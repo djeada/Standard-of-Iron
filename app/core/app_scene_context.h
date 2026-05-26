@@ -13,6 +13,7 @@ class TerrainFeatureManager;
 class TerrainScatterManager;
 class FogRenderer;
 class MapBoundaryFogRenderer;
+class AmbientFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -36,6 +37,7 @@ struct AppSceneContext {
   Render::GL::TerrainScatterManager* scatter = nullptr;
   Render::GL::FogRenderer* fog = nullptr;
   Render::GL::MapBoundaryFogRenderer* boundary_fog = nullptr;
+  Render::GL::AmbientFogRenderer* ambient_fog = nullptr;
   Render::GL::RainRenderer* rain = nullptr;
   MinimapManager* minimap_manager = nullptr;
   VisibilityCoordinator* visibility_coordinator = nullptr;

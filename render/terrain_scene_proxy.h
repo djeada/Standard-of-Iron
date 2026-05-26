@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../game/map/terrain_service.h"
+#include "ground/ambient_fog_renderer.h"
 #include "ground/biome_renderer.h"
 #include "ground/bridge_renderer.h"
 #include "ground/firecamp_renderer.h"
@@ -35,13 +36,15 @@ public:
                     TerrainScatterManager* scatter,
                     RainRenderer* rain,
                     FogRenderer* fog,
-                    MapBoundaryFogRenderer* boundary_fog)
+                    MapBoundaryFogRenderer* boundary_fog,
+                    AmbientFogRenderer* ambient_fog = nullptr)
       : m_surface(surface)
       , m_features(features)
       , m_scatter(scatter)
       , m_rain(rain)
       , m_fog(fog)
-      , m_boundary_fog(boundary_fog) {
+      , m_boundary_fog(boundary_fog)
+      , m_ambient_fog(ambient_fog) {
     if (m_surface != nullptr) {
       const auto& surface_passes = m_surface->passes();
       m_passes.insert(m_passes.end(), surface_passes.begin(), surface_passes.end());
@@ -57,6 +60,7 @@ public:
     m_passes.push_back(rain);
     m_passes.push_back(fog);
     m_passes.push_back(boundary_fog);
+    m_passes.push_back(ambient_fog);
   }
 
   void submit(Renderer& renderer, ResourceManager* resources) const {
@@ -66,7 +70,8 @@ public:
 
     for (auto* pass : {static_cast<IRenderPass*>(m_rain),
                        static_cast<IRenderPass*>(m_fog),
-                       static_cast<IRenderPass*>(m_boundary_fog)}) {
+                       static_cast<IRenderPass*>(m_boundary_fog),
+                       static_cast<IRenderPass*>(m_ambient_fog)}) {
       if (pass != nullptr) {
         pass->submit(renderer, resources);
       }
@@ -114,6 +119,9 @@ public:
   [[nodiscard]] auto fog() const -> FogRenderer* { return m_fog; }
   [[nodiscard]] auto boundary_fog() const -> MapBoundaryFogRenderer* {
     return m_boundary_fog;
+  }
+  [[nodiscard]] auto ambient_fog() const -> AmbientFogRenderer* {
+    return m_ambient_fog;
   }
 
   [[nodiscard]] auto has_field() const -> bool {
@@ -198,6 +206,7 @@ private:
   RainRenderer* m_rain = nullptr;
   FogRenderer* m_fog = nullptr;
   MapBoundaryFogRenderer* m_boundary_fog = nullptr;
+  AmbientFogRenderer* m_ambient_fog = nullptr;
   std::vector<IRenderPass*> m_passes;
 };
 

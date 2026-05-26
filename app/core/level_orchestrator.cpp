@@ -93,6 +93,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
 
   loader.set_fog_renderer(scene.fog);
   loader.set_boundary_fog_renderer(scene.boundary_fog);
+  loader.set_ambient_fog_renderer(scene.ambient_fog);
 
   loader.set_on_owners_updated(std::move(owner_update));
   loader.set_on_visibility_initialized([visibility_coordinator](

@@ -24,6 +24,7 @@ class TerrainRenderer;
 class TerrainFeatureManager;
 class FogRenderer;
 class MapBoundaryFogRenderer;
+class AmbientFogRenderer;
 class RainRenderer;
 class TerrainScatterManager;
 } // namespace Render::GL
@@ -79,6 +80,9 @@ public:
   void set_boundary_fog_renderer(Render::GL::MapBoundaryFogRenderer* boundary_fog) {
     m_boundary_fog = boundary_fog;
   }
+  void set_ambient_fog_renderer(Render::GL::AmbientFogRenderer* ambient_fog) {
+    m_ambient_fog = ambient_fog;
+  }
   void set_rain_renderer(Render::GL::RainRenderer* rain) { m_rain = rain; }
 
   void set_on_owners_updated(OwnersUpdatedCallback callback) {
@@ -106,6 +110,7 @@ private:
   Render::GL::TerrainScatterManager* m_scatter = nullptr;
   Render::GL::FogRenderer* m_fog = nullptr;
   Render::GL::MapBoundaryFogRenderer* m_boundary_fog = nullptr;
+  Render::GL::AmbientFogRenderer* m_ambient_fog = nullptr;
   Render::GL::RainRenderer* m_rain = nullptr;
   OwnersUpdatedCallback m_on_owners_updated;
   VisibilityInitializedCallback m_on_visibility_initialized;

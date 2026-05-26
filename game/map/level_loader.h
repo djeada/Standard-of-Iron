@@ -33,6 +33,7 @@ struct LevelLoadResult {
   int max_troops_per_player = 500;
   VictoryConfig victory_config;
   RainSettings rain_settings;
+  std::vector<FogZone> fog_zones;
   std::uint32_t biome_seed = 0;
   LightingSettings lighting_settings;
 };
