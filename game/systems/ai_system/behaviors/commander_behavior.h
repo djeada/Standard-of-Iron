@@ -23,9 +23,11 @@ public:
 private:
   float m_update_timer = 0.0F;
   float m_rally_timer = 0.0F;
+  float m_aura_timer = 0.0F;
 
   static constexpr float k_update_interval = 2.0F;
   static constexpr float k_rally_interval = 5.0F;
+  static constexpr float k_aura_interval = 20.0F;
   static constexpr float k_protected_offset = 4.0F;
   static constexpr float k_snap_threshold_sq = 9.0F;
 };

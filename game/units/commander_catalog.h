@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../systems/nation_id.h"
+#include "spawn_type.h"
 #include "troop_type.h"
 
 namespace Game::Units {
@@ -33,6 +34,9 @@ struct CommanderDefinition {
   float rally_morale_restore = 25.0F;
   float death_shock_radius = 14.0F;
   float death_morale_shock = 25.0F;
+  float aura_ability_duration = 15.0F;
+  float aura_ability_cooldown = 60.0F;
+  Game::Units::SpawnType aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
 };
 
 [[nodiscard]] auto

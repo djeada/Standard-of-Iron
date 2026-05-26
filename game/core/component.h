@@ -662,6 +662,17 @@ public:
   float death_shock_radius{14.0F};
   float death_morale_shock{25.0F};
   bool aura_active{true};
+
+  // Timed aura ability: when activated, grants 50% damage to same-type troops
+  // and 30% max-health bonus to all troops within radius.
+  bool aura_ability_active{false};
+  bool aura_ability_requested{false};
+  float aura_ability_duration{15.0F};
+  float aura_ability_remaining{0.0F};
+  float aura_ability_cooldown{60.0F};
+  float aura_ability_cooldown_remaining{0.0F};
+  Game::Units::SpawnType aura_affinity_spawn_type{Game::Units::SpawnType::Knight};
+
   bool wounded{false};
   bool fpv_controlled{false};
   int combo_step{0};
