@@ -98,6 +98,14 @@ struct UndeadZoneElement {
   QJsonArray waves;
 };
 
+struct FogZoneElement {
+  float x = 0.0F;
+  float z = 0.0F;
+  float width = 10.0F;
+  float height = 10.0F;
+  float density = 0.6F;
+};
+
 struct GridSettings {
   int width = 100;
   int height = 100;
@@ -178,6 +186,12 @@ public:
   void update_undead_zone(int index, const UndeadZoneElement& element);
   void remove_undead_zone(int index);
 
+  [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const {
+    return m_fog_zones;
+  }
+  void add_fog_zone(const FogZoneElement& element);
+  void remove_fog_zone(int index);
+
   void execute_command(std::unique_ptr<Command> cmd);
   void record_command(std::unique_ptr<Command> cmd);
   void undo();
@@ -206,6 +220,7 @@ private:
   QVector<StructureElement> m_structures;
   QVector<TroopSpawnElement> m_troop_spawns;
   QVector<UndeadZoneElement> m_undead_zones;
+  QVector<FogZoneElement> m_fog_zones;
 
   QJsonObject m_biome;
   QJsonObject m_camera;
@@ -236,6 +251,7 @@ private:
   void parse_bridges_array(const QJsonArray& arr);
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
+  void parse_fog_zones_array(const QJsonArray& arr);
   void parse_buildings_array(const QJsonArray& arr);
   void parse_walls_array(const QJsonArray& arr);
 
@@ -250,6 +266,7 @@ private:
   [[nodiscard]] QJsonObject structure_to_spawn_json(const StructureElement& elem) const;
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;
+  [[nodiscard]] QJsonArray fog_zones_to_json() const;
 };
 
 } // namespace MapEditor

@@ -908,6 +908,45 @@ void read_wall_lines(const QJsonArray& arr,
   }
 }
 
+void read_fog_zones(const QJsonArray& arr,
+                    std::vector<FogZone>& out,
+                    const GridDefinition& grid,
+                    CoordSystem coord_sys) {
+  out.clear();
+  out.reserve(arr.size());
+
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+
+  for (const auto& val : arr) {
+    auto obj = val.toObject();
+    FogZone zone;
+
+    const float raw_x = static_cast<float>(obj.value(X).toDouble(0.0));
+    const float raw_z = static_cast<float>(obj.value(Z).toDouble(0.0));
+    const float raw_w = static_cast<float>(obj.value(WIDTH).toDouble(10.0));
+    const float raw_h = static_cast<float>(obj.value(HEIGHT).toDouble(10.0));
+    zone.density = static_cast<float>(obj.value(DENSITY).toDouble(0.6));
+
+    if (coord_sys == CoordSystem::Grid) {
+      const float tile = std::max(min_tile_size, grid.tile_size);
+      zone.x =
+          (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
+      zone.z =
+          (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
+      zone.width = raw_w * tile;
+      zone.height = raw_h * tile;
+    } else {
+      zone.x = raw_x;
+      zone.z = raw_z;
+      zone.width = raw_w;
+      zone.height = raw_h;
+    }
+
+    out.push_back(zone);
+  }
+}
+
 } // namespace
 
 auto MapLoader::load_from_json_file(const QString& path,
@@ -1037,6 +1076,15 @@ auto MapLoader::load_from_json_file(const QString& path,
                     out_map.coordSystem);
   } else {
     out_map.wall_lines.clear();
+  }
+
+  if (root.contains(FOG_ZONES) && root.value(FOG_ZONES).isArray()) {
+    read_fog_zones(root.value(FOG_ZONES).toArray(),
+                   out_map.fog_zones,
+                   out_map.grid,
+                   out_map.coordSystem);
+  } else {
+    out_map.fog_zones.clear();
   }
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {

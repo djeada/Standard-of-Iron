@@ -286,6 +286,14 @@ struct RainSettings {
   float wind_strength = 0.0F;
 };
 
+struct FogZone {
+  float x = 0.0F;
+  float z = 0.0F;
+  float width = 10.0F;
+  float height = 10.0F;
+  float density = 0.6F;
+};
+
 struct MapDefinition {
   QString name;
   GridDefinition grid;
@@ -299,6 +307,7 @@ struct MapDefinition {
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
   std::vector<BuildingEntry> buildings;
+  std::vector<FogZone> fog_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 500;

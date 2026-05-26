@@ -244,6 +244,7 @@ void MapData::clear() {
   m_structures.clear();
   m_troop_spawns.clear();
   m_undead_zones.clear();
+  m_fog_zones.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
@@ -355,7 +356,8 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
       MapJsonKeys::spawns,       MapJsonKeys::victory,     MapJsonKeys::rain,
       MapJsonKeys::terrain,      MapJsonKeys::world_props, MapJsonKeys::firecamps,
       MapJsonKeys::rivers,       MapJsonKeys::roads,       MapJsonKeys::bridges,
-      MapJsonKeys::undead_zones, MapJsonKeys::buildings,   MapJsonKeys::walls};
+      MapJsonKeys::undead_zones, MapJsonKeys::fog_zones,   MapJsonKeys::buildings,
+      MapJsonKeys::walls};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -419,6 +421,9 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
 
   if (root.contains(MapJsonKeys::undead_zones)) {
     parse_undead_zones_array(root[MapJsonKeys::undead_zones].toArray());
+  }
+  if (root.contains(MapJsonKeys::fog_zones)) {
+    parse_fog_zones_array(root[MapJsonKeys::fog_zones].toArray());
   }
 
   m_undo_stack.clear();
@@ -529,6 +534,11 @@ QJsonObject MapData::build_root_json() const {
   QJsonArray const undead_zones_arr = undead_zones_to_json();
   if (!undead_zones_arr.isEmpty()) {
     root[MapJsonKeys::undead_zones] = undead_zones_arr;
+  }
+
+  QJsonArray const fog_zones_arr = fog_zones_to_json();
+  if (!fog_zones_arr.isEmpty()) {
+    root[MapJsonKeys::fog_zones] = fog_zones_arr;
   }
 
   return normalize_json_object(root);
@@ -1314,6 +1324,47 @@ QJsonArray MapData::undead_zones_to_json() const {
     if (!elem.waves.isEmpty()) {
       obj["waves"] = elem.waves;
     }
+    arr.append(obj);
+  }
+  return arr;
+}
+
+void MapData::add_fog_zone(const FogZoneElement& element) {
+  m_fog_zones.append(element);
+  set_modified(true);
+  emit data_changed();
+}
+
+void MapData::remove_fog_zone(int index) {
+  if (index >= 0 && index < m_fog_zones.size()) {
+    m_fog_zones.removeAt(index);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::parse_fog_zones_array(const QJsonArray& arr) {
+  for (const auto& val : arr) {
+    const QJsonObject obj = val.toObject();
+    FogZoneElement elem;
+    elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
+    elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
+    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(10.0));
+    elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(10.0));
+    elem.density = static_cast<float>(obj["density"].toDouble(0.6));
+    m_fog_zones.append(elem);
+  }
+}
+
+QJsonArray MapData::fog_zones_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_fog_zones) {
+    QJsonObject obj;
+    obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+    obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+    obj[MapJsonKeys::width] = static_cast<double>(elem.width);
+    obj[MapJsonKeys::height] = static_cast<double>(elem.height);
+    obj["density"] = static_cast<double>(elem.density);
     arr.append(obj);
   }
   return arr;

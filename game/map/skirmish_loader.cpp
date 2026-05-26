@@ -44,6 +44,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/visuals/team_colors.h"
+#include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -397,6 +398,10 @@ auto SkirmishLoader::start(const QString& map_path,
   if (m_boundary_fog != nullptr) {
     m_boundary_fog->configure(
         level_result.grid_width, level_result.grid_height, level_result.tile_size);
+  }
+
+  if (m_ambient_fog != nullptr && !level_result.fog_zones.empty()) {
+    m_ambient_fog->configure(level_result.fog_zones);
   }
 
   constexpr int default_map_size = 100;
