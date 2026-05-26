@@ -153,6 +153,7 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
+#include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
@@ -541,6 +542,7 @@ GameEngine::GameEngine(QObject* parent)
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
   m_boundary_fog = std::move(rendering.boundary_fog);
+  m_ambient_fog = std::move(rendering.ambient_fog);
   m_rain = std::move(rendering.rain);
 
   RendererBootstrap::initialize_world_systems(*m_world);
@@ -863,6 +865,7 @@ void GameEngine::cleanup_opengl_resources() {
   m_scatter.reset();
   m_fog.reset();
   m_boundary_fog.reset();
+  m_ambient_fog.reset();
   m_rain.reset();
   m_rain_manager.reset();
 
@@ -2106,6 +2109,7 @@ auto GameEngine::scene_context() const -> AppSceneContext {
                          .scatter = m_scatter.get(),
                          .fog = m_fog.get(),
                          .boundary_fog = m_boundary_fog.get(),
+                         .ambient_fog = m_ambient_fog.get(),
                          .rain = m_rain.get(),
                          .minimap_manager = m_minimap_manager.get(),
                          .visibility_coordinator = m_visibility_coordinator.get(),
