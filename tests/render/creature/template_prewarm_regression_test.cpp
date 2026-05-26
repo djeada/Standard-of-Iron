@@ -821,6 +821,72 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   nation_registry.clear();
 }
 
+TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation carthage{};
+  carthage.id = NationID::Carthage;
+  carthage.display_name = "Carthage";
+  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  nation_registry.register_nation(std::move(carthage));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity* commander = world.create_entity();
+  ASSERT_NE(commander, nullptr);
+  add_test_unit(*commander,
+                SpawnType::CarthageElephantMaster,
+                NationID::Carthage,
+                1,
+                "troops/carthage/commanders/hannibal_barca");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto commander_renderer =
+      registry.get("troops/carthage/commanders/hannibal_barca");
+  ASSERT_TRUE(static_cast<bool>(commander_renderer));
+
+  Engine::Core::Entity runtime_entity(9004);
+  add_test_unit(runtime_entity,
+                SpawnType::CarthageElephantMaster,
+                NationID::Carthage,
+                1,
+                "troops/carthage/commanders/hannibal_barca");
+
+  renderer.rigged_mesh_cache().reset_frame_stats();
+
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
+  ctx.renderer_id = "troops/carthage/commanders/hannibal_barca";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.has_variant_override = true;
+  ctx.variant_override = 0;
+
+  commander_renderer(ctx, renderer);
+
+  const auto& stats = renderer.rigged_mesh_cache().frame_stats();
+  EXPECT_EQ(stats.misses, 0U);
+  EXPECT_GT(stats.hits, 0U);
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
 TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants) {
   using Game::Systems::NationID;
   using Game::Units::SpawnType;

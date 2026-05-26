@@ -75,7 +75,9 @@ public:
                             int local_owner_id);
   [[nodiscard]] Engine::Core::EntityID locked_target_id() const;
   [[nodiscard]] Engine::Core::EntityID focus_target_id() const;
-  [[nodiscard]] bool is_dodge_rolling() const { return m_dodge_state == DodgeState::Rolling; }
+  [[nodiscard]] bool is_dodge_rolling() const {
+    return m_dodge_state == DodgeState::Rolling;
+  }
   [[nodiscard]] Engine::Core::Entity*
   controlled_commander(Engine::Core::World& world,
                        Engine::Core::EntityID commander_id,

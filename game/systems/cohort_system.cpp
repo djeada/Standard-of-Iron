@@ -101,7 +101,8 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       assigned.insert(i);
 
       for (std::size_t j = i + 1;
-           j < candidates.size() && members.size() < k_max_cohort_size; ++j) {
+           j < candidates.size() && members.size() < k_max_cohort_size;
+           ++j) {
         if (assigned.count(j) > 0) {
           continue;
         }
@@ -117,11 +118,13 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       }
 
       for (std::size_t idx : members) {
-        auto* membership = candidates[idx].entity->get_component<
-            Engine::Core::CohortMembershipComponent>();
+        auto* membership =
+            candidates[idx]
+                .entity->get_component<Engine::Core::CohortMembershipComponent>();
         if (membership == nullptr) {
-          membership = candidates[idx].entity->add_component<
-              Engine::Core::CohortMembershipComponent>();
+          membership =
+              candidates[idx]
+                  .entity->add_component<Engine::Core::CohortMembershipComponent>();
         }
         if (membership != nullptr) {
           membership->cohort_id = cohort_id;
@@ -130,8 +133,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       }
 
       ++m_diagnostics.cohorts_formed;
-      m_diagnostics.units_in_cohorts +=
-          static_cast<std::uint32_t>(members.size());
+      m_diagnostics.units_in_cohorts += static_cast<std::uint32_t>(members.size());
     }
   }
 
@@ -140,8 +142,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
   // activate the entire cohort.
   std::unordered_set<std::uint32_t> activated_cohorts;
   for (auto* entity : entities) {
-    auto* membership =
-        entity->get_component<Engine::Core::CohortMembershipComponent>();
+    auto* membership = entity->get_component<Engine::Core::CohortMembershipComponent>();
     if (membership == nullptr || membership->cohort_id == 0) {
       continue;
     }
@@ -151,8 +152,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   for (auto* entity : entities) {
-    auto* membership =
-        entity->get_component<Engine::Core::CohortMembershipComponent>();
+    auto* membership = entity->get_component<Engine::Core::CohortMembershipComponent>();
     if (membership == nullptr || membership->cohort_id == 0) {
       continue;
     }

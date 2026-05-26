@@ -130,9 +130,8 @@ auto select_commander_sword_sway(const Engine::Core::CommanderComponent* command
     return k_commander_sword_sway_thrust;
   }
   // Overhead on backward input or power strike
-  if (move_forward_axis < 0 ||
-      (move_right_axis == 0 && commander != nullptr &&
-       commander->power_strike_active)) {
+  if (move_forward_axis < 0 || (move_right_axis == 0 && commander != nullptr &&
+                                commander->power_strike_active)) {
     return k_commander_sword_sway_overhead;
   }
   // More varied directional slash selection based on sequence
@@ -1340,8 +1339,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->stamina = std::max(
           0.0F,
-          stamina->stamina -
-              Engine::Core::CombatStateComponent::k_stamina_cost_jump);
+          stamina->stamina - Engine::Core::CombatStateComponent::k_stamina_cost_jump);
     }
   }
 
@@ -1415,8 +1413,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->stamina = std::max(
           0.0F,
-          stamina->stamina -
-              Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
+          stamina->stamina - Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
     }
   }
 
@@ -1909,18 +1906,14 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   // Dodge roll camera tilt
   float dodge_tilt_rad = 0.0F;
   if (m_dodge_state == DodgeState::Rolling) {
-    const float dodge_progress =
-        1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
-    const float tilt_curve =
-        std::sin(dodge_progress * k_pi) * 0.12F; // ~7 degree roll
+    const float dodge_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
+    const float tilt_curve = std::sin(dodge_progress * k_pi) * 0.12F; // ~7 degree roll
     const float dot_right =
-        m_dodge_direction.x() * flat_right.x() +
-        m_dodge_direction.z() * flat_right.z();
+        m_dodge_direction.x() * flat_right.x() + m_dodge_direction.z() * flat_right.z();
     dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);
   }
 
-  const QVector3D up_final =
-      (up_leaned + right_world * dodge_tilt_rad).normalized();
+  const QVector3D up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();
 
   camera.look_at(m_cam_eye_smooth + shake_offset + punch_offset,
                  m_cam_target_smooth + shake_offset + punch_offset,

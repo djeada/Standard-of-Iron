@@ -58,18 +58,14 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
     }
 
     // Ensure commitment component exists for attackers with melee lock.
-    auto* commitment =
-        entity->get_component<Engine::Core::TargetCommitmentComponent>();
+    auto* commitment = entity->get_component<Engine::Core::TargetCommitmentComponent>();
 
-    auto* combat_state =
-        entity->get_component<Engine::Core::CombatStateComponent>();
-    auto* attack_target =
-        entity->get_component<Engine::Core::AttackTargetComponent>();
+    auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
+    auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
 
     if (commitment == nullptr) {
       if (atk->in_melee_lock && attack_target != nullptr) {
-        commitment =
-            entity->add_component<Engine::Core::TargetCommitmentComponent>();
+        commitment = entity->add_component<Engine::Core::TargetCommitmentComponent>();
         if (commitment != nullptr) {
           commitment->committed_target_id = attack_target->target_id;
         }

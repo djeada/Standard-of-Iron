@@ -3097,7 +3097,8 @@ TEST(HumanoidPrepare, GuardStanceForSwordAssetUsesHumanoidCreatureAsset) {
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
   ASSERT_EQ(prep.bodies.requests().size(), 1U);
-  EXPECT_EQ(prep.bodies.requests().front().state, Render::Creature::AnimationStateId::Hold);
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Hold);
   EXPECT_EQ(prep.bodies.requests().front().creature_asset_id,
             Render::Creature::Pipeline::k_humanoid_asset);
 }

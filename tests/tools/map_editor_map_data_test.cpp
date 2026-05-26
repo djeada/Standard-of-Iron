@@ -8,7 +8,6 @@
 #include <QVector2D>
 
 #include <cmath>
-
 #include <gtest/gtest.h>
 
 #include "tools/map_editor/map_data.h"

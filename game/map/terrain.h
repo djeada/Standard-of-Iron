@@ -4,8 +4,8 @@
 #include <QVector3D>
 
 #include <algorithm>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -640,8 +640,7 @@ inline constexpr float k_bridge_riverbank_visual_padding = 1.0F;
 }
 
 [[nodiscard]] inline auto bridge_required_half_length_for_river(
-    const Bridge& bridge,
-    const RiverSegment& river) noexcept -> std::optional<float> {
+    const Bridge& bridge, const RiverSegment& river) noexcept -> std::optional<float> {
   QVector3D const bridge_vec = bridge.end - bridge.start;
   QVector3D const river_vec = river.end - river.start;
   float const bridge_len = std::hypot(bridge_vec.x(), bridge_vec.z());

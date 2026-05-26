@@ -2248,7 +2248,8 @@ auto GameEngine::apply_runtime_time_effects(float dt) -> float {
       // Near-freeze for the first half, then ease out
       const float progress =
           1.0F - std::clamp(m_rpg_hit_stop_timer / m_rpg_hit_stop_total, 0.0F, 1.0F);
-      const float time_scale = progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
+      const float time_scale =
+          progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
       dt *= time_scale;
     }
   }
@@ -3383,8 +3384,8 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
         // Target combat state
         auto* locked_stagger =
             locked_ent->get_component<Engine::Core::StaggerComponent>();
-        result["locked_target_staggered"] = locked_stagger != nullptr &&
-                                            locked_stagger->remaining > 0.0F;
+        result["locked_target_staggered"] =
+            locked_stagger != nullptr && locked_stagger->remaining > 0.0F;
         auto* locked_guard =
             locked_ent->get_component<Engine::Core::CommanderGuardComponent>();
         result["locked_target_guard_broken"] =

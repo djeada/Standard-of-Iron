@@ -104,8 +104,7 @@ auto infantry_guard_shield_pose(
     return ShieldFormationPose::None;
   }
 
-  bool const formation_active =
-      (formation_mode != nullptr) && formation_mode->active;
+  bool const formation_active = (formation_mode != nullptr) && formation_mode->active;
   bool const guard_active = (guard_mode != nullptr) && guard_mode->active;
   if (!formation_active && !guard_active) {
     return ShieldFormationPose::None;
@@ -1168,8 +1167,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F) {
       int const row = idx / cols;
       int const col = idx % cols;
-      soldier_render_anim.shield_formation_pose =
-          infantry_guard_shield_pose(unit_comp, formation_mode, guard_mode_comp, row, col, rows, cols);
+      soldier_render_anim.shield_formation_pose = infantry_guard_shield_pose(
+          unit_comp, formation_mode, guard_mode_comp, row, col, rows, cols);
     }
     float const offset_x = layout.offset_x;
     float const offset_z = layout.offset_z;
