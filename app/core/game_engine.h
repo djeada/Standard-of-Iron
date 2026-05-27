@@ -312,6 +312,9 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_home_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_marketplace_state() const;
+  Q_INVOKABLE bool marketplace_buy_resource(const QString& resource_key);
+  Q_INVOKABLE bool marketplace_sell_resource(const QString& resource_key);
   Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
   Q_INVOKABLE QVariantList pop_rpg_damage_events();
   Q_INVOKABLE QVariantMap rpg_project_world(float x, float y, float z) const;

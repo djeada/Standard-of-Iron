@@ -106,6 +106,7 @@
 #include "game/systems/guard_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -258,6 +259,33 @@ auto choose_seeded_track(const QStringList& track_ids, const QString& seed) -> Q
   }
   const uint index = qHash(seed) % uint(track_ids.size());
   return track_ids.at(int(index));
+}
+
+auto marketplace_trade_resource_from_key(QStringView key)
+    -> std::optional<Game::Systems::ResourceType> {
+  if (key == QLatin1String("wood")) {
+    return Game::Systems::ResourceType::Wood;
+  }
+  if (key == QLatin1String("stone")) {
+    return Game::Systems::ResourceType::Stone;
+  }
+  if (key == QLatin1String("iron")) {
+    return Game::Systems::ResourceType::Iron;
+  }
+  return std::nullopt;
+}
+
+auto marketplace_trade_resource_label(QStringView key) -> QString {
+  if (key == QLatin1String("wood")) {
+    return QStringLiteral("wood");
+  }
+  if (key == QLatin1String("stone")) {
+    return QStringLiteral("stone");
+  }
+  if (key == QLatin1String("iron")) {
+    return QStringLiteral("iron");
+  }
+  return key.toString();
 }
 
 auto mission_terrain_to_ambience_biome(const QString& terrain_type) -> QString {
@@ -3154,10 +3182,83 @@ auto GameEngine::get_construction_info(const QString& item_type) const -> QVaria
                               : QVariantMap();
 }
 
+auto GameEngine::get_selected_marketplace_state() const -> QVariantMap {
+  return m_production_manager
+             ? m_production_manager->get_selected_marketplace_state(
+                   m_runtime.local_owner_id)
+             : QVariantMap();
+}
+
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
   return m_production_manager
              ? m_production_manager->get_selected_builder_production_state()
              : QVariantMap();
+}
+
+bool GameEngine::marketplace_buy_resource(const QString& resource_key) {
+  ensure_initialized();
+
+  QVariantMap const market_state = get_selected_marketplace_state();
+  if (!market_state.value("has_marketplace").toBool()) {
+    set_error(QStringLiteral("Select your marketplace to trade."));
+    return false;
+  }
+
+  auto const resource_type = marketplace_trade_resource_from_key(resource_key);
+  if (!resource_type.has_value()) {
+    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    return false;
+  }
+
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+  if (!marketplace.can_buy(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Not enough gold to buy %1.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  if (!marketplace.buy_resource(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Cannot buy %1 right now.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  clear_error();
+  sync_selected_player_state();
+  return true;
+}
+
+bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
+  ensure_initialized();
+
+  QVariantMap const market_state = get_selected_marketplace_state();
+  if (!market_state.value("has_marketplace").toBool()) {
+    set_error(QStringLiteral("Select your marketplace to trade."));
+    return false;
+  }
+
+  auto const resource_type = marketplace_trade_resource_from_key(resource_key);
+  if (!resource_type.has_value()) {
+    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    return false;
+  }
+
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+  if (!marketplace.can_sell(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Not enough %1 to sell.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  if (!marketplace.sell_resource(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Cannot sell %1 right now.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  clear_error();
+  sync_selected_player_state();
+  return true;
 }
 
 auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
@@ -4446,6 +4547,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
   Game::Systems::PlayerResourceRegistry::instance().clear();
+  Game::Systems::MarketplaceSystem::instance().clear();
   sync_selected_player_state();
   stop_mission_ambience();
   AudioSystem::get_instance().stop_music();

@@ -60,6 +60,7 @@
         <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
         <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
         <file alias="assets/visuals/icons/house_rome.png">assets/visuals/icons/house_rome.png</file>
+        <file alias="assets/visuals/icons/marketplace.png">assets/visuals/icons/marketplace.png</file>
         <file alias="assets/visuals/icons/attack_mode.png">assets/visuals/icons/attack_mode.png</file>
         <file alias="assets/visuals/icons/defend_mode.png">assets/visuals/icons/defend_mode.png</file>
         <file alias="assets/visuals/icons/hold_mode.png">assets/visuals/icons/hold_mode.png</file>
@@ -93,6 +94,7 @@
         <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
         <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
         <file alias="assets/visuals/icons/house_rome.png">assets/visuals/icons/house_rome.png</file>
+        <file alias="assets/visuals/icons/marketplace.png">assets/visuals/icons/marketplace.png</file>
         <file alias="assets/visuals/icons/attack_mode.png">assets/visuals/icons/attack_mode.png</file>
         <file alias="assets/visuals/icons/defend_mode.png">assets/visuals/icons/defend_mode.png</file>
         <file alias="assets/visuals/icons/hold_mode.png">assets/visuals/icons/hold_mode.png</file>

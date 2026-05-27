@@ -29,6 +29,10 @@ void MarketplaceSystem::unregister_marketplace(int owner_id) {
   }
 }
 
+void MarketplaceSystem::clear() {
+  m_marketplace_count.clear();
+}
+
 auto MarketplaceSystem::can_buy(int owner_id, ResourceType resource) const -> bool {
   if (!owner_has_marketplace(owner_id)) {
     return false;

@@ -31,6 +31,7 @@ public:
 
   void register_marketplace(int owner_id);
   void unregister_marketplace(int owner_id);
+  void clear();
 
   auto buy_resource(int owner_id, ResourceType resource) -> bool;
   auto sell_resource(int owner_id, ResourceType resource) -> bool;

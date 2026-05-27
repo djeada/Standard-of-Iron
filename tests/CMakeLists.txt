@@ -11,6 +11,7 @@ endif()
 # Test executable
 add_executable(standard_of_iron_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
+    ${CMAKE_SOURCE_DIR}/translations.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
@@ -22,8 +23,10 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/production_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/rts_action_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/language_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
     ${CMAKE_SOURCE_DIR}/app/core/ambient_state_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/graphics_settings_proxy.cpp
     ${CMAKE_SOURCE_DIR}/app/models/cursor_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/models/hover_tracker.cpp
     ${CMAKE_SOURCE_DIR}/app/controllers/action_vfx.cpp
@@ -32,6 +35,7 @@ add_executable(standard_of_iron_tests
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     core/audio_system_test.cpp
+    core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
