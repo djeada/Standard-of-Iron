@@ -250,6 +250,7 @@ TEST_F(PathfindingTest, BridgeDeckIsWalkableAndCrossesRiver) {
   map_def.grid.width = 21;
   map_def.grid.height = 21;
   map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
   map_def.rivers.push_back(
       {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
   map_def.bridges.push_back(
@@ -287,6 +288,70 @@ TEST_F(PathfindingTest, BridgeDeckIsWalkableAndCrossesRiver) {
   EXPECT_TRUE(used_bridge_centerline);
 }
 
+TEST_F(PathfindingTest, BridgeDeckRemainsWalkableWhenResourceMarkerOverlapsIt) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 3.0F, 0.6F});
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 0.0F, .z = 0.0F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  auto const center = Game::Systems::Point{10, 10};
+  ASSERT_TRUE(Game::Map::TerrainService::instance().get_height_map()->isBridgeCell(
+      center.x, center.y));
+  EXPECT_EQ(pathfinding.cell_value(center.x, center.y),
+            Game::Systems::Pathfinding::CellValue::Walkable);
+  EXPECT_TRUE(pathfinding.is_walkable(center.x, center.y));
+  EXPECT_FALSE(pathfinding.find_path({2, center.y}, {18, center.y}).empty());
+}
+
+TEST_F(PathfindingTest, HillEntranceRemainsWalkableWhenResourceMarkerOverlapsIt) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
+  Game::Map::TerrainFeature hill;
+  hill.type = Game::Map::TerrainType::Hill;
+  hill.center_x = 0.0F;
+  hill.center_z = 0.0F;
+  hill.width = 10.0F;
+  hill.depth = 10.0F;
+  hill.height = 3.0F;
+  hill.entrances.emplace_back(-5.0F, 0.0F, 0.0F);
+  map_def.terrain.push_back(hill);
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = -5.0F, .z = 0.0F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  auto const entrance = Game::Systems::Point{5, 10};
+  auto const hilltop = Game::Systems::Point{10, 10};
+  ASSERT_TRUE(Game::Map::TerrainService::instance().get_height_map()->isHillEntrance(
+      entrance.x, entrance.y));
+  EXPECT_EQ(pathfinding.cell_value(entrance.x, entrance.y),
+            Game::Systems::Pathfinding::CellValue::Walkable);
+  EXPECT_TRUE(pathfinding.is_walkable(entrance.x, entrance.y));
+  EXPECT_TRUE(pathfinding.is_walkable_with_radius(entrance.x, entrance.y, 0.7F));
+  EXPECT_FALSE(pathfinding.find_path({2, entrance.y}, hilltop, 0.7F).empty());
+}
+
 TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;
@@ -314,6 +379,54 @@ TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
 
   auto const path =
       pathfinding.find_path(to_grid(-8.0F, -8.0F), to_grid(8.0F, 8.0F), 0.6F);
+  ASSERT_FALSE(path.empty());
+
+  bool used_bridge = false;
+  for (const auto& point : path) {
+    if (Game::Map::TerrainService::instance().get_height_map()->isBridgeCell(point.x,
+                                                                             point.y)) {
+      used_bridge = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(used_bridge);
+}
+
+TEST_F(PathfindingTest, CrossingRhoneBridgeApproachRoutesFromBattleLogPosition) {
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_crossing_rhone.json"), map_def, &error))
+      << error.toStdString();
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  auto const to_grid = [&map_def](float world_x, float world_z) {
+    float const half_w = static_cast<float>(map_def.grid.width) * 0.5F - 0.5F;
+    float const half_h = static_cast<float>(map_def.grid.height) * 0.5F - 0.5F;
+    return Game::Systems::Point{
+        static_cast<int>(std::round(world_x / map_def.grid.tile_size + half_w)),
+        static_cast<int>(std::round(world_z / map_def.grid.tile_size + half_h))};
+  };
+
+  auto const start = to_grid(-53.5F, 33.9774F);
+  auto const end = to_grid(37.5F, 56.5F);
+  EXPECT_TRUE(pathfinding.is_walkable(start.x, start.y));
+  EXPECT_TRUE(pathfinding.is_walkable_with_radius(start.x, start.y, 0.7F));
+  EXPECT_TRUE(pathfinding.is_walkable(end.x, end.y));
+  EXPECT_TRUE(pathfinding.is_walkable_with_radius(end.x, end.y, 0.7F));
+
+  auto const path = pathfinding.find_path(start, end, 0.7F);
+  EXPECT_FALSE(pathfinding.find_path(start, to_grid(-6.5F, 43.5F), 0.7F).empty());
+  EXPECT_FALSE(pathfinding.find_path(to_grid(-6.5F, 43.5F), to_grid(-1.5F, 43.5F), 0.7F)
+                   .empty());
+  EXPECT_FALSE(pathfinding.find_path(to_grid(-1.5F, 43.5F), end, 0.7F).empty());
+
   ASSERT_FALSE(path.empty());
 
   bool used_bridge = false;

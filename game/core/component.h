@@ -154,6 +154,9 @@ public:
   float time_stuck{0.0F};
   float time_on_invalid_tile{0.0F};
   float unstuck_cooldown{0.0F};
+  float unstuck_push_seconds{0.0F};
+  float unstuck_push_vx{0.0F};
+  float unstuck_push_vz{0.0F};
 
   void clear_path() {
     path.clear();

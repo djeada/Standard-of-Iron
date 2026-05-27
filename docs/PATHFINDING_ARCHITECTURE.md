@@ -72,9 +72,10 @@ Every full rebuild starts with an all-free grid, then layers blockers in a fixed
 2. Apply static terrain from TerrainService
 3. Apply completed/loaded building footprints
 4. Apply harvestable resource props
+5. Force mandatory traversal cells back to Walkable
 ```
 
-The order is important. Terrain decides where the map is physically traversable. Buildings and resources then override terrain by occupying cells.
+The order is important. Terrain decides where the map is physically traversable. Buildings and resources then override terrain by occupying cells. Mandatory traversal cells are applied last so bridge crossings and hill entrances cannot be accidentally blocked by broad terrain/resource/building masks.
 
 ```text
 Terrain layer:
@@ -115,6 +116,8 @@ Legend:
 ```
 
 Units are not written into this grid. A unit standing in a cell does not make that cell blocked for other units. Unit-to-unit spacing is handled by formation planning and movement, because writing every unit into the global grid would make group movement unstable and expensive.
+
+The same order is used for regional rebuilds: reset the region to terrain, reapply buildings/resources intersecting the region, then force mandatory traversal cells in that region to `Walkable`.
 
 ## Enemy Units Are Not Empty Ground
 
@@ -205,7 +208,7 @@ M M M   -> all Blocked
 M M M
 ```
 
-Rivers are blocked except for bridge centerlines. A bridge may be visually wide, but the navigation grid only exposes the center crossing path:
+Rivers are blocked except for authored bridge traversal cells. Bridge cells and bridge centerline cells are forced back to `Walkable` at the end of grid construction:
 
 ```text
 River with bridge deck:
@@ -218,8 +221,8 @@ River with bridge deck:
 Navigation values:
 
   . . X X X . .
-  . . X . X . .
-  . . X . X . .
+  . . . . . . .
+  . . . . . . .
   . . X X X . .
 
 Legend:
@@ -230,7 +233,7 @@ Legend:
   . = Walkable
 ```
 
-This is deliberate. If the entire bridge deck were walkable, groups would drift toward edges, clip rails, or cross at awkward angles. The centerline gives A* a single clean crossing. Later, movement snaps bridge waypoints to `TerrainService::get_bridge_traversal_position()` so units visually enter and exit from the middle.
+Pathfinding must never leave an authored bridge crossing non-traversable. Movement still projects bridge waypoints toward `TerrainService::get_bridge_traversal_position()` so units visually enter and exit from the middle instead of drifting into rails.
 
 Hills are authored as connected plateau and entrance cells:
 
@@ -263,7 +266,7 @@ Legend:
   . = Walkable
 ```
 
-Pathfinding does not invent hill entrances. It consumes the terrain service's walkability mask. That means the terrain builder must guarantee that hill plateau cells are connected through intended entrances and that edge cells remain blocked.
+Pathfinding does not invent hill entrances. It consumes the terrain service's walkability mask, then forces authored hill entrance cells back to `Walkable` during grid construction. Plateau cells still come from the terrain mask. That means the terrain builder must guarantee that plateau cells connect through intended entrances and that edge cells remain blocked.
 
 ## Dynamic Blockers
 
@@ -339,6 +342,8 @@ MovementSystem
 ```
 
 The system does not continuously re-check every whole path. That would be expensive and would make large fights unstable. It checks the order up front, then movement checks the current segment and a few recovery cases.
+
+Movement animation is not pathfinding state. `World::finalize_motion_presentation_frame()` treats a unit as moving only when it has an active target, queued waypoint, pending path request, non-zero movement velocity, actual displacement, chase intent, direct control, or builder bypass. Stale `goal_x`, recent request history, repath cooldown, and unstuck cooldown are not movement intent and must not keep walk animation running after arrival.
 
 ## A* Search
 
@@ -475,6 +480,8 @@ Flow:
 
 This avoids the expensive alternative of constantly revalidating every unit against every dynamic blocker.
 
+Stuck recovery should stay local to `MovementSystem` and `CommandService`: try a short recovery target, a smooth push, or a repath. It should not add new grid cell types, write units into the navigation grid, or rely on per-frame debug logging.
+
 ## Melee Lock
 
 RTS melee lock is a combat rule, not a pathfinding state. A locked unit should not be pulled out of melee by a movement command.
@@ -540,6 +547,9 @@ That is the main performance contract: changes are sparse, so updates should be 
 `game/systems/movement_system.cpp`
 : Follows waypoints, checks current movement segments, aligns bridge traversal, suppresses movement during melee lock, and queues local recovery or repath requests.
 
+`game/core/world.cpp`
+: Builds motion presentation snapshots from active movement/combat state. It does not own pathfinding and must not derive walk animation from stale path request bookkeeping.
+
 `game/systems/formation_planner.h`
 : Computes formation slots using shared walkability plus local spacing checks. It does not write units into the navigation grid.
 
@@ -557,6 +567,13 @@ When adding a blocker type:
 2. Apply it in the navigation-grid build/update step.
 3. Mark the affected region dirty when it appears, disappears, or changes footprint.
 4. Add a focused test proving it blocks and clears correctly.
+
+When adding a mandatory traversal feature, such as a bridge crossing or hill entrance:
+
+1. Author the cells in `TerrainService`/height-map data.
+2. Force those cells to `Walkable` after terrain, buildings, and resources are applied.
+3. Keep visual centering or corridor projection outside A* path search.
+4. Add tests for full rebuild and regional rebuild behavior.
 
 When changing terrain:
 

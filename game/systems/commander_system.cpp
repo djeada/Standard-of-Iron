@@ -426,16 +426,15 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           // 30% max-health bonus for all troops in radius
           const int health_bonus = static_cast<int>(
               std::round(static_cast<float>(candidate_unit->max_health) * 0.3F));
-          candidate_unit->health =
-              std::min(candidate_unit->max_health + health_bonus,
-                       candidate_unit->health + health_bonus);
+          candidate_unit->health = std::min(candidate_unit->max_health + health_bonus,
+                                            candidate_unit->health + health_bonus);
 
           // 50% damage bonus for same-type troops
           if (candidate_unit->spawn_type == commander->aura_affinity_spawn_type) {
             if (auto* attack =
                     candidate->get_component<Engine::Core::AttackComponent>()) {
-              attack->damage = std::max(
-                  1, static_cast<int>(std::round(attack->damage * 1.5F)));
+              attack->damage =
+                  std::max(1, static_cast<int>(std::round(attack->damage * 1.5F)));
               attack->melee_damage = std::max(
                   1, static_cast<int>(std::round(attack->melee_damage * 1.5F)));
             }

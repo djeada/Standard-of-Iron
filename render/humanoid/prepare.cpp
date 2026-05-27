@@ -124,6 +124,62 @@ auto infantry_guard_shield_pose(
   }
 }
 
+auto archetype_has_left_hand_attachment(
+    Render::Creature::ArchetypeId archetype_id) noexcept -> bool {
+  auto const* desc = Render::Creature::ArchetypeRegistry::instance().get(archetype_id);
+  if (desc == nullptr) {
+    return false;
+  }
+
+  constexpr auto k_hand_l_bone =
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandL);
+  for (auto const& attachment : desc->attachments_view()) {
+    if (attachment.socket_bone_index == k_hand_l_bone) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto nation_guard_front_shield_pose(const Engine::Core::UnitComponent* unit) noexcept
+    -> ShieldFormationPose {
+  if (unit == nullptr) {
+    return ShieldFormationPose::None;
+  }
+
+  switch (unit->nation_id) {
+  case Game::Systems::NationID::RomanRepublic:
+    return ShieldFormationPose::RomanFront;
+  case Game::Systems::NationID::Carthage:
+    return ShieldFormationPose::CarthageFront;
+  default:
+    return ShieldFormationPose::None;
+  }
+}
+
+auto shared_guard_shield_pose(
+    const Engine::Core::UnitComponent* unit,
+    const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
+    const Engine::Core::FormationModeComponent* formation_mode,
+    const Engine::Core::GuardModeComponent* guard_mode,
+    int row,
+    int col,
+    int rows,
+    int cols) noexcept -> ShieldFormationPose {
+  if (unit == nullptr ||
+      !archetype_has_left_hand_attachment(visual_spec.archetype_id)) {
+    return ShieldFormationPose::None;
+  }
+
+  ShieldFormationPose const infantry_pose = infantry_guard_shield_pose(
+      unit, formation_mode, guard_mode, row, col, rows, cols);
+  if (infantry_pose != ShieldFormationPose::None) {
+    return infantry_pose;
+  }
+
+  return nation_guard_front_shield_pose(unit);
+}
+
 auto centered_grid_coordinate(int index, int count) noexcept -> float {
   if (count <= 1) {
     return 0.0F;
@@ -1164,11 +1220,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   auto append_prepared_soldier = [&](int idx, const AnimationInputs& soldier_anim) {
     SoldierLayout const& layout = soldier_layouts[static_cast<std::size_t>(idx)];
     AnimationInputs soldier_render_anim = soldier_anim;
-    if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F) {
+    if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F &&
+        soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
+      auto const visual_spec = owner.visual_spec();
       int const row = idx / cols;
       int const col = idx % cols;
-      soldier_render_anim.shield_formation_pose = infantry_guard_shield_pose(
-          unit_comp, formation_mode, guard_mode_comp, row, col, rows, cols);
+      soldier_render_anim.shield_formation_pose =
+          shared_guard_shield_pose(unit_comp,
+                                   visual_spec,
+                                   formation_mode,
+                                   guard_mode_comp,
+                                   row,
+                                   col,
+                                   rows,
+                                   cols);
     }
     float const offset_x = layout.offset_x;
     float const offset_z = layout.offset_z;

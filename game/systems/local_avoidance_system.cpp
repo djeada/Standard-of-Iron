@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
@@ -49,15 +50,15 @@ auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint
   if (entity.has_component<Engine::Core::BuildingComponent>()) {
     return 4;
   }
-  auto* atk = entity.get_component<Engine::Core::AttackComponent>();
+  const auto* atk = entity.get_component<Engine::Core::AttackComponent>();
   if (atk != nullptr && atk->in_melee_lock) {
     return 3;
   }
-  auto* intent = entity.get_component<Engine::Core::MovementIntentComponent>();
+  const auto* intent = entity.get_component<Engine::Core::MovementIntentComponent>();
   if (intent != nullptr) {
     return intent->priority;
   }
-  auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
   if (movement != nullptr && movement->has_target) {
     return 1;
   }
@@ -112,10 +113,10 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
     circle.priority = compute_avoidance_priority(*entity);
 
-    std::size_t idx = circles.size();
+    std::size_t const idx = circles.size();
     circles.push_back(circle);
 
-    CellKey key = to_cell(circle.x, circle.z, inv_cell_size);
+    CellKey const key = to_cell(circle.x, circle.z, inv_cell_size);
     grid[key].push_back(idx);
   }
 
@@ -131,19 +132,19 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
       continue; // Only moving units get displaced
     }
 
-    CellKey center = to_cell(ci.x, ci.z, inv_cell_size);
+    CellKey const center = to_cell(ci.x, ci.z, inv_cell_size);
     float sep_x = 0.0F;
     float sep_z = 0.0F;
     int neighbor_count = 0;
 
     for (int dx = -1; dx <= 1; ++dx) {
       for (int dz = -1; dz <= 1; ++dz) {
-        CellKey neighbor_key{center.cx + dx, center.cz + dz};
+        CellKey const neighbor_key{center.cx + dx, center.cz + dz};
         auto it = grid.find(neighbor_key);
         if (it == grid.end()) {
           continue;
         }
-        for (std::size_t j : it->second) {
+        for (std::size_t const j : it->second) {
           if (j == i) {
             continue;
           }
@@ -156,11 +157,22 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
           ++total_neighbors_checked;
 
-          if (dist_sq < min_dist_sq && dist_sq > 1e-6F) {
-            float const dist = std::sqrt(dist_sq);
+          if (dist_sq < min_dist_sq) {
+            float dist = std::sqrt(std::max(dist_sq, 0.0F));
+            float nx = 0.0F;
+            float nz = 0.0F;
+            if (dist > 1e-6F) {
+              nx = ddx / dist;
+              nz = ddz / dist;
+            } else {
+              auto const seed =
+                  static_cast<std::uint32_t>((ci.id * 73856093U) ^ (cj.id * 19349663U));
+              float const angle = static_cast<float>(seed % 6283U) * 0.001F;
+              nx = std::cos(angle);
+              nz = std::sin(angle);
+              dist = 0.0F;
+            }
             float const overlap = min_dist - dist;
-            float const nx = ddx / dist;
-            float const nz = ddz / dist;
 
             // Higher priority units push more; lower priority yields more.
             float weight = 1.0F;

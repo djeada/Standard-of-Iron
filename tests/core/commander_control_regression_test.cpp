@@ -325,6 +325,77 @@ TEST(CommanderControlRegressionTest, FpvCommanderHitOverlayUsesRichDamageBurstDa
   EXPECT_TRUE(contains(damage_numbers_source, "killingBlow"));
 }
 
+TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentation) {
+  const auto root = find_repo_root();
+  const auto hud_source = read_text(root / "ui" / "qml" / "HUD.qml");
+  const auto commander_hud_source =
+      read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
+  const auto fpv_overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  ASSERT_FALSE(hud_source.empty());
+  ASSERT_FALSE(commander_hud_source.empty());
+  ASSERT_FALSE(fpv_overlay_source.empty());
+  ASSERT_FALSE(game_view_source.empty());
+
+  EXPECT_TRUE(contains(hud_source,
+                       "property bool commander_rpg_mode: typeof game !== "
+                       "'undefined' && game.control_mode === \"commander\" && "
+                       "game.game_mode === \"rpg\""));
+  EXPECT_TRUE(
+      contains(hud_source,
+               "property bool commander_rally_overlay_blocked: commander_rpg_mode && "
+               "typeof game !== 'undefined' && (game.cursor_mode === "
+               "\"place_commander_rally\" || game.cursor_mode === "
+               "\"place_barracks_rally\")"));
+  EXPECT_TRUE(contains(hud_source, "bottomInset: bottomPanel.height"));
+  EXPECT_TRUE(contains(hud_source,
+                       "visible: hud.commander_rpg_mode && "
+                       "!hud.commander_rally_overlay_blocked"));
+
+  EXPECT_TRUE(contains(game_view_source,
+                       "visible: typeof game !== 'undefined' && game.control_mode === "
+                       "\"commander\" && game.game_mode !== \"rpg\" && "
+                       "!game_view.is_rally_placement()"));
+
+  EXPECT_TRUE(contains(commander_hud_source,
+                       "readonly property bool fpv_mode: typeof game !== "
+                       "'undefined' && game.game_mode === \"rpg\""));
+  EXPECT_TRUE(contains(commander_hud_source,
+                       "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
+                       "qsTr(\"ABILITIES\")"));
+  EXPECT_TRUE(contains(commander_hud_source, "qsTr(\"[Space] Dodge  [Alt] Jump\")"));
+  EXPECT_TRUE(
+      contains(commander_hud_source, "qsTr(\"[Tab] Cycle Target  [C] Camera\")"));
+
+  EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
+  EXPECT_TRUE(
+      contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 28"));
+  EXPECT_TRUE(
+      contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 20"));
+}
+
+TEST(CommanderControlRegressionTest, CommanderRpgHudAddsModernCombatFeedbackEffects) {
+  const auto root = find_repo_root();
+  const auto fpv_overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
+  const auto damage_numbers_source =
+      read_text(root / "ui" / "qml" / "RpgDamageNumbers.qml");
+  ASSERT_FALSE(fpv_overlay_source.empty());
+  ASSERT_FALSE(damage_numbers_source.empty());
+
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: punishPulseRing"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: lockBrackets"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: finisherBurst"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: combatFrame"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: attackSweep"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: dodgeTrail"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: guardBreakShock"));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"F\""));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"1\""));
+  EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"2\""));
+  EXPECT_TRUE(contains(damage_numbers_source, "property real impactFlashOpacity"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: impactFlashDecay"));
+}
+
 TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGameplay) {
   const auto root = find_repo_root();
   const auto main_qml = read_text(root / "ui" / "qml" / "Main.qml");

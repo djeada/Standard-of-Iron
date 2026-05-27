@@ -31,6 +31,7 @@ add_executable(standard_of_iron_tests
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
+    core/audio_system_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
@@ -48,6 +49,7 @@ add_executable(standard_of_iron_tests
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/map_loader_test.cpp
+    map/map_transformer_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/mission_victory_rules_test.cpp
@@ -189,6 +191,7 @@ target_link_libraries(standard_of_iron_tests
         engine_core
         render_gl
         game_systems
+        audio_system
 )
 
 # Include directories
@@ -245,6 +248,7 @@ target_link_libraries(standard_of_iron_tests_subset
         engine_core
         render_gl
         game_systems
+        audio_system
 )
 target_include_directories(standard_of_iron_tests_subset
     PRIVATE

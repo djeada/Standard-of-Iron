@@ -18,12 +18,14 @@ struct AnimKey {
       Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
   bool finisher_attack{false};
+  ShieldFormationPose shield_formation_pose{ShieldFormationPose::None};
 
   bool operator==(const AnimKey& other) const {
     return state == other.state && combat_phase == other.combat_phase &&
            frame == other.frame && attack_family == other.attack_family &&
            attack_variant == other.attack_variant &&
-           finisher_attack == other.finisher_attack;
+           finisher_attack == other.finisher_attack &&
+           shield_formation_pose == other.shield_formation_pose;
   }
 };
 
@@ -36,6 +38,8 @@ struct AnimKeyHash {
     h ^=
         static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
     h ^= static_cast<std::size_t>(key.finisher_attack) + 0x9e3779b9 + (h << 6) +
+         (h >> 2);
+    h ^= static_cast<std::size_t>(key.shield_formation_pose) + 0x9e3779b9 + (h << 6) +
          (h >> 2);
     return h;
   }

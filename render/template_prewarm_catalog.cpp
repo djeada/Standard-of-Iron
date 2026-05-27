@@ -34,6 +34,17 @@ void push_anim_key(std::vector<AnimKey>& keys,
   keys.push_back(key);
 }
 
+void push_guard_key(std::vector<AnimKey>& keys,
+                    ShieldFormationPose pose,
+                    std::uint8_t frame) {
+  AnimKey key{};
+  key.state = PoseIntent::Hold;
+  key.combat_phase = CombatAnimPhase::Idle;
+  key.frame = frame;
+  key.shield_formation_pose = pose;
+  keys.push_back(key);
+}
+
 void add_state_frames(std::vector<AnimKey>& keys, PoseIntent state, int frame_step) {
   int const step = std::max(1, frame_step);
   for (int frame = 0; frame < static_cast<int>(k_anim_frame_count); frame += step) {
@@ -114,6 +125,12 @@ auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegist
   push_anim_key(catalog.core_keys, PoseIntent::Walk, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Run, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Hold, CombatAnimPhase::Idle, 0, 0);
+  for (ShieldFormationPose const pose : {ShieldFormationPose::GuardDefault,
+                                         ShieldFormationPose::RomanFront,
+                                         ShieldFormationPose::RomanTop,
+                                         ShieldFormationPose::CarthageFront}) {
+    push_guard_key(catalog.core_keys, pose, k_anim_frame_count - 1U);
+  }
   push_anim_key(catalog.core_keys, PoseIntent::Construct, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Healing, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(

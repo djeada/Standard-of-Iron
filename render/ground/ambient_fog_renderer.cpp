@@ -72,9 +72,8 @@ void AmbientFogRenderer::build_instances() {
     for (int row = 0; row < rows; ++row) {
       for (int col = 0; col < cols; ++col) {
         FogInstanceData inst;
-        inst.center = QVector3D(start_x + col * actual_step_x,
-                                k_fog_y,
-                                start_z + row * actual_step_z);
+        inst.center = QVector3D(
+            start_x + col * actual_step_x, k_fog_y, start_z + row * actual_step_z);
         inst.size = std::max(actual_step_x, actual_step_z) * 1.4F;
         inst.color = QVector3D(0.62F, 0.65F, 0.70F);
         inst.alpha = 0.18F + 0.22F * density;
