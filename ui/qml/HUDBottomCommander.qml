@@ -271,6 +271,7 @@ RowLayout {
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 4
+                visible: !bottomRoot.fpv_mode
 
                 Text {
                     text: qsTr("HP %1 / %2").arg(bottomRoot.status_value("health", 0)).arg(bottomRoot.status_value("max_health", 0))
