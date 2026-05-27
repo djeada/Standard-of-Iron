@@ -41,6 +41,19 @@ auto alternating_stake_color(const WallPalette& palette, int index) -> QVector3D
   return use_light ? palette.wood_light : palette.wood_mid;
 }
 
+auto span_stake_position(int index, int stake_count, bool connected_span) -> float {
+  if (!connected_span || stake_count <= 1) {
+    return (static_cast<float>(index) + 0.5F) / static_cast<float>(stake_count);
+  }
+
+  static constexpr float k_connected_start_t = 0.06F;
+  static constexpr float k_connected_end_t = 0.98F;
+  const float denom = static_cast<float>(stake_count - 1);
+  return k_connected_start_t +
+         ((k_connected_end_t - k_connected_start_t) *
+          (static_cast<float>(index) / denom));
+}
+
 void add_x_span(BuildingArchetypeDesc& desc,
                 const WallPalette& palette,
                 const WallGeometry& geometry,
@@ -48,6 +61,7 @@ void add_x_span(BuildingArchetypeDesc& desc,
                 float length,
                 bool capped_outer_end) {
   constexpr int k_stakes = 5;
+  const bool connected_span = !capped_outer_end;
   const float center_x = direction * (length * 0.5F);
 
   desc.add_box(QVector3D(center_x, geometry.lower_lashing_y, 0.0F),
@@ -67,7 +81,7 @@ void add_x_span(BuildingArchetypeDesc& desc,
                BuildingLODMask::Full);
 
   for (int i = 0; i < k_stakes; ++i) {
-    const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_stakes);
+    const float t = span_stake_position(i, k_stakes, connected_span);
     const float x = direction * (t * length);
     desc.add_box(QVector3D(x, geometry.stake_center_y, 0.0F),
                  QVector3D(geometry.x_stake_half_x,
@@ -103,6 +117,7 @@ void add_z_span(BuildingArchetypeDesc& desc,
                 float length,
                 bool capped_outer_end) {
   constexpr int k_stakes = 5;
+  const bool connected_span = !capped_outer_end;
   const float center_z = direction * (length * 0.5F);
 
   desc.add_box(QVector3D(0.0F, geometry.lower_lashing_y, center_z),
@@ -122,7 +137,7 @@ void add_z_span(BuildingArchetypeDesc& desc,
                BuildingLODMask::Full);
 
   for (int i = 0; i < k_stakes; ++i) {
-    const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_stakes);
+    const float t = span_stake_position(i, k_stakes, connected_span);
     const float z = direction * (t * length);
     desc.add_box(QVector3D(0.0F, geometry.stake_center_y, z),
                  QVector3D(geometry.z_stake_half_x,

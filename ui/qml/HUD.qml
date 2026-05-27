@@ -98,7 +98,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: hud.commander_rpg_mode ? Math.max(112, parent.height * 0.13) : Math.max(140, parent.height * 0.2)
+        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.15)) : Math.max(140, parent.height * 0.2)
+        clip: true
 
         Loader {
             id: bottomPanelLoader

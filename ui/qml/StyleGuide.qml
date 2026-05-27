@@ -156,6 +156,7 @@ QtObject {
             "defense_tower": "🏰",
             "wall": "🧱",
             "home": "🏠",
+            "marketplace": "🏪",
             "default": "👤"
         })
     readonly property var unit_icon_sources: ({
@@ -238,6 +239,11 @@ QtObject {
                     "default": root.icon_path("house_rome.png"),
                     "roman_republic": root.icon_path("house_rome.png"),
                     "carthage": root.icon_path("house_cartaghe.png")
+                }),
+            "marketplace": ({
+                    "default": root.icon_path("marketplace.png"),
+                    "roman_republic": root.icon_path("marketplace.png"),
+                    "carthage": root.icon_path("marketplace.png")
                 }),
             "default": ({
                     "default": ""

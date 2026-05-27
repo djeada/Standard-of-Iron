@@ -128,6 +128,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 
 #include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
+#include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
@@ -460,6 +461,8 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Creating QGuiApplication...";
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
 
   // Parse rendering CLI flags. We do this after QGuiApplication
   // construction so that Qt's own platform args (-platform, -style, …) are

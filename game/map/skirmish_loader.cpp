@@ -40,6 +40,7 @@
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
@@ -95,6 +96,7 @@ void SkirmishLoader::reset_game_state() {
   m_world.clear();
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
+  Game::Systems::MarketplaceSystem::instance().clear();
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();
