@@ -148,6 +148,7 @@ private:
       -> AudioResourceConfig;
   void evict_lowest_priority_sound_locked();
   auto get_effective_volume(AudioCategory category, float event_volume) const -> float;
+  void load_persisted_volumes();
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
   std::unordered_map<std::string, AudioResourceConfig> resource_configs;

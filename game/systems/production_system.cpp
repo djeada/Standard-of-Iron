@@ -536,6 +536,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               sp.spawn_type = Game::Units::SpawnType::WallSegment;
             } else if (builder_prod->product_type == "home") {
               sp.spawn_type = Game::Units::SpawnType::Home;
+            } else if (builder_prod->product_type == "marketplace") {
+              sp.spawn_type = Game::Units::SpawnType::Marketplace;
             } else {
               builder_prod->in_progress = false;
               builder_prod->time_remaining = 0.0F;

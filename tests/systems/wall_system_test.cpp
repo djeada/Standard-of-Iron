@@ -6,6 +6,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/map_transformer.h"
+#include "map/terrain_service.h"
 #include "systems/ai_system/ai_strategy.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/building_collision_registry.h"
@@ -29,6 +30,7 @@ protected:
   void SetUp() override {
     BuildingCollisionRegistry::instance().clear();
     PlayerResourceRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
     CommandService::initialize(8, 8);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
@@ -38,6 +40,7 @@ protected:
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
+    Game::Map::TerrainService::instance().clear();
     PlayerResourceRegistry::instance().clear();
     BuildingCollisionRegistry::instance().clear();
   }
@@ -109,6 +112,36 @@ TEST_F(WallMechanicsTest, WallSegmentUsesDedicatedFootprint) {
 
   EXPECT_FLOAT_EQ(size.width, 2.0F);
   EXPECT_FLOAT_EQ(size.depth, 2.0F);
+}
+
+TEST_F(WallMechanicsTest, PlacementAllowsSegmentBetweenAdjacentWalls) {
+  Engine::Core::World world;
+
+  const QVector3D left = CommandService::grid_to_world(Game::Systems::Point{2, 4});
+  const QVector3D right = CommandService::grid_to_world(Game::Systems::Point{6, 4});
+  make_wall(world, left.x(), 0.0F, left.z(), 1);
+  make_wall(world, right.x(), 0.0F, right.z(), 1);
+
+  const auto snapped = WallGridPosition{4, 4};
+  const auto validation =
+      WallNetworkService::validate_wall_segment_placement(world, snapped, true);
+
+  EXPECT_TRUE(validation.valid);
+  EXPECT_TRUE(validation.failure_reason.empty());
+}
+
+TEST_F(WallMechanicsTest, PlacementAllowsWallTouchingTowerSocket) {
+  Engine::Core::World world;
+
+  const QVector3D tower = CommandService::grid_to_world(Game::Systems::Point{6, 4});
+  make_tower(world, tower.x(), tower.z(), 1);
+
+  const auto snapped = WallGridPosition{4, 4};
+  const auto validation =
+      WallNetworkService::validate_wall_segment_placement(world, snapped, true);
+
+  EXPECT_TRUE(validation.valid);
+  EXPECT_TRUE(validation.failure_reason.empty());
 }
 
 TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle) {
