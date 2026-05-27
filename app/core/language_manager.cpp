@@ -8,6 +8,8 @@
 #include <qtmetamacros.h>
 #include <qtranslator.h>
 
+#include "user_settings.h"
+
 LanguageManager::LanguageManager(QObject* parent)
     : QObject(parent)
     , m_current_language("en")
@@ -18,9 +20,15 @@ LanguageManager::LanguageManager(QObject* parent)
 #define DEFAULT_LANG "en"
 #endif
 
-  QString const default_lang = QString(DEFAULT_LANG);
-  if (m_available_languages.contains(default_lang)) {
-    load_language(default_lang);
+  QString startup_language = QString(DEFAULT_LANG);
+  if (const auto saved_language = App::Core::UserSettings::load_language();
+      saved_language.has_value() &&
+      m_available_languages.contains(*saved_language)) {
+    startup_language = *saved_language;
+  }
+
+  if (m_available_languages.contains(startup_language)) {
+    load_language(startup_language);
   } else {
     load_language("en");
   }
@@ -47,17 +55,27 @@ void LanguageManager::set_language(const QString& language) {
 void LanguageManager::load_language(const QString& language) {
   QCoreApplication::removeTranslator(m_translator);
 
-  QString const qm_file =
-      QString(":/StandardOfIron/translations/app_%1.qm").arg(language);
+  const QStringList qm_files{
+      QString(":/StandardOfIron/translations/app_%1.qm").arg(language),
+      QString(":/translations/app_%1.qm").arg(language),
+      QString(":/translations/translations/app_%1.qm").arg(language),
+  };
 
-  if (m_translator->load(qm_file)) {
+  for (const QString& qm_file : qm_files) {
+    if (!m_translator->load(qm_file)) {
+      continue;
+    }
+
     QCoreApplication::installTranslator(m_translator);
     m_current_language = language;
+    App::Core::UserSettings::save_language(language);
     qInfo() << "Language changed to:" << language;
     emit language_changed();
-  } else {
-    qWarning() << "Failed to load translation file:" << qm_file;
+    return;
   }
+
+  qWarning() << "Failed to load translation file for language:" << language
+             << "candidates:" << qm_files;
 }
 
 auto LanguageManager::language_display_name(const QString& language) -> QString {

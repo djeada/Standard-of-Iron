@@ -806,7 +806,6 @@ Item {
             font.letterSpacing: 1.0
         }
     }
-
     // ─── Guard break warning ───
     Item {
         id: guardBreakWarning
