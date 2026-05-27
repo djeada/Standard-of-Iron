@@ -361,19 +361,26 @@ void AudioSystem::process_event(const AudioEvent& event) {
     break;
   }
   case AudioEventType::PLAY_MUSIC: {
-    std::lock_guard<std::mutex> const lock(resource_mutex);
-    if (m_music_player != nullptr) {
-      const std::string resource_id = resolve_resource_id_locked(event.resource_id);
-      AudioResourceConfig const config = get_resource_config_locked(resource_id);
-      float const effective_volume =
-          get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
-      (void)m_music_player->play(resource_id,
-                                 effective_volume,
-                                 true,
-                                 event.crossfade
-                                     ? Game::Audio::MusicTransition::Crossfade
-                                     : Game::Audio::MusicTransition::Immediate);
+    if (m_music_player == nullptr) {
+      break;
     }
+
+    std::string resource_id;
+    float effective_volume = AudioConstants::MIN_VOLUME;
+    {
+      std::lock_guard<std::mutex> const lock(resource_mutex);
+      resource_id = resolve_resource_id_locked(event.resource_id);
+      AudioResourceConfig const config = get_resource_config_locked(resource_id);
+      effective_volume =
+          get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
+    }
+
+    (void)m_music_player->play(resource_id,
+                               effective_volume,
+                               true,
+                               event.crossfade
+                                   ? Game::Audio::MusicTransition::Crossfade
+                                   : Game::Audio::MusicTransition::Immediate);
     break;
   }
   case AudioEventType::STOP_SOUND: {

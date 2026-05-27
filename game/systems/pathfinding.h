@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QVector3D>
 #include <queue>
 
 #include <array>
@@ -77,6 +78,9 @@ public:
   auto get_grid_offset_x() const -> float { return m_grid_offset_x; }
   auto get_grid_offset_z() const -> float { return m_grid_offset_z; }
 
+  auto world_to_grid(float world_x, float world_z) const -> Point;
+  auto grid_to_world(const Point& grid_pos) const -> QVector3D;
+
   void set_obstacle(int x, int y, bool is_obstacle);
   auto is_walkable(int x, int y) const -> bool;
   auto is_tree(int x, int y) const -> bool;
@@ -84,6 +88,16 @@ public:
   auto is_iron_ore(int x, int y) const -> bool;
   auto cell_value(int x, int y) const -> CellValue;
   auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
+  auto is_world_position_walkable(const QVector3D& world_position,
+                                  float unit_radius) const -> bool;
+  auto is_world_segment_walkable(const QVector3D& from,
+                                 const QVector3D& to,
+                                 float unit_radius) const -> bool;
+  auto path_waypoint_world_position(const Point& path_cell,
+                                    const QVector3D& formation_offset = {}) const
+      -> QVector3D;
+  auto project_world_position_to_traversal_corridor(
+      const QVector3D& world_position) const -> QVector3D;
 
   void update_navigation_grid();
 
@@ -128,6 +142,8 @@ private:
   auto resolve_walkable_endpoint(const Point& requested,
                                  float unit_radius,
                                  Point& resolved) const -> bool;
+  void
+  force_mandatory_traversal_cells_walkable(int min_x, int max_x, int min_z, int max_z);
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 

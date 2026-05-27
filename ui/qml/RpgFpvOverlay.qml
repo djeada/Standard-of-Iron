@@ -4,6 +4,7 @@ Item {
     id: root
     anchors.fill: parent
 
+    property real bottomInset: 0
     property var status: ({})
 
     function status_value(key, fallback) {
@@ -19,6 +20,23 @@ Item {
             return 0.0;
         }
         return Math.max(0.0, Math.min(1.0, Number(status_value(remainingKey, 0.0)) / total));
+    }
+
+    function attack_sweep_rotation(direction) {
+        switch (Number(direction)) {
+        case 0:
+            return -28;
+        case 1:
+            return 28;
+        case 2:
+            return -90;
+        case 3:
+            return 0;
+        case 4:
+            return 90;
+        default:
+            return 0;
+        }
     }
 
     Timer {
@@ -181,18 +199,299 @@ Item {
         }
     }
 
+    Rectangle {
+        id: combatEntryFlash
+        anchors.fill: parent
+        color: "#8bdcff"
+        opacity: 0.0
+        visible: opacity > 0.0
+    }
+
+    Item {
+        id: combatFrame
+        anchors.fill: parent
+        visible: root.status_value("locked_target_name", "") !== "" || root.status_value("is_attacking", false) === true || root.status_value("guard_active", false) === true
+        opacity: visible ? (0.22 + Math.min(0.16, Number(root.status_value("combo_step", 0)) * 0.04)) : 0.0
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            width: 4
+            height: 180
+            radius: 2
+            color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            width: 4
+            height: 180
+            radius: 2
+            color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: -54
+            width: 92
+            height: 2
+            radius: 1
+            rotation: -10
+            color: "#88f6f3e7"
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: 54
+            width: 92
+            height: 2
+            radius: 1
+            rotation: 10
+            color: "#88f6f3e7"
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: -54
+            width: 92
+            height: 2
+            radius: 1
+            rotation: 10
+            color: "#88f6f3e7"
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: 54
+            width: 92
+            height: 2
+            radius: 1
+            rotation: -10
+            color: "#88f6f3e7"
+        }
+    }
+
+    Item {
+        id: attackSweep
+        anchors.centerIn: parent
+        width: 240
+        height: 240
+        opacity: 0.0
+        visible: opacity > 0.0
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 164
+            height: 6
+            radius: 3
+            rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0))
+            color: "#d7ffd28a"
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 108
+            height: 2
+            radius: 1
+            rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0)) + 90
+            color: "#99ffffff"
+        }
+    }
+
+    Item {
+        id: dodgeTrail
+        anchors.fill: parent
+        opacity: 0.0
+        visible: opacity > 0.0
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 72
+            anchors.verticalCenter: parent.verticalCenter
+            width: 180
+            height: 6
+            radius: 3
+            rotation: -20
+            color: "#88b8fff6"
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: 72
+            anchors.verticalCenter: parent.verticalCenter
+            width: 180
+            height: 6
+            radius: 3
+            rotation: 20
+            color: "#88b8fff6"
+        }
+    }
+
+    Rectangle {
+        id: guardBreakShock
+        anchors.fill: parent
+        color: "#ff6a36"
+        opacity: 0.0
+        visible: opacity > 0.0
+    }
+
+    Item {
+        id: punishPulseRing
+        anchors.centerIn: parent
+        width: 136
+        height: 136
+        visible: root.status_value("punish_active", false) === true
+        opacity: visible ? 0.7 : 0.0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.width: 2
+            border.color: "#99ffc84a"
+        }
+
+        SequentialAnimation on scale  {
+            running: punishPulseRing.visible
+            loops: Animation.Infinite
+            NumberAnimation {
+                from: 0.86
+                to: 1.05
+                duration: 320
+                easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                from: 1.05
+                to: 0.94
+                duration: 420
+                easing.type: Easing.InOutQuad
+            }
+        }
+    }
+
+    Item {
+        id: lockBrackets
+        anchors.centerIn: parent
+        width: 92
+        height: 92
+        visible: root.status_value("locked_target_name", "") !== ""
+        opacity: visible ? 0.92 : 0.0
+
+        Repeater {
+            model: [{
+                    "x": 0,
+                    "y": 0,
+                    "hAnchor": "left",
+                    "vAnchor": "top"
+                }, {
+                    "x": lockBrackets.width - 18,
+                    "y": 0,
+                    "hAnchor": "right",
+                    "vAnchor": "top"
+                }, {
+                    "x": 0,
+                    "y": lockBrackets.height - 18,
+                    "hAnchor": "left",
+                    "vAnchor": "bottom"
+                }, {
+                    "x": lockBrackets.width - 18,
+                    "y": lockBrackets.height - 18,
+                    "hAnchor": "right",
+                    "vAnchor": "bottom"
+                }]
+
+            delegate: Item {
+                x: modelData.x
+                y: modelData.y
+                width: 18
+                height: 18
+
+                Rectangle {
+                    width: 18
+                    height: 3
+                    radius: 1.5
+                    color: "#d7d9f2ff"
+                    anchors.top: modelData.vAnchor === "top" ? parent.top : undefined
+                    anchors.bottom: modelData.vAnchor === "bottom" ? parent.bottom : undefined
+                }
+
+                Rectangle {
+                    width: 3
+                    height: 18
+                    radius: 1.5
+                    color: "#d7d9f2ff"
+                    anchors.left: modelData.hAnchor === "left" ? parent.left : undefined
+                    anchors.right: modelData.hAnchor === "right" ? parent.right : undefined
+                }
+            }
+        }
+    }
+
+    Item {
+        id: finisherBurst
+        anchors.centerIn: parent
+        width: 84
+        height: 84
+        visible: root.status_value("finisher_ready", false) === true
+        opacity: visible ? 0.9 : 0.0
+        property real spin: 0
+
+        NumberAnimation on spin  {
+            running: finisherBurst.visible
+            from: 0
+            to: 360
+            duration: 2600
+            loops: Animation.Infinite
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 58
+            height: 58
+            radius: 14
+            rotation: finisherBurst.spin
+            color: "transparent"
+            border.width: 2
+            border.color: "#d0ffd24a"
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 42
+            height: 42
+            radius: 12
+            rotation: -finisherBurst.spin * 0.7
+            color: "transparent"
+            border.width: 1
+            border.color: "#88fff0aa"
+        }
+    }
+
     // ─── Crosshair ───
     Item {
         id: crosshair
-        width: 48
-        height: 48
+        width: 58
+        height: 58
         anchors.centerIn: parent
-        opacity: root.status_value("guard_active", false) === true ? 0.35 : 0.90
+        opacity: root.status_value("guard_active", false) === true ? 0.4 : 0.96
 
-        // Combo-dependent crosshair color
         property int comboStep: Number(root.status_value("combo_step", 0))
-        property color crossColor: comboStep >= 3 ? "#ffcc00" : (comboStep >= 2 ? "#ff8844" : "#e0e0e0")
-        property real crossSize: comboStep >= 3 ? 1.2 : (comboStep >= 2 ? 1.1 : 1.0)
+        property bool finisherReady: root.status_value("finisher_ready", false) === true
+        property bool punishActive: root.status_value("punish_active", false) === true
+        property bool lockedOn: root.status_value("locked_target_name", "") !== ""
+        property color crossColor: finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (lockedOn ? "#bfe8ff" : "#f3efe6"))
+        property real crossSize: finisherReady ? 1.18 : (comboStep >= 2 ? 1.08 : 1.0)
 
         scale: crossSize
 
@@ -203,57 +502,62 @@ Item {
             }
         }
 
-        // Center dot
         Rectangle {
-            width: 5
-            height: 5
-            radius: 2.5
-            color: crosshair.crossColor
             anchors.centerIn: parent
+            width: 34
+            height: 34
+            radius: 17
+            color: "#18000000"
+            border.width: 1
+            border.color: "#30ffffff"
         }
 
-        // Top tick
+        Rectangle {
+            anchors.centerIn: parent
+            width: 7
+            height: 7
+            radius: 3.5
+            color: crosshair.crossColor
+        }
+
         Rectangle {
             width: 2
-            height: 12
+            height: 16
             color: crosshair.crossColor
-            opacity: 0.85
+            opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.verticalCenter
-            anchors.bottomMargin: 6
+            anchors.bottomMargin: 7
         }
 
-        // Bottom tick
         Rectangle {
             width: 2
-            height: 12
+            height: 16
             color: crosshair.crossColor
-            opacity: 0.85
+            opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.verticalCenter
-            anchors.topMargin: 6
+            anchors.topMargin: 7
         }
 
-        // Left tick
         Rectangle {
-            width: 12
+            width: 16
             height: 2
             color: crosshair.crossColor
-            opacity: 0.85
+            opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.horizontalCenter
-            anchors.rightMargin: 6
+            anchors.rightMargin: 7
         }
 
-        // Right tick
         Rectangle {
-            width: 12
+            width: 16
             height: 2
             color: crosshair.crossColor
-            opacity: 0.85
+            opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.horizontalCenter
-            anchors.leftMargin: 6
+            anchors.leftMargin: 7
         }
     }
 
@@ -261,18 +565,27 @@ Item {
     Item {
         id: healthBarContainer
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 72
+        anchors.bottomMargin: root.bottomInset + 28
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 320
-        height: 36
+        width: 352
+        height: 40
 
         // Background
         Rectangle {
             anchors.fill: parent
-            radius: 6
-            color: "#cc0a0a0a"
-            border.color: "#55888888"
+            radius: 10
+            color: "#d20a0b10"
+            border.color: "#55f0c58a"
             border.width: 1
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                height: parent.height * 0.5
+                radius: parent.radius
+                color: "#18ffffff"
+            }
         }
 
         // Delayed drain bar (shows recent damage)
@@ -284,8 +597,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: (parent.width - 8) * drainRatio
             height: parent.height - 8
-            radius: 4
-            color: "#884a0000"
+            radius: 6
+            color: "#885a0a0a"
 
             Behavior on width  {
                 NumberAnimation {
@@ -304,8 +617,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: (parent.width - 8) * hpRatio
             height: parent.height - 8
-            radius: 4
-            color: hpRatio > 0.55 ? "#dd22aa33" : (hpRatio > 0.28 ? "#ddcc8800" : "#ddcc2200")
+            radius: 6
+            color: hpRatio > 0.55 ? "#de2ecc6c" : (hpRatio > 0.28 ? "#decf9732" : "#dedc4a32")
 
             Behavior on width  {
                 NumberAnimation {
@@ -323,9 +636,9 @@ Item {
         // Health text
         Text {
             anchors.centerIn: parent
-            text: Number(root.status_value("health", 0)) + " / " + Number(root.status_value("max_health", 100))
+            text: "HP  " + Number(root.status_value("health", 0)) + " / " + Number(root.status_value("max_health", 100))
             color: "#ffffff"
-            font.pixelSize: 13
+            font.pixelSize: 14
             font.bold: true
             style: Text.Outline
             styleColor: "#88000000"
@@ -338,14 +651,14 @@ Item {
         anchors.top: healthBarContainer.bottom
         anchors.topMargin: 6
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 240
-        height: 14
+        width: 260
+        height: 16
 
         Rectangle {
             anchors.fill: parent
-            radius: 4
-            color: "#aa0a0a0a"
-            border.color: "#44888888"
+            radius: 5
+            color: "#b30a0a0d"
+            border.color: "#44bfe7d9"
             border.width: 1
         }
 
@@ -357,8 +670,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: (parent.width - 6) * stamRatio
             height: parent.height - 6
-            radius: 3
-            color: stamRatio > 0.30 ? "#cc44bb66" : "#cccc6622"
+            radius: 4
+            color: stamRatio > 0.30 ? "#cc3ad7a0" : "#cccf9732"
             opacity: stamRatio < 0.20 ? (0.5 + 0.5 * Math.sin(Date.now() * 0.008)) : 1.0
 
             Behavior on width  {
@@ -377,8 +690,8 @@ Item {
         Text {
             anchors.centerIn: parent
             text: "STAMINA"
-            color: "#aaffffff"
-            font.pixelSize: 8
+            color: "#cff7ffff"
+            font.pixelSize: 9
             font.bold: true
             font.letterSpacing: 1.5
             style: Text.Outline
@@ -448,8 +761,8 @@ Item {
         anchors.bottom: healthBarContainer.top
         anchors.bottomMargin: 6
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 200
-        height: 10
+        width: 216
+        height: 12
         visible: Number(root.status_value("posture_ratio", 0.0)) > 0.05
         opacity: visible ? 1.0 : 0.0
 
@@ -461,9 +774,9 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: 3
-            color: "#880a0a0a"
-            border.color: "#44aaaaaa"
+            radius: 4
+            color: "#900a0a0d"
+            border.color: "#44ffd18a"
             border.width: 1
         }
 
@@ -474,8 +787,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: (parent.width - 4) * postureRatio
             height: parent.height - 4
-            radius: 2
-            color: postureRatio > 0.75 ? "#ccff3300" : (postureRatio > 0.45 ? "#ccff8800" : "#ccffcc00")
+            radius: 3
+            color: postureRatio > 0.75 ? "#ccff5533" : (postureRatio > 0.45 ? "#ccff9b2e" : "#cce7d347")
 
             Behavior on width  {
                 NumberAnimation {
@@ -549,50 +862,62 @@ Item {
     Row {
         id: abilityCooldowns
         anchors.right: parent.right
-        anchors.rightMargin: 24
+        anchors.rightMargin: 28
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24
+        anchors.bottomMargin: root.bottomInset + 20
         spacing: 12
 
         Repeater {
             model: [{
                     "name": "BASH",
+                    "key": "F",
                     "cdKey": "shield_bash_cooldown_remaining",
                     "totalKey": "shield_bash_cooldown",
                     "readyKey": "shield_bash_ready"
                 }, {
                     "name": "RUSH",
+                    "key": "1",
                     "cdKey": "vanguard_rush_cooldown_remaining",
                     "totalKey": "vanguard_rush_cooldown",
                     "readyKey": "vanguard_rush_ready"
                 }, {
                     "name": "HEAL",
+                    "key": "2",
                     "cdKey": "second_wind_cooldown_remaining",
                     "totalKey": "second_wind_cooldown",
                     "readyKey": "second_wind_ready"
                 }]
 
             delegate: Item {
-                width: 52
-                height: 52
+                width: 64
+                height: 64
 
                 property bool isReady: root.status_value(modelData.readyKey, true) === true
                 property real cdRatio: root.cooldown_ratio(modelData.cdKey, modelData.totalKey)
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: 8
-                    color: parent.isReady ? "#44228844" : "#44220000"
+                    radius: 12
+                    color: parent.isReady ? "#5a1a3d22" : "#5a281312"
                     border.width: 2
-                    border.color: parent.isReady ? "#88aaffaa" : "#88886644"
+                    border.color: parent.isReady ? "#a0ffe0a6" : "#888c6d4e"
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    radius: 9
+                    color: "transparent"
+                    border.width: 1
+                    border.color: parent.isReady ? "#35ffffff" : "#22000000"
                 }
 
                 // Cooldown sweep
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 3
-                    radius: 6
-                    color: "#44000000"
+                    anchors.margins: 5
+                    radius: 9
+                    color: "#33000000"
                     clip: true
                     visible: !parent.isReady
 
@@ -600,17 +925,49 @@ Item {
                         anchors.bottom: parent.bottom
                         width: parent.width
                         height: parent.height * parent.parent.cdRatio
-                        color: "#66444444"
+                        color: "#7a4a3a30"
+                    }
+                }
+
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.topMargin: 6
+                    anchors.rightMargin: 6
+                    radius: 8
+                    color: parent.isReady ? "#d6f8e6a0" : "#88796c58"
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData.key
+                        color: "#1a120b"
+                        font.pixelSize: 10
+                        font.bold: true
                     }
                 }
 
                 Text {
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 11
                     text: modelData.name
                     color: parent.isReady ? "#eeffeeee" : "#88aaaaaa"
                     font.pixelSize: 9
                     font.bold: true
-                    font.letterSpacing: 0.5
+                    font.letterSpacing: 0.8
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 22
+                    text: parent.isReady ? "READY" : Math.ceil(Number(root.status_value(modelData.cdKey, 0.0))).toString()
+                    color: parent.isReady ? "#d2ffe7cb" : "#d2f5c88f"
+                    font.pixelSize: 8
+                    font.bold: true
+                    font.letterSpacing: 0.7
                 }
             }
         }
@@ -618,14 +975,54 @@ Item {
 
     // ─── Damage vignette trigger from health changes ───
     property real _prevHealth: -1.0
+    property bool _prevAttacking: false
+    property bool _prevGuardBroken: false
+    property bool _prevPerfectGuard: false
+    property bool _prevDodge: false
+    property bool _prevLockedTarget: false
     onStatusChanged: {
         var hp = Number(status_value("health_ratio", 1.0));
+        var attacking = root.status_value("is_attacking", false) === true;
+        var guardBroken = root.status_value("guard_broken", false) === true;
+        var perfectGuard = root.status_value("perfect_guard_active", false) === true;
+        var dodgeActive = root.status_value("dodge_active", false) === true;
+        var hasLockedTarget = root.status_value("locked_target_name", "") !== "";
         if (_prevHealth >= 0.0 && hp < _prevHealth) {
             var damage_severity = Math.min(1.0, (_prevHealth - hp) * 3.0);
             damageVignette.opacity = damage_severity * 0.8;
             damageDecay.restart();
         }
+        if (attacking && !_prevAttacking) {
+            attackSweep.opacity = 0.85;
+            attackSweepDecay.restart();
+            combatEntryFlash.color = hasLockedTarget ? "#79cfff" : "#ffb260";
+            combatEntryFlash.opacity = 0.18;
+            combatEntryDecay.restart();
+        }
+        if (perfectGuard && !_prevPerfectGuard) {
+            combatEntryFlash.color = "#bce7ff";
+            combatEntryFlash.opacity = 0.24;
+            combatEntryDecay.restart();
+        }
+        if (guardBroken && !_prevGuardBroken) {
+            guardBreakShock.opacity = 0.26;
+            guardBreakDecay.restart();
+        }
+        if (dodgeActive && !_prevDodge) {
+            dodgeTrail.opacity = 0.42;
+            dodgeTrailDecay.restart();
+        }
+        if (hasLockedTarget && !_prevLockedTarget) {
+            combatEntryFlash.color = "#8ad6ff";
+            combatEntryFlash.opacity = 0.14;
+            combatEntryDecay.restart();
+        }
         _prevHealth = hp;
+        _prevAttacking = attacking;
+        _prevGuardBroken = guardBroken;
+        _prevPerfectGuard = perfectGuard;
+        _prevDodge = dodgeActive;
+        _prevLockedTarget = hasLockedTarget;
     }
 
     Timer {
@@ -636,6 +1033,54 @@ Item {
             damageVignette.opacity = Math.max(0.0, damageVignette.opacity - 0.04);
             if (damageVignette.opacity <= 0.0) {
                 damageDecay.stop();
+            }
+        }
+    }
+
+    Timer {
+        id: combatEntryDecay
+        interval: 16
+        repeat: true
+        onTriggered: {
+            combatEntryFlash.opacity = Math.max(0.0, combatEntryFlash.opacity - 0.025);
+            if (combatEntryFlash.opacity <= 0.0) {
+                combatEntryDecay.stop();
+            }
+        }
+    }
+
+    Timer {
+        id: attackSweepDecay
+        interval: 16
+        repeat: true
+        onTriggered: {
+            attackSweep.opacity = Math.max(0.0, attackSweep.opacity - 0.05);
+            if (attackSweep.opacity <= 0.0) {
+                attackSweepDecay.stop();
+            }
+        }
+    }
+
+    Timer {
+        id: dodgeTrailDecay
+        interval: 16
+        repeat: true
+        onTriggered: {
+            dodgeTrail.opacity = Math.max(0.0, dodgeTrail.opacity - 0.04);
+            if (dodgeTrail.opacity <= 0.0) {
+                dodgeTrailDecay.stop();
+            }
+        }
+    }
+
+    Timer {
+        id: guardBreakDecay
+        interval: 16
+        repeat: true
+        onTriggered: {
+            guardBreakShock.opacity = Math.max(0.0, guardBreakShock.opacity - 0.03);
+            if (guardBreakShock.opacity <= 0.0) {
+                guardBreakDecay.stop();
             }
         }
     }

@@ -286,9 +286,6 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
   }
   if (Render::GL::guard_pose_amount(anim) > 0.0F && !has_locomotion &&
       !anim.is_attacking) {
-    if (spec.creature_asset_id == Render::Creature::Pipeline::k_humanoid_sword_asset) {
-      spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_asset;
-    }
     auto pose = anim.shield_formation_pose;
     if (pose == Render::GL::ShieldFormationPose::None) {
       pose = Render::GL::ShieldFormationPose::GuardDefault;

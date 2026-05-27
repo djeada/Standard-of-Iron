@@ -378,8 +378,8 @@ ApplicationWindow {
             mainWindow.sync_audio_context();
         }
         onCancelled: function () {
-            settingsPanel.visible = false;
             mainWindow.menu_visible = true;
+            settingsPanel.visible = false;
         }
     }
 
