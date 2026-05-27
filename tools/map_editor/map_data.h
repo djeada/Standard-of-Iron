@@ -186,9 +186,7 @@ public:
   void update_undead_zone(int index, const UndeadZoneElement& element);
   void remove_undead_zone(int index);
 
-  [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const {
-    return m_fog_zones;
-  }
+  [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const { return m_fog_zones; }
   void add_fog_zone(const FogZoneElement& element);
   void remove_fog_zone(int index);
 

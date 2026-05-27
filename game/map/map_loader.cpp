@@ -930,10 +930,8 @@ void read_fog_zones(const QJsonArray& arr,
 
     if (coord_sys == CoordSystem::Grid) {
       const float tile = std::max(min_tile_size, grid.tile_size);
-      zone.x =
-          (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
-      zone.z =
-          (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
+      zone.x = (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
+      zone.z = (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
       zone.width = raw_w * tile;
       zone.height = raw_h * tile;
     } else {

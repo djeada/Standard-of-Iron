@@ -887,6 +887,78 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
   nation_registry.clear();
 }
 
+TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation roman{};
+  roman.id = NationID::RomanRepublic;
+  roman.display_name = "Roman Republic";
+  roman.formation_type = Game::Systems::FormationType::Roman;
+  nation_registry.register_nation(std::move(roman));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity* swordsman = world.create_entity();
+  ASSERT_NE(swordsman, nullptr);
+  add_test_unit(*swordsman,
+                SpawnType::Knight,
+                NationID::RomanRepublic,
+                1,
+                "troops/roman/swordsman");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto swordsman_renderer = registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(swordsman_renderer));
+
+  Engine::Core::Entity runtime_entity(9005);
+  add_test_unit(runtime_entity,
+                SpawnType::Knight,
+                NationID::RomanRepublic,
+                1,
+                "troops/roman/swordsman");
+
+  Render::GL::AnimationInputs guard_anim{};
+  guard_anim.is_guarding = true;
+  guard_anim.guard_pose_progress = 1.0F;
+  guard_anim.shield_formation_pose = Render::GL::ShieldFormationPose::RomanFront;
+
+  renderer.rigged_mesh_cache().reset_frame_stats();
+
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
+  ctx.renderer_id = "troops/roman/swordsman";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.force_single_soldier = true;
+  ctx.has_variant_override = true;
+  ctx.variant_override = 0;
+  ctx.animation_override = &guard_anim;
+
+  swordsman_renderer(ctx, renderer);
+
+  const auto& stats = renderer.rigged_mesh_cache().frame_stats();
+  EXPECT_EQ(stats.misses, 0U);
+  EXPECT_GT(stats.hits, 0U);
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
 TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants) {
   using Game::Systems::NationID;
   using Game::Units::SpawnType;

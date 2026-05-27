@@ -5,8 +5,10 @@
 #include <qglobal.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -15,8 +17,10 @@
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
+#include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
 #include "../systems/owner_registry.h"
+#include "../systems/wall_network_service.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "core/entity.h"
@@ -30,6 +34,100 @@ namespace Game::Map {
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
 std::unordered_map<int, int> s_player_team_overrides;
+
+constexpr float k_runtime_grid_center_offset = 0.5F;
+
+auto runtime_grid_offset(int grid_size) -> float {
+  return -(static_cast<float>(grid_size) * k_runtime_grid_center_offset -
+           k_runtime_grid_center_offset);
+}
+
+auto runtime_world_to_grid(float world_coord, int grid_size) -> int {
+  return static_cast<int>(std::round(world_coord - runtime_grid_offset(grid_size)));
+}
+
+auto runtime_grid_to_world(int grid_coord, int grid_size) -> float {
+  return static_cast<float>(grid_coord) + runtime_grid_offset(grid_size);
+}
+
+auto effective_player_id_for_map_owner(int player_id) -> int {
+  if (!s_player_team_overrides.empty() && player_id != Game::Core::NEUTRAL_OWNER_ID &&
+      s_player_team_overrides.find(player_id) == s_player_team_overrides.end()) {
+    return Game::Core::NEUTRAL_OWNER_ID;
+  }
+  return player_id;
+}
+
+auto resolve_nation_id_for_map_owner(int effective_player_id,
+                                     const std::optional<Game::Systems::NationID>&
+                                         explicit_nation) -> Game::Systems::NationID {
+  if (explicit_nation.has_value()) {
+    return *explicit_nation;
+  }
+  if (const auto* nation =
+          Game::Systems::NationRegistry::instance().get_nation_for_player(
+              effective_player_id)) {
+    return nation->id;
+  }
+  return Game::Systems::NationRegistry::instance().default_nation_id();
+}
+
+auto resolve_nation_id_for_map_owner(int effective_player_id,
+                                     const QString& authored_nation)
+    -> Game::Systems::NationID {
+  if (!authored_nation.trimmed().isEmpty()) {
+    Game::Systems::NationID parsed_nation_id;
+    if (Game::Systems::try_parse_nation_id(authored_nation, parsed_nation_id)) {
+      return parsed_nation_id;
+    }
+    qWarning() << "MapTransformer: unknown nation" << authored_nation
+               << "- using owner/default nation";
+  }
+  return resolve_nation_id_for_map_owner(effective_player_id,
+                                         std::optional<Game::Systems::NationID>{});
+}
+
+auto spawn_map_unit(const Game::Units::SpawnParams& params,
+                    Engine::Core::World& world,
+                    const Game::Visuals::VisualCatalog* visuals,
+                    std::vector<Engine::Core::EntityID>* runtime_unit_ids = nullptr)
+    -> Engine::Core::Entity* {
+  if (!s_registry) {
+    qWarning() << "MapTransformer: no factory registry set; skipping spawn";
+    return nullptr;
+  }
+
+  auto obj = s_registry->create(params.spawn_type, world, params);
+  if (!obj) {
+    qWarning() << "MapTransformer: no factory for spawn type"
+               << Game::Units::spawn_typeToQString(params.spawn_type)
+               << "- skipping spawn at" << params.position.x() << params.position.z();
+    return nullptr;
+  }
+
+  if (runtime_unit_ids != nullptr) {
+    runtime_unit_ids->push_back(obj->id());
+  }
+
+  Engine::Core::Entity* e = world.get_entity(obj->id());
+  if (e == nullptr) {
+    return nullptr;
+  }
+
+  if (auto* r = e->get_component<Engine::Core::RenderableComponent>()) {
+    if (visuals != nullptr) {
+      Game::Visuals::VisualDef defv;
+      if (visuals->lookup(Game::Units::spawn_typeToString(params.spawn_type), defv)) {
+        Game::Visuals::apply_to_renderable(defv, *r);
+      }
+    }
+    if (r->color[0] == 0.0F && r->color[1] == 0.0F && r->color[2] == 0.0F) {
+      r->color[0] = r->color[1] = r->color[2] = 1.0F;
+    }
+  }
+
+  return e;
+}
 } // namespace
 
 void MapTransformer::setFactoryRegistry(
@@ -82,6 +180,20 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
+  for (const auto& building : def.buildings) {
+    if (building.player_id == Game::Core::NEUTRAL_OWNER_ID) {
+      continue;
+    }
+    unique_player_ids.insert(building.player_id);
+  }
+
+  for (const auto& wall : def.wall_lines) {
+    if (wall.player_id == Game::Core::NEUTRAL_OWNER_ID) {
+      continue;
+    }
+    unique_player_ids.insert(wall.player_id);
+  }
+
   for (int const player_id : unique_player_ids) {
     bool const has_team_override =
         (s_player_team_overrides.find(player_id) != s_player_team_overrides.end());
@@ -122,15 +234,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
   for (const auto& s : def.spawns) {
 
-    int effective_player_id = s.player_id;
-    if (!s_player_team_overrides.empty() &&
-        s.player_id != Game::Core::NEUTRAL_OWNER_ID) {
-      bool const player_in_config =
-          (s_player_team_overrides.find(s.player_id) != s_player_team_overrides.end());
-      if (!player_in_config) {
-        effective_player_id = Game::Core::NEUTRAL_OWNER_ID;
-      }
-    }
+    int const effective_player_id = effective_player_id_for_map_owner(s.player_id);
 
     float world_x = s.x;
     float world_z = s.z;
@@ -169,52 +273,17 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
 
     Engine::Core::Entity* e = nullptr;
-    if (s_registry) {
-      Game::Units::SpawnParams sp;
-      sp.position = QVector3D(world_x, 0.0F, world_z);
-      sp.player_id = effective_player_id;
-      sp.spawn_type = s.type;
-      sp.ai_controlled = !owner_registry.is_player(effective_player_id);
-      sp.max_population = s.max_population;
+    Game::Units::SpawnParams sp;
+    sp.position = QVector3D(world_x, 0.0F, world_z);
+    sp.player_id = effective_player_id;
+    sp.spawn_type = s.type;
+    sp.ai_controlled = !owner_registry.is_player(effective_player_id);
+    sp.max_population = s.max_population;
+    sp.nation_id = resolve_nation_id_for_map_owner(effective_player_id, s.nation);
 
-      if (s.nation.has_value()) {
-        sp.nation_id = s.nation.value();
-      } else if (const auto* nation =
-                     Game::Systems::NationRegistry::instance().get_nation_for_player(
-                         effective_player_id)) {
-        sp.nation_id = nation->id;
-      } else {
-        sp.nation_id = Game::Systems::NationRegistry::instance().default_nation_id();
-      }
-      auto obj = s_registry->create(s.type, world, sp);
-      if (obj) {
-        e = world.get_entity(obj->id());
-        rt.unit_ids.push_back(obj->id());
-      } else {
-        qWarning() << "MapTransformer: no factory for spawn type"
-                   << Game::Units::spawn_typeToQString(s.type) << "- skipping spawn at"
-                   << world_x << world_z;
-        continue;
-      }
-    } else {
-      qWarning() << "MapTransformer: no factory registry set; skipping spawn";
-      continue;
-    }
-
+    e = spawn_map_unit(sp, world, visuals, &rt.unit_ids);
     if (e == nullptr) {
       continue;
-    }
-
-    if (auto* r = e->get_component<Engine::Core::RenderableComponent>()) {
-      if (visuals != nullptr) {
-        Game::Visuals::VisualDef defv;
-        if (visuals->lookup(Game::Units::spawn_typeToString(s.type), defv)) {
-          Game::Visuals::apply_to_renderable(defv, *r);
-        }
-      }
-      if (r->color[0] == 0.0F && r->color[1] == 0.0F && r->color[2] == 0.0F) {
-        r->color[0] = r->color[1] = r->color[2] = 1.0F;
-      }
     }
 
     if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
@@ -223,6 +292,53 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
               << QVector3D(t->position.x, t->position.y, t->position.z)
               << "(coordSystem="
               << (def.coordSystem == CoordSystem::Grid ? "Grid" : "World") << ")";
+    }
+  }
+
+  for (const auto& building : def.buildings) {
+    Game::Units::SpawnType building_type;
+    if (!Game::Units::try_parse_spawn_type(building.type, building_type) ||
+        !Game::Units::is_building_spawn(building_type) ||
+        building_type == Game::Units::SpawnType::WallSegment) {
+      qWarning() << "MapTransformer: unsupported building type" << building.type
+                 << "- skipping authored building";
+      continue;
+    }
+
+    Game::Units::SpawnParams sp;
+    sp.position = QVector3D(building.x, 0.0F, building.z);
+    sp.player_id = effective_player_id_for_map_owner(building.player_id);
+    sp.spawn_type = building_type;
+    sp.ai_controlled = !owner_registry.is_player(sp.player_id);
+    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, building.nation);
+    spawn_map_unit(sp, world, visuals);
+  }
+
+  for (const auto& wall_line : def.wall_lines) {
+    Game::Units::SpawnParams sp;
+    sp.player_id = effective_player_id_for_map_owner(wall_line.player_id);
+    sp.spawn_type = Game::Units::SpawnType::WallSegment;
+    sp.ai_controlled = !owner_registry.is_player(sp.player_id);
+    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, wall_line.nation);
+
+    const auto snapped_start = Game::Systems::WallGridPosition{
+        .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            runtime_world_to_grid(wall_line.start.x(), def.grid.width)),
+        .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            runtime_world_to_grid(wall_line.start.z(), def.grid.height))};
+    const auto snapped_end = Game::Systems::WallGridPosition{
+        .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            runtime_world_to_grid(wall_line.end.x(), def.grid.width)),
+        .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            runtime_world_to_grid(wall_line.end.z(), def.grid.height))};
+
+    for (const auto& segment :
+         Game::Systems::WallNetworkService::build_axis_aligned_chain(snapped_start,
+                                                                     snapped_end)) {
+      sp.position = QVector3D(runtime_grid_to_world(segment.x, def.grid.width),
+                              0.0F,
+                              runtime_grid_to_world(segment.z, def.grid.height));
+      spawn_map_unit(sp, world, visuals);
     }
   }
 

@@ -7,6 +7,7 @@ RowLayout {
     id: bottomRoot
 
     readonly property var hs: StyleGuide.historical
+    readonly property bool fpv_mode: typeof game !== 'undefined' && game.game_mode === "rpg"
     property var commander_status: default_status()
 
     function default_status() {
@@ -44,6 +45,7 @@ RowLayout {
             "guard_broken": false,
             "finisher_ready": false,
             "camera_mode": "Chase",
+            "locked_target_name": "",
             "shield_bash_cooldown": 3.0,
             "shield_bash_cooldown_remaining": 0.0,
             "shield_bash_ready": true,
@@ -187,8 +189,8 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(260, bottomRoot.width * 0.3)
         Layout.fillHeight: true
-        color: hs.parchmentDark
-        border.color: hs.bronze
+        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
         border.width: 2
         radius: 6
 
@@ -269,6 +271,7 @@ RowLayout {
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 6
+                visible: !bottomRoot.fpv_mode
 
                 Text {
                     text: qsTr("Health %1 / %2").arg(bottomRoot.status_value("health", 0)).arg(bottomRoot.status_value("max_health", 0))
@@ -338,14 +341,76 @@ RowLayout {
                 }
             }
 
-            Text {
-                text: qsTr("State: %1").arg(bottomRoot.stance_label())
-                color: Theme.textSubLite
-                font.pointSize: 9
+            Flow {
+                Layout.fillWidth: true
+                visible: bottomRoot.fpv_mode
+                spacing: 6
+
+                Rectangle {
+                    radius: 12
+                    color: hs.parchmentLight
+                    border.color: hs.bronzeDeep
+                    border.width: 1
+                    height: 24
+                    width: stateChipText.implicitWidth + 20
+
+                    Text {
+                        id: stateChipText
+                        anchors.centerIn: parent
+                        text: bottomRoot.stance_label()
+                        color: Theme.textMain
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+                }
+
+                Rectangle {
+                    radius: 12
+                    color: hs.parchmentLight
+                    border.color: hs.bronzeDeep
+                    border.width: 1
+                    height: 24
+                    width: cameraChipText.implicitWidth + 20
+
+                    Text {
+                        id: cameraChipText
+                        anchors.centerIn: parent
+                        text: qsTr("%1 camera").arg(bottomRoot.status_value("camera_mode", qsTr("Chase")))
+                        color: Theme.textMain
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+                }
+
+                Rectangle {
+                    visible: bottomRoot.status_value("locked_target_name", "") !== ""
+                    radius: 12
+                    color: Qt.rgba(0.53, 0.22, 0.14, 0.92)
+                    border.color: hs.wax
+                    border.width: 1
+                    height: 24
+                    width: targetChipText.implicitWidth + 20
+
+                    Text {
+                        id: targetChipText
+                        anchors.centerIn: parent
+                        text: qsTr("Locked target")
+                        color: Theme.textMain
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+                }
             }
 
             Text {
-                text: bottomRoot.status_value("perfect_guard_active", false) ? qsTr("Perfect guard live") : (bottomRoot.status_value("finisher_ready", false) ? qsTr("Finisher primed") : qsTr("Camera: %1").arg(bottomRoot.status_value("camera_mode", qsTr("Chase"))))
+                text: bottomRoot.fpv_mode ? (bottomRoot.status_value("locked_target_name", "") !== "" ? qsTr("Locked on %1").arg(bottomRoot.status_value("locked_target_name", "")) : qsTr("Lead from the front and keep the line stable.")) : qsTr("State: %1").arg(bottomRoot.stance_label())
+                color: Theme.textSubLite
+                font.pointSize: 9
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                text: bottomRoot.status_value("perfect_guard_active", false) ? qsTr("Perfect guard live") : (bottomRoot.status_value("finisher_ready", false) ? qsTr("Finisher primed") : (bottomRoot.fpv_mode ? qsTr("Aura %1").arg(bottomRoot.status_value("aura_active", false) ? qsTr("empowers nearby troops") : qsTr("is recovering")) : qsTr("Camera: %1").arg(bottomRoot.status_value("camera_mode", qsTr("Chase")))))
                 color: Theme.textSubLite
                 font.pointSize: 9
                 wrapMode: Text.WordWrap
@@ -357,8 +422,8 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(300, bottomRoot.width * 0.36)
         Layout.fillHeight: true
-        color: hs.parchmentDark
-        border.color: hs.bronze
+        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
         border.width: 2
         radius: 6
 
@@ -368,7 +433,7 @@ RowLayout {
             spacing: 8
 
             Text {
-                text: qsTr("ABILITIES")
+                text: bottomRoot.fpv_mode ? qsTr("ORDERS") : qsTr("ABILITIES")
                 color: hs.bronze
                 font.pointSize: 10
                 font.bold: true
@@ -377,7 +442,7 @@ RowLayout {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: hs.parchmentLight
+                color: bottomRoot.fpv_mode ? "#e01b140e" : hs.parchmentLight
                 radius: 6
                 border.color: (bottomRoot.status_value("rally_placing", false) || bottomRoot.status_value("rally_in_progress", false) || bottomRoot.status_value("rally_has_flag", false)) ? hs.bronze : hs.bronzeDeep
                 border.width: 2
@@ -479,7 +544,7 @@ RowLayout {
 
                     RowLayout {
                         spacing: 6
-                        visible: bottomRoot.status_value("has_commander", false)
+                        visible: bottomRoot.status_value("has_commander", false) && !bottomRoot.fpv_mode
 
                         Text {
                             text: qsTr("Combo")
@@ -546,7 +611,7 @@ RowLayout {
 
                         delegate: ColumnLayout {
                             Layout.fillWidth: true
-                            visible: bottomRoot.status_value("has_commander", false)
+                            visible: bottomRoot.status_value("has_commander", false) && !bottomRoot.fpv_mode
                             spacing: 4
 
                             Text {
@@ -590,8 +655,8 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(240, bottomRoot.width * 0.24)
         Layout.fillHeight: true
-        color: hs.parchmentDark
-        border.color: hs.bronze
+        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
         border.width: 2
         radius: 6
 
@@ -601,39 +666,42 @@ RowLayout {
             spacing: 6
 
             Text {
-                text: qsTr("FPV CONTROLS")
+                text: qsTr("COMBAT CONTROLS")
                 color: hs.bronze
                 font.pointSize: 10
                 font.bold: true
             }
 
             Text {
-                text: qsTr("[LMB] Strike")
-                color: Theme.textMain
-                font.pointSize: 10
-            }
-
-            Text {
-                text: qsTr("[RMB] Guard")
-                color: Theme.textMain
-                font.pointSize: 10
-            }
-
-            Text {
-                text: qsTr("[WASD] Move  [Shift] Sprint")
-                color: Theme.textMain
-                font.pointSize: 10
-            }
-
-            Text {
-                text: qsTr("[1] Rush  [2] Second Wind  [F] Bash")
+                text: qsTr("[LMB] Strike  [RMB] Guard")
                 color: Theme.textMain
                 font.pointSize: 10
                 wrapMode: Text.WordWrap
             }
 
             Text {
-                text: qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")
+                text: qsTr("[WASD] Move  [Shift] Sprint")
+                color: Theme.textMain
+                font.pointSize: 10
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                text: qsTr("[Space] Dodge  [Alt] Jump")
+                color: Theme.textMain
+                font.pointSize: 10
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [C] Camera") : qsTr("[Tab] Cycle Target  [1] Rush  [2] Second Wind  [F] Bash")
+                color: Theme.textMain
+                font.pointSize: 10
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                text: bottomRoot.fpv_mode ? qsTr("[R] Rally Orders  [Enter] Return to RTS") : qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")
                 color: Theme.textMain
                 font.pointSize: 10
                 wrapMode: Text.WordWrap
@@ -644,7 +712,7 @@ RowLayout {
             }
 
             Text {
-                text: !bottomRoot.status_value("alive", false) ? qsTr("Commander unavailable") : (bottomRoot.status_value("rally_in_progress", false) ? qsTr("Rally autopilot engaged until the flag is planted") : qsTr("First-person command engaged"))
+                text: !bottomRoot.status_value("alive", false) ? qsTr("Commander unavailable") : (bottomRoot.status_value("rally_in_progress", false) ? qsTr("Rally autopilot engaged until the flag is planted") : (bottomRoot.fpv_mode ? qsTr("Combat HUD synced for close-quarters command") : qsTr("First-person command engaged")))
                 color: Theme.textSubLite
                 font.pointSize: 9
                 wrapMode: Text.WordWrap

@@ -160,6 +160,53 @@ TEST_F(CommandServiceTest, InfantryMovementPublishesWalkAnimationStateImmediatel
   EXPECT_FALSE(Render::Creature::is_running_animation(anim.movement_state));
 }
 
+TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  movement->has_target = true;
+  movement->target_x = 0.25F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 5.0F;
+  movement->goal_y = 0.0F;
+  movement->last_goal_x = movement->goal_x;
+  movement->last_goal_y = movement->goal_y;
+  movement->time_since_last_path_request = 0.0F;
+  movement->repath_cooldown = 0.3F;
+  movement->unstuck_cooldown = 0.4F;
+  movement->vx = 1.0F;
+
+  auto* motion = unit->add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
+  motion->source = Engine::Core::MotionPresentationSource::Navigation;
+  motion->has_navigation_intent = true;
+  motion->has_movement_target = true;
+  motion->speed = 1.0F;
+
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.update(0.1F);
+
+  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(movement->has_waypoints());
+  EXPECT_FALSE(movement->path_pending);
+  EXPECT_EQ(movement->pending_request_id, 0U);
+  EXPECT_FALSE(motion->has_locomotion());
+  EXPECT_TRUE(motion->is_idle_state());
+  EXPECT_EQ(motion->source, Engine::Core::MotionPresentationSource::None);
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = unit;
+  ctx.world = &world;
+  ctx.animation_time = 0.1F;
+  auto const anim = Render::GL::sample_anim_state(ctx);
+
+  EXPECT_FALSE(Render::Creature::is_moving_animation(anim.movement_state));
+}
+
 TEST_F(CommandServiceTest, AttackRangeDoesNotCancelNavigationMotionPresentation) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
@@ -261,6 +308,183 @@ TEST_F(CommandServiceTest, MovementSystemQueuesRecoveryMoveForNextTick) {
 
   EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
   EXPECT_TRUE(movement->path_pending || movement->has_target);
+}
+
+TEST_F(CommandServiceTest, ValidTileStuckMovementStartsSmoothPushAndKeepsOrder) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 6.0F;
+  movement->goal_y = 0.0F;
+  movement->last_position_x = transform->position.x;
+  movement->last_position_z = transform->position.z;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.0F);
+  movement_system.update(&world, 1.5F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_GT(movement->unstuck_push_seconds, 0.0F);
+  EXPECT_GT((movement->unstuck_push_vx * movement->unstuck_push_vx) +
+                (movement->unstuck_push_vz * movement->unstuck_push_vz),
+            0.0F);
+  EXPECT_FLOAT_EQ(transform->position.x, 0.0F);
+  EXPECT_FLOAT_EQ(transform->position.z, 0.0F);
+
+  movement_system.update(&world, 0.1F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_GT((transform->position.x * transform->position.x) +
+                (transform->position.z * transform->position.z),
+            0.0F);
+}
+
+TEST_F(CommandServiceTest,
+       RepeatedValidTileStuckMovementKeepsPushingInsteadOfCancelling) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 6.0F;
+  movement->goal_y = 0.0F;
+  movement->last_position_x = transform->position.x;
+  movement->last_position_z = transform->position.z;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.0F);
+  movement_system.update(&world, 1.5F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_GT(movement->unstuck_push_seconds, 0.0F);
+  movement->unstuck_push_seconds = 0.0F;
+  movement->unstuck_push_vx = 0.0F;
+  movement->unstuck_push_vz = 0.0F;
+
+  movement_system.update(&world, 1.5F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_FALSE(movement->path_pending);
+  EXPECT_GT(movement->unstuck_push_seconds, 0.0F);
+  EXPECT_GT((movement->unstuck_push_vx * movement->unstuck_push_vx) +
+                (movement->unstuck_push_vz * movement->unstuck_push_vz),
+            0.0F);
+}
+
+TEST_F(CommandServiceTest, NewGoalResetsMovementWatcherStuckTiming) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 6.0F;
+  movement->goal_y = 0.0F;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.0F);
+  movement_system.update(&world, 1.4F);
+
+  movement->target_x = 7.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 7.0F;
+  movement->goal_y = 0.0F;
+  movement_system.update(&world, 0.2F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_LT(movement->time_stuck, 1.5F);
+}
+
+TEST_F(CommandServiceTest, PendingPathRequestSurvivesBlockedFallbackSegment) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, -4.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  Game::Systems::Point const obstacle =
+      Game::Systems::CommandService::world_to_grid(0.0F, 0.0F);
+  pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
+
+  movement->has_target = true;
+  movement->target_x = 4.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 4.0F;
+  movement->goal_y = 0.0F;
+  movement->path_pending = true;
+  movement->pending_request_id = 123U;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.1F);
+
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_TRUE(movement->path_pending);
+  EXPECT_EQ(movement->pending_request_id, 123U);
+  EXPECT_TRUE(movement->path.empty());
+  EXPECT_FLOAT_EQ(movement->vx, 0.0F);
+  EXPECT_FLOAT_EQ(movement->vz, 0.0F);
+}
+
+TEST_F(CommandServiceTest, BlockedSegmentWaitsForRepathCooldownBeforeCancelling) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, -4.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  Game::Systems::Point const obstacle =
+      Game::Systems::CommandService::world_to_grid(0.0F, 0.0F);
+  pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
+
+  movement->has_target = true;
+  movement->target_x = 4.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 4.0F;
+  movement->goal_y = 0.0F;
+  movement->repath_cooldown = 0.2F;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.1F);
+
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_FALSE(movement->path_pending);
+  EXPECT_EQ(movement->pending_request_id, 0U);
+  EXPECT_TRUE(movement->path.empty());
+  EXPECT_GT(movement->repath_cooldown, 0.0F);
+  EXPECT_FLOAT_EQ(movement->vx, 0.0F);
+  EXPECT_FLOAT_EQ(movement->vz, 0.0F);
 }
 
 TEST_F(CommandServiceTest, FpvCommanderMoveIgnoresStaleRtsMeleeLockState) {
