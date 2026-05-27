@@ -59,10 +59,9 @@ void render_commander_auras(Renderer* renderer,
     float const radius = commander->aura_radius;
     float const intensity = 1.0F;
 
-    QVector3D const color =
-        unit_comp != nullptr
-            ? get_commander_aura_color(unit_comp->nation_id)
-            : QVector3D(1.0F, 0.7F, 0.2F);
+    QVector3D const color = unit_comp != nullptr
+                                ? get_commander_aura_color(unit_comp->nation_id)
+                                : QVector3D(1.0F, 0.7F, 0.2F);
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
   }

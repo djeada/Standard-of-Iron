@@ -39,31 +39,13 @@ constexpr int k_recovery_search_radius = 16;
 auto is_direct_path_walkable(const QVector3D& from,
                              const QVector3D& to,
                              float unit_radius) -> bool {
-  Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!CommandService::is_grid_walkable_for_radius(end_grid, unit_radius)) {
-    return false;
+  auto* pathfinder = CommandService::get_pathfinder();
+  if (pathfinder != nullptr) {
+    pathfinder->update_navigation_grid();
+    return pathfinder->is_world_segment_walkable(from, to, unit_radius);
   }
 
-  QVector3D const direction = to - from;
-  float const length = direction.length();
-  if (length < 0.5F) {
-    return true;
-  }
-
-  constexpr float sample_interval = 0.5F;
-  int const num_samples = static_cast<int>(length / sample_interval);
-
-  for (int i = 1; i <= num_samples; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
-    QVector3D const sample_pos = from + direction * t;
-    Point const sample_grid =
-        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!CommandService::is_grid_walkable_for_radius(sample_grid, unit_radius)) {
-      return false;
-    }
-  }
-
-  return true;
+  return CommandService::is_world_position_walkable_for_radius(to, unit_radius);
 }
 
 auto are_all_surrounding_cells_invalid(const Point& position,
@@ -147,6 +129,9 @@ void clear_pending_movement_state(Engine::Core::MovementComponent* movement_comp
   movement_component->clear_path();
   movement_component->vx = 0.0F;
   movement_component->vz = 0.0F;
+  movement_component->unstuck_push_seconds = 0.0F;
+  movement_component->unstuck_push_vx = 0.0F;
+  movement_component->unstuck_push_vz = 0.0F;
 }
 
 auto simple_grid_targets(Engine::Core::World& world,
@@ -251,11 +236,7 @@ auto CommandService::get_pathfinder() -> Pathfinding* {
 }
 auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
   if (s_pathfinder) {
-    int const grid_x =
-        static_cast<int>(std::round(world_x - s_pathfinder->get_grid_offset_x()));
-    int const grid_z =
-        static_cast<int>(std::round(world_z - s_pathfinder->get_grid_offset_z()));
-    return {grid_x, grid_z};
+    return s_pathfinder->world_to_grid(world_x, world_z);
   }
 
   return {static_cast<int>(std::round(world_x)), static_cast<int>(std::round(world_z))};
@@ -263,9 +244,7 @@ auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
 
 auto CommandService::grid_to_world(const Point& grid_pos) -> QVector3D {
   if (s_pathfinder) {
-    return {static_cast<float>(grid_pos.x) + s_pathfinder->get_grid_offset_x(),
-            0.0F,
-            static_cast<float>(grid_pos.y) + s_pathfinder->get_grid_offset_z()};
+    return s_pathfinder->grid_to_world(grid_pos);
   }
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
@@ -478,6 +457,14 @@ auto CommandService::try_queue_local_recovery_move(
   }
 
   QVector3D const safe_pos = grid_to_world(recovery_cell);
+  float const active_target_dx = safe_pos.x() - movement->target_x;
+  float const active_target_dz = safe_pos.z() - movement->target_y;
+  if (movement->has_target &&
+      active_target_dx * active_target_dx + active_target_dz * active_target_dz <=
+          same_target_threshold_sq) {
+    return false;
+  }
+
   clear_pending_movement_state(movement);
   movement->target_x = safe_pos.x();
   movement->target_y = safe_pos.z();
@@ -620,6 +607,19 @@ void CommandService::move_unit(Engine::Core::World& world,
         s_entity_to_request.erase(request_it);
       }
     }
+  }
+
+  float const previous_goal_dx = mv->goal_x - target_x;
+  float const previous_goal_dz = mv->goal_y - target_z;
+  if (previous_goal_dx * previous_goal_dx + previous_goal_dz * previous_goal_dz >
+      same_target_threshold_sq) {
+    mv->last_position_x = transform->position.x;
+    mv->last_position_z = transform->position.z;
+    mv->time_stuck = 0.0F;
+    mv->unstuck_cooldown = 0.0F;
+    mv->unstuck_push_seconds = 0.0F;
+    mv->unstuck_push_vx = 0.0F;
+    mv->unstuck_push_vz = 0.0F;
   }
 
   mv->goal_x = target_x;
@@ -1099,15 +1099,12 @@ void CommandService::move_group(Engine::Core::World& world,
 
   auto& leader = members[leader_index];
   QVector3D const leader_target = leader.target;
-  float const shared_path_radius = [&members, &leader_target]() -> float {
+  float const shared_path_radius = [&members]() -> float {
     float max_member_radius = k_unit_radius_threshold;
-    float max_offset = 0.0F;
     for (const auto& member : members) {
       max_member_radius = std::max(max_member_radius, member.unit_radius);
-      QVector3D const offset = member.target - leader_target;
-      max_offset = std::max(max_offset, offset.length());
     }
-    return max_member_radius + max_offset;
+    return max_member_radius;
   }();
 
   std::vector<MemberInfo*> units_needing_new_path;
@@ -1241,36 +1238,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
       continue;
     }
 
-    std::vector<Point> resolved_path = std::move(result.path);
-    if (resolved_path.empty() && request_info.options.group_move &&
-        s_pathfinder != nullptr) {
-      auto* leader_entity = world.get_entity(request_info.entity_id);
-      auto* leader_transform =
-          leader_entity != nullptr
-              ? leader_entity->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
-      if (leader_transform != nullptr) {
-        float relaxed_radius = get_unit_radius(world, request_info.entity_id);
-        for (auto member_id : request_info.group_members) {
-          relaxed_radius = std::max(relaxed_radius, get_unit_radius(world, member_id));
-        }
-
-        Point const start =
-            world_to_grid(leader_transform->position.x, leader_transform->position.z);
-        Point const end =
-            world_to_grid(request_info.target.x(), request_info.target.z());
-        auto bridge_path = s_pathfinder->find_path(start, end, relaxed_radius);
-        bool const path_uses_bridge =
-            std::any_of(bridge_path.begin(), bridge_path.end(), [](const Point& point) {
-              QVector3D const world_pos = grid_to_world(point);
-              return Game::Map::TerrainService::instance().is_on_bridge(world_pos.x(),
-                                                                        world_pos.z());
-            });
-        if (path_uses_bridge) {
-          resolved_path = std::move(bridge_path);
-        }
-      }
-    }
+    std::vector<Point> const resolved_path = std::move(result.path);
 
     const auto& path_points = resolved_path;
 
@@ -1377,17 +1345,12 @@ void CommandService::process_path_results(Engine::Core::World& world) {
       if (has_path) {
         movement_component->path.reserve(path_points.size() - 1);
         for (size_t idx = 1; idx < path_points.size(); ++idx) {
-          QVector3D const world_pos = grid_to_world(path_points[idx]);
-          QVector3D waypoint = world_pos;
-          if (auto const bridge_center =
-                  Game::Map::TerrainService::instance().get_bridge_traversal_position(
-                      world_pos.x(), world_pos.z());
-              bridge_center.has_value()) {
-            waypoint.setX(bridge_center->x());
-            waypoint.setZ(bridge_center->z());
+          QVector3D waypoint;
+          if (s_pathfinder != nullptr) {
+            waypoint =
+                s_pathfinder->path_waypoint_world_position(path_points[idx], offset);
           } else {
-            waypoint.setX(world_pos.x() + offset.x());
-            waypoint.setZ(world_pos.z() + offset.z());
+            waypoint = grid_to_world(path_points[idx]) + offset;
           }
           movement_component->path.emplace_back(waypoint.x(), waypoint.z());
         }
@@ -1590,7 +1553,7 @@ void CommandService::attack_target(Engine::Core::World& world,
       continue;
     }
 
-    QVector3D desired_pos =
+    QVector3D const desired_pos =
         (index < attack_grid.size()) ? attack_grid[index] : attack_center;
 
     CommandService::MoveOptions opts;
