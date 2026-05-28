@@ -50,7 +50,7 @@ auto home_palette_slots(const CarthagePalette& palette) -> std::array<QVector3D,
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
   CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
-  float const wall_height = 0.8F;
+  float const wall_height = 0.9F;
   float height_multiplier = 1.0F;
 
   if (state == BuildingState::Damaged) {
@@ -61,53 +61,70 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   BuildingArchetypeDesc desc("carthage_home");
 
+  // == FOUNDATION: Heavy fortress-style stepped base ==
   desc.add_box(
-      QVector3D(0.0F, 0.10F, 0.0F), QVector3D(1.02F, 0.10F, 1.02F), c.stone_base);
+      QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.14F, 0.06F, 1.14F), c.stone_dark);
   desc.add_box(
-      QVector3D(0.0F, 0.22F, 0.0F), QVector3D(0.96F, 0.02F, 0.96F), c.stone_light);
+      QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.06F, 0.02F, 1.06F), c.stone_base);
+  desc.add_box(
+      QVector3D(0.0F, 0.18F, 0.0F), QVector3D(1.00F, 0.02F, 1.00F), c.stone_light);
 
-  float const wall_cy = wall_height * 0.5F * height_multiplier + 0.24F;
+  // == MAIN WALLS: Thick Punic brick with plaster ==
+  float const wall_cy = wall_height * 0.5F * height_multiplier + 0.20F;
   float const wall_hy = wall_height * 0.5F * height_multiplier;
   desc.add_box(
-      QVector3D(0.0F, wall_cy, -0.90F), QVector3D(0.85F, wall_hy, 0.08F), c.brick);
+      QVector3D(0.0F, wall_cy, -0.92F), QVector3D(0.88F, wall_hy, 0.10F), c.brick);
   desc.add_box(
-      QVector3D(0.0F, wall_cy, 0.90F), QVector3D(0.85F, wall_hy, 0.08F), c.brick);
+      QVector3D(0.0F, wall_cy, 0.92F), QVector3D(0.88F, wall_hy, 0.10F), c.brick);
   desc.add_box(
-      QVector3D(-0.90F, wall_cy, 0.0F), QVector3D(0.08F, wall_hy, 0.80F), c.brick);
+      QVector3D(-0.92F, wall_cy, 0.0F), QVector3D(0.10F, wall_hy, 0.82F), c.brick);
   desc.add_box(
-      QVector3D(0.90F, wall_cy, 0.0F), QVector3D(0.08F, wall_hy, 0.80F), c.brick);
+      QVector3D(0.92F, wall_cy, 0.0F), QVector3D(0.10F, wall_hy, 0.82F), c.brick);
 
-  float const band_y = wall_height * 0.35F * height_multiplier + 0.24F;
-  desc.add_box(QVector3D(0.0F, band_y, -0.90F),
-               QVector3D(0.88F, 0.04F, 0.10F),
-               c.stone_light,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.0F, band_y, 0.90F),
-               QVector3D(0.88F, 0.04F, 0.10F),
-               c.stone_light,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.90F, band_y, 0.0F),
-               QVector3D(0.10F, 0.04F, 0.84F),
-               c.stone_light,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.90F, band_y, 0.0F),
-               QVector3D(0.10F, 0.04F, 0.84F),
-               c.stone_light,
-               k_building_state_mask_intact);
+  // == WALL BANDING: Horizontal stone courses (Punic masonry signature) ==
+  float const lower_band_y = wall_height * 0.25F * height_multiplier + 0.20F;
+  float const upper_band_y = wall_height * 0.65F * height_multiplier + 0.20F;
+  for (float const band_y : {lower_band_y, upper_band_y}) {
+    desc.add_box(QVector3D(0.0F, band_y, -0.92F),
+                 QVector3D(0.90F, 0.03F, 0.12F),
+                 c.stone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.0F, band_y, 0.92F),
+                 QVector3D(0.90F, 0.03F, 0.12F),
+                 c.stone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-0.92F, band_y, 0.0F),
+                 QVector3D(0.12F, 0.03F, 0.86F),
+                 c.stone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.92F, band_y, 0.0F),
+                 QVector3D(0.12F, 0.03F, 0.86F),
+                 c.stone_light,
+                 k_building_state_mask_intact);
+  }
 
+  // == CORNER TOWERS: Rectangular pilasters (Punic fortress motif) ==
   float const post_hy = wall_height * 0.5F * height_multiplier;
-  float const post_cy = post_hy + 0.24F;
-  for (float const px : {-0.92F, 0.92F}) {
-    for (float const pz : {-0.92F, 0.92F}) {
+  float const post_cy = post_hy + 0.20F;
+  for (float const px : {-0.96F, 0.96F}) {
+    for (float const pz : {-0.96F, 0.96F}) {
       desc.add_box(QVector3D(px, post_cy, pz),
-                   QVector3D(0.06F, post_hy, 0.06F),
+                   QVector3D(0.08F, post_hy + 0.04F, 0.08F),
                    c.stone_light,
                    k_building_state_mask_intact);
+      // Pilaster cap
+      desc.add_box(QVector3D(px, post_cy + post_hy + 0.06F, pz),
+                   QVector3D(0.10F, 0.03F, 0.10F),
+                   c.stone_dark,
+                   k_building_state_mask_intact,
+                   BuildingLODMask::Full);
     }
   }
 
-  desc.add_box(QVector3D(0.0F, 1.08F, 0.0F),
-               QVector3D(1.00F, 0.05F, 1.00F),
+  // == ROOF: Flat terracotta with parapets ==
+  float const roof_y = wall_height * height_multiplier + 0.24F;
+  desc.add_box(QVector3D(0.0F, roof_y, 0.0F),
+               QVector3D(1.02F, 0.05F, 1.02F),
                c.tile_red,
                k_building_state_mask_intact);
   add_tile_rows_z(
@@ -115,15 +132,16 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
         desc.add_box(
             center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
       },
-      1.13F,
-      -0.80F,
-      0.80F,
-      0.32F,
-      QVector3D(0.96F, 0.02F, 0.06F),
+      roof_y + 0.06F,
+      -0.82F,
+      0.82F,
+      0.28F,
+      QVector3D(0.98F, 0.02F, 0.05F),
       c.tile_dark);
 
-  float const parapet_y = 1.14F;
-  float const merlon_h = 0.12F;
+  // == MERLONS: Stepped battlements on all four sides (key Punic identifier) ==
+  float const parapet_y = roof_y + 0.08F;
+  float const merlon_h = 0.13F;
   auto add_merlon =
       [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
         desc.add_box(
@@ -131,120 +149,168 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
       };
   add_merlon_strip_x(add_merlon,
                      parapet_y,
-                     -0.92F,
-                     -0.54F,
-                     0.36F,
-                     4,
-                     QVector3D(0.14F, merlon_h, 0.10F),
+                     -0.94F,
+                     -0.68F,
+                     0.34F,
+                     5,
+                     QVector3D(0.12F, merlon_h, 0.08F),
                      c.brick);
   add_merlon_strip_x(add_merlon,
                      parapet_y,
-                     0.92F,
-                     -0.76F,
+                     0.94F,
+                     -0.68F,
                      0.34F,
-                     2,
-                     QVector3D(0.14F, merlon_h, 0.10F),
-                     c.brick);
-  add_merlon_strip_x(add_merlon,
-                     parapet_y,
-                     0.92F,
-                     0.42F,
-                     0.34F,
-                     2,
-                     QVector3D(0.14F, merlon_h, 0.10F),
+                     5,
+                     QVector3D(0.12F, merlon_h, 0.08F),
                      c.brick);
   add_merlon_strip_z(add_merlon,
-                     -0.92F,
+                     -0.94F,
                      parapet_y,
-                     -0.55F,
-                     0.55F,
-                     3,
-                     QVector3D(0.10F, merlon_h, 0.14F),
+                     -0.68F,
+                     0.34F,
+                     5,
+                     QVector3D(0.08F, merlon_h, 0.12F),
                      c.brick);
   add_merlon_strip_z(add_merlon,
-                     0.92F,
+                     0.94F,
                      parapet_y,
-                     -0.55F,
-                     0.55F,
-                     3,
-                     QVector3D(0.10F, merlon_h, 0.14F),
+                     -0.68F,
+                     0.34F,
+                     5,
+                     QVector3D(0.08F, merlon_h, 0.12F),
                      c.brick);
 
+  // == ENTRANCE: Monumental arched doorway ==
   desc.add_box(
-      QVector3D(0.0F, 0.46F, 0.95F), QVector3D(0.30F, 0.46F, 0.05F), c.wood_dark);
-
-  desc.add_box(QVector3D(0.0F, 0.93F, 0.96F),
-               QVector3D(0.34F, 0.04F, 0.06F),
+      QVector3D(0.0F, 0.44F, 0.97F), QVector3D(0.32F, 0.44F, 0.06F), c.wood_dark);
+  desc.add_box(QVector3D(0.0F, 0.92F, 0.98F),
+               QVector3D(0.36F, 0.05F, 0.08F),
                c.stone_light,
                BuildingStateMask::All,
                BuildingLODMask::Full);
+  // Door frame pillars
+  desc.add_box(QVector3D(-0.34F, 0.52F, 0.96F),
+               QVector3D(0.04F, 0.32F, 0.04F),
+               c.stone_light,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.34F, 0.52F, 0.96F),
+               QVector3D(0.04F, 0.32F, 0.04F),
+               c.stone_light,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
 
+  // == ENTRANCE STEPS ==
   desc.add_box(
-      QVector3D(0.0F, 0.13F, 1.04F), QVector3D(0.36F, 0.04F, 0.14F), c.stone_light);
+      QVector3D(0.0F, 0.10F, 1.06F), QVector3D(0.40F, 0.04F, 0.14F), c.stone_light);
+  desc.add_box(
+      QVector3D(0.0F, 0.16F, 1.02F), QVector3D(0.36F, 0.02F, 0.10F), c.stone_base);
 
-  for (float const xw : {-0.93F, 0.93F}) {
-    desc.add_box(QVector3D(xw, 0.60F, -0.30F),
-                 QVector3D(0.015F, 0.20F, 0.07F),
+  // == WINDOWS: Narrow arrow-slit style (fortress theme) ==
+  for (float const xw : {-0.95F, 0.95F}) {
+    desc.add_box(QVector3D(xw, 0.58F, -0.32F),
+                 QVector3D(0.015F, 0.22F, 0.06F),
                  c.wood_dark,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(xw, 0.60F, 0.30F),
-                 QVector3D(0.015F, 0.20F, 0.07F),
+    desc.add_box(QVector3D(xw, 0.58F, 0.32F),
+                 QVector3D(0.015F, 0.22F, 0.06F),
                  c.wood_dark,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    // Window lintels
+    desc.add_box(QVector3D(xw, 0.82F, -0.32F),
+                 QVector3D(0.02F, 0.03F, 0.09F),
+                 c.stone_light,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    desc.add_box(QVector3D(xw, 0.82F, 0.32F),
+                 QVector3D(0.02F, 0.03F, 0.09F),
+                 c.stone_light,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
   }
 
-  desc.add_box(QVector3D(0.0F, 0.25F, 0.0F),
-               QVector3D(0.58F, 0.005F, 0.58F),
+  // == INTERIOR COURTYARD: Visible cistern/well ==
+  desc.add_box(QVector3D(0.0F, 0.21F, 0.0F),
+               QVector3D(0.62F, 0.005F, 0.62F),
                c.stone_dark,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
-
-  desc.add_cylinder(QVector3D(0.0F, 0.24F, 0.0F),
-                    QVector3D(0.0F, 0.34F, 0.0F),
-                    0.15F,
+  desc.add_cylinder(QVector3D(0.0F, 0.22F, 0.0F),
+                    QVector3D(0.0F, 0.38F, 0.0F),
+                    0.18F,
                     c.stone_light,
                     k_building_state_mask_intact,
                     BuildingLODMask::Full);
-  desc.add_box(QVector3D(0.0F, 0.34F, 0.0F),
-               QVector3D(0.34F, 0.025F, 0.34F),
+  desc.add_box(QVector3D(0.0F, 0.39F, 0.0F),
+               QVector3D(0.22F, 0.02F, 0.22F),
                c.stone_base,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
+  // Courtyard basin (blue water)
+  desc.add_cylinder(QVector3D(0.0F, 0.24F, 0.0F),
+                    QVector3D(0.0F, 0.25F, 0.0F),
+                    0.14F,
+                    QVector3D(0.25F, 0.42F, 0.55F),
+                    k_building_state_mask_intact,
+                    BuildingLODMask::Full);
 
+  // == ROYAL PURPLE CLOTH: Draped over entrance (Carthaginian cultural marker) ==
   if (state != BuildingState::Destroyed) {
-    desc.add_box(QVector3D(0.0F, 0.76F, 1.02F),
-                 QVector3D(0.42F, 0.04F, 0.10F),
+    desc.add_box(QVector3D(0.0F, 0.78F, 1.04F),
+                 QVector3D(0.44F, 0.05F, 0.10F),
                  c.royal_purple,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(-0.34F, 0.60F, 0.98F),
-                 QVector3D(0.02F, 0.18F, 0.02F),
+    // Banner support poles
+    desc.add_box(QVector3D(-0.38F, 0.62F, 1.00F),
+                 QVector3D(0.02F, 0.20F, 0.02F),
                  c.wood_dark,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.34F, 0.60F, 0.98F),
-                 QVector3D(0.02F, 0.18F, 0.02F),
+    desc.add_box(QVector3D(0.38F, 0.62F, 1.00F),
+                 QVector3D(0.02F, 0.20F, 0.02F),
                  c.wood_dark,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.0F, 1.32F, -0.08F),
-                 QVector3D(0.24F, 0.10F, 0.24F),
+
+    // == WATCHTOWER: Small elevated lookout on roof (fortress identity) ==
+    desc.add_box(QVector3D(0.0F, roof_y + 0.22F, -0.10F),
+                 QVector3D(0.26F, 0.12F, 0.26F),
                  c.stone_light,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
+    desc.add_box(QVector3D(0.0F, roof_y + 0.38F, -0.10F),
+                 QVector3D(0.22F, 0.04F, 0.22F),
+                 c.tile_red,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
     if (state == BuildingState::Normal) {
-      desc.add_box(QVector3D(0.0F, 1.46F, -0.08F),
-                   QVector3D(0.10F, 0.06F, 0.10F),
+      // Lookout pinnacle
+      desc.add_box(QVector3D(0.0F, roof_y + 0.46F, -0.10F),
+                   QVector3D(0.08F, 0.06F, 0.08F),
                    c.royal_purple,
                    BuildingStateMask::Normal,
                    BuildingLODMask::Full);
     }
   }
 
-  desc.add_palette_box(QVector3D(0.0F, 0.78F, 0.99F),
-                       QVector3D(0.28F, 0.10F, 0.02F),
+  // == BACK WALL DETAIL: Recessed niche (Punic religious motif) ==
+  desc.add_box(QVector3D(0.0F, 0.52F, -0.94F),
+               QVector3D(0.22F, 0.28F, 0.02F),
+               c.stone_dark,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, 0.82F, -0.94F),
+               QVector3D(0.26F, 0.04F, 0.03F),
+               c.stone_light,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+
+  // == TEAM COLOR BANNER ==
+  desc.add_palette_box(QVector3D(0.0F, 0.80F, 1.01F),
+                       QVector3D(0.30F, 0.12F, 0.02F),
                        k_home_team_slot,
                        BuildingStateMask::All,
                        BuildingLODMask::Full);
