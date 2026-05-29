@@ -7,7 +7,7 @@
 namespace Render::Creature::Bpat {
 
 inline constexpr std::array<std::uint8_t, 4> k_magic{'B', 'P', 'A', 'T'};
-inline constexpr std::uint32_t k_version = 1U;
+inline constexpr std::uint32_t k_version = 2U;
 
 inline constexpr std::uint32_t k_species_humanoid = 0U;
 inline constexpr std::uint32_t k_species_horse = 1U;
@@ -48,10 +48,15 @@ struct BpatClipEntry {
   float fps;
   std::uint8_t loops;
   std::uint8_t pad[3];
-  std::uint32_t reserved[2];
+  // Authored animation markers as normalized clip phase in [0,1]; -1 means unset.
+  float marker_anticipation_start;
+  float marker_weapon_release;
+  float marker_contact;
+  float marker_recover_unlocked;
+  float marker_exit_safe;
 };
 
-static_assert(sizeof(BpatClipEntry) == 32, "BpatClipEntry must be exactly 32 bytes");
+static_assert(sizeof(BpatClipEntry) == 44, "BpatClipEntry must be exactly 44 bytes");
 
 struct BpatSocketEntry {
   std::uint32_t name_offset;

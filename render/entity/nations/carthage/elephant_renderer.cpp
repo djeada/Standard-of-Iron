@@ -11,7 +11,6 @@
 #include "../../../creature/anatomy_bake.h"
 #include "../../../creature/pipeline/creature_prepared_state.h"
 #include "../../../elephant/elephant_renderer_base.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/humanoid/animation/animation_inputs.h"
 #include "../../../gl/humanoid/humanoid_types.h"
@@ -20,6 +19,7 @@
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -90,7 +90,7 @@ void register_elephant_renderer(EntityRendererRegistry& registry) {
                                        p.entity, seed, fabric_base, metal_base)
                                        .profile;
 
-        AnimationInputs anim =
+        AnimationInputs const anim =
             Render::Creature::Pipeline::resolve_elephant_animation_state(p).inputs;
 
         static_renderer.render(p, anim, profile, nullptr, nullptr, out);

@@ -22,8 +22,7 @@ LanguageManager::LanguageManager(QObject* parent)
 
   QString startup_language = QString(DEFAULT_LANG);
   if (const auto saved_language = App::Core::UserSettings::load_language();
-      saved_language.has_value() &&
-      m_available_languages.contains(*saved_language)) {
+      saved_language.has_value() && m_available_languages.contains(*saved_language)) {
     startup_language = *saved_language;
   }
 

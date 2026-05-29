@@ -9,6 +9,7 @@
 
 #include "../creature/animation_state_components.h"
 #include "../creature/movement_animation.h"
+#include "../creature/quadruped/gait.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "dimensions.h"
 #include "elephant_spec.h"
@@ -26,68 +27,41 @@ constexpr float k_idle_lag_damping = 0.86F;
 constexpr float k_position_phase_desync_x = 0.173F;
 constexpr float k_position_phase_desync_z = 0.127F;
 
-inline auto swing_ease(float t) -> float {
-  return t * t * (3.0F - 2.0F * t);
+namespace Quadruped = Render::Creature::Quadruped;
+
+[[nodiscard]] auto
+to_quadruped_dimensions(const ElephantDimensions& d) noexcept -> Quadruped::Dimensions {
+  Quadruped::Dimensions dims{};
+  dims.body_width = d.body_width;
+  dims.body_height = d.body_height;
+  dims.body_length = d.body_length;
+  dims.barrel_center_y = d.barrel_center_y;
+  dims.leg_length = d.leg_length;
+  dims.leg_radius = d.leg_radius;
+  dims.neck_length = d.neck_length;
+  dims.head_width = d.head_width;
+  dims.head_height = d.head_height;
+  dims.head_length = d.head_length;
+  dims.appendage_length = d.trunk_length;
+  dims.appendage_base_radius = d.trunk_base_radius;
+  dims.appendage_tip_radius = d.trunk_tip_radius;
+  dims.idle_bob_amplitude = d.idle_bob_amplitude;
+  dims.move_bob_amplitude = d.move_bob_amplitude;
+  return dims;
 }
 
-inline auto swing_arc(float t) -> float {
-  return 4.0F * t * (1.0F - t);
+[[nodiscard]] constexpr auto
+to_quadruped_leg(int leg_index) noexcept -> Quadruped::LegId {
+  return static_cast<Quadruped::LegId>(leg_index);
 }
 
-inline auto normalized_locomotion_intensity(
-    Render::Creature::MovementAnimationState movement_animation,
-    const ElephantGait& g) -> float {
-  if (!Render::Creature::is_moving_animation(movement_animation)) {
-    return 0.0F;
-  }
-  float const stride_swing = std::clamp(g.stride_swing, 0.0F, 1.0F);
-  float const stride_lift = std::clamp(g.stride_lift * 2.2F, 0.0F, 1.0F);
-  float const locomotion_boost =
-      Render::Creature::is_running_animation(movement_animation) ? 0.22F : 0.0F;
-  return std::clamp(0.62F + stride_swing * 0.24F + stride_lift * 0.14F +
-                        locomotion_boost,
-                    0.0F,
-                    1.0F);
-}
-
-inline auto get_default_foot_position(const ElephantDimensions& d,
-                                      int leg_index,
-                                      const QVector3D& barrel_center) -> QVector3D {
-  bool const is_front = (leg_index < 2);
-  bool const is_left = (leg_index == 0 || leg_index == 2);
-  float const lateral_sign = is_left ? 1.0F : -1.0F;
-
-  float const forward_offset =
-      is_front ? d.body_length * 0.48F : -d.body_length * 0.48F;
-
-  QVector3D const hip = barrel_center + QVector3D(lateral_sign * d.body_width * 0.52F,
-                                                  -d.body_height * 0.42F,
-                                                  forward_offset);
-
-  return {hip.x(), 0.0F, hip.z()};
-}
-
-inline auto calculate_swing_target(const ElephantDimensions& d,
-                                   int leg_index,
-                                   const QVector3D& barrel_center,
-                                   float stride_length) -> QVector3D {
-  QVector3D const default_pos = get_default_foot_position(d, leg_index, barrel_center);
-
-  return default_pos + QVector3D(0.0F, 0.0F, stride_length);
-}
-
-inline auto body_sway_for_motion(bool is_moving,
-                                 float phase,
-                                 float time,
-                                 float locomotion_intensity,
-                                 float stride_swing) -> float {
-  if (!is_moving) {
-    return std::sin(time * 0.3F) * 0.008F;
-  }
-  float const primary = std::sin(phase * k_two_pi);
-  float const secondary = std::sin((phase + 0.17F) * 2.0F * k_two_pi) * 0.35F;
-  float const sway_scale = 0.008F + std::clamp(stride_swing, 0.0F, 1.0F) * 0.0035F;
-  return (primary + secondary) * sway_scale * (0.8F + locomotion_intensity);
+[[nodiscard]] constexpr auto
+elephant_motion_config() noexcept -> Quadruped::MotionConfig {
+  Quadruped::MotionConfig config{};
+  config.moving_bob_base_scale = 0.88F;
+  config.moving_bob_intensity_scale = 0.18F;
+  config.running_bob_scale = 1.0F;
+  return config;
 }
 
 } // namespace
@@ -131,21 +105,17 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
   sample.is_moving = Render::Creature::is_moving_animation(movement_animation);
   sample.is_fighting =
       anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
-  float const locomotion_intensity =
-      normalized_locomotion_intensity(movement_animation, g);
-  float const cycle_time = std::max(g.cycle_time, 0.001F);
-
-  if (sample.is_moving) {
-    float const cycle_progress = std::fmod(anim.time / cycle_time, 1.0F);
-    sample.phase = cycle_progress;
-    float const primary = std::sin(cycle_progress * k_two_pi);
-    float const secondary = std::sin((cycle_progress + 0.19F) * 2.0F * k_two_pi);
-    sample.bob = (primary * 0.70F + secondary * 0.30F) * d.move_bob_amplitude *
-                 (0.88F + locomotion_intensity * 0.18F);
-  } else {
-    sample.phase = std::fmod(anim.time * 0.3F, 1.0F);
-    sample.bob = std::sin(anim.time * 0.45F) * d.idle_bob_amplitude;
-  }
+  Quadruped::MotionSample const quadruped_motion = Quadruped::evaluate_cycle_motion(
+      to_quadruped_dimensions(d),
+      g,
+      anim.time,
+      sample.is_moving,
+      Render::Creature::is_running_animation(movement_animation),
+      sample.is_fighting,
+      elephant_motion_config());
+  float const locomotion_intensity = quadruped_motion.locomotion_intensity;
+  sample.phase = quadruped_motion.phase;
+  sample.bob = quadruped_motion.bob;
 
   float const trunk_primary = sample.is_moving
                                   ? std::sin((sample.phase + 0.11F) * k_two_pi) *
@@ -162,8 +132,7 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
   sample.ear_flap = sample.is_moving ? ear_base * (0.16F + locomotion_intensity * 0.08F)
                                      : ear_base * 0.10F;
 
-  sample.body_sway = body_sway_for_motion(
-      sample.is_moving, sample.phase, anim.time, locomotion_intensity, g.stride_swing);
+  sample.body_sway = quadruped_motion.body_sway;
 
   float const weight_transfer = std::sin((sample.phase + 0.20F) * k_two_pi);
   float const shoulder_settle =
@@ -229,12 +198,12 @@ void apply_howdah_vertical_offset(HowdahAttachmentFrame& frame, float bob) {
 auto evaluate_swing_position(const ElephantLegState& leg,
                              float lift_height) -> QVector3D {
   float const t = leg.swing_progress;
-  float const eased_t = swing_ease(t);
+  float const eased_t = Quadruped::swing_ease(t, false);
 
   QVector3D const horizontal =
       leg.swing_start * (1.0F - eased_t) + leg.swing_target * eased_t;
 
-  float const lift = swing_arc(t) * lift_height;
+  float const lift = Quadruped::swing_arc(t, false) * lift_height;
 
   return {horizontal.x(), horizontal.y() + lift, horizontal.z()};
 }
@@ -305,14 +274,14 @@ auto get_leg_phase_offset(int leg_index) -> float {
 auto is_leg_in_swing(float cycle_phase, int leg_index) -> bool {
   using namespace GaitSystemConstants;
   float const leg_phase =
-      std::fmod(cycle_phase - get_leg_phase_offset(leg_index) + 1.0F, 1.0F);
+      Quadruped::wrap_phase(cycle_phase - get_leg_phase_offset(leg_index));
   return leg_phase < k_swing_duration;
 }
 
 auto get_swing_progress(float cycle_phase, int leg_index) -> float {
   using namespace GaitSystemConstants;
   float const leg_phase =
-      std::fmod(cycle_phase - get_leg_phase_offset(leg_index) + 1.0F, 1.0F);
+      Quadruped::wrap_phase(cycle_phase - get_leg_phase_offset(leg_index));
   if (leg_phase < k_swing_duration) {
     return leg_phase / k_swing_duration;
   }
@@ -334,15 +303,15 @@ void update_elephant_gait(ElephantGaitState& state,
   float const locomotion_scale =
       Render::Creature::is_running_animation(movement_animation) ? 1.18F : 1.0F;
   float const position_phase_offset =
-      std::fmod(body_world_pos.x() * k_position_phase_desync_x +
-                    body_world_pos.z() * k_position_phase_desync_z,
-                1.0F);
+      Quadruped::wrap_phase(body_world_pos.x() * k_position_phase_desync_x +
+                            body_world_pos.z() * k_position_phase_desync_z);
   float const forward_alignment = std::clamp(std::abs(body_forward_z), 0.2F, 1.0F);
 
   if (!state.initialized) {
     QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
     for (int i = 0; i < 4; ++i) {
-      state.legs[i].planted_foot = get_default_foot_position(d, i, barrel_center);
+      state.legs[i].planted_foot = Quadruped::default_foot_position(
+          to_quadruped_dimensions(d), to_quadruped_leg(i), barrel_center);
       state.legs[i].swing_start = state.legs[i].planted_foot;
       state.legs[i].swing_target = state.legs[i].planted_foot;
       state.legs[i].in_swing = false;
@@ -353,7 +322,7 @@ void update_elephant_gait(ElephantGaitState& state,
 
   if (is_moving) {
     state.cycle_phase =
-        std::fmod(anim.time / cycle_time + position_phase_offset + 1.0F, 1.0F);
+        Quadruped::wrap_phase(anim.time / cycle_time + position_phase_offset);
   } else {
 
     state.cycle_phase = 0.0F;
@@ -377,7 +346,14 @@ void update_elephant_gait(ElephantGaitState& state,
       if (!leg.in_swing) {
 
         leg.swing_start = leg.planted_foot;
-        leg.swing_target = calculate_swing_target(d, i, barrel_center, stride_length);
+        leg.swing_target = Quadruped::swing_target(to_quadruped_dimensions(d),
+                                                   to_quadruped_leg(i),
+                                                   barrel_center,
+                                                   stride_length,
+                                                   0.52F,
+                                                   0.42F,
+                                                   0.48F,
+                                                   false);
         leg.in_swing = true;
       }
       leg.swing_progress = swing_progress;

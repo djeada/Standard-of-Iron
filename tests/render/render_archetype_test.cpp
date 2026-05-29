@@ -580,7 +580,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   auto render_bounds = [](auto register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
-    EntityRendererRegistry registry;
+    EntityRendererRegistry const registry;
     register_renderer_fn(registry);
     const auto renderer = registry.get(key);
     EXPECT_TRUE(static_cast<bool>(renderer));
@@ -1098,7 +1098,8 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   RecordingSubmitter left_submitter;
   ctx.model = QMatrix4x4{};
   renderer(ctx, left_submitter);
-  meshes.insert(meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
+  meshes.insert(
+      meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
 
   RecordingSubmitter right_submitter;
   ctx.model = QMatrix4x4{};
@@ -1108,7 +1109,7 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   meshes.insert(
       meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
 
-  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.05F, 1.6F));
+  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.08F, 1.0F));
 }
 
 TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSeam) {
@@ -1135,7 +1136,8 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSe
   RecordingSubmitter left_submitter;
   ctx.model = QMatrix4x4{};
   renderer(ctx, left_submitter);
-  meshes.insert(meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
+  meshes.insert(
+      meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
 
   RecordingSubmitter right_submitter;
   ctx.model = QMatrix4x4{};

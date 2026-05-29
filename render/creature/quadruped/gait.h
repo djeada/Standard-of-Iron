@@ -18,8 +18,16 @@ struct Gait {
 struct MotionConfig {
   float idle_phase_speed{0.30F};
   float idle_bob_frequency{0.45F};
+  float cycle_time_floor{0.001F};
+  float moving_primary_weight{0.70F};
   float moving_secondary_phase{0.19F};
+  float moving_secondary_frequency{2.0F};
   float moving_secondary_weight{0.30F};
+  float moving_tertiary_phase{0.0F};
+  float moving_tertiary_frequency{1.0F};
+  float moving_tertiary_weight{0.0F};
+  float moving_bob_base_scale{1.0F};
+  float moving_bob_intensity_scale{0.0F};
   float running_bob_scale{1.10F};
 
   float stride_lift_intensity_scale{2.20F};
@@ -49,8 +57,8 @@ struct MotionSample {
 };
 
 [[nodiscard]] auto wrap_phase(float phase) noexcept -> float;
-[[nodiscard]] auto swing_ease(float t) noexcept -> float;
-[[nodiscard]] auto swing_arc(float t) noexcept -> float;
+[[nodiscard]] auto swing_ease(float t, bool clamp_input = true) noexcept -> float;
+[[nodiscard]] auto swing_arc(float t, bool clamp_input = true) noexcept -> float;
 
 [[nodiscard]] auto
 locomotion_intensity(bool is_moving,
@@ -66,13 +74,15 @@ default_foot_position(const Dimensions& dims,
                       float vertical_scale = 0.42F,
                       float fore_aft_scale = 0.48F) noexcept -> QVector3D;
 
-[[nodiscard]] auto swing_target(const Dimensions& dims,
-                                LegId leg,
-                                const QVector3D& barrel_center,
-                                float stride_length,
-                                float lateral_scale = 0.52F,
-                                float vertical_scale = 0.42F,
-                                float fore_aft_scale = 0.48F) noexcept -> QVector3D;
+[[nodiscard]] auto
+swing_target(const Dimensions& dims,
+             LegId leg,
+             const QVector3D& barrel_center,
+             float stride_length,
+             float lateral_scale = 0.52F,
+             float vertical_scale = 0.42F,
+             float fore_aft_scale = 0.48F,
+             bool mirror_stride_by_leg_side = true) noexcept -> QVector3D;
 
 [[nodiscard]] auto body_sway(bool is_moving,
                              float phase,

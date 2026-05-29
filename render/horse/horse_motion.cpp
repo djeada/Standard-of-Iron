@@ -8,10 +8,11 @@
 #include <numbers>
 
 #include "../creature/animation_state_components.h"
-#include "../creature/creature_math_utils.h"
+#include "../creature/quadruped/gait.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "dimensions.h"
 #include "horse_layout.h"
+#include "math/creature_math_utils.h"
 
 namespace Render::GL {
 
@@ -22,13 +23,7 @@ namespace {
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_epsilon = 1.0e-4F;
 
-auto wrap_phase(float phase) -> float {
-  phase = std::fmod(phase, 1.0F);
-  if (phase < 0.0F) {
-    phase += 1.0F;
-  }
-  return phase;
-}
+namespace Quadruped = Render::Creature::Quadruped;
 
 auto normalized_or(const QVector3D& v, const QVector3D& fallback) -> QVector3D {
   if (v.lengthSquared() <= k_epsilon) {
@@ -64,6 +59,62 @@ auto resolve_stop_intent(float speed,
   float const normalized_low_speed = std::clamp((3.0F - speed) / 3.0F, 0.0F, 1.0F);
   float const target_bias = rider_ctx.gait.has_target ? 1.0F : 0.70F;
   return normalized_low_speed * target_bias;
+}
+
+[[nodiscard]] auto
+to_quadruped_dimensions(const HorseDimensions& d) noexcept -> Quadruped::Dimensions {
+  Quadruped::Dimensions dims{};
+  dims.body_width = d.body_width;
+  dims.body_height = d.body_height;
+  dims.body_length = d.body_length;
+  dims.barrel_center_y = d.barrel_center_y;
+  dims.leg_length = d.leg_length;
+  dims.neck_length = d.neck_length;
+  dims.head_width = d.head_width;
+  dims.head_height = d.head_height;
+  dims.head_length = d.head_length;
+  dims.idle_bob_amplitude = d.idle_bob_amplitude;
+  dims.move_bob_amplitude = d.move_bob_amplitude;
+  return dims;
+}
+
+[[nodiscard]] constexpr auto
+horse_motion_config(GaitType gait_type) noexcept -> Quadruped::MotionConfig {
+  Quadruped::MotionConfig config{};
+  config.idle_phase_speed = 0.15F;
+  config.cycle_time_floor = 0.0001F;
+  config.moving_primary_weight = 1.0F;
+  config.moving_secondary_phase = 0.0F;
+  config.moving_secondary_weight = 0.0F;
+  config.running_bob_scale = 1.0F;
+
+  switch (gait_type) {
+  case GaitType::TROT:
+    config.moving_secondary_weight = 0.125F;
+    break;
+  case GaitType::CANTER:
+    config.moving_tertiary_frequency = 1.5F;
+    config.moving_tertiary_weight = 0.15F;
+    break;
+  case GaitType::GALLOP:
+    config.moving_primary_weight = 1.2F;
+    config.moving_secondary_weight = 0.075F;
+    break;
+  case GaitType::IDLE:
+  case GaitType::WALK:
+    break;
+  }
+  return config;
+}
+
+[[nodiscard]] constexpr auto horse_sway_config() noexcept -> Quadruped::SwayConfig {
+  Quadruped::SwayConfig config{};
+  config.idle_frequency = 0.4F;
+  config.idle_amplitude = 0.005F;
+  config.moving_secondary_weight = 0.0F;
+  config.base_amplitude = 0.007F;
+  config.stride_scale = 0.004F;
+  return config;
 }
 
 } // namespace
@@ -298,35 +349,38 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
   if (is_moving) {
     float const cycle_time = std::max(resolved.cycle_time, 0.0001F);
     if (rider_ctx.gait.cycle_time > 0.0001F) {
-      out_phase = wrap_phase(rider_ctx.gait.cycle_phase);
+      out_phase = Quadruped::wrap_phase(rider_ctx.gait.cycle_phase);
     } else if (state.locomotion_phase_valid) {
       float const elapsed = std::max(anim.time - state.locomotion_phase_time, 0.0F);
-      out_phase = wrap_phase(state.locomotion_phase + elapsed / cycle_time);
+      out_phase = Quadruped::wrap_phase(state.locomotion_phase + elapsed / cycle_time);
     } else {
-      out_phase = wrap_phase(anim.time / cycle_time + phase_offset);
+      out_phase = Quadruped::wrap_phase(anim.time / cycle_time + phase_offset);
     }
     state.locomotion_phase = out_phase;
     state.locomotion_phase_time = anim.time;
     state.locomotion_phase_valid = true;
+
     float const base_bob_amp = profile.dims.idle_bob_amplitude +
                                rider_intensity * (profile.dims.move_bob_amplitude -
                                                   profile.dims.idle_bob_amplitude);
     float const bob_amp = base_bob_amp * bob_scale_for_gait(state.target_gait);
-
-    float const primary_bob = std::sin(out_phase * 2.0F * k_pi);
-    float const secondary_bob = std::sin(out_phase * 4.0F * k_pi) * 0.25F;
     float const tertiary_variation =
         std::sin(anim.time * 0.7F + phase_offset * k_pi) * 0.08F + 1.0F;
 
-    float bob_pattern = primary_bob;
-    if (state.current_gait == GaitType::TROT) {
-      bob_pattern = primary_bob + secondary_bob * 0.5F;
-    } else if (state.current_gait == GaitType::CANTER) {
-      bob_pattern = primary_bob + std::sin(out_phase * 3.0F * k_pi) * 0.15F;
-    } else if (state.current_gait == GaitType::GALLOP) {
-      bob_pattern = primary_bob * 1.2F + secondary_bob * 0.3F;
-    }
-    out_bob = bob_pattern * bob_amp * tertiary_variation;
+    Quadruped::Dimensions dims = to_quadruped_dimensions(profile.dims);
+    dims.move_bob_amplitude = bob_amp * tertiary_variation;
+    HorseGait gait = resolved;
+    gait.phase_offset = 0.0F;
+    Quadruped::MotionSample const quadruped_motion =
+        Quadruped::evaluate_cycle_motion(dims,
+                                         gait,
+                                         out_phase * cycle_time,
+                                         true,
+                                         false,
+                                         false,
+                                         horse_motion_config(state.current_gait));
+    out_phase = quadruped_motion.phase;
+    out_bob = quadruped_motion.bob;
   } else {
     float const breathing = std::sin((anim.time + phase_offset * 2.0F) *
                                      k_idle_breathing_primary_freq * 2.0F * k_pi) *
@@ -336,7 +390,17 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
                                 k_idle_breathing_secondary_weight;
     float const weight_shift =
         std::sin(anim.time * 0.18F + phase_offset * 3.0F) * 0.20F;
-    out_phase = wrap_phase(anim.time * k_idle_phase_speed + phase_offset);
+    HorseGait gait = resolved;
+    gait.phase_offset = phase_offset;
+    Quadruped::MotionSample const quadruped_motion =
+        Quadruped::evaluate_cycle_motion(to_quadruped_dimensions(profile.dims),
+                                         gait,
+                                         anim.time,
+                                         false,
+                                         false,
+                                         false,
+                                         horse_motion_config(GaitType::IDLE));
+    out_phase = quadruped_motion.phase;
     out_bob = (breathing + weight_shift) * profile.dims.idle_bob_amplitude * 0.8F *
               state.idle_bob_intensity;
     state.locomotion_phase_valid = false;
@@ -486,10 +550,12 @@ auto evaluate_horse_motion(const HorseProfile& profile,
       sample.is_moving ? (1.0F - sample.rider_intensity * 0.5F) : 0.3F;
   float const gait_swing = std::clamp(sample.gait.stride_swing, 0.0F, 1.0F);
   float const gait_lift = std::clamp(sample.gait.stride_lift / 0.5F, 0.0F, 1.0F);
-  sample.body_sway = sample.is_moving
-                         ? std::sin(sample.phase * 2.0F * k_pi) *
-                               (0.007F + gait_swing * 0.004F) * sway_intensity
-                         : std::sin(anim.time * 0.4F) * 0.005F;
+  sample.body_sway = Quadruped::body_sway(sample.is_moving,
+                                          sample.phase,
+                                          anim.time,
+                                          sway_intensity - 0.8F,
+                                          sample.gait.stride_swing,
+                                          horse_sway_config());
   sample.body_sway += sample.turn_amount * (0.004F + sample.rider_intensity * 0.006F);
 
   float const pitch_intensity = sample.rider_intensity * 0.7F + 0.1F;

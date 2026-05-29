@@ -236,8 +236,17 @@ TEST_F(PathfindingTest, RuntimeHarvestPropsAreMarkedAfterTerrainLoads) {
       if (!expected.has_value()) {
         continue;
       }
-      EXPECT_EQ(pathfinding.cell_value(x, z), *expected)
-          << "resource marker at grid " << x << "," << z;
+      const auto* height_map = terrain.get_height_map();
+      if (height_map != nullptr &&
+          (height_map->isBridgeCell(x, z) || height_map->isBridgeCenterline(x, z) ||
+           height_map->isHillEntrance(x, z))) {
+        EXPECT_EQ(pathfinding.cell_value(x, z),
+                  Game::Systems::Pathfinding::CellValue::Walkable)
+            << "mandatory traversal cell at grid " << x << "," << z;
+      } else {
+        EXPECT_EQ(pathfinding.cell_value(x, z), *expected)
+            << "resource marker at grid " << x << "," << z;
+      }
       ++checked;
     }
   }

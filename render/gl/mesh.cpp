@@ -11,6 +11,7 @@
 
 #include "gl/buffer.h"
 #include "render_constants.h"
+#include "vertex_attrib_layout.h"
 
 namespace Render::GL {
 
@@ -50,20 +51,14 @@ void Mesh::setup_buffers() {
   auto const norm_off = offset_of(&Vertex::normal);
   auto const tex_off = offset_of(&Vertex::tex_coord);
 
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(
-      0, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(pos_off));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(
-      1, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(norm_off));
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(
-      2, 2, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(tex_off));
+  apply_vertex_attrib_layout({{0, 3, GL_FLOAT, GL_FALSE, k_stride, pos_off},
+                              {1, 3, GL_FLOAT, GL_FALSE, k_stride, norm_off},
+                              {2, 2, GL_FLOAT, GL_FALSE, k_stride, tex_off}});
   m_vao->set_index_buffer(*m_ebo);
 
   m_vao->unbind();
 
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::setup_buffers GL error" << err;
   }
@@ -84,7 +79,7 @@ auto Mesh::prepare_draw(const char* caller_name) -> bool {
 
 #ifndef NDEBUG
   initializeOpenGLFunctions();
-  GLenum pre_err = glGetError();
+  GLenum const pre_err = glGetError();
   if (pre_err != GL_NO_ERROR) {
     qWarning() << caller_name << "pre-draw GL error" << pre_err << "vao"
                << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
@@ -103,7 +98,7 @@ void Mesh::draw() {
   m_vao->unbind();
 
 #ifndef NDEBUG
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw GL error" << err << "indices" << m_indices.size();
   }
@@ -126,7 +121,7 @@ void Mesh::draw_instanced(std::size_t instance_count) {
   m_vao->unbind();
 
 #ifndef NDEBUG
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw_instanced GL error" << err << "indices"
                << m_indices.size() << "instances" << instance_count;
@@ -148,7 +143,7 @@ void Mesh::draw_instanced_raw(std::size_t instance_count) {
                           nullptr,
                           static_cast<GLsizei>(instance_count));
 #ifndef NDEBUG
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw_instanced_raw GL error" << err << "indices"
                << m_indices.size() << "instances" << instance_count;

@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "builder_renderer.h"
+#include "../../builder_renderer_common.h"
 
 namespace {
 
@@ -33,8 +33,8 @@ void register_roman_builder_style() {
   style.show_armor = false;
   style.show_tool_belt = true;
 
-  register_builder_style("default", style);
-  register_builder_style("roman_republic", style);
+  register_builder_style(std::string("default"), style);
+  register_builder_style(std::string("roman_republic"), style);
 }
 
 } // namespace Render::GL::Roman

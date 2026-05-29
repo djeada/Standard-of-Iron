@@ -197,6 +197,9 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_magic_shrine_uniforms, m_magic_shrine_shader);
 }
 
+// TODO(phase5): Extract byte-identical shared ring/cap/quad/prism builders with
+// render/ground/linear_feature_geometry.cpp once the vertex layouts can be proven
+// identical.
 void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
   shutdown_stone_pipeline();

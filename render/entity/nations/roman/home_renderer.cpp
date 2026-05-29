@@ -6,13 +6,14 @@
 #include <array>
 
 #include "../../../../game/core/component.h"
-#include "../../../geom/math_utils.h"
 #include "../../../submitter.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
+#include "../../home_renderer_common.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Roman {
 namespace {
@@ -45,8 +46,8 @@ inline auto make_palette(const QVector3D& team) -> RomanPalette {
   return p;
 }
 
-auto home_palette_slots(const RomanPalette& palette) -> std::array<QVector3D, 1> {
-  return {palette.team};
+auto home_palette_slots(const QVector3D& team) -> std::array<QVector3D, 1> {
+  return {make_palette(team).team};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -247,22 +248,55 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // == ROOF: Terracotta tiles with prominent gabled sections ==
-  desc.add_box(QVector3D(0.0F, cornice_y + 0.08F, 0.0F),
-               QVector3D(1.08F, 0.06F, 1.08F),
-               c.terracotta,
+  // == ROOF: Pitched terracotta gable (ridge runs front-to-back) ==
+  auto add_rot = [&](const QVector3D& center,
+                     const QVector3D& scale,
+                     const QVector3D& euler,
+                     const QVector3D& color) {
+    desc.add_rotated_box(center, scale, euler, color, k_building_state_mask_intact);
+  };
+  float const eave_y = cornice_y + 0.02F;
+  float const roof_rise = 0.55F * height_multiplier;
+  add_gable_roof_z(
+      add_rot, 0.0F, 0.0F, eave_y, 0.98F, 0.98F, roof_rise, 0.05F, c.terracotta, 0.07F);
+  // Ridge beam cap
+  desc.add_box(QVector3D(0.0F, eave_y + roof_rise + 0.01F, 0.0F),
+               QVector3D(0.05F, 0.03F, 1.04F),
+               c.terracotta_dark,
                k_building_state_mask_intact);
-  add_tile_rows_z(
-      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-        desc.add_box(
-            center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
-      },
-      cornice_y + 0.16F,
-      -0.88F,
-      0.88F,
-      0.37F,
-      QVector3D(1.04F, 0.03F, 0.06F),
-      c.terracotta_dark);
+  // Eave fascia boards along the sloped edges
+  desc.add_box(QVector3D(0.99F, eave_y, 0.0F),
+               QVector3D(0.04F, 0.04F, 1.05F),
+               c.terracotta_dark,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(-0.99F, eave_y, 0.0F),
+               QVector3D(0.04F, 0.04F, 1.05F),
+               c.terracotta_dark,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+  // Rear gable tympanum (stepped to approximate the triangular pediment)
+  desc.add_box(QVector3D(0.0F, eave_y + 0.14F, -0.97F),
+               QVector3D(0.68F, 0.14F, 0.05F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.0F, eave_y + 0.36F, -0.97F),
+               QVector3D(0.42F, 0.10F, 0.05F),
+               c.limestone,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.0F, eave_y + 0.50F, -0.97F),
+               QVector3D(0.16F, 0.06F, 0.05F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
+  // Front gable tympanum behind the colonnade pediment
+  desc.add_box(QVector3D(0.0F, eave_y + 0.18F, 0.93F),
+               QVector3D(0.60F, 0.16F, 0.05F),
+               c.limestone,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.0F, eave_y + 0.42F, 0.93F),
+               QVector3D(0.30F, 0.10F, 0.05F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
 
   // == PEDIMENT: Triangular gable over colonnade ==
   if (state != BuildingState::Destroyed) {
@@ -311,29 +345,16 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
   return k_set.for_state(state);
 }
 
-void draw_home(const DrawContext& p, ISubmitter& out) {
-  if (p.entity == nullptr) {
-    return;
-  }
-
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (r == nullptr) {
-    return;
-  }
-
-  RomanPalette const palette =
-      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
-  const auto palette_slots = home_palette_slots(palette);
-  submit_building_instance(
-      out, p, home_archetype(resolve_building_state(p)), palette_slots);
-  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.6F});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.25F, 2.25F});
-}
-
 } // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "roman", "home", draw_home);
+  register_home_renderer_variant(
+      registry,
+      HomeRendererConfig{.nation_slug = "roman",
+                         .archetype = &home_archetype,
+                         .palette_slots = &home_palette_slots,
+                         .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.6F},
+                         .selection = BuildingSelectionStyle{2.25F, 2.25F}});
 }
 
 } // namespace Render::GL::Roman

@@ -5,6 +5,7 @@
 
 #include "../../humanoid/style_palette.h"
 #include "../attachment_builder.h"
+#include "../equipment_archetype_helpers.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
 #include "helmet_alignment.h"
@@ -135,15 +136,7 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
 auto roman_heavy_helmet_fill_role_colors(const HumanoidPalette& palette,
                                          QVector3D* out,
                                          std::size_t max) -> std::uint32_t {
-  if (max < k_roman_heavy_helmet_role_count) {
-    return 0;
-  }
-  auto const colors = roman_heavy_palette(palette);
-  out[0] = colors[0];
-  out[1] = colors[1];
-  out[2] = colors[2];
-  out[3] = colors[3];
-  return k_roman_heavy_helmet_role_count;
+  return fill_role_colors(roman_heavy_palette(palette), out, max);
 }
 
 auto roman_heavy_helmet_make_static_attachment(
@@ -160,13 +153,7 @@ auto roman_heavy_helmet_make_static_attachment(
       .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,
   });
-  spec.palette_role_remap[k_steel_slot] = base_role_byte;
-  spec.palette_role_remap[k_steel_light_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_brass_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[k_crest_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 3U);
+  fill_sequential_role_remap(spec, base_role_byte, k_roman_heavy_helmet_role_count);
   return spec;
 }
 

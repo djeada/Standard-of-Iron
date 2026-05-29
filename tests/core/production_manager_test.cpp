@@ -351,7 +351,8 @@ TEST_F(ProductionManagerTest, WallConstructionKeepsRotatedSingleSegmentOrientati
   EXPECT_FLOAT_EQ(transform->rotation.y, 90.0F);
 }
 
-TEST_F(ProductionManagerTest, RotatedWallPreviewSnapsPerpendicularExtensionOffExistingWall) {
+TEST_F(ProductionManagerTest,
+       RotatedWallPreviewSnapsPerpendicularExtensionOffExistingWall) {
   add_selected_builder();
   ProductionManager manager(&world, &picking_service, &camera);
 
@@ -380,7 +381,8 @@ TEST_F(ProductionManagerTest, RotatedWallPreviewSnapsPerpendicularExtensionOffEx
   EXPECT_NEAR(preview_transform->position.x, expected_world.x(), 0.0001F);
   EXPECT_NEAR(preview_transform->position.z, expected_world.z(), 0.0001F);
 
-  manager.on_construction_pointer_released(hover_screen.x(), hover_screen.y(), viewport);
+  manager.on_construction_pointer_released(
+      hover_screen.x(), hover_screen.y(), viewport);
 
   auto* site = find_wall_construction_site();
   ASSERT_NE(site, nullptr);
@@ -466,7 +468,8 @@ TEST_F(ProductionManagerTest, DirectMarketplacePlacementSpawnsAndRegistersBuildi
   EXPECT_TRUE(Game::Systems::MarketplaceSystem::instance().owner_has_marketplace(1));
 }
 
-TEST_F(ProductionManagerTest, SelectedMarketplaceStateExposesTradeRatesForOwnedSelection) {
+TEST_F(ProductionManagerTest,
+       SelectedMarketplaceStateExposesTradeRatesForOwnedSelection) {
   add_selected_production_building(Game::Units::SpawnType::Marketplace, 2.0F, 3.0F, 1);
   ProductionManager manager(&world, &picking_service, &camera);
 

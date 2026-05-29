@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "../creature/quadruped/gait.h"
+
 namespace Render::GL {
 
 enum class GaitType {
@@ -12,14 +14,10 @@ enum class GaitType {
   GALLOP
 };
 
-struct HorseGait {
-  float cycle_time{};
-  float front_leg_phase{};
-  float rear_leg_phase{};
-  float stride_swing{};
-  float stride_lift{};
+struct HorseGait : Render::Creature::Quadruped::Gait {
+  constexpr HorseGait() noexcept
+      : Render::Creature::Quadruped::Gait{0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F} {}
 
-  float phase_offset{};
   float stride_jitter{};
   float head_height_jitter{};
   float lateral_lead_front{0.5F};

@@ -323,7 +323,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
   ctx.animation_time = 1.75F;
   anim = Render::GL::sample_anim_state(ctx);
   EXPECT_TRUE(anim.is_guarding);
-  EXPECT_NEAR(anim.guard_pose_progress, 0.5F, 1.0e-3F);
+  EXPECT_NEAR(anim.guard_pose_progress, 5.0F / 12.0F, 1.0e-3F);
   EXPECT_FALSE(anim.is_in_hold_mode);
 }
 

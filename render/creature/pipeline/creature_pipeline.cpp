@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 #include "../../../game/map/terrain_service.h"
 #include "../../bone_palette_arena.h"
@@ -311,6 +312,70 @@ auto is_humanoid_upper_body_bone(std::size_t bone_index) noexcept -> bool {
   }
 }
 
+using BonePaletteArray =
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>;
+
+// Thread-local fixed-block pooling allocator used with std::allocate_shared so that
+// both the bone-palette array and the shared_ptr control block are recycled, giving a
+// zero-allocation steady state for interpolating/blending creatures. Ownership
+// semantics stay identical to a plain shared_ptr: the buffer lives until the owning
+// draw command is destroyed (after the deferred draw queue is flushed). Rendering is
+// single-threaded (Qt GL context), so acquisition and the recycling deallocate always
+// run on the same thread.
+template <class T>
+struct PooledPaletteAllocator {
+  using value_type = T;
+
+  PooledPaletteAllocator() noexcept = default;
+  template <class U>
+  PooledPaletteAllocator(const PooledPaletteAllocator<U>&) noexcept {}
+
+  static auto free_list() noexcept -> std::vector<void*>& {
+    thread_local std::vector<void*> list;
+    return list;
+  }
+
+  auto allocate(std::size_t n) -> T* {
+    if (n == 1U) {
+      auto& list = free_list();
+      if (!list.empty()) {
+        void* block = list.back();
+        list.pop_back();
+        return static_cast<T*>(block);
+      }
+      return static_cast<T*>(::operator new(sizeof(T)));
+    }
+    return static_cast<T*>(::operator new(n * sizeof(T)));
+  }
+
+  void deallocate(T* ptr, std::size_t n) noexcept {
+    if (n == 1U) {
+      auto& list = free_list();
+      try {
+        list.push_back(static_cast<void*>(ptr));
+        return;
+      } catch (...) {
+        // Fall through to release the block directly on growth failure.
+      }
+    }
+    ::operator delete(static_cast<void*>(ptr));
+  }
+
+  template <class U>
+  auto operator==(const PooledPaletteAllocator<U>&) const noexcept -> bool {
+    return true;
+  }
+  template <class U>
+  auto operator!=(const PooledPaletteAllocator<U>&) const noexcept -> bool {
+    return false;
+  }
+};
+
+auto acquire_pooled_palette() -> std::shared_ptr<BonePaletteArray> {
+  return std::allocate_shared<BonePaletteArray>(
+      PooledPaletteAllocator<BonePaletteArray>{});
+}
+
 auto blend_palette_owned(const QMatrix4x4* primary_palette,
                          const QMatrix4x4* secondary_palette,
                          std::uint32_t bone_count,
@@ -322,8 +387,7 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   if (primary_palette == nullptr || secondary_palette == nullptr || bone_count == 0U) {
     return {};
   }
-  auto owned = std::make_shared<
-      std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>();
+  auto owned = acquire_pooled_palette();
   float const weight = std::clamp(secondary_weight, 0.0F, 1.0F);
   for (std::uint32_t bone = 0;
        bone < bone_count && bone < Render::GL::RiggedCreatureCmd::k_max_owned_bones;

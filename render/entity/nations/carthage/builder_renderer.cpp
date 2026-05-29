@@ -31,7 +31,6 @@
 #include "../../../equipment/humanoid_attachment_archetype.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../equipment/render_archetype_registry.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
@@ -53,6 +52,7 @@
 #include "../builder_tool_palette.h"
 #include "../equipment_loadout_catalog.h"
 #include "builder_style.h"
+#include "math/math_utils.h"
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 

@@ -4,17 +4,19 @@
 #include <QVector3D>
 
 #include <cmath>
+#include <numbers>
 
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
+#include "../../ballista_renderer_common.h"
 #include "../../registry.h"
 #include "../siege_anim_types.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Roman {
 namespace {
@@ -48,7 +50,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> BallistaAnimContext {
     return ctx;
   }
 
-  auto* loading = entity->get_component<Engine::Core::CatapultLoadingComponent>();
+  const auto* loading = entity->get_component<Engine::Core::CatapultLoadingComponent>();
   if (loading == nullptr) {
     return ctx;
   }
@@ -142,19 +144,19 @@ void draw_base_frame(const DrawContext& p,
 
 void draw_wheels(const DrawContext& p,
                  ISubmitter& out,
-                 Mesh* unit,
                  Texture* white,
                  const RomanBallistaPalette& c) {
 
   float wheel_radius = 0.14F;
   float wheel_thickness = 0.035F;
 
-  QVector3D left_pos(-0.42F, wheel_radius, 0.0F);
-  QVector3D right_pos(0.42F, wheel_radius, 0.0F);
+  QVector3D const left_pos(-0.42F, wheel_radius, 0.0F);
+  QVector3D const right_pos(0.42F, wheel_radius, 0.0F);
 
   auto draw_wheel = [&](const QVector3D& pos, float side_offset) {
-    QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
-    QVector3D outer = pos + QVector3D(side_offset * (wheel_thickness + 0.05F), 0, 0);
+    QVector3D const inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
+    QVector3D const outer =
+        pos + QVector3D(side_offset * (wheel_thickness + 0.05F), 0, 0);
 
     draw_cyl(out, p.model, inner, outer, wheel_radius, c.wood_dark, white);
 
@@ -175,10 +177,10 @@ void draw_wheels(const DrawContext& p,
              white);
 
     for (int s = 0; s < 6; ++s) {
-      float angle = s * 3.14159F / 3.0F;
-      float spoke_y = std::sin(angle) * wheel_radius * 0.7F;
-      float spoke_z = std::cos(angle) * wheel_radius * 0.7F;
-      QVector3D spoke_pos =
+      float const angle = s * std::numbers::pi_v<float> / 3.0F;
+      float const spoke_y = std::sin(angle) * wheel_radius * 0.7F;
+      float const spoke_z = std::cos(angle) * wheel_radius * 0.7F;
+      QVector3D const spoke_pos =
           pos + QVector3D(side_offset * (wheel_thickness + 0.025F), spoke_y, spoke_z);
       draw_cyl(out,
                p.model,
@@ -204,7 +206,6 @@ void draw_wheels(const DrawContext& p,
 
 void draw_torsion_bundles(const DrawContext& p,
                           ISubmitter& out,
-                          Mesh* unit,
                           Texture* white,
                           const RomanBallistaPalette& c) {
 
@@ -259,7 +260,6 @@ void draw_torsion_bundles(const DrawContext& p,
 
 void draw_arms(const DrawContext& p,
                ISubmitter& out,
-               Mesh* unit,
                Texture* white,
                const RomanBallistaPalette& c) {
 
@@ -460,49 +460,36 @@ void draw_roman_ornaments(const DrawContext& p,
            c.metal_bronze);
 }
 
+void draw_ballista_body(const DrawContext& p,
+                        ISubmitter& out,
+                        Mesh* unit,
+                        Texture* white,
+                        const QVector3D& team_color) {
+  RomanBallistaPalette const c = make_palette(team_color);
+  auto anim_ctx = get_anim_context(p.entity);
+
+  DrawContext ctx = p;
+  ctx.model = p.model;
+  ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+
+  draw_base_frame(ctx, out, unit, white, c);
+  draw_wheels(ctx, out, white, c);
+  draw_torsion_bundles(ctx, out, white, c);
+  draw_arms(ctx, out, white, c);
+  draw_bowstring(ctx, out, white, c);
+  draw_slide(ctx, out, unit, white, c, anim_ctx);
+  draw_trigger_mechanism(ctx, out, unit, white, c);
+  draw_roman_ornaments(ctx, out, unit, white, c);
+}
+
 } // namespace
 
 void register_ballista_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer(
-      "troops/roman/ballista", [](const DrawContext& p, ISubmitter& out) {
-        Mesh* unit = get_unit_cube();
-        Texture* white = nullptr;
-
-        if (p.resources != nullptr) {
-          unit = p.resources->unit();
-          white = p.resources->white();
-        }
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(&out)) {
-          unit = scene_renderer->get_mesh_cube();
-          white = scene_renderer->get_white_texture();
-        }
-
-        if (unit == nullptr || white == nullptr) {
-          return;
-        }
-
-        QVector3D team_color{0.8F, 0.2F, 0.2F};
-        if (p.entity != nullptr) {
-          if (auto* r = p.entity->get_component<Engine::Core::RenderableComponent>()) {
-            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
-          }
-        }
-        RomanBallistaPalette c = make_palette(team_color);
-        auto anim_ctx = get_anim_context(p.entity);
-
-        DrawContext ctx = p;
-        ctx.model = p.model;
-        ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-
-        draw_base_frame(ctx, out, unit, white, c);
-        draw_wheels(ctx, out, unit, white, c);
-        draw_torsion_bundles(ctx, out, unit, white, c);
-        draw_arms(ctx, out, unit, white, c);
-        draw_bowstring(ctx, out, white, c);
-        draw_slide(ctx, out, unit, white, c, anim_ctx);
-        draw_trigger_mechanism(ctx, out, unit, white, c);
-        draw_roman_ornaments(ctx, out, unit, white, c);
-      });
+  register_ballista_renderer_variant(
+      registry,
+      BallistaRendererConfig{.renderer_key = "troops/roman/ballista",
+                             .default_team = QVector3D(0.8F, 0.2F, 0.2F),
+                             .draw_body = &draw_ballista_body});
 }
 
 } // namespace Render::GL::Roman

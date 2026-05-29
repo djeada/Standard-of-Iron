@@ -34,39 +34,27 @@ void BoulderRenderer::configure(
     const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
     const std::vector<Game::Map::WorldProp>& runtime_world_props,
     bool use_world_props_exclusively) {
-  m_biome_settings = biome_settings;
-  m_use_world_props_exclusively = use_world_props_exclusively;
-  m_state.reset_instances();
+  configure_biome_common(biome_settings, use_world_props_exclusively);
   m_state.params.light_direction = m_light_direction;
   generate_instances(scatter_seed_world_props, runtime_world_props, height_map);
 }
 
 void BoulderRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction =
-      dir.isNull() ? StoneBatchParams::default_light_direction() : dir.normalized();
-  m_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, StoneBatchParams::default_light_direction());
 }
 
 void BoulderRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  Q_UNUSED(resources);
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const StoneInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; });
-  if (visible_count == 0 || !m_state.instance_buffer) {
-    return;
-  }
-
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Stone;
-  cmd.instance_buffer = m_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
-  cmd.stone = m_state.params;
-  renderer.terrain_scatter(cmd);
+  submit_filtered_common<false>(
+      renderer,
+      resources,
+      TerrainScatterCmd::Species::Stone,
+      [](TerrainScatterCmd& cmd, const StoneBatchParams& params) {
+        cmd.stone = params;
+      });
 }
 
 void BoulderRenderer::clear() {
-  m_state.reset_instances();
+  clear_common();
 }
 
 void BoulderRenderer::generate_instances(

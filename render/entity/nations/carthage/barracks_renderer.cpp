@@ -9,7 +9,6 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../geom/flag.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
@@ -18,11 +17,13 @@
 #include "../../../submitter.h"
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../barracks_renderer_common.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -311,18 +312,34 @@ void draw_fortress_walls(const DrawContext& p,
     float const lower_band_y = wall_height * 0.25F * height_multiplier + 0.26F;
     float const upper_band_y = wall_height * 0.70F * height_multiplier + 0.26F;
     for (float const band_y : {lower_band_y, upper_band_y}) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(0.0F, band_y, -1.33F),
-               QVector3D(1.56F, 0.03F, 0.16F), c.stone_dark);
-      draw_box(out, unit, white, p.model,
+               QVector3D(1.56F, 0.03F, 0.16F),
+               c.stone_dark);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(0.0F, band_y, 1.33F),
-               QVector3D(1.56F, 0.03F, 0.16F), c.stone_dark);
-      draw_box(out, unit, white, p.model,
+               QVector3D(1.56F, 0.03F, 0.16F),
+               c.stone_dark);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(-1.63F, band_y, 0.0F),
-               QVector3D(0.16F, 0.03F, 1.24F), c.stone_dark);
-      draw_box(out, unit, white, p.model,
+               QVector3D(0.16F, 0.03F, 1.24F),
+               c.stone_dark);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(1.63F, band_y, 0.0F),
-               QVector3D(0.16F, 0.03F, 1.24F), c.stone_dark);
+               QVector3D(0.16F, 0.03F, 1.24F),
+               c.stone_dark);
     }
   }
 
@@ -330,17 +347,29 @@ void draw_fortress_walls(const DrawContext& p,
   if (detailed && state != BuildingState::Destroyed) {
     float const slit_y = wall_height * 0.45F * height_multiplier + 0.26F;
     for (float const x : {-0.8F, 0.0F, 0.8F}) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(x, slit_y, -1.34F),
-               QVector3D(0.04F, 0.18F, 0.02F), c.wood_dark);
+               QVector3D(0.04F, 0.18F, 0.02F),
+               c.wood_dark);
     }
     for (float const z : {-0.6F, 0.0F, 0.6F}) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(-1.64F, slit_y, z),
-               QVector3D(0.02F, 0.18F, 0.04F), c.wood_dark);
-      draw_box(out, unit, white, p.model,
+               QVector3D(0.02F, 0.18F, 0.04F),
+               c.wood_dark);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(1.64F, slit_y, z),
-               QVector3D(0.02F, 0.18F, 0.04F), c.wood_dark);
+               QVector3D(0.02F, 0.18F, 0.04F),
+               c.wood_dark);
     }
   }
 
@@ -491,14 +520,13 @@ void draw_corner_towers(const DrawContext& p,
               c.brick);
         }
         // == CENTER FINIAL ==
-        draw_box(
-            out,
-            unit,
-            white,
-            p.model,
-            QVector3D(corner.x(), 1.78F * height_multiplier, corner.z()),
-            QVector3D(0.05F, 0.08F, 0.05F),
-            c.stone_light);
+        draw_box(out,
+                 unit,
+                 white,
+                 p.model,
+                 QVector3D(corner.x(), 1.78F * height_multiplier, corner.z()),
+                 QVector3D(0.05F, 0.08F, 0.05F),
+                 c.stone_light);
       }
     }
   }
@@ -617,7 +645,10 @@ void draw_courtyard(const DrawContext& p,
 
       // == WEAPON DETAILS on rack ==
       for (float const dx : {-0.15F, 0.0F, 0.15F}) {
-        draw_box(out, unit, white, p.model,
+        draw_box(out,
+                 unit,
+                 white,
+                 p.model,
                  QVector3D(dx, 0.72F, -0.94F),
                  QVector3D(0.02F, 0.32F, 0.02F),
                  c.iron);
@@ -686,7 +717,10 @@ void draw_carthage_roof(const DrawContext& p,
              c.brick_dark);
     // Watchtower merlons
     for (float const dx : {-0.14F, 0.0F, 0.14F}) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(dx, 2.06F, -0.12F),
                QVector3D(0.06F, 0.05F, 0.06F),
                c.brick);
@@ -749,7 +783,10 @@ void draw_gate(const DrawContext& p,
 
       // == FRAME PILLARS: Flanking the gate ==
       for (float const gx : {-0.52F, 0.52F}) {
-        draw_box(out, unit, white, p.model,
+        draw_box(out,
+                 unit,
+                 white,
+                 p.model,
                  QVector3D(gx, gate_half_height, 1.36F),
                  QVector3D(0.06F, gate_half_height, 0.06F),
                  c.stone_dark);
@@ -758,7 +795,10 @@ void draw_gate(const DrawContext& p,
       // == IRON STUDS: Door hardware ==
       for (float const sy : {0.35F, 0.65F, 0.95F}) {
         for (float const sx : {-0.24F, 0.24F}) {
-          draw_box(out, unit, white, p.model,
+          draw_box(out,
+                   unit,
+                   white,
+                   p.model,
                    QVector3D(sx, sy, 1.40F),
                    QVector3D(0.03F, 0.03F, 0.02F),
                    c.iron);
@@ -814,43 +854,28 @@ void draw_rally_flag(const DrawContext& p,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
-void draw_barracks(const DrawContext& p, ISubmitter& out) {
-  if ((p.resources == nullptr) || (p.entity == nullptr)) {
-    return;
-  }
-
-  auto* t = p.entity->get_component<Engine::Core::TransformComponent>();
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if ((t == nullptr) || (r == nullptr)) {
-    return;
-  }
-
-  Mesh* unit = p.resources->unit();
-  if (unit == nullptr) {
-    unit = get_unit_cube();
-  }
-  Texture* white = p.resources->white();
-  QVector3D const team(r->color[0], r->color[1], r->color[2]);
+void draw_barracks_ornaments(const DrawContext& p,
+                             ISubmitter& out,
+                             Mesh* unit,
+                             Texture* white,
+                             const QVector3D& team,
+                             const BarracksFlagRenderer::ClothBannerResources* cloth) {
   CarthagePalette const c = make_palette(team);
-
-  BarracksFlagRenderer::ClothBannerResources cloth;
-  if (p.backend != nullptr) {
-    cloth.cloth_mesh = p.backend->banner_mesh();
-    cloth.banner_shader = p.backend->banner_shader();
-  }
-
-  submit_building_instance(
-      out, p, barracks_archetype(resolve_building_state(p), unit, white));
-  draw_standards(p, out, unit, white, c, &cloth);
-  draw_rally_flag(p, out, white, c, &cloth);
-  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.4F, 0.10F, 2.45F, true});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.4F, 2.0F});
+  draw_standards(p, out, unit, white, c, cloth);
+  draw_rally_flag(p, out, white, c, cloth);
 }
 
 } // namespace
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "carthage", "barracks", draw_barracks);
+  register_barracks_renderer_variant(
+      registry,
+      BarracksRendererConfig{.nation_slug = "carthage",
+                             .archetype = &barracks_archetype,
+                             .draw_ornaments = &draw_barracks_ornaments,
+                             .health_bar =
+                                 BuildingHealthBarStyle{1.4F, 0.10F, 2.45F, true},
+                             .selection = BuildingSelectionStyle{2.4F, 2.0F}});
 }
 
 } // namespace Render::GL::Carthage

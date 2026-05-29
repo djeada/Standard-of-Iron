@@ -20,6 +20,7 @@
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
@@ -158,6 +159,14 @@ TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
 }
 
 TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
+  auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto& bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::k_species_horse, root + "/horse.bpat"));
+
   Render::GL::HorseRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
@@ -181,6 +190,13 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
   Render::GL::TemplateRecorder recorder;
+  Render::Creature::RuntimeBakeAllowScope const runtime_bake_scope;
+  auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  snapshot_reg.clear();
+  ASSERT_TRUE(snapshot_reg.load_species(Render::Creature::Bpat::k_species_horse,
+                                        Render::Creature::CreatureLOD::Minimal,
+                                        root + "/horse_minimal.bpsm"))
+      << snapshot_reg.last_error();
   recorder.snapshot_mesh_cache().clear();
 
   renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder);

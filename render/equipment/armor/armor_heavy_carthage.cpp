@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <deque>
 #include <string>
 
 #include "../../geom/parts.h"
@@ -17,6 +16,7 @@
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/mesh_helpers.h"
 #include "../attachment_builder.h"
+#include "../equipment_archetype_helpers.h"
 #include "../equipment_submit.h"
 #include "torso_local_archetype_utils.h"
 
@@ -32,23 +32,21 @@ enum ArmorHeavyCarthagePaletteSlot : std::uint8_t {
   k_carthage_heavy_bronze_core_slot = 2U,
 };
 
+struct ArmorHeavyCarthageCacheTag {};
+
+struct ArmorHeavyCarthageKey {
+  std::string value;
+
+  auto operator==(const ArmorHeavyCarthageKey& other) const -> bool {
+    return value == other.value;
+  }
+};
+
 auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
     -> const RenderArchetype& {
-  struct CachedArchetype {
-    std::string key;
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  std::string key = "carthage_heavy_armor_";
+  ArmorHeavyCarthageKey key{"carthage_heavy_armor_"};
   for (const auto& m : torsos) {
-    append_quantized_key(key, m);
-  }
-
-  for (const auto& entry : cache) {
-    if (entry.key == key) {
-      return entry.archetype;
-    }
+    append_quantized_key(key.value, m);
   }
 
   Mesh* torso_mesh = torso_mesh_without_bottom_cap();
@@ -56,7 +54,7 @@ auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
     torso_mesh = get_unit_torso();
   }
 
-  RenderArchetypeBuilder builder{key};
+  RenderArchetypeBuilder builder{key.value};
   builder.add_palette_mesh(
       torso_mesh, torsos[0], k_carthage_heavy_chainmail_slot, nullptr, 1.0F, 1);
   builder.add_palette_mesh(
@@ -64,6 +62,14 @@ auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
   builder.add_palette_mesh(
       torso_mesh, torsos[2], k_carthage_heavy_bronze_core_slot, nullptr, 1.0F, 1);
 
+  static std::deque<
+      GeneratedArchetypeCacheEntry<ArmorHeavyCarthageCacheTag, ArmorHeavyCarthageKey>>
+      cache;
+  for (const auto& entry : cache) {
+    if (entry.key == key) {
+      return entry.archetype;
+    }
+  }
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
 }
@@ -95,11 +101,12 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
     return;
   }
 
-  QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D const up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
-  QVector3D forward = safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
-  QVector3D waist_up = safe_attachment_axis(waist.up, up);
-  QVector3D head_up = safe_attachment_axis(head.up, up);
+  QVector3D const forward =
+      safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
+  QVector3D const waist_up = safe_attachment_axis(waist.up, up);
+  QVector3D const head_up = safe_attachment_axis(head.up, up);
   TorsoLocalFrame const torso_local = make_torso_local_frame(ctx.model, torso);
 
   float const torso_r = torso.radius;
@@ -112,7 +119,7 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.60F;
 
   QVector3D top = torso.origin + up * (torso_r * 0.64F);
-  QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
+  QVector3D const head_guard = head.origin - head_up * (head_r * 1.35F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.06F);
   }
@@ -124,9 +131,9 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
   bottom += forward * (torso_r * 0.010F);
   chainmail_bottom += forward * (torso_r * 0.010F);
 
-  QVector3D bronze_color = QVector3D(0.72F, 0.53F, 0.28F);
-  QVector3D bronze_core = bronze_color * 0.92F;
-  QVector3D chainmail_color = QVector3D(0.50F, 0.52F, 0.58F);
+  QVector3D const bronze_color = QVector3D(0.72F, 0.53F, 0.28F);
+  QVector3D const bronze_core = bronze_color * 0.92F;
+  QVector3D const chainmail_color = QVector3D(0.50F, 0.52F, 0.58F);
 
   auto build_torso = [&](const QVector3D& a,
                          const QVector3D& b,
@@ -164,13 +171,13 @@ auto armor_heavy_carthage_fill_role_colors(const HumanoidPalette& palette,
                                            QVector3D* out,
                                            std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < k_armor_heavy_carthage_role_count) {
-    return 0U;
-  }
-  out[0] = QVector3D(0.50F, 0.52F, 0.58F);
-  out[1] = QVector3D(0.72F, 0.53F, 0.28F);
-  out[2] = QVector3D(0.72F, 0.53F, 0.28F) * 0.92F;
-  return k_armor_heavy_carthage_role_count;
+  return fill_role_colors(
+      std::array<QVector3D, k_armor_heavy_carthage_role_count>{
+          QVector3D(0.50F, 0.52F, 0.58F),
+          QVector3D(0.72F, 0.53F, 0.28F),
+          QVector3D(0.72F, 0.53F, 0.28F) * 0.92F},
+      out,
+      max);
 }
 
 auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone_index,
@@ -181,11 +188,12 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
   const AttachmentFrame& waist = bind_frames.waist;
   const AttachmentFrame& head = bind_frames.head;
 
-  QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D const up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
-  QVector3D forward = safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
-  QVector3D waist_up = safe_attachment_axis(waist.up, up);
-  QVector3D head_up = safe_attachment_axis(head.up, up);
+  QVector3D const forward =
+      safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
+  QVector3D const waist_up = safe_attachment_axis(waist.up, up);
+  QVector3D const head_up = safe_attachment_axis(head.up, up);
   TorsoLocalFrame const torso_local = make_torso_local_frame(QMatrix4x4{}, torso);
 
   float const torso_r = torso.radius;
@@ -198,7 +206,7 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.60F;
 
   QVector3D top = torso.origin + up * (torso_r * 0.64F);
-  QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
+  QVector3D const head_guard = head.origin - head_up * (head_r * 1.35F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.06F);
   }
@@ -239,9 +247,7 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
-  spec.palette_role_remap[0] = base_role_byte;
-  spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[2] = static_cast<std::uint8_t>(base_role_byte + 2U);
+  fill_sequential_role_remap(spec, base_role_byte, k_armor_heavy_carthage_role_count);
   return spec;
 }
 

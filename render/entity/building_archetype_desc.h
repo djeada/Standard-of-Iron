@@ -17,7 +17,9 @@ enum class BuildingPartKind : std::uint8_t {
   Box,
   Cylinder,
   PaletteBox,
-  PaletteCylinder
+  PaletteCylinder,
+  RotatedBox,
+  PaletteRotatedBox
 };
 
 enum class BuildingStateMask : std::uint8_t {
@@ -49,6 +51,7 @@ struct BuildingPartDesc {
   QVector3D point_a{0.0F, 0.0F, 0.0F};
   QVector3D point_b{1.0F, 1.0F, 1.0F};
   QVector3D color{1.0F, 1.0F, 1.0F};
+  QVector3D euler_deg{0.0F, 0.0F, 0.0F};
   float radius{0.0F};
   std::uint8_t palette_slot{k_render_archetype_fixed_color_slot};
   Texture* texture{nullptr};
@@ -73,6 +76,20 @@ public:
                        std::uint8_t palette_slot,
                        BuildingStateMask states = BuildingStateMask::All,
                        BuildingLODMask lod = BuildingLODMask::All);
+  // Rotation is applied as translate * R(euler ZYX, degrees) * scale, matching the
+  // scale convention of add_box (same `scale` meaning).
+  void add_rotated_box(const QVector3D& center,
+                       const QVector3D& scale,
+                       const QVector3D& euler_deg,
+                       const QVector3D& color,
+                       BuildingStateMask states = BuildingStateMask::All,
+                       BuildingLODMask lod = BuildingLODMask::All);
+  void add_palette_rotated_box(const QVector3D& center,
+                               const QVector3D& scale,
+                               const QVector3D& euler_deg,
+                               std::uint8_t palette_slot,
+                               BuildingStateMask states = BuildingStateMask::All,
+                               BuildingLODMask lod = BuildingLODMask::All);
   void add_cylinder(const QVector3D& start,
                     const QVector3D& end,
                     float radius,

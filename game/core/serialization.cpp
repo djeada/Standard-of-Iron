@@ -232,6 +232,12 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     attack_obj["in_melee_lock"] = attack->in_melee_lock;
     attack_obj["melee_lock_target_id"] =
         static_cast<qint64>(attack->melee_lock_target_id);
+    attack_obj["has_pending_melee_strike"] = attack->has_pending_melee_strike;
+    attack_obj["pending_melee_target_id"] =
+        static_cast<qint64>(attack->pending_melee_target_id);
+    attack_obj["pending_melee_damage"] = attack->pending_melee_damage;
+    attack_obj["pending_melee_elapsed"] = attack->pending_melee_elapsed;
+    attack_obj["pending_melee_contact_time"] = attack->pending_melee_contact_time;
     entity_obj["attack"] = attack_obj;
   }
 
@@ -834,6 +840,15 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     attack->in_melee_lock = attack_obj["in_melee_lock"].toBool(false);
     attack->melee_lock_target_id = static_cast<EntityID>(
         attack_obj["melee_lock_target_id"].toVariant().toULongLong());
+    attack->has_pending_melee_strike =
+        attack_obj["has_pending_melee_strike"].toBool(false);
+    attack->pending_melee_target_id = static_cast<EntityID>(
+        attack_obj["pending_melee_target_id"].toVariant().toULongLong());
+    attack->pending_melee_damage = attack_obj["pending_melee_damage"].toInt(0);
+    attack->pending_melee_elapsed =
+        static_cast<float>(attack_obj["pending_melee_elapsed"].toDouble());
+    attack->pending_melee_contact_time =
+        static_cast<float>(attack_obj["pending_melee_contact_time"].toDouble());
   }
 
   if (json.contains("attack_target")) {
