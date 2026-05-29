@@ -304,6 +304,19 @@ public:
   bool in_melee_lock{false};
   EntityID melee_lock_target_id{0};
 
+  // Deferred melee strike: damage is snapshotted at swing start and applied when
+  // the swing reaches weapon contact, so hits land mid-animation instead of
+  // instantly. Cooldown is still reset at swing start, so steady-state DPS is
+  // unchanged. Stored on the component (not transient processor state) so it
+  // round-trips through save/load deterministically.
+  bool has_pending_melee_strike{false};
+  EntityID pending_melee_target_id{0};
+  int pending_melee_damage{0};
+  float pending_melee_elapsed{0.0F};
+  float pending_melee_contact_time{0.0F};
+
+  static constexpr float k_melee_contact_range_grace = 0.75F;
+
   [[nodiscard]] auto is_in_melee_range(float distance,
                                        float height_diff) const -> bool {
     return distance <= melee_range && height_diff <= max_height_difference;
@@ -455,6 +468,16 @@ public:
   static constexpr float k_impact_duration = 0.18F;
   static constexpr float k_recover_duration = 0.40F;
   static constexpr float k_reposition_duration = 0.28F;
+
+  // Fraction of a full melee swing at which the weapon makes contact, expressed
+  // in the swing's own time basis (advance+windup over the whole cycle). Used by
+  // the deferred-melee-strike system as the single source of truth for when a
+  // snapshotted melee hit lands. ~0.348 with the durations above.
+  static constexpr float k_melee_contact_fraction =
+      (k_advance_duration + k_wind_up_duration) /
+      (k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
+       k_recover_duration + k_reposition_duration);
+
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 
   static constexpr float k_stamina_cost_light_attack = 12.0F;

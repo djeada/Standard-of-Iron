@@ -10,6 +10,7 @@
 
 #include "../creature/movement_state.h"
 #include "humanoid_math.h"
+#include "pose_primitives.h"
 #include "spear_pose_utils.h"
 
 namespace Render::GL {
@@ -626,8 +627,7 @@ auto HumanoidPoseController::solve_elbow_ik(Side,
                                             float lateral_offset,
                                             float y_bias,
                                             float outward_sign) const -> QVector3D {
-
-  return elbow_bend_torso(
+  return Render::Humanoid::PosePrimitives::solve_elbow_ik(
       shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
 }
 

@@ -3183,10 +3183,9 @@ auto GameEngine::get_construction_info(const QString& item_type) const -> QVaria
 }
 
 auto GameEngine::get_selected_marketplace_state() const -> QVariantMap {
-  return m_production_manager
-             ? m_production_manager->get_selected_marketplace_state(
-                   m_runtime.local_owner_id)
-             : QVariantMap();
+  return m_production_manager ? m_production_manager->get_selected_marketplace_state(
+                                    m_runtime.local_owner_id)
+                              : QVariantMap();
 }
 
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {

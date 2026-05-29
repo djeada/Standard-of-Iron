@@ -140,7 +140,8 @@ inline auto load_audio_volumes() -> AudioVolumes {
 
 inline void save_audio_volume(const char* key, float volume, const char* label) {
   if (!std::isfinite(volume)) {
-    qWarning() << "Refusing to save non-finite audio volume for" << label << ":" << volume;
+    qWarning() << "Refusing to save non-finite audio volume for" << label << ":"
+               << volume;
     return;
   }
 

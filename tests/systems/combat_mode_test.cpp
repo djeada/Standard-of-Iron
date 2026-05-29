@@ -1054,6 +1054,98 @@ TEST_F(CombatModeTest, UnitStillAttacksWhenTargetReachesRange) {
   EXPECT_TRUE((movement == nullptr) || !movement->path_pending);
 }
 
+TEST_F(CombatModeTest, MeleeDamageIsDeferredUntilWeaponContact) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_range = 2.0F;
+  attack->damage = 10;
+  attack->melee_damage = 10;
+  attack->melee_cooldown = 1.0F;
+  attack->time_since_last = 1.0F;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  // Trigger frame: the swing starts but the blade has not connected yet, so the
+  // strike is scheduled and no damage has landed.
+  Game::Systems::Combat::process_attacks(
+      world.get(),
+      Game::Systems::Combat::build_combat_query_context(world.get()),
+      0.016F);
+  EXPECT_TRUE(attack->has_pending_melee_strike);
+  EXPECT_EQ(enemy_unit->health, 100);
+
+  // Advance time past the contact point; the snapshotted damage now lands.
+  float const contact_time =
+      CombatStateComponent::k_melee_contact_fraction * attack->melee_cooldown;
+  Game::Systems::Combat::process_attacks(
+      world.get(),
+      Game::Systems::Combat::build_combat_query_context(world.get()),
+      contact_time + 0.05F);
+  EXPECT_FALSE(attack->has_pending_melee_strike);
+  EXPECT_LT(enemy_unit->health, 100);
+}
+
+TEST_F(CombatModeTest, DeferredMeleeStrikeCancelsWhenTargetDies) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_range = 2.0F;
+  attack->damage = 10;
+  attack->melee_damage = 10;
+  attack->melee_cooldown = 1.0F;
+  attack->time_since_last = 1.0F;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  Game::Systems::Combat::process_attacks(
+      world.get(),
+      Game::Systems::Combat::build_combat_query_context(world.get()),
+      0.016F);
+  ASSERT_TRUE(attack->has_pending_melee_strike);
+
+  // Target dies during the wind-up: the pending strike must be cancelled.
+  enemy_unit->health = 0;
+  float const contact_time =
+      CombatStateComponent::k_melee_contact_fraction * attack->melee_cooldown;
+  Game::Systems::Combat::process_attacks(
+      world.get(),
+      Game::Systems::Combat::build_combat_query_context(world.get()),
+      contact_time + 0.05F);
+  EXPECT_FALSE(attack->has_pending_melee_strike);
+}
+
+TEST_F(CombatModeTest, MeleeContactFractionIsWithinSwing) {
+  EXPECT_GT(CombatStateComponent::k_melee_contact_fraction, 0.0F);
+  EXPECT_LT(CombatStateComponent::k_melee_contact_fraction, 1.0F);
+}
+
 TEST_F(CombatModeTest, RepeatedMeleeLockRestartsAttackCycleWithoutResettingSeed) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -1167,7 +1259,7 @@ TEST_F(CombatModeTest, CommanderFinisherFlagControlsFollowupPhaseDurations) {
 
   EXPECT_EQ(normal_state->animation_state, CombatAnimationState::WindUp);
   EXPECT_FLOAT_EQ(normal_state->state_duration,
-                  CombatStateComponent::k_wind_up_duration * 1.18F);
+                  CombatStateComponent::k_wind_up_duration * 1.65F);
 
   auto* finisher = world->create_entity();
   finisher->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
@@ -1190,7 +1282,7 @@ TEST_F(CombatModeTest, CommanderFinisherFlagControlsFollowupPhaseDurations) {
 
   EXPECT_EQ(finisher_state->animation_state, CombatAnimationState::WindUp);
   EXPECT_FLOAT_EQ(finisher_state->state_duration,
-                  CombatStateComponent::k_wind_up_duration * 1.42F);
+                  CombatStateComponent::k_wind_up_duration * 2.10F);
 }
 
 TEST_F(CombatModeTest, MeleeLockKeepsCurrentTargetEvenWhenCloserEnemyExists) {

@@ -18,6 +18,7 @@
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
+#include "../../marketplace_renderer_common.h"
 #include "../../registry.h"
 
 namespace Render::GL::Roman {
@@ -120,9 +121,8 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
 
   // -- Trading counter --
   float const counter_h = 0.44F * height_multiplier;
-  desc.add_box(QVector3D(-0.20F, counter_h, 0.0F),
-               QVector3D(0.62F, 0.05F, 0.86F),
-               c.cedar);
+  desc.add_box(
+      QVector3D(-0.20F, counter_h, 0.0F), QVector3D(0.62F, 0.05F, 0.86F), c.cedar);
   // Counter legs
   desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, -0.78F),
                QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
@@ -209,24 +209,21 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   return build_building_archetype(desc, state);
 }
 
-void draw_marketplace(const DrawContext& ctx, ISubmitter& out) {
-  static auto normal = build_marketplace_archetype(BuildingState::Normal);
-  static auto damaged = build_marketplace_archetype(BuildingState::Damaged);
-  static auto destroyed = build_marketplace_archetype(BuildingState::Destroyed);
-
-  BuildingState const state = resolve_building_state(ctx);
-  const RenderArchetype& archetype = (state == BuildingState::Destroyed) ? destroyed
-                                     : (state == BuildingState::Damaged) ? damaged
-                                                                         : normal;
-  submit_building_instance(out, ctx, archetype);
-  draw_building_health_bar(out, ctx, {1.0F, 0.08F, 1.2F});
-  draw_building_selection_overlay(out, ctx, {1.8F, 1.8F});
+auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
+  static const BuildingArchetypeSet k_set =
+      build_stateful_building_archetype_set(build_marketplace_archetype);
+  return k_set.for_state(state);
 }
 
 } // namespace
 
 void register_marketplace_renderer(EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "roman", "marketplace", draw_marketplace);
+  register_marketplace_renderer_variant(
+      registry,
+      MarketplaceRendererConfig{.nation_slug = "roman",
+                                .archetype = &marketplace_archetype,
+                                .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.2F},
+                                .selection = BuildingSelectionStyle{1.8F, 1.8F}});
 }
 
 } // namespace Render::GL::Roman

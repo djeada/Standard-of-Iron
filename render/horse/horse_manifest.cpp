@@ -259,31 +259,121 @@ auto build_horse_torso_section_mesh(std::span<const TorsoSectionRing> rings,
   return node;
 }
 
+// Periodic centripetal Catmull-Rom resampling of a closed control polygon.
+// Passes through every control point (so silhouette extrema are preserved) and
+// inserts smooth interpolated samples in between to remove faceting.
+auto resample_closed_centripetal(std::span<const QVector3D> control,
+                                 std::size_t samples_per_segment)
+    -> std::vector<QVector3D> {
+  std::size_t const n = control.size();
+  if (n < 3U || samples_per_segment <= 1U) {
+    return {control.begin(), control.end()};
+  }
+  std::vector<QVector3D> out;
+  out.reserve(n * samples_per_segment);
+  auto next_knot = [](float t, QVector3D const& a, QVector3D const& b) {
+    float const d = std::sqrt((b - a).length());
+    return t + (d > 1.0e-6F ? d : 1.0e-6F);
+  };
+  for (std::size_t s = 0; s < n; ++s) {
+    QVector3D const& p0 = control[(s + n - 1U) % n];
+    QVector3D const& p1 = control[s];
+    QVector3D const& p2 = control[(s + 1U) % n];
+    QVector3D const& p3 = control[(s + 2U) % n];
+    float const t0 = 0.0F;
+    float const t1 = next_knot(t0, p0, p1);
+    float const t2 = next_knot(t1, p1, p2);
+    float const t3 = next_knot(t2, p2, p3);
+    for (std::size_t k = 0; k < samples_per_segment; ++k) {
+      float const u = static_cast<float>(k) / static_cast<float>(samples_per_segment);
+      float const t = t1 + (t2 - t1) * u;
+      QVector3D const a1 = p0 * ((t1 - t) / (t1 - t0)) + p1 * ((t - t0) / (t1 - t0));
+      QVector3D const a2 = p1 * ((t2 - t) / (t2 - t1)) + p2 * ((t - t1) / (t2 - t1));
+      QVector3D const a3 = p2 * ((t3 - t) / (t3 - t2)) + p3 * ((t - t2) / (t3 - t2));
+      QVector3D const b1 = a1 * ((t2 - t) / (t2 - t0)) + a2 * ((t - t0) / (t2 - t0));
+      QVector3D const b2 = a2 * ((t3 - t) / (t3 - t1)) + a3 * ((t - t1) / (t3 - t1));
+      out.push_back(b1 * ((t2 - t) / (t2 - t1)) + b2 * ((t - t1) / (t2 - t1)));
+    }
+  }
+  return out;
+}
+
+// Replaces each vertex normal with the area-weighted average of the normals of
+// the triangles that touch it, producing smooth shading across rings and caps.
+// Normals are oriented to face away from the mesh centroid so lighting matches
+// the original outward-radial convention regardless of triangle winding.
+void recompute_smooth_normals(std::vector<Render::GL::Vertex>& vertices,
+                              std::span<const unsigned int> indices) {
+  for (Render::GL::Vertex& v : vertices) {
+    v.normal[0] = 0.0F;
+    v.normal[1] = 0.0F;
+    v.normal[2] = 0.0F;
+  }
+  auto pos = [&](unsigned int i) {
+    return QVector3D(
+        vertices[i].position[0], vertices[i].position[1], vertices[i].position[2]);
+  };
+  QVector3D centroid;
+  for (Render::GL::Vertex const& v : vertices) {
+    centroid += QVector3D(v.position[0], v.position[1], v.position[2]);
+  }
+  if (!vertices.empty()) {
+    centroid /= static_cast<float>(vertices.size());
+  }
+  for (std::size_t i = 0; i + 2U < indices.size(); i += 3U) {
+    unsigned int const ia = indices[i];
+    unsigned int const ib = indices[i + 1U];
+    unsigned int const ic = indices[i + 2U];
+    QVector3D const face =
+        QVector3D::crossProduct(pos(ib) - pos(ia), pos(ic) - pos(ia));
+    for (unsigned int const idx : {ia, ib, ic}) {
+      vertices[idx].normal[0] += face.x();
+      vertices[idx].normal[1] += face.y();
+      vertices[idx].normal[2] += face.z();
+    }
+  }
+  for (Render::GL::Vertex& v : vertices) {
+    QVector3D n(v.normal[0], v.normal[1], v.normal[2]);
+    QVector3D const outward =
+        QVector3D(v.position[0], v.position[1], v.position[2]) - centroid;
+    if (QVector3D::dotProduct(n, outward) < 0.0F) {
+      n = -n;
+    }
+    if (n.lengthSquared() <= 1.0e-12F) {
+      n = outward.lengthSquared() > 1.0e-12F ? outward.normalized()
+                                             : QVector3D(0.0F, 1.0F, 0.0F);
+    } else {
+      n.normalize();
+    }
+    v.normal[0] = n.x();
+    v.normal[1] = n.y();
+    v.normal[2] = n.z();
+  }
+}
+
 auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
     -> Render::Creature::Quadruped::CustomMeshNode {
   using Render::GL::Vertex;
 
-  auto append_vertex = [](std::vector<Vertex>& vertices,
-                          QVector3D const& p,
-                          QVector3D n) {
-    if (n.lengthSquared() <= 1.0e-8F) {
-      n = QVector3D(0.0F, 1.0F, 0.0F);
-    } else {
-      n.normalize();
-    }
-    vertices.push_back({{p.x(), p.y(), p.z()}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+  auto append_vertex = [](std::vector<Vertex>& vertices, QVector3D const& p) {
+    vertices.push_back({{p.x(), p.y(), p.z()}, {0.0F, 1.0F, 0.0F}, {0.0F, 0.0F}});
   };
 
+  // Hand-authored horse-head silhouette control points (back to front order).
+  constexpr std::size_t k_control_count = 9U;
+  constexpr std::size_t k_samples_per_segment = 4U;
+  std::size_t const k_ring_vertices = k_control_count * k_samples_per_segment;
+
   Render::Creature::Quadruped::CustomMeshNode node;
-  constexpr std::size_t k_ring_vertices = 9U;
   node.vertices.reserve(rings.size() * k_ring_vertices + 2U);
-  node.indices.reserve((rings.size() - 1U) * k_ring_vertices * 6U + 54U);
+  node.indices.reserve((rings.size() - 1U) * k_ring_vertices * 6U +
+                       k_ring_vertices * 6U);
 
   for (MuzzleRingProfile const& ring : rings) {
     float const upper_width = ring.half_width * 0.56F;
     float const jaw_width = ring.half_width * 0.62F;
     float const chin_width = ring.half_width * 0.10F;
-    std::array<QVector3D, k_ring_vertices> const points{{
+    std::array<QVector3D, k_control_count> const control{{
         {0.0F, ring.y + ring.top, ring.z},
         {upper_width, ring.y + ring.top * 0.58F, ring.z},
         {ring.half_width, ring.y + ring.top * 0.06F, ring.z},
@@ -294,9 +384,16 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
         {-ring.half_width, ring.y + ring.top * 0.06F, ring.z},
         {-upper_width, ring.y + ring.top * 0.58F, ring.z},
     }};
-    for (QVector3D const& point : points) {
-      append_vertex(
-          node.vertices, point, QVector3D(point.x(), point.y() - ring.y, 0.0F));
+    std::vector<QVector3D> const loop =
+        resample_closed_centripetal(control, k_samples_per_segment);
+    float const y_top = ring.y + ring.top;
+    float const y_bot = ring.y - ring.bottom;
+    for (QVector3D point : loop) {
+      // Clamp away any spline overshoot so head silhouette stays bounded.
+      point.setX(std::clamp(point.x(), -ring.half_width, ring.half_width));
+      point.setY(std::clamp(point.y(), y_bot, y_top));
+      point.setZ(ring.z);
+      append_vertex(node.vertices, point);
     }
   }
 
@@ -311,10 +408,7 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
                            profile.y + (profile.top - profile.bottom) *
                                            (front_facing ? 0.34F : 0.20F),
                            cap_z);
-    append_vertex(node.vertices,
-                  center,
-                  front_facing ? QVector3D(0.0F, 0.0F, 1.0F)
-                               : QVector3D(0.0F, 0.0F, -1.0F));
+    append_vertex(node.vertices, center);
     auto const center_index = static_cast<unsigned int>(node.vertices.size() - 1U);
     for (std::size_t i = 0; i < k_ring_vertices; ++i) {
       auto const a = static_cast<unsigned int>(base + i);
@@ -341,6 +435,7 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
 
   append_cap(0U, false);
   append_cap(rings.size() - 1U, true);
+  recompute_smooth_normals(node.vertices, node.indices);
   return node;
 }
 
@@ -484,8 +579,8 @@ auto build_horse_whole_nodes() -> std::vector<Render::Creature::Quadruped::MeshN
   neck.end_radius = 0.40F * (bw * 0.20F * k_horse_neck_width_scale *
                                  Render::Horse::k_horse_neck_width_boost +
                              bh * 0.19F * k_horse_neck_height_scale);
-  neck.segment_count = 5U;
-  neck.ring_vertices = 8U;
+  neck.segment_count = 9U;
+  neck.ring_vertices = 16U;
   nodes.push_back({"horse.neck",
                    static_cast<BoneIndex>(HorseBone::NeckTop),
                    k_role_coat,

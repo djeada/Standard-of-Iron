@@ -49,9 +49,8 @@ auto span_stake_position(int index, int stake_count, bool connected_span) -> flo
   static constexpr float k_connected_start_t = 0.06F;
   static constexpr float k_connected_end_t = 0.98F;
   const float denom = static_cast<float>(stake_count - 1);
-  return k_connected_start_t +
-         ((k_connected_end_t - k_connected_start_t) *
-          (static_cast<float>(index) / denom));
+  return k_connected_start_t + ((k_connected_end_t - k_connected_start_t) *
+                                (static_cast<float>(index) / denom));
 }
 
 void add_x_span(BuildingArchetypeDesc& desc,

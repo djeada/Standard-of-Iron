@@ -1,18 +1,10 @@
 #pragma once
 
-#include <QVector3D>
-
-#include <optional>
-#include <string>
+#include "../../swordsman_renderer_common.h"
 
 namespace Render::GL::Roman {
 
-struct KnightStyleConfig {
-  std::optional<QVector3D> cloth_color;
-  std::optional<QVector3D> leather_color;
-  std::optional<QVector3D> leather_dark_color;
-  std::optional<QVector3D> metal_color;
-};
+using KnightStyleConfig = ::Render::GL::SwordsmanStyleConfig;
 
 void register_roman_swordsman_style();
 

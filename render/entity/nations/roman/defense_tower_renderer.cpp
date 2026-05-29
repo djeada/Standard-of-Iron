@@ -8,14 +8,15 @@
 #include <numbers>
 
 #include "../../../../game/core/component.h"
-#include "../../../geom/math_utils.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_render_common.h"
+#include "../../defense_tower_renderer_common.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Roman {
 namespace {
@@ -72,8 +73,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.0F, 0.10F, 0.0F), QVector3D(1.18F, 0.06F, 1.18F), c.limestone_dark);
   desc.add_box(
       QVector3D(0.0F, 0.18F, 0.0F), QVector3D(1.08F, 0.08F, 1.08F), c.limestone);
-  desc.add_box(
-      QVector3D(0.0F, 0.28F, 0.0F), QVector3D(1.02F, 0.02F, 1.02F), c.marble);
+  desc.add_box(QVector3D(0.0F, 0.28F, 0.0F), QVector3D(1.02F, 0.02F, 1.02F), c.marble);
 
   // == PODIUM TILE DECORATIONS ==
   for (float x = -0.88F; x <= 0.88F; x += 0.44F) {
@@ -234,9 +234,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  c.cedar_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.28F, 1.36F, -0.20F),
-                 QVector3D(0.14F, 0.10F, 0.12F),
-                 c.terracotta);
+    desc.add_box(
+        QVector3D(0.28F, 1.36F, -0.20F), QVector3D(0.14F, 0.10F, 0.12F), c.terracotta);
   }
 
   return build_building_archetype(desc, state);
@@ -342,29 +341,23 @@ void draw_tower_banner(const DrawContext& p,
       p, out, unit, white, palette.team, palette.team_trim, style, &cloth);
 }
 
-void draw_defense_tower(const DrawContext& p, ISubmitter& out) {
-  if (p.entity == nullptr) {
-    return;
-  }
-
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (r == nullptr) {
-    return;
-  }
-
-  TowerPalette const palette =
-      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
-  BuildingState const state = resolve_building_state(p);
-  submit_building_instance(out, p, tower_archetype(state));
-  draw_tower_banner(p, out, palette, state);
-  draw_building_health_bar(out, p, tower_health_bar_style(state));
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.6F, 1.6F});
+void draw_tower_banner_for_team(const DrawContext& p,
+                                ISubmitter& out,
+                                const QVector3D& team,
+                                BuildingState state) {
+  draw_tower_banner(p, out, make_palette(team), state);
 }
 
 } // namespace
 
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "roman", "defense_tower", draw_defense_tower);
+  register_defense_tower_renderer_variant(
+      registry,
+      DefenseTowerRendererConfig{.nation_slug = "roman",
+                                 .archetype = &tower_archetype,
+                                 .health_bar_style = &tower_health_bar_style,
+                                 .draw_banner = &draw_tower_banner_for_team,
+                                 .selection = BuildingSelectionStyle{1.6F, 1.6F}});
 }
 
 } // namespace Render::GL::Roman

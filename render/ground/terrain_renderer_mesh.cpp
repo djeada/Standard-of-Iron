@@ -1,0 +1,1051 @@
+#include <QDebug>
+#include <QElapsedTimer>
+#include <QQuaternion>
+#include <QVector2D>
+#include <QtGlobal>
+#include <qelapsedtimer.h>
+#include <qglobal.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "../../game/map/render_visibility_rules.h"
+#include "../../game/map/terrain_service.h"
+#include "../../game/map/visibility_service.h"
+#include "../gl/mesh.h"
+#include "../gl/render_constants.h"
+#include "../gl/resources.h"
+#include "../scene_renderer.h"
+#include "ground_utils.h"
+#include "map/terrain.h"
+#include "terrain_renderer.h"
+#include "world_chunk.h"
+
+namespace {
+
+using std::uint32_t;
+using namespace Render::GL::Geometry;
+using namespace Render::Ground;
+
+inline auto apply_tint(const QVector3D& color, float tint) -> QVector3D {
+  QVector3D const c = color * tint;
+  return {std::clamp(c.x(), 0.0F, 1.0F),
+          std::clamp(c.y(), 0.0F, 1.0F),
+          std::clamp(c.z(), 0.0F, 1.0F)};
+}
+
+inline auto clamp01(const QVector3D& c) -> QVector3D {
+  return {std::clamp(c.x(), 0.0F, 1.0F),
+          std::clamp(c.y(), 0.0F, 1.0F),
+          std::clamp(c.z(), 0.0F, 1.0F)};
+}
+
+inline auto linstep(float a, float b, float x) -> float {
+  return std::clamp((x - a) / std::max(1e-6F, (b - a)), 0.0F, 1.0F);
+}
+inline auto smooth(float a, float b, float x) -> float {
+  float const t = linstep(a, b, x);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+} // namespace
+
+namespace Render::GL {
+
+auto TerrainRenderer::section_for(Game::Map::TerrainType type) -> int {
+  switch (type) {
+  case Game::Map::TerrainType::Mountain:
+    return 2;
+  case Game::Map::TerrainType::Hill:
+    return 1;
+  case Game::Map::TerrainType::Forest:
+  case Game::Map::TerrainType::Flat:
+  default:
+    return 0;
+  }
+}
+
+void TerrainRenderer::build_meshes() {
+  QElapsedTimer timer;
+  timer.start();
+
+  m_chunks.clear();
+  m_chunk_visibility_cache.clear();
+
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
+    return;
+  }
+
+  std::vector<float> height_data = m_height_data;
+  const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
+  const auto climate_profile = Game::Map::make_climate_profile(m_biome_settings);
+  std::vector<float> entry_weight;
+  if (!m_hill_entrances.empty() && m_hill_entrances.size() == height_data.size()) {
+    constexpr int k_entry_radius = 4;
+    entry_weight.assign(height_data.size(), 0.0F);
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int const idx = z * m_width + x;
+        if (m_terrain_types[idx] != Game::Map::TerrainType::Hill) {
+          continue;
+        }
+        auto min_dist = float(k_entry_radius + 1);
+        for (int dz = -k_entry_radius; dz <= k_entry_radius; ++dz) {
+          int const nz = z + dz;
+          if (nz < 0 || nz >= m_height) {
+            continue;
+          }
+          for (int dx = -k_entry_radius; dx <= k_entry_radius; ++dx) {
+            int const nx = x + dx;
+            if (nx < 0 || nx >= m_width) {
+              continue;
+            }
+            int const n_idx = nz * m_width + nx;
+            if (!m_hill_entrances[n_idx]) {
+              continue;
+            }
+            float const dist = std::sqrt(float(dx * dx + dz * dz));
+            min_dist = std::min(min_dist, dist);
+          }
+        }
+        if (min_dist <= k_entry_radius) {
+          float const t = 1.0F - (min_dist / float(k_entry_radius));
+          entry_weight[idx] = t * t;
+        }
+      }
+    }
+  }
+
+  float min_h = std::numeric_limits<float>::infinity();
+  float max_h = -std::numeric_limits<float>::infinity();
+  for (float const h : height_data) {
+    min_h = std::min(min_h, h);
+    max_h = std::max(max_h, h);
+  }
+  const float height_range = std::max(1e-4F, max_h - min_h);
+
+  const float half_width = m_width * 0.5F - 0.5F;
+  const float half_height = m_height * 0.5F - 0.5F;
+  const int vertex_count = m_width * m_height;
+
+  std::vector<QVector3D> positions(vertex_count);
+  std::vector<QVector3D> normals(vertex_count, QVector3D(0.0F, 0.0F, 0.0F));
+  std::vector<QVector3D> face_accum(vertex_count, QVector3D(0, 0, 0));
+  std::vector<float> feature_foot_weight(vertex_count, 0.0F);
+
+  auto is_elevated_feature = [&](int idx) {
+    if (idx < 0 || idx >= static_cast<int>(m_terrain_types.size())) {
+      return false;
+    }
+    return m_terrain_types[idx] == Game::Map::TerrainType::Hill ||
+           m_terrain_types[idx] == Game::Map::TerrainType::Mountain;
+  };
+
+  {
+    constexpr int k_feature_foot_radius = 5;
+    constexpr float k_height_edge_threshold = 0.035F;
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int const idx = z * m_width + x;
+        bool const center_feature = is_elevated_feature(idx);
+        auto min_dist = float(k_feature_foot_radius + 1);
+        float max_height_delta = 0.0F;
+
+        for (int dz = -k_feature_foot_radius; dz <= k_feature_foot_radius; ++dz) {
+          int const nz = z + dz;
+          if (nz < 0 || nz >= m_height) {
+            continue;
+          }
+          for (int dx = -k_feature_foot_radius; dx <= k_feature_foot_radius; ++dx) {
+            int const nx = x + dx;
+            if (nx < 0 || nx >= m_width) {
+              continue;
+            }
+            float const dist = std::sqrt(float(dx * dx + dz * dz));
+            if (dist > float(k_feature_foot_radius)) {
+              continue;
+            }
+
+            int const n_idx = nz * m_width + nx;
+            if (is_elevated_feature(n_idx) != center_feature) {
+              min_dist = std::min(min_dist, dist);
+            }
+            max_height_delta = std::max(
+                max_height_delta, std::abs(height_data[n_idx] - height_data[idx]));
+          }
+        }
+
+        float const boundary_t = (min_dist <= float(k_feature_foot_radius))
+                                     ? 1.0F - (min_dist / float(k_feature_foot_radius))
+                                     : 0.0F;
+        float const height_edge_t =
+            smooth(0.0F,
+                   k_height_edge_threshold * float(k_feature_foot_radius),
+                   max_height_delta);
+        float const foot = boundary_t * boundary_t * (3.0F - 2.0F * boundary_t);
+        feature_foot_weight[idx] =
+            std::clamp(foot * (0.35F + 0.65F * height_edge_t), 0.0F, 1.0F);
+      }
+    }
+  }
+
+  {
+    constexpr int k_visual_blur_passes = 4;
+    constexpr float k_feature_side_blend = 0.42F;
+    constexpr float k_ground_side_blend = 0.58F;
+    for (int pass = 0; pass < k_visual_blur_passes; ++pass) {
+      std::vector<float> next_heights = height_data;
+      for (int z = 1; z < m_height - 1; ++z) {
+        for (int x = 1; x < m_width - 1; ++x) {
+          int const idx = z * m_width + x;
+          float const foot = feature_foot_weight[idx];
+          if (foot <= 0.001F) {
+            continue;
+          }
+
+          float weighted_sum = height_data[idx] * 3.0F;
+          float weight_sum = 3.0F;
+          for (int dz = -1; dz <= 1; ++dz) {
+            for (int dx = -1; dx <= 1; ++dx) {
+              if (dx == 0 && dz == 0) {
+                continue;
+              }
+              int const n_idx = (z + dz) * m_width + (x + dx);
+              float const weight = (dx == 0 || dz == 0) ? 1.0F : 0.65F;
+              weighted_sum += height_data[n_idx] * weight;
+              weight_sum += weight;
+            }
+          }
+
+          float const entry_protection =
+              (!entry_weight.empty()) ? (1.0F - 0.45F * entry_weight[idx]) : 1.0F;
+          float const side_blend =
+              is_elevated_feature(idx) ? k_feature_side_blend : k_ground_side_blend;
+          float const blend =
+              std::clamp(foot * side_blend * entry_protection, 0.0F, 0.85F);
+          float const avg = weighted_sum / weight_sum;
+          next_heights[idx] = height_data[idx] * (1.0F - blend) + avg * blend;
+        }
+      }
+      height_data.swap(next_heights);
+    }
+  }
+
+  for (int z = 0; z < m_height; ++z) {
+    for (int x = 0; x < m_width; ++x) {
+      int const idx = z * m_width + x;
+      float const world_x = (x - half_width) * m_tile_size;
+      float const world_z = (z - half_height) * m_tile_size;
+      positions[idx] = QVector3D(world_x, height_data[idx], world_z);
+    }
+  }
+
+  auto sample_height_at = [&](float gx, float gz) {
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const h00 = height_data[z0 * m_width + x0];
+    float const h10 = height_data[z0 * m_width + x1];
+    float const h01 = height_data[z1 * m_width + x0];
+    float const h11 = height_data[z1 * m_width + x1];
+    float const h0 = h00 * (1.0F - tx) + h10 * tx;
+    float const h1 = h01 * (1.0F - tx) + h11 * tx;
+    return h0 * (1.0F - tz) + h1 * tz;
+  };
+
+  auto sample_entry_at = [&](float gx, float gz) {
+    if (entry_weight.empty()) {
+      return 0.0F;
+    }
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const e00 = entry_weight[z0 * m_width + x0];
+    float const e10 = entry_weight[z0 * m_width + x1];
+    float const e01 = entry_weight[z1 * m_width + x0];
+    float const e11 = entry_weight[z1 * m_width + x1];
+    float const e0 = e00 * (1.0F - tx) + e10 * tx;
+    float const e1 = e01 * (1.0F - tx) + e11 * tx;
+    return e0 * (1.0F - tz) + e1 * tz;
+  };
+
+  auto sample_feature_foot_at = [&](float gx, float gz) {
+    if (feature_foot_weight.empty()) {
+      return 0.0F;
+    }
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const f00 = feature_foot_weight[z0 * m_width + x0];
+    float const f10 = feature_foot_weight[z0 * m_width + x1];
+    float const f01 = feature_foot_weight[z1 * m_width + x0];
+    float const f11 = feature_foot_weight[z1 * m_width + x1];
+    float const f0 = f00 * (1.0F - tx) + f10 * tx;
+    float const f1 = f01 * (1.0F - tx) + f11 * tx;
+    return f0 * (1.0F - tz) + f1 * tz;
+  };
+
+  auto sample_curvature_magnitude_at = [&](int gx, int gz) {
+    gx = std::clamp(gx, 0, m_width - 1);
+    gz = std::clamp(gz, 0, m_height - 1);
+
+    auto& terrain_service = Game::Map::TerrainService::instance();
+    if (terrain_service.is_initialized()) {
+      auto const& field = terrain_service.terrain_field();
+      if (field.width == m_width && field.height == m_height &&
+          !field.curvature.empty()) {
+        return field.sample_curvature_at(gx, gz);
+      }
+    }
+
+    auto h = [&](int sample_x, int sample_z) {
+      sample_x = std::clamp(sample_x, 0, m_width - 1);
+      sample_z = std::clamp(sample_z, 0, m_height - 1);
+      return height_data[sample_z * m_width + sample_x];
+    };
+
+    float const h_c = h(gx, gz);
+    float const h_l = h(gx - 1, gz);
+    float const h_r = h(gx + 1, gz);
+    float const h_d = h(gx, gz - 1);
+    float const h_u = h(gx, gz + 1);
+    float const h_dl = h(gx - 1, gz - 1);
+    float const h_dr = h(gx + 1, gz - 1);
+    float const h_ul = h(gx - 1, gz + 1);
+    float const h_ur = h(gx + 1, gz + 1);
+
+    float const dxx = h_r - 2.0F * h_c + h_l;
+    float const dzz = h_u - 2.0F * h_c + h_d;
+    float const dxz = 0.25F * (h_ur - h_ul - h_dr + h_dl);
+    float const curvature_scale = std::max(m_tile_size * m_tile_size, 0.0001F);
+    return std::sqrt(dxx * dxx + dzz * dzz + 2.0F * dxz * dxz) / curvature_scale;
+  };
+
+  auto normal_from_heights_at = [&](float gx, float gz) {
+    float const gx0 = std::clamp(gx - 1.0F, 0.0F, float(m_width - 1));
+    float const gx1 = std::clamp(gx + 1.0F, 0.0F, float(m_width - 1));
+    float const gz0 = std::clamp(gz - 1.0F, 0.0F, float(m_height - 1));
+    float const gz1 = std::clamp(gz + 1.0F, 0.0F, float(m_height - 1));
+    float const h_l = sample_height_at(gx0, gz);
+    float const h_r = sample_height_at(gx1, gz);
+    float const h_d = sample_height_at(gx, gz0);
+    float const h_u = sample_height_at(gx, gz1);
+    QVector3D const dx(2.0F * m_tile_size, h_r - h_l, 0.0F);
+    QVector3D const dz(0.0F, h_u - h_d, 2.0F * m_tile_size);
+    QVector3D n = QVector3D::crossProduct(dz, dx);
+    if (n.lengthSquared() > 0.0F) {
+      n.normalize();
+    }
+    return n.isNull() ? QVector3D(0, 1, 0) : n;
+  };
+
+  for (int i = 0; i < vertex_count; ++i) {
+    int const x = i % m_width;
+    int const z = i / m_width;
+    normals[i] = normal_from_heights_at(float(x), float(z));
+    face_accum[i] = normals[i];
+  }
+
+  {
+    std::vector<QVector3D> filtered = normals;
+    auto get_n = [&](int x, int z) -> QVector3D& {
+      return normals[z * m_width + x];
+    };
+
+    for (int z = 1; z < m_height - 1; ++z) {
+      for (int x = 1; x < m_width - 1; ++x) {
+        const int idx = z * m_width + x;
+        const float h0 = height_data[idx];
+        const float nh = (h0 - min_h) / height_range;
+
+        const float h_l = height_data[z * m_width + (x - 1)];
+        const float h_r = height_data[z * m_width + (x + 1)];
+        const float h_d = height_data[(z - 1) * m_width + x];
+        const float h_u = height_data[(z + 1) * m_width + x];
+        const float avg_nbr = 0.25F * (h_l + h_r + h_d + h_u);
+        const float convexity = h0 - avg_nbr;
+
+        const QVector3D n0 = normals[idx];
+        const float slope = 1.0F - std::clamp(n0.y(), 0.0F, 1.0F);
+
+        const float ridge_s = smooth(0.35F, 0.70F, slope);
+        const float ridge_c = smooth(-0.02F, 0.18F, convexity);
+        const float ridge_factor =
+            std::clamp(0.5F * ridge_s + 0.5F * ridge_c, 0.0F, 1.0F);
+        const float base_boost = 0.6F * (1.0F - nh);
+
+        QVector3D acc(0, 0, 0);
+        float wsum = 0.0F;
+        for (int dz = -1; dz <= 1; ++dz) {
+          for (int dx = -1; dx <= 1; ++dx) {
+            const int nx = x + dx;
+            const int nz = z + dz;
+            const int n_idx = nz * m_width + nx;
+
+            const float dh = std::abs(height_data[n_idx] - h0);
+            const QVector3D nn = get_n(nx, nz);
+            const float ndot = std::max(0.0F, QVector3D::dotProduct(n0, nn));
+
+            const float w_h = 1.0F / (1.0F + 2.0F * dh);
+            const float w_n = std::pow(ndot, 8.0F);
+            const float w_b = 1.0F + base_boost;
+            const float w_r = 1.0F - ridge_factor * 0.85F;
+
+            const float w = w_h * w_n * w_b * w_r;
+            acc += nn * w;
+            wsum += w;
+          }
+        }
+
+        QVector3D n_filtered = (wsum > 0.0F) ? (acc / wsum) : n0;
+        n_filtered.normalize();
+
+        const QVector3D n_orig = face_accum[idx];
+        const QVector3D n_final =
+            (ridge_factor > 0.0F)
+                ? (n_filtered * (1.0F - ridge_factor) + n_orig * ridge_factor)
+                : n_filtered;
+
+        filtered[idx] = n_final.normalized();
+      }
+    }
+    normals.swap(filtered);
+  }
+
+  auto quad_section = [&](Game::Map::TerrainType a,
+                          Game::Map::TerrainType b,
+                          Game::Map::TerrainType c,
+                          Game::Map::TerrainType d) {
+    int const priority_a = section_for(a);
+    int const priority_b = section_for(b);
+    int const priority_c = section_for(c);
+    int const priority_d = section_for(d);
+    int result = priority_a;
+    result = std::max(result, priority_b);
+    result = std::max(result, priority_c);
+    result = std::max(result, priority_d);
+    return result;
+  };
+
+  const int chunk_size = default_chunk_size;
+  std::size_t total_triangles = 0;
+
+  for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
+    int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
+    for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
+      int const chunk_max_x = std::min(chunk_x + chunk_size, m_width - 1);
+
+      struct SectionData {
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::unordered_map<int, unsigned int> remap;
+        float height_sum = 0.0F;
+        int height_count = 0;
+        QVector3D normal_sum = QVector3D(0, 0, 0);
+        float slope_sum = 0.0F;
+        float height_var_sum = 0.0F;
+        int stat_count = 0;
+
+        float ao_sum = 0.0F;
+        int ao_count = 0;
+        float curvature_sum = 0.0F;
+        int curvature_count = 0;
+        float entry_sum = 0.0F;
+        float entry_peak = 0.0F;
+        int entry_count = 0;
+      };
+
+      SectionData sections[3];
+
+      auto ensure_vertex = [&](SectionData& section, int global_index) -> unsigned int {
+        auto it = section.remap.find(global_index);
+        if (it != section.remap.end()) {
+          return it->second;
+        }
+        Vertex v{};
+        const QVector3D& pos = positions[global_index];
+        const QVector3D& normal = normals[global_index];
+        v.position[0] = pos.x();
+        v.position[1] = pos.y();
+        v.position[2] = pos.z();
+        v.normal[0] = normal.x();
+        v.normal[1] = normal.y();
+        v.normal[2] = normal.z();
+
+        v.tex_coord[0] = feature_foot_weight[global_index];
+        v.tex_coord[1] = entry_weight.empty() ? 0.0F : entry_weight[global_index];
+
+        section.vertices.push_back(v);
+        auto const local_index = static_cast<unsigned int>(section.vertices.size() - 1);
+        section.remap.emplace(global_index, local_index);
+        section.normal_sum += normal;
+        return local_index;
+      };
+
+      auto add_vertex = [&](SectionData& section,
+                            const QVector3D& pos,
+                            const QVector3D& normal,
+                            float entry_mask) -> unsigned int {
+        Vertex v{};
+        v.position[0] = pos.x();
+        v.position[1] = pos.y();
+        v.position[2] = pos.z();
+        v.normal[0] = normal.x();
+        v.normal[1] = normal.y();
+        v.normal[2] = normal.z();
+
+        v.tex_coord[0] = sample_feature_foot_at((pos.x() / m_tile_size) + half_width,
+                                                (pos.z() / m_tile_size) + half_height);
+        v.tex_coord[1] = entry_weight.empty() ? 0.0F : entry_mask;
+
+        section.vertices.push_back(v);
+        auto const local_index = static_cast<unsigned int>(section.vertices.size() - 1);
+        section.normal_sum += normal;
+        return local_index;
+      };
+
+      auto add_vertex_at_grid = [&](SectionData& section,
+                                    float gx,
+                                    float gz,
+                                    float entry_mask) -> unsigned int {
+        float const world_x = (gx - half_width) * m_tile_size;
+        float const world_z = (gz - half_height) * m_tile_size;
+        float const h = sample_height_at(gx, gz);
+        QVector3D const pos(world_x, h, world_z);
+        QVector3D const normal = normal_from_heights_at(gx, gz);
+        return add_vertex(section, pos, normal, entry_mask);
+      };
+
+      for (int z = chunk_z; z < chunk_max_z; ++z) {
+        for (int x = chunk_x; x < chunk_max_x; ++x) {
+          int const idx0 = z * m_width + x;
+          int const idx1 = idx0 + 1;
+          int const idx2 = (z + 1) * m_width + x;
+          int const idx3 = idx2 + 1;
+
+          int const section_index = quad_section(m_terrain_types[idx0],
+                                                 m_terrain_types[idx1],
+                                                 m_terrain_types[idx2],
+                                                 m_terrain_types[idx3]);
+
+          SectionData& section = sections[section_index];
+          unsigned int const v0 = ensure_vertex(section, idx0);
+          unsigned int const v1 = ensure_vertex(section, idx1);
+          unsigned int const v2 = ensure_vertex(section, idx2);
+          unsigned int const v3 = ensure_vertex(section, idx3);
+
+          float entry_factor = 0.0F;
+          if (!entry_weight.empty()) {
+            entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
+                                    entry_weight[idx2] + entry_weight[idx3]);
+          }
+          float const foot_factor =
+              0.25F * (feature_foot_weight[idx0] + feature_foot_weight[idx1] +
+                       feature_foot_weight[idx2] + feature_foot_weight[idx3]);
+          section.entry_sum += entry_factor;
+          section.entry_peak = std::max(section.entry_peak, entry_factor);
+          section.entry_count += 1;
+          bool const subdivide =
+              section_index > 0 && (entry_factor > 0.20F || foot_factor > 0.16F);
+
+          if (subdivide) {
+            auto const gx = float(x);
+            auto const gz = float(z);
+            unsigned int const v00 = v0;
+            unsigned int const v20 = v1;
+            unsigned int const v02 = v2;
+            unsigned int const v22 = v3;
+
+            unsigned int const v10 = add_vertex_at_grid(
+                section, gx + 0.5F, gz, sample_entry_at(gx + 0.5F, gz));
+            unsigned int const v01 = add_vertex_at_grid(
+                section, gx, gz + 0.5F, sample_entry_at(gx, gz + 0.5F));
+            unsigned int const v21 = add_vertex_at_grid(
+                section, gx + 1.0F, gz + 0.5F, sample_entry_at(gx + 1.0F, gz + 0.5F));
+            unsigned int const v12 = add_vertex_at_grid(
+                section, gx + 0.5F, gz + 1.0F, sample_entry_at(gx + 0.5F, gz + 1.0F));
+            unsigned int const v11 = add_vertex_at_grid(
+                section, gx + 0.5F, gz + 0.5F, sample_entry_at(gx + 0.5F, gz + 0.5F));
+
+            section.indices.push_back(v00);
+            section.indices.push_back(v10);
+            section.indices.push_back(v01);
+            section.indices.push_back(v10);
+            section.indices.push_back(v11);
+            section.indices.push_back(v01);
+
+            section.indices.push_back(v10);
+            section.indices.push_back(v20);
+            section.indices.push_back(v11);
+            section.indices.push_back(v20);
+            section.indices.push_back(v21);
+            section.indices.push_back(v11);
+
+            section.indices.push_back(v01);
+            section.indices.push_back(v11);
+            section.indices.push_back(v02);
+            section.indices.push_back(v11);
+            section.indices.push_back(v12);
+            section.indices.push_back(v02);
+
+            section.indices.push_back(v11);
+            section.indices.push_back(v21);
+            section.indices.push_back(v12);
+            section.indices.push_back(v21);
+            section.indices.push_back(v22);
+            section.indices.push_back(v12);
+          } else {
+            section.indices.push_back(v0);
+            section.indices.push_back(v1);
+            section.indices.push_back(v2);
+            section.indices.push_back(v2);
+            section.indices.push_back(v1);
+            section.indices.push_back(v3);
+          }
+
+          float const quad_height = (height_data[idx0] + height_data[idx1] +
+                                     height_data[idx2] + height_data[idx3]) *
+                                    0.25F;
+          section.height_sum += quad_height;
+          section.height_count += 1;
+
+          float const n_y = (normals[idx0].y() + normals[idx1].y() + normals[idx2].y() +
+                             normals[idx3].y()) *
+                            0.25F;
+          float const slope = 1.0F - std::clamp(n_y, 0.0F, 1.0F);
+          section.slope_sum += slope;
+
+          float const hmin = std::min(std::min(height_data[idx0], height_data[idx1]),
+                                      std::min(height_data[idx2], height_data[idx3]));
+          float const hmax = std::max(std::max(height_data[idx0], height_data[idx1]),
+                                      std::max(height_data[idx2], height_data[idx3]));
+          section.height_var_sum += (hmax - hmin);
+          section.stat_count += 1;
+
+          auto h = [&](int gx, int gz) {
+            gx = std::clamp(gx, 0, m_width - 1);
+            gz = std::clamp(gz, 0, m_height - 1);
+            return height_data[gz * m_width + gx];
+          };
+          int const cx = x;
+          int const cz = z;
+          float const h_c = quad_height;
+          float ao = 0.0F;
+          ao += std::max(0.0F, h(cx - 1, cz) - h_c);
+          ao += std::max(0.0F, h(cx + 1, cz) - h_c);
+          ao += std::max(0.0F, h(cx, cz - 1) - h_c);
+          ao += std::max(0.0F, h(cx, cz + 1) - h_c);
+          ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
+          section.ao_sum += ao;
+          section.ao_count += 1;
+
+          float const curvature = 0.25F * (sample_curvature_magnitude_at(x, z) +
+                                           sample_curvature_magnitude_at(x + 1, z) +
+                                           sample_curvature_magnitude_at(x, z + 1) +
+                                           sample_curvature_magnitude_at(x + 1, z + 1));
+          section.curvature_sum += curvature;
+          section.curvature_count += 1;
+        }
+      }
+
+      for (int i = 0; i < 3; ++i) {
+        SectionData const& section = sections[i];
+        if (section.indices.empty()) {
+          continue;
+        }
+
+        auto mesh = std::make_unique<Mesh>(section.vertices, section.indices);
+        if (!mesh) {
+          continue;
+        }
+
+        ChunkMesh chunk;
+        chunk.mesh = std::move(mesh);
+        chunk.min_x = chunk_x;
+        chunk.max_x = chunk_max_x - 1;
+        chunk.min_z = chunk_z;
+        chunk.max_z = chunk_max_z - 1;
+        chunk.type = (i == 0)   ? Game::Map::TerrainType::Flat
+                     : (i == 1) ? Game::Map::TerrainType::Hill
+                                : Game::Map::TerrainType::Mountain;
+        chunk.average_height = (section.height_count > 0)
+                                   ? section.height_sum / float(section.height_count)
+                                   : 0.0F;
+
+        const float nh_chunk = (chunk.average_height - min_h) / height_range;
+        const float avg_slope = (section.stat_count > 0)
+                                    ? (section.slope_sum / float(section.stat_count))
+                                    : 0.0F;
+        const float roughness =
+            (section.stat_count > 0)
+                ? (section.height_var_sum / float(section.stat_count))
+                : 0.0F;
+        const float avg_curvature =
+            (section.curvature_count > 0)
+                ? (section.curvature_sum / float(section.curvature_count))
+                : 0.0F;
+        const float avg_entry = (section.entry_count > 0)
+                                    ? (section.entry_sum / float(section.entry_count))
+                                    : 0.0F;
+        const float entry_peak = section.entry_peak;
+
+        const float center_gx = 0.5F * (chunk.min_x + chunk.max_x);
+        const float center_gz = 0.5F * (chunk.min_z + chunk.max_z);
+        auto hgrid = [&](int gx, int gz) {
+          gx = std::clamp(gx, 0, m_width - 1);
+          gz = std::clamp(gz, 0, m_height - 1);
+          return height_data[gz * m_width + gx];
+        };
+        const int cxi = int(center_gx);
+        const int czi = int(center_gz);
+        const float h_c = hgrid(cxi, czi);
+        const float h_l = hgrid(cxi - 1, czi);
+        const float h_r = hgrid(cxi + 1, czi);
+        const float h_d = hgrid(cxi, czi - 1);
+        const float h_u = hgrid(cxi, czi + 1);
+        const float convexity = h_c - 0.25F * (h_l + h_r + h_d + h_u);
+
+        const float edge_factor = smooth(0.25F, 0.55F, avg_slope);
+        const float plateau_flat = 1.0F - smooth(0.10F, 0.25F, avg_slope);
+        const float plateau_height = smooth(0.60F, 0.80F, nh_chunk);
+        const float plateau_factor = plateau_flat * plateau_height;
+        const float concavity_entry_hint =
+            (1.0F - edge_factor) * smooth(0.00F, 0.15F, -convexity);
+        const float entry_coverage =
+            std::clamp(avg_entry * 0.65F + entry_peak * 0.35F, 0.0F, 1.0F);
+        const float entry_factor = compute_entry_shading_factor(
+            entry_coverage, avg_slope, plateau_factor, concavity_entry_hint);
+        const CurvatureShadingResponse curvature_response =
+            compute_curvature_shading_response(chunk.type,
+                                               avg_curvature,
+                                               avg_slope,
+                                               edge_factor,
+                                               plateau_factor,
+                                               entry_factor);
+
+        QVector3D const base_color =
+            get_terrain_color(chunk.type, chunk.average_height);
+        QVector3D const rock_tint = surface_profile.rock_low;
+
+        float slope_mix = std::clamp(
+            avg_slope * ((chunk.type == Game::Map::TerrainType::Flat)   ? 0.30F
+                         : (chunk.type == Game::Map::TerrainType::Hill) ? 0.55F
+                                                                        : 0.90F),
+            0.0F,
+            1.0F);
+
+        slope_mix += 0.15F * edge_factor;
+        slope_mix += 0.08F * curvature_response.ridge_response;
+        slope_mix -= 0.18F * entry_factor;
+        slope_mix -= 0.08F * plateau_factor;
+        slope_mix -= 0.06F * curvature_response.gully_response;
+        slope_mix = std::clamp(slope_mix, 0.0F, 1.0F);
+
+        float const center_wx = (center_gx - half_width) * m_tile_size;
+        float const center_wz = (center_gz - half_height) * m_tile_size;
+        float const macro =
+            value_noise(center_wx * 0.02F, center_wz * 0.02F, m_noise_seed ^ 0x51C3U);
+        float const macro_shade = 0.9F + 0.2F * macro;
+
+        float const ao_avg =
+            (section.ao_count > 0) ? (section.ao_sum / float(section.ao_count)) : 0.0F;
+        float const ao_shade = 1.0F - 0.35F * ao_avg;
+
+        QVector3D avg_n = section.normal_sum;
+        if (avg_n.lengthSquared() > 0.0F) {
+          avg_n.normalize();
+        }
+        QVector3D const north(0, 0, 1);
+        float const northness =
+            std::clamp(QVector3D::dotProduct(avg_n, north) * 0.5F + 0.5F, 0.0F, 1.0F);
+        QVector3D const cool_tint(0.96F, 1.02F, 1.04F);
+        QVector3D const warm_tint(1.03F, 1.0F, 0.97F);
+        QVector3D const aspect_tint =
+            cool_tint * northness + warm_tint * (1.0F - northness);
+
+        float const feature_bright = 1.0F + 0.08F * plateau_factor -
+                                     0.05F * edge_factor - 0.04F * entry_factor +
+                                     0.03F * curvature_response.gully_response;
+        QVector3D const feature_tint = QVector3D(
+            1.0F + 0.03F * plateau_factor - 0.02F * entry_factor,
+            1.0F + 0.01F * plateau_factor + 0.02F * entry_factor - 0.01F * edge_factor,
+            1.0F - 0.02F * plateau_factor + 0.05F * entry_factor);
+
+        chunk.tint = 1.0F;
+
+        QVector3D color = base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
+        color = apply_tint(color, chunk.tint);
+        color *= macro_shade;
+        color.setX(color.x() * aspect_tint.x() * feature_tint.x());
+        color.setY(color.y() * aspect_tint.y() * feature_tint.y());
+        color.setZ(color.z() * aspect_tint.z() * feature_tint.z());
+        color *= ao_shade * feature_bright;
+
+        color = color * 0.96F + QVector3D(0.04F, 0.04F, 0.04F);
+        chunk.color = clamp01(color);
+
+        TerrainChunkParams params;
+        auto tint_color = [&](const QVector3D& base) {
+          return clamp01(apply_tint(base, chunk.tint));
+        };
+        params.grass_primary = tint_color(surface_profile.grass_primary);
+        params.grass_secondary = tint_color(surface_profile.grass_secondary);
+        params.grass_dry = tint_color(surface_profile.grass_dry);
+        params.soil_color = tint_color(surface_profile.soil_color);
+        params.rock_low = tint_color(surface_profile.rock_low);
+        params.rock_high = tint_color(surface_profile.rock_high);
+
+        params.tile_size = std::max(0.001F, m_tile_size);
+        params.macro_noise_scale =
+            surface_profile.terrain_macro_noise_scale *
+            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.72F : 1.0F);
+        params.detail_noise_scale =
+            surface_profile.terrain_detail_noise_scale *
+            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.62F : 1.0F);
+
+        float slope_threshold = surface_profile.terrain_rock_threshold;
+        float sharpness_mul = 1.0F;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          slope_threshold -= 0.06F;
+          sharpness_mul = 1.15F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          slope_threshold -= 0.16F;
+          sharpness_mul = 1.60F;
+        }
+        slope_threshold -= 0.05F * edge_factor;
+        slope_threshold += 0.08F * entry_factor;
+        slope_threshold -= 0.04F * curvature_response.ridge_response;
+        slope_threshold = std::clamp(
+            slope_threshold - std::clamp(avg_slope * 0.20F, 0.0F, 0.12F), 0.05F, 0.9F);
+
+        params.slope_rock_threshold = slope_threshold;
+        params.slope_rock_sharpness =
+            std::max(1.0F, surface_profile.terrain_rock_sharpness * sharpness_mul);
+
+        float soil_height = surface_profile.terrain_soil_height;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          soil_height -= 0.04F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          soil_height -= 0.12F;
+        }
+        soil_height += 0.10F * entry_factor - 0.03F * plateau_factor;
+        soil_height += 0.03F * curvature_response.gully_response -
+                       0.02F * curvature_response.ridge_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          soil_height = std::min(soil_height - 0.95F, chunk.average_height - 0.20F);
+        }
+        params.soil_blend_height = soil_height;
+
+        params.soil_blend_sharpness = std::max(
+            0.75F,
+            surface_profile.terrain_soil_sharpness *
+                (chunk.type == Game::Map::TerrainType::Mountain ? 0.80F : 0.95F));
+
+        constexpr float k_noise_offset_scale = 256.0F;
+        const uint32_t noise_key_a = hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
+        const uint32_t noise_key_b = hash_coords(0, 0, m_noise_seed ^ 0x68E31DA4U);
+        params.noise_offset = QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
+                                        hash_to_01(noise_key_b) * k_noise_offset_scale);
+
+        float base_amp = surface_profile.height_noise_amplitude *
+                         (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          base_amp *= 1.12F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          base_amp *= 1.25F;
+        }
+        base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
+                     0.10F * entry_factor);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          base_amp = std::clamp(base_amp * 0.32F, 0.012F, 0.028F);
+        }
+        params.height_noise_strength = base_amp;
+        params.height_noise_frequency = surface_profile.height_noise_frequency;
+
+        params.ambient_boost =
+            surface_profile.terrain_ambient_boost *
+            ((chunk.type == Game::Map::TerrainType::Hill)       ? 0.97F
+             : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F
+                                                                : 0.95F);
+        params.ambient_boost *= 1.0F - 0.04F * curvature_response.curvature_emphasis;
+        params.rock_detail_strength =
+            surface_profile.terrain_rock_detail_strength *
+            (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
+             0.15F * edge_factor - 0.10F * plateau_factor - 0.14F * entry_factor);
+        params.rock_detail_strength *=
+            1.0F + 0.18F * curvature_response.curvature_emphasis;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.rock_detail_strength =
+              std::clamp(params.rock_detail_strength * 0.08F, 0.0F, 0.03F);
+        }
+
+        params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
+        params.light_direction = QVector3D(0.65F, 0.50F, 0.40F);
+        params.curvature_response = curvature_response.curvature_emphasis;
+        params.ridge_response = curvature_response.ridge_response;
+        params.gully_response = curvature_response.gully_response;
+        params.snow_coverage = std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
+        params.moisture_level = std::clamp(
+            climate_profile.moisture_level + 0.12F * entry_factor -
+                0.08F * edge_factor + 0.08F * curvature_response.gully_response -
+                0.05F * curvature_response.ridge_response,
+            0.0F,
+            1.0F);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.moisture_level = std::clamp(params.moisture_level + 0.10F, 0.0F, 1.0F);
+        }
+        params.crack_intensity = std::clamp(
+            climate_profile.crack_intensity *
+                (1.0F + 0.10F * edge_factor +
+                 0.12F * curvature_response.ridge_response - 0.30F * entry_factor -
+                 0.18F * curvature_response.gully_response),
+            0.0F,
+            1.0F);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.crack_intensity =
+              std::clamp(params.crack_intensity * 0.35F, 0.0F, 1.0F);
+        }
+        float rock_exposure = climate_profile.rock_exposure;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          rock_exposure *= 0.90F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          rock_exposure *= 1.15F;
+        }
+        rock_exposure +=
+            0.18F * edge_factor + 0.12F * curvature_response.ridge_response;
+        rock_exposure -=
+            0.24F * entry_factor + 0.10F * curvature_response.gully_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          rock_exposure = climate_profile.rock_exposure * 0.12F;
+        }
+        params.rock_exposure = std::clamp(rock_exposure, 0.0F, 1.0F);
+        float grass_saturation = climate_profile.grass_saturation;
+        if (chunk.type == Game::Map::TerrainType::Mountain) {
+          grass_saturation *= 0.92F;
+        }
+        grass_saturation +=
+            0.08F * entry_factor + 0.05F * curvature_response.gully_response;
+        grass_saturation -=
+            0.06F * edge_factor + 0.05F * curvature_response.ridge_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          grass_saturation += 0.08F;
+        }
+        params.grass_saturation = std::clamp(grass_saturation, 0.0F, 1.5F);
+        float soil_roughness = climate_profile.soil_roughness;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          soil_roughness += 0.04F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          soil_roughness += 0.10F;
+        }
+        soil_roughness +=
+            0.10F * edge_factor + 0.06F * curvature_response.ridge_response;
+        soil_roughness -=
+            0.12F * entry_factor + 0.08F * curvature_response.gully_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          soil_roughness *= 0.72F;
+        }
+        params.soil_roughness = std::clamp(soil_roughness, 0.0F, 1.0F);
+        params.snow_color = clamp01(climate_profile.snow_color);
+        if (chunk.type == Game::Map::TerrainType::Hill ||
+            chunk.type == Game::Map::TerrainType::Mountain) {
+          float soil_foot_height =
+              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.16F : 0.22F;
+          soil_foot_height *= 0.85F + 0.35F * edge_factor + 0.45F * entry_factor;
+          soil_foot_height += 0.06F * curvature_response.gully_response;
+          params.soil_foot_height = std::clamp(soil_foot_height, 0.08F, 0.36F);
+          float screen_toe_mul =
+              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.75F : 0.95F;
+          screen_toe_mul *= 0.70F + 0.30F * std::max(edge_factor, entry_factor);
+          params.screen_toe_mul = screen_toe_mul;
+          params.screen_toe_clamp =
+              ((chunk.type == Game::Map::TerrainType::Mountain) ? 0.18F : 0.24F) *
+              (0.70F +
+               0.30F * std::max(entry_factor, curvature_response.gully_response));
+        }
+
+        chunk.params = params;
+
+        total_triangles += chunk.mesh->get_indices().size() / 3;
+        m_chunks.push_back(std::move(chunk));
+      }
+    }
+  }
+
+  m_chunk_visibility_cache.assign(m_chunks.size(), {});
+}
+
+auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
+                                        float height) const -> QVector3D {
+  const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
+  switch (type) {
+  case Game::Map::TerrainType::Mountain:
+    if (height > 4.0F) {
+      return surface_profile.rock_high;
+    }
+    return surface_profile.rock_low;
+  case Game::Map::TerrainType::Hill: {
+    float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
+    float const t_smooth = t * t * (3.0F - 2.0F * t);
+
+    QVector3D const grass_low =
+        surface_profile.grass_primary * 0.55F + surface_profile.grass_secondary * 0.45F;
+    QVector3D const grass_high =
+        surface_profile.grass_secondary * 0.55F + surface_profile.grass_dry * 0.45F;
+    QVector3D const grass = grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
+
+    QVector3D const rock = surface_profile.rock_low * (1.0F - t_smooth) +
+                           surface_profile.rock_high * t_smooth;
+
+    float const rock_blend_base = 0.12F + 0.48F * t_smooth;
+    float const height_factor = std::clamp((height - 0.5F) * 0.28F, 0.0F, 0.22F);
+    float const rock_blend = std::clamp(rock_blend_base + height_factor, 0.0F, 0.65F);
+
+    return grass * (1.0F - rock_blend) + rock * rock_blend;
+  }
+  case Game::Map::TerrainType::Forest: {
+
+    float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
+    QVector3D const base = surface_profile.grass_primary * (1.0F - moisture) +
+                           surface_profile.grass_secondary * moisture;
+    float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
+    QVector3D const with_dry =
+        base * (1.0F - dry_blend) + surface_profile.grass_dry * dry_blend;
+
+    return {with_dry.x() * 0.7F, with_dry.y() * 0.9F, with_dry.z() * 0.6F};
+  }
+  case Game::Map::TerrainType::Flat:
+  default: {
+    float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
+    QVector3D const base = surface_profile.grass_primary * (1.0F - moisture) +
+                           surface_profile.grass_secondary * moisture;
+    float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
+    return base * (1.0F - dry_blend) + surface_profile.grass_dry * dry_blend;
+  }
+  }
+}
+
+} // namespace Render::GL

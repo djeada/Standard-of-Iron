@@ -19,6 +19,12 @@ struct ClipView {
   std::uint32_t frame_offset{0U};
   float fps{0.0F};
   bool loops{false};
+  // Authored animation markers as normalized clip phase in [0,1]; -1 means unset.
+  float marker_anticipation_start{-1.0F};
+  float marker_weapon_release{-1.0F};
+  float marker_contact{-1.0F};
+  float marker_recover_unlocked{-1.0F};
+  float marker_exit_safe{-1.0F};
 };
 
 struct SocketView {
@@ -29,6 +35,8 @@ struct SocketView {
 
 class BpatBlob {
 public:
+  static constexpr std::uint32_t k_invalid_clip_index = 0xFFFFu;
+
   static auto from_bytes(std::vector<std::uint8_t> bytes) -> BpatBlob;
   static auto from_file(const std::string& path) -> BpatBlob;
 
@@ -44,6 +52,7 @@ public:
   [[nodiscard]] auto socket_count() const noexcept -> std::uint32_t;
 
   [[nodiscard]] auto clip(std::uint32_t index) const -> ClipView;
+  [[nodiscard]] auto clip_index(std::string_view name) const -> std::uint32_t;
   [[nodiscard]] auto socket(std::uint32_t index) const -> SocketView;
 
   [[nodiscard]] auto
@@ -62,6 +71,13 @@ public:
   }
 
 private:
+  struct ClipIndexEntry {
+    std::string name{};
+    std::uint32_t clip_index{k_invalid_clip_index};
+  };
+
+  static constexpr std::uint32_t k_empty_clip_index_bucket = 0xFFFFFFFFu;
+
   bool validate();
   void decode_palette_cache();
 
@@ -76,6 +92,8 @@ private:
   const float* m_socket_data{nullptr};
 
   std::vector<QMatrix4x4> m_decoded_palette{};
+  std::vector<ClipIndexEntry> m_clip_index_entries{};
+  std::vector<std::uint32_t> m_clip_index_buckets{};
 };
 
 } // namespace Render::Creature::Bpat

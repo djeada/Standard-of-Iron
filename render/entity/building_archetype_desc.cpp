@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "../gl/primitives.h"
+
 namespace Render::GL {
 namespace {
 
@@ -74,6 +76,33 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
                             part.material_id,
                             part.material);
     break;
+  case BuildingPartKind::RotatedBox:
+  case BuildingPartKind::PaletteRotatedBox: {
+    QMatrix4x4 model;
+    model.translate(part.point_a);
+    model.rotate(part.euler_deg.z(), 0.0F, 0.0F, 1.0F);
+    model.rotate(part.euler_deg.y(), 0.0F, 1.0F, 0.0F);
+    model.rotate(part.euler_deg.x(), 1.0F, 0.0F, 0.0F);
+    model.scale(part.point_b);
+    if (part.kind == BuildingPartKind::PaletteRotatedBox) {
+      builder.add_palette_mesh(get_unit_cube(),
+                               model,
+                               part.palette_slot,
+                               part.texture,
+                               part.alpha,
+                               part.material_id,
+                               part.material);
+    } else {
+      builder.add_mesh(get_unit_cube(),
+                       model,
+                       part.color,
+                       part.texture,
+                       part.alpha,
+                       part.material_id,
+                       part.material);
+    }
+    break;
+  }
   case BuildingPartKind::Cylinder:
     builder.add_cylinder(part.point_a,
                          part.point_b,
@@ -147,6 +176,40 @@ void BuildingArchetypeDesc::add_palette_box(const QVector3D& center,
   part.kind = BuildingPartKind::PaletteBox;
   part.point_a = center;
   part.point_b = scale;
+  part.palette_slot = palette_slot;
+  part.states = states;
+  part.lod = lod;
+  m_parts.push_back(std::move(part));
+}
+
+void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
+                                            const QVector3D& scale,
+                                            const QVector3D& euler_deg,
+                                            const QVector3D& color,
+                                            BuildingStateMask states,
+                                            BuildingLODMask lod) {
+  BuildingPartDesc part;
+  part.kind = BuildingPartKind::RotatedBox;
+  part.point_a = center;
+  part.point_b = scale;
+  part.euler_deg = euler_deg;
+  part.color = color;
+  part.states = states;
+  part.lod = lod;
+  m_parts.push_back(std::move(part));
+}
+
+void BuildingArchetypeDesc::add_palette_rotated_box(const QVector3D& center,
+                                                    const QVector3D& scale,
+                                                    const QVector3D& euler_deg,
+                                                    std::uint8_t palette_slot,
+                                                    BuildingStateMask states,
+                                                    BuildingLODMask lod) {
+  BuildingPartDesc part;
+  part.kind = BuildingPartKind::PaletteRotatedBox;
+  part.point_a = center;
+  part.point_b = scale;
+  part.euler_deg = euler_deg;
   part.palette_slot = palette_slot;
   part.states = states;
   part.lod = lod;

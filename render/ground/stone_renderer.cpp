@@ -40,17 +40,8 @@ StoneRenderer::~StoneRenderer() = default;
 void StoneRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings,
                               const std::vector<Game::Map::WorldProp>& world_props) {
-  m_width = height_map.get_width();
-  m_height = height_map.get_height();
-  m_tile_size = height_map.get_tile_size();
-  m_height_data = height_map.get_height_data();
-  m_terrain_types = height_map.getTerrainTypes();
-  m_biome_settings = biome_settings;
-  m_noise_seed = biome_settings.seed;
-  m_world_props = world_props;
-
-  m_stone_state.reset_instances();
-  auto& stone_params = m_stone_state.params;
+  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
+  auto& stone_params = m_state.params;
 
   stone_params.light_direction = m_light_direction;
   stone_params.time = 0.0F;
@@ -59,40 +50,30 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
 }
 
 void StoneRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
-  m_stone_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, QVector3D(0.35F, 0.8F, 0.45F));
 }
 
 void StoneRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  Q_UNUSED(resources);
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_stone_state, [](const StoneInstanceGpu& instance) -> const QVector4D& {
-        return instance.pos_scale;
+  submit_filtered_common<false>(
+      renderer,
+      resources,
+      TerrainScatterCmd::Species::Stone,
+      [](TerrainScatterCmd& cmd, const StoneBatchParams& params) {
+        cmd.stone = params;
       });
-  if (visible_count == 0 || !m_stone_state.instance_buffer) {
-    return;
-  }
-
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Stone;
-  cmd.instance_buffer = m_stone_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
-  cmd.stone = m_stone_state.params;
-  renderer.terrain_scatter(cmd);
 }
 
 void StoneRenderer::clear() {
-  m_stone_state.reset_instances();
+  clear_common();
 }
 
 void StoneRenderer::generate_stone_instances() {
   QElapsedTimer timer;
   timer.start();
 
-  auto& stone_instances = m_stone_state.instances;
-  auto& stone_instance_count = m_stone_state.instance_count;
-  auto& stone_instances_dirty = m_stone_state.instances_dirty;
+  auto& stone_instances = m_state.instances;
+  auto& stone_instance_count = m_state.instance_count;
+  auto& stone_instances_dirty = m_state.instances_dirty;
 
   stone_instances.clear();
 

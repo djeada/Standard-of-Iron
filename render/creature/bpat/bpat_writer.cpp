@@ -141,6 +141,11 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
     e.frame_offset = c.frame_offset;
     e.fps = c.desc.fps;
     e.loops = c.desc.loops ? 1U : 0U;
+    e.marker_anticipation_start = c.desc.marker_anticipation_start;
+    e.marker_weapon_release = c.desc.marker_weapon_release;
+    e.marker_contact = c.desc.marker_contact;
+    e.marker_recover_unlocked = c.desc.marker_recover_unlocked;
+    e.marker_exit_safe = c.desc.marker_exit_safe;
     clip_entries.push_back(e);
   }
 

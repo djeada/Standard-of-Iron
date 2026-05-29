@@ -69,8 +69,30 @@ Each clip entry describes one named move:
 - where its frames begin inside the big shared frame stream
 - how fast it plays
 - whether it loops
+- **authored timing markers** (see below) — key moments inside the move
 
 In simple terms, the clip list is the table of contents for the motion book.
+
+### Authored markers (v2)
+
+Starting with **version 2**, every clip entry also carries five **timing markers**,
+each a normalized phase in `[0, 1]` (or `-1` when unset):
+
+| Marker | Meaning |
+|---|---|
+| `anticipation_start` | the wind-up begins |
+| `weapon_release` | the weapon starts travelling toward the target |
+| `contact` | the blade/impact connects — **this is when a melee hit lands** |
+| `recover_unlocked` | the attacker may start recovering / chaining |
+| `exit_safe` | the move can be safely interrupted/blended out |
+
+These replace the old, fragile habit of guessing key moments from the clip *name*. The
+baker authors the values; the runtime reads them directly. The `contact` marker is what
+lets a melee hit apply damage **mid-swing** (when the weapon visually connects) instead of
+on the trigger frame — see the deferred-melee-strike flow in
+[`ANIMATION_ARCHITECTURE.md`](ANIMATION_ARCHITECTURE.md). This stays DPS-neutral
+(the cooldown still resets at swing start) and deterministic (the pending strike is
+serialized).
 
 ### Socket list
 
@@ -192,13 +214,15 @@ In player terms: the creature animation is packed like an image so the graphics 
 
 For readers who want the important hard facts without drowning in byte offset tables:
 
-- BPAT v1 is **little-endian**.
+- BPAT v2 is **little-endian**.
 - Floating-point values are **32-bit IEEE 754 floats**.
 - Bone matrices are stored **row-major**.
 - Each section begins on a **16-byte boundary**.
 - Variable-sized data lives in trailing blocks referenced by **absolute file offsets**.
 - Reserved and padding bytes must be **zero**.
 - The file magic must be **`BPAT`**.
+- The header is **64 bytes**; each clip entry is **44 bytes** (it carries the 5 marker
+  floats); each socket entry is **32 bytes**.
 - Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton**.
 
 ## How the frame data is packed
@@ -216,7 +240,7 @@ So a clip entry does not own a separate chunked mini-file. It simply points to i
 The current reader accepts a BPAT file when:
 
 1. it starts with the `BPAT` magic
-2. it uses version `1`
+2. it uses version `2`
 3. its species id is known (`0..5` today)
 4. it has at least one clip
 5. its bone count is in range

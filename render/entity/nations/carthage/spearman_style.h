@@ -1,25 +1,9 @@
 #pragma once
 
-#include <QVector3D>
-
-#include <optional>
-#include <string>
+#include "../../spearman_renderer_common.h"
 
 namespace Render::GL::Carthage {
 
-struct SpearmanStyleConfig {
-  std::optional<QVector3D> cloth_color;
-  std::optional<QVector3D> leather_color;
-  std::optional<QVector3D> leather_dark_color;
-  std::optional<QVector3D> metal_color;
-  std::optional<QVector3D> spear_shaft_color;
-  std::optional<QVector3D> spearhead_color;
-  std::optional<float> spear_length_scale;
-  std::optional<float> spear_shaft_radius_scale;
-  bool force_beard = false;
-  std::string armor_id;
-};
-
-void register_carthage_spearman_style();
+void register_carthage_spearman_styles();
 
 } // namespace Render::GL::Carthage

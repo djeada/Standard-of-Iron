@@ -96,18 +96,18 @@ auto sample_height_envelope(const Game::Map::TerrainHeightMap& height_map,
   float max_height = sample_height_clamped(height_map, center.x(), center.z());
   for (int longitudinal_index = 0; longitudinal_index < longitudinal_samples;
        ++longitudinal_index) {
-    float longitudinal_t = longitudinal_samples > 1
-                               ? static_cast<float>(longitudinal_index) /
-                                     static_cast<float>(longitudinal_samples - 1)
-                               : 0.5F;
+    float const longitudinal_t = longitudinal_samples > 1
+                                     ? static_cast<float>(longitudinal_index) /
+                                           static_cast<float>(longitudinal_samples - 1)
+                                     : 0.5F;
     float const longitudinal_offset =
         -clamped_longitudinal + longitudinal_t * (clamped_longitudinal * 2.0F);
 
     for (int lateral_index = 0; lateral_index < lateral_samples; ++lateral_index) {
-      float lateral_t = lateral_samples > 1
-                            ? static_cast<float>(lateral_index) /
-                                  static_cast<float>(lateral_samples - 1)
-                            : 0.5F;
+      float const lateral_t = lateral_samples > 1
+                                  ? static_cast<float>(lateral_index) /
+                                        static_cast<float>(lateral_samples - 1)
+                                  : 0.5F;
       float const lateral_offset =
           -clamped_lateral + lateral_t * (clamped_lateral * 2.0F);
 
@@ -134,6 +134,8 @@ auto mixf(float a, float b, float t) -> float {
 
 namespace Render::Ground {
 
+// TODO(phase5): Extract byte-identical shared ring/cap/quad/prism builders with
+// vegetation_pipeline.cpp once the vertex layouts can be proven identical.
 auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
                               float tile_size,
                               const LinearFeatureRibbonSettings& settings)

@@ -760,6 +760,63 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   }
 }
 
+void clear_pending_melee_strike(Engine::Core::AttackComponent* attack_comp) {
+  attack_comp->has_pending_melee_strike = false;
+  attack_comp->pending_melee_target_id = 0;
+  attack_comp->pending_melee_damage = 0;
+  attack_comp->pending_melee_elapsed = 0.0F;
+  attack_comp->pending_melee_contact_time = 0.0F;
+}
+
+void apply_pending_melee_strike(Engine::Core::Entity* attacker,
+                                Engine::Core::AttackComponent* attack_comp,
+                                Engine::Core::Entity* target,
+                                Engine::Core::World* world) {
+  int const damage = attack_comp->pending_melee_damage;
+  clear_pending_melee_strike(attack_comp);
+  if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
+    Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+        world, target, damage, attacker->get_id());
+  } else {
+    deal_damage(world, target, damage, attacker->get_id());
+  }
+}
+
+// Advances a scheduled melee strike and applies its snapshotted damage once the
+// swing reaches weapon contact. Revalidates the target at contact so a hit is
+// cancelled if the attacker/target died, the target is no longer an enemy, or
+// the target slipped out of melee range during the wind-up.
+void process_pending_melee_strike(Engine::Core::Entity* attacker,
+                                  Engine::Core::AttackComponent* attack_comp,
+                                  Engine::Core::World* world,
+                                  float delta_time) {
+  if ((attack_comp == nullptr) || !attack_comp->has_pending_melee_strike) {
+    return;
+  }
+
+  attack_comp->pending_melee_elapsed += delta_time;
+  if (attack_comp->pending_melee_elapsed < attack_comp->pending_melee_contact_time) {
+    return;
+  }
+
+  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* target = world->get_entity(attack_comp->pending_melee_target_id);
+  if ((attacker_unit == nullptr) || (target == nullptr) ||
+      !is_valid_enemy_unit(attacker_unit, target, true)) {
+    clear_pending_melee_strike(attack_comp);
+    return;
+  }
+
+  float const grace_range = attack_comp->melee_range +
+                            Engine::Core::AttackComponent::k_melee_contact_range_grace;
+  if (!is_in_range(attacker, target, grace_range)) {
+    clear_pending_melee_strike(attack_comp);
+    return;
+  }
+
+  apply_pending_melee_strike(attacker, attack_comp, target, world);
+}
+
 } // namespace
 
 void process_attacks(Engine::Core::World* world,
@@ -795,6 +852,7 @@ void process_attacks(Engine::Core::World* world,
 
     process_melee_lock(attacker, attacker_atk, world, delta_time);
     sync_melee_lock_target(attacker, attacker_atk);
+    process_pending_melee_strike(attacker, attacker_atk, world, delta_time);
 
     float range = 2.0F;
     int damage = 10;
@@ -1084,8 +1142,28 @@ void process_attacks(Engine::Core::World* world,
         spawn_arrows(attacker, best_target, arrow_sys);
       }
 
+      bool const is_melee_attack = (attacker_atk != nullptr) &&
+                                   attacker_atk->current_mode ==
+                                       Engine::Core::AttackComponent::CombatMode::Melee;
+      auto const* attacker_commander =
+          attacker->get_component<Engine::Core::CommanderComponent>();
+      bool const fpv_commander =
+          (attacker_commander != nullptr) && attacker_commander->fpv_controlled;
+      bool const defer_melee_strike =
+          is_melee_attack && !fpv_commander && cooldown > 0.001F;
+
       if (use_special_projectile) {
         launch_special_projectile(attacker, best_target, damage, projectile_sys);
+      } else if (defer_melee_strike) {
+        // Snapshot the resolved damage and schedule it to land when the swing
+        // reaches weapon contact. Cooldown is still reset below at swing start,
+        // so steady-state DPS is unchanged.
+        attacker_atk->has_pending_melee_strike = true;
+        attacker_atk->pending_melee_target_id = best_target->get_id();
+        attacker_atk->pending_melee_damage = damage;
+        attacker_atk->pending_melee_elapsed = 0.0F;
+        attacker_atk->pending_melee_contact_time =
+            Engine::Core::CombatStateComponent::k_melee_contact_fraction * cooldown;
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(

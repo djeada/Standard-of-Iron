@@ -1,31 +1,29 @@
 #include "spearman_style.h"
 
-#include <QVector3D>
-
-#include "spearman_renderer.h"
-
-namespace {
-constexpr QVector3D k_legionary_spear_shaft{0.46F, 0.28F, 0.14F};
-constexpr QVector3D k_legionary_spearhead{0.80F, 0.74F, 0.58F};
-constexpr QVector3D k_legionary_cloth{0.72F, 0.16F, 0.18F};
-constexpr QVector3D k_legionary_leather{0.34F, 0.21F, 0.11F};
-constexpr QVector3D k_legionary_leather_dark{0.24F, 0.14F, 0.08F};
-constexpr QVector3D k_legionary_metal{0.78F, 0.72F, 0.58F};
-} // namespace
+#include <array>
 
 namespace Render::GL::Roman {
+namespace {
 
-void register_roman_spearman_style() {
-  SpearmanStyleConfig style;
-  style.cloth_color = k_legionary_cloth;
-  style.leather_color = k_legionary_leather;
-  style.leather_dark_color = k_legionary_leather_dark;
-  style.metal_color = k_legionary_metal;
-  style.spear_shaft_color = k_legionary_spear_shaft;
-  style.spearhead_color = k_legionary_spearhead;
-  style.spear_length_scale = 1.05F;
+const std::array<SpearmanStyleRegistration, 1> k_styles{{
+    {"roman_republic",
+     SpearmanStyleConfig{
+         .cloth_color = QVector3D(0.55F, 0.08F, 0.06F),
+         .leather_color = QVector3D(0.36F, 0.20F, 0.10F),
+         .leather_dark_color = QVector3D(0.18F, 0.10F, 0.06F),
+         .metal_color = QVector3D(0.72F, 0.70F, 0.66F),
+         .spear_shaft_color = QVector3D(0.44F, 0.26F, 0.14F),
+         .spearhead_color = QVector3D(0.78F, 0.78F, 0.74F),
+         .spear_length_scale = 1.04F,
+         .spear_shaft_radius_scale = 1.0F,
+         .armor_id = "roman_hamata",
+     }},
+}};
 
-  register_spearman_style("roman_republic", style);
+} // namespace
+
+void register_roman_spearman_styles() {
+  register_spearman_styles(k_styles);
 }
 
 } // namespace Render::GL::Roman

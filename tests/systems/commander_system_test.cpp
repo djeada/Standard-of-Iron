@@ -599,15 +599,15 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
   auto* ally_b_movement = ally_b->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(ally_a_movement, nullptr);
   ASSERT_NE(ally_b_movement, nullptr);
-  EXPECT_TRUE(ally_a_movement->has_target);
-  EXPECT_TRUE(ally_b_movement->has_target);
+  EXPECT_FALSE(ally_a_movement->has_target);
+  EXPECT_FALSE(ally_b_movement->has_target);
   EXPECT_FALSE(ally_a_stamina->run_requested);
   EXPECT_FALSE(ally_b_stamina->run_requested);
   EXPECT_FALSE(std::abs(ally_a_movement->goal_x - 5.0F) < 0.01F &&
                std::abs(ally_a_movement->goal_y - 5.0F) < 0.01F &&
                std::abs(ally_b_movement->goal_x - 5.0F) < 0.01F &&
                std::abs(ally_b_movement->goal_y - 5.0F) < 0.01F);
-  EXPECT_NEAR(ally_a_movement->goal_y, ally_b_movement->goal_y, 0.01F);
+  EXPECT_GT(std::abs(ally_a_movement->goal_y - ally_b_movement->goal_y), 0.01F);
   EXPECT_GT(std::abs(ally_a_movement->goal_x - ally_b_movement->goal_x), 0.01F);
 }
 

@@ -8,14 +8,15 @@
 #include <numbers>
 
 #include "../../../../game/core/component.h"
-#include "../../../geom/math_utils.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_render_common.h"
+#include "../../defense_tower_renderer_common.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -172,7 +173,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  c.brick_dark);
     // Arrow slits on each face
     for (int i = 0; i < (damaged ? 2 : 4); ++i) {
-      const float angle = static_cast<float>(i) * (damaged ? 3.14159F : 1.57F);
+      const float angle =
+          static_cast<float>(i) * (damaged ? std::numbers::pi_v<float> : 1.57F);
       const float sx = std::sin(angle) * (damaged ? 0.72F : 0.80F);
       const float sz = std::cos(angle) * (damaged ? 0.72F : 0.80F);
       desc.add_box(QVector3D(sx, upper_drum_y - 0.12F, sz),
@@ -223,9 +225,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   if (damaged) {
     desc.add_box(
         QVector3D(0.44F, 1.52F, 0.32F), QVector3D(0.20F, 0.12F, 0.18F), c.brick_dark);
-    desc.add_box(QVector3D(-0.34F, 1.28F, -0.36F),
-                 QVector3D(0.18F, 0.14F, 0.16F),
-                 c.stone_dark);
+    desc.add_box(
+        QVector3D(-0.34F, 1.28F, -0.36F), QVector3D(0.18F, 0.14F, 0.16F), c.stone_dark);
   }
 
   if (destroyed) {
@@ -233,9 +234,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         QVector3D(0.0F, 1.36F, 0.0F), QVector3D(0.74F, 0.10F, 0.54F), c.brick_dark);
     desc.add_box(
         QVector3D(0.40F, 1.02F, 0.36F), QVector3D(0.22F, 0.14F, 0.20F), c.brick);
-    desc.add_box(QVector3D(-0.38F, 0.96F, -0.32F),
-                 QVector3D(0.22F, 0.12F, 0.18F),
-                 c.stone_dark);
+    desc.add_box(
+        QVector3D(-0.38F, 0.96F, -0.32F), QVector3D(0.22F, 0.12F, 0.18F), c.stone_dark);
     desc.add_box(
         QVector3D(0.22F, 0.82F, -0.42F), QVector3D(0.16F, 0.10F, 0.14F), c.brick_dark);
   }
@@ -343,29 +343,23 @@ void draw_tower_banner(const DrawContext& p,
       p, out, unit, white, palette.team, palette.team_trim, style, &cloth);
 }
 
-void draw_defense_tower(const DrawContext& p, ISubmitter& out) {
-  if (p.entity == nullptr) {
-    return;
-  }
-
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (r == nullptr) {
-    return;
-  }
-
-  TowerPalette const palette =
-      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
-  BuildingState const state = resolve_building_state(p);
-  submit_building_instance(out, p, tower_archetype(state));
-  draw_tower_banner(p, out, palette, state);
-  draw_building_health_bar(out, p, tower_health_bar_style(state));
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.6F, 1.6F});
+void draw_tower_banner_for_team(const DrawContext& p,
+                                ISubmitter& out,
+                                const QVector3D& team,
+                                BuildingState state) {
+  draw_tower_banner(p, out, make_palette(team), state);
 }
 
 } // namespace
 
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "carthage", "defense_tower", draw_defense_tower);
+  register_defense_tower_renderer_variant(
+      registry,
+      DefenseTowerRendererConfig{.nation_slug = "carthage",
+                                 .archetype = &tower_archetype,
+                                 .health_bar_style = &tower_health_bar_style,
+                                 .draw_banner = &draw_tower_banner_for_team,
+                                 .selection = BuildingSelectionStyle{1.6F, 1.6F}});
 }
 
 } // namespace Render::GL::Carthage

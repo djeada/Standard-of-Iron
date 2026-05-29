@@ -335,8 +335,8 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
   renderer.render(ctx, frames, palette, anim, via_render);
 
   EXPECT_TRUE(via_submit.meshes.empty());
-  EXPECT_EQ(via_submit.archetypes.size(), 2U);
-  EXPECT_EQ(draw_count_of(via_submit), 14);
+  EXPECT_EQ(via_submit.archetypes.size(), 4U);
+  EXPECT_EQ(draw_count_of(via_submit), 16);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 

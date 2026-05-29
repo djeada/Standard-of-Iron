@@ -7,10 +7,10 @@
 #include <cmath>
 #include <cstdint>
 #include <deque>
+#include <numbers>
 #include <string>
 
 #include "../../entity/renderer_constants.h"
-#include "../../geom/math_utils.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
@@ -25,6 +25,7 @@
 #include "../equipment_submit.h"
 #include "../oriented_archetype_utils.h"
 #include "../primitive_archetype_utils.h"
+#include "math/math_utils.h"
 
 namespace Render::GL {
 
@@ -608,7 +609,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     float const base_w = m_config.sword_width;
     float const t = (attack_phase - 0.28F) / 0.40F;
     // Trail is bright at start, fades out toward end
-    float const alpha = clamp01(0.60F * std::sin(t * 3.14159F));
+    float const alpha = clamp01(0.60F * std::sin(t * std::numbers::pi_v<float>));
     QMatrix4x4 const sword_world =
         hand_basis_transform(ctx.model, grip) * sword_local_pose(sword_dir);
     QVector3D const blade_base = sword_world.column(3).toVector3D();

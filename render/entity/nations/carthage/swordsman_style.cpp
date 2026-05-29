@@ -1,53 +1,38 @@
 #include "swordsman_style.h"
 
-#include <QVector3D>
-
-#include "swordsman_renderer.h"
-
-namespace {
-constexpr QVector3D k_carthage_cloth{0.15F, 0.36F, 0.55F};
-constexpr QVector3D k_sepulcher_bone{0.82F, 0.84F, 0.79F};
-constexpr QVector3D k_sepulcher_cloth{0.18F, 0.18F, 0.20F};
-constexpr QVector3D k_sepulcher_leather{0.24F, 0.21F, 0.18F};
-constexpr QVector3D k_sepulcher_leather_dark{0.12F, 0.12F, 0.13F};
-constexpr QVector3D k_sepulcher_metal{0.58F, 0.61F, 0.67F};
-constexpr QVector3D k_sepulcher_shield{0.26F, 0.28F, 0.31F};
-constexpr QVector3D k_sepulcher_trim{0.71F, 0.72F, 0.76F};
-constexpr QVector3D k_carthage_leather{0.32F, 0.22F, 0.12F};
-constexpr QVector3D k_carthage_leather_dark{0.20F, 0.14F, 0.09F};
-constexpr QVector3D k_carthage_metal{0.70F, 0.68F, 0.52F};
-constexpr QVector3D k_carthage_shield{0.20F, 0.46F, 0.62F};
-constexpr QVector3D k_carthage_trim{0.76F, 0.68F, 0.42F};
-} // namespace
+#include <array>
 
 namespace Render::GL::Carthage {
 
 void register_carthage_swordsman_style() {
-  KnightStyleConfig style;
-  style.cloth_color = k_carthage_cloth;
-  style.leather_color = k_carthage_leather;
-  style.leather_dark_color = k_carthage_leather_dark;
-  style.metal_color = k_carthage_metal;
-  style.shield_color = k_carthage_shield;
-  style.shield_trim_color = k_carthage_trim;
-  style.shield_radius_scale = 0.9F;
-  style.shield_aspect_ratio = 0.85F;
-  style.has_scabbard = false;
-  style.shield_cross_decal = false;
+  KnightStyleConfig carthage;
+  carthage.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
+  carthage.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
+  carthage.leather_dark_color = QVector3D(0.20F, 0.14F, 0.09F);
+  carthage.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
+  carthage.shield_color = QVector3D(0.20F, 0.46F, 0.62F);
+  carthage.shield_trim_color = QVector3D(0.76F, 0.68F, 0.42F);
+  carthage.shield_radius_scale = 0.9F;
+  carthage.shield_aspect_ratio = 0.85F;
+  carthage.has_scabbard = false;
+  carthage.shield_cross_decal = false;
 
-  register_swordsman_style("carthage", style);
-
-  KnightStyleConfig sepulcher = style;
-  sepulcher.skin_color = k_sepulcher_bone;
-  sepulcher.cloth_color = k_sepulcher_cloth;
-  sepulcher.leather_color = k_sepulcher_leather;
-  sepulcher.leather_dark_color = k_sepulcher_leather_dark;
-  sepulcher.metal_color = k_sepulcher_metal;
-  sepulcher.shield_color = k_sepulcher_shield;
-  sepulcher.shield_trim_color = k_sepulcher_trim;
+  KnightStyleConfig sepulcher = carthage;
+  sepulcher.skin_color = QVector3D(0.82F, 0.84F, 0.79F);
+  sepulcher.cloth_color = QVector3D(0.18F, 0.18F, 0.20F);
+  sepulcher.leather_color = QVector3D(0.24F, 0.21F, 0.18F);
+  sepulcher.leather_dark_color = QVector3D(0.12F, 0.12F, 0.13F);
+  sepulcher.metal_color = QVector3D(0.58F, 0.61F, 0.67F);
+  sepulcher.shield_color = QVector3D(0.26F, 0.28F, 0.31F);
+  sepulcher.shield_trim_color = QVector3D(0.71F, 0.72F, 0.76F);
   sepulcher.shield_cross_decal = false;
   sepulcher.has_scabbard = false;
-  register_swordsman_style("iron_sepulcher", sepulcher);
+
+  const std::array<SwordsmanStyleRegistration, 2> styles{{
+      {.key = "carthage", .style = carthage},
+      {.key = "iron_sepulcher", .style = sepulcher},
+  }};
+  ::Render::GL::register_swordsman_styles(styles);
 }
 
 } // namespace Render::GL::Carthage

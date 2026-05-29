@@ -493,6 +493,11 @@ Nation renderers that need per-variant animation (builders with different tools,
 
 **Caching.** `CreatureRenderBatch::add_humanoid` calls `resolve_pose_intent` once and passes the result into both `humanoid_state_for_anim` (via its two-argument overload) and the variant-table dispatch block. No system in the critical render path calls the resolver more than once per entity per frame.
 
+> For the full animation/pose pipeline — bake step, BPAT clip resolution and sampling,
+> the procedural locomotion shaper, the combat visual state machine with marker-driven
+> melee damage sync, and the shared quadruped gait — see
+> [ANIMATION_ARCHITECTURE.md](ANIMATION_ARCHITECTURE.md).
+
 
 ## Procedural shaders
 

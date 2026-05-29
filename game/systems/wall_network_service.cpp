@@ -145,7 +145,8 @@ auto entity_allows_wall_boundary_touch(const Engine::Core::Entity* entity) -> bo
          unit->spawn_type == Game::Units::SpawnType::DefenseTower;
 }
 
-auto placement_can_touch_wall_network_structures(const std::string& building_type) -> bool {
+auto placement_can_touch_wall_network_structures(const std::string& building_type)
+    -> bool {
   return building_type == "wall_segment" || building_type == "defense_tower";
 }
 
@@ -528,8 +529,11 @@ auto WallNetworkService::validate_wall_segment_placement(
 
   const auto world_position =
       CommandService::grid_to_world(Point{position.x, position.z});
-  if (!is_buildable_world_position(
-          world_position.x(), world_position.z(), world, "wall_segment", ignore_entity_id)) {
+  if (!is_buildable_world_position(world_position.x(),
+                                   world_position.z(),
+                                   world,
+                                   "wall_segment",
+                                   ignore_entity_id)) {
     return {.valid = false, .failure_reason = "Cannot build there."};
   }
 

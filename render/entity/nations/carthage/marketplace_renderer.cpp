@@ -18,6 +18,7 @@
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
+#include "../../marketplace_renderer_common.h"
 #include "../../registry.h"
 
 namespace Render::GL::Carthage {
@@ -212,24 +213,21 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   return build_building_archetype(desc, state);
 }
 
-void draw_marketplace(const DrawContext& ctx, ISubmitter& out) {
-  static auto normal = build_marketplace_archetype(BuildingState::Normal);
-  static auto damaged = build_marketplace_archetype(BuildingState::Damaged);
-  static auto destroyed = build_marketplace_archetype(BuildingState::Destroyed);
-
-  BuildingState const state = resolve_building_state(ctx);
-  const RenderArchetype& archetype = (state == BuildingState::Destroyed) ? destroyed
-                                     : (state == BuildingState::Damaged) ? damaged
-                                                                         : normal;
-  submit_building_instance(out, ctx, archetype);
-  draw_building_health_bar(out, ctx, {1.0F, 0.08F, 1.1F});
-  draw_building_selection_overlay(out, ctx, {1.7F, 1.7F});
+auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
+  static const BuildingArchetypeSet k_set =
+      build_stateful_building_archetype_set(build_marketplace_archetype);
+  return k_set.for_state(state);
 }
 
 } // namespace
 
 void register_marketplace_renderer(EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "carthage", "marketplace", draw_marketplace);
+  register_marketplace_renderer_variant(
+      registry,
+      MarketplaceRendererConfig{.nation_slug = "carthage",
+                                .archetype = &marketplace_archetype,
+                                .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.1F},
+                                .selection = BuildingSelectionStyle{1.7F, 1.7F}});
 }
 
 } // namespace Render::GL::Carthage

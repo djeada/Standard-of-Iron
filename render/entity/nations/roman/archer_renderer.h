@@ -2,14 +2,17 @@
 
 #include <string>
 
+#include "../../archer_renderer_common.h"
 #include "../../registry.h"
 
 namespace Render::GL::Roman {
 
-struct ArcherStyleConfig;
+using ArcherStyleConfig = ::Render::GL::ArcherStyleConfig;
 
-void register_archer_style(const std::string& nation_id,
-                           const ArcherStyleConfig& style);
+inline void register_archer_style(const std::string& nation_id,
+                                  const ArcherStyleConfig& style) {
+  ::Render::GL::register_archer_style(nation_id, style);
+}
 
 void register_archer_renderer(EntityRendererRegistry& registry);
 
