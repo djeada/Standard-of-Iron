@@ -1,0 +1,47 @@
+# Core render sources (scene_renderer, geom, caches, pipeline, passes, profiling).
+set(RENDER_CORE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene_walk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/template_prewarm_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/effects_submitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_backend_factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/persistent_render_registry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/draw_queue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/world_chunk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/primitive_batch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/template_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/template_prewarm_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rig_dsl/rig_interpreter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pipeline/instance_coalescer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pass/frame_pass_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pass/primitive_flush_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pass/construction_preview_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_ring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_disc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/arrow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/stone.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/mode_indicator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/projectile_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/flag.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/banner_cloth.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/patrol_flags.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/formation_arrow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/transforms.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/parts.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/palette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh_bake.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/snapshot_mesh_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/snapshot_mesh_bake.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/static_attachment_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/bone_palette_arena.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mesh_geometry_pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/software/software_rasterizer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_profile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/profiling_hud.cpp
+)

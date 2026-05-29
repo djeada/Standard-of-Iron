@@ -12,6 +12,8 @@ Item {
     property int bottom_panel_height: bottomPanel.height
     property int selection_tick: 0
     property bool has_movable_units: false
+    property bool commander_rpg_mode: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg"
+    property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
 
     signal pause_toggled
     signal speed_changed(real speed)
@@ -96,7 +98,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Math.max(140, parent.height * 0.2)
+        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.15)) : Math.max(140, parent.height * 0.2)
+        clip: true
 
         Loader {
             id: bottomPanelLoader
@@ -137,7 +140,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: topPanel.bottom
         anchors.topMargin: 8
-        visible: typeof game !== 'undefined' && game.game_mode === "rpg" && target_max_hp > 0
+        visible: hud.commander_rpg_mode && target_max_hp > 0
 
         property var _status: typeof game !== 'undefined' && game.get_controlled_commander_status ? game.get_controlled_commander_status() : null
 
@@ -157,6 +160,8 @@ Item {
                     rpgTargetBar.target_hp = s["locked_target_hp"] || 0;
                     rpgTargetBar.target_max_hp = s["locked_target_max_hp"] || 0;
                     rpgTargetBar.target_hp_ratio = s["locked_target_hp_ratio"] || 0.0;
+                    rpgTargetBar.target_staggered = !!s["locked_target_staggered"];
+                    rpgTargetBar.target_guard_broken = !!s["locked_target_guard_broken"];
                 }
             }
         }
@@ -165,14 +170,15 @@ Item {
     RpgFpvOverlay {
         id: rpgFpvOverlay
         anchors.fill: parent
-        visible: typeof game !== 'undefined' && game.control_mode === "commander"
+        bottomInset: bottomPanel.height
+        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
     }
 
     RpgDamageNumbers {
         id: rpgDamageNumbers
         anchors.fill: parent
         engine: typeof game !== 'undefined' ? game : null
-        visible: typeof game !== 'undefined' && game.game_mode === "rpg" && game.control_mode === "commander"
+        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
     }
 
     HUDVictory {

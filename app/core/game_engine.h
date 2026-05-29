@@ -64,6 +64,7 @@ class TerrainScatterManager;
 class ResourceManager;
 class FogRenderer;
 class MapBoundaryFogRenderer;
+class AmbientFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -311,6 +312,9 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_home_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_marketplace_state() const;
+  Q_INVOKABLE bool marketplace_buy_resource(const QString& resource_key);
+  Q_INVOKABLE bool marketplace_sell_resource(const QString& resource_key);
   Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
   Q_INVOKABLE QVariantList pop_rpg_damage_events();
   Q_INVOKABLE QVariantMap rpg_project_world(float x, float y, float z) const;
@@ -550,6 +554,7 @@ private:
   std::unique_ptr<Render::GL::TerrainScatterManager> m_scatter;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
+  std::unique_ptr<Render::GL::AmbientFogRenderer> m_ambient_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::RainManager> m_rain_manager;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
@@ -625,6 +630,7 @@ private:
   std::vector<RpgDamageEvent> m_rpg_damage_events;
   std::uint32_t m_rpg_damage_event_sequence{0};
   float m_rpg_hit_stop_timer{0.0F};
+  float m_rpg_hit_stop_total{0.10F};
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;
   std::optional<QVector3D> m_commander_rally_preview_pos;

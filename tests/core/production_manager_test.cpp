@@ -12,10 +12,13 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/marketplace_system.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "render/gl/camera.h"
@@ -26,6 +29,7 @@ class ProductionManagerTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     auto& resources = Game::Systems::PlayerResourceRegistry::instance();
@@ -52,6 +56,7 @@ protected:
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
@@ -86,6 +91,7 @@ protected:
     }
     unit->owner_id = owner_id;
     unit->spawn_type = spawn_type;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
     selection->select_unit(building->get_id());
     return building;
   }
@@ -114,6 +120,32 @@ protected:
   auto find_wall_construction_site() -> Engine::Core::Entity* {
     auto sites = world.get_entities_with<Engine::Core::WallConstructionSiteComponent>();
     return sites.empty() ? nullptr : sites.front();
+  }
+
+  auto add_existing_wall(float x, float z, int owner_id = 1) -> Engine::Core::Entity* {
+    auto* wall = world.create_entity();
+    if (wall == nullptr) {
+      return nullptr;
+    }
+
+    wall->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
+    wall->add_component<Engine::Core::RenderableComponent>("mesh", "texture");
+    auto* unit = wall->add_component<Engine::Core::UnitComponent>(800, 800, 0.0F, 0.0F);
+    auto* building = wall->add_component<Engine::Core::BuildingComponent>();
+    auto* wall_segment = wall->add_component<Engine::Core::WallSegmentComponent>();
+    if (unit == nullptr || building == nullptr || wall_segment == nullptr) {
+      return nullptr;
+    }
+
+    unit->owner_id = owner_id;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    unit->spawn_type = Game::Units::SpawnType::WallSegment;
+    const auto snapped = Game::Systems::WallNetworkService::snap_world_position(x, z);
+    wall_segment->grid_x = snapped.x;
+    wall_segment->grid_z = snapped.z;
+    Game::Systems::BuildingCollisionRegistry::instance().register_building(
+        wall->get_id(), "wall_segment", x, z, owner_id);
+    return wall;
   }
 
   void initialize_collect_map(Game::Map::WorldProp::Type prop_type) {
@@ -319,6 +351,47 @@ TEST_F(ProductionManagerTest, WallConstructionKeepsRotatedSingleSegmentOrientati
   EXPECT_FLOAT_EQ(transform->rotation.y, 90.0F);
 }
 
+TEST_F(ProductionManagerTest,
+       RotatedWallPreviewSnapsPerpendicularExtensionOffExistingWall) {
+  add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  const QVector3D anchor_world =
+      Game::Systems::CommandService::grid_to_world(Game::Systems::Point{16, 16});
+  auto* existing_wall = add_existing_wall(anchor_world.x(), anchor_world.z());
+  ASSERT_NE(existing_wall, nullptr);
+
+  manager.start_builder_construction(QStringLiteral("wall_segment"));
+
+  const QPointF hover_screen =
+      world_to_screen(anchor_world + QVector3D(0.0F, 0.0F, 0.6F));
+  manager.on_construction_mouse_move(hover_screen.x(), hover_screen.y(), viewport);
+  manager.on_construction_scroll(1.0F);
+
+  auto previews = preview_entities();
+  ASSERT_EQ(previews.size(), 1U);
+  EXPECT_TRUE(manager.construction_preview_valid());
+
+  auto* preview_transform =
+      previews.front()->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(preview_transform, nullptr);
+
+  const QVector3D expected_world =
+      Game::Systems::CommandService::grid_to_world(Game::Systems::Point{16, 18});
+  EXPECT_NEAR(preview_transform->position.x, expected_world.x(), 0.0001F);
+  EXPECT_NEAR(preview_transform->position.z, expected_world.z(), 0.0001F);
+
+  manager.on_construction_pointer_released(
+      hover_screen.x(), hover_screen.y(), viewport);
+
+  auto* site = find_wall_construction_site();
+  ASSERT_NE(site, nullptr);
+  auto* transform = site->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_NEAR(transform->position.x, expected_world.x(), 0.0001F);
+  EXPECT_NEAR(transform->position.z, expected_world.z(), 0.0001F);
+}
+
 TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation) {
   ProductionManager manager(&world, &picking_service, &camera);
 
@@ -360,6 +433,82 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation
   auto* tower_transform = tower->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(tower_transform, nullptr);
   EXPECT_FLOAT_EQ(tower_transform->rotation.y, 10.0F);
+}
+
+TEST_F(ProductionManagerTest, MarketplaceConstructionInfoIncludesGoldCost) {
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  const QVariantMap info = manager.get_construction_info(QStringLiteral("marketplace"));
+  const QVariantMap resource_costs = info.value("resource_costs").toMap();
+
+  EXPECT_EQ(resource_costs.value("wood").toInt(), 60);
+  EXPECT_EQ(resource_costs.value("stone").toInt(), 40);
+  EXPECT_EQ(resource_costs.value("gold").toInt(), 50);
+}
+
+TEST_F(ProductionManagerTest, DirectMarketplacePlacementSpawnsAndRegistersBuilding) {
+  ProductionManager manager(&world, &picking_service, &camera);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Gold, 100);
+
+  manager.start_building_placement(QStringLiteral("marketplace"), 1);
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+
+  ASSERT_TRUE(manager.construction_preview_valid());
+
+  manager.on_construction_confirm();
+
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_TRUE(preview_entities().empty());
+
+  auto* marketplace = find_spawned_unit(Game::Units::SpawnType::Marketplace);
+  ASSERT_NE(marketplace, nullptr);
+  EXPECT_TRUE(Game::Systems::MarketplaceSystem::instance().owner_has_marketplace(1));
+}
+
+TEST_F(ProductionManagerTest,
+       SelectedMarketplaceStateExposesTradeRatesForOwnedSelection) {
+  add_selected_production_building(Game::Units::SpawnType::Marketplace, 2.0F, 3.0F, 1);
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  const QVariantMap state = manager.get_selected_marketplace_state(1);
+  const QVariantMap buy_prices = state.value("buy_prices").toMap();
+  const QVariantMap sell_prices = state.value("sell_prices").toMap();
+
+  EXPECT_TRUE(state.value("has_marketplace").toBool());
+  EXPECT_EQ(state.value("trade_quantity").toInt(), 10);
+  EXPECT_EQ(state.value("nation_id").toString(), QStringLiteral("roman_republic"));
+  EXPECT_EQ(buy_prices.value("wood").toInt(), 12);
+  EXPECT_EQ(buy_prices.value("stone").toInt(), 15);
+  EXPECT_EQ(buy_prices.value("iron").toInt(), 20);
+  EXPECT_EQ(sell_prices.value("wood").toInt(), 6);
+  EXPECT_EQ(sell_prices.value("stone").toInt(), 8);
+  EXPECT_EQ(sell_prices.value("iron").toInt(), 12);
+}
+
+TEST_F(ProductionManagerTest, MarketplaceSystemTradesWoodStoneAndIronForGold) {
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Gold, 100);
+  resources.set(1, Game::Systems::ResourceType::Wood, 15);
+  resources.set(1, Game::Systems::ResourceType::Stone, 20);
+  resources.set(1, Game::Systems::ResourceType::Iron, 25);
+
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+  marketplace.register_marketplace(1);
+
+  EXPECT_TRUE(marketplace.buy_resource(1, Game::Systems::ResourceType::Wood));
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 88);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Wood), 25);
+
+  EXPECT_TRUE(marketplace.sell_resource(1, Game::Systems::ResourceType::Stone));
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 96);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Stone), 10);
+
+  EXPECT_TRUE(marketplace.sell_resource(1, Game::Systems::ResourceType::Iron));
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 108);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Iron), 15);
 }
 
 TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueuedSite) {

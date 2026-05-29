@@ -8,33 +8,39 @@ auto construction_cost_info(std::string_view item_type) -> ConstructionCostInfo 
   ConstructionCostInfo info;
 
   if (item_type == "catapult") {
-    info.resource_costs.set(ResourceType::Wood, 90);
-    info.resource_costs.set(ResourceType::Iron, 35);
+    info.resource_costs.set(ResourceType::Wood, 60);
+    info.resource_costs.set(ResourceType::Iron, 25);
     return info;
   }
   if (item_type == "ballista") {
-    info.resource_costs.set(ResourceType::Wood, 75);
-    info.resource_costs.set(ResourceType::Iron, 45);
+    info.resource_costs.set(ResourceType::Wood, 50);
+    info.resource_costs.set(ResourceType::Iron, 30);
     return info;
   }
   if (item_type == "defense_tower") {
-    info.resource_costs.set(ResourceType::Wood, 90);
-    info.resource_costs.set(ResourceType::Stone, 120);
+    info.resource_costs.set(ResourceType::Wood, 60);
+    info.resource_costs.set(ResourceType::Stone, 80);
     return info;
   }
   if (item_type == "home") {
-    info.resource_costs.set(ResourceType::Wood, 80);
-    info.resource_costs.set(ResourceType::Stone, 25);
+    info.resource_costs.set(ResourceType::Wood, 50);
+    info.resource_costs.set(ResourceType::Stone, 15);
     return info;
   }
   if (item_type == "barracks") {
-    info.resource_costs.set(ResourceType::Wood, 140);
-    info.resource_costs.set(ResourceType::Stone, 90);
+    info.resource_costs.set(ResourceType::Wood, 100);
+    info.resource_costs.set(ResourceType::Stone, 60);
     return info;
   }
   if (item_type == "wall_segment") {
     info.resource_costs.set(ResourceType::Wood,
                             WallNetworkService::k_wall_segment_wood_cost);
+    return info;
+  }
+  if (item_type == "marketplace") {
+    info.resource_costs.set(ResourceType::Wood, 60);
+    info.resource_costs.set(ResourceType::Stone, 40);
+    info.resource_costs.set(ResourceType::Gold, 50);
     return info;
   }
 

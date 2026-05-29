@@ -22,7 +22,6 @@
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
 #include "combat_rules.h"
-#include "formation_planner.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 
@@ -40,31 +39,13 @@ constexpr int k_recovery_search_radius = 16;
 auto is_direct_path_walkable(const QVector3D& from,
                              const QVector3D& to,
                              float unit_radius) -> bool {
-  Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!CommandService::is_grid_walkable_for_radius(end_grid, unit_radius)) {
-    return false;
+  auto* pathfinder = CommandService::get_pathfinder();
+  if (pathfinder != nullptr) {
+    pathfinder->update_navigation_grid();
+    return pathfinder->is_world_segment_walkable(from, to, unit_radius);
   }
 
-  QVector3D const direction = to - from;
-  float const length = direction.length();
-  if (length < 0.5F) {
-    return true;
-  }
-
-  constexpr float sample_interval = 0.5F;
-  int const num_samples = static_cast<int>(length / sample_interval);
-
-  for (int i = 1; i <= num_samples; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
-    QVector3D const sample_pos = from + direction * t;
-    Point const sample_grid =
-        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!CommandService::is_grid_walkable_for_radius(sample_grid, unit_radius)) {
-      return false;
-    }
-  }
-
-  return true;
+  return CommandService::is_world_position_walkable_for_radius(to, unit_radius);
 }
 
 auto are_all_surrounding_cells_invalid(const Point& position,
@@ -148,6 +129,82 @@ void clear_pending_movement_state(Engine::Core::MovementComponent* movement_comp
   movement_component->clear_path();
   movement_component->vx = 0.0F;
   movement_component->vz = 0.0F;
+  movement_component->unstuck_push_seconds = 0.0F;
+  movement_component->unstuck_push_vx = 0.0F;
+  movement_component->unstuck_push_vz = 0.0F;
+}
+
+auto simple_grid_targets(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& units,
+                         const QVector3D& center) -> std::vector<QVector3D> {
+  std::vector<QVector3D> targets;
+  targets.reserve(units.size());
+  if (units.empty()) {
+    return targets;
+  }
+
+  QVector3D current_center(0.0F, 0.0F, 0.0F);
+  int positioned_count = 0;
+  float max_radius = CommandService::k_unit_radius_threshold;
+  std::vector<float> unit_radii;
+  unit_radii.reserve(units.size());
+  for (auto unit_id : units) {
+    float const unit_radius = CommandService::get_unit_radius(world, unit_id);
+    unit_radii.push_back(unit_radius);
+    max_radius = std::max(max_radius, unit_radius);
+    auto* entity = world.get_entity(unit_id);
+    auto* transform = entity != nullptr
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (transform == nullptr) {
+      continue;
+    }
+    current_center += QVector3D(transform->position.x, 0.0F, transform->position.z);
+    ++positioned_count;
+  }
+
+  if (positioned_count > 0) {
+    current_center /= static_cast<float>(positioned_count);
+  } else {
+    current_center = center - QVector3D(0.0F, 0.0F, 1.0F);
+  }
+
+  QVector3D forward = center - current_center;
+  forward.setY(0.0F);
+  if (forward.lengthSquared() <= 1.0e-4F) {
+    forward = QVector3D(0.0F, 0.0F, 1.0F);
+  } else {
+    forward.normalize();
+  }
+
+  QVector3D right(forward.z(), 0.0F, -forward.x());
+  if (right.lengthSquared() <= 1.0e-4F) {
+    right = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    right.normalize();
+  }
+
+  int const columns = std::max(
+      1, static_cast<int>(std::ceil(std::sqrt(static_cast<float>(units.size())))));
+  float const lane_center = (static_cast<float>(columns) - 1.0F) * 0.5F;
+  float const spacing =
+      std::max(Game::GameConfig::instance().gameplay().formation_spacing_default,
+               max_radius * 2.8F + 0.8F);
+
+  for (std::size_t idx = 0; idx < units.size(); ++idx) {
+    int const col = static_cast<int>(idx % static_cast<std::size_t>(columns));
+    int const row = static_cast<int>(idx / static_cast<std::size_t>(columns));
+    QVector3D const offset =
+        right * ((static_cast<float>(col) - lane_center) * spacing) -
+        forward * (static_cast<float>(row) * spacing);
+    float const unit_radius = (idx < unit_radii.size())
+                                  ? unit_radii[idx]
+                                  : CommandService::k_unit_radius_threshold;
+    targets.push_back(CommandService::snap_to_walkable_ground_for_radius(
+        center + offset, unit_radius, 8));
+  }
+
+  return targets;
 }
 
 } // namespace
@@ -179,11 +236,7 @@ auto CommandService::get_pathfinder() -> Pathfinding* {
 }
 auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
   if (s_pathfinder) {
-    int const grid_x =
-        static_cast<int>(std::round(world_x - s_pathfinder->get_grid_offset_x()));
-    int const grid_z =
-        static_cast<int>(std::round(world_z - s_pathfinder->get_grid_offset_z()));
-    return {grid_x, grid_z};
+    return s_pathfinder->world_to_grid(world_x, world_z);
   }
 
   return {static_cast<int>(std::round(world_x)), static_cast<int>(std::round(world_z))};
@@ -191,9 +244,7 @@ auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
 
 auto CommandService::grid_to_world(const Point& grid_pos) -> QVector3D {
   if (s_pathfinder) {
-    return {static_cast<float>(grid_pos.x) + s_pathfinder->get_grid_offset_x(),
-            0.0F,
-            static_cast<float>(grid_pos.y) + s_pathfinder->get_grid_offset_z()};
+    return s_pathfinder->grid_to_world(grid_pos);
   }
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
@@ -316,14 +367,9 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
   }
 
   plan.resolved_target = snap_to_walkable_ground(target);
-  auto formation_result = FormationPlanner::get_formation_with_facing(
-      world,
-      units,
-      plan.resolved_target,
-      Game::GameConfig::instance().gameplay().formation_spacing_default);
-  plan.positions = std::move(formation_result.positions);
-  plan.facing_angles = std::move(formation_result.facing_angles);
-  plan.preserve_formation_mode = formation_result.used_tactical_formation;
+  plan.positions = simple_grid_targets(world, units, plan.resolved_target);
+  plan.facing_angles.assign(units.size(), 0.0F);
+  plan.preserve_formation_mode = false;
   if (units.size() == 1 && !plan.positions.empty()) {
     plan.resolved_target = plan.positions.front();
   }
@@ -411,6 +457,14 @@ auto CommandService::try_queue_local_recovery_move(
   }
 
   QVector3D const safe_pos = grid_to_world(recovery_cell);
+  float const active_target_dx = safe_pos.x() - movement->target_x;
+  float const active_target_dz = safe_pos.z() - movement->target_y;
+  if (movement->has_target &&
+      active_target_dx * active_target_dx + active_target_dz * active_target_dz <=
+          same_target_threshold_sq) {
+    return false;
+  }
+
   clear_pending_movement_state(movement);
   movement->target_x = safe_pos.x();
   movement->target_y = safe_pos.z();
@@ -553,6 +607,19 @@ void CommandService::move_unit(Engine::Core::World& world,
         s_entity_to_request.erase(request_it);
       }
     }
+  }
+
+  float const previous_goal_dx = mv->goal_x - target_x;
+  float const previous_goal_dz = mv->goal_y - target_z;
+  if (previous_goal_dx * previous_goal_dx + previous_goal_dz * previous_goal_dz >
+      same_target_threshold_sq) {
+    mv->last_position_x = transform->position.x;
+    mv->last_position_z = transform->position.z;
+    mv->time_stuck = 0.0F;
+    mv->unstuck_cooldown = 0.0F;
+    mv->unstuck_push_seconds = 0.0F;
+    mv->unstuck_push_vx = 0.0F;
+    mv->unstuck_push_vz = 0.0F;
   }
 
   mv->goal_x = target_x;
@@ -851,6 +918,24 @@ void CommandService::move_group(Engine::Core::World& world,
     return;
   }
 
+  if (moving_members.size() > 1) {
+    QVector3D target_center(0.0F, 0.0F, 0.0F);
+    std::vector<Engine::Core::EntityID> moving_ids;
+    moving_ids.reserve(moving_members.size());
+    for (const auto& member : moving_members) {
+      target_center += member.target;
+      moving_ids.push_back(member.id);
+    }
+    target_center /= static_cast<float>(moving_members.size());
+
+    auto grid_targets = simple_grid_targets(world, moving_ids, target_center);
+    if (grid_targets.size() == moving_members.size()) {
+      for (std::size_t idx = 0; idx < moving_members.size(); ++idx) {
+        moving_members[idx].target = grid_targets[idx];
+      }
+    }
+  }
+
   if (s_pathfinder) {
     bool any_target_invalid = false;
     for (const auto& member : moving_members) {
@@ -1014,15 +1099,12 @@ void CommandService::move_group(Engine::Core::World& world,
 
   auto& leader = members[leader_index];
   QVector3D const leader_target = leader.target;
-  float const shared_path_radius = [&members, &leader_target]() -> float {
+  float const shared_path_radius = [&members]() -> float {
     float max_member_radius = k_unit_radius_threshold;
-    float max_offset = 0.0F;
     for (const auto& member : members) {
       max_member_radius = std::max(max_member_radius, member.unit_radius);
-      QVector3D const offset = member.target - leader_target;
-      max_offset = std::max(max_offset, offset.length());
     }
-    return max_member_radius + max_offset;
+    return max_member_radius;
   }();
 
   std::vector<MemberInfo*> units_needing_new_path;
@@ -1156,36 +1238,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
       continue;
     }
 
-    std::vector<Point> resolved_path = std::move(result.path);
-    if (resolved_path.empty() && request_info.options.group_move &&
-        s_pathfinder != nullptr) {
-      auto* leader_entity = world.get_entity(request_info.entity_id);
-      auto* leader_transform =
-          leader_entity != nullptr
-              ? leader_entity->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
-      if (leader_transform != nullptr) {
-        float relaxed_radius = get_unit_radius(world, request_info.entity_id);
-        for (auto member_id : request_info.group_members) {
-          relaxed_radius = std::max(relaxed_radius, get_unit_radius(world, member_id));
-        }
-
-        Point const start =
-            world_to_grid(leader_transform->position.x, leader_transform->position.z);
-        Point const end =
-            world_to_grid(request_info.target.x(), request_info.target.z());
-        auto bridge_path = s_pathfinder->find_path(start, end, relaxed_radius);
-        bool const path_uses_bridge =
-            std::any_of(bridge_path.begin(), bridge_path.end(), [](const Point& point) {
-              QVector3D const world_pos = grid_to_world(point);
-              return Game::Map::TerrainService::instance().is_on_bridge(world_pos.x(),
-                                                                        world_pos.z());
-            });
-        if (path_uses_bridge) {
-          resolved_path = std::move(bridge_path);
-        }
-      }
-    }
+    std::vector<Point> const resolved_path = std::move(result.path);
 
     const auto& path_points = resolved_path;
 
@@ -1292,17 +1345,12 @@ void CommandService::process_path_results(Engine::Core::World& world) {
       if (has_path) {
         movement_component->path.reserve(path_points.size() - 1);
         for (size_t idx = 1; idx < path_points.size(); ++idx) {
-          QVector3D const world_pos = grid_to_world(path_points[idx]);
-          QVector3D waypoint = world_pos;
-          if (auto const bridge_center =
-                  Game::Map::TerrainService::instance().get_bridge_traversal_position(
-                      world_pos.x(), world_pos.z());
-              bridge_center.has_value()) {
-            waypoint.setX(bridge_center->x());
-            waypoint.setZ(bridge_center->z());
+          QVector3D waypoint;
+          if (s_pathfinder != nullptr) {
+            waypoint =
+                s_pathfinder->path_waypoint_world_position(path_points[idx], offset);
           } else {
-            waypoint.setX(world_pos.x() + offset.x());
-            waypoint.setZ(world_pos.z() + offset.z());
+            waypoint = grid_to_world(path_points[idx]) + offset;
           }
           movement_component->path.emplace_back(waypoint.x(), waypoint.z());
         }
@@ -1404,7 +1452,80 @@ void CommandService::attack_target(Engine::Core::World& world,
   if (target_id == 0) {
     return;
   }
-  for (auto unit_id : units) {
+  auto* target_ent = world.get_entity(target_id);
+  auto* target_transform =
+      target_ent != nullptr
+          ? target_ent->get_component<Engine::Core::TransformComponent>()
+          : nullptr;
+  QVector3D const target_pos =
+      target_transform != nullptr
+          ? QVector3D(target_transform->position.x, 0.0F, target_transform->position.z)
+          : QVector3D();
+  float target_radius =
+      target_ent != nullptr ? std::max(get_unit_radius(world, target_id), 0.5F) : 0.5F;
+  if (target_ent != nullptr && target_transform != nullptr &&
+      target_ent->has_component<Engine::Core::BuildingComponent>()) {
+    target_radius =
+        std::max(target_radius,
+                 std::max(target_transform->scale.x, target_transform->scale.z) * 0.5F);
+  }
+
+  QVector3D attack_center = target_pos;
+  if (should_chase && target_transform != nullptr && !units.empty()) {
+    QVector3D current_center(0.0F, 0.0F, 0.0F);
+    int positioned_count = 0;
+    float max_attacker_radius = k_unit_radius_threshold;
+    float max_range = 2.0F;
+    bool has_ranged_unit = false;
+    for (auto unit_id : units) {
+      max_attacker_radius =
+          std::max(max_attacker_radius, get_unit_radius(world, unit_id));
+      auto* attacker = world.get_entity(unit_id);
+      auto* attacker_transform =
+          attacker != nullptr
+              ? attacker->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      if (attacker_transform != nullptr) {
+        current_center += QVector3D(
+            attacker_transform->position.x, 0.0F, attacker_transform->position.z);
+        ++positioned_count;
+      }
+      if (attacker != nullptr) {
+        if (auto* atk = attacker->get_component<Engine::Core::AttackComponent>()) {
+          max_range = std::max(max_range, std::max(0.1F, atk->range));
+          has_ranged_unit = has_ranged_unit ||
+                            (atk->can_ranged && atk->range > atk->melee_range * 1.5F);
+        }
+      }
+    }
+
+    if (positioned_count > 0) {
+      current_center /= static_cast<float>(positioned_count);
+    } else {
+      current_center = target_pos - QVector3D(1.0F, 0.0F, 0.0F);
+    }
+
+    QVector3D away_from_target = current_center - target_pos;
+    away_from_target.setY(0.0F);
+    if (away_from_target.lengthSquared() <= 1.0e-4F) {
+      away_from_target = QVector3D(1.0F, 0.0F, 0.0F);
+    } else {
+      away_from_target.normalize();
+    }
+
+    float desired_distance =
+        target_radius + max_attacker_radius + std::max(max_range - 0.2F, 0.2F);
+    if (has_ranged_unit) {
+      desired_distance = target_radius + max_attacker_radius + max_range * 0.85F;
+    }
+    attack_center = target_pos + away_from_target * desired_distance;
+  }
+  std::vector<QVector3D> attack_grid =
+      should_chase ? simple_grid_targets(world, units, attack_center)
+                   : std::vector<QVector3D>{};
+
+  for (std::size_t index = 0; index < units.size(); ++index) {
+    auto unit_id = units[index];
     auto* e = world.get_entity(unit_id);
     if (e == nullptr) {
       continue;
@@ -1427,73 +1548,18 @@ void CommandService::attack_target(Engine::Core::World& world,
       continue;
     }
 
-    auto* target_ent = world.get_entity(target_id);
-    if (target_ent == nullptr) {
-      continue;
-    }
-
-    auto* t_trans = target_ent->get_component<Engine::Core::TransformComponent>();
     auto* att_trans = e->get_component<Engine::Core::TransformComponent>();
-    if ((t_trans == nullptr) || (att_trans == nullptr)) {
+    if ((target_transform == nullptr) || (att_trans == nullptr)) {
       continue;
     }
 
-    QVector3D const target_pos(t_trans->position.x, 0.0F, t_trans->position.z);
-    QVector3D const attacker_pos(att_trans->position.x, 0.0F, att_trans->position.z);
-
-    QVector3D desired_pos = target_pos;
-
-    float range = 2.0F;
-    bool is_ranged_unit = false;
-    if (auto* atk = e->get_component<Engine::Core::AttackComponent>()) {
-      range = std::max(0.1F, atk->range);
-      if (atk->can_ranged && atk->range > atk->melee_range * 1.5F) {
-        is_ranged_unit = true;
-      }
-    }
-
-    QVector3D direction = target_pos - attacker_pos;
-    float const distance = direction.length();
-    if (distance > 0.001F) {
-      direction /= distance;
-      if (target_ent->has_component<Engine::Core::BuildingComponent>()) {
-        float const scale_x = t_trans->scale.x;
-        float const scale_z = t_trans->scale.z;
-        float const target_radius = std::max(scale_x, scale_z) * 0.5F;
-        float const desired_distance = target_radius + std::max(range - 0.2F, 0.2F);
-        if (distance > desired_distance + 0.15F) {
-          desired_pos = target_pos - direction * desired_distance;
-        }
-      } else {
-        float desired_distance = std::max(range - 0.2F, 0.2F);
-        if (is_ranged_unit) {
-          desired_distance = range * 0.85F;
-        }
-        if (distance > desired_distance + 0.15F) {
-          desired_pos = target_pos - direction * desired_distance;
-        }
-      }
-    }
+    QVector3D const desired_pos =
+        (index < attack_grid.size()) ? attack_grid[index] : attack_center;
 
     CommandService::MoveOptions opts;
     opts.kind = MoveOrderKind::AttackChase;
     opts.allow_direct_fallback = true;
     CommandService::move_unit(world, unit_id, desired_pos, opts);
-
-    auto* mv = e->get_component<Engine::Core::MovementComponent>();
-    if (mv == nullptr) {
-      mv = e->add_component<Engine::Core::MovementComponent>();
-    }
-    if (mv != nullptr) {
-      OrderService::clear_player_order_intent(e);
-
-      mv->target_x = desired_pos.x();
-      mv->target_y = desired_pos.z();
-      mv->goal_x = desired_pos.x();
-      mv->goal_y = desired_pos.z();
-      mv->has_target = true;
-      mv->clear_path();
-    }
   }
 }
 

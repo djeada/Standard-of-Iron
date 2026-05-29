@@ -20,13 +20,17 @@ auto wrap_phase(float phase) noexcept -> float {
   return phase;
 }
 
-auto swing_ease(float t) noexcept -> float {
-  t = std::clamp(t, 0.0F, 1.0F);
+auto swing_ease(float t, bool clamp_input) noexcept -> float {
+  if (clamp_input) {
+    t = std::clamp(t, 0.0F, 1.0F);
+  }
   return t * t * (3.0F - 2.0F * t);
 }
 
-auto swing_arc(float t) noexcept -> float {
-  t = std::clamp(t, 0.0F, 1.0F);
+auto swing_arc(float t, bool clamp_input) noexcept -> float {
+  if (clamp_input) {
+    t = std::clamp(t, 0.0F, 1.0F);
+  }
   return 4.0F * t * (1.0F - t);
 }
 
@@ -68,10 +72,12 @@ auto swing_target(const Dimensions& dims,
                   float stride_length,
                   float lateral_scale,
                   float vertical_scale,
-                  float fore_aft_scale) noexcept -> QVector3D {
+                  float fore_aft_scale,
+                  bool mirror_stride_by_leg_side) noexcept -> QVector3D {
   QVector3D target = default_foot_position(
       dims, leg, barrel_center, lateral_scale, vertical_scale, fore_aft_scale);
-  target += QVector3D(0.0F, 0.0F, stride_length * leg_forward_sign(leg));
+  float const direction = mirror_stride_by_leg_side ? leg_forward_sign(leg) : 1.0F;
+  target += QVector3D(0.0F, 0.0F, stride_length * direction);
   return target;
 }
 
@@ -108,13 +114,20 @@ auto evaluate_cycle_motion(const Dimensions& dims,
       locomotion_intensity(is_moving, is_running, gait, motion);
 
   if (is_moving) {
-    float const cycle_time = std::max(gait.cycle_time, 0.001F);
+    float const cycle_time = std::max(gait.cycle_time, motion.cycle_time_floor);
     sample.phase = wrap_phase(time / cycle_time + gait.phase_offset);
     float const primary = std::sin(sample.phase * k_two_pi);
-    float const secondary =
-        std::sin((sample.phase + motion.moving_secondary_phase) * 2.0F * k_two_pi);
-    float const bob_scale = is_running ? motion.running_bob_scale : 1.0F;
-    sample.bob = (primary * 0.70F + secondary * motion.moving_secondary_weight) *
+    float const secondary = std::sin((sample.phase + motion.moving_secondary_phase) *
+                                     motion.moving_secondary_frequency * k_two_pi);
+    float const tertiary = std::sin((sample.phase + motion.moving_tertiary_phase) *
+                                    motion.moving_tertiary_frequency * k_two_pi);
+    float const bob_scale =
+        (motion.moving_bob_base_scale +
+         sample.locomotion_intensity * motion.moving_bob_intensity_scale) *
+        (is_running ? motion.running_bob_scale : 1.0F);
+    sample.bob = (primary * motion.moving_primary_weight +
+                  secondary * motion.moving_secondary_weight +
+                  tertiary * motion.moving_tertiary_weight) *
                  dims.move_bob_amplitude * bob_scale;
   } else {
     sample.phase = wrap_phase(time * motion.idle_phase_speed + gait.phase_offset);

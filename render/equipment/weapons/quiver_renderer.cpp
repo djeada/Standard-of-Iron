@@ -6,7 +6,6 @@
 #include <string>
 
 #include "../../entity/registry.h"
-#include "../../geom/math_utils.h"
 #include "../../gl/render_constants.h"
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_spec.h"
@@ -15,6 +14,7 @@
 #include "../generated_equipment.h"
 #include "../oriented_archetype_utils.h"
 #include "arrow_archetype_utils.h"
+#include "math/math_utils.h"
 
 namespace Render::GL {
 
@@ -112,7 +112,7 @@ void append_quiver_arrow(EquipmentBatch& batch,
 } // namespace
 
 QuiverRenderer::QuiverRenderer(QuiverRenderConfig config)
-    : m_config(std::move(config)) {
+    : m_config(config) {
 }
 
 void QuiverRenderer::render(const DrawContext& ctx,
@@ -202,7 +202,7 @@ auto quiver_make_static_attachments(const QuiverRenderConfig& config,
   };
 
   const std::uint8_t leather_role = base_role_byte;
-  const std::uint8_t fletching_role = static_cast<std::uint8_t>(base_role_byte + 2U);
+  const auto fletching_role = static_cast<std::uint8_t>(base_role_byte + 2U);
 
   QMatrix4x4 const body_transform =
       waist_basis_transform(QMatrix4x4{}, bw, quiver_pos_local);

@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -630,6 +631,71 @@ struct Bridge {
   float width = 3.0F;
   float height = 0.5F;
 };
+
+inline constexpr float k_bridge_riverbank_visual_padding = 1.0F;
+
+[[nodiscard]] inline auto xz_cross(const QVector3D& a,
+                                   const QVector3D& b) noexcept -> float {
+  return a.x() * b.z() - a.z() * b.x();
+}
+
+[[nodiscard]] inline auto bridge_required_half_length_for_river(
+    const Bridge& bridge, const RiverSegment& river) noexcept -> std::optional<float> {
+  QVector3D const bridge_vec = bridge.end - bridge.start;
+  QVector3D const river_vec = river.end - river.start;
+  float const bridge_len = std::hypot(bridge_vec.x(), bridge_vec.z());
+  float const river_len = std::hypot(river_vec.x(), river_vec.z());
+  if (bridge_len < 1.0e-4F || river_len < 1.0e-4F) {
+    return std::nullopt;
+  }
+
+  float const cross = xz_cross(bridge_vec, river_vec);
+  float const sin_angle = std::abs(cross) / (bridge_len * river_len);
+  if (sin_angle < 1.0e-4F) {
+    return std::nullopt;
+  }
+
+  QVector3D const diff = river.start - bridge.start;
+  float const t = xz_cross(diff, river_vec) / cross;
+  float const s = xz_cross(diff, bridge_vec) / cross;
+  if (t < 0.0F || t > 1.0F || s < 0.0F || s > 1.0F) {
+    return std::nullopt;
+  }
+
+  float const effective_river_half_width =
+      river.width * 0.5F + k_bridge_riverbank_visual_padding;
+  return effective_river_half_width / sin_angle;
+}
+
+inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
+                                             const std::vector<RiverSegment>& rivers) {
+  for (const RiverSegment& river : rivers) {
+    QVector3D bridge_vec = bridge.end - bridge.start;
+    float const bridge_len = std::hypot(bridge_vec.x(), bridge_vec.z());
+    if (bridge_len < 1.0e-4F) {
+      continue;
+    }
+
+    auto const required_half = bridge_required_half_length_for_river(bridge, river);
+    if (!required_half.has_value()) {
+      continue;
+    }
+
+    QVector3D dir(bridge_vec.x() / bridge_len, 0.0F, bridge_vec.z() / bridge_len);
+    QVector3D const river_vec = river.end - river.start;
+    float const cross = xz_cross(bridge_vec, river_vec);
+    QVector3D const diff = river.start - bridge.start;
+    float const t = xz_cross(diff, river_vec) / cross;
+    float const before = std::max(0.0F, *required_half - t * bridge_len);
+    float const after = std::max(0.0F, *required_half - (1.0F - t) * bridge_len);
+    if (before > 0.0F) {
+      bridge.start -= dir * before;
+    }
+    if (after > 0.0F) {
+      bridge.end += dir * after;
+    }
+  }
+}
 
 struct WallLine {
   QVector3D start;

@@ -4,9 +4,9 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
-#include <optional>
 #include <random>
 #include <vector>
 
@@ -31,9 +31,14 @@ constexpr float hold_mode_turn_speed_degrees = 180.0F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
 constexpr float k_stuck_check_dist_sq = 0.01F;
+constexpr float k_target_progress_epsilon = 0.05F;
 constexpr float k_time_stuck_threshold = 1.5F;
+constexpr float k_soft_stuck_push_threshold = 0.20F;
 constexpr float k_invalid_tile_recovery_threshold = 0.25F;
 constexpr float k_unstuck_cooldown_seconds = 1.5F;
+constexpr float k_unstuck_push_seconds = 0.35F;
+constexpr float k_unstuck_push_distance = 0.9F;
+constexpr int k_max_stuck_recovery_attempts = 1;
 
 class MovementModePolicy {
 public:
@@ -114,39 +119,6 @@ class ElephantMovementImplementation final : public UnitMovementImplementation {
   return humanoid;
 }
 
-void synchronize_with_bridge_centerline(
-    Engine::Core::TransformComponent* transform,
-    const Engine::Core::MovementComponent* movement,
-    Engine::Core::TerrainContextComponent* terrain_ctx) {
-  if (transform == nullptr) {
-    return;
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  bool const is_on_bridge =
-      terrain_service.is_on_bridge(transform->position.x, transform->position.z);
-  auto const bridge_center = terrain_service.get_bridge_traversal_position(
-      transform->position.x, transform->position.z);
-  auto const target_bridge_center = (movement != nullptr && movement->has_target)
-                                        ? terrain_service.get_bridge_traversal_position(
-                                              movement->target_x, movement->target_y)
-                                        : std::nullopt;
-  if (!bridge_center.has_value() ||
-      (!is_on_bridge && !target_bridge_center.has_value())) {
-    if (terrain_ctx != nullptr) {
-      terrain_ctx->is_on_bridge = is_on_bridge;
-    }
-    return;
-  }
-
-  transform->position.x = bridge_center->x();
-  transform->position.z = bridge_center->z();
-  if (terrain_ctx != nullptr) {
-    terrain_ctx->is_on_bridge =
-        terrain_service.is_on_bridge(transform->position.x, transform->position.z);
-  }
-}
-
 void apply_desired_yaw(Engine::Core::TransformComponent* transform,
                        float delta_time,
                        float turn_speed_degrees) {
@@ -193,31 +165,70 @@ auto is_segment_walkable(const QVector3D& from,
                          Engine::Core::EntityID ignore_entity,
                          float unit_radius = 0.5F) -> bool {
   (void)ignore_entity;
-  Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!CommandService::is_grid_walkable_for_radius(end_grid, unit_radius)) {
+  auto* pathfinder = CommandService::get_pathfinder();
+  if (pathfinder != nullptr) {
+    pathfinder->update_navigation_grid();
+    return pathfinder->is_world_segment_walkable(from, to, unit_radius);
+  }
+
+  return CommandService::is_world_position_walkable_for_radius(to, unit_radius);
+}
+
+auto try_start_unstuck_push(Engine::Core::Entity* entity,
+                            Engine::Core::TransformComponent* transform,
+                            Engine::Core::MovementComponent* movement,
+                            const QVector3D& preferred_target,
+                            float unit_radius,
+                            float max_speed) -> bool {
+  if (entity == nullptr || transform == nullptr || movement == nullptr) {
     return false;
   }
 
-  QVector3D const direction = to - from;
-  float const length = direction.length();
-  if (length < 0.5F) {
+  QVector3D const current(transform->position.x, 0.0F, transform->position.z);
+  QVector3D to_target = preferred_target - current;
+  if (to_target.lengthSquared() < 0.0001F) {
+    to_target = QVector3D(movement->goal_x, 0.0F, movement->goal_y) - current;
+  }
+  if (to_target.lengthSquared() < 0.0001F) {
+    to_target = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  to_target.normalize();
+
+  QVector3D const right(to_target.z(), 0.0F, -to_target.x());
+  std::array<QVector3D, 8> const directions{
+      to_target,
+      right,
+      -right,
+      -to_target,
+      (to_target + right).normalized(),
+      (to_target - right).normalized(),
+      (-to_target + right).normalized(),
+      (-to_target - right).normalized(),
+  };
+
+  float const push_step = k_unstuck_push_distance;
+  for (const QVector3D& direction : directions) {
+    if (direction.lengthSquared() < 0.0001F) {
+      continue;
+    }
+    QVector3D const candidate = current + direction * push_step;
+    if (!is_point_allowed(candidate, *entity, unit_radius)) {
+      continue;
+    }
+    if (!is_segment_walkable(current, candidate, entity->get_id(), unit_radius)) {
+      continue;
+    }
+
+    float const push_speed = std::max(max_speed * 1.2F, 2.0F);
+    movement->unstuck_push_vx = direction.x() * push_speed;
+    movement->unstuck_push_vz = direction.z() * push_speed;
+    movement->unstuck_push_seconds = k_unstuck_push_seconds;
+    movement->unstuck_cooldown = std::min(movement->unstuck_cooldown, 0.15F);
+    movement->time_stuck = 0.0F;
     return true;
   }
 
-  constexpr float sample_interval = 0.5F;
-  int const num_samples = static_cast<int>(length / sample_interval);
-
-  for (int i = 1; i <= num_samples; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
-    QVector3D const sample_pos = from + direction * t;
-    Point const sample_grid =
-        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!CommandService::is_grid_walkable_for_radius(sample_grid, unit_radius)) {
-      return false;
-    }
-  }
-
-  return true;
+  return false;
 }
 
 } // namespace
@@ -225,11 +236,185 @@ auto is_segment_walkable(const QVector3D& from,
 void MovementSystem::update(Engine::Core::World* world, float delta_time) {
   CommandService::process_repath_requests(*world);
   CommandService::process_path_results(*world);
+  prune_moving_units(world);
   auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
 
   for (auto* entity : entities) {
     move_unit(entity, world, delta_time);
   }
+}
+
+void MovementSystem::prune_moving_units(Engine::Core::World* world) {
+  if (world == nullptr) {
+    m_moving_units.clear();
+    m_moving_unit_indices.clear();
+    return;
+  }
+
+  for (std::size_t idx = m_moving_units.size(); idx > 0; --idx) {
+    auto& entry = m_moving_units[idx - 1];
+    auto* entity = world->get_entity(entry.entity_id);
+    if (entity == nullptr || entity != entry.entity ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>() ||
+        entity->get_component<Engine::Core::TransformComponent>() == nullptr ||
+        entity->get_component<Engine::Core::MovementComponent>() == nullptr) {
+      untrack_moving_unit(entry.entity_id);
+    }
+  }
+}
+
+auto MovementSystem::track_moving_unit(
+    Engine::Core::Entity* entity,
+    const Engine::Core::TransformComponent* transform,
+    const Engine::Core::MovementComponent* movement) -> MovingUnitStepState* {
+  if (entity == nullptr || transform == nullptr || movement == nullptr) {
+    return nullptr;
+  }
+
+  auto const entity_id = entity->get_id();
+  auto it = m_moving_unit_indices.find(entity_id);
+  if (it != m_moving_unit_indices.end()) {
+    auto& entry = m_moving_units[it->second];
+    entry.entity = entity;
+    return &entry;
+  }
+
+  float active_target_x = movement->target_x;
+  float active_target_z = movement->target_y;
+  if (movement->has_waypoints()) {
+    const auto& waypoint = movement->current_waypoint();
+    active_target_x = waypoint.first;
+    active_target_z = waypoint.second;
+  }
+  float const target_dx = active_target_x - transform->position.x;
+  float const target_dz = active_target_z - transform->position.z;
+  m_moving_unit_indices[entity_id] = m_moving_units.size();
+  m_moving_units.push_back(MovingUnitStepState{
+      entity_id,
+      entity,
+      transform->position.x,
+      transform->position.z,
+      movement->goal_x,
+      movement->goal_y,
+      active_target_x,
+      active_target_z,
+      std::sqrt(target_dx * target_dx + target_dz * target_dz),
+      0.0F,
+      0,
+  });
+  return &m_moving_units.back();
+}
+
+void MovementSystem::untrack_moving_unit(Engine::Core::EntityID entity_id) {
+  auto it = m_moving_unit_indices.find(entity_id);
+  if (it == m_moving_unit_indices.end()) {
+    return;
+  }
+
+  std::size_t const index = it->second;
+  std::size_t const last_index = m_moving_units.size() - 1;
+  if (index != last_index) {
+    m_moving_units[index] = m_moving_units[last_index];
+    m_moving_unit_indices[m_moving_units[index].entity_id] = index;
+  }
+  m_moving_units.pop_back();
+  m_moving_unit_indices.erase(it);
+}
+
+auto MovementSystem::sample_moving_unit_progress(
+    Engine::Core::Entity* entity,
+    const Engine::Core::TransformComponent* transform,
+    const Engine::Core::MovementComponent* movement,
+    bool current_position_allowed,
+    float delta_time) -> MovingUnitStepState* {
+  if (entity == nullptr || transform == nullptr || movement == nullptr) {
+    return nullptr;
+  }
+
+  bool const has_movement_activity =
+      movement->has_target || movement->has_waypoints() || movement->path_pending ||
+      movement->pending_request_id != 0;
+  bool const should_watch = has_movement_activity || !current_position_allowed;
+  if (!should_watch) {
+    untrack_moving_unit(entity->get_id());
+    return nullptr;
+  }
+
+  auto* entry = track_moving_unit(entity, transform, movement);
+  if (entry == nullptr) {
+    return nullptr;
+  }
+
+  float const goal_dx = movement->goal_x - entry->goal_x;
+  float const goal_dz = movement->goal_y - entry->goal_y;
+  if (goal_dx * goal_dx + goal_dz * goal_dz > k_stuck_check_dist_sq) {
+    entry->goal_x = movement->goal_x;
+    entry->goal_y = movement->goal_y;
+    entry->last_x = transform->position.x;
+    entry->last_z = transform->position.z;
+    entry->active_target_x = movement->target_x;
+    entry->active_target_z = movement->target_y;
+    if (movement->has_waypoints()) {
+      const auto& waypoint = movement->current_waypoint();
+      entry->active_target_x = waypoint.first;
+      entry->active_target_z = waypoint.second;
+    }
+    float const target_dx = entry->active_target_x - transform->position.x;
+    float const target_dz = entry->active_target_z - transform->position.z;
+    entry->last_target_distance =
+        std::sqrt(target_dx * target_dx + target_dz * target_dz);
+    entry->stationary_seconds = 0.0F;
+    entry->recovery_attempts = 0;
+  }
+
+  bool const should_sample_steps = movement->has_target || !current_position_allowed;
+  if (!should_sample_steps) {
+    return entry;
+  }
+
+  float active_target_x = movement->target_x;
+  float active_target_z = movement->target_y;
+  if (movement->has_waypoints()) {
+    const auto& waypoint = movement->current_waypoint();
+    active_target_x = waypoint.first;
+    active_target_z = waypoint.second;
+  }
+  float const active_target_dx = active_target_x - entry->active_target_x;
+  float const active_target_dz = active_target_z - entry->active_target_z;
+  if (active_target_dx * active_target_dx + active_target_dz * active_target_dz >
+      k_stuck_check_dist_sq) {
+    float const target_dx = active_target_x - transform->position.x;
+    float const target_dz = active_target_z - transform->position.z;
+    entry->active_target_x = active_target_x;
+    entry->active_target_z = active_target_z;
+    entry->last_target_distance =
+        std::sqrt(target_dx * target_dx + target_dz * target_dz);
+    entry->last_x = transform->position.x;
+    entry->last_z = transform->position.z;
+    entry->stationary_seconds = 0.0F;
+    entry->recovery_attempts = 0;
+    return entry;
+  }
+
+  float const dpx = transform->position.x - entry->last_x;
+  float const dpz = transform->position.z - entry->last_z;
+  float const target_dx = active_target_x - transform->position.x;
+  float const target_dz = active_target_z - transform->position.z;
+  float const distance_to_target =
+      std::sqrt(target_dx * target_dx + target_dz * target_dz);
+  bool const made_target_progress =
+      distance_to_target + k_target_progress_epsilon < entry->last_target_distance;
+  if (made_target_progress) {
+    entry->last_x = transform->position.x;
+    entry->last_z = transform->position.z;
+    entry->last_target_distance = distance_to_target;
+    entry->stationary_seconds = 0.0F;
+    entry->recovery_attempts = 0;
+  } else {
+    entry->stationary_seconds += delta_time;
+  }
+
+  return entry;
 }
 
 void MovementSystem::move_unit(Engine::Core::Entity* entity,
@@ -246,6 +431,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (unit->health <= 0 ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    untrack_moving_unit(entity->get_id());
     return;
   }
 
@@ -258,6 +444,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }
+    untrack_moving_unit(entity->get_id());
     return;
   }
 
@@ -275,6 +462,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->vz = 0.0F;
       movement->clear_path();
       movement->path_pending = false;
+      untrack_moving_unit(entity->get_id());
       in_hold_mode = true;
 
       if (hold_mode->kneel_duration > 0.0F && hold_mode->kneel_entry_progress < 1.0F) {
@@ -289,12 +477,14 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (hold_mode->exit_cooldown > 0.0F && !in_hold_mode) {
       movement->vx = 0.0F;
       movement->vz = 0.0F;
+      untrack_moving_unit(entity->get_id());
 
       return;
     }
   }
 
   if (in_hold_mode) {
+    untrack_moving_unit(entity->get_id());
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
       apply_desired_yaw(transform, delta_time, hold_mode_turn_speed_degrees);
     }
@@ -310,6 +500,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vz = 0.0F;
     movement->clear_path();
     movement->path_pending = false;
+    untrack_moving_unit(entity->get_id());
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
       apply_desired_yaw(
           transform, delta_time, movement_impl.melee_turn_speed_degrees());
@@ -340,6 +531,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->has_target = false;
       OrderService::clear_player_order_intent(entity);
       movement->clear_path();
+      untrack_moving_unit(entity->get_id());
     } else {
 
       float const dist = std::sqrt(std::max(dist_sq, 0.0001F));
@@ -383,18 +575,22 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->unstuck_cooldown =
         std::max(0.0F, movement->unstuck_cooldown - delta_time);
   }
-  {
-    float const dpx = transform->position.x - movement->last_position_x;
-    float const dpz = transform->position.z - movement->last_position_z;
-    bool const moved_enough = (dpx * dpx + dpz * dpz) > k_stuck_check_dist_sq;
-    bool const is_trying_to_move = movement->has_target || !current_position_allowed;
-    if (!is_trying_to_move || moved_enough) {
-      movement->last_position_x = transform->position.x;
-      movement->last_position_z = transform->position.z;
-      movement->time_stuck = 0.0F;
-    } else {
-      movement->time_stuck += delta_time;
-    }
+
+  auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
+  const float max_speed = movement_impl.max_speed(*unit, stamina);
+  const float accel = max_speed * 4.0F;
+  const float damping = 6.0F;
+
+  auto* moving_step_state = sample_moving_unit_progress(
+      entity, transform, movement, current_position_allowed, delta_time);
+  if (moving_step_state != nullptr) {
+    movement->last_position_x = moving_step_state->last_x;
+    movement->last_position_z = moving_step_state->last_z;
+    movement->time_stuck = moving_step_state->stationary_seconds;
+  } else {
+    movement->last_position_x = transform->position.x;
+    movement->last_position_z = transform->position.z;
+    movement->time_stuck = 0.0F;
   }
 
   bool const needs_recovery = !movement->path_pending &&
@@ -407,9 +603,78 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                                     invalid_position_persistent;
   bool const has_no_valid_target = !movement->has_target || !destination_allowed;
 
-  bool const force_recovery = !current_position_allowed && !movement->path_pending &&
-                              movement->unstuck_cooldown <= 0.0F &&
-                              movement->time_stuck >= k_time_stuck_threshold;
+  bool const force_recovery =
+      !current_position_allowed && !movement->path_pending &&
+      movement->unstuck_cooldown <= 0.0F && moving_step_state != nullptr &&
+      moving_step_state->stationary_seconds >= k_time_stuck_threshold;
+  bool const valid_position_stuck =
+      current_position_allowed && movement->has_target && !movement->path_pending &&
+      movement->unstuck_cooldown <= 0.0F && moving_step_state != nullptr &&
+      moving_step_state->stationary_seconds >= k_time_stuck_threshold;
+
+  if (current_position_allowed && movement->has_target && !movement->path_pending &&
+      movement->unstuck_push_seconds <= 0.0F && moving_step_state != nullptr &&
+      moving_step_state->stationary_seconds >= k_soft_stuck_push_threshold &&
+      moving_step_state->stationary_seconds < k_time_stuck_threshold) {
+    QVector3D push_target(movement->target_x, 0.0F, movement->target_y);
+    if (movement->has_waypoints()) {
+      const auto& wp = movement->current_waypoint();
+      push_target = QVector3D(wp.first, 0.0F, wp.second);
+    }
+    if (CommandService::try_queue_local_recovery_move(
+            *world, entity->get_id(), current_pos_3d, final_goal, movement)) {
+      moving_step_state->stationary_seconds = 0.0F;
+      ++moving_step_state->recovery_attempts;
+      movement->repath_cooldown = repath_cooldown_seconds;
+      return;
+    }
+    if (try_start_unstuck_push(
+            entity, transform, movement, push_target, unit_radius, max_speed)) {
+      moving_step_state->stationary_seconds = 0.0F;
+      ++moving_step_state->recovery_attempts;
+      return;
+    }
+  }
+
+  if (valid_position_stuck) {
+    QVector3D push_target(movement->target_x, 0.0F, movement->target_y);
+    if (movement->has_waypoints()) {
+      const auto& wp = movement->current_waypoint();
+      push_target = QVector3D(wp.first, 0.0F, wp.second);
+    }
+    if (try_start_unstuck_push(
+            entity, transform, movement, push_target, unit_radius, max_speed)) {
+      moving_step_state->stationary_seconds = 0.0F;
+      ++moving_step_state->recovery_attempts;
+      return;
+    }
+
+    if (moving_step_state->recovery_attempts < k_max_stuck_recovery_attempts &&
+        destination_allowed) {
+      CommandService::queue_repath_request(*world, entity->get_id(), final_goal, false);
+      movement->clear_path();
+      movement->has_target = false;
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+      movement->repath_cooldown = repath_cooldown_seconds;
+      movement->time_stuck = 0.0F;
+      movement->unstuck_cooldown = k_unstuck_cooldown_seconds;
+      moving_step_state->stationary_seconds = 0.0F;
+      ++moving_step_state->recovery_attempts;
+      return;
+    }
+    movement->clear_path();
+    movement->has_target = false;
+    OrderService::clear_player_order_intent(entity);
+    movement->path_pending = false;
+    movement->pending_request_id = 0;
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
+    movement->time_stuck = 0.0F;
+    movement->unstuck_cooldown = k_unstuck_cooldown_seconds;
+    untrack_moving_unit(entity->get_id());
+    return;
+  }
 
   if (((needs_recovery && has_no_valid_target) ||
        persistent_invalid_position_recovery || force_recovery) &&
@@ -420,6 +685,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (force_recovery || persistent_invalid_position_recovery) {
       movement->time_stuck = 0.0F;
       movement->unstuck_cooldown = k_unstuck_cooldown_seconds;
+      if (moving_step_state != nullptr) {
+        moving_step_state->stationary_seconds = 0.0F;
+        moving_step_state->recovery_attempts = 0;
+      }
     }
   }
 
@@ -431,6 +700,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->pending_request_id = 0;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
+    untrack_moving_unit(entity->get_id());
     return;
   }
 
@@ -442,12 +712,17 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->time_since_last_path_request += delta_time;
   }
 
-  auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-  const float max_speed = movement_impl.max_speed(*unit, stamina);
-  const float accel = max_speed * 4.0F;
-  const float damping = 6.0F;
-
-  if (!movement->has_target) {
+  bool const applying_unstuck_push = movement->unstuck_push_seconds > 0.0F;
+  if (applying_unstuck_push) {
+    movement->vx = movement->unstuck_push_vx;
+    movement->vz = movement->unstuck_push_vz;
+    movement->unstuck_push_seconds =
+        std::max(0.0F, movement->unstuck_push_seconds - delta_time);
+    if (movement->unstuck_push_seconds <= 0.0F) {
+      movement->unstuck_push_vx = 0.0F;
+      movement->unstuck_push_vz = 0.0F;
+    }
+  } else if (!movement->has_target) {
     QVector3D const current_pos(transform->position.x, 0.0F, transform->position.z);
     float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
     constexpr float k_stuck_distance_sq = 0.6F * 0.6F;
@@ -517,10 +792,26 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (!(escaping_invalid_ground && destination_tile_walkable) &&
         !is_segment_walkable(
             current_pos, segment_target, entity->get_id(), unit_radius)) {
+      if (movement->unstuck_push_seconds <= 0.0F &&
+          try_start_unstuck_push(
+              entity, transform, movement, segment_target, unit_radius, max_speed)) {
+        if (moving_step_state != nullptr) {
+          moving_step_state->stationary_seconds = 0.0F;
+          moving_step_state->recovery_attempts = 0;
+        }
+        return;
+      }
+
+      if (movement->path_pending || movement->pending_request_id != 0) {
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+        return;
+      }
+
       if (!try_advance_past_blocked_segment()) {
         bool issued_path_request = false;
+        float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
         if (!movement->path_pending && movement->repath_cooldown <= 0.0F) {
-          float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
           if (goal_dist_sq > 0.01F && destination_allowed) {
             CommandService::queue_repath_request(
                 *world,
@@ -530,6 +821,13 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
             movement->repath_cooldown = repath_cooldown_seconds;
             issued_path_request = true;
           }
+        }
+
+        if (!issued_path_request && movement->repath_cooldown > 0.0F &&
+            goal_dist_sq > 0.01F && destination_allowed) {
+          movement->vx = 0.0F;
+          movement->vz = 0.0F;
+          return;
         }
 
         if (!issued_path_request) {
@@ -542,11 +840,21 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
         OrderService::clear_player_order_intent(entity);
         movement->vx = 0.0F;
         movement->vz = 0.0F;
+        if (!issued_path_request) {
+          untrack_moving_unit(entity->get_id());
+        }
         return;
       }
     }
 
-    float const arrive_radius = std::clamp(max_speed * delta_time * 2.0F, 0.05F, 0.25F);
+    float const waypoint_arrive_radius =
+        std::clamp(max_speed * delta_time * 2.0F, 0.05F, 0.25F);
+    bool const current_target_is_final =
+        !movement->has_waypoints() || movement->remaining_waypoints() <= 1;
+    float const arrive_radius =
+        current_target_is_final ? std::max(waypoint_arrive_radius,
+                                           std::clamp(unit_radius * 1.1F, 0.25F, 0.9F))
+                                : waypoint_arrive_radius;
     float const arrive_radius_sq = arrive_radius * arrive_radius;
 
     float dx = movement->target_x - transform->position.x;
@@ -568,11 +876,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
         }
       }
 
-      transform->position.x = movement->target_x;
-      transform->position.z = movement->target_y;
       movement->has_target = false;
       OrderService::clear_player_order_intent(entity);
       movement->vx = movement->vz = 0.0F;
+      untrack_moving_unit(entity->get_id());
 
       auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
       if ((guard_mode != nullptr) && guard_mode->active &&
@@ -619,9 +926,12 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   transform->position.z += movement->vz * delta_time;
 
   auto& terrain = Game::Map::TerrainService::instance();
-  auto* terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
-  if (terrain.is_initialized()) {
-    synchronize_with_bridge_centerline(transform, movement, terrain_ctx);
+  if (auto* pathfinder = CommandService::get_pathfinder(); pathfinder != nullptr) {
+    QVector3D const projected =
+        pathfinder->project_world_position_to_traversal_corridor(QVector3D(
+            transform->position.x, transform->position.y, transform->position.z));
+    transform->position.x = projected.x();
+    transform->position.z = projected.z();
   }
 
   {
@@ -665,6 +975,11 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
+  if (!movement->has_target && !movement->has_waypoints() && !movement->path_pending &&
+      movement->pending_request_id == 0) {
+    untrack_moving_unit(entity->get_id());
+  }
+
   if (terrain.is_initialized()) {
     const Game::Map::TerrainHeightMap* hm = terrain.get_height_map();
     if (hm != nullptr) {
@@ -684,24 +999,15 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
-  float const speed2 = movement->vx * movement->vx + movement->vz * movement->vz;
-  bool const is_moving = speed2 > 1e-5F;
-
-  if (terrain.is_initialized() && is_moving) {
-    if (terrain_ctx != nullptr) {
-      terrain_ctx->is_on_bridge =
-          terrain.is_on_bridge(transform->position.x, transform->position.z);
-      terrain_ctx->is_at_hill_entrance = false;
-    }
-  }
-
-  terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+  auto* terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
   if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
     terrain_ctx->audio_cooldown =
         std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);
   }
 
   if (!entity->has_component<Engine::Core::BuildingComponent>()) {
+    float const speed2 = movement->vx * movement->vx + movement->vz * movement->vz;
+    bool const is_moving = speed2 > 1e-5F;
     if (is_moving) {
       float const target_yaw =
           std::atan2(movement->vx, movement->vz) * 180.0F / std::numbers::pi_v<float>;
@@ -728,17 +1034,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       }
     }
   }
-}
-
-auto MovementSystem::has_reached_target(
-    const Engine::Core::TransformComponent* transform,
-    const Engine::Core::MovementComponent* movement) -> bool {
-  float const dx = movement->target_x - transform->position.x;
-  float const dz = movement->target_y - transform->position.z;
-  float const distance_squared = dx * dx + dz * dz;
-
-  const float threshold = 0.1F;
-  return distance_squared < threshold * threshold;
 }
 
 } // namespace Game::Systems

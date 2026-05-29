@@ -51,17 +51,49 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
     return Pathfinding::CellValue::Blocked;
   }
 
+  if (height_map->isBridgeCell(x, z) || height_map->isHillEntrance(x, z)) {
+    return Pathfinding::CellValue::Walkable;
+  }
+
   if (terrain_type == Game::Map::TerrainType::River) {
     return height_map->isBridgeCenterline(x, z) ? Pathfinding::CellValue::Walkable
                                                 : Pathfinding::CellValue::Blocked;
   }
 
-  if (height_map->isBridgeCell(x, z) && !height_map->isBridgeCenterline(x, z)) {
-    return Pathfinding::CellValue::Blocked;
-  }
-
   return terrain_service.is_walkable(x, z) ? Pathfinding::CellValue::Walkable
                                            : Pathfinding::CellValue::Blocked;
+}
+
+auto is_mandatory_traversal_cell(int x, int z) -> bool {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return false;
+  }
+
+  const auto* height_map = terrain_service.get_height_map();
+  return height_map != nullptr &&
+         (height_map->isBridgeCenterline(x, z) || height_map->isHillEntrance(x, z));
+}
+
+auto is_hard_radius_blocker(Pathfinding::CellValue value, int x, int z) -> bool {
+  if (value == Pathfinding::CellValue::Walkable) {
+    return false;
+  }
+
+  if (value == Pathfinding::CellValue::Tree ||
+      value == Pathfinding::CellValue::Boulder ||
+      value == Pathfinding::CellValue::IronOre) {
+    return false;
+  }
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return true;
+  }
+
+  const auto* height_map = terrain_service.get_height_map();
+  return terrain_cell_value(terrain_service, height_map, x, z) ==
+         Pathfinding::CellValue::Walkable;
 }
 
 } // namespace
@@ -122,6 +154,17 @@ void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
   m_grid_offset_z = offset_z;
 }
 
+auto Pathfinding::world_to_grid(float world_x, float world_z) const -> Point {
+  return {static_cast<int>(std::round(world_x - m_grid_offset_x)),
+          static_cast<int>(std::round(world_z - m_grid_offset_z))};
+}
+
+auto Pathfinding::grid_to_world(const Point& grid_pos) const -> QVector3D {
+  return {static_cast<float>(grid_pos.x) + m_grid_offset_x,
+          0.0F,
+          static_cast<float>(grid_pos.y) + m_grid_offset_z};
+}
+
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
   m_navigation_grid.set(x, y, is_obstacle ? CellValue::Blocked : CellValue::Walkable);
 }
@@ -172,7 +215,9 @@ auto Pathfinding::is_walkable_with_radius(int x,
   auto& terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized()) {
     auto const* height_map = terrain_service.get_height_map();
-    if (height_map != nullptr && height_map->isBridgeCell(x, y)) {
+    if (height_map != nullptr &&
+        (height_map->isBridgeCell(x, y) || height_map->isBridgeCenterline(x, y) ||
+         height_map->isHillEntrance(x, y))) {
       return true;
     }
   }
@@ -187,7 +232,8 @@ auto Pathfinding::is_walkable_with_radius(int x,
         return false;
       }
 
-      if (cell_value(check_x, check_y) == CellValue::Walkable) {
+      CellValue const check_value = cell_value(check_x, check_y);
+      if (!is_hard_radius_blocker(check_value, check_x, check_y)) {
         continue;
       }
 
@@ -199,6 +245,79 @@ auto Pathfinding::is_walkable_with_radius(int x,
   }
 
   return true;
+}
+
+auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
+                                             float unit_radius) const -> bool {
+  Point const grid = world_to_grid(world_position.x(), world_position.z());
+  if (unit_radius > 0.5F) {
+    return is_walkable_with_radius(grid.x, grid.y, unit_radius);
+  }
+  return is_walkable(grid.x, grid.y);
+}
+
+auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
+                                            const QVector3D& to,
+                                            float unit_radius) const -> bool {
+  if (!is_world_position_walkable(to, unit_radius)) {
+    return false;
+  }
+
+  QVector3D const direction = to - from;
+  float const length = direction.length();
+  if (length < 0.5F) {
+    return true;
+  }
+
+  constexpr float sample_interval = 0.5F;
+  int const num_samples = static_cast<int>(length / sample_interval);
+  for (int i = 1; i <= num_samples; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
+    QVector3D const sample_pos = from + direction * t;
+    if (!is_world_position_walkable(sample_pos, unit_radius)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+auto Pathfinding::project_world_position_to_traversal_corridor(
+    const QVector3D& world_position) const -> QVector3D {
+  QVector3D projected = world_position;
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return projected;
+  }
+
+  if (auto const bridge_center = terrain_service.get_bridge_traversal_position(
+          world_position.x(), world_position.z());
+      bridge_center.has_value()) {
+    projected.setX(bridge_center->x());
+    projected.setZ(bridge_center->z());
+    return projected;
+  }
+
+  return projected;
+}
+
+auto Pathfinding::path_waypoint_world_position(
+    const Point& path_cell, const QVector3D& formation_offset) const -> QVector3D {
+  QVector3D const cell_center = grid_to_world(path_cell);
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.is_initialized()) {
+    const auto* height_map = terrain_service.get_height_map();
+    if (height_map != nullptr &&
+        (height_map->isBridgeCell(path_cell.x, path_cell.y) ||
+         height_map->isBridgeCenterline(path_cell.x, path_cell.y) ||
+         height_map->isHillEntrance(path_cell.x, path_cell.y))) {
+      return project_world_position_to_traversal_corridor(cell_center);
+    }
+  }
+
+  QVector3D waypoint = cell_center + formation_offset;
+  waypoint.setY(cell_center.y());
+  return project_world_position_to_traversal_corridor(waypoint);
 }
 
 void Pathfinding::mark_navigation_grid_dirty() {
@@ -286,6 +405,7 @@ void Pathfinding::process_dirty_regions() {
       }
 
       apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
+      force_mandatory_traversal_cells_walkable(0, m_width - 1, 0, m_height - 1);
 
       return;
     }
@@ -339,6 +459,39 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   }
 
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
+  force_mandatory_traversal_cells_walkable(min_x, max_x, min_z, max_z);
+}
+
+void Pathfinding::force_mandatory_traversal_cells_walkable(int min_x,
+                                                           int max_x,
+                                                           int min_z,
+                                                           int max_z) {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return;
+  }
+
+  const auto* height_map = terrain_service.get_height_map();
+  if (height_map == nullptr) {
+    return;
+  }
+
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+  if (min_x > max_x || min_z > max_z) {
+    return;
+  }
+
+  for (int z = min_z; z <= max_z; ++z) {
+    for (int x = min_x; x <= max_x; ++x) {
+      if (height_map->isBridgeCell(x, z) || height_map->isBridgeCenterline(x, z) ||
+          height_map->isHillEntrance(x, z)) {
+        m_navigation_grid.set(x, z, CellValue::Walkable);
+      }
+    }
+  }
 }
 
 void Pathfinding::apply_resource_prop_cells(int min_x,
@@ -545,8 +698,12 @@ auto Pathfinding::find_path_internal(const Point& start,
       }
 
       if (neighbor.x != current_point.x && neighbor.y != current_point.y) {
-        if (!is_walkableFunc(current_point.x, neighbor.y) ||
-            !is_walkableFunc(neighbor.x, current_point.y)) {
+        bool const mandatory_traversal_transition =
+            is_mandatory_traversal_cell(current_point.x, current_point.y) ||
+            is_mandatory_traversal_cell(neighbor.x, neighbor.y);
+        if (!mandatory_traversal_transition &&
+            (!is_walkableFunc(current_point.x, neighbor.y) ||
+             !is_walkableFunc(neighbor.x, current_point.y))) {
           continue;
         }
       }
@@ -755,8 +912,11 @@ auto Pathfinding::collect_neighbors(const Point& point,
       }
 
       if (dx != 0 && dy != 0) {
-        if (!is_walkable(point.x + dx, point.y) ||
-            !is_walkable(point.x, point.y + dy)) {
+        bool const mandatory_traversal_transition =
+            is_mandatory_traversal_cell(point.x, point.y) ||
+            is_mandatory_traversal_cell(x, y);
+        if (!mandatory_traversal_transition && (!is_walkable(point.x + dx, point.y) ||
+                                                !is_walkable(point.x, point.y + dy))) {
           continue;
         }
       }

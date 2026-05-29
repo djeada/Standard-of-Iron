@@ -16,6 +16,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/construction_cost_catalog.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
@@ -157,7 +158,9 @@ auto wall_preview_is_vertical(float angle) -> bool {
 
 auto is_previewable_structure_item(const QString& item_type) -> bool {
   return item_type == QStringLiteral("defense_tower") ||
-         item_type == QStringLiteral("barracks") || item_type == QStringLiteral("home");
+         item_type == QStringLiteral("barracks") ||
+         item_type == QStringLiteral("home") ||
+         item_type == QStringLiteral("marketplace");
 }
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
@@ -183,6 +186,9 @@ auto spawn_type_for_construction_item(const QString& item_type)
   }
   if (item_type == QStringLiteral("home")) {
     return Game::Units::SpawnType::Home;
+  }
+  if (item_type == QStringLiteral("marketplace")) {
+    return Game::Units::SpawnType::Marketplace;
   }
   return std::nullopt;
 }
@@ -725,6 +731,64 @@ auto resolve_construction_placement_position(Engine::Core::World* world,
     return maybe_snap_tower_to_wall_socket(world, owner_id, world_position);
   }
   return world_position;
+}
+
+auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
+                                     const QVector3D& world_position,
+                                     bool vertical) -> QVector3D {
+  if (world == nullptr) {
+    return world_position;
+  }
+
+  const auto base = Game::Systems::WallNetworkService::snap_world_position(
+      world_position.x(), world_position.z());
+  std::optional<Game::Systems::WallGridPosition> best_position;
+  float best_distance_sq = std::numeric_limits<float>::infinity();
+
+  const auto consider_candidate = [&](Game::Systems::WallGridPosition candidate) {
+    const auto validation =
+        Game::Systems::WallNetworkService::validate_wall_segment_placement(
+            *world, candidate, true);
+    if (!validation.valid) {
+      return;
+    }
+
+    const QVector3D candidate_world = Game::Systems::CommandService::grid_to_world(
+        Game::Systems::Point{candidate.x, candidate.z});
+    const float dx = candidate_world.x() - world_position.x();
+    const float dz = candidate_world.z() - world_position.z();
+    const float distance_sq = dx * dx + dz * dz;
+    if (distance_sq >= best_distance_sq) {
+      return;
+    }
+
+    best_distance_sq = distance_sq;
+    best_position = candidate;
+  };
+
+  consider_candidate(base);
+  if (vertical) {
+    consider_candidate(
+        {.x = base.x,
+         .z = base.z - Game::Systems::WallNetworkService::k_segment_spacing});
+    consider_candidate(
+        {.x = base.x,
+         .z = base.z + Game::Systems::WallNetworkService::k_segment_spacing});
+  } else {
+    consider_candidate(
+        {.x = base.x - Game::Systems::WallNetworkService::k_segment_spacing,
+         .z = base.z});
+    consider_candidate(
+        {.x = base.x + Game::Systems::WallNetworkService::k_segment_spacing,
+         .z = base.z});
+  }
+
+  if (!best_position.has_value()) {
+    return world_position;
+  }
+
+  return Game::Systems::CommandService::grid_to_world(
+      Game::Systems::Point{best_position->x, best_position->z});
 }
 
 auto resolve_construction_pointer_hit(Engine::Core::World* world,
@@ -1583,10 +1647,20 @@ void ProductionManager::rebuild_wall_preview_plan(
     return;
   }
 
+  QVector3D preview_world_position = current_world_position;
+  if (!m_wall_drag_active && m_wall_preview_rotation_explicit) {
+    preview_world_position = maybe_snap_rotated_wall_preview(
+        m_world,
+        current_world_position,
+        wall_preview_is_vertical(m_wall_preview_rotation_y));
+  }
+
+  const QVector3D anchor_world =
+      m_wall_drag_active ? m_wall_drag_anchor_world : preview_world_position;
   const auto anchor = Game::Systems::WallNetworkService::snap_world_position(
-      m_wall_drag_anchor_world.x(), m_wall_drag_anchor_world.z());
+      anchor_world.x(), anchor_world.z());
   auto target = Game::Systems::WallNetworkService::snap_world_position(
-      current_world_position.x(), current_world_position.z());
+      preview_world_position.x(), preview_world_position.z());
   if (m_wall_drag_active && m_wall_preview_rotation_explicit) {
     if (wall_preview_is_vertical(m_wall_preview_rotation_y)) {
       target.x = anchor.x;
@@ -2011,6 +2085,60 @@ auto ProductionManager::get_selected_builder_production_state() const -> QVarian
       m["product_type"] = QString::fromStdString(builder_prod->product_type);
       return m;
     }
+  }
+
+  return m;
+}
+
+auto ProductionManager::get_selected_marketplace_state(int local_owner_id) const
+    -> QVariantMap {
+  QVariantMap m;
+  m["has_marketplace"] = false;
+  m["nation_id"] = "";
+  m["trade_quantity"] = 0;
+  m["buy_prices"] = QVariantMap{};
+  m["sell_prices"] = QVariantMap{};
+
+  if (m_world == nullptr) {
+    return m;
+  }
+
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return m;
+  }
+
+  auto const& selected = selection_system->get_selected_units();
+  for (auto id : selected) {
+    auto* e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Marketplace ||
+        unit->owner_id != local_owner_id) {
+      continue;
+    }
+
+    auto const& rates = Game::Systems::MarketplaceSystem::instance().get_rates();
+    QVariantMap buy_prices;
+    buy_prices["wood"] = rates.buy_price_wood;
+    buy_prices["stone"] = rates.buy_price_stone;
+    buy_prices["iron"] = rates.buy_price_iron;
+
+    QVariantMap sell_prices;
+    sell_prices["wood"] = rates.sell_price_wood;
+    sell_prices["stone"] = rates.sell_price_stone;
+    sell_prices["iron"] = rates.sell_price_iron;
+
+    m["has_marketplace"] = true;
+    m["nation_id"] =
+        QString::fromStdString(Game::Systems::nation_id_to_string(unit->nation_id));
+    m["trade_quantity"] = rates.trade_quantity;
+    m["buy_prices"] = buy_prices;
+    m["sell_prices"] = sell_prices;
+    return m;
   }
 
   return m;

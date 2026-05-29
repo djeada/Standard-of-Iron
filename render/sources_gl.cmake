@@ -1,0 +1,36 @@
+# GL backend layer (Phase 1 owner). Edit ONLY this file for render/gl/* sources.
+set(RENDER_GL_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/camera.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/character_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/primitive_batch_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/banner_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healing_beam_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healer_aura_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/combat_dust_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mode_indicator_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rain_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_instancing_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_character_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/scatter_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_linear_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/humanoid/animation/animation_inputs.cpp
+)

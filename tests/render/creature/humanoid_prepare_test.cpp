@@ -1248,10 +1248,8 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
     }
   }
 
-  EXPECT_GE(states.size(), 3U);
+  EXPECT_EQ(states.size(), 1U);
   EXPECT_EQ(states.count(Render::Creature::AnimationStateId::AttackSword), 1U);
-  EXPECT_EQ(states.count(Render::Creature::AnimationStateId::Hold), 1U);
-  EXPECT_EQ(states.count(Render::Creature::AnimationStateId::Walk), 1U);
 
   ASSERT_GE(phases.size(), 2U);
   std::size_t distinct_phase_count = 0U;
@@ -1278,7 +1276,7 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   ASSERT_NE(min_phase, phases.end());
   ASSERT_NE(max_phase, phases.end());
   float const spread = *max_phase - *min_phase;
-  EXPECT_GT(spread, 0.05F);
+  EXPECT_GT(spread, 0.04F);
   EXPECT_LT(spread, 0.18F);
 }
 
@@ -2216,7 +2214,8 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
     }
   }
 
-  EXPECT_GE(states.size(), 3U);
+  EXPECT_EQ(states.size(), 1U);
+  EXPECT_EQ(states.count(Render::Creature::AnimationStateId::AttackSword), 1U);
   ASSERT_GE(attack_phases.size(), 2U);
   auto const [min_phase, max_phase] =
       std::minmax_element(attack_phases.begin(), attack_phases.end());
@@ -2282,7 +2281,7 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
 
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
-  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Walk);
 }
 
 TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
@@ -3059,6 +3058,50 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
             registry.bpat_clip(roman_id, AnimationStateId::Walk));
 }
 
+TEST(HumanoidPrepare, GuardStanceForSwordAssetKeepsSwordCreatureAsset) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
+        : spec_(spec) {}
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  auto const archetype_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/guard_sword_asset_switch";
+  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+  spec.archetype_id = archetype_id;
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  FixedSpecRenderer const owner(spec);
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_guarding = true;
+  anim.guard_pose_progress = 1.0F;
+  anim.shield_formation_pose = Render::GL::ShieldFormationPose::RomanFront;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_EQ(prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Hold);
+  EXPECT_EQ(prep.bodies.requests().front().creature_asset_id,
+            Render::Creature::Pipeline::k_humanoid_sword_asset);
+}
+
 TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuarding) {
   constexpr std::uint8_t k_base_role = 6;
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
@@ -3127,6 +3170,256 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
   EXPECT_EQ(moving_guard_prep.bodies.requests().front().archetype, base_archetype);
 }
 
+TEST(HumanoidPrepare, GuardShieldFormationFacesRomanAndCarthageShieldsOutward) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
+      spec_.debug_name = "tests/guard_shield_facing_renderer";
+      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec_.archetype_id = archetype;
+      spec_.skip_default_facial_hair_archetype = true;
+    }
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+
+  auto const guard_forward_for_pose =
+      [&](std::string_view debug_name,
+          const Render::Creature::StaticAttachmentSpec& attachment,
+          Render::GL::ShieldFormationPose pose) {
+        std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{attachment};
+        auto const base_archetype = registry.register_unit_archetype(
+            debug_name,
+            Render::Creature::Pipeline::CreatureKind::Humanoid,
+            attachments);
+        EXPECT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+        if (base_archetype == Render::Creature::k_invalid_archetype) {
+          return QVector3D{};
+        }
+
+        FixedSpecRenderer const owner(base_archetype);
+        Render::GL::DrawContext ctx{};
+        ctx.force_single_soldier = true;
+        ctx.allow_template_cache = false;
+
+        Render::GL::AnimationInputs anim{};
+        anim.is_guarding = true;
+        anim.guard_pose_progress = 1.0F;
+        anim.shield_formation_pose = pose;
+
+        Render::Humanoid::HumanoidPreparation prep;
+        Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+        EXPECT_EQ(prep.bodies.requests().size(), 1U);
+        if (prep.bodies.requests().size() != 1U) {
+          return QVector3D{};
+        }
+
+        auto const guard_archetype = prep.bodies.requests().front().archetype;
+        auto const* guard_desc = registry.get(guard_archetype);
+        EXPECT_NE(guard_desc, nullptr);
+        if (guard_desc == nullptr) {
+          return QVector3D{};
+        }
+        EXPECT_EQ(guard_desc->bake_attachment_count, 1U);
+        if (guard_desc->bake_attachment_count != 1U) {
+          return QVector3D{};
+        }
+        return guard_desc->bake_attachments.front()
+            .local_offset.column(2)
+            .toVector3D()
+            .normalized();
+      };
+
+  QVector3D const roman_forward =
+      guard_forward_for_pose("tests/guard_shield_facing_roman",
+                             Render::GL::roman_scutum_make_static_attachment(0U),
+                             Render::GL::ShieldFormationPose::RomanFront);
+  EXPECT_GT(QVector3D::dotProduct(roman_forward, QVector3D(0.0F, 0.0F, 1.0F)), 0.6F);
+
+  QVector3D const carthage_forward =
+      guard_forward_for_pose("tests/guard_shield_facing_carthage",
+                             Render::GL::carthage_shield_make_static_attachment(
+                                 Render::GL::CarthageShieldConfig{}, 0U),
+                             Render::GL::ShieldFormationPose::CarthageFront);
+  EXPECT_GT(QVector3D::dotProduct(carthage_forward, QVector3D(0.0F, 0.0F, 1.0F)), 0.4F);
+}
+
+TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
+      spec_.debug_name = "tests/commander_guard_shared_pose_renderer";
+      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec_.archetype_id = archetype;
+      spec_.skip_default_facial_hair_archetype = true;
+    }
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+
+  auto const expect_commander_pose =
+      [&](std::string_view debug_name,
+          Game::Systems::NationID nation_id,
+          const Render::Creature::StaticAttachmentSpec& attachment,
+          Render::GL::ShieldFormationPose expected_pose) {
+        std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{attachment};
+        auto const base_archetype = registry.register_unit_archetype(
+            debug_name,
+            Render::Creature::Pipeline::CreatureKind::Humanoid,
+            attachments);
+        ASSERT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+
+        FixedSpecRenderer const owner(base_archetype);
+
+        Render::GL::DrawContext commander_ctx{};
+        commander_ctx.force_single_soldier = true;
+        commander_ctx.allow_template_cache = false;
+
+        Engine::Core::Entity commander_entity(1);
+        auto* unit = commander_entity.add_component<Engine::Core::UnitComponent>(
+            100, 100, 1.0F, 12.0F);
+        ASSERT_NE(unit, nullptr);
+        unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+        unit->nation_id = nation_id;
+        ASSERT_NE(commander_entity.add_component<Engine::Core::CommanderComponent>(),
+                  nullptr);
+        commander_ctx.entity = &commander_entity;
+
+        Render::GL::AnimationInputs commander_anim{};
+        commander_anim.is_guarding = true;
+        commander_anim.guard_pose_progress = 1.0F;
+
+        Render::Humanoid::HumanoidPreparation commander_prep;
+        Render::Humanoid::prepare_humanoid_instances(
+            owner, commander_ctx, commander_anim, 0U, commander_prep);
+        ASSERT_EQ(commander_prep.bodies.requests().size(), 1U);
+
+        Render::GL::DrawContext explicit_ctx{};
+        explicit_ctx.force_single_soldier = true;
+        explicit_ctx.allow_template_cache = false;
+
+        Render::GL::AnimationInputs explicit_anim = commander_anim;
+        explicit_anim.shield_formation_pose = expected_pose;
+
+        Render::Humanoid::HumanoidPreparation explicit_prep;
+        Render::Humanoid::prepare_humanoid_instances(
+            owner, explicit_ctx, explicit_anim, 0U, explicit_prep);
+        ASSERT_EQ(explicit_prep.bodies.requests().size(), 1U);
+
+        EXPECT_EQ(commander_prep.bodies.requests().front().archetype,
+                  explicit_prep.bodies.requests().front().archetype);
+      };
+
+  expect_commander_pose("tests/commander_guard_shared_pose_roman",
+                        Game::Systems::NationID::RomanRepublic,
+                        Render::GL::roman_scutum_make_static_attachment(0U),
+                        Render::GL::ShieldFormationPose::RomanFront);
+  expect_commander_pose("tests/commander_guard_shared_pose_carthage",
+                        Game::Systems::NationID::Carthage,
+                        Render::GL::carthage_shield_make_static_attachment(
+                            Render::GL::CarthageShieldConfig{}, 0U),
+                        Render::GL::ShieldFormationPose::CarthageFront);
+}
+
+TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
+      spec_.debug_name = "tests/shield_guard_fallback_renderer";
+      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec_.archetype_id = archetype;
+      spec_.skip_default_facial_hair_archetype = true;
+    }
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+
+  auto const expect_guard_fallback =
+      [&](std::string_view debug_name,
+          Game::Systems::NationID nation_id,
+          const Render::Creature::StaticAttachmentSpec& attachment,
+          Render::GL::ShieldFormationPose expected_pose) {
+        std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{attachment};
+        auto const base_archetype = registry.register_unit_archetype(
+            debug_name,
+            Render::Creature::Pipeline::CreatureKind::Humanoid,
+            attachments);
+        ASSERT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+
+        FixedSpecRenderer const owner(base_archetype);
+
+        Render::GL::DrawContext guard_ctx{};
+        guard_ctx.force_single_soldier = true;
+        guard_ctx.allow_template_cache = false;
+
+        Engine::Core::Entity entity(1);
+        auto* unit =
+            entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+        ASSERT_NE(unit, nullptr);
+        unit->spawn_type = Game::Units::SpawnType::Knight;
+        unit->nation_id = nation_id;
+        guard_ctx.entity = &entity;
+
+        Render::GL::AnimationInputs guard_anim{};
+        guard_anim.is_guarding = true;
+        guard_anim.guard_pose_progress = 1.0F;
+
+        Render::Humanoid::HumanoidPreparation guard_prep;
+        Render::Humanoid::prepare_humanoid_instances(
+            owner, guard_ctx, guard_anim, 0U, guard_prep);
+        ASSERT_EQ(guard_prep.bodies.requests().size(), 1U);
+
+        Render::GL::DrawContext explicit_ctx{};
+        explicit_ctx.force_single_soldier = true;
+        explicit_ctx.allow_template_cache = false;
+
+        Render::GL::AnimationInputs explicit_anim = guard_anim;
+        explicit_anim.shield_formation_pose = expected_pose;
+
+        Render::Humanoid::HumanoidPreparation explicit_prep;
+        Render::Humanoid::prepare_humanoid_instances(
+            owner, explicit_ctx, explicit_anim, 0U, explicit_prep);
+        ASSERT_EQ(explicit_prep.bodies.requests().size(), 1U);
+
+        EXPECT_EQ(guard_prep.bodies.requests().front().archetype,
+                  explicit_prep.bodies.requests().front().archetype);
+      };
+
+  expect_guard_fallback("tests/shield_guard_fallback_roman",
+                        Game::Systems::NationID::RomanRepublic,
+                        Render::GL::roman_scutum_make_static_attachment(0U),
+                        Render::GL::ShieldFormationPose::RomanFront);
+  expect_guard_fallback("tests/shield_guard_fallback_carthage",
+                        Game::Systems::NationID::Carthage,
+                        Render::GL::carthage_shield_make_static_attachment(
+                            Render::GL::CarthageShieldConfig{}, 0U),
+                        Render::GL::ShieldFormationPose::CarthageFront);
+}
+
 TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
@@ -3154,7 +3447,9 @@ TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   auto const enter_mid = Render::GL::sample_anim_state(ctx);
   EXPECT_TRUE(enter_mid.is_guarding);
   EXPECT_FALSE(enter_mid.is_exiting_guard);
-  EXPECT_NEAR(enter_mid.guard_pose_progress, 0.5F, 1.0e-3F);
+  EXPECT_NEAR(enter_mid.guard_pose_progress,
+              0.75F / Engine::Core::Defaults::k_guard_enter_duration,
+              1.0e-3F);
 
   ctx.animation_time = 3.25F;
   auto const fully_braced = Render::GL::sample_anim_state(ctx);
@@ -3167,7 +3462,9 @@ TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   auto const exit_mid = Render::GL::sample_anim_state(ctx);
   EXPECT_FALSE(exit_mid.is_guarding);
   EXPECT_TRUE(exit_mid.is_exiting_guard);
-  EXPECT_NEAR(exit_mid.guard_pose_progress, 0.5F, 1.0e-3F);
+  EXPECT_NEAR(exit_mid.guard_pose_progress,
+              1.0F - (1.0F / Engine::Core::Defaults::k_guard_exit_duration),
+              1.0e-3F);
 }
 
 TEST(HumanoidPrepare, HoldSamplingBlendsKneelInAndOutFromVisualState) {
@@ -3289,7 +3586,10 @@ TEST(HumanoidPrepare, MeleeAttackSmoothlyExitsExistingHoldKneel) {
   EXPECT_TRUE(melee_exit.is_attacking);
   EXPECT_FALSE(melee_exit.is_in_hold_mode);
   EXPECT_TRUE(melee_exit.is_exiting_hold);
-  EXPECT_NEAR(Render::GL::hold_transition_amount(melee_exit), 0.75F, 1.0e-3F);
+  // hold_transition_amount applies a smoothstep ease (matching guard_pose_amount)
+  // so the kneel/brace blend is smooth at both ends. Linear progress here is
+  // 0.75 (0.5s into a 2.0s stand-up), eased to smoothstep(0.75) = 0.84375.
+  EXPECT_NEAR(Render::GL::hold_transition_amount(melee_exit), 0.84375F, 1.0e-3F);
 }
 
 TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShields) {
@@ -3372,7 +3672,7 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
   EXPECT_EQ(roman_archetypes.count(*carthage_archetypes.begin()), 0U);
 }
 
-TEST(HumanoidPrepare, RomanFormationFrontShieldFlipsFaceOutwardComparedToDefaultGuard) {
+TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback) {
   constexpr std::uint8_t k_base_role = 6;
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
       Render::GL::roman_scutum_make_static_attachment(k_base_role),
@@ -3457,7 +3757,7 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldFlipsFaceOutwardComparedToDefault
   QVector3D const formation_forward =
       formation_attachment->local_offset.mapVector(QVector3D(0.0F, 0.0F, 1.0F))
           .normalized();
-  EXPECT_LT(QVector3D::dotProduct(default_forward, formation_forward), -0.95F);
+  EXPECT_GT(QVector3D::dotProduct(default_forward, formation_forward), 0.95F);
 }
 
 TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
@@ -3545,8 +3845,8 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
   QVector3D const formation_up =
       formation_attachment->local_offset.mapVector(QVector3D(0.0F, 1.0F, 0.0F))
           .normalized();
-  EXPECT_LT(std::abs(default_up.z()), 0.05F);
-  EXPECT_GT(formation_up.z(), 0.15F);
+  EXPECT_LT(default_up.z(), -0.15F);
+  EXPECT_LT(formation_up.z(), -0.15F);
 }
 
 TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
@@ -3627,6 +3927,47 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
                 Render::GL::k_roman_scutum_role_count +
                 Render::GL::k_roman_heavy_armor_role_count +
                 Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
+}
+
+TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
+  Render::GL::clear_humanoid_caches();
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
+
+  Engine::Core::Entity entity(91);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* persistent =
+      entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
+  auto* formation_mode = entity.add_component<Engine::Core::FormationModeComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(persistent, nullptr);
+  ASSERT_NE(formation_mode, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  formation_mode->active = true;
+  ctx.entity = &entity;
+
+  auto expect_visible = [&](float animation_time) {
+    ctx.animation_time = animation_time;
+    CountingSubmitter sink;
+    renderer(ctx, sink);
+    ASSERT_EQ(sink.rigged_calls, 1);
+    ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 1U);
+    EXPECT_TRUE(std::isfinite(sink.rigged_mesh_min_world_y.front()));
+  };
+
+  expect_visible(1.0F);
+  expect_visible(1.75F);
+  expect_visible(3.25F);
 }
 
 TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {

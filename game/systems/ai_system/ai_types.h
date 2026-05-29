@@ -43,7 +43,8 @@ enum class AICommandType {
   AttackTarget,
   StartProduction,
   StartBuilderConstruction,
-  TriggerCommanderRally
+  TriggerCommanderRally,
+  TriggerCommanderAura
 };
 
 enum class BehaviorPriority {
@@ -227,6 +228,7 @@ struct AIContext {
   int defense_tower_count = 0;
   int wall_segment_count = 0;
   int barracks_count = 0;
+  int marketplace_count = 0;
   int assembled_unit_count = 0;
   int effective_reserve_units = 0;
   int effective_harass_units = 0;
@@ -246,6 +248,7 @@ struct AIContext {
     int builder_count = 3;
     int home_count = 2;
     int barracks_count = 1;
+    int marketplace_count = 0;
     int defense_tower_count = 1;
     int wall_segment_count = 0;
     int catapult_count = 0;

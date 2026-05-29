@@ -216,6 +216,32 @@ void main() {
         clamp(v_alpha * (0.55 + 0.45 * shell_mask + hot_streak * 0.40), 0.0, 1.0);
     color = clamp(color, 0.0, 3.4) * fireball_alpha;
     frag_color = vec4(color, fireball_alpha);
+  } else if (u_effect_type == 5) {
+    // MetalSpark: brilliant white-hot sparks with orange/gold tails
+    float height = clamp(v_texcoord.y, 0.0, 1.0);
+    float spark_age = clamp(u_time * 3.0, 0.0, 1.0);
+
+    // Hot metal color gradient: white-hot core → orange → red tip
+    vec3 white_hot = vec3(3.0, 2.8, 2.2);
+    vec3 hot_orange = vec3(2.4, 1.2, 0.15);
+    vec3 cool_red = vec3(1.4, 0.3, 0.05);
+
+    float core_heat = pow(max(0.0, 1.0 - height), 2.0);
+    color = mix(hot_orange, white_hot, core_heat * (1.0 - spark_age * 0.6));
+    color = mix(color, cool_red, height * spark_age);
+
+    // Glint sparkle
+    float glint = pow(max(0.0,
+                          sin(v_texcoord.x * 40.0 + u_time * 25.0) *
+                              sin(v_texcoord.y * 30.0 - u_time * 18.0)),
+                      8.0);
+    color += vec3(2.0, 1.8, 1.2) * glint * (1.0 - spark_age);
+
+    color *= v_intensity * 1.4;
+    color = clamp(color, 0.0, 4.0);
+
+    float spark_alpha = v_alpha * (0.8 + 0.2 * (1.0 - height));
+    frag_color = vec4(color, clamp(spark_alpha, 0.0, 1.0));
   } else {
 
     color = u_dust_color;

@@ -34,6 +34,9 @@ inline constexpr float k_capture_required_time = 15.0F;
 inline constexpr float k_hold_stand_up_duration = 2.0F;
 inline constexpr float k_hold_kneel_duration = 1.5F;
 
+inline constexpr float k_guard_enter_duration = 1.8F;
+inline constexpr float k_guard_exit_duration = 1.4F;
+
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
 inline constexpr float k_blood_stain_default_radius = 0.6F;
@@ -151,6 +154,9 @@ public:
   float time_stuck{0.0F};
   float time_on_invalid_tile{0.0F};
   float unstuck_cooldown{0.0F};
+  float unstuck_push_seconds{0.0F};
+  float unstuck_push_vx{0.0F};
+  float unstuck_push_vz{0.0F};
 
   void clear_path() {
     path.clear();
@@ -298,6 +304,19 @@ public:
   bool in_melee_lock{false};
   EntityID melee_lock_target_id{0};
 
+  // Deferred melee strike: damage is snapshotted at swing start and applied when
+  // the swing reaches weapon contact, so hits land mid-animation instead of
+  // instantly. Cooldown is still reset at swing start, so steady-state DPS is
+  // unchanged. Stored on the component (not transient processor state) so it
+  // round-trips through save/load deterministically.
+  bool has_pending_melee_strike{false};
+  EntityID pending_melee_target_id{0};
+  int pending_melee_damage{0};
+  float pending_melee_elapsed{0.0F};
+  float pending_melee_contact_time{0.0F};
+
+  static constexpr float k_melee_contact_range_grace = 0.75F;
+
   [[nodiscard]] auto is_in_melee_range(float distance,
                                        float height_diff) const -> bool {
     return distance <= melee_range && height_diff <= max_height_difference;
@@ -417,12 +436,21 @@ enum class CombatAnimationState : std::uint8_t {
   Reposition
 };
 
+enum class AttackDirection : std::uint8_t {
+  LeftSlash = 0,
+  RightSlash = 1,
+  Overhead = 2,
+  Thrust = 3,
+  HeavyOverhead = 4
+};
+
 class CombatStateComponent : public Component {
 public:
   CombatStateComponent() = default;
 
   CombatAnimationState animation_state{CombatAnimationState::Idle};
   CombatAttackFamily attack_family{CombatAttackFamily::None};
+  AttackDirection attack_direction{AttackDirection::LeftSlash};
   float state_time{0.0F};
   float state_duration{0.0F};
   float attack_offset{0.0F};
@@ -430,15 +458,44 @@ public:
   bool finisher_attack{false};
   bool is_hit_paused{false};
   float hit_pause_remaining{0.0F};
+  bool damage_dealt_this_swing{false};
+  bool input_buffered{false};
 
-  static constexpr float k_combat_animation_hit_pause_duration = 0.05F;
-  static constexpr float k_advance_duration = 0.16F;
-  static constexpr float k_wind_up_duration = 0.22F;
-  static constexpr float k_strike_duration = 0.18F;
-  static constexpr float k_impact_duration = 0.10F;
-  static constexpr float k_recover_duration = 0.36F;
-  static constexpr float k_reposition_duration = 0.24F;
+  static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
+  static constexpr float k_advance_duration = 0.22F;
+  static constexpr float k_wind_up_duration = 0.42F;
+  static constexpr float k_strike_duration = 0.34F;
+  static constexpr float k_impact_duration = 0.18F;
+  static constexpr float k_recover_duration = 0.40F;
+  static constexpr float k_reposition_duration = 0.28F;
+
+  // Fraction of a full melee swing at which the weapon makes contact, expressed
+  // in the swing's own time basis (advance+windup over the whole cycle). Used by
+  // the deferred-melee-strike system as the single source of truth for when a
+  // snapshotted melee hit lands. ~0.348 with the durations above.
+  static constexpr float k_melee_contact_fraction =
+      (k_advance_duration + k_wind_up_duration) /
+      (k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
+       k_recover_duration + k_reposition_duration);
+
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
+
+  static constexpr float k_stamina_cost_light_attack = 12.0F;
+  static constexpr float k_stamina_cost_heavy_attack = 25.0F;
+  static constexpr float k_stamina_cost_dodge = 18.0F;
+  static constexpr float k_stamina_cost_guard_per_second = 8.0F;
+  static constexpr float k_stamina_cost_shield_bash = 20.0F;
+  static constexpr float k_stamina_cost_jump = 10.0F;
+  static constexpr float k_low_stamina_threshold = 20.0F;
+  static constexpr float k_low_stamina_damage_penalty = 0.7F;
+};
+
+enum class StaggerTier : std::uint8_t {
+  LightFlinch = 0,
+  HeavyStagger = 1,
+  Knockback = 2,
+  Knockdown = 3,
+  GuardBreak = 4
 };
 
 class HitFeedbackComponent : public Component {
@@ -450,9 +507,33 @@ public:
   float reaction_intensity{0.0F};
   float knockback_x{0.0F};
   float knockback_z{0.0F};
+  StaggerTier stagger_tier{StaggerTier::LightFlinch};
+  float hit_direction_x{0.0F};
+  float hit_direction_z{0.0F};
 
   static constexpr float k_reaction_duration = 0.25F;
   static constexpr float k_max_knockback = 0.15F;
+  static constexpr float k_light_flinch_duration = 0.15F;
+  static constexpr float k_heavy_stagger_duration = 0.40F;
+  static constexpr float k_knockback_duration = 0.55F;
+  static constexpr float k_knockdown_duration = 0.90F;
+  static constexpr float k_guard_break_duration = 0.65F;
+
+  [[nodiscard]] static auto duration_for_tier(StaggerTier tier) noexcept -> float {
+    switch (tier) {
+    case StaggerTier::LightFlinch:
+      return k_light_flinch_duration;
+    case StaggerTier::HeavyStagger:
+      return k_heavy_stagger_duration;
+    case StaggerTier::Knockback:
+      return k_knockback_duration;
+    case StaggerTier::Knockdown:
+      return k_knockdown_duration;
+    case StaggerTier::GuardBreak:
+      return k_guard_break_duration;
+    }
+    return k_reaction_duration;
+  }
 };
 
 class PatrolComponent : public Component {
@@ -607,6 +688,17 @@ public:
   float death_shock_radius{14.0F};
   float death_morale_shock{25.0F};
   bool aura_active{true};
+
+  // Timed aura ability: when activated, grants 50% damage to same-type troops
+  // and 30% max-health bonus to all troops within radius.
+  bool aura_ability_active{false};
+  bool aura_ability_requested{false};
+  float aura_ability_duration{15.0F};
+  float aura_ability_remaining{0.0F};
+  float aura_ability_cooldown{60.0F};
+  float aura_ability_cooldown_remaining{0.0F};
+  Game::Units::SpawnType aura_affinity_spawn_type{Game::Units::SpawnType::Knight};
+
   bool wounded{false};
   bool fpv_controlled{false};
   int combo_step{0};
@@ -671,6 +763,28 @@ public:
   explicit StaggerComponent(float duration = 0.5F)
       : remaining(duration) {}
   float remaining;
+  StaggerTier tier{StaggerTier::LightFlinch};
+};
+
+enum class EnemyTelegraphPhase : std::uint8_t {
+  None,
+  WindUp,
+  Active,
+  Recovery
+};
+
+class EnemyTelegraphComponent : public Component {
+public:
+  EnemyTelegraphComponent() = default;
+
+  EnemyTelegraphPhase phase{EnemyTelegraphPhase::None};
+  float phase_time{0.0F};
+  float wind_up_duration{0.45F};
+  float active_duration{0.20F};
+  float recovery_duration{0.35F};
+  AttackDirection attack_direction{AttackDirection::LeftSlash};
+  bool is_unblockable{false};
+  bool visual_tell_active{false};
 };
 
 enum class RpgEngagementRole : std::uint8_t {
@@ -1097,6 +1211,115 @@ public:
   CivilianDeliveryComponent() = default;
 
   EntityID target_barracks_id{0};
+};
+
+// ---------------------------------------------------------------------------
+// Battle Movement Refactor Components (Workstreams 1-8)
+// ---------------------------------------------------------------------------
+
+/// Movement intent produced by combat or AI systems; consumed by MovementSystem.
+/// Combat code should write desired movement here instead of editing transforms.
+class MovementIntentComponent : public Component {
+public:
+  MovementIntentComponent() = default;
+
+  float desired_vx{0.0F};
+  float desired_vz{0.0F};
+  float desired_facing{0.0F};
+  bool has_facing_request{false};
+
+  /// Knockback displacement request (one-shot, cleared after application).
+  float knockback_dx{0.0F};
+  float knockback_dz{0.0F};
+
+  /// Priority: higher priority units resist avoidance displacement.
+  /// 0 = default moving unit, 1 = formation member, 2 = braced/stationary,
+  /// 3 = melee-locked, 4 = building/immovable.
+  std::uint8_t priority{0};
+};
+
+/// Engagement slot assigned to a melee attacker around a target.
+class EngagementSlotComponent : public Component {
+public:
+  EngagementSlotComponent() = default;
+
+  EntityID target_id{0};
+
+  /// Slot arc index (0..max_slots-1) around the target perimeter.
+  std::uint8_t slot_index{0};
+  std::uint8_t max_slots{8};
+
+  /// Anchor offset from target center (world-space direction).
+  float anchor_offset_x{0.0F};
+  float anchor_offset_z{0.0F};
+
+  /// Whether this slot assignment is still valid.
+  bool valid{true};
+
+  /// Lease expiry: time remaining before slot must be revalidated.
+  float lease_remaining{2.0F};
+};
+
+/// Target commitment state: prevents rapid target switching during attack phases.
+class TargetCommitmentComponent : public Component {
+public:
+  TargetCommitmentComponent() = default;
+
+  EntityID committed_target_id{0};
+  float cooldown_remaining{0.0F};
+
+  /// Whether the unit is in a committed attack phase (wind-up, strike, impact).
+  bool in_committed_phase{false};
+
+  static constexpr float k_switch_cooldown = 0.8F;
+};
+
+/// Local AI cohort membership for batch defensive response.
+class CohortMembershipComponent : public Component {
+public:
+  CohortMembershipComponent() = default;
+
+  /// Cohort identifier (assigned by CohortSystem).
+  std::uint32_t cohort_id{0};
+  bool cohort_activated{false};
+};
+
+/// Elephant knockback cooldown per victim (stored on elephant entity).
+class ElephantKnockbackCooldownComponent : public Component {
+public:
+  ElephantKnockbackCooldownComponent() = default;
+
+  struct VictimCooldown {
+    EntityID victim_id{0};
+    float remaining{0.0F};
+  };
+
+  std::vector<VictimCooldown> cooldowns;
+  static constexpr float k_knockback_cooldown = 1.0F;
+
+  void tick(float dt) {
+    for (auto it = cooldowns.begin(); it != cooldowns.end();) {
+      it->remaining -= dt;
+      if (it->remaining <= 0.0F) {
+        it = cooldowns.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+
+  [[nodiscard]] auto is_on_cooldown(EntityID victim) const -> bool {
+    for (const auto& cd : cooldowns) {
+      if (cd.victim_id == victim) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void add_cooldown(EntityID victim) {
+    cooldowns.push_back({victim, k_knockback_cooldown});
+  }
 };
 
 } // namespace Engine::Core

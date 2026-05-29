@@ -1,27 +1,15 @@
 #pragma once
 
-#include <QVector3D>
-
-#include <optional>
 #include <string>
+
+#include "../../builder_renderer_common.h"
 
 namespace Render::GL::Roman {
 
-struct BuilderStyleConfig {
-  std::optional<QVector3D> cloth_color;
-  std::optional<QVector3D> leather_color;
-  std::optional<QVector3D> leather_dark_color;
-  std::optional<QVector3D> metal_color;
-  std::optional<QVector3D> wood_color;
-  std::optional<QVector3D> apron_color;
+using BuilderStyleConfig = Render::GL::BuilderStyleConfig;
 
-  bool show_helmet = false;
-  bool show_armor = false;
-  bool show_tool_belt = true;
-
-  std::string attachment_profile;
-};
-
+void register_builder_style(const std::string& nation_id,
+                            const BuilderStyleConfig& style);
 void register_roman_builder_style();
 
 } // namespace Render::GL::Roman

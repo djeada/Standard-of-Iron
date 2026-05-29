@@ -131,6 +131,38 @@ TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
   EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 0);
 }
 
+TEST(MapLoaderTest, ExtendsBridgeEndpointsToSpanRiverbanks) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Bridge Span Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"rivers",
+       QJsonArray{QJsonObject{{"start", QJsonArray{0.0, -10.0}},
+                              {"end", QJsonArray{0.0, 10.0}},
+                              {"width", 10.0}}}},
+      {"bridges",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-3.0, 0.0}},
+                              {"end", QJsonArray{3.0, 0.0}},
+                              {"width", 4.0},
+                              {"height", 0.5}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.bridges.size(), 1U);
+  const auto& bridge = map_def.bridges.front();
+  EXPECT_LE(bridge.start.x(), -6.0F);
+  EXPECT_GE(bridge.end.x(), 6.0F);
+}
+
 TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

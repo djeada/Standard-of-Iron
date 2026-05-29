@@ -15,6 +15,7 @@
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
+#include "../marketplace_system.h"
 #include "../wall_network_service.h"
 
 namespace Game::Systems::Combat {
@@ -343,6 +344,25 @@ void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
   }
 }
 
+void add_or_extend_stagger(Engine::Core::Entity* entity,
+                           float duration,
+                           Engine::Core::StaggerTier tier) {
+  if (entity == nullptr || duration <= 0.0F) {
+    return;
+  }
+  if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
+    stagger->remaining = std::max(stagger->remaining, duration);
+    if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
+      stagger->tier = tier;
+    }
+  } else {
+    auto* new_stagger = entity->add_component<Engine::Core::StaggerComponent>(duration);
+    if (new_stagger != nullptr) {
+      new_stagger->tier = tier;
+    }
+  }
+}
+
 DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
                                           Engine::Core::Entity* target,
                                           int damage,
@@ -437,6 +457,10 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
 
     if (target->has_component<Engine::Core::BuildingComponent>()) {
       BuildingCollisionRegistry::instance().unregister_building(target->get_id());
+      if (auto* unit = target->get_component<Engine::Core::UnitComponent>();
+          unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Marketplace) {
+        MarketplaceSystem::instance().unregister_marketplace(unit->owner_id);
+      }
     }
     if (world != nullptr &&
         target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {

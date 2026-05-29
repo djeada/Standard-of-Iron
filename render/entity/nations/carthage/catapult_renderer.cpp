@@ -4,17 +4,19 @@
 #include <QVector3D>
 
 #include <cmath>
+#include <numbers>
 
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
+#include "../../catapult_renderer_common.h"
 #include "../../registry.h"
 #include "../siege_anim_types.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -49,7 +51,7 @@ get_anim_context(const Engine::Core::Entity* entity) -> CatapultAnimContext {
     return ctx;
   }
 
-  auto* loading = entity->get_component<Engine::Core::CatapultLoadingComponent>();
+  const auto* loading = entity->get_component<Engine::Core::CatapultLoadingComponent>();
   if (loading == nullptr) {
     return ctx;
   }
@@ -172,21 +174,21 @@ void draw_base_frame(const DrawContext& p,
 
 void draw_wheels(const DrawContext& p,
                  ISubmitter& out,
-                 Mesh* unit,
                  Texture* white,
                  const CarthageCatapultPalette& c) {
 
   float wheel_radius = 0.20F;
   float wheel_thickness = 0.045F;
 
-  QVector3D left_front(-0.45F, wheel_radius, -0.28F);
-  QVector3D left_back(-0.45F, wheel_radius, 0.28F);
-  QVector3D right_front(0.45F, wheel_radius, -0.28F);
-  QVector3D right_back(0.45F, wheel_radius, 0.28F);
+  QVector3D const left_front(-0.45F, wheel_radius, -0.28F);
+  QVector3D const left_back(-0.45F, wheel_radius, 0.28F);
+  QVector3D const right_front(0.45F, wheel_radius, -0.28F);
+  QVector3D const right_back(0.45F, wheel_radius, 0.28F);
 
   auto draw_wheel = [&](const QVector3D& pos, float side_offset) {
-    QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
-    QVector3D outer = pos + QVector3D(side_offset * (wheel_thickness + 0.07F), 0, 0);
+    QVector3D const inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
+    QVector3D const outer =
+        pos + QVector3D(side_offset * (wheel_thickness + 0.07F), 0, 0);
 
     draw_cyl(out, p.model, inner, outer, wheel_radius, c.wood_dark, white);
 
@@ -207,10 +209,10 @@ void draw_wheels(const DrawContext& p,
              white);
 
     for (int s = 0; s < 6; ++s) {
-      float angle = s * 3.14159F / 3.0F;
-      float spoke_y = std::sin(angle) * wheel_radius * 0.75F;
-      float spoke_z = std::cos(angle) * wheel_radius * 0.75F;
-      QVector3D spoke_pos =
+      float const angle = s * std::numbers::pi_v<float> / 3.0F;
+      float const spoke_y = std::sin(angle) * wheel_radius * 0.75F;
+      float const spoke_z = std::cos(angle) * wheel_radius * 0.75F;
+      QVector3D const spoke_pos =
           pos + QVector3D(side_offset * (wheel_thickness + 0.035F), spoke_y, spoke_z);
       draw_cyl(out,
                p.model,
@@ -359,7 +361,7 @@ void draw_torsion_mechanism(const DrawContext& p,
            c.wood_dark);
 
   for (int i = 0; i < 4; ++i) {
-    float offset = (float(i) - 1.5F) * 0.035F;
+    float const offset = (float(i) - 1.5F) * 0.035F;
     draw_cyl(out,
              p.model,
              QVector3D(-0.15F, 0.28F + offset, -0.10F),
@@ -445,7 +447,6 @@ void draw_decorations(const DrawContext& p,
 
 void draw_windlass(const DrawContext& p,
                    ISubmitter& out,
-                   Mesh* unit,
                    Texture* white,
                    const CarthageCatapultPalette& c) {
 
@@ -488,40 +489,30 @@ void draw_windlass(const DrawContext& p,
            white);
 }
 
+void draw_catapult_body(const DrawContext& p,
+                        ISubmitter& out,
+                        Mesh* unit_cube,
+                        Texture* white_tex,
+                        const QVector3D& team_color) {
+  auto palette = make_palette(team_color);
+  auto anim_ctx = get_anim_context(p.entity);
+
+  draw_base_frame(p, out, unit_cube, white_tex, palette);
+  draw_wheels(p, out, white_tex, palette);
+  draw_torsion_mechanism(p, out, unit_cube, white_tex, palette);
+  draw_throwing_arm(p, out, unit_cube, white_tex, palette, anim_ctx);
+  draw_windlass(p, out, white_tex, palette);
+  draw_decorations(p, out, unit_cube, white_tex, palette);
+}
+
 } // namespace
 
 void register_catapult_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer(
-      "troops/carthage/catapult", [](const DrawContext& p, ISubmitter& out) {
-        Mesh* unit_cube = get_unit_cube();
-        Texture* white_tex = nullptr;
-
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(&out)) {
-          unit_cube = scene_renderer->get_mesh_cube();
-          white_tex = scene_renderer->get_white_texture();
-        }
-
-        if (unit_cube == nullptr || white_tex == nullptr) {
-          return;
-        }
-
-        QVector3D team_color{0.4F, 0.2F, 0.6F};
-        if (p.entity != nullptr) {
-          if (auto* r = p.entity->get_component<Engine::Core::RenderableComponent>()) {
-            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
-          }
-        }
-
-        auto palette = make_palette(team_color);
-        auto anim_ctx = get_anim_context(p.entity);
-
-        draw_base_frame(p, out, unit_cube, white_tex, palette);
-        draw_wheels(p, out, unit_cube, white_tex, palette);
-        draw_torsion_mechanism(p, out, unit_cube, white_tex, palette);
-        draw_throwing_arm(p, out, unit_cube, white_tex, palette, anim_ctx);
-        draw_windlass(p, out, unit_cube, white_tex, palette);
-        draw_decorations(p, out, unit_cube, white_tex, palette);
-      });
+  register_catapult_renderer_variant(
+      registry,
+      CatapultRendererConfig{.renderer_key = "troops/carthage/catapult",
+                             .default_team = QVector3D(0.4F, 0.2F, 0.6F),
+                             .draw_body = &draw_catapult_body});
 }
 
 } // namespace Render::GL::Carthage

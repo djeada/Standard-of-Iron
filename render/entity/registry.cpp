@@ -10,6 +10,7 @@
 #include "defense_tower_renderer.h"
 #include "elephant_renderer.h"
 #include "home_renderer.h"
+#include "marketplace_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/builder_renderer.h"
@@ -71,6 +72,12 @@ auto EntityRendererRegistry::get_handle(const std::string& type) const
   return it->second;
 }
 
+// NOTE(refactor): the per-nation renderers below are now thin data structs
+// (see *_renderer_common.{h,cpp}); the registration list is still spelled out by
+// hand because it is not a clean nation x unit grid -- some renderers are
+// nation-less (catapult/ballista/buildings) and some are Carthage-only
+// (skeleton/grave_priest). A future pass could drive the symmetric units from a
+// {nation, unit} -> factory table while keeping the asymmetric ones explicit.
 void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
@@ -115,6 +122,8 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   register_home_renderer(registry);
 
   register_wall_renderer(registry);
+
+  register_marketplace_renderer(registry);
 }
 
 } // namespace Render::GL

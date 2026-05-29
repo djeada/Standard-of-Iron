@@ -139,7 +139,9 @@ TEST(CreatureRenderBatch, HoldExitUsesReverseStandUpProgressForRequestPhase) {
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
-  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.75F);
+  // hold_transition_amount eases the kneel/stand-up phase with a smoothstep
+  // (consistent with guard_pose_amount): linear 0.75 -> smoothstep(0.75) = 0.84375.
+  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.84375F);
 }
 
 TEST(CreatureRenderBatch, FullHoldKeepsTerminalKneelFrame) {

@@ -103,20 +103,6 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
   }
 }
 
-void clamp_and_apply_displacement(Engine::Core::TransformComponent* transform,
-                                  const QVector3D& direction,
-                                  float displacement) {
-  if (transform == nullptr || displacement <= 0.0F) {
-    return;
-  }
-
-  float const scale = (displacement > Constants::k_max_displacement_per_frame)
-                          ? (Constants::k_max_displacement_per_frame / displacement)
-                          : 1.0F;
-  transform->position.x += direction.x() * displacement * scale;
-  transform->position.z += direction.z() * displacement * scale;
-}
-
 auto should_queue_chase_command(Engine::Core::Entity* attacker,
                                 Engine::Core::Entity* target,
                                 Engine::Core::TransformComponent* attacker_transform,
@@ -435,42 +421,7 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     face_target(tgt_t, att_t);
   }
 
-  float const dx = tgt_t->position.x - att_t->position.x;
-  float const dz = tgt_t->position.z - att_t->position.z;
-  float const dist = std::sqrt(dx * dx + dz * dz);
-
-  if (dist > Constants::k_max_melee_separation) {
-    if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-      float const pull_amount = (dist - Constants::k_ideal_melee_distance) *
-                                Constants::k_melee_pull_factor * delta_time *
-                                Constants::k_melee_pull_speed;
-
-      if (dist > Constants::k_min_distance) {
-        QVector3D const direction(dx / dist, 0.0F, dz / dist);
-        QVector3D const clamped_offset =
-            direction * std::min(pull_amount, Constants::k_max_displacement_per_frame);
-        float const new_x = att_t->position.x + clamped_offset.x();
-        float const new_z = att_t->position.z + clamped_offset.z();
-
-        auto* pathfinder = CommandService::get_pathfinder();
-        if (pathfinder != nullptr) {
-          Point const new_grid = CommandService::world_to_grid(new_x, new_z);
-          if (pathfinder->is_walkable(new_grid.x, new_grid.y)) {
-            att_t->position.x = new_x;
-            att_t->position.z = new_z;
-          } else {
-
-            attack_comp->in_melee_lock = false;
-            attack_comp->melee_lock_target_id = 0;
-          }
-        } else {
-
-          att_t->position.x = new_x;
-          att_t->position.z = new_z;
-        }
-      }
-    }
-  }
+  (void)delta_time;
 }
 
 auto locked_target_for_attack(Engine::Core::Entity* attacker,
@@ -806,28 +757,64 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
     if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
       face_target(tgt_t, att_t);
     }
-
-    float const dx = tgt_t->position.x - att_t->position.x;
-    float const dz = tgt_t->position.z - att_t->position.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-
-    if (dist > Constants::k_ideal_melee_distance + 0.1F) {
-      float const move_amount =
-          (dist - Constants::k_ideal_melee_distance) * Constants::k_move_amount_factor;
-
-      if (dist > Constants::k_min_distance) {
-        QVector3D const direction(dx / dist, 0.0F, dz / dist);
-
-        if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-          clamp_and_apply_displacement(att_t, direction, move_amount);
-        }
-
-        if (!is_unit_in_hold_mode(target) && !is_large_melee_anchor(target)) {
-          clamp_and_apply_displacement(tgt_t, -direction, move_amount);
-        }
-      }
-    }
   }
+}
+
+void clear_pending_melee_strike(Engine::Core::AttackComponent* attack_comp) {
+  attack_comp->has_pending_melee_strike = false;
+  attack_comp->pending_melee_target_id = 0;
+  attack_comp->pending_melee_damage = 0;
+  attack_comp->pending_melee_elapsed = 0.0F;
+  attack_comp->pending_melee_contact_time = 0.0F;
+}
+
+void apply_pending_melee_strike(Engine::Core::Entity* attacker,
+                                Engine::Core::AttackComponent* attack_comp,
+                                Engine::Core::Entity* target,
+                                Engine::Core::World* world) {
+  int const damage = attack_comp->pending_melee_damage;
+  clear_pending_melee_strike(attack_comp);
+  if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
+    Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+        world, target, damage, attacker->get_id());
+  } else {
+    deal_damage(world, target, damage, attacker->get_id());
+  }
+}
+
+// Advances a scheduled melee strike and applies its snapshotted damage once the
+// swing reaches weapon contact. Revalidates the target at contact so a hit is
+// cancelled if the attacker/target died, the target is no longer an enemy, or
+// the target slipped out of melee range during the wind-up.
+void process_pending_melee_strike(Engine::Core::Entity* attacker,
+                                  Engine::Core::AttackComponent* attack_comp,
+                                  Engine::Core::World* world,
+                                  float delta_time) {
+  if ((attack_comp == nullptr) || !attack_comp->has_pending_melee_strike) {
+    return;
+  }
+
+  attack_comp->pending_melee_elapsed += delta_time;
+  if (attack_comp->pending_melee_elapsed < attack_comp->pending_melee_contact_time) {
+    return;
+  }
+
+  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* target = world->get_entity(attack_comp->pending_melee_target_id);
+  if ((attacker_unit == nullptr) || (target == nullptr) ||
+      !is_valid_enemy_unit(attacker_unit, target, true)) {
+    clear_pending_melee_strike(attack_comp);
+    return;
+  }
+
+  float const grace_range = attack_comp->melee_range +
+                            Engine::Core::AttackComponent::k_melee_contact_range_grace;
+  if (!is_in_range(attacker, target, grace_range)) {
+    clear_pending_melee_strike(attack_comp);
+    return;
+  }
+
+  apply_pending_melee_strike(attacker, attack_comp, target, world);
 }
 
 } // namespace
@@ -865,6 +852,7 @@ void process_attacks(Engine::Core::World* world,
 
     process_melee_lock(attacker, attacker_atk, world, delta_time);
     sync_melee_lock_target(attacker, attacker_atk);
+    process_pending_melee_strike(attacker, attacker_atk, world, delta_time);
 
     float range = 2.0F;
     int damage = 10;
@@ -1027,6 +1015,19 @@ void process_attacks(Engine::Core::World* world,
                 hold_position = true;
               }
             }
+          } else {
+            QVector3D direction = target_pos - attacker_pos;
+            float const distance_sq = direction.lengthSquared();
+            if (distance_sq > 0.000001F) {
+              float const distance = std::sqrt(distance_sq);
+              direction /= distance;
+              float const desired_distance = std::max(range - 0.2F, 0.2F);
+              if (distance > desired_distance + 0.15F) {
+                desired_pos = target_pos - direction * desired_distance;
+              } else {
+                hold_position = true;
+              }
+            }
           }
 
           auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
@@ -1141,8 +1142,28 @@ void process_attacks(Engine::Core::World* world,
         spawn_arrows(attacker, best_target, arrow_sys);
       }
 
+      bool const is_melee_attack = (attacker_atk != nullptr) &&
+                                   attacker_atk->current_mode ==
+                                       Engine::Core::AttackComponent::CombatMode::Melee;
+      auto const* attacker_commander =
+          attacker->get_component<Engine::Core::CommanderComponent>();
+      bool const fpv_commander =
+          (attacker_commander != nullptr) && attacker_commander->fpv_controlled;
+      bool const defer_melee_strike =
+          is_melee_attack && !fpv_commander && cooldown > 0.001F;
+
       if (use_special_projectile) {
         launch_special_projectile(attacker, best_target, damage, projectile_sys);
+      } else if (defer_melee_strike) {
+        // Snapshot the resolved damage and schedule it to land when the swing
+        // reaches weapon contact. Cooldown is still reset below at swing start,
+        // so steady-state DPS is unchanged.
+        attacker_atk->has_pending_melee_strike = true;
+        attacker_atk->pending_melee_target_id = best_target->get_id();
+        attacker_atk->pending_melee_damage = damage;
+        attacker_atk->pending_melee_elapsed = 0.0F;
+        attacker_atk->pending_melee_contact_time =
+            Engine::Core::CombatStateComponent::k_melee_contact_fraction * cooldown;
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
@@ -1206,6 +1227,7 @@ void process_attacks(Engine::Core::World* world,
     CommandService::MoveOptions options;
     options.kind = MoveOrderKind::AttackChase;
     options.allow_direct_fallback = true;
+    options.group_move = chase_move_intents.size() > 1;
     CommandService::move_units(*world, chase_move_intents, options);
   }
 }

@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "healer_renderer.h"
+#include "../../healer_renderer_common.h"
 
 namespace {
 
@@ -45,8 +45,8 @@ void register_carthage_healer_style() {
 
   style.force_beard = true;
 
-  register_healer_style("default", style);
-  register_healer_style("carthage", style);
+  Render::GL::register_healer_style("default", style);
+  Render::GL::register_healer_style("carthage", style);
 
   HealerStyleConfig sepulcher = style;
   sepulcher.cloth_color = k_sepulcher_tunic;
@@ -57,7 +57,7 @@ void register_carthage_healer_style() {
   sepulcher.wood_color = k_sepulcher_wood;
   sepulcher.cape_color = k_sepulcher_cape;
   sepulcher.force_beard = false;
-  register_healer_style("iron_sepulcher", sepulcher);
+  Render::GL::register_healer_style("iron_sepulcher", sepulcher);
 }
 
 } // namespace Render::GL::Carthage

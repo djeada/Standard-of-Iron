@@ -38,12 +38,15 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/wall_network_service.h"
 #include "game/visuals/team_colors.h"
+#include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -93,6 +96,7 @@ void SkirmishLoader::reset_game_state() {
   m_world.clear();
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
+  Game::Systems::MarketplaceSystem::instance().clear();
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();
@@ -142,21 +146,32 @@ auto SkirmishLoader::start(const QString& map_path,
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
-      QJsonObject obj = doc.object();
-      if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
-        const QJsonArray spawns = obj[SPAWNS].toArray();
-        for (const auto& spawn_val : spawns) {
-          if (spawn_val.isObject()) {
-            QJsonObject spawn = spawn_val.toObject();
-            if (spawn.contains(PLAYER_ID)) {
-              const int player_id = spawn[PLAYER_ID].toInt();
-              if (player_id > 0) {
-                map_player_ids.insert(player_id);
-              }
-            }
+      QJsonObject const obj = doc.object();
+      auto collect_player_ids = [&map_player_ids, &obj](const char* key) {
+        if (!obj.contains(key) || !obj[key].isArray()) {
+          return;
+        }
+
+        const QJsonArray entries = obj[key].toArray();
+        for (const auto& entry_val : entries) {
+          if (!entry_val.isObject()) {
+            continue;
+          }
+          QJsonObject const entry = entry_val.toObject();
+          if (!entry.contains(PLAYER_ID)) {
+            continue;
+          }
+
+          const int player_id = entry[PLAYER_ID].toInt();
+          if (player_id > 0) {
+            map_player_ids.insert(player_id);
           }
         }
-      }
+      };
+
+      collect_player_ids(SPAWNS);
+      collect_player_ids(BUILDINGS);
+      collect_player_ids(WALLS);
     }
   } else {
     qWarning() << "Could not open map file for reading player IDs:"
@@ -399,10 +414,15 @@ auto SkirmishLoader::start(const QString& map_path,
         level_result.grid_width, level_result.grid_height, level_result.tile_size);
   }
 
+  if (m_ambient_fog != nullptr && !level_result.fog_zones.empty()) {
+    m_ambient_fog->configure(level_result.fog_zones);
+  }
+
   constexpr int default_map_size = 100;
   const int map_width = level_result.ok ? level_result.grid_width : default_map_size;
   const int map_height = level_result.ok ? level_result.grid_height : default_map_size;
   Game::Systems::CommandService::initialize(map_width, map_height);
+  Game::Systems::WallNetworkService::refresh_world(m_world);
 
   if (m_on_visibility_initialized) {
     m_on_visibility_initialized(m_world,

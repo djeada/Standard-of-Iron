@@ -34,7 +34,7 @@ std::vector<std::uint8_t> serialize(const BpatWriter& w) {
 
 TEST(BpatFormat, HeaderAndEntrySizesAreFrozen) {
   EXPECT_EQ(sizeof(BpatHeader), 64U);
-  EXPECT_EQ(sizeof(BpatClipEntry), 32U);
+  EXPECT_EQ(sizeof(BpatClipEntry), 44U);
   EXPECT_EQ(sizeof(BpatSocketEntry), 32U);
   EXPECT_EQ(k_magic[0], 'B');
   EXPECT_EQ(k_magic[3], 'T');
@@ -103,6 +103,30 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
   }
 }
 
+TEST(BpatReader, ClipIndexFindsNamesAndSurvivesBlobMove) {
+  constexpr std::uint32_t bone_count = 2U;
+  BpatWriter w(k_species_humanoid, bone_count);
+
+  for (ClipDescriptor const& clip : {ClipDescriptor{"idle", 1U, 30.0F, true},
+                                     ClipDescriptor{"walk", 1U, 30.0F, true},
+                                     ClipDescriptor{"idle", 1U, 24.0F, false}}) {
+    w.add_clip(clip);
+    std::vector<QMatrix4x4> palettes(bone_count * clip.frame_count);
+    for (auto& m : palettes) {
+      m.setToIdentity();
+    }
+    w.append_clip_palettes(palettes);
+  }
+
+  BpatBlob blob = BpatBlob::from_bytes(serialize(w));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+
+  BpatBlob const moved = std::move(blob);
+  EXPECT_EQ(moved.clip_index("idle"), 0U);
+  EXPECT_EQ(moved.clip_index("walk"), 1U);
+  EXPECT_EQ(moved.clip_index("missing"), BpatBlob::k_invalid_clip_index);
+}
+
 TEST(BpatWriter, BakedSocketsRoundTrip) {
   constexpr std::uint32_t bone_count = 20U;
   BpatWriter w(k_species_humanoid, bone_count);
@@ -142,6 +166,46 @@ TEST(BpatWriter, BakedSocketsRoundTrip) {
       EXPECT_FLOAT_EQ(sm[(row * 4) + col], expected(row, col));
     }
   }
+}
+
+TEST(BpatWriter, AuthoredClipMarkersRoundTrip) {
+  constexpr std::uint32_t bone_count = 4U;
+  BpatWriter w(k_species_humanoid, bone_count);
+
+  ClipDescriptor attack{"attack_sword_a", 2U, 30.0F, false};
+  attack.marker_anticipation_start = 0.10F;
+  attack.marker_weapon_release = 0.54F;
+  attack.marker_contact = 0.58F;
+  attack.marker_recover_unlocked = 0.72F;
+  attack.marker_exit_safe = 0.90F;
+  w.add_clip(attack);
+  std::vector<QMatrix4x4> attack_palettes(bone_count * attack.frame_count);
+  for (auto& m : attack_palettes) {
+    m.setToIdentity();
+  }
+  w.append_clip_palettes(attack_palettes);
+
+  ClipDescriptor const idle{"idle", 2U, 30.0F, true};
+  w.add_clip(idle);
+  std::vector<QMatrix4x4> idle_palettes(bone_count * idle.frame_count);
+  for (auto& m : idle_palettes) {
+    m.setToIdentity();
+  }
+  w.append_clip_palettes(idle_palettes);
+
+  auto blob = BpatBlob::from_bytes(serialize(w));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+
+  auto const attack_view = blob.clip(0);
+  EXPECT_FLOAT_EQ(attack_view.marker_anticipation_start, 0.10F);
+  EXPECT_FLOAT_EQ(attack_view.marker_weapon_release, 0.54F);
+  EXPECT_FLOAT_EQ(attack_view.marker_contact, 0.58F);
+  EXPECT_FLOAT_EQ(attack_view.marker_recover_unlocked, 0.72F);
+  EXPECT_FLOAT_EQ(attack_view.marker_exit_safe, 0.90F);
+
+  auto const idle_view = blob.clip(1);
+  EXPECT_FLOAT_EQ(idle_view.marker_anticipation_start, -1.0F);
+  EXPECT_FLOAT_EQ(idle_view.marker_contact, -1.0F);
 }
 
 TEST(BpatReader, RejectsBadMagic) {

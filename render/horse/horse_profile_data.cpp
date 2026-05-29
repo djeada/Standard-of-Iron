@@ -11,18 +11,18 @@
 #include <numbers>
 #include <vector>
 
-#include "../creature/creature_math_utils.h"
 #include "../creature/pipeline/creature_visual_definition.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
-#include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../humanoid/humanoid_renderer_base.h"
 #include "../submitter.h"
 #include "horse_renderer_base.h"
 #include "horse_spec.h"
+#include "math/creature_math_utils.h"
+#include "math/math_utils.h"
 #include "prepare.h"
 
 namespace Render::GL {

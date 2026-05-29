@@ -3,6 +3,7 @@
 #include "../../../render/profiling/frame_profile.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../rpg_combat_system/rpg_commander_damage.h"
 
 namespace Game::Systems::Combat {
 
@@ -39,19 +40,37 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
     return 1.0F;
   }
 
+  // Amplified durations: much larger wind-up for readability, fast strike for impact
+  // Directional variation: thrust is snappy, overhead is slow and heavy
+  float direction_scale = 1.0F;
+  switch (combat_state.attack_direction) {
+  case Engine::Core::AttackDirection::Thrust:
+    direction_scale = 0.80F; // Thrusts are quick and snappy
+    break;
+  case Engine::Core::AttackDirection::Overhead:
+    direction_scale = 1.15F; // Overheads are slow and powerful
+    break;
+  case Engine::Core::AttackDirection::HeavyOverhead:
+    direction_scale = 1.30F; // Heavy overhead is very slow and devastating
+    break;
+  default:
+    direction_scale = 1.0F; // Slashes are normal speed
+    break;
+  }
+
   switch (state) {
   case CS::Advance:
-    return combat_state.finisher_attack ? 1.55F : 1.22F;
+    return (combat_state.finisher_attack ? 1.90F : 1.50F) * direction_scale;
   case CS::WindUp:
-    return combat_state.finisher_attack ? 1.42F : 1.18F;
+    return (combat_state.finisher_attack ? 2.10F : 1.65F) * direction_scale;
   case CS::Strike:
-    return combat_state.finisher_attack ? 1.26F : 1.10F;
+    return (combat_state.finisher_attack ? 1.40F : 1.15F) * direction_scale;
   case CS::Impact:
-    return combat_state.finisher_attack ? 1.22F : 1.08F;
+    return (combat_state.finisher_attack ? 1.50F : 1.25F) * direction_scale;
   case CS::Recover:
-    return combat_state.finisher_attack ? 1.38F : 1.18F;
+    return (combat_state.finisher_attack ? 1.35F : 1.15F) * direction_scale;
   case CS::Reposition:
-    return combat_state.finisher_attack ? 1.18F : 1.06F;
+    return (combat_state.finisher_attack ? 1.20F : 1.0F) * direction_scale;
   case CS::Idle:
   default:
     return 1.0F;
@@ -103,6 +122,37 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state->animation_state = CS::Strike;
         combat_state->state_duration = phase_duration_for_state(
             *unit, *combat_state, combat_state->animation_state);
+        // Deferred hit window: deal damage when blade connects
+        if (!combat_state->damage_dealt_this_swing) {
+          auto const* commander =
+              unit->get_component<Engine::Core::CommanderComponent>();
+          if (commander != nullptr && commander->fpv_controlled) {
+            auto const* action =
+                unit->get_component<Engine::Core::RpgCommanderActionComponent>();
+            auto const* attack = unit->get_component<Engine::Core::AttackComponent>();
+            if (action != nullptr && action->active_target_id != 0) {
+              auto* target = world->get_entity(action->active_target_id);
+              if (target != nullptr) {
+                int damage = 10;
+                if (attack != nullptr) {
+                  damage = std::max(1, attack->get_current_damage());
+                }
+                // Low stamina penalty
+                auto const* stamina =
+                    unit->get_component<Engine::Core::StaminaComponent>();
+                if (stamina != nullptr &&
+                    stamina->stamina < CSC::k_low_stamina_threshold) {
+                  damage = static_cast<int>(static_cast<float>(damage) *
+                                            CSC::k_low_stamina_damage_penalty);
+                  damage = std::max(1, damage);
+                }
+                Game::Systems::RpgCombat::deal_commander_attack_damage(
+                    world, target, damage, unit->get_id());
+                combat_state->damage_dealt_this_swing = true;
+              }
+            }
+          }
+        }
         break;
       case CS::Strike:
         combat_state->animation_state = CS::Impact;
@@ -115,15 +165,25 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
             *unit, *combat_state, combat_state->animation_state);
         break;
       case CS::Recover:
-        combat_state->animation_state = CS::Reposition;
-        combat_state->state_duration = phase_duration_for_state(
-            *unit, *combat_state, combat_state->animation_state);
+        // Input buffering: skip Reposition and go directly to Advance for next attack
+        if (combat_state->input_buffered) {
+          combat_state->animation_state = CS::Advance;
+          combat_state->state_duration = phase_duration_for_state(
+              *unit, *combat_state, combat_state->animation_state);
+          combat_state->input_buffered = false;
+          combat_state->damage_dealt_this_swing = false;
+        } else {
+          combat_state->animation_state = CS::Reposition;
+          combat_state->state_duration = phase_duration_for_state(
+              *unit, *combat_state, combat_state->animation_state);
+        }
         break;
       case CS::Reposition:
       case CS::Idle:
       default:
         combat_state->animation_state = CS::Idle;
         combat_state->state_duration = 0.0F;
+        combat_state->input_buffered = false;
         break;
       }
       combat_state->state_time = 0.0F;

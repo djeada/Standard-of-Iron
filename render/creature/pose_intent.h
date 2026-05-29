@@ -1,9 +1,25 @@
 #pragma once
 
 #include "../gl/humanoid/humanoid_types.h"
-#include "../humanoid/humanoid_state_machine.h"
 #include "pose_intent_enum.h"
 #include "render_request.h"
+
+namespace Render::Humanoid {
+
+enum class HumanoidState {
+  Idle,
+  Walk,
+  Run,
+  Hold,
+  AttackMelee,
+  AttackRanged,
+  HitReaction,
+  Healing,
+  Construct,
+  Death,
+};
+
+} // namespace Render::Humanoid
 
 namespace Render::Creature {
 

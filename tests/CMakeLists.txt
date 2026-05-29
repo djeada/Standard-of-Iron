@@ -11,6 +11,7 @@ endif()
 # Test executable
 add_executable(standard_of_iron_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
+    ${CMAKE_SOURCE_DIR}/translations.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
@@ -22,8 +23,10 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/production_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/rts_action_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/language_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
     ${CMAKE_SOURCE_DIR}/app/core/ambient_state_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/graphics_settings_proxy.cpp
     ${CMAKE_SOURCE_DIR}/app/models/cursor_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/models/hover_tracker.cpp
     ${CMAKE_SOURCE_DIR}/app/controllers/action_vfx.cpp
@@ -31,6 +34,8 @@ add_executable(standard_of_iron_tests
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
+    core/audio_system_test.cpp
+    core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
@@ -48,6 +53,7 @@ add_executable(standard_of_iron_tests
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/map_loader_test.cpp
+    map/map_transformer_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/mission_victory_rules_test.cpp
@@ -77,6 +83,7 @@ add_executable(standard_of_iron_tests
     systems/elephant_special_processor_test.cpp
     systems/siege_special_processor_test.cpp
     systems/wall_system_test.cpp
+    systems/battle_movement_refactor_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
@@ -122,7 +129,6 @@ add_executable(standard_of_iron_tests
     render/pipeline/instance_coalescer_test.cpp
     render/pass/frame_pass_runner_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
-    render/animation/animation_test.cpp
     render/bpat/bpat_format_test.cpp
     render/bpat/bpat_registry_test.cpp
     render/humanoid/skeleton_test.cpp
@@ -188,6 +194,7 @@ target_link_libraries(standard_of_iron_tests
         engine_core
         render_gl
         game_systems
+        audio_system
 )
 
 # Include directories
@@ -244,6 +251,7 @@ target_link_libraries(standard_of_iron_tests_subset
         engine_core
         render_gl
         game_systems
+        audio_system
 )
 target_include_directories(standard_of_iron_tests_subset
     PRIVATE

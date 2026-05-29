@@ -1,6 +1,9 @@
 #include "graphics_settings_proxy.h"
 
+#include <QDebug>
+
 #include "../../render/graphics_settings.h"
+#include "../core/user_settings.h"
 
 namespace App::Models {
 
@@ -14,12 +17,14 @@ int GraphicsSettingsProxy::quality_level() const {
 
 void GraphicsSettingsProxy::set_quality_level(int level) {
   if (level < 0 || level > 3) {
+    qWarning() << "Ignoring invalid graphics quality level:" << level;
     return;
   }
 
   auto newQuality = static_cast<Render::GraphicsQuality>(level);
   if (newQuality != Render::GraphicsSettings::instance().quality()) {
     Render::GraphicsSettings::instance().set_quality(newQuality);
+    App::Core::UserSettings::save_graphics_quality_level(level);
     emit quality_level_changed();
   }
 }

@@ -25,7 +25,6 @@
 #include "../../../equipment/attachment_builder.h"
 #include "../../../equipment/generated_equipment.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
@@ -41,10 +40,12 @@
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
+#include "../../healer_renderer_common.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
 #include "../equipment_loadout_catalog.h"
 #include "healer_style.h"
+#include "math/math_utils.h"
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
@@ -53,26 +54,9 @@ namespace Render::GL::Roman {
 
 namespace {
 
-constexpr std::string_view k_default_style_key = "default";
-
-auto style_registry() -> std::unordered_map<std::string, HealerStyleConfig>& {
-  static std::unordered_map<std::string, HealerStyleConfig> styles;
-  return styles;
-}
-
-void ensure_healer_styles_registered() {
-  static const bool registered = []() {
-    register_roman_healer_style();
-    return true;
-  }();
-  (void)registered;
-}
-
-constexpr float k_team_mix_weight = 0.65F;
-constexpr float k_style_mix_weight = 0.35F;
-constexpr std::uint32_t k_healer_tunic_role_count = 6;
 constexpr auto k_profile =
     Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = -0.01F});
+constexpr std::uint32_t k_healer_tunic_role_count = 6;
 
 enum HealerTunicPaletteSlot : std::uint8_t {
   k_healer_white_slot = 0U,
@@ -300,140 +284,66 @@ auto healer_tunic_extra_role_colors(const void* variant_void,
                           variant.palette, out + base_count, max_count - base_count);
 }
 
-} // namespace
+const Render::Creature::Pipeline::UnitVisualSpec&
+roman_healer_visual_spec(std::string_view,
+                         std::string_view,
+                         Render::Creature::Pipeline::CreatureAssetId,
+                         const Render::GL::HealerStyleConfig& style,
+                         const Render::GL::Humanoid::ProportionProfile& profile) {
+  using namespace Render::Creature::Pipeline;
 
-void register_healer_style(const std::string& nation_id,
-                           const HealerStyleConfig& style) {
-  style_registry()[nation_id] = style;
+  static const UnitVisualSpec spec = [&]() {
+    static const auto k_healer_base_archetype = []() {
+      auto& registry = Render::Creature::ArchetypeRegistry::instance();
+      const auto* base_desc =
+          registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+      if (base_desc == nullptr) {
+        return Render::Creature::k_invalid_archetype;
+      }
+
+      Render::Creature::ArchetypeDescriptor desc = *base_desc;
+      desc.debug_name = "troops/roman/healer/base";
+      desc.bake_attachments[desc.bake_attachment_count++] =
+          healer_tunic_make_static_attachment(
+              static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
+              desc.role_count);
+      desc.role_count =
+          static_cast<std::uint8_t>(desc.role_count + k_healer_tunic_role_count);
+      desc.append_extra_role_colors_fn(&healer_tunic_extra_role_colors);
+      return registry.register_archetype(desc);
+    }();
+    const auto loadout =
+        Render::GL::Nation::resolve_equipment_loadout("troops/roman/healer");
+    const std::array<EquipmentHandle, 2> handles{
+        style.show_helmet ? loadout.helmet_handle : k_invalid_equipment_handle,
+        loadout.armor_handle};
+
+    UnitVisualSpec out{};
+    out.kind = CreatureKind::Humanoid;
+    out.debug_name = "troops/roman/healer";
+    out.scaling = profile.as_pipeline_scaling();
+    out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    out.archetype_id = resolve_humanoid_equipment_archetype(
+        "troops/roman/healer", k_healer_base_archetype, handles);
+    return out;
+  }();
+  return spec;
 }
 
-using Render::Geom::clamp01;
-using Render::Geom::clamp_f;
-using Render::GL::Humanoid::mix_palette_color;
-using Render::GL::Humanoid::saturate_color;
-
-class HealerRenderer : public HumanoidRendererBase {
-public:
-  auto get_proportion_scaling() const -> QVector3D override {
-    return k_profile.as_vector();
-  }
-
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-    using namespace Render::Creature::Pipeline;
-
-    ensure_healer_styles_registered();
-    static const HealerStyleConfig captured_style = []() {
-      auto& styles = style_registry();
-      auto it = styles.find("roman_republic");
-      if (it != styles.end()) {
-        return it->second;
-      }
-      auto it_default = styles.find(std::string(k_default_style_key));
-      if (it_default != styles.end()) {
-        return it_default->second;
-      }
-      return HealerStyleConfig{};
-    }();
-
-    static const UnitVisualSpec spec = []() {
-      static const auto k_healer_base_archetype = []() {
-        auto& registry = Render::Creature::ArchetypeRegistry::instance();
-        const auto* base_desc =
-            registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
-        if (base_desc == nullptr) {
-          return Render::Creature::k_invalid_archetype;
-        }
-
-        Render::Creature::ArchetypeDescriptor desc = *base_desc;
-        desc.debug_name = "troops/roman/healer/base";
-        desc.bake_attachments[desc.bake_attachment_count++] =
-            healer_tunic_make_static_attachment(
-                static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
-                desc.role_count);
-        desc.role_count =
-            static_cast<std::uint8_t>(desc.role_count + k_healer_tunic_role_count);
-        desc.append_extra_role_colors_fn(&healer_tunic_extra_role_colors);
-        return registry.register_archetype(desc);
-      }();
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/roman/healer");
-      const std::array<EquipmentHandle, 2> handles{captured_style.show_helmet
-                                                       ? loadout.helmet_handle
-                                                       : k_invalid_equipment_handle,
-                                                   loadout.armor_handle};
-
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/healer";
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/roman/healer", k_healer_base_archetype, handles);
-      return s;
-    }();
-    return spec;
-  }
-
-  void get_variant(const DrawContext& ctx,
-                   uint32_t seed,
-                   HumanoidVariant& v) const override {
-    QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = make_humanoid_palette(team_tint, seed);
-    auto const& style = resolve_style(ctx);
-    apply_palette_overrides(style, team_tint, v);
-  }
-
-private:
-  auto resolve_style(const DrawContext& ctx) const -> const HealerStyleConfig& {
-    ensure_healer_styles_registered();
-    auto& styles = style_registry();
-    std::string nation_id;
-    if (ctx.entity != nullptr) {
-      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-        nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
-      }
-    }
-    if (!nation_id.empty()) {
-      auto it = styles.find(nation_id);
-      if (it != styles.end()) {
-        return it->second;
-      }
-    }
-    auto fallback = styles.find(std::string(k_default_style_key));
-    if (fallback != styles.end()) {
-      return fallback->second;
-    }
-    static const HealerStyleConfig default_style{};
-    return default_style;
-  }
-
-private:
-  void apply_palette_overrides(const HealerStyleConfig& style,
-                               const QVector3D& team_tint,
-                               HumanoidVariant& variant) const {
-    auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target) {
-      target = mix_palette_color(
-          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
-    };
-
-    apply_color(style.cloth_color, variant.palette.cloth);
-    apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leather_dark);
-    apply_color(style.metal_color, variant.palette.metal);
-    apply_color(style.wood_color, variant.palette.wood);
-  }
+const HealerRendererProfile k_healer_profile{
+    .proportion_profile = k_profile,
+    .visual_spec_factory = &roman_healer_visual_spec,
+    .ensure_styles_registered = &register_roman_healer_style,
 };
 
+const std::array<HealerRendererRegistration, 1> k_healer_renderers{{
+    {"troops/roman/healer", "roman_republic"},
+}};
+
+} // namespace
+
 void register_healer_renderer(Render::GL::EntityRendererRegistry& registry) {
-  ensure_healer_styles_registered();
-  static HealerRenderer const renderer;
-  registry.register_renderer("troops/roman/healer",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static HealerRenderer const static_renderer;
-                               static_renderer.render(ctx, out);
-                             });
+  register_healer_renderer_profile(registry, k_healer_profile, k_healer_renderers);
 }
 
 } // namespace Render::GL::Roman

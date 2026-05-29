@@ -103,17 +103,112 @@ void add_owner_occupancy(WallNetworkService::OwnerOccupancyMap& out,
   out[owner_id].insert(WallNetworkService::encode_key(grid_x, grid_z));
 }
 
+auto circle_overlaps_footprint(const BuildingFootprint& building,
+                               float x,
+                               float z,
+                               float radius,
+                               float* distance_sq_out = nullptr) -> bool {
+  float const half_width = building.width / 2.0F;
+  float const half_depth = building.depth / 2.0F;
+
+  float const min_x = building.center_x - half_width;
+  float const max_x = building.center_x + half_width;
+  float const min_z = building.center_z - half_depth;
+  float const max_z = building.center_z + half_depth;
+
+  float const closest_x = std::clamp(x, min_x, max_x);
+  float const closest_z = std::clamp(z, min_z, max_z);
+  float const dx = x - closest_x;
+  float const dz = z - closest_z;
+  float const distance_sq = dx * dx + dz * dz;
+  if (distance_sq_out != nullptr) {
+    *distance_sq_out = distance_sq;
+  }
+  return distance_sq <= radius * radius;
+}
+
+auto entity_allows_wall_boundary_touch(const Engine::Core::Entity* entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+
+  if (entity->get_component<WallConstructionSiteComponent>() != nullptr) {
+    return true;
+  }
+
+  const auto* unit = entity->get_component<UnitComponent>();
+  if (unit == nullptr) {
+    return false;
+  }
+
+  return unit->spawn_type == Game::Units::SpawnType::WallSegment ||
+         unit->spawn_type == Game::Units::SpawnType::DefenseTower;
+}
+
+auto placement_can_touch_wall_network_structures(const std::string& building_type)
+    -> bool {
+  return building_type == "wall_segment" || building_type == "defense_tower";
+}
+
+auto collides_with_registered_building(Engine::Core::World& world,
+                                       float pos_x,
+                                       float pos_z,
+                                       float radius,
+                                       const std::string& building_type,
+                                       unsigned int ignore_entity_id = 0) -> bool {
+  auto& collision_registry = BuildingCollisionRegistry::instance();
+  if (!placement_can_touch_wall_network_structures(building_type)) {
+    return collision_registry.is_circle_overlapping_building(
+        pos_x, pos_z, radius, ignore_entity_id);
+  }
+
+  static constexpr float k_touch_epsilon = 1.0e-4F;
+  for (const auto& building : collision_registry.get_all_buildings()) {
+    if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
+      continue;
+    }
+
+    float distance_sq = 0.0F;
+    if (!circle_overlaps_footprint(building, pos_x, pos_z, radius, &distance_sq)) {
+      continue;
+    }
+
+    Engine::Core::Entity* entity = world.get_entity(building.entity_id);
+    if (entity_allows_wall_boundary_touch(entity) &&
+        distance_sq + k_touch_epsilon >= radius * radius) {
+      continue;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 auto is_buildable_world_position(float pos_x,
                                  float pos_z,
+                                 Engine::Core::World& world,
                                  const std::string& building_type,
                                  unsigned int ignore_entity_id = 0) -> bool {
-  auto& collision_registry = Game::Systems::BuildingCollisionRegistry::instance();
   auto size =
       Game::Systems::BuildingCollisionRegistry::get_building_size(building_type);
 
-  if (collision_registry.is_circle_overlapping_building(
-          pos_x, pos_z, std::max(size.width, size.depth) * 0.5F, ignore_entity_id)) {
+  if (collides_with_registered_building(world,
+                                        pos_x,
+                                        pos_z,
+                                        std::max(size.width, size.depth) * 0.5F,
+                                        building_type,
+                                        ignore_entity_id)) {
     return false;
+  }
+
+  if (placement_can_touch_wall_network_structures(building_type)) {
+    if (auto& terrain_service = Game::Map::TerrainService::instance();
+        terrain_service.is_initialized()) {
+      Game::Systems::Point const grid =
+          Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+      return terrain_service.is_walkable(grid.x, grid.y);
+    }
+    return true;
   }
 
   Game::Systems::Pathfinding* pathfinder =
@@ -434,8 +529,11 @@ auto WallNetworkService::validate_wall_segment_placement(
 
   const auto world_position =
       CommandService::grid_to_world(Point{position.x, position.z});
-  if (!is_buildable_world_position(
-          world_position.x(), world_position.z(), "wall_segment", ignore_entity_id)) {
+  if (!is_buildable_world_position(world_position.x(),
+                                   world_position.z(),
+                                   world,
+                                   "wall_segment",
+                                   ignore_entity_id)) {
     return {.valid = false, .failure_reason = "Cannot build there."};
   }
 
@@ -486,7 +584,7 @@ auto WallNetworkService::find_tower_snap_socket(Engine::Core::World& world,
     const auto candidate_world =
         CommandService::grid_to_world(Point{candidate.x, candidate.z});
     if (!is_buildable_world_position(
-            candidate_world.x(), candidate_world.z(), "defense_tower")) {
+            candidate_world.x(), candidate_world.z(), world, "defense_tower")) {
       continue;
     }
 

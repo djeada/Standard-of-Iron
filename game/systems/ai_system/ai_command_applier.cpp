@@ -27,10 +27,12 @@ namespace {
 constexpr const char* BUILDING_TYPE_HOME = "home";
 constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
+constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 
 constexpr float BUILD_TIME_HOME = 20.0F;
 constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
 constexpr float BUILD_TIME_BARRACKS = 30.0F;
+constexpr float BUILD_TIME_MARKETPLACE = 25.0F;
 constexpr float BUILD_TIME_DEFAULT = 20.0F;
 } // namespace
 
@@ -190,6 +192,24 @@ void AICommandApplier::apply(Engine::Core::World& world,
       break;
     }
 
+    case AICommandType::TriggerCommanderAura: {
+      for (auto entity_id : command.units) {
+        auto* entity = world.get_entity(entity_id);
+        if (entity == nullptr) {
+          continue;
+        }
+        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
+          continue;
+        }
+        auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+        if (commander != nullptr) {
+          commander->aura_ability_requested = true;
+        }
+      }
+      break;
+    }
+
     case AICommandType::StartBuilderConstruction: {
       if (command.units.empty() || command.construction_type == nullptr) {
         break;
@@ -242,6 +262,8 @@ void AICommandApplier::apply(Engine::Core::World& world,
           builder_prod->build_time = BUILD_TIME_DEFENSE_TOWER;
         } else if (ctype == BUILDING_TYPE_BARRACKS) {
           builder_prod->build_time = BUILD_TIME_BARRACKS;
+        } else if (ctype == BUILDING_TYPE_MARKETPLACE) {
+          builder_prod->build_time = BUILD_TIME_MARKETPLACE;
         } else {
           builder_prod->build_time = BUILD_TIME_DEFAULT;
         }

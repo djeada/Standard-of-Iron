@@ -52,6 +52,7 @@ class ArrowSystem;
 namespace Render::GL {
 
 class Backend;
+class EffectsSubmitter;
 
 class Renderer : public ISubmitter {
 public:
@@ -248,6 +249,11 @@ public:
                     float radius,
                     float intensity,
                     float time) override;
+  void metal_spark(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time);
   void mode_indicator(const QMatrix4x4& model,
                       int mode_type,
                       const QVector3D& color,
@@ -336,12 +342,7 @@ private:
   void process_async_template_prewarm();
   void cancel_async_template_prewarm();
 
-  struct AsyncTemplatePrewarmState {
-    std::vector<PrewarmProfile> profiles;
-    std::vector<PrewarmWorkItem> work_items;
-    std::atomic<std::size_t> next_index{0};
-    std::atomic<bool> cancel_requested{false};
-  };
+  struct AsyncTemplatePrewarmState;
 
   void run_template_prewarm_item(const PrewarmProfile& profile,
                                  const PrewarmWorkItem& item);
@@ -356,6 +357,7 @@ private:
   int m_render_queue_index = 1;
 
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
+  std::unique_ptr<EffectsSubmitter> m_effects_submitter;
   unsigned int m_hovered_entity_id = 0;
   std::unordered_set<unsigned int> m_selected_ids;
 

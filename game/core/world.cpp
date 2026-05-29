@@ -20,9 +20,6 @@ namespace {
 
 constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
-constexpr float k_goal_intent_distance_sq = 0.35F * 0.35F;
-constexpr float k_recent_path_request_window = 0.35F;
-
 [[nodiscard]] auto
 forward_xz_from_yaw(float yaw_degrees) noexcept -> std::pair<float, float> {
   float const yaw_rad = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
@@ -39,26 +36,6 @@ void normalize_xz(float& x, float& z) noexcept {
   float const inv_len = 1.0F / std::sqrt(len_sq);
   x *= inv_len;
   z *= inv_len;
-}
-
-[[nodiscard]] auto
-movement_goal_is_active(const MovementComponent* movement,
-                        const TransformComponent* transform) noexcept -> bool {
-  if (movement == nullptr || transform == nullptr) {
-    return false;
-  }
-
-  float const dx = movement->goal_x - transform->position.x;
-  float const dz = movement->goal_y - transform->position.z;
-  if (dx * dx + dz * dz <= k_goal_intent_distance_sq) {
-    return false;
-  }
-
-  bool const has_recent_request =
-      movement->time_since_last_path_request < k_recent_path_request_window &&
-      (movement->last_goal_x != 0.0F || movement->last_goal_y != 0.0F);
-  return movement->repath_cooldown > 0.0F || has_recent_request ||
-         movement->time_stuck > 0.0F || movement->unstuck_cooldown > 0.0F;
 }
 
 [[nodiscard]] auto
@@ -174,9 +151,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         movement != nullptr &&
         (movement->has_target || movement->has_waypoints() || movement->path_pending ||
          movement->pending_request_id != 0);
-    bool const has_navigation_intent = has_active_navigation_segment ||
-                                       has_component_velocity ||
-                                       movement_goal_is_active(movement, transform);
+    bool const has_navigation_intent =
+        has_active_navigation_segment || has_component_velocity;
 
     bool const direct_control_moving =
         commander != nullptr && commander->fpv_controlled &&
@@ -245,10 +221,6 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     } else if (movement != nullptr && movement->has_target) {
       motion->movement_target_x = movement->target_x;
       motion->movement_target_z = movement->target_y;
-      motion->has_movement_target = true;
-    } else if (movement_goal_is_active(movement, transform)) {
-      motion->movement_target_x = movement->goal_x;
-      motion->movement_target_z = movement->goal_y;
       motion->has_movement_target = true;
     } else if (motion->has_chase_intent && attack_target != nullptr) {
       if (auto* target = world.get_entity(attack_target->target_id)) {

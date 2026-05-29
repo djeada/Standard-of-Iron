@@ -257,11 +257,33 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         std::max(0.0F, commander->rally_cooldown_remaining - delta_time);
     commander->rally_feedback_time =
         std::max(0.0F, commander->rally_feedback_time - delta_time);
+    commander->aura_ability_cooldown_remaining =
+        std::max(0.0F, commander->aura_ability_cooldown_remaining - delta_time);
+
+    if (commander->aura_ability_active) {
+      commander->aura_ability_remaining -= delta_time;
+      if (commander->aura_ability_remaining <= 0.0F) {
+        commander->aura_ability_active = false;
+        commander->aura_ability_remaining = 0.0F;
+        commander->aura_ability_cooldown_remaining = commander->aura_ability_cooldown;
+      }
+    }
+
+    if (commander->aura_ability_requested) {
+      commander->aura_ability_requested = false;
+      if (!commander->aura_ability_active &&
+          commander->aura_ability_cooldown_remaining <= 0.0F) {
+        commander->aura_ability_active = true;
+        commander->aura_ability_remaining = commander->aura_ability_duration;
+      }
+    }
 
     if (unit->health <= 0) {
       if (!commander->wounded) {
         commander->wounded = true;
         commander->aura_active = false;
+        commander->aura_ability_active = false;
+        commander->aura_ability_remaining = 0.0F;
         apply_commander_death_shock(
             world, commander_entity, *commander, *unit, *transform);
       }
@@ -395,6 +417,26 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
               const float haste = std::max(0.0F, commander->aura_bonus_value);
               production->time_remaining =
                   std::max(0.0F, production->time_remaining - delta_time * haste);
+            }
+          }
+        }
+
+        // Timed aura ability: +50% damage to same-type, +30% health to all
+        if (candidate_is_troop && commander->aura_ability_active) {
+          // 30% max-health bonus for all troops in radius
+          const int health_bonus = static_cast<int>(
+              std::round(static_cast<float>(candidate_unit->max_health) * 0.3F));
+          candidate_unit->health = std::min(candidate_unit->max_health + health_bonus,
+                                            candidate_unit->health + health_bonus);
+
+          // 50% damage bonus for same-type troops
+          if (candidate_unit->spawn_type == commander->aura_affinity_spawn_type) {
+            if (auto* attack =
+                    candidate->get_component<Engine::Core::AttackComponent>()) {
+              attack->damage =
+                  std::max(1, static_cast<int>(std::round(attack->damage * 1.5F)));
+              attack->melee_damage = std::max(
+                  1, static_cast<int>(std::round(attack->melee_damage * 1.5F)));
             }
           }
         }

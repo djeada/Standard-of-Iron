@@ -53,21 +53,14 @@ void PineRenderer::configure(
     const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
     const std::vector<Game::Map::WorldProp>& runtime_world_props,
     bool use_world_props_exclusively) {
-  m_width = height_map.get_width();
-  m_height = height_map.get_height();
-  m_tile_size = height_map.get_tile_size();
-  m_height_data = height_map.get_height_data();
-  m_terrain_types = height_map.getTerrainTypes();
-  m_scatter_seed_world_props = scatter_seed_world_props;
-  m_runtime_world_props = runtime_world_props;
-  m_use_world_props_exclusively = use_world_props_exclusively;
-  m_biome_settings = biome_settings;
-  m_noise_seed = biome_settings.seed;
-
-  m_pine_state.reset_instances();
+  configure_height_scatter_common(height_map,
+                                  biome_settings,
+                                  scatter_seed_world_props,
+                                  runtime_world_props,
+                                  use_world_props_exclusively);
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
-  auto& pine_params = m_pine_state.params;
+  auto& pine_params = m_state.params;
   pine_params.light_direction = m_light_direction;
   pine_params.time = 0.0F;
   pine_params.wind_strength = wind_profile.sway_strength;
@@ -77,39 +70,25 @@ void PineRenderer::configure(
 }
 
 void PineRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
-  m_pine_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, QVector3D(0.35F, 0.8F, 0.45F));
 }
 
 void PineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  (void)resources;
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_pine_state, [](const PineInstanceGpu& instance) -> const QVector4D& {
-        return instance.pos_scale;
-      });
-  if (visible_count == 0 || !m_pine_state.instance_buffer) {
-    return;
-  }
-
-  PineBatchParams params = m_pine_state.params;
-  params.time = renderer.get_animation_time();
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Pine;
-  cmd.instance_buffer = m_pine_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
-  cmd.pine = params;
-  renderer.terrain_scatter(cmd);
+  submit_filtered_common<true>(
+      renderer,
+      resources,
+      TerrainScatterCmd::Species::Pine,
+      [](TerrainScatterCmd& cmd, const PineBatchParams& params) { cmd.pine = params; });
 }
 
 void PineRenderer::clear() {
-  m_pine_state.reset_instances();
+  clear_common();
 }
 
 void PineRenderer::generate_pine_instances() {
-  auto& pine_instances = m_pine_state.instances;
-  auto& pine_instance_count = m_pine_state.instance_count;
-  auto& pine_instances_dirty = m_pine_state.instances_dirty;
+  auto& pine_instances = m_state.instances;
+  auto& pine_instance_count = m_state.instance_count;
+  auto& pine_instances_dirty = m_state.instances_dirty;
   pine_instances.clear();
 
   {
@@ -196,6 +175,9 @@ void PineRenderer::generate_pine_instances() {
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x92C3B17FU);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Pine, scene)) {
       return false;
     }

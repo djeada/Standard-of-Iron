@@ -4,9 +4,7 @@
 #include <QVector3D>
 
 #include <array>
-#include <cmath>
 #include <cstdint>
-#include <deque>
 #include <span>
 #include <string>
 
@@ -18,6 +16,7 @@
 #include "../../humanoid/skeleton.h"
 #include "../../humanoid/spear_pose_utils.h"
 #include "../attachment_builder.h"
+#include "../equipment_archetype_helpers.h"
 #include "../equipment_submit.h"
 #include "../generated_equipment.h"
 #include "../oriented_archetype_utils.h"
@@ -43,130 +42,73 @@ auto operator==(const SpearArchetypeKey& lhs, const SpearArchetypeKey& rhs) -> b
          lhs.material_id == rhs.material_id;
 }
 
-auto quantize_spear_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+template <std::uint8_t PaletteSlot, typename Tag>
+auto cached_spear_part_archetype(const SpearRenderConfig& config,
+                                 float radius,
+                                 const char* debug_prefix,
+                                 GeneratedEquipmentPrimitiveKind kind)
+    -> const RenderArchetype& {
+  SpearArchetypeKey const key{quantize_equipment_value(config.shaft_radius),
+                              config.material_id};
+  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
+      kind == GeneratedEquipmentPrimitiveKind::Cone
+          ? generated_cone(QVector3D(0.0F, 0.0F, 0.0F),
+                           QVector3D(0.0F, 1.0F, 0.0F),
+                           radius,
+                           PaletteSlot,
+                           1.0F,
+                           config.material_id)
+          : generated_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
+                               QVector3D(0.0F, 1.0F, 0.0F),
+                               radius,
+                               PaletteSlot,
+                               1.0F,
+                               config.material_id),
+  }};
+  return cached_generated_archetype<Tag>(key,
+                                         std::string(debug_prefix) + "_" +
+                                             std::to_string(key.shaft_radius_key) +
+                                             "_" + std::to_string(key.material_id),
+                                         primitives);
 }
+
+struct SpearLowerShaftTag {};
+struct SpearUpperShaftTag {};
+struct SpearHeadTag {};
+struct SpearGripTag {};
 
 auto spear_lower_shaft_archetype(const SpearRenderConfig& config)
     -> const RenderArchetype& {
-  struct CachedArchetype {
-    SpearArchetypeKey key;
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  SpearArchetypeKey const key{quantize_spear_value(config.shaft_radius),
-                              config.material_id};
-  for (const auto& entry : cache) {
-    if (entry.key == key) {
-      return entry.archetype;
-    }
-  }
-  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
-      generated_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
-                         QVector3D(0.0F, 1.0F, 0.0F),
-                         config.shaft_radius,
-                         k_shaft_slot,
-                         1.0F,
-                         config.material_id),
-  }};
-  cache.push_back({key,
-                   build_generated_equipment_archetype(
-                       "spear_lower_shaft_" + std::to_string(key.shaft_radius_key) +
-                           "_" + std::to_string(key.material_id),
-                       primitives)});
-  return cache.back().archetype;
+  return cached_spear_part_archetype<k_shaft_slot, SpearLowerShaftTag>(
+      config,
+      config.shaft_radius,
+      "spear_lower_shaft",
+      GeneratedEquipmentPrimitiveKind::Cylinder);
 }
 
 auto spear_upper_shaft_archetype(const SpearRenderConfig& config)
     -> const RenderArchetype& {
-  struct CachedArchetype {
-    SpearArchetypeKey key;
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  SpearArchetypeKey const key{quantize_spear_value(config.shaft_radius),
-                              config.material_id};
-  for (const auto& entry : cache) {
-    if (entry.key == key) {
-      return entry.archetype;
-    }
-  }
-  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
-      generated_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
-                         QVector3D(0.0F, 1.0F, 0.0F),
-                         config.shaft_radius * 0.95F,
-                         k_shaft_dark_slot,
-                         1.0F,
-                         config.material_id),
-  }};
-  cache.push_back({key,
-                   build_generated_equipment_archetype(
-                       "spear_upper_shaft_" + std::to_string(key.shaft_radius_key) +
-                           "_" + std::to_string(key.material_id),
-                       primitives)});
-  return cache.back().archetype;
+  return cached_spear_part_archetype<k_shaft_dark_slot, SpearUpperShaftTag>(
+      config,
+      config.shaft_radius * 0.95F,
+      "spear_upper_shaft",
+      GeneratedEquipmentPrimitiveKind::Cylinder);
 }
 
 auto spearhead_archetype(const SpearRenderConfig& config) -> const RenderArchetype& {
-  struct CachedArchetype {
-    SpearArchetypeKey key;
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  SpearArchetypeKey const key{quantize_spear_value(config.shaft_radius),
-                              config.material_id};
-  for (const auto& entry : cache) {
-    if (entry.key == key) {
-      return entry.archetype;
-    }
-  }
-  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
-      generated_cone(QVector3D(0.0F, 0.0F, 0.0F),
-                     QVector3D(0.0F, 1.0F, 0.0F),
-                     config.shaft_radius * 1.8F,
-                     k_head_slot,
-                     1.0F,
-                     config.material_id),
-  }};
-  cache.push_back({key,
-                   build_generated_equipment_archetype(
-                       "spear_head_" + std::to_string(key.shaft_radius_key) + "_" +
-                           std::to_string(key.material_id),
-                       primitives)});
-  return cache.back().archetype;
+  return cached_spear_part_archetype<k_head_slot, SpearHeadTag>(
+      config,
+      config.shaft_radius * 1.8F,
+      "spear_head",
+      GeneratedEquipmentPrimitiveKind::Cone);
 }
 
 auto spear_grip_archetype(const SpearRenderConfig& config) -> const RenderArchetype& {
-  struct CachedArchetype {
-    SpearArchetypeKey key;
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  SpearArchetypeKey const key{quantize_spear_value(config.shaft_radius),
-                              config.material_id};
-  for (const auto& entry : cache) {
-    if (entry.key == key) {
-      return entry.archetype;
-    }
-  }
-  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
-      generated_cylinder(QVector3D(0.0F, 0.0F, 0.0F),
-                         QVector3D(0.0F, 1.0F, 0.0F),
-                         config.shaft_radius * 1.5F,
-                         k_grip_slot,
-                         1.0F,
-                         config.material_id),
-  }};
-  cache.push_back({key,
-                   build_generated_equipment_archetype(
-                       "spear_grip_" + std::to_string(key.shaft_radius_key) + "_" +
-                           std::to_string(key.material_id),
-                       primitives)});
-  return cache.back().archetype;
+  return cached_spear_part_archetype<k_grip_slot, SpearGripTag>(
+      config,
+      config.shaft_radius * 1.5F,
+      "spear_grip",
+      GeneratedEquipmentPrimitiveKind::Cylinder);
 }
 
 auto spear_palette(const SpearRenderConfig& config,
@@ -180,7 +122,7 @@ auto spear_palette(const SpearRenderConfig& config,
 } // namespace
 
 SpearRenderer::SpearRenderer(SpearRenderConfig config)
-    : m_base(std::move(config)) {
+    : m_base(config) {
 }
 
 void SpearRenderer::render(const DrawContext& ctx,
@@ -254,14 +196,13 @@ auto Render::GL::spear_fill_role_colors(const HumanoidPalette& palette,
                                         const SpearRenderConfig& config,
                                         QVector3D* out,
                                         std::size_t max) -> std::uint32_t {
-  if (max < k_spear_role_count) {
-    return 0U;
-  }
-  out[k_shaft_slot] = config.shaft_color;
-  out[k_shaft_dark_slot] = config.shaft_color * 0.98F;
-  out[k_head_slot] = config.spearhead_color;
-  out[k_grip_slot] = palette.leather * 0.92F;
-  return static_cast<std::uint32_t>(k_spear_role_count);
+  return fill_role_colors(
+      std::array<QVector3D, k_spear_role_count>{config.shaft_color,
+                                                config.shaft_color * 0.98F,
+                                                config.spearhead_color,
+                                                palette.leather * 0.92F},
+      out,
+      max);
 }
 
 auto Render::GL::spear_make_static_attachments(const SpearRenderConfig& config,

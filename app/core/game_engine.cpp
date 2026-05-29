@@ -106,6 +106,7 @@
 #include "game/systems/guard_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -150,6 +151,7 @@
 #include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
+#include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -257,6 +259,33 @@ auto choose_seeded_track(const QStringList& track_ids, const QString& seed) -> Q
   }
   const uint index = qHash(seed) % uint(track_ids.size());
   return track_ids.at(int(index));
+}
+
+auto marketplace_trade_resource_from_key(QStringView key)
+    -> std::optional<Game::Systems::ResourceType> {
+  if (key == QLatin1String("wood")) {
+    return Game::Systems::ResourceType::Wood;
+  }
+  if (key == QLatin1String("stone")) {
+    return Game::Systems::ResourceType::Stone;
+  }
+  if (key == QLatin1String("iron")) {
+    return Game::Systems::ResourceType::Iron;
+  }
+  return std::nullopt;
+}
+
+auto marketplace_trade_resource_label(QStringView key) -> QString {
+  if (key == QLatin1String("wood")) {
+    return QStringLiteral("wood");
+  }
+  if (key == QLatin1String("stone")) {
+    return QStringLiteral("stone");
+  }
+  if (key == QLatin1String("iron")) {
+    return QStringLiteral("iron");
+  }
+  return key.toString();
 }
 
 auto mission_terrain_to_ambience_biome(const QString& terrain_type) -> QString {
@@ -541,6 +570,7 @@ GameEngine::GameEngine(QObject* parent)
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
   m_boundary_fog = std::move(rendering.boundary_fog);
+  m_ambient_fog = std::move(rendering.ambient_fog);
   m_rain = std::move(rendering.rain);
 
   RendererBootstrap::initialize_world_systems(*m_world);
@@ -863,6 +893,7 @@ void GameEngine::cleanup_opengl_resources() {
   m_scatter.reset();
   m_fog.reset();
   m_boundary_fog.reset();
+  m_ambient_fog.reset();
   m_rain.reset();
   m_rain_manager.reset();
 
@@ -2106,6 +2137,7 @@ auto GameEngine::scene_context() const -> AppSceneContext {
                          .scatter = m_scatter.get(),
                          .fog = m_fog.get(),
                          .boundary_fog = m_boundary_fog.get(),
+                         .ambient_fog = m_ambient_fog.get(),
                          .rain = m_rain.get(),
                          .minimap_manager = m_minimap_manager.get(),
                          .visibility_coordinator = m_visibility_coordinator.get(),
@@ -2219,7 +2251,15 @@ void GameEngine::update_commander_control_mode(float dt) {
     auto* cmd = cmd_ent->get_component<Engine::Core::CommanderComponent>();
     if (cmd != nullptr && cmd->just_struck_enemy) {
       cmd->just_struck_enemy = false;
-      m_rpg_hit_stop_timer = 0.10F;
+      // Scale hit-stop based on combo step / power strikes
+      float hit_stop_duration = 0.10F;
+      if (cmd->last_strike_combo_step >= 3) {
+        hit_stop_duration = 0.18F; // Finisher gets massive hit-stop
+      } else if (cmd->power_strike_active) {
+        hit_stop_duration = 0.14F; // Heavy attack gets strong hit-stop
+      }
+      m_rpg_hit_stop_timer = hit_stop_duration;
+      m_rpg_hit_stop_total = hit_stop_duration;
     }
   }
 
@@ -2237,7 +2277,12 @@ auto GameEngine::apply_runtime_time_effects(float dt) -> float {
     if (m_rpg_hit_stop_timer < 0.0F) {
       m_rpg_hit_stop_timer = 0.0F;
     } else {
-      dt *= 0.10F;
+      // Near-freeze for the first half, then ease out
+      const float progress =
+          1.0F - std::clamp(m_rpg_hit_stop_timer / m_rpg_hit_stop_total, 0.0F, 1.0F);
+      const float time_scale =
+          progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
+      dt *= time_scale;
     }
   }
   return dt;
@@ -3137,10 +3182,82 @@ auto GameEngine::get_construction_info(const QString& item_type) const -> QVaria
                               : QVariantMap();
 }
 
+auto GameEngine::get_selected_marketplace_state() const -> QVariantMap {
+  return m_production_manager ? m_production_manager->get_selected_marketplace_state(
+                                    m_runtime.local_owner_id)
+                              : QVariantMap();
+}
+
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
   return m_production_manager
              ? m_production_manager->get_selected_builder_production_state()
              : QVariantMap();
+}
+
+bool GameEngine::marketplace_buy_resource(const QString& resource_key) {
+  ensure_initialized();
+
+  QVariantMap const market_state = get_selected_marketplace_state();
+  if (!market_state.value("has_marketplace").toBool()) {
+    set_error(QStringLiteral("Select your marketplace to trade."));
+    return false;
+  }
+
+  auto const resource_type = marketplace_trade_resource_from_key(resource_key);
+  if (!resource_type.has_value()) {
+    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    return false;
+  }
+
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+  if (!marketplace.can_buy(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Not enough gold to buy %1.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  if (!marketplace.buy_resource(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Cannot buy %1 right now.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  clear_error();
+  sync_selected_player_state();
+  return true;
+}
+
+bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
+  ensure_initialized();
+
+  QVariantMap const market_state = get_selected_marketplace_state();
+  if (!market_state.value("has_marketplace").toBool()) {
+    set_error(QStringLiteral("Select your marketplace to trade."));
+    return false;
+  }
+
+  auto const resource_type = marketplace_trade_resource_from_key(resource_key);
+  if (!resource_type.has_value()) {
+    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    return false;
+  }
+
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+  if (!marketplace.can_sell(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Not enough %1 to sell.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  if (!marketplace.sell_resource(m_runtime.local_owner_id, *resource_type)) {
+    set_error(QStringLiteral("Cannot sell %1 right now.")
+                  .arg(marketplace_trade_resource_label(resource_key)));
+    return false;
+  }
+
+  clear_error();
+  sync_selected_player_state();
+  return true;
 }
 
 auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
@@ -3175,6 +3292,11 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["perfect_guard_active"] = false;
   result["guard_break_remaining"] = 0.0;
   result["guard_broken"] = false;
+  result["guard_active"] = false;
+  result["combat_phase"] = 0;
+  result["attack_direction"] = 0;
+  result["is_attacking"] = false;
+  result["dodge_active"] = false;
   result["finisher_ready"] = false;
   result["camera_mode"] = QStringLiteral("Chase");
   result["shield_bash_cooldown"] = 3.0;
@@ -3309,12 +3431,29 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
     result["perfect_guard_active"] = guard->perfect_guard_remaining > 0.0F;
     result["guard_break_remaining"] = static_cast<double>(guard->guard_break_remaining);
     result["guard_broken"] = guard->guard_break_remaining > 0.0F;
+    result["guard_active"] = guard->active;
   }
+
+  // Combat state info
+  if (auto* combat_state =
+          commander_entity != nullptr
+              ? commander_entity->get_component<Engine::Core::CombatStateComponent>()
+              : nullptr) {
+    result["combat_phase"] = static_cast<int>(combat_state->animation_state);
+    result["attack_direction"] = static_cast<int>(combat_state->attack_direction);
+    result["is_attacking"] =
+        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle;
+  }
+
+  // Dodge active
+  result["dodge_active"] = m_commander_control.is_dodge_rolling();
 
   result["locked_target_name"] = QString();
   result["locked_target_hp"] = 0;
   result["locked_target_max_hp"] = 0;
   result["locked_target_hp_ratio"] = 0.0;
+  result["locked_target_staggered"] = false;
+  result["locked_target_guard_broken"] = false;
 
   Engine::Core::EntityID locked_id = m_commander_control.locked_target_id();
   if (auto* rpg_targets =
@@ -3346,6 +3485,15 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
           result["locked_target_hp_ratio"] =
               lmax > 0 ? static_cast<double>(lhp) / static_cast<double>(lmax) : 0.0;
         }
+        // Target combat state
+        auto* locked_stagger =
+            locked_ent->get_component<Engine::Core::StaggerComponent>();
+        result["locked_target_staggered"] =
+            locked_stagger != nullptr && locked_stagger->remaining > 0.0F;
+        auto* locked_guard =
+            locked_ent->get_component<Engine::Core::CommanderGuardComponent>();
+        result["locked_target_guard_broken"] =
+            locked_guard != nullptr && locked_guard->guard_break_remaining > 0.0F;
       }
     }
   }
@@ -4398,6 +4546,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
   Game::Systems::PlayerResourceRegistry::instance().clear();
+  Game::Systems::MarketplaceSystem::instance().clear();
   sync_selected_player_state();
   stop_mission_ambience();
   AudioSystem::get_instance().stop_music();

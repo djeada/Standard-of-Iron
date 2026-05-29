@@ -30,9 +30,9 @@ namespace {
 constexpr auto k_cut_tree_product_type = "cut_tree";
 constexpr auto k_collect_stone_product_type = "collect_stone";
 constexpr auto k_collect_iron_ore_product_type = "collect_iron_ore";
-constexpr int k_cut_tree_wood_reward = 25;
-constexpr int k_collect_stone_reward = 25;
-constexpr int k_collect_iron_ore_reward = 25;
+constexpr int k_cut_tree_wood_reward = 40;
+constexpr int k_collect_stone_reward = 35;
+constexpr int k_collect_iron_ore_reward = 30;
 
 void apply_production_profile(Engine::Core::ProductionComponent* prod,
                               Game::Systems::NationID nation_id,
@@ -536,6 +536,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               sp.spawn_type = Game::Units::SpawnType::WallSegment;
             } else if (builder_prod->product_type == "home") {
               sp.spawn_type = Game::Units::SpawnType::Home;
+            } else if (builder_prod->product_type == "marketplace") {
+              sp.spawn_type = Game::Units::SpawnType::Marketplace;
             } else {
               builder_prod->in_progress = false;
               builder_prod->time_remaining = 0.0F;

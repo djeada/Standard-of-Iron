@@ -32,7 +32,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
 
   const auto& passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 23U);
+  ASSERT_EQ(passes.size(), 24U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -77,6 +77,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(passes[20], &rain);
   EXPECT_EQ(passes[21], &fog);
   EXPECT_EQ(passes[22], &boundary_fog);
+  EXPECT_EQ(passes[23], nullptr);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {

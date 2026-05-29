@@ -608,7 +608,7 @@ Item {
     Item {
         id: commanderReticle
 
-        visible: typeof game !== 'undefined' && game.control_mode === "commander" && !game_view.is_rally_placement()
+        visible: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode !== "rpg" && !game_view.is_rally_placement()
         width: 22
         height: 22
         anchors.centerIn: parent

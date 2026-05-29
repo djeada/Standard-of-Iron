@@ -13,7 +13,6 @@
 
 #include "../../entity/registry.h"
 #include "../../entity/renderer_constants.h"
-#include "../../geom/math_utils.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
@@ -28,6 +27,7 @@
 #include "../oriented_archetype_utils.h"
 #include "../primitive_archetype_utils.h"
 #include "arrow_archetype_utils.h"
+#include "math/math_utils.h"
 
 namespace Render::GL {
 

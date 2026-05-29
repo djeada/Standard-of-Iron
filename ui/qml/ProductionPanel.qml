@@ -16,6 +16,16 @@ Rectangle {
     signal builder_construction(string item_type)
 
     readonly property var recruit_unit_cards: ["archer", "swordsman", "spearman", "horse_swordsman", "horse_archer", "horse_spearman", "healer", "builder", "elephant"]
+    readonly property var marketplace_trade_specs: [{
+            "key": "wood",
+            "label": qsTr("Wood")
+        }, {
+            "key": "stone",
+            "label": qsTr("Stone")
+        }, {
+            "key": "iron",
+            "label": qsTr("Iron")
+        }]
     readonly property var builder_card_specs: [{
             "item_type": "catapult",
             "label": qsTr("Catapult"),
@@ -36,6 +46,11 @@ Rectangle {
             "label": qsTr("Home"),
             "description": qsTr("Residential building\nAdds +50 population to nearest barracks"),
             "fallback_emoji": "🏠"
+        }, {
+            "item_type": "marketplace",
+            "label": qsTr("Marketplace"),
+            "description": qsTr("Trade building\nBuy or sell resources for gold"),
+            "fallback_emoji": "🏪"
         }, {
             "item_type": "wall_segment",
             "label": qsTr("Wall Segment"),
@@ -58,6 +73,16 @@ Rectangle {
             "time_remaining": 0,
             "nation_id": "",
             "has_home": false
+        };
+    }
+
+    function default_marketplace_state() {
+        return {
+            "has_marketplace": false,
+            "nation_id": "",
+            "trade_quantity": 0,
+            "buy_prices": {},
+            "sell_prices": {}
         };
     }
 
@@ -141,6 +166,9 @@ Rectangle {
             }, {
                 "key": "iron",
                 "label": qsTr("iron")
+            }, {
+                "key": "gold",
+                "label": qsTr("gold")
             }];
         for (var i = 0; i < ordered.length; ++i) {
             var entry = ordered[i];
@@ -161,7 +189,7 @@ Rectangle {
                     "key": "population",
                     "amount": popCost
                 });
-        var ordered = ["wood", "stone", "iron"];
+        var ordered = ["wood", "stone", "iron", "gold"];
         for (var i = 0; i < ordered.length; ++i) {
             var key = ordered[i];
             var amount = resource_amount(resourceCosts, key);
@@ -187,13 +215,34 @@ Rectangle {
         var woodCost = resource_amount(resourceCosts, "wood");
         var stoneCost = resource_amount(resourceCosts, "stone");
         var ironCost = resource_amount(resourceCosts, "iron");
+        var goldCost = resource_amount(resourceCosts, "gold");
         if (woodCost > 0)
             parts.push(qsTr("%1 wood").arg(woodCost));
         if (stoneCost > 0)
             parts.push(qsTr("%1 stone").arg(stoneCost));
         if (ironCost > 0)
             parts.push(qsTr("%1 iron").arg(ironCost));
+        if (goldCost > 0)
+            parts.push(qsTr("%1 gold").arg(goldCost));
         return parts.join(", ");
+    }
+
+    function trade_price(priceMap, key) {
+        if (!priceMap || priceMap[key] === undefined)
+            return 0;
+        return Math.max(0, priceMap[key] || 0);
+    }
+
+    function can_buy_trade_resource(marketState, key) {
+        if (!marketState || !marketState.has_marketplace)
+            return false;
+        return resource_amount(current_resources(), "gold") >= trade_price(marketState.buy_prices, key);
+    }
+
+    function can_sell_trade_resource(marketState, key) {
+        if (!marketState || !marketState.has_marketplace)
+            return false;
+        return resource_amount(current_resources(), key) >= Math.max(0, marketState.trade_quantity || 0);
     }
 
     function recruit_card_state(prod, unitInfo, queueTotal) {
@@ -2624,6 +2673,287 @@ Rectangle {
                                 }
                             }
                         }
+
+                        Rectangle {
+                            id: builderMarketplaceCard
+
+                            property var construction_info: productionPanel.get_construction_info("marketplace")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderMarketplaceMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderMarketplaceIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                source: productionPanel.unit_icon_source("marketplace")
+                                visible: status === Image.Ready
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: builderMarketplaceIcon.status !== Image.Ready
+                                text: "🏪"
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pointSize: 34
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 24
+                                text: qsTr("Marketplace")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderMarketplaceCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderMarketplaceCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderMarketplaceCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderMarketplaceCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderMarketplaceMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled)
+                                        productionPanel.builder_construction("marketplace");
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Marketplace\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Trade building\nBuy or sell resources for gold")).arg(productionPanel.format_cost_summary(0, builderMarketplaceCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderMarketplaceCard.construction_info.build_time || 10).toFixed(0)) : builderMarketplaceCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderMarketplaceMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                property bool has_marketplace_selected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("marketplace")))
+
+                width: parent.width
+                height: marketplaceContent.height + 16
+                color: "#120D09"
+                radius: 6
+                border.color: hs.bronzeDeep
+                border.width: 1
+                visible: has_marketplace_selected
+
+                Column {
+                    id: marketplaceContent
+
+                    property var market_state: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_marketplace_state) ? productionPanel.game_instance.get_selected_marketplace_state() : productionPanel.default_marketplace_state())
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.margins: 8
+                    spacing: 8
+                    width: parent.width - 16
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 6
+
+                        Image {
+                            id: marketplaceHeaderIcon
+
+                            width: 18
+                            height: 18
+                            source: productionPanel.unit_icon_source("marketplace", marketplaceContent.market_state.nation_id)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            visible: status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: marketplaceHeaderIcon.visible ? qsTr("MARKETPLACE") : qsTr("🏪 MARKETPLACE")
+                            color: hs.bronze
+                            font.pointSize: 9
+                            font.bold: true
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: marketplaceContent.market_state.has_marketplace ? qsTr("Trade resources for gold at fixed exchange rates") : qsTr("Select your marketplace to trade")
+                        color: "#8D7146"
+                        font.pointSize: 7
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: marketplaceContent.market_state.has_marketplace
+                        text: qsTr("Gold: %1    Trade size: %2").arg(productionPanel.resource_amount(productionPanel.current_resources(), "gold")).arg(Math.max(0, marketplaceContent.market_state.trade_quantity || 0))
+                        color: "#F4E7C8"
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: !marketplaceContent.market_state.has_marketplace
+                        text: qsTr("Trading is available only for your own marketplace.")
+                        color: "#8D7146"
+                        font.pointSize: 8
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        width: parent.width - 24
+                    }
+
+                    Column {
+                        width: parent.width
+                        spacing: 6
+                        visible: marketplaceContent.market_state.has_marketplace
+
+                        Repeater {
+                            model: productionPanel.marketplace_trade_specs
+
+                            delegate: Rectangle {
+                                property string resource_key: modelData.key
+                                property int trade_quantity: Math.max(0, marketplaceContent.market_state.trade_quantity || 0)
+                                property int buy_price: productionPanel.trade_price(marketplaceContent.market_state.buy_prices, resource_key)
+                                property int sell_price: productionPanel.trade_price(marketplaceContent.market_state.sell_prices, resource_key)
+
+                                width: marketplaceContent.width
+                                height: 54
+                                radius: 6
+                                color: "#1A120C"
+                                border.color: hs.bronzeDeep
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 8
+
+                                    Image {
+                                        Layout.preferredWidth: 18
+                                        Layout.preferredHeight: 18
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.cost_icon_source(resource_key)
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 1
+
+                                        Text {
+                                            text: modelData.label
+                                            color: "#F4E7C8"
+                                            font.pointSize: 8
+                                            font.bold: true
+                                        }
+
+                                        Text {
+                                            text: qsTr("You have %1").arg(productionPanel.resource_amount(productionPanel.current_resources(), resource_key))
+                                            color: "#8D7146"
+                                            font.pointSize: 7
+                                        }
+                                    }
+
+                                    Button {
+                                        Layout.preferredWidth: 110
+                                        text: qsTr("Buy %1 (%2g)").arg(trade_quantity).arg(buy_price)
+                                        enabled: productionPanel.can_buy_trade_resource(marketplaceContent.market_state, resource_key)
+                                        onClicked: productionPanel.game_instance.marketplace_buy_resource(resource_key)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: qsTr("Spend %1 gold to buy %2 %3").arg(buy_price).arg(trade_quantity).arg(modelData.label.toLowerCase())
+                                    }
+
+                                    Button {
+                                        Layout.preferredWidth: 110
+                                        text: qsTr("Sell %1 (+%2g)").arg(trade_quantity).arg(sell_price)
+                                        enabled: productionPanel.can_sell_trade_resource(marketplaceContent.market_state, resource_key)
+                                        onClicked: productionPanel.game_instance.marketplace_sell_resource(resource_key)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: qsTr("Sell %1 %2 for %3 gold").arg(trade_quantity).arg(modelData.label.toLowerCase()).arg(sell_price)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2632,8 +2962,9 @@ Rectangle {
                 property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
                 property bool has_builder: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("builder")))
                 property bool has_home: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
+                property bool has_marketplace: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("marketplace")))
 
-                visible: !has_barracks && !has_builder && !has_home
+                visible: !has_barracks && !has_builder && !has_home && !has_marketplace
                 width: parent.width
                 height: 200
 

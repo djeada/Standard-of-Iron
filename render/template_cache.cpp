@@ -114,8 +114,10 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
     anim.movement_state = Render::Creature::MovementAnimationState::Run;
     break;
   case Render::Creature::PoseIntent::Hold:
-    anim.is_in_hold_mode = true;
-    anim.hold_entry_progress = phase;
+    if (key.shield_formation_pose == ShieldFormationPose::None) {
+      anim.is_in_hold_mode = true;
+      anim.hold_entry_progress = phase;
+    }
     break;
   case Render::Creature::PoseIntent::AttackMelee:
     anim.is_attacking = true;
@@ -183,6 +185,12 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
   default:
     anim.movement_state = Render::Creature::MovementAnimationState::Idle;
     break;
+  }
+
+  if (key.shield_formation_pose != ShieldFormationPose::None) {
+    anim.is_guarding = true;
+    anim.guard_pose_progress = phase;
+    anim.shield_formation_pose = key.shield_formation_pose;
   }
 
   if (anim.is_attacking && anim.combat_phase == CombatAnimPhase::Idle) {

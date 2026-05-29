@@ -180,7 +180,29 @@ void tick_rpg_combat(Engine::Core::World* world,
       if (fb != nullptr) {
         fb->is_reacting = true;
         fb->reaction_time = 0.0F;
-        fb->reaction_intensity = 1.0F;
+        fb->stagger_tier = stagger->tier;
+        // Scale intensity and knockback based on stagger tier
+        switch (stagger->tier) {
+        case Engine::Core::StaggerTier::LightFlinch:
+          fb->reaction_intensity = 0.4F;
+          break;
+        case Engine::Core::StaggerTier::HeavyStagger:
+          fb->reaction_intensity = 0.75F;
+          break;
+        case Engine::Core::StaggerTier::Knockback:
+          fb->reaction_intensity = 1.0F;
+          fb->knockback_x = fb->hit_direction_x * 0.12F;
+          fb->knockback_z = fb->hit_direction_z * 0.12F;
+          break;
+        case Engine::Core::StaggerTier::Knockdown:
+          fb->reaction_intensity = 1.0F;
+          fb->knockback_x = fb->hit_direction_x * 0.08F;
+          fb->knockback_z = fb->hit_direction_z * 0.08F;
+          break;
+        case Engine::Core::StaggerTier::GuardBreak:
+          fb->reaction_intensity = 0.85F;
+          break;
+        }
       }
     }
   }
@@ -195,6 +217,123 @@ void tick_rpg_combat(Engine::Core::World* world,
   if (rpg != nullptr && rpg->active && rpg->rpg_hp > 0 && unit != nullptr &&
       unit->health <= 0) {
     unit->health = 1;
+  }
+
+  // Tick enemy telegraph phases
+  for (auto* telegraphed :
+       world->get_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
+    auto* telegraph =
+        telegraphed->get_component<Engine::Core::EnemyTelegraphComponent>();
+    if (telegraph == nullptr ||
+        telegraph->phase == Engine::Core::EnemyTelegraphPhase::None) {
+      continue;
+    }
+    telegraph->phase_time += dt;
+    switch (telegraph->phase) {
+    case Engine::Core::EnemyTelegraphPhase::WindUp:
+      telegraph->visual_tell_active = true;
+      if (telegraph->phase_time >= telegraph->wind_up_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Active;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::Active:
+      telegraph->visual_tell_active = false;
+      if (telegraph->phase_time >= telegraph->active_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Recovery;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::Recovery:
+      if (telegraph->phase_time >= telegraph->recovery_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::None;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::None:
+      break;
+    }
+  }
+
+  // ─── Enemy RPG combat AI: circling, spacing, turn-based engagement ───
+  auto* engagement = entity->get_component<Engine::Core::RpgEngagementComponent>();
+  auto* cmd_transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (engagement == nullptr || cmd_transform == nullptr) {
+    return;
+  }
+
+  const float cmd_x = cmd_transform->position.x;
+  const float cmd_z = cmd_transform->position.z;
+
+  // Enemies circle the player and maintain spacing
+  constexpr float k_ideal_engage_distance = 2.8F;
+  constexpr float k_circle_speed = 1.4F;
+  constexpr float k_approach_speed = 2.2F;
+  constexpr float k_back_off_speed = 1.8F;
+
+  for (auto& slot : engagement->engagement_slots) {
+    auto* enemy = world->get_entity(slot.entity_id);
+    if (enemy == nullptr) {
+      continue;
+    }
+    auto* enemy_tf = enemy->get_component<Engine::Core::TransformComponent>();
+    auto* enemy_unit = enemy->get_component<Engine::Core::UnitComponent>();
+    auto* enemy_stagger = enemy->get_component<Engine::Core::StaggerComponent>();
+    if (enemy_tf == nullptr || enemy_unit == nullptr || enemy_unit->health <= 0) {
+      continue;
+    }
+    // Don't move if staggered
+    if (enemy_stagger != nullptr && enemy_stagger->remaining > 0.0F) {
+      continue;
+    }
+
+    float dx = enemy_tf->position.x - cmd_x;
+    float dz = enemy_tf->position.z - cmd_z;
+    float dist = std::sqrt(dx * dx + dz * dz);
+    if (dist < 0.001F) {
+      dist = 0.001F;
+      dx = 0.001F;
+    }
+
+    float const nx = dx / dist;
+    float const nz = dz / dist;
+    // Perpendicular (tangent for circling)
+    float const tx = -nz;
+    float const tz = nx;
+
+    bool const is_active_attacker = slot_is_active(slot);
+
+    if (is_active_attacker) {
+      // Active attackers approach to ideal distance
+      if (dist > k_ideal_engage_distance + 0.5F) {
+        enemy_tf->position.x -= nx * k_approach_speed * dt;
+        enemy_tf->position.z -= nz * k_approach_speed * dt;
+      } else if (dist < k_ideal_engage_distance - 0.3F) {
+        // Too close - back off slightly
+        enemy_tf->position.x += nx * k_back_off_speed * dt;
+        enemy_tf->position.z += nz * k_back_off_speed * dt;
+      }
+      // Face the player
+      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
+      enemy_tf->rotation.y = face_angle;
+    } else {
+      // Support enemies circle and maintain outer ring distance
+      constexpr float k_support_ring = 4.5F;
+      if (dist < k_support_ring - 0.5F) {
+        enemy_tf->position.x += nx * k_back_off_speed * 0.6F * dt;
+        enemy_tf->position.z += nz * k_back_off_speed * 0.6F * dt;
+      } else if (dist > k_support_ring + 1.0F) {
+        enemy_tf->position.x -= nx * k_approach_speed * 0.5F * dt;
+        enemy_tf->position.z -= nz * k_approach_speed * 0.5F * dt;
+      }
+      // Circle around player
+      float const circle_dir = (slot.signed_angle_degrees >= 0.0F) ? 1.0F : -1.0F;
+      enemy_tf->position.x += tx * k_circle_speed * circle_dir * dt;
+      enemy_tf->position.z += tz * k_circle_speed * circle_dir * dt;
+      // Face the player
+      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
+      enemy_tf->rotation.y = face_angle;
+    }
   }
 }
 

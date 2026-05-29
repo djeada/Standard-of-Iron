@@ -548,6 +548,7 @@ TEST_F(AISystemTest, BuilderBehaviorUsesStrategyDrivenBarracksTargets) {
   context.home_count = 3;
   context.defense_tower_count = 1;
   context.barracks_count = 1;
+  context.marketplace_count = 1;
   context.base_pos_x = 40.0F;
   context.base_pos_z = 55.0F;
   context.macro_targets.home_count = 3;

@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "app/core/user_settings.h"
 #include "miniaudio_backend.h"
 #include "music_player.h"
 #include "sound.h"
@@ -40,6 +41,7 @@ AudioSystem::AudioSystem()
     , music_volume(AudioConstants::DEFAULT_VOLUME)
     , voice_volume(AudioConstants::DEFAULT_VOLUME)
     , ambience_volume(AudioConstants::DEFAULT_VOLUME) {
+  load_persisted_volumes();
 }
 
 AudioSystem::~AudioSystem() {
@@ -61,6 +63,8 @@ auto AudioSystem::initialize() -> bool {
     qWarning() << "Failed to initialize MusicPlayer";
     return false;
   }
+
+  m_music_player->set_volume(master_volume.load() * music_volume.load());
 
   is_running = true;
   audio_thread = std::thread(&AudioSystem::audio_thread_func, this);
@@ -139,6 +143,7 @@ void AudioSystem::stop_music() {
 
 void AudioSystem::set_master_volume(float volume) {
   master_volume = sanitize_volume(volume);
+  App::Core::UserSettings::save_master_volume(master_volume.load());
 
   if (m_music_player != nullptr) {
     m_music_player->set_volume(master_volume.load() * music_volume.load());
@@ -147,10 +152,12 @@ void AudioSystem::set_master_volume(float volume) {
 
 void AudioSystem::set_sound_volume(float volume) {
   sound_volume = sanitize_volume(volume);
+  App::Core::UserSettings::save_sound_volume(sound_volume.load());
 }
 
 void AudioSystem::set_music_volume(float volume) {
   music_volume = sanitize_volume(volume);
+  App::Core::UserSettings::save_music_volume(music_volume.load());
   if (m_music_player != nullptr) {
     m_music_player->set_volume(master_volume.load() * music_volume.load());
   }
@@ -158,10 +165,21 @@ void AudioSystem::set_music_volume(float volume) {
 
 void AudioSystem::set_voice_volume(float volume) {
   voice_volume = sanitize_volume(volume);
+  App::Core::UserSettings::save_voice_volume(voice_volume.load());
 }
 
 void AudioSystem::set_ambience_volume(float volume) {
   ambience_volume = sanitize_volume(volume);
+  App::Core::UserSettings::save_ambience_volume(ambience_volume.load());
+}
+
+void AudioSystem::load_persisted_volumes() {
+  const auto volumes = App::Core::UserSettings::load_audio_volumes();
+  master_volume = volumes.master;
+  sound_volume = volumes.sound;
+  music_volume = volumes.music;
+  voice_volume = volumes.voice;
+  ambience_volume = volumes.ambience;
 }
 
 void AudioSystem::pause_all() {
@@ -361,19 +379,26 @@ void AudioSystem::process_event(const AudioEvent& event) {
     break;
   }
   case AudioEventType::PLAY_MUSIC: {
-    std::lock_guard<std::mutex> const lock(resource_mutex);
-    if (m_music_player != nullptr) {
-      const std::string resource_id = resolve_resource_id_locked(event.resource_id);
-      AudioResourceConfig const config = get_resource_config_locked(resource_id);
-      float const effective_volume =
-          get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
-      (void)m_music_player->play(resource_id,
-                                 effective_volume,
-                                 true,
-                                 event.crossfade
-                                     ? Game::Audio::MusicTransition::Crossfade
-                                     : Game::Audio::MusicTransition::Immediate);
+    if (m_music_player == nullptr) {
+      break;
     }
+
+    std::string resource_id;
+    float effective_volume = AudioConstants::MIN_VOLUME;
+    {
+      std::lock_guard<std::mutex> const lock(resource_mutex);
+      resource_id = resolve_resource_id_locked(event.resource_id);
+      AudioResourceConfig const config = get_resource_config_locked(resource_id);
+      effective_volume =
+          get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
+    }
+
+    (void)m_music_player->play(resource_id,
+                               effective_volume,
+                               true,
+                               event.crossfade
+                                   ? Game::Audio::MusicTransition::Crossfade
+                                   : Game::Audio::MusicTransition::Immediate);
     break;
   }
   case AudioEventType::STOP_SOUND: {

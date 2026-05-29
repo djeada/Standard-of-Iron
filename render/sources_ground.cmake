@@ -1,0 +1,41 @@
+# Ground/terrain renderer sources.
+set(RENDER_GROUND_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_anchor_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_camp_layout.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_composition_context.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_composition_types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_renderer_base.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_rules.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/spawn_validator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/linear_feature_geometry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_surface_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/ground_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/fog_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/map_boundary_fog_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/ambient_fog_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_submission.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/river_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/olive_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_asset_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/bridge_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_feature_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/biome_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/stone_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/plant_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/pine_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/firecamp_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_scatter_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/tent_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/supply_cart_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/weapon_rack_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/ruins_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/dead_tree_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/boulder_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/iron_ore_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/magic_shrine_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/rain_renderer.cpp
+)

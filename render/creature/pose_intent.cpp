@@ -1,7 +1,5 @@
 #include "pose_intent.h"
 
-#include "../humanoid/humanoid_state_machine.h"
-
 namespace Render::Creature {
 
 namespace {

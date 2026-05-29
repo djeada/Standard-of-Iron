@@ -12,6 +12,7 @@
 #include "../../humanoid/facial_hair_catalog.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
+#include "creature_asset.h"
 #include "preparation_common.h"
 
 namespace Render::Creature::Pipeline {
@@ -41,18 +42,22 @@ auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
   guard_turn.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
   switch (pose) {
   case Render::GL::ShieldFormationPose::RomanFront:
+    // Shield faces forward with slight upward tilt for overlap
     guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.05F, 0.08F);
+    guard_turn.rotate(-8.0F, 1.0F, 0.0F, 0.0F);
+    guard_turn.translate(0.0F, 0.06F, 0.06F);
     break;
   case Render::GL::ShieldFormationPose::RomanTop:
+    // Shield flat overhead covering from above
     guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(-72.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.18F, -0.02F);
+    guard_turn.rotate(-78.0F, 1.0F, 0.0F, 0.0F);
+    guard_turn.translate(0.0F, 0.20F, -0.03F);
     break;
   case Render::GL::ShieldFormationPose::CarthageFront:
+    // Round shield angled outward and tilted toward sky
     guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(12.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.01F, 0.10F);
+    guard_turn.rotate(-40.0F, 1.0F, 0.0F, 0.0F);
+    guard_turn.translate(0.0F, 0.14F, 0.03F);
     break;
   case Render::GL::ShieldFormationPose::GuardDefault:
   case Render::GL::ShieldFormationPose::None:

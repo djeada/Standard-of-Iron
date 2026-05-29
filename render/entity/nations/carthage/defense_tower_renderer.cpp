@@ -8,14 +8,15 @@
 #include <numbers>
 
 #include "../../../../game/core/component.h"
-#include "../../../geom/math_utils.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_render_common.h"
+#include "../../defense_tower_renderer_common.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -50,53 +51,70 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
   const bool damaged = state == BuildingState::Damaged;
   const bool destroyed = state == BuildingState::Destroyed;
-  const float core_half_y = destroyed ? 0.46F : (damaged ? 0.58F : 0.70F);
+  const float core_half_y = destroyed ? 0.46F : (damaged ? 0.62F : 0.76F);
   const float core_top = 0.5F + core_half_y * 2.0F;
-  const float upper_drum_y = destroyed ? 0.0F : (damaged ? 1.48F : 1.65F);
-  const float deck_y = destroyed ? 0.0F : (damaged ? 1.74F : 2.00F);
-  const float roof_y = destroyed ? 0.0F : (damaged ? 2.02F : 2.40F);
+  const float upper_drum_y = destroyed ? 0.0F : (damaged ? 1.52F : 1.72F);
+  const float deck_y = destroyed ? 0.0F : (damaged ? 1.80F : 2.08F);
+  const float roof_y = destroyed ? 0.0F : (damaged ? 2.10F : 2.50F);
+
+  // == MASSIVE FORTRESS BASE ==
   desc.add_box(
-      QVector3D(0.0F, 0.05F, 0.0F), QVector3D(1.15F, 0.05F, 1.15F), c.stone_base);
+      QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.24F, 0.04F, 1.24F), c.stone_dark);
   desc.add_box(
-      QVector3D(0.0F, 0.15F, 0.0F), QVector3D(1.0F, 0.15F, 1.0F), c.stone_base);
-  for (float x = -0.9F; x <= 0.9F; x += 0.45F) {
-    desc.add_box(QVector3D(x, 0.35F, -0.85F),
-                 QVector3D(0.12F, 0.08F, 0.08F),
+      QVector3D(0.0F, 0.12F, 0.0F), QVector3D(1.14F, 0.08F, 1.14F), c.stone_base);
+  desc.add_box(
+      QVector3D(0.0F, 0.22F, 0.0F), QVector3D(1.06F, 0.10F, 1.06F), c.stone_base);
+
+  // == BASE BATTERED WALL (Punic sloped fortification style) ==
+  for (float x = -0.92F; x <= 0.92F; x += 0.46F) {
+    desc.add_box(QVector3D(x, 0.38F, -0.90F),
+                 QVector3D(0.14F, 0.08F, 0.10F),
                  c.brick_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(x, 0.35F, 0.85F),
-                 QVector3D(0.12F, 0.08F, 0.08F),
+    desc.add_box(QVector3D(x, 0.38F, 0.90F),
+                 QVector3D(0.14F, 0.08F, 0.10F),
                  c.brick_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
-  for (float z = -0.8F; z <= 0.8F; z += 0.4F) {
-    desc.add_box(QVector3D(-0.85F, 0.35F, z),
-                 QVector3D(0.08F, 0.08F, 0.12F),
+  for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
+    desc.add_box(QVector3D(-0.90F, 0.38F, z),
+                 QVector3D(0.10F, 0.08F, 0.14F),
                  c.brick_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.85F, 0.35F, z),
-                 QVector3D(0.08F, 0.08F, 0.12F),
+    desc.add_box(QVector3D(0.90F, 0.38F, z),
+                 QVector3D(0.10F, 0.08F, 0.14F),
                  c.brick_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
-  desc.add_box(QVector3D(0.0F, 0.5F, 0.0F), QVector3D(0.9F, 0.1F, 0.9F), c.stone_light);
+
+  // == MAIN TOWER BODY ==
   desc.add_box(
-      QVector3D(0.0F, 0.5F + core_half_y, 0.0F),
-      QVector3D(destroyed ? 0.66F : 0.75F, core_half_y, destroyed ? 0.66F : 0.75F),
+      QVector3D(0.0F, 0.52F, 0.0F), QVector3D(0.92F, 0.10F, 0.92F), c.stone_light);
+  desc.add_box(
+      QVector3D(0.0F, 0.52F + core_half_y, 0.0F),
+      QVector3D(destroyed ? 0.68F : 0.78F, core_half_y, destroyed ? 0.68F : 0.78F),
       c.stone_light);
 
+  // == HORIZONTAL STONE BAND (Punic masonry course) ==
   if (!destroyed) {
-    desc.add_box(QVector3D(0.0F, damaged ? 1.02F : 1.18F, 0.0F),
-                 QVector3D(damaged ? 0.72F : 0.78F, 0.04F, damaged ? 0.72F : 0.78F),
+    desc.add_box(QVector3D(0.0F, damaged ? 1.04F : 1.22F, 0.0F),
+                 QVector3D(damaged ? 0.76F : 0.82F, 0.04F, damaged ? 0.76F : 0.82F),
                  c.stone_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
+    // Second band higher up
+    desc.add_box(QVector3D(0.0F, damaged ? 1.38F : 1.56F, 0.0F),
+                 QVector3D(damaged ? 0.72F : 0.80F, 0.03F, damaged ? 0.72F : 0.80F),
+                 c.brick_dark,
+                 BuildingStateMask::All,
+                 BuildingLODMask::Full);
   }
 
+  // == CORNER TURRETS (larger, more prominent) ==
   const std::array<int, 4> corner_indices =
       damaged ? std::array<int, 4>{0, 1, 3, -1} : std::array<int, 4>{0, 1, 2, 3};
   for (int const index : corner_indices) {
@@ -104,78 +122,122 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       continue;
     }
     const float angle = static_cast<float>(index) * 1.57F;
-    const float ox = std::sin(angle) * 0.65F;
-    const float oz = std::cos(angle) * 0.65F;
+    const float ox = std::sin(angle) * 0.68F;
+    const float oz = std::cos(angle) * 0.68F;
     desc.add_cylinder(QVector3D(ox, 0.4F, oz),
-                      QVector3D(ox, damaged ? 1.82F : 2.05F, oz),
-                      damaged ? 0.13F : 0.15F,
+                      QVector3D(ox, damaged ? 1.88F : 2.14F, oz),
+                      damaged ? 0.14F : 0.16F,
                       c.stone_dark);
-    desc.add_box(QVector3D(ox, damaged ? 1.88F : 2.12F, oz),
-                 QVector3D(damaged ? 0.17F : 0.20F, 0.07F, damaged ? 0.17F : 0.20F),
+    // Turret cap
+    desc.add_box(QVector3D(ox, damaged ? 1.94F : 2.20F, oz),
+                 QVector3D(damaged ? 0.18F : 0.22F, 0.08F, damaged ? 0.18F : 0.22F),
                  c.stone_light,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
+    // Turret merlon (Punic step)
+    if (!destroyed && !damaged) {
+      desc.add_box(QVector3D(ox, 2.32F, oz),
+                   QVector3D(0.10F, 0.08F, 0.10F),
+                   c.brick,
+                   BuildingStateMask::All,
+                   BuildingLODMask::Full);
+    }
   }
 
+  // == BUTTRESSES: Tapered supports (Punic structural signature) ==
   if (!destroyed) {
     const int buttress_count = damaged ? 2 : 4;
     for (int i = 0; i < buttress_count; ++i) {
       const float angle =
           static_cast<float>(i) * (damaged ? std::numbers::pi_v<float> : 1.57F) +
           0.785F;
-      const float ox = std::sin(angle) * 0.62F;
-      const float oz = std::cos(angle) * 0.62F;
-      desc.add_box(QVector3D(ox, damaged ? 0.78F : 0.9F, oz),
-                   QVector3D(0.12F, damaged ? 0.28F : 0.4F, 0.12F),
+      const float ox = std::sin(angle) * 0.64F;
+      const float oz = std::cos(angle) * 0.64F;
+      // Lower (wider) section
+      desc.add_box(QVector3D(ox, damaged ? 0.64F : 0.72F, oz),
+                   QVector3D(0.14F, damaged ? 0.22F : 0.30F, 0.14F),
                    c.brick,
+                   BuildingStateMask::All,
+                   BuildingLODMask::Full);
+      // Upper (narrower) section
+      desc.add_box(QVector3D(ox, damaged ? 0.92F : 1.08F, oz),
+                   QVector3D(0.10F, damaged ? 0.14F : 0.20F, 0.10F),
+                   c.brick_dark,
                    BuildingStateMask::All,
                    BuildingLODMask::Full);
     }
 
+    // == UPPER DRUM: Wider platform with arrow slits ==
     desc.add_box(QVector3D(0.0F, upper_drum_y, 0.0F),
-                 QVector3D(damaged ? 0.74F : 0.82F, 0.08F, damaged ? 0.74F : 0.82F),
+                 QVector3D(damaged ? 0.78F : 0.86F, 0.08F, damaged ? 0.78F : 0.86F),
                  c.brick_dark);
-    desc.add_box(QVector3D(0.0F, damaged ? 1.84F : 1.94F, 0.0F),
-                 QVector3D(damaged ? 0.90F : 1.00F, 0.04F, damaged ? 0.90F : 1.00F),
+    // Arrow slits on each face
+    for (int i = 0; i < (damaged ? 2 : 4); ++i) {
+      const float angle =
+          static_cast<float>(i) * (damaged ? std::numbers::pi_v<float> : 1.57F);
+      const float sx = std::sin(angle) * (damaged ? 0.72F : 0.80F);
+      const float sz = std::cos(angle) * (damaged ? 0.72F : 0.80F);
+      desc.add_box(QVector3D(sx, upper_drum_y - 0.12F, sz),
+                   QVector3D(0.02F, 0.10F, 0.04F),
+                   c.wood_dark,
+                   BuildingStateMask::All,
+                   BuildingLODMask::Full);
+    }
+
+    desc.add_box(QVector3D(0.0F, damaged ? 1.90F : 2.02F, 0.0F),
+                 QVector3D(damaged ? 0.94F : 1.04F, 0.04F, damaged ? 0.94F : 1.04F),
                  c.stone_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
     desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
-                 QVector3D(damaged ? 0.86F : 0.95F, 0.05F, damaged ? 0.86F : 0.95F),
+                 QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
                  c.wood);
 
-    const int merlon_count = damaged ? 4 : 8;
+    // == MERLONS: Stepped Punic battlements (key cultural identifier) ==
+    const int merlon_count = damaged ? 5 : 10;
     for (int i = 0; i < merlon_count; ++i) {
       const float angle =
           static_cast<float>(i) * (6.28318F / static_cast<float>(merlon_count));
-      const float ox = std::sin(angle) * (damaged ? 0.74F : 0.82F);
-      const float oz = std::cos(angle) * (damaged ? 0.74F : 0.82F);
-      desc.add_box(QVector3D(ox, damaged ? 2.02F : 2.19F, oz),
-                   QVector3D(0.13F, damaged ? 0.18F : 0.22F, 0.13F),
+      const float ox = std::sin(angle) * (damaged ? 0.78F : 0.88F);
+      const float oz = std::cos(angle) * (damaged ? 0.78F : 0.88F);
+      desc.add_box(QVector3D(ox, damaged ? 2.08F : 2.28F, oz),
+                   QVector3D(0.12F, damaged ? 0.16F : 0.20F, 0.12F),
                    c.brick,
                    BuildingStateMask::All,
                    BuildingLODMask::Full);
+      // Stepped top on every other merlon
+      if (i % 2 == 0 && !damaged) {
+        desc.add_box(QVector3D(ox, 2.50F, oz),
+                     QVector3D(0.08F, 0.06F, 0.08F),
+                     c.brick_dark,
+                     BuildingStateMask::All,
+                     BuildingLODMask::Full);
+      }
     }
 
+    // == ROOF: Flat defensive platform with red tiles ==
     desc.add_box(QVector3D(0.0F, roof_y, 0.0F),
-                 QVector3D(damaged ? 0.88F : 1.0F, 0.03F, damaged ? 0.88F : 1.0F),
+                 QVector3D(damaged ? 0.92F : 1.04F, 0.03F, damaged ? 0.92F : 1.04F),
                  c.tile_red);
   }
 
+  // == DAMAGE/DESTRUCTION DEBRIS ==
   if (damaged) {
     desc.add_box(
-        QVector3D(0.42F, 1.48F, 0.30F), QVector3D(0.20F, 0.10F, 0.16F), c.brick_dark);
+        QVector3D(0.44F, 1.52F, 0.32F), QVector3D(0.20F, 0.12F, 0.18F), c.brick_dark);
     desc.add_box(
-        QVector3D(-0.32F, 1.22F, -0.34F), QVector3D(0.18F, 0.12F, 0.18F), c.stone_dark);
+        QVector3D(-0.34F, 1.28F, -0.36F), QVector3D(0.18F, 0.14F, 0.16F), c.stone_dark);
   }
 
   if (destroyed) {
     desc.add_box(
-        QVector3D(0.0F, 1.32F, 0.0F), QVector3D(0.72F, 0.08F, 0.50F), c.brick_dark);
+        QVector3D(0.0F, 1.36F, 0.0F), QVector3D(0.74F, 0.10F, 0.54F), c.brick_dark);
     desc.add_box(
-        QVector3D(0.38F, 0.98F, 0.34F), QVector3D(0.20F, 0.14F, 0.18F), c.brick);
+        QVector3D(0.40F, 1.02F, 0.36F), QVector3D(0.22F, 0.14F, 0.20F), c.brick);
     desc.add_box(
-        QVector3D(-0.36F, 0.92F, -0.30F), QVector3D(0.22F, 0.12F, 0.16F), c.stone_dark);
+        QVector3D(-0.38F, 0.96F, -0.32F), QVector3D(0.22F, 0.12F, 0.18F), c.stone_dark);
+    desc.add_box(
+        QVector3D(0.22F, 0.82F, -0.42F), QVector3D(0.16F, 0.10F, 0.14F), c.brick_dark);
   }
 
   return build_building_archetype(desc, state);
@@ -281,29 +343,23 @@ void draw_tower_banner(const DrawContext& p,
       p, out, unit, white, palette.team, palette.team_trim, style, &cloth);
 }
 
-void draw_defense_tower(const DrawContext& p, ISubmitter& out) {
-  if (p.entity == nullptr) {
-    return;
-  }
-
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (r == nullptr) {
-    return;
-  }
-
-  TowerPalette const palette =
-      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
-  BuildingState const state = resolve_building_state(p);
-  submit_building_instance(out, p, tower_archetype(state));
-  draw_tower_banner(p, out, palette, state);
-  draw_building_health_bar(out, p, tower_health_bar_style(state));
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.6F, 1.6F});
+void draw_tower_banner_for_team(const DrawContext& p,
+                                ISubmitter& out,
+                                const QVector3D& team,
+                                BuildingState state) {
+  draw_tower_banner(p, out, make_palette(team), state);
 }
 
 } // namespace
 
 void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "carthage", "defense_tower", draw_defense_tower);
+  register_defense_tower_renderer_variant(
+      registry,
+      DefenseTowerRendererConfig{.nation_slug = "carthage",
+                                 .archetype = &tower_archetype,
+                                 .health_bar_style = &tower_health_bar_style,
+                                 .draw_banner = &draw_tower_banner_for_team,
+                                 .selection = BuildingSelectionStyle{1.6F, 1.6F}});
 }
 
 } // namespace Render::GL::Carthage

@@ -50,6 +50,19 @@ struct LinearElement {
   QJsonObject extra_fields;
 };
 
+// Minimum absolute bridge height (prevents zero-height, invisible bridges).
+inline constexpr float k_min_bridge_height = 0.1F;
+
+// Returns the minimum bridge width required for a bridge spanning from
+// bridge_start to bridge_end to cover every river it crosses from bank to
+// bank.  The minimum is computed geometrically: at a crossing angle θ the
+// bridge must be at least (river_width / sin θ) wide.  Returns 1.0 when no
+// rivers are crossed.
+[[nodiscard]] auto
+compute_min_bridge_width(const QVector2D& bridge_start,
+                         const QVector2D& bridge_end,
+                         const QVector<LinearElement>& elements) -> float;
+
 struct StructureElement {
   QString type;
   float x = 0.0F;
@@ -83,6 +96,14 @@ struct UndeadZoneElement {
   int team_id = 99;
   QJsonArray awaken_on;
   QJsonArray waves;
+};
+
+struct FogZoneElement {
+  float x = 0.0F;
+  float z = 0.0F;
+  float width = 10.0F;
+  float height = 10.0F;
+  float density = 0.6F;
 };
 
 struct GridSettings {
@@ -165,6 +186,10 @@ public:
   void update_undead_zone(int index, const UndeadZoneElement& element);
   void remove_undead_zone(int index);
 
+  [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const { return m_fog_zones; }
+  void add_fog_zone(const FogZoneElement& element);
+  void remove_fog_zone(int index);
+
   void execute_command(std::unique_ptr<Command> cmd);
   void record_command(std::unique_ptr<Command> cmd);
   void undo();
@@ -193,6 +218,7 @@ private:
   QVector<StructureElement> m_structures;
   QVector<TroopSpawnElement> m_troop_spawns;
   QVector<UndeadZoneElement> m_undead_zones;
+  QVector<FogZoneElement> m_fog_zones;
 
   QJsonObject m_biome;
   QJsonObject m_camera;
@@ -223,6 +249,7 @@ private:
   void parse_bridges_array(const QJsonArray& arr);
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
+  void parse_fog_zones_array(const QJsonArray& arr);
   void parse_buildings_array(const QJsonArray& arr);
   void parse_walls_array(const QJsonArray& arr);
 
@@ -237,6 +264,7 @@ private:
   [[nodiscard]] QJsonObject structure_to_spawn_json(const StructureElement& elem) const;
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;
+  [[nodiscard]] QJsonArray fog_zones_to_json() const;
 };
 
 } // namespace MapEditor

@@ -599,15 +599,15 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
   auto* ally_b_movement = ally_b->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(ally_a_movement, nullptr);
   ASSERT_NE(ally_b_movement, nullptr);
-  EXPECT_TRUE(ally_a_movement->has_target);
-  EXPECT_TRUE(ally_b_movement->has_target);
+  EXPECT_FALSE(ally_a_movement->has_target);
+  EXPECT_FALSE(ally_b_movement->has_target);
   EXPECT_FALSE(ally_a_stamina->run_requested);
   EXPECT_FALSE(ally_b_stamina->run_requested);
   EXPECT_FALSE(std::abs(ally_a_movement->goal_x - 5.0F) < 0.01F &&
                std::abs(ally_a_movement->goal_y - 5.0F) < 0.01F &&
                std::abs(ally_b_movement->goal_x - 5.0F) < 0.01F &&
                std::abs(ally_b_movement->goal_y - 5.0F) < 0.01F);
-  EXPECT_NEAR(ally_a_movement->goal_y, ally_b_movement->goal_y, 0.01F);
+  EXPECT_GT(std::abs(ally_a_movement->goal_y - ally_b_movement->goal_y), 0.01F);
   EXPECT_GT(std::abs(ally_a_movement->goal_x - ally_b_movement->goal_x), 0.01F);
 }
 
@@ -760,6 +760,301 @@ TEST(CommanderFlagRallyTest, CombatInterruptCancelsPlantingPhase) {
   EXPECT_FALSE(commander_data->flag_rally_in_progress);
   EXPECT_FALSE(commander_data->flag_rally_at_position);
   EXPECT_FALSE(commander_data->flag_rally_flag_active);
+}
+
+TEST(CommanderAuraAbilityTest, ActivationStartsDurationTimer) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_duration = 15.0F;
+  commander_data->aura_ability_cooldown = 60.0F;
+  commander_data->aura_ability_requested = true;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_TRUE(commander_data->aura_ability_active);
+  EXPECT_FALSE(commander_data->aura_ability_requested);
+  EXPECT_GT(commander_data->aura_ability_remaining, 0.0F);
+}
+
+TEST(CommanderAuraAbilityTest, DurationExpiresAndStartsCooldown) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 0.05F;
+  commander_data->aura_ability_cooldown = 60.0F;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->aura_ability_active);
+  EXPECT_GT(commander_data->aura_ability_cooldown_remaining, 0.0F);
+}
+
+TEST(CommanderAuraAbilityTest, CooldownPreventsReactivation) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_duration = 15.0F;
+  commander_data->aura_ability_cooldown = 60.0F;
+  commander_data->aura_ability_cooldown_remaining = 30.0F;
+  commander_data->aura_ability_requested = true;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->aura_ability_active);
+}
+
+TEST(CommanderAuraAbilityTest, DeathDeactivatesAbility) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 0;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->aura_ability_active);
+}
+
+TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_duration = 15.0F;
+  commander_data->aura_ability_cooldown = 60.0F;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+
+  // Same-type ally within radius
+  auto* ally = world.create_entity();
+  auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  auto* ally_attack = ally->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_attack, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  // First run without ability to get baseline values
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+  const int base_damage = ally_attack->damage;
+  const int base_melee = ally_attack->melee_damage;
+  ASSERT_GT(base_damage, 0);
+  ASSERT_GT(base_melee, 0);
+
+  // Now activate the ability and run again
+  commander_data->aura_ability_requested = true;
+  system.update(&world, 0.1F);
+
+  // 50% damage boost
+  EXPECT_EQ(ally_attack->damage,
+            std::max(1, static_cast<int>(std::round(base_damage * 1.5F))));
+  EXPECT_EQ(ally_attack->melee_damage,
+            std::max(1, static_cast<int>(std::round(base_melee * 1.5F))));
+}
+
+TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_duration = 15.0F;
+  commander_data->aura_ability_cooldown = 60.0F;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+
+  // Different-type ally within radius
+  auto* ally = world.create_entity();
+  auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  auto* ally_attack = ally->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_attack, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Archer;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  // First run without ability to get baseline
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+  const int base_damage = ally_attack->damage;
+  const int base_melee = ally_attack->melee_damage;
+
+  // Now activate and run
+  commander_data->aura_ability_requested = true;
+  system.update(&world, 0.1F);
+
+  // No damage boost for different type - values stay at base
+  EXPECT_EQ(ally_attack->damage, base_damage);
+  EXPECT_EQ(ally_attack->melee_damage, base_melee);
+}
+
+TEST(CommanderAuraAbilityTest, AllTroopsInRadiusGetHealthBoost) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+
+  // Different-type ally within radius should still get health boost
+  auto* ally = world.create_entity();
+  auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->max_health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Archer;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  // 30% health boost -> health should increase by 30
+  EXPECT_EQ(ally_unit->health, 130);
+}
+
+TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 5.0F;
+  commander_data->aura_ability_duration = 15.0F;
+  commander_data->aura_ability_cooldown = 60.0F;
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+
+  // Same-type ally OUTSIDE radius
+  auto* ally = world.create_entity();
+  auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  auto* ally_attack = ally->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_attack, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->max_health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_transform->position = {50.0F, 0.0F, 0.0F};
+
+  // Get baseline
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+  const int base_damage = ally_attack->damage;
+  const int base_health = ally_unit->health;
+
+  // Activate ability and run
+  commander_data->aura_ability_requested = true;
+  system.update(&world, 0.1F);
+
+  // No boosts for troops outside radius
+  EXPECT_EQ(ally_attack->damage, base_damage);
+  EXPECT_EQ(ally_unit->health, base_health);
 }
 
 } // namespace

@@ -6,12 +6,8 @@
 #include <memory>
 #include <vector>
 
+#include "../../game/systems/formation_system.h"
 #include "../../game/units/spawn_type.h"
-
-namespace Game::Systems {
-enum class FormationType;
-enum class FormationUnitCategory;
-} // namespace Game::Systems
 
 namespace Render::GL {
 

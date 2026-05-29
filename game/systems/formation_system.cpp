@@ -238,9 +238,13 @@ auto cavalry_row_yaw(int row, int rows) -> float {
 
 auto roman_infantry_local_offset(int row, int col, int rows, int cols, float spacing)
     -> FormationOffset {
-  return {(col - (cols - 1) * 0.5F) * spacing * k_roman_infantry_lateral_spacing_scale,
-          (row - (rows - 1) * 0.5F) * spacing * k_roman_infantry_depth_spacing_scale,
-          0.0F};
+  float const lateral =
+      (col - (cols - 1) * 0.5F) * spacing * k_roman_infantry_lateral_spacing_scale;
+  float const depth =
+      (row - (rows - 1) * 0.5F) * spacing * k_roman_infantry_depth_spacing_scale;
+  // Stagger odd rows slightly for tighter interlocking coverage
+  float const stagger = (row % 2 == 1) ? spacing * 0.15F : 0.0F;
+  return {lateral + stagger, depth, 0.0F};
 }
 
 auto cavalry_local_offset(int row, int col, int rows, int cols, float spacing)

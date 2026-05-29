@@ -142,26 +142,16 @@ auto FormationCalculatorFactory::get_calculator(Nation nation, UnitCategory cate
   switch (nation) {
   case Nation::Roman:
   case Nation::Barbarian:
-    switch (category) {
-    case UnitCategory::Infantry:
-      return &s_roman_infantry;
-    case UnitCategory::Cavalry:
+    if (category == UnitCategory::Cavalry) {
       return &s_roman_cavalry;
-    case UnitCategory::BuilderConstruction:
-      return &s_builder_circle;
     }
-    break;
+    return &s_roman_infantry;
 
   case Nation::Carthage:
-    switch (category) {
-    case UnitCategory::Infantry:
-      return &s_carthage_infantry;
-    case UnitCategory::Cavalry:
+    if (category == UnitCategory::Cavalry) {
       return &s_carthage_cavalry;
-    case UnitCategory::BuilderConstruction:
-      return &s_builder_circle;
     }
-    break;
+    return &s_carthage_infantry;
   }
 
   return &s_roman_infantry;

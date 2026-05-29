@@ -1,15 +1,19 @@
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
+#include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_system.h"
+#include "game/units/factory.h"
 
 namespace {
 
@@ -17,13 +21,20 @@ class ProductionSystemTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     Game::Systems::CommandService::initialize(8, 8);
+
+    auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
+    Game::Units::register_built_in_units(*registry);
+    Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
   }
 
   void TearDown() override {
+    Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
   }
@@ -85,7 +96,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Wood),
-            25);
+            40);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -155,7 +166,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Stone),
-            25);
+            35);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -225,7 +236,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Iron),
-            25);
+            30);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -324,6 +335,64 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
            "collect_iron_ore",
            &Game::Systems::Pathfinding::is_iron_ore,
            "iron_ore");
+}
+
+TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
+  auto const build_world = Game::Systems::CommandService::grid_to_world({4, 4});
+
+  Engine::Core::World world;
+  auto* builder = world.create_entity();
+  ASSERT_NE(builder, nullptr);
+
+  auto* transform = builder->add_component<Engine::Core::TransformComponent>(
+      build_world.x(), 0.0F, build_world.z());
+  auto* movement = builder->add_component<Engine::Core::MovementComponent>();
+  auto* unit = builder->add_component<Engine::Core::UnitComponent>();
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(production, nullptr);
+
+  unit->owner_id = 1;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  production->in_progress = true;
+  production->time_remaining = 0.0F;
+  production->product_type = "marketplace";
+  production->has_construction_site = true;
+  production->construction_site_x = build_world.x();
+  production->construction_site_z = build_world.z();
+  production->construction_site_rotation_y = 15.0F;
+  production->at_construction_site = true;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  Engine::Core::Entity* marketplace = nullptr;
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == builder) {
+      continue;
+    }
+    auto* spawned_unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (spawned_unit != nullptr &&
+        spawned_unit->spawn_type == Game::Units::SpawnType::Marketplace) {
+      marketplace = entity;
+      break;
+    }
+  }
+
+  ASSERT_NE(marketplace, nullptr);
+  EXPECT_TRUE(marketplace->has_component<Engine::Core::BuildingComponent>());
+  EXPECT_TRUE(Game::Systems::MarketplaceSystem::instance().owner_has_marketplace(1));
+
+  auto* marketplace_transform =
+      marketplace->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(marketplace_transform, nullptr);
+  EXPECT_FLOAT_EQ(marketplace_transform->rotation.y, 15.0F);
+
+  EXPECT_FALSE(production->in_progress);
+  EXPECT_TRUE(production->construction_complete);
+  EXPECT_FALSE(production->has_construction_site);
 }
 
 } // namespace

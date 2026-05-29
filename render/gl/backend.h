@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMatrix4x4>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QVector2D>
 #include <QVector3D>
@@ -153,6 +154,38 @@ public:
   }
 
 private:
+  struct CommandExecutionContext {
+    const DrawQueue& queue;
+    const Camera& cam;
+    const QMatrix4x4& view;
+    const QMatrix4x4& projection;
+    const QMatrix4x4& view_proj;
+    float banner_wind_strength;
+    bool& polygon_offset_enabled;
+    bool rigged_instancing_enabled;
+    std::size_t& debug_rigged_batches;
+    std::size_t& debug_rigged_cmds;
+    std::size_t& debug_rigged_instanced_attempts;
+    std::size_t& debug_rigged_instanced_successes;
+    std::size_t& debug_rigged_instanced_failures;
+    std::size_t& debug_rigged_single_draws;
+  };
+
+  void execute_cylinder_commands(const PreparedBatch& prepared,
+                                 CommandExecutionContext& context);
+  void execute_scatter_commands(const PreparedBatch& prepared,
+                                CommandExecutionContext& context);
+  void execute_terrain_commands(const PreparedBatch& prepared,
+                                CommandExecutionContext& context);
+  void execute_water_linear_commands(const PreparedBatch& prepared,
+                                     CommandExecutionContext& context);
+  void execute_mesh_commands(const PreparedBatch& prepared,
+                             CommandExecutionContext& context);
+  void execute_effects_commands(const PreparedBatch& prepared,
+                                CommandExecutionContext& context);
+  void execute_rigged_commands(const PreparedBatch& prepared,
+                               CommandExecutionContext& context);
+
   int m_viewport_width{0};
   int m_viewport_height{0};
   std::array<float, 4> m_clear_color{0.70F, 0.73F, 0.80F, 1.0F};

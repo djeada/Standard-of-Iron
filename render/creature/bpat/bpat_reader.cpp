@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <iterator>
 
 namespace Render::Creature::Bpat {
@@ -34,6 +35,8 @@ bool BpatBlob::validate() {
   m_string_table = nullptr;
   m_palette_data = nullptr;
   m_socket_data = nullptr;
+  m_clip_index_entries.clear();
+  m_clip_index_buckets.clear();
 
   if (m_bytes.size() < sizeof(BpatHeader)) {
     m_last_error = "file shorter than header";
@@ -117,6 +120,13 @@ bool BpatBlob::validate() {
           ? reinterpret_cast<const float*>(m_bytes.data() + socket_data_offset)
           : nullptr;
 
+  std::uint32_t clip_index_bucket_count = 1U;
+  while (clip_index_bucket_count < header->clip_count * 2U) {
+    clip_index_bucket_count <<= 1U;
+  }
+  m_clip_index_entries.reserve(header->clip_count);
+  m_clip_index_buckets.assign(clip_index_bucket_count, k_empty_clip_index_bucket);
+
   std::uint32_t computed_total = 0U;
   for (std::uint32_t i = 0; i < header->clip_count; ++i) {
     auto const& c = m_clip_table[i];
@@ -136,6 +146,22 @@ bool BpatBlob::validate() {
     if (m_string_table[c.name_offset + c.name_length] != '\0') {
       m_last_error = "clip name not NUL-terminated";
       return false;
+    }
+    std::string_view const clip_name(m_string_table + c.name_offset, c.name_length);
+    std::uint32_t bucket = static_cast<std::uint32_t>(
+        std::hash<std::string_view>{}(clip_name) & (m_clip_index_buckets.size() - 1U));
+    while (m_clip_index_buckets[bucket] != k_empty_clip_index_bucket) {
+      auto const& existing = m_clip_index_entries[m_clip_index_buckets[bucket]];
+      if (existing.name == clip_name) {
+        break;
+      }
+      bucket =
+          (bucket + 1U) & static_cast<std::uint32_t>(m_clip_index_buckets.size() - 1U);
+    }
+    if (m_clip_index_buckets[bucket] == k_empty_clip_index_bucket) {
+      m_clip_index_buckets[bucket] =
+          static_cast<std::uint32_t>(m_clip_index_entries.size());
+      m_clip_index_entries.push_back({std::string(clip_name), i});
     }
   }
   if (computed_total != header->frame_total) {
@@ -191,7 +217,29 @@ auto BpatBlob::clip(std::uint32_t index) const -> ClipView {
   v.frame_offset = e.frame_offset;
   v.fps = e.fps;
   v.loops = e.loops != 0U;
+  v.marker_anticipation_start = e.marker_anticipation_start;
+  v.marker_weapon_release = e.marker_weapon_release;
+  v.marker_contact = e.marker_contact;
+  v.marker_recover_unlocked = e.marker_recover_unlocked;
+  v.marker_exit_safe = e.marker_exit_safe;
   return v;
+}
+
+auto BpatBlob::clip_index(std::string_view name) const -> std::uint32_t {
+  if (m_header == nullptr || m_clip_index_buckets.empty()) {
+    return k_invalid_clip_index;
+  }
+  std::uint32_t bucket = static_cast<std::uint32_t>(
+      std::hash<std::string_view>{}(name) & (m_clip_index_buckets.size() - 1U));
+  while (m_clip_index_buckets[bucket] != k_empty_clip_index_bucket) {
+    auto const& entry = m_clip_index_entries[m_clip_index_buckets[bucket]];
+    if (entry.name == name) {
+      return entry.clip_index;
+    }
+    bucket =
+        (bucket + 1U) & static_cast<std::uint32_t>(m_clip_index_buckets.size() - 1U);
+  }
+  return k_invalid_clip_index;
 }
 
 auto BpatBlob::socket(std::uint32_t index) const -> SocketView {
@@ -218,7 +266,7 @@ auto BpatBlob::palette_matrix(std::uint32_t global_frame_index,
   std::uint64_t const offset =
       ((std::uint64_t{global_frame_index} * m_header->bone_count) + bone_index) *
       k_matrix_floats;
-  return std::span<const float>(m_palette_data + offset, k_matrix_floats);
+  return {m_palette_data + offset, k_matrix_floats};
 }
 
 auto BpatBlob::frame_palette_view(std::uint32_t global_frame_index) const
@@ -229,8 +277,7 @@ auto BpatBlob::frame_palette_view(std::uint32_t global_frame_index) const
   }
   std::size_t const off =
       static_cast<std::size_t>(global_frame_index) * m_header->bone_count;
-  return std::span<const QMatrix4x4>(m_decoded_palette.data() + off,
-                                     m_header->bone_count);
+  return {m_decoded_palette.data() + off, m_header->bone_count};
 }
 
 auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
@@ -244,7 +291,7 @@ auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
   std::uint64_t const offset =
       ((std::uint64_t{global_frame_index} * m_header->socket_count) + socket_index) *
       k_socket_matrix_floats;
-  return std::span<const float>(m_socket_data + offset, k_socket_matrix_floats);
+  return {m_socket_data + offset, k_socket_matrix_floats};
 }
 
 void BpatBlob::decode_palette_cache() {

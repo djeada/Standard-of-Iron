@@ -77,6 +77,7 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
                                 std::vector<AICommand>& out_commands) {
   m_update_timer += delta_time;
   m_rally_timer += delta_time;
+  m_aura_timer += delta_time;
 
   if (m_rally_timer >= k_rally_interval) {
     m_rally_timer = 0.0F;
@@ -85,6 +86,16 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
       rally_cmd.type = AICommandType::TriggerCommanderRally;
       rally_cmd.units = {commander_id};
       out_commands.push_back(std::move(rally_cmd));
+    }
+  }
+
+  if (m_aura_timer >= k_aura_interval && !snapshot.visible_enemies.empty()) {
+    m_aura_timer = 0.0F;
+    for (auto commander_id : context.commander_ids) {
+      AICommand aura_cmd;
+      aura_cmd.type = AICommandType::TriggerCommanderAura;
+      aura_cmd.units = {commander_id};
+      out_commands.push_back(std::move(aura_cmd));
     }
   }
 

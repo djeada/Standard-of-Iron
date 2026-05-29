@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <utility>
 #include <vector>
@@ -82,6 +83,25 @@ auto fake_texture(int id) -> Render::GL::Texture* {
 
 auto near_vec3(const QVector3D& lhs, const QVector3D& rhs, float eps = 1e-4F) -> bool {
   return (lhs - rhs).length() <= eps;
+}
+
+auto has_mesh_center_near_axis(const std::vector<RecordedMesh>& meshes,
+                               float seam_position,
+                               bool use_x_axis,
+                               float tolerance,
+                               float min_center_y) -> bool {
+  for (const RecordedMesh& mesh : meshes) {
+    const QVector3D center = mesh.model.column(3).toVector3D();
+    if (center.y() < min_center_y) {
+      continue;
+    }
+
+    const float axis_value = use_x_axis ? center.x() : center.z();
+    if (std::abs(axis_value - seam_position) <= tolerance) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto axis_scale_of(const QMatrix4x4& model, int column) -> float {
@@ -560,7 +580,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   auto render_bounds = [](auto register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
-    EntityRendererRegistry registry;
+    EntityRendererRegistry const registry;
     register_renderer_fn(registry);
     const auto renderer = registry.get(key);
     EXPECT_TRUE(static_cast<bool>(renderer));
@@ -1052,6 +1072,82 @@ TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {
 
   EXPECT_LT(bounds.min.x(), -0.9F);
   EXPECT_GT(bounds.max.x(), 0.9F);
+}
+
+TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+  const auto renderer = registry.get("troops/roman/wall_segment_end");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(71);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(renderable, nullptr);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+
+  std::vector<RecordedMesh> meshes;
+
+  RecordingSubmitter left_submitter;
+  ctx.model = QMatrix4x4{};
+  renderer(ctx, left_submitter);
+  meshes.insert(
+      meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
+
+  RecordingSubmitter right_submitter;
+  ctx.model = QMatrix4x4{};
+  ctx.model.translate(2.0F, 0.0F, 0.0F);
+  ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+  renderer(ctx, right_submitter);
+  meshes.insert(
+      meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
+
+  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.08F, 1.0F));
+}
+
+TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSeam) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_wall_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/wall_segment_end");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(72);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(renderable, nullptr);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+
+  std::vector<RecordedMesh> meshes;
+
+  RecordingSubmitter left_submitter;
+  ctx.model = QMatrix4x4{};
+  renderer(ctx, left_submitter);
+  meshes.insert(
+      meshes.end(), left_submitter.meshes.begin(), left_submitter.meshes.end());
+
+  RecordingSubmitter right_submitter;
+  ctx.model = QMatrix4x4{};
+  ctx.model.translate(2.0F, 0.0F, 0.0F);
+  ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+  renderer(ctx, right_submitter);
+  meshes.insert(
+      meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
+
+  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.05F, 1.5F));
 }
 
 } // namespace
