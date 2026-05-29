@@ -7,13 +7,13 @@
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
-#include "../i_render_pass.h"
-#include "scatter_renderer_state.h"
+#include "scatter_renderer_base.h"
 
 namespace Render::GL {
 class Renderer;
 
-class IronOreRenderer : public IRenderPass {
+class IronOreRenderer
+    : public ScatterRendererBase<IronOreInstanceGpu, IronOreBatchParams> {
 public:
   IronOreRenderer();
   ~IronOreRenderer() override;
@@ -27,23 +27,9 @@ public:
 
   void clear();
 
-  [[nodiscard]] bool is_gpu_ready() const { return m_state.is_gpu_ready(); }
-  [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_state.instances.size();
-  }
-  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
-    return m_state.last_sync_stats;
-  }
-
 private:
   void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,
                           const Game::Map::TerrainHeightMap& height_map);
-
-  Game::Map::BiomeSettings m_biome_settings;
-  QVector3D m_light_direction = IronOreBatchParams::default_light_direction();
-
-  Render::Ground::Scatter::FilteredRendererState<IronOreInstanceGpu, IronOreBatchParams>
-      m_state;
 };
 
 } // namespace Render::GL

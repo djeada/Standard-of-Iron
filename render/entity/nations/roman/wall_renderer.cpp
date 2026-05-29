@@ -47,8 +47,11 @@ const WallGeometry k_wall_geometry{.connected_span_length = 1.08F,
                                    .center_tip_half_x = 0.12F,
                                    .center_tip_half_z = 0.12F,
                                    .center_tip_y_offset = 0.02F};
-const std::array<RenderArchetype, 6> k_wall_archetypes =
-    build_wall_archetype_set("roman_wall_variant", k_wall_palette, k_wall_geometry);
+auto wall_archetypes() -> const std::array<RenderArchetype, 6>& {
+  static const std::array<RenderArchetype, 6> archetypes =
+      build_wall_archetype_set("roman_wall_variant", k_wall_palette, k_wall_geometry);
+  return archetypes;
+}
 
 } // namespace
 
@@ -56,7 +59,7 @@ void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
   for (const auto& [name, variant] : wall_renderer_variants()) {
     register_building_renderer(
         registry, "roman", name, [variant](const DrawContext& p, ISubmitter& out) {
-          submit_wall_segment_variant(out, p, k_wall_archetypes, variant);
+          submit_wall_segment_variant(out, p, wall_archetypes(), variant);
         });
   }
 }

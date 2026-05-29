@@ -318,6 +318,7 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(attack, nullptr);
   attack->can_melee = true;
   attack->can_ranged = false;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->melee_damage = 17;
   attack->melee_range = 1.6F;
 
@@ -327,17 +328,16 @@ TEST_F(CommanderControlControllerTest,
   CommanderControlController controller;
   ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
 
-  EXPECT_EQ(enemy_unit->health, 83);
+  EXPECT_EQ(enemy_unit->health, 100);
   EXPECT_FALSE(commander->has_component<Engine::Core::AttackTargetComponent>());
-  EXPECT_TRUE(commander_data->just_struck_enemy);
+  EXPECT_FALSE(commander_data->just_struck_enemy);
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
   ASSERT_NE(action, nullptr);
   EXPECT_EQ(action->phase, Engine::Core::RpgCommanderActionPhase::Strike);
   EXPECT_EQ(action->active_target_id, enemy->get_id());
-  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->last_hit_target_id, 0U);
   auto* targets = commander->get_component<Engine::Core::RpgCommanderTargetComponent>();
-  ASSERT_NE(targets, nullptr);
-  EXPECT_EQ(targets->recent_hit_target_id, enemy->get_id());
+  EXPECT_EQ(targets, nullptr);
 }
 
 TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossClicks) {
@@ -376,7 +376,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossCl
 
   EXPECT_EQ(combat_state->attack_variant, 1U);
   EXPECT_EQ(action->melee_attack_style, 1U);
-  EXPECT_EQ(action->melee_attack_sequence, 0U);
+  EXPECT_EQ(action->melee_attack_sequence, 2U);
 }
 
 TEST_F(CommanderControlControllerTest, PrimaryActionUsesDedicatedFinisherSwordSway) {

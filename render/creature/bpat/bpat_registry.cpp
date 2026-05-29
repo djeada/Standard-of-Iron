@@ -116,12 +116,8 @@ auto BpatRegistry::find_clip(std::uint32_t species_id,
   if (b == nullptr) {
     return k_invalid_clip;
   }
-  for (std::uint32_t i = 0; i < b->clip_count(); ++i) {
-    if (b->clip(i).name == name) {
-      return i;
-    }
-  }
-  return k_invalid_clip;
+  const std::uint32_t clip_index = b->clip_index(name);
+  return clip_index != BpatBlob::k_invalid_clip_index ? clip_index : k_invalid_clip;
 }
 
 auto BpatRegistry::sample_palette(std::uint32_t species_id,

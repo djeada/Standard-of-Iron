@@ -2,8 +2,8 @@
 
 #include <QDebug>
 
-#include "../core/user_settings.h"
 #include "../../render/graphics_settings.h"
+#include "../core/user_settings.h"
 
 namespace App::Models {
 

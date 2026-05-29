@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "builder_renderer.h"
+#include "../../builder_renderer_common.h"
 
 namespace {
 
@@ -38,8 +38,8 @@ void register_carthage_builder_style() {
 
   style.force_beard = true;
 
-  register_builder_style("default", style);
-  register_builder_style("carthage", style);
+  register_builder_style(std::string("default"), style);
+  register_builder_style(std::string("carthage"), style);
 }
 
 } // namespace Render::GL::Carthage

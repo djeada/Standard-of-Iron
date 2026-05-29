@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-
 #include <memory>
 
 #include "core/component.h"
@@ -97,7 +96,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Wood),
-            25);
+            40);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -167,7 +166,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Stone),
-            25);
+            35);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -237,7 +236,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Iron),
-            25);
+            30);
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();

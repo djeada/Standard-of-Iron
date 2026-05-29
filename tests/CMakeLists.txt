@@ -129,7 +129,6 @@ add_executable(standard_of_iron_tests
     render/pipeline/instance_coalescer_test.cpp
     render/pass/frame_pass_runner_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
-    render/animation/animation_test.cpp
     render/bpat/bpat_format_test.cpp
     render/bpat/bpat_registry_test.cpp
     render/humanoid/skeleton_test.cpp

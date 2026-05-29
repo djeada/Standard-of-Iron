@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "healer_renderer.h"
+#include "../../healer_renderer_common.h"
 
 namespace {
 
@@ -34,8 +34,8 @@ void register_roman_healer_style() {
   style.show_armor = false;
   style.show_cape = false;
 
-  register_healer_style("default", style);
-  register_healer_style("roman_republic", style);
+  Render::GL::register_healer_style("default", style);
+  Render::GL::register_healer_style("roman_republic", style);
 }
 
 } // namespace Render::GL::Roman

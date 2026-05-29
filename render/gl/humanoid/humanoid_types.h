@@ -125,13 +125,17 @@ struct AnimationInputs {
 };
 
 inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
+  float t = 0.0F;
   if (inputs.is_in_hold_mode) {
-    return std::clamp(inputs.hold_entry_progress, 0.0F, 1.0F);
+    t = std::clamp(inputs.hold_entry_progress, 0.0F, 1.0F);
+  } else if (inputs.is_exiting_hold) {
+    t = std::clamp(1.0F - inputs.hold_exit_progress, 0.0F, 1.0F);
+  } else {
+    return 0.0F;
   }
-  if (inputs.is_exiting_hold) {
-    return std::clamp(1.0F - inputs.hold_exit_progress, 0.0F, 1.0F);
-  }
-  return 0.0F;
+  // Smooth ease-in-out for a natural kneel/brace transition, matching the
+  // eased curve used by guard_pose_amount (endpoints 0/1 are preserved).
+  return t * t * (3.0F - 2.0F * t);
 }
 
 inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {

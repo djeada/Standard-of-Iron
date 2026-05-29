@@ -746,8 +746,9 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
   float best_distance_sq = std::numeric_limits<float>::infinity();
 
   const auto consider_candidate = [&](Game::Systems::WallGridPosition candidate) {
-    const auto validation = Game::Systems::WallNetworkService::validate_wall_segment_placement(
-        *world, candidate, true);
+    const auto validation =
+        Game::Systems::WallNetworkService::validate_wall_segment_placement(
+            *world, candidate, true);
     if (!validation.valid) {
       return;
     }
@@ -768,14 +769,18 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
   consider_candidate(base);
   if (vertical) {
     consider_candidate(
-        {.x = base.x, .z = base.z - Game::Systems::WallNetworkService::k_segment_spacing});
+        {.x = base.x,
+         .z = base.z - Game::Systems::WallNetworkService::k_segment_spacing});
     consider_candidate(
-        {.x = base.x, .z = base.z + Game::Systems::WallNetworkService::k_segment_spacing});
+        {.x = base.x,
+         .z = base.z + Game::Systems::WallNetworkService::k_segment_spacing});
   } else {
     consider_candidate(
-        {.x = base.x - Game::Systems::WallNetworkService::k_segment_spacing, .z = base.z});
+        {.x = base.x - Game::Systems::WallNetworkService::k_segment_spacing,
+         .z = base.z});
     consider_candidate(
-        {.x = base.x + Game::Systems::WallNetworkService::k_segment_spacing, .z = base.z});
+        {.x = base.x + Game::Systems::WallNetworkService::k_segment_spacing,
+         .z = base.z});
   }
 
   if (!best_position.has_value()) {
@@ -1650,8 +1655,8 @@ void ProductionManager::rebuild_wall_preview_plan(
         wall_preview_is_vertical(m_wall_preview_rotation_y));
   }
 
-  const QVector3D anchor_world = m_wall_drag_active ? m_wall_drag_anchor_world
-                                                    : preview_world_position;
+  const QVector3D anchor_world =
+      m_wall_drag_active ? m_wall_drag_anchor_world : preview_world_position;
   const auto anchor = Game::Systems::WallNetworkService::snap_world_position(
       anchor_world.x(), anchor_world.z());
   auto target = Game::Systems::WallNetworkService::snap_world_position(

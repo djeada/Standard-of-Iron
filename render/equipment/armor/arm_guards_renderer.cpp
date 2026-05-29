@@ -13,6 +13,7 @@
 #include "../../render_archetype.h"
 #include "../../static_attachment_spec.h"
 #include "../attachment_builder.h"
+#include "../equipment_archetype_helpers.h"
 #include "../equipment_submit.h"
 
 namespace Render::GL {
@@ -33,7 +34,8 @@ auto arm_guard_transform(const QMatrix4x4& parent,
     side_axis = QVector3D::crossProduct(QVector3D(1.0F, 0.0F, 0.0F), arm_dir);
   }
   side_axis.normalize();
-  QVector3D normal_axis = QVector3D::crossProduct(side_axis, arm_dir).normalized();
+  QVector3D const normal_axis =
+      QVector3D::crossProduct(side_axis, arm_dir).normalized();
 
   QMatrix4x4 local;
   local.setColumn(0, QVector4D(side_axis, 0.0F));
@@ -87,7 +89,7 @@ auto arm_guards_archetype(const ArmGuardsConfig& config,
         guard_start + (guard_end - guard_start) * 0.5F,
         guard_end - 0.02F,
     };
-    for (float y : strap_positions) {
+    for (float const y : strap_positions) {
       builder.add_palette_mesh(
           get_unit_sphere(),
           Render::Geom::sphere_at(QVector3D(0.0F, y, 0.0F), 0.010F),
@@ -123,10 +125,10 @@ void ArmGuardsRenderer::submit(const ArmGuardsConfig& config,
                                const HumanoidAnimationContext&,
                                EquipmentBatch& batch) {
   std::array<QVector3D, 2> const palette{config.leather_color, config.strap_color};
-  QVector3D elbow_l = frames.shoulder_l.origin +
-                      (frames.hand_l.origin - frames.shoulder_l.origin) * 0.55F;
-  QVector3D elbow_r = frames.shoulder_r.origin +
-                      (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
+  QVector3D const elbow_l = frames.shoulder_l.origin +
+                            (frames.hand_l.origin - frames.shoulder_l.origin) * 0.55F;
+  QVector3D const elbow_r = frames.shoulder_r.origin +
+                            (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
 
   render_arm_guard(config, ctx, elbow_l, frames.hand_l.origin, palette, batch);
   render_arm_guard(config, ctx, elbow_r, frames.hand_r.origin, palette, batch);
@@ -154,13 +156,12 @@ auto arm_guards_fill_role_colors(const HumanoidPalette& palette,
                                  QVector3D* out,
                                  std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < k_arm_guards_role_count) {
-    return 0U;
-  }
   constexpr ArmGuardsConfig cfg{};
-  out[0] = cfg.leather_color;
-  out[1] = cfg.strap_color;
-  return k_arm_guards_role_count;
+  return fill_role_colors(
+      std::array<QVector3D, k_arm_guards_role_count>{cfg.leather_color,
+                                                     cfg.strap_color},
+      out,
+      max);
 }
 
 auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
@@ -191,10 +192,7 @@ auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
       .socket_bone_index = shoulder_l_bone_index,
       .unit_local_pose_at_bind = bind_mat_l,
   });
-  spec_l.palette_role_remap[k_guard_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 0U);
-  spec_l.palette_role_remap[k_strap_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
+  fill_sequential_role_remap(spec_l, base_role_byte, k_arm_guards_role_count);
 
   QMatrix4x4 const bind_mat_r =
       arm_guard_transform(QMatrix4x4{}, elbow_r, hand_r.origin);
@@ -204,10 +202,7 @@ auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
       .socket_bone_index = shoulder_r_bone_index,
       .unit_local_pose_at_bind = bind_mat_r,
   });
-  spec_r.palette_role_remap[k_guard_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 0U);
-  spec_r.palette_role_remap[k_strap_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
+  fill_sequential_role_remap(spec_r, base_role_byte, k_arm_guards_role_count);
 
   return {spec_l, spec_r};
 }

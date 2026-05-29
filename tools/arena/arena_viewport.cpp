@@ -289,6 +289,7 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
   m_boundary_fog = std::move(rendering.boundary_fog);
+  m_ambient_fog = std::move(rendering.ambient_fog);
   m_rain = std::move(rendering.rain);
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
@@ -322,6 +323,7 @@ ArenaViewport::~ArenaViewport() {
     m_surface.reset();
     m_fog.reset();
     m_boundary_fog.reset();
+    m_ambient_fog.reset();
     m_rain.reset();
     if (m_renderer != nullptr) {
       m_renderer->shutdown();

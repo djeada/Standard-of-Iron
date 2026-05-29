@@ -43,41 +43,28 @@ DeadTreeRenderer::~DeadTreeRenderer() = default;
 void DeadTreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                  const Game::Map::BiomeSettings& biome_settings,
                                  const std::vector<Game::Map::WorldProp>& world_props) {
-  m_biome_settings = biome_settings;
-  m_state.reset_instances();
+  configure_biome_common(biome_settings);
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }
 
 void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction =
-      dir.isNull() ? DeadTreeBatchParams::default_light_direction() : dir.normalized();
-  m_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, DeadTreeBatchParams::default_light_direction());
 }
 
 void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  Q_UNUSED(resources);
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_state, [](const DeadTreeInstanceGpu& inst) -> const QVector4D& {
-        return inst.pos_scale;
-      });
-  if (visible_count == 0 || !m_state.instance_buffer) {
-    return;
-  }
-
   m_state.params.time = renderer.get_animation_time();
-
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::DeadTree;
-  cmd.instance_buffer = m_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
-  cmd.dead_tree = m_state.params;
-  renderer.terrain_scatter(cmd);
+  submit_filtered_common<false>(
+      renderer,
+      resources,
+      TerrainScatterCmd::Species::DeadTree,
+      [](TerrainScatterCmd& cmd, const DeadTreeBatchParams& params) {
+        cmd.dead_tree = params;
+      });
 }
 
 void DeadTreeRenderer::clear() {
-  m_state.reset_instances();
+  clear_common();
 }
 
 void DeadTreeRenderer::generate_instances(

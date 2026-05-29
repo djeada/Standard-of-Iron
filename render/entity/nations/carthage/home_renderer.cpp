@@ -6,13 +6,14 @@
 #include <array>
 
 #include "../../../../game/core/component.h"
-#include "../../../geom/math_utils.h"
 #include "../../../submitter.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
+#include "../../home_renderer_common.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -44,8 +45,8 @@ inline auto make_palette(const QVector3D& team) -> CarthagePalette {
   return p;
 }
 
-auto home_palette_slots(const CarthagePalette& palette) -> std::array<QVector3D, 1> {
-  return {palette.team};
+auto home_palette_slots(const QVector3D& team) -> std::array<QVector3D, 1> {
+  return {make_palette(team).team};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -324,29 +325,16 @@ auto home_archetype(BuildingState state) -> const RenderArchetype& {
   return k_set.for_state(state);
 }
 
-void draw_home(const DrawContext& p, ISubmitter& out) {
-  if (p.entity == nullptr) {
-    return;
-  }
-
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (r == nullptr) {
-    return;
-  }
-
-  CarthagePalette const palette =
-      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
-  const auto palette_slots = home_palette_slots(palette);
-  submit_building_instance(
-      out, p, home_archetype(resolve_building_state(p)), palette_slots);
-  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.5F});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.1F, 2.1F});
-}
-
 } // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "carthage", "home", draw_home);
+  register_home_renderer_variant(
+      registry,
+      HomeRendererConfig{.nation_slug = "carthage",
+                         .archetype = &home_archetype,
+                         .palette_slots = &home_palette_slots,
+                         .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.5F},
+                         .selection = BuildingSelectionStyle{2.1F, 2.1F}});
 }
 
 } // namespace Render::GL::Carthage

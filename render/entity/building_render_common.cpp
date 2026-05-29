@@ -13,10 +13,10 @@
 
 #include "../../game/core/component.h"
 #include "../../game/systems/nation_id.h"
-#include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
+#include "math/math_utils.h"
 
 namespace Render::GL {
 namespace {

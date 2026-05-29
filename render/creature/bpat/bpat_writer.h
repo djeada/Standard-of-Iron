@@ -19,6 +19,12 @@ struct ClipDescriptor {
   std::uint32_t frame_count{0U};
   float fps{30.0F};
   bool loops{true};
+  // Authored animation markers as normalized clip phase in [0,1]; -1 means unset.
+  float marker_anticipation_start{-1.0F};
+  float marker_weapon_release{-1.0F};
+  float marker_contact{-1.0F};
+  float marker_recover_unlocked{-1.0F};
+  float marker_exit_safe{-1.0F};
 };
 
 struct SocketDescriptor {

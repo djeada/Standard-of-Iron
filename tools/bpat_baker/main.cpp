@@ -49,6 +49,36 @@ namespace {
 namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
 
+// Authors per-clip animation markers (normalized clip phase in [0,1]; -1 = unset) onto
+// a clip descriptor based on the clip name. These values are baked into the BPAT clip
+// table and consumed at runtime by clip_marker_set(); they previously lived as a
+// runtime name-substring heuristic in bpat_playback.cpp and are reproduced here
+// verbatim so the move to baked markers is behavior-preserving.
+void apply_authored_markers(bpat::ClipDescriptor& desc) {
+  auto const has = [&desc](std::string_view needle) {
+    return desc.name.find(needle) != std::string::npos;
+  };
+  if (has("attack_sword") || has("attack_spear") || has("riding_sword")) {
+    desc.marker_anticipation_start = 0.10F;
+    desc.marker_weapon_release = 0.54F;
+    desc.marker_contact = 0.58F;
+    desc.marker_recover_unlocked = 0.72F;
+    desc.marker_exit_safe = 0.90F;
+  } else if (has("attack_bow") || has("bow_shot")) {
+    desc.marker_anticipation_start = 0.18F;
+    desc.marker_weapon_release = 0.56F;
+    desc.marker_contact = 0.56F;
+    desc.marker_recover_unlocked = 0.66F;
+    desc.marker_exit_safe = 0.86F;
+  } else if (has("hold")) {
+    desc.marker_anticipation_start = 0.0F;
+    desc.marker_exit_safe = 0.98F;
+  } else if (has("walk") || has("run") || has("idle") || has("riding_idle") ||
+             has("riding_charge")) {
+    desc.marker_exit_safe = 0.98F;
+  }
+}
+
 enum class BakerAttackType : std::uint8_t {
   None,
   Sword,
@@ -872,6 +902,7 @@ bool bake_humanoid(const std::filesystem::path& out_dir,
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
+    apply_authored_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -930,6 +961,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     desc.frame_count = clip.frame_count;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
+    apply_authored_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -1086,6 +1118,7 @@ bool bake_horse(const std::filesystem::path& out_dir) {
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
+    apply_authored_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -1254,6 +1287,7 @@ bool bake_elephant(const std::filesystem::path& out_dir) {
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
+    apply_authored_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;

@@ -12,6 +12,7 @@
 #include "humanoid_math.h"
 #include "humanoid_specs.h"
 #include "pose_controller.h"
+#include "pose_primitives.h"
 
 namespace Render::GL {
 
@@ -1005,7 +1006,7 @@ auto MountedPoseController::solve_elbow_ik(Side,
                                            float lateral_offset,
                                            float y_bias,
                                            float outward_sign) const -> QVector3D {
-  return elbow_bend_torso(
+  return Render::Humanoid::PosePrimitives::solve_elbow_ik(
       shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
 }
 

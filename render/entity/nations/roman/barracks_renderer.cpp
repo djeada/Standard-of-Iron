@@ -8,7 +8,6 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../geom/flag.h"
-#include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/backend/banner_pipeline.h"
@@ -21,11 +20,13 @@
 #include "../../../submitter.h"
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../barracks_renderer_common.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
+#include "math/math_utils.h"
 
 namespace Render::GL::Roman {
 namespace {
@@ -195,15 +196,27 @@ void draw_platform(const DrawContext& p,
   }
 
   // Detailed stepped podium
-  draw_box(out, unit, white, p.model,
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.04F, 0.0F),
-           QVector3D(1.72F, 0.04F, 1.52F), c.limestone_dark);
-  draw_box(out, unit, white, p.model,
+           QVector3D(1.72F, 0.04F, 1.52F),
+           c.limestone_dark);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.10F, 0.0F),
-           QVector3D(1.62F, 0.02F, 1.42F), c.limestone_shade);
-  draw_box(out, unit, white, p.model,
+           QVector3D(1.62F, 0.02F, 1.42F),
+           c.limestone_shade);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.14F, 0.0F),
-           QVector3D(1.55F, 0.02F, 1.42F), c.limestone);
+           QVector3D(1.55F, 0.02F, 1.42F),
+           c.limestone);
 
   // == MOSAIC FLOOR: Terracotta tile pattern ==
   for (float x = -1.4F; x <= 1.4F; x += 0.32F) {
@@ -221,16 +234,28 @@ void draw_platform(const DrawContext& p,
   }
 
   // == CENTRAL IMPLUVIUM: Training ground water basin ==
-  draw_box(out, unit, white, p.model,
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.20F, 0.0F),
-           QVector3D(0.52F, 0.015F, 0.42F), c.blue_light);
+           QVector3D(0.52F, 0.015F, 0.42F),
+           c.blue_light);
   // Basin rim
-  draw_box(out, unit, white, p.model,
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.22F, -0.44F),
-           QVector3D(0.56F, 0.02F, 0.04F), c.marble);
-  draw_box(out, unit, white, p.model,
+           QVector3D(0.56F, 0.02F, 0.04F),
+           c.marble);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(0.0F, 0.22F, 0.44F),
-           QVector3D(0.56F, 0.02F, 0.04F), c.marble);
+           QVector3D(0.56F, 0.02F, 0.04F),
+           c.marble);
 }
 
 void draw_podium(const DrawContext& p,
@@ -363,7 +388,7 @@ void draw_colonnade(const DrawContext& p,
   // == FRONT COLONNADE: Classical columns with bases and Corinthian capitals ==
   for (int i = 0; i < num_columns; ++i) {
     float const x = -1.30F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE /
-                                                              (num_columns - 1)
+                                                               (num_columns - 1)
                                                          : 0.0F);
     float const z = 1.42F;
 
@@ -418,7 +443,7 @@ void draw_colonnade(const DrawContext& p,
   int const side_columns = (state == BuildingState::Destroyed) ? 2 : (detailed ? 4 : 3);
   for (int i = 0; i < side_columns; ++i) {
     float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE /
-                                                              (side_columns - 1)
+                                                               (side_columns - 1)
                                                          : 0.0F);
 
     for (float const x_side : {-1.62F, 1.62F}) {
@@ -452,19 +477,31 @@ void draw_colonnade(const DrawContext& p,
   // == ENTABLATURE: Architrave beam connecting front columns ==
   if (state != BuildingState::Destroyed) {
     float const entab_y = 0.2F + col_height * height_multiplier + 0.16F;
-    draw_box(out, unit, white, p.model,
+    draw_box(out,
+             unit,
+             white,
+             p.model,
              QVector3D(0.0F, entab_y, 1.42F),
-             QVector3D(1.38F, 0.05F, 0.08F), c.limestone);
+             QVector3D(1.38F, 0.05F, 0.08F),
+             c.limestone);
     // Frieze with blue accent
     if (detailed) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(0.0F, entab_y + 0.06F, 1.42F),
-               QVector3D(1.32F, 0.03F, 0.06F), c.blue_accent);
+               QVector3D(1.32F, 0.03F, 0.06F),
+               c.blue_accent);
     }
     // Dentil course
-    draw_box(out, unit, white, p.model,
+    draw_box(out,
+             unit,
+             white,
+             p.model,
              QVector3D(0.0F, entab_y - 0.04F, 1.42F),
-             QVector3D(1.34F, 0.02F, 0.07F), c.marble);
+             QVector3D(1.34F, 0.02F, 0.07F),
+             c.marble);
   }
 }
 
@@ -499,12 +536,20 @@ void draw_terrace(const DrawContext& p,
            c.gold);
 
   // == SIDE MOLDINGS: Blue accent bands ==
-  draw_box(out, unit, white, p.model,
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(-1.68F, 2.19F, 0.0F),
-           QVector3D(0.04F, 0.04F, 1.48F), c.blue_accent);
-  draw_box(out, unit, white, p.model,
+           QVector3D(0.04F, 0.04F, 1.48F),
+           c.blue_accent);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
            QVector3D(1.68F, 2.19F, 0.0F),
-           QVector3D(0.04F, 0.04F, 1.48F), c.blue_accent);
+           QVector3D(0.04F, 0.04F, 1.48F),
+           c.blue_accent);
 
   // == TERRACOTTA FLOOR: Upper training level ==
   draw_box(out,
@@ -537,9 +582,13 @@ void draw_terrace(const DrawContext& p,
 
   if (detailed) {
     // == CENTRAL EAGLE: Grand gold ornament ==
-    draw_box(out, unit, white, p.model,
+    draw_box(out,
+             unit,
+             white,
+             p.model,
              QVector3D(0.0F, 2.46F, -0.68F),
-             QVector3D(0.14F, 0.12F, 0.04F), c.gold);
+             QVector3D(0.14F, 0.12F, 0.04F),
+             c.gold);
   }
 }
 
@@ -613,16 +662,28 @@ void draw_roofline(const DrawContext& p,
 
     if (detailed) {
       // == GOLD ACROTERIA: Roof-edge ornaments ==
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(-0.88F, 2.50F, 1.16F),
-               QVector3D(0.06F, 0.08F, 0.06F), c.gold);
-      draw_box(out, unit, white, p.model,
+               QVector3D(0.06F, 0.08F, 0.06F),
+               c.gold);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(0.88F, 2.50F, 1.16F),
-               QVector3D(0.06F, 0.08F, 0.06F), c.gold);
+               QVector3D(0.06F, 0.08F, 0.06F),
+               c.gold);
       // Central eagle finial
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(0.0F, 2.74F, 0.92F),
-               QVector3D(0.08F, 0.10F, 0.04F), c.gold);
+               QVector3D(0.08F, 0.10F, 0.04F),
+               c.gold);
     }
   }
 }
@@ -673,43 +734,28 @@ void draw_rally_flag(const DrawContext& p,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
-void draw_barracks(const DrawContext& p, ISubmitter& out) {
-  if ((p.resources == nullptr) || (p.entity == nullptr)) {
-    return;
-  }
-
-  auto* t = p.entity->get_component<Engine::Core::TransformComponent>();
-  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if ((t == nullptr) || (r == nullptr)) {
-    return;
-  }
-
-  Mesh* unit = p.resources->unit();
-  if (unit == nullptr) {
-    unit = get_unit_cube();
-  }
-  Texture* white = p.resources->white();
-  QVector3D const team(r->color[0], r->color[1], r->color[2]);
+void draw_barracks_ornaments(const DrawContext& p,
+                             ISubmitter& out,
+                             Mesh* unit,
+                             Texture* white,
+                             const QVector3D& team,
+                             const BarracksFlagRenderer::ClothBannerResources* cloth) {
   RomanPalette const c = make_palette(team);
-
-  BarracksFlagRenderer::ClothBannerResources cloth;
-  if (p.backend != nullptr) {
-    cloth.cloth_mesh = p.backend->banner_mesh();
-    cloth.banner_shader = p.backend->banner_shader();
-  }
-
-  submit_building_instance(
-      out, p, barracks_archetype(resolve_building_state(p), unit, white));
-  draw_phoenician_banner(p, out, unit, white, c, &cloth);
-  draw_rally_flag(p, out, white, c, &cloth);
-  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.6F, 2.2F});
+  draw_phoenician_banner(p, out, unit, white, c, cloth);
+  draw_rally_flag(p, out, white, c, cloth);
 }
 
 } // namespace
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
-  register_building_renderer(registry, "roman", "barracks", draw_barracks);
+  register_barracks_renderer_variant(
+      registry,
+      BarracksRendererConfig{.nation_slug = "roman",
+                             .archetype = &barracks_archetype,
+                             .draw_ornaments = &draw_barracks_ornaments,
+                             .health_bar =
+                                 BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true},
+                             .selection = BuildingSelectionStyle{2.6F, 2.2F}});
 }
 
 } // namespace Render::GL::Roman

@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "geom/math_utils.h"
 #include "humanoid/humanoid_math.h"
+#include "math/math_utils.h"
 
 namespace Render::GL {
 
@@ -21,7 +21,7 @@ auto make_humanoid_palette(const QVector3D& team_tint,
   p.skin = [&]() {
     float const t = hash_01(seed ^ 0x53C17F0BU);
     float const tint = hash_01(seed ^ 0x914A6FE3U);
-    float const value_jitter = (hash_01(seed ^ 0x2B7Cu) - 0.5F) * 0.06F;
+    float const value_jitter = (hash_01(seed ^ 0x2B7CU) - 0.5F) * 0.06F;
 
     QVector3D const cool_light(0.97F, 0.83F, 0.74F);
     QVector3D const warm_light(0.96F, 0.78F, 0.66F);
