@@ -1,13 +1,34 @@
 #include "mission_definition_view.h"
 
+#include <QFileInfo>
 #include <QStringList>
 #include <QVariantList>
 
+#include "game/map/mission_loader.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_type.h"
 #include "mission_commander_setup.h"
+#include "utils/resource_utils.h"
 
 namespace {
+
+auto resolve_mission_file_path(const QString& mission_id) -> QString {
+  const QStringList search_paths = {QStringLiteral("assets/missions/%1.json"),
+                                    QStringLiteral("../assets/missions/%1.json"),
+                                    QStringLiteral("../../assets/missions/%1.json"),
+                                    QStringLiteral(":/assets/missions/%1.json"),
+                                    QStringLiteral("/assets/missions/%1.json"),
+                                    QStringLiteral("/../assets/missions/%1.json")};
+
+  for (const auto& pattern : search_paths) {
+    QString candidate = pattern.arg(mission_id);
+    candidate = Utils::Resources::resolve_resource_path(candidate);
+    if (QFileInfo::exists(candidate)) {
+      return candidate;
+    }
+  }
+  return {};
+}
 
 auto titleize(const QString& value) -> QString {
   QStringList parts = value.split('_', Qt::SkipEmptyParts);
@@ -198,6 +219,24 @@ auto build_ai_setup_map(const Game::Mission::AISetup& setup) -> QVariantMap {
   return map;
 }
 
+auto build_campaign_player_config(const QString& nation,
+                                  const std::optional<QString>& commander_troop,
+                                  int player_id,
+                                  int color_index,
+                                  int team_id,
+                                  bool is_human) -> QVariantMap {
+  QVariantMap player;
+  player["player_id"] = player_id;
+  player["playerName"] = nation;
+  player["colorIndex"] = color_index;
+  player["team_id"] = team_id;
+  player["nationId"] = nation;
+  player["commanderTroop"] =
+      App::Core::resolve_commander_troop(nation, commander_troop);
+  player["isHuman"] = is_human;
+  return player;
+}
+
 } // namespace
 
 auto build_mission_definition_map(const Game::Mission::MissionDefinition& mission)
@@ -233,4 +272,66 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
   result["optional_objectives"] = build_condition_list(mission.optional_objectives);
 
   return result;
+}
+
+auto build_mission_objectives_map(const Game::Mission::MissionDefinition& mission)
+    -> QVariantMap {
+  QVariantMap result;
+  result["title"] = mission.title;
+  result["summary"] = mission.summary;
+  result["victory_conditions"] = build_condition_list(mission.victory_conditions);
+  result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
+  result["optional_objectives"] = build_condition_list(mission.optional_objectives);
+  return result;
+}
+
+auto build_campaign_player_configs(const Game::Mission::MissionDefinition& mission)
+    -> QVariantList {
+  QVariantList player_configs;
+  player_configs.append(
+      build_campaign_player_config(mission.player_setup.nation,
+                                   mission.player_setup.commander_troop,
+                                   1,
+                                   0,
+                                   0,
+                                   true));
+
+  int player_id = 2;
+  int default_team_id = 1;
+  for (const auto& ai_setup : mission.ai_setups) {
+    const int team_id =
+        ai_setup.team_id.has_value() ? ai_setup.team_id.value() : default_team_id++;
+    player_configs.append(build_campaign_player_config(ai_setup.nation,
+                                                       ai_setup.commander_troop,
+                                                       player_id,
+                                                       player_id - 1,
+                                                       team_id,
+                                                       false));
+    ++player_id;
+  }
+
+  return player_configs;
+}
+
+auto load_mission_definition_map(const QString& mission_id) -> QVariantMap {
+  QVariantMap result;
+  if (mission_id.isEmpty()) {
+    return result;
+  }
+
+  const QString mission_path = resolve_mission_file_path(mission_id);
+  if (mission_path.isEmpty()) {
+    qWarning() << "Mission definition not found for" << mission_id;
+    return result;
+  }
+
+  Game::Mission::MissionDefinition mission;
+  QString error;
+  if (!Game::Mission::MissionLoader::load_from_json_file(
+          mission_path, mission, &error)) {
+    qWarning() << "Failed to load mission definition" << mission_id << error;
+    return result;
+  }
+
+  return build_mission_definition_map(mission);
 }

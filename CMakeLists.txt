@@ -146,6 +146,13 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/visibility_coordinator.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
+        app/core/audio_coordinator.cpp
+        app/core/commander_status_builder.cpp
+        app/core/commander_mode_coordinator.cpp
+        app/core/frame_ui_coordinator.cpp
+        app/core/mission_setup_coordinator.cpp
+        app/core/save_load_coordinator.cpp
+        app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
         app/core/loading_progress_tracker.cpp
@@ -184,6 +191,13 @@ else()
         app/core/visibility_coordinator.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
+        app/core/audio_coordinator.cpp
+        app/core/commander_status_builder.cpp
+        app/core/commander_mode_coordinator.cpp
+        app/core/frame_ui_coordinator.cpp
+        app/core/mission_setup_coordinator.cpp
+        app/core/save_load_coordinator.cpp
+        app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
         app/core/loading_progress_tracker.cpp
