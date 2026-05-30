@@ -236,6 +236,52 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
       << "attack_sword_a mid-frame palette must differ from idle frame 0";
 }
 
+TEST(BpatRegistry, HumanoidAttackClipsBakeDenseFramesAndOrderedMarkers) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  auto const* default_blob = reg.blob(k_species_humanoid);
+  auto const* sword_blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(default_blob, nullptr);
+  ASSERT_NE(sword_blob, nullptr);
+
+  auto const assert_dense_ordered_attack = [](auto const& clip, const char* name) {
+    EXPECT_GE(clip.frame_count, 32U) << name;
+    EXPECT_GE(clip.marker_anticipation_start, 0.0F) << name;
+    EXPECT_GT(clip.marker_weapon_release, clip.marker_anticipation_start) << name;
+    EXPECT_GE(clip.marker_contact, clip.marker_weapon_release) << name;
+    EXPECT_GT(clip.marker_recover_unlocked, clip.marker_contact) << name;
+    EXPECT_GT(clip.marker_exit_safe, clip.marker_recover_unlocked) << name;
+    EXPECT_LT(clip.marker_exit_safe, 1.0F) << name;
+  };
+
+  auto const default_sword =
+      default_blob->clip(Render::Creature::k_humanoid_attack_sword_a_clip);
+  auto const sword_ready_sword =
+      sword_blob->clip(Render::Creature::k_humanoid_attack_sword_a_clip);
+  auto const spear_clip =
+      default_blob->clip(Render::Creature::k_humanoid_attack_spear_a_clip);
+  auto const bow_clip =
+      default_blob->clip(Render::Creature::k_humanoid_attack_bow_clip);
+
+  assert_dense_ordered_attack(default_sword, "default attack_sword_a");
+  assert_dense_ordered_attack(sword_ready_sword, "sword-ready attack_sword_a");
+  assert_dense_ordered_attack(spear_clip, "attack_spear_a");
+  assert_dense_ordered_attack(bow_clip, "attack_bow");
+
+  EXPECT_GT(sword_ready_sword.marker_weapon_release,
+            default_sword.marker_weapon_release);
+  EXPECT_GT(sword_ready_sword.marker_recover_unlocked,
+            default_sword.marker_recover_unlocked);
+}
+
 TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
   using Render::Humanoid::HumanoidBone;
 

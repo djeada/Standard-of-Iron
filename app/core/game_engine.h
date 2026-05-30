@@ -37,14 +37,17 @@
 #include "game/systems/game_state_serializer.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
+#include "mission_setup_coordinator.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
 #include "runtime_frame_orchestrator.h"
+#include "save_load_coordinator.h"
 
 class ProductionManager;
 class CampaignManager;
 class SelectionQueryService;
 class VisibilityCoordinator;
+class AudioCoordinator;
 
 namespace Engine::Core {
 class World;
@@ -92,6 +95,10 @@ namespace App {
 namespace Controllers {
 class CommandController;
 }
+namespace Core {
+class CommanderModeCoordinator;
+class SkirmishRuntimeCoordinator;
+} // namespace Core
 namespace Models {
 class AudioSystemProxy;
 }
@@ -418,15 +425,7 @@ private:
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
   };
-  struct PendingMissionWave {
-    int owner_id = 0;
-    Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
-    QString ai_id;
-    float trigger_time = 0.0F;
-    QVector3D entry_world_position{0.0F, 0.0F, 0.0F};
-    std::vector<Game::Mission::WaveComposition> composition;
-    bool spawned = false;
-  };
+  using PendingMissionWave = App::Core::PendingMissionWave;
   enum class PlayerControlMode {
     Rts,
     Commander
@@ -465,8 +464,6 @@ private:
   bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
   [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const;
   [[nodiscard]] Engine::Core::Entity* find_local_commander() const;
-  bool enter_commander_control_mode();
-  void exit_commander_control_mode();
   void request_enter_commander_control_mode();
   void request_exit_commander_control_mode();
   void enter_rts_runtime_mode();
@@ -488,22 +485,11 @@ private:
   void poll_commander_mouse_look();
   void reset_commander_input();
   void sync_selection_flags();
-  void prune_unavailable_action_context();
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
-  void update_civilian_delivery_availability();
   void sync_selected_player_state();
   void sync_scatter_world_props();
-  void initialize_player_resources();
   static void reset_movement(Engine::Core::Entity* entity);
   QAbstractItemModel* selected_units_model();
-  void apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
-                              const QString& map_path);
-  void configure_audio_manifest_mappings();
-  void configure_audio_voice_mappings();
-  void configure_audio_ambient_mappings();
-  void ensure_result_audio_ready(const QString& state);
-  void apply_frontend_music_context(const QString& context);
-  void stop_mission_ambience();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
   void rebuild_entity_cache();
@@ -512,8 +498,6 @@ private:
   void restore_environment_from_metadata(const QJsonObject& metadata);
   void update_cursor(Qt::CursorShape new_cursor);
   void set_error(const QString& error_message);
-  bool load_from_slot(const QString& slot);
-  bool save_to_slot(const QString& slot, const QString& title);
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot& snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
@@ -521,8 +505,6 @@ private:
   void start_skirmish_internal(const QString& map_path,
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
-  void perform_skirmish_load(const QString& map_path,
-                             const QVariantList& player_configs);
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
   void apply_mission_setup();
   void configure_mission_victory_conditions();
@@ -530,17 +512,12 @@ private:
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
-  void spawn_mission_wave(const PendingMissionWave& wave);
-  void center_camera_on_local_forces();
-  void finalize_skirmish_load();
   void apply_game_mode_render_policy();
-  void render_game_effects();
   void update_loading_overlay();
   void update_cursor_position();
   void restore_controlled_commander_direct_control_if_ready();
   void seed_commander_rally_preview_from_view_center();
   void seed_barracks_rally_preview_from_selection();
-  [[nodiscard]] bool has_selected_local_barracks() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -568,9 +545,13 @@ private:
   std::unique_ptr<App::Controllers::CommandController> m_command_controller;
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
+  std::unique_ptr<AudioCoordinator> m_audio_coordinator;
+  std::unique_ptr<App::Core::CommanderModeCoordinator> m_commander_mode;
+  std::unique_ptr<App::Core::MissionSetupCoordinator> m_mission_setup;
+  std::unique_ptr<App::Core::SaveLoadCoordinator> m_save_load_coordinator;
+  std::unique_ptr<App::Core::SkirmishRuntimeCoordinator> m_skirmish_runtime;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
   QString m_audio_frontend_context;
-  QString m_current_ambient_sound_id;
   std::unique_ptr<MinimapManager> m_minimap_manager;
   std::unique_ptr<VisibilityCoordinator> m_visibility_coordinator;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
