@@ -76,20 +76,20 @@ auto walk_profile(float speed_factor,
       0.205F * variation.walk_speed_mult * (0.88F + 0.14F * speed_factor);
   profile.step_height = 0.044F * (0.92F + 0.10F * speed_factor);
   profile.vertical_bob = 0.005F * speed_factor;
-  profile.hip_sway = 0.018F * variation.stance_width;
-  profile.shoulder_counter_sway = 0.018F;
-  profile.shoulder_twist = 0.011F;
+  profile.hip_sway = 0.020F * variation.stance_width;
+  profile.shoulder_counter_sway = 0.024F;
+  profile.shoulder_twist = 0.018F;
   profile.forward_lean = 0.016F + (speed_factor - 1.0F) * 0.010F;
   profile.lateral_foot_shift = 0.008F;
-  profile.arm_swing = 0.118F * variation.arm_swing_amp;
-  profile.max_arm_displacement = 0.122F;
-  profile.arm_lift_scale = 0.11F;
-  profile.arm_counter_shift = 0.10F;
-  profile.weight_shift = 0.018F;
+  profile.arm_swing = 0.142F * variation.arm_swing_amp;
+  profile.max_arm_displacement = 0.150F;
+  profile.arm_lift_scale = 0.13F;
+  profile.arm_counter_shift = 0.11F;
+  profile.weight_shift = 0.020F;
   profile.pelvis_drop = 0.0055F;
-  profile.head_stabilization = 0.62F;
+  profile.head_stabilization = 0.60F;
   profile.contact_lift = 0.004F;
-  profile.knee_drive = 0.0045F;
+  profile.knee_drive = 0.0065F;
   return profile;
 }
 
@@ -102,19 +102,19 @@ auto run_profile(float speed_factor,
   profile.step_height = 0.080F * (0.88F + 0.18F * speed_factor);
   profile.vertical_bob = 0.013F * speed_factor;
   profile.hip_sway = 0.012F * variation.stance_width;
-  profile.shoulder_counter_sway = 0.022F;
-  profile.shoulder_twist = 0.021F;
-  profile.forward_lean = 0.072F + (speed_factor - 1.0F) * 0.018F;
+  profile.shoulder_counter_sway = 0.030F;
+  profile.shoulder_twist = 0.032F;
+  profile.forward_lean = 0.082F + (speed_factor - 1.0F) * 0.018F;
   profile.lateral_foot_shift = 0.009F;
-  profile.arm_swing = 0.178F * variation.arm_swing_amp;
-  profile.max_arm_displacement = 0.180F;
-  profile.arm_lift_scale = 0.16F;
+  profile.arm_swing = 0.212F * variation.arm_swing_amp;
+  profile.max_arm_displacement = 0.216F;
+  profile.arm_lift_scale = 0.185F;
   profile.arm_counter_shift = 0.13F;
   profile.weight_shift = 0.010F;
   profile.pelvis_drop = 0.0035F;
   profile.head_stabilization = 0.82F;
   profile.contact_lift = 0.010F;
-  profile.knee_drive = 0.010F;
+  profile.knee_drive = 0.014F;
   return profile;
 }
 
@@ -352,10 +352,10 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
         float const lift_curve = std::sin(t * std::numbers::pi_v<float>);
         float const landing_soften = smooth_pulse(t, 0.72F, 0.90F, 1.0F);
         z_pos = -foot_stride_length * 0.50F + (foot_stride_length * 1.00F) * travel;
-        foot_y += lift_curve * foot_step_height +
-                  std::sin(t * std::numbers::pi_v<float> * 0.5F) * profile.knee_drive *
-                      step_scale +
-                  landing_soften * profile.contact_lift * 0.25F;
+        foot_y +=
+            lift_curve * foot_step_height +
+            std::sin(t * std::numbers::pi_v<float>) * profile.knee_drive * step_scale +
+            landing_soften * profile.contact_lift * 0.25F;
       }
 
       float const stance_turn_bias =

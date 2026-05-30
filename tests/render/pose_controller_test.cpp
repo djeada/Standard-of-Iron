@@ -607,6 +607,22 @@ TEST_F(HumanoidPoseControllerTest, HoldBowReadyKeepsHandsInLowerReadyPose) {
   EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.15F);
 }
 
+TEST_F(HumanoidPoseControllerTest, AimBowFullDrawLoadsShouldersAndPullsBackStringHand) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  QVector3D const original_pelvis = pose.pelvis_pos;
+  QVector3D const original_shoulder_r = pose.shoulder_r;
+  QVector3D const original_head = pose.head_pos;
+
+  controller.aim_bow(0.40F);
+
+  EXPECT_LT(pose.hand_l.z(), 0.18F);
+  EXPECT_GT(pose.hand_r.z(), 0.64F);
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r.z() + 0.12F);
+  EXPECT_LT(pose.pelvis_pos.z(), original_pelvis.z());
+  EXPECT_GT(pose.head_pos.z(), original_head.z());
+}
+
 TEST_F(HumanoidPoseControllerTest,
        BraceSwordAndShieldForHoldRaisesShieldComparedToMarchHold) {
   HumanoidPose march_pose = pose;
@@ -887,6 +903,19 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustVariantReadyGripMatchesNormalStanc
   EXPECT_GT(pose.hand_l.x(), 0.18F);
   EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
   EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.04F);
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustVariantDrivesPelvisAndHeadAtExtension) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  QVector3D const original_pelvis = pose.pelvis_pos;
+  QVector3D const original_head = pose.head_pos;
+
+  controller.spear_thrust_variant(0.60F, 0);
+
+  EXPECT_LT(pose.pelvis_pos.y(), original_pelvis.y());
+  EXPECT_GT(pose.pelvis_pos.z(), original_pelvis.z());
+  EXPECT_GT(pose.head_pos.z(), original_head.z());
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustFromHoldAppliesTorsoTwist) {
