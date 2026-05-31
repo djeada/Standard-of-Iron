@@ -1,6 +1,7 @@
 #include "music_player.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QFileInfo>
 #include <QMetaObject>
 #include <QTimer>
