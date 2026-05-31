@@ -218,6 +218,7 @@ endif()
 include(GoogleTest)
 gtest_discover_tests(standard_of_iron_tests
     DISCOVERY_MODE PRE_TEST
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 # --- Subset test binary -------------------------------------------------

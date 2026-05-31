@@ -38,7 +38,7 @@ RENAMES = [
     ("drawFortressWalls", "draw_fortress_walls"),
     ("drawGate", "draw_gate"),
     ("drawPoleWithBanner", "draw_pole_with_banner"),
-    ("drawPolygon", "draw_polygon"),
+    # ("drawPolygon", "draw_polygon"),  # Qt API: QPainter::drawPolygon
     ("drawRomanOrnaments", "draw_roman_ornaments"),
     ("drawSlide", "draw_slide"),
     ("drawStandards", "draw_standards"),
@@ -128,11 +128,11 @@ RENAMES = [
     ("lineColor", "line_color"),
     ("lowerStart", "lower_start"),
     ("loweringOffset", "lowering_offset"),
-    ("majorVersion", "major_version"),
+    # ("majorVersion", "major_version"),  # Qt API: QSurfaceFormat::majorVersion
     ("maxLowering", "max_lowering"),
     ("maxVal", "max_val"),
     ("minVal", "min_val"),
-    ("minorVersion", "minor_version"),
+    # ("minorVersion", "minor_version"),  # Qt API: QSurfaceFormat::minorVersion
     ("modeColor", "mode_color"),
     ("newCapacity", "new_capacity"),
     ("outMode", "out_mode"),
@@ -228,7 +228,7 @@ def rename_in_file(path: Path, renames: list, dry_run: bool = False) -> int:
 
 
 def main():
-    base = Path("/home/runner/work/Standard-of-Iron/Standard-of-Iron")
+    base = Path("/tmp/workspace/djeada/Standard-of-Iron")
     dirs = [base / "render", base / "tests" / "render"]
 
     total_files = 0
