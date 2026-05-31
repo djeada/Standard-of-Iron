@@ -14,8 +14,11 @@ struct Model {
   double origin_z = 0.0;
   double center_x = 0.0;
   double center_z = 0.0;
+  double rotation_deg = 0.0;
+  double base_radius = 10.0;
   double hill_half_width = 10.0;
   double hill_half_depth = 10.0;
+  bool is_mountain = false;
   QVector<QPoint> hill_cells;
   QVector<QPoint> entrance_cells;
   QJsonArray preserved_entrances;

@@ -22,6 +22,8 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 
+#include <cmath>
+
 #include "json_edit_dialog.h"
 #include "map_json_keys.h"
 #include "resize_dialog.h"
@@ -581,12 +583,28 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
     json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-    json[MapJsonKeys::width] = static_cast<double>(elem.width);
-    json[MapJsonKeys::depth] = static_cast<double>(elem.depth);
     json[MapJsonKeys::height] = static_cast<double>(elem.height);
     json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
-    if (!elem.entrances.isEmpty()) {
+    const QString terrain_type = elem.type.trimmed().toLower();
+    const bool is_mountain = terrain_type == QStringLiteral("mountain");
+    const bool is_circular_hill = terrain_type == QStringLiteral("hill") &&
+                                  elem.radius > 0.0F && elem.width > 0.0F &&
+                                  elem.depth > 0.0F &&
+                                  std::abs(elem.width - elem.depth) <= 1e-3F &&
+                                  std::abs(elem.width - elem.radius) <= 1e-3F;
+    if (elem.radius > 0.0F &&
+        (is_mountain || is_circular_hill || elem.width <= 0.0F || elem.depth <= 0.0F)) {
+      json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+    }
+    if (!is_mountain && !is_circular_hill) {
+      if (elem.width > 0.0F) {
+        json[MapJsonKeys::width] = static_cast<double>(elem.width);
+      }
+      if (elem.depth > 0.0F) {
+        json[MapJsonKeys::depth] = static_cast<double>(elem.depth);
+      }
+    }
+    if (!is_mountain && !elem.entrances.isEmpty()) {
       json[MapJsonKeys::entrances] = elem.entrances;
     }
     for (const QString& key : elem.extra_fields.keys()) {
@@ -739,6 +757,10 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(3.0));
       elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
       elem.entrances = new_json[MapJsonKeys::entrances].toArray();
+      if (elem.type.trimmed().compare(QStringLiteral("mountain"),
+                                      Qt::CaseInsensitive) == 0) {
+        elem.entrances = QJsonArray{};
+      }
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::x,
