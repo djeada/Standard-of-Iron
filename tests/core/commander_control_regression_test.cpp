@@ -222,8 +222,7 @@ TEST(CommanderControlRegressionTest, CommanderModePreservesAndRestoresRtsSelecti
   EXPECT_TRUE(contains(engine_source, "select_controlled_commander();"));
   EXPECT_TRUE(contains(engine_source, "restore_rts_selection();"));
   EXPECT_TRUE(contains(engine_source,
-                       "m_selection_controller->select_single_unit("
-                       "m_controlled_commander_id,"));
+                       "m_commander_mode->select_controlled_commander("));
   EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
 }
 
@@ -266,14 +265,14 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
 
   EXPECT_TRUE(contains(engine_source,
                        "if (m_control_mode == PlayerControlMode::Commander) {\n"
-                       "    exit_commander_control_mode();\n"
+                       "    request_exit_commander_control_mode();\n"
                        "  }\n\n"
                        "  reset_preload_interaction_state();"));
   EXPECT_TRUE(contains(engine_source,
                        "if (m_control_mode == PlayerControlMode::Commander) {\n"
-                       "    exit_commander_control_mode();\n"
+                       "    request_exit_commander_control_mode();\n"
                        "  }\n"
-                       "  Game::Systems::RuntimeSnapshot const runtime_snap = "
+                       "  const Game::Systems::RuntimeSnapshot runtime_snapshot = "
                        "to_runtime_snapshot();"));
 }
 
@@ -461,6 +460,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   const auto game_engine = read_text(root / "app" / "core" / "game_engine.cpp");
   const auto controller =
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto commander_mode =
+      read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
   ASSERT_FALSE(movement_system.empty());
@@ -473,6 +474,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(command_controller.empty());
   ASSERT_FALSE(game_engine.empty());
   ASSERT_FALSE(controller.empty());
+  ASSERT_FALSE(commander_mode.empty());
 
   EXPECT_TRUE(contains(combat_rules, "uses_rpg_combat_rules"));
   EXPECT_TRUE(contains(combat_rules, "participates_in_rts_melee_lock"));
@@ -497,8 +499,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   EXPECT_TRUE(
       contains(command_controller, "CombatRules::clear_rts_melee_lock(entity);"));
 
-  EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = true;"));
-  EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = false;"));
+  EXPECT_TRUE(contains(commander_mode, "commander_data->fpv_controlled = true;"));
+  EXPECT_TRUE(contains(commander_mode, "commander_data->fpv_controlled = false;"));
   EXPECT_FALSE(
       contains(game_engine, "CombatRules::clear_rts_combat_tracking(commander);"));
   EXPECT_FALSE(contains(controller, "atk->in_melee_lock = false;"));
@@ -653,11 +655,12 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   const auto component_source = read_text(root / "game" / "core" / "component.h");
   const auto controller_source =
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto commander_mode_source =
+      read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
   const auto prepare_source = read_text(root / "render" / "humanoid" / "prepare.cpp");
   ASSERT_FALSE(component_source.empty());
   ASSERT_FALSE(controller_source.empty());
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(commander_mode_source.empty());
   ASSERT_FALSE(prepare_source.empty());
 
   EXPECT_TRUE(contains(component_source, "bool jump_active{false};"));
@@ -670,7 +673,8 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(controller_source, "m_jump_last_walkable_position"));
   EXPECT_TRUE(contains(controller_source, "m_jump_timer <= 0.0F"));
 
-  EXPECT_TRUE(contains(engine_source, "commander_data->jump_active = false;"));
+  EXPECT_TRUE(
+      contains(commander_mode_source, "commander_data->jump_active = false;"));
 
   EXPECT_TRUE(contains(prepare_source, "RCP::set_model_world_y("));
   EXPECT_TRUE(

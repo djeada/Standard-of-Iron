@@ -298,7 +298,7 @@ dev: install build
 test: build
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@if [ -f "$(BUILD_DIR)/bin/standard_of_iron_tests" ]; then \
-		cd $(BUILD_DIR) && ./bin/standard_of_iron_tests; \
+		./$(BUILD_DIR)/bin/standard_of_iron_tests; \
 	else \
 		echo "$(RED)Test executable not found. Build may have failed.$(RESET)"; \
 		exit 1; \
