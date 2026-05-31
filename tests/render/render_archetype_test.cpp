@@ -96,7 +96,9 @@ auto fake_texture(int id) -> Render::GL::Texture* {
   return reinterpret_cast<Render::GL::Texture*>(static_cast<intptr_t>(id));
 }
 
-auto near_vec3(const QVector3D& lhs, const QVector3D& rhs, float eps = k_default_epsilon) -> bool {
+auto near_vec3(const QVector3D& lhs,
+               const QVector3D& rhs,
+               float eps = k_default_epsilon) -> bool {
   return (lhs - rhs).length() <= eps;
 }
 
@@ -371,10 +373,12 @@ TEST(RenderArchetypeEquipment, SaddleArchetypesStayLowAndWide) {
     int rear_arch_count = 0;
     for (const RecordedMesh& mesh : submitter.meshes) {
       QVector3D const center = mesh.model.column(3).toVector3D();
-      if (center.z() > k_saddle_front_arch_z_threshold && center.y() > k_saddle_front_arch_y_threshold) {
+      if (center.z() > k_saddle_front_arch_z_threshold &&
+          center.y() > k_saddle_front_arch_y_threshold) {
         ++front_arch_count;
       }
-      if (center.z() < k_saddle_rear_arch_z_threshold && center.y() > k_saddle_rear_arch_y_threshold) {
+      if (center.z() < k_saddle_rear_arch_z_threshold &&
+          center.y() > k_saddle_rear_arch_y_threshold) {
         ++rear_arch_count;
       }
     }
@@ -396,7 +400,8 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   Engine::Core::Entity entity(1);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -425,7 +430,8 @@ TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   Engine::Core::Entity entity(2);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -453,7 +459,8 @@ TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
   renderable->color = {0.8F, 0.1F, 0.2F};
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -491,8 +498,8 @@ TEST(RenderArchetypeBuildings, RomanAndCarthageHomesRemainDistinctSilhouettes) {
   auto render_bounds = [&](std::uint32_t entity_id, const RenderFunc& renderer) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
 
@@ -529,7 +536,8 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
   renderable->color = {1.2F, -0.1F, 0.35F};
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -565,7 +573,8 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
   renderable->color = {0.8F, 0.2F, 0.6F};
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -605,8 +614,8 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
 
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -645,8 +654,8 @@ TEST(RenderArchetypeBuildings, RomanTowerHealthBarOnlyShowsWhileUnderAttack) {
   auto render_mesh_count = [&](bool under_attack) {
     Engine::Core::Entity entity(30 + (under_attack ? 1U : 0U));
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -692,8 +701,8 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarOnlyShowsWhileUnderAttack) {
   auto render_mesh_count = [&](bool under_attack) {
     Engine::Core::Entity entity(34 + (under_attack ? 1U : 0U));
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -739,8 +748,8 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarShowsOnRecentCombatHit) {
   auto render_mesh_count = [&](bool recent_hit) {
     Engine::Core::Entity entity(36 + (recent_hit ? 1U : 0U));
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -785,8 +794,8 @@ TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {
   auto render_team_tint_count = [&](std::uint32_t entity_id, int health) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -823,8 +832,8 @@ TEST(RenderArchetypeBuildings, RomanTowerDamageStatesReduceSilhouette) {
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -867,8 +876,8 @@ TEST(RenderArchetypeBuildings, CarthageTowerDamageStatesReduceSilhouette) {
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
     if (renderable == nullptr || unit == nullptr) {
@@ -910,7 +919,8 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   Engine::Core::Entity entity(4);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -945,7 +955,8 @@ TEST(RenderArchetypeBuildings, CarthageStraightWallFormsTallContinuousPalisade) 
   Engine::Core::Entity entity(44);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -981,8 +992,8 @@ TEST(RenderArchetypeBuildings, RomanBarracksDamageStatesReduceSilhouette) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
     auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(transform, nullptr);
     EXPECT_NE(unit, nullptr);
@@ -1027,8 +1038,8 @@ TEST(RenderArchetypeBuildings, CarthageBarracksDamageStatesReduceSilhouette) {
     Engine::Core::Entity entity(entity_id);
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
     auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-    auto* unit =
-        entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+        k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(transform, nullptr);
     EXPECT_NE(unit, nullptr);
@@ -1072,7 +1083,8 @@ TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {
   Engine::Core::Entity entity(5);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -1099,7 +1111,8 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
 
   Engine::Core::Entity entity(71);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(renderable, nullptr);
   ASSERT_NE(unit, nullptr);
 
@@ -1137,7 +1150,8 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSe
 
   Engine::Core::Entity entity(72);
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
   ASSERT_NE(renderable, nullptr);
   ASSERT_NE(unit, nullptr);
 
