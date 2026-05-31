@@ -1103,12 +1103,16 @@ TEST(HorseSpecTest, ManifestEyesStayInsetWithinHeadSilhouette) {
   Render::GL::Mesh const head_upper_mesh(head_upper->vertices, head_upper->indices);
   float const head_width = mesh_axis_max(head_upper_mesh, 0);
   float max_eye_extent = 0.0F;
+  float max_eye_radius = 0.0F;
   for (auto const& eye : eyes) {
     max_eye_extent = std::max(max_eye_extent, std::abs(eye.center.x()) + eye.radii.x());
+    max_eye_radius = std::max(max_eye_radius, eye.radii.x());
   }
 
-  EXPECT_GT(max_eye_extent, head_width * 0.55F);
-  EXPECT_LT(max_eye_extent, head_width * 0.92F);
+  EXPECT_GT(max_eye_extent, head_width * 0.60F);
+  EXPECT_LT(max_eye_extent, head_width * 0.82F);
+  EXPECT_GT(max_eye_radius, head_width * 0.10F);
+  EXPECT_LT(max_eye_radius, head_width * 0.18F);
 }
 
 TEST(HorseSpecTest, ManifestAddsWithersAndBrisketMassForForequarterRead) {
