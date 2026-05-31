@@ -84,6 +84,12 @@ TEST(MapEditorMapDataTest, LoadSaveKeepsSnakeCaseSchemaAndPreservesExtraRootFiel
   EXPECT_EQ(output.value(MapJsonKeys::time_of_day).toString(), "afternoon");
   ASSERT_TRUE(output.value(MapJsonKeys::world_props).isArray());
   EXPECT_EQ(output.value(MapJsonKeys::world_props).toArray().size(), 1);
+  ASSERT_TRUE(output.value(MapJsonKeys::terrain).isArray());
+  const QJsonObject saved_hill =
+      output.value(MapJsonKeys::terrain).toArray().first().toObject();
+  EXPECT_DOUBLE_EQ(saved_hill.value(MapJsonKeys::radius).toDouble(), 6.0);
+  EXPECT_FALSE(saved_hill.contains(MapJsonKeys::width));
+  EXPECT_FALSE(saved_hill.contains(MapJsonKeys::depth));
 }
 
 TEST(MapEditorMapDataTest, LegacyCamelCaseRootsSaveBackAsSnakeCase) {

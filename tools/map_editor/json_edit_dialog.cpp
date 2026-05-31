@@ -103,7 +103,8 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
       });
     }
 
-    // Hide the marker row entirely when there are no editable layers (e.g. mountains).
+    // Hide the marker row entirely when a terrain projection exposes no editable
+    // layers.
     marker_row->setVisible(!defs.isEmpty());
 
     // Pre-select the entrance layer button.
@@ -216,7 +217,7 @@ void JsonEditDialog::update_projection_state() {
   if (!m_is_valid) {
     m_projection_hint_label->setText(
         "Projection disabled until JSON is valid.\n"
-        "Fix syntax errors in JSON to continue editing entrances.");
+        "Fix syntax errors in JSON to continue editing the terrain footprint.");
     m_projection->setEnabled(false);
     set_buttons_enabled(false);
     return;
@@ -235,8 +236,10 @@ void JsonEditDialog::update_projection_state() {
 
   if (is_mountain) {
     m_projection_hint_label->setText(
-        "Mountains are fully impassable — the game skips all entrance processing.\n"
-        "This panel shows the approximate footprint for placement reference only.");
+        "Grid max: 80 x 80 cells\n"
+        "Left drag: paint mountain footprint\n"
+        "Right drag: erase mountain footprint\n"
+        "Mountains stay entrance-free; rotation still comes from JSON.");
   } else {
     m_projection_hint_label->setText(
         "Grid max: 80 x 80 cells\n"
