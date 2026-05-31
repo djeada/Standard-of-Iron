@@ -904,9 +904,22 @@ void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame& mount,
 
 void MountedPoseController::attach_feet_to_stirrups(
     const MountedAttachmentFrame& mount) {
+  QVector3D seat_right = mount.seat_right;
+  if (seat_right.lengthSquared() < 1e-6F) {
+    seat_right = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    seat_right.normalize();
+  }
 
-  m_pose.foot_l = mount.stirrup_bottom_left;
-  m_pose.foot_r = mount.stirrup_bottom_right;
+  float const height_scale = m_anim_ctx.variation.height_scale;
+  float const stirrup_half_spread =
+      0.5F * std::abs(QVector3D::dotProduct(
+                 mount.stirrup_bottom_right - mount.stirrup_bottom_left, seat_right));
+  float const foot_outboard_bias =
+      std::max(0.03F * height_scale, stirrup_half_spread * 0.16F);
+
+  m_pose.foot_l = mount.stirrup_bottom_left - seat_right * foot_outboard_bias;
+  m_pose.foot_r = mount.stirrup_bottom_right + seat_right * foot_outboard_bias;
 }
 
 void MountedPoseController::position_pelvis_on_saddle(
@@ -958,9 +971,9 @@ void MountedPoseController::calculate_riding_knees(
   float const stirrup_half_spread =
       0.5F * std::abs(QVector3D::dotProduct(
                  mount.stirrup_bottom_right - mount.stirrup_bottom_left, seat_right));
-  float const hip_spread = std::max({HP::HIP_LATERAL_OFFSET * height_scale * 2.10F,
+  float const hip_spread = std::max({HP::HIP_LATERAL_OFFSET * height_scale * 2.35F,
                                      0.18F * height_scale,
-                                     stirrup_half_spread * 0.72F});
+                                     stirrup_half_spread * 0.82F});
   QVector3D const hip_offset =
       mount.seat_up * (-0.06F * height_scale) - seat_forward * (-0.02F * height_scale);
   QVector3D const hip_left = m_pose.pelvis_pos - seat_right * hip_spread + hip_offset;
@@ -970,16 +983,20 @@ void MountedPoseController::calculate_riding_knees(
       [&](Side side, const QVector3D& hip, const QVector3D& foot) {
         QVector3D knee = solve_knee_ik(side, hip, foot, height_scale);
         QVector3D const outward = (side == Side::Left) ? -seat_right : seat_right;
+        float const foot_out = QVector3D::dotProduct(foot - m_pose.pelvis_pos, outward);
         float const minimum_knee_out =
-            std::max(hip_spread + 0.10F * height_scale, stirrup_half_spread * 0.92F);
+            std::max(hip_spread + 0.02F * height_scale, stirrup_half_spread * 0.88F);
+        float const target_knee_out = std::clamp(foot_out - 0.005F * height_scale,
+                                                 minimum_knee_out,
+                                                 foot_out + 0.03F * height_scale);
         float const knee_out = QVector3D::dotProduct(knee - m_pose.pelvis_pos, outward);
-        if (knee_out < minimum_knee_out) {
-          knee += outward * (minimum_knee_out - knee_out);
+        if (std::abs(knee_out - target_knee_out) > 1.0e-4F) {
+          knee += outward * (target_knee_out - knee_out);
         }
 
         float const foot_forward = QVector3D::dotProduct(foot - hip, seat_forward);
         float const knee_forward = QVector3D::dotProduct(knee - hip, seat_forward);
-        float const minimum_knee_forward = foot_forward + 0.03F * height_scale;
+        float const minimum_knee_forward = foot_forward + 0.10F * height_scale;
         if (knee_forward < minimum_knee_forward) {
           knee += seat_forward * (minimum_knee_forward - knee_forward);
         }
@@ -1015,54 +1032,15 @@ auto MountedPoseController::solve_knee_ik(Side side,
                                           const QVector3D& foot,
                                           float height_scale) const -> QVector3D {
   using HP = HumanProportions;
-
-  QVector3D const hip_to_foot = foot - hip;
-  float const distance = hip_to_foot.length();
-  if (distance < 1e-5F) {
-    return hip;
-  }
-
-  float const upper_len = HP::UPPER_LEG_LEN * height_scale;
-  float const lower_len = HP::LOWER_LEG_LEN * height_scale;
-  float const reach = upper_len + lower_len;
-  float const min_reach = std::max(std::abs(upper_len - lower_len) + 1e-4F, 1e-3F);
-  float const max_reach = std::max(reach - 1e-4F, min_reach + 1e-4F);
-  float const clamped_dist = std::clamp(distance, min_reach, max_reach);
-
-  QVector3D const dir = hip_to_foot / distance;
-
-  float cos_theta =
-      (upper_len * upper_len + clamped_dist * clamped_dist - lower_len * lower_len) /
-      (2.0F * upper_len * clamped_dist);
-  cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
-  float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
-
-  QVector3D bend_pref = (side == Side::Left) ? QVector3D(-0.70F, -0.15F, 0.30F)
-                                             : QVector3D(0.70F, -0.15F, 0.30F);
-  bend_pref.normalize();
-
-  QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
-  if (bend_axis.lengthSquared() < 1e-6F) {
-    bend_axis = QVector3D::crossProduct(dir, QVector3D(0.0F, 1.0F, 0.0F));
-    if (bend_axis.lengthSquared() < 1e-6F) {
-      bend_axis = QVector3D::crossProduct(dir, QVector3D(1.0F, 0.0F, 0.0F));
-    }
-  }
-  bend_axis.normalize();
-
-  QVector3D knee =
-      hip + dir * (cos_theta * upper_len) + bend_axis * (sin_theta * upper_len);
-
-  float const knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F;
-  if (knee.y() < knee_floor) {
-    knee.setY(knee_floor);
-  }
-
-  if (knee.y() > hip.y()) {
-    knee.setY(hip.y());
-  }
-
-  return knee;
+  return Render::Humanoid::PosePrimitives::solve_knee_ik(
+      hip,
+      foot,
+      {.upper_leg_len = HP::UPPER_LEG_LEN * height_scale,
+       .lower_leg_len = HP::LOWER_LEG_LEN * height_scale,
+       .knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F,
+       .bend_preference = (side == Side::Left) ? QVector3D(-0.70F, -0.15F, 0.30F)
+                                               : QVector3D(0.70F, -0.15F, 0.30F),
+       .clamp_to_hip_height = true});
 }
 
 auto MountedPoseController::get_shoulder(Side side) const -> const QVector3D& {
@@ -1082,18 +1060,11 @@ auto MountedPoseController::get_elbow(Side side) -> QVector3D& {
 }
 
 auto MountedPoseController::compute_right_axis() const -> QVector3D {
-  QVector3D right_axis = m_pose.shoulder_r - m_pose.shoulder_l;
-  right_axis.setY(0.0F);
-  if (right_axis.lengthSquared() < 1e-8F) {
-    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  right_axis.normalize();
-  return right_axis;
+  return Render::Humanoid::PosePrimitives::compute_right_axis(m_pose);
 }
 
 auto MountedPoseController::compute_outward_dir(Side side) const -> QVector3D {
-  QVector3D const right_axis = compute_right_axis();
-  return (side == Side::Left) ? -right_axis : right_axis;
+  return Render::Humanoid::PosePrimitives::compute_outward_dir(m_pose, side);
 }
 
 void MountedPoseController::apply_fixed_head_frame(const MountedAttachmentFrame& mount,

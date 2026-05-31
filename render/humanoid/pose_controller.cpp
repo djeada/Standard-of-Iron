@@ -636,54 +636,15 @@ auto HumanoidPoseController::solve_knee_ik(Side side,
                                            const QVector3D& foot,
                                            float height_scale) const -> QVector3D {
   using HP = HumanProportions;
-
-  QVector3D const hip_to_foot = foot - hip;
-  float const distance = hip_to_foot.length();
-  if (distance < 1e-5F) {
-    return hip;
-  }
-
-  float const upper_len = HP::UPPER_LEG_LEN * height_scale;
-  float const lower_len = HP::LOWER_LEG_LEN * height_scale;
-  float const reach = upper_len + lower_len;
-  float const min_reach = std::max(std::abs(upper_len - lower_len) + 1e-4F, 1e-3F);
-  float const max_reach = std::max(reach - 1e-4F, min_reach + 1e-4F);
-  float const clamped_dist = std::clamp(distance, min_reach, max_reach);
-
-  QVector3D const dir = hip_to_foot / distance;
-
-  float cos_theta =
-      (upper_len * upper_len + clamped_dist * clamped_dist - lower_len * lower_len) /
-      (2.0F * upper_len * clamped_dist);
-  cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
-  float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
-
-  QVector3D bend_pref = (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F)
-                                             : QVector3D(0.24F, 0.0F, 0.95F);
-  bend_pref.normalize();
-
-  QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
-  if (bend_axis.lengthSquared() < 1e-6F) {
-    bend_axis = QVector3D::crossProduct(dir, QVector3D(0.0F, 1.0F, 0.0F));
-    if (bend_axis.lengthSquared() < 1e-6F) {
-      bend_axis = QVector3D::crossProduct(dir, QVector3D(1.0F, 0.0F, 0.0F));
-    }
-  }
-  bend_axis.normalize();
-
-  QVector3D knee =
-      hip + dir * (cos_theta * upper_len) + bend_axis * (sin_theta * upper_len);
-
-  float const knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F;
-  if (knee.y() < knee_floor) {
-    knee.setY(knee_floor);
-  }
-
-  if (knee.y() > hip.y()) {
-    knee.setY(hip.y());
-  }
-
-  return knee;
+  return Render::Humanoid::PosePrimitives::solve_knee_ik(
+      hip,
+      foot,
+      {.upper_leg_len = HP::UPPER_LEG_LEN * height_scale,
+       .lower_leg_len = HP::LOWER_LEG_LEN * height_scale,
+       .knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F,
+       .bend_preference = (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F)
+                                               : QVector3D(0.24F, 0.0F, 0.95F),
+       .clamp_to_hip_height = true});
 }
 
 auto HumanoidPoseController::get_shoulder(Side side) const -> const QVector3D& {
@@ -703,18 +664,11 @@ auto HumanoidPoseController::get_elbow(Side side) -> QVector3D& {
 }
 
 auto HumanoidPoseController::compute_right_axis() const -> QVector3D {
-  QVector3D right_axis = m_pose.shoulder_r - m_pose.shoulder_l;
-  right_axis.setY(0.0F);
-  if (right_axis.lengthSquared() < 1e-8F) {
-    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  right_axis.normalize();
-  return right_axis;
+  return Render::Humanoid::PosePrimitives::compute_right_axis(m_pose);
 }
 
 auto HumanoidPoseController::compute_outward_dir(Side side) const -> QVector3D {
-  QVector3D const right_axis = compute_right_axis();
-  return (side == Side::Left) ? -right_axis : right_axis;
+  return Render::Humanoid::PosePrimitives::compute_outward_dir(m_pose, side);
 }
 
 auto HumanoidPoseController::get_shoulder_y(Side side) const -> float {
@@ -1532,8 +1486,6 @@ void HumanoidPoseController::combat_sword_slash_variant(float attack_phase,
 }
 
 void HumanoidPoseController::mount_on_horse(float saddle_height) {
-
-  float const offset_y = saddle_height - m_pose.pelvis_pos.y();
   m_pose.pelvis_pos.setY(saddle_height);
 }
 

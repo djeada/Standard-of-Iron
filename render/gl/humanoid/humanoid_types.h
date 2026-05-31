@@ -204,13 +204,13 @@ struct HumanoidPose {
 };
 
 struct VariationParams {
-  float height_scale;
-  float bulk_scale;
-  float stance_width;
-  float arm_swing_amp;
-  float walk_speed_mult;
-  float posture_slump;
-  float shoulder_tilt;
+  float height_scale{1.0F};
+  float bulk_scale{1.0F};
+  float stance_width{1.0F};
+  float arm_swing_amp{1.0F};
+  float walk_speed_mult{1.0F};
+  float posture_slump{0.0F};
+  float shoulder_tilt{0.0F};
 
   static auto from_seed(uint32_t seed) -> VariationParams {
     VariationParams v{};

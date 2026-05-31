@@ -90,8 +90,13 @@ TEST_F(MountedPoseControllerTest, MountOnHorsePlacesFeetInStirrups) {
 
   controller.mount_on_horse(mount);
 
-  EXPECT_TRUE(approx_equal(pose.foot_l, mount.stirrup_bottom_left));
-  EXPECT_TRUE(approx_equal(pose.foot_r, mount.stirrup_bottom_right));
+  EXPECT_NEAR(pose.foot_l.y(), mount.stirrup_bottom_left.y(), 0.01F);
+  EXPECT_NEAR(pose.foot_l.z(), mount.stirrup_bottom_left.z(), 0.01F);
+  EXPECT_LT(pose.foot_l.x(), mount.stirrup_bottom_left.x());
+
+  EXPECT_NEAR(pose.foot_r.y(), mount.stirrup_bottom_right.y(), 0.01F);
+  EXPECT_NEAR(pose.foot_r.z(), mount.stirrup_bottom_right.z(), 0.01F);
+  EXPECT_GT(pose.foot_r.x(), mount.stirrup_bottom_right.x());
 }
 
 TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
@@ -345,18 +350,36 @@ TEST_F(MountedPoseControllerTest, KneePositionValidForMountedRiding) {
 
   controller.mount_on_horse(mount);
 
-  QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
-  QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
+  QVector3D const calf_l = pose.knee_l - pose.foot_l;
+  QVector3D const calf_r = pose.knee_r - pose.foot_r;
+  QVector3D const calf_center_l = (pose.knee_l + pose.foot_l) * 0.5F;
+  QVector3D const calf_center_r = (pose.knee_r + pose.foot_r) * 0.5F;
+  float const stirrup_half_spread =
+      0.5F *
+      std::abs(QVector3D::dotProduct(
+          mount.stirrup_bottom_right - mount.stirrup_bottom_left, mount.seat_right));
+  float const left_calf_lateral =
+      std::abs(QVector3D::dotProduct(calf_l, mount.seat_right));
+  float const right_calf_lateral =
+      std::abs(QVector3D::dotProduct(calf_r, mount.seat_right));
+  float const left_calf_forward = QVector3D::dotProduct(calf_l, mount.seat_forward);
+  float const right_calf_forward = QVector3D::dotProduct(calf_r, mount.seat_forward);
+  float const left_calf_out =
+      QVector3D::dotProduct(calf_center_l - mount.saddle_center, -mount.seat_right);
+  float const right_calf_out =
+      QVector3D::dotProduct(calf_center_r - mount.saddle_center, mount.seat_right);
 
   EXPECT_LT(pose.knee_l.y(), pose.pelvis_pos.y());
   EXPECT_GT(pose.knee_l.y(), pose.foot_l.y());
-  EXPECT_LT(pose.knee_l.x(), hip_l.x());
   EXPECT_GT(pose.knee_l.z(), pose.foot_l.z());
+  EXPECT_GT(left_calf_forward, left_calf_lateral * 1.5F);
+  EXPECT_GT(left_calf_out, stirrup_half_spread * 0.95F);
 
   EXPECT_LT(pose.knee_r.y(), pose.pelvis_pos.y());
   EXPECT_GT(pose.knee_r.y(), pose.foot_r.y());
-  EXPECT_GT(pose.knee_r.x(), hip_r.x());
   EXPECT_GT(pose.knee_r.z(), pose.foot_r.z());
+  EXPECT_GT(right_calf_forward, right_calf_lateral * 1.5F);
+  EXPECT_GT(right_calf_out, stirrup_half_spread * 0.95F);
 }
 
 TEST_F(MountedPoseControllerTest, ElbowPositionValidForAllActions) {
