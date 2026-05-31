@@ -776,11 +776,15 @@ QJsonArray MapData::terrain_to_json() const {
     obj[MapJsonKeys::z] = static_cast<double>(elem.z);
 
     if (elem.type == "hill") {
+      const bool has_width = elem.width > 0.0F;
+      const bool has_depth = elem.depth > 0.0F;
+      const bool is_circular =
+          has_width && has_depth && std::abs(elem.width - elem.depth) <= 1e-3F;
 
-      bool const has_custom_dimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
-                                         (elem.depth != 10.0F && elem.depth > 0.0F);
-
-      if (has_custom_dimensions) {
+      if (is_circular) {
+        obj[MapJsonKeys::radius] =
+            static_cast<double>(elem.radius > 0.0F ? elem.radius : elem.width);
+      } else if (has_width || has_depth) {
         if (elem.width > 0.0F) {
           obj[MapJsonKeys::width] = static_cast<double>(elem.width);
         }

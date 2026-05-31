@@ -1,10 +1,12 @@
 #include "hill_projection_model.h"
 
+#include <QPointF>
 #include <QSet>
 #include <queue>
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include "map_json_keys.h"
 
@@ -14,6 +16,22 @@ namespace {
 
 constexpr int k_max_projection_size = 80;
 constexpr int k_grid_half_span = k_max_projection_size / 2;
+constexpr double k_pi = 3.14159265358979323846;
+constexpr double k_mountain_major_scale = 1.8;
+constexpr double k_mountain_minor_scale = 0.22;
+
+struct RotationAxes {
+  double cos_yaw = 1.0;
+  double sin_yaw = 0.0;
+};
+
+struct OrientedBounds {
+  bool valid = false;
+  double min_u = 0.0;
+  double max_u = 0.0;
+  double min_v = 0.0;
+  double max_v = 0.0;
+};
 
 auto encode_cell(const QPoint& cell) -> quint64 {
   return (static_cast<quint64>(static_cast<quint32>(cell.y())) << 32U) |
@@ -26,6 +44,25 @@ auto numeric_value(const QJsonValue& value, double* out_value) -> bool {
   }
   *out_value = value.toDouble();
   return true;
+}
+
+auto rotation_axes(double rotation_deg) -> RotationAxes {
+  const double radians = rotation_deg * (k_pi / 180.0);
+  return {std::cos(radians), std::sin(radians)};
+}
+
+auto project_world(double world_x,
+                   double world_z,
+                   const RotationAxes& axes) -> std::pair<double, double> {
+  return {world_x * axes.cos_yaw + world_z * axes.sin_yaw,
+          -world_x * axes.sin_yaw + world_z * axes.cos_yaw};
+}
+
+auto unproject_world(double projected_u,
+                     double projected_v,
+                     const RotationAxes& axes) -> QPointF {
+  return {projected_u * axes.cos_yaw - projected_v * axes.sin_yaw,
+          projected_u * axes.sin_yaw + projected_v * axes.cos_yaw};
 }
 
 auto world_x_from_cell(const Model& model, int cell_x) -> double {
@@ -121,6 +158,150 @@ auto connected_components(const QVector<QPoint>& cells) -> QVector<QVector<QPoin
   return components;
 }
 
+auto mountain_major_radius(double radius) -> double {
+  return std::max(radius * k_mountain_major_scale, radius + 3.0);
+}
+
+auto mountain_minor_radius(double radius) -> double {
+  return std::max(radius * k_mountain_minor_scale, 0.8);
+}
+
+auto mountain_radius_threshold(double local_u,
+                               double local_v,
+                               double base_radius) -> double {
+  double low = 0.5;
+  double high = std::max(base_radius, low);
+  while (true) {
+    const double major = mountain_major_radius(high);
+    const double minor = mountain_minor_radius(high);
+    const double norm =
+        (local_u * local_u) / (major * major) + (local_v * local_v) / (minor * minor);
+    if (norm <= 1.0 || high >= 512.0) {
+      break;
+    }
+    high *= 2.0;
+  }
+  for (int iter = 0; iter < 28; ++iter) {
+    const double mid = (low + high) * 0.5;
+    const double major = mountain_major_radius(mid);
+    const double minor = mountain_minor_radius(mid);
+    const double norm =
+        (local_u * local_u) / (major * major) + (local_v * local_v) / (minor * minor);
+    if (norm <= 1.0) {
+      high = mid;
+    } else {
+      low = mid;
+    }
+  }
+  return high;
+}
+
+auto radius_from_matching_cells(const Model& model,
+                                const QVector<QPoint>& selected_cells,
+                                double center_x,
+                                double center_z,
+                                double rotation_deg,
+                                double base_radius,
+                                bool is_mountain) -> double {
+  if (selected_cells.isEmpty()) {
+    return std::max(0.5, base_radius);
+  }
+
+  const RotationAxes axes = rotation_axes(rotation_deg);
+  QSet<quint64> selected_set;
+  for (const QPoint& cell : selected_cells) {
+    selected_set.insert(encode_cell(cell));
+  }
+
+  double lower = 0.5;
+  double upper = 512.0;
+  for (int cell_z = 0; cell_z < model.grid_height; ++cell_z) {
+    const double world_z = world_z_from_cell(model, cell_z);
+    for (int cell_x = 0; cell_x < model.grid_width; ++cell_x) {
+      const double world_x = world_x_from_cell(model, cell_x);
+      const auto [local_u, local_v] =
+          project_world(world_x - center_x, world_z - center_z, axes);
+      const double threshold =
+          is_mountain ? mountain_radius_threshold(local_u, local_v, base_radius)
+                      : std::sqrt(local_u * local_u + local_v * local_v);
+      if (selected_set.contains(encode_cell(QPoint(cell_x, cell_z)))) {
+        lower = std::max(lower, threshold);
+      } else {
+        upper = std::min(upper, threshold);
+      }
+    }
+  }
+
+  constexpr double k_interval_epsilon = 1e-6;
+  if (lower + k_interval_epsilon < upper) {
+    if (base_radius >= lower && base_radius < upper) {
+      return base_radius;
+    }
+    return (lower + upper) * 0.5;
+  }
+  return lower;
+}
+
+auto append_rotated_ellipse_cells(Model* model,
+                                  double half_width,
+                                  double half_depth,
+                                  double rotation_deg) -> void {
+  if (model == nullptr || half_width <= 0.0 || half_depth <= 0.0) {
+    return;
+  }
+
+  const RotationAxes axes = rotation_axes(rotation_deg);
+  const double inv_width_sq = 1.0 / (half_width * half_width);
+  const double inv_depth_sq = 1.0 / (half_depth * half_depth);
+
+  for (int cell_z = 0; cell_z < model->grid_height; ++cell_z) {
+    const double world_z = world_z_from_cell(*model, cell_z);
+    for (int cell_x = 0; cell_x < model->grid_width; ++cell_x) {
+      const double world_x = world_x_from_cell(*model, cell_x);
+      const auto [local_u, local_v] =
+          project_world(world_x - model->center_x, world_z - model->center_z, axes);
+      const double norm =
+          (local_u * local_u) * inv_width_sq + (local_v * local_v) * inv_depth_sq;
+      if (norm <= 1.0) {
+        model->hill_cells.append(QPoint(cell_x, cell_z));
+      }
+    }
+  }
+}
+
+auto oriented_bounds_from_cells(const Model& model,
+                                const QVector<QPoint>& cells,
+                                double rotation_deg) -> OrientedBounds {
+  OrientedBounds bounds;
+  const RotationAxes axes = rotation_axes(rotation_deg);
+  for (const QPoint& cell : cells) {
+    const double world_x = world_x_from_cell(model, cell.x());
+    const double world_z = world_z_from_cell(model, cell.y());
+    const auto [projected_u, projected_v] = project_world(world_x, world_z, axes);
+    if (!bounds.valid) {
+      bounds.valid = true;
+      bounds.min_u = bounds.max_u = projected_u;
+      bounds.min_v = bounds.max_v = projected_v;
+      continue;
+    }
+    bounds.min_u = std::min(bounds.min_u, projected_u);
+    bounds.max_u = std::max(bounds.max_u, projected_u);
+    bounds.min_v = std::min(bounds.min_v, projected_v);
+    bounds.max_v = std::max(bounds.max_v, projected_v);
+  }
+  return bounds;
+}
+
+auto fit_mountain_radius(const Model& model,
+                         const QVector<QPoint>& mountain_cells,
+                         double center_x,
+                         double center_z,
+                         double rotation_deg,
+                         double base_radius) -> double {
+  return radius_from_matching_cells(
+      model, mountain_cells, center_x, center_z, rotation_deg, base_radius, true);
+}
+
 } // namespace
 
 auto build_model(const QJsonObject& hill_json) -> Model {
@@ -130,50 +311,28 @@ auto build_model(const QJsonObject& hill_json) -> Model {
 
   model.center_x = hill_json.value(MapJsonKeys::x).toDouble(0.0);
   model.center_z = hill_json.value(MapJsonKeys::z).toDouble(0.0);
+  model.rotation_deg = hill_json.value(MapJsonKeys::rotation).toDouble(0.0);
   model.origin_x = std::floor(model.center_x) - static_cast<double>(k_grid_half_span);
   model.origin_z = std::floor(model.center_z) - static_cast<double>(k_grid_half_span);
 
   const double radius =
       std::max(1.0, hill_json.value(MapJsonKeys::radius).toDouble(10.0));
+  model.base_radius = radius;
   const QString terrain_type =
       hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
-  const bool is_mountain = terrain_type == QStringLiteral("mountain");
+  model.is_mountain = terrain_type == QStringLiteral("mountain");
 
-  double resolved_width;
-  double resolved_depth;
-  if (is_mountain) {
-    // Match game engine: major_radius = radius*1.8, minor_radius = radius*0.22
-    const double major_r = std::max(radius * 1.8, radius + 3.0);
-    const double minor_r = std::max(radius * 0.22, 0.8);
-    resolved_width = major_r * 2.0;
-    resolved_depth = minor_r * 2.0;
+  if (model.is_mountain) {
+    model.hill_half_width = mountain_major_radius(radius);
+    model.hill_half_depth = mountain_minor_radius(radius);
   } else {
     const double width = hill_json.value(MapJsonKeys::width).toDouble(0.0);
     const double depth = hill_json.value(MapJsonKeys::depth).toDouble(0.0);
-    resolved_width = width > 0.0 ? width : (radius * 2.0);
-    resolved_depth = depth > 0.0 ? depth : (radius * 2.0);
+    model.hill_half_width = std::max(0.5, width > 0.0 ? width : radius);
+    model.hill_half_depth = std::max(0.5, depth > 0.0 ? depth : radius);
   }
-  model.hill_half_width = std::max(0.5, resolved_width * 0.5);
-  model.hill_half_depth = std::max(0.5, resolved_depth * 0.5);
-
-  const double min_x = model.center_x - model.hill_half_width;
-  const double max_x = model.center_x + model.hill_half_width;
-  const double min_z = model.center_z - model.hill_half_depth;
-  const double max_z = model.center_z + model.hill_half_depth;
-
-  const int hill_min_x = std::clamp(
-      static_cast<int>(std::floor(min_x - model.origin_x)), 0, model.grid_width - 1);
-  const int hill_max_x = std::clamp(
-      static_cast<int>(std::ceil(max_x - model.origin_x)), 0, model.grid_width - 1);
-  const int hill_min_z = std::clamp(
-      static_cast<int>(std::floor(min_z - model.origin_z)), 0, model.grid_height - 1);
-  const int hill_max_z = std::clamp(
-      static_cast<int>(std::ceil(max_z - model.origin_z)), 0, model.grid_height - 1);
-  for (int z = hill_min_z; z <= hill_max_z; ++z) {
-    for (int x = hill_min_x; x <= hill_max_x; ++x) {
-      model.hill_cells.append(QPoint(x, z));
-    }
-  }
+  append_rotated_ellipse_cells(
+      &model, model.hill_half_width, model.hill_half_depth, model.rotation_deg);
   if (model.hill_cells.isEmpty()) {
     const QPoint center_cell = cell_from_world(model, model.center_x, model.center_z);
     if (in_bounds(model, center_cell)) {
@@ -316,35 +475,59 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
   const QString terrain_type =
       base_hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool is_mountain = terrain_type == QStringLiteral("mountain");
+  const double rotation_deg = base_hill_json.value(MapJsonKeys::rotation).toDouble(0.0);
 
-  if (!is_mountain) {
-    // For hills: update position and size from the painted body cells.
-    const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
-    if (!normalized_hill.isEmpty()) {
-      double min_x = world_x_from_cell(model, normalized_hill.first().x());
-      double max_x = min_x;
-      double min_z = world_z_from_cell(model, normalized_hill.first().y());
-      double max_z = min_z;
+  const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
+  if (!normalized_hill.isEmpty()) {
+    const OrientedBounds bounds =
+        oriented_bounds_from_cells(model, normalized_hill, rotation_deg);
+    if (bounds.valid) {
+      const RotationAxes axes = rotation_axes(rotation_deg);
+      const double center_u = (bounds.min_u + bounds.max_u) * 0.5;
+      const double center_v = (bounds.min_v + bounds.max_v) * 0.5;
+      const QPointF center = unproject_world(center_u, center_v, axes);
+      updated[MapJsonKeys::x] = center.x();
+      updated[MapJsonKeys::z] = center.y();
 
-      for (const QPoint& cell : normalized_hill) {
-        const double world_x = world_x_from_cell(model, cell.x());
-        const double world_z = world_z_from_cell(model, cell.y());
-        min_x = std::min(min_x, world_x);
-        max_x = std::max(max_x, world_x);
-        min_z = std::min(min_z, world_z);
-        max_z = std::max(max_z, world_z);
+      if (is_mountain) {
+        const double radius = fit_mountain_radius(
+            model,
+            normalized_hill,
+            center.x(),
+            center.y(),
+            rotation_deg,
+            base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius));
+        updated[MapJsonKeys::radius] = radius;
+        updated.remove(MapJsonKeys::width);
+        updated.remove(MapJsonKeys::depth);
+      } else {
+        const double half_width = std::max(0.5, (bounds.max_u - bounds.min_u) * 0.5);
+        const double half_depth = std::max(0.5, (bounds.max_v - bounds.min_v) * 0.5);
+        if (std::abs(half_width - half_depth) <= 1e-6) {
+          const double radius = radius_from_matching_cells(
+              model,
+              normalized_hill,
+              center.x(),
+              center.y(),
+              rotation_deg,
+              base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius),
+              false);
+          updated[MapJsonKeys::radius] = radius;
+          updated.remove(MapJsonKeys::width);
+          updated.remove(MapJsonKeys::depth);
+        } else {
+          updated[MapJsonKeys::width] = half_width;
+          updated[MapJsonKeys::depth] = half_depth;
+          updated.remove(MapJsonKeys::radius);
+        }
       }
-
-      updated[MapJsonKeys::x] = (min_x + max_x) * 0.5;
-      updated[MapJsonKeys::z] = (min_z + max_z) * 0.5;
-      updated[MapJsonKeys::width] = (max_x - min_x) + 1.0;
-      updated[MapJsonKeys::depth] = (max_z - min_z) + 1.0;
-      updated.remove(MapJsonKeys::radius);
     }
   }
-  // For mountains: the game engine derives shape from `radius` (major_radius =
-  // radius*1.8, minor_radius = radius*0.22). Never modify radius/width/depth/x/z — only
-  // entrances.
+
+  if (is_mountain) {
+    updated.remove(MapJsonKeys::entrances);
+    return updated;
+  }
 
   const QJsonArray entrances = entrances_from_cells(model, entrance_cells);
   if (entrances.isEmpty()) {
