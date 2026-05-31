@@ -8,6 +8,7 @@
 #include "../entity/renderer_constants.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/humanoid_types.h"
+#include "pose_primitives.h"
 
 namespace Render::GL {
 
@@ -51,13 +52,8 @@ inline auto compute_offhand_spear_grip(const HumanoidPose& pose,
 
   QVector3D offhand = main_hand_pos + spear_dir * along_offset;
 
-  QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
-  right_axis.setY(0.0F);
-  if (right_axis.lengthSquared() < 1e-6F) {
-    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-  } else {
-    right_axis.normalize();
-  }
+  QVector3D const right_axis =
+      Render::Humanoid::PosePrimitives::compute_right_axis(pose);
 
   offhand += ((main_side == Side::Left) ? right_axis : -right_axis) * lateral_offset;
   offhand.setY(offhand.y() - y_drop);

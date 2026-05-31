@@ -42,6 +42,7 @@ constexpr float k_horse_thigh_thickness_scale = 1.18F;
 constexpr float k_horse_calf_thickness_scale = 1.10F;
 constexpr float k_horse_segmented_leg_width_scale = 1.10F;
 constexpr float k_horse_calf_width_scale = 1.50F;
+constexpr float k_horse_eye_scale = 5.0F / 3.0F;
 
 struct HorseClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -652,10 +653,12 @@ auto build_horse_whole_nodes() -> std::vector<Render::Creature::Quadruped::MeshN
 
   auto add_eye = [&](float side) {
     EllipsoidNode eye;
-    eye.center = QVector3D(-side * hw * 0.56F,
-                           head_base_y + hh * 0.34F,
-                           head_back_z + hl * 0.16F * k_horse_head_length_scale);
-    eye.radii = QVector3D(hw * 0.060F, hh * 0.088F, hl * 0.044F);
+    eye.center = QVector3D(-side * hw * 0.42F,
+                           head_base_y + hh * 0.28F,
+                           head_back_z + hl * 0.21F * k_horse_head_length_scale);
+    eye.radii = QVector3D(hw * 0.060F * k_horse_eye_scale,
+                          hh * 0.088F * k_horse_eye_scale,
+                          hl * 0.044F * k_horse_eye_scale);
     eye.ring_count = 4U;
     eye.ring_vertices = 6U;
     nodes.push_back({"horse.eye",

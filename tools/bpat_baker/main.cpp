@@ -718,6 +718,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         0U, 0.0F, hold_gait, variation, pose);
 
     Render::GL::HumanoidAnimationContext anim_ctx_r{};
+    anim_ctx_r.variation = variation;
     anim_ctx_r.gait = hold_gait;
     anim_ctx_r.gait.state = Render::GL::HumanoidMotionState::Hold;
     anim_ctx_r.inputs.movement_state =
