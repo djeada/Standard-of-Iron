@@ -221,8 +221,8 @@ TEST(CommanderControlRegressionTest, CommanderModePreservesAndRestoresRtsSelecti
   EXPECT_TRUE(contains(engine_source, "store_rts_selection();"));
   EXPECT_TRUE(contains(engine_source, "select_controlled_commander();"));
   EXPECT_TRUE(contains(engine_source, "restore_rts_selection();"));
-  EXPECT_TRUE(contains(engine_source,
-                       "m_commander_mode->select_controlled_commander("));
+  EXPECT_TRUE(
+      contains(engine_source, "m_commander_mode->select_controlled_commander("));
   EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
 }
 
@@ -673,8 +673,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(controller_source, "m_jump_last_walkable_position"));
   EXPECT_TRUE(contains(controller_source, "m_jump_timer <= 0.0F"));
 
-  EXPECT_TRUE(
-      contains(commander_mode_source, "commander_data->jump_active = false;"));
+  EXPECT_TRUE(contains(commander_mode_source, "commander_data->jump_active = false;"));
 
   EXPECT_TRUE(contains(prepare_source, "RCP::set_model_world_y("));
   EXPECT_TRUE(
