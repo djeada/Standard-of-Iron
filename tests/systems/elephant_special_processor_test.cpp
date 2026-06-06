@@ -5,6 +5,7 @@
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/elephant_special_processor.h"
 #include "systems/owner_registry.h"
+#include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
@@ -100,13 +101,13 @@ TEST_F(ElephantSpecialProcessorTest, PanicDoesNotCreateHiddenRandomMoveTarget) {
 
   auto* movement = elephant->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  movement->has_target = false;
-  movement->target_x = 0.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, false);
+  MovementTestAccess::set_target_x(*movement, 0.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
 
   update(3.0F);
 
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FLOAT_EQ(movement->target_x, 0.0F);
-  EXPECT_FLOAT_EQ(movement->target_y, 0.0F);
+  EXPECT_FALSE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_target_x(), 0.0F);
+  EXPECT_FLOAT_EQ(movement->get_target_y(), 0.0F);
 }

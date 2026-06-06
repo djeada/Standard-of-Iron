@@ -4,6 +4,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/stamina_system.h"
+#include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
@@ -27,8 +28,8 @@ TEST_F(StaminaSystemTest, StaminaDepletesWhileRunning) {
   unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;
@@ -50,8 +51,8 @@ TEST_F(StaminaSystemTest, StaminaRegeneratesWhenNotRunning) {
   unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 0.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_vx(*movement, 0.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 50.0F;
@@ -73,8 +74,8 @@ TEST_F(StaminaSystemTest, StaminaDoesNotExceedMax) {
   unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 0.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_vx(*movement, 0.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 95.0F;
@@ -95,8 +96,8 @@ TEST_F(StaminaSystemTest, RunningStopsWhenStaminaDepleted) {
   unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 5.0F;
@@ -119,8 +120,8 @@ TEST_F(StaminaSystemTest, CatapultsCannotRun) {
   unit_comp->spawn_type = Game::Units::SpawnType::Catapult;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;
@@ -141,8 +142,8 @@ TEST_F(StaminaSystemTest, BallistasCannotRun) {
   unit_comp->spawn_type = Game::Units::SpawnType::Ballista;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;
@@ -163,8 +164,8 @@ TEST_F(StaminaSystemTest, InfantryCanRun) {
   unit_comp->spawn_type = Game::Units::SpawnType::Knight;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;
@@ -184,8 +185,8 @@ TEST_F(StaminaSystemTest, CavalryCanRun) {
   unit_comp->spawn_type = Game::Units::SpawnType::MountedKnight;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;
@@ -205,8 +206,8 @@ TEST_F(StaminaSystemTest, NoRunningWhenStationary) {
   unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
   auto* movement = unit->add_component<MovementComponent>();
-  movement->vx = 0.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_vx(*movement, 0.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
 
   auto* stamina = unit->add_component<StaminaComponent>();
   stamina->stamina = 100.0F;

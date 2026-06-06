@@ -7,6 +7,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/command_service.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
 #include "../systems/troop_profile_service.h"
@@ -58,31 +59,17 @@ void Unit::ensure_core_components() {
 
 void Unit::move_to(float x, float z) {
   ensure_core_components();
-  if (m_mv == nullptr) {
-    if (auto* e = entity()) {
-      m_mv = e->add_component<Engine::Core::MovementComponent>();
-    }
-  }
-  if (m_mv != nullptr) {
-    m_mv->target_x = x;
-    m_mv->target_y = z;
-    m_mv->has_target = true;
-    m_mv->goal_x = x;
-    m_mv->goal_y = z;
-    m_mv->clear_path();
-    m_mv->path_pending = false;
-    m_mv->pending_request_id = 0;
+  if (m_world == nullptr || entity() == nullptr) {
+    return;
   }
 
+  Game::Systems::CommandService::MoveOptions options;
+  options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Systems::CommandService::move_unit(
+      *m_world, m_id, QVector3D(x, 0.0F, z), options);
+
   if (auto* e = entity()) {
-    auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_comp != nullptr) && hold_comp->active) {
-      hold_comp->begin_exit();
-    }
-    auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
-    if (guard_comp != nullptr) {
-      guard_comp->active = false;
-    }
+    m_mv = e->get_component<Engine::Core::MovementComponent>();
   }
 }
 
@@ -129,9 +116,7 @@ void Unit::set_hold_mode(bool enabled) {
 
     auto* mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
-      mv->has_target = false;
-      mv->clear_path();
-      mv->path_pending = false;
+      mv->stop();
     }
   } else {
     if ((hold_comp != nullptr) && hold_comp->active) {

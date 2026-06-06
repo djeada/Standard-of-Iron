@@ -903,9 +903,10 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
 
   // Consume stamina for the attack
   if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
-    float cost = (cmd_comp != nullptr && cmd_comp->power_strike_active)
-                     ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
-                     : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack;
+    float const cost =
+        (cmd_comp != nullptr && cmd_comp->power_strike_active)
+            ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
+            : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack;
     stamina->stamina = std::max(0.0F, stamina->stamina - cost);
   }
 
@@ -1130,8 +1131,7 @@ void CommanderControlController::try_activate_vanguard_rush(
   transform->position.x = resolved.x();
   transform->position.z = resolved.z();
   if (movement != nullptr) {
-    movement->vx = rush_direction.x() * 8.0F;
-    movement->vz = rush_direction.z() * 8.0F;
+    movement->set_manual_velocity(rush_direction.x() * 8.0F, rush_direction.z() * 8.0F);
   }
   m_input.primary_action_scan_cooldown = 0.18F;
   m_dodge_fov_kick = std::max(m_dodge_fov_kick, 6.0F);
@@ -1257,8 +1257,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_view_yaw = wrap_angle_degrees(transform->rotation.y);
 
     if (movement != nullptr) {
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
+      movement->set_manual_velocity(0.0F, 0.0F);
     }
     if (guard != nullptr) {
       guard->active = false;
@@ -1276,14 +1275,8 @@ auto CommanderControlController::update(Engine::Core::World& world,
   }
 
   if (movement != nullptr) {
-    movement->has_target = false;
-    movement->path_pending = false;
-    movement->pending_request_id = 0;
-    movement->goal_x = transform->position.x;
-    movement->goal_y = transform->position.z;
-    movement->target_x = transform->position.x;
-    movement->target_y = transform->position.z;
-    movement->clear_path();
+    movement->stop();
+    movement->set_rest_position(transform->position.x, transform->position.z);
   }
 
   update_lock_on_yaw(world, *commander, dt);
@@ -1441,8 +1434,8 @@ auto CommanderControlController::update(Engine::Core::World& world,
       transform->position.z = nz;
     }
     if (movement != nullptr) {
-      movement->vx = m_dodge_direction.x() * k_dodge_speed;
-      movement->vz = m_dodge_direction.z() * k_dodge_speed;
+      movement->set_manual_velocity(m_dodge_direction.x() * k_dodge_speed,
+                                    m_dodge_direction.z() * k_dodge_speed);
     }
     actual_speed_for_bob = k_dodge_speed;
     run_for_bob = true;
@@ -1471,17 +1464,14 @@ auto CommanderControlController::update(Engine::Core::World& world,
         transform->position.x = nx;
         transform->position.z = nz;
         if (movement != nullptr) {
-          movement->vx = move.x() * speed;
-          movement->vz = move.z() * speed;
+          movement->set_manual_velocity(move.x() * speed, move.z() * speed);
         }
         actual_speed_for_bob = speed;
       } else if (movement != nullptr) {
-        movement->vx = 0.0F;
-        movement->vz = 0.0F;
+        movement->set_manual_velocity(0.0F, 0.0F);
       }
     } else if (movement != nullptr) {
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
+      movement->set_manual_velocity(0.0F, 0.0F);
     }
   } else {
 
@@ -1498,18 +1488,15 @@ auto CommanderControlController::update(Engine::Core::World& world,
         transform->position.z = nz;
         mark_jump_safe_position(nx, nz);
         if (movement != nullptr) {
-          movement->vx = move.x() * speed;
-          movement->vz = move.z() * speed;
+          movement->set_manual_velocity(move.x() * speed, move.z() * speed);
         }
         actual_speed_for_bob = speed;
         run_for_bob = m_input.run;
       } else if (movement != nullptr) {
-        movement->vx = 0.0F;
-        movement->vz = 0.0F;
+        movement->set_manual_velocity(0.0F, 0.0F);
       }
     } else if (movement != nullptr) {
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
+      movement->set_manual_velocity(0.0F, 0.0F);
     }
   }
   if (m_jump_safe_position_valid && !jump_active) {
@@ -1517,8 +1504,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
       transform->position.x = m_jump_last_walkable_position.x();
       transform->position.z = m_jump_last_walkable_position.z();
       if (movement != nullptr) {
-        movement->vx = 0.0F;
-        movement->vz = 0.0F;
+        movement->set_manual_velocity(0.0F, 0.0F);
       }
       actual_speed_for_bob = 0.0F;
       run_for_bob = false;
@@ -1531,16 +1517,12 @@ auto CommanderControlController::update(Engine::Core::World& world,
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
   if (cmd_comp != nullptr) {
-    cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->vx : 0.0F;
-    cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->vz : 0.0F;
+    cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
+    cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
   }
 
   if (movement != nullptr && actual_speed_for_bob > 0.05F) {
-    movement->has_target = true;
-    movement->goal_x = transform->position.x;
-    movement->goal_y = transform->position.z;
-    movement->target_x = transform->position.x;
-    movement->target_y = transform->position.z;
+    movement->engage_manual_move(transform->position.x, transform->position.z);
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->run_requested = m_move_running;

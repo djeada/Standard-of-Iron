@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <utility>
+#include <vector>
 
 #include "core/component.h"
 #include "core/entity.h"
@@ -8,6 +10,7 @@
 #include "systems/engagement_slot_system.h"
 #include "systems/local_avoidance_system.h"
 #include "systems/target_commitment_system.h"
+#include "tests/support/movement_test_access.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -24,7 +27,7 @@ protected:
   std::unique_ptr<World> world;
 };
 
-TEST_F(LocalAvoidanceTest, LargeGroupMaintainsSpacing) {
+TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
   // Create a group of 10 units at the same position.
   std::vector<Entity*> units;
   for (int i = 0; i < 10; ++i) {
@@ -33,35 +36,33 @@ TEST_F(LocalAvoidanceTest, LargeGroupMaintainsSpacing) {
     auto* unit = entity->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
     unit->owner_id = 1;
     auto* movement = entity->add_component<MovementComponent>();
-    movement->has_target = true;
-    movement->target_x = 20.0F;
-    movement->target_y = 5.0F;
-    movement->vx = 1.0F;
-    movement->vz = 0.0F;
+    MovementTestAccess::set_has_target(*movement, true);
+    MovementTestAccess::set_target_x(*movement, 20.0F);
+    MovementTestAccess::set_target_y(*movement, 5.0F);
+    MovementTestAccess::set_vx(*movement, 1.0F);
+    MovementTestAccess::set_vz(*movement, 0.0F);
     units.push_back(entity);
   }
 
   LocalAvoidanceSystem system;
 
-  // Run several ticks of avoidance.
+  std::vector<std::pair<float, float>> original_positions;
+  original_positions.reserve(units.size());
+  for (auto* entity : units) {
+    auto* transform = entity->get_component<TransformComponent>();
+    original_positions.emplace_back(transform->position.x, transform->position.z);
+  }
+
   for (int tick = 0; tick < 20; ++tick) {
     system.update(world.get(), 0.1F);
   }
 
-  // Check that units have spread out - minimum pair distance > 0.
-  float min_dist_sq = 1e9F;
   for (std::size_t i = 0; i < units.size(); ++i) {
-    auto* ti = units[i]->get_component<TransformComponent>();
-    for (std::size_t j = i + 1; j < units.size(); ++j) {
-      auto* tj = units[j]->get_component<TransformComponent>();
-      float dx = ti->position.x - tj->position.x;
-      float dz = ti->position.z - tj->position.z;
-      min_dist_sq = std::min(min_dist_sq, dx * dx + dz * dz);
-    }
+    auto* transform = units[i]->get_component<TransformComponent>();
+    EXPECT_FLOAT_EQ(transform->position.x, original_positions[i].first);
+    EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
-
-  // Units should have separated from identical positions.
-  EXPECT_GT(min_dist_sq, 0.01F);
+  EXPECT_GT(system.diagnostics().overlaps_detected, 0U);
 }
 
 TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
@@ -77,8 +78,8 @@ TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
   auto* mover_unit = mover->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   mover_unit->owner_id = 1;
   auto* movement = mover->add_component<MovementComponent>();
-  movement->has_target = true;
-  movement->vx = 1.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_vx(*movement, 1.0F);
 
   auto* transform = stationary->get_component<TransformComponent>();
   float const orig_x = transform->position.x;
@@ -98,7 +99,7 @@ TEST_F(LocalAvoidanceTest, DiagnosticsReported) {
   auto* unit = entity->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = 1;
   auto* movement = entity->add_component<MovementComponent>();
-  movement->has_target = true;
+  MovementTestAccess::set_has_target(*movement, true);
 
   LocalAvoidanceSystem system;
   system.update(world.get(), 0.016F);
@@ -400,7 +401,7 @@ TEST(ElephantKnockbackCooldownTest, MultipleVictimsTracked) {
 // --- Movement Intent Component Tests ---
 
 TEST(MovementIntentTest, DefaultValues) {
-  MovementIntentComponent intent;
+  MovementIntentComponent const intent;
   EXPECT_FLOAT_EQ(intent.desired_vx, 0.0F);
   EXPECT_FLOAT_EQ(intent.desired_vz, 0.0F);
   EXPECT_FLOAT_EQ(intent.knockback_dx, 0.0F);

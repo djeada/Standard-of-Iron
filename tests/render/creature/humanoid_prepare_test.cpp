@@ -60,6 +60,7 @@
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -232,11 +233,11 @@ auto render_bow_mesh_count(const char* renderer_id,
       if (movement == nullptr) {
         return {};
       }
-      movement->has_target = true;
-      movement->target_x = 2.0F;
-      movement->target_y = 0.0F;
-      movement->vx = 1.0F;
-      movement->vz = 0.0F;
+      MovementTestAccess::set_has_target(*movement, true);
+      MovementTestAccess::set_target_x(*movement, 2.0F);
+      MovementTestAccess::set_target_y(*movement, 0.0F);
+      MovementTestAccess::set_vx(*movement, 1.0F);
+      MovementTestAccess::set_vz(*movement, 0.0F);
     }
     ctx.entity = &entity;
 
@@ -333,11 +334,11 @@ auto render_runtime_mesh_count(const char* renderer_id,
     if (movement == nullptr) {
       return 0;
     }
-    movement->has_target = true;
-    movement->target_x = 2.0F;
-    movement->target_y = 0.0F;
-    movement->vx = 1.0F;
-    movement->vz = 0.0F;
+    MovementTestAccess::set_has_target(*movement, true);
+    MovementTestAccess::set_target_x(*movement, 2.0F);
+    MovementTestAccess::set_target_y(*movement, 0.0F);
+    MovementTestAccess::set_vx(*movement, 1.0F);
+    MovementTestAccess::set_vz(*movement, 0.0F);
   }
   ctx.entity = &entity;
 
@@ -478,11 +479,11 @@ auto moving_palette_changes_over_time(const char* renderer_id,
   }
   unit->spawn_type = spawn_type;
   unit->nation_id = nation_id;
-  movement->has_target = true;
-  movement->target_x = 6.0F;
-  movement->target_y = 0.0F;
-  movement->vx = 1.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 6.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   if (motion != nullptr) {
     motion->initialized = true;
@@ -1126,11 +1127,11 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   ASSERT_NE(motion, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
-  movement->has_target = true;
-  movement->target_x = 6.0F;
-  movement->target_y = 0.0F;
-  movement->vx = 1.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 6.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   motion->initialized = true;
   motion->snapshot_valid = true;
@@ -2260,9 +2261,9 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   ASSERT_NE(add_walk_motion(entity, unit->speed), nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->has_target = true;
-  movement->target_x = 4.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 4.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   combat_state->animation_state = Engine::Core::CombatAnimationState::Recover;
   combat_state->attack_family = Engine::Core::CombatAttackFamily::Sword;
   combat_state->state_time = 0.18F;
@@ -2300,9 +2301,9 @@ TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
   ASSERT_NE(add_walk_motion(entity, unit->speed), nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->has_target = true;
-  movement->target_x = 4.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 4.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
   combat_state->attack_family = Engine::Core::CombatAttackFamily::Sword;
   combat_state->state_time = 0.05F;
@@ -2471,19 +2472,19 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->has_target = true;
-  movement->target_x = 6.0F;
-  movement->target_y = 0.0F;
-  movement->vx = 0.0F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 6.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_vx(*movement, 0.0F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
   motion->has_navigation_intent = true;
   motion->has_movement_target = true;
-  motion->movement_target_x = movement->target_x;
-  motion->movement_target_z = movement->target_y;
+  motion->movement_target_x = movement->get_target_x();
+  motion->movement_target_z = movement->get_target_y();
   motion->speed = unit->speed;
   ctx.entity = &entity;
 
@@ -2505,7 +2506,7 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   EXPECT_GT(humanoid_state->locomotion_blend, 0.0F);
 }
 
-TEST(HumanoidPrepare, PathPendingMovementStillTriggersWalkAnimation) {
+TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -2522,17 +2523,17 @@ TEST(HumanoidPrepare, PathPendingMovementStillTriggersWalkAnimation) {
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->goal_x = 8.0F;
-  movement->goal_y = 0.0F;
-  movement->path_pending = true;
-  movement->pending_request_id = 77U;
-  movement->time_since_last_path_request = 0.05F;
+  MovementTestAccess::set_goal_x(*movement, 8.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 8.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
   motion->has_navigation_intent = true;
   motion->has_movement_target = true;
-  motion->movement_target_x = movement->goal_x;
-  motion->movement_target_z = movement->goal_y;
+  motion->movement_target_x = movement->get_goal_x();
+  motion->movement_target_z = movement->get_goal_y();
   motion->speed = unit->speed;
   ctx.entity = &entity;
 
@@ -2546,7 +2547,7 @@ TEST(HumanoidPrepare, PathPendingMovementStillTriggersWalkAnimation) {
             Render::Creature::AnimationStateId::Walk);
 }
 
-TEST(HumanoidPrepare, QueuedWaypointMovementStillTriggersWalkAnimation) {
+TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -2563,16 +2564,16 @@ TEST(HumanoidPrepare, QueuedWaypointMovementStillTriggersWalkAnimation) {
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->path.emplace_back(5.0F, 0.0F);
-  movement->path_index = 0;
-  movement->goal_x = 5.0F;
-  movement->goal_y = 0.0F;
+  MovementTestAccess::set_path(*movement, {{5.0F, 0.0F}});
+  MovementTestAccess::set_path_index(*movement, 0);
+  MovementTestAccess::set_goal_x(*movement, 5.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
   motion->has_navigation_intent = true;
   motion->has_movement_target = true;
-  motion->movement_target_x = movement->goal_x;
-  motion->movement_target_z = movement->goal_y;
+  motion->movement_target_x = movement->get_goal_x();
+  motion->movement_target_z = movement->get_goal_y();
   motion->speed = unit->speed;
   ctx.entity = &entity;
 
@@ -2603,14 +2604,15 @@ TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->vx = 1.4F;
-  movement->vz = 0.2F;
+  MovementTestAccess::set_vx(*movement, 1.4F);
+  MovementTestAccess::set_vz(*movement, 0.2F);
   transform->position = {0.0F, 0.0F, 0.0F};
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
   motion->has_velocity = true;
-  motion->velocity_x = movement->vx;
-  motion->velocity_z = movement->vz;
-  motion->speed = std::sqrt(movement->vx * movement->vx + movement->vz * movement->vz);
+  motion->velocity_x = movement->get_vx();
+  motion->velocity_z = movement->get_vz();
+  motion->speed = std::sqrt(movement->get_vx() * movement->get_vx() +
+                            movement->get_vz() * movement->get_vz());
   ctx.entity = &entity;
 
   auto const anim = Render::GL::sample_anim_state(ctx);
@@ -2748,13 +2750,13 @@ TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->range = 1.5F;
   attack_target->should_chase = true;
-  movement->has_target = true;
-  movement->target_x = 0.6F;
-  movement->target_y = 0.0F;
-  movement->goal_x = 0.6F;
-  movement->goal_y = 0.0F;
-  movement->vx = 0.05F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 0.6F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 0.6F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
+  MovementTestAccess::set_vx(*movement, 0.05F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
 
   auto* enemy = world.create_entity();
@@ -2839,9 +2841,9 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   ASSERT_NE(motion, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->has_target = true;
-  movement->target_x = 7.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 7.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   ctx.entity = &entity;
 
@@ -2849,11 +2851,11 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   ASSERT_TRUE(anim.visual_movement.is_authoritative);
   ASSERT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 
-  movement->has_target = false;
-  movement->target_x = 0.0F;
-  movement->target_y = 0.0F;
-  movement->goal_x = 0.0F;
-  movement->goal_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, false);
+  MovementTestAccess::set_target_x(*movement, 0.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 0.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
@@ -2883,9 +2885,9 @@ TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
   ASSERT_NE(transform, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
-  movement->has_target = true;
-  movement->target_x = 9.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 9.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   transform->position = {0.0F, 0.0F, 0.0F};
   ctx.entity = &entity;
 

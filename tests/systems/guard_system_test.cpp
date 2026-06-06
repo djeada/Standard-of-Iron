@@ -3,6 +3,9 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/map/terrain_service.h"
+#include "systems/building_collision_registry.h"
+#include "systems/command_service.h"
 #include "systems/guard_system.h"
 
 using namespace Engine::Core;
@@ -10,9 +13,18 @@ using namespace Game::Systems;
 
 class GuardSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override { world = std::make_unique<World>(); }
+  void SetUp() override {
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::CommandService::initialize(64, 64);
+    world = std::make_unique<World>();
+  }
 
-  void TearDown() override { world.reset(); }
+  void TearDown() override {
+    world.reset();
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+  }
 
   std::unique_ptr<World> world;
   GuardSystem guard_system;
@@ -41,9 +53,9 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
 
   guard_system.update(world.get(), 0.1F);
 
-  EXPECT_TRUE(guard_movement->has_target);
-  EXPECT_FLOAT_EQ(guard_movement->goal_x, 5.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 5.0F);
+  EXPECT_TRUE(guard_movement->get_has_target());
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_x(), 5.0F);
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_y(), 5.0F);
 
   guarded_transform->position.x = 15.0F;
   guarded_transform->position.z = 15.0F;
@@ -53,9 +65,9 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
   EXPECT_FLOAT_EQ(guard_mode->guard_position_x, 15.0F);
   EXPECT_FLOAT_EQ(guard_mode->guard_position_z, 15.0F);
 
-  EXPECT_TRUE(guard_movement->has_target);
-  EXPECT_FLOAT_EQ(guard_movement->goal_x, 15.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 15.0F);
+  EXPECT_TRUE(guard_movement->get_has_target());
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_x(), 15.0F);
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_y(), 15.0F);
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
@@ -82,7 +94,7 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowSmallMovements) {
 
   guard_system.update(world.get(), 0.1F);
 
-  EXPECT_FALSE(guard_movement->has_target);
+  EXPECT_FALSE(guard_movement->get_has_target());
 }
 
 TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
@@ -116,7 +128,7 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
 
   guard_system.update(world.get(), 0.1F);
 
-  EXPECT_FALSE(guard_movement->has_target);
+  EXPECT_FALSE(guard_movement->get_has_target());
 
   EXPECT_FLOAT_EQ(guard_mode->guard_position_x, 5.0F);
   EXPECT_FLOAT_EQ(guard_mode->guard_position_z, 5.0F);
@@ -140,9 +152,9 @@ TEST_F(GuardSystemTest, GuardReturnsToPositionWhenGuardingLocation) {
 
   guard_system.update(world.get(), 0.1F);
 
-  EXPECT_TRUE(guard_movement->has_target);
-  EXPECT_FLOAT_EQ(guard_movement->goal_x, 10.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 10.0F);
+  EXPECT_TRUE(guard_movement->get_has_target());
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_x(), 10.0F);
+  EXPECT_FLOAT_EQ(guard_movement->get_goal_y(), 10.0F);
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
@@ -164,6 +176,6 @@ TEST_F(GuardSystemTest, GuardDoesNotMoveWhenAlreadyAtPosition) {
 
   guard_system.update(world.get(), 0.1F);
 
-  EXPECT_FALSE(guard_movement->has_target);
+  EXPECT_FALSE(guard_movement->get_has_target());
   EXPECT_FALSE(guard_mode->returning_to_guard_position);
 }

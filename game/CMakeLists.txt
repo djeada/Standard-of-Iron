@@ -68,6 +68,7 @@ add_library(game_systems STATIC
     systems/camera_visibility_service.cpp
     systems/picking_service.cpp
     systems/command_service.cpp
+    systems/movement_orders.cpp
     systems/commander_system.cpp
     systems/construction_cost_catalog.cpp
     systems/production_service.cpp

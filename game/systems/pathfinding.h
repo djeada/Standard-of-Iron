@@ -1,15 +1,11 @@
 #pragma once
 
 #include <QVector3D>
-#include <queue>
 
 #include <array>
 #include <atomic>
-#include <condition_variable>
 #include <cstdint>
-#include <future>
 #include <mutex>
-#include <thread>
 #include <vector>
 
 namespace Game::Systems {
@@ -87,17 +83,10 @@ public:
   auto is_boulder(int x, int y) const -> bool;
   auto is_iron_ore(int x, int y) const -> bool;
   auto cell_value(int x, int y) const -> CellValue;
-  auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
-  auto is_world_position_walkable(const QVector3D& world_position,
-                                  float unit_radius) const -> bool;
+  auto is_world_position_walkable(const QVector3D& world_position) const -> bool;
   auto is_world_segment_walkable(const QVector3D& from,
-                                 const QVector3D& to,
-                                 float unit_radius) const -> bool;
-  auto path_waypoint_world_position(const Point& path_cell,
-                                    const QVector3D& formation_offset = {}) const
-      -> QVector3D;
-  auto project_world_position_to_traversal_corridor(
-      const QVector3D& world_position) const -> QVector3D;
+                                 const QVector3D& to) const -> bool;
+  auto path_waypoint_world_position(const Point& path_cell) const -> QVector3D;
 
   void update_navigation_grid();
 
@@ -109,41 +98,15 @@ public:
   mark_building_region_dirty(float center_x, float center_z, float width, float depth);
 
   auto find_path(const Point& start, const Point& end) -> std::vector<Point>;
-  auto find_path(const Point& start,
-                 const Point& end,
-                 float unit_radius) -> std::vector<Point>;
-
-  auto find_path_async(const Point& start,
-                       const Point& end) -> std::future<std::vector<Point>>;
-
-  void
-  submit_path_request(std::uint64_t request_id, const Point& start, const Point& end);
-  void submit_path_request(std::uint64_t request_id,
-                           const Point& start,
-                           const Point& end,
-                           float unit_radius);
-
-  struct PathResult {
-    std::uint64_t request_id;
-    std::vector<Point> path;
-  };
-  auto fetch_completed_paths() -> std::vector<PathResult>;
 
   static auto find_nearest_walkable_point(const Point& point,
                                           int max_search_radius,
-                                          const Pathfinding& pathfinder,
-                                          float unit_radius = 0.0F) -> Point;
+                                          const Pathfinding& pathfinder) -> Point;
 
 private:
   auto find_path_internal(const Point& start, const Point& end) -> std::vector<Point>;
-  auto find_path_internal(const Point& start,
-                          const Point& end,
-                          float unit_radius) -> std::vector<Point>;
-  auto resolve_walkable_endpoint(const Point& requested,
-                                 float unit_radius,
-                                 Point& resolved) const -> bool;
-  void
-  force_mandatory_traversal_cells_walkable(int min_x, int max_x, int min_z, int max_z);
+  auto resolve_walkable_endpoint(const Point& requested, Point& resolved) const -> bool;
+  void force_map_passage_cells_walkable(int min_x, int max_x, int min_z, int max_z);
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 
@@ -183,8 +146,6 @@ private:
   void push_open_node(const QueueNode& node);
   auto pop_open_node() -> QueueNode;
 
-  void worker_loop();
-
   void process_dirty_regions();
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
@@ -196,19 +157,6 @@ private:
   float m_grid_offset_x{0.0F}, m_grid_offset_z{0.0F};
   std::atomic<bool> m_navigation_grid_dirty;
   mutable std::mutex m_mutex;
-  std::atomic<bool> m_stop_worker{false};
-  std::thread m_worker_thread;
-  std::mutex m_request_mutex;
-  std::condition_variable m_request_condition;
-  struct PathRequest {
-    std::uint64_t request_id{};
-    Point start;
-    Point end;
-    float unit_radius{0.0F};
-  };
-  std::queue<PathRequest> m_request_queue;
-  std::mutex m_result_mutex;
-  std::queue<PathResult> m_result_queue;
 
   mutable std::vector<std::uint32_t> m_closed_generation;
   mutable std::vector<std::uint32_t> m_g_cost_generation;

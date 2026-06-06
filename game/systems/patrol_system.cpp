@@ -6,6 +6,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "command_service.h"
 
 namespace Game::Systems {
 
@@ -100,11 +101,10 @@ void PatrolSystem::update(Engine::Core::World* world, float) {
       target_z = waypoint.second;
     }
 
-    movement->has_target = true;
-    movement->target_x = target_x;
-    movement->target_y = target_z;
-    movement->goal_x = target_x;
-    movement->goal_y = target_z;
+    Game::Systems::CommandService::MoveOptions options;
+    options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+    Game::Systems::CommandService::move_unit(
+        *world, entity->get_id(), QVector3D(target_x, 0.0F, target_z), options);
   }
 }
 

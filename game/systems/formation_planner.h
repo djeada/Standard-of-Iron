@@ -54,104 +54,15 @@ private:
     Engine::Core::EntityID entity_id{0};
     QVector3D local_offset;
     float facing_angle{0.0F};
-    float unit_radius{0.0F};
   };
 
-  struct OccupiedSlot {
-    QVector3D position;
-    float unit_radius{0.0F};
-  };
-
-  static auto is_position_walkable_for_radius(const QVector3D& position,
-                                              float unit_radius) -> bool {
-    return CommandService::is_world_position_walkable_for_radius(position, unit_radius);
-  }
-
-  static auto respects_spacing(const QVector3D& candidate,
-                               float unit_radius,
-                               const std::vector<OccupiedSlot>& occupied) -> bool {
-    for (const auto& slot : occupied) {
-      float const dx = candidate.x() - slot.position.x();
-      float const dz = candidate.z() - slot.position.z();
-      float const min_distance = unit_radius + slot.unit_radius;
-      if (dx * dx + dz * dz < min_distance * min_distance) {
-        return false;
-      }
-    }
-    return true;
+  static auto is_position_walkable(const QVector3D& position) -> bool {
+    return CommandService::is_world_position_walkable(position);
   }
 
   static auto find_nearest_walkable(const QVector3D& position,
                                     int max_search_radius = 5) -> QVector3D {
-    return find_nearest_walkable_for_radius(position, 0.0F, max_search_radius);
-  }
-
-  static auto find_nearest_walkable_for_radius(const QVector3D& position,
-                                               float unit_radius,
-                                               int max_search_radius = 5) -> QVector3D {
-    return CommandService::snap_to_walkable_ground_for_radius(
-        position, unit_radius, max_search_radius);
-  }
-
-  static auto
-  find_nearest_walkable_non_overlapping(const QVector3D& position,
-                                        float unit_radius,
-                                        const std::vector<OccupiedSlot>& occupied,
-                                        int max_search_radius = 5) -> QVector3D {
-    if (is_position_walkable_for_radius(position, unit_radius) &&
-        respects_spacing(position, unit_radius, occupied)) {
-      return position;
-    }
-
-    QVector3D const walkable_fallback =
-        find_nearest_walkable_for_radius(position, unit_radius, max_search_radius);
-
-    Point const center_grid = CommandService::world_to_grid(position.x(), position.z());
-
-    for (int radius = 1; radius <= max_search_radius; ++radius) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        for (int dz = -radius; dz <= radius; ++dz) {
-          if (std::abs(dx) != radius && std::abs(dz) != radius) {
-            continue;
-          }
-
-          Point const candidate_grid{center_grid.x + dx, center_grid.y + dz};
-          if (!CommandService::is_grid_walkable_for_radius(candidate_grid,
-                                                           unit_radius)) {
-            continue;
-          }
-
-          QVector3D candidate = CommandService::grid_to_world(candidate_grid);
-          candidate.setY(position.y());
-          if (respects_spacing(candidate, unit_radius, occupied)) {
-            return candidate;
-          }
-        }
-      }
-    }
-
-    return walkable_fallback;
-  }
-
-  static auto is_area_mostly_walkable(const QVector3D& center, float radius) -> bool {
-    Point const center_grid = CommandService::world_to_grid(center.x(), center.z());
-
-    int const check_radius = static_cast<int>(std::ceil(radius));
-    int walkable_count = 0;
-    int total_count = 0;
-
-    for (int dx = -check_radius; dx <= check_radius; ++dx) {
-      for (int dz = -check_radius; dz <= check_radius; ++dz) {
-        Point const candidate{center_grid.x + dx, center_grid.y + dz};
-
-        ++total_count;
-        if (CommandService::is_grid_walkable_for_radius(candidate, 0.0F)) {
-          ++walkable_count;
-        }
-      }
-    }
-
-    return walkable_count >= (total_count * 2 / 3);
+    return CommandService::snap_to_walkable_ground(position, max_search_radius);
   }
 
   static auto rotate_local_offset(const QVector3D& local,
@@ -165,84 +76,9 @@ private:
             -local.x() * sin_yaw + local.z() * cos_yaw};
   }
 
-  static auto
-  are_slots_walkable_at_center(const QVector3D& center,
-                               const std::vector<PlannedSlot>& planned_slots) -> bool {
-    for (const auto& slot : planned_slots) {
-      if (!is_position_walkable_for_radius(center + slot.local_offset,
-                                           slot.unit_radius)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static auto
-  find_coherent_walkable_center(const QVector3D& preferred_center,
-                                const std::vector<PlannedSlot>& planned_slots,
-                                int max_search_radius = 15) -> QVector3D {
-    if (planned_slots.empty()) {
-      return preferred_center;
-    }
-
-    if (are_slots_walkable_at_center(preferred_center, planned_slots)) {
-      return preferred_center;
-    }
-
-    Point const center_grid =
-        CommandService::world_to_grid(preferred_center.x(), preferred_center.z());
-
-    QVector3D best_center = preferred_center;
-    int best_valid_count = -1;
-    float best_distance_sq = 0.0F;
-    bool found_partial_candidate = false;
-
-    auto consider_candidate = [&](int grid_x, int grid_z) -> bool {
-      QVector3D candidate_center = CommandService::grid_to_world({grid_x, grid_z});
-      candidate_center.setY(preferred_center.y());
-      int valid_count = 0;
-      for (const auto& slot : planned_slots) {
-        if (is_position_walkable_for_radius(candidate_center + slot.local_offset,
-                                            slot.unit_radius)) {
-          ++valid_count;
-        }
-      }
-
-      float const distance_sq = (candidate_center - preferred_center).lengthSquared();
-      if (valid_count == static_cast<int>(planned_slots.size())) {
-        best_center = candidate_center;
-        best_valid_count = valid_count;
-        best_distance_sq = distance_sq;
-        return true;
-      }
-
-      if (!found_partial_candidate || valid_count > best_valid_count ||
-          (valid_count == best_valid_count && distance_sq < best_distance_sq)) {
-        best_center = candidate_center;
-        best_valid_count = valid_count;
-        best_distance_sq = distance_sq;
-        found_partial_candidate = true;
-      }
-      return false;
-    };
-
-    consider_candidate(center_grid.x, center_grid.y);
-
-    for (int radius = 1; radius <= max_search_radius; ++radius) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        for (int dz = -radius; dz <= radius; ++dz) {
-          if (std::abs(dx) != radius && std::abs(dz) != radius) {
-            continue;
-          }
-
-          if (consider_candidate(center_grid.x + dx, center_grid.y + dz)) {
-            return best_center;
-          }
-        }
-      }
-    }
-
-    return best_center;
+  static auto resolve_slot_target(const QVector3D& candidate,
+                                  const QVector3D& resolved_center) -> QVector3D {
+    return is_position_walkable(candidate) ? candidate : resolved_center;
   }
 
 public:
@@ -268,13 +104,7 @@ public:
     result.positions = spread_formation(int(units.size()), center, spacing);
     result.facing_angles.resize(units.size(), 0.0F);
 
-    QVector3D adjusted_center = center;
-    float const estimated_formation_radius =
-        std::sqrt(static_cast<float>(units.size())) * spacing * 2.0F;
-
-    if (!is_area_mostly_walkable(center, estimated_formation_radius)) {
-      adjusted_center = find_nearest_walkable(center, 15);
-    }
+    QVector3D adjusted_center = find_nearest_walkable(center, 15);
 
     struct FormationGroup {
       FormationType formation_type{FormationType::Roman};
@@ -446,20 +276,15 @@ public:
         auto it = unit_to_original_idx.find(fpos.entity_id);
         if (it != unit_to_original_idx.end()) {
           size_t const original_idx = it->second;
-          planned_slots.push_back(
-              {original_idx,
-               fpos.entity_id,
-               rotated,
-               result.formation_facing + fpos.facing_angle,
-               CommandService::get_unit_radius(world, fpos.entity_id)});
+          planned_slots.push_back({original_idx,
+                                   fpos.entity_id,
+                                   rotated,
+                                   result.formation_facing + fpos.facing_angle});
         }
       }
 
       left_edge += group_width + group_gap;
     }
-
-    QVector3D const coherent_center =
-        find_coherent_walkable_center(adjusted_center, planned_slots, 18);
 
     std::stable_sort(
         planned_slots.begin(),
@@ -474,14 +299,11 @@ public:
           return a.entity_id < b.entity_id;
         });
 
-    std::vector<OccupiedSlot> occupied_slots;
-    occupied_slots.reserve(planned_slots.size());
     for (const auto& slot : planned_slots) {
-      QVector3D final_position = find_nearest_walkable_non_overlapping(
-          coherent_center + slot.local_offset, slot.unit_radius, occupied_slots, 10);
+      QVector3D final_position =
+          resolve_slot_target(adjusted_center + slot.local_offset, adjusted_center);
       result.positions[slot.original_idx] = final_position;
       result.facing_angles[slot.original_idx] = slot.facing_angle;
-      occupied_slots.push_back({final_position, slot.unit_radius});
     }
 
     result.used_tactical_formation = true;

@@ -414,7 +414,7 @@ TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem)
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "movement->has_target = true;"));
+  EXPECT_TRUE(contains(source, "movement->engage_manual_move("));
 
   EXPECT_TRUE(contains(source, "stamina->run_requested = m_move_running;"));
   EXPECT_TRUE(contains(source, "stamina->run_requested = false;"));
@@ -444,6 +444,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
   const auto movement_system =
       read_text(root / "game" / "systems" / "movement_system.cpp");
+  const auto movement_orders =
+      read_text(root / "game" / "systems" / "movement_orders.cpp");
   const auto command_service =
       read_text(root / "game" / "systems" / "command_service.cpp");
   const auto scene_renderer = read_text(root / "render" / "scene_renderer.cpp");
@@ -465,6 +467,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
   ASSERT_FALSE(movement_system.empty());
+  ASSERT_FALSE(movement_orders.empty());
   ASSERT_FALSE(command_service.empty());
   ASSERT_FALSE(scene_renderer.empty());
   ASSERT_FALSE(animation_inputs.empty());
@@ -487,7 +490,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   EXPECT_FALSE(
       contains(attack_processor, "CombatRules::clear_rts_melee_lock(target);"));
   EXPECT_TRUE(contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(contains(command_service, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(movement_orders, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(scene_renderer, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
       contains(animation_inputs, "CombatRules::participates_in_rts_melee_lock"));

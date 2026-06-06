@@ -18,9 +18,9 @@ namespace {
     return true;
   }
   return movement != nullptr &&
-         ((movement->vx * movement->vx + movement->vz * movement->vz) > 1.0e-5F ||
-          movement->has_target || movement->has_waypoints() || movement->path_pending ||
-          movement->pending_request_id != 0);
+         ((movement->get_vx() * movement->get_vx() +
+           movement->get_vz() * movement->get_vz()) > 1.0e-5F ||
+          movement->get_has_target() || movement->has_waypoints());
 }
 } // namespace
 

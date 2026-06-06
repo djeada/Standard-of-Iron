@@ -12,6 +12,7 @@
 #include "map/terrain_service.h"
 #include "systems/nation_id.h"
 #include "systems/owner_registry.h"
+#include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
 
@@ -168,25 +169,18 @@ TEST_F(SerializationTest, MovementComponentSerialization) {
   auto* movement = entity->add_component<MovementComponent>();
   auto* intent = entity->add_component<PlayerOrderIntentComponent>();
 
-  movement->has_target = true;
-  movement->target_x = 50.0F;
-  movement->target_y = 60.0F;
-  movement->goal_x = 55.0F;
-  movement->goal_y = 65.0F;
-  movement->vx = 1.5F;
-  movement->vz = 2.0F;
-  movement->path_pending = false;
-  movement->pending_request_id = 42;
-  movement->repath_cooldown = 1.0F;
-  movement->last_goal_x = 45.0F;
-  movement->last_goal_y = 55.0F;
-  movement->time_since_last_path_request = 0.5F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 50.0F);
+  MovementTestAccess::set_target_y(*movement, 60.0F);
+  MovementTestAccess::set_goal_x(*movement, 55.0F);
+  MovementTestAccess::set_goal_y(*movement, 65.0F);
+  MovementTestAccess::set_vx(*movement, 1.5F);
+  MovementTestAccess::set_vz(*movement, 2.0F);
   ASSERT_NE(intent, nullptr);
   intent->kind = PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
 
-  movement->path.emplace_back(10.0F, 20.0F);
-  movement->path.emplace_back(30.0F, 40.0F);
+  MovementTestAccess::set_path(*movement, {{10.0F, 20.0F}, {30.0F, 40.0F}});
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
@@ -200,8 +194,6 @@ TEST_F(SerializationTest, MovementComponentSerialization) {
   EXPECT_FLOAT_EQ(movement_obj["goal_y"].toDouble(), 65.0);
   EXPECT_FLOAT_EQ(movement_obj["vx"].toDouble(), 1.5);
   EXPECT_FLOAT_EQ(movement_obj["vz"].toDouble(), 2.0);
-  EXPECT_FALSE(movement_obj["path_pending"].toBool());
-  EXPECT_EQ(movement_obj["pending_request_id"].toVariant().toULongLong(), 42ULL);
 
   ASSERT_TRUE(movement_obj.contains("path"));
   QJsonArray path_array = movement_obj["path"].toArray();
@@ -613,15 +605,14 @@ TEST_F(SerializationTest, MovementComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   auto* movement = original_entity->add_component<MovementComponent>();
   auto* intent = original_entity->add_component<PlayerOrderIntentComponent>();
-  movement->has_target = true;
-  movement->target_x = 100.0F;
-  movement->target_y = 200.0F;
-  movement->goal_x = 150.0F;
-  movement->goal_y = 250.0F;
-  movement->vx = 1.5F;
-  movement->vz = 2.5F;
-  movement->path.emplace_back(10.0F, 20.0F);
-  movement->path.emplace_back(30.0F, 40.0F);
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 100.0F);
+  MovementTestAccess::set_target_y(*movement, 200.0F);
+  MovementTestAccess::set_goal_x(*movement, 150.0F);
+  MovementTestAccess::set_goal_y(*movement, 250.0F);
+  MovementTestAccess::set_vx(*movement, 1.5F);
+  MovementTestAccess::set_vz(*movement, 2.5F);
+  MovementTestAccess::set_path(*movement, {{10.0F, 20.0F}, {30.0F, 40.0F}});
   ASSERT_NE(intent, nullptr);
   intent->kind = PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
@@ -633,14 +624,14 @@ TEST_F(SerializationTest, MovementComponentRoundTrip) {
 
   auto* deserialized = new_entity->get_component<MovementComponent>();
   ASSERT_NE(deserialized, nullptr);
-  EXPECT_TRUE(deserialized->has_target);
-  EXPECT_FLOAT_EQ(deserialized->target_x, 100.0F);
-  EXPECT_FLOAT_EQ(deserialized->target_y, 200.0F);
-  EXPECT_FLOAT_EQ(deserialized->goal_x, 150.0F);
-  EXPECT_FLOAT_EQ(deserialized->goal_y, 250.0F);
-  EXPECT_FLOAT_EQ(deserialized->vx, 1.5F);
-  EXPECT_FLOAT_EQ(deserialized->vz, 2.5F);
-  EXPECT_EQ(deserialized->path.size(), 2UL);
+  EXPECT_TRUE(deserialized->get_has_target());
+  EXPECT_FLOAT_EQ(deserialized->get_target_x(), 100.0F);
+  EXPECT_FLOAT_EQ(deserialized->get_target_y(), 200.0F);
+  EXPECT_FLOAT_EQ(deserialized->get_goal_x(), 150.0F);
+  EXPECT_FLOAT_EQ(deserialized->get_goal_y(), 250.0F);
+  EXPECT_FLOAT_EQ(deserialized->get_vx(), 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->get_vz(), 2.5F);
+  EXPECT_EQ(deserialized->get_path().size(), 2UL);
 
   auto* deserialized_intent = new_entity->get_component<PlayerOrderIntentComponent>();
   ASSERT_NE(deserialized_intent, nullptr);
@@ -1090,8 +1081,8 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
 
   auto* movement = entity->add_component<MovementComponent>();
   auto* intent = entity->add_component<PlayerOrderIntentComponent>();
-  movement->has_target = true;
-  movement->target_x = 100.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 100.0F);
 
   auto* attack = entity->add_component<AttackComponent>();
   attack->damage = 25;
@@ -1773,21 +1764,20 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
 
   auto* movement = entity->add_component<MovementComponent>();
   auto* intent = entity->add_component<PlayerOrderIntentComponent>();
-  movement->has_target = true;
-  movement->target_x = 50.0F;
-  movement->target_y = 60.0F;
-  movement->goal_x = 55.0F;
-  movement->goal_y = 65.0F;
-  movement->vx = 2.5F;
-  movement->vz = 3.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 50.0F);
+  MovementTestAccess::set_target_y(*movement, 60.0F);
+  MovementTestAccess::set_goal_x(*movement, 55.0F);
+  MovementTestAccess::set_goal_y(*movement, 65.0F);
+  MovementTestAccess::set_vx(*movement, 2.5F);
+  MovementTestAccess::set_vz(*movement, 3.0F);
   ASSERT_NE(intent, nullptr);
   intent->kind = PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
 
-  movement->path.emplace_back(20.0F, 30.0F);
-  movement->path.emplace_back(35.0F, 45.0F);
-  movement->path.emplace_back(50.0F, 60.0F);
-  const size_t expected_path_size = movement->path.size();
+  MovementTestAccess::set_path(*movement,
+                               {{20.0F, 30.0F}, {35.0F, 45.0F}, {50.0F, 60.0F}});
+  const size_t expected_path_size = movement->get_path().size();
 
   QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
@@ -1799,26 +1789,62 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   auto* restored_movement = restored_entity->get_component<MovementComponent>();
   ASSERT_NE(restored_movement, nullptr);
 
-  EXPECT_TRUE(restored_movement->has_target);
-  EXPECT_FLOAT_EQ(restored_movement->target_x, 50.0F);
-  EXPECT_FLOAT_EQ(restored_movement->target_y, 60.0F);
-  EXPECT_FLOAT_EQ(restored_movement->goal_x, 55.0F);
-  EXPECT_FLOAT_EQ(restored_movement->goal_y, 65.0F);
-  EXPECT_FLOAT_EQ(restored_movement->vx, 2.5F);
-  EXPECT_FLOAT_EQ(restored_movement->vz, 3.0F);
+  EXPECT_TRUE(restored_movement->get_has_target());
+  EXPECT_FLOAT_EQ(restored_movement->get_target_x(), 50.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_target_y(), 60.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_goal_x(), 55.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_goal_y(), 65.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_vx(), 2.5F);
+  EXPECT_FLOAT_EQ(restored_movement->get_vz(), 3.0F);
 
-  ASSERT_EQ(restored_movement->path.size(), expected_path_size);
-  EXPECT_FLOAT_EQ(restored_movement->path[0].first, 20.0F);
-  EXPECT_FLOAT_EQ(restored_movement->path[0].second, 30.0F);
-  EXPECT_FLOAT_EQ(restored_movement->path[1].first, 35.0F);
-  EXPECT_FLOAT_EQ(restored_movement->path[1].second, 45.0F);
-  EXPECT_FLOAT_EQ(restored_movement->path[2].first, 50.0F);
-  EXPECT_FLOAT_EQ(restored_movement->path[2].second, 60.0F);
+  ASSERT_EQ(restored_movement->get_path().size(), expected_path_size);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[0].first, 20.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[0].second, 30.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[1].first, 35.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[1].second, 45.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[2].first, 50.0F);
+  EXPECT_FLOAT_EQ(restored_movement->get_path()[2].second, 60.0F);
+  EXPECT_EQ(restored_movement->get_state(), MovementState::FollowingPath);
 
   auto* restored_intent = restored_entity->get_component<PlayerOrderIntentComponent>();
   ASSERT_NE(restored_intent, nullptr);
   EXPECT_EQ(restored_intent->kind, PlayerOrderIntentKind::ManualMove);
   EXPECT_TRUE(restored_intent->suppress_opportunistic_combat);
+}
+
+TEST_F(SerializationTest, LegacyRemovedMovementStateReconstructsFromPath) {
+  auto* entity = world->create_entity();
+  ASSERT_NE(entity, nullptr);
+
+  QJsonObject json;
+  json["id"] = static_cast<qint64>(entity->get_id());
+
+  QJsonObject movement_obj;
+  movement_obj["has_target"] = true;
+  movement_obj["target_x"] = 4.0;
+  movement_obj["target_y"] = 5.0;
+  movement_obj["goal_x"] = 8.0;
+  movement_obj["goal_y"] = 9.0;
+  movement_obj["vx"] = 0.0;
+  movement_obj["vz"] = 0.0;
+  movement_obj["path_index"] = 0;
+  movement_obj["state"] = 1;
+
+  QJsonArray path;
+  QJsonObject waypoint;
+  waypoint["x"] = 4.0;
+  waypoint["y"] = 5.0;
+  path.append(waypoint);
+  movement_obj["path"] = path;
+  json["movement"] = movement_obj;
+
+  Serialization::deserialize_entity(entity, json);
+
+  auto* movement = entity->get_component<MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_EQ(movement->get_state(), MovementState::FollowingPath);
+  EXPECT_TRUE(movement->get_has_target());
+  ASSERT_FALSE(movement->get_path().empty());
 }
 
 TEST_F(SerializationTest, CombatStatePreserved) {

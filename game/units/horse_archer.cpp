@@ -78,10 +78,7 @@ void HorseArcher::init(const SpawnParams& params) {
 
   m_mv = e->add_component<Engine::Core::MovementComponent>();
   if (m_mv != nullptr) {
-    m_mv->goal_x = params.position.x();
-    m_mv->goal_y = params.position.z();
-    m_mv->target_x = params.position.x();
-    m_mv->target_y = params.position.z();
+    m_mv->set_rest_position(params.position.x(), params.position.z());
   }
 
   m_atk = e->add_component<Engine::Core::AttackComponent>();

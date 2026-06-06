@@ -137,7 +137,7 @@ auto is_construction_position_valid(float pos_x,
 
   Game::Systems::Point const grid =
       Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
-  return Game::Systems::CommandService::is_grid_walkable_for_radius(grid, 0.0F);
+  return Game::Systems::CommandService::is_grid_walkable(grid);
 }
 
 auto normalize_rotation_degrees(float angle) -> float {
@@ -200,10 +200,7 @@ auto update_builder_move_target(Engine::Core::Entity* entity,
     return;
   }
   if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-    movement->goal_x = target_x;
-    movement->goal_y = target_z;
-    movement->target_x = target_x;
-    movement->target_y = target_z;
+    movement->set_rest_position(target_x, target_z);
   }
 }
 
@@ -250,12 +247,10 @@ auto resolve_harvest_work_position(Engine::Core::World* world,
     return std::nullopt;
   }
 
-  float const unit_radius =
-      Game::Systems::CommandService::get_unit_radius(*world, builder_id);
   Game::Systems::Point const tree_grid =
       Game::Systems::CommandService::world_to_grid(target.x, target.z);
   auto const work_grid = Game::Systems::CommandService::find_nearest_walkable_grid(
-      tree_grid, k_harvest_work_search_radius, unit_radius);
+      tree_grid, k_harvest_work_search_radius);
   if (!work_grid.has_value()) {
     return std::nullopt;
   }
@@ -1150,10 +1145,7 @@ void ProductionManager::on_construction_confirm() {
 
     if (auto* entity = m_world->get_entity(placement.builder_id)) {
       if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-        movement->goal_x = placement.target->x;
-        movement->goal_y = placement.target->z;
-        movement->target_x = placement.target->x;
-        movement->target_y = placement.target->z;
+        movement->set_rest_position(placement.target->x, placement.target->z);
       }
     }
 
@@ -1198,10 +1190,8 @@ void ProductionManager::on_construction_confirm() {
 
     auto* mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
-      mv->goal_x = m_construction_placement_position.x();
-      mv->goal_y = m_construction_placement_position.z();
-      mv->target_x = m_construction_placement_position.x();
-      mv->target_y = m_construction_placement_position.z();
+      mv->set_rest_position(m_construction_placement_position.x(),
+                            m_construction_placement_position.z());
     }
   }
 
