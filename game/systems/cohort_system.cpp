@@ -16,14 +16,11 @@ namespace {
 
 auto is_idle_or_guarding(Engine::Core::Entity* entity) -> bool {
   auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-  if (movement != nullptr && movement->has_target) {
+  if (movement != nullptr && movement->get_has_target()) {
     return false;
   }
   auto* atk = entity->get_component<Engine::Core::AttackComponent>();
-  if (atk != nullptr && atk->in_melee_lock) {
-    return false;
-  }
-  return true;
+  return atk == nullptr || !atk->in_melee_lock;
 }
 
 } // namespace
@@ -91,11 +88,11 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
     // Simple greedy clustering by proximity.
     std::unordered_set<std::size_t> assigned;
     for (std::size_t i = 0; i < candidates.size(); ++i) {
-      if (assigned.count(i) > 0) {
+      if (assigned.contains(i)) {
         continue;
       }
 
-      std::uint32_t cohort_id = m_next_cohort_id++;
+      std::uint32_t const cohort_id = m_next_cohort_id++;
       std::vector<std::size_t> members;
       members.push_back(i);
       assigned.insert(i);
@@ -103,7 +100,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       for (std::size_t j = i + 1;
            j < candidates.size() && members.size() < k_max_cohort_size;
            ++j) {
-        if (assigned.count(j) > 0) {
+        if (assigned.contains(j)) {
           continue;
         }
         if (candidates[j].owner_id != candidates[i].owner_id) {
@@ -117,7 +114,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
         }
       }
 
-      for (std::size_t idx : members) {
+      for (std::size_t const idx : members) {
         auto* membership =
             candidates[idx]
                 .entity->get_component<Engine::Core::CohortMembershipComponent>();
@@ -156,7 +153,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
     if (membership == nullptr || membership->cohort_id == 0) {
       continue;
     }
-    if (activated_cohorts.count(membership->cohort_id) > 0) {
+    if (activated_cohorts.contains(membership->cohort_id)) {
       if (!membership->cohort_activated) {
         membership->cohort_activated = true;
         ++m_diagnostics.cohorts_activated;

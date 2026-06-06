@@ -97,8 +97,6 @@ void AICommandApplier::apply(Engine::Core::World& world,
 
       CommandService::MoveOptions opts;
       opts.kind = MoveOrderKind::ScriptedMove;
-      opts.allow_direct_fallback = true;
-      opts.group_move = owned_units.size() > 1;
       CommandService::move_units(world, owned_units, owned_targets, opts);
       break;
     }

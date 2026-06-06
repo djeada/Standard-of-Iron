@@ -32,9 +32,7 @@ void TerrainAlignmentSystem::align_entity_to_terrain(Engine::Core::Entity* entit
 
   QVector3D const aligned = terrain_service.resolve_surface_world_position(
       transform->position.x, transform->position.z, 0.0F, transform->position.y);
-  transform->position.x = aligned.x();
   transform->position.y = aligned.y();
-  transform->position.z = aligned.z();
 }
 
 } // namespace Game::Systems

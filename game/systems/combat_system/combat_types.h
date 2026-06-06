@@ -4,8 +4,6 @@ namespace Game::Systems::Combat {
 
 namespace Constants {
 inline constexpr float k_engagement_cooldown = 0.5F;
-inline constexpr float k_chase_request_cooldown = 0.5F;
-inline constexpr float k_chase_goal_movement_threshold = 1.0F;
 inline constexpr float k_chase_near_range_buffer = 0.25F;
 inline constexpr float k_ideal_melee_distance = 0.6F;
 inline constexpr float k_min_distance = 0.001F;

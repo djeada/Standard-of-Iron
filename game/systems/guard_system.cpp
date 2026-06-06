@@ -63,16 +63,15 @@ void GuardSystem::update(Engine::Core::World* world, float) {
             guard_mode->guard_position_z = new_guard_z;
 
             bool const already_moving_to_target =
-                movement->has_target &&
-                std::abs(movement->goal_x - new_guard_x) < 0.5F &&
-                std::abs(movement->goal_y - new_guard_z) < 0.5F;
+                movement->get_has_target() &&
+                std::abs(movement->get_goal_x() - new_guard_x) < 0.5F &&
+                std::abs(movement->get_goal_y() - new_guard_z) < 0.5F;
 
             if (!already_moving_to_target) {
               guard_mode->returning_to_guard_position = true;
 
               CommandService::MoveOptions opts;
               opts.kind = MoveOrderKind::GuardReturn;
-              opts.allow_direct_fallback = true;
               std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
               std::vector<QVector3D> const targets = {
                   QVector3D(new_guard_x, 0.0F, new_guard_z)};
@@ -97,7 +96,6 @@ void GuardSystem::update(Engine::Core::World* world, float) {
 
           CommandService::MoveOptions opts;
           opts.kind = MoveOrderKind::GuardReturn;
-          opts.allow_direct_fallback = true;
           std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
           std::vector<QVector3D> const targets = {QVector3D(
               guard_mode->guard_position_x, 0.0F, guard_mode->guard_position_z)};

@@ -104,13 +104,14 @@ auto find_guaranteed_valid_exit(float exit_x,
                                 float unit_radius) -> QVector3D {
   Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
 
-  if (CommandService::is_grid_walkable_for_radius(exit_grid, unit_radius)) {
+  (void)unit_radius;
+  if (CommandService::is_grid_walkable(exit_grid)) {
     return {exit_x, 0.0F, exit_z};
   }
 
   constexpr int k_max_search_radius = 50;
-  auto const safe_grid = CommandService::find_nearest_walkable_grid(
-      exit_grid, k_max_search_radius, unit_radius);
+  auto const safe_grid =
+      CommandService::find_nearest_walkable_grid(exit_grid, k_max_search_radius);
   if (safe_grid.has_value()) {
     return CommandService::grid_to_world(*safe_grid);
   }
@@ -181,10 +182,8 @@ auto assign_next_wall_site(Engine::Core::World* world,
 
     if (auto* movement =
             builder_entity->get_component<Engine::Core::MovementComponent>()) {
-      movement->goal_x = builder->construction_site_x;
-      movement->goal_y = builder->construction_site_z;
-      movement->target_x = builder->construction_site_x;
-      movement->target_y = builder->construction_site_z;
+      movement->set_rest_position(builder->construction_site_x,
+                                  builder->construction_site_z);
     }
     return true;
   }
@@ -396,14 +395,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           transform->position.z = builder_prod->construction_site_z;
 
           if (movement != nullptr) {
-            movement->goal_x = builder_prod->construction_site_x;
-            movement->goal_y = builder_prod->construction_site_z;
-            movement->target_x = builder_prod->construction_site_x;
-            movement->target_y = builder_prod->construction_site_z;
-            movement->has_target = false;
-            movement->clear_path();
-            movement->vx = 0.0F;
-            movement->vz = 0.0F;
+            movement->set_rest_position(builder_prod->construction_site_x,
+                                        builder_prod->construction_site_z);
+            movement->stop();
           }
         } else {
 
@@ -572,10 +566,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
               activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
 
-              movement->goal_x = safe_exit.x();
-              movement->goal_y = safe_exit.z();
-              movement->target_x = safe_exit.x();
-              movement->target_y = safe_exit.z();
+              movement->set_rest_position(safe_exit.x(), safe_exit.z());
             }
           }
         }

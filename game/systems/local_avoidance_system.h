@@ -11,14 +11,14 @@ struct LocalAvoidanceDiagnostics {
   float spatial_hash_build_ms{0.0F};
   std::uint32_t average_neighbors_checked{0};
   std::uint32_t units_processed{0};
-  std::uint32_t corrections_applied{0};
+  std::uint32_t overlaps_detected{0};
 };
 
-/// Local dynamic avoidance system (Workstream 1).
+/// Local dynamic avoidance diagnostics.
 ///
-/// Runs after movement/combat intents are produced and before transforms are
-/// committed. Maintains a transient spatial hash of active unit circles and
-/// applies soft separation and velocity steering for moving units.
+/// Maintains a transient spatial hash of active unit circles and reports
+/// crowding pressure. It does not write transforms; movement ownership stays in
+/// MovementSystem.
 class LocalAvoidanceSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
