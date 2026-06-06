@@ -315,13 +315,6 @@ auto is_humanoid_upper_body_bone(std::size_t bone_index) noexcept -> bool {
 using BonePaletteArray =
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>;
 
-// Thread-local fixed-block pooling allocator used with std::allocate_shared so that
-// both the bone-palette array and the shared_ptr control block are recycled, giving a
-// zero-allocation steady state for interpolating/blending creatures. Ownership
-// semantics stay identical to a plain shared_ptr: the buffer lives until the owning
-// draw command is destroyed (after the deferred draw queue is flushed). Rendering is
-// single-threaded (Qt GL context), so acquisition and the recycling deallocate always
-// run on the same thread.
 template <class T>
 struct PooledPaletteAllocator {
   using value_type = T;
@@ -355,7 +348,6 @@ struct PooledPaletteAllocator {
         list.push_back(static_cast<void*>(ptr));
         return;
       } catch (...) {
-        // Fall through to release the block directly on growth failure.
       }
     }
     ::operator delete(static_cast<void*>(ptr));

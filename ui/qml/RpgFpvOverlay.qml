@@ -52,7 +52,6 @@ Item {
         }
     }
 
-    // ─── Full-screen damage vignette ───
     Rectangle {
         id: damageVignette
         anchors.fill: parent
@@ -112,7 +111,6 @@ Item {
         }
     }
 
-    // ─── Low health danger pulse ───
     Rectangle {
         id: lowHealthPulse
         anchors.fill: parent
@@ -160,7 +158,6 @@ Item {
         }
     }
 
-    // ─── Guard active edge glow ───
     Rectangle {
         id: guardGlow
         anchors.fill: parent
@@ -184,7 +181,6 @@ Item {
         }
     }
 
-    // ─── Perfect guard flash ───
     Rectangle {
         id: perfectGuardFlash
         anchors.fill: parent
@@ -478,7 +474,6 @@ Item {
         }
     }
 
-    // ─── Crosshair ───
     Item {
         id: crosshair
         width: 58
@@ -561,7 +556,6 @@ Item {
         }
     }
 
-    // ─── Health bar (bottom center) ───
     Item {
         id: healthBarContainer
         anchors.bottom: parent.bottom
@@ -570,7 +564,6 @@ Item {
         width: 352
         height: 40
 
-        // Background
         Rectangle {
             anchors.fill: parent
             radius: 10
@@ -588,7 +581,6 @@ Item {
             }
         }
 
-        // Delayed drain bar (shows recent damage)
         Rectangle {
             id: healthDrain
             property real drainRatio: Number(root.status_value("health_ratio", 1.0))
@@ -608,7 +600,6 @@ Item {
             }
         }
 
-        // Health fill
         Rectangle {
             id: healthFill
             property real hpRatio: Number(root.status_value("health_ratio", 1.0))
@@ -633,7 +624,6 @@ Item {
             }
         }
 
-        // Health text
         Text {
             anchors.centerIn: parent
             text: "HP  " + Number(root.status_value("health", 0)) + " / " + Number(root.status_value("max_health", 100))
@@ -645,7 +635,6 @@ Item {
         }
     }
 
-    // ─── Stamina bar (below health) ───
     Item {
         id: staminaBarContainer
         anchors.top: healthBarContainer.bottom
@@ -700,7 +689,6 @@ Item {
         }
     }
 
-    // ─── Combo counter (right of crosshair) ───
     Item {
         id: comboIndicator
         anchors.right: parent.right
@@ -742,7 +730,6 @@ Item {
             visible: comboIndicator.combo > 0
         }
 
-        // Finisher pulse glow
         Rectangle {
             anchors.fill: parent
             anchors.margins: -8
@@ -755,7 +742,6 @@ Item {
         }
     }
 
-    // ─── Posture bar (above health bar when taking damage) ───
     Item {
         id: postureBar
         anchors.bottom: healthBarContainer.top
@@ -806,7 +792,7 @@ Item {
             font.letterSpacing: 1.0
         }
     }
-    // ─── Guard break warning ───
+
     Item {
         id: guardBreakWarning
         anchors.centerIn: parent
@@ -832,7 +818,6 @@ Item {
         }
     }
 
-    // ─── Punish window indicator ───
     Item {
         id: punishIndicator
         anchors.centerIn: parent
@@ -857,7 +842,6 @@ Item {
         }
     }
 
-    // ─── Ability cooldown indicators (bottom-right) ───
     Row {
         id: abilityCooldowns
         anchors.right: parent.right
@@ -911,7 +895,6 @@ Item {
                     border.color: parent.isReady ? "#35ffffff" : "#22000000"
                 }
 
-                // Cooldown sweep
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 5
@@ -972,7 +955,6 @@ Item {
         }
     }
 
-    // ─── Damage vignette trigger from health changes ───
     property real _prevHealth: -1.0
     property bool _prevAttacking: false
     property bool _prevGuardBroken: false

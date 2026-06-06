@@ -62,7 +62,7 @@ auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint
   if (movement != nullptr && movement->get_has_target()) {
     return 1;
   }
-  return 2; // stationary default
+  return 2;
 }
 
 } // namespace
@@ -79,7 +79,6 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
     return;
   }
 
-  // Build transient spatial hash of unit circles.
   float const inv_cell_size = 1.0F / k_default_cell_size;
   std::unordered_map<CellKey, std::vector<std::size_t>, CellKeyHash> grid;
   std::vector<UnitCircle> circles;
@@ -127,7 +126,6 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
   m_diagnostics.units_processed = static_cast<std::uint32_t>(circles.size());
 
-  // Measure nearby overlaps without applying displacement.
   std::uint32_t total_neighbors_checked = 0;
   std::uint32_t overlaps_detected = 0;
 
@@ -178,10 +176,9 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
             }
             float const overlap = min_dist - dist;
 
-            // Higher priority units push more; lower priority yields more.
             float weight = 1.0F;
             if (cj.priority > ci.priority) {
-              weight = 1.5F; // yield to higher priority
+              weight = 1.5F;
             } else if (cj.priority < ci.priority) {
               weight = 0.5F;
             }
@@ -199,7 +196,6 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
       sep_x *= inv_n * k_separation_strength;
       sep_z *= inv_n * k_separation_strength;
 
-      // Clamp correction magnitude.
       float const mag_sq = sep_x * sep_x + sep_z * sep_z;
       float const max_corr = k_max_correction_per_tick;
       if (mag_sq > max_corr * max_corr) {

@@ -57,7 +57,6 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    // Ensure commitment component exists for attackers with melee lock.
     auto* commitment = entity->get_component<Engine::Core::TargetCommitmentComponent>();
 
     auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
@@ -73,20 +72,17 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    // Tick cooldown.
     if (commitment->cooldown_remaining > 0.0F) {
       commitment->cooldown_remaining =
           std::max(0.0F, commitment->cooldown_remaining - delta_time);
     }
 
-    // Update committed phase status.
-    bool in_committed =
+    bool const in_committed =
         combat_state != nullptr && is_committed_phase(combat_state->animation_state);
     commitment->in_committed_phase = in_committed;
 
-    // Check if current committed target is still valid.
     if (!is_target_valid(world, commitment->committed_target_id)) {
-      // Force release.
+
       commitment->committed_target_id = 0;
       commitment->cooldown_remaining = 0.0F;
       commitment->in_committed_phase = false;
@@ -94,16 +90,15 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    // If attack target is trying to change, enforce commitment.
     if (attack_target != nullptr &&
         attack_target->target_id != commitment->committed_target_id) {
 
       if (in_committed || commitment->cooldown_remaining > 0.0F) {
-        // Block the switch.
+
         attack_target->target_id = commitment->committed_target_id;
         ++m_diagnostics.switches_blocked;
       } else {
-        // Allow the switch and update commitment.
+
         commitment->committed_target_id = attack_target->target_id;
         commitment->cooldown_remaining =
             Engine::Core::TargetCommitmentComponent::k_switch_cooldown;

@@ -21,7 +21,7 @@ const std::array<SpearmanStyleRegistration, 1> k_styles{{
      }},
 }};
 
-} // namespace
+}
 
 void register_carthage_spearman_styles() {
   register_spearman_styles(k_styles);

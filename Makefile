@@ -368,6 +368,8 @@ format: clean-format-trash
 		echo "$(YELLOW)Skipping clang-tidy auto fixes because FORMAT_RUN_TIDY=$(FORMAT_RUN_TIDY)$(RESET)"; \
 	fi
 
+	@$(MAKE) format-strip-comments
+
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format ($(FORMAT_JOBS) jobs)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		find $(CXX_FORMAT_PATHS) -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \

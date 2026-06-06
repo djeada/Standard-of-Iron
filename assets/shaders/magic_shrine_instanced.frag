@@ -133,7 +133,6 @@ void main() {
   float obelisk_mask = (1.0 - smoothstep(0.02, 0.18, obelisk_dist)) *
                        smoothstep(0.26, 1.22, v_local_pos.y);
 
-  // Lighting
   vec3 sun_color = vec3(1.05, 0.90, 0.75);
   vec3 sky_color = vec3(0.60, 0.65, 1.00);
 
@@ -149,7 +148,6 @@ void main() {
 
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
 
-  // Rim light from sky
   float rim = pow(1.0 - max(dot(N, V), 0.0), 3.5) * 0.12;
   vec3 rim_color = sky_color * rim;
 

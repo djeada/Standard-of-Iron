@@ -40,12 +40,6 @@ void main() {
 
   v_color = a_color_rot.rgb;
 
-  /*
-    Use scaled local position so large ore chunks get larger vein structure.
-    If you want every ore piece to have identical vein density regardless of scale,
-    change this back to:
-      v_local_pos = a_pos;
-  */
   v_local_pos = a_pos * scale;
 
   v_seed = hash13(world_origin * 0.173 + vec3(rotation, scale, 0.37));

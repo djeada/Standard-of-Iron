@@ -197,9 +197,6 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_magic_shrine_uniforms, m_magic_shrine_shader);
 }
 
-// TODO(phase5): Extract byte-identical shared ring/cap/quad/prism builders with
-// render/ground/linear_feature_geometry.cpp once the vertex layouts can be proven
-// identical.
 void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
   shutdown_stone_pipeline();
@@ -2027,25 +2024,18 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  // Flat base slab — ore seam embedded in ground
   append_box(verts, idx, {-0.55F, -0.02F, -0.45F}, {0.55F, 0.10F, 0.45F});
 
-  // Main ore mass — blocky central body
   append_box(verts, idx, {-0.42F, 0.08F, -0.35F}, {0.40F, 0.42F, 0.32F});
 
-  // Upper-left angular chunk
   append_box(verts, idx, {-0.38F, 0.38F, -0.28F}, {-0.06F, 0.70F, 0.18F});
 
-  // Upper-right chunk
   append_box(verts, idx, {0.06F, 0.34F, -0.22F}, {0.34F, 0.64F, 0.14F});
 
-  // Front protrusion
   append_box(verts, idx, {-0.20F, 0.10F, 0.28F}, {0.18F, 0.42F, 0.50F});
 
-  // Back overhang
   append_box(verts, idx, {-0.28F, 0.12F, -0.50F}, {0.14F, 0.34F, -0.28F});
 
-  // Small surface nodules
   append_box(verts, idx, {-0.44F, 0.40F, -0.08F}, {-0.26F, 0.58F, 0.10F});
   append_box(verts, idx, {0.22F, 0.38F, 0.08F}, {0.40F, 0.54F, 0.26F});
 
@@ -2106,14 +2096,12 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
         verts, idx, {x - 0.10F, 1.20F, z - 0.10F}, {x + 0.10F, 1.28F, z + 0.10F});
   };
 
-  // Broad stepped sanctuary base.
   append_box(verts, idx, {-0.86F, -0.02F, -0.86F}, {0.86F, 0.08F, 0.86F});
   append_box(verts, idx, {-0.68F, 0.08F, -0.68F}, {0.68F, 0.16F, 0.68F});
   append_box(verts, idx, {-0.82F, 0.08F, -0.24F}, {0.82F, 0.15F, 0.24F});
   append_box(verts, idx, {-0.24F, 0.08F, -0.82F}, {0.24F, 0.15F, 0.82F});
   append_box(verts, idx, {-0.48F, 0.16F, -0.48F}, {0.48F, 0.24F, 0.48F});
 
-  // Central altar plinth with a recessed radiant core.
   append_box(verts, idx, {-0.26F, 0.24F, -0.26F}, {0.26F, 0.72F, 0.26F});
   append_box(verts, idx, {-0.32F, 0.72F, -0.32F}, {0.32F, 0.80F, 0.32F});
   append_box(verts, idx, {-0.26F, 0.80F, -0.26F}, {-0.08F, 0.92F, 0.26F});
@@ -2122,7 +2110,6 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   append_box(verts, idx, {-0.08F, 0.80F, 0.08F}, {0.08F, 0.92F, 0.26F});
   append_box(verts, idx, {-0.16F, 0.92F, -0.16F}, {0.16F, 1.00F, 0.16F});
 
-  // Ceremonial buttresses leading toward the altar.
   append_oriented_box(
       verts, idx, {-0.58F, 0.16F, -0.12F}, {-0.26F, 0.60F, -0.12F}, 0.055F, 0.06F);
   append_oriented_box(
@@ -2132,19 +2119,16 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   append_oriented_box(
       verts, idx, {0.12F, 0.16F, 0.58F}, {0.12F, 0.58F, 0.24F}, 0.055F, 0.07F);
 
-  // Four obelisks frame the shrine and push the silhouette upward.
   add_obelisk(-0.54F, -0.54F);
   add_obelisk(0.54F, -0.54F);
   add_obelisk(-0.54F, 0.54F);
   add_obelisk(0.54F, 0.54F);
 
-  // Floating-feel canopy rails over the sanctuary.
   append_box(verts, idx, {-0.58F, 1.12F, -0.60F}, {0.58F, 1.20F, -0.44F});
   append_box(verts, idx, {-0.58F, 1.12F, 0.44F}, {0.58F, 1.20F, 0.60F});
   append_box(verts, idx, {-0.60F, 1.12F, -0.58F}, {-0.44F, 1.20F, 0.58F});
   append_box(verts, idx, {0.44F, 1.12F, -0.58F}, {0.60F, 1.20F, 0.58F});
 
-  // Rune stones orbiting the steps.
   add_rune_stone({-0.72F, 0.0F, -0.06F}, 0.6F);
   add_rune_stone({0.72F, 0.0F, 0.08F}, 2.5F);
   add_rune_stone({-0.06F, 0.0F, 0.72F}, 1.3F);

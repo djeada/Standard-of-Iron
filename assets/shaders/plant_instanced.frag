@@ -94,14 +94,6 @@ void main() {
   float type_val = fract(v_type);
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
 
-  /*
-    Anti-aliased coverage.
-
-    This replaces the hard discard:
-      if (sdf > -0.004) discard;
-
-    Hard discard near the SDF boundary is the biggest cause of shimmering.
-  */
   float sdf_aa = clamp(fwidth(sdf) * 0.85, 0.0015, 0.025);
   float coverage = 1.0 - smoothstep(-sdf_aa, sdf_aa, sdf);
   coverage *= v_alpha;
@@ -132,14 +124,6 @@ void main() {
 
   vec3 Nshape = normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
 
-  /*
-    Stable rim factor.
-
-    The old shader used:
-      smoothstep(0.30, 0.0, sdf)
-
-    That has reversed edges and is undefined.
-  */
   float rim = 1.0 - smoothstep(0.0, 0.14, -sdf);
 
   vec3 Ntemp = normalize(mix(N, Nshape, 0.65 * rim));

@@ -32,7 +32,6 @@
 
 namespace {
 
-// --- Test constants (reduce magic numbers) ---
 constexpr float k_default_epsilon = 1e-4F;
 constexpr std::size_t k_min_home_mesh_count = 47U;
 constexpr float k_roman_tower_min_banner_height = 3.75F;
@@ -604,7 +603,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   auto render_bounds = [](auto register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
-    EntityRendererRegistry registry;
+    EntityRendererRegistry const registry;
     register_renderer_fn(registry);
     const auto renderer = registry.get(key);
     EXPECT_TRUE(static_cast<bool>(renderer));

@@ -1,12 +1,5 @@
 #include "prepare_internal.h"
 
-// Commander jump preparation moved to prepare_submission.cpp during the phase 4
-// split; keep these source-audit anchors here for regression tests that still
-// scan prepare.cpp directly: RCP::set_model_world_y(
-// RCP::model_world_origin(inst_ctx.model).y() +
-// locomotion_state.gait.state = Render::GL::HumanoidMotionState::Idle;
-// anim_ctx.ambient_idle_type = AmbientIdleType::Jump;
-
 namespace Render::GL {
 
 using namespace Render::GL::Geometry;

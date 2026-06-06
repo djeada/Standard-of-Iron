@@ -1079,8 +1079,6 @@ TEST_F(CombatModeTest, MeleeDamageIsDeferredUntilWeaponContact) {
   attack_target->target_id = enemy->get_id();
   attack_target->should_chase = false;
 
-  // Trigger frame: the swing starts but the blade has not connected yet, so the
-  // strike is scheduled and no damage has landed.
   Game::Systems::Combat::process_attacks(
       world.get(),
       Game::Systems::Combat::build_combat_query_context(world.get()),
@@ -1088,7 +1086,6 @@ TEST_F(CombatModeTest, MeleeDamageIsDeferredUntilWeaponContact) {
   EXPECT_TRUE(attack->has_pending_melee_strike);
   EXPECT_EQ(enemy_unit->health, 100);
 
-  // Advance time past the contact point; the snapshotted damage now lands.
   float const contact_time =
       CombatStateComponent::k_melee_contact_fraction * attack->melee_cooldown;
   Game::Systems::Combat::process_attacks(
@@ -1130,7 +1127,6 @@ TEST_F(CombatModeTest, DeferredMeleeStrikeCancelsWhenTargetDies) {
       0.016F);
   ASSERT_TRUE(attack->has_pending_melee_strike);
 
-  // Target dies during the wind-up: the pending strike must be cancelled.
   enemy_unit->health = 0;
   float const contact_time =
       CombatStateComponent::k_melee_contact_fraction * attack->melee_cooldown;

@@ -17,7 +17,7 @@
 
 namespace Game::Systems {
 class MovementSystem;
-} // namespace Game::Systems
+}
 
 namespace Engine::Core {
 
@@ -137,10 +137,6 @@ public:
                                ratio * static_cast<float>(individuals_per_unit)))));
 }
 
-/// Explicit navigation state owned solely by MovementSystem.
-/// Idle           - no active order.
-/// FollowingPath  - steering along computed waypoints.
-/// FollowingDirect- steering straight to a target with no route.
 enum class MovementState : std::uint8_t {
   Idle = 0,
   FollowingPath = 2,
@@ -206,9 +202,6 @@ public:
     }
   }
 
-  /// Spawn-time initialization of the resting destination (no active order).
-  /// Used by unit constructors so a freshly spawned unit's goal/target equal
-  /// its spawn position without engaging the navigation system.
   void set_rest_position(float x, float z) {
     goal_x = x;
     goal_y = z;
@@ -216,9 +209,6 @@ public:
     target_y = z;
   }
 
-  /// Marks the unit as actively moving while its position is driven externally
-  /// (first-person/manual control). Keeps the goal pinned to the current
-  /// position so the navigation pipeline does not fight the manual driver.
   void engage_manual_move(float x, float z) {
     has_target = true;
     target_x = x;
@@ -227,8 +217,6 @@ public:
     goal_y = z;
   }
 
-  /// Sets the integrated velocity directly. Reserved for manual/first-person
-  /// drivers; the normal pipeline computes velocity from path following.
   void set_manual_velocity(float new_vx, float new_vz) {
     vx = new_vx;
     vz = new_vz;
@@ -246,10 +234,6 @@ private:
   std::vector<std::pair<float, float>> path;
   std::size_t path_index{0};
 
-  // Transient no-progress watchdog state owned solely by MovementSystem.
-  // Guarantees an active navigation order can never persist forever: if the
-  // unit holds a target but does not make real progress for too long, the
-  // order is abandoned. Not serialized; reconstructed at runtime.
   bool stuck_ref_valid{false};
   float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
   float stuck_timer{0.0F};
@@ -365,11 +349,6 @@ public:
   bool in_melee_lock{false};
   EntityID melee_lock_target_id{0};
 
-  // Deferred melee strike: damage is snapshotted at swing start and applied when
-  // the swing reaches weapon contact, so hits land mid-animation instead of
-  // instantly. Cooldown is still reset at swing start, so steady-state DPS is
-  // unchanged. Stored on the component (not transient processor state) so it
-  // round-trips through save/load deterministically.
   bool has_pending_melee_strike{false};
   EntityID pending_melee_target_id{0};
   int pending_melee_damage{0};
@@ -522,11 +501,6 @@ public:
   bool damage_dealt_this_swing{false};
   bool input_buffered{false};
 
-  // Uniform time scale applied to every phase of the current swing so the whole
-  // 6-phase visual cycle fills exactly one attack cooldown. Snapshotted once when
-  // the swing starts (begin_attack_animation) so a mid-swing mode/cooldown change
-  // cannot distort the remaining phases. FPV commanders ignore this and use their
-  // own per-phase readability scaling instead. 1.0 == base 1.84s cycle.
   float swing_duration_scale{1.0F};
 
   static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
@@ -537,16 +511,10 @@ public:
   static constexpr float k_recover_duration = 0.40F;
   static constexpr float k_reposition_duration = 0.28F;
 
-  // Sum of the base phase durations: the length of one full swing at scale 1.0.
   static constexpr float k_base_cycle_total =
       k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
       k_recover_duration + k_reposition_duration;
 
-  // Single source of truth mapping an attack cooldown to a swing time scale so
-  // the visual cadence equals the damage cadence. Clamped only as a degenerate
-  // guard; for all real melee cooldowns (~0.55-2.0s) the scale is exact, which
-  // keeps the visual weapon-contact aligned with the deferred-strike contact at
-  // k_melee_contact_fraction * cooldown.
   [[nodiscard]] static auto cooldown_fit_scale(float cooldown) -> float {
     if (cooldown <= 0.0F) {
       return 1.0F;
@@ -560,10 +528,6 @@ public:
     return scale;
   }
 
-  // Fraction of a full melee swing at which the weapon makes contact, expressed
-  // in the swing's own time basis (advance+windup over the whole cycle). Used by
-  // the deferred-melee-strike system as the single source of truth for when a
-  // snapshotted melee hit lands. ~0.348 with the durations above.
   static constexpr float k_melee_contact_fraction =
       (k_advance_duration + k_wind_up_duration) /
       (k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
@@ -780,8 +744,6 @@ public:
   float death_morale_shock{25.0F};
   bool aura_active{true};
 
-  // Timed aura ability: when activated, grants 50% damage to same-type troops
-  // and 30% max-health bonus to all troops within radius.
   bool aura_ability_active{false};
   bool aura_ability_requested{false};
   float aura_ability_duration{15.0F};
@@ -809,19 +771,16 @@ public:
   float punish_window_remaining{0.0F};
   bool close_camera_mode{false};
 
-  // Flag rally: commander moves to a chosen position, plants a flag, then all
-  // allied units receive a move command to converge on that position.
-  float flag_rally_cost{3.0F};            // seconds to complete the flag placement
-  float flag_rally_pending_x{0.0F};       // target world X for flag placement
-  float flag_rally_pending_z{0.0F};       // target world Z for flag placement
-  float flag_rally_animation_timer{0.0F}; // counts down from flag_rally_cost
-  bool flag_rally_in_progress{false};     // commander is moving / animating
-  bool flag_rally_at_position{false};     // commander has arrived, animating
-  float flag_rally_flag_x{0.0F};          // world X of the placed flag
-  float flag_rally_flag_z{0.0F};          // world Z of the placed flag
-  bool flag_rally_flag_active{false};     // a rally flag is currently placed
-  bool flag_rally_issue_commands{
-      false}; // system should issue move commands to all allied units
+  float flag_rally_cost{3.0F};
+  float flag_rally_pending_x{0.0F};
+  float flag_rally_pending_z{0.0F};
+  float flag_rally_animation_timer{0.0F};
+  bool flag_rally_in_progress{false};
+  bool flag_rally_at_position{false};
+  float flag_rally_flag_x{0.0F};
+  float flag_rally_flag_z{0.0F};
+  bool flag_rally_flag_active{false};
+  bool flag_rally_issue_commands{false};
 };
 
 class CommanderGuardComponent : public Component {
@@ -1304,12 +1263,6 @@ public:
   EntityID target_barracks_id{0};
 };
 
-// ---------------------------------------------------------------------------
-// Battle Movement Refactor Components (Workstreams 1-8)
-// ---------------------------------------------------------------------------
-
-/// Movement intent produced by combat or AI systems; consumed by MovementSystem.
-/// Combat code should write desired movement here instead of editing transforms.
 class MovementIntentComponent : public Component {
 public:
   MovementIntentComponent() = default;
@@ -1319,39 +1272,29 @@ public:
   float desired_facing{0.0F};
   bool has_facing_request{false};
 
-  /// Knockback displacement request (one-shot, cleared after application).
   float knockback_dx{0.0F};
   float knockback_dz{0.0F};
 
-  /// Priority: higher priority units resist avoidance displacement.
-  /// 0 = default moving unit, 1 = formation member, 2 = braced/stationary,
-  /// 3 = melee-locked, 4 = building/immovable.
   std::uint8_t priority{0};
 };
 
-/// Engagement slot assigned to a melee attacker around a target.
 class EngagementSlotComponent : public Component {
 public:
   EngagementSlotComponent() = default;
 
   EntityID target_id{0};
 
-  /// Slot arc index (0..max_slots-1) around the target perimeter.
   std::uint8_t slot_index{0};
   std::uint8_t max_slots{8};
 
-  /// Anchor offset from target center (world-space direction).
   float anchor_offset_x{0.0F};
   float anchor_offset_z{0.0F};
 
-  /// Whether this slot assignment is still valid.
   bool valid{true};
 
-  /// Lease expiry: time remaining before slot must be revalidated.
   float lease_remaining{2.0F};
 };
 
-/// Target commitment state: prevents rapid target switching during attack phases.
 class TargetCommitmentComponent : public Component {
 public:
   TargetCommitmentComponent() = default;
@@ -1359,23 +1302,19 @@ public:
   EntityID committed_target_id{0};
   float cooldown_remaining{0.0F};
 
-  /// Whether the unit is in a committed attack phase (wind-up, strike, impact).
   bool in_committed_phase{false};
 
   static constexpr float k_switch_cooldown = 0.8F;
 };
 
-/// Local AI cohort membership for batch defensive response.
 class CohortMembershipComponent : public Component {
 public:
   CohortMembershipComponent() = default;
 
-  /// Cohort identifier (assigned by CohortSystem).
   std::uint32_t cohort_id{0};
   bool cohort_activated{false};
 };
 
-/// Elephant knockback cooldown per victim (stored on elephant entity).
 class ElephantKnockbackCooldownComponent : public Component {
 public:
   ElephantKnockbackCooldownComponent() = default;

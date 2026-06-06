@@ -38,7 +38,6 @@ RENAMES = [
     ("drawFortressWalls", "draw_fortress_walls"),
     ("drawGate", "draw_gate"),
     ("drawPoleWithBanner", "draw_pole_with_banner"),
-    # ("drawPolygon", "draw_polygon"),  # Qt API: QPainter::drawPolygon
     ("drawRomanOrnaments", "draw_roman_ornaments"),
     ("drawSlide", "draw_slide"),
     ("drawStandards", "draw_standards"),
@@ -128,11 +127,9 @@ RENAMES = [
     ("lineColor", "line_color"),
     ("lowerStart", "lower_start"),
     ("loweringOffset", "lowering_offset"),
-    # ("majorVersion", "major_version"),  # Qt API: QSurfaceFormat::majorVersion
     ("maxLowering", "max_lowering"),
     ("maxVal", "max_val"),
     ("minVal", "min_val"),
-    # ("minorVersion", "minor_version"),  # Qt API: QSurfaceFormat::minorVersion
     ("modeColor", "mode_color"),
     ("newCapacity", "new_capacity"),
     ("outMode", "out_mode"),

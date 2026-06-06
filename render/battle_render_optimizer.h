@@ -89,9 +89,6 @@ public:
       return true;
     }
 
-    // Use the finalized motion state directly. Same reasoning as should_render_unit:
-    // snapshot_valid may be false during the render window but state retains its
-    // last valid value.
     bool const is_moving = motion != nullptr && motion->has_locomotion();
     if (is_moving) {
       return true;

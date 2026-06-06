@@ -185,7 +185,6 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
     result["guard_active"] = guard->active;
   }
 
-  // Combat state info
   if (auto* combat_state =
           commander_entity != nullptr
               ? commander_entity->get_component<Engine::Core::CombatStateComponent>()
@@ -196,7 +195,6 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
         combat_state->animation_state != Engine::Core::CombatAnimationState::Idle;
   }
 
-  // Dodge active
   result["dodge_active"] = input.dodge_active;
 
   result["locked_target_name"] = QString();
@@ -236,7 +234,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
           result["locked_target_hp_ratio"] =
               lmax > 0 ? static_cast<double>(lhp) / static_cast<double>(lmax) : 0.0;
         }
-        // Target combat state
+
         auto* locked_stagger =
             locked_ent->get_component<Engine::Core::StaggerComponent>();
         result["locked_target_staggered"] =

@@ -7,14 +7,11 @@
 
 namespace Render::GL {
 
-// Deterministic, subtle per-part value variation so large flat surfaces read as
-// weathered masonry/timber instead of a single flat fill. `seed` should differ
-// per part (e.g. a loop index); the result stays close to the input color.
 inline auto
 weathered(const QVector3D& color, int seed, float amount = 0.06F) -> QVector3D {
   const float n = std::sin(static_cast<float>(seed) * 12.9898F) * 43758.5453F;
-  const float frac = n - std::floor(n);              // [0,1)
-  const float delta = (frac - 0.5F) * 2.0F * amount; // [-amount, amount]
+  const float frac = n - std::floor(n);
+  const float delta = (frac - 0.5F) * 2.0F * amount;
   const float scale = 1.0F + delta;
   return QVector3D(std::clamp(color.x() * scale, 0.0F, 1.0F),
                    std::clamp(color.y() * scale, 0.0F, 1.0F),
@@ -72,12 +69,6 @@ void add_tile_rows_z(AddBox&& add_box,
   }
 }
 
-// Builds a two-slope (gable) roof whose ridge runs along the X axis. All size
-// parameters are half-extents (matching add_box / box_local_model, since the
-// unit cube spans [-1,1]). The roof sits on a footprint of half-width
-// `half_span_x` (X, the ridge length) and half-depth `half_depth_z` (Z, the
-// direction the slopes fall), rising `rise` above `eave_y`. `add_rot` is a
-// callable (center, scale, euler_deg, color) forwarding to add_rotated_box.
 template <typename AddRotatedBox>
 void add_gable_roof_x(AddRotatedBox&& add_rot,
                       float center_x,
@@ -105,7 +96,6 @@ void add_gable_roof_x(AddRotatedBox&& add_rot,
           color);
 }
 
-// Same as above but the ridge runs along the Z axis (slopes fall along X).
 template <typename AddRotatedBox>
 void add_gable_roof_z(AddRotatedBox&& add_rot,
                       float center_x,

@@ -64,10 +64,9 @@ TEST_F(BattleRenderOptimizerTest, MovingUnitsWithStaleSnapshotAlwaysRender) {
   optimizer.begin_frame();
 
   Engine::Core::MotionPresentationComponent motion;
-  motion.snapshot_valid = false; // stale: between begin and finalize
+  motion.snapshot_valid = false;
   motion.set_state(Engine::Core::MotionPresentationState::Walk);
 
-  // Find the entity_id that would be temporally culled without the fix
   uint32_t const frame = optimizer.frame_counter();
   uint32_t const id_would_skip = (frame % 2 == 0) ? 1 : 2;
 
@@ -79,10 +78,9 @@ TEST_F(BattleRenderOptimizerTest,
   auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
-  // Identify which entity_id is throttled on the upcoming frame
   optimizer.begin_frame();
   uint32_t const frame = optimizer.frame_counter();
-  // skip_frames=2 so throttled when (entity_id+frame)%3 != 0
+
   uint32_t throttled_id = 0;
   for (uint32_t id = 1; id <= 3; ++id) {
     if ((id + frame) % 3 != 0) {
@@ -93,7 +91,7 @@ TEST_F(BattleRenderOptimizerTest,
   ASSERT_NE(throttled_id, 0U);
 
   Engine::Core::MotionPresentationComponent motion;
-  motion.snapshot_valid = false; // stale: between begin and finalize
+  motion.snapshot_valid = false;
   motion.set_state(Engine::Core::MotionPresentationState::Walk);
 
   float const far_distance_sq = 100.0F * 100.0F;

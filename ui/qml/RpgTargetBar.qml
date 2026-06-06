@@ -77,7 +77,6 @@ Item {
         border.color: root.target_staggered ? "#ffff8800" : (root.target_guard_broken ? "#ffff2200" : Theme.border)
         border.width: root.target_staggered || root.target_guard_broken ? 3 : 2
 
-        // Damage flash border
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
@@ -106,7 +105,6 @@ Item {
                     elide: Text.ElideRight
                 }
 
-                // Stagger indicator
                 Rectangle {
                     width: staggerLabel.implicitWidth + 12
                     height: 18
@@ -141,7 +139,6 @@ Item {
                 Layout.fillWidth: true
                 height: 16
 
-                // Background
                 Rectangle {
                     anchors.fill: parent
                     radius: 8
@@ -150,7 +147,6 @@ Item {
                     border.width: 1
                 }
 
-                // Delayed drain (red, shows recent damage)
                 Rectangle {
                     width: parent.width * root.target_hp_ratio
                     height: parent.height
@@ -164,7 +160,6 @@ Item {
                     }
                 }
 
-                // Current HP fill
                 Rectangle {
                     id: hp_fill
                     width: parent.width * root.displayed_ratio
@@ -178,7 +173,6 @@ Item {
                     }
                 }
 
-                // Damage tick marks
                 Repeater {
                     model: Math.max(0, Math.floor(root.target_max_hp / 50) - 1)
                     Rectangle {

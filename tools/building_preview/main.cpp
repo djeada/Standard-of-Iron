@@ -1,5 +1,4 @@
-// Offscreen building preview: renders each building renderer (Roman + Carthage)
-// to a PNG contact sheet using the CPU SoftwareRasterizer. Dev tool only.
+
 
 #include <QFont>
 #include <QGuiApplication>
@@ -47,7 +46,6 @@ struct Capture {
   float alpha{1.0F};
 };
 
-// Captures geometry submissions and replays the meshes' CPU triangles.
 class CapturingSubmitter : public ISubmitter {
 public:
   std::vector<Capture> captures;
@@ -55,9 +53,9 @@ public:
   void mesh(Mesh* mesh,
             const QMatrix4x4& model,
             const QVector3D& color,
-            Render::GL::Texture* /*tex*/ = nullptr,
+            Render::GL::Texture* = nullptr,
             float alpha = 1.0F,
-            int /*material_id*/ = 0) override {
+            int = 0) override {
     if (mesh != nullptr) {
       captures.push_back(Capture{mesh, model, color, alpha});
     }
@@ -75,7 +73,6 @@ public:
     }
   }
 
-  // Unused channels for static building previews.
   void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
   void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
   void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}

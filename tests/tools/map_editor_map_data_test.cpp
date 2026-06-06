@@ -531,10 +531,6 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
   EXPECT_DOUBLE_EQ(raw_building.value("strength").toDouble(), 77.78);
 }
 
-// ---------------------------------------------------------------------------
-// compute_min_bridge_width tests
-// ---------------------------------------------------------------------------
-
 namespace {
 
 auto make_river(float x1, float y1, float x2, float y2, float width)
@@ -571,8 +567,7 @@ TEST(ComputeMinBridgeWidthTest, NonRiverElementsIgnored) {
 }
 
 TEST(ComputeMinBridgeWidthTest, PerpendicularCrossingRequiresRiverWidth) {
-  // Bridge runs along X axis; river runs along Y axis — crossing at 90 degrees.
-  // Required width == river_width / sin(90°) == river_width.
+
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(5.0F, -5.0F, 5.0F, 5.0F, 4.0F));
 
@@ -582,9 +577,7 @@ TEST(ComputeMinBridgeWidthTest, PerpendicularCrossingRequiresRiverWidth) {
 }
 
 TEST(ComputeMinBridgeWidthTest, DiagonalCrossingIncreasesRequirement) {
-  // Bridge runs along X axis; river runs diagonally at 45 degrees.
-  // sin(45°) = sqrt(2)/2, so required width = river_width / sin(45°)
-  //          = 4.0 * sqrt(2) ≈ 5.657.
+
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(0.0F, 0.0F, 10.0F, 10.0F, 4.0F));
 
@@ -595,7 +588,7 @@ TEST(ComputeMinBridgeWidthTest, DiagonalCrossingIncreasesRequirement) {
 }
 
 TEST(ComputeMinBridgeWidthTest, NonIntersectingRiverIgnored) {
-  // River is beside the bridge and does not cross it.
+
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(20.0F, -5.0F, 20.0F, 5.0F, 4.0F));
 
@@ -605,7 +598,7 @@ TEST(ComputeMinBridgeWidthTest, NonIntersectingRiverIgnored) {
 }
 
 TEST(ComputeMinBridgeWidthTest, MultipleRiversUsesWidestRequirement) {
-  // Two rivers cross the bridge; the wider river should dominate.
+
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(3.0F, -5.0F, 3.0F, 5.0F, 2.0F));
   elements.append(make_river(7.0F, -5.0F, 7.0F, 5.0F, 6.0F));
@@ -616,7 +609,7 @@ TEST(ComputeMinBridgeWidthTest, MultipleRiversUsesWidestRequirement) {
 }
 
 TEST(ComputeMinBridgeWidthTest, ParallelRiverIgnored) {
-  // Bridge and river are parallel (both along X) — no meaningful crossing.
+
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(0.0F, 1.0F, 10.0F, 1.0F, 4.0F));
 

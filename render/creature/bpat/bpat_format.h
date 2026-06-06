@@ -48,7 +48,7 @@ struct BpatClipEntry {
   float fps;
   std::uint8_t loops;
   std::uint8_t pad[3];
-  // Authored animation markers as normalized clip phase in [0,1]; -1 means unset.
+
   float marker_anticipation_start;
   float marker_weapon_release;
   float marker_contact;

@@ -531,8 +531,7 @@ TEST(CommanderSystemTest, ManualRallyModeDoesNotAutoTriggerWithoutRequest) {
 }
 
 TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
-  // Simulate a commander that is already at the rally position so the system
-  // immediately starts the animation timer, then completes and plants the flag.
+
   Engine::Core::World world;
   Game::Systems::CommandService::initialize(64, 64);
 
@@ -549,15 +548,12 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
   commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
   commander_transform->position = {5.0F, 0.0F, 5.0F};
 
-  // Set up the flag rally: commander is already at the pending position.
   commander_data->flag_rally_pending_x = 5.0F;
   commander_data->flag_rally_pending_z = 5.0F;
   commander_data->flag_rally_cost = 2.0F;
   commander_data->flag_rally_in_progress = true;
   commander_data->flag_rally_at_position = false;
 
-  // Add allied troops that should receive the same formation move order as a
-  // ground right-click.
   auto* ally_a = world.create_entity();
   auto* ally_a_unit = ally_a->add_component<Engine::Core::UnitComponent>();
   auto* ally_a_transform = ally_a->add_component<Engine::Core::TransformComponent>();
@@ -580,20 +576,18 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
 
   Game::Systems::CommanderSystem system;
 
-  // First tick: commander arrives and starts the planting phase.
   system.update(&world, 0.1F);
   EXPECT_TRUE(commander_data->flag_rally_at_position);
   EXPECT_NEAR(commander_data->flag_rally_animation_timer, 2.0F, 0.01F);
   EXPECT_FALSE(commander_data->flag_rally_flag_active);
 
-  // Advance past the full planting cost.
   system.update(&world, 2.0F);
   EXPECT_FALSE(commander_data->flag_rally_in_progress);
   EXPECT_FALSE(commander_data->flag_rally_at_position);
   EXPECT_TRUE(commander_data->flag_rally_flag_active);
   EXPECT_NEAR(commander_data->flag_rally_flag_x, 5.0F, 0.01F);
   EXPECT_NEAR(commander_data->flag_rally_flag_z, 5.0F, 0.01F);
-  // issue_commands is consumed immediately in the same tick.
+
   EXPECT_FALSE(commander_data->flag_rally_issue_commands);
 
   auto* ally_a_movement = ally_a->get_component<Engine::Core::MovementComponent>();
@@ -626,7 +620,7 @@ TEST(CommanderFlagRallyTest, FlagRallyCancelledOnCommanderDeath) {
   ASSERT_NE(commander_transform, nullptr);
   ASSERT_NE(commander_data, nullptr);
   commander_unit->owner_id = 1;
-  commander_unit->health = 0; // commander is dead
+  commander_unit->health = 0;
   commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
   commander_transform->position = {5.0F, 0.0F, 5.0F};
   commander_data->flag_rally_pending_x = 5.0F;
@@ -640,7 +634,6 @@ TEST(CommanderFlagRallyTest, FlagRallyCancelledOnCommanderDeath) {
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
 
-  // The rally should be cancelled on death.
   EXPECT_FALSE(commander_data->flag_rally_in_progress);
   EXPECT_FALSE(commander_data->flag_rally_at_position);
   EXPECT_FALSE(commander_data->flag_rally_flag_active);
@@ -681,7 +674,7 @@ TEST(CommanderFlagRallyTest, CommanderMovingTowardsFlagPositionDoesNotCompleteEa
   commander_unit->owner_id = 1;
   commander_unit->health = 100;
   commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
-  // Commander is far from the target — has not arrived yet.
+
   commander_transform->position = {0.0F, 0.0F, 0.0F};
   commander_data->flag_rally_pending_x = 50.0F;
   commander_data->flag_rally_pending_z = 50.0F;
@@ -692,7 +685,6 @@ TEST(CommanderFlagRallyTest, CommanderMovingTowardsFlagPositionDoesNotCompleteEa
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
 
-  // Commander has not arrived yet — no phase transition.
   EXPECT_FALSE(commander_data->flag_rally_at_position);
   EXPECT_FALSE(commander_data->flag_rally_flag_active);
 }
@@ -892,7 +884,6 @@ TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
   commander_data->aura_ability_cooldown = 60.0F;
   commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
 
-  // Same-type ally within radius
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
   auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
@@ -905,7 +896,6 @@ TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
   ally_unit->spawn_type = Game::Units::SpawnType::Knight;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
-  // First run without ability to get baseline values
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
   const int base_damage = ally_attack->damage;
@@ -913,11 +903,9 @@ TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
   ASSERT_GT(base_damage, 0);
   ASSERT_GT(base_melee, 0);
 
-  // Now activate the ability and run again
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
 
-  // 50% damage boost
   EXPECT_EQ(ally_attack->damage,
             std::max(1, static_cast<int>(std::round(base_damage * 1.5F))));
   EXPECT_EQ(ally_attack->melee_damage,
@@ -944,7 +932,6 @@ TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
   commander_data->aura_ability_cooldown = 60.0F;
   commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
 
-  // Different-type ally within radius
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
   auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
@@ -957,17 +944,14 @@ TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
   ally_unit->spawn_type = Game::Units::SpawnType::Archer;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
-  // First run without ability to get baseline
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
   const int base_damage = ally_attack->damage;
   const int base_melee = ally_attack->melee_damage;
 
-  // Now activate and run
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
 
-  // No damage boost for different type - values stay at base
   EXPECT_EQ(ally_attack->damage, base_damage);
   EXPECT_EQ(ally_attack->melee_damage, base_melee);
 }
@@ -992,7 +976,6 @@ TEST(CommanderAuraAbilityTest, AllTroopsInRadiusGetHealthBoost) {
   commander_data->aura_ability_remaining = 10.0F;
   commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
 
-  // Different-type ally within radius should still get health boost
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
   auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
@@ -1007,7 +990,6 @@ TEST(CommanderAuraAbilityTest, AllTroopsInRadiusGetHealthBoost) {
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
 
-  // 30% health boost -> health should increase by 30
   EXPECT_EQ(ally_unit->health, 130);
 }
 
@@ -1031,7 +1013,6 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
   commander_data->aura_ability_cooldown = 60.0F;
   commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
 
-  // Same-type ally OUTSIDE radius
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
   auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
@@ -1045,17 +1026,14 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
   ally_unit->spawn_type = Game::Units::SpawnType::Knight;
   ally_transform->position = {50.0F, 0.0F, 0.0F};
 
-  // Get baseline
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
   const int base_damage = ally_attack->damage;
   const int base_health = ally_unit->health;
 
-  // Activate ability and run
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
 
-  // No boosts for troops outside radius
   EXPECT_EQ(ally_attack->damage, base_damage);
   EXPECT_EQ(ally_unit->health, base_health);
 }

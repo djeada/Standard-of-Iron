@@ -160,7 +160,6 @@ void draw_fortress_base(const DrawContext& p,
                         const CarthagePalette& c,
                         bool detailed) {
 
-  // == FOUNDATION: Heavy stepped fortress base (Punic masonry signature) ==
   draw_box(out,
            unit,
            white,
@@ -183,7 +182,6 @@ void draw_fortress_base(const DrawContext& p,
            QVector3D(1.78F, 0.04F, 1.48F),
            c.stone_light);
 
-  // == ENTRANCE STAIRS: Stepped approach (fortress access) ==
   draw_box(out,
            unit,
            white,
@@ -210,7 +208,6 @@ void draw_fortress_base(const DrawContext& p,
     return;
   }
 
-  // == BATTERED BASE STONES: Visible coursework along perimeter ==
   for (float x = -1.7F; x <= 1.7F; x += 0.38F) {
     draw_box(out,
              unit,
@@ -244,7 +241,6 @@ void draw_fortress_base(const DrawContext& p,
              c.brick_dark);
   }
 
-  // == CORNER PILASTERS: Battered foundation supports ==
   for (float const px : {-1.72F, 1.72F}) {
     for (float const pz : {-1.42F, 1.42F}) {
       draw_box(out,
@@ -277,7 +273,6 @@ void draw_fortress_walls(const DrawContext& p,
   float const wall_cy = wall_height * 0.5F * height_multiplier + 0.26F;
   float const wall_hy = wall_height * 0.5F * height_multiplier;
 
-  // == MAIN WALLS: Thick Punic brick ==
   draw_box(out,
            unit,
            white,
@@ -307,7 +302,6 @@ void draw_fortress_walls(const DrawContext& p,
            QVector3D(0.14F, wall_hy, 1.22F),
            c.stone_light);
 
-  // == HORIZONTAL STONE COURSES (Punic masonry bands) ==
   if (state != BuildingState::Destroyed) {
     float const lower_band_y = wall_height * 0.25F * height_multiplier + 0.26F;
     float const upper_band_y = wall_height * 0.70F * height_multiplier + 0.26F;
@@ -343,7 +337,6 @@ void draw_fortress_walls(const DrawContext& p,
     }
   }
 
-  // == ARROW SLITS: Narrow defensive windows ==
   if (detailed && state != BuildingState::Destroyed) {
     float const slit_y = wall_height * 0.45F * height_multiplier + 0.26F;
     for (float const x : {-0.8F, 0.0F, 0.8F}) {
@@ -373,7 +366,6 @@ void draw_fortress_walls(const DrawContext& p,
     }
   }
 
-  // == STEPPED MERLONS: Battlement crowns on all four sides ==
   if (state != BuildingState::Destroyed) {
     float const merlon_top = wall_height * height_multiplier + 0.32F;
     const int front_merlons = (state == BuildingState::Damaged) ? 5 : 7;
@@ -425,7 +417,6 @@ void draw_fortress_walls(const DrawContext& p,
     }
   }
 
-  // == GATE PILASTERS: Flanking the front entrance ==
   if (detailed && state != BuildingState::Destroyed) {
     for (float const x : {-1.36F, 1.36F}) {
       draw_box(out,
@@ -435,7 +426,7 @@ void draw_fortress_walls(const DrawContext& p,
                QVector3D(x, 0.60F, 1.14F),
                QVector3D(0.14F, 0.38F, 0.22F),
                c.stone_dark);
-      // Pilaster cap
+
       draw_box(out,
                unit,
                white,
@@ -467,7 +458,7 @@ void draw_corner_towers(const DrawContext& p,
   }
 
   for (auto corner : corners) {
-    // == MAIN TOWER SHAFT ==
+
     draw_box(out,
              unit,
              white,
@@ -476,7 +467,6 @@ void draw_corner_towers(const DrawContext& p,
              QVector3D(0.28F, 0.70F * height_multiplier, 0.28F),
              c.stone_dark);
 
-    // == BATTERED BASE: Wider foundation for each tower ==
     draw_box(out,
              unit,
              white,
@@ -486,7 +476,7 @@ void draw_corner_towers(const DrawContext& p,
              c.brick_dark);
 
     if (state != BuildingState::Destroyed) {
-      // == TOWER CAP: Stepped crown ==
+
       draw_box(out,
                unit,
                white,
@@ -495,7 +485,6 @@ void draw_corner_towers(const DrawContext& p,
                QVector3D(0.32F, 0.10F, 0.32F),
                c.brick_dark);
 
-      // == STONE BAND on tower ==
       draw_box(out,
                unit,
                white,
@@ -505,7 +494,7 @@ void draw_corner_towers(const DrawContext& p,
                c.stone_light);
 
       if (detailed) {
-        // == MINI MERLONS on each corner tower ==
+
         for (int j = 0; j < 4; ++j) {
           float const angle = float(j) * 1.57F;
           float const ox = sinf(angle) * 0.22F;
@@ -519,7 +508,7 @@ void draw_corner_towers(const DrawContext& p,
               QVector3D(0.07F, 0.09F, 0.07F),
               c.brick);
         }
-        // == CENTER FINIAL ==
+
         draw_box(out,
                  unit,
                  white,
@@ -540,7 +529,6 @@ void draw_courtyard(const DrawContext& p,
                     BuildingState state,
                     bool detailed) {
 
-  // == TRAINING GROUND: Large paved courtyard ==
   draw_box(out,
            unit,
            white,
@@ -549,7 +537,6 @@ void draw_courtyard(const DrawContext& p,
            QVector3D(1.3F, 0.02F, 1.0F),
            c.stone_base);
 
-  // == DRILL MARKER: Central stone circle ==
   draw_cyl(out,
            p.model,
            QVector3D(0.0F, 0.24F, 0.0F),
@@ -558,7 +545,6 @@ void draw_courtyard(const DrawContext& p,
            c.stone_dark,
            white);
 
-  // == CENTRAL STANDARD: Tall command post ==
   draw_cyl(out,
            p.model,
            QVector3D(0.0F, 0.24F, 0.0F),
@@ -567,7 +553,6 @@ void draw_courtyard(const DrawContext& p,
            c.stone_light,
            white);
 
-  // == WEAPONS RACK (back wall) ==
   draw_box(out,
            unit,
            white,
@@ -577,7 +562,7 @@ void draw_courtyard(const DrawContext& p,
            c.brick);
 
   if (state != BuildingState::Destroyed) {
-    // == PURPLE CLOTH BANNER: Cultural marker (Punic identity) ==
+
     draw_box(out,
              unit,
              white,
@@ -585,7 +570,7 @@ void draw_courtyard(const DrawContext& p,
              QVector3D(0.0F, 1.06F, 0.12F),
              QVector3D(0.42F, 0.06F, 0.28F),
              c.royal_purple);
-    // Banner supports
+
     draw_box(out,
              unit,
              white,
@@ -601,7 +586,6 @@ void draw_courtyard(const DrawContext& p,
              QVector3D(0.02F, 0.30F, 0.02F),
              c.wood_dark);
 
-    // == SECOND PURPLE BANNER (side wall) ==
     draw_box(out,
              unit,
              white,
@@ -611,7 +595,7 @@ void draw_courtyard(const DrawContext& p,
              c.royal_purple);
 
     if (detailed) {
-      // == ORNAMENTAL CAP on standard ==
+
       draw_box(out,
                unit,
                white,
@@ -627,7 +611,6 @@ void draw_courtyard(const DrawContext& p,
                QVector3D(0.10F, 0.08F, 0.10F),
                c.royal_purple);
 
-      // == CERAMIC POTTERY: Training ground decoration ==
       draw_cyl(out,
                p.model,
                QVector3D(0.85F, 0.24F, 0.72F),
@@ -643,7 +626,6 @@ void draw_courtyard(const DrawContext& p,
                c.tile_dark,
                white);
 
-      // == WEAPON DETAILS on rack ==
       for (float const dx : {-0.15F, 0.0F, 0.15F}) {
         draw_box(out,
                  unit,
@@ -669,7 +651,6 @@ void draw_carthage_roof(const DrawContext& p,
     return;
   }
 
-  // == MAIN ROOF SLAB: Flat terracotta ==
   draw_box(out,
            unit,
            white,
@@ -678,7 +659,6 @@ void draw_carthage_roof(const DrawContext& p,
            QVector3D(detailed ? 1.58F : 1.44F, 0.06F, detailed ? 1.28F : 1.16F),
            c.tile_red);
 
-  // == TILE ROWS: Visible roofing texture ==
   add_tile_rows_z(
       [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
         draw_box(out, unit, white, p.model, center, size, color);
@@ -691,7 +671,7 @@ void draw_carthage_roof(const DrawContext& p,
       c.tile_dark);
 
   if (detailed && state == BuildingState::Normal) {
-    // == CENTRAL ROOF RIDGE: Heavy stone cap ==
+
     draw_box(out,
              unit,
              white,
@@ -700,7 +680,6 @@ void draw_carthage_roof(const DrawContext& p,
              QVector3D(0.48F, 0.05F, 0.28F),
              c.stone_dark);
 
-    // == ROOF WATCHTOWER: Small elevated observation post ==
     draw_box(out,
              unit,
              white,
@@ -715,7 +694,7 @@ void draw_carthage_roof(const DrawContext& p,
              QVector3D(0.0F, 1.98F, -0.12F),
              QVector3D(0.28F, 0.04F, 0.18F),
              c.brick_dark);
-    // Watchtower merlons
+
     for (float const dx : {-0.14F, 0.0F, 0.14F}) {
       draw_box(out,
                unit,
@@ -739,7 +718,6 @@ void draw_gate(const DrawContext& p,
                                  : (state == BuildingState::Damaged) ? 0.52F
                                                                      : 0.66F;
 
-  // == MAIN GATE: Heavy timber door ==
   draw_box(out,
            unit,
            white,
@@ -748,7 +726,6 @@ void draw_gate(const DrawContext& p,
            QVector3D(0.54F, gate_half_height, 0.08F),
            c.wood_dark);
 
-  // == IRON STRAPS: Reinforcement bands ==
   const int strap_count = detailed ? 4 : 2;
   for (int i = 0; i < strap_count; ++i) {
     float const y = 0.24F + float(i) * 0.26F;
@@ -762,7 +739,7 @@ void draw_gate(const DrawContext& p,
   }
 
   if (state != BuildingState::Destroyed) {
-    // == ARCH LINTEL: Stone archway over gate ==
+
     draw_box(out,
              unit,
              white,
@@ -771,7 +748,6 @@ void draw_gate(const DrawContext& p,
              QVector3D(0.64F, 0.06F, 0.14F),
              c.brick_dark);
 
-    // == KEYSTONE: Central arch decoration ==
     if (detailed) {
       draw_box(out,
                unit,
@@ -781,7 +757,6 @@ void draw_gate(const DrawContext& p,
                QVector3D(0.10F, 0.06F, 0.10F),
                c.stone_light);
 
-      // == FRAME PILLARS: Flanking the gate ==
       for (float const gx : {-0.52F, 0.52F}) {
         draw_box(out,
                  unit,
@@ -792,7 +767,6 @@ void draw_gate(const DrawContext& p,
                  c.stone_dark);
       }
 
-      // == IRON STUDS: Door hardware ==
       for (float const sy : {0.35F, 0.65F, 0.95F}) {
         for (float const sx : {-0.24F, 0.24F}) {
           draw_box(out,

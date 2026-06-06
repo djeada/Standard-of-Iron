@@ -210,8 +210,6 @@ auto select_template_prewarm_anim_budget(std::size_t domain_count,
         std::clamp<std::size_t>(max_variants_for_core, 1, k_template_variant_count);
   }
 
-  // Keep at least four visual variants in the prewarm set; cache sizing is clamped
-  // later.
   variant_count = std::max<std::size_t>(variant_count, 4U);
 
   std::size_t anim_count_budget =

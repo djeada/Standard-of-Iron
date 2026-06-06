@@ -18,9 +18,6 @@ namespace Game::Systems {
 
 static constexpr int max_waypoint_skip_count = 4;
 
-// No-progress watchdog tuning. A unit holding an active navigation target that
-// moves less than the epsilon distance for longer than the timeout is treated
-// as permanently stuck and has its order cleared.
 static constexpr float k_stuck_timeout_seconds = 3.0F;
 static constexpr float k_stuck_progress_epsilon_sq = 0.15F * 0.15F;
 
@@ -92,8 +89,6 @@ auto is_point_allowed(const QVector3D& pos,
 
 namespace {
 
-// Shared end-of-tick work: clamp to map bounds, decay terrain audio cooldown
-// and turn the unit to face its motion (or its desired yaw when stationary).
 void finalize_orientation(Engine::Core::Entity* entity,
                           Engine::Core::TransformComponent* transform,
                           Engine::Core::MovementComponent* movement,
@@ -246,11 +241,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   bool const bypass_mode =
       (builder_prod != nullptr) && builder_prod->bypass_movement_active;
 
-  // No-progress watchdog: an active navigation order may never persist forever.
-  // Regardless of why a unit stops advancing (oscillation, predicate mismatch,
-  // unreachable goal, crowding), if it holds a target yet makes no real
-  // progress for too long, abandon the order. This is the single terminal
-  // backstop that makes a permanent "moving in place" state impossible.
   if (movement->has_target) {
     float const px = transform->position.x;
     float const pz = transform->position.z;
@@ -454,15 +444,11 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   };
 
   if (!was_on_valid_tile || cell_walkable(new_x, new_z)) {
-    // Already off the grid (escaping a blocked region) or the full step is
-    // clear: take it unchanged.
+
     transform->position.x = new_x;
     transform->position.z = new_z;
   } else {
-    // The full step would enter a blocked cell. Slide along the obstacle by
-    // applying only the axis component that stays in walkable space instead of
-    // dead-stopping. This keeps the unit progressing along its waypoints past
-    // grazed corners and walls rather than vibrating in place forever.
+
     bool const x_axis_clear = cell_walkable(new_x, old_z);
     bool const z_axis_clear = cell_walkable(old_x, new_z);
 
@@ -473,8 +459,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       transform->position.z = new_z;
       movement->vx = 0.0F;
     } else {
-      // Fully wedged: no axis is free. Hold position; the no-progress watchdog
-      // is the terminal backstop if this persists.
+
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }

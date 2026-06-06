@@ -471,47 +471,45 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
             : std::fmod(anim.inputs.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
   }
 
-  // Per-direction sword arc keyframes for visually distinct attack types
-  // Each direction has: ready position, wind-up apex, strike end, return pos
-  QVector3D ready_pos(0.10F, 0.85F, 0.52F);    // Default rest: sword up-right
-  QVector3D windup_pos(0.0F, 1.0F, 0.0F);      // Wind-up: raised high
-  QVector3D strike_mid(0.0F, 0.50F, 0.87F);    // Mid-strike: forward/down
-  QVector3D strike_end(-0.08F, -0.10F, 0.99F); // Strike end: fully extended low
+  QVector3D ready_pos(0.10F, 0.85F, 0.52F);
+  QVector3D windup_pos(0.0F, 1.0F, 0.0F);
+  QVector3D strike_mid(0.0F, 0.50F, 0.87F);
+  QVector3D strike_end(-0.08F, -0.10F, 0.99F);
 
   std::uint8_t const variant = anim.inputs.attack_variant;
   if (anim.amplified_attack) {
     switch (variant) {
-    case 0: // LeftSlash - wide arc from upper-right to lower-left
+    case 0:
       ready_pos = QVector3D(0.45F, 0.85F, 0.28F);
       windup_pos = QVector3D(0.70F, 0.65F, 0.30F);
       strike_mid = QVector3D(-0.20F, 0.30F, 0.93F);
       strike_end = QVector3D(-0.72F, -0.15F, 0.68F);
       break;
-    case 1: // RightSlash - wide arc from upper-left to lower-right
+    case 1:
       ready_pos = QVector3D(-0.40F, 0.88F, 0.25F);
       windup_pos = QVector3D(-0.68F, 0.68F, 0.28F);
       strike_mid = QVector3D(0.22F, 0.28F, 0.93F);
       strike_end = QVector3D(0.74F, -0.12F, 0.67F);
       break;
-    case 2: // Finisher / HeavyOverhead - high up then straight down
+    case 2:
       ready_pos = QVector3D(0.0F, 0.90F, 0.44F);
       windup_pos = QVector3D(0.0F, 1.0F, -0.05F);
       strike_mid = QVector3D(0.0F, 0.40F, 0.92F);
       strike_end = QVector3D(0.0F, -0.30F, 0.95F);
       break;
-    case 3: // Overhead - angled overhead from right
+    case 3:
       ready_pos = QVector3D(0.20F, 0.92F, 0.34F);
       windup_pos = QVector3D(0.25F, 1.0F, -0.10F);
       strike_mid = QVector3D(0.05F, 0.35F, 0.94F);
       strike_end = QVector3D(-0.10F, -0.20F, 0.98F);
       break;
-    case 4: // Thrust - straight forward lunge
+    case 4:
       ready_pos = QVector3D(0.15F, 0.55F, 0.82F);
       windup_pos = QVector3D(0.10F, 0.60F, -0.20F);
       strike_mid = QVector3D(0.05F, 0.15F, 0.99F);
       strike_end = QVector3D(0.02F, 0.05F, 1.0F);
       break;
-    default: // Alternating slash fallback
+    default:
       if (variant % 2 == 0) {
         ready_pos = QVector3D(0.38F, 0.88F, 0.28F);
         windup_pos = QVector3D(0.60F, 0.72F, 0.34F);
@@ -527,7 +525,6 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     }
   }
 
-  // Normalize all direction vectors
   auto safe_normalize = [](QVector3D& v) {
     if (v.lengthSquared() > 1e-6F) {
       v.normalize();
@@ -541,44 +538,38 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
   QVector3D sword_dir = ready_pos;
 
   if (is_attacking) {
-    // Phase timeline for full, dramatic swing:
-    // 0.00 - 0.20: Wind-up (ready → windup apex, slow gather)
-    // 0.20 - 0.30: Hold at apex (tension/anticipation)
-    // 0.30 - 0.52: Strike swing (windup → strike_mid → strike_end, fast & powerful)
-    // 0.52 - 0.65: Follow-through (hold near strike_end, weight)
-    // 0.65 - 0.85: Recovery arc (strike_end back toward ready_pos)
-    // 0.85 - 1.00: Settle (easing back to rest)
+
     if (attack_phase < 0.20F) {
-      // Wind-up: slow rising motion to gathered position
+
       float const t = ease_in_out_cubic(attack_phase / 0.20F);
       sword_dir = nlerp(ready_pos, windup_pos, t);
     } else if (attack_phase < 0.30F) {
-      // Apex hold: slight tremor at peak for tension
+
       float const hold_t = (attack_phase - 0.20F) / 0.10F;
       float const tremor = std::sin(hold_t * 12.0F) * 0.02F;
       sword_dir = windup_pos + QVector3D(tremor, tremor * 0.5F, 0.0F);
       safe_normalize(sword_dir);
     } else if (attack_phase < 0.40F) {
-      // Strike first half: explosive start, windup → strike_mid
+
       float t = (attack_phase - 0.30F) / 0.10F;
-      t = t * t; // Accelerating (ease-in)
+      t = t * t;
       sword_dir = nlerp(windup_pos, strike_mid, t);
     } else if (attack_phase < 0.52F) {
-      // Strike second half: strike_mid → strike_end, fastest part
+
       float t = (attack_phase - 0.40F) / 0.12F;
-      t = 1.0F - (1.0F - t) * (1.0F - t); // Decelerating (ease-out)
+      t = 1.0F - (1.0F - t) * (1.0F - t);
       sword_dir = nlerp(strike_mid, strike_end, t);
     } else if (attack_phase < 0.65F) {
-      // Follow-through: hold near strike_end with slight drift
+
       float const drift = (attack_phase - 0.52F) / 0.13F;
       QVector3D const drift_target = nlerp(strike_end, ready_pos, 0.08F);
       sword_dir = nlerp(strike_end, drift_target, drift);
     } else if (attack_phase < 0.85F) {
-      // Recovery arc: sweeping back toward ready position
+
       float const t = ease_in_out_cubic((attack_phase - 0.65F) / 0.20F);
       sword_dir = nlerp(strike_end, ready_pos, t);
     } else {
-      // Settle: ease into rest
+
       float const t = ease_in_out_cubic((attack_phase - 0.85F) / 0.15F);
       QVector3D const almost_ready =
           nlerp(ready_pos, QVector3D(0.08F, 0.92F, 0.38F), 0.1F);
@@ -608,7 +599,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
   if (is_attacking && attack_phase >= 0.28F && attack_phase < 0.68F) {
     float const base_w = m_config.sword_width;
     float const t = (attack_phase - 0.28F) / 0.40F;
-    // Trail is bright at start, fades out toward end
+
     float const alpha = clamp01(0.60F * std::sin(t * std::numbers::pi_v<float>));
     QMatrix4x4 const sword_world =
         hand_basis_transform(ctx.model, grip) * sword_local_pose(sword_dir);
@@ -622,11 +613,10 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
       swing_dir = QVector3D(0.0F, 1.0F, 0.0F);
     }
     QVector3D const guard_right = sword_world.column(0).toVector3D();
-    // Trail extends along more of the blade length
+
     QVector3D const trail_start = blade_base + swing_dir * 0.04F;
     QVector3D const trail_end = blade_base + swing_dir * (0.55F + 0.35F * t);
 
-    // Hot white-blue core trail (modern RPG style)
     QVector3D const hot_core_color =
         lerp(QVector3D(1.0F, 0.95F, 0.85F), m_config.metal_color * 1.3F, t);
     std::array<QVector3D, 1> const core_palette{hot_core_color};
@@ -639,7 +629,6 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
         nullptr,
         alpha * 0.85F);
 
-    // Outer glow trail (wider, colored)
     QVector3D const glow_color =
         lerp(QVector3D(0.7F, 0.85F, 1.0F), m_config.metal_color * 0.8F, t * 0.7F);
     std::array<QVector3D, 1> const glow_palette{glow_color};
@@ -652,7 +641,6 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
         nullptr,
         alpha * 0.45F);
 
-    // Secondary, wider ghost trail for afterimage effect
     if (attack_phase >= 0.32F && attack_phase < 0.60F) {
       float const ghost_t = (attack_phase - 0.32F) / 0.28F;
       float const ghost_alpha = clamp01(0.28F * (1.0F - ghost_t * ghost_t));
@@ -671,10 +659,9 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     }
   }
 
-  // Speed-line afterimage: render ghost swords at previous positions during peak strike
   if (is_attacking && anim.amplified_attack && attack_phase >= 0.32F &&
       attack_phase < 0.54F) {
-    // Render 2 afterimage swords at slightly earlier phases for motion blur effect
+
     constexpr int k_afterimage_count = 2;
     constexpr float k_phase_offsets[k_afterimage_count] = {0.04F, 0.09F};
     constexpr float k_afterimage_alphas[k_afterimage_count] = {0.22F, 0.10F};
@@ -684,7 +671,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
       if (prev_phase < 0.28F) {
         continue;
       }
-      // Recalculate sword direction at previous phase
+
       QVector3D prev_dir;
       if (prev_phase < 0.40F) {
         float pt = (prev_phase - 0.30F) / 0.10F;

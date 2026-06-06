@@ -13,4 +13,4 @@ void deal_damage(Engine::Core::World* world,
                  int damage,
                  Engine::Core::EntityID attacker_id = 0);
 
-} // namespace Game::Systems::Combat
+}

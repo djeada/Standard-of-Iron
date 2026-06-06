@@ -785,11 +785,9 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
             ? std::clamp(csc->state_time / csc->state_duration, 0.0F, 1.0F)
             : 0.0F;
 
-    // Bigger, more visible danger rings that grow as the attack charges
     const float inner_r = 0.70F + 0.55F * progress;
     constexpr float outer_r = 1.65F;
 
-    // Stronger pulsing with urgency increase as attack charges
     const float pulse_speed = 4.0F + 6.0F * progress;
     const float inner_alpha = 0.70F + 0.25F * pulse(anim_time, pulse_speed);
     const float outer_alpha = 0.35F + 0.18F * pulse(anim_time, 2.5F, 1.047F);
@@ -810,7 +808,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 outer_alpha,
                 outer_alpha * 0.45F,
                 k_warning_orange);
-    // Third ring - pulsing danger halo for extra visibility
+
     const float halo_r = outer_r + 0.30F + 0.20F * pulse(anim_time, 3.0F, 2.0F);
     const float halo_alpha = 0.18F * progress;
     submit_ring(renderer,
@@ -850,7 +848,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 stagger_alpha,
                 stagger_alpha * 0.40F,
                 k_stagger_cyan);
-    // Second ring for stagger visibility
+
     submit_ring(renderer,
                 ex,
                 tf->position.y,
@@ -865,7 +863,6 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     const float elapsed = anim_time - flash.start_time;
     const float t = elapsed / StrikeFlash::k_duration;
 
-    // Much bigger, brighter strike flash
     const float flash_r = 1.2F + 1.0F * t;
     const float flash_alpha = (1.0F - t) * 0.90F;
     submit_ring(renderer,
@@ -876,7 +873,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 flash_alpha,
                 flash_alpha * 0.45F,
                 k_flash_white);
-    // Inner bright core
+
     const float core_r = 0.4F + 0.6F * t;
     const float core_alpha = (1.0F - t * t) * 0.95F;
     submit_ring(renderer,
@@ -887,7 +884,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 core_alpha,
                 core_alpha * 0.55F,
                 QVector3D(1.0F, 1.0F, 0.80F));
-    // Emit metal spark particle effect at impact point
+
     if (elapsed < 0.08F) {
       QVector3D const spark_pos(flash.pos.x(), flash.pos.y() + 0.4F, flash.pos.z());
       QVector3D const spark_color(1.0F, 0.85F, 0.4F);
@@ -904,14 +901,14 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
         const float lx = lock_tf->position.x;
         const float lz = lock_tf->position.z;
         const float ly = lock_tf->position.y;
-        // Bigger, more visible lock-on indicator
+
         const float lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);
         const float lock_outer = 0.28F + 0.10F * pulse(anim_time, 3.0F, 1.047F);
         submit_ring(
             renderer, lx, ly, lz, 1.10F, lock_alpha, lock_alpha * 0.48F, k_lock_gold);
         submit_ring(
             renderer, lx, ly, lz, 1.35F, lock_outer, lock_outer * 0.35F, k_lock_white);
-        // Tight inner ring for precision
+
         const float inner_lock = 0.48F + 0.08F * pulse(anim_time, 4.0F, 0.5F);
         submit_ring(
             renderer, lx, ly, lz, 0.60F, inner_lock, inner_lock * 0.40F, k_lock_gold);

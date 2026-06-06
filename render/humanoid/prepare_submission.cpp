@@ -274,7 +274,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
   auto record_soldier_debug = [&](int idx,
-                                  const AnimationInputs& /*raw_anim*/,
+                                  const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
                                   float attack_phase,
                                   Render::Creature::AnimationStateId animation_state,

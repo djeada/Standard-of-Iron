@@ -43,7 +43,7 @@ TEST_F(ScatterCompositionTest, ContextClassifiesCampRiverAndRockyScenes) {
   map_def.rivers.push_back(
       {QVector3D(-6.0F, 0.0F, -8.0F), QVector3D(-6.0F, 0.0F, 8.0F), 2.0F});
 
-  std::vector<Game::Map::WorldProp> world_props{
+  std::vector<Game::Map::WorldProp> const world_props{
       {.type = Game::Map::WorldProp::Type::FireCamp,
        .x = 10.0F,
        .z = 10.0F,
@@ -183,7 +183,7 @@ TEST_F(ScatterCompositionTest, RuinsPropBlocksObstacleInfluence) {
   map_def.grid.height = 20;
   map_def.grid.tile_size = 1.0F;
 
-  std::vector<Game::Map::WorldProp> world_props{
+  std::vector<Game::Map::WorldProp> const world_props{
       {.type = Game::Map::WorldProp::Type::Ruins,
        .x = 10.0F,
        .z = 10.0F,
@@ -192,20 +192,15 @@ TEST_F(ScatterCompositionTest, RuinsPropBlocksObstacleInfluence) {
 
   auto const context = build_context(map_def, world_props);
 
-  // The ruins is at grid (10, 10) → world (0, 0) on a 20x20 grid with tile_size=1
-  // obstacle radius = max(2.0, 1.0 * 2.90) = 2.9 world units
-  // Points inside the exclusion radius must have obstacle_influence == 1.0
   auto const inside = context.sample_world(0.0F, 0.0F);
   EXPECT_FLOAT_EQ(inside.obstacle_influence, 1.0F);
 
   auto const at_edge = context.sample_world(0.0F, 2.88F);
   EXPECT_FLOAT_EQ(at_edge.obstacle_influence, 1.0F);
 
-  // Points beyond the outer edge (1.5 * radius = 4.35) must have no influence
   auto const outside = context.sample_world(0.0F, 5.0F);
   EXPECT_FLOAT_EQ(outside.obstacle_influence, 0.0F);
 
-  // Points between inner and outer radius should have partial influence
   auto const partial = context.sample_world(0.0F, 3.5F);
   EXPECT_GT(partial.obstacle_influence, 0.0F);
   EXPECT_LT(partial.obstacle_influence, 1.0F);
@@ -217,7 +212,7 @@ TEST_F(ScatterCompositionTest, MagicShrineBlocksObstacleInfluence) {
   map_def.grid.height = 20;
   map_def.grid.tile_size = 1.0F;
 
-  std::vector<Game::Map::WorldProp> world_props{
+  std::vector<Game::Map::WorldProp> const world_props{
       {.type = Game::Map::WorldProp::Type::MagicShrine,
        .x = 10.0F,
        .z = 10.0F,
@@ -226,7 +221,6 @@ TEST_F(ScatterCompositionTest, MagicShrineBlocksObstacleInfluence) {
 
   auto const context = build_context(map_def, world_props);
 
-  // MagicShrine radius = max(2.0, 1.0 * 1.80) = 2.0 world units
   auto const inside = context.sample_world(0.0F, 0.0F);
   EXPECT_FLOAT_EQ(inside.obstacle_influence, 1.0F);
 
@@ -240,7 +234,7 @@ TEST_F(ScatterCompositionTest, BoulderDoesNotBlockObstacleInfluence) {
   map_def.grid.height = 20;
   map_def.grid.tile_size = 1.0F;
 
-  std::vector<Game::Map::WorldProp> world_props{
+  std::vector<Game::Map::WorldProp> const world_props{
       {.type = Game::Map::WorldProp::Type::Boulder,
        .x = 10.0F,
        .z = 10.0F,
@@ -248,7 +242,6 @@ TEST_F(ScatterCompositionTest, BoulderDoesNotBlockObstacleInfluence) {
 
   auto const context = build_context(map_def, world_props);
 
-  // Boulders are NOT hard obstacles – obstacle_influence should remain 0
   auto const near_boulder = context.sample_world(0.0F, 0.0F);
   EXPECT_FLOAT_EQ(near_boulder.obstacle_influence, 0.0F);
 }

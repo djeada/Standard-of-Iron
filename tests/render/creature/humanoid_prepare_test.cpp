@@ -3588,9 +3588,7 @@ TEST(HumanoidPrepare, MeleeAttackSmoothlyExitsExistingHoldKneel) {
   EXPECT_TRUE(melee_exit.is_attacking);
   EXPECT_FALSE(melee_exit.is_in_hold_mode);
   EXPECT_TRUE(melee_exit.is_exiting_hold);
-  // hold_transition_amount applies a smoothstep ease (matching guard_pose_amount)
-  // so the kneel/brace blend is smooth at both ends. Linear progress here is
-  // 0.75 (0.5s into a 2.0s stand-up), eased to smoothstep(0.75) = 0.84375.
+
   EXPECT_NEAR(Render::GL::hold_transition_amount(melee_exit), 0.84375F, 1.0e-3F);
 }
 
@@ -5406,14 +5404,6 @@ TEST(HumanoidPrepare,
   EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Walk);
 }
 
-// Regression: render-thread race window (snapshot_valid=false, initialized=true).
-// MotionPresentationComponent state is written only by
-// finalize_motion_presentation_frame under entity_mutex, so reading it under the
-// render lock is always safe even when snapshot_valid=false. The removed legacy
-// fallback path read MovementComponent fields that the movement system may write
-// without holding entity_mutex.
-// The fix gates on initialized instead of snapshot_valid so the snapshot is
-// preferred throughout the race window.
 TEST(HumanoidPrepare,
      RaceWindowInitializedSnapshotDrivesWalkEvenWhenSnapshotValidFalse) {
   Render::GL::HumanoidRendererBase const owner;
@@ -5431,10 +5421,9 @@ TEST(HumanoidPrepare,
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Spearman;
   transform->position = {0.0F, 0.0F, 0.0F};
-  // Simulate race window: begin set snapshot_valid=false but finalize already
-  // ran in the previous tick and populated the motion snapshot correctly.
+
   motion->initialized = true;
-  motion->snapshot_valid = false; // as-if in the begin→finalize race window
+  motion->snapshot_valid = false;
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
   motion->has_navigation_intent = true;
   motion->direction_x = 0.0F;
@@ -5479,7 +5468,6 @@ TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStami
   motion->speed = 4.0F;
   ctx.entity = &entity;
 
-  // No StaminaComponent — the run flag must come from the snapshot alone.
   auto const anim = Render::GL::sample_anim_state(ctx);
   EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
   EXPECT_TRUE(Render::Creature::is_running_animation(anim.movement_state))

@@ -134,8 +134,6 @@ auto mixf(float a, float b, float t) -> float {
 
 namespace Render::Ground {
 
-// TODO(phase5): Extract byte-identical shared ring/cap/quad/prism builders with
-// vegetation_pipeline.cpp once the vertex layouts can be proven identical.
 auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
                               float tile_size,
                               const LinearFeatureRibbonSettings& settings)

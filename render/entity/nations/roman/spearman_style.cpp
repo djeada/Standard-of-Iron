@@ -20,7 +20,7 @@ const std::array<SpearmanStyleRegistration, 1> k_styles{{
      }},
 }};
 
-} // namespace
+}
 
 void register_roman_spearman_styles() {
   register_spearman_styles(k_styles);

@@ -79,8 +79,6 @@
 #include "visibility_budget.h"
 #include "world_chunk.h"
 
-// Scene traversal delegates still use CombatRules::participates_in_rts_melee_lock.
-
 namespace Render::GL {
 
 namespace {

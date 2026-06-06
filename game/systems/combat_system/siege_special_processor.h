@@ -2,7 +2,7 @@
 
 namespace Engine::Core {
 class World;
-} // namespace Engine::Core
+}
 
 namespace Game::Systems::Combat {
 

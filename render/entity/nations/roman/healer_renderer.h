@@ -8,4 +8,4 @@ namespace Render::GL::Roman {
 
 void register_healer_renderer(EntityRendererRegistry& registry);
 
-} // namespace Render::GL::Roman
+}

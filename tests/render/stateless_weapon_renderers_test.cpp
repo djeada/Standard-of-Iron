@@ -638,7 +638,7 @@ TEST(StatelessWeaponRenderers, BowUsesHandSocketInsteadOfCarryGripFrame) {
 }
 
 TEST(StatelessWeaponRenderers, BowStringSitsBehindGripPlane) {
-  // The nock (string midpoint, tracked by the draw arm) must sit behind the bow grip.
+
   auto frames = make_frames();
   frames.hand_l.origin = frames.hand_r.origin + QVector3D(0.0F, 0.0F, -0.50F);
   const auto anim = make_anim();
@@ -653,7 +653,6 @@ TEST(StatelessWeaponRenderers, BowStringSitsBehindGripPlane) {
   QVector3D bow_forward = batch.archetypes.front().world.column(2).toVector3D();
   bow_forward.normalize();
 
-  // archetypes[2] starts at the nock (origin of the bottom V-segment).
   QVector3D const nock = batch.archetypes[2].world.column(3).toVector3D();
   EXPECT_LT(QVector3D::dotProduct(nock - grip, bow_forward), -0.01F);
 }

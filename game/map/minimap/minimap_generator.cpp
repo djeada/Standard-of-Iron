@@ -731,21 +731,18 @@ void MinimapGenerator::render_roads(QImage& image, const MapDefinition& map_def)
 void MinimapGenerator::draw_road_segment(
     QPainter& painter, float x1, float y1, float x2, float y2, float width) {
 
-  // Shadow pass — slightly wider, dark edge gives roads a clear outline
   QPen shadow_pen(Palette::ROAD_SHADOW);
   shadow_pen.setWidthF(width + 2.0F);
   shadow_pen.setCapStyle(Qt::RoundCap);
   painter.setPen(shadow_pen);
   painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
 
-  // Main road fill
   QPen road_pen(Palette::ROAD_MAIN);
   road_pen.setWidthF(width);
   road_pen.setCapStyle(Qt::RoundCap);
   painter.setPen(road_pen);
   painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
 
-  // Centre highlight — thin lighter stripe along the road crown
   QPen highlight_pen(Palette::ROAD_HIGHLIGHT);
   highlight_pen.setWidthF(std::max(width * 0.35F, 0.8F));
   highlight_pen.setCapStyle(Qt::RoundCap);

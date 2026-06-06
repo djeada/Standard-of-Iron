@@ -76,8 +76,7 @@ public:
                        std::uint8_t palette_slot,
                        BuildingStateMask states = BuildingStateMask::All,
                        BuildingLODMask lod = BuildingLODMask::All);
-  // Rotation is applied as translate * R(euler ZYX, degrees) * scale, matching the
-  // scale convention of add_box (same `scale` meaning).
+
   void add_rotated_box(const QVector3D& center,
                        const QVector3D& scale,
                        const QVector3D& euler_deg,

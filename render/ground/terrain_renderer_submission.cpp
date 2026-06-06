@@ -12,7 +12,7 @@ namespace {
 
 const QMatrix4x4 k_identity_matrix;
 
-} // namespace
+}
 
 namespace Render::GL {
 

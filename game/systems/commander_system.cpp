@@ -303,7 +303,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
       commander->cancel_flag_rally();
     }
 
-    // --- Flag rally processing ---
     bool started_flag_planting = false;
     if (commander->flag_rally_in_progress && !commander->flag_rally_at_position) {
       const float dx = transform->position.x - commander->flag_rally_pending_x;
@@ -325,8 +324,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    // Phase 3: flag just placed — issue the same ground move order the player would
-    // get from selecting their troops and right-clicking the rally position.
     if (commander->flag_rally_issue_commands) {
       commander->flag_rally_issue_commands = false;
       const QVector3D rally_pos(
@@ -416,15 +413,13 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           }
         }
 
-        // Timed aura ability: +50% damage to same-type, +30% health to all
         if (candidate_is_troop && commander->aura_ability_active) {
-          // 30% max-health bonus for all troops in radius
+
           const int health_bonus = static_cast<int>(
               std::round(static_cast<float>(candidate_unit->max_health) * 0.3F));
           candidate_unit->health = std::min(candidate_unit->max_health + health_bonus,
                                             candidate_unit->health + health_bonus);
 
-          // 50% damage bonus for same-type troops
           if (candidate_unit->spawn_type == commander->aura_affinity_spawn_type) {
             if (auto* attack =
                     candidate->get_component<Engine::Core::AttackComponent>()) {

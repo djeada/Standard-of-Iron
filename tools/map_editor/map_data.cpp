@@ -44,7 +44,7 @@ auto normalize_json_object(const QJsonObject& object) -> QJsonObject {
 
 auto normalize_json_value(const QJsonValue& value) -> QJsonValue {
   if (value.isDouble()) {
-    return QJsonValue(round_to_two_decimals(value.toDouble()));
+    return {round_to_two_decimals(value.toDouble())};
   }
   if (value.isArray()) {
     return QJsonValue(normalize_json_array(value.toArray()));
@@ -191,7 +191,7 @@ auto compute_min_bridge_width(const QVector2D& bridge_start,
     const QVector2D river_dir = elem.end - elem.start;
     const float cross = bridge_dir.x() * river_dir.y() - bridge_dir.y() * river_dir.x();
     if (std::abs(cross) < 1e-6F) {
-      continue; // parallel segments
+      continue;
     }
 
     const QVector2D diff = elem.start - bridge_start;
@@ -199,7 +199,7 @@ auto compute_min_bridge_width(const QVector2D& bridge_start,
     const float s = (diff.x() * bridge_dir.y() - diff.y() * bridge_dir.x()) / cross;
 
     if (t < 0.0F || t > 1.0F || s < 0.0F || s > 1.0F) {
-      continue; // no intersection within segment extents
+      continue;
     }
 
     const float river_len = river_dir.length();
@@ -207,17 +207,15 @@ auto compute_min_bridge_width(const QVector2D& bridge_start,
       continue;
     }
 
-    // sin of the angle between bridge and river
     const float dot = std::clamp(
         QVector2D::dotProduct(bridge_dir / bridge_len, river_dir / river_len),
         -1.0F,
         1.0F);
     const float sin_angle = std::sqrt(1.0F - dot * dot);
     if (sin_angle < 1e-4F) {
-      continue; // nearly parallel — cannot meaningfully span
+      continue;
     }
 
-    // Bridge width must be at least river_width / sin(angle) to span the river
     const float required = elem.width / sin_angle;
     min_width = std::max(min_width, required);
   }
@@ -503,7 +501,7 @@ QJsonObject MapData::build_root_json() const {
   ordered_spawns.reserve(m_structures.size() + m_troop_spawns.size() +
                          m_raw_spawns.size());
   for (const auto& elem : m_structures) {
-    // defense_tower and home are saved to the "buildings" array, not spawns
+
     if (elem.type == QStringLiteral("defense_tower") ||
         elem.type == QStringLiteral("home")) {
       continue;

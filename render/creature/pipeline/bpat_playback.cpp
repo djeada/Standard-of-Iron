@@ -12,7 +12,7 @@ namespace {
 
 constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
 
-} // namespace
+}
 
 auto normalize_bpat_phase(float phase, bool loops) noexcept -> float {
   if (!loops) {

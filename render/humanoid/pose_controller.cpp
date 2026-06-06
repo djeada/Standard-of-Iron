@@ -684,7 +684,6 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
 
   draw_phase = std::clamp(draw_phase, 0.0F, 1.0F);
 
-  // Pre-lean bow shoulder so the IK chain can reach the extended hand_r target.
   m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.10F);
 
   QVector3D const aim_pos(-0.02F, HP::SHOULDER_Y + 0.18F, 0.42F);
@@ -1530,9 +1529,6 @@ void HumanoidPoseController::brace_spear_for_hold() {
 void HumanoidPoseController::hold_bow_ready() {
   using HP = HumanProportions;
 
-  // Pre-lean bow shoulder before IK so the arm chain can reach the extended target.
-  // Without this the stored hand position (used for bow attachment) diverges from
-  // the rendered wrist position, making the bow float away from the hands.
   m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.16F);
 
   QVector3D const bow_hand_pos(0.06F, HP::SHOULDER_Y + 0.08F, 0.70F);
@@ -1570,7 +1566,7 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
 
   switch (pose) {
   case ShieldFormationPose::RomanTop:
-    // Interior soldiers: shield flat overhead, body crouched low
+
     sword_hand_target = QVector3D(0.14F, HP::SHOULDER_Y - 0.22F, 0.12F);
     shield_hand_target = QVector3D(-0.04F, HP::SHOULDER_Y + 0.34F, 0.20F);
     shoulder_l_delta = QVector3D(0.0F, 0.08F, 0.20F);
@@ -1579,7 +1575,7 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
     head_delta = QVector3D(0.0F, -0.05F, 0.09F);
     break;
   case ShieldFormationPose::RomanFront:
-    // Perimeter soldiers: shield angled forward covering body front
+
     sword_hand_target = QVector3D(0.20F, HP::SHOULDER_Y - 0.20F, 0.20F);
     shield_hand_target = QVector3D(-0.10F, HP::SHOULDER_Y + 0.14F, 0.56F);
     shoulder_l_delta = QVector3D(0.0F, 0.06F, 0.17F);
@@ -1588,7 +1584,7 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
     head_delta = QVector3D(0.0F, -0.03F, 0.08F);
     break;
   case ShieldFormationPose::CarthageFront:
-    // Carthage: round shield angled outward and skyward, distinctly different stance
+
     sword_hand_target = QVector3D(0.20F, HP::SHOULDER_Y - 0.08F, 0.26F);
     shield_hand_target = QVector3D(-0.14F, HP::SHOULDER_Y + 0.26F, 0.34F);
     shoulder_l_delta = QVector3D(0.0F, 0.06F, 0.18F);

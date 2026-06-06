@@ -56,7 +56,7 @@ void IronOreRenderer::clear() {
 
 void IronOreRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
-    const Game::Map::TerrainHeightMap& /*height_map*/) {
+    const Game::Map::TerrainHeightMap&) {
 
   auto& terrain_service = Game::Map::TerrainService::instance();
 
@@ -72,11 +72,10 @@ void IronOreRenderer::generate_instances(
                                  static_cast<int>(prop.z),
                                  m_biome_settings.seed ^ 0xB7C3D1A4U);
 
-    // Dark rock base with slight iron-brown tint
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D color = surface_profile.rock_low * (1.0F - color_var) +
                       surface_profile.rock_high * color_var;
-    // Darken and shift toward iron-brown
+
     color = color * 0.76F;
     QVector3D const iron_tint(0.38F, 0.20F, 0.14F);
     float const iron_mix = remap(rand_01(state), 0.14F, 0.34F);

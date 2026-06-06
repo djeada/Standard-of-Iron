@@ -260,9 +260,6 @@ auto build_horse_torso_section_mesh(std::span<const TorsoSectionRing> rings,
   return node;
 }
 
-// Periodic centripetal Catmull-Rom resampling of a closed control polygon.
-// Passes through every control point (so silhouette extrema are preserved) and
-// inserts smooth interpolated samples in between to remove faceting.
 auto resample_closed_centripetal(std::span<const QVector3D> control,
                                  std::size_t samples_per_segment)
     -> std::vector<QVector3D> {
@@ -299,10 +296,6 @@ auto resample_closed_centripetal(std::span<const QVector3D> control,
   return out;
 }
 
-// Replaces each vertex normal with the area-weighted average of the normals of
-// the triangles that touch it, producing smooth shading across rings and caps.
-// Normals are oriented to face away from the mesh centroid so lighting matches
-// the original outward-radial convention regardless of triangle winding.
 void recompute_smooth_normals(std::vector<Render::GL::Vertex>& vertices,
                               std::span<const unsigned int> indices) {
   for (Render::GL::Vertex& v : vertices) {
@@ -360,7 +353,6 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
     vertices.push_back({{p.x(), p.y(), p.z()}, {0.0F, 1.0F, 0.0F}, {0.0F, 0.0F}});
   };
 
-  // Hand-authored horse-head silhouette control points (back to front order).
   constexpr std::size_t k_control_count = 9U;
   constexpr std::size_t k_samples_per_segment = 4U;
   std::size_t const k_ring_vertices = k_control_count * k_samples_per_segment;
@@ -390,7 +382,7 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
     float const y_top = ring.y + ring.top;
     float const y_bot = ring.y - ring.bottom;
     for (QVector3D point : loop) {
-      // Clamp away any spline overshoot so head silhouette stays bounded.
+
       point.setX(std::clamp(point.x(), -ring.half_width, ring.half_width));
       point.setY(std::clamp(point.y(), y_bot, y_top));
       point.setZ(ring.z);

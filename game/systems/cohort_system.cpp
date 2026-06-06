@@ -32,7 +32,6 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
 
   m_diagnostics = {};
 
-  // Reform cohorts periodically.
   m_reform_timer -= delta_time;
   bool const should_reform = m_reform_timer <= 0.0F;
   if (should_reform) {
@@ -41,9 +40,8 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
 
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  // Phase 1: Reform cohorts if timer elapsed.
   if (should_reform) {
-    // Clear old cohort assignments.
+
     for (auto* entity : entities) {
       auto* membership =
           entity->get_component<Engine::Core::CohortMembershipComponent>();
@@ -53,7 +51,6 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    // Group by owner + idle status.
     struct UnitInfo {
       Engine::Core::Entity* entity;
       float x;
@@ -85,7 +82,6 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
           {entity, transform->position.x, transform->position.z, unit->owner_id});
     }
 
-    // Simple greedy clustering by proximity.
     std::unordered_set<std::size_t> assigned;
     for (std::size_t i = 0; i < candidates.size(); ++i) {
       if (assigned.contains(i)) {
@@ -134,9 +130,6 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
-  // Phase 2: Propagate activation.
-  // If any unit in a cohort has detected an enemy (has AttackTargetComponent),
-  // activate the entire cohort.
   std::unordered_set<std::uint32_t> activated_cohorts;
   for (auto* entity : entities) {
     auto* membership = entity->get_component<Engine::Core::CohortMembershipComponent>();

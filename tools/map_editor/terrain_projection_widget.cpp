@@ -51,7 +51,7 @@ void TerrainProjectionWidget::set_active_layer(int index) {
 QVector<QPoint> TerrainProjectionWidget::body_cells() const {
   QVector<QPoint> cells;
   cells.reserve(m_body_cells.size());
-  for (quint64 encoded : m_body_cells) {
+  for (quint64 const encoded : m_body_cells) {
     cells.append(decode_cell(encoded));
   }
   std::sort(cells.begin(), cells.end(), [](const QPoint& lhs, const QPoint& rhs) {
@@ -63,7 +63,7 @@ QVector<QPoint> TerrainProjectionWidget::body_cells() const {
 QVector<QPoint> TerrainProjectionWidget::entrance_cells() const {
   QVector<QPoint> cells;
   cells.reserve(m_entrance_cells.size());
-  for (quint64 encoded : m_entrance_cells) {
+  for (quint64 const encoded : m_entrance_cells) {
     cells.append(decode_cell(encoded));
   }
   std::sort(cells.begin(), cells.end(), [](const QPoint& lhs, const QPoint& rhs) {
@@ -97,7 +97,6 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
   painter.setPen(QPen(k_grid_border_color, 1));
   painter.drawRect(geometry.rect);
 
-  // Determine body cell colour from layer definitions, falling back to mountain grey.
   QColor body_color = k_mountain_body_color;
   const int body_idx = body_layer_index();
   const auto defs = layer_definitions();
@@ -105,7 +104,7 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
     body_color = defs[body_idx].second;
   }
 
-  for (quint64 encoded : m_body_cells) {
+  for (quint64 const encoded : m_body_cells) {
     const QPoint cell = decode_cell(encoded);
     const QRectF cell_rect(geometry.rect.left() + geometry.cell_size * cell.x(),
                            geometry.rect.top() + geometry.cell_size * cell.y(),
@@ -114,7 +113,7 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
     painter.fillRect(cell_rect.adjusted(1.0, 1.0, -1.0, -1.0), body_color);
   }
 
-  for (quint64 encoded : m_entrance_cells) {
+  for (quint64 const encoded : m_entrance_cells) {
     const QPoint cell = decode_cell(encoded);
     const QRectF cell_rect(geometry.rect.left() + geometry.cell_size * cell.x(),
                            geometry.rect.top() + geometry.cell_size * cell.y(),
@@ -298,7 +297,6 @@ void TerrainProjectionWidget::set_cell_marked(const QPoint& cell, bool marked) {
   const quint64 encoded = encode_cell(cell);
   const auto defs = layer_definitions();
 
-  // "Nothing" layer erases from both sets.
   if (m_active_layer >= 0 && m_active_layer < defs.size() &&
       defs[m_active_layer].first == QStringLiteral("Nothing")) {
     if (body_cells_user_editable()) {
@@ -331,7 +329,7 @@ quint64 TerrainProjectionWidget::encode_cell(const QPoint& cell) {
 QPoint TerrainProjectionWidget::decode_cell(quint64 encoded) {
   const int x = static_cast<int>(encoded & 0xFFFFFFFFULL);
   const int y = static_cast<int>((encoded >> 32U) & 0xFFFFFFFFULL);
-  return QPoint(x, y);
+  return {x, y};
 }
 
 } // namespace MapEditor

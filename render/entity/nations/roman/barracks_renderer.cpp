@@ -155,7 +155,7 @@ void draw_platform(const DrawContext& p,
                    Texture* white,
                    const RomanPalette& c,
                    bool detailed) {
-  // == FOUNDATION: Triple-stepped Roman podium ==
+
   if (!detailed) {
     draw_box(out,
              unit,
@@ -195,7 +195,6 @@ void draw_platform(const DrawContext& p,
     return;
   }
 
-  // Detailed stepped podium
   draw_box(out,
            unit,
            white,
@@ -218,7 +217,6 @@ void draw_platform(const DrawContext& p,
            QVector3D(1.55F, 0.02F, 1.42F),
            c.limestone);
 
-  // == MOSAIC FLOOR: Terracotta tile pattern ==
   for (float x = -1.4F; x <= 1.4F; x += 0.32F) {
     for (float z = -1.2F; z <= 1.2F; z += 0.32F) {
       if (fabsf(x) > 0.6F || fabsf(z) > 0.5F) {
@@ -233,7 +231,6 @@ void draw_platform(const DrawContext& p,
     }
   }
 
-  // == CENTRAL IMPLUVIUM: Training ground water basin ==
   draw_box(out,
            unit,
            white,
@@ -241,7 +238,7 @@ void draw_platform(const DrawContext& p,
            QVector3D(0.0F, 0.20F, 0.0F),
            QVector3D(0.52F, 0.015F, 0.42F),
            c.blue_light);
-  // Basin rim
+
   draw_box(out,
            unit,
            white,
@@ -264,7 +261,7 @@ void draw_podium(const DrawContext& p,
                  Texture* white,
                  const RomanPalette& c,
                  BuildingState state) {
-  // == FRONT STEPS: Grand entrance stairway ==
+
   draw_box(out,
            unit,
            white,
@@ -287,7 +284,7 @@ void draw_podium(const DrawContext& p,
              QVector3D(0.0F, 0.16F, 1.38F),
              QVector3D(0.72F, 0.04F, 0.14F),
              c.limestone);
-    // Top step marble capping
+
     draw_box(out,
              unit,
              white,
@@ -385,14 +382,12 @@ void draw_colonnade(const DrawContext& p,
     num_columns = std::min(num_columns, 5);
   }
 
-  // == FRONT COLONNADE: Classical columns with bases and Corinthian capitals ==
   for (int i = 0; i < num_columns; ++i) {
     float const x = -1.30F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE /
                                                                (num_columns - 1)
                                                          : 0.0F);
     float const z = 1.42F;
 
-    // Attic base
     draw_box(out,
              unit,
              white,
@@ -400,7 +395,7 @@ void draw_colonnade(const DrawContext& p,
              QVector3D(x, 0.22F, z),
              QVector3D(col_radius * 1.4F, 0.04F, col_radius * 1.4F),
              c.marble);
-    // Plinth
+
     draw_box(out,
              unit,
              white,
@@ -409,7 +404,6 @@ void draw_colonnade(const DrawContext& p,
              QVector3D(col_radius * 1.6F, 0.03F, col_radius * 1.6F),
              c.limestone_shade);
 
-    // Column shaft
     draw_cyl(out,
              p.model,
              QVector3D(x, 0.2F, z),
@@ -418,7 +412,6 @@ void draw_colonnade(const DrawContext& p,
              c.limestone,
              white);
 
-    // Corinthian capital
     draw_box(out,
              unit,
              white,
@@ -427,7 +420,6 @@ void draw_colonnade(const DrawContext& p,
              QVector3D(col_radius * 1.6F, 0.08F, col_radius * 1.6F),
              c.marble);
 
-    // Gold capital ornament (detailed only)
     if (state != BuildingState::Destroyed && detailed) {
       draw_box(out,
                unit,
@@ -439,7 +431,6 @@ void draw_colonnade(const DrawContext& p,
     }
   }
 
-  // == SIDE COLONNADES: Flanking wings ==
   int const side_columns = (state == BuildingState::Destroyed) ? 2 : (detailed ? 4 : 3);
   for (int i = 0; i < side_columns; ++i) {
     float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE /
@@ -447,7 +438,7 @@ void draw_colonnade(const DrawContext& p,
                                                          : 0.0F);
 
     for (float const x_side : {-1.62F, 1.62F}) {
-      // Base
+
       draw_box(out,
                unit,
                white,
@@ -455,7 +446,7 @@ void draw_colonnade(const DrawContext& p,
                QVector3D(x_side, 0.22F, z),
                QVector3D(col_radius * 1.4F, 0.04F, col_radius * 1.4F),
                c.marble);
-      // Shaft
+
       draw_cyl(out,
                p.model,
                QVector3D(x_side, 0.2F, z),
@@ -463,7 +454,7 @@ void draw_colonnade(const DrawContext& p,
                col_radius,
                c.limestone,
                white);
-      // Capital
+
       draw_box(out,
                unit,
                white,
@@ -474,7 +465,6 @@ void draw_colonnade(const DrawContext& p,
     }
   }
 
-  // == ENTABLATURE: Architrave beam connecting front columns ==
   if (state != BuildingState::Destroyed) {
     float const entab_y = 0.2F + col_height * height_multiplier + 0.16F;
     draw_box(out,
@@ -484,7 +474,7 @@ void draw_colonnade(const DrawContext& p,
              QVector3D(0.0F, entab_y, 1.42F),
              QVector3D(1.38F, 0.05F, 0.08F),
              c.limestone);
-    // Frieze with blue accent
+
     if (detailed) {
       draw_box(out,
                unit,
@@ -494,7 +484,7 @@ void draw_colonnade(const DrawContext& p,
                QVector3D(1.32F, 0.03F, 0.06F),
                c.blue_accent);
     }
-    // Dentil course
+
     draw_box(out,
              unit,
              white,
@@ -517,7 +507,6 @@ void draw_terrace(const DrawContext& p,
     return;
   }
 
-  // == MAIN TERRACE SLAB: Marble entablature ==
   draw_box(out,
            unit,
            white,
@@ -526,7 +515,6 @@ void draw_terrace(const DrawContext& p,
            QVector3D(1.74F, 0.08F, 1.54F),
            c.marble);
 
-  // == FRONT MOLDING: Gold accent trim ==
   draw_box(out,
            unit,
            white,
@@ -535,7 +523,6 @@ void draw_terrace(const DrawContext& p,
            QVector3D(1.68F, 0.04F, 0.05F),
            c.gold);
 
-  // == SIDE MOLDINGS: Blue accent bands ==
   draw_box(out,
            unit,
            white,
@@ -551,7 +538,6 @@ void draw_terrace(const DrawContext& p,
            QVector3D(0.04F, 0.04F, 1.48F),
            c.blue_accent);
 
-  // == TERRACOTTA FLOOR: Upper training level ==
   draw_box(out,
            unit,
            white,
@@ -560,7 +546,6 @@ void draw_terrace(const DrawContext& p,
            QVector3D(detailed ? 1.54F : 1.42F, 0.04F, detailed ? 1.04F : 0.96F),
            c.terracotta);
 
-  // == BACK PEDIMENT: Triangular classical element ==
   draw_box(out,
            unit,
            white,
@@ -569,7 +554,6 @@ void draw_terrace(const DrawContext& p,
            QVector3D(1.48F, 0.06F, 0.05F),
            c.limestone);
 
-  // == EAGLE ORNAMENTS: Corner finials (Roman signature) ==
   for (float const x : {-1.44F, 1.44F}) {
     draw_box(out,
              unit,
@@ -581,7 +565,7 @@ void draw_terrace(const DrawContext& p,
   }
 
   if (detailed) {
-    // == CENTRAL EAGLE: Grand gold ornament ==
+
     draw_box(out,
              unit,
              white,
@@ -603,7 +587,6 @@ void draw_roofline(const DrawContext& p,
     return;
   }
 
-  // == FRONT CORNICE: Classical entablature profile ==
   draw_box(out,
            unit,
            white,
@@ -612,7 +595,6 @@ void draw_roofline(const DrawContext& p,
            QVector3D(detailed ? 1.24F : 1.02F, 0.04F, 0.14F),
            c.limestone_shade);
 
-  // == TERRACOTTA TILE ROWS: Visible roof texture ==
   if (detailed) {
     add_tile_rows_z(
         [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
@@ -632,7 +614,6 @@ void draw_roofline(const DrawContext& p,
         c.terracotta_dark);
   }
 
-  // == RIDGE LINE: Central spine ==
   draw_box(out,
            unit,
            white,
@@ -641,7 +622,6 @@ void draw_roofline(const DrawContext& p,
            QVector3D(detailed ? 0.90F : 0.72F, 0.05F, 0.06F),
            c.terracotta);
 
-  // == UPPER RIDGE ==
   draw_box(out,
            unit,
            white,
@@ -651,7 +631,7 @@ void draw_roofline(const DrawContext& p,
            c.terracotta_dark);
 
   if (state == BuildingState::Normal) {
-    // == BLUE ACCENT PEAK: Decorative color band ==
+
     draw_box(out,
              unit,
              white,
@@ -661,7 +641,7 @@ void draw_roofline(const DrawContext& p,
              c.blue_accent);
 
     if (detailed) {
-      // == GOLD ACROTERIA: Roof-edge ornaments ==
+
       draw_box(out,
                unit,
                white,
@@ -676,7 +656,7 @@ void draw_roofline(const DrawContext& p,
                QVector3D(0.88F, 2.50F, 1.16F),
                QVector3D(0.06F, 0.08F, 0.06F),
                c.gold);
-      // Central eagle finial
+
       draw_box(out,
                unit,
                white,
