@@ -848,7 +848,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       }
 
       if (elem.type == QStringLiteral("bridge")) {
-        // Enforce minimum height
+
         if (elem.height < k_min_bridge_height) {
           elem.height = k_min_bridge_height;
           show_action_feedback(
@@ -857,7 +857,6 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
               false);
         }
 
-        // Enforce minimum width to span any crossed rivers from bank to bank
         const float required_width = compute_min_bridge_width(
             elem.start, elem.end, m_map_data->linear_elements());
         if (elem.width < required_width) {
@@ -1202,7 +1201,7 @@ void EditorWindow::refresh_json_preview() {
     return;
   }
   const QString json = m_map_data->to_json_string();
-  // Only update text if content changed to avoid resetting scroll position
+
   if (m_json_preview->toPlainText() != json) {
     const int scroll_pos = m_json_preview->verticalScrollBar()->value();
     m_json_preview->setPlainText(json);

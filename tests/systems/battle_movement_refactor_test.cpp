@@ -28,7 +28,7 @@ protected:
 };
 
 TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
-  // Create a group of 10 units at the same position.
+
   std::vector<Entity*> units;
   for (int i = 0; i < 10; ++i) {
     auto* entity = world->create_entity();
@@ -66,12 +66,12 @@ TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
 }
 
 TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
-  // Stationary units (no target) should not be moved by avoidance.
+
   auto* stationary = world->create_entity();
   stationary->add_component<TransformComponent>(10.0F, 0.0F, 10.0F);
   auto* unit = stationary->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = 1;
-  stationary->add_component<MovementComponent>(); // no target
+  stationary->add_component<MovementComponent>();
 
   auto* mover = world->create_entity();
   mover->add_component<TransformComponent>(10.1F, 0.0F, 10.1F);
@@ -88,7 +88,6 @@ TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
   LocalAvoidanceSystem system;
   system.update(world.get(), 0.1F);
 
-  // Stationary unit should not move.
   EXPECT_FLOAT_EQ(transform->position.x, orig_x);
   EXPECT_FLOAT_EQ(transform->position.z, orig_z);
 }
@@ -107,8 +106,6 @@ TEST_F(LocalAvoidanceTest, DiagnosticsReported) {
   EXPECT_GE(system.diagnostics().units_processed, 1U);
 }
 
-// --- Engagement Slot Tests ---
-
 class EngagementSlotTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -122,13 +119,12 @@ protected:
 };
 
 TEST_F(EngagementSlotTest, MeleeAttackersGetDistinctSlots) {
-  // Create a target.
+
   auto* target = world->create_entity();
   target->add_component<TransformComponent>(10.0F, 0.0F, 10.0F);
   auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
 
-  // Create multiple attackers targeting the same entity.
   std::vector<Entity*> attackers;
   for (int i = 0; i < 5; ++i) {
     auto* attacker = world->create_entity();
@@ -147,7 +143,6 @@ TEST_F(EngagementSlotTest, MeleeAttackersGetDistinctSlots) {
   EngagementSlotSystem system;
   system.update(world.get(), 0.016F);
 
-  // Each attacker should have a unique slot index.
   std::set<std::uint8_t> slot_indices;
   for (auto* attacker : attackers) {
     auto* slot = attacker->get_component<EngagementSlotComponent>();
@@ -157,7 +152,6 @@ TEST_F(EngagementSlotTest, MeleeAttackersGetDistinctSlots) {
     slot_indices.insert(slot->slot_index);
   }
 
-  // All slots should be distinct.
   EXPECT_EQ(slot_indices.size(), attackers.size());
 }
 
@@ -167,7 +161,6 @@ TEST_F(EngagementSlotTest, OverflowHandled) {
   auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
 
-  // Create more attackers than max slots.
   for (int i = 0; i < 12; ++i) {
     auto* attacker = world->create_entity();
     attacker->add_component<TransformComponent>(8.0F, 0.0F, 10.0F);
@@ -185,8 +178,6 @@ TEST_F(EngagementSlotTest, OverflowHandled) {
 
   EXPECT_GT(system.diagnostics().overflow_redirects, 0U);
 }
-
-// --- Target Commitment Tests ---
 
 class TargetCommitmentTest : public ::testing::Test {
 protected:
@@ -220,20 +211,16 @@ TEST_F(TargetCommitmentTest, CannotSwitchDuringWindUp) {
   auto* attack_target = attacker->add_component<AttackTargetComponent>();
   attack_target->target_id = enemy1->get_id();
 
-  // Set combat state to WindUp.
   auto* combat_state = attacker->add_component<CombatStateComponent>();
   combat_state->animation_state = CombatAnimationState::WindUp;
 
   TargetCommitmentSystem system;
 
-  // First tick: establishes commitment.
   system.update(world.get(), 0.016F);
 
-  // Try to switch target.
   attack_target->target_id = enemy2->get_id();
   system.update(world.get(), 0.016F);
 
-  // Should be blocked - target remains enemy1.
   EXPECT_EQ(attack_target->target_id, enemy1->get_id());
   EXPECT_GT(system.diagnostics().switches_blocked, 0U);
 }
@@ -264,12 +251,10 @@ TEST_F(TargetCommitmentTest, CanSwitchAfterRecovery) {
   TargetCommitmentSystem system;
   system.update(world.get(), 0.016F);
 
-  // Exhaust cooldown.
   for (int i = 0; i < 60; ++i) {
     system.update(world.get(), 0.016F);
   }
 
-  // Now switch target.
   attack_target->target_id = enemy2->get_id();
   system.update(world.get(), 0.016F);
 
@@ -297,7 +282,6 @@ TEST_F(TargetCommitmentTest, ForcedReleaseOnTargetDeath) {
   TargetCommitmentSystem system;
   system.update(world.get(), 0.016F);
 
-  // Kill the target.
   enemy_unit->health = 0;
   system.update(world.get(), 0.016F);
 
@@ -306,8 +290,6 @@ TEST_F(TargetCommitmentTest, ForcedReleaseOnTargetDeath) {
   EXPECT_EQ(commitment->committed_target_id, static_cast<EntityID>(0));
   EXPECT_GT(system.diagnostics().forced_releases, 0U);
 }
-
-// --- Cohort System Tests ---
 
 class CohortSystemTest : public ::testing::Test {
 protected:
@@ -322,7 +304,7 @@ protected:
 };
 
 TEST_F(CohortSystemTest, NearbyUnitsFormCohort) {
-  // Create a group of nearby idle units.
+
   for (int i = 0; i < 4; ++i) {
     auto* entity = world->create_entity();
     entity->add_component<TransformComponent>(
@@ -352,25 +334,20 @@ TEST_F(CohortSystemTest, CohortActivatesWhenOneDetectsEnemy) {
   }
 
   CohortSystem system;
-  // First tick forms cohorts.
+
   system.update(world.get(), 0.016F);
 
-  // Give one unit an attack target (simulating enemy detection).
   auto* attack_target = units[0]->add_component<AttackTargetComponent>();
-  attack_target->target_id = 999; // doesn't matter if entity exists
+  attack_target->target_id = 999;
 
-  // Second tick propagates activation.
   system.update(world.get(), 0.016F);
 
-  // All units in the cohort should be activated.
   for (auto* entity : units) {
     auto* membership = entity->get_component<CohortMembershipComponent>();
     ASSERT_NE(membership, nullptr);
     EXPECT_TRUE(membership->cohort_activated);
   }
 }
-
-// --- Elephant Knockback Cooldown Tests ---
 
 TEST(ElephantKnockbackCooldownTest, CooldownPreventsRepeatedKnockback) {
   ElephantKnockbackCooldownComponent comp;
@@ -380,7 +357,6 @@ TEST(ElephantKnockbackCooldownTest, CooldownPreventsRepeatedKnockback) {
   comp.add_cooldown(42);
   EXPECT_TRUE(comp.is_on_cooldown(42));
 
-  // After ticking past cooldown duration.
   comp.tick(ElephantKnockbackCooldownComponent::k_knockback_cooldown + 0.1F);
   EXPECT_FALSE(comp.is_on_cooldown(42));
 }
@@ -397,8 +373,6 @@ TEST(ElephantKnockbackCooldownTest, MultipleVictimsTracked) {
   EXPECT_TRUE(comp.is_on_cooldown(3));
   EXPECT_FALSE(comp.is_on_cooldown(4));
 }
-
-// --- Movement Intent Component Tests ---
 
 TEST(MovementIntentTest, DefaultValues) {
   MovementIntentComponent const intent;

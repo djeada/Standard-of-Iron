@@ -40,21 +40,19 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
     return 1.0F;
   }
 
-  // Amplified durations: much larger wind-up for readability, fast strike for impact
-  // Directional variation: thrust is snappy, overhead is slow and heavy
   float direction_scale = 1.0F;
   switch (combat_state.attack_direction) {
   case Engine::Core::AttackDirection::Thrust:
-    direction_scale = 0.80F; // Thrusts are quick and snappy
+    direction_scale = 0.80F;
     break;
   case Engine::Core::AttackDirection::Overhead:
-    direction_scale = 1.15F; // Overheads are slow and powerful
+    direction_scale = 1.15F;
     break;
   case Engine::Core::AttackDirection::HeavyOverhead:
-    direction_scale = 1.30F; // Heavy overhead is very slow and devastating
+    direction_scale = 1.30F;
     break;
   default:
-    direction_scale = 1.0F; // Slashes are normal speed
+    direction_scale = 1.0F;
     break;
   }
 
@@ -85,7 +83,7 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
     return base_phase_duration(state) *
            commander_phase_scale(unit, combat_state, state);
   }
-  // RTS units: one snapshotted scale makes the whole swing fill one cooldown.
+
   return base_phase_duration(state) * combat_state.swing_duration_scale;
 }
 
@@ -117,9 +115,6 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
 
     combat_state->state_time += delta_time;
 
-    // Bounded carry loop: advance through as many phases as elapsed this frame,
-    // carrying the remainder so a frame spike (or very short scaled phase) does
-    // not silently stretch the swing past its cooldown. Capped to avoid runaway.
     int transitions = 0;
     while (combat_state->state_duration > 0.0F &&
            combat_state->state_time >= combat_state->state_duration &&
@@ -136,7 +131,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state->animation_state = CS::Strike;
         combat_state->state_duration = phase_duration_for_state(
             *unit, *combat_state, combat_state->animation_state);
-        // Deferred hit window: deal damage when blade connects
+
         if (!combat_state->damage_dealt_this_swing) {
           auto const* commander =
               unit->get_component<Engine::Core::CommanderComponent>();
@@ -151,7 +146,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
                 if (attack != nullptr) {
                   damage = std::max(1, attack->get_current_damage());
                 }
-                // Low stamina penalty
+
                 auto const* stamina =
                     unit->get_component<Engine::Core::StaminaComponent>();
                 if (stamina != nullptr &&
@@ -179,7 +174,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
             *unit, *combat_state, combat_state->animation_state);
         break;
       case CS::Recover:
-        // Input buffering: skip Reposition and go directly to Advance for next attack
+
         if (combat_state->input_buffered) {
           combat_state->animation_state = CS::Advance;
           combat_state->state_duration = phase_duration_for_state(

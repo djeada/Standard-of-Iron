@@ -19,7 +19,7 @@ struct ClipView {
   std::uint32_t frame_offset{0U};
   float fps{0.0F};
   bool loops{false};
-  // Authored animation markers as normalized clip phase in [0,1]; -1 means unset.
+
   float marker_anticipation_start{-1.0F};
   float marker_weapon_release{-1.0F};
   float marker_contact{-1.0F};

@@ -25,8 +25,6 @@ class RainManager;
 class MinimapManager;
 class VisibilityCoordinator;
 
-// Built on demand from GameEngine so the active camera pointer always reflects the
-// current runtime mode instead of a stale cached camera.
 struct AppSceneContext {
   Engine::Core::World* world = nullptr;
   Render::GL::Renderer* renderer = nullptr;

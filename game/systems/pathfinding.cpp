@@ -726,10 +726,6 @@ auto Pathfinding::collect_neighbors(const Point& point,
         continue;
       }
 
-      // No corner cutting: a diagonal step is only valid when both orthogonally
-      // adjacent cells are walkable. Otherwise the straight-line motion between
-      // the two waypoints clips the corner of a blocked cell, which the
-      // movement collision check rejects, stalling the unit on the path.
       if (dx != 0 && dy != 0) {
         if (!is_walkable(point.x + dx, point.y) ||
             !is_walkable(point.x, point.y + dy)) {

@@ -16,7 +16,6 @@ public:
 
   explicit HillProjectionWidget(QWidget* parent = nullptr);
 
-  // Backward-compatible aliases
   void set_hill_json(const QJsonObject& json) { set_terrain_json(json); }
   void set_edit_layer(EditLayer layer) { set_active_layer(static_cast<int>(layer)); }
   [[nodiscard]] bool is_hill_active() const { return is_active(); }

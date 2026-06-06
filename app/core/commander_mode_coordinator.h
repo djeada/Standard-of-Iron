@@ -25,7 +25,7 @@ class SelectionController;
 
 namespace Render::GL {
 class Camera;
-} // namespace Render::GL
+}
 
 namespace App::Core {
 

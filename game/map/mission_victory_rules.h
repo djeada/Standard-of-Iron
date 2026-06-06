@@ -8,4 +8,4 @@ namespace Game::Mission {
 [[nodiscard]] auto
 build_victory_rules(const MissionDefinition& mission) -> Game::Systems::VictoryRuleSet;
 
-} // namespace Game::Mission
+}

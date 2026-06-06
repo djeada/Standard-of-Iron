@@ -206,7 +206,7 @@ void tick_rpg_combat(Engine::Core::World* world,
         fb->is_reacting = true;
         fb->reaction_time = 0.0F;
         fb->stagger_tier = stagger->tier;
-        // Scale intensity and knockback based on stagger tier
+
         switch (stagger->tier) {
         case Engine::Core::StaggerTier::LightFlinch:
           fb->reaction_intensity = 0.4F;
@@ -244,7 +244,6 @@ void tick_rpg_combat(Engine::Core::World* world,
     unit->health = 1;
   }
 
-  // Tick enemy telegraph phases
   for (auto* telegraphed :
        world->get_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
     auto* telegraph =
@@ -280,7 +279,6 @@ void tick_rpg_combat(Engine::Core::World* world,
     }
   }
 
-  // ─── Enemy RPG combat AI: circling, spacing, turn-based engagement ───
   auto* engagement = entity->get_component<Engine::Core::RpgEngagementComponent>();
   auto* cmd_transform = entity->get_component<Engine::Core::TransformComponent>();
   if (engagement == nullptr || cmd_transform == nullptr) {
@@ -290,7 +288,6 @@ void tick_rpg_combat(Engine::Core::World* world,
   const float cmd_x = cmd_transform->position.x;
   const float cmd_z = cmd_transform->position.z;
 
-  // Enemies circle the player and maintain spacing
   constexpr float k_ideal_engage_distance = 2.8F;
   constexpr float k_circle_speed = 1.4F;
 
@@ -305,7 +302,7 @@ void tick_rpg_combat(Engine::Core::World* world,
     if (enemy_tf == nullptr || enemy_unit == nullptr || enemy_unit->health <= 0) {
       continue;
     }
-    // Don't move if staggered
+
     if (enemy_stagger != nullptr && enemy_stagger->remaining > 0.0F) {
       continue;
     }

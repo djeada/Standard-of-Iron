@@ -212,7 +212,7 @@ void render_arrow_projectile(Renderer* renderer,
 void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
                              const Game::Systems::StoneProjectile& stone,
-                             const QVector3D& /*pos*/,
+                             const QVector3D&,
                              const QMatrix4x4& base_model) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;

@@ -77,15 +77,13 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
           attacker->get_component<Engine::Core::CommanderComponent>();
       bool const is_fpv = (commander != nullptr && commander->fpv_controlled);
       if (is_fpv) {
-        // FPV commanders keep their own per-phase readability scaling; the
-        // uniform cooldown-fit scale does not apply to them.
+
         combat_state->swing_duration_scale = 1.0F;
         combat_state->state_duration =
             Engine::Core::CombatStateComponent::k_advance_duration *
             commander_attack_advance_scale(attacker);
       } else {
-        // RTS units: snapshot one scale so the whole swing fills exactly one
-        // melee cooldown. Ranged swings keep the base cadence (scale 1.0).
+
         float scale = 1.0F;
         if (attack != nullptr &&
             attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
@@ -774,10 +772,6 @@ void apply_pending_melee_strike(Engine::Core::Entity* attacker,
   }
 }
 
-// Advances a scheduled melee strike and applies its snapshotted damage once the
-// swing reaches weapon contact. Revalidates the target at contact so a hit is
-// cancelled if the attacker/target died, the target is no longer an enemy, or
-// the target slipped out of melee range during the wind-up.
 void process_pending_melee_strike(Engine::Core::Entity* attacker,
                                   Engine::Core::AttackComponent* attack_comp,
                                   Engine::Core::World* world,
@@ -1142,9 +1136,7 @@ void process_attacks(Engine::Core::World* world,
       if (use_special_projectile) {
         launch_special_projectile(attacker, best_target, damage, projectile_sys);
       } else if (defer_melee_strike) {
-        // Snapshot the resolved damage and schedule it to land when the swing
-        // reaches weapon contact. Cooldown is still reset below at swing start,
-        // so steady-state DPS is unchanged.
+
         attacker_atk->has_pending_melee_strike = true;
         attacker_atk->pending_melee_target_id = best_target->get_id();
         attacker_atk->pending_melee_damage = damage;

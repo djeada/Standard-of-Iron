@@ -45,7 +45,7 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   m_editor->setTabStopDistance(
       4 * m_editor->fontMetrics().horizontalAdvance(QLatin1Char(' ')));
 
-  QJsonDocument doc(json);
+  QJsonDocument const doc(json);
   m_editor->setPlainText(doc.toJson(QJsonDocument::Indented));
   m_model_json = json;
   m_result = json;
@@ -69,7 +69,6 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     projection_title->setObjectName("panelTitle");
     projection_layout->addWidget(projection_title);
 
-    // Factory-create the appropriate projection widget based on terrain type.
     const QString terrain_type =
         json.value(MapJsonKeys::type).toString().trimmed().toLower();
     if (terrain_type == QStringLiteral("mountain")) {
@@ -78,7 +77,6 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
       m_projection = new HillProjectionWidget(projection_panel);
     }
 
-    // Build marker buttons dynamically from layer definitions.
     auto* marker_row = new QWidget(projection_panel);
     auto* marker_layout = new QHBoxLayout(marker_row);
     marker_layout->setContentsMargins(0, 0, 0, 0);
@@ -103,11 +101,8 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
       });
     }
 
-    // Hide the marker row entirely when a terrain projection exposes no editable
-    // layers.
     marker_row->setVisible(!defs.isEmpty());
 
-    // Pre-select the entrance layer button.
     const int entrance_idx = m_projection->entrance_layer_index();
     if (entrance_idx >= 0 && entrance_idx < m_marker_buttons.size()) {
       m_marker_buttons[entrance_idx]->setChecked(true);
@@ -166,7 +161,8 @@ void JsonEditDialog::validate_json() {
   }
 
   QJsonParseError error;
-  QJsonDocument doc = QJsonDocument::fromJson(m_editor->toPlainText().toUtf8(), &error);
+  QJsonDocument const doc =
+      QJsonDocument::fromJson(m_editor->toPlainText().toUtf8(), &error);
 
   m_is_valid = (error.error == QJsonParseError::NoError && doc.isObject());
   m_ok_button->setEnabled(m_is_valid);
@@ -194,7 +190,7 @@ void JsonEditDialog::sync_editor_from_model() {
 
   m_syncing_editor = true;
   {
-    QSignalBlocker blocker(m_editor);
+    QSignalBlocker const blocker(m_editor);
     m_editor->setPlainText(json_text);
   }
   m_syncing_editor = false;
@@ -228,7 +224,7 @@ void JsonEditDialog::update_projection_state() {
   const bool is_mountain = terrain_type == QStringLiteral("mountain");
   if (terrain_type != QStringLiteral("hill") && !is_mountain) {
     m_projection_hint_label->setText(
-        "Projection is only active for terrain with type \"hill\" or \"mountain\".");
+        R"(Projection is only active for terrain with type "hill" or "mountain".)");
     m_projection->setEnabled(false);
     set_buttons_enabled(false);
     return;
@@ -262,9 +258,7 @@ void JsonEditDialog::apply_projection_to_model_json() {
   if (m_projection == nullptr) {
     return;
   }
-  // Reuse the model cached inside the widget (set when set_terrain_json was last
-  // called). Rebuilding from m_model_json would shift the origin after each edit,
-  // causing drift.
+
   const HillProjection::Model& model = m_projection->get_model();
   m_model_json = HillProjection::apply_projection_to_hill_json(
       m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());

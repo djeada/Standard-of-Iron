@@ -66,7 +66,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   const float deck_y = destroyed ? 0.0F : shaft_top + 0.12F;
   const float battlement_y = destroyed ? 0.0F : shaft_top + (damaged ? 0.28F : 0.34F);
 
-  // == MASSIVE STEPPED ROMAN PODIUM ==
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.30F, 0.04F, 1.30F), c.limestone_dark);
   desc.add_box(
@@ -75,7 +74,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.0F, 0.18F, 0.0F), QVector3D(1.08F, 0.08F, 1.08F), c.limestone);
   desc.add_box(QVector3D(0.0F, 0.28F, 0.0F), QVector3D(1.02F, 0.02F, 1.02F), c.marble);
 
-  // == PODIUM TILE DECORATIONS ==
   for (float x = -0.88F; x <= 0.88F; x += 0.44F) {
     for (float z = -0.88F; z <= 0.88F; z += 0.44F) {
       if (std::fabs(x) > 0.32F || std::fabs(z) > 0.32F) {
@@ -88,30 +86,26 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     }
   }
 
-  // == TOWER BASE (square transition to round) ==
   desc.add_box(
       QVector3D(0.0F, 0.44F, 0.0F), QVector3D(0.94F, 0.12F, 0.94F), c.sandstone_light);
 
-  // == MAIN CYLINDRICAL SHAFT ==
   desc.add_cylinder(QVector3D(0.0F, 0.52F, 0.0F),
                     QVector3D(0.0F, shaft_top, 0.0F),
                     shaft_radius,
                     c.limestone);
 
-  // == MARBLE BANDS (classical molding) ==
   if (!destroyed) {
     desc.add_cylinder(QVector3D(0.0F, damaged ? 1.18F : 1.38F, 0.0F),
                       QVector3D(0.0F, damaged ? 1.24F : 1.44F, 0.0F),
                       belt_radius,
                       c.marble);
-    // Second band higher
+
     desc.add_cylinder(QVector3D(0.0F, damaged ? 1.58F : 1.82F, 0.0F),
                       QVector3D(0.0F, damaged ? 1.62F : 1.86F, 0.0F),
                       belt_radius * 0.98F,
                       c.limestone_shade);
   }
 
-  // == ATTACHED COLUMNS (Roman signature, semi-engaged) ==
   const std::array<int, 4> corner_indices =
       damaged ? std::array<int, 4>{0, 2, -1, -1} : std::array<int, 4>{0, 1, 2, 3};
   for (int const index : corner_indices) {
@@ -125,19 +119,19 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
     desc.add_cylinder(
         QVector3D(ox, 0.52F, oz), QVector3D(ox, column_top, oz), 0.09F, c.marble);
-    // Column base
+
     desc.add_box(QVector3D(ox, 0.62F, oz),
                  QVector3D(0.14F, 0.10F, 0.14F),
                  c.marble,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    // Column capital (Corinthian-style block)
+
     desc.add_box(QVector3D(ox, column_top + 0.06F, oz),
                  QVector3D(0.15F, 0.10F, 0.15F),
                  c.marble,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    // Gold eagle ornament atop each capital
+
     if (!damaged) {
       desc.add_box(QVector3D(ox, column_top + 0.14F, oz),
                    QVector3D(0.08F, 0.05F, 0.08F),
@@ -147,7 +141,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     }
   }
 
-  // == PILASTERS ON SHAFT FACE ==
   if (!destroyed) {
     const int spoke_count = damaged ? 2 : 4;
     for (int i = 0; i < spoke_count; ++i) {
@@ -162,7 +155,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                    BuildingLODMask::Full);
     }
 
-    // == PLATFORM AND DECK ==
     desc.add_cylinder(QVector3D(0.0F, shaft_top + 0.02F, 0.0F),
                       QVector3D(0.0F, shaft_top + 0.08F, 0.0F),
                       damaged ? 0.62F : 0.66F,
@@ -171,7 +163,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(platform_radius, 0.05F, platform_radius),
                  c.cedar);
 
-    // == BATTLEMENTS: Classical Roman (terracotta, more uniform) ==
     const int merlon_count = damaged ? 5 : 10;
     for (int i = 0; i < merlon_count; ++i) {
       const float angle =
@@ -187,12 +178,10 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                    BuildingLODMask::Full);
     }
 
-    // == UPPER CORNICE (caps the battlements) ==
     desc.add_box(QVector3D(0.0F, battlement_y + 0.14F, 0.0F),
                  QVector3D(damaged ? 0.74F : 0.88F, 0.04F, damaged ? 0.74F : 0.88F),
                  c.limestone);
 
-    // == BLUE ACCENT ORNAMENTS AT CORNERS ==
     if (!damaged) {
       for (float const x : {-0.78F, 0.78F}) {
         for (float const z : {-0.78F, 0.78F}) {
@@ -203,7 +192,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                        BuildingLODMask::Full);
         }
       }
-      // Central eagle finial
+
       desc.add_box(QVector3D(0.0F, battlement_y + 0.24F, 0.0F),
                    QVector3D(0.10F, 0.10F, 0.10F),
                    c.gold,
@@ -212,7 +201,6 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     }
   }
 
-  // == DAMAGE DEBRIS ==
   if (damaged) {
     desc.add_box(QVector3D(0.48F, 1.82F, 0.24F),
                  QVector3D(0.18F, 0.12F, 0.14F),

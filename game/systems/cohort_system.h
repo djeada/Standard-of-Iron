@@ -5,18 +5,12 @@
 
 namespace Game::Systems {
 
-/// Diagnostics for cohort system.
 struct CohortDiagnostics {
   std::uint32_t cohorts_formed{0};
   std::uint32_t cohorts_activated{0};
   std::uint32_t units_in_cohorts{0};
 };
 
-/// Local AI cohort system (Workstream 6).
-///
-/// Clusters idle/guarding AI units by local radius so that when one unit
-/// detects an enemy, its local cohort responds together instead of just the
-/// nearest single unit or the entire army.
 class CohortSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;

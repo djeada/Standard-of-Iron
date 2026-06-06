@@ -27,8 +27,7 @@ struct BowRenderConfig {
   float string_radius = 0.008F;
   float bow_depth = 0.25F;
   float bow_x = 0.0F;
-  // Shifts the bow limbs/string along the bow forward axis while keeping the grip at
-  // the hand. Negative values move the bow closer to the archer's torso.
+
   float bow_forward_offset = 0.0F;
   float bow_top_y = 0.0F;
   float bow_bot_y = 0.0F;

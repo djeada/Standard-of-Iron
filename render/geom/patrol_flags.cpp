@@ -138,7 +138,6 @@ void render_commander_rally_flags(Renderer* renderer,
     return;
   }
 
-  // Draw the placement preview flag (shown while picking a rally position).
   if (preview_pos.has_value()) {
     QVector3D const preview_color = Game::Visuals::team_colorForOwner(preview_owner_id);
     auto flag = Geom::Flag::create(preview_pos->x(),
@@ -149,7 +148,6 @@ void render_commander_rally_flags(Renderer* renderer,
     draw_flag(renderer, resources, flag);
   }
 
-  // Draw placed rally flags from all commander components.
   if (world == nullptr) {
     return;
   }

@@ -41,17 +41,4 @@ void register_builder_style(std::string_view style_key,
                             const BuilderStyleConfig& style);
 void register_builder_styles(std::span<const BuilderStyleRegistration> styles);
 
-// TODO(phase2): Builder renderers have complex tool-specific archetypes (hammer, saw,
-// chisel), work tunics, aprons, arm guards, and tool belts that are highly entangled
-// with nation-specific implementations. Full extraction to common pattern requires
-// careful separation of:
-// - Tool archetype generation (builder_work_tunic_archetype, builder_hammer_archetype,
-// etc.)
-// - Role color filling functions (builder_work_tunic_fill_role_colors,
-// builder_tool_belt_fill_role_colors, etc.)
-// - Static attachment specs (builder_work_tunic_make_static_attachment, etc.)
-// - Extra role color callbacks
-// For now, only style registry is extracted to common. Nation-specific renderers remain
-// separate.
-
 } // namespace Render::GL

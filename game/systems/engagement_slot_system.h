@@ -5,17 +5,12 @@
 
 namespace Game::Systems {
 
-/// Diagnostics for engagement slot allocation.
 struct EngagementSlotDiagnostics {
   std::uint32_t slots_allocated{0};
   std::uint32_t slots_invalidated{0};
   std::uint32_t overflow_redirects{0};
 };
 
-/// Melee engagement slot allocator (Workstream 3).
-///
-/// Assigns engagement slots around targets so melee attackers spread around
-/// the target perimeter instead of all stacking on the same point.
 class EngagementSlotSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;

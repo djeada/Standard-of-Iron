@@ -187,7 +187,7 @@ void main() {
                     0.0,
                     1.0);
   } else if (u_effect_type == 5) {
-    // MetalSpark: bright metallic sparks ejected on weapon clash
+
     float height = a_texcoord.y;
     float angle_t = a_texcoord.x;
     float angle = angle_t * 6.28318;
@@ -198,7 +198,6 @@ void main() {
     float spark_hash = fract(sin(spark_id * 93.17 + 217.3) * 61523.7);
     float spark_hash2 = fract(sin(spark_id * 41.3 + 89.7) * 35197.1);
 
-    // Sparks shoot upward and outward with gravity
     float spark_speed = 3.2 + 2.8 * spark_hash;
     float spark_angle = angle + (spark_hash2 - 0.5) * 1.2;
     vec2 spark_dir = vec2(cos(spark_angle), sin(spark_angle));
@@ -206,17 +205,14 @@ void main() {
     float radial_spread = t * spark_speed * (0.4 + 0.6 * spark_hash);
     pos.xz += spark_dir * radial_spread * height;
 
-    // Upward arc with gravity
     float up_velocity = 2.5 + 3.5 * spark_hash2;
     float gravity = 12.0;
     float spark_y = height * (up_velocity * t - 0.5 * gravity * t * t);
     pos.y += max(spark_y, -0.1);
 
-    // Sparks are thin streaks
     float streak_length = 0.08 + 0.12 * spark_hash;
     pos.y += streak_length * height * (1.0 - t * 2.0);
 
-    // Fade quickly
     float life = (1.0 - smoothstep(0.15, 0.45, t));
     float spark_fade = smoothstep(0.0, 0.05, t) * life;
     float flicker = 0.7 + 0.3 * sin(t * 40.0 + spark_id * 7.0);

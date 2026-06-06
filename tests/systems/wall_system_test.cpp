@@ -409,10 +409,8 @@ TEST_F(WallMechanicsTest, InvalidatedWallSiteRefundsWoodAndAdvancesQueue) {
   EXPECT_TRUE(production->queued_construction_site_ids.empty());
 }
 
-// ---- Builder production dispatch ----
-
 TEST(WallBuilderProductionTest, WallSegmentSpawnTypeExists) {
-  // Verify WallSegment is a distinct spawn type (compile-time check via cast)
+
   constexpr auto wall_type = Game::Units::SpawnType::WallSegment;
   EXPECT_NE(wall_type, Game::Units::SpawnType::DefenseTower);
   EXPECT_NE(wall_type, Game::Units::SpawnType::Barracks);
@@ -424,8 +422,6 @@ TEST(WallBuilderProductionTest, BuilderProductionComponentProductTypeStorable) {
   comp.product_type = "wall_segment";
   EXPECT_EQ(comp.product_type, "wall_segment");
 }
-
-// ---- AI strategy wall counts ----
 
 TEST(AIWallStrategyTest, DefensiveStrategyWantsWalls) {
   auto config = Game::Systems::AI::AIStrategyFactory::create_config(
@@ -458,8 +454,6 @@ TEST(AIWallStrategyTest, HighDefensePersonalityBoostsWallCount) {
   Game::Systems::AI::AIStrategyFactory::apply_personality(config, 0.5F, 0.8F, 0.5F);
   EXPECT_GE(config.desired_wall_segment_count, baseline);
 }
-
-// ---- AIContext wall_segment_count field ----
 
 TEST(AIWallContextTest, AIContextHasWallSegmentCount) {
   Game::Systems::AI::AIContext ctx;

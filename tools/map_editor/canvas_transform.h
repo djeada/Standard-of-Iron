@@ -21,7 +21,6 @@ struct CanvasTransform {
     const float view_z =
         (static_cast<float>(widget_pos.y()) - pan_offset.y()) / scaled_cell;
 
-    // Mirror both axes so the editor matches the in-game battlefield facing.
     return QPointF(static_cast<float>(grid.width) - view_x,
                    static_cast<float>(grid.height) - view_z);
   }
