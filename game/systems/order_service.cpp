@@ -56,27 +56,16 @@ void OrderService::reset_movement(Engine::Core::Entity* entity) {
     return;
   }
 
-  entity->remove_component<Engine::Core::RepathRequestComponent>();
   auto* movement = entity->get_component<Engine::Core::MovementComponent>();
   if (movement == nullptr) {
     return;
   }
   auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-  movement->has_target = false;
-  movement->path.clear();
-  movement->path_pending = false;
-  movement->pending_request_id = 0;
-  movement->repath_cooldown = 0.0F;
+  movement->stop();
   if (transform != nullptr) {
-    movement->target_x = transform->position.x;
-    movement->target_y = transform->position.z;
-    movement->goal_x = transform->position.x;
-    movement->goal_y = transform->position.z;
+    movement->set_rest_position(transform->position.x, transform->position.z);
   } else {
-    movement->target_x = 0.0F;
-    movement->target_y = 0.0F;
-    movement->goal_x = 0.0F;
-    movement->goal_y = 0.0F;
+    movement->set_rest_position(0.0F, 0.0F);
   }
 }
 
@@ -172,7 +161,6 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
     return;
   }
 
-  entity->remove_component<Engine::Core::RepathRequestComponent>();
   if (should_clear_auxiliary_orders(kind)) {
     clear_civilian_delivery(entity);
     clear_patrol(entity);
@@ -210,7 +198,6 @@ void OrderService::prepare_for_attack(Engine::Core::Entity* entity) {
     return;
   }
 
-  entity->remove_component<Engine::Core::RepathRequestComponent>();
   clear_player_order_intent(entity);
   clear_civilian_delivery(entity);
   clear_patrol(entity);

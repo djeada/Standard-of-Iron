@@ -39,12 +39,6 @@ inline void clear_patrol_command(Engine::Core::Entity* entity) {
   Game::Systems::OrderService::clear_patrol(entity);
 }
 
-inline auto snap_to_walkable_ground_for_unit(const QVector3D& world_position,
-                                             float unit_radius) -> QVector3D {
-  return Game::Systems::CommandService::snap_to_walkable_ground_for_radius(
-      world_position, unit_radius);
-}
-
 inline auto barracks_delivery_target_position(const QVector3D& civilian_position,
                                               const QVector3D& barracks_position,
                                               float unit_radius) -> QVector3D {
@@ -80,7 +74,7 @@ inline auto barracks_delivery_target_position(const QVector3D& civilian_position
   QVector3D target(barracks_position.x() + dir_x * final_scale,
                    0.0F,
                    barracks_position.z() + dir_z * final_scale);
-  return snap_to_walkable_ground_for_unit(target, unit_radius);
+  return snap_to_walkable_ground(target);
 }
 
 inline auto
@@ -182,7 +176,6 @@ issue_civilian_delivery_command(Engine::Core::World* world,
 
   Game::Systems::CommandService::MoveOptions opts;
   opts.kind = Game::Systems::MoveOrderKind::ScriptedMove;
-  opts.group_move = false;
   Game::Systems::CommandService::move_units(*world, civilian_ids, targets, opts);
   return true;
 }

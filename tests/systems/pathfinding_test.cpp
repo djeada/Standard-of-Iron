@@ -288,13 +288,13 @@ TEST_F(PathfindingTest, BridgeDeckIsWalkableAndCrossesRiver) {
   auto const path = pathfinding.find_path({2, center.y}, {18, center.y});
   ASSERT_FALSE(path.empty());
 
-  bool used_bridge_centerline = false;
+  bool used_bridge_cell = false;
   for (const auto& point : path) {
     if (point.x == center.x && point.y == center.y) {
-      used_bridge_centerline = true;
+      used_bridge_cell = true;
     }
   }
-  EXPECT_TRUE(used_bridge_centerline);
+  EXPECT_TRUE(used_bridge_cell);
 }
 
 TEST_F(PathfindingTest, BridgeDeckRemainsWalkableWhenResourceMarkerOverlapsIt) {
@@ -321,6 +321,7 @@ TEST_F(PathfindingTest, BridgeDeckRemainsWalkableWhenResourceMarkerOverlapsIt) {
       center.x, center.y));
   EXPECT_EQ(pathfinding.cell_value(center.x, center.y),
             Game::Systems::Pathfinding::CellValue::Walkable);
+  EXPECT_TRUE(pathfinding.is_walkable(center.x, center.y));
   EXPECT_TRUE(pathfinding.is_walkable(center.x, center.y));
   EXPECT_FALSE(pathfinding.find_path({2, center.y}, {18, center.y}).empty());
 }
@@ -357,11 +358,11 @@ TEST_F(PathfindingTest, HillEntranceRemainsWalkableWhenResourceMarkerOverlapsIt)
   EXPECT_EQ(pathfinding.cell_value(entrance.x, entrance.y),
             Game::Systems::Pathfinding::CellValue::Walkable);
   EXPECT_TRUE(pathfinding.is_walkable(entrance.x, entrance.y));
-  EXPECT_TRUE(pathfinding.is_walkable_with_radius(entrance.x, entrance.y, 0.7F));
-  EXPECT_FALSE(pathfinding.find_path({2, entrance.y}, hilltop, 0.7F).empty());
+  EXPECT_TRUE(pathfinding.is_walkable(entrance.x, entrance.y));
+  EXPECT_FALSE(pathfinding.find_path({2, entrance.y}, hilltop).empty());
 }
 
-TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
+TEST_F(PathfindingTest, DiagonalBridgeCellsCanCrossRiver) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;
   map_def.grid.height = 21;
@@ -386,8 +387,7 @@ TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
         static_cast<int>(std::round(world_z / map_def.grid.tile_size + half_h))};
   };
 
-  auto const path =
-      pathfinding.find_path(to_grid(-8.0F, -8.0F), to_grid(8.0F, 8.0F), 0.6F);
+  auto const path = pathfinding.find_path(to_grid(-8.0F, -8.0F), to_grid(8.0F, 8.0F));
   ASSERT_FALSE(path.empty());
 
   bool used_bridge = false;
@@ -399,6 +399,27 @@ TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
     }
   }
   EXPECT_TRUE(used_bridge);
+}
+
+TEST_F(PathfindingTest, BridgeApproachSegmentIsWalkableThroughGridCells) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  EXPECT_TRUE(pathfinding.is_world_segment_walkable(QVector3D(-4.0F, 0.0F, 0.0F),
+                                                    QVector3D(-1.5F, 0.0F, 0.0F)));
 }
 
 TEST_F(PathfindingTest, CrossingRhoneBridgeApproachRoutesFromBattleLogPosition) {
@@ -426,15 +447,15 @@ TEST_F(PathfindingTest, CrossingRhoneBridgeApproachRoutesFromBattleLogPosition) 
   auto const start = to_grid(-53.5F, 33.9774F);
   auto const end = to_grid(37.5F, 56.5F);
   EXPECT_TRUE(pathfinding.is_walkable(start.x, start.y));
-  EXPECT_TRUE(pathfinding.is_walkable_with_radius(start.x, start.y, 0.7F));
+  EXPECT_TRUE(pathfinding.is_walkable(start.x, start.y));
   EXPECT_TRUE(pathfinding.is_walkable(end.x, end.y));
-  EXPECT_TRUE(pathfinding.is_walkable_with_radius(end.x, end.y, 0.7F));
+  EXPECT_TRUE(pathfinding.is_walkable(end.x, end.y));
 
-  auto const path = pathfinding.find_path(start, end, 0.7F);
-  EXPECT_FALSE(pathfinding.find_path(start, to_grid(-6.5F, 43.5F), 0.7F).empty());
-  EXPECT_FALSE(pathfinding.find_path(to_grid(-6.5F, 43.5F), to_grid(-1.5F, 43.5F), 0.7F)
-                   .empty());
-  EXPECT_FALSE(pathfinding.find_path(to_grid(-1.5F, 43.5F), end, 0.7F).empty());
+  auto const path = pathfinding.find_path(start, end);
+  EXPECT_FALSE(pathfinding.find_path(start, to_grid(-6.5F, 43.5F)).empty());
+  EXPECT_FALSE(
+      pathfinding.find_path(to_grid(-6.5F, 43.5F), to_grid(-1.5F, 43.5F)).empty());
+  EXPECT_FALSE(pathfinding.find_path(to_grid(-1.5F, 43.5F), end).empty());
 
   ASSERT_FALSE(path.empty());
 
@@ -464,6 +485,19 @@ TEST_F(PathfindingTest, FindPathResolvesBlockedDestinationToNearestWalkableCell)
   EXPECT_LE(std::abs(path.back().y - 5), 1);
 }
 
+TEST_F(PathfindingTest, FindPathCanRecoverFromBlockedStartCell) {
+  Game::Systems::Pathfinding pathfinding(8, 8);
+  pathfinding.update_navigation_grid();
+  pathfinding.set_obstacle(2, 2, true);
+
+  auto const path = pathfinding.find_path({2, 2}, {6, 6});
+
+  ASSERT_FALSE(path.empty());
+  EXPECT_NE(path.front(), (Game::Systems::Point{2, 2}));
+  EXPECT_TRUE(pathfinding.is_walkable(path.front().x, path.front().y));
+  EXPECT_EQ(path.back(), (Game::Systems::Point{6, 6}));
+}
+
 TEST_F(PathfindingTest, FindPathResolvesOutOfBoundsDestinationToNearestWalkableCell) {
   Game::Systems::Pathfinding pathfinding(8, 8);
   pathfinding.update_navigation_grid();
@@ -473,6 +507,22 @@ TEST_F(PathfindingTest, FindPathResolvesOutOfBoundsDestinationToNearestWalkableC
   ASSERT_FALSE(path.empty());
   EXPECT_EQ(path.front(), (Game::Systems::Point{2, 2}));
   EXPECT_EQ(path.back(), (Game::Systems::Point{7, 7}));
+}
+
+TEST_F(PathfindingTest, FindPathReturnsClosestReachableRouteWhenGoalIsSealedOff) {
+  Game::Systems::Pathfinding pathfinding(8, 8);
+  pathfinding.update_navigation_grid();
+  for (int y = 0; y < 8; ++y) {
+    pathfinding.set_obstacle(4, y, true);
+  }
+
+  auto const path = pathfinding.find_path({1, 4}, {7, 4});
+
+  ASSERT_FALSE(path.empty());
+  EXPECT_EQ(path.front(), (Game::Systems::Point{1, 4}));
+  EXPECT_NE(path.back(), (Game::Systems::Point{7, 4}));
+  EXPECT_LT(path.back().x, 4);
+  EXPECT_TRUE(pathfinding.is_walkable(path.back().x, path.back().y));
 }
 
 } // namespace

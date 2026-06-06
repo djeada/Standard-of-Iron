@@ -8,6 +8,7 @@
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/siege_special_processor.h"
 #include "systems/owner_registry.h"
+#include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
@@ -207,9 +208,9 @@ TEST_F(SiegeSpecialProcessorTest, TargetUnitRetaliatesAgainstAttackingDefenseTow
   ASSERT_NE(attack, nullptr);
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(intent, nullptr);
-  movement->has_target = true;
-  movement->target_x = 30.0F;
-  movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 30.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
   intent->kind = PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
 

@@ -115,8 +115,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
 
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-      data.movement.has_component = true;
-      data.movement.has_target = movement->has_target;
+      data.movement = MovementSnapshot{true, movement->get_has_target()};
     }
 
     if (auto* production = entity->get_component<Engine::Core::ProductionComponent>()) {

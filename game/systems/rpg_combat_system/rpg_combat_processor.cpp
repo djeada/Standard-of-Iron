@@ -1,5 +1,7 @@
 #include "rpg_combat_processor.h"
 
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -7,6 +9,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../command_service.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::RpgCombat {
@@ -35,6 +38,28 @@ auto slot_is_active(const Engine::Core::RpgEngagementComponent::Slot& slot) -> b
   return slot.role == Engine::Core::RpgEngagementRole::FrontAttacker ||
          slot.role == Engine::Core::RpgEngagementRole::LeftThreat ||
          slot.role == Engine::Core::RpgEngagementRole::RightThreat;
+}
+
+void issue_scripted_position_goal(Engine::Core::World& world,
+                                  Engine::Core::EntityID entity_id,
+                                  const QVector3D& target) {
+  auto* entity = world.get_entity(entity_id);
+  auto* transform = entity != nullptr
+                        ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (transform == nullptr) {
+    return;
+  }
+
+  float const dx = target.x() - transform->position.x;
+  float const dz = target.z() - transform->position.z;
+  if (dx * dx + dz * dz <= 0.04F) {
+    return;
+  }
+
+  CommandService::MoveOptions options;
+  options.kind = MoveOrderKind::ScriptedMove;
+  CommandService::move_unit(world, entity_id, target, options);
 }
 
 } // namespace
@@ -268,8 +293,6 @@ void tick_rpg_combat(Engine::Core::World* world,
   // Enemies circle the player and maintain spacing
   constexpr float k_ideal_engage_distance = 2.8F;
   constexpr float k_circle_speed = 1.4F;
-  constexpr float k_approach_speed = 2.2F;
-  constexpr float k_back_off_speed = 1.8F;
 
   for (auto& slot : engagement->engagement_slots) {
     auto* enemy = world->get_entity(slot.entity_id);
@@ -288,7 +311,7 @@ void tick_rpg_combat(Engine::Core::World* world,
     }
 
     float dx = enemy_tf->position.x - cmd_x;
-    float dz = enemy_tf->position.z - cmd_z;
+    float const dz = enemy_tf->position.z - cmd_z;
     float dist = std::sqrt(dx * dx + dz * dz);
     if (dist < 0.001F) {
       dist = 0.001F;
@@ -297,40 +320,33 @@ void tick_rpg_combat(Engine::Core::World* world,
 
     float const nx = dx / dist;
     float const nz = dz / dist;
-    // Perpendicular (tangent for circling)
-    float const tx = -nz;
-    float const tz = nx;
-
     bool const is_active_attacker = slot_is_active(slot);
 
     if (is_active_attacker) {
-      // Active attackers approach to ideal distance
       if (dist > k_ideal_engage_distance + 0.5F) {
-        enemy_tf->position.x -= nx * k_approach_speed * dt;
-        enemy_tf->position.z -= nz * k_approach_speed * dt;
+        issue_scripted_position_goal(*world,
+                                     enemy->get_id(),
+                                     QVector3D(cmd_x + nx * k_ideal_engage_distance,
+                                               0.0F,
+                                               cmd_z + nz * k_ideal_engage_distance));
       } else if (dist < k_ideal_engage_distance - 0.3F) {
-        // Too close - back off slightly
-        enemy_tf->position.x += nx * k_back_off_speed * dt;
-        enemy_tf->position.z += nz * k_back_off_speed * dt;
+        issue_scripted_position_goal(*world,
+                                     enemy->get_id(),
+                                     QVector3D(cmd_x + nx * k_ideal_engage_distance,
+                                               0.0F,
+                                               cmd_z + nz * k_ideal_engage_distance));
       }
-      // Face the player
       float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
       enemy_tf->rotation.y = face_angle;
     } else {
-      // Support enemies circle and maintain outer ring distance
       constexpr float k_support_ring = 4.5F;
-      if (dist < k_support_ring - 0.5F) {
-        enemy_tf->position.x += nx * k_back_off_speed * 0.6F * dt;
-        enemy_tf->position.z += nz * k_back_off_speed * 0.6F * dt;
-      } else if (dist > k_support_ring + 1.0F) {
-        enemy_tf->position.x -= nx * k_approach_speed * 0.5F * dt;
-        enemy_tf->position.z -= nz * k_approach_speed * 0.5F * dt;
-      }
-      // Circle around player
       float const circle_dir = (slot.signed_angle_degrees >= 0.0F) ? 1.0F : -1.0F;
-      enemy_tf->position.x += tx * k_circle_speed * circle_dir * dt;
-      enemy_tf->position.z += tz * k_circle_speed * circle_dir * dt;
-      // Face the player
+      float const angle = std::atan2(dz, dx) + circle_dir * k_circle_speed * dt;
+      issue_scripted_position_goal(*world,
+                                   enemy->get_id(),
+                                   QVector3D(cmd_x + std::cos(angle) * k_support_ring,
+                                             0.0F,
+                                             cmd_z + std::sin(angle) * k_support_ring));
       float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
       enemy_tf->rotation.y = face_angle;
     }

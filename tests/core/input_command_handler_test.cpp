@@ -181,7 +181,7 @@ TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove)
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->has_target || movement->path_pending);
+  EXPECT_TRUE(movement->get_has_target());
 }
 
 TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) {
@@ -202,7 +202,7 @@ TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) 
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->has_target || movement->path_pending);
+  EXPECT_TRUE(movement->get_has_target());
   EXPECT_FALSE(patrol->patrolling);
   EXPECT_TRUE(patrol->waypoints.empty());
 }
@@ -220,19 +220,17 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickDoesNotBypassFormationPlacement)
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FALSE(movement->path_pending);
+  EXPECT_FALSE(movement->get_has_target());
 
   input_handler->on_right_double_click(
       ground_screen.x(), ground_screen.y(), 1, viewport);
 
   EXPECT_TRUE(input_handler->is_placing_formation());
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FALSE(movement->path_pending);
+  EXPECT_FALSE(movement->get_has_target());
 
   input_handler->on_formation_confirm();
 
-  EXPECT_TRUE(movement->has_target || movement->path_pending);
+  EXPECT_TRUE(movement->get_has_target());
 }
 
 TEST_F(InputCommandHandlerTest, RightDoubleClickEnablesRunModeAndDispatchesMove) {
@@ -251,7 +249,7 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickEnablesRunModeAndDispatchesMove)
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->has_target || movement->path_pending);
+  EXPECT_TRUE(movement->get_has_target());
   EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
@@ -264,7 +262,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickMovesSelectedUnitsToWorldPositi
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->has_target || movement->path_pending);
+  EXPECT_TRUE(movement->get_has_target());
 }
 
 TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingWithNoSelection) {
@@ -275,8 +273,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingWithNoSelection) {
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FALSE(movement->path_pending);
+  EXPECT_FALSE(movement->get_has_target());
 }
 
 TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingInSpectatorMode) {
@@ -289,8 +286,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingInSpectatorMode) {
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FALSE(movement->path_pending);
+  EXPECT_FALSE(movement->get_has_target());
 }
 
 TEST_F(InputCommandHandlerTest, MinimapRightClickMovesMultipleSelectedUnitsToTarget) {
@@ -307,8 +303,8 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickMovesMultipleSelectedUnitsToTar
   auto* mv2 = unit2->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(mv1, nullptr);
   ASSERT_NE(mv2, nullptr);
-  EXPECT_TRUE(mv1->has_target || mv1->path_pending);
-  EXPECT_TRUE(mv2->has_target || mv2->path_pending);
+  EXPECT_TRUE(mv1->get_has_target());
+  EXPECT_TRUE(mv2->get_has_target());
 }
 
 } // namespace

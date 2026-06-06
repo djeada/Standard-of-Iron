@@ -541,7 +541,7 @@ TEST_F(FormationSystemTest, PlannerRotatesFrontlineTowardOrderDirection) {
   EXPECT_NEAR(result.facing_angles[0], result.formation_facing, 5.0F);
 }
 
-TEST_F(FormationSystemTest, PlannerSnapsInvalidFormationSlotsToWalkableTargets) {
+TEST_F(FormationSystemTest, PlannerCollapsesInvalidFormationSlotsToCenterTarget) {
   NationRegistry::instance().initialize_defaults();
   Game::Systems::CommandService::initialize(32, 32);
   Engine::Core::World world;
@@ -556,24 +556,31 @@ TEST_F(FormationSystemTest, PlannerSnapsInvalidFormationSlotsToWalkableTargets) 
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
-  Game::Systems::Point const blocked =
-      Game::Systems::CommandService::world_to_grid(1.0F, 10.0F);
+  QVector3D const target(0.0F, 0.0F, 10.0F);
+  auto const baseline =
+      FormationPlanner::get_formation_with_facing(world, units, target, 1.0F);
+  ASSERT_TRUE(baseline.used_tactical_formation);
+  ASSERT_EQ(baseline.positions.size(), units.size());
+
+  Game::Systems::Point const blocked = Game::Systems::CommandService::world_to_grid(
+      baseline.positions.front().x(), baseline.positions.front().z());
+  Game::Systems::Point const center =
+      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  ASSERT_FALSE(blocked == center);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
-  auto result = FormationPlanner::get_formation_with_facing(
-      world, units, QVector3D(0.0F, 0.0F, 10.0F), 1.0F);
+  auto result = FormationPlanner::get_formation_with_facing(world, units, target, 1.0F);
 
   ASSERT_TRUE(result.used_tactical_formation);
   ASSERT_EQ(result.positions.size(), units.size());
 
-  for (auto const& pos : result.positions) {
-    auto const grid = Game::Systems::CommandService::world_to_grid(pos.x(), pos.z());
-    EXPECT_TRUE(pathfinder->is_walkable(grid.x, grid.y));
-    EXPECT_FALSE(grid == blocked);
-  }
+  auto const collapsed = Game::Systems::CommandService::world_to_grid(
+      result.positions.front().x(), result.positions.front().z());
+  EXPECT_EQ(collapsed, center);
+  EXPECT_TRUE(pathfinder->is_walkable(collapsed.x, collapsed.y));
 }
 
-TEST_F(FormationSystemTest, PlannerShiftsWholeFormationCoherentlyAroundBlockedSlot) {
+TEST_F(FormationSystemTest, PlannerCollapsesTightFormationAreaToCenterTarget) {
   NationRegistry::instance().initialize_defaults();
   Game::Systems::CommandService::initialize(32, 32);
   Engine::Core::World world;
@@ -588,35 +595,31 @@ TEST_F(FormationSystemTest, PlannerShiftsWholeFormationCoherentlyAroundBlockedSl
       add_unit(
           world, Game::Units::SpawnType::Archer, NationID::RomanRepublic, true, 3.0F)};
 
-  QVector3D const target(10.0F, 0.0F, 10.0F);
-  auto const baseline =
-      FormationPlanner::get_formation_with_facing(world, units, target, 1.0F);
-  ASSERT_TRUE(baseline.used_tactical_formation);
-
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
-  auto const blocked = Game::Systems::CommandService::world_to_grid(
-      baseline.positions[0].x(), baseline.positions[0].z());
-  pathfinder->set_obstacle(blocked.x, blocked.y, true);
+  QVector3D const target(10.0F, 0.0F, 10.0F);
+  auto const center =
+      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  for (int dz = -3; dz <= 3; ++dz) {
+    for (int dx = -3; dx <= 3; ++dx) {
+      if (dx == 0 && dz == 0) {
+        continue;
+      }
+      pathfinder->set_obstacle(center.x + dx, center.y + dz, true);
+    }
+  }
 
-  auto const shifted =
+  auto const result =
       FormationPlanner::get_formation_with_facing(world, units, target, 1.0F);
-  ASSERT_TRUE(shifted.used_tactical_formation);
-  ASSERT_EQ(shifted.positions.size(), baseline.positions.size());
+  ASSERT_TRUE(result.used_tactical_formation);
+  ASSERT_EQ(result.positions.size(), units.size());
 
-  QVector3D const common_delta = shifted.positions[0] - baseline.positions[0];
-  EXPECT_GT(common_delta.lengthSquared(), 0.01F);
-
-  for (size_t i = 0; i < shifted.positions.size(); ++i) {
-    auto const grid = Game::Systems::CommandService::world_to_grid(
-        shifted.positions[i].x(), shifted.positions[i].z());
+  for (auto const& position : result.positions) {
+    auto const grid =
+        Game::Systems::CommandService::world_to_grid(position.x(), position.z());
+    EXPECT_EQ(grid, center);
     EXPECT_TRUE(pathfinder->is_walkable(grid.x, grid.y));
-    EXPECT_FALSE(grid == blocked);
-
-    QVector3D const delta = shifted.positions[i] - baseline.positions[i];
-    EXPECT_NEAR(delta.x(), common_delta.x(), 1.0e-4F);
-    EXPECT_NEAR(delta.z(), common_delta.z(), 1.0e-4F);
   }
 }

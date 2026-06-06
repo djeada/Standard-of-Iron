@@ -480,7 +480,7 @@ TEST_F(AISystemTest, EntityEngagementRequiresNearbyEnemyNotOldDamage) {
       Game::Systems::AI::is_entity_engaged(unit, {make_enemy(9, 12.0F, 10.0F)}));
 }
 
-TEST_F(AISystemTest, CommandFilterKeepsNonDuplicateUnitsInGroupMoveCommands) {
+TEST_F(AISystemTest, CommandFilterKeepsNonDuplicateUnitsInMultiUnitMoveCommands) {
   Game::Systems::AI::AICommandFilter filter;
 
   Game::Systems::AI::AICommand initial;

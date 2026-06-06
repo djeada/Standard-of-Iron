@@ -914,8 +914,6 @@ void CommandController::confirm_formation_placement() {
 
   Game::Systems::CommandService::MoveOptions opts;
   opts.kind = Game::Systems::MoveOrderKind::FormationMove;
-  opts.group_move = m_formation_units.size() > 1;
-  opts.retry_individual_on_group_failure = m_formation_units.size() > 1;
   opts.preserve_formation_mode = formation_result.used_tactical_formation;
   Game::Systems::CommandService::move_units(
       *m_world, m_formation_units, formation_result.positions, opts);

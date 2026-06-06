@@ -15,6 +15,10 @@
 #include "../units/troop_type.h"
 #include "entity.h"
 
+namespace Game::Systems {
+class MovementSystem;
+} // namespace Game::Systems
+
 namespace Engine::Core {
 
 namespace Defaults {
@@ -133,40 +137,56 @@ public:
                                ratio * static_cast<float>(individuals_per_unit)))));
 }
 
+/// Explicit navigation state owned solely by MovementSystem.
+/// Idle           - no active order.
+/// FollowingPath  - steering along computed waypoints.
+/// FollowingDirect- steering straight to a target with no route.
+enum class MovementState : std::uint8_t {
+  Idle = 0,
+  FollowingPath = 2,
+  FollowingDirect = 3
+};
+
 class MovementComponent : public Component {
 public:
   MovementComponent() = default;
 
-  bool has_target{false};
-  float target_x{0.0F}, target_y{0.0F};
-  float goal_x{0.0F}, goal_y{0.0F};
-  float vx{0.0F}, vz{0.0F};
-  std::vector<std::pair<float, float>> path;
-  std::size_t path_index{0};
-  bool path_pending{false};
-  std::uint64_t pending_request_id{0};
-  float repath_cooldown{0.0F};
-
-  float last_goal_x{0.0F}, last_goal_y{0.0F};
-  float time_since_last_path_request{0.0F};
-
-  float last_position_x{0.0F}, last_position_z{0.0F};
-  float time_stuck{0.0F};
-  float time_on_invalid_tile{0.0F};
-  float unstuck_cooldown{0.0F};
-  float unstuck_push_seconds{0.0F};
-  float unstuck_push_vx{0.0F};
-  float unstuck_push_vz{0.0F};
+  [[nodiscard]] auto get_has_target() const -> bool { return has_target; }
+  [[nodiscard]] auto get_target_x() const -> float { return target_x; }
+  [[nodiscard]] auto get_target_y() const -> float { return target_y; }
+  [[nodiscard]] auto get_goal_x() const -> float { return goal_x; }
+  [[nodiscard]] auto get_goal_y() const -> float { return goal_y; }
+  [[nodiscard]] auto get_vx() const -> float { return vx; }
+  [[nodiscard]] auto get_vz() const -> float { return vz; }
+  [[nodiscard]] auto get_path() const -> const std::vector<std::pair<float, float>>& {
+    return path;
+  }
+  [[nodiscard]] auto get_path_index() const -> std::size_t { return path_index; }
+  [[nodiscard]] auto get_state() const -> MovementState {
+    if (has_target && has_waypoints()) {
+      return MovementState::FollowingPath;
+    }
+    if (has_target) {
+      return MovementState::FollowingDirect;
+    }
+    return MovementState::Idle;
+  }
 
   void clear_path() {
     path.clear();
     path_index = 0;
   }
 
+  void stop() {
+    has_target = false;
+    clear_path();
+    vx = 0.0F;
+    vz = 0.0F;
+  }
+
   [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
 
   [[nodiscard]] auto current_waypoint() const -> const std::pair<float, float>& {
-
     return path[path_index];
   }
 
@@ -185,6 +205,54 @@ public:
       path_index = path.size();
     }
   }
+
+  /// Spawn-time initialization of the resting destination (no active order).
+  /// Used by unit constructors so a freshly spawned unit's goal/target equal
+  /// its spawn position without engaging the navigation system.
+  void set_rest_position(float x, float z) {
+    goal_x = x;
+    goal_y = z;
+    target_x = x;
+    target_y = z;
+  }
+
+  /// Marks the unit as actively moving while its position is driven externally
+  /// (first-person/manual control). Keeps the goal pinned to the current
+  /// position so the navigation pipeline does not fight the manual driver.
+  void engage_manual_move(float x, float z) {
+    has_target = true;
+    target_x = x;
+    target_y = z;
+    goal_x = x;
+    goal_y = z;
+  }
+
+  /// Sets the integrated velocity directly. Reserved for manual/first-person
+  /// drivers; the normal pipeline computes velocity from path following.
+  void set_manual_velocity(float new_vx, float new_vz) {
+    vx = new_vx;
+    vz = new_vz;
+  }
+
+private:
+  friend class Game::Systems::MovementSystem;
+  friend class Serialization;
+  friend struct MovementTestAccess;
+
+  bool has_target{false};
+  float target_x{0.0F}, target_y{0.0F};
+  float goal_x{0.0F}, goal_y{0.0F};
+  float vx{0.0F}, vz{0.0F};
+  std::vector<std::pair<float, float>> path;
+  std::size_t path_index{0};
+
+  // Transient no-progress watchdog state owned solely by MovementSystem.
+  // Guarantees an active navigation order can never persist forever: if the
+  // unit holds a target but does not make real progress for too long, the
+  // order is abandoned. Not serialized; reconstructed at runtime.
+  bool stuck_ref_valid{false};
+  float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
+  float stuck_timer{0.0F};
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {
@@ -196,13 +264,6 @@ class PlayerOrderIntentComponent : public Component {
 public:
   PlayerOrderIntentKind kind{PlayerOrderIntentKind::None};
   bool suppress_opportunistic_combat{false};
-};
-
-class RepathRequestComponent : public Component {
-public:
-  float goal_x{0.0F};
-  float goal_y{0.0F};
-  bool allow_direct_fallback{false};
 };
 
 enum class MotionPresentationSource : std::uint8_t {

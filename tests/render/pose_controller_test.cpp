@@ -13,6 +13,7 @@
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/spear_pose_utils.h"
+#include "tests/support/movement_test_access.h"
 
 using namespace Render::GL;
 
@@ -336,11 +337,11 @@ TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(motion, nullptr);
   commander->fpv_controlled = true;
-  movement->has_target = false;
-  movement->vx = 1.4F;
-  movement->vz = 0.0F;
+  MovementTestAccess::set_has_target(*movement, false);
+  MovementTestAccess::set_vx(*movement, 1.4F);
+  MovementTestAccess::set_vz(*movement, 0.0F);
   motion->set_state(Engine::Core::MotionPresentationState::Walk);
-  motion->velocity_x = movement->vx;
+  motion->velocity_x = movement->get_vx();
   motion->has_velocity = true;
 
   Render::GL::DrawContext ctx{};

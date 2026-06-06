@@ -2,12 +2,8 @@
 
 #include <QVector3D>
 
-#include <atomic>
-#include <cstdint>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 #include "order_service.h"
@@ -34,9 +30,6 @@ public:
 
   struct MoveOptions {
     MoveOrderKind kind = MoveOrderKind::PlayerMove;
-    bool allow_direct_fallback = true;
-    bool group_move = false;
-    bool retry_individual_on_group_failure = false;
     bool preserve_formation_mode = false;
   };
 
@@ -55,18 +48,13 @@ public:
   static auto get_pathfinder() -> Pathfinding*;
   static auto world_to_grid(float world_x, float world_z) -> Point;
   static auto grid_to_world(const Point& grid_pos) -> QVector3D;
-  static auto is_grid_walkable_for_radius(const Point& grid_pos,
-                                          float unit_radius) -> bool;
-  static auto is_world_position_walkable_for_radius(const QVector3D& world_position,
-                                                    float unit_radius) -> bool;
+  static auto is_grid_walkable(const Point& grid_pos) -> bool;
+  static auto is_world_position_walkable(const QVector3D& world_position) -> bool;
   static auto find_nearest_walkable_grid(const Point& origin,
-                                         int max_search_radius,
-                                         float unit_radius) -> std::optional<Point>;
+                                         int max_search_radius) -> std::optional<Point>;
   static auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D;
-  static auto
-  snap_to_walkable_ground_for_radius(const QVector3D& world_position,
-                                     float unit_radius,
-                                     int max_search_radius = 24) -> QVector3D;
+  static auto snap_to_walkable_ground(const QVector3D& world_position,
+                                      int max_search_radius) -> QVector3D;
   static auto plan_ground_move(Engine::Core::World& world,
                                const std::vector<Engine::Core::EntityID>& units,
                                const QVector3D& target) -> GroundMovePlan;
@@ -75,13 +63,6 @@ public:
                                 const GroundMovePlan& plan);
   static auto get_unit_radius(Engine::Core::World& world,
                               Engine::Core::EntityID entity_id) -> float;
-  static auto
-  try_queue_local_recovery_move(Engine::Core::World& world,
-                                Engine::Core::EntityID entity_id,
-                                const QVector3D& current_position,
-                                const QVector3D& goal,
-                                Engine::Core::MovementComponent* movement) -> bool;
-
   static void move_unit(Engine::Core::World& world,
                         Engine::Core::EntityID unit_id,
                         const QVector3D& target);
@@ -107,38 +88,16 @@ public:
                          const std::vector<MoveIntent>& intents,
                          const MoveOptions& options);
 
-  static void process_path_results(Engine::Core::World& world);
-  static void process_repath_requests(Engine::Core::World& world);
-  static void queue_repath_request(Engine::Core::World& world,
-                                   Engine::Core::EntityID entity_id,
-                                   const QVector3D& goal,
-                                   bool allow_direct_fallback);
-
   static void attack_target(Engine::Core::World& world,
                             const std::vector<Engine::Core::EntityID>& units,
                             Engine::Core::EntityID target_id,
                             bool should_chase = true);
 
 private:
-  struct PendingPathRequest {
-    Engine::Core::EntityID entity_id{};
-    QVector3D target;
-    MoveOptions options;
-    std::vector<Engine::Core::EntityID> group_members;
-    std::vector<QVector3D> group_targets;
-    float unit_radius{0.0F};
-  };
-
   static std::unique_ptr<Pathfinding> s_pathfinder;
-  static std::unordered_map<std::uint64_t, PendingPathRequest> s_pending_requests;
-  static std::unordered_map<Engine::Core::EntityID, std::uint64_t> s_entity_to_request;
-  static std::mutex s_pending_mutex;
-  static std::atomic<std::uint64_t> s_next_request_id;
-  static void clear_pending_request(Engine::Core::EntityID entity_id);
-  static void move_group(Engine::Core::World& world,
-                         const std::vector<Engine::Core::EntityID>& units,
-                         const std::vector<QVector3D>& targets,
-                         const MoveOptions& options);
+  static auto resolve_move_targets(Engine::Core::World& world,
+                                   const std::vector<Engine::Core::EntityID>& units,
+                                   const QVector3D& center) -> std::vector<QVector3D>;
 };
 
 } // namespace Game::Systems
