@@ -12,6 +12,7 @@
 #include "render/entity/registry.h"
 #include "render/gl/camera.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -151,13 +152,13 @@ TEST_F(CommanderControlControllerTest,
       transform->position.x, transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
-  movement->has_target = true;
-  movement->target_x = 0.0F;
-  movement->target_y = 3.0F;
-  movement->goal_x = 0.0F;
-  movement->goal_y = 3.0F;
-  movement->vx = 1.5F;
-  movement->vz = 1.5F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 0.0F);
+  MovementTestAccess::set_target_y(*movement, 3.0F);
+  MovementTestAccess::set_goal_x(*movement, 0.0F);
+  MovementTestAccess::set_goal_y(*movement, 3.0F);
+  MovementTestAccess::set_vx(*movement, 1.5F);
+  MovementTestAccess::set_vz(*movement, 1.5F);
   commander_data->jump_active = true;
 
   Game::Systems::MovementSystem movement_system;
@@ -165,9 +166,9 @@ TEST_F(CommanderControlControllerTest,
 
   EXPECT_FLOAT_EQ(transform->position.x, 0.0F);
   EXPECT_FLOAT_EQ(transform->position.z, 0.0F);
-  EXPECT_TRUE(movement->has_target);
-  EXPECT_FLOAT_EQ(movement->vx, 1.5F);
-  EXPECT_FLOAT_EQ(movement->vz, 1.5F);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_vx(), 1.5F);
+  EXPECT_FLOAT_EQ(movement->get_vz(), 1.5F);
 }
 
 TEST_F(CommanderControlControllerTest,
@@ -197,9 +198,9 @@ TEST_F(CommanderControlControllerTest,
 
   auto anim = Render::GL::sample_anim_state(ctx);
 
-  EXPECT_FALSE(movement->has_target);
-  EXPECT_FLOAT_EQ(movement->vx, 0.0F);
-  EXPECT_FLOAT_EQ(movement->vz, 0.0F);
+  EXPECT_FALSE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_vx(), 0.0F);
+  EXPECT_FLOAT_EQ(movement->get_vz(), 0.0F);
   EXPECT_GT(std::abs(commander_data->fpv_motion_vx) +
                 std::abs(commander_data->fpv_motion_vz),
             0.05F);

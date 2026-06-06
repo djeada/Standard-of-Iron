@@ -15,6 +15,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_catalog_loader.h"
 #include "game/units/troop_type.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -599,16 +600,18 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
   auto* ally_b_movement = ally_b->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(ally_a_movement, nullptr);
   ASSERT_NE(ally_b_movement, nullptr);
-  EXPECT_FALSE(ally_a_movement->has_target);
-  EXPECT_FALSE(ally_b_movement->has_target);
+  EXPECT_TRUE(ally_a_movement->get_has_target());
+  EXPECT_TRUE(ally_b_movement->get_has_target());
   EXPECT_FALSE(ally_a_stamina->run_requested);
   EXPECT_FALSE(ally_b_stamina->run_requested);
-  EXPECT_FALSE(std::abs(ally_a_movement->goal_x - 5.0F) < 0.01F &&
-               std::abs(ally_a_movement->goal_y - 5.0F) < 0.01F &&
-               std::abs(ally_b_movement->goal_x - 5.0F) < 0.01F &&
-               std::abs(ally_b_movement->goal_y - 5.0F) < 0.01F);
-  EXPECT_GT(std::abs(ally_a_movement->goal_y - ally_b_movement->goal_y), 0.01F);
-  EXPECT_GT(std::abs(ally_a_movement->goal_x - ally_b_movement->goal_x), 0.01F);
+  EXPECT_FALSE(std::abs(ally_a_movement->get_goal_x() - 5.0F) < 0.01F &&
+               std::abs(ally_a_movement->get_goal_y() - 5.0F) < 0.01F &&
+               std::abs(ally_b_movement->get_goal_x() - 5.0F) < 0.01F &&
+               std::abs(ally_b_movement->get_goal_y() - 5.0F) < 0.01F);
+  EXPECT_GT(std::abs(ally_a_movement->get_goal_y() - ally_b_movement->get_goal_y()),
+            0.01F);
+  EXPECT_GT(std::abs(ally_a_movement->get_goal_x() - ally_b_movement->get_goal_x()),
+            0.01F);
 }
 
 TEST(CommanderFlagRallyTest, FlagRallyCancelledOnCommanderDeath) {
@@ -715,11 +718,11 @@ TEST(CommanderFlagRallyTest, DivergentMoveOrderCancelsFlagRally) {
   commander_data->flag_rally_pending_x = 10.0F;
   commander_data->flag_rally_pending_z = 0.0F;
   commander_data->flag_rally_in_progress = true;
-  commander_movement->has_target = true;
-  commander_movement->goal_x = 25.0F;
-  commander_movement->goal_y = 0.0F;
-  commander_movement->target_x = 25.0F;
-  commander_movement->target_y = 0.0F;
+  MovementTestAccess::set_has_target(*commander_movement, true);
+  MovementTestAccess::set_goal_x(*commander_movement, 25.0F);
+  MovementTestAccess::set_goal_y(*commander_movement, 0.0F);
+  MovementTestAccess::set_target_x(*commander_movement, 25.0F);
+  MovementTestAccess::set_target_y(*commander_movement, 0.0F);
 
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);

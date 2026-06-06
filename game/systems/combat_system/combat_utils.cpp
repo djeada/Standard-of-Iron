@@ -188,7 +188,8 @@ auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {
   auto* intent = unit->get_component<Engine::Core::PlayerOrderIntentComponent>();
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   return (intent != nullptr) && intent->suppress_opportunistic_combat &&
-         (movement != nullptr) && (movement->has_target || movement->path_pending);
+         (movement != nullptr) &&
+         (movement->get_has_target() || movement->has_waypoints());
 }
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
@@ -209,7 +210,7 @@ auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
   }
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
-  if ((movement != nullptr) && movement->has_target) {
+  if ((movement != nullptr) && movement->get_has_target()) {
     return false;
   }
 

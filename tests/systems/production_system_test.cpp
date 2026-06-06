@@ -14,6 +14,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_system.h"
 #include "game/units/factory.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -295,11 +296,11 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
     ASSERT_NE(production, nullptr);
 
     unit->spawn_type = Game::Units::SpawnType::Builder;
-    movement->goal_x = target_world.x();
-    movement->goal_y = target_world.z();
-    movement->target_x = target_world.x();
-    movement->target_y = target_world.z();
-    movement->has_target = false;
+    MovementTestAccess::set_goal_x(*movement, target_world.x());
+    MovementTestAccess::set_goal_y(*movement, target_world.z());
+    MovementTestAccess::set_target_x(*movement, target_world.x());
+    MovementTestAccess::set_target_y(*movement, target_world.z());
+    MovementTestAccess::set_has_target(*movement, false);
 
     production->in_progress = true;
     production->build_time = 6.0F;
@@ -318,7 +319,7 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
     Game::Systems::MovementSystem movement_system;
     movement_system.update(&world, 0.1F);
 
-    EXPECT_FALSE(movement->has_target);
+    EXPECT_FALSE(movement->get_has_target());
     EXPECT_NEAR(transform->position.x, target_world.x(), 0.0001F);
     EXPECT_NEAR(transform->position.z, target_world.z(), 0.0001F);
   };

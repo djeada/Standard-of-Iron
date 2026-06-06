@@ -59,7 +59,7 @@ auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint
     return intent->priority;
   }
   const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
-  if (movement != nullptr && movement->has_target) {
+  if (movement != nullptr && movement->get_has_target()) {
     return 1;
   }
   return 2; // stationary default
@@ -106,9 +106,14 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
     auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     if (movement != nullptr) {
-      circle.vx = movement->vx;
-      circle.vz = movement->vz;
-      circle.is_moving = movement->has_target;
+      circle = UnitCircle{circle.id,
+                          circle.x,
+                          circle.z,
+                          circle.radius,
+                          movement->get_vx(),
+                          movement->get_vz(),
+                          circle.priority,
+                          movement->get_has_target()};
     }
 
     circle.priority = compute_avoidance_priority(*entity);
@@ -122,16 +127,15 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
   m_diagnostics.units_processed = static_cast<std::uint32_t>(circles.size());
 
-  // Apply soft separation.
+  // Measure nearby overlaps without applying displacement.
   std::uint32_t total_neighbors_checked = 0;
-  std::uint32_t corrections = 0;
+  std::uint32_t overlaps_detected = 0;
 
   for (std::size_t i = 0; i < circles.size(); ++i) {
     auto& ci = circles[i];
     if (!ci.is_moving) {
-      continue; // Only moving units get displaced
+      continue;
     }
-
     CellKey const center = to_cell(ci.x, ci.z, inv_cell_size);
     float sep_x = 0.0F;
     float sep_z = 0.0F;
@@ -204,28 +208,14 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
         sep_z = sep_z / mag * max_corr;
       }
 
-      // Apply correction to entity.
-      auto* entity = world->get_entity(ci.id);
-      if (entity != nullptr) {
-        auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-        if (transform != nullptr) {
-          float const new_x = transform->position.x + sep_x * delta_time;
-          float const new_z = transform->position.z + sep_z * delta_time;
-
-          // Validate against terrain before committing.
-          QVector3D const candidate(new_x, 0.0F, new_z);
-          if (CommandService::is_world_position_walkable_for_radius(candidate,
-                                                                    ci.radius)) {
-            transform->position.x = new_x;
-            transform->position.z = new_z;
-            ++corrections;
-          }
-        }
-      }
+      (void)sep_x;
+      (void)sep_z;
+      (void)delta_time;
+      ++overlaps_detected;
     }
   }
 
-  m_diagnostics.corrections_applied = corrections;
+  m_diagnostics.overlaps_detected = overlaps_detected;
   if (!circles.empty()) {
     m_diagnostics.average_neighbors_checked =
         total_neighbors_checked / static_cast<std::uint32_t>(circles.size());

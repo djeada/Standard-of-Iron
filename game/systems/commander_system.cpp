@@ -55,28 +55,23 @@ void halt_rally_movement(Engine::Core::MovementComponent* movement) {
     return;
   }
 
-  movement->has_target = false;
-  movement->path_pending = false;
-  movement->pending_request_id = 0;
-  movement->vx = 0.0F;
-  movement->vz = 0.0F;
-  movement->clear_path();
+  movement->stop();
 }
 
 [[nodiscard]] auto
 movement_targets_rally(const Engine::Core::MovementComponent* movement,
                        const Engine::Core::CommanderComponent& commander) -> bool {
-  if (movement == nullptr || !movement->has_target) {
+  if (movement == nullptr || !movement->get_has_target()) {
     return false;
   }
 
-  return distance_sq(movement->goal_x,
-                     movement->goal_y,
+  return distance_sq(movement->get_goal_x(),
+                     movement->get_goal_y(),
                      commander.flag_rally_pending_x,
                      commander.flag_rally_pending_z) <=
              k_flag_rally_order_tolerance_sq ||
-         distance_sq(movement->target_x,
-                     movement->target_y,
+         distance_sq(movement->get_target_x(),
+                     movement->get_target_y(),
                      commander.flag_rally_pending_x,
                      commander.flag_rally_pending_z) <= k_flag_rally_order_tolerance_sq;
 }
@@ -128,7 +123,7 @@ is_flag_rally_interrupted(Engine::Core::Entity& entity,
     return !movement_targets_rally(movement, commander);
   }
 
-  return movement != nullptr && movement->has_target &&
+  return movement != nullptr && movement->get_has_target() &&
          !movement_targets_rally(movement, commander);
 }
 

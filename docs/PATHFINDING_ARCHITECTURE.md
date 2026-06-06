@@ -2,9 +2,9 @@
 
 Pathfinding in Standard of Iron is deliberately simple at the core: the game keeps one flat 2D navigation grid, and A* searches that grid. The grid is not a physics simulation, not a unit occupancy map, and not a navmesh. It is a compact answer to one question:
 
-> Can a unit of this radius stand on or move through this cell?
+> Is this grid cell free to pass, or is it blocked?
 
-Terrain, buildings, bridges, hills, and resources feed into that answer. Formations, group spacing, combat locks, and invalid-position recovery sit around it. Keeping that separation is what makes the system fast enough to use during normal RTS play without constantly revalidating every unit.
+Terrain, buildings, bridges, hills, and resources feed into that answer. Unit radius is not part of path search. Formations, combat locks, and invalid-position recovery sit around the grid without adding extra public navigation concepts. Keeping that separation is what makes the system fast enough to use during normal RTS play without constantly revalidating every unit.
 
 ## The Grid
 
@@ -56,10 +56,10 @@ grid cell:       ( 112, 91 )
 
 | Function | Use |
 | --- | --- |
-| `is_grid_walkable_for_radius(point, radius)` | Test one grid cell using the same radius rule as A*. |
-| `is_world_position_walkable_for_radius(position, radius)` | Convert world to grid, then test. |
-| `find_nearest_walkable_grid(origin, max_radius, unit_radius)` | Find a nearby valid cell without changing the grid. |
-| `snap_to_walkable_ground_for_radius(position, unit_radius)` | Snap orders, exits, formation slots, and delivery positions. |
+| `is_grid_walkable(point)` | Test one grid cell against the current navigation grid. |
+| `is_world_position_walkable(position)` | Convert world to grid, then test. |
+| `find_nearest_walkable_grid(origin, max_search_radius)` | Find a nearby valid cell without changing the grid. |
+| `snap_to_walkable_ground(position, max_search_radius)` | Snap orders, exits, formation slots, and delivery positions. |
 
 This boundary matters. `Pathfinding` owns cell values and A*. `CommandService` owns coordinate conversion and high-level navigation queries. Movement, formations, production, resource gathering, and UI helpers call `CommandService`.
 
@@ -115,7 +115,7 @@ Legend:
   I = Iron ore
 ```
 
-Units are not written into this grid. A unit standing in a cell does not make that cell blocked for other units. Unit-to-unit spacing is handled by formation planning and movement, because writing every unit into the global grid would make group movement unstable and expensive.
+Units are not written into this grid. A unit standing in a cell does not make that cell blocked for other units. Unit-to-unit spacing is intentionally not a pathfinding concern, because writing every unit into the global grid would make movement unstable and expensive.
 
 The same order is used for regional rebuilds: reset the region to terrain, reapply buildings/resources intersecting the region, then force mandatory traversal cells in that region to `Walkable`.
 
@@ -321,29 +321,20 @@ CommandService
   - snap target to walkable ground
   - reject movement if unit is in RTS melee lock
   - use direct path for short clear moves
-  - submit A* request for longer moves
-    |
-    v
-Pathfinding worker thread
-  - refresh navigation grid if dirty
-  - run A*
-  - publish completed path
-    |
-    v
-CommandService::process_path_results()
+  - run A* synchronously for longer or blocked moves
   - convert grid path to world waypoints
-  - snap bridge waypoints to bridge center
     |
     v
 MovementSystem
   - follow waypoints
-  - check next segment only
-  - request recovery/repath if blocked
+  - stop only for arrival, melee lock, hold mode, direct-control override, or explicit order reset
+  - recover immediately if the unit is in an invalid cell
+  - recompute the unit's own path if the next integrated step enters a blocked cell
 ```
 
 The system does not continuously re-check every whole path. That would be expensive and would make large fights unstable. It checks the order up front, then movement checks the current segment and a few recovery cases.
 
-Movement animation is not pathfinding state. `World::finalize_motion_presentation_frame()` treats a unit as moving only when it has an active target, queued waypoint, pending path request, non-zero movement velocity, actual displacement, chase intent, direct control, or builder bypass. Stale `goal_x`, recent request history, repath cooldown, and unstuck cooldown are not movement intent and must not keep walk animation running after arrival.
+Movement animation is not pathfinding state. `World::finalize_motion_presentation_frame()` treats a unit as moving only when it has active movement state, non-zero movement velocity, actual displacement, chase intent, direct control, or builder bypass. Stale `goal_x`, recent request history, repath cooldown, and unstuck cooldown are not movement intent and must not keep walk animation running after arrival.
 
 ## A* Search
 
@@ -364,40 +355,24 @@ X = blocked
   . . . . . . . .
 ```
 
-Diagonal movement is allowed only when it does not cut through blocked corners. Radius-aware checks expand the effective footprint for larger units:
-
-```text
-Small unit:
-
-  . . .
-  . u .
-  . . .      ok
-
-Large unit near blocker:
-
-  . X .
-  . U .
-  . . .      rejected if the blocker intersects the unit radius
-```
-
-`Pathfinding::is_walkable_with_radius()` answers that radius question. Bridges are special-cased so units can still cross the centerline even though the visual deck may be narrow.
+Diagonal movement is allowed only when it does not cut through blocked corners. A* does not expand cells by unit radius. This is deliberate: a single-cell bridge, hill entrance, or tight building gap is passable if the cell itself is walkable. Unit radius is used for final arrival tolerance and visual footprint concerns, not for deciding whether a route exists.
 
 ## Formations And Group Movement
 
-The navigation grid is unit-agnostic. Formations add the unit-specific layer:
+The navigation grid is unit-agnostic. Formations add only initial target offsets:
 
 ```text
 Grid says:
   "These cells are traversable."
 
 FormationPlanner says:
-  "These specific units can stand here without overlapping."
+  "Use this target offset if the slot is walkable; otherwise collapse to the center."
 
-CommandService::move_group says:
-  "The leader/group route can reach the destination."
+MovementSystem says:
+  "Each unit receives and follows its own independent path."
 ```
 
-Formation planning uses shared walkability queries for every slot, then checks local spacing between chosen slots:
+Formation planning uses shared walkability queries for every slot. It does not solve packing, overlap, or passage width. Tight spaces intentionally simplify to center movement:
 
 ```text
 Target center:
@@ -410,24 +385,24 @@ Target center:
       slot slot slot
 
 For each slot:
-  1. Snap to radius-valid walkable cell.
-  2. Reject if it overlaps an already placed slot.
-  3. Search nearby for the closest walkable non-overlapping position.
+  1. Snap the center to walkable ground.
+  2. Use the offset slot if that slot is walkable.
+  3. Otherwise use the center target.
 ```
 
-Group movement computes a shared route, then offsets members around it. Bridge traversal suppresses those offsets so the group crosses on the bridge centerline instead of spreading over blocked bridge edges.
+There is no special group route entity and no shared movement path. A multi-unit move is just a batch of individual unit orders. The only group-level behavior is target assignment at order time.
 
 ```text
 Normal ground:
 
-  leader path:  * * * * *
-  member paths: offset around the leader path
+  target slots:  a b c
+                 d e f
 
-Bridge:
+Tight bridge / hill entrance / building gap:
 
-  river:        X X X X X
-  centerline:      * * *
-  members:      all align to center while crossing
+  target slots collapse to center:
+                 c c c
+                 c c c
 ```
 
 ## Resource Gathering And The Cursor
@@ -472,15 +447,93 @@ Recovery exception:
 
 Flow:
 
-1. A movement order is attempted normally.
-2. If no path exists, `CommandService` checks the unit's current cell.
-3. If the unit is already invalid, it searches for a nearby walkable recovery cell.
-4. During recovery, movement may pass through invalid cells just long enough to get out.
-5. Once the unit reaches valid ground, normal rules resume.
+1. `MovementSystem` checks the unit's current grid cell each frame.
+2. If the unit is already invalid, it searches for a nearby walkable recovery cell.
+3. If the unit had an active order, recovery splices a path from the safe cell toward the existing goal.
+4. If the unit was idle, recovery only moves it to the safe cell.
+5. Once the unit reaches valid ground, normal movement rules resume.
 
-This avoids the expensive alternative of constantly revalidating every unit against every dynamic blocker.
+Recovery does not use stop reasons, cooldowns, pending path requests, or a separate recovery state. It assigns ordinary movement target/path data on the unit.
 
-Stuck recovery should stay local to `MovementSystem` and `CommandService`: try a short recovery target, a smooth push, or a repath. It should not add new grid cell types, write units into the navigation grid, or rely on per-frame debug logging.
+## Animated But Not Progressing
+
+The current system is leaner, but a unit can still appear to be "moving forever" if animation state and physical progress disagree. That is possible because these are separate facts:
+
+| Fact | Owner |
+| --- | --- |
+| Unit has active movement target/path | `MovementComponent` |
+| Unit has non-zero velocity | `MovementSystem` |
+| Unit actually changed world position this frame | `World` motion presentation snapshot |
+| Unit is on a walkable cell | `CommandService` / `Pathfinding` |
+| Unit is visually playing walk animation | render motion presentation |
+
+The dangerous state is:
+
+```text
+has_target = true
+velocity != 0 or animation sees movement intent
+position stays in the same invalid/blocked cell
+path is not cleared because arrival never happens
+recovery does not produce a different reachable cell
+```
+
+This can still happen without old stop reasons or cooldowns:
+
+1. The next integrated movement step is reverted because it enters a blocked cell, but the unit keeps an active target and recomputes the same first blocked step next frame.
+2. The unit is already invalid, but the nearest recovery cell resolves to a target that the continuous movement step cannot physically enter from its current world position.
+3. The path is grid-valid, but the float-space position, rounding, arrival radius, or blocked-step revert keeps the unit oscillating around a cell boundary.
+4. A movement override outside pathfinding, such as melee lock, hold mode, direct commander control, builder bypass, or combat chase, keeps presentation state active while navigation progress is zero.
+5. The render/motion presentation layer treats intent or velocity as movement even when actual displacement has been zero for many frames.
+
+Because we control the whole stack, this state should not be allowed to persist forever. The mitigation should be deterministic and centralized, not another scattered cooldown.
+
+Recommended options:
+
+1. **Authoritative Progress Watchdog**
+
+   Track per-unit progress inside `MovementSystem`: current grid cell, distance-to-goal, and actual displacement. If a unit has an active target but makes no meaningful progress for a fixed number of frames, force one deterministic resolution:
+
+   - if current cell is invalid, snap or move to nearest walkable cell
+   - if current cell is valid, recompute path once from current cell
+   - if the recomputed first step is still impossible, clear movement and mark animation idle
+
+   This is the most direct mitigation for "moving animation but no progress".
+
+2. **Hard Invalid-Cell Ejection**
+
+   If a unit remains in an invalid cell after recovery assignment, do not keep trying ordinary steering forever. Move it smoothly but authoritatively toward the nearest walkable cell center, ignoring unit radius and formation offsets. If it cannot reduce invalid distance after a small frame budget, snap to that cell center.
+
+   This makes invalid placement a temporary visual correction, not a navigation state.
+
+3. **Blocked-Step Retry Budget**
+
+   When movement integration reverts a step because the new grid cell is blocked, count consecutive reverts for that unit and target. After a small limit, invalidate the current path and choose one of:
+
+   - recompute path from current grid
+   - advance to a later waypoint if the later segment is walkable
+   - collapse to nearest walkable cell and clear movement
+
+   This prevents a unit from requesting or following the same impossible first step forever.
+
+4. **Animation Gated By Displacement**
+
+   Make walk animation require recent actual displacement, not just `has_target` or non-zero desired velocity. A unit may keep an active target, but if it has not moved for several frames it should visually idle or play a blocked/recovering state.
+
+   This does not solve navigation by itself, but it prevents false feedback where the unit looks like it is walking while physically stuck.
+
+5. **Scenario Regression Tests**
+
+   Add frame-budget tests for the exact failure modes:
+
+   - single unit crosses bridge
+   - ten selected units cross bridge
+   - unit starts inside blocked building footprint and exits
+   - group crosses one-cell building gap
+   - hill entrance crossing
+   - dynamic blocker appears under moving unit
+   - blocked first step cannot repeat forever
+
+   Each test should assert either "arrived/reached valid cell within N frames" or "movement cleared and animation idle within N frames". No test should accept an active moving state with zero displacement after the budget.
 
 ## Melee Lock
 
@@ -536,22 +589,22 @@ That is the main performance contract: changes are sparse, so updates should be 
 ## File Responsibilities
 
 `game/systems/pathfinding.h`
-: Defines `Point`, `DirtyRegion`, `Pathfinding::CellValue`, `Pathfinding::NavigationGrid`, A* requests, and dirty-region state.
+: Defines `Point`, `DirtyRegion`, `Pathfinding::CellValue`, `Pathfinding::NavigationGrid`, A* search, and dirty-region state.
 
 `game/systems/pathfinding.cpp`
-: Builds and updates the navigation grid, applies terrain/building/resource layers, runs A*, and processes async path requests.
+: Builds and updates the navigation grid, applies terrain/building/resource layers, forces mandatory traversal cells walkable, and runs A*.
 
 `game/systems/command_service.cpp`
-: Owns the pathfinder instance, converts world/grid coordinates, exposes shared navigation queries, issues individual/group movement, and handles invalid-start recovery.
+: Owns the pathfinder instance, converts world/grid coordinates, exposes shared navigation queries, resolves move targets, and issues per-unit movement.
 
 `game/systems/movement_system.cpp`
-: Follows waypoints, checks current movement segments, aligns bridge traversal, suppresses movement during melee lock, and queues local recovery or repath requests.
+: Follows waypoints, integrates velocity, suppresses movement during melee lock/hold/direct-control overrides, reverts blocked steps, and assigns immediate local recovery when a unit is in an invalid cell.
 
 `game/core/world.cpp`
-: Builds motion presentation snapshots from active movement/combat state. It does not own pathfinding and must not derive walk animation from stale path request bookkeeping.
+: Builds motion presentation snapshots from active movement/combat state. It does not own pathfinding and must not derive walk animation from stale path request bookkeeping or stale goals.
 
 `game/systems/formation_planner.h`
-: Computes formation slots using shared walkability plus local spacing checks. It does not write units into the navigation grid.
+: Computes initial formation target slots using shared walkability. Invalid/tight slots collapse to the resolved center target. It does not write units into the navigation grid and does not create group movement entities.
 
 `game/systems/building_collision_registry.cpp`
 : Registers and unregisters solid building footprints and marks affected grid regions dirty.
@@ -572,7 +625,7 @@ When adding a mandatory traversal feature, such as a bridge crossing or hill ent
 
 1. Author the cells in `TerrainService`/height-map data.
 2. Force those cells to `Walkable` after terrain, buildings, and resources are applied.
-3. Keep visual centering or corridor projection outside A* path search.
+3. Keep visual centering or passage projection outside A* path search.
 4. Add tests for full rebuild and regional rebuild behavior.
 
 When changing terrain:
@@ -588,3 +641,5 @@ When changing movement behavior:
 2. Do not write units into the navigation grid.
 3. Keep invalid-position recovery narrow.
 4. Keep melee lock as a combat-owned movement override.
+5. Do not add public tight-passage, group-path, path-request ID, stop-reason, or movement-cooldown concepts.
+6. Any "cannot progress forever" mitigation must have a scenario test with a frame budget.

@@ -118,52 +118,22 @@ auto should_queue_chase_command(Engine::Core::Entity* attacker,
     return false;
   }
 
-  if (movement->path_pending) {
-    return false;
-  }
-
-  QVector3D planned_target(movement->goal_x, 0.0F, movement->goal_y);
-  if (movement->has_target) {
-    planned_target = QVector3D(movement->target_x, 0.0F, movement->target_y);
-  }
-  if (!movement->path.empty()) {
-    auto const& final_node = movement->path.back();
-    planned_target = QVector3D(final_node.first, 0.0F, final_node.second);
-  }
+  QVector3D const planned_target(movement->get_goal_x(), 0.0F, movement->get_goal_y());
 
   float const threshold_sq =
       Constants::k_new_command_threshold * Constants::k_new_command_threshold;
-  if ((movement->has_target || !movement->path.empty()) &&
-      (planned_target - desired_pos).lengthSquared() <= threshold_sq) {
-    return false;
-  }
-
-  if (movement->time_since_last_path_request < Constants::k_chase_request_cooldown) {
-    QVector3D const last_goal(movement->last_goal_x, 0.0F, movement->last_goal_y);
-    float const chase_goal_threshold_sq = Constants::k_chase_goal_movement_threshold *
-                                          Constants::k_chase_goal_movement_threshold;
-    if ((last_goal - desired_pos).lengthSquared() <= chase_goal_threshold_sq) {
-      return false;
-    }
-  }
-
-  return true;
+  return (!movement->get_has_target() && !movement->has_waypoints()) ||
+         (planned_target - desired_pos).lengthSquared() > threshold_sq;
 }
 
 void stop_unit_movement(Engine::Core::Entity* unit,
                         Engine::Core::TransformComponent* transform) {
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
-  if ((movement != nullptr) && movement->has_target) {
-    movement->has_target = false;
+  if ((movement != nullptr) && movement->get_has_target()) {
+    movement->stop();
     OrderService::clear_player_order_intent(unit);
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
-    movement->clear_path();
     if (transform != nullptr) {
-      movement->target_x = transform->position.x;
-      movement->target_y = transform->position.z;
-      movement->goal_x = transform->position.x;
-      movement->goal_y = transform->position.z;
+      movement->set_rest_position(transform->position.x, transform->position.z);
     }
   }
 }
@@ -1037,14 +1007,9 @@ void process_attacks(Engine::Core::World* world,
 
           if (movement != nullptr) {
             if (hold_position) {
-              movement->has_target = false;
-              movement->vx = 0.0F;
-              movement->vz = 0.0F;
-              movement->clear_path();
-              movement->target_x = attacker_transform->position.x;
-              movement->target_y = attacker_transform->position.z;
-              movement->goal_x = attacker_transform->position.x;
-              movement->goal_y = attacker_transform->position.z;
+              movement->stop();
+              movement->set_rest_position(attacker_transform->position.x,
+                                          attacker_transform->position.z);
             } else if (should_queue_chase_command(attacker,
                                                   target,
                                                   attacker_transform,
@@ -1215,7 +1180,6 @@ void process_attacks(Engine::Core::World* world,
           guard_mode->returning_to_guard_position = true;
           CommandService::MoveOptions options;
           options.kind = MoveOrderKind::GuardReturn;
-          options.allow_direct_fallback = true;
           CommandService::move_unit(
               *world, attacker->get_id(), QVector3D(guard_x, 0.0F, guard_z), options);
         }
@@ -1226,8 +1190,6 @@ void process_attacks(Engine::Core::World* world,
   if (!chase_move_intents.empty()) {
     CommandService::MoveOptions options;
     options.kind = MoveOrderKind::AttackChase;
-    options.allow_direct_fallback = true;
-    options.group_move = chase_move_intents.size() > 1;
     CommandService::move_units(*world, chase_move_intents, options);
   }
 }

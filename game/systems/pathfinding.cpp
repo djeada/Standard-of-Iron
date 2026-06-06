@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <future>
 #include <limits>
 #include <mutex>
 #include <utility>
@@ -19,23 +18,6 @@
 namespace Game::Systems {
 
 namespace {
-
-auto blocked_cell_intersects_footprint(int candidate_x,
-                                       int candidate_y,
-                                       int blocked_x,
-                                       int blocked_y,
-                                       float cell_size,
-                                       float unit_radius) -> bool {
-  float const half_extent = cell_size * 0.5F;
-  float const world_dx =
-      std::abs(static_cast<float>(blocked_x - candidate_x)) * cell_size;
-  float const world_dy =
-      std::abs(static_cast<float>(blocked_y - candidate_y)) * cell_size;
-  float const clearance_x = std::max(0.0F, world_dx - half_extent);
-  float const clearance_y = std::max(0.0F, world_dy - half_extent);
-  return clearance_x * clearance_x + clearance_y * clearance_y <=
-         unit_radius * unit_radius;
-}
 
 auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
                         const Game::Map::TerrainHeightMap* height_map,
@@ -62,38 +44,6 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
 
   return terrain_service.is_walkable(x, z) ? Pathfinding::CellValue::Walkable
                                            : Pathfinding::CellValue::Blocked;
-}
-
-auto is_mandatory_traversal_cell(int x, int z) -> bool {
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized()) {
-    return false;
-  }
-
-  const auto* height_map = terrain_service.get_height_map();
-  return height_map != nullptr &&
-         (height_map->isBridgeCenterline(x, z) || height_map->isHillEntrance(x, z));
-}
-
-auto is_hard_radius_blocker(Pathfinding::CellValue value, int x, int z) -> bool {
-  if (value == Pathfinding::CellValue::Walkable) {
-    return false;
-  }
-
-  if (value == Pathfinding::CellValue::Tree ||
-      value == Pathfinding::CellValue::Boulder ||
-      value == Pathfinding::CellValue::IronOre) {
-    return false;
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized()) {
-    return true;
-  }
-
-  const auto* height_map = terrain_service.get_height_map();
-  return terrain_cell_value(terrain_service, height_map, x, z) ==
-         Pathfinding::CellValue::Walkable;
 }
 
 } // namespace
@@ -137,17 +87,9 @@ Pathfinding::Pathfinding(int width, int height)
     , m_navigation_grid(width, height) {
   ensure_working_buffers();
   m_navigation_grid_dirty.store(true, std::memory_order_release);
-
-  m_worker_thread = std::thread(&Pathfinding::worker_loop, this);
 }
 
-Pathfinding::~Pathfinding() {
-  m_stop_worker.store(true, std::memory_order_release);
-  m_request_condition.notify_all();
-  if (m_worker_thread.joinable()) {
-    m_worker_thread.join();
-  }
-}
+Pathfinding::~Pathfinding() = default;
 
 void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
   m_grid_offset_x = offset_x;
@@ -201,65 +143,19 @@ auto Pathfinding::cell_value(int x, int y) const -> CellValue {
   return m_navigation_grid.get(x, y);
 }
 
-auto Pathfinding::is_walkable_with_radius(int x,
-                                          int y,
-                                          float unit_radius) const -> bool {
-  if (!is_walkable(x, y)) {
-    return false;
-  }
-
-  if (unit_radius <= 0.0F) {
-    return true;
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.is_initialized()) {
-    auto const* height_map = terrain_service.get_height_map();
-    if (height_map != nullptr &&
-        (height_map->isBridgeCell(x, y) || height_map->isBridgeCenterline(x, y) ||
-         height_map->isHillEntrance(x, y))) {
-      return true;
-    }
-  }
-
-  float const half_extent = m_grid_cell_size * 0.5F;
-  int const search_radius =
-      static_cast<int>(std::ceil((unit_radius + half_extent) / m_grid_cell_size));
-
-  for (int check_y = y - search_radius; check_y <= y + search_radius; ++check_y) {
-    for (int check_x = x - search_radius; check_x <= x + search_radius; ++check_x) {
-      if (check_x < 0 || check_x >= m_width || check_y < 0 || check_y >= m_height) {
-        return false;
-      }
-
-      CellValue const check_value = cell_value(check_x, check_y);
-      if (!is_hard_radius_blocker(check_value, check_x, check_y)) {
-        continue;
-      }
-
-      if (blocked_cell_intersects_footprint(
-              x, y, check_x, check_y, m_grid_cell_size, unit_radius)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
-                                             float unit_radius) const -> bool {
+auto Pathfinding::is_world_position_walkable(const QVector3D& world_position) const
+    -> bool {
   Point const grid = world_to_grid(world_position.x(), world_position.z());
-  if (unit_radius > 0.5F) {
-    return is_walkable_with_radius(grid.x, grid.y, unit_radius);
-  }
   return is_walkable(grid.x, grid.y);
 }
 
 auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
-                                            const QVector3D& to,
-                                            float unit_radius) const -> bool {
-  if (!is_world_position_walkable(to, unit_radius)) {
+                                            const QVector3D& to) const -> bool {
+  auto segment_point_walkable = [this](const QVector3D& point) -> bool {
+    return is_world_position_walkable(point);
+  };
+
+  if (!segment_point_walkable(to)) {
     return false;
   }
 
@@ -274,7 +170,7 @@ auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
   for (int i = 1; i <= num_samples; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
     QVector3D const sample_pos = from + direction * t;
-    if (!is_world_position_walkable(sample_pos, unit_radius)) {
+    if (!segment_point_walkable(sample_pos)) {
       return false;
     }
   }
@@ -282,42 +178,9 @@ auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
   return true;
 }
 
-auto Pathfinding::project_world_position_to_traversal_corridor(
-    const QVector3D& world_position) const -> QVector3D {
-  QVector3D projected = world_position;
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized()) {
-    return projected;
-  }
-
-  if (auto const bridge_center = terrain_service.get_bridge_traversal_position(
-          world_position.x(), world_position.z());
-      bridge_center.has_value()) {
-    projected.setX(bridge_center->x());
-    projected.setZ(bridge_center->z());
-    return projected;
-  }
-
-  return projected;
-}
-
-auto Pathfinding::path_waypoint_world_position(
-    const Point& path_cell, const QVector3D& formation_offset) const -> QVector3D {
-  QVector3D const cell_center = grid_to_world(path_cell);
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.is_initialized()) {
-    const auto* height_map = terrain_service.get_height_map();
-    if (height_map != nullptr &&
-        (height_map->isBridgeCell(path_cell.x, path_cell.y) ||
-         height_map->isBridgeCenterline(path_cell.x, path_cell.y) ||
-         height_map->isHillEntrance(path_cell.x, path_cell.y))) {
-      return project_world_position_to_traversal_corridor(cell_center);
-    }
-  }
-
-  QVector3D waypoint = cell_center + formation_offset;
-  waypoint.setY(cell_center.y());
-  return project_world_position_to_traversal_corridor(waypoint);
+auto Pathfinding::path_waypoint_world_position(const Point& path_cell) const
+    -> QVector3D {
+  return grid_to_world(path_cell);
 }
 
 void Pathfinding::mark_navigation_grid_dirty() {
@@ -405,7 +268,7 @@ void Pathfinding::process_dirty_regions() {
       }
 
       apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
-      force_mandatory_traversal_cells_walkable(0, m_width - 1, 0, m_height - 1);
+      force_map_passage_cells_walkable(0, m_width - 1, 0, m_height - 1);
 
       return;
     }
@@ -459,13 +322,13 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   }
 
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
-  force_mandatory_traversal_cells_walkable(min_x, max_x, min_z, max_z);
+  force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
 }
 
-void Pathfinding::force_mandatory_traversal_cells_walkable(int min_x,
-                                                           int max_x,
-                                                           int min_z,
-                                                           int max_z) {
+void Pathfinding::force_map_passage_cells_walkable(int min_x,
+                                                   int max_x,
+                                                   int min_z,
+                                                   int max_z) {
   auto& terrain_service = Game::Map::TerrainService::instance();
   if (!terrain_service.is_initialized()) {
     return;
@@ -570,80 +433,29 @@ auto Pathfinding::find_path(const Point& start,
   return find_path_internal(start, end);
 }
 
-auto Pathfinding::find_path(const Point& start,
-                            const Point& end,
-                            float unit_radius) -> std::vector<Point> {
-
-  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
-    update_navigation_grid();
-  }
-
-  std::lock_guard<std::mutex> const lock(m_mutex);
-  return find_path_internal(start, end, unit_radius);
-}
-
-auto Pathfinding::find_path_async(const Point& start,
-                                  const Point& end) -> std::future<std::vector<Point>> {
-  return std::async(std::launch::async,
-                    [this, start, end]() { return find_path(start, end); });
-}
-
-void Pathfinding::submit_path_request(std::uint64_t request_id,
-                                      const Point& start,
-                                      const Point& end) {
-  {
-    std::lock_guard<std::mutex> const lock(m_request_mutex);
-    m_request_queue.push({request_id, start, end, 0.0F});
-  }
-  m_request_condition.notify_one();
-}
-
-void Pathfinding::submit_path_request(std::uint64_t request_id,
-                                      const Point& start,
-                                      const Point& end,
-                                      float unit_radius) {
-  {
-    std::lock_guard<std::mutex> const lock(m_request_mutex);
-    m_request_queue.push({request_id, start, end, unit_radius});
-  }
-  m_request_condition.notify_one();
-}
-
-auto Pathfinding::fetch_completed_paths() -> std::vector<Pathfinding::PathResult> {
-  std::vector<PathResult> results;
-  std::lock_guard<std::mutex> const lock(m_result_mutex);
-  while (!m_result_queue.empty()) {
-    results.push_back(std::move(m_result_queue.front()));
-    m_result_queue.pop();
-  }
-  return results;
-}
-
 auto Pathfinding::find_path_internal(const Point& start,
                                      const Point& end) -> std::vector<Point> {
-  return find_path_internal(start, end, 0.0F);
-}
-
-auto Pathfinding::find_path_internal(const Point& start,
-                                     const Point& end,
-                                     float unit_radius) -> std::vector<Point> {
   ensure_working_buffers();
 
-  auto const is_walkableFunc = [this, unit_radius](int x, int y) -> bool {
-    if (unit_radius <= 0.5F) {
-      return is_walkable(x, y);
-    }
-    return is_walkable_with_radius(x, y, unit_radius);
+  auto const is_walkableFunc = [this](int x, int y) -> bool {
+    return is_walkable(x, y);
   };
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
-    Point resolved_end{};
-    if (!is_walkableFunc(start.x, start.y) ||
-        !resolve_walkable_endpoint(end, unit_radius, resolved_end)) {
+    Point resolved_start = start;
+    Point resolved_end = end;
+    if ((!is_walkableFunc(start.x, start.y) &&
+         !resolve_walkable_endpoint(start, resolved_start)) ||
+        (!is_walkableFunc(end.x, end.y) &&
+         !resolve_walkable_endpoint(end, resolved_end))) {
       return {};
     }
 
-    return find_path_internal(start, resolved_end, unit_radius);
+    if (resolved_start == start && resolved_end == end) {
+      return {};
+    }
+
+    return find_path_internal(resolved_start, resolved_end);
   }
 
   const int start_idx = to_index(start);
@@ -666,6 +478,9 @@ auto Pathfinding::find_path_internal(const Point& start,
   int iterations = 0;
 
   int final_cost = -1;
+  int best_reachable_idx = start_idx;
+  int best_reachable_h = calculate_heuristic(start, end);
+  int best_reachable_g = 0;
 
   while (!m_open_heap.empty() && iterations < max_iterations) {
     ++iterations;
@@ -682,12 +497,20 @@ auto Pathfinding::find_path_internal(const Point& start,
 
     set_closed(current.index, generation);
 
+    Point const current_point = to_point(current.index);
+    int const current_h = calculate_heuristic(current_point, end);
+    if (current_h < best_reachable_h ||
+        (current_h == best_reachable_h && current.g_cost < best_reachable_g)) {
+      best_reachable_idx = current.index;
+      best_reachable_h = current_h;
+      best_reachable_g = current.g_cost;
+    }
+
     if (current.index == end_idx) {
       final_cost = current.g_cost;
       break;
     }
 
-    const Point current_point = to_point(current.index);
     std::array<Point, 8> neighbors{};
     const std::size_t neighbor_count = collect_neighbors(current_point, neighbors);
 
@@ -695,17 +518,6 @@ auto Pathfinding::find_path_internal(const Point& start,
       const Point& neighbor = neighbors[i];
       if (!is_walkableFunc(neighbor.x, neighbor.y)) {
         continue;
-      }
-
-      if (neighbor.x != current_point.x && neighbor.y != current_point.y) {
-        bool const mandatory_traversal_transition =
-            is_mandatory_traversal_cell(current_point.x, current_point.y) ||
-            is_mandatory_traversal_cell(neighbor.x, neighbor.y);
-        if (!mandatory_traversal_transition &&
-            (!is_walkableFunc(current_point.x, neighbor.y) ||
-             !is_walkableFunc(neighbor.x, current_point.y))) {
-          continue;
-        }
       }
 
       const int neighbor_idx = to_index(neighbor);
@@ -727,7 +539,14 @@ auto Pathfinding::find_path_internal(const Point& start,
   }
 
   if (final_cost < 0) {
-    return {};
+    if (best_reachable_idx == start_idx) {
+      return {start};
+    }
+    std::vector<Point> partial_path;
+    partial_path.reserve(static_cast<std::size_t>(best_reachable_g + 1));
+    build_path(
+        start_idx, best_reachable_idx, generation, best_reachable_g + 1, partial_path);
+    return partial_path;
   }
 
   std::vector<Point> path;
@@ -737,13 +556,9 @@ auto Pathfinding::find_path_internal(const Point& start,
 }
 
 auto Pathfinding::resolve_walkable_endpoint(const Point& requested,
-                                            float unit_radius,
                                             Point& resolved) const -> bool {
-  auto const is_walkable_func = [this, unit_radius](int x, int y) -> bool {
-    if (unit_radius <= 0.5F) {
-      return is_walkable(x, y);
-    }
-    return is_walkable_with_radius(x, y, unit_radius);
+  auto const is_walkable_func = [this](int x, int y) -> bool {
+    return is_walkable(x, y);
   };
 
   if (is_walkable_func(requested.x, requested.y)) {
@@ -911,12 +726,13 @@ auto Pathfinding::collect_neighbors(const Point& point,
         continue;
       }
 
+      // No corner cutting: a diagonal step is only valid when both orthogonally
+      // adjacent cells are walkable. Otherwise the straight-line motion between
+      // the two waypoints clips the corner of a blocked cell, which the
+      // movement collision check rejects, stalling the unit on the path.
       if (dx != 0 && dy != 0) {
-        bool const mandatory_traversal_transition =
-            is_mandatory_traversal_cell(point.x, point.y) ||
-            is_mandatory_traversal_cell(x, y);
-        if (!mandatory_traversal_transition && (!is_walkable(point.x + dx, point.y) ||
-                                                !is_walkable(point.x, point.y + dy))) {
+        if (!is_walkable(point.x + dx, point.y) ||
+            !is_walkable(point.x, point.y + dy)) {
           continue;
         }
       }
@@ -1010,44 +826,11 @@ auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
   return top;
 }
 
-void Pathfinding::worker_loop() {
-  while (true) {
-    PathRequest request;
-    {
-      std::unique_lock<std::mutex> lock(m_request_mutex);
-      m_request_condition.wait(lock, [this]() {
-        return m_stop_worker.load(std::memory_order_acquire) ||
-               !m_request_queue.empty();
-      });
-
-      if (m_stop_worker.load(std::memory_order_acquire) && m_request_queue.empty()) {
-        break;
-      }
-
-      request = m_request_queue.front();
-      m_request_queue.pop();
-    }
-
-    auto path = (request.unit_radius > 0.0F)
-                    ? find_path(request.start, request.end, request.unit_radius)
-                    : find_path(request.start, request.end);
-
-    {
-      std::lock_guard<std::mutex> const lock(m_result_mutex);
-      m_result_queue.push({request.request_id, std::move(path)});
-    }
-  }
-}
-
 auto Pathfinding::find_nearest_walkable_point(const Point& point,
                                               int max_search_radius,
-                                              const Pathfinding& pathfinder,
-                                              float unit_radius) -> Point {
-  auto const is_walkableFunc = [&pathfinder, unit_radius](int x, int y) -> bool {
-    if (unit_radius <= 0.5F) {
-      return pathfinder.is_walkable(x, y);
-    }
-    return pathfinder.is_walkable_with_radius(x, y, unit_radius);
+                                              const Pathfinding& pathfinder) -> Point {
+  auto const is_walkableFunc = [&pathfinder](int x, int y) -> bool {
+    return pathfinder.is_walkable(x, y);
   };
 
   if (is_walkableFunc(point.x, point.y)) {

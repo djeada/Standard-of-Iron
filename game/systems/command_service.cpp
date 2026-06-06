@@ -1,19 +1,12 @@
 #include "command_service.h"
 
 #include <QVector3D>
-#include <qvectornd.h>
 
 #include <algorithm>
-#include <array>
-#include <atomic>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 #include <memory>
-#include <mutex>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "../core/component.h"
@@ -21,122 +14,23 @@
 #include "../game_config.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
-#include "combat_rules.h"
+#include "movement_system.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
 
 namespace {
-constexpr float same_target_threshold_sq = 0.01F;
-
-constexpr float pathfinding_request_cooldown = 1.0F;
-
-constexpr float target_movement_threshold_sq = 4.0F;
-
-constexpr int k_recovery_search_radius = 16;
-
-auto is_direct_path_walkable(const QVector3D& from,
-                             const QVector3D& to,
-                             float unit_radius) -> bool {
-  auto* pathfinder = CommandService::get_pathfinder();
-  if (pathfinder != nullptr) {
-    pathfinder->update_navigation_grid();
-    return pathfinder->is_world_segment_walkable(from, to, unit_radius);
-  }
-
-  return CommandService::is_world_position_walkable_for_radius(to, unit_radius);
+auto resolve_walkable_target(const QVector3D& target) -> QVector3D {
+  return CommandService::snap_to_walkable_ground(target, 8);
 }
 
-auto are_all_surrounding_cells_invalid(const Point& position,
-                                       float unit_radius) -> bool {
-  for (int dy = -1; dy <= 1; ++dy) {
-    for (int dx = -1; dx <= 1; ++dx) {
-      if (dx == 0 && dy == 0) {
-        continue;
-      }
+} // namespace
 
-      int const check_x = position.x + dx;
-      int const check_y = position.y + dy;
-
-      if (CommandService::is_grid_walkable_for_radius({check_x, check_y},
-                                                      unit_radius)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-auto is_walkable_for_radius(int x, int y, float unit_radius) -> bool {
-  return CommandService::is_grid_walkable_for_radius({x, y}, unit_radius);
-}
-
-auto find_recovery_cell(const Point& origin,
-                        float unit_radius,
-                        Point& recovery_cell) -> bool {
-  std::array<float, 4> const candidate_radii = {
-      unit_radius,
-      std::max(CommandService::k_unit_radius_threshold, unit_radius * 0.85F),
-      CommandService::k_unit_radius_threshold,
-      0.0F};
-
-  for (float const candidate_radius : candidate_radii) {
-    for (int radius = 1; radius <= k_recovery_search_radius; ++radius) {
-      bool found_candidate = false;
-      float best_distance_sq = std::numeric_limits<float>::infinity();
-      Point best_candidate{};
-
-      for (int dy = -radius; dy <= radius; ++dy) {
-        for (int dx = -radius; dx <= radius; ++dx) {
-          if (std::abs(dx) != radius && std::abs(dy) != radius) {
-            continue;
-          }
-
-          int const check_x = origin.x + dx;
-          int const check_y = origin.y + dy;
-          if (!is_walkable_for_radius(check_x, check_y, candidate_radius)) {
-            continue;
-          }
-
-          auto const distance_sq = static_cast<float>(dx * dx + dy * dy);
-          if (distance_sq < best_distance_sq) {
-            best_distance_sq = distance_sq;
-            best_candidate = {check_x, check_y};
-            found_candidate = true;
-          }
-        }
-      }
-
-      if (found_candidate) {
-        recovery_cell = best_candidate;
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-void clear_pending_movement_state(Engine::Core::MovementComponent* movement_component) {
-  if (movement_component == nullptr) {
-    return;
-  }
-
-  movement_component->path_pending = false;
-  movement_component->pending_request_id = 0;
-  movement_component->clear_path();
-  movement_component->vx = 0.0F;
-  movement_component->vz = 0.0F;
-  movement_component->unstuck_push_seconds = 0.0F;
-  movement_component->unstuck_push_vx = 0.0F;
-  movement_component->unstuck_push_vz = 0.0F;
-}
-
-auto simple_grid_targets(Engine::Core::World& world,
-                         const std::vector<Engine::Core::EntityID>& units,
-                         const QVector3D& center) -> std::vector<QVector3D> {
+auto CommandService::resolve_move_targets(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& units,
+    const QVector3D& center) -> std::vector<QVector3D> {
   std::vector<QVector3D> targets;
   targets.reserve(units.size());
   if (units.empty()) {
@@ -146,11 +40,8 @@ auto simple_grid_targets(Engine::Core::World& world,
   QVector3D current_center(0.0F, 0.0F, 0.0F);
   int positioned_count = 0;
   float max_radius = CommandService::k_unit_radius_threshold;
-  std::vector<float> unit_radii;
-  unit_radii.reserve(units.size());
   for (auto unit_id : units) {
     float const unit_radius = CommandService::get_unit_radius(world, unit_id);
-    unit_radii.push_back(unit_radius);
     max_radius = std::max(max_radius, unit_radius);
     auto* entity = world.get_entity(unit_id);
     auto* transform = entity != nullptr
@@ -167,6 +58,14 @@ auto simple_grid_targets(Engine::Core::World& world,
     current_center /= static_cast<float>(positioned_count);
   } else {
     current_center = center - QVector3D(0.0F, 0.0F, 1.0F);
+  }
+
+  QVector3D const center_target = resolve_walkable_target(center);
+  Point const center_grid =
+      CommandService::world_to_grid(center_target.x(), center_target.z());
+  if (!CommandService::is_grid_walkable(center_grid)) {
+    targets.assign(units.size(), center_target);
+    return targets;
   }
 
   QVector3D forward = center - current_center;
@@ -197,34 +96,23 @@ auto simple_grid_targets(Engine::Core::World& world,
     QVector3D const offset =
         right * ((static_cast<float>(col) - lane_center) * spacing) -
         forward * (static_cast<float>(row) * spacing);
-    float const unit_radius = (idx < unit_radii.size())
-                                  ? unit_radii[idx]
-                                  : CommandService::k_unit_radius_threshold;
-    targets.push_back(CommandService::snap_to_walkable_ground_for_radius(
-        center + offset, unit_radius, 8));
+    QVector3D const candidate = center + offset;
+    Point const candidate_grid =
+        CommandService::world_to_grid(candidate.x(), candidate.z());
+    if (CommandService::is_grid_walkable(candidate_grid)) {
+      targets.push_back(resolve_walkable_target(candidate));
+    } else {
+      targets.push_back(center_target);
+    }
   }
 
   return targets;
 }
 
-} // namespace
-
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
-std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
-    CommandService::s_pending_requests;
-std::unordered_map<Engine::Core::EntityID, std::uint64_t>
-    CommandService::s_entity_to_request;
-std::mutex CommandService::s_pending_mutex;
-std::atomic<std::uint64_t> CommandService::s_next_request_id{1};
 
 void CommandService::initialize(int world_width, int world_height) {
   s_pathfinder = std::make_unique<Pathfinding>(world_width, world_height);
-  {
-    std::lock_guard<std::mutex> const lock(s_pending_mutex);
-    s_pending_requests.clear();
-    s_entity_to_request.clear();
-  }
-  s_next_request_id.store(1, std::memory_order_release);
 
   float const offset_x = -(world_width * 0.5F - 0.5F);
   float const offset_z = -(world_height * 0.5F - 0.5F);
@@ -249,13 +137,9 @@ auto CommandService::grid_to_world(const Point& grid_pos) -> QVector3D {
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
 
-auto CommandService::is_grid_walkable_for_radius(const Point& grid_pos,
-                                                 float unit_radius) -> bool {
+auto CommandService::is_grid_walkable(const Point& grid_pos) -> bool {
   if (s_pathfinder != nullptr) {
     s_pathfinder->update_navigation_grid();
-    if (unit_radius > k_unit_radius_threshold) {
-      return s_pathfinder->is_walkable_with_radius(grid_pos.x, grid_pos.y, unit_radius);
-    }
     return s_pathfinder->is_walkable(grid_pos.x, grid_pos.y);
   }
 
@@ -267,29 +151,23 @@ auto CommandService::is_grid_walkable_for_radius(const Point& grid_pos,
   return true;
 }
 
-auto CommandService::is_world_position_walkable_for_radius(
-    const QVector3D& world_position, float unit_radius) -> bool {
+auto CommandService::is_world_position_walkable(const QVector3D& world_position)
+    -> bool {
   Point const grid = world_to_grid(world_position.x(), world_position.z());
-  return is_grid_walkable_for_radius(grid, unit_radius);
+  return is_grid_walkable(grid);
 }
 
-auto CommandService::find_nearest_walkable_grid(const Point& origin,
-                                                int max_search_radius,
-                                                float unit_radius)
-    -> std::optional<Point> {
+auto CommandService::find_nearest_walkable_grid(
+    const Point& origin, int max_search_radius) -> std::optional<Point> {
   if (max_search_radius < 0) {
     return std::nullopt;
   }
 
   auto is_candidate_walkable = [&](const Point& candidate) -> bool {
     if (s_pathfinder != nullptr) {
-      if (unit_radius > k_unit_radius_threshold) {
-        return s_pathfinder->is_walkable_with_radius(
-            candidate.x, candidate.y, unit_radius);
-      }
       return s_pathfinder->is_walkable(candidate.x, candidate.y);
     }
-    return is_grid_walkable_for_radius(candidate, unit_radius);
+    return is_grid_walkable(candidate);
   };
 
   if (s_pathfinder != nullptr) {
@@ -332,20 +210,18 @@ auto CommandService::find_nearest_walkable_grid(const Point& origin,
 
 auto CommandService::snap_to_walkable_ground(const QVector3D& world_position)
     -> QVector3D {
-  return snap_to_walkable_ground_for_radius(world_position, 0.0F);
+  return snap_to_walkable_ground(world_position, 24);
 }
 
-auto CommandService::snap_to_walkable_ground_for_radius(const QVector3D& world_position,
-                                                        float unit_radius,
-                                                        int max_search_radius)
-    -> QVector3D {
+auto CommandService::snap_to_walkable_ground(const QVector3D& world_position,
+                                             int max_search_radius) -> QVector3D {
   QVector3D snapped = world_position;
   auto& terrain_service = Game::Map::TerrainService::instance();
   snapped.setY(terrain_service.resolve_surface_world_y(
       snapped.x(), snapped.z(), 0.0F, snapped.y()));
 
   Point const grid = world_to_grid(snapped.x(), snapped.z());
-  auto const nearest = find_nearest_walkable_grid(grid, max_search_radius, unit_radius);
+  auto const nearest = find_nearest_walkable_grid(grid, max_search_radius);
   if (!nearest.has_value()) {
     return snapped;
   }
@@ -366,8 +242,8 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
     return plan;
   }
 
-  plan.resolved_target = snap_to_walkable_ground(target);
-  plan.positions = simple_grid_targets(world, units, plan.resolved_target);
+  plan.resolved_target = resolve_walkable_target(target);
+  plan.positions = resolve_move_targets(world, units, plan.resolved_target);
   plan.facing_angles.assign(units.size(), 0.0F);
   plan.preserve_formation_mode = false;
   if (units.size() == 1 && !plan.positions.empty()) {
@@ -405,8 +281,6 @@ void CommandService::issue_ground_move(Engine::Core::World& world,
 
   MoveOptions opts;
   opts.kind = MoveOrderKind::FormationMove;
-  opts.group_move = units.size() > 1;
-  opts.retry_individual_on_group_failure = units.size() > 1;
   opts.preserve_formation_mode = plan.preserve_formation_mode;
   move_units(world, units, plan.positions, opts);
 }
@@ -430,1019 +304,41 @@ auto CommandService::get_unit_radius(Engine::Core::World& world,
   return std::max(selection_ring_size * 0.5F, k_unit_radius_threshold);
 }
 
-auto CommandService::try_queue_local_recovery_move(
-    Engine::Core::World& world,
-    Engine::Core::EntityID entity_id,
-    const QVector3D& current_position,
-    const QVector3D& goal,
-    Engine::Core::MovementComponent* movement) -> bool {
-  auto* pathfinder = get_pathfinder();
-  if (pathfinder == nullptr || movement == nullptr) {
-    return false;
-  }
-
-  float const unit_radius = get_unit_radius(world, entity_id);
-  Point const current_grid = world_to_grid(current_position.x(), current_position.z());
-
-  Point recovery_cell{};
-  if (!find_recovery_cell(current_grid, unit_radius, recovery_cell)) {
-
-    constexpr int k_emergency_search_radius = 64;
-    auto const nearest =
-        find_nearest_walkable_grid(current_grid, k_emergency_search_radius, 0.0F);
-    if (!nearest.has_value()) {
-      return false;
-    }
-    recovery_cell = *nearest;
-  }
-
-  QVector3D const safe_pos = grid_to_world(recovery_cell);
-  float const active_target_dx = safe_pos.x() - movement->target_x;
-  float const active_target_dz = safe_pos.z() - movement->target_y;
-  if (movement->has_target &&
-      active_target_dx * active_target_dx + active_target_dz * active_target_dz <=
-          same_target_threshold_sq) {
-    return false;
-  }
-
-  clear_pending_movement_state(movement);
-  movement->target_x = safe_pos.x();
-  movement->target_y = safe_pos.z();
-  movement->goal_x = goal.x();
-  movement->goal_y = goal.z();
-  movement->has_target = true;
-  movement->repath_cooldown = 0.0F;
-  return true;
-}
-
-void CommandService::queue_repath_request(Engine::Core::World& world,
-                                          Engine::Core::EntityID entity_id,
-                                          const QVector3D& goal,
-                                          bool allow_direct_fallback) {
-  auto* entity = world.get_entity(entity_id);
-  if (entity == nullptr) {
-    return;
-  }
-
-  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-  if (movement == nullptr) {
-    return;
-  }
-
-  auto* repath = entity->get_component<Engine::Core::RepathRequestComponent>();
-  if (repath == nullptr) {
-    repath = entity->add_component<Engine::Core::RepathRequestComponent>();
-  }
-  if (repath == nullptr) {
-    return;
-  }
-
-  repath->goal_x = goal.x();
-  repath->goal_y = goal.z();
-  repath->allow_direct_fallback = allow_direct_fallback;
-}
-
-void CommandService::process_repath_requests(Engine::Core::World& world) {
-  auto entities = world.get_entities_with<Engine::Core::RepathRequestComponent>();
-  for (auto* entity : entities) {
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* repath = entity->get_component<Engine::Core::RepathRequestComponent>();
-    if (repath == nullptr) {
-      continue;
-    }
-
-    MoveOptions options;
-    options.kind = MoveOrderKind::RecoveryMove;
-    options.allow_direct_fallback = repath->allow_direct_fallback;
-    move_unit(world,
-              entity->get_id(),
-              QVector3D(repath->goal_x, 0.0F, repath->goal_y),
-              options);
-    entity->remove_component<Engine::Core::RepathRequestComponent>();
-  }
-}
-
-void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
-  std::lock_guard<std::mutex> const lock(s_pending_mutex);
-  auto it = s_entity_to_request.find(entity_id);
-  if (it == s_entity_to_request.end()) {
-    return;
-  }
-
-  std::uint64_t const request_id = it->second;
-  s_entity_to_request.erase(it);
-
-  auto pending_it = s_pending_requests.find(request_id);
-  if (pending_it == s_pending_requests.end()) {
-    return;
-  }
-
-  auto members = pending_it->second.group_members;
-  s_pending_requests.erase(pending_it);
-
-  for (auto member_id : members) {
-    auto member_entry = s_entity_to_request.find(member_id);
-    if (member_entry != s_entity_to_request.end() &&
-        member_entry->second == request_id) {
-      s_entity_to_request.erase(member_entry);
-    }
-  }
-}
-
 void CommandService::move_unit(Engine::Core::World& world,
                                Engine::Core::EntityID unit_id,
                                const QVector3D& target) {
-  move_unit(world, unit_id, target, MoveOptions{});
+  MovementSystem::issue_move(world, unit_id, target);
 }
 
 void CommandService::move_unit(Engine::Core::World& world,
                                Engine::Core::EntityID unit_id,
                                const QVector3D& target,
                                const MoveOptions& options) {
-  auto* e = world.get_entity(unit_id);
-  if (e == nullptr) {
-    return;
-  }
-
-  OrderService::prepare_for_move(e, options.kind, options.preserve_formation_mode);
-
-  auto* atk = e->get_component<Engine::Core::AttackComponent>();
-  if ((atk != nullptr) && atk->in_melee_lock &&
-      CombatRules::participates_in_rts_melee_lock(e)) {
-    return;
-  }
-
-  auto* transform = e->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  auto* mv = e->get_component<Engine::Core::MovementComponent>();
-  if (mv == nullptr) {
-    mv = e->add_component<Engine::Core::MovementComponent>();
-  }
-  if (mv == nullptr) {
-    return;
-  }
-
-  float const target_x = target.x();
-  float const target_z = target.z();
-
-  bool matched_pending = false;
-  if (mv->path_pending) {
-    std::lock_guard<std::mutex> const lock(s_pending_mutex);
-    auto request_it = s_entity_to_request.find(unit_id);
-    if (request_it != s_entity_to_request.end()) {
-      auto pending_it = s_pending_requests.find(request_it->second);
-      if (pending_it != s_pending_requests.end()) {
-        float const pdx = pending_it->second.target.x() - target_x;
-        float const pdz = pending_it->second.target.z() - target_z;
-        if (pdx * pdx + pdz * pdz <= same_target_threshold_sq) {
-          pending_it->second.options = options;
-          matched_pending = true;
-        }
-      } else {
-        s_entity_to_request.erase(request_it);
-      }
-    }
-  }
-
-  float const previous_goal_dx = mv->goal_x - target_x;
-  float const previous_goal_dz = mv->goal_y - target_z;
-  if (previous_goal_dx * previous_goal_dx + previous_goal_dz * previous_goal_dz >
-      same_target_threshold_sq) {
-    mv->last_position_x = transform->position.x;
-    mv->last_position_z = transform->position.z;
-    mv->time_stuck = 0.0F;
-    mv->unstuck_cooldown = 0.0F;
-    mv->unstuck_push_seconds = 0.0F;
-    mv->unstuck_push_vx = 0.0F;
-    mv->unstuck_push_vz = 0.0F;
-  }
-
-  mv->goal_x = target_x;
-  mv->goal_y = target_z;
-
-  if (matched_pending) {
-    return;
-  }
-
-  bool should_suppress_path_request = false;
-  if (mv->time_since_last_path_request < pathfinding_request_cooldown) {
-    float const last_goal_dx = mv->last_goal_x - target_x;
-    float const last_goal_dz = mv->last_goal_y - target_z;
-    float const goal_movement_sq =
-        last_goal_dx * last_goal_dx + last_goal_dz * last_goal_dz;
-
-    if (goal_movement_sq < target_movement_threshold_sq) {
-      should_suppress_path_request = true;
-
-      if (mv->has_target || mv->path_pending) {
-        return;
-      }
-    }
-  }
-
-  if (!mv->path_pending) {
-    bool const current_target_matches = mv->has_target && !mv->has_waypoints();
-    if (current_target_matches) {
-      float const dx = mv->target_x - target_x;
-      float const dz = mv->target_y - target_z;
-      if (dx * dx + dz * dz <= same_target_threshold_sq) {
-        return;
-      }
-    }
-
-    if (!mv->path.empty()) {
-      const auto& last_waypoint = mv->path.back();
-      float const dx = last_waypoint.first - target_x;
-      float const dz = last_waypoint.second - target_z;
-      if (dx * dx + dz * dz <= same_target_threshold_sq) {
-        return;
-      }
-    }
-  }
-
-  if (s_pathfinder) {
-    float const unit_radius = get_unit_radius(world, unit_id);
-    Point const start = world_to_grid(transform->position.x, transform->position.z);
-    Point const end = world_to_grid(target.x(), target.z());
-
-    if (start == end) {
-      mv->target_x = target_x;
-      mv->target_y = target_z;
-      mv->has_target = true;
-      mv->clear_path();
-      mv->path_pending = false;
-      mv->pending_request_id = 0;
-      mv->vx = 0.0F;
-      mv->vz = 0.0F;
-      clear_pending_request(unit_id);
-      return;
-    }
-
-    int const dx = std::abs(end.x - start.x);
-    int const dz = std::abs(end.y - start.y);
-    QVector3D const current_pos(transform->position.x, 0.0F, transform->position.z);
-    bool const use_direct_path =
-        ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-        is_direct_path_walkable(current_pos, target, unit_radius);
-
-    if (use_direct_path) {
-      mv->target_x = target_x;
-      mv->target_y = target_z;
-      mv->has_target = true;
-      mv->clear_path();
-      mv->path_pending = false;
-      mv->pending_request_id = 0;
-      mv->vx = 0.0F;
-      mv->vz = 0.0F;
-      clear_pending_request(unit_id);
-
-      mv->time_since_last_path_request = 0.0F;
-      mv->last_goal_x = target_x;
-      mv->last_goal_y = target_z;
-    } else {
-      bool skip_new_request = false;
-      {
-        std::lock_guard<std::mutex> const lock(s_pending_mutex);
-        auto existing_it = s_entity_to_request.find(unit_id);
-        if (existing_it != s_entity_to_request.end()) {
-          auto pending_it = s_pending_requests.find(existing_it->second);
-          if (pending_it != s_pending_requests.end()) {
-            float const dx = pending_it->second.target.x() - target_x;
-            float const dz = pending_it->second.target.z() - target_z;
-            if (dx * dx + dz * dz <= same_target_threshold_sq) {
-              pending_it->second.options = options;
-              skip_new_request = true;
-            } else {
-              s_pending_requests.erase(pending_it);
-              s_entity_to_request.erase(existing_it);
-            }
-          } else {
-            s_entity_to_request.erase(existing_it);
-          }
-        }
-      }
-
-      if (skip_new_request) {
-        return;
-      }
-
-      mv->clear_path();
-      mv->has_target = options.allow_direct_fallback;
-      if (options.allow_direct_fallback) {
-        mv->target_x = target_x;
-        mv->target_y = target_z;
-      }
-      mv->vx = 0.0F;
-      mv->vz = 0.0F;
-      mv->path_pending = true;
-
-      std::uint64_t const request_id =
-          s_next_request_id.fetch_add(1, std::memory_order_relaxed);
-      mv->pending_request_id = request_id;
-
-      {
-        std::lock_guard<std::mutex> const lock(s_pending_mutex);
-        PendingPathRequest pending;
-        pending.entity_id = unit_id;
-        pending.target = target;
-        pending.options = options;
-        pending.unit_radius = unit_radius;
-        s_pending_requests[request_id] = std::move(pending);
-        s_entity_to_request[unit_id] = request_id;
-      }
-
-      s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
-      mv->time_since_last_path_request = 0.0F;
-      mv->last_goal_x = target_x;
-      mv->last_goal_y = target_z;
-    }
-  } else {
-    mv->target_x = target_x;
-    mv->target_y = target_z;
-    mv->has_target = true;
-    mv->clear_path();
-    mv->path_pending = false;
-    mv->pending_request_id = 0;
-    mv->vx = 0.0F;
-    mv->vz = 0.0F;
-    clear_pending_request(unit_id);
-  }
+  MovementSystem::issue_move(world, unit_id, target, options);
 }
 
 void CommandService::move_units(Engine::Core::World& world,
                                 const std::vector<Engine::Core::EntityID>& units,
                                 const std::vector<QVector3D>& targets) {
-  move_units(world, units, targets, MoveOptions{});
+  MovementSystem::issue_move_units(world, units, targets);
 }
 
 void CommandService::move_units(Engine::Core::World& world,
                                 const std::vector<Engine::Core::EntityID>& units,
                                 const std::vector<QVector3D>& targets,
                                 const MoveOptions& options) {
-  if (units.size() != targets.size()) {
-    return;
-  }
-
-  if (options.group_move && units.size() > 1) {
-    move_group(world, units, targets, options);
-    return;
-  }
-
-  for (std::size_t i = 0; i < units.size(); ++i) {
-    move_unit(world, units[i], targets[i], options);
-  }
+  MovementSystem::issue_move_units(world, units, targets, options);
 }
 
 void CommandService::move_units(Engine::Core::World& world,
                                 const std::vector<MoveIntent>& intents) {
-  move_units(world, intents, MoveOptions{});
+  MovementSystem::issue_move_units(world, intents);
 }
 
 void CommandService::move_units(Engine::Core::World& world,
                                 const std::vector<MoveIntent>& intents,
                                 const MoveOptions& options) {
-  if (options.group_move && intents.size() > 1) {
-    std::vector<Engine::Core::EntityID> unit_ids;
-    std::vector<QVector3D> move_targets;
-    unit_ids.reserve(intents.size());
-    move_targets.reserve(intents.size());
-
-    for (const auto& intent : intents) {
-      unit_ids.push_back(intent.unit_id);
-      move_targets.push_back(intent.target);
-    }
-
-    move_units(world, unit_ids, move_targets, options);
-    return;
-  }
-
-  for (const auto& intent : intents) {
-    move_unit(world, intent.unit_id, intent.target, options);
-  }
-}
-
-void CommandService::move_group(Engine::Core::World& world,
-                                const std::vector<Engine::Core::EntityID>& units,
-                                const std::vector<QVector3D>& targets,
-                                const MoveOptions& options) {
-  struct MemberInfo {
-    Engine::Core::EntityID id;
-    Engine::Core::Entity* entity;
-    Engine::Core::TransformComponent* transform;
-    Engine::Core::MovementComponent* movement;
-    QVector3D target;
-    bool is_engaged;
-    float speed;
-    Game::Units::SpawnType spawn_type;
-    float unit_radius;
-    float distance_to_target;
-  };
-
-  std::vector<MemberInfo> members;
-  members.reserve(units.size());
-
-  for (size_t i = 0; i < units.size(); ++i) {
-    auto* entity = world.get_entity(units[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
-      continue;
-    }
-
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (movement == nullptr) {
-      movement = entity->add_component<Engine::Core::MovementComponent>();
-    }
-    if (movement == nullptr) {
-      continue;
-    }
-
-    OrderService::prepare_for_move(
-        entity, options.kind, options.preserve_formation_mode);
-    bool const engaged =
-        entity->get_component<Engine::Core::AttackTargetComponent>() != nullptr;
-
-    auto* unit_component = entity->get_component<Engine::Core::UnitComponent>();
-    float const member_speed =
-        (unit_component != nullptr) ? std::max(0.1F, unit_component->speed) : 1.0F;
-    Game::Units::SpawnType const spawn_type = (unit_component != nullptr)
-                                                  ? unit_component->spawn_type
-                                                  : Game::Units::SpawnType::Archer;
-    float const member_radius = get_unit_radius(world, units[i]);
-
-    members.push_back({units[i],
-                       entity,
-                       transform,
-                       movement,
-                       targets[i],
-                       engaged,
-                       member_speed,
-                       spawn_type,
-                       member_radius,
-                       0.0F});
-  }
-
-  if (members.empty()) {
-    return;
-  }
-
-  if (members.size() == 1) {
-    std::vector<Engine::Core::EntityID> const single_unit = {members[0].id};
-    std::vector<QVector3D> const single_target = {members[0].target};
-    MoveOptions single_options = options;
-    single_options.group_move = false;
-    move_units(world, single_unit, single_target, single_options);
-    return;
-  }
-
-  std::vector<MemberInfo> moving_members;
-  std::vector<MemberInfo> engaged_members;
-
-  for (const auto& member : members) {
-    if (member.is_engaged) {
-      engaged_members.push_back(member);
-    } else {
-      moving_members.push_back(member);
-    }
-  }
-
-  if (moving_members.empty()) {
-    return;
-  }
-
-  if (moving_members.size() > 1) {
-    QVector3D target_center(0.0F, 0.0F, 0.0F);
-    std::vector<Engine::Core::EntityID> moving_ids;
-    moving_ids.reserve(moving_members.size());
-    for (const auto& member : moving_members) {
-      target_center += member.target;
-      moving_ids.push_back(member.id);
-    }
-    target_center /= static_cast<float>(moving_members.size());
-
-    auto grid_targets = simple_grid_targets(world, moving_ids, target_center);
-    if (grid_targets.size() == moving_members.size()) {
-      for (std::size_t idx = 0; idx < moving_members.size(); ++idx) {
-        moving_members[idx].target = grid_targets[idx];
-      }
-    }
-  }
-
-  if (s_pathfinder) {
-    bool any_target_invalid = false;
-    for (const auto& member : moving_members) {
-      Point const target_grid = world_to_grid(member.target.x(), member.target.z());
-
-      if (target_grid.x < 0 || target_grid.y < 0) {
-        any_target_invalid = true;
-        break;
-      }
-
-      if (!is_grid_walkable_for_radius(target_grid, member.unit_radius)) {
-        any_target_invalid = true;
-        break;
-      }
-    }
-
-    if (any_target_invalid) {
-      return;
-    }
-  }
-
-  members = moving_members;
-
-  if (members.empty()) {
-    return;
-  }
-
-  QVector3D target_centroid(0.0F, 0.0F, 0.0F);
-  QVector3D position_centroid(0.0F, 0.0F, 0.0F);
-  float speed_sum = 0.0F;
-  for (auto& member : members) {
-    target_centroid += member.target;
-    position_centroid +=
-        QVector3D(member.transform->position.x, 0.0F, member.transform->position.z);
-    speed_sum += member.speed;
-  }
-
-  target_centroid /= static_cast<float>(members.size());
-  position_centroid /= static_cast<float>(members.size());
-
-  float target_distance_sum = 0.0F;
-  float max_target_distance = 0.0F;
-  float centroid_distance_sum = 0.0F;
-  for (auto& member : members) {
-    QVector3D const current_pos(
-        member.transform->position.x, 0.0F, member.transform->position.z);
-    float const to_target = (current_pos - member.target).length();
-    float const to_centroid = (current_pos - position_centroid).length();
-
-    member.distance_to_target = to_target;
-    target_distance_sum += to_target;
-    centroid_distance_sum += to_centroid;
-    max_target_distance = std::max(max_target_distance, to_target);
-  }
-
-  float const avg_target_distance =
-      members.empty() ? 0.0F : target_distance_sum / static_cast<float>(members.size());
-  float const avg_scatter =
-      members.empty() ? 0.0F
-                      : centroid_distance_sum / static_cast<float>(members.size());
-  float const avg_speed =
-      members.empty() ? 0.0F : speed_sum / static_cast<float>(members.size());
-
-  float const near_threshold = std::clamp(avg_target_distance * 0.5F, 4.0F, 12.0F);
-  if (max_target_distance <= near_threshold) {
-    MoveOptions direct_options = options;
-    direct_options.group_move = false;
-
-    std::vector<Engine::Core::EntityID> direct_ids;
-    std::vector<QVector3D> direct_targets;
-    direct_ids.reserve(members.size());
-    direct_targets.reserve(members.size());
-
-    for (const auto& member : members) {
-      direct_ids.push_back(member.id);
-      direct_targets.push_back(member.target);
-    }
-
-    move_units(world, direct_ids, direct_targets, direct_options);
-    return;
-  }
-
-  float const scatter_threshold = std::max(avg_scatter, 2.5F);
-
-  std::vector<MemberInfo> regroup_members;
-  std::vector<MemberInfo> direct_members;
-  regroup_members.reserve(members.size());
-  direct_members.reserve(members.size());
-
-  for (const auto& member : members) {
-    QVector3D const current_pos(
-        member.transform->position.x, 0.0F, member.transform->position.z);
-    float const to_target = member.distance_to_target;
-    float const to_centroid = (current_pos - position_centroid).length();
-    bool const near_destination = to_target <= near_threshold;
-    bool const far_from_group = to_centroid > scatter_threshold * 1.5F;
-    bool const fast_unit = member.speed >= avg_speed + 0.5F ||
-                           member.spawn_type == Game::Units::SpawnType::MountedKnight;
-
-    bool should_advance = near_destination;
-    if (!should_advance && fast_unit && to_target <= near_threshold * 1.5F) {
-      should_advance = true;
-    }
-    if (!should_advance && far_from_group && to_target <= near_threshold * 2.0F) {
-      should_advance = true;
-    }
-
-    if (should_advance) {
-      direct_members.push_back(member);
-    } else {
-      regroup_members.push_back(member);
-    }
-  }
-
-  if (!direct_members.empty()) {
-    MoveOptions direct_options = options;
-    direct_options.group_move = false;
-
-    std::vector<Engine::Core::EntityID> direct_ids;
-    std::vector<QVector3D> direct_targets;
-    direct_ids.reserve(direct_members.size());
-    direct_targets.reserve(direct_members.size());
-
-    for (const auto& member : direct_members) {
-      direct_ids.push_back(member.id);
-      direct_targets.push_back(member.target);
-    }
-
-    move_units(world, direct_ids, direct_targets, direct_options);
-  }
-
-  if (regroup_members.size() <= 1) {
-    if (!regroup_members.empty()) {
-      MoveOptions direct_options = options;
-      direct_options.group_move = false;
-      std::vector<Engine::Core::EntityID> const single_ids = {
-          regroup_members.front().id};
-      std::vector<QVector3D> const single_targets = {regroup_members.front().target};
-      move_units(world, single_ids, single_targets, direct_options);
-    }
-    return;
-  }
-
-  members = std::move(regroup_members);
-
-  QVector3D average(0.0F, 0.0F, 0.0F);
-  for (const auto& member : members) {
-    average += member.target;
-  }
-  average /= static_cast<float>(members.size());
-
-  std::size_t leader_index = 0;
-  float best_dist_sq = std::numeric_limits<float>::infinity();
-  for (std::size_t i = 0; i < members.size(); ++i) {
-    float const dist_sq = (members[i].target - average).lengthSquared();
-    if (dist_sq < best_dist_sq) {
-      best_dist_sq = dist_sq;
-      leader_index = i;
-    }
-  }
-
-  auto& leader = members[leader_index];
-  QVector3D const leader_target = leader.target;
-  float const shared_path_radius = [&members]() -> float {
-    float max_member_radius = k_unit_radius_threshold;
-    for (const auto& member : members) {
-      max_member_radius = std::max(max_member_radius, member.unit_radius);
-    }
-    return max_member_radius;
-  }();
-
-  std::vector<MemberInfo*> units_needing_new_path;
-
-  for (auto& member : members) {
-    auto* mv = member.movement;
-
-    mv->goal_x = member.target.x();
-    mv->goal_y = member.target.z();
-
-    clear_pending_request(member.id);
-    mv->target_x = member.transform->position.x;
-    mv->target_y = member.transform->position.z;
-    mv->has_target = false;
-    mv->vx = 0.0F;
-    mv->vz = 0.0F;
-    mv->clear_path();
-    mv->path_pending = false;
-    mv->pending_request_id = 0;
-    units_needing_new_path.push_back(&member);
-  }
-
-  if (units_needing_new_path.empty()) {
-    return;
-  }
-
-  if (!s_pathfinder) {
-    for (auto* member : units_needing_new_path) {
-      member->movement->target_x = member->target.x();
-      member->movement->target_y = member->target.z();
-      member->movement->has_target = true;
-    }
-    return;
-  }
-
-  Point const start =
-      world_to_grid(leader.transform->position.x, leader.transform->position.z);
-  Point const end = world_to_grid(leader_target.x(), leader_target.z());
-
-  if (start == end) {
-    for (auto* member : units_needing_new_path) {
-      member->movement->target_x = member->target.x();
-      member->movement->target_y = member->target.z();
-      member->movement->has_target = true;
-    }
-    return;
-  }
-
-  int const dx = std::abs(end.x - start.x);
-  int const dz = std::abs(end.y - start.y);
-  QVector3D const leader_pos(
-      leader.transform->position.x, 0.0F, leader.transform->position.z);
-  bool const use_direct_path =
-      ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-      is_direct_path_walkable(leader_pos, leader_target, shared_path_radius);
-
-  if (use_direct_path) {
-    for (auto* member : units_needing_new_path) {
-      member->movement->target_x = member->target.x();
-      member->movement->target_y = member->target.z();
-      member->movement->has_target = true;
-
-      member->movement->time_since_last_path_request = 0.0F;
-      member->movement->last_goal_x = member->target.x();
-      member->movement->last_goal_y = member->target.z();
-    }
-    return;
-  }
-
-  std::uint64_t const request_id =
-      s_next_request_id.fetch_add(1, std::memory_order_relaxed);
-
-  for (auto* member : units_needing_new_path) {
-    member->movement->path_pending = true;
-    member->movement->pending_request_id = request_id;
-
-    member->movement->time_since_last_path_request = 0.0F;
-    member->movement->last_goal_x = member->target.x();
-    member->movement->last_goal_y = member->target.z();
-  }
-
-  PendingPathRequest pending;
-  pending.entity_id = leader.id;
-  pending.target = leader_target;
-  pending.options = options;
-  pending.unit_radius = shared_path_radius;
-  pending.group_members.reserve(units_needing_new_path.size());
-  pending.group_targets.reserve(units_needing_new_path.size());
-  for (const auto* member : units_needing_new_path) {
-    pending.group_members.push_back(member->id);
-    pending.group_targets.push_back(member->target);
-  }
-
-  {
-    std::lock_guard<std::mutex> const lock(s_pending_mutex);
-    s_pending_requests[request_id] = std::move(pending);
-    for (const auto* member : units_needing_new_path) {
-      s_entity_to_request[member->id] = request_id;
-    }
-  }
-
-  s_pathfinder->submit_path_request(request_id, start, end, shared_path_radius);
-}
-
-void CommandService::process_path_results(Engine::Core::World& world) {
-  if (!s_pathfinder) {
-    return;
-  }
-
-  auto results = s_pathfinder->fetch_completed_paths();
-  if (results.empty()) {
-    return;
-  }
-
-  for (auto& result : results) {
-    PendingPathRequest request_info;
-    bool found = false;
-
-    {
-      std::lock_guard<std::mutex> const lock(s_pending_mutex);
-      auto pending_it = s_pending_requests.find(result.request_id);
-      if (pending_it != s_pending_requests.end()) {
-        request_info = pending_it->second;
-        s_pending_requests.erase(pending_it);
-
-        found = true;
-      }
-    }
-
-    if (!found) {
-      continue;
-    }
-
-    std::vector<Point> const resolved_path = std::move(result.path);
-
-    const auto& path_points = resolved_path;
-
-    const float skip_threshold_sq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
-    const bool has_path = path_points.size() > 1;
-
-    auto remove_entry = [&](Engine::Core::EntityID id) {
-      auto entry = s_entity_to_request.find(id);
-      if (entry != s_entity_to_request.end() && entry->second == result.request_id) {
-        s_entity_to_request.erase(entry);
-      }
-    };
-
-    {
-      std::lock_guard<std::mutex> const lock(s_pending_mutex);
-      remove_entry(request_info.entity_id);
-      for (auto member_id : request_info.group_members) {
-        remove_entry(member_id);
-      }
-    }
-
-    if (resolved_path.empty() && request_info.options.group_move &&
-        request_info.options.retry_individual_on_group_failure &&
-        !request_info.group_members.empty()) {
-      MoveOptions individual_options = request_info.options;
-      individual_options.group_move = false;
-
-      std::vector<Engine::Core::EntityID> retry_ids;
-      std::vector<QVector3D> retry_targets;
-      retry_ids.reserve(request_info.group_members.size() + 1);
-      retry_targets.reserve(request_info.group_members.size() + 1);
-
-      auto add_retry_target = [&](Engine::Core::EntityID member_id,
-                                  const QVector3D& target) {
-        if (std::find(retry_ids.begin(), retry_ids.end(), member_id) !=
-            retry_ids.end()) {
-          return;
-        }
-
-        auto* member_entity = world.get_entity(member_id);
-        if (member_entity == nullptr) {
-          return;
-        }
-
-        auto* movement_component =
-            member_entity->get_component<Engine::Core::MovementComponent>();
-        if (movement_component == nullptr) {
-          return;
-        }
-
-        clear_pending_movement_state(movement_component);
-        movement_component->has_target = false;
-        OrderService::clear_player_order_intent(member_entity);
-        retry_ids.push_back(member_id);
-        retry_targets.push_back(target);
-      };
-
-      add_retry_target(request_info.entity_id, request_info.target);
-      for (std::size_t idx = 0; idx < request_info.group_members.size(); ++idx) {
-        QVector3D const target = (idx < request_info.group_targets.size())
-                                     ? request_info.group_targets[idx]
-                                     : request_info.target;
-        add_retry_target(request_info.group_members[idx], target);
-      }
-
-      if (!retry_ids.empty()) {
-        move_units(world, retry_ids, retry_targets, individual_options);
-      }
-      continue;
-    }
-
-    auto apply_to_member = [&](Engine::Core::EntityID member_id,
-                               const QVector3D& target,
-                               const QVector3D& offset) {
-      auto* member_entity = world.get_entity(member_id);
-      if (member_entity == nullptr) {
-        return;
-      }
-
-      auto* movement_component =
-          member_entity->get_component<Engine::Core::MovementComponent>();
-      if (movement_component == nullptr) {
-        return;
-      }
-
-      auto* member_transform =
-          member_entity->get_component<Engine::Core::TransformComponent>();
-      if (member_transform == nullptr) {
-        return;
-      }
-
-      float const member_unit_radius = get_unit_radius(world, member_id);
-
-      if (!movement_component->path_pending ||
-          movement_component->pending_request_id != result.request_id) {
-        clear_pending_movement_state(movement_component);
-        return;
-      }
-
-      clear_pending_movement_state(movement_component);
-      movement_component->goal_x = target.x();
-      movement_component->goal_y = target.z();
-
-      if (has_path) {
-        movement_component->path.reserve(path_points.size() - 1);
-        for (size_t idx = 1; idx < path_points.size(); ++idx) {
-          QVector3D waypoint;
-          if (s_pathfinder != nullptr) {
-            waypoint =
-                s_pathfinder->path_waypoint_world_position(path_points[idx], offset);
-          } else {
-            waypoint = grid_to_world(path_points[idx]) + offset;
-          }
-          movement_component->path.emplace_back(waypoint.x(), waypoint.z());
-        }
-
-        while (movement_component->has_waypoints()) {
-          const auto& wp = movement_component->current_waypoint();
-          float const dx = wp.first - member_transform->position.x;
-          float const dz = wp.second - member_transform->position.z;
-          if (dx * dx + dz * dz <= skip_threshold_sq) {
-            movement_component->advance_waypoint();
-          } else {
-            break;
-          }
-        }
-
-        if (movement_component->has_waypoints()) {
-          const auto& wp = movement_component->current_waypoint();
-          movement_component->target_x = wp.first;
-          movement_component->target_y = wp.second;
-          movement_component->has_target = true;
-          return;
-        }
-      }
-
-      if (!has_path && s_pathfinder) {
-        Point const current_grid =
-            world_to_grid(member_transform->position.x, member_transform->position.z);
-
-        bool const current_cell_invalid =
-            !is_grid_walkable_for_radius(current_grid, member_unit_radius);
-
-        if (current_cell_invalid) {
-          QVector3D const current_position(
-              member_transform->position.x, 0.0F, member_transform->position.z);
-          if (try_queue_local_recovery_move(
-                  world, member_id, current_position, target, movement_component)) {
-            return;
-          }
-          movement_component->has_target = false;
-          OrderService::clear_player_order_intent(member_entity);
-          return;
-        }
-
-        if (are_all_surrounding_cells_invalid(current_grid, member_unit_radius)) {
-          QVector3D const current_position(
-              member_transform->position.x, 0.0F, member_transform->position.z);
-          if (try_queue_local_recovery_move(
-                  world, member_id, current_position, target, movement_component)) {
-            return;
-          }
-          movement_component->has_target = false;
-          OrderService::clear_player_order_intent(member_entity);
-          return;
-        }
-      }
-
-      if (request_info.options.allow_direct_fallback) {
-        movement_component->target_x = target.x();
-        movement_component->target_y = target.z();
-        movement_component->has_target = true;
-      } else {
-        movement_component->has_target = false;
-        OrderService::clear_player_order_intent(member_entity);
-      }
-    };
-
-    QVector3D leader_target = request_info.target;
-    std::vector<Engine::Core::EntityID> processed;
-    processed.reserve(request_info.group_members.size() + 1);
-
-    auto add_member = [&](Engine::Core::EntityID id, const QVector3D& target) {
-      if (std::find(processed.begin(), processed.end(), id) != processed.end()) {
-        return;
-      }
-      QVector3D const offset = target - leader_target;
-      apply_to_member(id, target, offset);
-      processed.push_back(id);
-    };
-
-    add_member(request_info.entity_id, leader_target);
-
-    if (!request_info.group_members.empty()) {
-      const std::size_t count = request_info.group_members.size();
-      for (std::size_t idx = 0; idx < count; ++idx) {
-        auto member_id = request_info.group_members[idx];
-        QVector3D const target = (idx < request_info.group_targets.size())
-                                     ? request_info.group_targets[idx]
-                                     : leader_target;
-        add_member(member_id, target);
-      }
-    }
-  }
+  MovementSystem::issue_move_units(world, intents, options);
 }
 
 void CommandService::attack_target(Engine::Core::World& world,
@@ -1521,7 +417,7 @@ void CommandService::attack_target(Engine::Core::World& world,
     attack_center = target_pos + away_from_target * desired_distance;
   }
   std::vector<QVector3D> attack_grid =
-      should_chase ? simple_grid_targets(world, units, attack_center)
+      should_chase ? resolve_move_targets(world, units, attack_center)
                    : std::vector<QVector3D>{};
 
   for (std::size_t index = 0; index < units.size(); ++index) {
@@ -1558,7 +454,6 @@ void CommandService::attack_target(Engine::Core::World& world,
 
     CommandService::MoveOptions opts;
     opts.kind = MoveOrderKind::AttackChase;
-    opts.allow_direct_fallback = true;
     CommandService::move_unit(world, unit_id, desired_pos, opts);
   }
 }

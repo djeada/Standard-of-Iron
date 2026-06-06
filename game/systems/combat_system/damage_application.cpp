@@ -468,11 +468,7 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
     }
 
     if (auto* movement = target->get_component<Engine::Core::MovementComponent>()) {
-      movement->has_target = false;
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-      movement->clear_path();
-      movement->path_pending = false;
+      movement->stop();
     }
 
     auto* attack = target->get_component<Engine::Core::AttackComponent>();

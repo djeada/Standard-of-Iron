@@ -142,15 +142,15 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
 
     float movement_speed_sq = 0.0F;
     if (movement != nullptr) {
-      movement_speed_sq = movement->vx * movement->vx + movement->vz * movement->vz;
+      movement_speed_sq = movement->get_vx() * movement->get_vx() +
+                          movement->get_vz() * movement->get_vz();
     }
     bool const has_component_velocity =
         movement_speed_sq > k_motion_velocity_epsilon_sq;
 
     bool const has_active_navigation_segment =
         movement != nullptr &&
-        (movement->has_target || movement->has_waypoints() || movement->path_pending ||
-         movement->pending_request_id != 0);
+        (movement->get_has_target() || movement->has_waypoints());
     bool const has_navigation_intent =
         has_active_navigation_segment || has_component_velocity;
 
@@ -190,8 +190,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     motion->displacement_x = displacement_x;
     motion->displacement_z = displacement_z;
     if (has_component_velocity && movement != nullptr) {
-      motion->velocity_x = movement->vx;
-      motion->velocity_z = movement->vz;
+      motion->velocity_x = movement->get_vx();
+      motion->velocity_z = movement->get_vz();
       motion->speed = std::sqrt(movement_speed_sq);
     } else if (displaced) {
       motion->velocity_x = displacement_x / safe_dt;
@@ -218,9 +218,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
       motion->movement_target_x = waypoint.first;
       motion->movement_target_z = waypoint.second;
       motion->has_movement_target = true;
-    } else if (movement != nullptr && movement->has_target) {
-      motion->movement_target_x = movement->target_x;
-      motion->movement_target_z = movement->target_y;
+    } else if (movement != nullptr && movement->get_has_target()) {
+      motion->movement_target_x = movement->get_target_x();
+      motion->movement_target_z = movement->get_target_y();
       motion->has_movement_target = true;
     } else if (motion->has_chase_intent && attack_target != nullptr) {
       if (auto* target = world.get_entity(attack_target->target_id)) {
@@ -233,8 +233,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     }
 
     if (has_component_velocity && movement != nullptr) {
-      motion->direction_x = movement->vx;
-      motion->direction_z = movement->vz;
+      motion->direction_x = movement->get_vx();
+      motion->direction_z = movement->get_vz();
     } else if (displaced) {
       motion->direction_x = displacement_x;
       motion->direction_z = displacement_z;

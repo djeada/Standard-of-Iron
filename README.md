@@ -14,7 +14,7 @@ Primary focus is army management and tactical strategy.
 
 The game logic layer follows an *Entity-Component-System* architecture. This separates data storage from processing logic, making it easier to add new gameplay features without rewriting existing systems.
 
-* When units receive movement orders, the *pathfinding* module computes grid-based routes that avoid obstacles and respect formation spacing. This prevents units from overlapping or clipping through structures.
+* When units receive movement orders, the *pathfinding* module computes grid-based routes through walkable cells. Formation spacing is applied only when initial targets are assigned; each unit then follows its own path.
 * Damage resolution is handled by a dedicated *combat system*. It calculates hit detection, applies damage, and triggers death handling. Without these steps, units could become immortal or fail silently during combat.
 * A centralized *AI director* evaluates threats, issues build orders, and coordinates attacks. If disabled, opponents become passive and stop producing troops or responding to incursions.
 * Buildings with production capability maintain a *spawn queue* that respects population caps and production timers, ensuring that rapid clicking cannot bypass recruitment limits.
@@ -212,7 +212,7 @@ The engine uses an *Entity-Component-System* pattern to decouple data from logic
 
 * `TransformComponent` stores world-space position, rotation, and scale. Without it, an entity cannot be rendered or participate in spatial logic.
 * `UnitComponent` stores health, faction, speed, damage, and unit type. It is the primary marker for combatants.
-* `MovementComponent` tracks the target position, current velocity, and pathfinding state. Clearing it stops the unit.
+* `MovementComponent` tracks only target/goal position, current velocity, and assigned waypoints. Clearing it stops the unit.
 * `AttackTargetComponent` references the target entity, attack range, and cooldown timer. Removing it cancels an ongoing attack.
 * `PatrolComponent` contains the waypoint list, current index, and aggro radius. Patrol behavior is disabled if the waypoint list is empty.
 * `ProductionComponent` manages the build queue, spawn timer, and rally point position. Buildings without this component cannot train units.
@@ -221,7 +221,7 @@ The engine uses an *Entity-Component-System* pattern to decouple data from logic
 **System execution order per frame:**
 
 1. *ArrowSystem* updates projectile positions and triggers hit detection.
-2. *MovementSystem* advances units toward their targets and recalculates paths when blocked.
+2. *MovementSystem* advances units along their assigned path, recovers units that are inside invalid cells, and stops only for explicit movement overrides or arrival.
 3. *PatrolSystem* cycles waypoints and scans for enemies within aggro range.
 4. *CombatSystem* executes attacks, applies damage, and removes dead entities.
 5. *AISystem* evaluates strategic state and issues commands to AI-owned units.

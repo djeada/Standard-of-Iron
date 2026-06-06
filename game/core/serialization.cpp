@@ -183,14 +183,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     movement_obj["goal_y"] = movement->goal_y;
     movement_obj["vx"] = movement->vx;
     movement_obj["vz"] = movement->vz;
-    movement_obj["path_pending"] = movement->path_pending;
-    movement_obj["pending_request_id"] =
-        static_cast<qint64>(movement->pending_request_id);
-    movement_obj["repath_cooldown"] = movement->repath_cooldown;
-    movement_obj["last_goal_x"] = movement->last_goal_x;
-    movement_obj["last_goal_y"] = movement->last_goal_y;
-    movement_obj["time_since_last_path_request"] =
-        movement->time_since_last_path_request;
     movement_obj["path_index"] = static_cast<int>(movement->path_index);
 
     QJsonArray path_array;
@@ -201,10 +193,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
       path_array.append(waypoint_obj);
     }
     movement_obj["path"] = path_array;
-    movement_obj["last_position_x"] = static_cast<double>(movement->last_position_x);
-    movement_obj["last_position_z"] = static_cast<double>(movement->last_position_z);
-    movement_obj["time_stuck"] = static_cast<double>(movement->time_stuck);
-    movement_obj["unstuck_cooldown"] = static_cast<double>(movement->unstuck_cooldown);
     entity_obj["movement"] = movement_obj;
   }
 
@@ -772,16 +760,6 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     movement->goal_y = static_cast<float>(movement_obj["goal_y"].toDouble());
     movement->vx = static_cast<float>(movement_obj["vx"].toDouble());
     movement->vz = static_cast<float>(movement_obj["vz"].toDouble());
-    movement->path_pending = movement_obj["path_pending"].toBool(false);
-    movement->pending_request_id = static_cast<std::uint64_t>(
-        movement_obj["pending_request_id"].toVariant().toULongLong());
-    movement->repath_cooldown =
-        static_cast<float>(movement_obj["repath_cooldown"].toDouble());
-    movement->last_goal_x = static_cast<float>(movement_obj["last_goal_x"].toDouble());
-    movement->last_goal_y = static_cast<float>(movement_obj["last_goal_y"].toDouble());
-    movement->time_since_last_path_request =
-        static_cast<float>(movement_obj["time_since_last_path_request"].toDouble());
-
     movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());
@@ -797,13 +775,9 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     }
 
     movement->validate_path_index();
-    movement->last_position_x =
-        static_cast<float>(movement_obj["last_position_x"].toDouble(0.0));
-    movement->last_position_z =
-        static_cast<float>(movement_obj["last_position_z"].toDouble(0.0));
-    movement->time_stuck = static_cast<float>(movement_obj["time_stuck"].toDouble(0.0));
-    movement->unstuck_cooldown =
-        static_cast<float>(movement_obj["unstuck_cooldown"].toDouble(0.0));
+    if (!movement->has_target) {
+      movement->clear_path();
+    }
   }
 
   if (json.contains("player_order_intent")) {

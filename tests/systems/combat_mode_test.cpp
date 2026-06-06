@@ -20,6 +20,7 @@
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
 #include "systems/rpg_combat_system/rpg_commander_damage.h"
+#include "tests/support/movement_test_access.h"
 #include "units/troop_config.h"
 
 using namespace Engine::Core;
@@ -172,30 +173,30 @@ TEST_F(CombatModeTest, ManualMoveSuppressesRangedOpportunisticAttackStop) {
 
   auto* movement = archer->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  ASSERT_TRUE(movement->has_target);
+  ASSERT_TRUE(movement->get_has_target());
   EXPECT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(archer));
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
-  EXPECT_TRUE(movement->has_target);
-  EXPECT_FLOAT_EQ(movement->goal_x, 7.0F);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_goal_x(), 7.0F);
   EXPECT_FALSE(archer->has_component<AttackTargetComponent>());
   EXPECT_EQ(enemy_unit->health, 100);
 }
 
-TEST_F(CombatModeTest, ManualGroupMoveSuppressesAutoEngagementWhilePathPending) {
-  auto* leader = world->create_entity();
-  leader->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto* leader_unit = leader->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
-  leader_unit->owner_id = 1;
-  leader_unit->spawn_type = Game::Units::SpawnType::Spearman;
-  auto* leader_attack = leader->add_component<AttackComponent>();
-  leader_attack->can_melee = true;
-  leader_attack->can_ranged = false;
-  leader_attack->preferred_mode = AttackComponent::CombatMode::Melee;
-  leader_attack->current_mode = AttackComponent::CombatMode::Melee;
+TEST_F(CombatModeTest, ManualMultiUnitMoveSuppressesAutoEngagementWhileMoving) {
+  auto* first = world->create_entity();
+  first->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* first_unit = first->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  first_unit->owner_id = 1;
+  first_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* first_attack = first->add_component<AttackComponent>();
+  first_attack->can_melee = true;
+  first_attack->can_ranged = false;
+  first_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  first_attack->current_mode = AttackComponent::CombatMode::Melee;
 
   auto* flank = world->create_entity();
   flank->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
@@ -213,27 +214,24 @@ TEST_F(CombatModeTest, ManualGroupMoveSuppressesAutoEngagementWhilePathPending) 
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 
-  CommandService::MoveOptions options;
-  options.group_move = true;
-  options.retry_individual_on_group_failure = true;
+  CommandService::MoveOptions const options;
   CommandService::move_units(
       *world,
-      {leader->get_id(), flank->get_id()},
+      {first->get_id(), flank->get_id()},
       {QVector3D(18.0F, 0.0F, 0.0F), QVector3D(18.0F, 0.0F, 1.0F)},
       options);
 
-  auto* leader_movement = leader->get_component<MovementComponent>();
-  ASSERT_NE(leader_movement, nullptr);
-  EXPECT_TRUE(leader_movement->path_pending);
-  EXPECT_FALSE(leader_movement->has_target);
-  EXPECT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(leader));
+  auto* first_movement = first->get_component<MovementComponent>();
+  ASSERT_NE(first_movement, nullptr);
+  EXPECT_TRUE(first_movement->get_has_target());
+  EXPECT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(first));
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::AutoEngagement auto_engagement;
   auto_engagement.process(world.get(), query_context, 0.016F);
 
-  EXPECT_FALSE(leader->has_component<AttackTargetComponent>());
+  EXPECT_FALSE(first->has_component<AttackTargetComponent>());
   EXPECT_FALSE(flank->has_component<AttackTargetComponent>());
 }
 
@@ -263,7 +261,7 @@ TEST_F(CombatModeTest, AutoEngagementResumesAfterManualMoveArrives) {
   MovementSystem movement_system;
   movement_system.update(world.get(), 0.016F);
 
-  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(movement->get_has_target());
   EXPECT_FALSE(Game::Systems::Combat::suppresses_opportunistic_combat(spearman));
 
   auto const query_context =
@@ -893,16 +891,21 @@ TEST_F(CombatModeTest, ChasingUnitDoesNotRequestNewPathEveryFrame) {
 
   auto* movement = attacker->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->path_pending);
-  std::uint64_t const first_request_id = movement->pending_request_id;
-  ASSERT_NE(first_request_id, 0U);
+  EXPECT_TRUE(movement->get_has_target());
+  float const first_goal_x = movement->get_goal_x();
+  float const first_goal_y = movement->get_goal_y();
+  float const first_target_x = movement->get_target_x();
+  float const first_target_y = movement->get_target_y();
 
   auto const second_query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), second_query_context, 0.016F);
 
-  EXPECT_TRUE(movement->path_pending);
-  EXPECT_EQ(movement->pending_request_id, first_request_id);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_goal_x(), first_goal_x);
+  EXPECT_FLOAT_EQ(movement->get_goal_y(), first_goal_y);
+  EXPECT_FLOAT_EQ(movement->get_target_x(), first_target_x);
+  EXPECT_FLOAT_EQ(movement->get_target_y(), first_target_y);
 }
 
 TEST_F(CombatModeTest, ShortUnobstructedChaseUsesDirectMovement) {
@@ -932,10 +935,8 @@ TEST_F(CombatModeTest, ShortUnobstructedChaseUsesDirectMovement) {
 
   auto* movement = attacker->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  EXPECT_TRUE(movement->has_target);
-  EXPECT_FALSE(movement->path_pending);
-  EXPECT_EQ(movement->pending_request_id, 0U);
-  EXPECT_TRUE(movement->path.empty());
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_TRUE(movement->get_path().empty());
 }
 
 TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
@@ -965,13 +966,11 @@ TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
 
   auto* movement = attacker->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  std::uint64_t const first_request_id = movement->pending_request_id;
-  ASSERT_NE(first_request_id, 0U);
+  float const first_goal_x = movement->get_goal_x();
 
-  movement->path_pending = false;
-  movement->has_target = true;
-  movement->target_x = movement->goal_x;
-  movement->target_y = movement->goal_y;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, movement->get_goal_x());
+  MovementTestAccess::set_target_y(*movement, movement->get_goal_y());
 
   enemy_transform->position.x = 16.0F;
   enemy_transform->position.z = 0.0F;
@@ -980,11 +979,11 @@ TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), second_query_context, 0.016F);
 
-  EXPECT_TRUE(movement->path_pending);
-  EXPECT_NE(movement->pending_request_id, first_request_id);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_NE(movement->get_goal_x(), first_goal_x);
 }
 
-TEST_F(CombatModeTest, PendingPathDoesNotSubmitDuplicateEquivalentRequest) {
+TEST_F(CombatModeTest, EquivalentChaseKeepsSameGoal) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
@@ -1011,14 +1010,15 @@ TEST_F(CombatModeTest, PendingPathDoesNotSubmitDuplicateEquivalentRequest) {
 
   auto* movement = attacker->get_component<MovementComponent>();
   ASSERT_NE(movement, nullptr);
-  std::uint64_t const first_request_id = movement->pending_request_id;
-  ASSERT_NE(first_request_id, 0U);
+  float const first_goal_x = movement->get_goal_x();
+  float const first_goal_y = movement->get_goal_y();
 
   auto const second_query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), second_query_context, 0.016F);
 
-  EXPECT_EQ(movement->pending_request_id, first_request_id);
+  EXPECT_FLOAT_EQ(movement->get_goal_x(), first_goal_x);
+  EXPECT_FLOAT_EQ(movement->get_goal_y(), first_goal_y);
 }
 
 TEST_F(CombatModeTest, UnitStillAttacksWhenTargetReachesRange) {
@@ -1051,7 +1051,7 @@ TEST_F(CombatModeTest, UnitStillAttacksWhenTargetReachesRange) {
 
   EXPECT_LT(enemy_unit->health, 100);
   auto* movement = attacker->get_component<MovementComponent>();
-  EXPECT_TRUE((movement == nullptr) || !movement->path_pending);
+  EXPECT_TRUE((movement == nullptr) || !movement->get_has_target());
 }
 
 TEST_F(CombatModeTest, MeleeDamageIsDeferredUntilWeaponContact) {
@@ -1612,9 +1612,9 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
   target->add_component<RenderableComponent>("mesh", "tex");
   auto* movement = target->add_component<MovementComponent>();
-  movement->has_target = true;
-  movement->vx = 1.0F;
-  movement->vz = 1.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
   auto* target_unit = target->add_component<UnitComponent>(30, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
 
@@ -1627,7 +1627,7 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   EXPECT_EQ(death->profile, DeathSequenceProfile::Infantry);
   EXPECT_EQ(death->sequence_variant, 0U);
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
-  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(movement->get_has_target());
 
   auto blood_stains = world->get_entities_with<BloodStainComponent>();
   ASSERT_EQ(blood_stains.size(), 1U);
