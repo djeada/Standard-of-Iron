@@ -49,9 +49,6 @@ namespace {
 namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
 
-// Authors per-clip animation markers (normalized clip phase in [0,1]; -1 = unset) onto
-// a clip descriptor based on the clip name and bake profile. These values are baked
-// into the BPAT clip table and consumed at runtime by clip_marker_set().
 void apply_authored_markers(bool sword_ready_profile, bpat::ClipDescriptor& desc) {
   auto const has = [&desc](std::string_view needle) {
     return desc.name.find(needle) != std::string::npos;

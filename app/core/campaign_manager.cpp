@@ -26,8 +26,7 @@ void CampaignManager::set_available_campaigns(const QVariantList& campaigns) {
   emit available_campaigns_changed();
 }
 
-void CampaignManager::start_campaign_mission(const QString& mission_path,
-                                             int& /*selected_player_id*/) {
+void CampaignManager::start_campaign_mission(const QString& mission_path, int&) {
   const QStringList parts = mission_path.split('/');
   if (parts.size() != 2) {
     qWarning() << "Invalid mission path format. Expected: campaign_id/mission_id";

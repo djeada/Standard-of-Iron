@@ -6,4 +6,4 @@ namespace Render::GL::Roman {
 
 void register_roman_spearman_styles();
 
-} // namespace Render::GL::Roman
+}

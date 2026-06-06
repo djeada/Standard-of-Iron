@@ -125,22 +125,21 @@ auto select_commander_sword_sway(const Engine::Core::CommanderComponent* command
   if (finisher_attack) {
     return k_commander_sword_sway_finisher;
   }
-  // Thrust on forward input
+
   if (move_forward_axis > 0) {
     return k_commander_sword_sway_thrust;
   }
-  // Overhead on backward input or power strike
+
   if (move_forward_axis < 0 || (move_right_axis == 0 && commander != nullptr &&
                                 commander->power_strike_active)) {
     return k_commander_sword_sway_overhead;
   }
-  // More varied directional slash selection based on sequence
-  // Cycles through: left, right, left-high, right-high, overhead-light
+
   switch (attack_sequence % 5U) {
   case 0:
-    return k_commander_sword_sway_default; // Left slash
+    return k_commander_sword_sway_default;
   case 1:
-    return k_commander_sword_sway_reverse; // Right slash
+    return k_commander_sword_sway_reverse;
   case 2:
     return (move_right_axis > 0) ? k_commander_sword_sway_reverse
                                  : k_commander_sword_sway_default;
@@ -148,7 +147,7 @@ auto select_commander_sword_sway(const Engine::Core::CommanderComponent* command
     return (move_right_axis < 0) ? k_commander_sword_sway_default
                                  : k_commander_sword_sway_reverse;
   case 4:
-    return k_commander_sword_sway_overhead; // Occasional overhead in neutral
+    return k_commander_sword_sway_overhead;
   default:
     return k_commander_sword_sway_default;
   }
@@ -825,7 +824,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   if (combat_state != nullptr &&
       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
-    // Input buffering: allow queuing next attack during Recover/Reposition phases
+
     if (combat_state->animation_state == Engine::Core::CombatAnimationState::Recover ||
         combat_state->animation_state ==
             Engine::Core::CombatAnimationState::Reposition) {
@@ -901,7 +900,6 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     m_combo_miss_timer = 0.0F;
   }
 
-  // Consume stamina for the attack
   if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
     float const cost =
         (cmd_comp != nullptr && cmd_comp->power_strike_active)
@@ -910,7 +908,6 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     stamina->stamina = std::max(0.0F, stamina->stamina - cost);
   }
 
-  // Mark that damage has not been dealt yet for this swing (deferred to Strike phase)
   if (combat_state != nullptr) {
     combat_state->damage_dealt_this_swing = false;
   }
@@ -921,7 +918,6 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     return true;
   }
 
-  // Store pending target for deferred damage at Strike phase
   if (auto* action =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
     action->active_target_id = target_id;
@@ -1328,7 +1324,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_jump_safe_position_valid = true;
     m_jump_last_walkable_position =
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
-    // Stamina cost for jump
+
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->stamina = std::max(
           0.0F,
@@ -1402,7 +1398,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
       rpg->dodge_invincible = true;
     }
-    // Stamina cost for dodge
+
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->stamina = std::max(
           0.0F,
@@ -1559,7 +1555,6 @@ auto CommanderControlController::update(Engine::Core::World& world,
   }
   m_guard_was_active = (guard != nullptr) && guard->active;
 
-  // Stamina drain while guarding
   if (guard != nullptr && guard->active) {
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->stamina = std::max(
@@ -1782,7 +1777,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   QVector3D eye_desired = pivot - flat_forward * back_offset +
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * bob_l;
-  // Combat impact micro-shake for crisp hit feedback
+
   if (m_impact_shake > 0.1F) {
     float const shake_intensity = m_impact_shake * 0.012F;
     float const shake_t = m_impact_shake_seed + m_impact_shake * 7.0F;
@@ -1876,7 +1871,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     if (cmd->just_struck_enemy) {
       m_strike_punch_fwd =
           (last_strike_combo_step >= 3 ? 0.52F : 0.38F) * camera_effect_scale;
-      // Trigger impact micro-shake for crisp hit feedback
+
       m_impact_shake = last_strike_combo_step >= 3 ? 5.5F : 3.2F;
       m_impact_shake_seed = static_cast<float>(last_strike_combo_step) * 1.7F;
     }
@@ -1885,11 +1880,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   m_strike_punch_fwd *= std::exp(-k_punch_decay * std::max(dt, 0.0F));
   const QVector3D punch_offset = forward_vec * m_strike_punch_fwd;
 
-  // Dodge roll camera tilt
   float dodge_tilt_rad = 0.0F;
   if (m_dodge_state == DodgeState::Rolling) {
     const float dodge_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
-    const float tilt_curve = std::sin(dodge_progress * k_pi) * 0.12F; // ~7 degree roll
+    const float tilt_curve = std::sin(dodge_progress * k_pi) * 0.12F;
     const float dot_right =
         m_dodge_direction.x() * flat_right.x() + m_dodge_direction.z() * flat_right.z();
     dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);

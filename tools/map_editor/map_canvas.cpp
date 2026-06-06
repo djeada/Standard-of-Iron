@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <math.h>
 
 #include "canvas_transform.h"
 #include "spawn_icon_library.h"
@@ -539,12 +540,10 @@ void MapCanvas::draw_undead_zones(QPainter& painter) {
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // Leash radius ring (dotted)
     painter.setBrush(Qt::NoBrush);
     painter.setPen(QPen(k_leash_ring, 1, Qt::DotLine));
     painter.drawEllipse(center, leash_px, leash_px);
 
-    // Fill zone circle
     painter.setBrush(k_zone_fill);
     if (is_selected) {
       painter.setPen(QPen(Qt::yellow, 2));
@@ -555,7 +554,6 @@ void MapCanvas::draw_undead_zones(QPainter& painter) {
     }
     painter.drawEllipse(center, radius_px, radius_px);
 
-    // Anchor icon in the center
     const QString icon = (elem.anchor_type == QStringLiteral("ruins")) ? "🏚" : "✦";
     painter.setPen(QColor(230, 180, 255));
     QFont f = painter.font();
@@ -564,7 +562,6 @@ void MapCanvas::draw_undead_zones(QPainter& painter) {
     painter.drawText(
         QRect(center.x() - 10, center.y() - 10, 20, 20), Qt::AlignCenter, icon);
 
-    // Zone id label below
     if (!elem.id.isEmpty()) {
       f.setPointSize(7);
       painter.setFont(f);
@@ -720,7 +717,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
                                      const QString& type,
                                      const QPoint& pos,
                                      int size) {
-  const float s = static_cast<float>(size);
+  const auto s = static_cast<float>(size);
   painter.save();
   painter.translate(pos);
 
@@ -728,7 +725,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setBrush(QColor(255, 140, 0));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
-    // Flame: three overlapping teardrop shapes
+
     const float fw = s * 0.38F;
     const float fh = s * 0.80F;
     const auto draw_flame = [&](float ox, float oy_base, float w, float h) {
@@ -756,7 +753,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     tent << QPointF(0, -th) << QPointF(tw, th * 0.55F) << QPointF(-tw, th * 0.55F);
     painter.setBrush(QColor(210, 165, 100));
     painter.drawPolygon(tent);
-    // Door slit
+
     painter.setPen(QPen(QColor(120, 85, 50), std::max(1.0F, s * 0.1F)));
     painter.drawLine(QPointF(0, 0), QPointF(0, th * 0.55F));
 
@@ -779,7 +776,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
     const float arm = s * 0.70F;
-    QPen cross_pen(
+    QPen const cross_pen(
         QColor(210, 210, 220), std::max(2.0F, s * 0.18F), Qt::SolidLine, Qt::RoundCap);
     painter.setPen(cross_pen);
     painter.drawLine(QPointF(-arm, -arm), QPointF(arm, arm));
@@ -790,10 +787,10 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
     const float rs = s * 0.65F;
-    QPen rp(
+    QPen const rp(
         QColor(170, 165, 150), std::max(1.5F, s * 0.12F), Qt::SolidLine, Qt::SquareCap);
     painter.setPen(rp);
-    // Broken rectangle: 4 corner L-shapes
+
     const float gap = rs * 0.35F;
     painter.drawLine(QPointF(-rs, -rs), QPointF(-rs + gap, -rs));
     painter.drawLine(QPointF(-rs, -rs), QPointF(-rs, -rs + gap));
@@ -827,12 +824,12 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setBrush(QColor(111, 86, 67));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
-    QPen tp(
+    QPen const tp(
         QColor(200, 170, 135), std::max(1.5F, s * 0.14F), Qt::SolidLine, Qt::RoundCap);
     painter.setPen(tp);
-    // Trunk
+
     painter.drawLine(QPointF(0, s * 0.55F), QPointF(0, -s * 0.15F));
-    // Branches
+
     painter.drawLine(QPointF(0, -s * 0.15F), QPointF(-s * 0.55F, -s * 0.65F));
     painter.drawLine(QPointF(0, -s * 0.15F), QPointF(s * 0.55F, -s * 0.65F));
     painter.drawLine(QPointF(0, s * 0.20F), QPointF(-s * 0.42F, -s * 0.22F));
@@ -842,7 +839,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setBrush(QColor(110, 110, 110));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
-    // Irregular polygon stone
+
     QPolygonF rock;
     rock << QPointF(0, -s * 0.72F) << QPointF(s * 0.58F, -s * 0.40F)
          << QPointF(s * 0.70F, s * 0.20F) << QPointF(s * 0.30F, s * 0.68F)
@@ -850,8 +847,8 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
          << QPointF(-s * 0.55F, -s * 0.42F);
     painter.setBrush(QColor(175, 175, 175));
     painter.drawPolygon(rock);
-    // Highlight facet
-    QPen hp(QColor(215, 215, 215), std::max(1.0F, s * 0.10F));
+
+    QPen const hp(QColor(215, 215, 215), std::max(1.0F, s * 0.10F));
     painter.setPen(hp);
     painter.drawLine(QPointF(-s * 0.30F, -s * 0.55F), QPointF(s * 0.40F, -s * 0.35F));
   }
@@ -860,16 +857,16 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
 }
 
 QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
-  float rx_cells, ry_cells;
+  float rx_cells = NAN;
+  float ry_cells = NAN;
 
   if (elem.type == QStringLiteral("mountain")) {
-    // Mountains are elongated ridges in the game engine:
-    // major_radius = radius * 1.8, minor_radius = radius * 0.22 (perpendicular)
+
     const float r = std::max(elem.radius, 1.0F);
     rx_cells = r * 1.8F;
     ry_cells = r * 0.22F;
   } else {
-    // Hills: width and depth are the half-extents from centre (same as game engine)
+
     if (elem.width > 0.0F && elem.depth > 0.0F) {
       rx_cells = elem.width;
       ry_cells = elem.depth;
@@ -880,7 +877,7 @@ QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
 
   const float rx = rx_cells * static_cast<float>(grid_cell_size) * m_zoom;
   const float ry = ry_cells * static_cast<float>(grid_cell_size) * m_zoom;
-  // Enforce a minimum so tiny features are still clickable / visible
+
   return {std::max(static_cast<float>(icon_size), rx), std::max(4.0F, ry)};
 }
 
@@ -896,7 +893,7 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
   painter.rotate(static_cast<double>(elem.rotation));
 
   if (elem.type == QStringLiteral("hill")) {
-    // Topographic concentric rings: outer → inner warming in colour
+
     const QColor outer(168, 148, 102);
     const QColor mid(144, 122, 78);
     const QColor inner(120, 98, 58);
@@ -917,11 +914,11 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.drawEllipse(QPointF(0, 0), dot_r, dot_r);
 
   } else if (elem.type == QStringLiteral("mountain")) {
-    // Same topographic concentric rings as hills but cool grey/blue tones
+
     const QColor outer(148, 148, 162);
     const QColor mid(115, 115, 130);
     const QColor inner(85, 85, 100);
-    const QColor peak(230, 235, 245); // white snow cap
+    const QColor peak(230, 235, 245);
 
     painter.setPen(Qt::NoPen);
     painter.setBrush(outer);
@@ -972,10 +969,13 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     const bool shift_held =
         event->modifiers() &
         static_cast<int>(
-            static_cast<int>(static_cast<unsigned int>(
-                                 static_cast<int>(static_cast<unsigned int>(
-                                                      Qt::ShiftModifier != 0U) != 0U) !=
-                                 0U) != 0U) != 0U != 0u);
+            static_cast<int>(
+                static_cast<unsigned int>(
+                    static_cast<int>(
+                        static_cast<unsigned int>(
+                            static_cast<int>(static_cast<unsigned int>(
+                                                 Qt::ShiftModifier != 0U) != 0U) !=
+                            0U) != 0U) != 0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     switch (m_current_tool) {
@@ -1220,10 +1220,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
     const bool shift_held =
         event->modifiers() &
         static_cast<int>(
-            static_cast<int>(static_cast<unsigned int>(
-                                 static_cast<int>(static_cast<unsigned int>(
-                                                      Qt::ShiftModifier != 0U) != 0U) !=
-                                 0U) != 0U) != 0U != 0u);
+            static_cast<int>(
+                static_cast<unsigned int>(
+                    static_cast<int>(
+                        static_cast<unsigned int>(
+                            static_cast<int>(static_cast<unsigned int>(
+                                                 Qt::ShiftModifier != 0U) != 0U) !=
+                            0U) != 0U) != 0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     if (m_selected_type == 0) {
@@ -1398,7 +1401,6 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     consider_hit(4, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 0);
   }
 
-  // Undead zones: hit if cursor is within radius circle
   const auto& undead_zones = m_map_data->undead_zones();
   for (int i = undead_zones.size() - 1; i >= 0; --i) {
     const auto& elem = undead_zones[i];
@@ -1558,7 +1560,7 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     elem.owner_id = 99;
     elem.team_id = 99;
     elem.awaken_on = QJsonArray{QStringLiteral("unit_enters_radius")};
-    // Default wave: 2 skeleton swordsmen + 1 grave priest
+
     QJsonObject units_obj;
     units_obj[QStringLiteral("skeleton_swordsman")] = 2;
     units_obj[QStringLiteral("grave_priest")] = 1;

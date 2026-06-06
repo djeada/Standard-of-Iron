@@ -139,13 +139,11 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
-// Constants replacing magic numbers
 constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
 
 #ifdef Q_OS_WIN
-// Test OpenGL using native Win32 API (before any Qt initialization)
-// Returns whether a 3.3 core-capable, non-GDI context appears available.
+
 static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
   NativeOpenGLProbeResult result;
 
@@ -275,11 +273,10 @@ static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
   return result;
 }
 
-// Windows crash handler to detect OpenGL failures and suggest fallback
 static bool g_opengl_crashed = false;
 static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
   if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
-    // Log crash
+
     FILE* crash_log = fopen("opengl_crash.txt", "w");
     if (crash_log) {
       fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
@@ -305,7 +302,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 
 auto main(int argc, char* argv[]) -> int {
 #ifdef Q_OS_WIN
-  // Install crash handler to detect OpenGL failures
+
   SetUnhandledExceptionFilter(crashHandler);
 
   if (windows_software_requested_from_argv(argc, argv)) {
@@ -348,7 +345,6 @@ auto main(int argc, char* argv[]) -> int {
   }
 #endif
 
-  // Setup message handler for debugging
   qInstallMessageHandler(
       [](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
         QByteArray const local_msg = msg.toLocal8Bit();
@@ -375,7 +371,7 @@ auto main(int argc, char* argv[]) -> int {
                   file,
                   context.line,
                   function);
-          // Check for critical OpenGL warnings
+
           if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
               msg.contains("scene graph", Qt::CaseInsensitive) ||
               msg.contains("RHI", Qt::CaseInsensitive)) {
@@ -412,14 +408,10 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
 
-  // Allow the existing QML campaign/mission loaders to read local JSON files
-  // without triggering Qt's local-file XHR warning on every startup.
   if (!qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_READ")) {
     qputenv("QML_XHR_ALLOW_FILE_READ", "1");
   }
 
-  // On Linux, prefer the X11/xcb platform whenever a DISPLAY is available,
-  // unless the user already picked a different Qt platform explicitly.
 #ifdef Q_OS_LINUX
   if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") &&
       qEnvironmentVariableIsSet("DISPLAY")) {
@@ -429,8 +421,7 @@ auto main(int argc, char* argv[]) -> int {
 #endif
 
   qInfo() << "Setting OpenGL environment...";
-  // Only force desktop OpenGL if the pre-init code (Windows) or the user
-  // hasn't already selected a different backend (e.g. software fallback).
+
   if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
     qputenv("QT_OPENGL", "desktop");
   }
@@ -444,11 +435,7 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Configuring OpenGL surface format...";
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);
-  // Use Core Profile on all platforms.  All render classes derive from
-  // QOpenGLFunctions_3_3_Core, which on some Qt/driver combinations refuses
-  // to initialize when the context profile is Compatibility rather than Core.
-  // Requesting Compatibility Profile while using Core Profile functions was
-  // the primary cause of blank-screen issues reported on Windows.
+
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(k_depth_buffer_bits);
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
@@ -464,10 +451,6 @@ auto main(int argc, char* argv[]) -> int {
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 
-  // Parse rendering CLI flags. We do this after QGuiApplication
-  // construction so that Qt's own platform args (-platform, -style, …) are
-  // already consumed, but before any rendering setup so that the chosen
-  // shader_quality is honoured by the GameEngine on first ensure_initialized().
   {
     QCommandLineParser parser;
     parser.setApplicationDescription("Standard of Iron");
@@ -506,12 +489,7 @@ auto main(int argc, char* argv[]) -> int {
       auto& gfx = Render::GraphicsSettings::instance();
       auto features = gfx.features();
       features.shader_quality = *requested;
-      // GraphicsSettings does not expose a direct features setter; the
-      // shader_quality field is consulted through features() each frame.
-      // We persist it by setting the matching GraphicsQuality preset and
-      // then overriding shader_quality. Low ↔ Minimal, Medium ↔ Reduced,
-      // High/Ultra ↔ Full, anything-software → keep current preset and just
-      // flip the shader_quality bit.
+
       switch (*requested) {
       case Render::ShaderQuality::None:
         qInfo() << "[CLI] shader_quality = None (software backend)";
@@ -529,14 +507,11 @@ auto main(int argc, char* argv[]) -> int {
         qInfo() << "[CLI] shader_quality = Full";
         break;
       }
-      // Override the per-feature shader_quality after the preset apply so
-      // --force-software always wins regardless of the underlying preset.
+
       const_cast<Render::GraphicsFeatures&>(gfx.features()).shader_quality = *requested;
     }
   }
 
-  // Use unique_ptr with custom deleter for Qt objects
-  // This ensures proper cleanup order and prevents segfaults
   std::unique_ptr<LanguageManager> language_manager;
   std::unique_ptr<GameEngine> game_engine;
   std::unique_ptr<App::Models::GraphicsSettingsProxy> graphics_settings;
@@ -557,12 +532,10 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Setting up QML engine...";
   engine = std::make_unique<QQmlApplicationEngine>();
 
-  // Register minimap image provider
   qInfo() << "Registering minimap image provider...";
   auto* minimap_provider = new MinimapImageProvider();
   engine->addImageProvider("minimap", minimap_provider);
 
-  // Register map preview image provider
   qInfo() << "Registering map preview image provider...";
   auto* map_preview_provider = new MapPreviewImageProvider();
   engine->addImageProvider("mappreview", map_preview_provider);
@@ -578,9 +551,6 @@ auto main(int argc, char* argv[]) -> int {
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
 
-  // Connect minimap image updates to the provider with DirectConnection
-  // This ensures the image is set in the provider BEFORE QML reacts to the
-  // signal
   QObject::connect(
       game_engine.get(),
       &GameEngine::minimap_image_changed,
@@ -590,7 +560,6 @@ auto main(int argc, char* argv[]) -> int {
       },
       Qt::DirectConnection);
 
-  // Set initial minimap image if available
   if (!game_engine->minimap_image().isNull()) {
     qInfo() << "Setting initial minimap image";
     minimap_provider->set_minimap_image(game_engine->minimap_image());
@@ -603,10 +572,8 @@ auto main(int argc, char* argv[]) -> int {
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
   qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
-  // Register Theme singleton
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);
 
-  // Register StyleGuide singleton from QML file
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
                            "StandardOfIron",
                            1,
@@ -625,7 +592,6 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "QML loaded successfully, root objects count:"
           << engine->rootObjects().size();
 
-  // Connect language changed signal to retranslate QML
   qInfo() << "Connecting language change handler...";
   QObject::connect(language_manager.get(),
                    &LanguageManager::language_changed,
@@ -695,24 +661,19 @@ auto main(int argc, char* argv[]) -> int {
 
   int const result = QGuiApplication::exec();
 
-  // Explicitly destroy in correct order to prevent segfault
   qInfo() << "Shutting down...";
 
-  // Destroy QML engine first (destroys OpenGL context)
   engine.reset();
   qInfo() << "QML engine destroyed";
 
-  // Then destroy game engine
-  // OpenGL cleanup in destructors will be skipped if no valid context
   game_engine.reset();
   qInfo() << "GameEngine destroyed";
 
-  // Finally destroy language manager
   language_manager.reset();
   qInfo() << "LanguageManager destroyed";
 
 #ifdef Q_OS_WIN
-  // Check if we crashed during OpenGL initialization
+
   if (g_opengl_crashed) {
     qCritical() << "";
     qCritical() << "========================================";

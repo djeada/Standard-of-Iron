@@ -53,7 +53,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
 
   BuildingArchetypeDesc desc("roman_marketplace");
 
-  // -- Stepped stone platform (Roman podium) --
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.40F, 0.04F, 1.40F), c.limestone_dark);
   desc.add_box(
@@ -61,7 +60,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.24F, 0.02F, 1.24F), c.limestone);
 
-  // -- Mosaic floor pattern (Roman identity) --
   desc.add_box(QVector3D(0.0F, 0.165F, 0.0F),
                QVector3D(0.90F, 0.005F, 0.90F),
                c.marble,
@@ -78,33 +76,31 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // -- Back wall (limestone arcade) --
   float const wall_h = 0.78F * height_multiplier;
   desc.add_box(QVector3D(0.92F, wall_h * 0.5F + 0.16F, 0.0F),
                QVector3D(0.12F, wall_h * 0.5F, 1.10F),
                c.limestone);
-  // Wall cornice
+
   desc.add_box(QVector3D(0.92F, wall_h + 0.18F, 0.0F),
                QVector3D(0.14F, 0.04F, 1.14F),
                c.limestone_shade,
                k_building_state_mask_intact);
 
-  // -- Colonnade (front columns - Roman architectural signature) --
   float const col_height = 0.82F * height_multiplier;
   float const col_radius = 0.05F;
   for (float const cz : {-0.80F, -0.27F, 0.27F, 0.80F}) {
-    // Column base
+
     desc.add_box(QVector3D(-0.96F, 0.18F, cz),
                  QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
                  c.marble,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    // Column shaft
+
     desc.add_cylinder(QVector3D(-0.96F, 0.16F, cz),
                       QVector3D(-0.96F, 0.16F + col_height, cz),
                       col_radius,
                       c.limestone_shade);
-    // Column capital
+
     desc.add_box(QVector3D(-0.96F, 0.16F + col_height + 0.04F, cz),
                  QVector3D(col_radius * 1.5F, 0.05F, col_radius * 1.5F),
                  c.marble,
@@ -112,18 +108,16 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  // -- Entablature connecting columns --
   float const entab_y = 0.16F + col_height + 0.10F;
   desc.add_box(QVector3D(-0.96F, entab_y, 0.0F),
                QVector3D(0.08F, 0.05F, 0.92F),
                c.limestone,
                k_building_state_mask_intact);
 
-  // -- Trading counter --
   float const counter_h = 0.44F * height_multiplier;
   desc.add_box(
       QVector3D(-0.20F, counter_h, 0.0F), QVector3D(0.62F, 0.05F, 0.86F), c.cedar);
-  // Counter legs
+
   desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, -0.78F),
                QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
                c.cedar_dark,
@@ -135,13 +129,12 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // -- Main awning (red cloth - Roman identity) --
   float const awning_y = col_height + 0.20F;
   desc.add_box(QVector3D(-0.20F, awning_y, 0.0F),
                QVector3D(0.62F, 0.02F, 0.88F),
                c.cloth_red,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
-  // Gold fringe
+
   desc.add_box(QVector3D(-0.20F, awning_y - 0.03F, 0.86F),
                QVector3D(0.62F, 0.02F, 0.04F),
                c.cloth_gold,
@@ -151,7 +144,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.cloth_gold,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
-  // -- Terracotta roof section over back wall --
   desc.add_box(QVector3D(0.92F, wall_h + 0.26F, 0.0F),
                QVector3D(0.20F, 0.04F, 1.08F),
                c.terracotta,
@@ -168,7 +160,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.18F, 0.02F, 0.06F),
       c.terracotta_dark);
 
-  // -- Decorative goods/wares --
   desc.add_box(QVector3D(0.50F, 0.28F, -0.70F),
                QVector3D(0.14F, 0.10F, 0.14F),
                c.cedar_dark,
@@ -186,21 +177,18 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                     BuildingStateMask::Normal,
                     BuildingLODMask::Full);
 
-  // -- Blue accent trim along wall (Roman decorative motif) --
   desc.add_box(QVector3D(0.92F, wall_h * 0.6F + 0.16F, 0.0F),
                QVector3D(0.005F, 0.03F, 1.06F),
                c.blue_accent,
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
-  // -- Gold ornament on entablature --
   desc.add_box(QVector3D(-0.96F, entab_y + 0.06F, 0.0F),
                QVector3D(0.06F, 0.05F, 0.06F),
                c.gold,
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
-  // -- Team-color banner --
   desc.add_palette_box(QVector3D(0.96F, 0.56F * height_multiplier, 0.0F),
                        QVector3D(0.02F, 0.22F, 0.14F),
                        k_marketplace_team_slot,

@@ -8,7 +8,6 @@
 
 namespace Utils::Resources {
 
-// Resolve resources that may have been relocated under a Qt QML module prefix.
 inline auto resolve_resource_path(const QString& path) -> QString {
   if (path.isEmpty()) {
     return path;
@@ -26,8 +25,6 @@ inline auto resolve_resource_path(const QString& path) -> QString {
     return dir.exists();
   };
 
-  // For Qt resource paths, prefer a filesystem override when available so live
-  // shader edits are picked up without rebuilding the resource bundle.
   if (is_resource) {
     auto search_upwards = [&](const QString& start_dir) -> QString {
       if (start_dir.isEmpty()) {

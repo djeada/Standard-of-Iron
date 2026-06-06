@@ -133,8 +133,7 @@ inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
   } else {
     return 0.0F;
   }
-  // Smooth ease-in-out for a natural kneel/brace transition, matching the
-  // eased curve used by guard_pose_amount (endpoints 0/1 are preserved).
+
   return t * t * (3.0F - 2.0F * t);
 }
 
@@ -143,7 +142,7 @@ inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {
     return 0.0F;
   }
   float const t = std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
-  // Smooth ease-in-out for natural transition (matching kneel_transition style)
+
   return t * t * (3.0F - 2.0F * t);
 }
 

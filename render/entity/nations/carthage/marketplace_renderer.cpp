@@ -51,13 +51,11 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
 
   BuildingArchetypeDesc desc("carthage_marketplace");
 
-  // -- Raised stone platform --
   desc.add_box(
       QVector3D(0.0F, 0.05F, 0.0F), QVector3D(1.35F, 0.05F, 1.35F), c.sandstone_dark);
   desc.add_box(
       QVector3D(0.0F, 0.12F, 0.0F), QVector3D(1.28F, 0.02F, 1.28F), c.sandstone);
 
-  // -- Back wall (fortress-style thick sandstone) --
   float const wall_h = 0.72F * height_multiplier;
   desc.add_box(QVector3D(0.92F, wall_h * 0.5F + 0.14F, 0.0F),
                QVector3D(0.14F, wall_h * 0.5F, 1.10F),
@@ -68,7 +66,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // -- Merlons along the back wall top (Punic fortress motif) --
   if (state != BuildingState::Destroyed) {
     float const merlon_y = wall_h + 0.18F;
     auto add_merlon =
@@ -86,7 +83,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                        c.brick);
   }
 
-  // -- Side walls (low flanking walls) --
   float const side_wall_h = 0.44F * height_multiplier;
   desc.add_box(QVector3D(0.20F, side_wall_h * 0.5F + 0.14F, -1.08F),
                QVector3D(0.60F, side_wall_h * 0.5F, 0.08F),
@@ -97,7 +93,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.brick,
                k_building_state_mask_intact);
 
-  // -- Trading counter (L-shaped wood surface) --
   float const counter_h = 0.42F * height_multiplier;
   desc.add_box(QVector3D(-0.30F, counter_h, 0.0F),
                QVector3D(0.60F, 0.05F, 0.80F),
@@ -107,14 +102,13 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.wood_dark,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
-  // Counter front apron
+
   desc.add_box(QVector3D(-0.30F, counter_h - 0.08F, -0.78F),
                QVector3D(0.58F, 0.08F, 0.03F),
                c.wood_dark,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // -- Awning support posts --
   float const post_h = 0.88F * height_multiplier;
   desc.add_box(QVector3D(-0.82F, post_h * 0.5F, -0.72F),
                QVector3D(0.05F, post_h * 0.5F, 0.05F),
@@ -129,14 +123,12 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.05F, post_h * 0.5F, 0.05F),
                c.wood_dark);
 
-  // -- Main awning (purple cloth - Carthaginian identity) --
   float const awning_y = post_h + 0.04F;
   desc.add_box(QVector3D(-0.32F, awning_y, 0.0F),
                QVector3D(0.58F, 0.02F, 0.82F),
                c.cloth_purple,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
-  // -- Gold trim along awning edges --
   desc.add_box(QVector3D(-0.32F, awning_y - 0.03F, 0.80F),
                QVector3D(0.58F, 0.02F, 0.04F),
                c.cloth_gold,
@@ -146,7 +138,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.cloth_gold,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
-  // -- Secondary awning at rear (layered depth) --
   float const rear_awning_y = (post_h * 0.85F) + 0.04F;
   desc.add_box(QVector3D(0.52F, rear_awning_y, 0.0F),
                QVector3D(0.28F, 0.02F, 0.70F),
@@ -154,7 +145,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
-  // -- Ceramic pottery (goods on display) --
   desc.add_cylinder(QVector3D(-0.50F, counter_h + 0.05F, -0.35F),
                     QVector3D(-0.50F, counter_h + 0.18F, -0.35F),
                     0.07F,
@@ -174,7 +164,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                     BuildingStateMask::Normal,
                     BuildingLODMask::Full);
 
-  // -- Stone pillar at entrance (Punic decorative column) --
   desc.add_cylinder(QVector3D(-1.05F, 0.14F, 0.0F),
                     QVector3D(-1.05F, 0.14F + 0.62F * height_multiplier, 0.0F),
                     0.08F,
@@ -187,7 +176,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // -- Goods crates (stacked near back wall) --
   desc.add_box(QVector3D(0.62F, 0.24F, -0.60F),
                QVector3D(0.14F, 0.10F, 0.14F),
                c.wood_medium,
@@ -204,7 +192,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
-  // -- Team-color banner on back wall --
   desc.add_palette_box(QVector3D(0.94F, 0.56F * height_multiplier, 0.0F),
                        QVector3D(0.02F, 0.20F, 0.14F),
                        k_marketplace_team_slot,

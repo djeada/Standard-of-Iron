@@ -38,8 +38,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.world != nullptr) {
-    // Ordering is load-bearing: simulation must run before visibility/minimap/victory
-    // so those presenters observe the current frame's world state instead of lagging.
+
     simulation_step(dt);
 
     if (scene.visibility_coordinator != nullptr) {

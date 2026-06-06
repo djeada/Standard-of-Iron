@@ -432,7 +432,7 @@ TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoT
   EXPECT_TRUE(
       contains(source, "find_primary_target(world, commander_id, local_owner_id);"));
   EXPECT_TRUE(contains(source, "if (target_id == 0) {"));
-  // Damage is now deferred to Strike phase in combat_state_processor
+
   EXPECT_TRUE(contains(source, "combat_state->damage_dealt_this_swing = false;"));
   EXPECT_FALSE(contains(source, "target_comp->target_id = target_id;"));
 }

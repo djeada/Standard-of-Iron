@@ -62,7 +62,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   BuildingArchetypeDesc desc("roman_home");
 
-  // == FOUNDATION: Triple-stepped Roman podium ==
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.18F, 0.04F, 1.18F), c.limestone_dark);
   desc.add_box(
@@ -70,7 +69,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.04F, 0.02F, 1.04F), c.limestone);
 
-  // == MAIN WALLS: Clean limestone with recessed panels ==
   float const wall_cy = wall_height * 0.5F * height_multiplier + 0.16F;
   float const wall_hy = wall_height * 0.5F * height_multiplier;
   desc.add_box(
@@ -82,7 +80,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.88F, wall_cy, 0.0F), QVector3D(0.08F, wall_hy, 0.78F), c.limestone);
 
-  // == CORNICE: Classical entablature around top ==
   float const cornice_y = wall_height * height_multiplier + 0.18F;
   desc.add_box(QVector3D(0.0F, cornice_y, -0.88F),
                QVector3D(0.90F, 0.05F, 0.10F),
@@ -100,7 +97,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.10F, 0.05F, 0.84F),
                c.limestone_shade,
                k_building_state_mask_intact);
-  // Dentil course beneath cornice
+
   desc.add_box(QVector3D(0.0F, cornice_y - 0.06F, -0.88F),
                QVector3D(0.86F, 0.02F, 0.09F),
                c.marble,
@@ -112,7 +109,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // == WINDOWS: Larger Roman shuttered style ==
   for (float const xw : {-0.92F, 0.92F}) {
     desc.add_box(QVector3D(xw, 0.58F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
@@ -124,7 +120,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  c.cedar_dark,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    // Window sills
+
     desc.add_box(QVector3D(xw, 0.44F, -0.30F),
                  QVector3D(0.015F, 0.03F, 0.19F),
                  c.limestone_shade,
@@ -135,7 +131,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  c.limestone_shade,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
-    // Lintels above windows
+
     desc.add_box(QVector3D(xw, 0.80F, -0.30F),
                  QVector3D(0.015F, 0.04F, 0.20F),
                  c.marble,
@@ -148,7 +144,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  // == FRONT COLONNADE: Six columns (signature Roman element) ==
   float const col_height = 0.88F;
   float const col_radius = 0.055F;
   QVector3D const front_cols[6] = {QVector3D(-0.72F, 0.0F, 0.92F),
@@ -159,19 +154,19 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                                    QVector3D(0.72F, 0.0F, 0.92F)};
 
   for (const QVector3D& col : front_cols) {
-    // Attic base
+
     desc.add_box(QVector3D(col.x(), 0.18F, col.z()),
                  QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
                  c.marble,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    // Shaft
+
     desc.add_cylinder(
         QVector3D(col.x(), 0.16F, col.z()),
         QVector3D(col.x(), 0.16F + col_height * height_multiplier, col.z()),
         col_radius,
         c.limestone_shade);
-    // Corinthian capital
+
     desc.add_box(
         QVector3D(col.x(), 0.16F + col_height * height_multiplier + 0.04F, col.z()),
         QVector3D(col_radius * 1.6F, 0.07F, col_radius * 1.6F),
@@ -180,20 +175,18 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
         BuildingLODMask::Full);
   }
 
-  // == ENTABLATURE: Architrave + frieze + cornice over colonnade ==
   float const entab_y = 0.16F + col_height * height_multiplier + 0.12F;
   desc.add_box(QVector3D(0.0F, entab_y, 0.92F),
                QVector3D(0.82F, 0.04F, 0.06F),
                c.limestone,
                k_building_state_mask_intact);
-  // Frieze band (blue accent)
+
   desc.add_box(QVector3D(0.0F, entab_y + 0.06F, 0.92F),
                QVector3D(0.80F, 0.03F, 0.05F),
                c.blue_accent,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // == ENTRANCE: Grand doorway with steps ==
   desc.add_box(
       QVector3D(0.0F, 0.48F, 0.92F), QVector3D(0.28F, 0.42F, 0.05F), c.cedar_dark);
   desc.add_box(QVector3D(0.0F, 0.72F, 0.94F),
@@ -201,7 +194,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.blue_accent,
                BuildingStateMask::All,
                BuildingLODMask::Full);
-  // Front steps
+
   desc.add_box(
       QVector3D(0.0F, 0.06F, 1.08F), QVector3D(0.60F, 0.04F, 0.16F), c.limestone_dark);
   desc.add_box(QVector3D(0.0F, 0.12F, 1.04F),
@@ -215,7 +208,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact);
   }
 
-  // == ATRIUM FLOOR: Mosaic pattern (Roman cultural identity) ==
   desc.add_box(QVector3D(0.0F, 0.155F, 0.0F),
                QVector3D(0.54F, 0.005F, 0.54F),
                c.marble,
@@ -241,14 +233,13 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.limestone_dark,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
-  // Impluvium (blue pool at center)
+
   desc.add_box(QVector3D(0.0F, 0.153F, 0.0F),
                QVector3D(0.28F, 0.005F, 0.28F),
                c.blue_light,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  // == ROOF: Pitched terracotta gable (ridge runs front-to-back) ==
   auto add_rot = [&](const QVector3D& center,
                      const QVector3D& scale,
                      const QVector3D& euler,
@@ -259,12 +250,12 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   float const roof_rise = 0.55F * height_multiplier;
   add_gable_roof_z(
       add_rot, 0.0F, 0.0F, eave_y, 0.98F, 0.98F, roof_rise, 0.05F, c.terracotta, 0.07F);
-  // Ridge beam cap
+
   desc.add_box(QVector3D(0.0F, eave_y + roof_rise + 0.01F, 0.0F),
                QVector3D(0.05F, 0.03F, 1.04F),
                c.terracotta_dark,
                k_building_state_mask_intact);
-  // Eave fascia boards along the sloped edges
+
   desc.add_box(QVector3D(0.99F, eave_y, 0.0F),
                QVector3D(0.04F, 0.04F, 1.05F),
                c.terracotta_dark,
@@ -275,7 +266,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.terracotta_dark,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
-  // Rear gable tympanum (stepped to approximate the triangular pediment)
+
   desc.add_box(QVector3D(0.0F, eave_y + 0.14F, -0.97F),
                QVector3D(0.68F, 0.14F, 0.05F),
                c.limestone_shade,
@@ -288,7 +279,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(0.16F, 0.06F, 0.05F),
                c.limestone_shade,
                k_building_state_mask_intact);
-  // Front gable tympanum behind the colonnade pediment
+
   desc.add_box(QVector3D(0.0F, eave_y + 0.18F, 0.93F),
                QVector3D(0.60F, 0.16F, 0.05F),
                c.limestone,
@@ -298,7 +289,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.limestone_shade,
                k_building_state_mask_intact);
 
-  // == PEDIMENT: Triangular gable over colonnade ==
   if (state != BuildingState::Destroyed) {
     desc.add_box(QVector3D(0.0F, cornice_y + 0.20F, 0.96F),
                  QVector3D(0.66F, 0.06F, 0.06F),
@@ -309,13 +299,13 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  c.terracotta,
                  k_building_state_mask_intact);
     if (state == BuildingState::Normal) {
-      // Pediment apex
+
       desc.add_box(QVector3D(0.0F, cornice_y + 0.36F, 0.96F),
                    QVector3D(0.22F, 0.05F, 0.04F),
                    c.blue_accent,
                    BuildingStateMask::Normal,
                    BuildingLODMask::Full);
-      // Acroteria (gold ornaments at pediment corners)
+
       desc.add_box(QVector3D(-0.62F, cornice_y + 0.24F, 0.96F),
                    QVector3D(0.05F, 0.07F, 0.05F),
                    c.gold,
@@ -329,7 +319,6 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
     }
   }
 
-  // == TEAM COLOR BANNER ==
   desc.add_palette_box(QVector3D(0.0F, 0.76F, 0.97F),
                        QVector3D(0.28F, 0.12F, 0.02F),
                        k_home_team_slot,

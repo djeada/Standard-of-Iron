@@ -39,7 +39,7 @@ struct ProportionTolerance {
 };
 
 constexpr ProportionTolerance k_infantry_tolerance{};
-// Support robes create a looser rendered depth silhouette than infantry armor.
+
 constexpr ProportionTolerance k_support_tolerance{.min_height_ratio = 0.90F,
                                                   .max_height_ratio = 1.12F,
                                                   .min_silhouette_ratio = 0.82F,

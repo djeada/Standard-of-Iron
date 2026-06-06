@@ -6,7 +6,6 @@
 
 namespace Game::Systems {
 
-/// Diagnostics counters for local avoidance.
 struct LocalAvoidanceDiagnostics {
   float spatial_hash_build_ms{0.0F};
   std::uint32_t average_neighbors_checked{0};
@@ -14,11 +13,6 @@ struct LocalAvoidanceDiagnostics {
   std::uint32_t overlaps_detected{0};
 };
 
-/// Local dynamic avoidance diagnostics.
-///
-/// Maintains a transient spatial hash of active unit circles and reports
-/// crowding pressure. It does not write transforms; movement ownership stays in
-/// MovementSystem.
 class LocalAvoidanceSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
@@ -27,7 +21,6 @@ public:
     return m_diagnostics;
   }
 
-  /// Configurable parameters.
   static constexpr float k_default_cell_size = 4.0F;
   static constexpr float k_separation_radius = 2.0F;
   static constexpr float k_max_correction_per_tick = 0.3F;

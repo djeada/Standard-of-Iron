@@ -75,10 +75,6 @@ void main() {
 
   vec3 p = v_local_pos * 1.35;
 
-  /*
-    Domain warp gives the ore veins a natural, mineral-like flow.
-    This is smoother and less flickery than stacking raw high-frequency sin waves.
-  */
   float warp_a = fbm(p * 1.15 + vec3(v_seed * 3.1));
   float warp_b = fbm(p.yzx * 1.40 + vec3(4.7, 1.3, 8.2) + v_seed);
   float warp_c = fbm(p.zxy * 1.05 + vec3(9.1, 5.4, 2.8) + v_seed * 2.0);
@@ -89,11 +85,6 @@ void main() {
   float stone_grain = fbm(q * 11.0);
   float mineral_noise = fbm(q * 5.5 + vec3(6.0));
 
-  /*
-    Arcane vein fields.
-    wide_* gives stained ore around the vein.
-    core_* gives the hot magical center.
-  */
   float field1 = sin(q.y * 7.0 + q.x * 2.8 - q.z * 2.2 + fbm(q * 2.0) * 5.5);
 
   float field2 =
@@ -108,9 +99,6 @@ void main() {
   float vein_wide = clamp(max(wide1, wide2), 0.0, 1.0);
   float vein_core = clamp(max(core1, core2), 0.0, 1.0);
 
-  /*
-    Dark host rock with subtle color variation.
-  */
   vec3 deep_rock = v_color * vec3(0.46, 0.48, 0.55);
   vec3 cool_rock = v_color * vec3(0.70, 0.72, 0.82);
   vec3 warm_mineral = vec3(0.48, 0.30, 0.20);
@@ -119,21 +107,13 @@ void main() {
   rock_color *= mix(0.72, 1.08, stone_grain);
   rock_color = mix(rock_color, warm_mineral, mineral_noise * 0.18);
 
-  /*
-    Magical ore color.
-    Change these two colors for different ore types.
-  */
-  vec3 magic_a = vec3(0.14, 0.85, 1.35); // cyan
-  vec3 magic_b = vec3(0.82, 0.24, 1.45); // violet
+  vec3 magic_a = vec3(0.14, 0.85, 1.35);
+  vec3 magic_b = vec3(0.82, 0.24, 1.45);
   vec3 magic_color = mix(magic_a, magic_b, fbm(q * 1.7 + vec3(v_seed)));
 
   vec3 stained_ore = mix(rock_color, magic_color * 0.55, vein_wide * 0.45);
   vec3 albedo = stained_ore;
 
-  /*
-    Stable tiny crystals.
-    These are cell-based, so they do not crawl over the surface.
-  */
   vec3 cell_p = q * 9.0;
   vec3 cell = floor(cell_p);
   vec3 cell_f = fract(cell_p);
@@ -150,9 +130,6 @@ void main() {
 
   float crystal = crystal_mask * crystal_twinkle * mix(0.35, 1.0, vein_wide);
 
-  /*
-    Lighting.
-  */
   vec3 sun_color = vec3(1.05, 0.88, 0.70);
   vec3 sky_color = vec3(0.58, 0.68, 0.95);
 

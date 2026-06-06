@@ -40,6 +40,3 @@
 #include "terrain_pipeline.h"
 #include "vegetation_pipeline.h"
 #include "water_pipeline.h"
-
-// TODO(phase1): Move direct shader uniform/state setup behind pipeline draw methods
-// once each command path has a mechanically verifiable contract.

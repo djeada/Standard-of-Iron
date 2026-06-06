@@ -1797,7 +1797,7 @@ auto GameEngine::apply_runtime_time_effects(float dt) -> float {
     if (m_rpg_hit_stop_timer < 0.0F) {
       m_rpg_hit_stop_timer = 0.0F;
     } else {
-      // Near-freeze for the first half, then ease out
+
       const float progress =
           1.0F - std::clamp(m_rpg_hit_stop_timer / m_rpg_hit_stop_total, 0.0F, 1.0F);
       const float time_scale =
