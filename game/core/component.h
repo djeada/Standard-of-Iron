@@ -522,6 +522,13 @@ public:
   bool damage_dealt_this_swing{false};
   bool input_buffered{false};
 
+  // Uniform time scale applied to every phase of the current swing so the whole
+  // 6-phase visual cycle fills exactly one attack cooldown. Snapshotted once when
+  // the swing starts (begin_attack_animation) so a mid-swing mode/cooldown change
+  // cannot distort the remaining phases. FPV commanders ignore this and use their
+  // own per-phase readability scaling instead. 1.0 == base 1.84s cycle.
+  float swing_duration_scale{1.0F};
+
   static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
   static constexpr float k_advance_duration = 0.22F;
   static constexpr float k_wind_up_duration = 0.42F;
@@ -529,6 +536,29 @@ public:
   static constexpr float k_impact_duration = 0.18F;
   static constexpr float k_recover_duration = 0.40F;
   static constexpr float k_reposition_duration = 0.28F;
+
+  // Sum of the base phase durations: the length of one full swing at scale 1.0.
+  static constexpr float k_base_cycle_total =
+      k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
+      k_recover_duration + k_reposition_duration;
+
+  // Single source of truth mapping an attack cooldown to a swing time scale so
+  // the visual cadence equals the damage cadence. Clamped only as a degenerate
+  // guard; for all real melee cooldowns (~0.55-2.0s) the scale is exact, which
+  // keeps the visual weapon-contact aligned with the deferred-strike contact at
+  // k_melee_contact_fraction * cooldown.
+  [[nodiscard]] static auto cooldown_fit_scale(float cooldown) -> float {
+    if (cooldown <= 0.0F) {
+      return 1.0F;
+    }
+    float scale = cooldown / k_base_cycle_total;
+    if (scale < 0.15F) {
+      scale = 0.15F;
+    } else if (scale > 3.0F) {
+      scale = 3.0F;
+    }
+    return scale;
+  }
 
   // Fraction of a full melee swing at which the weapon makes contact, expressed
   // in the swing's own time basis (advance+windup over the whole cycle). Used by
