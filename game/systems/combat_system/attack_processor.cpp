@@ -72,9 +72,31 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
       combat_state->animation_state == Engine::Core::CombatAnimationState::Idle) {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
-    combat_state->state_duration =
-        Engine::Core::CombatStateComponent::k_advance_duration *
-        commander_attack_advance_scale(attacker);
+    {
+      auto const* commander =
+          attacker->get_component<Engine::Core::CommanderComponent>();
+      bool const is_fpv = (commander != nullptr && commander->fpv_controlled);
+      if (is_fpv) {
+        // FPV commanders keep their own per-phase readability scaling; the
+        // uniform cooldown-fit scale does not apply to them.
+        combat_state->swing_duration_scale = 1.0F;
+        combat_state->state_duration =
+            Engine::Core::CombatStateComponent::k_advance_duration *
+            commander_attack_advance_scale(attacker);
+      } else {
+        // RTS units: snapshot one scale so the whole swing fills exactly one
+        // melee cooldown. Ranged swings keep the base cadence (scale 1.0).
+        float scale = 1.0F;
+        if (attack != nullptr &&
+            attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
+          scale = Engine::Core::CombatStateComponent::cooldown_fit_scale(
+              attack->get_current_cooldown());
+        }
+        combat_state->swing_duration_scale = scale;
+        combat_state->state_duration =
+            Engine::Core::CombatStateComponent::k_advance_duration * scale;
+      }
+    }
     if (unit != nullptr && attack != nullptr) {
       combat_state->attack_family = Engine::Core::resolve_combat_attack_family(
           unit->spawn_type, attack->current_mode);

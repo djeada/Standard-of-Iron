@@ -1,7 +1,6 @@
 #include "movement_system.h"
 
 #include <QVector3D>
-#include <QtGlobal>
 
 #include <algorithm>
 #include <cmath>
@@ -269,35 +268,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
         movement->stuck_timer = 0.0F;
       } else {
         movement->stuck_timer += delta_time;
-        // Diagnostic: emit a heartbeat for a unit that holds a target yet is
-        // not progressing, roughly twice per second, before the watchdog trips.
-        if (std::fmod(movement->stuck_timer, 0.5F) < delta_time) {
-          qInfo("[MOVE-STALL] id=%u t=%.2f pos=(%.2f,%.2f) tgt=(%.2f,%.2f) "
-                "goal=(%.2f,%.2f) wp=%zu v=(%.3f,%.3f)",
-                static_cast<unsigned>(entity->get_id()),
-                movement->stuck_timer,
-                px,
-                pz,
-                movement->target_x,
-                movement->target_y,
-                movement->goal_x,
-                movement->goal_y,
-                movement->remaining_waypoints(),
-                movement->vx,
-                movement->vz);
-        }
         if (movement->stuck_timer >= k_stuck_timeout_seconds) {
-          qInfo("[MOVE-STUCK] id=%u FORCED STOP after %.2fs pos=(%.2f,%.2f) "
-                "tgt=(%.2f,%.2f) goal=(%.2f,%.2f) wp=%zu",
-                static_cast<unsigned>(entity->get_id()),
-                movement->stuck_timer,
-                px,
-                pz,
-                movement->target_x,
-                movement->target_y,
-                movement->goal_x,
-                movement->goal_y,
-                movement->remaining_waypoints());
           movement->stop();
           OrderService::clear_player_order_intent(entity);
           movement->stuck_ref_valid = false;
@@ -365,22 +336,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (!current_position_allowed && MovementSystem::assign_local_recovery_move(
                                        current_pos_3d, final_goal, movement)) {
-    if (movement->stuck_timer > 0.5F) {
-      qInfo("[MOVE-BRANCH] id=%u recovery (current pos blocked) pos=(%.2f,%.2f)",
-            static_cast<unsigned>(entity->get_id()),
-            transform->position.x,
-            transform->position.z);
-    }
     return;
   }
 
   if (movement->has_target && !destination_allowed && current_position_allowed) {
-    if (movement->stuck_timer > 0.5F) {
-      qInfo("[MOVE-BRANCH] id=%u dest-blocked retarget goal=(%.2f,%.2f)",
-            static_cast<unsigned>(entity->get_id()),
-            movement->goal_x,
-            movement->goal_y);
-    }
     Point const requested_goal =
         CommandService::world_to_grid(final_goal.x(), final_goal.z());
     auto const nearest_goal =
@@ -518,14 +477,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       // is the terminal backstop if this persists.
       movement->vx = 0.0F;
       movement->vz = 0.0F;
-      if (movement->stuck_timer > 0.5F) {
-        qInfo("[MOVE-WEDGE] id=%u no free axis at (%.2f,%.2f) goal=(%.2f,%.2f)",
-              static_cast<unsigned>(entity->get_id()),
-              old_x,
-              old_z,
-              movement->goal_x,
-              movement->goal_y);
-      }
     }
   }
 

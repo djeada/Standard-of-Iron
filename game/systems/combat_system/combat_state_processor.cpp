@@ -80,7 +80,13 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
 auto phase_duration_for_state(const Engine::Core::Entity& unit,
                               const Engine::Core::CombatStateComponent& combat_state,
                               CS state) noexcept -> float {
-  return base_phase_duration(state) * commander_phase_scale(unit, combat_state, state);
+  auto const* commander = unit.get_component<Engine::Core::CommanderComponent>();
+  if (commander != nullptr && commander->fpv_controlled) {
+    return base_phase_duration(state) *
+           commander_phase_scale(unit, combat_state, state);
+  }
+  // RTS units: one snapshotted scale makes the whole swing fill one cooldown.
+  return base_phase_duration(state) * combat_state.swing_duration_scale;
 }
 
 } // namespace
@@ -111,7 +117,15 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
 
     combat_state->state_time += delta_time;
 
-    if (combat_state->state_time >= combat_state->state_duration) {
+    // Bounded carry loop: advance through as many phases as elapsed this frame,
+    // carrying the remainder so a frame spike (or very short scaled phase) does
+    // not silently stretch the swing past its cooldown. Capped to avoid runaway.
+    int transitions = 0;
+    while (combat_state->state_duration > 0.0F &&
+           combat_state->state_time >= combat_state->state_duration &&
+           transitions < 8) {
+      ++transitions;
+      float const carry = combat_state->state_time - combat_state->state_duration;
       switch (combat_state->animation_state) {
       case CS::Advance:
         combat_state->animation_state = CS::WindUp;
@@ -186,7 +200,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state->input_buffered = false;
         break;
       }
-      combat_state->state_time = 0.0F;
+      combat_state->state_time = carry;
     }
   }
 }

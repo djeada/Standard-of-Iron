@@ -780,8 +780,10 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (csc == nullptr) {
       continue;
     }
-    const float progress = std::clamp(
-        csc->state_time / CombatStateComponent::k_wind_up_duration, 0.0F, 1.0F);
+    const float progress =
+        (csc->state_duration > 0.0F)
+            ? std::clamp(csc->state_time / csc->state_duration, 0.0F, 1.0F)
+            : 0.0F;
 
     // Bigger, more visible danger rings that grow as the attack charges
     const float inner_r = 0.70F + 0.55F * progress;
