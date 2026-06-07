@@ -868,6 +868,40 @@ TEST_F(CommandServiceTest, AttackTargetAssignsDistinctApproachGoals) {
   EXPECT_EQ(goals.size(), attackers.size());
 }
 
+TEST_F(CommandServiceTest, AttackTargetBreaksStaleMeleeLockOnRetarget) {
+  Engine::Core::World world;
+
+  auto* old_target = create_unit(world, 1.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* new_target = create_unit(world, 12.0F, 0.0F, Game::Units::SpawnType::Knight);
+  auto* attacker = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(old_target, nullptr);
+  ASSERT_NE(new_target, nullptr);
+  ASSERT_NE(attacker, nullptr);
+
+  old_target->get_component<Engine::Core::UnitComponent>()->owner_id = 2;
+  new_target->get_component<Engine::Core::UnitComponent>()->owner_id = 2;
+  attacker->get_component<Engine::Core::UnitComponent>()->owner_id = 1;
+
+  auto* attack = attacker->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = old_target->get_id();
+
+  Game::Systems::CommandService::attack_target(
+      world, {attacker->get_id()}, new_target->get_id(), true);
+
+  EXPECT_FALSE(attack->in_melee_lock);
+  EXPECT_EQ(attack->melee_lock_target_id, 0U);
+
+  auto* attack_target = attacker->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr);
+  EXPECT_EQ(attack_target->target_id, new_target->get_id());
+  EXPECT_TRUE(attack_target->is_player_command);
+}
+
 TEST_F(CommandServiceTest, InvalidPositionAssignsNearbyWalkableRecoveryMove) {
   Game::Systems::CommandService::initialize(16, 16);
   Engine::Core::World world;

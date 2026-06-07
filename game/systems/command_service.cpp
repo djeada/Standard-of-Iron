@@ -437,8 +437,18 @@ void CommandService::attack_target(Engine::Core::World& world,
       continue;
     }
 
+    if (auto* atk = e->get_component<Engine::Core::AttackComponent>();
+        atk != nullptr && atk->in_melee_lock &&
+        atk->melee_lock_target_id != target_id) {
+      atk->in_melee_lock = false;
+      atk->melee_lock_target_id = 0;
+      atk->has_pending_melee_strike = false;
+      atk->pending_melee_target_id = 0;
+    }
+
     attack_target->target_id = target_id;
     attack_target->should_chase = should_chase;
+    attack_target->is_player_command = true;
 
     if (!should_chase) {
       continue;

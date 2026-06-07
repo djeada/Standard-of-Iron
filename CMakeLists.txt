@@ -100,6 +100,33 @@ endif()
 
 set(CMAKE_AUTOMOC ON)
 
+if(DEFINED ENV{CI} AND NOT "$ENV{CI}" STREQUAL "")
+    set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT OFF)
+else()
+    set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT ON)
+endif()
+
+option(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS
+    "Embed generated campaign map assets produced by tools/map_pipeline"
+    ${ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT})
+
+set(GENERATED_CAMPAIGN_MAP_RESOURCES
+    assets/campaign_map/campaign_base_color.png
+    assets/campaign_map/campaign_water.png
+    assets/campaign_map/coastlines_uv.json
+    assets/campaign_map/rivers_uv.json
+    assets/campaign_map/land_mesh.bin
+    assets/campaign_map/hannibal_path.json
+    assets/campaign_map/provinces.json
+)
+
+if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
+    message(STATUS "Generated campaign map assets enabled")
+else()
+    message(STATUS "Generated campaign map assets disabled")
+    set(GENERATED_CAMPAIGN_MAP_RESOURCES)
+endif()
+
 # ---- Google Test Setup ----
 include(FetchContent)
 FetchContent_Declare(
@@ -304,14 +331,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
             assets/campaigns/second_punic_war.json
-            assets/campaign_map/campaign_base_color.png
-            assets/campaign_map/campaign_water.png
-            assets/campaign_map/coastlines_uv.json
-            assets/campaign_map/rivers_uv.json
-            assets/campaign_map/land_mesh.bin
-            assets/campaign_map/hannibal_path.json
             assets/campaign_map/campaign_state.json
-            assets/campaign_map/provinces.json
+            ${GENERATED_CAMPAIGN_MAP_RESOURCES}
             assets.qrc
             assets/visuals/unit_visuals.json
             assets/visuals/unit_equipment_loadouts.json

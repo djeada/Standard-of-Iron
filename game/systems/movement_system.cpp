@@ -412,7 +412,12 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       float const nx = dx / std::max(0.0001F, distance);
       float const nz = dz / std::max(0.0001F, distance);
       float desired_speed = max_speed;
-      float const slow_radius = arrive_radius * 4.0F;
+
+      auto* const move_attack = entity->get_component<Engine::Core::AttackComponent>();
+      bool const ranged_mode = (move_attack != nullptr) && move_attack->can_ranged &&
+                               move_attack->current_mode ==
+                                   Engine::Core::AttackComponent::CombatMode::Ranged;
+      float const slow_radius = ranged_mode ? arrive_radius : arrive_radius * 1.5F;
       if (distance < slow_radius) {
         desired_speed = max_speed * (distance / slow_radius);
       }

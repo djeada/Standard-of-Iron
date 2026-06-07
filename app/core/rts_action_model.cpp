@@ -345,9 +345,6 @@ auto get_current_action_mode(const ActionContext& context) -> QString {
   if (get_status(context, ActionId::Patrol).active) {
     return QStringLiteral("patrol");
   }
-  if (get_status(context, ActionId::Attack).active) {
-    return QStringLiteral("attack");
-  }
   if (get_status(context, ActionId::Guard).active) {
     return QStringLiteral("guard");
   }

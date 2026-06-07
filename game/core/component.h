@@ -385,6 +385,7 @@ public:
 
   EntityID target_id{0};
   bool should_chase{false};
+  bool is_player_command{false};
 };
 
 class RpgCommanderTargetComponent : public Component {

@@ -448,7 +448,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "systems" / "movement_orders.cpp");
   const auto command_service =
       read_text(root / "game" / "systems" / "command_service.cpp");
-  const auto scene_renderer = read_text(root / "render" / "scene_renderer.cpp");
+  const auto scene_walk = read_text(root / "render" / "scene_walk.cpp");
   const auto animation_inputs = read_text(root / "render" / "gl" / "humanoid" /
                                           "animation" / "animation_inputs.cpp");
   const auto prepared_state = read_text(root / "render" / "creature" / "pipeline" /
@@ -469,7 +469,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(movement_system.empty());
   ASSERT_FALSE(movement_orders.empty());
   ASSERT_FALSE(command_service.empty());
-  ASSERT_FALSE(scene_renderer.empty());
+  ASSERT_FALSE(scene_walk.empty());
   ASSERT_FALSE(animation_inputs.empty());
   ASSERT_FALSE(prepared_state.empty());
   ASSERT_FALSE(combat_dust_renderer.empty());
@@ -491,7 +491,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       contains(attack_processor, "CombatRules::clear_rts_melee_lock(target);"));
   EXPECT_TRUE(contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(movement_orders, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(contains(scene_renderer, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(scene_walk, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
       contains(animation_inputs, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(prepared_state, "CombatRules::participates_in_rts_melee_lock"));
@@ -660,11 +660,12 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
   const auto commander_mode_source =
       read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
-  const auto prepare_source = read_text(root / "render" / "humanoid" / "prepare.cpp");
+  const auto prepare_submission_source =
+      read_text(root / "render" / "humanoid" / "prepare_submission.cpp");
   ASSERT_FALSE(component_source.empty());
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(commander_mode_source.empty());
-  ASSERT_FALSE(prepare_source.empty());
+  ASSERT_FALSE(prepare_submission_source.empty());
 
   EXPECT_TRUE(contains(component_source, "bool jump_active{false};"));
   EXPECT_TRUE(contains(component_source, "float jump_phase{0.0F};"));
@@ -678,14 +679,14 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
 
   EXPECT_TRUE(contains(commander_mode_source, "commander_data->jump_active = false;"));
 
-  EXPECT_TRUE(contains(prepare_source, "RCP::set_model_world_y("));
-  EXPECT_TRUE(
-      contains(prepare_source, "RCP::model_world_origin(inst_ctx.model).y() +"));
-  EXPECT_TRUE(contains(prepare_source,
+  EXPECT_TRUE(contains(prepare_submission_source, "RCP::set_model_world_y("));
+  EXPECT_TRUE(contains(prepare_submission_source,
+                       "RCP::model_world_origin(inst_ctx.model).y() +"));
+  EXPECT_TRUE(contains(prepare_submission_source,
                        "locomotion_state.gait.state = "
                        "Render::GL::HumanoidMotionState::Idle;"));
-  EXPECT_TRUE(
-      contains(prepare_source, "anim_ctx.ambient_idle_type = AmbientIdleType::Jump;"));
+  EXPECT_TRUE(contains(prepare_submission_source,
+                       "anim_ctx.ambient_idle_type = AmbientIdleType::Jump;"));
 }
 
 TEST(CommanderControlRegressionTest,
