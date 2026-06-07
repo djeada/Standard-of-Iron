@@ -257,3 +257,67 @@ TEST_F(SiegeSpecialProcessorTest, UnitDoesNotRetaliateAgainstRegularBuildingDama
   auto* attack_target = enemy->get_component<AttackTargetComponent>();
   EXPECT_TRUE((attack_target == nullptr) || (attack_target->target_id == 0));
 }
+
+TEST_F(SiegeSpecialProcessorTest, UnitRetaliatesAgainstAttackingEnemyUnit) {
+  auto* defender = make_enemy(0.0F, 0.0F, 0.0F, 2);
+  defender->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* attacker = make_enemy(5.0F, 0.0F, 0.0F, 1);
+
+  Combat::deal_damage(world.get(), defender, 15, attacker->get_id());
+
+  auto* attack_target = defender->get_component<AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr);
+  EXPECT_EQ(attack_target->target_id, attacker->get_id());
+  EXPECT_TRUE(attack_target->should_chase);
+  EXPECT_FALSE(attack_target->is_player_command);
+}
+
+TEST_F(SiegeSpecialProcessorTest, RetaliationAlertsNearbyIdleAlly) {
+  auto* defender = make_enemy(0.0F, 0.0F, 0.0F, 2);
+  defender->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* ally = make_enemy(3.0F, 0.0F, 0.0F, 2);
+  ally->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* attacker = make_enemy(6.0F, 0.0F, 0.0F, 1);
+
+  Combat::deal_damage(world.get(), defender, 15, attacker->get_id());
+
+  auto* ally_target = ally->get_component<AttackTargetComponent>();
+  ASSERT_NE(ally_target, nullptr);
+  EXPECT_EQ(ally_target->target_id, attacker->get_id());
+}
+
+TEST_F(SiegeSpecialProcessorTest, RetaliationDoesNotAlertDistantAlly) {
+  auto* defender = make_enemy(0.0F, 0.0F, 0.0F, 2);
+  defender->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* ally = make_enemy(40.0F, 0.0F, 0.0F, 2);
+  ally->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* attacker = make_enemy(6.0F, 0.0F, 0.0F, 1);
+
+  Combat::deal_damage(world.get(), defender, 15, attacker->get_id());
+
+  auto* ally_target = ally->get_component<AttackTargetComponent>();
+  EXPECT_TRUE((ally_target == nullptr) || (ally_target->target_id == 0));
+}
+
+TEST_F(SiegeSpecialProcessorTest, SquadAlertSkipsAllyUnderManualMoveOrder) {
+  auto* defender = make_enemy(0.0F, 0.0F, 0.0F, 2);
+  defender->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* ally = make_enemy(3.0F, 0.0F, 0.0F, 2);
+  ally->add_component<AttackComponent>(2.0F, 12, 1.0F);
+  auto* ally_move = ally->add_component<MovementComponent>();
+  auto* ally_intent = ally->add_component<PlayerOrderIntentComponent>();
+  MovementTestAccess::set_has_target(*ally_move, true);
+  MovementTestAccess::set_target_x(*ally_move, 50.0F);
+  ally_intent->kind = PlayerOrderIntentKind::ManualMove;
+  ally_intent->suppress_opportunistic_combat = true;
+  auto* attacker = make_enemy(6.0F, 0.0F, 0.0F, 1);
+
+  Combat::deal_damage(world.get(), defender, 15, attacker->get_id());
+
+  auto* ally_target = ally->get_component<AttackTargetComponent>();
+  EXPECT_TRUE((ally_target == nullptr) || (ally_target->target_id == 0));
+
+  auto* defender_target = defender->get_component<AttackTargetComponent>();
+  ASSERT_NE(defender_target, nullptr);
+  EXPECT_EQ(defender_target->target_id, attacker->get_id());
+}

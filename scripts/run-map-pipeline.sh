@@ -9,12 +9,25 @@ requirements_path="$root_dir/tools/map_pipeline/requirements.txt"
 
 python_cmd="${PYTHON:-python3}"
 rebuild_maps="${map_pipeline_rebuild:-0}"
+skip_maps="${SKIP_MAP_PIPELINE:-0}"
 
 for arg in "$@"; do
   if [ "$arg" = "--rebuild" ] || [ "$arg" = "-f" ]; then
     rebuild_maps=1
   fi
+  if [ "$arg" = "--skip" ]; then
+    skip_maps=1
+  fi
 done
+
+if [ "${CI:-}" = "true" ] && [ "${RUN_MAP_PIPELINE_IN_CI:-0}" != "1" ]; then
+  skip_maps=1
+fi
+
+if [ "$skip_maps" = "1" ]; then
+  echo "Map pipeline skipped."
+  exit 0
+fi
 
 required_outputs=(
   "$map_output_dir/campaign_base_color.png"

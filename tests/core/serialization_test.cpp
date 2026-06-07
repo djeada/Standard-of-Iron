@@ -947,6 +947,7 @@ TEST_F(SerializationTest, AttackTargetComponentSerialization) {
 
   attack_target->target_id = 42;
   attack_target->should_chase = true;
+  attack_target->is_player_command = true;
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
@@ -955,6 +956,7 @@ TEST_F(SerializationTest, AttackTargetComponentSerialization) {
 
   EXPECT_EQ(attack_target_obj["target_id"].toVariant().toULongLong(), 42ULL);
   EXPECT_TRUE(attack_target_obj["should_chase"].toBool());
+  EXPECT_TRUE(attack_target_obj["is_player_command"].toBool());
 }
 
 TEST_F(SerializationTest, AttackTargetComponentRoundTrip) {
@@ -962,6 +964,7 @@ TEST_F(SerializationTest, AttackTargetComponentRoundTrip) {
   auto* attack_target = original_entity->add_component<AttackTargetComponent>();
   attack_target->target_id = 123;
   attack_target->should_chase = false;
+  attack_target->is_player_command = true;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -972,6 +975,7 @@ TEST_F(SerializationTest, AttackTargetComponentRoundTrip) {
   ASSERT_NE(deserialized, nullptr);
   EXPECT_EQ(deserialized->target_id, 123U);
   EXPECT_FALSE(deserialized->should_chase);
+  EXPECT_TRUE(deserialized->is_player_command);
 }
 
 TEST_F(SerializationTest, BuildingComponentSerialization) {
