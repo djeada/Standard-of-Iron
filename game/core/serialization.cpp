@@ -233,6 +233,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     QJsonObject attack_target_obj;
     attack_target_obj["target_id"] = static_cast<qint64>(attack_target->target_id);
     attack_target_obj["should_chase"] = attack_target->should_chase;
+    attack_target_obj["is_player_command"] = attack_target->is_player_command;
     entity_obj["attack_target"] = attack_target_obj;
   }
 
@@ -833,6 +834,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     attack_target->target_id =
         static_cast<EntityID>(attack_target_obj["target_id"].toVariant().toULongLong());
     attack_target->should_chase = attack_target_obj["should_chase"].toBool(false);
+    attack_target->is_player_command =
+        attack_target_obj["is_player_command"].toBool(false);
   }
 
   if (json.contains("commander")) {
