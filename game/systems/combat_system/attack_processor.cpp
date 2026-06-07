@@ -304,6 +304,34 @@ void face_target(Engine::Core::TransformComponent* attacker_transform,
   attacker_transform->has_desired_yaw = true;
 }
 
+auto chase_spread_angle(Engine::Core::EntityID attacker_id) -> float {
+  std::uint32_t const seed =
+      static_cast<std::uint32_t>(attacker_id * 2654435761U) ^ 0x85EBCA6BU;
+  return (hash_to_unit(seed) - 0.5F) * Constants::k_chase_spread_arc;
+}
+
+auto rotate_xz(const QVector3D& vec, float angle) -> QVector3D {
+  float const cos_a = std::cos(angle);
+  float const sin_a = std::sin(angle);
+  return {vec.x() * cos_a - vec.z() * sin_a, 0.0F, vec.x() * sin_a + vec.z() * cos_a};
+}
+
+auto chase_destination(const QVector3D& attacker_pos,
+                       const QVector3D& target_pos,
+                       float desired_distance,
+                       float spread_angle) -> QVector3D {
+  QVector3D approach = attacker_pos - target_pos;
+  approach.setY(0.0F);
+  float const length_sq = approach.lengthSquared();
+  if (length_sq <= 0.000001F) {
+    approach = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    approach /= std::sqrt(length_sq);
+  }
+  approach = rotate_xz(approach, spread_angle);
+  return target_pos + approach * desired_distance;
+}
+
 auto has_valid_melee_lock(Engine::Core::Entity* entity,
                           Engine::Core::World* world) -> bool {
   if ((entity == nullptr) || (world == nullptr)) {
@@ -972,44 +1000,41 @@ void process_attacks(Engine::Core::World* world,
           QVector3D desired_pos = target_pos;
           bool hold_position = false;
 
+          float const spread_angle = chase_spread_angle(attacker->get_id());
+          QVector3D const direction = target_pos - attacker_pos;
+          float const distance_sq = direction.lengthSquared();
+          float const distance =
+              distance_sq > 0.000001F ? std::sqrt(distance_sq) : 0.0F;
+
           if (target_is_building ||
               target->has_component<Engine::Core::ElephantComponent>()) {
             float const target_radius = combat_radius(target);
-            QVector3D direction = target_pos - attacker_pos;
-            float const distance_sq = direction.lengthSquared();
-            if (distance_sq > 0.000001F) {
-              float const distance = std::sqrt(distance_sq);
-              direction /= distance;
+            if (distance > 0.0F) {
               float const desired_distance =
                   target_radius + std::max(range - 0.2F, 0.2F);
               if (distance > desired_distance + 0.15F) {
-                desired_pos = target_pos - direction * desired_distance;
+                desired_pos = chase_destination(
+                    attacker_pos, target_pos, desired_distance, spread_angle);
               } else {
                 hold_position = true;
               }
             }
           } else if (ranged_unit) {
-            QVector3D direction = target_pos - attacker_pos;
-            float const distance_sq = direction.lengthSquared();
-            if (distance_sq > 0.000001F) {
-              float const distance = std::sqrt(distance_sq);
-              direction /= distance;
+            if (distance > 0.0F) {
               float const optimal_range = range * Constants::k_optimal_range_factor;
               if (distance > optimal_range + Constants::k_optimal_range_buffer) {
-                desired_pos = target_pos - direction * optimal_range;
+                desired_pos = chase_destination(
+                    attacker_pos, target_pos, optimal_range, spread_angle);
               } else {
                 hold_position = true;
               }
             }
           } else {
-            QVector3D direction = target_pos - attacker_pos;
-            float const distance_sq = direction.lengthSquared();
-            if (distance_sq > 0.000001F) {
-              float const distance = std::sqrt(distance_sq);
-              direction /= distance;
+            if (distance > 0.0F) {
               float const desired_distance = std::max(range - 0.2F, 0.2F);
               if (distance > desired_distance + 0.15F) {
-                desired_pos = target_pos - direction * desired_distance;
+                desired_pos = chase_destination(
+                    attacker_pos, target_pos, desired_distance, spread_angle);
               } else {
                 hold_position = true;
               }

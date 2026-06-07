@@ -37,6 +37,10 @@ inline constexpr float k_arrow_volley_wave_height = 0.28F;
 inline constexpr float k_arrow_volley_wave_depth = 0.40F;
 inline constexpr float k_arrow_speed = 14.0F;
 inline constexpr int k_max_visual_arrows_per_volley = 20;
+
+inline constexpr float k_squad_alert_radius = 9.0F;
+inline constexpr int k_max_squad_alert_allies = 6;
+inline constexpr float k_chase_spread_arc = 1.4F;
 } // namespace Constants
 
 } // namespace Game::Systems::Combat

@@ -2119,11 +2119,7 @@ void ArenaViewport::clear_forced_animation_state(
       continue;
     }
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-      movement->has_target = false;
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-      movement->clear_path();
-      movement->path_pending = false;
+      movement->stop();
     }
     entity->remove_component<Engine::Core::AttackTargetComponent>();
     entity->remove_component<Engine::Core::CombatStateComponent>();
@@ -2166,13 +2162,10 @@ void ArenaViewport::update_active_scenario(float simulation_dt) {
                            : nullptr;
       if (transform != nullptr) {
         if (movement != nullptr) {
-          movement->target_x = transform->position.x;
-          movement->target_y = transform->position.z + 8.0F;
-          movement->goal_x = movement->target_x;
-          movement->goal_y = movement->target_y;
-          movement->has_target = true;
           movement->clear_path();
-          movement->path_pending = false;
+          movement->engage_manual_move(transform->position.x,
+                                       transform->position.z + 8.0F);
+          movement->set_manual_velocity(0.0F, 0.0F);
         }
         m_active_scenario.first_event_applied = true;
       }
@@ -2271,13 +2264,9 @@ void ArenaViewport::play_walk_animation() {
     float const target_x = transform->position.x + direction_x * distance;
     float const target_z = transform->position.z + direction_z * distance;
 
-    movement->target_x = target_x;
-    movement->target_y = target_z;
-    movement->goal_x = target_x;
-    movement->goal_y = target_z;
-    movement->has_target = true;
     movement->clear_path();
-    movement->path_pending = false;
+    movement->engage_manual_move(target_x, target_z);
+    movement->set_manual_velocity(0.0F, 0.0F);
   }
 
   update();
@@ -2328,11 +2317,7 @@ void ArenaViewport::play_death_animation() {
     }
 
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-      movement->has_target = false;
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-      movement->clear_path();
-      movement->path_pending = false;
+      movement->stop();
     }
     if (auto* renderable = entity->get_component<Engine::Core::RenderableComponent>()) {
       renderable->visible = false;
@@ -2377,13 +2362,9 @@ void ArenaViewport::move_selected_unit_forward() {
     float const target_x = transform->position.x + std::sin(yaw_rad) * 5.0F;
     float const target_z = transform->position.z + std::cos(yaw_rad) * 5.0F;
 
-    movement->target_x = target_x;
-    movement->target_y = target_z;
-    movement->goal_x = target_x;
-    movement->goal_y = target_z;
-    movement->has_target = true;
     movement->clear_path();
-    movement->path_pending = false;
+    movement->engage_manual_move(target_x, target_z);
+    movement->set_manual_velocity(0.0F, 0.0F);
   }
 
   update();
@@ -2524,11 +2505,7 @@ void ArenaViewport::apply_attack_scrub_override() {
 
   if (auto* movement = entity->get_component<Engine::Core::MovementComponent>();
       movement != nullptr) {
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
-    movement->has_target = false;
-    movement->path_pending = false;
-    movement->clear_path();
+    movement->stop();
   }
 
   auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();

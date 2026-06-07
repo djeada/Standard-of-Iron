@@ -44,6 +44,7 @@ add_executable(standard_of_iron_tests
     core/mission_definition_view_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
+    core/rts_action_model_test.cpp
     controllers/command_controller_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     db/save_storage_test.cpp
