@@ -9,6 +9,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/clip_manifest.h"
+#include "animation/pose_manifest.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
@@ -16,6 +18,7 @@
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/pose_intent.h"
 #include "render/creature/render_request.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
@@ -77,6 +80,10 @@ auto palette_contact_y(CreatureKind kind,
     return 0.0F;
   }
   return 0.0F;
+}
+
+auto animation_state_for_index(std::size_t index) -> AnimationStateId {
+  return static_cast<AnimationStateId>(index);
 }
 
 class CountingSubmitter : public Render::GL::ISubmitter {
@@ -177,10 +184,10 @@ TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
   const auto& reg = ArchetypeRegistry::instance();
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackSword),
-            3U);
+            Animation::k_humanoid_attack_sword_variant_count);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_rider_base,
                                    AnimationStateId::AttackSword),
-            1U);
+            Animation::k_humanoid_riding_sword_variant_count);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackBow),
             1U);
@@ -189,7 +196,50 @@ TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
       1U);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::Idle),
-            5U);
+            Animation::k_humanoid_idle_variant_count);
+}
+
+TEST(ArchetypeRegistryBaseline, BaselineArchetypesUseAnimationCoreManifests) {
+  const auto& reg = ArchetypeRegistry::instance();
+  auto const assert_manifest = [&reg](Render::Creature::ArchetypeId archetype,
+                                      const Animation::ClipManifest& manifest) {
+    for (std::size_t i = 0; i < Animation::state_count(); ++i) {
+      auto const state = animation_state_for_index(i);
+      auto const expected_clip = manifest.clips[i] == Animation::k_unmapped_clip
+                                     ? ArchetypeDescriptor::k_unmapped_clip
+                                     : manifest.clips[i];
+      EXPECT_EQ(reg.bpat_clip(archetype, state), expected_clip) << "state index " << i;
+      EXPECT_EQ(reg.clip_variant_count(archetype, state), manifest.variant_counts[i])
+          << "state index " << i;
+      EXPECT_EQ(reg.is_snapshot(archetype, state), manifest.snapshot[i])
+          << "state index " << i;
+    }
+  };
+
+  assert_manifest(ArchetypeRegistry::k_humanoid_base,
+                  Animation::humanoid_clip_manifest());
+  assert_manifest(ArchetypeRegistry::k_rider_base, Animation::rider_clip_manifest());
+  assert_manifest(ArchetypeRegistry::k_horse_base, Animation::horse_clip_manifest());
+  assert_manifest(ArchetypeRegistry::k_elephant_base,
+                  Animation::elephant_clip_manifest());
+}
+
+TEST(AnimationCorePoseManifest, RenderPoseResolutionUsesAnimationCoreStates) {
+  for (std::size_t i = 0; i < Animation::pose_intent_count(); ++i) {
+    auto const intent = static_cast<Render::Creature::PoseIntent>(i);
+    auto const render_pose = Render::Creature::resolve_pose_for_intent(intent);
+    auto const semantic_pose =
+        Animation::resolve_pose(static_cast<Animation::PoseIntent>(i));
+
+    EXPECT_EQ(render_pose.animation_state, semantic_pose.animation_state)
+        << "pose intent index " << i;
+    EXPECT_EQ(render_pose.animation.action, semantic_pose.semantic.action)
+        << "pose intent index " << i;
+    EXPECT_EQ(render_pose.animation.stance, semantic_pose.semantic.stance)
+        << "pose intent index " << i;
+    EXPECT_EQ(render_pose.animation.locomotion, semantic_pose.semantic.locomotion)
+        << "pose intent index " << i;
+  }
 }
 
 TEST(ArchetypeRegistryBaseline, IdleVariantsResolveToAmbientIdleClips) {

@@ -142,6 +142,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # engine core moved under game; no separate engine subdir target
+add_subdirectory(animation)
 add_subdirectory(render)
 add_subdirectory(game)
 add_subdirectory(ui)

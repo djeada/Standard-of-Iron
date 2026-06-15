@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <string_view>
 
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
@@ -19,34 +18,10 @@
 #include "../archetype_registry.h"
 #include "../bpat/bpat_registry.h"
 #include "../pose_intent.h"
+#include "animation/clip_manifest.h"
+#include "animation/playback_manifest.h"
 
 namespace Render::Creature::Pipeline {
-
-namespace {
-
-constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
-
-auto hold_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> float {
-  if (anim.inputs.is_constructing &&
-      anim.construction_role == Render::GL::ConstructionRole::KneelingChisel) {
-    return k_terminal_non_looping_phase;
-  }
-
-  float const hold_phase = Render::GL::hold_transition_amount(anim.inputs);
-  if (hold_phase > 0.0F) {
-    return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
-  }
-
-  float const guard_phase = Render::GL::guard_pose_amount(anim.inputs);
-  if (guard_phase > 0.0F) {
-    return std::clamp(guard_phase, 0.0F, k_terminal_non_looping_phase);
-  }
-
-  return 0.0F;
-}
-
-} // namespace
 
 auto pass_intent_from_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> RenderPassIntent {
@@ -84,35 +59,44 @@ auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) n
   return resolved_humanoid_pose(anim).animation_state;
 }
 
+namespace {
+
+auto humanoid_playback_phase_inputs_for_state(
+    const Render::GL::HumanoidAnimationContext& anim,
+    Render::Creature::AnimationStateId state) noexcept
+    -> Animation::HumanoidPlaybackPhaseInputs {
+  return {
+      .state = state,
+      .is_mounted = anim.inputs.is_mounted,
+      .is_attacking = anim.inputs.is_attacking,
+      .is_melee = anim.inputs.is_melee,
+      .movement_state = anim.inputs.movement_state,
+      .is_constructing = anim.inputs.is_constructing,
+      .construction_role = anim.construction_role,
+      .construction_progress = anim.inputs.construction_progress,
+      .construction_jitter_seed = anim.jitter_seed,
+      .is_in_hold_mode = anim.inputs.is_in_hold_mode,
+      .is_exiting_hold = anim.inputs.is_exiting_hold,
+      .hold_entry_progress = anim.inputs.hold_entry_progress,
+      .hold_exit_progress = anim.inputs.hold_exit_progress,
+      .is_guarding = anim.inputs.is_guarding,
+      .is_exiting_guard = anim.inputs.is_exiting_guard,
+      .guard_pose_progress = anim.inputs.guard_pose_progress,
+      .death_progress = anim.inputs.death_progress,
+      .attack_phase = anim.attack_phase,
+      .ambient_idle = anim.ambient_idle_type,
+      .ambient_idle_phase = anim.ambient_idle_phase,
+      .gait_cycle_phase = anim.gait.cycle_phase,
+  };
+}
+
+} // namespace
+
 auto humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
                               Render::Creature::AnimationStateId state) noexcept
     -> float {
-  if (state == Render::Creature::AnimationStateId::Die) {
-    return std::clamp(anim.inputs.death_progress, 0.0F, 1.0F);
-  }
-  if (state == Render::Creature::AnimationStateId::Dead) {
-    return 0.0F;
-  }
-  if (state == Render::Creature::AnimationStateId::Hold) {
-    return hold_phase_for_anim(anim);
-  }
-  if (state == Render::Creature::AnimationStateId::RidingCharge &&
-      anim.inputs.is_mounted && anim.inputs.is_attacking && anim.inputs.is_melee &&
-      !Render::Creature::is_moving_animation(anim.inputs.movement_state)) {
-    return 0.12F + 0.66F * std::clamp(anim.attack_phase, 0.0F, 1.0F);
-  }
-  if (anim.inputs.is_constructing) {
-    return normalize_bpat_phase(anim.inputs.construction_progress + anim.jitter_seed,
-                                true);
-  }
-  if (Render::Creature::is_attack_animation_state(state)) {
-    return anim.attack_phase;
-  }
-  if (state == Render::Creature::AnimationStateId::Idle &&
-      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
-    return anim.ambient_idle_phase;
-  }
-  return anim.gait.cycle_phase;
+  return Animation::resolve_humanoid_playback_phase(
+      humanoid_playback_phase_inputs_for_state(anim, state));
 }
 
 namespace {
@@ -124,56 +108,20 @@ auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noex
              : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 }
 
-auto humanoid_requested_clip_variant_for_state(
-    const Render::GL::HumanoidAnimationContext& anim,
-    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t {
-  if (state == Render::Creature::AnimationStateId::Die ||
-      state == Render::Creature::AnimationStateId::Dead) {
-    return anim.inputs.death_variant;
-  }
-  if (anim.inputs.is_constructing &&
-      state == Render::Creature::AnimationStateId::AttackSword) {
-    switch (anim.construction_role) {
-    case Render::GL::ConstructionRole::Hammer:
-      return 0U;
-    case Render::GL::ConstructionRole::Saw:
-      return 1U;
-    case Render::GL::ConstructionRole::Chisel:
-      return 2U;
-    case Render::GL::ConstructionRole::KneelingChisel:
-      return 2U;
-    case Render::GL::ConstructionRole::None:
-      break;
-    }
-
-    auto const bucket =
-        static_cast<std::uint32_t>(std::floor(anim.jitter_seed * 64.0F));
-    return static_cast<std::uint8_t>(bucket % 3U);
-  }
-  if (Render::Creature::is_attack_animation_state(state)) {
-    return anim.inputs.attack_variant;
-  }
-  if (state == Render::Creature::AnimationStateId::Idle &&
-      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
-    return Render::GL::ambient_idle_clip_variant(anim.ambient_idle_type);
-  }
-  return 0U;
-}
-
-auto expected_humanoid_idle_variant_name(std::uint8_t clip_variant) noexcept
-    -> std::string_view {
-  switch (clip_variant) {
-  case 1U:
-    return "idle_squat";
-  case 2U:
-    return "idle_jump";
-  case 3U:
-    return "idle_weapon";
-  case 4U:
-    return "idle_weave";
-  default:
-    return "idle";
-  }
+auto humanoid_variant_inputs_for_state(const Render::GL::HumanoidAnimationContext& anim,
+                                       Render::Creature::AnimationStateId state,
+                                       std::uint8_t available_variant_count) noexcept
+    -> Animation::HumanoidClipVariantInputs {
+  return {
+      .state = state,
+      .is_constructing = anim.inputs.is_constructing,
+      .construction_role = anim.construction_role,
+      .construction_jitter_seed = anim.jitter_seed,
+      .death_variant = anim.inputs.death_variant,
+      .attack_variant = anim.inputs.attack_variant,
+      .ambient_idle = anim.ambient_idle_type,
+      .available_variant_count = available_variant_count,
+  };
 }
 
 auto humanoid_clip_matches_requested_idle_variant(
@@ -187,7 +135,8 @@ auto humanoid_clip_matches_requested_idle_variant(
   if (clip_id >= blob.clip_count()) {
     return false;
   }
-  return blob.clip(clip_id).name == expected_humanoid_idle_variant_name(clip_variant);
+  return blob.clip(clip_id).name ==
+         Animation::humanoid_idle_variant_clip_name(clip_variant);
 }
 
 } // namespace
@@ -203,8 +152,8 @@ auto humanoid_clip_variant_for_state(Render::Creature::ArchetypeId archetype_id,
   if (variant_count <= 1U) {
     return 0U;
   }
-  return std::min<std::uint8_t>(humanoid_requested_clip_variant_for_state(anim, state),
-                                variant_count - 1U);
+  return Animation::resolve_humanoid_clip_variant(
+      humanoid_variant_inputs_for_state(anim, state, variant_count));
 }
 
 auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept

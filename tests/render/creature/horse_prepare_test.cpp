@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/horse_gait_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
@@ -370,6 +371,82 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
               0.01F);
   EXPECT_NEAR(
       requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(), 1.9F, 0.01F);
+}
+
+TEST(AnimationCoreHorseGaitManifest, SelectionUsesHysteresisAroundGaitBands) {
+  using Animation::HorseGaitType;
+
+  EXPECT_EQ(Animation::resolve_horse_desired_gait({
+                .has_locomotion_input = false,
+                .anim_has_motion = false,
+                .speed = 4.0F,
+                .anchor = HorseGaitType::Trot,
+            }),
+            HorseGaitType::Idle);
+
+  EXPECT_EQ(Animation::resolve_horse_desired_gait({
+                .has_locomotion_input = true,
+                .anim_has_motion = true,
+                .speed = 1.4F,
+                .anchor = HorseGaitType::Idle,
+            }),
+            HorseGaitType::Walk);
+
+  EXPECT_EQ(Animation::resolve_horse_desired_gait({
+                .has_locomotion_input = true,
+                .anim_has_motion = true,
+                .speed = 6.2F,
+                .anchor = HorseGaitType::Idle,
+            }),
+            HorseGaitType::Canter);
+
+  EXPECT_EQ(Animation::resolve_horse_desired_gait({
+                .has_locomotion_input = true,
+                .anim_has_motion = false,
+                .speed = 2.5F,
+                .anchor = HorseGaitType::Trot,
+            }),
+            HorseGaitType::Walk);
+}
+
+TEST(AnimationCoreHorseGaitManifest, TransitionPreservesPlaybackExitIntent) {
+  using Animation::HorseGaitType;
+
+  auto const entering = Animation::resolve_horse_gait_transition({
+      .current = HorseGaitType::Idle,
+      .target = HorseGaitType::Idle,
+      .transition_progress = 1.0F,
+      .transition_start_time = 0.0F,
+      .sample_time = 2.0F,
+      .desired = HorseGaitType::Walk,
+      .idle_bob_intensity = 1.0F,
+      .transition_duration = 0.30F,
+  });
+  EXPECT_EQ(entering.current, HorseGaitType::Idle);
+  EXPECT_EQ(entering.target, HorseGaitType::Walk);
+  EXPECT_FLOAT_EQ(entering.transition_progress, 0.0F);
+  EXPECT_FLOAT_EQ(entering.transition_start_time, 2.0F);
+  EXPECT_EQ(Animation::horse_playback_gait_for_transition(
+                entering.current, entering.target, true),
+            HorseGaitType::Walk);
+
+  auto const exiting = Animation::resolve_horse_gait_transition({
+      .current = HorseGaitType::Walk,
+      .target = HorseGaitType::Walk,
+      .transition_progress = 1.0F,
+      .transition_start_time = 2.0F,
+      .sample_time = 2.1F,
+      .desired = HorseGaitType::Idle,
+      .idle_bob_intensity = 2.0F,
+      .transition_duration = 0.30F,
+  });
+  EXPECT_EQ(exiting.current, HorseGaitType::Walk);
+  EXPECT_EQ(exiting.target, HorseGaitType::Idle);
+  EXPECT_FLOAT_EQ(exiting.transition_progress, 0.0F);
+  EXPECT_FLOAT_EQ(exiting.idle_bob_intensity, 1.5F);
+  EXPECT_EQ(Animation::horse_playback_gait_for_transition(
+                exiting.current, exiting.target, true),
+            HorseGaitType::Walk);
 }
 
 TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) {

@@ -1,9 +1,13 @@
 #include "combat_state_processor.h"
 
+#include <cmath>
+#include <numbers>
+
 #include "../../../render/profiling/frame_profile.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
+#include "combat_utils.h"
 
 namespace Game::Systems::Combat {
 
@@ -11,6 +15,120 @@ namespace {
 
 using CS = Engine::Core::CombatAnimationState;
 using CSC = Engine::Core::CombatStateComponent;
+
+constexpr float k_commander_contact_cone_dot = 0.25F;
+
+auto commander_melee_reach(const Engine::Core::Entity& commander) -> float {
+  auto const* attack = commander.get_component<Engine::Core::AttackComponent>();
+  float const base_reach = attack != nullptr
+                               ? attack->melee_range
+                               : Engine::Core::Defaults::k_attack_melee_range;
+  return base_reach + Engine::Core::AttackComponent::k_melee_contact_range_grace;
+}
+
+auto target_in_swing_arc(Engine::Core::Entity& commander,
+                         Engine::Core::Entity& target,
+                         float reach) -> bool {
+  if (!is_in_range(&commander, &target, reach)) {
+    return false;
+  }
+
+  auto const* commander_transform =
+      commander.get_component<Engine::Core::TransformComponent>();
+  auto const* target_transform =
+      target.get_component<Engine::Core::TransformComponent>();
+  if (commander_transform == nullptr || target_transform == nullptr) {
+    return false;
+  }
+
+  float const yaw =
+      commander_transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
+  float const forward_x = std::sin(yaw);
+  float const forward_z = std::cos(yaw);
+  float const dx = target_transform->position.x - commander_transform->position.x;
+  float const dz = target_transform->position.z - commander_transform->position.z;
+  float const dist = std::sqrt(dx * dx + dz * dz);
+  if (dist <= 0.0001F) {
+    return true;
+  }
+  float const facing = (forward_x * dx + forward_z * dz) / dist;
+  return facing >= k_commander_contact_cone_dot;
+}
+
+auto resolve_commander_contact_target(Engine::Core::World* world,
+                                      Engine::Core::Entity& commander,
+                                      Engine::Core::EntityID locked_target_id)
+    -> Engine::Core::Entity* {
+  auto const* commander_unit = commander.get_component<Engine::Core::UnitComponent>();
+  if (commander_unit == nullptr) {
+    return nullptr;
+  }
+
+  float const reach = commander_melee_reach(commander);
+
+  if (locked_target_id != 0) {
+    auto* locked = world->get_entity(locked_target_id);
+    if (locked != nullptr && is_valid_enemy_unit(commander_unit, locked, true) &&
+        target_in_swing_arc(commander, *locked, reach)) {
+      return locked;
+    }
+  }
+
+  Engine::Core::Entity* best = nullptr;
+  float best_score = -1000000.0F;
+  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (candidate == nullptr || candidate == &commander ||
+        !is_valid_enemy_unit(commander_unit, candidate, false) ||
+        !target_in_swing_arc(commander, *candidate, reach)) {
+      continue;
+    }
+    auto const* candidate_transform =
+        candidate->get_component<Engine::Core::TransformComponent>();
+    auto const* commander_transform =
+        commander.get_component<Engine::Core::TransformComponent>();
+    if (candidate_transform == nullptr || commander_transform == nullptr) {
+      continue;
+    }
+    float const dx = candidate_transform->position.x - commander_transform->position.x;
+    float const dz = candidate_transform->position.z - commander_transform->position.z;
+    float const score = -std::sqrt(dx * dx + dz * dz);
+    if (score > best_score) {
+      best_score = score;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+void deal_commander_contact_damage(Engine::Core::World* world,
+                                   Engine::Core::Entity& commander,
+                                   Engine::Core::CombatStateComponent& combat_state) {
+  auto const* action =
+      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  Engine::Core::EntityID const locked_target_id =
+      action != nullptr ? action->active_target_id : 0;
+
+  auto* target = resolve_commander_contact_target(world, commander, locked_target_id);
+  if (target == nullptr) {
+    return;
+  }
+
+  int damage = 10;
+  if (auto const* attack = commander.get_component<Engine::Core::AttackComponent>()) {
+    damage = std::max(1, attack->get_current_damage());
+  }
+
+  auto const* stamina = commander.get_component<Engine::Core::StaminaComponent>();
+  if (stamina != nullptr && stamina->stamina < CSC::k_low_stamina_threshold) {
+    damage = static_cast<int>(static_cast<float>(damage) *
+                              CSC::k_low_stamina_damage_penalty);
+    damage = std::max(1, damage);
+  }
+
+  Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world, target, damage, commander.get_id());
+  combat_state.damage_dealt_this_swing = true;
+}
 
 auto base_phase_duration(CS state) noexcept -> float {
   switch (state) {
@@ -131,42 +249,19 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state->animation_state = CS::Strike;
         combat_state->state_duration = phase_duration_for_state(
             *unit, *combat_state, combat_state->animation_state);
-
-        if (!combat_state->damage_dealt_this_swing) {
-          auto const* commander =
-              unit->get_component<Engine::Core::CommanderComponent>();
-          if (commander != nullptr && commander->fpv_controlled) {
-            auto const* action =
-                unit->get_component<Engine::Core::RpgCommanderActionComponent>();
-            auto const* attack = unit->get_component<Engine::Core::AttackComponent>();
-            if (action != nullptr && action->active_target_id != 0) {
-              auto* target = world->get_entity(action->active_target_id);
-              if (target != nullptr) {
-                int damage = 10;
-                if (attack != nullptr) {
-                  damage = std::max(1, attack->get_current_damage());
-                }
-
-                auto const* stamina =
-                    unit->get_component<Engine::Core::StaminaComponent>();
-                if (stamina != nullptr &&
-                    stamina->stamina < CSC::k_low_stamina_threshold) {
-                  damage = static_cast<int>(static_cast<float>(damage) *
-                                            CSC::k_low_stamina_damage_penalty);
-                  damage = std::max(1, damage);
-                }
-                Game::Systems::RpgCombat::deal_commander_attack_damage(
-                    world, target, damage, unit->get_id());
-                combat_state->damage_dealt_this_swing = true;
-              }
-            }
-          }
-        }
         break;
       case CS::Strike:
         combat_state->animation_state = CS::Impact;
         combat_state->state_duration = phase_duration_for_state(
             *unit, *combat_state, combat_state->animation_state);
+
+        if (!combat_state->damage_dealt_this_swing) {
+          auto const* commander =
+              unit->get_component<Engine::Core::CommanderComponent>();
+          if (commander != nullptr && commander->fpv_controlled) {
+            deal_commander_contact_damage(world, *unit, *combat_state);
+          }
+        }
         break;
       case CS::Impact:
         combat_state->animation_state = CS::Recover;

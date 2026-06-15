@@ -10,6 +10,7 @@
 #include "../creature/animation_state_components.h"
 #include "../creature/quadruped/gait.h"
 #include "../gl/humanoid/humanoid_types.h"
+#include "animation/horse_gait_manifest.h"
 #include "dimensions.h"
 #include "horse_layout.h"
 #include "math/creature_math_utils.h"
@@ -262,67 +263,41 @@ constexpr float k_idle_breathing_secondary_weight = 0.4F;
 constexpr float k_idle_phase_speed = 0.15F;
 constexpr float k_gait_transition_duration = 0.3F;
 
-auto playback_gait_for_transition(GaitType current_gait,
-                                  GaitType target_gait,
-                                  bool is_moving) noexcept -> GaitType {
-  if (!is_moving) {
-    return GaitType::IDLE;
-  }
-  if (current_gait == GaitType::IDLE && target_gait != GaitType::IDLE) {
-    return target_gait;
-  }
-  if (target_gait == GaitType::IDLE && current_gait != GaitType::IDLE) {
-    return current_gait;
-  }
-  return current_gait;
-}
-
-auto bob_scale_for_gait(GaitType gait) noexcept -> float {
+auto to_animation_gait_type(GaitType gait) noexcept -> Animation::HorseGaitType {
   switch (gait) {
   case GaitType::IDLE:
-    return 0.30F;
+    return Animation::HorseGaitType::Idle;
   case GaitType::WALK:
-    return 0.50F;
+    return Animation::HorseGaitType::Walk;
   case GaitType::TROT:
-    return 0.85F;
+    return Animation::HorseGaitType::Trot;
   case GaitType::CANTER:
-    return 1.00F;
+    return Animation::HorseGaitType::Canter;
   case GaitType::GALLOP:
-    return 1.12F;
+    return Animation::HorseGaitType::Gallop;
   }
-  return 0.30F;
+  return Animation::HorseGaitType::Idle;
 }
 
-void update_target_gait(Render::Creature::HorseAnimationStateComponent& state,
-                        GaitType desired,
-                        float anim_time,
-                        float idle_bob_intensity) {
-  if (desired == GaitType::IDLE) {
-    state.idle_bob_intensity = std::clamp(idle_bob_intensity, 0.0F, 1.5F);
-  } else {
-    state.idle_bob_intensity = 1.0F;
+auto to_render_gait_type(Animation::HorseGaitType gait) noexcept -> GaitType {
+  switch (gait) {
+  case Animation::HorseGaitType::Idle:
+    return GaitType::IDLE;
+  case Animation::HorseGaitType::Walk:
+    return GaitType::WALK;
+  case Animation::HorseGaitType::Trot:
+    return GaitType::TROT;
+  case Animation::HorseGaitType::Canter:
+    return GaitType::CANTER;
+  case Animation::HorseGaitType::Gallop:
+    return GaitType::GALLOP;
   }
-  if (state.target_gait != desired) {
-    state.target_gait = desired;
-    state.gait_transition_progress = 0.0F;
-    state.transition_start_time = anim_time;
-  }
+  return GaitType::IDLE;
 }
 
-auto resolve_persistent_gait(Render::Creature::HorseAnimationStateComponent& state,
-                             const HorseProfile& profile,
-                             float anim_time) -> HorseGait {
-  if (state.gait_transition_progress < 1.0F) {
-    float const elapsed = anim_time - state.transition_start_time;
-    state.gait_transition_progress =
-        std::clamp(elapsed / k_gait_transition_duration, 0.0F, 1.0F);
-    if (state.gait_transition_progress >= 1.0F) {
-      state.current_gait = state.target_gait;
-    }
-  } else {
-    state.current_gait = state.target_gait;
-  }
-
+auto resolve_persistent_gait(
+    const Render::Creature::HorseAnimationStateComponent& state,
+    const HorseProfile& profile) -> HorseGait {
   HorseGait const current = gait_for_type(state.current_gait, profile.gait);
   if (state.gait_transition_progress < 1.0F &&
       state.current_gait != state.target_gait) {
@@ -363,7 +338,8 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
     float const base_bob_amp = profile.dims.idle_bob_amplitude +
                                rider_intensity * (profile.dims.move_bob_amplitude -
                                                   profile.dims.idle_bob_amplitude);
-    float const bob_amp = base_bob_amp * bob_scale_for_gait(state.target_gait);
+    float const bob_amp = base_bob_amp * Animation::horse_bob_scale_for_gait(
+                                             to_animation_gait_type(state.target_gait));
     float const tertiary_variation =
         std::sin(anim.time * 0.7F + phase_offset * k_pi) * 0.08F + 1.0F;
 
@@ -425,11 +401,7 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   bool const anim_has_run = Render::Creature::is_running_animation(anim.movement_state);
   bool const has_locomotion_input = rider_has_motion || anim_has_motion;
 
-  constexpr float k_idle_speed_max = 0.5F;
-  constexpr float k_walk_speed_max = 3.0F;
-  constexpr float k_trot_speed_max = 5.5F;
   constexpr float k_canter_speed_max = 8.0F;
-  constexpr float k_gait_hysteresis = 0.35F;
 
   float speed = rider_ctx.locomotion_speed();
   if (speed < 0.01F) {
@@ -440,78 +412,30 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   sample.rider_intensity = std::max(rider_ctx.locomotion_normalized_speed(),
                                     std::clamp(speed / k_canter_speed_max, 0.0F, 1.0F));
 
-  auto const select_gait = [&]() -> GaitType {
-    if (!has_locomotion_input) {
-      return GaitType::IDLE;
-    }
-    GaitType const anchor = state.target_gait;
-    float const idle_up = k_idle_speed_max + k_gait_hysteresis;
-    float const idle_dn = k_idle_speed_max - k_gait_hysteresis;
-    float const walk_up = k_walk_speed_max + k_gait_hysteresis;
-    float const walk_dn = k_walk_speed_max - k_gait_hysteresis;
-    float const trot_up = k_trot_speed_max + k_gait_hysteresis;
-    float const trot_dn = k_trot_speed_max - k_gait_hysteresis;
-    float const canter_up = k_canter_speed_max + k_gait_hysteresis;
-    float const canter_dn = k_canter_speed_max - k_gait_hysteresis;
-    auto const upshift = [&](float threshold) {
-      return speed >= threshold;
-    };
-    auto const downshift = [&](float threshold) {
-      return speed < threshold;
-    };
+  auto const desired_gait = Animation::resolve_horse_desired_gait({
+      .has_locomotion_input = has_locomotion_input,
+      .anim_has_motion = anim_has_motion,
+      .anim_has_run = anim_has_run,
+      .speed = speed,
+      .anchor = to_animation_gait_type(state.target_gait),
+  });
+  auto const transition = Animation::resolve_horse_gait_transition({
+      .current = to_animation_gait_type(state.current_gait),
+      .target = to_animation_gait_type(state.target_gait),
+      .transition_progress = state.gait_transition_progress,
+      .transition_start_time = state.transition_start_time,
+      .sample_time = anim.time,
+      .desired = desired_gait,
+      .idle_bob_intensity = 1.0F,
+      .transition_duration = k_gait_transition_duration,
+  });
+  state.current_gait = to_render_gait_type(transition.current);
+  state.target_gait = to_render_gait_type(transition.target);
+  state.gait_transition_progress = transition.transition_progress;
+  state.transition_start_time = transition.transition_start_time;
+  state.idle_bob_intensity = transition.idle_bob_intensity;
 
-    switch (anchor) {
-    case GaitType::IDLE:
-      if (!anim_has_motion && speed < k_idle_speed_max) {
-        return GaitType::IDLE;
-      }
-      if (upshift(idle_up)) {
-        if (upshift(walk_up)) {
-          if (upshift(trot_up)) {
-            return upshift(canter_up) ? GaitType::GALLOP : GaitType::CANTER;
-          }
-          return GaitType::TROT;
-        }
-        return GaitType::WALK;
-      }
-      return anim_has_motion ? GaitType::WALK : GaitType::IDLE;
-    case GaitType::WALK:
-      if (downshift(idle_dn) && !anim_has_motion) {
-        return GaitType::IDLE;
-      }
-      if (upshift(walk_up)) {
-        return upshift(trot_up) ? GaitType::TROT : GaitType::TROT;
-      }
-      return GaitType::WALK;
-    case GaitType::TROT:
-      if (downshift(walk_dn)) {
-        return GaitType::WALK;
-      }
-      if (upshift(trot_up)) {
-        return GaitType::CANTER;
-      }
-      return GaitType::TROT;
-    case GaitType::CANTER:
-      if (downshift(trot_dn)) {
-        return GaitType::TROT;
-      }
-      if (upshift(canter_up)) {
-        return GaitType::GALLOP;
-      }
-      return GaitType::CANTER;
-    case GaitType::GALLOP:
-      if (downshift(canter_dn)) {
-        return GaitType::CANTER;
-      }
-      return GaitType::GALLOP;
-    }
-    return GaitType::IDLE;
-  };
-
-  GaitType const desired_gait = select_gait();
-  update_target_gait(state, desired_gait, anim.time, 1.0F);
-
-  HorseGait const resolved = resolve_persistent_gait(state, profile, anim.time);
+  HorseGait const resolved = resolve_persistent_gait(state, profile);
   sample.is_moving =
       state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
   evaluate_phase_and_bob(state,
@@ -526,8 +450,11 @@ auto evaluate_horse_motion(const HorseProfile& profile,
       anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
   sample.gait = resolved;
   sample.gait_type = state.current_gait;
-  sample.playback_gait_type = playback_gait_for_transition(
-      state.current_gait, state.target_gait, sample.is_moving);
+  sample.playback_gait_type =
+      to_render_gait_type(Animation::horse_playback_gait_for_transition(
+          to_animation_gait_type(state.current_gait),
+          to_animation_gait_type(state.target_gait),
+          sample.is_moving));
   sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
   sample.stop_intent = resolve_stop_intent(speed, has_locomotion_input, rider_ctx);
 

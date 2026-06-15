@@ -146,7 +146,7 @@ void SpearRenderer::submit(const SpearRenderConfig& m_config,
                 frames.hand_r, Render::Humanoid::HumanoidSocket::GripR);
   QVector3D const grip_pos = grip.origin;
 
-  QVector3D const spear_dir = compute_spear_direction(anim.inputs);
+  QVector3D const spear_dir = resolve_spear_direction(anim.inputs, anim.attack_phase);
 
   QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
   QVector3D shaft_mid = grip_pos + spear_dir * (m_config.spear_length * 0.5F);
@@ -221,7 +221,7 @@ auto Render::GL::spear_make_static_attachments(const SpearRenderConfig& config,
   QMatrix4x4 const bind_socket_inverse = bind_socket.inverted(&bind_socket_invertible);
   QVector3D const grip_pos = bind_socket.column(3).toVector3D();
   AnimationInputs const idle_inputs{};
-  QVector3D const spear_dir = compute_spear_direction(idle_inputs);
+  QVector3D const spear_dir = resolve_spear_direction(idle_inputs);
 
   QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
   QVector3D shaft_mid = grip_pos + spear_dir * (config.spear_length * 0.5F);

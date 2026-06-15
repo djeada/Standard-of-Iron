@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <memory>
 #include <sstream>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -29,6 +28,7 @@
 #include "../skeleton.h"
 #include "../snapshot_mesh_registry.h"
 #include "../spec.h"
+#include "animation/clip_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
 
@@ -767,22 +767,6 @@ auto resolve_blob_palette(std::uint32_t species_id,
   return blob->frame_palette_view(out_global_frame);
 }
 
-auto expected_humanoid_idle_variant_name(std::uint8_t clip_variant) noexcept
-    -> std::string_view {
-  switch (clip_variant) {
-  case 1U:
-    return "idle_squat";
-  case 2U:
-    return "idle_jump";
-  case 3U:
-    return "idle_weapon";
-  case 4U:
-    return "idle_weave";
-  default:
-    return "idle";
-  }
-}
-
 auto humanoid_idle_variant_clip_is_usable(const Render::Creature::Bpat::BpatBlob* blob,
                                           std::uint16_t clip_id,
                                           Render::Creature::AnimationStateId state,
@@ -793,7 +777,8 @@ auto humanoid_idle_variant_clip_is_usable(const Render::Creature::Bpat::BpatBlob
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return false;
   }
-  return blob->clip(clip_id).name == expected_humanoid_idle_variant_name(clip_variant);
+  return blob->clip(clip_id).name ==
+         Animation::humanoid_idle_variant_clip_name(clip_variant);
 }
 
 } // namespace
