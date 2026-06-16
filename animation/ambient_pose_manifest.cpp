@@ -132,10 +132,10 @@ auto resolve_humanoid_ambient_selection(
   }
 
   bool const eligible = !inputs.mounted && !inputs.has_locomotion &&
-                        !inputs.attacking && !inputs.in_hold_mode &&
-                        !inputs.guarding && !inputs.exiting_guard &&
-                        !inputs.constructing && !inputs.healing &&
-                        !inputs.hit_reacting && !inputs.dying && !inputs.dead;
+                        !inputs.attacking && !inputs.in_hold_mode && !inputs.guarding &&
+                        !inputs.exiting_guard && !inputs.constructing &&
+                        !inputs.healing && !inputs.hit_reacting && !inputs.dying &&
+                        !inputs.dead;
   if (!eligible) {
     return {};
   }

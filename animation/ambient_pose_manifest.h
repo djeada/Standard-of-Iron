@@ -87,8 +87,8 @@ struct HumanoidAmbientPoseSample {
 resolve_humanoid_ambient_schedule(const HumanoidAmbientScheduleInputs& inputs) noexcept
     -> HumanoidAmbientScheduleSample;
 
-[[nodiscard]] auto
-resolve_humanoid_ambient_selection(const HumanoidAmbientSelectionInputs& inputs) noexcept
+[[nodiscard]] auto resolve_humanoid_ambient_selection(
+    const HumanoidAmbientSelectionInputs& inputs) noexcept
     -> HumanoidAmbientScheduleSample;
 
 [[nodiscard]] auto resolve_humanoid_ambient_pose(

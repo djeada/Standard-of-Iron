@@ -84,9 +84,9 @@ auto resolve_humanoid_hit_reaction_transform(
   }
 
   float const desync =
-      0.7F + 0.6F * static_cast<float>(((inputs.inst_seed ^ 0x68F2A3B1U) *
-                                        2654435761U) >>
-                                       24U & 0xFFU) /
+      0.7F + 0.6F *
+                 static_cast<float>(
+                     ((inputs.inst_seed ^ 0x68F2A3B1U) * 2654435761U) >> 24U & 0xFFU) /
                  255.0F;
   constexpr float k_hit_recoil_scale = 1.6F;
   float const intensity = std::min(inputs.intensity, 1.5F);
