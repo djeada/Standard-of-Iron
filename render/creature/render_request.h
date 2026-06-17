@@ -11,35 +11,16 @@
 #include <span>
 
 #include "../creature/spec.h"
+#include "animation/clip_manifest.h"
 #include "pipeline/bpat_playback.h"
 #include "pipeline/render_pass_intent.h"
 
 namespace Render::Creature {
 
-enum class AnimationStateId : std::uint8_t {
-  Idle = 0,
-  Walk = 1,
-  Run = 2,
-  Hold = 3,
-  AttackMelee = 4,
-  AttackRanged = 5,
-  Die = 6,
-  Dead = 7,
-  AttackSword = 8,
-  AttackSpear = 9,
-  AttackBow = 10,
-  Cast = 11,
-
-  RidingIdle = 12,
-  RidingCharge = 13,
-  RidingReining = 14,
-  RidingBowShot = 15,
-
-  Count
-};
+using AnimationStateId = Animation::StateId;
 
 [[nodiscard]] constexpr auto animation_state_count() noexcept -> std::size_t {
-  return static_cast<std::size_t>(AnimationStateId::Count);
+  return Animation::state_count();
 }
 
 using ArchetypeId = std::uint16_t;

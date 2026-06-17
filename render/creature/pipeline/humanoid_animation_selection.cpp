@@ -12,6 +12,7 @@
 #include "../../humanoid/facial_hair_catalog.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
+#include "animation/selection_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
 
@@ -38,30 +39,17 @@ void update_clip_id(HumanoidAnimationSelection& selection) noexcept {
 }
 
 auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
+  auto const profile = Animation::guard_shield_attachment_profile(pose);
   QMatrix4x4 guard_turn;
-  guard_turn.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
-  switch (pose) {
-  case Render::GL::ShieldFormationPose::RomanFront:
-
-    guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(-8.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.06F, 0.06F);
-    break;
-  case Render::GL::ShieldFormationPose::RomanTop:
-
-    guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(-78.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.20F, -0.03F);
-    break;
-  case Render::GL::ShieldFormationPose::CarthageFront:
-
-    guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(-40.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.14F, 0.03F);
-    break;
-  case Render::GL::ShieldFormationPose::GuardDefault:
-  case Render::GL::ShieldFormationPose::None:
-    break;
+  guard_turn.rotate(profile.base_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  if (profile.yaw_degrees != 0.0F) {
+    guard_turn.rotate(profile.yaw_degrees, 0.0F, 1.0F, 0.0F);
+  }
+  if (profile.pitch_degrees != 0.0F) {
+    guard_turn.rotate(profile.pitch_degrees, 1.0F, 0.0F, 0.0F);
+  }
+  if (profile.translate_y != 0.0F || profile.translate_z != 0.0F) {
+    guard_turn.translate(0.0F, profile.translate_y, profile.translate_z);
   }
   return guard_turn;
 }
@@ -136,33 +124,6 @@ auto guard_shield_archetype(Render::Creature::ArchetypeId base_archetype,
   return resolved;
 }
 
-auto smooth01(float t) noexcept -> float {
-  t = std::clamp(t, 0.0F, 1.0F);
-  return t * t * (3.0F - 2.0F * t);
-}
-
-auto attack_visual_weight(
-    const Render::Creature::CombatVisualResolvedState& combat) noexcept -> float {
-  using Phase = Render::Creature::CombatVisualTransactionPhase;
-  switch (combat.phase) {
-  case Phase::None:
-    return 0.0F;
-  case Phase::Enter:
-    return 0.28F * smooth01(combat.phase_progress);
-  case Phase::Anticipation:
-    return 0.28F + 0.42F * smooth01(combat.phase_progress);
-  case Phase::Strike:
-    return 0.70F + 0.25F * smooth01(combat.phase_progress);
-  case Phase::FollowThrough:
-    return 0.95F;
-  case Phase::Recover:
-    return 0.95F - 0.15F * smooth01(combat.phase_progress);
-  case Phase::ExitBlend:
-    return 0.80F * (1.0F - smooth01(combat.exit_blend_progress));
-  }
-  return 0.0F;
-}
-
 auto build_selection_for_pose(const UnitVisualSpec& spec,
                               const Render::GL::HumanoidAnimationContext& anim,
                               const Render::Creature::ResolvedPose& pose,
@@ -179,55 +140,25 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
       selection.resolved_archetype, anim, selection.state);
 
   if (spec.animation_manifest.variant_table != nullptr) {
-    auto const* table = spec.animation_manifest.variant_table;
-    auto const pose_idx = static_cast<std::size_t>(selection.pose.intent);
+    auto const override = Animation::resolve_archetype_variant_override({
+        .table = spec.animation_manifest.variant_table,
+        .pose_intent = selection.pose.intent,
+        .seed = seed,
+        .variant_index_hint =
+            variant != nullptr ? static_cast<std::uint8_t>(variant->facial_hair.style)
+                               : std::uint8_t{0U},
+        .has_variant_index_hint = variant != nullptr,
+    });
 
-    auto const pose_archetype = table->archetype_for_pose[pose_idx];
-    if (pose_archetype != Render::Creature::k_invalid_archetype) {
-      selection.resolved_archetype = pose_archetype;
-      selection.variant_table_changed = true;
+    if (override.archetype_changed) {
+      selection.resolved_archetype = override.archetype;
     }
-
-    auto const pose_state = table->state_for_pose[pose_idx];
-    if (pose_state != Render::Creature::AnimationStateId::Count) {
-      selection.state = pose_state;
-      selection.variant_table_changed = true;
+    if (override.state_changed) {
+      selection.state = override.state;
     }
+    selection.variant_table_changed = override.changed();
 
-    if (table->variant_stride > 0U) {
-      bool const trigger_matches =
-          (table->variant_trigger_pose == Render::Creature::PoseIntent::Count) ||
-          (selection.pose.intent == table->variant_trigger_pose);
-      if (trigger_matches) {
-        std::size_t variant_idx{0U};
-        bool have_variant_idx = false;
-        if (table->variant_is_seed_based) {
-          variant_idx = seeded_variant_index(seed, table->variant_stride);
-          have_variant_idx = true;
-        } else if (variant != nullptr) {
-          variant_idx = std::min<std::size_t>(
-              static_cast<std::size_t>(variant->facial_hair.style),
-              static_cast<std::size_t>(table->variant_stride) - 1U);
-          have_variant_idx = true;
-        }
-
-        if (have_variant_idx) {
-          auto const variant_archetype = table->archetype_for_variant[variant_idx];
-          if (variant_archetype != Render::Creature::k_invalid_archetype) {
-            selection.resolved_archetype = variant_archetype;
-            selection.variant_table_changed = true;
-          }
-
-          auto const variant_state = table->state_for_variant[variant_idx];
-          if (variant_state != Render::Creature::AnimationStateId::Count) {
-            selection.state = variant_state;
-            selection.variant_table_changed = true;
-          }
-        }
-      }
-    }
-
-    if (selection.variant_table_changed) {
+    if (override.changed()) {
       selection.phase = humanoid_phase_for_state(anim, selection.state);
       selection.clip_variant = humanoid_clip_variant_for_state(
           selection.resolved_archetype, anim, selection.state);
@@ -250,6 +181,21 @@ auto playback_layer_from_selection(const HumanoidAnimationSelection& selection,
   layer.weight = std::clamp(weight, 0.0F, 1.0F);
   layer.mode = mode;
   return layer;
+}
+
+auto selection_from_layer_source(Animation::PlaybackLayerSource source,
+                                 const HumanoidAnimationSelection& base,
+                                 const HumanoidAnimationSelection& action) noexcept
+    -> const HumanoidAnimationSelection* {
+  switch (source) {
+  case Animation::PlaybackLayerSource::Base:
+    return &base;
+  case Animation::PlaybackLayerSource::Action:
+    return &action;
+  case Animation::PlaybackLayerSource::None:
+    break;
+  }
+  return nullptr;
 }
 
 auto locomotion_only_pose(const Render::GL::HumanoidAnimationContext& anim) noexcept
@@ -314,52 +260,45 @@ auto resolve_humanoid_animation_selection(
       build_selection_for_pose(spec, anim, locomotion_only_pose(anim), seed, variant);
   auto const action_selection =
       build_selection_for_pose(spec, anim, action_only_pose(anim), seed, variant);
-  float const emphasis = std::clamp(
-      combat->attack_emphasis, 0.72F, combat->finisher_attack ? 1.35F : 1.18F);
-  float const combat_weight =
-      std::clamp(attack_visual_weight(*combat) * emphasis, 0.0F, 1.0F);
-  if (combat->phase == Render::Creature::CombatVisualTransactionPhase::ExitBlend &&
-      combat_weight <= 0.01F) {
-    return base_selection;
-  }
-
   bool const moving =
       Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
       base_selection.state != Render::Creature::AnimationStateId::Idle;
 
-  if (!anim.inputs.is_mounted && moving &&
-      !anim.inputs.visual_movement.forced_displacement &&
-      combat->phase != Render::Creature::CombatVisualTransactionPhase::Recover &&
-      combat->phase != Render::Creature::CombatVisualTransactionPhase::ExitBlend &&
-      action_selection.state != base_selection.state && combat_weight > 0.01F) {
+  auto const policy = Animation::resolve_combat_playback_layer_policy({
+      .has_authoritative_combat = true,
+      .phase = combat->phase,
+      .phase_progress = combat->phase_progress,
+      .exit_blend_progress = combat->exit_blend_progress,
+      .attack_emphasis = combat->attack_emphasis,
+      .finisher_attack = combat->finisher_attack,
+      .mounted = anim.inputs.is_mounted,
+      .moving = moving,
+      .forced_displacement = anim.inputs.visual_movement.forced_displacement,
+      .action_state_differs_from_base = action_selection.state != base_selection.state,
+      .selection_state_differs_from_base = selection.state != base_selection.state,
+      .action_state_differs_from_selection = action_selection.state != selection.state,
+  });
+
+  if (policy.use_base_selection) {
     selection = base_selection;
-    selection.upper_body_overlay = playback_layer_from_selection(
-        action_selection,
-        combat_weight,
-        Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
-    return selection;
   }
 
-  using Phase = Render::Creature::CombatVisualTransactionPhase;
-  if (combat->phase == Phase::Enter || combat->phase == Phase::Anticipation) {
-    if (selection.state != base_selection.state) {
-      selection.full_body_blend = playback_layer_from_selection(
-          base_selection,
-          1.0F - combat_weight,
-          Render::Creature::PlaybackLayerMode::FullBodyBlend);
-    }
-  } else if (combat->phase == Phase::ExitBlend) {
-    if (selection.state != base_selection.state) {
-      selection.full_body_blend = playback_layer_from_selection(
-          base_selection,
-          1.0F - combat_weight,
-          Render::Creature::PlaybackLayerMode::FullBodyBlend);
-    } else if (action_selection.state != selection.state) {
-      selection.full_body_blend = playback_layer_from_selection(
-          action_selection,
-          combat_weight,
-          Render::Creature::PlaybackLayerMode::FullBodyBlend);
-    }
+  if (auto const* full_body = selection_from_layer_source(
+          policy.full_body_source, base_selection, action_selection);
+      full_body != nullptr) {
+    selection.full_body_blend = playback_layer_from_selection(
+        *full_body,
+        policy.full_body_weight,
+        Render::Creature::PlaybackLayerMode::FullBodyBlend);
+  }
+
+  if (auto const* upper_body = selection_from_layer_source(
+          policy.upper_body_source, base_selection, action_selection);
+      upper_body != nullptr) {
+    selection.upper_body_overlay = playback_layer_from_selection(
+        *upper_body,
+        policy.upper_body_weight,
+        Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
   }
   return selection;
 }

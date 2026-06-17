@@ -11,6 +11,21 @@
 #include <unordered_set>
 #include <vector>
 
+#include "animation/action_manifest.h"
+#include "animation/ambient_pose_manifest.h"
+#include "animation/attack_pose_manifest.h"
+#include "animation/clip_manifest.h"
+#include "animation/guard_manifest.h"
+#include "animation/hold_pose_manifest.h"
+#include "animation/intent_manifest.h"
+#include "animation/layout_manifest.h"
+#include "animation/locomotion_manifest.h"
+#include "animation/micro_variation_manifest.h"
+#include "animation/mounted_pose_manifest.h"
+#include "animation/playback_manifest.h"
+#include "animation/posture_pose_manifest.h"
+#include "animation/selection_manifest.h"
+#include "animation/state_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -86,6 +101,7 @@ public:
   int rigged_calls{0};
   int meshes{0};
   std::vector<std::uint32_t> role_color_counts;
+  std::vector<const Render::GL::RiggedMesh*> rigged_meshes;
   std::vector<float> rigged_world_y;
   std::vector<float> rigged_mesh_min_world_y;
   std::vector<std::vector<QMatrix4x4>> rigged_bone_palettes;
@@ -102,6 +118,7 @@ public:
   void rigged(const Render::GL::RiggedCreatureCmd& cmd) override {
     ++rigged_calls;
     role_color_counts.push_back(cmd.role_color_count);
+    rigged_meshes.push_back(cmd.mesh);
     rigged_world_y.push_back(cmd.world.column(3).y());
     float min_world_y = std::numeric_limits<float>::infinity();
     if (cmd.mesh != nullptr && cmd.bone_palette != nullptr) {
@@ -572,8 +589,10 @@ auto render_builder_submission_count(const char* renderer_id,
   return sink.rigged_calls;
 }
 
-auto render_builder_unique_role_color_count(
+auto render_builder_unique_tool_mesh_count(
     const char* renderer_id, Game::Systems::NationID nation_id) -> std::size_t {
+  Render::GL::clear_humanoid_caches();
+
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -614,11 +633,13 @@ auto render_builder_unique_role_color_count(
   renderer(ctx, sink);
   EXPECT_GT(sink.rigged_calls, 0);
 
-  std::unordered_set<std::uint32_t> unique_counts;
-  for (auto const count : sink.role_color_counts) {
-    unique_counts.insert(count);
+  std::unordered_set<const Render::GL::RiggedMesh*> unique_meshes;
+  for (auto const* mesh : sink.rigged_meshes) {
+    if (mesh != nullptr) {
+      unique_meshes.insert(mesh);
+    }
   }
-  return unique_counts.size();
+  return unique_meshes.size();
 }
 
 auto render_civilian_submission_count(const char* renderer_id,
@@ -1379,6 +1400,2420 @@ TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
   EXPECT_NE(playback->clip_id, registry.bpat_clip(builder_id, AnimationStateId::Idle));
 }
 
+TEST(AnimationCoreClipVariantManifest, RenderClipVariantUsesAnimationCorePolicy) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::Pipeline::humanoid_clip_variant_for_state;
+
+  auto const archetype = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext attack_anim{};
+  attack_anim.inputs.attack_variant = 2U;
+  EXPECT_EQ(
+      humanoid_clip_variant_for_state(
+          archetype, attack_anim, AnimationStateId::AttackSword),
+      Animation::resolve_humanoid_clip_variant({
+          .state = Animation::StateId::AttackSword,
+          .attack_variant = 2U,
+          .available_variant_count = Animation::k_humanoid_attack_sword_variant_count,
+      }));
+
+  Render::GL::HumanoidAnimationContext construction_anim{};
+  construction_anim.inputs.is_constructing = true;
+  construction_anim.construction_role = Render::GL::ConstructionRole::Saw;
+  EXPECT_EQ(
+      humanoid_clip_variant_for_state(
+          archetype, construction_anim, AnimationStateId::AttackSword),
+      Animation::resolve_humanoid_clip_variant({
+          .state = Animation::StateId::AttackSword,
+          .is_constructing = true,
+          .construction_role = Animation::HumanoidConstructionRole::Saw,
+          .available_variant_count = Animation::k_humanoid_attack_sword_variant_count,
+      }));
+
+  Render::GL::HumanoidAnimationContext idle_anim{};
+  idle_anim.ambient_idle_type = Render::GL::AmbientIdleType::PlantFlag;
+  EXPECT_EQ(
+      humanoid_clip_variant_for_state(archetype, idle_anim, AnimationStateId::Idle),
+      Animation::resolve_humanoid_clip_variant({
+          .state = Animation::StateId::Idle,
+          .ambient_idle = Animation::HumanoidAmbientIdle::PlantFlag,
+          .available_variant_count = Animation::k_humanoid_idle_variant_count,
+      }));
+}
+
+TEST(AnimationCoreClipVariantManifest,
+     ConstructionRoleSelectionUsesAnimationCorePolicy) {
+  using Animation::HumanoidConstructionRole;
+
+  EXPECT_EQ(Animation::humanoid_construction_role_for_variant_index(0U),
+            HumanoidConstructionRole::Hammer);
+  EXPECT_EQ(Animation::humanoid_construction_role_for_variant_index(1U),
+            HumanoidConstructionRole::Saw);
+  EXPECT_EQ(Animation::humanoid_construction_role_for_variant_index(2U),
+            HumanoidConstructionRole::Chisel);
+  EXPECT_EQ(Animation::humanoid_construction_role_for_variant_index(3U),
+            HumanoidConstructionRole::KneelingChisel);
+  EXPECT_EQ(Animation::humanoid_construction_role_for_variant_index(4U),
+            HumanoidConstructionRole::Hammer);
+
+  EXPECT_EQ(Animation::resolve_humanoid_construction_role({
+                .seed = 123U,
+                .force_single_soldier = true,
+                .variant_table_can_select_roles = true,
+                .variant_stride = 4U,
+                .variant_is_seed_based = true,
+            }),
+            HumanoidConstructionRole::Hammer);
+  EXPECT_EQ(Animation::resolve_humanoid_construction_role({
+                .seed = 123U,
+                .variant_table_can_select_roles = false,
+                .variant_stride = 4U,
+                .variant_is_seed_based = true,
+            }),
+            HumanoidConstructionRole::Hammer);
+
+  for (std::uint8_t variant_index = 0U; variant_index < 4U; ++variant_index) {
+    auto const expected =
+        Animation::humanoid_construction_role_for_variant_index(variant_index);
+    bool found_seed = false;
+    for (std::uint32_t seed = 0U; seed < 1024U && !found_seed; ++seed) {
+      found_seed = Animation::resolve_humanoid_construction_role({
+                       .seed = seed,
+                       .variant_table_can_select_roles = true,
+                       .variant_stride = 4U,
+                       .variant_is_seed_based = true,
+                   }) == expected;
+    }
+    EXPECT_TRUE(found_seed) << "variant_index=" << unsigned(variant_index);
+  }
+}
+
+TEST(AnimationCorePlaybackManifest, RenderHoldAndGuardUseAnimationCorePolicy) {
+  Render::GL::AnimationInputs hold_inputs{};
+  hold_inputs.is_in_hold_mode = true;
+  hold_inputs.hold_entry_progress = 0.5F;
+  EXPECT_FLOAT_EQ(Render::GL::hold_transition_amount(hold_inputs),
+                  Animation::humanoid_hold_transition_amount({
+                      .is_in_hold_mode = true,
+                      .hold_entry_progress = 0.5F,
+                  }));
+
+  Render::GL::AnimationInputs guard_inputs{};
+  guard_inputs.is_guarding = true;
+  guard_inputs.guard_pose_progress = 0.25F;
+  EXPECT_FLOAT_EQ(Render::GL::guard_pose_amount(guard_inputs),
+                  Animation::humanoid_guard_pose_amount({
+                      .is_guarding = true,
+                      .guard_pose_progress = 0.25F,
+                  }));
+}
+
+TEST(AnimationCorePlaybackManifest, RenderPlaybackPhaseUsesAnimationCorePolicy) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::MovementAnimationState;
+  using Render::Creature::Pipeline::humanoid_phase_for_state;
+
+  Render::GL::HumanoidAnimationContext anim{};
+
+  anim.inputs.death_progress = 1.3F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::Die),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::Die,
+                      .death_progress = 1.3F,
+                  }));
+
+  anim = {};
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 0.5F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::Hold),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::Hold,
+                      .is_in_hold_mode = true,
+                      .hold_entry_progress = 0.5F,
+                  }));
+
+  anim = {};
+  anim.inputs.is_constructing = true;
+  anim.inputs.construction_progress = 0.8F;
+  anim.jitter_seed = 0.45F;
+  EXPECT_NEAR(humanoid_phase_for_state(anim, AnimationStateId::AttackSword),
+              Animation::resolve_humanoid_playback_phase({
+                  .state = Animation::StateId::AttackSword,
+                  .is_constructing = true,
+                  .construction_progress = 0.8F,
+                  .construction_jitter_seed = 0.45F,
+              }),
+              1.0e-6F);
+
+  anim = {};
+  anim.attack_phase = 0.61F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::AttackSpear),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::AttackSpear,
+                      .attack_phase = 0.61F,
+                  }));
+
+  anim = {};
+  anim.ambient_idle_type = Render::GL::AmbientIdleType::RaiseWeapon;
+  anim.ambient_idle_phase = 0.37F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::Idle),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::Idle,
+                      .ambient_idle = Animation::HumanoidAmbientIdle::RaiseWeapon,
+                      .ambient_idle_phase = 0.37F,
+                  }));
+
+  anim = {};
+  anim.inputs.is_mounted = true;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.movement_state = MovementAnimationState::Idle;
+  anim.attack_phase = 0.5F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::RidingCharge),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::RidingCharge,
+                      .is_mounted = true,
+                      .is_attacking = true,
+                      .is_melee = true,
+                      .movement_state = Animation::MovementState::Idle,
+                      .attack_phase = 0.5F,
+                  }));
+
+  anim = {};
+  anim.gait.cycle_phase = 0.82F;
+  EXPECT_FLOAT_EQ(humanoid_phase_for_state(anim, AnimationStateId::Walk),
+                  Animation::resolve_humanoid_playback_phase({
+                      .state = Animation::StateId::Walk,
+                      .gait_cycle_phase = 0.82F,
+                  }));
+}
+
+TEST(AnimationCoreActionManifest, DeathActionSuppressesOtherActionFlags) {
+  auto const sample = Animation::resolve_humanoid_action_sample({
+      .death =
+          {
+              .active = true,
+              .dying = true,
+              .state_time = 0.5F,
+              .state_duration = 2.0F,
+              .variant = 3U,
+          },
+      .combat =
+          {
+              .has_state = true,
+              .phase = Animation::CombatPhase::Strike,
+              .attack_family = Animation::CombatAttackFamily::Sword,
+          },
+      .hit_reaction = {.active = true, .intensity = 1.0F},
+  });
+
+  EXPECT_TRUE(sample.is_dying);
+  EXPECT_FALSE(sample.is_dead);
+  EXPECT_FLOAT_EQ(sample.death_progress, 0.25F);
+  EXPECT_EQ(sample.death_variant, 3U);
+  EXPECT_FALSE(sample.is_attacking);
+  EXPECT_FALSE(sample.is_hit_reacting);
+}
+
+TEST(AnimationCoreActionManifest, ConstructionProgressWrapsAuthoredCycle) {
+  auto const sample = Animation::resolve_humanoid_action_sample({
+      .construction =
+          {
+              .active = true,
+              .build_time = 4.0F,
+              .time_remaining = 2.5F,
+              .cycles_per_second = 1.75F,
+          },
+  });
+
+  EXPECT_TRUE(sample.is_constructing);
+  EXPECT_NEAR(sample.construction_progress, 0.625F, 1.0e-6F);
+}
+
+TEST(AnimationCoreActionManifest, CombatStateSetsAttackPhaseAndFamily) {
+  auto const sword = Animation::resolve_humanoid_action_sample({
+      .combat =
+          {
+              .has_state = true,
+              .phase = Animation::CombatPhase::Recover,
+              .phase_time = 0.15F,
+              .phase_duration = 0.30F,
+              .attack_family = Animation::CombatAttackFamily::Sword,
+              .attack_variant = 2U,
+              .finisher_attack = true,
+              .attack_offset = 0.4F,
+          },
+  });
+
+  EXPECT_TRUE(sword.is_attacking);
+  EXPECT_TRUE(sword.is_melee);
+  EXPECT_TRUE(sword.attack_from_combat_state);
+  EXPECT_EQ(sword.combat_phase, Animation::CombatPhase::Recover);
+  EXPECT_FLOAT_EQ(sword.combat_phase_progress, 0.5F);
+  EXPECT_EQ(sword.attack_family, Animation::CombatAttackFamily::Sword);
+  EXPECT_EQ(sword.attack_variant, 2U);
+  EXPECT_TRUE(sword.finisher_attack);
+  EXPECT_TRUE(sword.has_attack_offset);
+
+  auto const fallback = Animation::resolve_humanoid_action_sample({
+      .combat =
+          {
+              .has_state = true,
+              .phase = Animation::CombatPhase::Strike,
+              .attack_family = Animation::CombatAttackFamily::None,
+              .fallback_mode_is_melee = true,
+          },
+  });
+  EXPECT_TRUE(fallback.is_melee);
+}
+
+TEST(AnimationCoreActionManifest, MeleeLockCreatesFallbackAttackOnlyWhenNeeded) {
+  auto const sample = Animation::resolve_humanoid_action_sample({
+      .melee_lock =
+          {
+              .in_lock = true,
+              .participates = true,
+              .fallback_attack_family = Animation::CombatAttackFamily::Spear,
+          },
+  });
+
+  EXPECT_TRUE(sample.is_attacking);
+  EXPECT_TRUE(sample.is_melee);
+  EXPECT_TRUE(sample.is_in_melee_lock);
+  EXPECT_TRUE(sample.attack_from_melee_lock);
+  EXPECT_EQ(sample.attack_family, Animation::CombatAttackFamily::Spear);
+}
+
+TEST(AnimationCoreActionManifest, HitReactionUsesSquaredRecoilEnvelope) {
+  auto const sample = Animation::resolve_humanoid_action_sample({
+      .hit_reaction =
+          {
+              .active = true,
+              .reaction_time = 0.25F,
+              .reaction_duration = 1.0F,
+              .intensity = 2.0F,
+              .knockback_x = 4.0F,
+              .knockback_z = -2.0F,
+          },
+  });
+
+  EXPECT_TRUE(sample.is_hit_reacting);
+  EXPECT_FLOAT_EQ(sample.hit_reaction_intensity, 1.5F);
+  EXPECT_FLOAT_EQ(sample.hit_recoil_x, 2.25F);
+  EXPECT_FLOAT_EQ(sample.hit_recoil_z, -1.125F);
+}
+
+TEST(AnimationCoreActionManifest, RangedProjectileAttackCanBecomeCast) {
+  auto const fireball = Animation::resolve_humanoid_action_sample({
+      .combat =
+          {
+              .has_state = true,
+              .phase = Animation::CombatPhase::Strike,
+              .attack_family = Animation::CombatAttackFamily::Bow,
+          },
+      .cast =
+          {
+              .has_projectile_cast = true,
+              .projectile_is_fireball = true,
+          },
+  });
+
+  EXPECT_TRUE(fireball.is_attacking);
+  EXPECT_FALSE(fireball.is_melee);
+  EXPECT_TRUE(fireball.is_casting);
+  EXPECT_EQ(fireball.cast_kind, Animation::CastVisualKind::Fireball);
+
+  auto const melee = Animation::resolve_humanoid_action_sample({
+      .combat =
+          {
+              .has_state = true,
+              .phase = Animation::CombatPhase::Strike,
+              .attack_family = Animation::CombatAttackFamily::Sword,
+          },
+      .cast = {.has_projectile_cast = true, .projectile_is_fireball = true},
+  });
+  EXPECT_FALSE(melee.is_casting);
+}
+
+TEST(AnimationCoreActionManifest, CommanderJumpPoseClampsPhaseAndHeight) {
+  auto const missing = Animation::resolve_humanoid_commander_jump_pose({
+      .has_commander = false,
+      .active = true,
+      .phase = 0.5F,
+      .height_offset = 2.0F,
+  });
+  EXPECT_FALSE(missing.active);
+  EXPECT_FLOAT_EQ(missing.phase, 0.0F);
+  EXPECT_FLOAT_EQ(missing.height_offset, 0.0F);
+
+  auto const active = Animation::resolve_humanoid_commander_jump_pose({
+      .has_commander = true,
+      .active = true,
+      .phase = 1.4F,
+      .height_offset = -0.25F,
+  });
+  EXPECT_TRUE(active.active);
+  EXPECT_FLOAT_EQ(active.phase, 1.0F);
+  EXPECT_FLOAT_EQ(active.height_offset, 0.0F);
+}
+
+TEST(AnimationCoreActionManifest, CommanderAttackPoseRequiresFpvMelee) {
+  auto disabled = Animation::resolve_humanoid_commander_attack_pose({
+      .has_commander = true,
+      .fpv_controlled = false,
+      .is_melee = true,
+      .has_style = true,
+      .style = 3U,
+  });
+  EXPECT_FALSE(disabled.amplified);
+  EXPECT_FALSE(disabled.has_style);
+
+  disabled = Animation::resolve_humanoid_commander_attack_pose({
+      .has_commander = true,
+      .fpv_controlled = true,
+      .is_melee = false,
+      .has_style = true,
+      .style = 3U,
+  });
+  EXPECT_FALSE(disabled.amplified);
+  EXPECT_FALSE(disabled.has_style);
+
+  auto const amplified = Animation::resolve_humanoid_commander_attack_pose({
+      .has_commander = true,
+      .fpv_controlled = true,
+      .is_melee = true,
+      .has_style = true,
+      .style = 3U,
+  });
+  EXPECT_TRUE(amplified.amplified);
+  EXPECT_TRUE(amplified.has_style);
+  EXPECT_EQ(amplified.style, 3U);
+}
+
+TEST(AnimationCoreActionManifest, CommanderFlagRallyPoseOwnsPlantPhase) {
+  auto inactive = Animation::resolve_humanoid_commander_flag_rally_pose({
+      .has_commander = true,
+      .planting = false,
+      .animation_timer = 0.5F,
+      .cost = 1.0F,
+  });
+  EXPECT_FALSE(inactive.active);
+  EXPECT_FLOAT_EQ(inactive.phase, 0.0F);
+
+  auto const free = Animation::resolve_humanoid_commander_flag_rally_pose({
+      .has_commander = true,
+      .planting = true,
+      .animation_timer = 9.0F,
+      .cost = 0.0F,
+  });
+  EXPECT_TRUE(free.active);
+  EXPECT_FLOAT_EQ(free.phase, 1.0F);
+
+  auto const clamped = Animation::resolve_humanoid_commander_flag_rally_pose({
+      .has_commander = true,
+      .planting = true,
+      .animation_timer = 0.25F,
+      .cost = 1.0F,
+  });
+  EXPECT_TRUE(clamped.active);
+  EXPECT_FLOAT_EQ(clamped.phase, 0.75F);
+}
+
+TEST(AnimationCoreActionManifest, ApproximateAttackPhaseUsesIdleWrapOrPhaseWindow) {
+  EXPECT_NEAR(Animation::approximate_humanoid_attack_phase({
+                  .is_attacking = true,
+                  .combat_phase = Animation::CombatPhase::Idle,
+                  .sample_time = 1.75F,
+                  .attack_offset = 0.5F,
+                  .has_attack_offset = true,
+              }),
+              0.25F,
+              1.0e-6F);
+
+  auto const window =
+      Animation::attack_phase_window(Animation::CombatPhase::Strike, false, true);
+  EXPECT_NEAR(Animation::approximate_humanoid_attack_phase({
+                  .is_attacking = true,
+                  .combat_phase = Animation::CombatPhase::Strike,
+                  .combat_phase_progress = 0.25F,
+                  .finisher_attack = true,
+              }),
+              window.start + (window.end - window.start) * 0.25F,
+              1.0e-6F);
+}
+
+TEST(AnimationCoreMicroVariationManifest,
+     DisabledWithoutAuthoritativeMultiSoldierCombat) {
+  Animation::HumanoidCombatMicroVariationInputs inputs{};
+  inputs.lane = Animation::SoldierCombatLane::LeadStrike;
+  inputs.combat_phase = Animation::CombatPhase::Impact;
+  inputs.is_attacking = true;
+  inputs.attack_phase = 0.55F;
+  inputs.sample_time = 1.0F;
+
+  auto disabled = Animation::resolve_humanoid_combat_micro_variation(inputs);
+  EXPECT_FALSE(disabled.active);
+  EXPECT_FLOAT_EQ(disabled.torso_lean, 0.0F);
+  EXPECT_FLOAT_EQ(disabled.impact_stagger, 0.0F);
+
+  inputs.multi_soldier_unit = true;
+  disabled = Animation::resolve_humanoid_combat_micro_variation(inputs);
+  EXPECT_FALSE(disabled.active);
+
+  inputs.authoritative_combat = true;
+  inputs.is_dying = true;
+  disabled = Animation::resolve_humanoid_combat_micro_variation(inputs);
+  EXPECT_FALSE(disabled.active);
+
+  inputs.is_dying = false;
+  inputs.is_dead = true;
+  disabled = Animation::resolve_humanoid_combat_micro_variation(inputs);
+  EXPECT_FALSE(disabled.active);
+}
+
+TEST(AnimationCoreMicroVariationManifest,
+     LeadStrikeUsesAttackPressureAndImpactStagger) {
+  auto const variation = Animation::resolve_humanoid_combat_micro_variation({
+      .multi_soldier_unit = true,
+      .authoritative_combat = true,
+      .lane = Animation::SoldierCombatLane::LeadStrike,
+      .combat_phase = Animation::CombatPhase::Strike,
+      .is_attacking = true,
+      .attack_phase = 0.55F,
+      .sample_time = 1.0F,
+      .inst_seed = 0U,
+  });
+
+  EXPECT_TRUE(variation.active);
+  EXPECT_FLOAT_EQ(variation.lane_sign, -1.0F);
+  EXPECT_NEAR(variation.breath, std::sin(5.3F) * 0.004F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(variation.torso_lean, 0.030F);
+  EXPECT_FLOAT_EQ(variation.shoulder_delay, 0.018F);
+  EXPECT_FLOAT_EQ(variation.wrist_angle, 0.014F);
+  EXPECT_FLOAT_EQ(variation.foot_adjust, 0.022F);
+  EXPECT_FLOAT_EQ(variation.head_tracking, 0.010F);
+  EXPECT_FLOAT_EQ(variation.impact_stagger, 0.016F);
+}
+
+TEST(AnimationCoreMicroVariationManifest, ShieldBraceUsesLaneSignAndShieldReaction) {
+  auto const variation = Animation::resolve_humanoid_combat_micro_variation({
+      .multi_soldier_unit = true,
+      .authoritative_combat = true,
+      .lane = Animation::SoldierCombatLane::ShieldBrace,
+      .combat_phase = Animation::CombatPhase::Idle,
+      .is_attacking = false,
+      .attack_phase = 0.25F,
+      .sample_time = 1.0F,
+      .inst_seed = 0U,
+  });
+
+  EXPECT_TRUE(variation.active);
+  EXPECT_FLOAT_EQ(variation.lane_sign, -1.0F);
+  EXPECT_FLOAT_EQ(variation.lateral_tilt, 0.018F);
+  EXPECT_FLOAT_EQ(variation.shield_reaction, 0.020F);
+  EXPECT_FLOAT_EQ(variation.foot_adjust, -0.010F);
+  EXPECT_FLOAT_EQ(variation.head_tracking, -0.006F);
+  EXPECT_FLOAT_EQ(variation.impact_stagger, 0.0F);
+}
+
+TEST(AnimationCoreMicroVariationManifest, RangedReloadOffsetsReloadSide) {
+  auto const variation = Animation::resolve_humanoid_combat_micro_variation({
+      .multi_soldier_unit = true,
+      .authoritative_combat = true,
+      .lane = Animation::SoldierCombatLane::RangedReload,
+      .combat_phase = Animation::CombatPhase::Recover,
+      .is_attacking = false,
+      .attack_phase = 0.25F,
+      .sample_time = 1.0F,
+      .inst_seed = 128U,
+  });
+
+  EXPECT_TRUE(variation.active);
+  EXPECT_FLOAT_EQ(variation.lane_sign, 1.0F);
+  EXPECT_FLOAT_EQ(variation.torso_lean, -0.014F);
+  EXPECT_FLOAT_EQ(variation.shoulder_delay, -0.012F);
+  EXPECT_FLOAT_EQ(variation.wrist_angle, -0.010F);
+  EXPECT_FLOAT_EQ(variation.foot_adjust, -0.012F);
+}
+
+TEST(AnimationCoreMicroVariationManifest, HitReactionTransformDisablesBelowThreshold) {
+  auto sample = Animation::resolve_humanoid_hit_reaction_transform({
+      .active = false,
+      .intensity = 1.0F,
+      .recoil_x = 0.5F,
+      .recoil_z = -0.25F,
+      .inst_seed = 17U,
+  });
+
+  EXPECT_FALSE(sample.active);
+  EXPECT_FLOAT_EQ(sample.recoil_x, 0.0F);
+  EXPECT_FLOAT_EQ(sample.recoil_z, 0.0F);
+  EXPECT_FLOAT_EQ(sample.squash, 0.0F);
+  EXPECT_FLOAT_EQ(sample.tilt_degrees, 0.0F);
+
+  sample = Animation::resolve_humanoid_hit_reaction_transform({
+      .active = true,
+      .intensity = 0.01F,
+      .recoil_x = 0.5F,
+      .recoil_z = -0.25F,
+      .inst_seed = 17U,
+  });
+
+  EXPECT_FALSE(sample.active);
+  EXPECT_FLOAT_EQ(sample.recoil_x, 0.0F);
+  EXPECT_FLOAT_EQ(sample.recoil_z, 0.0F);
+  EXPECT_FLOAT_EQ(sample.squash, 0.0F);
+  EXPECT_FLOAT_EQ(sample.tilt_degrees, 0.0F);
+}
+
+TEST(AnimationCoreMicroVariationManifest,
+     HitReactionTransformOwnsRecoilSquashAndTiltPolicy) {
+  std::uint32_t constexpr seed = 0x12345678U;
+  float const desync =
+      0.7F +
+      0.6F * static_cast<float>(((seed ^ 0x68F2A3B1U) * 2654435761U) >> 24U & 0xFFU) /
+          255.0F;
+
+  auto const sample = Animation::resolve_humanoid_hit_reaction_transform({
+      .active = true,
+      .intensity = 2.25F,
+      .recoil_x = 0.4F,
+      .recoil_z = -0.2F,
+      .inst_seed = seed,
+  });
+
+  EXPECT_TRUE(sample.active);
+  EXPECT_NEAR(sample.recoil_x, 0.4F * 1.6F * desync, 1.0e-6F);
+  EXPECT_NEAR(sample.recoil_z, -0.2F * 1.6F * desync, 1.0e-6F);
+  EXPECT_NEAR(sample.squash, 1.5F * 0.05F * desync, 1.0e-6F);
+  EXPECT_NEAR(sample.tilt_degrees, 1.5F * 9.0F * desync, 1.0e-6F);
+}
+
+TEST(AnimationCoreGuardManifest, ShieldlessAndUnknownFamiliesResolveNone) {
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose({
+                .has_left_hand_shield = false,
+                .shield_family = Animation::GuardShieldFamily::Roman,
+            }),
+            Animation::ShieldFormationPose::None);
+
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose({
+                .has_left_hand_shield = true,
+                .shield_family = Animation::GuardShieldFamily::None,
+            }),
+            Animation::ShieldFormationPose::None);
+}
+
+TEST(AnimationCoreGuardManifest, RomanInteriorFormationUsesTopShield) {
+  auto const pose = Animation::resolve_humanoid_guard_shield_pose({
+      .has_left_hand_shield = true,
+      .infantry_formation_unit = true,
+      .formation_active = true,
+      .shield_family = Animation::GuardShieldFamily::Roman,
+      .row = 1,
+      .col = 1,
+      .rows = 3,
+      .cols = 3,
+  });
+
+  EXPECT_EQ(pose, Animation::ShieldFormationPose::RomanTop);
+}
+
+TEST(AnimationCoreGuardManifest, GuardFallbackUsesNationFrontShield) {
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose({
+                .has_left_hand_shield = true,
+                .infantry_formation_unit = false,
+                .formation_active = false,
+                .guard_mode_active = false,
+                .shield_family = Animation::GuardShieldFamily::Roman,
+            }),
+            Animation::ShieldFormationPose::RomanFront);
+
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose({
+                .has_left_hand_shield = true,
+                .infantry_formation_unit = true,
+                .formation_active = true,
+                .shield_family = Animation::GuardShieldFamily::Carthage,
+                .row = 1,
+                .col = 1,
+                .rows = 3,
+                .cols = 3,
+            }),
+            Animation::ShieldFormationPose::CarthageFront);
+}
+
+TEST(AnimationCoreGuardManifest, AttachmentProfilesExposeShieldTurns) {
+  auto const roman_front = Animation::guard_shield_attachment_profile(
+      Animation::ShieldFormationPose::RomanFront);
+  EXPECT_FLOAT_EQ(roman_front.base_yaw_degrees, -90.0F);
+  EXPECT_FLOAT_EQ(roman_front.yaw_degrees, 180.0F);
+  EXPECT_FLOAT_EQ(roman_front.pitch_degrees, -8.0F);
+  EXPECT_FLOAT_EQ(roman_front.translate_y, 0.06F);
+  EXPECT_FLOAT_EQ(roman_front.translate_z, 0.06F);
+
+  auto const roman_top = Animation::guard_shield_attachment_profile(
+      Animation::ShieldFormationPose::RomanTop);
+  EXPECT_FLOAT_EQ(roman_top.pitch_degrees, -78.0F);
+  EXPECT_FLOAT_EQ(roman_top.translate_y, 0.20F);
+  EXPECT_FLOAT_EQ(roman_top.translate_z, -0.03F);
+
+  auto const carthage = Animation::guard_shield_attachment_profile(
+      Animation::ShieldFormationPose::CarthageFront);
+  EXPECT_FLOAT_EQ(carthage.pitch_degrees, -40.0F);
+  EXPECT_FLOAT_EQ(carthage.translate_y, 0.14F);
+  EXPECT_FLOAT_EQ(carthage.translate_z, 0.03F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, CombatSwordVariantOwnsReachAndBodyDrive) {
+  auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::CombatSwordSlash,
+      .attack_phase = 0.62F,
+      .variant = 0U,
+      .reach_scale = 1.20F,
+      .attack_emphasis = 1.25F,
+      .finisher_attack = true,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_GT(sample.right_hand.z, 0.25F);
+  EXPECT_GT(sample.left_hand.z, 0.25F);
+  EXPECT_GT(sample.shoulder_r_z_delta, 0.0F);
+  EXPECT_GT(sample.pelvis_z_delta, 0.0F);
+  EXPECT_LT(sample.pelvis_y_delta, 0.0F);
+  EXPECT_NE(sample.foot_l_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, SwordSlashVariantCanReverseDirection) {
+  auto const right_to_left = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SwordSlash,
+      .attack_phase = 0.58F,
+      .variant = 0U,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+  auto const left_to_right = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SwordSlash,
+      .attack_phase = 0.58F,
+      .variant = 1U,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_LT(right_to_left.right_hand.x, left_to_right.right_hand.x);
+  EXPECT_GT(right_to_left.shoulder_r_z_delta, left_to_right.shoulder_r_z_delta);
+}
+
+TEST(AnimationCoreAttackPoseManifest, SpearVariantExposesOffhandGripPolicy) {
+  auto const low_thrust = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SpearThrust,
+      .attack_phase = 0.50F,
+      .variant = 1U,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_TRUE(low_thrust.use_offhand_spear_grip);
+  EXPECT_LT(low_thrust.right_hand.y, 1.20F);
+  EXPECT_GT(low_thrust.right_hand.z, 1.05F);
+  EXPECT_LT(low_thrust.pelvis_y_delta, 0.0F);
+  EXPECT_GT(low_thrust.foot_r_z_delta, 0.0F);
+  EXPECT_FLOAT_EQ(low_thrust.offhand_lateral_offset, -0.05F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, SpearVariantOwnsOffhandDirectionDuringStrike) {
+  auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SpearThrust,
+      .attack_phase = 0.40F,
+      .variant = 0U,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_TRUE(sample.use_offhand_spear_grip);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0422183F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.210775F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.976622F, 0.0001F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, SpearDirectionBlendsHoldAndStrikePolicy) {
+  auto const idle = Animation::resolve_humanoid_spear_direction({});
+  EXPECT_NEAR(idle.x, 0.0493264F, 0.0001F);
+  EXPECT_NEAR(idle.y, 0.542590F, 0.0001F);
+  EXPECT_NEAR(idle.z, 0.838548F, 0.0001F);
+
+  auto const held = Animation::resolve_humanoid_spear_direction({
+      .hold_blend = 1.0F,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_phase = 0.40F,
+  });
+  EXPECT_NEAR(held.x, 0.0502367F, 0.0001F);
+  EXPECT_NEAR(held.y, 0.401893F, 0.0001F);
+  EXPECT_NEAR(held.z, 0.914307F, 0.0001F);
+
+  auto const strike = Animation::resolve_humanoid_spear_direction({
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_phase = 0.40F,
+  });
+  EXPECT_NEAR(strike.y, 0.210775F, 0.0001F);
+  EXPECT_NEAR(strike.z, 0.976622F, 0.0001F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, ClassicSpearThrustOwnsBodyDrive) {
+  auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SpearThrustClassic,
+      .attack_phase = 0.52F,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_TRUE(sample.use_offhand_spear_grip);
+  EXPECT_GT(sample.right_hand.z, 0.95F);
+  EXPECT_GT(sample.shoulder_r_z_delta, 0.0F);
+  EXPECT_GT(sample.foot_r_z_delta, 0.0F);
+  EXPECT_FLOAT_EQ(sample.offhand_lateral_offset, -0.05F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.838548F, 0.0001F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, HoldSpearThrustAppliesHoldDepth) {
+  auto const upright = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SpearThrustFromHold,
+      .attack_phase = 0.45F,
+      .hold_depth = 0.0F,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+  auto const crouched = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::SpearThrustFromHold,
+      .attack_phase = 0.45F,
+      .hold_depth = 1.0F,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_TRUE(crouched.use_offhand_spear_grip);
+  EXPECT_LT(crouched.right_hand.y, upright.right_hand.y);
+  EXPECT_GT(crouched.right_hand.z, 0.85F);
+  EXPECT_GT(crouched.shoulder_r_z_delta, 0.0F);
+  EXPECT_FLOAT_EQ(crouched.offhand_lateral_offset, -0.05F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, BasicMeleeStrikeOwnsGenericHitCurve) {
+  auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
+      .attack_phase = 0.38F,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+
+  EXPECT_NEAR(sample.right_hand.x, 0.29F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.y, 1.215F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.z, 0.35F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.x, -0.15F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.y, 1.18F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.z, 0.24F, 0.0001F);
+  EXPECT_GT(sample.shoulder_r_z_delta, 0.0F);
+  EXPECT_GT(sample.foot_r_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawStartsAtAimPose) {
+  auto const sample = Animation::resolve_humanoid_bow_draw_pose({
+      .draw_phase = 0.0F,
+      .jitter_seed = 0.35F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.left_hand.x, -0.02F);
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.38F);
+  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.42F);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.03F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.28F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.62F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.10F);
+  EXPECT_FLOAT_EQ(sample.pelvis_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawBuildsTension) {
+  auto const sample = Animation::resolve_humanoid_bow_draw_pose({
+      .draw_phase = 0.35F,
+      .jitter_seed = 0.0F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_GT(sample.left_hand.z, 0.13F);
+  EXPECT_LT(sample.left_hand.z, 0.22F);
+  EXPECT_GT(sample.right_hand.z, 0.62F);
+  EXPECT_LT(sample.shoulder_r_y_delta, 0.0F);
+  EXPECT_GT(sample.shoulder_r_z_delta, 0.10F);
+  EXPECT_GT(sample.neck_z_delta, 0.0F);
+  EXPECT_LT(sample.pelvis_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawRecoversToAimPose) {
+  auto const sample = Animation::resolve_humanoid_bow_draw_pose({
+      .draw_phase = 1.0F,
+      .jitter_seed = 0.15F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.left_hand.x, -0.02F);
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.38F);
+  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.42F);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.03F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.28F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.62F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.10F);
+  EXPECT_NEAR(sample.head_z_delta, 0.0F, 0.0001F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, ConstructionSawOwnsGripAndBodyDeltas) {
+  auto const sample = Animation::resolve_humanoid_construction_pose({
+      .kind = Animation::HumanoidConstructionPoseKind::Saw,
+      .work_phase = 0.25F,
+      .jitter_seed = 0.0F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_TRUE(sample.use_two_handed_grip);
+  EXPECT_NEAR(sample.grip_center.x, 0.04F, 0.0001F);
+  EXPECT_NEAR(sample.grip_center.y, 1.09F, 0.0001F);
+  EXPECT_NEAR(sample.grip_center.z, 0.64F, 0.0001F);
+  EXPECT_NEAR(sample.hand_separation, 0.25F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_r_z_delta, 0.095F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_l_y_delta, -0.04F, 0.0001F);
+  EXPECT_NEAR(sample.pelvis_x_delta, 0.018F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.foot_l_z_delta, -0.030F);
+  EXPECT_FLOAT_EQ(sample.foot_r_z_delta, 0.045F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, ConstructionChiselOwnsStandingStrikePose) {
+  auto const sample = Animation::resolve_humanoid_construction_pose({
+      .kind = Animation::HumanoidConstructionPoseKind::Chisel,
+      .work_phase = 0.47F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_FALSE(sample.use_two_handed_grip);
+  EXPECT_FLOAT_EQ(sample.left_hand.x, -0.05F);
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.06F);
+  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.48F);
+  EXPECT_NEAR(sample.right_hand.x, 0.12F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.y, 1.165F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.z, 0.38F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_r_y_delta, 0.02F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_l_z_delta, 0.0525F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.foot_r_z_delta, 0.03F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, ConstructionChiselOwnsKneelingStrikePose) {
+  auto const sample = Animation::resolve_humanoid_construction_pose({
+      .kind = Animation::HumanoidConstructionPoseKind::KneelingChisel,
+      .work_phase = 0.60F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.01F);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.09F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.04F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.58F);
+  EXPECT_NEAR(sample.shoulder_l_y_delta, -0.02F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_r_y_delta, 0.02F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_r_z_delta, 0.12F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.foot_r_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, SpearIdleExposesOffhandGripContract) {
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::SpearIdle,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_TRUE(sample.use_offhand_spear_grip);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.34F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.18F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.30F);
+  EXPECT_FLOAT_EQ(sample.offhand_along_offset, 0.46F);
+  EXPECT_FLOAT_EQ(sample.offhand_y_drop, -0.03F);
+  EXPECT_FLOAT_EQ(sample.offhand_lateral_offset, -0.08F);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0493264F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.542590F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.838548F, 0.0001F);
+  EXPECT_TRUE(sample.clamp_left_hand_x_min);
+  EXPECT_FLOAT_EQ(sample.left_hand_x_min, 0.10F);
+  EXPECT_TRUE(sample.clamp_left_hand_y_max);
+  EXPECT_FLOAT_EQ(sample.left_hand_y_max, 1.32F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_x_delta, 0.025F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_z_delta, 0.020F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, SpearBraceOwnsBodyReadinessDeltas) {
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::SpearBrace,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_TRUE(sample.use_offhand_spear_grip);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.30F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.10F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.58F);
+  EXPECT_FLOAT_EQ(sample.offhand_along_offset, -0.24F);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0502367F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.401893F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.914307F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.left_hand_z_delta, 0.03F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_y_delta, -0.05F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.08F);
+  EXPECT_FLOAT_EQ(sample.neck_z_delta, 0.07F);
+  EXPECT_FLOAT_EQ(sample.head_y_delta, -0.01F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldHoldExposeStableTargets) {
+  auto const bow = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::BowReady,
+      .shoulder_y = 1.20F,
+  });
+  auto const shield_moving = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::SwordShieldHold,
+      .shoulder_y = 1.20F,
+      .moving = true,
+  });
+
+  EXPECT_FALSE(bow.use_offhand_spear_grip);
+  EXPECT_FLOAT_EQ(bow.right_hand.z, 0.70F);
+  EXPECT_FLOAT_EQ(bow.left_hand.y, 1.24F);
+  EXPECT_FLOAT_EQ(bow.shoulder_r_z_delta, 0.16F);
+  EXPECT_FLOAT_EQ(bow.head_y_delta, -0.01F);
+
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.x, 0.37F);
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.y, 1.09F);
+  EXPECT_FLOAT_EQ(shield_moving.right_hand.z, 0.50F);
+  EXPECT_FLOAT_EQ(shield_moving.left_hand.x, -0.35F);
+  EXPECT_FLOAT_EQ(shield_moving.left_hand.y, 1.15F);
+  EXPECT_FLOAT_EQ(shield_moving.left_hand.z, 0.33F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, GuardStanceOwnsFormationTargetsAndDeltas) {
+  auto const top = Animation::resolve_humanoid_guard_stance_pose({
+      .pose = Animation::ShieldFormationPose::RomanTop,
+      .amount = 0.50F,
+      .shoulder_y = 1.20F,
+  });
+  auto const inactive = Animation::resolve_humanoid_guard_stance_pose({
+      .pose = Animation::ShieldFormationPose::RomanFront,
+      .amount = 0.0F,
+      .shoulder_y = 1.20F,
+  });
+
+  EXPECT_TRUE(top.active);
+  EXPECT_FLOAT_EQ(top.blend_amount, 0.50F);
+  EXPECT_FLOAT_EQ(top.right_hand.x, 0.14F);
+  EXPECT_FLOAT_EQ(top.right_hand.y, 0.98F);
+  EXPECT_FLOAT_EQ(top.left_hand.y, 1.54F);
+  EXPECT_FLOAT_EQ(top.shoulder_l_delta.y, 0.04F);
+  EXPECT_FLOAT_EQ(top.shoulder_l_delta.z, 0.10F);
+  EXPECT_FLOAT_EQ(top.neck_delta.y, -0.02F);
+  EXPECT_FLOAT_EQ(top.head_delta.z, 0.045F);
+  EXPECT_FALSE(inactive.active);
+}
+
+TEST(AnimationCorePosturePoseManifest, MicroIdleIsDeterministicAndMovesBreathingParts) {
+  auto const first = Animation::resolve_humanoid_micro_idle_pose({
+      .sample_time = 1.25F,
+      .seed = 42U,
+  });
+  auto const second = Animation::resolve_humanoid_micro_idle_pose({
+      .sample_time = 1.25F,
+      .seed = 42U,
+  });
+
+  EXPECT_FLOAT_EQ(first.shoulder_l_y_delta, second.shoulder_l_y_delta);
+  EXPECT_FLOAT_EQ(first.hand_r_y_delta, second.hand_r_y_delta);
+  EXPECT_GT(std::abs(first.shoulder_l_y_delta) + std::abs(first.pelvis_x_delta) +
+                std::abs(first.head_z_delta),
+            0.0F);
+}
+
+TEST(AnimationCorePosturePoseManifest, KneelPoseOwnsAbsoluteLegPlacement) {
+  auto const sample = Animation::resolve_humanoid_kneel_pose({
+      .depth = 0.50F,
+      .waist_y = 0.75F,
+      .ground_y = 0.0F,
+      .lower_leg_len = 0.52F,
+      .foot_y_offset = 0.02F,
+  });
+
+  EXPECT_TRUE(sample.active);
+  EXPECT_FLOAT_EQ(sample.pelvis.y, 0.55F);
+  EXPECT_FLOAT_EQ(sample.knee_l.x, -0.11F);
+  EXPECT_FLOAT_EQ(sample.knee_l.y, 0.035F);
+  EXPECT_FLOAT_EQ(sample.knee_l.z, -0.03F);
+  EXPECT_FLOAT_EQ(sample.foot_l.x, -0.135F);
+  EXPECT_FLOAT_EQ(sample.foot_l.y, 0.0F);
+  EXPECT_NEAR(sample.foot_l.z, -0.2718F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.knee_r.y, 0.43F);
+  EXPECT_FLOAT_EQ(sample.foot_r.y, 0.02F);
+  EXPECT_FLOAT_EQ(sample.foot_r.z, 0.14F);
+  EXPECT_FLOAT_EQ(sample.upper_body.shoulder_l_y_delta, -0.20F);
+  EXPECT_FLOAT_EQ(sample.upper_body.neck_z_delta, 0.012F);
+}
+
+TEST(AnimationCorePosturePoseManifest,
+     KneelTransitionStandingUpPushesRightFootAndHands) {
+  auto const sample = Animation::resolve_humanoid_kneel_transition_pose({
+      .progress = 0.175F,
+      .standing_up = true,
+  });
+
+  EXPECT_FLOAT_EQ(sample.foot_r_z_delta, -0.04F);
+  EXPECT_FLOAT_EQ(sample.knee_r_z_delta, -0.025F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_z_delta, 0.03F);
+  EXPECT_FLOAT_EQ(sample.neck_z_delta, 0.027F);
+  EXPECT_FLOAT_EQ(sample.hand_l_z_delta, 0.02F);
+  EXPECT_FLOAT_EQ(sample.hand_r_z_delta, 0.02F);
+}
+
+TEST(AnimationCorePosturePoseManifest, HitFlinchOwnsBodyReactionDeltas) {
+  auto const sample = Animation::resolve_humanoid_hit_flinch_pose({
+      .intensity = 0.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.head_z_delta, -0.03F);
+  EXPECT_FLOAT_EQ(sample.head_y_delta, -0.01F);
+  EXPECT_FLOAT_EQ(sample.neck_z_delta, -0.024F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_y_delta, -0.015F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_z_delta, -0.018F);
+  EXPECT_FLOAT_EQ(sample.pelvis_y_delta, -0.006F);
+}
+
+TEST(AnimationCorePosturePoseManifest, LeanPoseNormalizesDirectionAndScalesBody) {
+  auto const sample = Animation::resolve_humanoid_lean_pose({
+      .direction = {0.0F, 0.0F, 2.0F},
+      .amount = 0.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.shoulder_l_z_delta, 0.06F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.06F);
+  EXPECT_FLOAT_EQ(sample.neck_z_delta, 0.051F);
+  EXPECT_FLOAT_EQ(sample.head_z_delta, 0.045F);
+}
+
+TEST(AnimationCorePosturePoseManifest, LookAtPoseMovesHeadAndNeckHorizontally) {
+  auto const sample = Animation::resolve_humanoid_look_at_pose({
+      .head_position = {0.0F, 0.0F, 0.0F},
+      .target = {3.0F, 0.0F, 4.0F},
+  });
+
+  EXPECT_NEAR(sample.head_x_delta, 0.018F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.head_y_delta, 0.0F);
+  EXPECT_NEAR(sample.head_z_delta, 0.024F, 0.0001F);
+  EXPECT_NEAR(sample.neck_x_delta, 0.009F, 0.0001F);
+  EXPECT_NEAR(sample.neck_z_delta, 0.012F, 0.0001F);
+}
+
+TEST(AnimationCorePosturePoseManifest, TorsoTiltOwnsBodyAndFrameDeltas) {
+  auto const sample = Animation::resolve_humanoid_torso_tilt_pose({
+      .heading_right = {1.0F, 0.0F, 0.0F},
+      .heading_forward = {0.0F, 0.0F, 1.0F},
+      .side_tilt = 0.02F,
+      .forward_tilt = -0.04F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.shoulder_l_x_delta, 0.02F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_z_delta, -0.04F);
+  EXPECT_FLOAT_EQ(sample.neck_x_delta, 0.024F);
+  EXPECT_FLOAT_EQ(sample.neck_z_delta, -0.048F);
+  EXPECT_FLOAT_EQ(sample.head_x_delta, 0.03F);
+  EXPECT_FLOAT_EQ(sample.head_z_delta, -0.06F);
+  EXPECT_FLOAT_EQ(sample.torso_frame_origin_delta.x, 0.02F);
+  EXPECT_FLOAT_EQ(sample.torso_frame_origin_delta.z, -0.04F);
+  EXPECT_FLOAT_EQ(sample.head_frame_origin_delta.x, 0.03F);
+  EXPECT_FLOAT_EQ(sample.head_frame_origin_delta.z, -0.06F);
+}
+
+TEST(AnimationCorePosturePoseManifest, MountedLeanOwnsSeatAxisBodyOffsets) {
+  auto const sample = Animation::resolve_mounted_rider_lean_pose({
+      .forward_lean = 0.50F,
+      .side_lean = -0.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.forward, 0.075F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.right, -0.05F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_delta.forward, 0.075F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.forward, 0.0675F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.right, -0.045F);
+  EXPECT_FLOAT_EQ(sample.head_forward_tilt, 0.20F);
+  EXPECT_FLOAT_EQ(sample.head_side_tilt, -0.20F);
+}
+
+TEST(AnimationCorePosturePoseManifest, MountedChargeOwnsLeanAndCrouch) {
+  auto const sample = Animation::resolve_mounted_rider_charge_pose({
+      .intensity = 0.40F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.forward, 0.10F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.world_y, -0.032F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.forward, 0.085F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.world_y, -0.0256F);
+}
+
+TEST(AnimationCorePosturePoseManifest, MountedReiningClampsTensionAndLeansBack) {
+  auto const sample = Animation::resolve_mounted_rider_reining_pose({
+      .left_tension = 0.50F,
+      .right_tension = 1.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.forward, -0.06F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_delta.forward, -0.06F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.forward, -0.054F);
+}
+
+TEST(AnimationCorePosturePoseManifest, MountedTorsoSculptOwnsCompressionAndTwist) {
+  auto const sample = Animation::resolve_mounted_rider_torso_sculpt_pose({
+      .compression = 0.50F,
+      .twist = 0.50F,
+      .shoulder_dip = -0.50F,
+  });
+
+  EXPECT_TRUE(sample.active);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.forward, -0.0375F);
+  EXPECT_NEAR(sample.shoulder_l_delta.right, -0.01085F, 0.00001F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_delta.up, -0.015F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_delta.forward, -0.0375F);
+  EXPECT_NEAR(sample.shoulder_r_delta.right, 0.01085F, 0.00001F);
+  EXPECT_FLOAT_EQ(sample.shoulder_r_delta.up, 0.015F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.forward, -0.020625F);
+  EXPECT_FLOAT_EQ(sample.neck_delta.up, 0.0048F);
+  EXPECT_FLOAT_EQ(sample.head_delta.forward, -0.020625F);
+  EXPECT_FLOAT_EQ(sample.head_delta.up, 0.0048F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, ScheduleSuppressesShortIdleDurations) {
+  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
+      .seed = 0U,
+      .idle_duration = 4.99F,
+  });
+
+  EXPECT_FALSE(schedule.active);
+  EXPECT_EQ(schedule.type, Animation::HumanoidAmbientIdle::None);
+  EXPECT_FLOAT_EQ(schedule.phase, 0.0F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, ScheduleOwnsSeededActivationWindow) {
+  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
+      .seed = 0U,
+      .idle_duration = 5.40F,
+  });
+
+  EXPECT_TRUE(schedule.active);
+  EXPECT_EQ(schedule.type, Animation::HumanoidAmbientIdle::ShiftWeight);
+  EXPECT_NEAR(schedule.phase, 0.0221572F, 0.000001F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, SelectionPrioritizesCommanderOverrides) {
+  auto const jump = Animation::resolve_humanoid_ambient_selection({
+      .jump_active = true,
+      .jump_phase = 1.40F,
+      .flag_rally_active = true,
+      .flag_rally_phase = 0.25F,
+      .attacking = true,
+      .seed = 0U,
+      .idle_duration = 5.40F,
+  });
+  EXPECT_TRUE(jump.active);
+  EXPECT_EQ(jump.type, Animation::HumanoidAmbientIdle::Jump);
+  EXPECT_FLOAT_EQ(jump.phase, 1.0F);
+
+  auto const rally = Animation::resolve_humanoid_ambient_selection({
+      .jump_active = false,
+      .flag_rally_active = true,
+      .flag_rally_phase = -0.25F,
+      .attacking = true,
+      .seed = 0U,
+      .idle_duration = 5.40F,
+  });
+  EXPECT_TRUE(rally.active);
+  EXPECT_EQ(rally.type, Animation::HumanoidAmbientIdle::PlantFlag);
+  EXPECT_FLOAT_EQ(rally.phase, 0.0F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, SelectionOwnsEligibilityAndSchedule) {
+  auto const suppressed = Animation::resolve_humanoid_ambient_selection({
+      .has_locomotion = true,
+      .seed = 0U,
+      .idle_duration = 5.40F,
+  });
+  EXPECT_FALSE(suppressed.active);
+  EXPECT_EQ(suppressed.type, Animation::HumanoidAmbientIdle::None);
+
+  auto const scheduled = Animation::resolve_humanoid_ambient_selection({
+      .seed = 0U,
+      .idle_duration = 5.40F,
+  });
+  EXPECT_TRUE(scheduled.active);
+  EXPECT_EQ(scheduled.type, Animation::HumanoidAmbientIdle::ShiftWeight);
+  EXPECT_NEAR(scheduled.phase, 0.0221572F, 0.000001F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, SitDownOwnsCrouchAndFootSpread) {
+  auto const sample = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::SitDown,
+      .phase = 0.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.pelvis_y_delta, -0.18F);
+  EXPECT_FLOAT_EQ(sample.shoulder_l_y_delta, -0.126F);
+  EXPECT_FLOAT_EQ(sample.neck_y_delta, -0.1116F);
+  EXPECT_FLOAT_EQ(sample.head_z_delta, 0.025F);
+  EXPECT_FLOAT_EQ(sample.knee_l_z_delta, 0.09F);
+  EXPECT_FLOAT_EQ(sample.foot_l_x_delta, -0.025F);
+  EXPECT_FLOAT_EQ(sample.foot_r_x_delta, 0.025F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, RaiseWeaponOwnsHandAndHeadDeltas) {
+  auto const sample = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::RaiseWeapon,
+      .phase = 0.50F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.hand_r_y_delta, 0.28F);
+  EXPECT_FLOAT_EQ(sample.elbow_r_y_delta, 0.154F);
+  EXPECT_NEAR(sample.hand_r_x_delta, 0.0F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.hand_r_z_delta, -0.06F);
+  EXPECT_FLOAT_EQ(sample.hand_l_y_delta, 0.07F);
+  EXPECT_FLOAT_EQ(sample.head_y_delta, 0.018F);
+  EXPECT_FLOAT_EQ(sample.head_z_delta, -0.035F);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, JumpScalesWithAirborneState) {
+  auto const grounded = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::Jump,
+      .phase = 0.46F,
+      .airborne = false,
+  });
+  auto const airborne = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::Jump,
+      .phase = 0.46F,
+      .airborne = true,
+  });
+
+  EXPECT_NEAR(grounded.pelvis_y_delta, 0.083F, 0.0001F);
+  EXPECT_NEAR(grounded.foot_l_y_delta, 0.0595F, 0.0001F);
+  EXPECT_NEAR(grounded.hand_r_y_delta, 0.0225F, 0.0001F);
+  EXPECT_GT(airborne.pelvis_y_delta, grounded.pelvis_y_delta);
+  EXPECT_GT(airborne.foot_l_y_delta, grounded.foot_l_y_delta);
+  EXPECT_GT(airborne.hand_r_y_delta, grounded.hand_r_y_delta);
+}
+
+TEST(AnimationCoreAmbientPoseManifest, PlantFlagOwnsPlantDrive) {
+  auto const sample = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::PlantFlag,
+      .phase = 0.50F,
+  });
+
+  EXPECT_LT(sample.pelvis_y_delta, -0.16F);
+  EXPECT_GT(sample.pelvis_z_delta, 0.03F);
+  EXPECT_GT(sample.shoulder_r_z_delta, sample.shoulder_l_z_delta);
+  EXPECT_GT(sample.knee_r_z_delta, sample.knee_l_z_delta);
+  EXPECT_LT(sample.hand_r_y_delta, -0.30F);
+  EXPECT_GT(sample.hand_r_z_delta, 0.15F);
+  EXPECT_LT(sample.hand_l_x_delta, 0.0F);
+  EXPECT_LT(sample.elbow_l_y_delta, 0.0F);
+}
+
+TEST(AnimationCoreMountedPoseManifest, IdleRestOwnsMountedHandTargets) {
+  auto const sample = Animation::resolve_mounted_rider_hand_pose({
+      .kind = Animation::MountedRiderHandPoseKind::IdleRest,
+  });
+
+  EXPECT_TRUE(sample.left.active);
+  EXPECT_TRUE(sample.right.active);
+  EXPECT_FALSE(sample.left.uses_rein);
+  EXPECT_EQ(sample.left.anchor, Animation::MountedHandAnchor::Seat);
+  EXPECT_FLOAT_EQ(sample.left.offset.forward, 0.12F);
+  EXPECT_FLOAT_EQ(sample.left.offset.right, -0.14F);
+  EXPECT_FLOAT_EQ(sample.right.offset.right, 0.14F);
+  EXPECT_FLOAT_EQ(sample.left.elbow.y_bias, -0.05F);
+  EXPECT_STREQ(sample.debug_label, "riding_idle");
+}
+
+TEST(AnimationCoreMountedPoseManifest, ReinHoldClampsControlsAndOwnsElbowProfile) {
+  auto const sample = Animation::resolve_mounted_rider_hand_pose({
+      .kind = Animation::MountedRiderHandPoseKind::ReinHold,
+      .left_rein_slack = -0.50F,
+      .right_rein_slack = 1.50F,
+      .left_rein_tension = 1.25F,
+      .right_rein_tension = -0.25F,
+  });
+
+  EXPECT_TRUE(sample.left.uses_rein);
+  EXPECT_TRUE(sample.right.uses_rein);
+  EXPECT_FLOAT_EQ(sample.left.rein_slack, 0.0F);
+  EXPECT_FLOAT_EQ(sample.right.rein_slack, 1.0F);
+  EXPECT_FLOAT_EQ(sample.left.rein_tension, 1.0F);
+  EXPECT_FLOAT_EQ(sample.right.rein_tension, 0.0F);
+  EXPECT_FLOAT_EQ(sample.left.elbow.along_frac, 0.45F);
+  EXPECT_FLOAT_EQ(sample.left.elbow.lateral_offset, 0.12F);
+  EXPECT_FLOAT_EQ(sample.left.elbow.y_bias, -0.08F);
+}
+
+TEST(AnimationCoreMountedPoseManifest, StowedShieldAndSwordIdleScaleFromMountDims) {
+  auto const shield = Animation::resolve_mounted_rider_hand_pose({
+      .kind = Animation::MountedRiderHandPoseKind::ShieldStowed,
+      .body_length = 2.0F,
+      .body_width = 0.60F,
+      .saddle_thickness = 0.20F,
+  });
+  EXPECT_TRUE(shield.left.active);
+  EXPECT_FALSE(shield.right.active);
+  EXPECT_EQ(shield.left.anchor, Animation::MountedHandAnchor::Seat);
+  EXPECT_FLOAT_EQ(shield.left.offset.forward, -0.10F);
+  EXPECT_FLOAT_EQ(shield.left.offset.right, -0.33F);
+  EXPECT_FLOAT_EQ(shield.left.offset.up, 0.10F);
+  EXPECT_FLOAT_EQ(shield.left.elbow.along_frac, 0.42F);
+
+  auto const sword = Animation::resolve_mounted_rider_hand_pose({
+      .kind = Animation::MountedRiderHandPoseKind::SwordIdle,
+      .body_length = 2.0F,
+      .body_width = 0.60F,
+      .body_height = 1.20F,
+      .saddle_thickness = 0.20F,
+  });
+  EXPECT_FALSE(sword.left.active);
+  EXPECT_TRUE(sword.right.active);
+  EXPECT_EQ(sword.right.anchor, Animation::MountedHandAnchor::RightShoulder);
+  EXPECT_FLOAT_EQ(sword.right.offset.forward, 0.44F);
+  EXPECT_FLOAT_EQ(sword.right.offset.right, 0.54F);
+  EXPECT_FLOAT_EQ(sword.right.offset.up, 0.092F);
+  EXPECT_FLOAT_EQ(sword.right.elbow.lateral_offset, 0.24F);
+}
+
+TEST(AnimationCoreMountedPoseManifest, PosePlanOwnsSeatBiasAndReinClaims) {
+  auto const forward = Animation::resolve_mounted_rider_pose_plan({
+      .seat_pose = Animation::MountedSeatPoseKind::Forward,
+      .forward_bias = 0.10F,
+  });
+  EXPECT_FLOAT_EQ(forward.forward_bias, 0.45F);
+  EXPECT_TRUE(forward.apply_left_rein);
+  EXPECT_TRUE(forward.apply_right_rein);
+
+  auto const defensive = Animation::resolve_mounted_rider_pose_plan({
+      .seat_pose = Animation::MountedSeatPoseKind::Defensive,
+      .forward_bias = 0.10F,
+  });
+  EXPECT_FLOAT_EQ(defensive.forward_bias, -0.10F);
+
+  auto const spear = Animation::resolve_mounted_rider_pose_plan({
+      .weapon_pose = Animation::MountedWeaponPoseKind::SpearThrust,
+  });
+  EXPECT_TRUE(spear.weapon_claims_left_hand);
+  EXPECT_TRUE(spear.weapon_claims_right_hand);
+  EXPECT_FALSE(spear.apply_left_rein);
+  EXPECT_FALSE(spear.apply_right_rein);
+}
+
+TEST(AnimationCoreMountedPoseManifest, PosePlanKeepsShieldHandForSwordStrike) {
+  auto const sword_and_shield = Animation::resolve_mounted_rider_pose_plan({
+      .weapon_pose = Animation::MountedWeaponPoseKind::SwordStrike,
+      .shield_pose = Animation::MountedShieldPoseKind::Guard,
+  });
+
+  EXPECT_TRUE(sword_and_shield.shield_claims_left_hand);
+  EXPECT_TRUE(sword_and_shield.weapon_claims_right_hand);
+  EXPECT_FALSE(sword_and_shield.weapon_claims_left_hand);
+  EXPECT_FALSE(sword_and_shield.apply_left_rein);
+  EXPECT_FALSE(sword_and_shield.apply_right_rein);
+  EXPECT_TRUE(sword_and_shield.sword_strike_keeps_left_hand);
+
+  auto const sword_only = Animation::resolve_mounted_rider_pose_plan({
+      .weapon_pose = Animation::MountedWeaponPoseKind::SwordStrike,
+  });
+  EXPECT_TRUE(sword_only.apply_left_rein);
+  EXPECT_FALSE(sword_only.apply_right_rein);
+  EXPECT_FALSE(sword_only.sword_strike_keeps_left_hand);
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustCouchesBeforeStrike) {
+  auto const sample = Animation::resolve_mounted_spear_thrust_pose({
+      .attack_phase = 0.10F,
+  });
+
+  EXPECT_NEAR(sample.right_hand.forward, 0.1025F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.right, 0.1425F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.up, 0.1325F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.forward, 0.1095F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand.right, -0.1045F, 0.0001F);
+  EXPECT_GT(sample.torso_compression, 0.0F);
+  EXPECT_GT(sample.forward_lean, 0.0F);
+  EXPECT_STREQ(sample.debug_label, "spear_couch");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustDrivesForwardAtImpact) {
+  auto const sample = Animation::resolve_mounted_spear_thrust_pose({
+      .attack_phase = 0.55F,
+  });
+
+  EXPECT_GT(sample.right_hand.forward, 0.95F);
+  EXPECT_LT(sample.right_hand.right, 0.08F);
+  EXPECT_FLOAT_EQ(sample.forward_lean, 0.20F);
+  EXPECT_FLOAT_EQ(sample.torso_twist, 0.05F);
+  EXPECT_FLOAT_EQ(sample.shoulder_drop, 0.04F);
+  EXPECT_FLOAT_EQ(sample.head_forward_tilt, 0.5F);
+  EXPECT_STREQ(sample.debug_label, "spear_extend");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustRecoversToGuard) {
+  auto const sample = Animation::resolve_mounted_spear_thrust_pose({
+      .attack_phase = 1.0F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.right_hand.forward, 0.12F);
+  EXPECT_FLOAT_EQ(sample.right_hand.right, 0.15F);
+  EXPECT_FLOAT_EQ(sample.right_hand.up, 0.15F);
+  EXPECT_FLOAT_EQ(sample.left_hand.forward, 0.12F);
+  EXPECT_FLOAT_EQ(sample.left_hand.right, -0.10F);
+  EXPECT_FLOAT_EQ(sample.left_hand.up, 0.15F);
+  EXPECT_NEAR(sample.forward_lean, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.torso_twist, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_drop, 0.0F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.head_forward_tilt, 0.0F);
+  EXPECT_STREQ(sample.debug_label, "spear_recover");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeChambers) {
+  auto const sample = Animation::resolve_mounted_sword_strike_pose({
+      .attack_phase = 0.11F,
+  });
+
+  EXPECT_NEAR(sample.right_hand.forward, 0.0375F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.right, 0.265F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.up, 0.20F, 0.0001F);
+  EXPECT_NEAR(sample.torso_twist, -0.0125F, 0.0001F);
+  EXPECT_NEAR(sample.torso_commit, -0.005F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_dip, 0.01F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.left_hand_up_offset, -0.02F);
+  EXPECT_STREQ(sample.debug_label, "sword_chamber");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeCommitsBodyAtImpact) {
+  auto const sample = Animation::resolve_mounted_sword_strike_pose({
+      .attack_phase = 0.55F,
+  });
+
+  EXPECT_NEAR(sample.right_hand.forward, 0.37F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.right, 0.51F, 0.0001F);
+  EXPECT_NEAR(sample.right_hand.up, 0.15F, 0.0001F);
+  EXPECT_NEAR(sample.torso_twist, 0.045F, 0.0001F);
+  EXPECT_NEAR(sample.side_lean, 0.07F, 0.0001F);
+  EXPECT_NEAR(sample.forward_lean, 0.065F, 0.0001F);
+  EXPECT_NEAR(sample.torso_commit, 0.105F, 0.0001F);
+  EXPECT_NEAR(sample.counter_lift, 0.055F, 0.0001F);
+  EXPECT_NEAR(sample.left_hand_up_offset, -0.045F, 0.0001F);
+  EXPECT_NEAR(sample.head_forward_tilt, 0.20F, 0.0001F);
+  EXPECT_NEAR(sample.head_side_tilt, 0.08F, 0.0001F);
+  EXPECT_STREQ(sample.debug_label, "sword_strike");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeRecoversToRest) {
+  auto const sample = Animation::resolve_mounted_sword_strike_pose({
+      .attack_phase = 1.0F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.right_hand.forward, 0.08F);
+  EXPECT_FLOAT_EQ(sample.right_hand.right, 0.24F);
+  EXPECT_FLOAT_EQ(sample.right_hand.up, 0.12F);
+  EXPECT_NEAR(sample.torso_twist, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.side_lean, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.forward_lean, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.torso_commit, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.counter_lift, 0.0F, 0.0001F);
+  EXPECT_NEAR(sample.shoulder_dip, 0.0F, 0.0001F);
+  EXPECT_FLOAT_EQ(sample.left_hand_up_offset, -0.02F);
+  EXPECT_STREQ(sample.debug_label, "sword_recover");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedSpearGuardExposesGripTargets) {
+  auto const overhand = Animation::resolve_mounted_spear_guard_pose({
+      .grip = Animation::MountedSpearGuardGrip::Overhand,
+  });
+  auto const couched = Animation::resolve_mounted_spear_guard_pose({
+      .grip = Animation::MountedSpearGuardGrip::Couched,
+  });
+  auto const two_handed = Animation::resolve_mounted_spear_guard_pose({
+      .grip = Animation::MountedSpearGuardGrip::TwoHanded,
+  });
+
+  EXPECT_TRUE(overhand.left_hand_uses_rein);
+  EXPECT_FLOAT_EQ(overhand.right_hand.up, 0.55F);
+  EXPECT_FLOAT_EQ(overhand.left_rein_slack, 0.30F);
+  EXPECT_FLOAT_EQ(couched.right_hand.forward, -0.15F);
+  EXPECT_FLOAT_EQ(couched.left_rein_tension, 0.20F);
+  EXPECT_FALSE(two_handed.left_hand_uses_rein);
+  EXPECT_FLOAT_EQ(two_handed.left_hand.right, -0.10F);
+  EXPECT_STREQ(two_handed.debug_label, "spear_guard_pose");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedBowDrawOwnsDrawHandCurve) {
+  auto const prepare = Animation::resolve_mounted_bow_draw_pose({
+      .draw_phase = 0.15F,
+  });
+  auto const hold = Animation::resolve_mounted_bow_draw_pose({
+      .draw_phase = 0.50F,
+  });
+  auto const recover = Animation::resolve_mounted_bow_draw_pose({
+      .draw_phase = 1.0F,
+  });
+
+  EXPECT_FLOAT_EQ(prepare.left_hand.forward, 0.25F);
+  EXPECT_NEAR(prepare.right_hand.forward, 0.1875F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand.right, 0.03F, 0.0001F);
+  EXPECT_NEAR(prepare.right_hand_world_y_offset, -0.0375F, 0.0001F);
+  EXPECT_FLOAT_EQ(hold.right_hand.forward, 0.0F);
+  EXPECT_FLOAT_EQ(hold.right_hand.right, 0.12F);
+  EXPECT_FLOAT_EQ(recover.right_hand.forward, 0.25F);
+  EXPECT_NEAR(recover.right_hand_world_y_offset, -0.05F, 0.0001F);
+  EXPECT_STREQ(recover.debug_label, "bow_draw");
+}
+
+TEST(AnimationCoreAttackPoseManifest, MountedShieldDefenseOwnsRaisedAndRestPose) {
+  auto const rest = Animation::resolve_mounted_shield_defense_pose({
+      .raised = false,
+  });
+  auto const raised = Animation::resolve_mounted_shield_defense_pose({
+      .raised = true,
+  });
+
+  EXPECT_FLOAT_EQ(rest.left_hand.forward, 0.05F);
+  EXPECT_FLOAT_EQ(rest.left_hand.right, -0.16F);
+  EXPECT_FLOAT_EQ(rest.right_rein_slack, 0.30F);
+  EXPECT_FLOAT_EQ(rest.right_rein_tension, 0.25F);
+  EXPECT_FLOAT_EQ(raised.left_hand.up, 0.40F);
+  EXPECT_FLOAT_EQ(raised.right_rein_slack, 0.15F);
+  EXPECT_FLOAT_EQ(raised.right_rein_tension, 0.45F);
+  EXPECT_STREQ(raised.debug_label, "shield_defense");
+}
+
+TEST(AnimationCoreLocomotionManifest, BasePoseOwnsProportionsAndSeededAsymmetry) {
+  Animation::HumanoidBasePoseInputs inputs{};
+  inputs.seed = 0U;
+  inputs.height_scale = 1.0F;
+  inputs.bulk_scale = 1.20F;
+  inputs.stance_width = 1.10F;
+  inputs.posture_slump = 0.05F;
+  inputs.shoulder_tilt = 0.02F;
+  inputs.proportions = {
+      .chest_y = 1.10F,
+      .ground_y = 0.0F,
+      .head_center_y = 1.60F,
+      .head_radius = 0.10F,
+      .neck_base_y = 1.45F,
+      .shoulder_y = 1.35F,
+      .shoulder_width = 0.50F,
+      .waist_y = 0.80F,
+      .foot_y_offset_default = 0.02F,
+  };
+
+  auto const first = Animation::resolve_humanoid_base_pose(inputs);
+  auto const second = Animation::resolve_humanoid_base_pose(inputs);
+  inputs.seed = 1U;
+  auto const other_seed = Animation::resolve_humanoid_base_pose(inputs);
+
+  EXPECT_FLOAT_EQ(first.head_radius, 0.10F);
+  EXPECT_FLOAT_EQ(first.head_pos.y, 1.60F);
+  EXPECT_FLOAT_EQ(first.head_pos.z, 0.014775F);
+  EXPECT_FLOAT_EQ(first.neck_base.z, 0.012675F);
+  EXPECT_FLOAT_EQ(first.shoulder_l.x, -0.255F);
+  EXPECT_FLOAT_EQ(first.shoulder_l.y, 1.37F);
+  EXPECT_FLOAT_EQ(first.shoulder_l.z, 0.0255F);
+  EXPECT_FLOAT_EQ(first.shoulder_r.x, 0.255F);
+  EXPECT_FLOAT_EQ(first.shoulder_r.y, 1.33F);
+  EXPECT_FLOAT_EQ(first.pelvis.y, 0.782F);
+  EXPECT_FLOAT_EQ(first.pelvis.z, -0.010F);
+  EXPECT_FLOAT_EQ(first.foot_y_offset, 0.02F);
+  EXPECT_NEAR(first.foot_l.x + first.foot_r.x, 0.0F, 0.000001F);
+  EXPECT_NEAR(first.foot_l.z + first.foot_r.z, 0.0F, 0.000001F);
+  EXPECT_FLOAT_EQ(first.foot_l.x, second.foot_l.x);
+  EXPECT_FLOAT_EQ(first.hand_l.x, second.hand_l.x);
+  EXPECT_NE(first.foot_l.z, other_seed.foot_l.z);
+  EXPECT_NE(first.hand_l.x, other_seed.hand_l.x);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionPoseIsInactiveForIdle) {
+  auto const sample = Animation::resolve_humanoid_locomotion_pose({
+      .state = Animation::HumanoidMotionState::Idle,
+      .base_foot_l = {-0.2F, 0.02F, 0.02F},
+      .base_foot_r = {0.2F, 0.02F, -0.02F},
+  });
+
+  EXPECT_FALSE(sample.active);
+  EXPECT_FLOAT_EQ(sample.pelvis_delta.x, 0.0F);
+  EXPECT_FLOAT_EQ(sample.hand_l_delta.z, 0.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
+  Animation::HumanoidLocomotionPoseInputs inputs{};
+  inputs.state = Animation::HumanoidMotionState::Walk;
+  inputs.normalized_speed = 1.0F;
+  inputs.cycle_phase = 0.25F;
+  inputs.stride_distance = 2.35F * 0.92F;
+  inputs.locomotion_blend = 1.0F;
+  inputs.walk_speed_multiplier = 1.0F;
+  inputs.stance_width = 1.0F;
+  inputs.arm_swing_amplitude = 1.0F;
+  inputs.reference_walk_speed = 2.35F;
+  inputs.reference_run_speed = 5.10F;
+  inputs.ground_y = 0.0F;
+  inputs.foot_y_offset = 0.02F;
+  inputs.base_foot_l = {-0.20F, 0.02F, 0.02F};
+  inputs.base_foot_r = {0.20F, 0.02F, -0.02F};
+
+  auto const first = Animation::resolve_humanoid_locomotion_pose(inputs);
+  auto const second = Animation::resolve_humanoid_locomotion_pose(inputs);
+
+  EXPECT_TRUE(first.active);
+  EXPECT_FLOAT_EQ(first.foot_l.x, second.foot_l.x);
+  EXPECT_FLOAT_EQ(first.foot_l.z, second.foot_l.z);
+  EXPECT_NE(first.foot_l.z, inputs.base_foot_l.z);
+  EXPECT_NE(first.foot_r.z, inputs.base_foot_r.z);
+  EXPECT_LT(first.pelvis_delta.y, 0.0F);
+  EXPECT_NE(first.shoulder_l_delta.z, 0.0F);
+  EXPECT_NE(first.hand_l_delta.z, 0.0F);
+  EXPECT_NEAR(first.hand_l_delta.z, -first.hand_r_delta.z, 0.0001F);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionPoseRunDrivesBodyFurtherForward) {
+  Animation::HumanoidLocomotionPoseInputs walk{};
+  walk.state = Animation::HumanoidMotionState::Walk;
+  walk.normalized_speed = 1.0F;
+  walk.cycle_phase = 0.25F;
+  walk.locomotion_blend = 1.0F;
+  walk.walk_speed_multiplier = 1.0F;
+  walk.stance_width = 1.0F;
+  walk.arm_swing_amplitude = 1.0F;
+  walk.reference_walk_speed = 2.35F;
+  walk.reference_run_speed = 5.10F;
+  walk.ground_y = 0.0F;
+  walk.foot_y_offset = 0.02F;
+  walk.base_foot_l = {-0.20F, 0.02F, 0.02F};
+  walk.base_foot_r = {0.20F, 0.02F, -0.02F};
+
+  auto run = walk;
+  run.state = Animation::HumanoidMotionState::Run;
+  run.run_blend = 1.0F;
+
+  auto const walk_pose = Animation::resolve_humanoid_locomotion_pose(walk);
+  auto const run_pose = Animation::resolve_humanoid_locomotion_pose(run);
+
+  EXPECT_TRUE(walk_pose.active);
+  EXPECT_TRUE(run_pose.active);
+  EXPECT_GT(run_pose.pelvis_delta.z, walk_pose.pelvis_delta.z);
+  EXPECT_GT(run_pose.shoulder_l_delta.z, walk_pose.shoulder_l_delta.z);
+  EXPECT_GT(std::abs(run_pose.hand_l_delta.z), std::abs(walk_pose.hand_l_delta.z));
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionVariationKeepsIdleTuningStable) {
+  auto const sample = Animation::resolve_humanoid_locomotion_variation({
+      .has_locomotion = false,
+      .running = false,
+      .walk_speed_multiplier = 1.10F,
+      .arm_swing_amplitude = 0.90F,
+      .stance_width = 1.20F,
+      .posture_slump = 0.04F,
+  });
+
+  EXPECT_FLOAT_EQ(sample.walk_speed_multiplier, 1.10F);
+  EXPECT_FLOAT_EQ(sample.arm_swing_amplitude, 0.90F);
+  EXPECT_FLOAT_EQ(sample.stance_width, 1.20F);
+  EXPECT_FLOAT_EQ(sample.posture_slump, 0.04F);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionVariationOwnsWalkAndRunTuning) {
+  auto const walk = Animation::resolve_humanoid_locomotion_variation({
+      .has_locomotion = true,
+      .running = false,
+      .walk_speed_multiplier = 1.10F,
+      .arm_swing_amplitude = 0.90F,
+      .stance_width = 1.20F,
+      .posture_slump = 0.04F,
+  });
+  EXPECT_NEAR(walk.walk_speed_multiplier, 1.10F * 1.05F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(walk.arm_swing_amplitude, 0.90F);
+  EXPECT_FLOAT_EQ(walk.stance_width, 1.20F);
+  EXPECT_FLOAT_EQ(walk.posture_slump, 0.04F);
+
+  auto const run = Animation::resolve_humanoid_locomotion_variation({
+      .has_locomotion = true,
+      .running = true,
+      .walk_speed_multiplier = 1.10F,
+      .arm_swing_amplitude = 0.90F,
+      .stance_width = 1.20F,
+      .posture_slump = 0.15F,
+  });
+  EXPECT_NEAR(run.walk_speed_multiplier, 1.10F * 1.25F, 1.0e-6F);
+  EXPECT_NEAR(run.arm_swing_amplitude, 0.90F * 1.12F, 1.0e-6F);
+  EXPECT_NEAR(run.stance_width, 1.20F * 0.96F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(run.posture_slump, 0.16F);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionActionOverrideFreezesJumpingCommander) {
+  auto const inactive = Animation::resolve_humanoid_locomotion_action_override({
+      .commander_jump_active = false,
+  });
+  EXPECT_FALSE(inactive.active);
+
+  auto const jump = Animation::resolve_humanoid_locomotion_action_override({
+      .commander_jump_active = true,
+  });
+  EXPECT_TRUE(jump.active);
+  EXPECT_EQ(jump.state, Animation::HumanoidMotionState::Idle);
+  EXPECT_FLOAT_EQ(jump.move_speed, 0.0F);
+  EXPECT_FLOAT_EQ(jump.normalized_speed, 0.0F);
+  EXPECT_FALSE(jump.has_target);
+  EXPECT_TRUE(jump.airborne);
+}
+
+TEST(AnimationCoreLocomotionManifest, LocomotionPhaseOverrideOwnsBowReadyIdle) {
+  auto const idle = Animation::resolve_humanoid_locomotion_phase_override({
+      .bow_ready_idle = true,
+      .has_locomotion = false,
+      .attacking = false,
+  });
+  EXPECT_TRUE(idle.active);
+  EXPECT_FLOAT_EQ(idle.cycle_phase, 0.5F);
+
+  EXPECT_FALSE(
+      Animation::resolve_humanoid_locomotion_phase_override({
+                                                                .bow_ready_idle = false,
+                                                                .has_locomotion = false,
+                                                                .attacking = false,
+                                                            })
+          .active);
+  EXPECT_FALSE(
+      Animation::resolve_humanoid_locomotion_phase_override({
+                                                                .bow_ready_idle = true,
+                                                                .has_locomotion = true,
+                                                                .attacking = false,
+                                                            })
+          .active);
+  EXPECT_FALSE(
+      Animation::resolve_humanoid_locomotion_phase_override({
+                                                                .bow_ready_idle = true,
+                                                                .has_locomotion = false,
+                                                                .attacking = true,
+                                                            })
+          .active);
+}
+
+TEST(AnimationCoreLocomotionManifest, RunSampleIsDeterministic) {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Run;
+  inputs.motion_state = Animation::HumanoidMotionState::Run;
+  inputs.speed = 4.8F;
+  inputs.locomotion_direction_z = 1.0F;
+  inputs.sample_time = 1.5F;
+  inputs.phase_offset = 0.125F;
+  inputs.tuning.walk_speed_multiplier = 1.10F;
+
+  auto const first = Animation::resolve_humanoid_locomotion_sample(inputs);
+  auto const second = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_EQ(first.state, Animation::HumanoidMotionState::Run);
+  EXPECT_EQ(first.state, second.state);
+  EXPECT_FLOAT_EQ(first.cycle_time, second.cycle_time);
+  EXPECT_FLOAT_EQ(first.cycle_phase, second.cycle_phase);
+  EXPECT_FLOAT_EQ(first.normalized_speed, second.normalized_speed);
+  EXPECT_FLOAT_EQ(first.stride_distance, second.stride_distance);
+  EXPECT_GT(first.cycle_time, 0.0F);
+  EXPECT_GT(first.stride_distance, 0.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest, MotionStateOwnsWalkRunSelection) {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.speed = 3.30F;
+  inputs.sample_time = 1.0F;
+
+  auto const walking = Animation::resolve_humanoid_locomotion_sample(inputs);
+  EXPECT_EQ(walking.state, Animation::HumanoidMotionState::Walk);
+
+  inputs.movement_state = Animation::MovementState::Run;
+  inputs.motion_state = Animation::HumanoidMotionState::Run;
+  inputs.speed = 1.20F;
+  auto const running = Animation::resolve_humanoid_locomotion_sample(inputs);
+  EXPECT_EQ(running.state, Animation::HumanoidMotionState::Run);
+}
+
+TEST(AnimationCoreLocomotionManifest, WalkCadenceTightensAsSpeedRises) {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.sample_time = 1.0F;
+
+  inputs.speed = 1.25F;
+  auto const slow_walk = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  inputs.speed = 2.35F;
+  auto const brisk_walk = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_GT(slow_walk.cycle_time, brisk_walk.cycle_time);
+  EXPECT_LT(slow_walk.stride_distance, brisk_walk.stride_distance);
+}
+
+TEST(AnimationCoreLocomotionManifest, IdlePhaseAdvancesOverTime) {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Idle;
+  inputs.motion_state = Animation::HumanoidMotionState::Idle;
+  inputs.sample_time = 0.10F;
+  inputs.phase_offset = 0.125F;
+
+  auto const first = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  inputs.sample_time = 0.90F;
+  auto const second = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_FLOAT_EQ(first.cycle_time, 1.6F);
+  EXPECT_LT(first.cycle_phase, second.cycle_phase);
+  EXPECT_NEAR(first.cycle_phase, 0.140625F, 1.0e-6F);
+  EXPECT_NEAR(second.cycle_phase, 0.640625F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(first.stride_distance, 0.0F);
+  EXPECT_FLOAT_EQ(second.stride_distance, 0.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest,
+     PersistentStateKeepsPhaseAdvancingDuringCadenceChanges) {
+  auto wrapped_forward_delta = [](float start, float end) {
+    float delta = end - start;
+    if (delta < 0.0F) {
+      delta += 1.0F;
+    }
+    return delta;
+  };
+
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.phase_offset = 0.125F;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.sample_time = 1.00F;
+  inputs.speed = 1.25F;
+
+  auto const first = Animation::resolve_humanoid_locomotion_sample(inputs);
+  ASSERT_TRUE(first.write_persistent_state);
+
+  inputs.previous = first.persistent;
+  inputs.sample_time += 1.0F / 60.0F;
+  inputs.speed = 2.35F;
+  auto const second = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_GT(wrapped_forward_delta(first.cycle_phase, second.cycle_phase), 0.01F);
+  EXPECT_LT(second.cycle_time, first.cycle_time);
+}
+
+TEST(AnimationCoreLocomotionManifest, PersistentStatePreservesPhaseAcrossWalkRun) {
+  auto wrapped_phase_delta = [](float a, float b) {
+    float const direct = std::abs(a - b);
+    return std::min(direct, 1.0F - direct);
+  };
+
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.phase_offset = 0.125F;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.sample_time = 1.50F;
+  inputs.speed = 2.30F;
+
+  auto const walking = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  inputs.previous = walking.persistent;
+  inputs.movement_state = Animation::MovementState::Run;
+  inputs.motion_state = Animation::HumanoidMotionState::Run;
+  inputs.sample_time += 1.0F / 60.0F;
+  inputs.speed = 5.10F;
+  auto const running = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_EQ(walking.state, Animation::HumanoidMotionState::Walk);
+  EXPECT_EQ(running.state, Animation::HumanoidMotionState::Run);
+  EXPECT_LT(wrapped_phase_delta(walking.cycle_phase, running.cycle_phase), 0.08F);
+  EXPECT_GT(running.run_blend, 0.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest, DisabledPersistentWritesReturnPreviewOnly) {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.phase_offset = 0.125F;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.sample_time = 0.75F;
+  inputs.speed = 2.30F;
+  auto const seeded = Animation::resolve_humanoid_locomotion_sample(inputs);
+  ASSERT_TRUE(seeded.write_persistent_state);
+
+  inputs.previous = seeded.persistent;
+  inputs.allow_persistent_update = false;
+  inputs.movement_state = Animation::MovementState::Run;
+  inputs.motion_state = Animation::HumanoidMotionState::Run;
+  inputs.sample_time += 1.0F / 60.0F;
+  inputs.speed = 5.10F;
+  auto const preview = Animation::resolve_humanoid_locomotion_sample(inputs);
+
+  EXPECT_FALSE(preview.write_persistent_state);
+  EXPECT_FLOAT_EQ(preview.persistent.phase, seeded.persistent.phase);
+  EXPECT_FLOAT_EQ(preview.persistent.filtered_speed, seeded.persistent.filtered_speed);
+  EXPECT_FLOAT_EQ(preview.persistent.run_blend, seeded.persistent.run_blend);
+  EXPECT_EQ(preview.persistent.state, seeded.persistent.state);
+  EXPECT_GT(preview.run_blend, seeded.persistent.run_blend);
+}
+
+TEST(AnimationCoreIntentManifest, MeleeLockPrioritizesAttackOverLocomotion) {
+  auto const intent = Animation::resolve_humanoid_intent({
+      .locomotion = Animation::MovementState::Walk,
+      .is_attacking = true,
+      .is_melee = true,
+      .is_in_melee_lock = true,
+      .attack_family = Animation::CombatAttackFamily::Sword,
+  });
+
+  EXPECT_EQ(intent.semantic.action, Animation::ActionIntent::AttackMelee);
+  EXPECT_TRUE(intent.semantic.prioritize_action_over_locomotion);
+  EXPECT_EQ(Animation::pose_intent_for_semantic_intent(intent.semantic),
+            Animation::PoseIntent::AttackMelee);
+}
+
+TEST(AnimationCoreIntentManifest, ChaseMovementKeepsLocomotionUnlessLocked) {
+  auto const intent = Animation::resolve_humanoid_intent({
+      .locomotion = Animation::MovementState::Walk,
+      .has_chase_intent = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .combat_phase = Animation::CombatPhase::Strike,
+      .attack_family = Animation::CombatAttackFamily::Sword,
+  });
+
+  EXPECT_EQ(intent.semantic.action, Animation::ActionIntent::AttackMelee);
+  EXPECT_FALSE(intent.semantic.prioritize_action_over_locomotion);
+  EXPECT_EQ(Animation::pose_intent_for_semantic_intent(intent.semantic),
+            Animation::PoseIntent::Walk);
+}
+
+TEST(AnimationCoreIntentManifest, MountedSwordAndSpearResolveDifferentActions) {
+  auto const sword = Animation::resolve_humanoid_intent({
+      .is_mounted = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_family = Animation::CombatAttackFamily::Sword,
+  });
+  EXPECT_EQ(sword.semantic.action, Animation::ActionIntent::AttackMelee);
+  EXPECT_TRUE(sword.semantic.prioritize_action_over_locomotion);
+
+  auto const spear = Animation::resolve_humanoid_intent({
+      .is_mounted = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_family = Animation::CombatAttackFamily::Spear,
+  });
+  EXPECT_EQ(spear.semantic.action, Animation::ActionIntent::MountedCharge);
+  EXPECT_TRUE(spear.semantic.prioritize_action_over_locomotion);
+}
+
+TEST(AnimationCoreIntentManifest, HoldAttackUsesHeldMeleeOrRangedPose) {
+  auto const melee = Animation::resolve_humanoid_intent({
+      .is_in_hold_mode = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_family = Animation::CombatAttackFamily::None,
+  });
+  EXPECT_EQ(melee.semantic.action, Animation::ActionIntent::AttackMelee);
+  EXPECT_EQ(melee.semantic.stance, Animation::StanceIntent::Hold);
+
+  auto const ranged = Animation::resolve_humanoid_intent({
+      .is_in_hold_mode = true,
+      .is_attacking = true,
+      .is_melee = false,
+      .attack_family = Animation::CombatAttackFamily::Bow,
+  });
+  EXPECT_EQ(ranged.semantic.action, Animation::ActionIntent::AttackRanged);
+  EXPECT_EQ(ranged.semantic.stance, Animation::StanceIntent::Hold);
+}
+
+TEST(AnimationCoreIntentManifest, LifecycleActionsOverrideCombatIntent) {
+  auto const dying = Animation::resolve_humanoid_intent({
+      .is_dying = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_family = Animation::CombatAttackFamily::Sword,
+  });
+  EXPECT_EQ(dying.semantic.action, Animation::ActionIntent::Dying);
+
+  auto const hit = Animation::resolve_humanoid_intent({
+      .is_hit_reacting = true,
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_family = Animation::CombatAttackFamily::Sword,
+  });
+  EXPECT_EQ(hit.semantic.action, Animation::ActionIntent::HitReaction);
+}
+
+TEST(AnimationCoreLayoutManifest, StructuredPhaseOffsetIsDeterministicAndBounded) {
+  auto const first = Animation::structured_layout_phase_offset(1, 2, 3, 4, 0x12345678U);
+  auto const second =
+      Animation::structured_layout_phase_offset(1, 2, 3, 4, 0x12345678U);
+
+  EXPECT_FLOAT_EQ(first, second);
+  EXPECT_GE(first, 0.0F);
+  EXPECT_LE(first, 0.25F);
+}
+
+TEST(AnimationCoreLayoutManifest, SingleSoldierPolicyHasNoJitter) {
+  auto const policy = Animation::resolve_soldier_layout_policy({
+      .idx = 0,
+      .row = 0,
+      .col = 0,
+      .rows = 1,
+      .cols = 1,
+      .formation_spacing = 1.0F,
+      .seed = 0xCAFEBABEU,
+      .force_single_soldier = true,
+      .melee_attack = false,
+      .sample_time = 0.0F,
+  });
+
+  EXPECT_EQ(policy.row_index, 0U);
+  EXPECT_EQ(policy.col_index, 0U);
+  EXPECT_EQ(policy.rank_band, 0U);
+  EXPECT_EQ(policy.inst_seed, 0xCAFEBABEU);
+  EXPECT_FLOAT_EQ(policy.offset_x_delta, 0.0F);
+  EXPECT_FLOAT_EQ(policy.offset_z_delta, 0.0F);
+  EXPECT_FLOAT_EQ(policy.vertical_jitter, 0.0F);
+  EXPECT_FLOAT_EQ(policy.yaw_delta, 0.0F);
+  EXPECT_FLOAT_EQ(policy.phase_offset, 0.0F);
+}
+
+TEST(AnimationCoreLayoutManifest, MultiSoldierPolicyOwnsRankSeedAndJitter) {
+  auto const policy = Animation::resolve_soldier_layout_policy({
+      .idx = 3,
+      .row = 1,
+      .col = 1,
+      .rows = 3,
+      .cols = 2,
+      .formation_spacing = 1.25F,
+      .seed = 0x12345678U,
+      .force_single_soldier = false,
+      .melee_attack = false,
+      .sample_time = 2.5F,
+  });
+
+  EXPECT_EQ(policy.row_index, 1U);
+  EXPECT_EQ(policy.col_index, 1U);
+  EXPECT_EQ(policy.rank_band, 1U);
+  EXPECT_EQ(policy.inst_seed, 0x12345678U ^ std::uint32_t(3 * 9176U));
+  EXPECT_NE(policy.vertical_jitter, 0.0F);
+  EXPECT_NE(policy.yaw_delta, 0.0F);
+  EXPECT_GE(policy.phase_offset, 0.0F);
+  EXPECT_LE(policy.phase_offset, 0.25F);
+}
+
+TEST(AnimationCoreLayoutManifest, MeleeAttackAddsCombatSwayAndYaw) {
+  Animation::SoldierLayoutPolicyInputs inputs{};
+  inputs.idx = 3;
+  inputs.row = 1;
+  inputs.col = 1;
+  inputs.rows = 2;
+  inputs.cols = 2;
+  inputs.formation_spacing = 1.25F;
+  inputs.seed = 0x12345678U;
+  inputs.force_single_soldier = false;
+  inputs.sample_time = 2.5F;
+
+  auto const idle = Animation::resolve_soldier_layout_policy(inputs);
+  inputs.melee_attack = true;
+  auto const melee = Animation::resolve_soldier_layout_policy(inputs);
+
+  EXPECT_FLOAT_EQ(idle.vertical_jitter, melee.vertical_jitter);
+  EXPECT_FLOAT_EQ(idle.phase_offset, melee.phase_offset);
+  EXPECT_NE(idle.offset_x_delta, melee.offset_x_delta);
+  EXPECT_NE(idle.offset_z_delta, melee.offset_z_delta);
+  EXPECT_NE(idle.yaw_delta, melee.yaw_delta);
+}
+
+TEST(AnimationCoreStateManifest, ActionFlagsGateHoldAndGuardTargets) {
+  auto const melee_attack_targets = Animation::resolve_humanoid_stance_targets({
+      .hold_requested = true,
+      .hold_exit_requested = false,
+      .raw_guard_requested = true,
+      .hold_entry_progress = 0.75F,
+      .previous_hold_pose_progress = 0.5F,
+      .action =
+          {
+              .is_attacking = true,
+              .is_melee = true,
+          },
+  });
+  EXPECT_FALSE(melee_attack_targets.hold);
+  EXPECT_TRUE(melee_attack_targets.exiting_hold);
+  EXPECT_FLOAT_EQ(melee_attack_targets.hold_entry_progress, 0.0F);
+  EXPECT_FLOAT_EQ(melee_attack_targets.hold_exit_progress, 0.0F);
+  EXPECT_FALSE(melee_attack_targets.guard);
+
+  auto const ranged_attack_targets = Animation::resolve_humanoid_stance_targets({
+      .hold_requested = true,
+      .hold_exit_requested = false,
+      .raw_guard_requested = true,
+      .hold_entry_progress = 1.25F,
+      .action =
+          {
+              .is_attacking = true,
+              .is_melee = false,
+          },
+  });
+  EXPECT_TRUE(ranged_attack_targets.hold);
+  EXPECT_FALSE(ranged_attack_targets.exiting_hold);
+  EXPECT_FLOAT_EQ(ranged_attack_targets.hold_entry_progress, 1.0F);
+  EXPECT_FALSE(ranged_attack_targets.guard);
+}
+
+TEST(AnimationCoreStateManifest, HoldExitRequestCarriesAuthoredExitProgress) {
+  auto const targets = Animation::resolve_humanoid_stance_targets({
+      .hold_requested = false,
+      .hold_exit_requested = true,
+      .hold_exit_progress = 1.2F,
+  });
+
+  EXPECT_FALSE(targets.hold);
+  EXPECT_TRUE(targets.exiting_hold);
+  EXPECT_FLOAT_EQ(targets.hold_exit_progress, 1.0F);
+}
+
+TEST(AnimationCoreStateManifest, FirstPersistentSampleStartsPoseBlendsAtRest) {
+  auto const state = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 3.0F,
+      .previous_initialized = false,
+      .is_active = false,
+      .stance =
+          {
+              .hold = true,
+              .hold_entry_progress = 1.0F,
+              .guard = true,
+          },
+      .guard_enter_duration = 1.0F,
+      .guard_exit_duration = 1.0F,
+      .hold_enter_duration = 1.5F,
+      .hold_exit_duration = 2.0F,
+  });
+
+  EXPECT_TRUE(state.initialized);
+  EXPECT_FLOAT_EQ(state.last_sample_time, 3.0F);
+  EXPECT_TRUE(state.is_guarding);
+  EXPECT_TRUE(state.is_in_hold_mode);
+  EXPECT_FLOAT_EQ(state.guard_pose_progress, 0.0F);
+  EXPECT_FLOAT_EQ(state.hold_pose_progress, 0.0F);
+  EXPECT_FLOAT_EQ(state.hold_entry_progress, 0.0F);
+  EXPECT_FLOAT_EQ(state.idle_duration, 0.0F);
+}
+
+TEST(AnimationCoreStateManifest, PersistentGuardBlendsInAndOut) {
+  auto const entering = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 1.75F,
+      .previous_initialized = true,
+      .previous_sample_time = 1.0F,
+      .previous_guard_pose_progress = 0.0F,
+      .stance = {.guard = true},
+      .guard_enter_duration = 1.5F,
+      .guard_exit_duration = 2.0F,
+  });
+  EXPECT_TRUE(entering.is_guarding);
+  EXPECT_FALSE(entering.is_exiting_guard);
+  EXPECT_NEAR(entering.guard_pose_progress, 0.5F, 1.0e-6F);
+
+  auto const exiting = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 3.0F,
+      .previous_initialized = true,
+      .previous_sample_time = 2.5F,
+      .previous_guard_pose_progress = 0.75F,
+      .stance = {.guard = false},
+      .guard_enter_duration = 1.5F,
+      .guard_exit_duration = 2.0F,
+  });
+  EXPECT_FALSE(exiting.is_guarding);
+  EXPECT_TRUE(exiting.is_exiting_guard);
+  EXPECT_NEAR(exiting.guard_pose_progress, 0.5F, 1.0e-6F);
+}
+
+TEST(AnimationCoreStateManifest, PersistentHoldUsesGameplayAndVisualLimits) {
+  auto const entering = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 1.75F,
+      .previous_initialized = true,
+      .previous_sample_time = 1.0F,
+      .previous_hold_pose_progress = 0.25F,
+      .stance =
+          {
+              .hold = true,
+              .hold_entry_progress = 0.9F,
+          },
+      .hold_enter_duration = 1.5F,
+      .hold_exit_duration = 2.0F,
+  });
+  EXPECT_TRUE(entering.is_in_hold_mode);
+  EXPECT_FALSE(entering.is_exiting_hold);
+  EXPECT_NEAR(entering.hold_pose_progress, 0.75F, 1.0e-6F);
+  EXPECT_NEAR(entering.hold_entry_progress, 0.75F, 1.0e-6F);
+
+  auto const exiting = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 3.0F,
+      .previous_initialized = true,
+      .previous_sample_time = 2.5F,
+      .previous_hold_pose_progress = 0.75F,
+      .stance = {.exiting_hold = true},
+      .hold_enter_duration = 1.5F,
+      .hold_exit_duration = 2.0F,
+  });
+  EXPECT_FALSE(exiting.is_in_hold_mode);
+  EXPECT_TRUE(exiting.is_exiting_hold);
+  EXPECT_NEAR(exiting.hold_pose_progress, 0.5F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(exiting.hold_entry_progress, 0.0F);
+  EXPECT_NEAR(exiting.hold_exit_progress, 0.5F, 1.0e-6F);
+}
+
+TEST(AnimationCoreStateManifest, IdleDurationTracksInactiveTimeOnly) {
+  auto const inactive = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 4.5F,
+      .previous_initialized = true,
+      .previous_sample_time = 3.0F,
+      .previous_idle_duration = 2.0F,
+      .is_active = false,
+  });
+  EXPECT_FLOAT_EQ(inactive.idle_duration, 3.5F);
+
+  auto const active = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 4.5F,
+      .previous_initialized = true,
+      .previous_sample_time = 3.0F,
+      .previous_idle_duration = 2.0F,
+      .is_active = true,
+  });
+  EXPECT_FLOAT_EQ(active.idle_duration, 0.0F);
+}
+
+TEST(AnimationCoreStateManifest, TimeRegressionResetsPersistentPoseState) {
+  auto const state = Animation::resolve_humanoid_persistent_stance_state({
+      .sample_time = 1.0F,
+      .previous_initialized = true,
+      .previous_sample_time = 2.0F,
+      .previous_idle_duration = 5.0F,
+      .previous_guard_pose_progress = 1.0F,
+      .previous_hold_pose_progress = 1.0F,
+      .stance =
+          {
+              .hold = true,
+              .hold_entry_progress = 1.0F,
+              .guard = true,
+          },
+      .guard_enter_duration = 1.0F,
+      .guard_exit_duration = 1.0F,
+      .hold_enter_duration = 1.0F,
+      .hold_exit_duration = 1.0F,
+  });
+
+  EXPECT_TRUE(state.initialized);
+  EXPECT_FLOAT_EQ(state.last_sample_time, 1.0F);
+  EXPECT_FLOAT_EQ(state.idle_duration, 0.0F);
+  EXPECT_FLOAT_EQ(state.guard_pose_progress, 0.0F);
+  EXPECT_FLOAT_EQ(state.hold_pose_progress, 0.0F);
+}
+
+TEST(AnimationCoreSelectionManifest, VariantTableOverrideUsesAnimationCorePolicy) {
+  Animation::ArchetypeVariantTable table{};
+  auto const idle_idx = static_cast<std::size_t>(Animation::PoseIntent::Idle);
+  table.archetype_for_pose[idle_idx] = 7U;
+  table.state_for_pose[idle_idx] = Animation::StateId::AttackSpear;
+
+  auto const pose_override = Animation::resolve_archetype_variant_override({
+      .table = &table,
+      .pose_intent = Animation::PoseIntent::Idle,
+      .seed = 12U,
+  });
+  EXPECT_TRUE(pose_override.changed());
+  EXPECT_TRUE(pose_override.archetype_changed);
+  EXPECT_TRUE(pose_override.state_changed);
+  EXPECT_EQ(pose_override.archetype, 7U);
+  EXPECT_EQ(pose_override.state, Animation::StateId::AttackSpear);
+
+  table.variant_trigger_pose = Animation::PoseIntent::Count;
+  table.variant_stride = 4U;
+  table.variant_is_seed_based = true;
+  table.archetype_for_variant[2] = 19U;
+  table.state_for_variant[2] = Animation::StateId::Hold;
+
+  std::uint32_t seed_for_variant_2 = 0U;
+  for (; seed_for_variant_2 < 512U; ++seed_for_variant_2) {
+    if (Animation::seeded_visual_variant_index(seed_for_variant_2, 4U) == 2U) {
+      break;
+    }
+  }
+  ASSERT_LT(seed_for_variant_2, 512U);
+
+  auto const seeded_override = Animation::resolve_archetype_variant_override({
+      .table = &table,
+      .pose_intent = Animation::PoseIntent::Walk,
+      .seed = seed_for_variant_2,
+  });
+  EXPECT_TRUE(seeded_override.changed());
+  EXPECT_EQ(seeded_override.archetype, 19U);
+  EXPECT_EQ(seeded_override.state, Animation::StateId::Hold);
+
+  table.variant_is_seed_based = false;
+  table.state_for_variant[3] = Animation::StateId::Cast;
+  auto const hinted_override = Animation::resolve_archetype_variant_override({
+      .table = &table,
+      .pose_intent = Animation::PoseIntent::Walk,
+      .variant_index_hint = 99U,
+      .has_variant_index_hint = true,
+  });
+  EXPECT_TRUE(hinted_override.state_changed);
+  EXPECT_EQ(hinted_override.state, Animation::StateId::Cast);
+}
+
+TEST(AnimationCoreSelectionManifest, CombatLayerPolicyOwnsBlendAndOverlayRules) {
+  auto const moving_overlay = Animation::resolve_combat_playback_layer_policy({
+      .has_authoritative_combat = true,
+      .phase = Animation::CombatTransactionPhase::Strike,
+      .phase_progress = 0.5F,
+      .attack_emphasis = 1.0F,
+      .moving = true,
+      .action_state_differs_from_base = true,
+  });
+  EXPECT_TRUE(moving_overlay.use_base_selection);
+  EXPECT_EQ(moving_overlay.upper_body_source, Animation::PlaybackLayerSource::Action);
+  EXPECT_EQ(moving_overlay.full_body_source, Animation::PlaybackLayerSource::None);
+  EXPECT_GT(moving_overlay.upper_body_weight, 0.7F);
+
+  auto const enter_blend = Animation::resolve_combat_playback_layer_policy({
+      .has_authoritative_combat = true,
+      .phase = Animation::CombatTransactionPhase::Anticipation,
+      .phase_progress = 0.25F,
+      .attack_emphasis = 1.0F,
+      .selection_state_differs_from_base = true,
+  });
+  EXPECT_FALSE(enter_blend.use_base_selection);
+  EXPECT_EQ(enter_blend.full_body_source, Animation::PlaybackLayerSource::Base);
+  EXPECT_NEAR(enter_blend.full_body_weight, 1.0F - enter_blend.combat_weight, 1.0e-6F);
+
+  auto const settled_exit = Animation::resolve_combat_playback_layer_policy({
+      .has_authoritative_combat = true,
+      .phase = Animation::CombatTransactionPhase::ExitBlend,
+      .exit_blend_progress = 1.0F,
+      .attack_emphasis = 1.0F,
+  });
+  EXPECT_TRUE(settled_exit.use_base_selection);
+  EXPECT_EQ(settled_exit.full_body_source, Animation::PlaybackLayerSource::None);
+  EXPECT_EQ(settled_exit.upper_body_source, Animation::PlaybackLayerSource::None);
+}
+
 TEST(HumanoidPrepare, HealingSelectionStillUsesIdleClipFamily) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::ArchetypeRegistry;
@@ -1546,7 +3981,7 @@ TEST(HumanoidPrepare, MovingCombatSelectionProducesUpperBodyOverlay) {
   anim.inputs.combat_visual.is_melee = true;
   anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::Strike;
   anim.inputs.combat_visual.phase_progress = 0.5F;
-  anim.inputs.combat_visual.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Sword;
 
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 29U);
 
@@ -1579,7 +4014,7 @@ TEST(HumanoidPrepare, CombatAttackEmphasisScalesUpperBodyOverlayWeight) {
   anim.inputs.combat_visual.is_melee = true;
   anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::Anticipation;
   anim.inputs.combat_visual.phase_progress = 0.5F;
-  anim.inputs.combat_visual.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Sword;
 
   anim.inputs.combat_visual.attack_emphasis = 0.75F;
   auto const restrained = resolve_humanoid_animation_selection(spec, anim, 29U);
@@ -1615,7 +4050,7 @@ TEST(HumanoidPrepare, ExitBlendSelectionCarriesFullBodyOutgoingClip) {
   anim.inputs.combat_visual.is_melee = true;
   anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::ExitBlend;
   anim.inputs.combat_visual.exit_blend_progress = 0.2F;
-  anim.inputs.combat_visual.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Sword;
 
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 31U);
 
@@ -1783,39 +4218,38 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
 
   ASSERT_EQ(prep.bodies.requests().size(), 16U);
 
-  std::array<bool, 4> seen_roles{false, false, false, false};
   for (auto const& req : prep.bodies.requests()) {
-    auto const role_index =
-        Render::Creature::Pipeline::seeded_variant_index(req.seed, 4U);
-    ASSERT_LT(role_index, seen_roles.size());
-    seen_roles[role_index] = true;
+    auto const role = Animation::resolve_humanoid_construction_role({
+        .seed = req.seed,
+        .variant_table_can_select_roles = true,
+        .variant_stride = k_variant_table.variant_stride,
+        .variant_is_seed_based = k_variant_table.variant_is_seed_based,
+    });
 
-    switch (role_index) {
-    case 0U:
+    switch (role) {
+    case Animation::HumanoidConstructionRole::Hammer:
       EXPECT_EQ(req.state, AnimationStateId::AttackSword);
       EXPECT_EQ(req.clip_variant, 0U);
       break;
-    case 1U:
+    case Animation::HumanoidConstructionRole::Saw:
       EXPECT_EQ(req.state, AnimationStateId::AttackSword);
       EXPECT_EQ(req.clip_variant, 1U);
       break;
-    case 2U:
+    case Animation::HumanoidConstructionRole::Chisel:
       EXPECT_EQ(req.state, AnimationStateId::AttackSword);
       EXPECT_EQ(req.clip_variant, 2U);
       break;
-    case 3U:
+    case Animation::HumanoidConstructionRole::KneelingChisel:
       EXPECT_EQ(req.state, AnimationStateId::Hold);
       EXPECT_EQ(req.clip_variant, 0U);
       EXPECT_GT(req.phase, 0.99F);
       break;
+    case Animation::HumanoidConstructionRole::None:
     default:
-      FAIL() << "unexpected construction role index";
+      FAIL() << "unexpected construction role";
       break;
     }
   }
-
-  EXPECT_TRUE(std::all_of(
-      seen_roles.begin(), seen_roles.end(), [](bool seen) { return seen; }));
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
@@ -1833,11 +4267,11 @@ TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersUseMixedConstructionToolSets) {
-  EXPECT_GT(render_builder_unique_role_color_count(
+  EXPECT_GT(render_builder_unique_tool_mesh_count(
                 "troops/roman/builder", Game::Systems::NationID::RomanRepublic),
             1U);
-  EXPECT_GT(render_builder_unique_role_color_count("troops/carthage/builder",
-                                                   Game::Systems::NationID::Carthage),
+  EXPECT_GT(render_builder_unique_tool_mesh_count("troops/carthage/builder",
+                                                  Game::Systems::NationID::Carthage),
             1U);
 }
 
@@ -5478,6 +7912,57 @@ TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStami
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Run);
+}
+
+TEST(HumanoidPrepare, HitReactionRecoilDisplacesAndSquashesInstanceTransform) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(421);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  transform->position = {2.0F, 0.0F, 3.0F};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.movement_state = Render::Creature::MovementAnimationState::Idle;
+
+  Render::Humanoid::HumanoidPreparation baseline_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, baseline_prep);
+  auto const baseline_requests = baseline_prep.bodies.requests();
+  ASSERT_EQ(baseline_requests.size(), 1U);
+  QVector3D const baseline_origin =
+      baseline_requests.front().world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const baseline_head =
+      baseline_requests.front().world.map(QVector3D(0.0F, 1.0F, 0.0F));
+
+  anim.is_hit_reacting = true;
+  anim.hit_reaction_intensity = 1.0F;
+  anim.hit_recoil_x = 0.2F;
+  anim.hit_recoil_z = 0.0F;
+
+  Render::Humanoid::HumanoidPreparation hit_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, hit_prep);
+  auto const hit_requests = hit_prep.bodies.requests();
+  ASSERT_EQ(hit_requests.size(), 1U);
+  QVector3D const hit_origin =
+      hit_requests.front().world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const hit_head =
+      hit_requests.front().world.map(QVector3D(0.0F, 1.0F, 0.0F));
+
+  float const lurch = hit_origin.x() - baseline_origin.x();
+  EXPECT_GT(lurch, 0.2F);
+  EXPECT_LT(lurch, 0.45F);
+  EXPECT_NEAR(hit_origin.z(), baseline_origin.z(), 0.0001F);
+
+  float const baseline_head_height = baseline_head.y() - baseline_origin.y();
+  float const hit_head_height = hit_head.y() - hit_origin.y();
+  EXPECT_LT(hit_head_height, baseline_head_height - 0.01F);
 }
 
 } // namespace

@@ -7,6 +7,10 @@
 #include "../horse/horse_renderer_base.h"
 #include "humanoid_renderer_base.h"
 
+namespace Animation {
+struct MountedHandPoseTarget;
+}
+
 namespace Render::GL {
 
 class HumanoidPoseController;
@@ -158,6 +162,9 @@ private:
                        float right_tension,
                        bool apply_left,
                        bool apply_right);
+  void apply_mounted_hand_target(const MountedAttachmentFrame& mount,
+                                 Side side,
+                                 const Animation::MountedHandPoseTarget& target);
 
   void apply_fixed_head_frame(const MountedAttachmentFrame& mount,
                               float extra_forward_tilt,

@@ -17,16 +17,7 @@ public:
 
   void apply_micro_idle(float time, std::uint32_t seed);
 
-  void apply_ambient_idle(float time, std::uint32_t seed, float idle_duration);
-
   void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
-
-  static auto get_ambient_idle_type(float time,
-                                    std::uint32_t seed,
-                                    float idle_duration) -> AmbientIdleType;
-
-  static auto compute_ambient_idle_phase(float idle_duration,
-                                         std::uint32_t seed) -> float;
 
   void kneel(float depth);
   void kneel_transition(float progress, bool standing_up);

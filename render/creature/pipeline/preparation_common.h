@@ -103,18 +103,4 @@ void set_model_world_y(QMatrix4x4& model, float world_y) noexcept;
   return base_seed ^ static_cast<std::uint32_t>(index * 9176);
 }
 
-[[nodiscard]] inline auto
-seeded_variant_index(std::uint32_t seed, std::uint8_t stride) noexcept -> std::uint8_t {
-  if (stride == 0U) {
-    return 0U;
-  }
-
-  seed ^= seed >> 16U;
-  seed *= 0x7FEB352DU;
-  seed ^= seed >> 15U;
-  seed *= 0x846CA68BU;
-  seed ^= seed >> 16U;
-  return static_cast<std::uint8_t>(seed % stride);
-}
-
 } // namespace Render::Creature::Pipeline

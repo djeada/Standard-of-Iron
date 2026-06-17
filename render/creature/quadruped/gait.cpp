@@ -1,55 +1,79 @@
 #include "gait.h"
 
-#include <algorithm>
-#include <cmath>
-#include <numbers>
-
 namespace Render::Creature::Quadruped {
 
 namespace {
 
-constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
-
+[[nodiscard]] auto to_animation_leg(LegId leg) noexcept -> Animation::QuadrupedLegId {
+  return static_cast<Animation::QuadrupedLegId>(leg);
 }
 
+[[nodiscard]] auto to_animation_dimensions(const Dimensions& dims) noexcept
+    -> Animation::QuadrupedDimensions {
+  return {
+      .body_width = dims.body_width,
+      .body_height = dims.body_height,
+      .body_length = dims.body_length,
+      .barrel_center_y = dims.barrel_center_y,
+      .idle_bob_amplitude = dims.idle_bob_amplitude,
+      .move_bob_amplitude = dims.move_bob_amplitude,
+  };
+}
+
+[[nodiscard]] auto
+to_animation_gait(const Gait& gait) noexcept -> Animation::QuadrupedGait {
+  return {
+      .cycle_time = gait.cycle_time,
+      .stride_swing = gait.stride_swing,
+      .stride_lift = gait.stride_lift,
+      .front_leg_phase = gait.front_leg_phase,
+      .rear_leg_phase = gait.rear_leg_phase,
+      .phase_offset = gait.phase_offset,
+  };
+}
+
+[[nodiscard]] auto
+to_animation_vec(const QVector3D& v) noexcept -> Animation::PoseVec3 {
+  return {.x = v.x(), .y = v.y(), .z = v.z()};
+}
+
+[[nodiscard]] auto to_qvector(const Animation::PoseVec3& v) noexcept -> QVector3D {
+  return {v.x, v.y, v.z};
+}
+
+[[nodiscard]] auto to_render_sample(
+    const Animation::QuadrupedMotionSample& sample) noexcept -> MotionSample {
+  return {
+      .phase = sample.phase,
+      .bob = sample.bob,
+      .locomotion_intensity = sample.locomotion_intensity,
+      .body_sway = sample.body_sway,
+      .is_moving = sample.is_moving,
+      .is_fighting = sample.is_fighting,
+      .barrel_center = to_qvector(sample.barrel_center),
+  };
+}
+
+} // namespace
+
 auto wrap_phase(float phase) noexcept -> float {
-  phase = std::fmod(phase, 1.0F);
-  if (phase < 0.0F) {
-    phase += 1.0F;
-  }
-  return phase;
+  return Animation::wrap_quadruped_phase(phase);
 }
 
 auto swing_ease(float t, bool clamp_input) noexcept -> float {
-  if (clamp_input) {
-    t = std::clamp(t, 0.0F, 1.0F);
-  }
-  return t * t * (3.0F - 2.0F * t);
+  return Animation::quadruped_swing_ease(t, clamp_input);
 }
 
 auto swing_arc(float t, bool clamp_input) noexcept -> float {
-  if (clamp_input) {
-    t = std::clamp(t, 0.0F, 1.0F);
-  }
-  return 4.0F * t * (1.0F - t);
+  return Animation::quadruped_swing_arc(t, clamp_input);
 }
 
 auto locomotion_intensity(bool is_moving,
                           bool is_running,
                           const Gait& gait,
                           const MotionConfig& config) noexcept -> float {
-  if (!is_moving) {
-    return 0.0F;
-  }
-  float const stride_swing = std::clamp(gait.stride_swing, 0.0F, 1.0F);
-  float const stride_lift =
-      std::clamp(gait.stride_lift * config.stride_lift_intensity_scale, 0.0F, 1.0F);
-  float const running_bonus = is_running ? config.running_intensity_bonus : 0.0F;
-  return std::clamp(config.base_intensity +
-                        stride_swing * config.swing_intensity_scale +
-                        stride_lift * config.lift_intensity_scale + running_bonus,
-                    0.0F,
-                    1.0F);
+  return Animation::quadruped_locomotion_intensity(
+      is_moving, is_running, to_animation_gait(gait), config);
 }
 
 auto default_foot_position(const Dimensions& dims,
@@ -58,12 +82,13 @@ auto default_foot_position(const Dimensions& dims,
                            float lateral_scale,
                            float vertical_scale,
                            float fore_aft_scale) noexcept -> QVector3D {
-  QVector3D const hip =
-      barrel_center +
-      QVector3D(leg_lateral_sign(leg) * dims.body_width * lateral_scale,
-                -dims.body_height * vertical_scale,
-                leg_forward_sign(leg) * dims.body_length * fore_aft_scale);
-  return {hip.x(), 0.0F, hip.z()};
+  return to_qvector(
+      Animation::quadruped_default_foot_position(to_animation_dimensions(dims),
+                                                 to_animation_leg(leg),
+                                                 to_animation_vec(barrel_center),
+                                                 lateral_scale,
+                                                 vertical_scale,
+                                                 fore_aft_scale));
 }
 
 auto swing_target(const Dimensions& dims,
@@ -74,11 +99,14 @@ auto swing_target(const Dimensions& dims,
                   float vertical_scale,
                   float fore_aft_scale,
                   bool mirror_stride_by_leg_side) noexcept -> QVector3D {
-  QVector3D target = default_foot_position(
-      dims, leg, barrel_center, lateral_scale, vertical_scale, fore_aft_scale);
-  float const direction = mirror_stride_by_leg_side ? leg_forward_sign(leg) : 1.0F;
-  target += QVector3D(0.0F, 0.0F, stride_length * direction);
-  return target;
+  return to_qvector(Animation::quadruped_swing_target(to_animation_dimensions(dims),
+                                                      to_animation_leg(leg),
+                                                      to_animation_vec(barrel_center),
+                                                      stride_length,
+                                                      lateral_scale,
+                                                      vertical_scale,
+                                                      fore_aft_scale,
+                                                      mirror_stride_by_leg_side));
 }
 
 auto body_sway(bool is_moving,
@@ -87,16 +115,8 @@ auto body_sway(bool is_moving,
                float move_intensity,
                float stride_swing,
                const SwayConfig& config) noexcept -> float {
-  if (!is_moving) {
-    return std::sin(time * config.idle_frequency) * config.idle_amplitude;
-  }
-  float const primary = std::sin(phase * k_two_pi);
-  float const secondary =
-      std::sin((phase + config.moving_secondary_phase) * 2.0F * k_two_pi) *
-      config.moving_secondary_weight;
-  float const amplitude = config.base_amplitude +
-                          std::clamp(stride_swing, 0.0F, 1.0F) * config.stride_scale;
-  return (primary + secondary) * amplitude * (0.8F + move_intensity);
+  return Animation::quadruped_body_sway(
+      is_moving, phase, time, move_intensity, stride_swing, config);
 }
 
 auto evaluate_cycle_motion(const Dimensions& dims,
@@ -107,42 +127,15 @@ auto evaluate_cycle_motion(const Dimensions& dims,
                            bool is_fighting,
                            const MotionConfig& motion,
                            const SwayConfig& sway) noexcept -> MotionSample {
-  MotionSample sample{};
-  sample.is_moving = is_moving;
-  sample.is_fighting = is_fighting;
-  sample.locomotion_intensity =
-      locomotion_intensity(is_moving, is_running, gait, motion);
-
-  if (is_moving) {
-    float const cycle_time = std::max(gait.cycle_time, motion.cycle_time_floor);
-    sample.phase = wrap_phase(time / cycle_time + gait.phase_offset);
-    float const primary = std::sin(sample.phase * k_two_pi);
-    float const secondary = std::sin((sample.phase + motion.moving_secondary_phase) *
-                                     motion.moving_secondary_frequency * k_two_pi);
-    float const tertiary = std::sin((sample.phase + motion.moving_tertiary_phase) *
-                                    motion.moving_tertiary_frequency * k_two_pi);
-    float const bob_scale =
-        (motion.moving_bob_base_scale +
-         sample.locomotion_intensity * motion.moving_bob_intensity_scale) *
-        (is_running ? motion.running_bob_scale : 1.0F);
-    sample.bob = (primary * motion.moving_primary_weight +
-                  secondary * motion.moving_secondary_weight +
-                  tertiary * motion.moving_tertiary_weight) *
-                 dims.move_bob_amplitude * bob_scale;
-  } else {
-    sample.phase = wrap_phase(time * motion.idle_phase_speed + gait.phase_offset);
-    sample.bob = std::sin(time * motion.idle_bob_frequency) * dims.idle_bob_amplitude;
-  }
-
-  sample.body_sway = body_sway(is_moving,
-                               sample.phase,
-                               time,
-                               sample.locomotion_intensity,
-                               gait.stride_swing,
-                               sway);
-  sample.barrel_center =
-      QVector3D(sample.body_sway, dims.barrel_center_y + sample.bob, 0.0F);
-  return sample;
+  return to_render_sample(
+      Animation::resolve_quadruped_cycle_motion(to_animation_dimensions(dims),
+                                                to_animation_gait(gait),
+                                                time,
+                                                is_moving,
+                                                is_running,
+                                                is_fighting,
+                                                motion,
+                                                sway));
 }
 
 } // namespace Render::Creature::Quadruped

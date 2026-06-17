@@ -662,10 +662,16 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
       read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =
       read_text(root / "render" / "humanoid" / "prepare_submission.cpp");
+  const auto locomotion_manifest_source =
+      read_text(root / "animation" / "locomotion_manifest.cpp");
+  const auto ambient_manifest_source =
+      read_text(root / "animation" / "ambient_pose_manifest.cpp");
   ASSERT_FALSE(component_source.empty());
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(commander_mode_source.empty());
   ASSERT_FALSE(prepare_submission_source.empty());
+  ASSERT_FALSE(locomotion_manifest_source.empty());
+  ASSERT_FALSE(ambient_manifest_source.empty());
 
   EXPECT_TRUE(contains(component_source, "bool jump_active{false};"));
   EXPECT_TRUE(contains(component_source, "float jump_phase{0.0F};"));
@@ -683,10 +689,16 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(prepare_submission_source,
                        "RCP::model_world_origin(inst_ctx.model).y() +"));
   EXPECT_TRUE(contains(prepare_submission_source,
-                       "locomotion_state.gait.state = "
-                       "Render::GL::HumanoidMotionState::Idle;"));
-  EXPECT_TRUE(contains(prepare_submission_source,
-                       "anim_ctx.ambient_idle_type = AmbientIdleType::Jump;"));
+                       "resolve_humanoid_locomotion_action_override"));
+  EXPECT_TRUE(
+      contains(locomotion_manifest_source, "if (!inputs.commander_jump_active)"));
+  EXPECT_TRUE(
+      contains(locomotion_manifest_source, ".state = HumanoidMotionState::Idle,"));
+  EXPECT_TRUE(contains(locomotion_manifest_source, ".airborne = true,"));
+  EXPECT_TRUE(
+      contains(prepare_submission_source, "resolve_humanoid_ambient_selection"));
+  EXPECT_TRUE(contains(ambient_manifest_source, "if (inputs.jump_active)"));
+  EXPECT_TRUE(contains(ambient_manifest_source, ".type = HumanoidAmbientIdle::Jump,"));
 }
 
 TEST(CommanderControlRegressionTest,

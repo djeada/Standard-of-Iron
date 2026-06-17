@@ -10,62 +10,28 @@
 #include "../../creature/movement_state.h"
 #include "../../palette.h"
 #include "../../side.h"
+#include "animation/action_manifest.h"
+#include "animation/clip_manifest.h"
+#include "animation/guard_manifest.h"
+#include "animation/locomotion_manifest.h"
+#include "animation/playback_manifest.h"
 
 namespace Render::GL {
 
-enum class AmbientIdleType : std::uint8_t {
-  None = 0,
-  SitDown,
-  ShuffleFeet,
-  TapFoot,
-  ShiftWeight,
-  StepInPlace,
-  BendKnee,
-  RaiseWeapon,
-  Jump,
-  PlantFlag
-};
+using AmbientIdleType = Animation::HumanoidAmbientIdle;
 
-[[nodiscard]] inline constexpr auto
+[[nodiscard]] inline auto
 ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
-  switch (t) {
-  case AmbientIdleType::SitDown:
-    return 1U;
-  case AmbientIdleType::Jump:
-    return 2U;
-  case AmbientIdleType::RaiseWeapon:
-    return 3U;
-  case AmbientIdleType::ShiftWeight:
-    return 4U;
-  case AmbientIdleType::PlantFlag:
-    return 5U;
-  default:
-    return 0U;
-  }
+  return Animation::humanoid_ambient_idle_clip_variant(t);
 }
 
-enum class CastVisualKind : std::uint8_t {
-  None = 0,
-  Fireball,
-};
+using CastVisualKind = Animation::CastVisualKind;
 
 using CombatAnimPhase = Engine::Core::CombatAnimationState;
 
-enum class ConstructionRole : std::uint8_t {
-  None = 0,
-  Hammer,
-  Saw,
-  Chisel,
-  KneelingChisel,
-};
+using ConstructionRole = Animation::HumanoidConstructionRole;
 
-enum class ShieldFormationPose : std::uint8_t {
-  None = 0,
-  GuardDefault,
-  RomanFront,
-  RomanTop,
-  CarthageFront,
-};
+using ShieldFormationPose = Animation::ShieldFormationPose;
 
 struct VisualMovementState {
   bool is_authoritative{false};
@@ -107,6 +73,9 @@ struct AnimationInputs {
   CastVisualKind cast_kind{CastVisualKind::None};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
+
+  float hit_recoil_x{0.0F};
+  float hit_recoil_z{0.0F};
   bool is_healing{false};
   float healing_target_dx{0.0F};
   float healing_target_dz{0.0F};
@@ -125,25 +94,20 @@ struct AnimationInputs {
 };
 
 inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
-  float t = 0.0F;
-  if (inputs.is_in_hold_mode) {
-    t = std::clamp(inputs.hold_entry_progress, 0.0F, 1.0F);
-  } else if (inputs.is_exiting_hold) {
-    t = std::clamp(1.0F - inputs.hold_exit_progress, 0.0F, 1.0F);
-  } else {
-    return 0.0F;
-  }
-
-  return t * t * (3.0F - 2.0F * t);
+  return Animation::humanoid_hold_transition_amount({
+      .is_in_hold_mode = inputs.is_in_hold_mode,
+      .is_exiting_hold = inputs.is_exiting_hold,
+      .hold_entry_progress = inputs.hold_entry_progress,
+      .hold_exit_progress = inputs.hold_exit_progress,
+  });
 }
 
 inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {
-  if (!inputs.is_guarding && !inputs.is_exiting_guard) {
-    return 0.0F;
-  }
-  float const t = std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
-
-  return t * t * (3.0F - 2.0F * t);
+  return Animation::humanoid_guard_pose_amount({
+      .is_guarding = inputs.is_guarding,
+      .is_exiting_guard = inputs.is_exiting_guard,
+      .guard_pose_progress = inputs.guard_pose_progress,
+  });
 }
 
 struct FormationParams {
@@ -297,13 +261,7 @@ inline void seed_missing_humanoid_wear(HumanoidVariant& variant,
   }
 }
 
-enum class HumanoidMotionState {
-  Idle,
-  Walk,
-  Run,
-  Hold,
-  Attacking
-};
+using HumanoidMotionState = Animation::HumanoidMotionState;
 
 struct HumanoidGaitDescriptor {
   HumanoidMotionState state{HumanoidMotionState::Idle};

@@ -652,6 +652,8 @@ void apply_hit_feedback(Engine::Core::Entity* target,
         float const dz = target_transform->position.z - attacker_transform->position.z;
         float const dist = std::sqrt(dx * dx + dz * dz);
         if (dist > 0.001F) {
+          feedback->hit_direction_x = dx / dist;
+          feedback->hit_direction_z = dz / dist;
           float const knockback = std::clamp(
               Engine::Core::HitFeedbackComponent::k_max_knockback * knockback_scale,
               0.0F,
