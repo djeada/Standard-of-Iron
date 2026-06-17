@@ -5,12 +5,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <numbers>
 
 #include "../creature/animation_state_components.h"
 #include "../creature/movement_animation.h"
 #include "../creature/quadruped/gait.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
+#include "animation/elephant_gait_manifest.h"
 #include "dimensions.h"
 #include "elephant_spec.h"
 
@@ -20,12 +22,6 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_two_pi = 2.0F * k_pi;
-constexpr float k_weight_shift_smoothing_x = 0.22F;
-constexpr float k_weight_shift_smoothing_z = 0.20F;
-constexpr float k_lag_smoothing = 0.28F;
-constexpr float k_idle_lag_damping = 0.86F;
-constexpr float k_position_phase_desync_x = 0.173F;
-constexpr float k_position_phase_desync_z = 0.127F;
 
 namespace Quadruped = Render::Creature::Quadruped;
 
@@ -50,9 +46,79 @@ to_quadruped_dimensions(const ElephantDimensions& d) noexcept -> Quadruped::Dime
   return dims;
 }
 
+[[nodiscard]] auto
+to_animation_vec(const QVector3D& v) noexcept -> Animation::PoseVec3 {
+  return {.x = v.x(), .y = v.y(), .z = v.z()};
+}
+
+[[nodiscard]] auto to_qvector(const Animation::PoseVec3& v) noexcept -> QVector3D {
+  return {v.x, v.y, v.z};
+}
+
+[[nodiscard]] constexpr auto to_animation_dimensions(
+    const ElephantDimensions& d) noexcept -> Animation::QuadrupedDimensions {
+  return {
+      .body_width = d.body_width,
+      .body_height = d.body_height,
+      .body_length = d.body_length,
+      .barrel_center_y = d.barrel_center_y,
+      .idle_bob_amplitude = d.idle_bob_amplitude,
+      .move_bob_amplitude = d.move_bob_amplitude,
+  };
+}
+
 [[nodiscard]] constexpr auto
-to_quadruped_leg(int leg_index) noexcept -> Quadruped::LegId {
-  return static_cast<Quadruped::LegId>(leg_index);
+to_animation_gait(const ElephantGait& g) noexcept -> Animation::QuadrupedGait {
+  return {
+      .cycle_time = g.cycle_time,
+      .stride_swing = g.stride_swing,
+      .stride_lift = g.stride_lift,
+      .front_leg_phase = g.front_leg_phase,
+      .rear_leg_phase = g.rear_leg_phase,
+      .phase_offset = g.phase_offset,
+  };
+}
+
+[[nodiscard]] auto to_animation_elephant_gait_state(
+    const ElephantGaitState& state) noexcept -> Animation::ElephantGaitState {
+  Animation::ElephantGaitState core{};
+  for (int i = 0; i < 4; ++i) {
+    auto& core_leg = core.legs[static_cast<std::size_t>(i)];
+    const ElephantLegState& render_leg = state.legs[i];
+    core_leg.planted_foot = to_animation_vec(render_leg.planted_foot);
+    core_leg.swing_start = to_animation_vec(render_leg.swing_start);
+    core_leg.swing_target = to_animation_vec(render_leg.swing_target);
+    core_leg.swing_progress = render_leg.swing_progress;
+    core_leg.in_swing = render_leg.in_swing;
+  }
+  core.cycle_phase = state.cycle_phase;
+  core.weight_shift_x = state.weight_shift_x;
+  core.weight_shift_z = state.weight_shift_z;
+  core.shoulder_lag = state.shoulder_lag;
+  core.hip_lag = state.hip_lag;
+  core.initialized = state.initialized;
+  return core;
+}
+
+[[nodiscard]] auto to_render_elephant_gait_state(
+    const Animation::ElephantGaitState& core) noexcept -> ElephantGaitState {
+  ElephantGaitState state{};
+  for (int i = 0; i < 4; ++i) {
+    const auto& core_leg = core.legs[static_cast<std::size_t>(i)];
+    ElephantLegState& render_leg = state.legs[i];
+    render_leg.planted_foot = to_qvector(core_leg.planted_foot);
+    render_leg.swing_start = to_qvector(core_leg.swing_start);
+    render_leg.swing_target = to_qvector(core_leg.swing_target);
+    render_leg.swing_progress = core_leg.swing_progress;
+    render_leg.in_swing = core_leg.in_swing;
+  }
+  state.cycle_phase = core.cycle_phase;
+  state.weight_shift_x = core.weight_shift_x;
+  state.weight_shift_z = core.weight_shift_z;
+  state.shoulder_lag = core.shoulder_lag;
+  state.hip_lag = core.hip_lag;
+  state.initialized = core.initialized;
+  return state;
 }
 
 [[nodiscard]] constexpr auto
@@ -256,36 +322,15 @@ auto solve_elephant_leg_ik(const QVector3D& hip,
 }
 
 auto get_leg_phase_offset(int leg_index) -> float {
-  using namespace GaitSystemConstants;
-  switch (leg_index) {
-  case 0:
-    return k_leg_phase_fl;
-  case 1:
-    return k_leg_phase_fr;
-  case 2:
-    return k_leg_phase_rl;
-  case 3:
-    return k_leg_phase_rr;
-  default:
-    return 0.0F;
-  }
+  return Animation::elephant_leg_phase_offset(leg_index);
 }
 
 auto is_leg_in_swing(float cycle_phase, int leg_index) -> bool {
-  using namespace GaitSystemConstants;
-  float const leg_phase =
-      Quadruped::wrap_phase(cycle_phase - get_leg_phase_offset(leg_index));
-  return leg_phase < k_swing_duration;
+  return Animation::elephant_leg_is_in_swing(cycle_phase, leg_index);
 }
 
 auto get_swing_progress(float cycle_phase, int leg_index) -> float {
-  using namespace GaitSystemConstants;
-  float const leg_phase =
-      Quadruped::wrap_phase(cycle_phase - get_leg_phase_offset(leg_index));
-  if (leg_phase < k_swing_duration) {
-    return leg_phase / k_swing_duration;
-  }
-  return -1.0F;
+  return Animation::elephant_leg_swing_progress(cycle_phase, leg_index);
 }
 
 void update_elephant_gait(ElephantGaitState& state,
@@ -293,118 +338,22 @@ void update_elephant_gait(ElephantGaitState& state,
                           const AnimationInputs& anim,
                           const QVector3D& body_world_pos,
                           float body_forward_z) {
-  using namespace GaitSystemConstants;
-  const ElephantDimensions& d = profile.dims;
-  const ElephantGait& g = profile.gait;
-  float const cycle_time = std::max(g.cycle_time, 0.001F);
   Render::Creature::MovementAnimationState const movement_animation =
       anim.movement_state;
   bool const is_moving = Render::Creature::is_moving_animation(movement_animation);
-  float const locomotion_scale =
-      Render::Creature::is_running_animation(movement_animation) ? 1.18F : 1.0F;
-  float const position_phase_offset =
-      Quadruped::wrap_phase(body_world_pos.x() * k_position_phase_desync_x +
-                            body_world_pos.z() * k_position_phase_desync_z);
-  float const forward_alignment = std::clamp(std::abs(body_forward_z), 0.2F, 1.0F);
-
-  if (!state.initialized) {
-    QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
-    for (int i = 0; i < 4; ++i) {
-      state.legs[i].planted_foot = Quadruped::default_foot_position(
-          to_quadruped_dimensions(d), to_quadruped_leg(i), barrel_center);
-      state.legs[i].swing_start = state.legs[i].planted_foot;
-      state.legs[i].swing_target = state.legs[i].planted_foot;
-      state.legs[i].in_swing = false;
-      state.legs[i].swing_progress = 0.0F;
-    }
-    state.initialized = true;
-  }
-
-  if (is_moving) {
-    state.cycle_phase =
-        Quadruped::wrap_phase(anim.time / cycle_time + position_phase_offset);
-  } else {
-
-    state.cycle_phase = 0.0F;
-    for (auto& leg : state.legs) {
-      leg.in_swing = false;
-    }
-  }
-
-  QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
-
-  float const stride_length = d.body_length *
-                              (0.18F + std::clamp(g.stride_swing, 0.0F, 1.0F) * 0.28F) *
-                              locomotion_scale;
-
-  for (int i = 0; i < 4; ++i) {
-    ElephantLegState& leg = state.legs[i];
-    float const swing_progress = get_swing_progress(state.cycle_phase, i);
-
-    if (swing_progress >= 0.0F && is_moving) {
-
-      if (!leg.in_swing) {
-
-        leg.swing_start = leg.planted_foot;
-        leg.swing_target = Quadruped::swing_target(to_quadruped_dimensions(d),
-                                                   to_quadruped_leg(i),
-                                                   barrel_center,
-                                                   stride_length,
-                                                   0.52F,
-                                                   0.42F,
-                                                   0.48F,
-                                                   false);
-        leg.in_swing = true;
-      }
-      leg.swing_progress = swing_progress;
-    } else {
-
-      if (leg.in_swing) {
-
-        leg.planted_foot = leg.swing_target;
-        leg.in_swing = false;
-      }
-      leg.swing_progress = 0.0F;
-    }
-  }
-
-  float total_x = 0.0F;
-  float total_z = 0.0F;
-  int planted_count = 0;
-
-  for (auto& leg : state.legs) {
-    if (!leg.in_swing) {
-      total_x += leg.planted_foot.x();
-      total_z += leg.planted_foot.z();
-      ++planted_count;
-    }
-  }
-
-  if (planted_count > 0) {
-    float const center_x = total_x / static_cast<float>(planted_count);
-    float const center_z = total_z / static_cast<float>(planted_count);
-
-    float const target_shift_x = -center_x * k_weight_shift_lateral;
-    float const target_shift_z =
-        -center_z * k_weight_shift_fore_aft * 0.5F * forward_alignment;
-    state.weight_shift_x +=
-        (target_shift_x - state.weight_shift_x) * k_weight_shift_smoothing_x;
-    state.weight_shift_z +=
-        (target_shift_z - state.weight_shift_z) * k_weight_shift_smoothing_z;
-  }
-
-  if (is_moving) {
-    float const cycle_sin = std::sin(state.cycle_phase * 2.0F * k_pi);
-    float const shoulder_target =
-        cycle_sin * k_shoulder_lag_factor * (0.90F + 0.15F * locomotion_scale);
-    float const hip_target =
-        -cycle_sin * k_hip_lag_factor * (0.90F + 0.10F * locomotion_scale);
-    state.shoulder_lag += (shoulder_target - state.shoulder_lag) * k_lag_smoothing;
-    state.hip_lag += (hip_target - state.hip_lag) * k_lag_smoothing;
-  } else {
-    state.shoulder_lag *= k_idle_lag_damping;
-    state.hip_lag *= k_idle_lag_damping;
-  }
+  bool const is_running = Render::Creature::is_running_animation(movement_animation);
+  Animation::ElephantGaitUpdateInputs const inputs{
+      .previous = to_animation_elephant_gait_state(state),
+      .dimensions = to_animation_dimensions(profile.dims),
+      .gait = to_animation_gait(profile.gait),
+      .sample_time = anim.time,
+      .body_world_x = body_world_pos.x(),
+      .body_world_z = body_world_pos.z(),
+      .body_forward_z = body_forward_z,
+      .is_moving = is_moving,
+      .is_running = is_running,
+  };
+  state = to_render_elephant_gait_state(Animation::resolve_elephant_gait_state(inputs));
 }
 
 } // namespace Render::GL

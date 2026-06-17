@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
+#include "animation/clip_manifest.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
@@ -280,6 +281,52 @@ TEST(BpatRegistry, HumanoidAttackClipsBakeDenseFramesAndOrderedMarkers) {
             default_sword.marker_weapon_release);
   EXPECT_GT(sword_ready_sword.marker_recover_unlocked,
             default_sword.marker_recover_unlocked);
+}
+
+TEST(BpatRegistry, HumanoidAttackMarkersMatchAnimationManifest) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_skeleton, root + "/humanoid_skeleton.bpat"));
+
+  auto const assert_markers_equal = [&reg](std::uint32_t species_id,
+                                           std::uint16_t clip_id,
+                                           Animation::HumanoidClipProfile profile) {
+    auto const* blob = reg.blob(species_id);
+    ASSERT_NE(blob, nullptr);
+    auto const clip = blob->clip(clip_id);
+    auto const markers = Animation::authored_humanoid_clip_markers(clip_id, profile);
+    EXPECT_FLOAT_EQ(clip.marker_anticipation_start, markers.anticipation_start);
+    EXPECT_FLOAT_EQ(clip.marker_weapon_release, markers.weapon_release);
+    EXPECT_FLOAT_EQ(clip.marker_contact, markers.contact);
+    EXPECT_FLOAT_EQ(clip.marker_recover_unlocked, markers.recover_unlocked);
+    EXPECT_FLOAT_EQ(clip.marker_exit_safe, markers.exit_safe);
+  };
+
+  assert_markers_equal(k_species_humanoid,
+                       Animation::k_humanoid_attack_sword_a_clip,
+                       Animation::HumanoidClipProfile::Default);
+  assert_markers_equal(k_species_humanoid_sword,
+                       Animation::k_humanoid_attack_sword_a_clip,
+                       Animation::HumanoidClipProfile::SwordReady);
+  assert_markers_equal(k_species_humanoid_spear,
+                       Animation::k_humanoid_attack_spear_a_clip,
+                       Animation::HumanoidClipProfile::SpearReady);
+  assert_markers_equal(k_species_humanoid_skeleton,
+                       Animation::k_humanoid_attack_sword_a_clip,
+                       Animation::HumanoidClipProfile::Skeleton);
+  assert_markers_equal(k_species_humanoid_sword,
+                       Animation::k_humanoid_riding_sword_strike_clip,
+                       Animation::HumanoidClipProfile::SwordReady);
 }
 
 TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {

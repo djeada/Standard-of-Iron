@@ -3,8 +3,10 @@
 #include <QDebug>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
+
+#include "animation/combat_manifest.h"
+#include "render/creature/animation_core_bridge.h"
 
 namespace Render::Profiling {
 
@@ -13,30 +15,6 @@ namespace {
 constexpr float k_attack_phase_reset_epsilon = 0.02F;
 constexpr float k_churn_window_seconds = 1.0F;
 constexpr std::uint32_t k_churn_threshold = 5U;
-
-auto all_attack_phase_windows(bool amplified_attack, bool finisher_attack)
-    -> std::array<std::pair<Render::GL::CombatAnimPhase, CombatPhaseWindow>, 6> {
-  return {{
-      {Render::GL::CombatAnimPhase::Advance,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::Advance, amplified_attack, finisher_attack)},
-      {Render::GL::CombatAnimPhase::WindUp,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::WindUp, amplified_attack, finisher_attack)},
-      {Render::GL::CombatAnimPhase::Strike,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::Strike, amplified_attack, finisher_attack)},
-      {Render::GL::CombatAnimPhase::Impact,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::Impact, amplified_attack, finisher_attack)},
-      {Render::GL::CombatAnimPhase::Recover,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::Recover, amplified_attack, finisher_attack)},
-      {Render::GL::CombatAnimPhase::Reposition,
-       attack_phase_window(
-           Render::GL::CombatAnimPhase::Reposition, amplified_attack, finisher_attack)},
-  }};
-}
 
 auto visual_state_from_sample(const SoldierAnimationDebugSample& sample) noexcept
     -> SoldierVisualState {
@@ -65,69 +43,20 @@ auto visual_state_from_sample(const SoldierAnimationDebugSample& sample) noexcep
 auto attack_phase_window(Render::GL::CombatAnimPhase phase,
                          bool amplified_attack,
                          bool finisher_attack) noexcept -> CombatPhaseWindow {
-  if (amplified_attack) {
-    switch (phase) {
-    case Render::GL::CombatAnimPhase::Advance:
-      return finisher_attack ? CombatPhaseWindow{0.00F, 0.14F, 0.95F}
-                             : CombatPhaseWindow{0.00F, 0.10F, 0.95F};
-    case Render::GL::CombatAnimPhase::WindUp:
-      return finisher_attack ? CombatPhaseWindow{0.14F, 0.46F, 0.82F}
-                             : CombatPhaseWindow{0.10F, 0.38F, 0.80F};
-    case Render::GL::CombatAnimPhase::Strike:
-      return finisher_attack ? CombatPhaseWindow{0.46F, 0.68F, 0.22F}
-                             : CombatPhaseWindow{0.38F, 0.58F, 0.26F};
-    case Render::GL::CombatAnimPhase::Impact:
-      return finisher_attack ? CombatPhaseWindow{0.68F, 0.78F, 0.16F}
-                             : CombatPhaseWindow{0.58F, 0.68F, 0.16F};
-    case Render::GL::CombatAnimPhase::Recover:
-      return finisher_attack ? CombatPhaseWindow{0.78F, 0.94F, 0.88F}
-                             : CombatPhaseWindow{0.68F, 0.90F, 0.85F};
-    case Render::GL::CombatAnimPhase::Reposition:
-      return finisher_attack ? CombatPhaseWindow{0.94F, 0.995F, 0.70F}
-                             : CombatPhaseWindow{0.90F, 0.995F, 0.70F};
-    case Render::GL::CombatAnimPhase::Idle:
-    default:
-      break;
-    }
-  }
-
-  switch (phase) {
-  case Render::GL::CombatAnimPhase::Advance:
-    return {0.00F, 0.14F, 0.90F};
-  case Render::GL::CombatAnimPhase::WindUp:
-    return {0.14F, 0.34F, 0.75F};
-  case Render::GL::CombatAnimPhase::Strike:
-    return {0.34F, 0.52F, 0.25F};
-  case Render::GL::CombatAnimPhase::Impact:
-    return {0.52F, 0.60F, 0.15F};
-  case Render::GL::CombatAnimPhase::Recover:
-    return {0.60F, 0.86F, 0.80F};
-  case Render::GL::CombatAnimPhase::Reposition:
-    return {0.86F, 0.995F, 0.70F};
-  case Render::GL::CombatAnimPhase::Idle:
-  default:
-    break;
-  }
-
-  return {};
+  auto const window =
+      Animation::attack_phase_window(Render::Creature::animation_combat_phase(phase),
+                                     amplified_attack,
+                                     finisher_attack);
+  return {window.start, window.end, window.offset_weight};
 }
 
 auto scrubbed_combat_phase_from_attack_phase(float attack_phase,
                                              bool amplified_attack,
                                              bool finisher_attack) noexcept
     -> ScrubbedCombatPhase {
-  float const clamped_phase = std::clamp(attack_phase, 0.0F, 0.995F);
-  for (const auto& [phase, window] :
-       all_attack_phase_windows(amplified_attack, finisher_attack)) {
-    if (clamped_phase <= window.end ||
-        phase == Render::GL::CombatAnimPhase::Reposition) {
-      float const span = std::max(window.end - window.start, 1.0e-4F);
-      float const progress =
-          std::clamp((clamped_phase - window.start) / span, 0.0F, 1.0F);
-      return {phase, progress};
-    }
-  }
-  return {};
+  auto const scrubbed = Animation::scrubbed_combat_phase_from_attack_phase(
+      attack_phase, amplified_attack, finisher_attack);
+  return {Render::Creature::engine_combat_phase(scrubbed.phase), scrubbed.progress};
 }
 
 auto combat_phase_name(Render::GL::CombatAnimPhase phase) noexcept -> const char* {

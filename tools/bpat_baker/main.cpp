@@ -17,6 +17,7 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
 #include "render/creature/humanoid_clip_ids.h"
@@ -49,45 +50,16 @@ namespace {
 namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
 
-void apply_authored_markers(bool sword_ready_profile, bpat::ClipDescriptor& desc) {
-  auto const has = [&desc](std::string_view needle) {
-    return desc.name.find(needle) != std::string::npos;
-  };
-  if (has("attack_sword")) {
-    desc.marker_anticipation_start = sword_ready_profile ? 0.12F : 0.10F;
-    desc.marker_weapon_release = sword_ready_profile ? 0.46F : 0.42F;
-    desc.marker_contact = sword_ready_profile ? 0.58F : 0.54F;
-    desc.marker_recover_unlocked = sword_ready_profile ? 0.76F : 0.72F;
-    desc.marker_exit_safe = 0.92F;
-  } else if (has("attack_spear")) {
-    desc.marker_anticipation_start = 0.12F;
-    desc.marker_weapon_release = 0.34F;
-    desc.marker_contact = 0.48F;
-    desc.marker_recover_unlocked = 0.72F;
-    desc.marker_exit_safe = 0.90F;
-  } else if (has("riding_sword")) {
-    desc.marker_anticipation_start = 0.10F;
-    desc.marker_weapon_release = 0.50F;
-    desc.marker_contact = 0.58F;
-    desc.marker_recover_unlocked = 0.76F;
-    desc.marker_exit_safe = 0.92F;
-  } else if (has("attack_bow") || has("bow_shot")) {
-    desc.marker_anticipation_start = 0.20F;
-    desc.marker_weapon_release = 0.54F;
-    desc.marker_contact = 0.54F;
-    desc.marker_recover_unlocked = 0.64F;
-    desc.marker_exit_safe = 0.84F;
-  } else if (has("hold")) {
-    desc.marker_anticipation_start = 0.0F;
-    desc.marker_exit_safe = 0.98F;
-  } else if (has("walk") || has("run") || has("idle") || has("riding_idle") ||
-             has("riding_charge")) {
-    desc.marker_exit_safe = 0.98F;
-  }
+void apply_markers(const Animation::ClipMarkers& markers, bpat::ClipDescriptor& desc) {
+  desc.marker_anticipation_start = markers.anticipation_start;
+  desc.marker_weapon_release = markers.weapon_release;
+  desc.marker_contact = markers.contact;
+  desc.marker_recover_unlocked = markers.recover_unlocked;
+  desc.marker_exit_safe = markers.exit_safe;
 }
 
-void apply_authored_markers(bpat::ClipDescriptor& desc) {
-  apply_authored_markers(false, desc);
+void apply_generic_markers(bpat::ClipDescriptor& desc) {
+  apply_markers(Animation::authored_generic_clip_markers(desc.name), desc);
 }
 
 enum class BakerAttackType : std::uint8_t {
@@ -128,6 +100,29 @@ enum class HumanoidBakeProfile : std::uint8_t {
   Skeleton
 };
 
+auto animation_profile_for_bake(HumanoidBakeProfile profile) noexcept
+    -> Animation::HumanoidClipProfile {
+  switch (profile) {
+  case HumanoidBakeProfile::Default:
+    return Animation::HumanoidClipProfile::Default;
+  case HumanoidBakeProfile::SwordReady:
+    return Animation::HumanoidClipProfile::SwordReady;
+  case HumanoidBakeProfile::SpearReady:
+    return Animation::HumanoidClipProfile::SpearReady;
+  case HumanoidBakeProfile::Skeleton:
+    return Animation::HumanoidClipProfile::Skeleton;
+  }
+  return Animation::HumanoidClipProfile::Default;
+}
+
+void apply_humanoid_markers(std::uint16_t clip_id,
+                            HumanoidBakeProfile profile,
+                            bpat::ClipDescriptor& desc) {
+  apply_markers(Animation::authored_humanoid_clip_markers(
+                    clip_id, animation_profile_for_bake(profile)),
+                desc);
+}
+
 struct HumanoidClipSpec {
   const char* name{};
   Render::GL::HumanoidMotionState state;
@@ -143,7 +138,8 @@ struct HumanoidClipSpec {
   bool loops{};
 };
 
-constexpr std::array<HumanoidClipSpec, 25> k_humanoid_clips{{
+constexpr auto k_humanoid_baker_clip_count = Animation::k_humanoid_clip_count;
+constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_clips{{
     {"idle",
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
@@ -908,15 +904,14 @@ bool bake_humanoid(const std::filesystem::path& out_dir,
     writer.add_socket(std::move(s));
   }
 
-  for (auto const& clip : k_humanoid_clips) {
+  for (std::size_t clip_index = 0; clip_index < k_humanoid_clips.size(); ++clip_index) {
+    auto const& clip = k_humanoid_clips[clip_index];
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
-    apply_authored_markers(profile == HumanoidBakeProfile::SwordReady ||
-                               profile == HumanoidBakeProfile::Skeleton,
-                           desc);
+    apply_humanoid_markers(static_cast<std::uint16_t>(clip_index), profile, desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -975,7 +970,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     desc.frame_count = clip.frame_count;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
-    apply_authored_markers(desc);
+    apply_generic_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -1132,7 +1127,7 @@ bool bake_horse(const std::filesystem::path& out_dir) {
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
-    apply_authored_markers(desc);
+    apply_generic_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
@@ -1301,7 +1296,7 @@ bool bake_elephant(const std::filesystem::path& out_dir) {
     desc.frame_count = clip.frames;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
-    apply_authored_markers(desc);
+    apply_generic_markers(desc);
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;

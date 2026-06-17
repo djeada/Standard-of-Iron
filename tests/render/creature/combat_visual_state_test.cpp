@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "animation/combat_manifest.h"
 #include "render/creature/combat_visual_state.h"
 
 namespace {
@@ -7,6 +8,120 @@ namespace {
 using Render::Creature::CombatVisualInterruptReason;
 using Render::Creature::CombatVisualTransactionPhase;
 using Render::Creature::SoldierCombatLane;
+
+TEST(AnimationCoreCombatManifest, RenderLaneResolutionUsesAnimationCorePolicy) {
+  Render::Creature::CombatLaneInputs render_inputs{};
+  render_inputs.unit_seed = 23U;
+  render_inputs.soldier_seed = 101U;
+  render_inputs.row = 1;
+  render_inputs.col = 2;
+  render_inputs.rows = 3;
+  render_inputs.cols = 4;
+  render_inputs.health_ratio = 0.80F;
+  render_inputs.local_enemy_pressure = 0.70F;
+  render_inputs.is_melee = true;
+  render_inputs.is_mounted = false;
+  render_inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+
+  Animation::CombatLaneInputs animation_inputs{};
+  animation_inputs.unit_seed = render_inputs.unit_seed;
+  animation_inputs.soldier_seed = render_inputs.soldier_seed;
+  animation_inputs.row = render_inputs.row;
+  animation_inputs.col = render_inputs.col;
+  animation_inputs.rows = render_inputs.rows;
+  animation_inputs.cols = render_inputs.cols;
+  animation_inputs.health_ratio = render_inputs.health_ratio;
+  animation_inputs.local_enemy_pressure = render_inputs.local_enemy_pressure;
+  animation_inputs.is_melee = render_inputs.is_melee;
+  animation_inputs.is_mounted = render_inputs.is_mounted;
+  animation_inputs.attack_family = Animation::CombatAttackFamily::Spear;
+
+  auto const render_lane =
+      Render::Creature::resolve_soldier_combat_lane({}, render_inputs);
+  auto const animation_lane =
+      Animation::resolve_soldier_combat_lane({}, animation_inputs);
+
+  EXPECT_EQ(render_lane.state.signature, animation_lane.state.signature);
+  EXPECT_EQ(render_lane.state.lane, animation_lane.state.lane);
+  EXPECT_EQ(render_lane.state.variant_bias, animation_lane.state.variant_bias);
+  EXPECT_EQ(render_lane.profile.lane, animation_lane.profile.lane);
+  EXPECT_EQ(render_lane.profile.phase_bias, animation_lane.profile.phase_bias);
+  EXPECT_EQ(render_lane.profile.recover_scale, animation_lane.profile.recover_scale);
+  EXPECT_EQ(render_lane.profile.emphasis_scale, animation_lane.profile.emphasis_scale);
+}
+
+TEST(AnimationCoreCombatManifest, RenderVariantSelectionUsesAnimationCorePolicy) {
+  auto const render_variant = Render::Creature::next_attack_variant_for_lane(
+      1U,
+      Engine::Core::CombatAttackFamily::Spear,
+      Render::Creature::SoldierCombatLane::ShieldBrace,
+      1.0F,
+      2U,
+      19U,
+      3U);
+  auto const animation_variant =
+      Animation::next_attack_variant_for_lane(1U,
+                                              Animation::CombatAttackFamily::Spear,
+                                              Animation::SoldierCombatLane::ShieldBrace,
+                                              1.0F,
+                                              2U,
+                                              19U,
+                                              3U);
+
+  EXPECT_EQ(render_variant, animation_variant);
+}
+
+TEST(AnimationCoreCombatManifest, RenderTransactionResolutionUsesAnimationCorePolicy) {
+  Render::Creature::CombatLaneProfile lane{};
+  lane.lane = Render::Creature::SoldierCombatLane::StepIn;
+  lane.phase_bias = -0.015F;
+  lane.recover_scale = 1.00F;
+  lane.emphasis_scale = 1.00F;
+  lane.local_enemy_pressure = 0.5F;
+  lane.variant_bias = 1U;
+  lane.lane_seed = 77U;
+
+  Render::Creature::CombatVisualRawInputs render_raw{};
+  render_raw.sample_time = 0.25F;
+  render_raw.attack_requested = true;
+  render_raw.is_melee = true;
+  render_raw.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  render_raw.attack_variant = 2U;
+  render_raw.attack_target_id = 9U;
+  render_raw.attack_target_alive = true;
+  render_raw.combat_phase = Engine::Core::CombatAnimationState::Strike;
+  render_raw.combat_phase_progress = 0.45F;
+
+  Animation::CombatRawInputs animation_raw{};
+  animation_raw.sample_time = render_raw.sample_time;
+  animation_raw.attack_requested = render_raw.attack_requested;
+  animation_raw.is_melee = render_raw.is_melee;
+  animation_raw.attack_family = Animation::CombatAttackFamily::Sword;
+  animation_raw.attack_variant = render_raw.attack_variant;
+  animation_raw.attack_target_id = render_raw.attack_target_id;
+  animation_raw.attack_target_alive = render_raw.attack_target_alive;
+  animation_raw.combat_phase = Animation::CombatPhase::Strike;
+  animation_raw.combat_phase_progress = render_raw.combat_phase_progress;
+
+  auto const render_resolution =
+      Render::Creature::resolve_combat_visual_state({}, render_raw, lane);
+  auto const animation_resolution =
+      Animation::resolve_combat_transaction_state({}, animation_raw, lane);
+
+  EXPECT_EQ(render_resolution.persistent.locked_family,
+            animation_resolution.persistent.locked_family);
+  EXPECT_EQ(render_resolution.persistent.locked_lane,
+            animation_resolution.persistent.locked_lane);
+  EXPECT_EQ(render_resolution.persistent.locked_variant,
+            animation_resolution.persistent.locked_variant);
+  EXPECT_EQ(render_resolution.resolved.attack_family,
+            animation_resolution.resolved.attack_family);
+  EXPECT_EQ(render_resolution.resolved.phase, animation_resolution.resolved.phase);
+  EXPECT_EQ(render_resolution.resolved.attack_variant,
+            animation_resolution.resolved.attack_variant);
+  EXPECT_FLOAT_EQ(render_resolution.resolved.attack_phase,
+                  animation_resolution.resolved.attack_phase);
+}
 
 TEST(CombatVisualState, MonotonicRecoveryAndExitBlendPersistAfterAttackStops) {
   Render::Creature::CombatLaneInputs lane_inputs{};
@@ -415,7 +530,7 @@ TEST(CombatVisualState, FamilyChangeQueuesFollowupUntilCurrentCompletes) {
 
   auto started = Render::Creature::resolve_combat_visual_state({}, raw, sword_lane);
   ASSERT_TRUE(started.resolved.active);
-  ASSERT_EQ(started.resolved.attack_family, Engine::Core::CombatAttackFamily::Sword);
+  ASSERT_EQ(started.resolved.attack_family, Animation::CombatAttackFamily::Sword);
 
   raw.sample_time += 0.03F;
   raw.attack_family = Engine::Core::CombatAttackFamily::Spear;
@@ -425,10 +540,9 @@ TEST(CombatVisualState, FamilyChangeQueuesFollowupUntilCurrentCompletes) {
       started.persistent, raw, spear_lane);
 
   EXPECT_TRUE(queued.resolved.active);
-  EXPECT_EQ(queued.resolved.attack_family, Engine::Core::CombatAttackFamily::Sword);
+  EXPECT_EQ(queued.resolved.attack_family, Animation::CombatAttackFamily::Sword);
   EXPECT_TRUE(queued.persistent.queued_next.pending);
-  EXPECT_EQ(queued.persistent.queued_next.family,
-            Engine::Core::CombatAttackFamily::Spear);
+  EXPECT_EQ(queued.persistent.queued_next.family, Animation::CombatAttackFamily::Spear);
 
   raw.sample_time += 0.40F;
   auto exiting =
@@ -440,7 +554,7 @@ TEST(CombatVisualState, FamilyChangeQueuesFollowupUntilCurrentCompletes) {
   auto next = Render::Creature::resolve_combat_visual_state(
       exiting.persistent, raw, spear_lane);
   EXPECT_TRUE(next.persistent.active);
-  EXPECT_EQ(next.persistent.locked_family, Engine::Core::CombatAttackFamily::Spear);
+  EXPECT_EQ(next.persistent.locked_family, Animation::CombatAttackFamily::Spear);
   EXPECT_GT(next.persistent.transaction_id, started.resolved.transaction_id);
 }
 

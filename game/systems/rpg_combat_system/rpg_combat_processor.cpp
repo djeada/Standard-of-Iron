@@ -9,6 +9,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
 
@@ -62,7 +63,19 @@ void issue_scripted_position_goal(Engine::Core::World& world,
   CommandService::move_unit(world, entity_id, target, options);
 }
 
+constexpr float k_engage_edge_margin = 0.15F;
+constexpr float k_min_engage_distance = 1.2F;
+
 } // namespace
+
+auto ideal_engage_distance(const Engine::Core::Entity& attacker,
+                           Engine::Core::Entity& commander) -> float {
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  float const reach = attack != nullptr ? attack->melee_range
+                                        : Engine::Core::Defaults::k_attack_melee_range;
+  float const strike_range = reach + Game::Systems::Combat::combat_radius(&commander);
+  return std::max(strike_range - k_engage_edge_margin, k_min_engage_distance);
+}
 
 void refresh_commander_engagement(Engine::Core::World* world,
                                   Engine::Core::EntityID commander_id) {
@@ -216,13 +229,13 @@ void tick_rpg_combat(Engine::Core::World* world,
           break;
         case Engine::Core::StaggerTier::Knockback:
           fb->reaction_intensity = 1.0F;
-          fb->knockback_x = fb->hit_direction_x * 0.12F;
-          fb->knockback_z = fb->hit_direction_z * 0.12F;
+          fb->knockback_x = fb->hit_direction_x * 0.18F;
+          fb->knockback_z = fb->hit_direction_z * 0.18F;
           break;
         case Engine::Core::StaggerTier::Knockdown:
           fb->reaction_intensity = 1.0F;
-          fb->knockback_x = fb->hit_direction_x * 0.08F;
-          fb->knockback_z = fb->hit_direction_z * 0.08F;
+          fb->knockback_x = fb->hit_direction_x * 0.12F;
+          fb->knockback_z = fb->hit_direction_z * 0.12F;
           break;
         case Engine::Core::StaggerTier::GuardBreak:
           fb->reaction_intensity = 0.85F;
@@ -288,7 +301,6 @@ void tick_rpg_combat(Engine::Core::World* world,
   const float cmd_x = cmd_transform->position.x;
   const float cmd_z = cmd_transform->position.z;
 
-  constexpr float k_ideal_engage_distance = 2.8F;
   constexpr float k_circle_speed = 1.4F;
 
   for (auto& slot : engagement->engagement_slots) {
@@ -320,18 +332,13 @@ void tick_rpg_combat(Engine::Core::World* world,
     bool const is_active_attacker = slot_is_active(slot);
 
     if (is_active_attacker) {
-      if (dist > k_ideal_engage_distance + 0.5F) {
+      float const engage_distance = ideal_engage_distance(*enemy, *entity);
+      if (dist > engage_distance + 0.5F || dist < engage_distance - 0.3F) {
         issue_scripted_position_goal(*world,
                                      enemy->get_id(),
-                                     QVector3D(cmd_x + nx * k_ideal_engage_distance,
+                                     QVector3D(cmd_x + nx * engage_distance,
                                                0.0F,
-                                               cmd_z + nz * k_ideal_engage_distance));
-      } else if (dist < k_ideal_engage_distance - 0.3F) {
-        issue_scripted_position_goal(*world,
-                                     enemy->get_id(),
-                                     QVector3D(cmd_x + nx * k_ideal_engage_distance,
-                                               0.0F,
-                                               cmd_z + nz * k_ideal_engage_distance));
+                                               cmd_z + nz * engage_distance));
       }
       float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
       enemy_tf->rotation.y = face_angle;

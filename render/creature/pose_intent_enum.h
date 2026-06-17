@@ -1,37 +1,13 @@
 #pragma once
 
-#include <cstdint>
+#include "animation/pose_manifest.h"
 
 namespace Render::Creature {
 
-enum class PoseIntent : std::uint8_t {
-
-  Idle = 0,
-  Walk,
-  Run,
-  Hold,
-
-  AttackMelee,
-  AttackSpear,
-  AttackRanged,
-  Cast,
-  HitReaction,
-
-  Healing,
-  Construct,
-
-  RidingIdle,
-  RidingCharge,
-  RidingReining,
-  RidingBowShot,
-
-  Dying,
-  Dead,
-  Count
-};
+using PoseIntent = Animation::PoseIntent;
 
 [[nodiscard]] constexpr auto pose_intent_count() noexcept -> std::size_t {
-  return static_cast<std::size_t>(PoseIntent::Count);
+  return Animation::pose_intent_count();
 }
 
 } // namespace Render::Creature

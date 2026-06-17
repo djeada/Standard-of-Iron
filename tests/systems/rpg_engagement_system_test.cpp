@@ -89,3 +89,29 @@ TEST_F(RpgEngagementSystemTest, IgnoresAlliesDeadUnitsAndUnitsOutsideRing) {
   EXPECT_EQ(engagement->front_attacker_id, enemy->get_id());
   EXPECT_EQ(engagement->active_attackers, 1);
 }
+
+TEST_F(RpgEngagementSystemTest, IdealEngageDistanceScalesWithWeaponReach) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+
+  auto* swordsman = create_unit(world, 0.0F, 3.0F, 2);
+  auto* sword_attack = swordsman->add_component<AttackComponent>();
+  sword_attack->current_mode = AttackComponent::CombatMode::Melee;
+  sword_attack->melee_range = 1.6F;
+
+  auto* spearman = create_unit(world, 1.0F, 3.0F, 2);
+  auto* spear_attack = spearman->add_component<AttackComponent>();
+  spear_attack->current_mode = AttackComponent::CombatMode::Melee;
+  spear_attack->melee_range = 2.5F;
+
+  float const sword_distance =
+      Game::Systems::RpgCombat::ideal_engage_distance(*swordsman, *commander);
+  float const spear_distance =
+      Game::Systems::RpgCombat::ideal_engage_distance(*spearman, *commander);
+
+  EXPECT_GT(spear_distance, sword_distance);
+  EXPECT_GT(spear_distance - sword_distance, 0.8F);
+
+  float const commander_radius = 0.5F;
+  EXPECT_LE(sword_distance, sword_attack->melee_range + commander_radius);
+  EXPECT_LE(spear_distance, spear_attack->melee_range + commander_radius);
+}

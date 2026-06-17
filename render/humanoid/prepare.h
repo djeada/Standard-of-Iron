@@ -18,7 +18,6 @@ class ISubmitter;
 struct AnimationInputs;
 class HumanoidRendererBase;
 class IFormationCalculator;
-enum class AmbientIdleType : std::uint8_t;
 } // namespace Render::GL
 
 namespace Render::Creature {

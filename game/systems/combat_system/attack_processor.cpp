@@ -21,6 +21,7 @@
 #include "../projectile_system.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "../troop_profile_service.h"
+#include "combat_animation_timing.h"
 #include "combat_mode_processor.h"
 #include "combat_random.h"
 #include "combat_types.h"
@@ -53,6 +54,26 @@ auto commander_attack_advance_scale(const Engine::Core::Entity* attacker) noexce
     return 1.0F;
   }
   return commander->combo_step >= 3 ? 1.55F : 1.22F;
+}
+
+auto melee_strike_blocked_by_commander_ring(Engine::Core::Entity* attacker,
+                                            Engine::Core::Entity* target) -> bool {
+  if (attacker == nullptr || target == nullptr) {
+    return false;
+  }
+  auto const* commander = target->get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || !commander->fpv_controlled) {
+    return false;
+  }
+  auto const* engagement =
+      target->get_component<Engine::Core::RpgEngagementComponent>();
+  if (engagement == nullptr || engagement->active_attackers <= 0) {
+    return false;
+  }
+  auto const attacker_id = attacker->get_id();
+  return attacker_id != engagement->front_attacker_id &&
+         attacker_id != engagement->left_threat_id &&
+         attacker_id != engagement->right_threat_id;
 }
 
 void begin_attack_animation(Engine::Core::Entity* attacker,
@@ -1125,6 +1146,10 @@ void process_attacks(Engine::Core::World* world,
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
 
+        if (melee_strike_blocked_by_commander_ring(attacker, best_target)) {
+          continue;
+        }
+
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 
@@ -1167,7 +1192,7 @@ void process_attacks(Engine::Core::World* world,
         attacker_atk->pending_melee_damage = damage;
         attacker_atk->pending_melee_elapsed = 0.0F;
         attacker_atk->pending_melee_contact_time =
-            Engine::Core::CombatStateComponent::k_melee_contact_fraction * cooldown;
+            melee_contact_time_for_attack(attacker, cooldown);
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
