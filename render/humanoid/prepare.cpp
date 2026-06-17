@@ -30,38 +30,6 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> i
   return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
 }
 
-auto infantry_guard_shield_pose(
-    const Engine::Core::UnitComponent* unit,
-    const Engine::Core::FormationModeComponent* formation_mode,
-    const Engine::Core::GuardModeComponent* guard_mode,
-    int row,
-    int col,
-    int rows,
-    int cols) noexcept -> ShieldFormationPose {
-  if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Knight) {
-    return ShieldFormationPose::None;
-  }
-
-  bool const formation_active = (formation_mode != nullptr) && formation_mode->active;
-  bool const guard_active = (guard_mode != nullptr) && guard_mode->active;
-  if (!formation_active && !guard_active) {
-    return ShieldFormationPose::None;
-  }
-
-  switch (unit->nation_id) {
-  case Game::Systems::NationID::RomanRepublic: {
-    bool const is_interior =
-        rows > 2 && cols > 2 && row > 0 && row + 1 < rows && col > 0 && col + 1 < cols;
-    return is_interior ? ShieldFormationPose::RomanTop
-                       : ShieldFormationPose::RomanFront;
-  }
-  case Game::Systems::NationID::Carthage:
-    return ShieldFormationPose::CarthageFront;
-  default:
-    return ShieldFormationPose::None;
-  }
-}
-
 auto archetype_has_left_hand_attachment(
     Render::Creature::ArchetypeId archetype_id) noexcept -> bool {
   auto const* desc = Render::Creature::ArchetypeRegistry::instance().get(archetype_id);
@@ -79,19 +47,19 @@ auto archetype_has_left_hand_attachment(
   return false;
 }
 
-auto nation_guard_front_shield_pose(const Engine::Core::UnitComponent* unit) noexcept
-    -> ShieldFormationPose {
+auto guard_shield_family(const Engine::Core::UnitComponent* unit) noexcept
+    -> Animation::GuardShieldFamily {
   if (unit == nullptr) {
-    return ShieldFormationPose::None;
+    return Animation::GuardShieldFamily::None;
   }
 
   switch (unit->nation_id) {
   case Game::Systems::NationID::RomanRepublic:
-    return ShieldFormationPose::RomanFront;
+    return Animation::GuardShieldFamily::Roman;
   case Game::Systems::NationID::Carthage:
-    return ShieldFormationPose::CarthageFront;
+    return Animation::GuardShieldFamily::Carthage;
   default:
-    return ShieldFormationPose::None;
+    return Animation::GuardShieldFamily::None;
   }
 }
 
@@ -104,84 +72,41 @@ auto shared_guard_shield_pose(
     int col,
     int rows,
     int cols) noexcept -> ShieldFormationPose {
-  if (unit == nullptr ||
-      !archetype_has_left_hand_attachment(visual_spec.archetype_id)) {
+  if (unit == nullptr) {
     return ShieldFormationPose::None;
   }
 
-  ShieldFormationPose const infantry_pose = infantry_guard_shield_pose(
-      unit, formation_mode, guard_mode, row, col, rows, cols);
-  if (infantry_pose != ShieldFormationPose::None) {
-    return infantry_pose;
-  }
-
-  return nation_guard_front_shield_pose(unit);
-}
-
-auto centered_grid_coordinate(int index, int count) noexcept -> float {
-  if (count <= 1) {
-    return 0.0F;
-  }
-  float const normalized = static_cast<float>(index) / static_cast<float>(count - 1);
-  return normalized * 2.0F - 1.0F;
-}
-
-auto phase_cohort_offset(std::uint32_t inst_seed) noexcept -> float {
-  int const cohort = static_cast<int>((inst_seed >> 9U) % 3U) - 1;
-  return static_cast<float>(cohort);
-}
-
-auto structured_layout_phase_offset(
-    int row, int col, int rows, int cols, std::uint32_t inst_seed) noexcept -> float {
-  float const row_bias = centered_grid_coordinate(row, rows) * 0.040F;
-  float const col_bias = centered_grid_coordinate(col, cols) * 0.018F;
-  float const checker_bias = (((row + col) & 1) == 0 ? -1.0F : 1.0F) * 0.012F;
-  float const cohort_bias = phase_cohort_offset(inst_seed) * 0.026F;
-
-  std::uint32_t rng_state = inst_seed ^ 0xA511E9B3U;
-  float const micro_bias =
-      (::Render::Creature::Pipeline::fast_random(rng_state) - 0.5F) * 0.014F;
-
-  return std::clamp(0.125F + row_bias + col_bias + checker_bias + cohort_bias +
-                        micro_bias,
-                    0.0F,
-                    0.25F);
-}
-
-auto construction_role_for_variant_index(std::uint8_t variant_index) noexcept
-    -> ConstructionRole {
-  switch (variant_index) {
-  case 0U:
-    return ConstructionRole::Hammer;
-  case 1U:
-    return ConstructionRole::Saw;
-  case 2U:
-    return ConstructionRole::Chisel;
-  case 3U:
-    return ConstructionRole::KneelingChisel;
-  default:
-    return ConstructionRole::Hammer;
-  }
+  return Animation::resolve_humanoid_guard_shield_pose({
+      .has_left_hand_shield =
+          archetype_has_left_hand_attachment(visual_spec.archetype_id),
+      .infantry_formation_unit = unit->spawn_type == Game::Units::SpawnType::Knight,
+      .formation_active = formation_mode != nullptr && formation_mode->active,
+      .guard_mode_active = guard_mode != nullptr && guard_mode->active,
+      .shield_family = guard_shield_family(unit),
+      .row = row,
+      .col = col,
+      .rows = rows,
+      .cols = cols,
+  });
 }
 
 auto resolve_construction_role(
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
     std::uint32_t inst_seed,
     bool force_single_soldier) noexcept -> ConstructionRole {
-  if (force_single_soldier) {
-    return ConstructionRole::Hammer;
-  }
-
   auto const* variant_table = visual_spec.animation_manifest.variant_table;
-  if (variant_table == nullptr ||
-      variant_table->variant_trigger_pose != Render::Creature::PoseIntent::Construct ||
-      variant_table->variant_stride == 0U || !variant_table->variant_is_seed_based) {
-    return ConstructionRole::Hammer;
-  }
-
-  std::uint8_t const variant_index = Render::Creature::Pipeline::seeded_variant_index(
-      inst_seed, variant_table->variant_stride);
-  return construction_role_for_variant_index(variant_index);
+  return Animation::resolve_humanoid_construction_role({
+      .seed = inst_seed,
+      .force_single_soldier = force_single_soldier,
+      .variant_table_can_select_roles =
+          variant_table != nullptr && variant_table->variant_trigger_pose ==
+                                          Render::Creature::PoseIntent::Construct,
+      .variant_stride = variant_table != nullptr
+                            ? static_cast<std::uint8_t>(variant_table->variant_stride)
+                            : std::uint8_t{0U},
+      .variant_is_seed_based =
+          variant_table != nullptr && variant_table->variant_is_seed_based,
+  });
 }
 
 void apply_spec_pose_layer(

@@ -24,7 +24,7 @@ add_library(render_gl STATIC
 )
 
 target_include_directories(render_gl PUBLIC .)
-target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core)
+target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core animation_core)
 
 # Optimization flags for render hot paths
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")

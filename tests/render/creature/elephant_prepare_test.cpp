@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/elephant_gait_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
@@ -98,6 +99,70 @@ auto make_test_elephant_profile() -> Render::GL::ElephantProfile {
   profile.gait.stride_swing = 0.3F;
   profile.gait.stride_lift = 0.12F;
   return profile;
+}
+
+TEST(AnimationCoreElephantGaitManifest, LegPhaseOffsetsAndSwingProgressAreStable) {
+  EXPECT_FLOAT_EQ(Animation::elephant_leg_phase_offset(0), 0.0F);
+  EXPECT_FLOAT_EQ(Animation::elephant_leg_phase_offset(1), 0.5F);
+  EXPECT_FLOAT_EQ(Animation::elephant_leg_phase_offset(2), 0.75F);
+  EXPECT_FLOAT_EQ(Animation::elephant_leg_phase_offset(3), 0.25F);
+
+  EXPECT_TRUE(Animation::elephant_leg_is_in_swing(0.01F, 0));
+  EXPECT_NEAR(Animation::elephant_leg_swing_progress(0.01F, 0), 0.04F, 0.0001F);
+  EXPECT_FALSE(Animation::elephant_leg_is_in_swing(0.30F, 0));
+  EXPECT_FLOAT_EQ(Animation::elephant_leg_swing_progress(0.30F, 0), -1.0F);
+}
+
+TEST(AnimationCoreElephantGaitManifest, GaitStateInitializesAndAdvancesMovingCycle) {
+  Animation::QuadrupedDimensions dims{};
+  dims.body_width = 1.4F;
+  dims.body_height = 2.4F;
+  dims.body_length = 3.2F;
+  dims.barrel_center_y = 2.1F;
+  dims.idle_bob_amplitude = 0.05F;
+  dims.move_bob_amplitude = 0.12F;
+
+  Animation::QuadrupedGait gait{};
+  gait.cycle_time = 1.4F;
+  gait.stride_swing = 0.3F;
+  gait.stride_lift = 0.12F;
+
+  Animation::ElephantGaitState const idle = Animation::resolve_elephant_gait_state({
+      .previous = {},
+      .dimensions = dims,
+      .gait = gait,
+      .sample_time = 0.0F,
+      .body_world_x = 0.0F,
+      .body_world_z = 0.0F,
+      .body_forward_z = 1.0F,
+      .is_moving = false,
+      .is_running = false,
+  });
+
+  EXPECT_TRUE(idle.initialized);
+  EXPECT_FLOAT_EQ(idle.cycle_phase, 0.0F);
+  for (const auto& leg : idle.legs) {
+    EXPECT_FALSE(leg.in_swing);
+    EXPECT_FLOAT_EQ(leg.swing_progress, 0.0F);
+  }
+
+  Animation::ElephantGaitState const moving = Animation::resolve_elephant_gait_state({
+      .previous = idle,
+      .dimensions = dims,
+      .gait = gait,
+      .sample_time = 0.01F,
+      .body_world_x = 0.0F,
+      .body_world_z = 0.0F,
+      .body_forward_z = 1.0F,
+      .is_moving = true,
+      .is_running = false,
+  });
+
+  ASSERT_TRUE(moving.initialized);
+  EXPECT_GT(moving.cycle_phase, 0.0F);
+  EXPECT_TRUE(moving.legs[0].in_swing);
+  EXPECT_GT(moving.legs[0].swing_target.z, moving.legs[0].swing_start.z);
+  EXPECT_NE(moving.weight_shift_z, 0.0F);
 }
 
 TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {

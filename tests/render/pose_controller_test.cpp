@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 
+#include "animation/ambient_pose_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "render/entity/registry.h"
@@ -22,12 +23,27 @@ namespace {
 constexpr float k_sample_cycle_period = 18.0F;
 constexpr float k_sample_cycle_midpoint = 7.75F;
 
+auto ambient_idle_type(std::uint32_t seed, float idle_duration) -> AmbientIdleType {
+  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
+      .seed = seed,
+      .idle_duration = idle_duration,
+  });
+  return schedule.active ? schedule.type : AmbientIdleType::None;
+}
+
+auto ambient_idle_phase(std::uint32_t seed, float idle_duration) -> float {
+  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
+      .seed = seed,
+      .idle_duration = idle_duration,
+  });
+  return schedule.active ? schedule.phase : 0.0F;
+}
+
 auto find_seed_with_ambient_idle(float max_idle_duration) -> std::uint32_t {
   for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
     for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
          idle_duration += 0.25F) {
-      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
-          AmbientIdleType::None) {
+      if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
         return seed;
       }
     }
@@ -41,8 +57,7 @@ auto find_seed_with_multiple_ambient_types(float max_idle_duration,
     std::unordered_set<int> selected_types;
     for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
          idle_duration += 0.25F) {
-      auto const type =
-          HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration);
+      auto const type = ambient_idle_type(seed, idle_duration);
       if (type == AmbientIdleType::None) {
         continue;
       }
@@ -123,25 +138,20 @@ TEST_F(HumanoidPoseControllerTest,
   ASSERT_NE(seed, 0U);
   float activation_time = -1.0F;
   for (float idle_duration = 5.0F; idle_duration <= 80.0F; idle_duration += 0.01F) {
-    if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
-        AmbientIdleType::None) {
+    if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
       activation_time = idle_duration;
       break;
     }
   }
 
   ASSERT_GT(activation_time, 0.0F);
-  auto const idle_type_now =
-      HumanoidPoseController::get_ambient_idle_type(10.0F, seed, activation_time);
-  auto const idle_type_later =
-      HumanoidPoseController::get_ambient_idle_type(1000.0F, seed, activation_time);
+  auto const idle_type_now = ambient_idle_type(seed, activation_time);
+  auto const idle_type_later = ambient_idle_type(seed, activation_time);
   EXPECT_EQ(idle_type_now, idle_type_later);
   EXPECT_NE(idle_type_now, AmbientIdleType::None);
 
-  float const start_phase =
-      HumanoidPoseController::compute_ambient_idle_phase(activation_time, seed);
-  float const progressed_phase =
-      HumanoidPoseController::compute_ambient_idle_phase(activation_time + 1.0F, seed);
+  float const start_phase = ambient_idle_phase(seed, activation_time);
+  float const progressed_phase = ambient_idle_phase(seed, activation_time + 1.0F);
   EXPECT_LT(start_phase, 0.10F);
   EXPECT_GT(progressed_phase, start_phase);
 }
@@ -152,8 +162,7 @@ TEST_F(HumanoidPoseControllerTest,
   ASSERT_NE(seed, 0U);
   std::unordered_set<int> selected_types;
   for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
-    auto const type =
-        HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration);
+    auto const type = ambient_idle_type(seed, idle_duration);
     if (type == AmbientIdleType::None) {
       continue;
     }
@@ -174,8 +183,7 @@ TEST_F(HumanoidPoseControllerTest,
         k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
     for (int idx = 0; idx < soldier_count; ++idx) {
       std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
-          AmbientIdleType::None) {
+      if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
         ++active;
       }
     }
@@ -200,8 +208,7 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeed
     int active = 0;
     for (int idx = 0; idx < soldier_count; ++idx) {
       std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      auto const type =
-          HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration);
+      auto const type = ambient_idle_type(seed, idle_duration);
       if (type == AmbientIdleType::None) {
         continue;
       }
@@ -231,8 +238,7 @@ TEST_F(HumanoidPoseControllerTest,
         k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
     for (int idx = 0; idx < soldier_count; ++idx) {
       std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) ==
-          AmbientIdleType::None) {
+      if (ambient_idle_type(seed, idle_duration) == AmbientIdleType::None) {
         continue;
       }
       active[static_cast<std::size_t>(idx)] = 1;
@@ -1000,17 +1006,17 @@ TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
 
 TEST_F(HumanoidPoseControllerTest, SpearDirectionBlendsDuringHoldEntry) {
   AnimationInputs const standing_inputs{};
-  QVector3D const standing_dir = compute_spear_direction(standing_inputs);
+  QVector3D const standing_dir = resolve_spear_direction(standing_inputs);
 
   AnimationInputs partial_hold_inputs{};
   partial_hold_inputs.is_in_hold_mode = true;
   partial_hold_inputs.hold_entry_progress = 0.5F;
-  QVector3D const partial_hold_dir = compute_spear_direction(partial_hold_inputs);
+  QVector3D const partial_hold_dir = resolve_spear_direction(partial_hold_inputs);
 
   AnimationInputs full_hold_inputs{};
   full_hold_inputs.is_in_hold_mode = true;
   full_hold_inputs.hold_entry_progress = 1.0F;
-  QVector3D const full_hold_dir = compute_spear_direction(full_hold_inputs);
+  QVector3D const full_hold_dir = resolve_spear_direction(full_hold_inputs);
 
   EXPECT_LT(partial_hold_dir.y(), standing_dir.y());
   EXPECT_GT(partial_hold_dir.y(), full_hold_dir.y());
@@ -1022,12 +1028,12 @@ TEST_F(HumanoidPoseControllerTest, SpearDirectionMatchesExitHoldDepth) {
   AnimationInputs entry_inputs{};
   entry_inputs.is_in_hold_mode = true;
   entry_inputs.hold_entry_progress = 0.75F;
-  QVector3D const entry_dir = compute_spear_direction(entry_inputs);
+  QVector3D const entry_dir = resolve_spear_direction(entry_inputs);
 
   AnimationInputs exit_inputs{};
   exit_inputs.is_exiting_hold = true;
   exit_inputs.hold_exit_progress = 0.25F;
-  QVector3D const exit_dir = compute_spear_direction(exit_inputs);
+  QVector3D const exit_dir = resolve_spear_direction(exit_inputs);
 
   EXPECT_TRUE(approx_equal(entry_dir, exit_dir, 0.001F));
 }

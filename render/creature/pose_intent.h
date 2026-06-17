@@ -23,26 +23,8 @@ enum class HumanoidState {
 
 namespace Render::Creature {
 
-enum class ActionIntent : std::uint8_t {
-  None = 0,
-  AttackMelee,
-  AttackSpear,
-  AttackRanged,
-  Cast,
-  MountedCharge,
-  HitReaction,
-  Healing,
-  Construct,
-  Dying,
-  Dead,
-};
-
-enum class StanceIntent : std::uint8_t {
-  Normal = 0,
-  Hold,
-  Guard,
-  Mounted,
-};
+using ActionIntent = Animation::ActionIntent;
+using StanceIntent = Animation::StanceIntent;
 
 struct AnimationIntent {
   Render::Creature::MovementAnimationState locomotion{

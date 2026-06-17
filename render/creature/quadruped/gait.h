@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include "animation/quadruped_gait_manifest.h"
 #include "dimensions.h"
 
 namespace Render::Creature::Quadruped {
@@ -15,36 +16,8 @@ struct Gait {
   float phase_offset{0.0F};
 };
 
-struct MotionConfig {
-  float idle_phase_speed{0.30F};
-  float idle_bob_frequency{0.45F};
-  float cycle_time_floor{0.001F};
-  float moving_primary_weight{0.70F};
-  float moving_secondary_phase{0.19F};
-  float moving_secondary_frequency{2.0F};
-  float moving_secondary_weight{0.30F};
-  float moving_tertiary_phase{0.0F};
-  float moving_tertiary_frequency{1.0F};
-  float moving_tertiary_weight{0.0F};
-  float moving_bob_base_scale{1.0F};
-  float moving_bob_intensity_scale{0.0F};
-  float running_bob_scale{1.10F};
-
-  float stride_lift_intensity_scale{2.20F};
-  float running_intensity_bonus{0.22F};
-  float base_intensity{0.62F};
-  float swing_intensity_scale{0.24F};
-  float lift_intensity_scale{0.14F};
-};
-
-struct SwayConfig {
-  float idle_frequency{0.30F};
-  float idle_amplitude{0.008F};
-  float moving_secondary_phase{0.17F};
-  float moving_secondary_weight{0.35F};
-  float base_amplitude{0.008F};
-  float stride_scale{0.0035F};
-};
+using MotionConfig = Animation::QuadrupedMotionConfig;
+using SwayConfig = Animation::QuadrupedSwayConfig;
 
 struct MotionSample {
   float phase{0.0F};

@@ -5,25 +5,12 @@
 
 #include "../bpat/bpat_format.h"
 #include "../bpat/bpat_registry.h"
+#include "animation/playback_manifest.h"
 
 namespace Render::Creature::Pipeline {
 
-namespace {
-
-constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
-
-}
-
 auto normalize_bpat_phase(float phase, bool loops) noexcept -> float {
-  if (!loops) {
-    return std::clamp(phase, 0.0F, k_terminal_non_looping_phase);
-  }
-
-  float wrapped = std::fmod(phase, 1.0F);
-  if (wrapped < 0.0F) {
-    wrapped += 1.0F;
-  }
-  return wrapped;
+  return Animation::normalize_clip_phase(phase, loops);
 }
 
 auto resolve_bpat_playback(const Render::Creature::Bpat::BpatBlob* blob,
@@ -40,18 +27,19 @@ auto resolve_bpat_playback(const Render::Creature::Bpat::BpatBlob* blob,
     return resolved;
   }
 
-  float const normalized_phase = normalize_bpat_phase(phase, clip.loops != 0U);
+  float const normalized_phase =
+      normalize_bpat_phase(phase, static_cast<unsigned int>(clip.loops) != 0U);
   float const frame_position = normalized_phase * static_cast<float>(clip.frame_count);
   int frame_idx = static_cast<int>(std::floor(frame_position));
   frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
   float frame_lerp =
       std::clamp(frame_position - static_cast<float>(frame_idx), 0.0F, 1.0F);
 
-  std::uint32_t next_frame_idx = static_cast<std::uint32_t>(frame_idx);
+  auto next_frame_idx = static_cast<std::uint32_t>(frame_idx);
   if (clip.frame_count > 1U) {
     if (static_cast<std::uint32_t>(frame_idx) + 1U < clip.frame_count) {
       next_frame_idx = static_cast<std::uint32_t>(frame_idx) + 1U;
-    } else if (clip.loops != 0U) {
+    } else if (static_cast<unsigned int>(clip.loops) != 0U) {
       next_frame_idx = 0U;
     } else {
       frame_lerp = 0.0F;
@@ -63,7 +51,7 @@ auto resolve_bpat_playback(const Render::Creature::Bpat::BpatBlob* blob,
   resolved.blob = blob;
   resolved.clip_id = clip_id;
   resolved.frame_count = clip.frame_count;
-  resolved.loops = clip.loops != 0U;
+  resolved.loops = static_cast<unsigned int>(clip.loops) != 0U;
   resolved.normalized_phase = normalized_phase;
   resolved.frame_in_clip = static_cast<std::uint32_t>(frame_idx);
   resolved.global_frame = clip.frame_offset + resolved.frame_in_clip;

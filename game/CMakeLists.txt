@@ -22,6 +22,7 @@ add_library(game_systems STATIC
     systems/combat_system/auto_engagement.cpp
     systems/combat_system/hit_feedback_processor.cpp
     systems/combat_system/combat_state_processor.cpp
+    systems/combat_system/combat_animation_timing.cpp
     systems/combat_system/attack_processor.cpp
     systems/combat_system/elephant_special_processor.cpp
     systems/combat_system/siege_special_processor.cpp
@@ -145,6 +146,6 @@ add_library(game_systems STATIC
 )
 
 target_include_directories(game_systems PUBLIC .)
-target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Sql engine_core render_gl)
+target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Sql engine_core animation_core render_gl)
 
 add_subdirectory(audio)

@@ -340,7 +340,7 @@ EXCLUDE_PATHS := */venv/* */.venv/*
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
 	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
 COMMENT_STRIP_PATHS := main.cpp app/ game/ render/ scripts/ tests/ tools/ ui/ utils/ assets/shaders/
-CXX_FORMAT_PATHS := main.cpp app game render tests tools ui utils compat
+CXX_FORMAT_PATHS := main.cpp app game render tests tools ui utils compat animation
 QML_FORMAT_PATHS := app tools ui
 SHADER_FORMAT_PATHS := assets/shaders
 PY_FORMAT_PATHS := scripts tests tools
