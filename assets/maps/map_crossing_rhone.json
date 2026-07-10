@@ -808,7 +808,9 @@
             "player_id": 2,
             "type": "spearman",
             "x": 99,
-            "z": 27
+            "z": 27,
+            "behavior": "guard",
+            "guard_radius": 14
         },
         {
             "id": "rome_north_spearman_02",
@@ -816,7 +818,9 @@
             "player_id": 2,
             "type": "spearman",
             "x": 119,
-            "z": 16
+            "z": 16,
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "id": "rome_north_swordsman_01",
@@ -824,7 +828,9 @@
             "player_id": 2,
             "type": "swordsman",
             "x": 118,
-            "z": 22
+            "z": 22,
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "id": "rome_north_archer_01",
@@ -833,7 +839,8 @@
             "role": "hill defender",
             "type": "archer",
             "x": 101,
-            "z": 29
+            "z": 29,
+            "behavior": "hold"
         },
         {
             "id": "rome_north_archer_02",
@@ -842,7 +849,8 @@
             "role": "hill defender",
             "type": "archer",
             "x": 122,
-            "z": 20
+            "z": 20,
+            "behavior": "hold"
         },
         {
             "id": "rome_north_archer_03",
@@ -851,7 +859,8 @@
             "role": "anti-rush defender",
             "type": "archer",
             "x": 122,
-            "z": 23
+            "z": 23,
+            "behavior": "hold"
         },
         {
             "id": "rome_north_catapult_01",
@@ -860,7 +869,8 @@
             "role": "dangerous exposed target",
             "type": "catapult",
             "x": 125,
-            "z": 21
+            "z": 21,
+            "behavior": "hold"
         },
         {
             "id": "rome_north_healer_01",
@@ -868,7 +878,9 @@
             "player_id": 2,
             "type": "healer",
             "x": 123,
-            "z": 17
+            "z": 17,
+            "behavior": "guard",
+            "guard_radius": 10
         },
         {
             "id": "rome_north_signal_guard_01",
@@ -877,7 +889,18 @@
             "role": "runs warning to south if not intercepted",
             "type": "horse_swordsman",
             "x": 116,
-            "z": 22
+            "z": 22,
+            "behavior": "patrol",
+            "patrol_waypoints": [
+                {
+                    "x": 125,
+                    "z": 24
+                },
+                {
+                    "x": 133,
+                    "z": 36
+                }
+            ]
         },
         {
             "id": "gaul_center_spearman_01",
@@ -886,7 +909,9 @@
             "role": "neutral warning encounter",
             "type": "spearman",
             "x": 75,
-            "z": 56
+            "z": 56,
+            "behavior": "guard",
+            "guard_radius": 10
         },
         {
             "id": "gaul_center_archer_01",
@@ -895,7 +920,8 @@
             "role": "neutral warning encounter",
             "type": "archer",
             "x": 76,
-            "z": 63
+            "z": 63,
+            "behavior": "hold"
         },
         {
             "id": "gaul_center_swordsman_01",
@@ -904,7 +930,9 @@
             "role": "neutral warning encounter",
             "type": "swordsman",
             "x": 74,
-            "z": 65
+            "z": 65,
+            "behavior": "guard",
+            "guard_radius": 10
         },
         {
             "id": "gaul_bridge_spearman_01",
@@ -913,7 +941,9 @@
             "role": "hints central crossing danger",
             "type": "spearman",
             "x": 72,
-            "z": 86
+            "z": 86,
+            "behavior": "guard",
+            "guard_radius": 10
         },
         {
             "id": "gaul_bridge_archer_01",
@@ -922,7 +952,8 @@
             "role": "hints central crossing danger",
             "type": "archer",
             "x": 75,
-            "z": 83
+            "z": 83,
+            "behavior": "hold"
         },
         {
             "id": "gaul_south_horse_01",
@@ -931,7 +962,18 @@
             "role": "draws attention to southern alliance route",
             "type": "horse_swordsman",
             "x": 149,
-            "z": 119
+            "z": 119,
+            "behavior": "patrol",
+            "patrol_waypoints": [
+                {
+                    "x": 141,
+                    "z": 124
+                },
+                {
+                    "x": 132,
+                    "z": 134
+                }
+            ]
         },
         {
             "id": "gaul_south_bridge_horse_01",
@@ -940,21 +982,34 @@
             "role": "visible guide toward southern bridge",
             "type": "horse_swordsman",
             "x": 82,
-            "z": 116
+            "z": 116,
+            "behavior": "patrol",
+            "patrol_waypoints": [
+                {
+                    "x": 88,
+                    "z": 116
+                },
+                {
+                    "x": 94,
+                    "z": 120
+                }
+            ]
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
             "x": 100,
-            "z": 58
+            "z": 58,
+            "behavior": "hold"
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
             "x": 101,
-            "z": 54
+            "z": 54,
+            "behavior": "hold"
         },
         {
             "max_population": -1,
@@ -968,42 +1023,52 @@
             "player_id": 3,
             "type": "swordsman",
             "x": 144,
-            "z": 125
+            "z": 125,
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "max_population": -1,
             "player_id": 3,
             "type": "swordsman",
             "x": 141,
-            "z": 120
+            "z": 120,
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "max_population": -1,
             "player_id": 3,
             "type": "archer",
             "x": 135,
-            "z": 146
+            "z": 146,
+            "behavior": "hold"
         },
         {
             "max_population": -1,
             "player_id": 3,
             "type": "archer",
             "x": 129,
-            "z": 146
+            "z": 146,
+            "behavior": "hold"
         },
         {
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
             "x": 46,
-            "z": 109
+            "z": 109,
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
             "x": 50,
-            "z": 136
+            "z": 136,
+            "behavior": "guard",
+            "guard_radius": 12
         }
     ],
     "starting_resources": {

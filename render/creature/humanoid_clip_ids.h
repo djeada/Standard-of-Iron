@@ -45,6 +45,8 @@ inline constexpr std::uint16_t k_humanoid_riding_bow_shot_clip =
     Animation::k_humanoid_riding_bow_shot_clip;
 inline constexpr std::uint16_t k_humanoid_riding_sword_strike_clip =
     Animation::k_humanoid_riding_sword_strike_clip;
+inline constexpr std::uint16_t k_humanoid_riding_spear_thrust_clip =
+    Animation::k_humanoid_riding_spear_thrust_clip;
 inline constexpr std::uint16_t k_humanoid_die_infantry_clip =
     Animation::k_humanoid_die_infantry_clip;
 inline constexpr std::uint16_t k_humanoid_dead_infantry_clip =
@@ -53,5 +55,15 @@ inline constexpr std::uint16_t k_humanoid_die_mounted_clip =
     Animation::k_humanoid_die_mounted_clip;
 inline constexpr std::uint16_t k_humanoid_dead_mounted_clip =
     Animation::k_humanoid_dead_mounted_clip;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_left_clip =
+    Animation::k_humanoid_rpg_sword_slash_left_clip;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_right_clip =
+    Animation::k_humanoid_rpg_sword_slash_right_clip;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_overhead_clip =
+    Animation::k_humanoid_rpg_sword_overhead_clip;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip =
+    Animation::k_humanoid_rpg_sword_thrust_clip;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip =
+    Animation::k_humanoid_rpg_sword_finisher_clip;
 
 } // namespace Render::Creature

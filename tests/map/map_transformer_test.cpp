@@ -189,4 +189,62 @@ TEST_F(MapTransformerStructureTest,
             Game::Systems::WallNetworkService::k_connection_west);
 }
 
+TEST_F(MapTransformerStructureTest, AuthoredGuardSpawnIsScenarioControlled) {
+  Engine::Core::World world;
+
+  Game::Map::MapDefinition def;
+  def.grid.width = 16;
+  def.grid.height = 16;
+  def.spawns.push_back({
+      .type = Game::Units::SpawnType::Spearman,
+      .x = 4,
+      .z = 6,
+      .player_id = 2,
+      .team_id = 1,
+      .max_population = 100,
+      .nation = Game::Systems::NationID::Carthage,
+      .behavior = QStringLiteral("guard"),
+      .guard_radius = 16.0F,
+  });
+  def.spawns.push_back({
+      .type = Game::Units::SpawnType::Archer,
+      .x = 8,
+      .z = 6,
+      .player_id = 2,
+      .team_id = 1,
+      .max_population = 100,
+      .nation = Game::Systems::NationID::Carthage,
+  });
+
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  Engine::Core::Entity* guard_entity = nullptr;
+  Engine::Core::Entity* strategic_entity = nullptr;
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    ASSERT_NE(entity, nullptr);
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(unit, nullptr);
+    if (unit->spawn_type == Game::Units::SpawnType::Spearman) {
+      guard_entity = entity;
+    } else if (unit->spawn_type == Game::Units::SpawnType::Archer) {
+      strategic_entity = entity;
+    }
+  }
+
+  ASSERT_NE(guard_entity, nullptr);
+  EXPECT_EQ(guard_entity->get_component<Engine::Core::AIControlledComponent>(),
+            nullptr);
+  const auto* guard = guard_entity->get_component<Engine::Core::GuardModeComponent>();
+  ASSERT_NE(guard, nullptr);
+  EXPECT_TRUE(guard->active);
+  EXPECT_TRUE(guard->has_guard_target);
+  EXPECT_FLOAT_EQ(guard->guard_radius, 16.0F);
+  EXPECT_FLOAT_EQ(guard->guard_position_x, runtime_world_from_grid(4, def.grid.width));
+  EXPECT_FLOAT_EQ(guard->guard_position_z, runtime_world_from_grid(6, def.grid.height));
+
+  ASSERT_NE(strategic_entity, nullptr);
+  EXPECT_NE(strategic_entity->get_component<Engine::Core::AIControlledComponent>(),
+            nullptr);
+}
+
 } // namespace

@@ -107,6 +107,41 @@ TEST(MapLoaderTest, StartingResourcesDefaultToZeroWhenAbsent) {
   EXPECT_TRUE(map_def.starting_resources.empty());
 }
 
+TEST(MapLoaderTest, ParsesAuthoredSpawnBehavior) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Spawn Behavior Test"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"spawns",
+       QJsonArray{QJsonObject{{"type", "spearman"},
+                              {"x", 12},
+                              {"z", 14},
+                              {"player_id", 2},
+                              {"behavior", "guard"},
+                              {"guard_radius", 18.0},
+                              {"patrol_waypoints",
+                               QJsonArray{QJsonObject{{"x", 16}, {"z", 14}},
+                                          QJsonObject{{"x", 16}, {"z", 20}}}}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.spawns.size(), 1U);
+  const auto& spawn = map_def.spawns.front();
+  EXPECT_EQ(spawn.behavior, QStringLiteral("guard"));
+  EXPECT_FLOAT_EQ(spawn.guard_radius, 18.0F);
+  ASSERT_EQ(spawn.patrol_waypoints.size(), 2U);
+  EXPECT_FLOAT_EQ(spawn.patrol_waypoints[0].x(), 16.0F);
+  EXPECT_FLOAT_EQ(spawn.patrol_waypoints[1].z(), 20.0F);
+}
+
 TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

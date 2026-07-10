@@ -15,10 +15,20 @@ struct Position {
   float z = 0.0F;
 };
 
+enum class UnitBehavior {
+  Strategic,
+  Guard,
+  Hold,
+  Patrol
+};
+
 struct UnitSetup {
   QString type;
   int count = 1;
   Position position;
+  UnitBehavior behavior = UnitBehavior::Strategic;
+  float guard_radius = 10.0F;
+  std::vector<Position> patrol_waypoints;
 };
 
 struct BuildingSetup {

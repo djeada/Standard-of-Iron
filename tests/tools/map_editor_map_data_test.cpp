@@ -320,6 +320,8 @@ TEST(MapEditorMapDataTest,
                               {MapJsonKeys::x, 10},
                               {MapJsonKeys::z, 12},
                               {MapJsonKeys::player_id, 2},
+                              {MapJsonKeys::behavior, "guard"},
+                              {MapJsonKeys::guard_radius, 18.0},
                               {"hidden", true},
                               {"description", "Front line"}},
                   QJsonObject{{MapJsonKeys::type, "archer"},
@@ -341,10 +343,18 @@ TEST(MapEditorMapDataTest,
 
   MapEditor::TroopSpawnElement spearman = data.troop_spawns().first();
   EXPECT_EQ(spearman.type, "spearman");
+  EXPECT_EQ(spearman.behavior, "guard");
+  EXPECT_FLOAT_EQ(spearman.guard_radius, 18.0F);
   EXPECT_TRUE(spearman.extra_fields.value("hidden").toBool());
   EXPECT_EQ(spearman.extra_fields.value("description").toString(), "Front line");
+  EXPECT_FALSE(spearman.extra_fields.contains(MapJsonKeys::behavior));
+  EXPECT_FALSE(spearman.extra_fields.contains(MapJsonKeys::guard_radius));
   spearman.x = 20.0F;
   spearman.z = 22.0F;
+  spearman.behavior = "patrol";
+  spearman.patrol_waypoints =
+      QJsonArray{QJsonObject{{MapJsonKeys::x, 24}, {MapJsonKeys::z, 22}},
+                 QJsonObject{{MapJsonKeys::x, 24}, {MapJsonKeys::z, 28}}};
   data.update_troop_spawn(0, spearman);
 
   MapEditor::TroopSpawnElement builder;
@@ -352,6 +362,7 @@ TEST(MapEditorMapDataTest,
   builder.x = 40.0F;
   builder.z = 42.0F;
   builder.player_id = 4;
+  builder.behavior = "hold";
   builder.extra_fields["hidden"] = false;
   data.add_troop_spawn(builder);
 
@@ -367,6 +378,14 @@ TEST(MapEditorMapDataTest,
   EXPECT_EQ(saved_spearman.value(MapJsonKeys::type).toString(), "spearman");
   EXPECT_DOUBLE_EQ(saved_spearman.value(MapJsonKeys::x).toDouble(), 20.0);
   EXPECT_DOUBLE_EQ(saved_spearman.value(MapJsonKeys::z).toDouble(), 22.0);
+  EXPECT_EQ(saved_spearman.value(MapJsonKeys::behavior).toString(), "patrol");
+  const QJsonArray saved_patrol_waypoints =
+      saved_spearman.value(MapJsonKeys::patrol_waypoints).toArray();
+  ASSERT_EQ(saved_patrol_waypoints.size(), 2);
+  EXPECT_DOUBLE_EQ(
+      saved_patrol_waypoints[0].toObject().value(MapJsonKeys::x).toDouble(), 24.0);
+  EXPECT_DOUBLE_EQ(
+      saved_patrol_waypoints[1].toObject().value(MapJsonKeys::z).toDouble(), 28.0);
   EXPECT_TRUE(saved_spearman.value("hidden").toBool());
   EXPECT_EQ(saved_spearman.value("description").toString(), "Front line");
 
@@ -379,6 +398,7 @@ TEST(MapEditorMapDataTest,
   const QJsonObject saved_builder = spawns[3].toObject();
   EXPECT_EQ(saved_builder.value(MapJsonKeys::type).toString(), "builder");
   EXPECT_EQ(saved_builder.value(MapJsonKeys::player_id).toInt(), 4);
+  EXPECT_EQ(saved_builder.value(MapJsonKeys::behavior).toString(), "hold");
   EXPECT_FALSE(saved_builder.value("hidden").toBool(true));
 
   const QJsonArray buildings =

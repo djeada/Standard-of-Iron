@@ -116,7 +116,8 @@ auto resolve_perfect_guard(Engine::Core::World* world,
 auto resolve_commander_guard(Engine::Core::World* world,
                              Engine::Core::Entity* target,
                              int damage,
-                             Engine::Core::EntityID attacker_id) -> GuardResolution {
+                             Engine::Core::EntityID attacker_id,
+                             CommanderDamageProfile profile) -> GuardResolution {
   GuardResolution result{damage, false, false, false};
   if (world == nullptr || target == nullptr || attacker_id == 0 || damage <= 0) {
     return result;
@@ -139,7 +140,10 @@ auto resolve_commander_guard(Engine::Core::World* world,
       1,
       static_cast<int>(std::round(static_cast<float>(damage) *
                                   std::clamp(guard->damage_multiplier, 0.0F, 1.0F))));
-  apply_posture_pressure(target, std::max(10.0F, static_cast<float>(damage) * 0.85F));
+  float const guard_pressure =
+      std::max(std::max(10.0F, static_cast<float>(damage) * 0.85F),
+               std::max(0.0F, profile.guard_pressure));
+  apply_posture_pressure(target, guard_pressure);
   if (commander != nullptr && commander->posture >= commander->posture_max) {
     guard->guard_break_remaining = std::max(guard->guard_break_remaining, 1.0F);
     guard->rearm_requires_release = true;
@@ -180,11 +184,11 @@ void mark_commander_hit(Engine::Core::CommanderComponent& commander,
 
 } // namespace
 
-CommanderDamageResult
-deal_commander_attack_damage(Engine::Core::World* world,
-                             Engine::Core::Entity* target,
-                             int raw_damage,
-                             Engine::Core::EntityID commander_id) {
+CommanderDamageResult deal_commander_attack_damage(Engine::Core::World* world,
+                                                   Engine::Core::Entity* target,
+                                                   int raw_damage,
+                                                   Engine::Core::EntityID commander_id,
+                                                   CommanderDamageProfile profile) {
   CommanderDamageResult result;
   if (world == nullptr || target == nullptr || raw_damage <= 0 || commander_id == 0) {
     return result;
@@ -221,7 +225,7 @@ deal_commander_attack_damage(Engine::Core::World* world,
 
   if (auto* target_rpg = target->get_component<Engine::Core::RpgHealthComponent>();
       target_rpg != nullptr && target_rpg->active) {
-    result = deal_damage_to_rpg_commander(world, target, damage, commander_id);
+    result = deal_damage_to_rpg_commander(world, target, damage, commander_id, profile);
     if (result.effective_damage > 0 && commander != nullptr) {
       mark_commander_hit(*commander, combo_step, power_strike_hit);
     }
@@ -254,7 +258,8 @@ deal_commander_attack_damage(Engine::Core::World* world,
 CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
                                                    Engine::Core::Entity* commander,
                                                    int raw_damage,
-                                                   Engine::Core::EntityID attacker_id) {
+                                                   Engine::Core::EntityID attacker_id,
+                                                   CommanderDamageProfile profile) {
   CommanderDamageResult result;
   if (world == nullptr || commander == nullptr || raw_damage <= 0) {
     return result;
@@ -267,7 +272,7 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
   }
 
   GuardResolution const guard =
-      resolve_commander_guard(world, commander, raw_damage, attacker_id);
+      resolve_commander_guard(world, commander, raw_damage, attacker_id, profile);
   result.blocked = guard.blocked;
   result.guard_broken = guard.guard_broken;
 
@@ -287,9 +292,10 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
         commander, result.guard_broken ? 0.65F : 0.45F, tier);
   }
   if (!result.blocked) {
-    apply_posture_pressure(
-        commander,
-        std::max(6.0F, static_cast<float>(rpg_result.effective_damage) * 0.25F));
+    float const posture_damage = std::max(
+        std::max(6.0F, static_cast<float>(rpg_result.effective_damage) * 0.25F),
+        std::max(0.0F, profile.posture_damage));
+    apply_posture_pressure(commander, posture_damage);
   }
   Game::Systems::Combat::apply_hit_feedback(commander, attacker_id, world);
 

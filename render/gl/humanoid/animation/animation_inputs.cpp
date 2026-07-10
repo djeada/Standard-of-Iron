@@ -8,6 +8,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/core/world.h"
+#include "../../../../game/systems/combat_actions/combat_action_definition.h"
 #include "../../../../game/systems/combat_rules.h"
 #include "../../../creature/animation_core_bridge.h"
 #include "../../../creature/animation_state_components.h"
@@ -313,6 +314,38 @@ private:
   return Animation::resolve_humanoid_action_sample(inputs);
 }
 
+[[nodiscard]] auto commander_sword_attack_animation(
+    const Engine::Core::RpgCommanderActionComponent* action) noexcept
+    -> Animation::SwordAttackAnimation {
+  if (action == nullptr ||
+      action->phase != Engine::Core::RpgCommanderActionPhase::Strike) {
+    return Animation::SwordAttackAnimation::InfantrySlashA;
+  }
+  switch (static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id)) {
+  case Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft:
+    return Animation::SwordAttackAnimation::RpgSlashLeft;
+  case Game::Systems::CombatActions::CombatActionId::RpgSwordSlashRight:
+    return Animation::SwordAttackAnimation::RpgSlashRight;
+  case Game::Systems::CombatActions::CombatActionId::RpgSwordOverhead:
+    return Animation::SwordAttackAnimation::RpgOverhead;
+  case Game::Systems::CombatActions::CombatActionId::RpgSwordThrust:
+    return Animation::SwordAttackAnimation::RpgThrust;
+  case Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher:
+    return Animation::SwordAttackAnimation::RpgFinisher;
+  case Game::Systems::CombatActions::CombatActionId::MountedSwordSlash:
+    return Animation::SwordAttackAnimation::RpgSlashRight;
+  case Game::Systems::CombatActions::CombatActionId::RpgSpearThrust:
+  case Game::Systems::CombatActions::CombatActionId::RpgSpearSweep:
+  case Game::Systems::CombatActions::CombatActionId::RpgBowShot:
+  case Game::Systems::CombatActions::CombatActionId::MountedSpearThrust:
+  case Game::Systems::CombatActions::CombatActionId::MountedChargeImpact:
+  case Game::Systems::CombatActions::CombatActionId::None:
+    break;
+  }
+  return Animation::SwordAttackAnimation::InfantrySlashA;
+}
+
 void apply_action_sample(AnimationInputs& anim,
                          const Animation::HumanoidActionSample& sample) noexcept {
   anim.is_attacking = sample.is_attacking;
@@ -341,6 +374,80 @@ void apply_action_sample(AnimationInputs& anim,
   anim.is_dead = sample.is_dead;
   anim.death_progress = sample.death_progress;
   anim.death_variant = sample.death_variant;
+}
+
+[[nodiscard]] auto action_event_time(
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    Game::Systems::CombatActions::CombatActionEventType type,
+    float fallback) noexcept -> float {
+  for (auto const& event : definition.events) {
+    if (event.type == type) {
+      return event.normalized_time;
+    }
+  }
+  return fallback;
+}
+
+void apply_authored_action_sample(
+    AnimationInputs& anim,
+    const Engine::Core::RpgCommanderActionComponent* action) noexcept {
+  if (action == nullptr || action->combat_action_id == 0U ||
+      (!action->action_running && !action->action_completed)) {
+    return;
+  }
+  auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id);
+  auto const* definition =
+      Game::Systems::CombatActions::find_combat_action_definition(action_id);
+  if (definition == nullptr) {
+    return;
+  }
+
+  float const time = std::clamp(action->normalized_action_time, 0.0F, 1.0F);
+  float const windup = action_event_time(
+      *definition,
+      Game::Systems::CombatActions::CombatActionEventType::WindupStart,
+      0.08F);
+  float const active_start = action_event_time(
+      *definition,
+      Game::Systems::CombatActions::CombatActionEventType::ActiveStart,
+      0.35F);
+  float const active = action_event_time(
+      *definition,
+      Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart,
+      active_start);
+  float const recovery = action_event_time(
+      *definition,
+      Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
+      0.75F);
+  float const exit =
+      action_event_time(*definition,
+                        Game::Systems::CombatActions::CombatActionEventType::ExitSafe,
+                        0.92F);
+
+  auto set_phase = [&](CombatAnimPhase phase, float start, float end) {
+    anim.combat_phase = phase;
+    anim.combat_phase_progress =
+        std::clamp((time - start) / std::max(1.0e-4F, end - start), 0.0F, 1.0F);
+  };
+  if (time < windup) {
+    set_phase(CombatAnimPhase::Advance, 0.0F, windup);
+  } else if (time < active) {
+    set_phase(CombatAnimPhase::WindUp, windup, active);
+  } else if (time < recovery) {
+    set_phase(CombatAnimPhase::Strike, active, recovery);
+  } else if (time < exit) {
+    set_phase(CombatAnimPhase::Recover, recovery, exit);
+  } else {
+    set_phase(CombatAnimPhase::Reposition, exit, 1.0F);
+  }
+
+  anim.is_attacking = action->action_running;
+  anim.is_melee =
+      definition->weapon_family != Game::Systems::CombatActions::WeaponFamily::Bow;
+  anim.attack_family = definition->attack_family;
+  anim.finisher_attack =
+      action_id == Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher;
 }
 
 } // namespace
@@ -434,6 +541,8 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   anim.combat_phase_progress = 0.0F;
   anim.attack_family = Engine::Core::CombatAttackFamily::None;
   anim.attack_variant = 0;
+  anim.has_sword_attack_animation = false;
+  anim.sword_attack_animation = Animation::SwordAttackAnimation::InfantrySlashA;
   anim.attack_offset = 0.0F;
   anim.has_attack_offset = false;
   anim.is_in_melee_lock = false;
@@ -479,6 +588,9 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   auto* commander = ctx.entity->get_component<Engine::Core::CommanderComponent>();
   auto* commander_guard =
       ctx.entity->get_component<Engine::Core::CommanderGuardComponent>();
+  auto* commander_action =
+      ctx.entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto* spear_brace = ctx.entity->get_component<Engine::Core::SpearBraceComponent>();
   auto* special_attack =
       ctx.entity->get_component<Engine::Core::SpecialAttackComponent>();
   auto* builder_prod =
@@ -517,7 +629,10 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   bool const commander_guarding = animation_policy.is_guarding(commander_guard);
   bool const infantry_formation_guarding =
       is_infantry_formation_candidate(unit, formation_mode, false, guard_mode);
-  bool const raw_target_guarding = commander_guarding || infantry_formation_guarding;
+  bool const spear_bracing =
+      spear_brace != nullptr && (spear_brace->requested || spear_brace->active);
+  bool const raw_target_guarding =
+      commander_guarding || infantry_formation_guarding || spear_bracing;
 
   auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
@@ -527,8 +642,27 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   }
 
   apply_action_sample(anim, action_sample);
+  apply_authored_action_sample(anim, commander_action);
   attack_from_combat_state = action_sample.attack_from_combat_state;
   attack_from_melee_lock = action_sample.attack_from_melee_lock;
+  if (commander != nullptr && commander->fpv_controlled && anim.is_attacking &&
+      anim.is_melee && anim.attack_family == Engine::Core::CombatAttackFamily::Sword) {
+    anim.has_sword_attack_animation = true;
+    anim.sword_attack_animation = commander_sword_attack_animation(commander_action);
+  }
+  if (commander_action != nullptr && commander_action->combat_action_id != 0U) {
+    auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+        commander_action->combat_action_id);
+    auto const* definition =
+        Game::Systems::CombatActions::find_combat_action_definition(action_id);
+    if (definition != nullptr &&
+        definition->rider_clip_id != Animation::k_unmapped_clip) {
+      anim.has_authored_action_clip = true;
+      anim.authored_action_clip = definition->rider_clip_id;
+      anim.authored_action_phase =
+          std::clamp(commander_action->normalized_action_time, 0.0F, 1.0F);
+    }
+  }
 
   Animation::HumanoidStanceTargets const stance =
       resolve_stance_targets(hold_mode, raw_target_guarding, humanoid_state, anim);

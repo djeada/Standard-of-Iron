@@ -477,6 +477,7 @@ void CreatureRenderBatch::add_humanoid(
     }
   }
   req.clip_variant = selection.clip_variant;
+  req.clip_id = selection.clip_id.value_or(Animation::k_unmapped_clip);
   populate_role_colors(req, variant);
   req.wear_params = QVector4D(
       variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
@@ -485,12 +486,16 @@ void CreatureRenderBatch::add_humanoid(
   req.full_body_blend.phase = selection.full_body_blend.phase;
   req.full_body_blend.weight = selection.full_body_blend.weight;
   req.full_body_blend.clip_variant = selection.full_body_blend.clip_variant;
+  req.full_body_blend.clip_id =
+      selection.full_body_blend.clip_id.value_or(Animation::k_unmapped_clip);
   req.full_body_blend.mode = selection.full_body_blend.mode;
   req.upper_body_overlay.archetype = selection.upper_body_overlay.archetype;
   req.upper_body_overlay.state = selection.upper_body_overlay.state;
   req.upper_body_overlay.phase = selection.upper_body_overlay.phase;
   req.upper_body_overlay.weight = selection.upper_body_overlay.weight;
   req.upper_body_overlay.clip_variant = selection.upper_body_overlay.clip_variant;
+  req.upper_body_overlay.clip_id =
+      selection.upper_body_overlay.clip_id.value_or(Animation::k_unmapped_clip);
   req.upper_body_overlay.mode = selection.upper_body_overlay.mode;
   requests_.push_back(req);
 }

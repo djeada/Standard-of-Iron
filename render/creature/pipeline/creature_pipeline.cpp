@@ -215,7 +215,8 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
                               ArchetypeId archetype,
                               AnimationStateId state,
                               float phase,
-                              std::uint8_t clip_variant) noexcept
+                              std::uint8_t clip_variant,
+                              std::uint16_t explicit_clip_id) noexcept
     -> ResolvedRequestPlayback {
   ResolvedRequestPlayback resolved{};
   resolved.archetype = archetype;
@@ -233,19 +234,23 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
 
   const CreatureClipPlaybackDesc& playback_desc =
       resolved.handle->playback[state_index];
-  std::uint8_t effective_clip_variant = clip_variant;
+  bool const has_explicit_clip = explicit_clip_id != Animation::k_unmapped_clip;
+  std::uint8_t effective_clip_variant = has_explicit_clip ? 0U : clip_variant;
   std::uint16_t effective_clip_id =
-      (clip_variant == 0U)
-          ? playback_desc.clip_id
-          : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-                archetype, state, clip_variant);
+      has_explicit_clip
+          ? explicit_clip_id
+          : ((clip_variant == 0U)
+                 ? playback_desc.clip_id
+                 : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+                       archetype, state, clip_variant));
 
   ResolvedClipPlayback playback =
       (effective_clip_id == playback_desc.clip_id)
           ? resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase)
           : resolve_bpat_playback(
                 resolved.handle->asset->bpat_species_id, effective_clip_id, phase);
-  if (!humanoid_idle_variant_clip_is_usable(
+  if (!has_explicit_clip &&
+      !humanoid_idle_variant_clip_is_usable(
           playback.blob, effective_clip_id, state, effective_clip_variant)) {
     effective_clip_variant = 0U;
     effective_clip_id = playback_desc.clip_id;
@@ -824,7 +829,8 @@ auto CreaturePipeline::submit_requests(
                                                   req.archetype,
                                                   req.state,
                                                   req.phase,
-                                                  req.clip_variant);
+                                                  req.clip_variant,
+                                                  req.clip_id);
     if (!primary.valid()) {
       return;
     }
@@ -839,7 +845,8 @@ auto CreaturePipeline::submit_requests(
                                              req.full_body_blend.archetype,
                                              req.full_body_blend.state,
                                              req.full_body_blend.phase,
-                                             req.full_body_blend.clip_variant);
+                                             req.full_body_blend.clip_variant,
+                                             req.full_body_blend.clip_id);
       }
       if (req.upper_body_overlay.active()) {
         overlay = resolve_request_playback(*handle,
@@ -847,7 +854,8 @@ auto CreaturePipeline::submit_requests(
                                            req.upper_body_overlay.archetype,
                                            req.upper_body_overlay.state,
                                            req.upper_body_overlay.phase,
-                                           req.upper_body_overlay.clip_variant);
+                                           req.upper_body_overlay.clip_variant,
+                                           req.upper_body_overlay.clip_id);
       }
     }
 

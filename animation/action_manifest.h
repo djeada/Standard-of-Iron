@@ -71,20 +71,6 @@ struct HumanoidCommanderJumpPose {
   float height_offset{0.0F};
 };
 
-struct HumanoidCommanderAttackPoseInputs {
-  bool has_commander{false};
-  bool fpv_controlled{false};
-  bool is_melee{false};
-  bool has_style{false};
-  std::uint8_t style{0U};
-};
-
-struct HumanoidCommanderAttackPose {
-  bool amplified{false};
-  bool has_style{false};
-  std::uint8_t style{0U};
-};
-
 struct HumanoidCommanderFlagRallyPoseInputs {
   bool has_commander{false};
   bool planting{false};
@@ -156,10 +142,6 @@ struct HumanoidAttackPhaseInputs {
 [[nodiscard]] auto resolve_humanoid_commander_jump_pose(
     const HumanoidCommanderJumpPoseInputs& inputs) noexcept
     -> HumanoidCommanderJumpPose;
-
-[[nodiscard]] auto resolve_humanoid_commander_attack_pose(
-    const HumanoidCommanderAttackPoseInputs& inputs) noexcept
-    -> HumanoidCommanderAttackPose;
 
 [[nodiscard]] auto resolve_humanoid_commander_flag_rally_pose(
     const HumanoidCommanderFlagRallyPoseInputs& inputs) noexcept

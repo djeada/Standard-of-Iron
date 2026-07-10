@@ -364,6 +364,54 @@ TEST(StatelessWeaponRenderers, CommanderSwordAttackVariantChangesVisibleSway) {
   EXPECT_NE(hash_batch(batch_a), hash_batch(batch_b));
 }
 
+TEST(StatelessWeaponRenderers, RpgSwordAttackUsesAuthoredGripInsteadOfVariantSway) {
+  auto frames = make_frames();
+  frames.hand_r.radius = 0.05F;
+  frames.hand_r.depth = 0.10F;
+  frames.grip_r = frames.hand_r;
+  frames.grip_r.origin += QVector3D(0.18F, 0.05F, -0.10F);
+  frames.grip_r.right = {0.0F, 0.0F, -1.0F};
+  frames.grip_r.up = {0.0F, 1.0F, 0.0F};
+  frames.grip_r.forward = {1.0F, 0.0F, 0.0F};
+  frames.grip_r.radius = 0.05F;
+  frames.grip_r.depth = 0.10F;
+
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  auto anim_a = make_anim();
+  anim_a.inputs.is_attacking = true;
+  anim_a.inputs.is_melee = true;
+  anim_a.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim_a.inputs.has_sword_attack_animation = true;
+  anim_a.inputs.sword_attack_animation = Animation::SwordAttackAnimation::RpgThrust;
+  anim_a.inputs.has_attack_offset = true;
+  anim_a.inputs.attack_variant = 0U;
+  anim_a.amplified_attack = true;
+  anim_a.attack_phase = 0.42F;
+
+  auto anim_b = anim_a;
+  anim_b.inputs.attack_variant = 4U;
+  anim_b.inputs.finisher_attack = true;
+  anim_b.attack_phase = 0.62F;
+
+  EquipmentBatch batch_a;
+  EquipmentBatch batch_b;
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_a, batch_a);
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_b, batch_b);
+
+  EXPECT_EQ(batch_a.archetypes.size(), 1U);
+  EXPECT_EQ(batch_b.archetypes.size(), 1U);
+  EXPECT_EQ(hash_batch(batch_a), hash_batch(batch_b));
+
+  auto moved_grip_frames = frames;
+  moved_grip_frames.grip_r.origin += QVector3D(0.0F, 0.24F, 0.0F);
+  EquipmentBatch moved_grip_batch;
+  SwordRenderer::submit(
+      SwordRenderConfig{}, ctx, moved_grip_frames, palette, anim_a, moved_grip_batch);
+  EXPECT_NE(hash_batch(batch_a), hash_batch(moved_grip_batch));
+}
+
 TEST(StatelessWeaponRenderers, SwordProfileFieldsChangeVisibleMesh) {
   const auto frames = make_frames();
   const auto anim = make_anim();

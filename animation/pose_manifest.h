@@ -162,6 +162,11 @@ is_locomotion_pose_intent(PoseIntent intent) noexcept -> bool {
   case StateId::AttackSpear:
   case StateId::AttackBow:
   case StateId::Cast:
+  case StateId::RpgSwordSlashLeft:
+  case StateId::RpgSwordSlashRight:
+  case StateId::RpgSwordOverhead:
+  case StateId::RpgSwordThrust:
+  case StateId::RpgSwordFinisher:
     return true;
   case StateId::Idle:
   case StateId::Walk:

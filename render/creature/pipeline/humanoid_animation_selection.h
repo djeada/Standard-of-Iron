@@ -20,6 +20,7 @@ struct HumanoidPlaybackLayerSelection {
   float phase{0.0F};
   float weight{0.0F};
   std::uint8_t clip_variant{0U};
+  std::optional<std::uint16_t> clip_id{};
   Render::Creature::PlaybackLayerMode mode{Render::Creature::PlaybackLayerMode::None};
 
   [[nodiscard]] auto active() const noexcept -> bool {

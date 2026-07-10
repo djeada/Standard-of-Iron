@@ -90,6 +90,21 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
 
+    const auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+    if ((guard_mode != nullptr) && guard_mode->active && guard_mode->has_guard_target) {
+      continue;
+    }
+
+    const auto* patrol = entity->get_component<Engine::Core::PatrolComponent>();
+    if ((patrol != nullptr) && patrol->patrolling) {
+      continue;
+    }
+
+    const auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      continue;
+    }
+
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
