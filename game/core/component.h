@@ -412,12 +412,27 @@ public:
   RpgCommanderActionComponent() = default;
 
   RpgCommanderActionPhase phase{RpgCommanderActionPhase::None};
-  std::uint8_t melee_attack_style{0};
+  std::uint8_t combat_action_id{0};
   std::uint8_t melee_attack_sequence{0};
   EntityID active_target_id{0};
   EntityID last_hit_target_id{0};
+  static constexpr std::size_t k_max_action_hit_targets = 8;
+  std::array<EntityID, k_max_action_hit_targets> hit_target_ids{};
+  std::uint8_t hit_target_count{0};
   int last_damage{0};
-  float phase_time{0.0F};
+  float action_elapsed_time{0.0F};
+  float action_duration{0.0F};
+  float previous_normalized_action_time{0.0F};
+  float normalized_action_time{0.0F};
+  std::uint8_t next_event_index{0};
+  std::uint8_t last_event_type{0};
+  bool last_event_valid{false};
+  bool action_active{false};
+  bool weapon_trace_active{false};
+  bool action_running{false};
+  bool action_completed{false};
+  bool cancel_window_active{false};
+  bool input_buffered{false};
 };
 
 enum class CombatAttackFamily : std::uint8_t {
@@ -794,6 +809,67 @@ public:
   float perfect_guard_remaining{0.0F};
   float guard_break_remaining{0.0F};
   bool rearm_requires_release{false};
+};
+
+enum class SpearBraceSource : std::uint8_t {
+  Explicit = 0,
+  HoldMode = 1,
+  GuardMode = 2,
+  CommanderGuard = 3
+};
+
+class SpearBraceComponent : public Component {
+public:
+  SpearBraceComponent() = default;
+
+  bool requested{false};
+  bool active{false};
+  float pose_progress{0.0F};
+  float enter_duration{0.28F};
+  float exit_duration{0.18F};
+  float min_interrupt_speed{3.5F};
+  SpearBraceSource source{SpearBraceSource::Explicit};
+};
+
+enum class MountedChargeState : std::uint8_t {
+  Ready = 0,
+  Charging = 1,
+  ImpactActive = 2,
+  Cooldown = 3
+};
+
+enum class MountedChargeIntentSource : std::uint8_t {
+  None = 0,
+  Player = 1,
+  AI = 2,
+  ContactAuto = 3
+};
+
+enum class MountedChargeCancelReason : std::uint8_t {
+  None = 0,
+  SpeedLost = 1,
+  Interrupted = 2,
+  InvalidUnit = 3,
+  Explicit = 4
+};
+
+class MountedChargeComponent : public Component {
+public:
+  MountedChargeComponent() = default;
+
+  MountedChargeState state{MountedChargeState::Ready};
+  MountedChargeIntentSource intent_source{MountedChargeIntentSource::None};
+  MountedChargeCancelReason last_cancel_reason{MountedChargeCancelReason::None};
+  bool intent_requested{false};
+  bool auto_contact_enabled{true};
+  float min_start_speed{4.0F};
+  float cancel_speed{2.2F};
+  float speed_loss_grace{0.15F};
+  float below_cancel_speed_time{0.0F};
+  float cooldown_duration{0.65F};
+  float cooldown_remaining{0.0F};
+  EntityID active_target_id{0};
+  EntityID last_impact_target_id{0};
 };
 
 class RpgHealthComponent : public Component {

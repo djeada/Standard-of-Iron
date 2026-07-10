@@ -28,6 +28,18 @@ enum class AttackClipFamily : std::uint8_t {
   Bow
 };
 
+enum class SwordAttackAnimation : std::uint8_t {
+  InfantrySlashA = 0,
+  InfantrySlashB,
+  InfantrySlashC,
+  RpgSlashLeft,
+  RpgSlashRight,
+  RpgOverhead,
+  RpgThrust,
+  RpgFinisher,
+  MountedSlash,
+};
+
 enum class HumanoidAmbientIdle : std::uint8_t {
   None = 0,
   SitDown,
@@ -76,6 +88,12 @@ enum class StateId : std::uint8_t {
   RidingReining = 14,
   RidingBowShot = 15,
 
+  RpgSwordSlashLeft = 16,
+  RpgSwordSlashRight = 17,
+  RpgSwordOverhead = 18,
+  RpgSwordThrust = 19,
+  RpgSwordFinisher = 20,
+
   Count
 };
 
@@ -107,11 +125,17 @@ inline constexpr std::uint16_t k_humanoid_riding_charge_clip = 17U;
 inline constexpr std::uint16_t k_humanoid_riding_reining_clip = 18U;
 inline constexpr std::uint16_t k_humanoid_riding_bow_shot_clip = 19U;
 inline constexpr std::uint16_t k_humanoid_riding_sword_strike_clip = 20U;
-inline constexpr std::uint16_t k_humanoid_die_infantry_clip = 21U;
-inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 22U;
-inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 23U;
-inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 24U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 25U;
+inline constexpr std::uint16_t k_humanoid_riding_spear_thrust_clip = 21U;
+inline constexpr std::uint16_t k_humanoid_die_infantry_clip = 22U;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 23U;
+inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 24U;
+inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 25U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_left_clip = 26U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_right_clip = 27U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_overhead_clip = 28U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip = 29U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip = 30U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 31U;
 
 inline constexpr std::uint8_t k_humanoid_idle_variant_count = 5U;
 inline constexpr std::uint8_t k_humanoid_attack_sword_variant_count = 3U;
@@ -195,9 +219,14 @@ humanoid_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Die)] = k_humanoid_die_infantry_clip;
   t[state_index(StateId::Dead)] = k_humanoid_dead_infantry_clip;
   t[state_index(StateId::AttackSword)] = k_humanoid_attack_sword_a_clip;
-  t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_a_clip;
+  t[state_index(StateId::AttackSpear)] = k_humanoid_riding_spear_thrust_clip;
   t[state_index(StateId::AttackBow)] = k_humanoid_attack_bow_clip;
   t[state_index(StateId::Cast)] = k_humanoid_attack_bow_clip;
+  t[state_index(StateId::RpgSwordSlashLeft)] = k_humanoid_rpg_sword_slash_left_clip;
+  t[state_index(StateId::RpgSwordSlashRight)] = k_humanoid_rpg_sword_slash_right_clip;
+  t[state_index(StateId::RpgSwordOverhead)] = k_humanoid_rpg_sword_overhead_clip;
+  t[state_index(StateId::RpgSwordThrust)] = k_humanoid_rpg_sword_thrust_clip;
+  t[state_index(StateId::RpgSwordFinisher)] = k_humanoid_rpg_sword_finisher_clip;
   return t;
 }
 
@@ -311,6 +340,34 @@ elephant_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
 [[nodiscard]] auto humanoid_attack_clip(AttackClipFamily family,
                                         bool mounted,
                                         std::uint8_t variant) noexcept -> std::uint16_t;
+
+[[nodiscard]] constexpr auto
+state_for_sword_attack_animation(SwordAttackAnimation animation) noexcept -> StateId {
+  switch (animation) {
+  case SwordAttackAnimation::RpgSlashLeft:
+    return StateId::RpgSwordSlashLeft;
+  case SwordAttackAnimation::RpgSlashRight:
+    return StateId::RpgSwordSlashRight;
+  case SwordAttackAnimation::RpgOverhead:
+    return StateId::RpgSwordOverhead;
+  case SwordAttackAnimation::RpgThrust:
+    return StateId::RpgSwordThrust;
+  case SwordAttackAnimation::RpgFinisher:
+    return StateId::RpgSwordFinisher;
+  case SwordAttackAnimation::InfantrySlashA:
+  case SwordAttackAnimation::InfantrySlashB:
+  case SwordAttackAnimation::InfantrySlashC:
+  case SwordAttackAnimation::MountedSlash:
+    return StateId::AttackSword;
+  }
+  return StateId::AttackSword;
+}
+
+[[nodiscard]] auto
+humanoid_sword_attack_clip(SwordAttackAnimation animation) noexcept -> std::uint16_t;
+
+[[nodiscard]] auto
+humanoid_sword_attack_name(SwordAttackAnimation animation) noexcept -> std::string_view;
 
 [[nodiscard]] auto
 humanoid_ambient_idle_clip_variant(HumanoidAmbientIdle idle) noexcept -> std::uint8_t;

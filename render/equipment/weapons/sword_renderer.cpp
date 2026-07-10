@@ -198,6 +198,19 @@ auto sword_local_pose(const QVector3D& blade_axis_local) -> QMatrix4x4 {
   return pose;
 }
 
+[[nodiscard]] auto
+uses_authored_rpg_sword_blade(const HumanoidAnimationContext& anim) noexcept -> bool {
+  return anim.inputs.has_sword_attack_animation && anim.inputs.is_attacking &&
+         anim.inputs.is_melee &&
+         anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Sword &&
+         Animation::state_for_sword_attack_animation(
+             anim.inputs.sword_attack_animation) != Animation::StateId::AttackSword;
+}
+
+[[nodiscard]] auto authored_sword_blade_dir() noexcept -> QVector3D {
+  return {0.02F, 0.97F, 0.0F};
+}
+
 auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& {
   struct CachedArchetype {
     SwordArchetypeKey key;
@@ -459,6 +472,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
                            const HumanoidAnimationContext& anim,
                            EquipmentBatch& batch) {
   bool const is_attacking = anim.inputs.is_attacking && anim.inputs.is_melee;
+  bool const use_authored_blade = uses_authored_rpg_sword_blade(anim);
   float attack_phase = 0.0F;
   if (is_attacking) {
     bool const use_authored_phase = anim.inputs.has_attack_offset ||
@@ -535,9 +549,9 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
   safe_normalize(strike_mid);
   safe_normalize(strike_end);
 
-  QVector3D sword_dir = ready_pos;
+  QVector3D sword_dir = use_authored_blade ? authored_sword_blade_dir() : ready_pos;
 
-  if (is_attacking) {
+  if (is_attacking && !use_authored_blade) {
 
     if (attack_phase < 0.20F) {
 
@@ -583,20 +597,23 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
                                                m_config.metal_color * 0.65F,
                                                palette.leather};
   AttachmentFrame const grip =
-      frames.hand_r.radius > 0.0F
-          ? Render::Humanoid::socket_attachment_frame(
-                frames.hand_r, Render::Humanoid::HumanoidSocket::GripR)
-          : (frames.grip_r.radius > 0.0F
-                 ? frames.grip_r
-                 : Render::Humanoid::socket_attachment_frame(
-                       frames.hand_r, Render::Humanoid::HumanoidSocket::GripR));
+      (use_authored_blade && frames.grip_r.radius > 0.0F)
+          ? frames.grip_r
+          : (frames.hand_r.radius > 0.0F
+                 ? Render::Humanoid::socket_attachment_frame(
+                       frames.hand_r, Render::Humanoid::HumanoidSocket::GripR)
+                 : (frames.grip_r.radius > 0.0F
+                        ? frames.grip_r
+                        : Render::Humanoid::socket_attachment_frame(
+                              frames.hand_r, Render::Humanoid::HumanoidSocket::GripR)));
   append_equipment_archetype(batch,
                              sword_archetype(m_config),
                              hand_basis_transform(ctx.model, grip) *
                                  sword_local_pose(sword_dir),
                              palette_slots);
 
-  if (is_attacking && attack_phase >= 0.28F && attack_phase < 0.68F) {
+  if (is_attacking && !use_authored_blade && attack_phase >= 0.28F &&
+      attack_phase < 0.68F) {
     float const base_w = m_config.sword_width;
     float const t = (attack_phase - 0.28F) / 0.40F;
 
@@ -659,8 +676,8 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     }
   }
 
-  if (is_attacking && anim.amplified_attack && attack_phase >= 0.32F &&
-      attack_phase < 0.54F) {
+  if (is_attacking && !use_authored_blade && anim.amplified_attack &&
+      attack_phase >= 0.32F && attack_phase < 0.54F) {
 
     constexpr int k_afterimage_count = 2;
     constexpr float k_phase_offsets[k_afterimage_count] = {0.04F, 0.09F};

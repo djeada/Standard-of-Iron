@@ -196,6 +196,32 @@ TEST_F(AISystemTest, DifficultyChangesExecutionKnobsWithoutChangingStyleIdentity
             hard.difficulty.production_rate_multiplier);
 }
 
+TEST_F(AISystemTest, SnapshotExcludesLocalGuardAndPatrolAssignments) {
+  Engine::Core::World world;
+
+  auto* strategic = add_world_unit(world, 3, 0.0F, 0.0F, 20.0F, true);
+  auto* guard = add_world_unit(world, 3, 10.0F, 0.0F, 20.0F, true);
+  auto* patrol = add_world_unit(world, 3, 20.0F, 0.0F, 20.0F, true);
+  ASSERT_NE(strategic, nullptr);
+  ASSERT_NE(guard, nullptr);
+  ASSERT_NE(patrol, nullptr);
+
+  auto* guard_mode = guard->add_component<Engine::Core::GuardModeComponent>();
+  guard_mode->active = true;
+  guard_mode->has_guard_target = true;
+  guard_mode->guard_position_x = 10.0F;
+  guard_mode->guard_position_z = 0.0F;
+
+  auto* patrol_mode = patrol->add_component<Engine::Core::PatrolComponent>();
+  patrol_mode->patrolling = true;
+  patrol_mode->waypoints = {{20.0F, 0.0F}, {25.0F, 0.0F}};
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+
+  ASSERT_EQ(snapshot.friendly_units.size(), 1U);
+  EXPECT_EQ(snapshot.friendly_units.front().id, strategic->get_id());
+}
+
 TEST_F(AISystemTest, PersonalityChangesArmyCommitmentAndOrganization) {
   auto aggressive = Game::Systems::AI::AIStrategyFactory::create_config(
       Game::Systems::AI::AIStrategy::Balanced);

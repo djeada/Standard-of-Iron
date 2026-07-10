@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QVector4D>
 
 #include <algorithm>
 #include <array>
@@ -31,6 +32,8 @@
 #include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/mounted_knight_pose.h"
+#include "render/equipment/weapons/spear_renderer.h"
+#include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_gait.h"
@@ -42,6 +45,7 @@
 #include "render/humanoid/mounted_pose_controller.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/skeleton.h"
+#include "render/humanoid/spear_pose_utils.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 
@@ -84,7 +88,8 @@ enum class BakerRidingType : std::uint8_t {
   Charge,
   Reining,
   BowShot,
-  SwordStrike
+  SwordStrike,
+  SpearThrust
 };
 enum class BakerAmbientIdleType : std::uint8_t {
   None,
@@ -137,6 +142,10 @@ struct HumanoidClipSpec {
   float cycle_time{};
   bool loops{};
 };
+
+[[nodiscard]] auto is_rpg_sword_clip(const HumanoidClipSpec& clip) noexcept -> bool {
+  return std::string_view{clip.name}.starts_with("rpg_sword_");
+}
 
 constexpr auto k_humanoid_baker_clip_count = Animation::k_humanoid_clip_count;
 constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_clips{{
@@ -392,6 +401,18 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      24.0F,
      1.2F,
      false},
+    {"riding_spear_thrust",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::SpearThrust,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     32U,
+     24.0F,
+     1.2F,
+     false},
     {"die_infantry",
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
@@ -440,17 +461,108 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      1.0F,
      1.0F,
      true},
+    {"rpg_sword_slash_left",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     36U,
+     24.0F,
+     1.0F,
+     false},
+    {"rpg_sword_slash_right",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     1,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     36U,
+     24.0F,
+     1.0F,
+     false},
+    {"rpg_sword_overhead",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     3,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     40U,
+     24.0F,
+     1.1F,
+     false},
+    {"rpg_sword_thrust",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     4,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     34U,
+     24.0F,
+     0.9F,
+     false},
+    {"rpg_sword_finisher",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     5,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     44U,
+     24.0F,
+     1.25F,
+     false},
 }};
 
 struct HumanoidSocketSpec {
-  const char* name;
+  const char* name{};
   Render::Humanoid::HumanoidSocket socket;
+  enum class Kind : std::uint8_t {
+    TopologySocket,
+    GripFrame,
+    SwordBladeBase,
+    SwordBladeTip,
+    SpearShaftBase,
+    SpearShaftTip,
+    SpearHeadTip,
+  };
+  Kind kind{Kind::TopologySocket};
 };
 
-constexpr std::array<HumanoidSocketSpec, 10> k_humanoid_sockets{{
+constexpr std::array<HumanoidSocketSpec, 17> k_humanoid_sockets{{
     {"head", Render::Humanoid::HumanoidSocket::Head},
     {"hand_r", Render::Humanoid::HumanoidSocket::HandR},
     {"hand_l", Render::Humanoid::HumanoidSocket::HandL},
+    {"grip_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::GripFrame},
+    {"grip_l",
+     Render::Humanoid::HumanoidSocket::GripL,
+     HumanoidSocketSpec::Kind::GripFrame},
+    {"sword_blade_base_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::SwordBladeBase},
+    {"sword_blade_tip_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::SwordBladeTip},
+    {"spear_shaft_base_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::SpearShaftBase},
+    {"spear_shaft_tip_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::SpearShaftTip},
+    {"spear_head_tip_r",
+     Render::Humanoid::HumanoidSocket::GripR,
+     HumanoidSocketSpec::Kind::SpearHeadTip},
     {"back", Render::Humanoid::HumanoidSocket::Back},
     {"hip_l", Render::Humanoid::HumanoidSocket::HipL},
     {"hip_r", Render::Humanoid::HumanoidSocket::HipR},
@@ -498,6 +610,104 @@ auto blend_body_frames(const Render::GL::BodyFrames& from,
   return blended;
 }
 
+auto normalized_or(const QVector3D& value, const QVector3D& fallback) -> QVector3D {
+  QVector3D out = value;
+  if (out.lengthSquared() <= 1.0e-6F) {
+    out = fallback;
+  }
+  if (out.lengthSquared() <= 1.0e-6F) {
+    return {0.0F, 1.0F, 0.0F};
+  }
+  out.normalize();
+  return out;
+}
+
+auto attachment_frame_matrix(const Render::GL::AttachmentFrame& frame) -> QMatrix4x4 {
+  QMatrix4x4 out;
+  out.setColumn(
+      0, QVector4D(normalized_or(frame.right, QVector3D(1.0F, 0.0F, 0.0F)), 0.0F));
+  out.setColumn(1,
+                QVector4D(normalized_or(frame.up, QVector3D(0.0F, 1.0F, 0.0F)), 0.0F));
+  out.setColumn(
+      2, QVector4D(normalized_or(frame.forward, QVector3D(0.0F, 0.0F, 1.0F)), 0.0F));
+  out.setColumn(3, QVector4D(frame.origin, 1.0F));
+  return out;
+}
+
+auto sword_local_pose(const QVector3D& blade_axis_local) -> QMatrix4x4 {
+  QVector3D const blade_dir =
+      normalized_or(blade_axis_local, QVector3D(0.0F, 1.0F, 0.0F));
+
+  QVector3D guard_right(0.0F, 0.0F, 1.0F);
+  guard_right -= blade_dir * QVector3D::dotProduct(guard_right, blade_dir);
+  guard_right = normalized_or(guard_right, QVector3D(1.0F, 0.0F, 0.0F));
+
+  QVector3D const z_axis = normalized_or(
+      QVector3D::crossProduct(guard_right, blade_dir), QVector3D(0.0F, 0.0F, 1.0F));
+
+  QMatrix4x4 pose;
+  pose.setColumn(0, QVector4D(guard_right, 0.0F));
+  pose.setColumn(1, QVector4D(blade_dir, 0.0F));
+  pose.setColumn(2, QVector4D(z_axis, 0.0F));
+  pose.setColumn(3, QVector4D(blade_dir * 0.05F, 1.0F));
+  return pose;
+}
+
+auto baked_sword_blade_socket_matrix(const Render::GL::AttachmentFrame& grip,
+                                     bool tip) -> QMatrix4x4 {
+  Render::GL::SwordRenderConfig const config{};
+  QVector3D const blade_axis_local(0.02F, 0.97F, 0.0F);
+  QMatrix4x4 socket =
+      attachment_frame_matrix(grip) * sword_local_pose(blade_axis_local);
+  if (tip) {
+    QVector3D const tip_origin =
+        (socket * QVector4D(0.0F, config.sword_length, 0.0F, 1.0F)).toVector3D();
+    socket.setColumn(3, QVector4D(tip_origin, 1.0F));
+  }
+  return socket;
+}
+
+auto spear_endpoint_distance(HumanoidSocketSpec::Kind kind,
+                             const Render::GL::SpearRenderConfig& config) -> float {
+  switch (kind) {
+  case HumanoidSocketSpec::Kind::SpearShaftBase:
+    return -0.28F;
+  case HumanoidSocketSpec::Kind::SpearShaftTip:
+    return config.spear_length;
+  case HumanoidSocketSpec::Kind::SpearHeadTip:
+    return config.spear_length + config.spearhead_length;
+  case HumanoidSocketSpec::Kind::TopologySocket:
+  case HumanoidSocketSpec::Kind::GripFrame:
+  case HumanoidSocketSpec::Kind::SwordBladeBase:
+  case HumanoidSocketSpec::Kind::SwordBladeTip:
+    break;
+  }
+  return 0.0F;
+}
+
+auto baked_spear_socket_matrix(const Render::GL::AttachmentFrame& grip,
+                               const Render::GL::AnimationInputs& inputs,
+                               float attack_phase,
+                               HumanoidSocketSpec::Kind kind) -> QMatrix4x4 {
+  Render::GL::SpearRenderConfig const config{};
+  QVector3D const spear_dir = Render::GL::resolve_spear_direction(inputs, attack_phase);
+
+  QVector3D right =
+      grip.right - spear_dir * QVector3D::dotProduct(grip.right, spear_dir);
+  right = normalized_or(right, QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D const forward = normalized_or(QVector3D::crossProduct(right, spear_dir),
+                                          QVector3D(0.0F, 0.0F, 1.0F));
+
+  QMatrix4x4 socket;
+  socket.setColumn(0, QVector4D(right, 0.0F));
+  socket.setColumn(1, QVector4D(spear_dir, 0.0F));
+  socket.setColumn(2, QVector4D(forward, 0.0F));
+  socket.setColumn(
+      3,
+      QVector4D(grip.origin + spear_dir * spear_endpoint_distance(kind, config), 1.0F));
+  return socket;
+}
+
 auto blend_pose(const Render::GL::HumanoidPose& from,
                 const Render::GL::HumanoidPose& to,
                 float t) -> Render::GL::HumanoidPose {
@@ -540,6 +750,198 @@ auto hold_gait_descriptor() -> Render::GL::HumanoidGaitDescriptor {
   gait.speed = 0.0F;
   gait.normalized_speed = 0.0F;
   return gait;
+}
+
+struct AuthoredSwordPoseKey {
+  float phase{0.0F};
+  QVector3D right_hand;
+  QVector3D left_hand;
+  QVector3D pelvis_delta;
+  QVector3D shoulder_r_delta;
+  QVector3D shoulder_l_delta;
+  QVector3D neck_delta;
+  QVector3D head_delta;
+  QVector3D foot_r_delta;
+  QVector3D knee_r_delta;
+  QVector3D foot_l_delta;
+  QVector3D knee_l_delta;
+};
+
+using AuthoredSwordPoseKeys = std::array<AuthoredSwordPoseKey, 6>;
+
+auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
+  static const AuthoredSwordPoseKeys slash_left{{
+      {0.00F, {0.24F, 1.22F, 0.18F}, {-0.22F, 1.16F, 0.18F}},
+      {0.16F, {0.46F, 1.44F, -0.26F}, {-0.26F, 1.10F, 0.20F}},
+      {0.38F,
+       {0.42F, 1.48F, 0.02F},
+       {-0.22F, 1.08F, 0.26F},
+       {0.02F, -0.03F, 0.04F},
+       {0.12F, 0.02F, -0.08F},
+       {-0.06F, -0.01F, 0.07F}},
+      {0.54F,
+       {-0.22F, 0.86F, 1.18F},
+       {0.04F, 0.98F, 0.66F},
+       {0.02F, -0.06F, 0.16F},
+       {0.20F, -0.12F, 0.16F},
+       {-0.12F, 0.04F, 0.02F},
+       {0.00F, -0.04F, 0.10F},
+       {0.00F, -0.03F, 0.06F},
+       {0.00F, 0.00F, 0.18F},
+       {0.00F, 0.00F, 0.10F}},
+      {0.76F, {-0.34F, 0.72F, 0.76F}, {-0.10F, 0.94F, 0.54F}, {0.00F, -0.04F, 0.10F}},
+      {1.00F, {0.22F, 1.16F, 0.24F}, {-0.22F, 1.12F, 0.18F}},
+  }};
+  static const AuthoredSwordPoseKeys slash_right{{
+      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.14F, 0.18F}},
+      {0.16F, {-0.28F, 1.42F, -0.22F}, {-0.26F, 1.10F, 0.20F}},
+      {0.38F,
+       {-0.22F, 1.46F, 0.02F},
+       {-0.24F, 1.08F, 0.24F},
+       {-0.02F, -0.03F, 0.03F},
+       {-0.08F, 0.02F, 0.06F},
+       {0.10F, -0.02F, -0.08F}},
+      {0.54F,
+       {0.58F, 0.88F, 1.14F},
+       {0.10F, 0.98F, 0.66F},
+       {-0.02F, -0.06F, 0.15F},
+       {-0.18F, -0.10F, 0.14F},
+       {0.12F, 0.04F, 0.00F},
+       {0.00F, -0.04F, 0.08F},
+       {0.00F, -0.03F, 0.05F},
+       {0.00F, 0.00F, -0.02F},
+       {0.00F, 0.00F, -0.01F},
+       {0.00F, 0.00F, 0.12F},
+       {0.00F, 0.00F, 0.08F}},
+      {0.76F, {0.64F, 0.78F, 0.74F}, {0.04F, 0.94F, 0.54F}, {0.00F, -0.04F, 0.08F}},
+      {1.00F, {0.22F, 1.16F, 0.24F}, {-0.22F, 1.12F, 0.18F}},
+  }};
+  static const AuthoredSwordPoseKeys overhead{{
+      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.12F, 0.18F}},
+      {0.18F, {0.18F, 1.58F, -0.32F}, {-0.18F, 1.18F, 0.20F}},
+      {0.42F,
+       {0.10F, 1.72F, -0.10F},
+       {-0.10F, 1.22F, 0.30F},
+       {0.00F, -0.03F, 0.02F},
+       {0.06F, 0.10F, -0.04F},
+       {-0.04F, 0.08F, -0.02F}},
+      {0.60F,
+       {0.02F, 0.78F, 1.22F},
+       {-0.02F, 0.96F, 0.74F},
+       {0.00F, -0.10F, 0.20F},
+       {0.04F, -0.18F, 0.20F},
+       {-0.04F, -0.06F, 0.12F},
+       {0.00F, -0.08F, 0.14F},
+       {0.00F, -0.06F, 0.10F},
+       {0.00F, 0.00F, 0.20F},
+       {0.00F, 0.00F, 0.12F}},
+      {0.82F, {-0.02F, 0.64F, 0.70F}, {-0.06F, 0.90F, 0.54F}},
+      {1.00F, {0.22F, 1.14F, 0.24F}, {-0.22F, 1.10F, 0.18F}},
+  }};
+  static const AuthoredSwordPoseKeys thrust{{
+      {0.00F, {0.20F, 1.16F, 0.18F}, {-0.22F, 1.12F, 0.18F}},
+      {0.14F, {0.28F, 1.18F, -0.30F}, {-0.18F, 1.08F, 0.18F}},
+      {0.34F, {0.18F, 1.10F, 0.28F}, {-0.06F, 1.06F, 0.34F}},
+      {0.48F,
+       {0.02F, 1.02F, 1.42F},
+       {0.00F, 1.02F, 0.74F},
+       {0.00F, -0.08F, 0.24F},
+       {0.00F, -0.08F, 0.24F},
+       {0.00F, -0.02F, 0.10F},
+       {0.00F, -0.04F, 0.12F},
+       {0.00F, -0.02F, 0.08F},
+       {0.00F, 0.00F, 0.26F},
+       {0.00F, 0.00F, 0.16F},
+       {0.00F, 0.00F, -0.08F}},
+      {0.72F, {0.08F, 1.02F, 1.02F}, {-0.04F, 1.00F, 0.58F}},
+      {1.00F, {0.22F, 1.14F, 0.24F}, {-0.22F, 1.10F, 0.18F}},
+  }};
+  static const AuthoredSwordPoseKeys finisher{{
+      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.12F, 0.18F}},
+      {0.18F, {0.26F, 1.68F, -0.42F}, {-0.20F, 1.22F, 0.18F}},
+      {0.48F,
+       {0.12F, 1.84F, -0.18F},
+       {-0.08F, 1.28F, 0.30F},
+       {0.00F, -0.04F, 0.04F},
+       {0.08F, 0.12F, -0.08F}},
+      {0.66F,
+       {-0.10F, 0.58F, 1.42F},
+       {-0.02F, 0.86F, 0.82F},
+       {0.00F, -0.16F, 0.28F},
+       {0.02F, -0.26F, 0.30F},
+       {-0.06F, -0.10F, 0.16F},
+       {0.00F, -0.12F, 0.20F},
+       {0.00F, -0.10F, 0.14F},
+       {0.00F, 0.00F, 0.30F},
+       {0.00F, 0.00F, 0.18F}},
+      {0.86F, {-0.24F, 0.52F, 0.74F}, {-0.08F, 0.82F, 0.54F}},
+      {1.00F, {0.22F, 1.12F, 0.24F}, {-0.22F, 1.08F, 0.18F}},
+  }};
+
+  switch (variant) {
+  case 1U:
+    return slash_right;
+  case 3U:
+    return overhead;
+  case 4U:
+    return thrust;
+  case 5U:
+    return finisher;
+  case 0U:
+  default:
+    return slash_left;
+  }
+}
+
+auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
+                                    float phase) -> AuthoredSwordPoseKey {
+  float const clamped = std::clamp(phase, 0.0F, 1.0F);
+  for (std::size_t i = 1; i < keys.size(); ++i) {
+    if (clamped <= keys[i].phase) {
+      auto const& from = keys[i - 1U];
+      auto const& to = keys[i];
+      float const span = std::max(0.001F, to.phase - from.phase);
+      float const raw_t = std::clamp((clamped - from.phase) / span, 0.0F, 1.0F);
+      float const t = raw_t * raw_t * (3.0F - 2.0F * raw_t);
+      return {
+          .phase = clamped,
+          .right_hand = blend_vec(from.right_hand, to.right_hand, t),
+          .left_hand = blend_vec(from.left_hand, to.left_hand, t),
+          .pelvis_delta = blend_vec(from.pelvis_delta, to.pelvis_delta, t),
+          .shoulder_r_delta = blend_vec(from.shoulder_r_delta, to.shoulder_r_delta, t),
+          .shoulder_l_delta = blend_vec(from.shoulder_l_delta, to.shoulder_l_delta, t),
+          .neck_delta = blend_vec(from.neck_delta, to.neck_delta, t),
+          .head_delta = blend_vec(from.head_delta, to.head_delta, t),
+          .foot_r_delta = blend_vec(from.foot_r_delta, to.foot_r_delta, t),
+          .knee_r_delta = blend_vec(from.knee_r_delta, to.knee_r_delta, t),
+          .foot_l_delta = blend_vec(from.foot_l_delta, to.foot_l_delta, t),
+          .knee_l_delta = blend_vec(from.knee_l_delta, to.knee_l_delta, t),
+      };
+    }
+  }
+  return keys.back();
+}
+
+void apply_authored_rpg_sword_pose(std::uint8_t variant,
+                                   float phase,
+                                   Render::GL::HumanoidPose& pose) {
+  auto const sample =
+      sample_authored_sword_pose_key(rpg_sword_pose_keys(variant), phase);
+  pose.hand_r = sample.right_hand;
+  pose.hand_l = sample.left_hand;
+  pose.elbow_r =
+      blend_vec(pose.shoulder_r, pose.hand_r, 0.52F) + QVector3D(0.05F, -0.06F, -0.02F);
+  pose.elbow_l =
+      blend_vec(pose.shoulder_l, pose.hand_l, 0.55F) + QVector3D(-0.04F, -0.05F, 0.02F);
+  pose.pelvis_pos += sample.pelvis_delta;
+  pose.shoulder_r += sample.shoulder_r_delta;
+  pose.shoulder_l += sample.shoulder_l_delta;
+  pose.neck_base += sample.neck_delta;
+  pose.head_pos += sample.head_delta;
+  pose.foot_r += sample.foot_r_delta;
+  pose.knee_r += sample.knee_r_delta;
+  pose.foot_l += sample.foot_l_delta;
+  pose.knee_l += sample.knee_l_delta;
 }
 
 void bake_hold_pose(HumanoidBakeProfile profile,
@@ -684,8 +1086,10 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         profile == HumanoidBakeProfile::Skeleton ? 0.88F : 1.0F;
     switch (clip.attack_type) {
     case BakerAttackType::Sword:
-      if (profile == HumanoidBakeProfile::SwordReady ||
-          profile == HumanoidBakeProfile::Skeleton) {
+      if (is_rpg_sword_clip(clip)) {
+        apply_authored_rpg_sword_pose(clip.attack_variant, phase, pose);
+      } else if (profile == HumanoidBakeProfile::SwordReady ||
+                 profile == HumanoidBakeProfile::Skeleton) {
         ctrl.combat_sword_slash_variant(phase, clip.attack_variant, sword_reach_scale);
       } else {
         ctrl.sword_slash_variant(phase, clip.attack_variant, sword_reach_scale);
@@ -726,7 +1130,8 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     Render::GL::MountedPoseController ctrl(pose, anim_ctx_r);
     if (profile == HumanoidBakeProfile::SwordReady &&
         clip.riding_type != BakerRidingType::BowShot &&
-        clip.riding_type != BakerRidingType::SwordStrike) {
+        clip.riding_type != BakerRidingType::SwordStrike &&
+        clip.riding_type != BakerRidingType::SpearThrust) {
       Render::GL::MountedPoseController::MountedRiderPoseRequest request{};
       request.dims = horse_profile.dims;
       request.weapon_pose =
@@ -776,6 +1181,9 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         break;
       case BakerRidingType::SwordStrike:
         ctrl.riding_melee_strike(mount, phase);
+        break;
+      case BakerRidingType::SpearThrust:
+        ctrl.riding_spear_thrust(mount, phase);
         break;
       default:
         break;
@@ -873,7 +1281,10 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     }
   }
 
-  if (clip.riding_type == BakerRidingType::SwordStrike) {
+  if (is_rpg_sword_clip(clip) || clip.attack_type == BakerAttackType::Spear ||
+      clip.hold_type == BakerHoldType::Spear ||
+      clip.riding_type == BakerRidingType::SwordStrike ||
+      clip.riding_type == BakerRidingType::SpearThrust) {
     Render::Humanoid::rebuild_humanoid_frames(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
   }
 
@@ -884,7 +1295,57 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     out_palettes.push_back(palette[b]);
   }
 
+  Render::GL::AnimationInputs socket_inputs{};
+  if (clip.attack_type != BakerAttackType::None) {
+    socket_inputs.is_attacking = true;
+    socket_inputs.is_melee = (clip.attack_type != BakerAttackType::Bow);
+    socket_inputs.attack_variant = clip.attack_variant;
+  }
+  if (clip.hold_type != BakerHoldType::None) {
+    socket_inputs.is_in_hold_mode = true;
+    socket_inputs.hold_entry_progress = transition_phase(frame_index, clip.frames);
+  }
+
   for (auto const& spec : k_humanoid_sockets) {
+    switch (spec.kind) {
+    case HumanoidSocketSpec::Kind::GripFrame:
+      if (spec.socket == Render::Humanoid::HumanoidSocket::GripR &&
+          pose.body_frames.grip_r.radius > 0.0F) {
+        out_sockets.push_back(attachment_frame_matrix(pose.body_frames.grip_r));
+        continue;
+      }
+      if (spec.socket == Render::Humanoid::HumanoidSocket::GripL &&
+          pose.body_frames.grip_l.radius > 0.0F) {
+        out_sockets.push_back(attachment_frame_matrix(pose.body_frames.grip_l));
+        continue;
+      }
+      break;
+    case HumanoidSocketSpec::Kind::SwordBladeBase:
+      if (pose.body_frames.grip_r.radius > 0.0F) {
+        out_sockets.push_back(
+            baked_sword_blade_socket_matrix(pose.body_frames.grip_r, false));
+        continue;
+      }
+      break;
+    case HumanoidSocketSpec::Kind::SwordBladeTip:
+      if (pose.body_frames.grip_r.radius > 0.0F) {
+        out_sockets.push_back(
+            baked_sword_blade_socket_matrix(pose.body_frames.grip_r, true));
+        continue;
+      }
+      break;
+    case HumanoidSocketSpec::Kind::SpearShaftBase:
+    case HumanoidSocketSpec::Kind::SpearShaftTip:
+    case HumanoidSocketSpec::Kind::SpearHeadTip:
+      if (pose.body_frames.grip_r.radius > 0.0F) {
+        out_sockets.push_back(baked_spear_socket_matrix(
+            pose.body_frames.grip_r, socket_inputs, phase, spec.kind));
+        continue;
+      }
+      break;
+    case HumanoidSocketSpec::Kind::TopologySocket:
+      break;
+    }
     out_sockets.push_back(Render::Humanoid::socket_transform(palette, spec.socket));
   }
 }
@@ -1388,8 +1849,14 @@ int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_riding_idle_clip == 16U);
   static_assert(Render::Creature::k_humanoid_riding_bow_shot_clip == 19U);
   static_assert(Render::Creature::k_humanoid_riding_sword_strike_clip == 20U);
-  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 21U);
-  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 24U);
+  static_assert(Render::Creature::k_humanoid_riding_spear_thrust_clip == 21U);
+  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 22U);
+  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 25U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_left_clip == 26U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_right_clip == 27U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 28U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 29U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 30U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];

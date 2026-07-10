@@ -346,6 +346,19 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
       }
     }
 
+    spawn.behavior = spawn_obj.value(QStringLiteral("behavior")).toString();
+    spawn.guard_radius =
+        float(spawn_obj.value(QStringLiteral("guard_radius")).toDouble(10.0));
+    const QJsonArray patrol_waypoints =
+        spawn_obj.value(QStringLiteral("patrol_waypoints")).toArray();
+    spawn.patrol_waypoints.reserve(patrol_waypoints.size());
+    for (const auto& waypoint_val : patrol_waypoints) {
+      const QJsonObject waypoint_obj = waypoint_val.toObject();
+      spawn.patrol_waypoints.emplace_back(float(waypoint_obj.value(X).toDouble(0.0)),
+                                          0.0F,
+                                          float(waypoint_obj.value(Z).toDouble(0.0)));
+    }
+
     out.push_back(spawn);
   }
 }
@@ -553,7 +566,7 @@ void read_terrain(const QJsonArray& arr,
         }
 
         if (coord_sys == CoordSystem::Grid) {
-          const double radius_sq =
+          const auto radius_sq =
               static_cast<double>(entrance_radius_authored * entrance_radius_authored);
           const int min_grid_x =
               static_cast<int>(std::floor(entrance_x - entrance_radius_authored));

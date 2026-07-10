@@ -109,19 +109,6 @@ auto resolve_humanoid_commander_jump_pose(
   };
 }
 
-auto resolve_humanoid_commander_attack_pose(
-    const HumanoidCommanderAttackPoseInputs& inputs) noexcept
-    -> HumanoidCommanderAttackPose {
-  if (!inputs.has_commander || !inputs.fpv_controlled || !inputs.is_melee) {
-    return {};
-  }
-  return {
-      .amplified = true,
-      .has_style = inputs.has_style,
-      .style = inputs.style,
-  };
-}
-
 auto resolve_humanoid_commander_flag_rally_pose(
     const HumanoidCommanderFlagRallyPoseInputs& inputs) noexcept
     -> HumanoidCommanderFlagRallyPose {

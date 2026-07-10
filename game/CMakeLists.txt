@@ -21,11 +21,22 @@ add_library(game_systems STATIC
     systems/combat_system/combat_mode_processor.cpp
     systems/combat_system/auto_engagement.cpp
     systems/combat_system/hit_feedback_processor.cpp
+    systems/combat_system/combat_hit_resolver.cpp
+    systems/combat_system/combat_action_processor.cpp
+    systems/combat_system/spear_brace_processor.cpp
+    systems/combat_system/mounted_charge_processor.cpp
+    systems/combat_system/combat_status_effect_processor.cpp
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/combat_animation_timing.cpp
     systems/combat_system/attack_processor.cpp
     systems/combat_system/elephant_special_processor.cpp
     systems/combat_system/siege_special_processor.cpp
+    systems/combat_actions/body_impact.cpp
+    systems/combat_actions/combat_action_definition.cpp
+    systems/combat_actions/combat_action_events.cpp
+    systems/combat_actions/combat_action_service.cpp
+    systems/combat_actions/projectile_release.cpp
+    systems/combat_actions/weapon_trace.cpp
     systems/cleanup_system.cpp
     systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
@@ -60,6 +71,7 @@ add_library(game_systems STATIC
     systems/wall_network_service.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
+    systems/combat_status_effect_system.cpp
     systems/projectile_system.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp

@@ -1,13 +1,26 @@
 #include "combat_state_processor.h"
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <span>
+#include <vector>
 
 #include "../../../render/profiling/frame_profile.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../units/spawn_type.h"
+#include "../combat_actions/body_impact.h"
+#include "../combat_actions/combat_action_definition.h"
+#include "../combat_actions/combat_action_events.h"
+#include "../combat_actions/projectile_release.h"
+#include "../combat_actions/weapon_trace.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
+#include "combat_action_processor.h"
+#include "combat_hit_resolver.h"
 #include "combat_utils.h"
+#include "mounted_charge_processor.h"
+#include "spear_brace_processor.h"
 
 namespace Game::Systems::Combat {
 
@@ -205,11 +218,21 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
   return base_phase_duration(state) * combat_state.swing_duration_scale;
 }
 
+void reset_action_events_if_present(Engine::Core::Entity& unit) {
+  auto* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr) {
+    return;
+  }
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
+}
+
 } // namespace
 
 void process_combat_state(Engine::Core::World* world, float delta_time) {
   auto& profile = Render::Profiling::global_profile();
   Render::Profiling::AccumulatorScope const scope(&profile.combat_state_update_us);
+  process_spear_brace_state(world, delta_time);
+  process_mounted_charge_intents(world, delta_time);
   auto units = world->get_entities_with<Engine::Core::CombatStateComponent>();
 
   for (auto* unit : units) {
@@ -258,7 +281,10 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         if (!combat_state->damage_dealt_this_swing) {
           auto const* commander =
               unit->get_component<Engine::Core::CommanderComponent>();
-          if (commander != nullptr && commander->fpv_controlled) {
+          auto const* action =
+              unit->get_component<Engine::Core::RpgCommanderActionComponent>();
+          if (commander != nullptr && commander->fpv_controlled &&
+              (action == nullptr || action->combat_action_id == 0U)) {
             deal_commander_contact_damage(world, *unit, *combat_state);
           }
         }
@@ -276,6 +302,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
               *unit, *combat_state, combat_state->animation_state);
           combat_state->input_buffered = false;
           combat_state->damage_dealt_this_swing = false;
+          reset_action_events_if_present(*unit);
         } else {
           combat_state->animation_state = CS::Reposition;
           combat_state->state_duration = phase_duration_for_state(
@@ -292,6 +319,20 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       }
       combat_state->state_time = carry;
     }
+  }
+
+  for (auto* unit :
+       world->get_entities_with<Engine::Core::RpgCommanderActionComponent>()) {
+    if (unit == nullptr ||
+        unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto* presentation_state =
+        unit->get_component<Engine::Core::CombatStateComponent>();
+    if (presentation_state != nullptr && presentation_state->is_hit_paused) {
+      continue;
+    }
+    process_authored_combat_action(world, *unit, presentation_state, delta_time);
   }
 }
 

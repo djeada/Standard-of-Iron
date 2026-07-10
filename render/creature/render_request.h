@@ -45,6 +45,7 @@ struct PlaybackLayerRequest {
   float phase{0.0F};
   float weight{0.0F};
   std::uint8_t clip_variant{0U};
+  std::uint16_t clip_id{Animation::k_unmapped_clip};
   PlaybackLayerMode mode{PlaybackLayerMode::None};
 
   [[nodiscard]] auto active() const noexcept -> bool {
@@ -77,6 +78,7 @@ struct CreatureRenderRequest {
   static constexpr std::size_t k_role_color_capacity = 32;
   std::array<QVector3D, k_role_color_capacity> role_colors{};
   std::uint8_t clip_variant{0};
+  std::uint16_t clip_id{Animation::k_unmapped_clip};
   std::uint8_t role_color_count{0};
   QVector3D base_color{0.5F, 0.5F, 0.5F};
   QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};

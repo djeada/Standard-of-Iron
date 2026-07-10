@@ -10,6 +10,7 @@
 #include "render/creature/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/entity/mounted_knight_pose.h"
+#include "render/equipment/weapons/sword_renderer.h"
 #include "render/horse/horse_motion.h"
 #include "render/humanoid/skeleton.h"
 #include "tests/render/test_asset_paths.h"
@@ -327,6 +328,227 @@ TEST(BpatRegistry, HumanoidAttackMarkersMatchAnimationManifest) {
   assert_markers_equal(k_species_humanoid_sword,
                        Animation::k_humanoid_riding_sword_strike_clip,
                        Animation::HumanoidClipProfile::SwordReady);
+}
+
+TEST(BpatRegistry, HumanoidRpgSwordClipsExistAsAuthoredNonLoopingClips) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+  ASSERT_GE(blob->clip_count(),
+            static_cast<std::uint32_t>(Animation::k_humanoid_clip_count));
+
+  constexpr std::array<Animation::SwordAttackAnimation, 5> k_rpg_sword_anims{{
+      Animation::SwordAttackAnimation::RpgSlashLeft,
+      Animation::SwordAttackAnimation::RpgSlashRight,
+      Animation::SwordAttackAnimation::RpgOverhead,
+      Animation::SwordAttackAnimation::RpgThrust,
+      Animation::SwordAttackAnimation::RpgFinisher,
+  }};
+
+  for (auto const anim : k_rpg_sword_anims) {
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    ASSERT_LT(clip_id, blob->clip_count());
+    auto const clip = blob->clip(clip_id);
+    EXPECT_EQ(clip.name, Animation::humanoid_sword_attack_name(anim));
+    EXPECT_FALSE(clip.loops) << clip.name;
+    EXPECT_GT(clip.frame_count, 30U) << clip.name;
+    EXPECT_FLOAT_EQ(clip.marker_contact,
+                    Animation::authored_humanoid_clip_markers(
+                        clip_id, Animation::HumanoidClipProfile::SwordReady)
+                        .contact)
+        << clip.name;
+  }
+}
+
+TEST(BpatRegistry, HumanoidRpgSwordClipsHaveDistinctAuthoredSilhouettes) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+
+  auto frame_for_marker = [&](Animation::SwordAttackAnimation anim, float marker) {
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    auto const clip = blob->clip(clip_id);
+    return static_cast<std::uint32_t>(
+        marker * static_cast<float>(clip.frame_count - 1U) + 0.5F);
+  };
+
+  auto sample_hand = [&](Animation::SwordAttackAnimation anim, std::uint32_t frame) {
+    std::array<QMatrix4x4, 64> palette{};
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    auto const n = reg.sample_palette(
+        k_species_humanoid_sword, clip_id, frame, std::span<QMatrix4x4>(palette));
+    auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandR);
+    EXPECT_GT(n, hand_index);
+    return palette[hand_index].column(3).toVector3D();
+  };
+
+  auto const slash_left_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgSlashLeft),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const slash_right_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgSlashRight),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const overhead_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgOverhead),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const thrust_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(Animation::SwordAttackAnimation::RpgThrust),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const finisher_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgFinisher),
+      Animation::HumanoidClipProfile::SwordReady);
+
+  QVector3D const slash_left_contact =
+      sample_hand(Animation::SwordAttackAnimation::RpgSlashLeft,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgSlashLeft,
+                                   slash_left_markers.contact));
+  QVector3D const slash_right_contact =
+      sample_hand(Animation::SwordAttackAnimation::RpgSlashRight,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgSlashRight,
+                                   slash_right_markers.contact));
+  QVector3D const overhead_release =
+      sample_hand(Animation::SwordAttackAnimation::RpgOverhead,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgOverhead,
+                                   overhead_markers.weapon_release));
+  QVector3D const thrust_contact =
+      sample_hand(Animation::SwordAttackAnimation::RpgThrust,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgThrust,
+                                   thrust_markers.contact));
+  QVector3D const finisher_release =
+      sample_hand(Animation::SwordAttackAnimation::RpgFinisher,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgFinisher,
+                                   finisher_markers.weapon_release));
+  QVector3D const finisher_contact =
+      sample_hand(Animation::SwordAttackAnimation::RpgFinisher,
+                  frame_for_marker(Animation::SwordAttackAnimation::RpgFinisher,
+                                   finisher_markers.contact));
+
+  EXPECT_LT(slash_left_contact.x(), slash_right_contact.x() - 0.35F);
+  EXPECT_GT(thrust_contact.z(), slash_left_contact.z() + 0.18F);
+  EXPECT_GT(thrust_contact.z(), slash_right_contact.z() + 0.18F);
+  EXPECT_GT(overhead_release.y(), slash_left_contact.y() + 0.20F);
+  EXPECT_GT(finisher_release.y(), overhead_release.y() + 0.025F);
+  EXPECT_LT(finisher_contact.y(), overhead_release.y() - 0.55F);
+}
+
+TEST(BpatRegistry, HumanoidRpgSwordClipsMoveAttachedSwordIntoDistinctCuts) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+
+  Render::GL::SwordRenderConfig sword_cfg;
+  sword_cfg.sword_length = 0.84F;
+  auto const sword_attachment = Render::GL::sword_make_static_attachment(sword_cfg, 0U);
+  auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandR);
+  ASSERT_EQ(sword_attachment.socket_bone_index, hand_index);
+
+  auto frame_for_marker = [&](Animation::SwordAttackAnimation anim, float marker) {
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    auto const clip = blob->clip(clip_id);
+    return static_cast<std::uint32_t>(
+        marker * static_cast<float>(clip.frame_count - 1U) + 0.5F);
+  };
+
+  struct SwordEndpoints {
+    QVector3D base;
+    QVector3D tip;
+  };
+
+  auto sample_sword = [&](Animation::SwordAttackAnimation anim,
+                          std::uint32_t frame) -> SwordEndpoints {
+    std::array<QMatrix4x4, 64> palette{};
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    auto const n = reg.sample_palette(
+        k_species_humanoid_sword, clip_id, frame, std::span<QMatrix4x4>(palette));
+    EXPECT_GT(n, hand_index);
+    QMatrix4x4 const sword_world = palette[hand_index] * sword_attachment.local_offset;
+    return {
+        .base = sword_world.column(3).toVector3D(),
+        .tip = (sword_world * QVector4D(0.0F, sword_cfg.sword_length, 0.0F, 1.0F))
+                   .toVector3D(),
+    };
+  };
+
+  auto const slash_left_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgSlashLeft),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const slash_right_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgSlashRight),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const overhead_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgOverhead),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const thrust_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(Animation::SwordAttackAnimation::RpgThrust),
+      Animation::HumanoidClipProfile::SwordReady);
+  auto const finisher_markers = Animation::authored_humanoid_clip_markers(
+      Animation::humanoid_sword_attack_clip(
+          Animation::SwordAttackAnimation::RpgFinisher),
+      Animation::HumanoidClipProfile::SwordReady);
+
+  auto const slash_left_contact =
+      sample_sword(Animation::SwordAttackAnimation::RpgSlashLeft,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgSlashLeft,
+                                    slash_left_markers.contact));
+  auto const slash_right_contact =
+      sample_sword(Animation::SwordAttackAnimation::RpgSlashRight,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgSlashRight,
+                                    slash_right_markers.contact));
+  auto const overhead_release =
+      sample_sword(Animation::SwordAttackAnimation::RpgOverhead,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgOverhead,
+                                    overhead_markers.weapon_release));
+  auto const thrust_contact =
+      sample_sword(Animation::SwordAttackAnimation::RpgThrust,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgThrust,
+                                    thrust_markers.contact));
+  auto const finisher_release =
+      sample_sword(Animation::SwordAttackAnimation::RpgFinisher,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgFinisher,
+                                    finisher_markers.weapon_release));
+  auto const finisher_contact =
+      sample_sword(Animation::SwordAttackAnimation::RpgFinisher,
+                   frame_for_marker(Animation::SwordAttackAnimation::RpgFinisher,
+                                    finisher_markers.contact));
+
+  EXPECT_LT(slash_left_contact.tip.x(), slash_right_contact.tip.x() - 0.35F);
+  EXPECT_GT(thrust_contact.tip.z(), slash_left_contact.tip.z() + 0.18F);
+  EXPECT_GT(thrust_contact.tip.z(), slash_right_contact.tip.z() + 0.18F);
+  EXPECT_GT(overhead_release.tip.y(), slash_left_contact.tip.y() + 0.20F);
+  EXPECT_GT(finisher_release.tip.y(), overhead_release.tip.y() + 0.025F);
+  EXPECT_LT(finisher_contact.base.y(), finisher_release.base.y() - 0.55F);
 }
 
 TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
@@ -757,4 +979,139 @@ TEST(BpatRegistry, SwordHumanoidRidingSwordStrikeRotatesGripIntoCut) {
 
   EXPECT_LT(strike_up.y(), chamber_up.y() - 0.12F);
   EXPECT_GT(strike_up.z(), chamber_up.z() + 0.30F);
+}
+
+TEST(BpatRegistry, SwordHumanoidBakesDedicatedGripSocket) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+
+  std::uint32_t hand_socket_index = blob->socket_count();
+  std::uint32_t grip_socket_index = blob->socket_count();
+  for (std::uint32_t i = 0U; i < blob->socket_count(); ++i) {
+    if (blob->socket(i).name == "hand_r") {
+      hand_socket_index = i;
+    } else if (blob->socket(i).name == "grip_r") {
+      grip_socket_index = i;
+    }
+  }
+  ASSERT_LT(hand_socket_index, blob->socket_count());
+  ASSERT_LT(grip_socket_index, blob->socket_count());
+  EXPECT_NE(hand_socket_index, grip_socket_index);
+
+  QMatrix4x4 grip;
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_sword,
+                                Render::Creature::k_humanoid_rpg_sword_slash_left_clip,
+                                18U,
+                                grip_socket_index,
+                                grip));
+
+  QVector3D const grip_origin = grip.column(3).toVector3D();
+  QVector3D const grip_up = grip.column(1).toVector3D();
+  EXPECT_GT(grip_origin.lengthSquared(), 0.01F);
+  EXPECT_GT(grip_up.lengthSquared(), 0.80F);
+}
+
+TEST(BpatRegistry, SwordHumanoidBakesBladeEndpointSockets) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+
+  std::uint32_t base_socket_index = blob->socket_count();
+  std::uint32_t tip_socket_index = blob->socket_count();
+  for (std::uint32_t i = 0U; i < blob->socket_count(); ++i) {
+    if (blob->socket(i).name == "sword_blade_base_r") {
+      base_socket_index = i;
+    } else if (blob->socket(i).name == "sword_blade_tip_r") {
+      tip_socket_index = i;
+    }
+  }
+  ASSERT_LT(base_socket_index, blob->socket_count());
+  ASSERT_LT(tip_socket_index, blob->socket_count());
+
+  QMatrix4x4 base;
+  QMatrix4x4 tip;
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_sword,
+                                Render::Creature::k_humanoid_rpg_sword_slash_left_clip,
+                                18U,
+                                base_socket_index,
+                                base));
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_sword,
+                                Render::Creature::k_humanoid_rpg_sword_slash_left_clip,
+                                18U,
+                                tip_socket_index,
+                                tip));
+
+  float const blade_length =
+      (tip.column(3).toVector3D() - base.column(3).toVector3D()).length();
+  EXPECT_NEAR(blade_length, 0.84F, 0.04F);
+}
+
+TEST(BpatRegistry, SpearHumanoidBakesShaftEndpointSockets) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_spear);
+  ASSERT_NE(blob, nullptr);
+
+  std::uint32_t shaft_base_index = blob->socket_count();
+  std::uint32_t shaft_tip_index = blob->socket_count();
+  std::uint32_t head_tip_index = blob->socket_count();
+  for (std::uint32_t i = 0U; i < blob->socket_count(); ++i) {
+    if (blob->socket(i).name == "spear_shaft_base_r") {
+      shaft_base_index = i;
+    } else if (blob->socket(i).name == "spear_shaft_tip_r") {
+      shaft_tip_index = i;
+    } else if (blob->socket(i).name == "spear_head_tip_r") {
+      head_tip_index = i;
+    }
+  }
+  ASSERT_LT(shaft_base_index, blob->socket_count());
+  ASSERT_LT(shaft_tip_index, blob->socket_count());
+  ASSERT_LT(head_tip_index, blob->socket_count());
+
+  QMatrix4x4 shaft_base;
+  QMatrix4x4 shaft_tip;
+  QMatrix4x4 head_tip;
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_spear,
+                                Animation::k_humanoid_attack_spear_a_clip,
+                                16U,
+                                shaft_base_index,
+                                shaft_base));
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_spear,
+                                Animation::k_humanoid_attack_spear_a_clip,
+                                16U,
+                                shaft_tip_index,
+                                shaft_tip));
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_spear,
+                                Animation::k_humanoid_attack_spear_a_clip,
+                                16U,
+                                head_tip_index,
+                                head_tip));
+
+  float const shaft_length =
+      (shaft_tip.column(3).toVector3D() - shaft_base.column(3).toVector3D()).length();
+  float const full_length =
+      (head_tip.column(3).toVector3D() - shaft_base.column(3).toVector3D()).length();
+  EXPECT_NEAR(shaft_length, 1.48F, 0.06F);
+  EXPECT_NEAR(full_length, 1.66F, 0.06F);
 }

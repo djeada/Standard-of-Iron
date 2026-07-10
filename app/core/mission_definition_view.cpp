@@ -80,6 +80,29 @@ auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup>& units)
     entry["count"] = unit.count;
     entry["x"] = unit.position.x;
     entry["z"] = unit.position.z;
+    switch (unit.behavior) {
+    case Game::Mission::UnitBehavior::Guard:
+      entry["behavior"] = QStringLiteral("guard");
+      entry["guard_radius"] = unit.guard_radius;
+      break;
+    case Game::Mission::UnitBehavior::Hold:
+      entry["behavior"] = QStringLiteral("hold");
+      break;
+    case Game::Mission::UnitBehavior::Patrol: {
+      entry["behavior"] = QStringLiteral("patrol");
+      QVariantList waypoints;
+      for (const auto& waypoint : unit.patrol_waypoints) {
+        QVariantMap point;
+        point["x"] = waypoint.x;
+        point["z"] = waypoint.z;
+        waypoints.append(point);
+      }
+      entry["patrol_waypoints"] = waypoints;
+      break;
+    }
+    case Game::Mission::UnitBehavior::Strategic:
+      break;
+    }
     list.append(entry);
   }
   return list;

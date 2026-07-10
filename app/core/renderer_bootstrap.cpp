@@ -6,6 +6,7 @@
 #include "game/systems/capture_system.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/cleanup_system.h"
+#include "game/systems/combat_status_effect_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/guard_system.h"
@@ -60,6 +61,7 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
 
 void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Systems::ArrowSystem>());
+  world.add_system(std::make_unique<Game::Systems::CombatStatusEffectSystem>());
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
   world.add_system(std::make_unique<Game::Systems::StaminaSystem>());
   world.add_system(std::make_unique<Game::Systems::MovementSystem>());
