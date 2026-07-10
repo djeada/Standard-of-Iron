@@ -39,7 +39,9 @@ protected:
           {
             "type": "spearman",
             "count": 10,
-            "position": {"x": 60, "z": 60}
+            "position": {"x": 60, "z": 60},
+            "behavior": "guard",
+            "guard_radius": 14
           }
         ],
         "starting_buildings": [
@@ -117,6 +119,9 @@ TEST_F(MissionLoaderTest, LoadsValidMission) {
   EXPECT_EQ(mission.title, "Test Mission");
   EXPECT_EQ(mission.summary, "A test mission for unit testing");
   EXPECT_EQ(mission.map_path, ":/assets/maps/map_forest.json");
+  ASSERT_EQ(mission.player_setup.starting_units.size(), 1U);
+  EXPECT_EQ(mission.player_setup.starting_units[0].behavior, UnitBehavior::Guard);
+  EXPECT_FLOAT_EQ(mission.player_setup.starting_units[0].guard_radius, 14.0F);
 }
 
 TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
@@ -249,6 +254,66 @@ TEST_F(MissionLoaderTest, CrossingTheRhonePatrolForcesStayDefensive) {
   EXPECT_EQ(*patrol_it->strategy, "defensive");
   EXPECT_LT(patrol_it->personality.aggression, 0.5F);
   EXPECT_GT(patrol_it->personality.defense, 0.7F);
+}
+
+TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QString json = R"({
+    "id": "patrol_mission",
+    "title": "Patrol Mission",
+    "summary": "Patrol parsing",
+    "map_path": ":/assets/maps/map_forest.json",
+    "player_setup": {
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "commander_troop": "roman_veteran_consul",
+      "starting_units": [],
+      "starting_buildings": []
+    },
+    "ai_setups": [
+      {
+        "id": "road_guard",
+        "nation": "carthage",
+        "faction": "carthaginian",
+        "color": "blue",
+        "commander_troop": "carthage_elephant_master",
+        "difficulty": "medium",
+        "starting_units": [
+          {
+            "type": "archer",
+            "count": 2,
+            "position": {"x": 50, "z": 40},
+            "behavior": "patrol",
+            "patrol_waypoints": [
+              {"x": 56, "z": 40},
+              {"x": 56, "z": 48}
+            ]
+          }
+        ],
+        "starting_buildings": []
+      }
+    ],
+    "victory_conditions": [],
+    "defeat_conditions": []
+  })";
+  temp_file.write(json.toUtf8());
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(mission.ai_setups.size(), 1U);
+  ASSERT_EQ(mission.ai_setups[0].starting_units.size(), 1U);
+  const UnitSetup& unit = mission.ai_setups[0].starting_units[0];
+  EXPECT_EQ(unit.behavior, UnitBehavior::Patrol);
+  ASSERT_EQ(unit.patrol_waypoints.size(), 2U);
+  EXPECT_FLOAT_EQ(unit.patrol_waypoints[0].x, 56.0F);
+  EXPECT_FLOAT_EQ(unit.patrol_waypoints[1].z, 48.0F);
 }
 
 TEST_F(MissionLoaderTest, ShippedMissionsAuthorCommandersForPlayerAndAiSetups) {

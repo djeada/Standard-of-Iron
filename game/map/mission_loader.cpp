@@ -14,11 +14,32 @@ auto MissionLoader::parse_position(const QJsonObject& obj) -> Position {
   return pos;
 }
 
+auto parse_unit_behavior(const QString& value) -> UnitBehavior {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == "guard" || lowered == "defend" || lowered == "defensive") {
+    return UnitBehavior::Guard;
+  }
+  if (lowered == "hold" || lowered == "hold_position") {
+    return UnitBehavior::Hold;
+  }
+  if (lowered == "patrol") {
+    return UnitBehavior::Patrol;
+  }
+  return UnitBehavior::Strategic;
+}
+
 auto MissionLoader::parse_unit_setup(const QJsonObject& obj) -> UnitSetup {
   UnitSetup unit;
   unit.type = obj["type"].toString();
   unit.count = obj["count"].toInt(1);
   unit.position = parse_position(obj["position"].toObject());
+  unit.behavior = parse_unit_behavior(obj["behavior"].toString());
+  unit.guard_radius = static_cast<float>(obj["guard_radius"].toDouble(10.0));
+
+  const QJsonArray patrol_waypoints = obj["patrol_waypoints"].toArray();
+  for (const auto& waypoint_val : patrol_waypoints) {
+    unit.patrol_waypoints.push_back(parse_position(waypoint_val.toObject()));
+  }
   return unit;
 }
 

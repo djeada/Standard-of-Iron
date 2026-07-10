@@ -1758,39 +1758,6 @@ TEST(AnimationCoreActionManifest, CommanderJumpPoseClampsPhaseAndHeight) {
   EXPECT_FLOAT_EQ(active.height_offset, 0.0F);
 }
 
-TEST(AnimationCoreActionManifest, CommanderAttackPoseRequiresFpvMelee) {
-  auto disabled = Animation::resolve_humanoid_commander_attack_pose({
-      .has_commander = true,
-      .fpv_controlled = false,
-      .is_melee = true,
-      .has_style = true,
-      .style = 3U,
-  });
-  EXPECT_FALSE(disabled.amplified);
-  EXPECT_FALSE(disabled.has_style);
-
-  disabled = Animation::resolve_humanoid_commander_attack_pose({
-      .has_commander = true,
-      .fpv_controlled = true,
-      .is_melee = false,
-      .has_style = true,
-      .style = 3U,
-  });
-  EXPECT_FALSE(disabled.amplified);
-  EXPECT_FALSE(disabled.has_style);
-
-  auto const amplified = Animation::resolve_humanoid_commander_attack_pose({
-      .has_commander = true,
-      .fpv_controlled = true,
-      .is_melee = true,
-      .has_style = true,
-      .style = 3U,
-  });
-  EXPECT_TRUE(amplified.amplified);
-  EXPECT_TRUE(amplified.has_style);
-  EXPECT_EQ(amplified.style, 3U);
-}
-
 TEST(AnimationCoreActionManifest, CommanderFlagRallyPoseOwnsPlantPhase) {
   auto inactive = Animation::resolve_humanoid_commander_flag_rally_pose({
       .has_commander = true,
@@ -5400,7 +5367,7 @@ TEST(HumanoidPrepare, MovingAnimationOverrideWithoutEntityBuildsAuthoritativeStr
             Render::Creature::AnimationStateId::Run);
 }
 
-TEST(HumanoidPrepare, CommanderFpvAttacksUseExpandedAttackPhaseMapping) {
+TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -5438,7 +5405,7 @@ TEST(HumanoidPrepare, CommanderFpvAttacksUseExpandedAttackPhaseMapping) {
   auto const& commander_requests = commander_prep.bodies.requests();
   ASSERT_FALSE(commander_requests.empty());
 
-  EXPECT_GT(commander_requests.front().phase, base_requests.front().phase);
+  EXPECT_FLOAT_EQ(commander_requests.front().phase, base_requests.front().phase);
 }
 
 TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWalkClip) {
@@ -5987,6 +5954,37 @@ TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {
   EXPECT_FALSE(guard_enter.is_exiting_guard);
   EXPECT_GT(guard_enter.guard_pose_progress, 0.0F);
   EXPECT_LT(guard_enter.guard_pose_progress, 1.0F);
+}
+
+TEST(HumanoidPrepare, ExplicitSpearBraceFeedsGuardAnimationState) {
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(830);
+  ASSERT_NE(entity.add_component<Render::Creature::HumanoidAnimationStateComponent>(),
+            nullptr);
+  auto* brace = entity.add_component<Engine::Core::SpearBraceComponent>();
+  ASSERT_NE(brace, nullptr);
+  brace->requested = true;
+  brace->pose_progress = 0.5F;
+  ctx.entity = &entity;
+
+  ctx.animation_time = 1.0F;
+  auto const enter_start = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(enter_start.is_guarding);
+  EXPECT_FALSE(enter_start.is_exiting_guard);
+
+  ctx.animation_time = 1.75F;
+  auto const enter_mid = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(enter_mid.is_guarding);
+  EXPECT_GT(enter_mid.guard_pose_progress, 0.0F);
+
+  brace->requested = false;
+  brace->active = false;
+  ctx.animation_time = 2.0F;
+  auto const exit = Render::GL::sample_anim_state(ctx);
+  EXPECT_FALSE(exit.is_guarding);
+  EXPECT_TRUE(exit.is_exiting_guard);
 }
 
 TEST(HumanoidPrepare, MeleeAttackSmoothlyExitsExistingHoldKneel) {

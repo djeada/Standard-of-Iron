@@ -43,6 +43,9 @@ inline constexpr const char* style = Game::Map::JsonKeys::ROAD_STYLE;
 inline constexpr const char* player_id = Game::Map::JsonKeys::PLAYER_ID;
 inline constexpr const char* max_population = Game::Map::JsonKeys::MAX_POPULATION;
 inline constexpr const char* nation = Game::Map::JsonKeys::NATION;
+inline constexpr const char* behavior = "behavior";
+inline constexpr const char* guard_radius = "guard_radius";
+inline constexpr const char* patrol_waypoints = "patrol_waypoints";
 
 inline constexpr const char* depth = "depth";
 inline constexpr const char* entrances = "entrances";

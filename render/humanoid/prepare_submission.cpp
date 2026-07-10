@@ -435,12 +435,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       }
     }
 
-    auto const commander_attack = preparation_mode.attack_pose(soldier_render_anim);
     std::uint8_t base_attack_variant = soldier_render_anim.attack_variant;
     if (ctx.has_attack_variant_override) {
       base_attack_variant = ctx.attack_variant_override;
-    } else if (commander_attack.has_style) {
-      base_attack_variant = commander_attack.style;
     }
 
     Render::Creature::CombatLaneInputs lane_inputs{};
@@ -480,7 +477,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     raw_combat.is_mounted = is_mounted_spawn;
     raw_combat.is_casting = soldier_render_anim.is_casting;
     raw_combat.finisher_attack = soldier_render_anim.finisher_attack;
-    raw_combat.amplified_attack = commander_attack.amplified;
+    raw_combat.amplified_attack = false;
     raw_combat.is_hit_reacting = soldier_render_anim.is_hit_reacting;
     raw_combat.is_healing = soldier_render_anim.is_healing;
     raw_combat.is_constructing = soldier_render_anim.is_constructing;
@@ -572,7 +569,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.construction_role = construction_role;
     anim_ctx.attack_phase = anim_ctx.inputs.combat_visual.attack_phase;
     anim_ctx.attack_emphasis = anim_ctx.inputs.combat_visual.attack_emphasis;
-    anim_ctx.amplified_attack = anim_ctx.inputs.combat_visual.amplified_attack;
+    anim_ctx.amplified_attack = false;
     anim_ctx.finisher_attack = anim_ctx.inputs.combat_visual.finisher_attack;
 
     auto const rally_pose = preparation_mode.flag_rally_pose();

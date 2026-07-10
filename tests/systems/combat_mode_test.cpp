@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <gtest/gtest.h>
 #include <numbers>
 
@@ -6,16 +7,27 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "render/creature/bpat/bpat_format.h"
+#include "render/creature/bpat/bpat_registry.h"
 #include "systems/arrow_system.h"
 #include "systems/cleanup_system.h"
+#include "systems/combat_actions/body_impact.h"
+#include "systems/combat_actions/combat_action_definition.h"
+#include "systems/combat_actions/combat_action_events.h"
+#include "systems/combat_actions/weapon_trace.h"
+#include "systems/combat_status_effect_system.h"
 #include "systems/combat_system/attack_processor.h"
 #include "systems/combat_system/auto_engagement.h"
 #include "systems/combat_system/combat_animation_timing.h"
+#include "systems/combat_system/combat_hit_resolver.h"
 #include "systems/combat_system/combat_mode_processor.h"
 #include "systems/combat_system/combat_state_processor.h"
+#include "systems/combat_system/combat_status_effect_processor.h"
 #include "systems/combat_system/combat_types.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
+#include "systems/combat_system/mounted_charge_processor.h"
+#include "systems/combat_system/spear_brace_processor.h"
 #include "systems/command_service.h"
 #include "systems/healing_system.h"
 #include "systems/movement_system.h"
@@ -45,6 +57,7 @@ void advance_projectiles(World& world, float total_time = 1.5F, float step = 0.1
   auto* projectile_system = world.get_system<Game::Systems::ProjectileSystem>();
   ASSERT_NE(projectile_system, nullptr);
   for (float elapsed = 0.0F; elapsed < total_time; elapsed += step) {
+    (void)Game::Systems::Combat::process_combat_status_effects(&world, step);
     projectile_system->update(&world, step);
   }
 }
@@ -1912,6 +1925,7 @@ TEST_F(CombatModeTest, GuardBreakDropsGuardAndLetsTheBreakingHitThrough) {
   target_rpg->active = true;
   target_rpg->rpg_hp = 100;
   target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
 
   Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
       world.get(), target, 20, attacker->get_id());
@@ -2458,6 +2472,37 @@ auto make_fpv_commander(World& world, float x, float z) -> Entity* {
   return commander;
 }
 
+auto make_fpv_spear_commander(World& world, float x, float z) -> Entity* {
+  auto* commander = make_fpv_commander(world, x, z);
+  auto* unit = commander->get_component<UnitComponent>();
+  auto* attack = commander->get_component<AttackComponent>();
+  if (unit != nullptr) {
+    unit->spawn_type = Game::Units::SpawnType::Spearman;
+  }
+  if (attack != nullptr) {
+    attack->melee_range = 2.6F;
+    attack->melee_damage = 10;
+  }
+  return commander;
+}
+
+auto make_fpv_bow_commander(World& world, float x, float z) -> Entity* {
+  auto* commander = make_fpv_commander(world, x, z);
+  auto* unit = commander->get_component<UnitComponent>();
+  auto* attack = commander->get_component<AttackComponent>();
+  if (unit != nullptr) {
+    unit->spawn_type = Game::Units::SpawnType::Archer;
+  }
+  if (attack != nullptr) {
+    attack->can_ranged = true;
+    attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+    attack->current_mode = AttackComponent::CombatMode::Ranged;
+    attack->range = 8.0F;
+    attack->damage = 13;
+  }
+  return commander;
+}
+
 auto begin_commander_strike(Entity* commander,
                             EntityID locked_target_id) -> CombatStateComponent* {
   auto* combat_state = commander->add_component<CombatStateComponent>();
@@ -2470,12 +2515,93 @@ auto begin_commander_strike(Entity* commander,
   return combat_state;
 }
 
+auto start_authored_action_at(Entity* entity,
+                              Game::Systems::CombatActions::CombatActionId id,
+                              float normalized_time) -> RpgCommanderActionComponent* {
+  auto* action = entity->get_component<RpgCommanderActionComponent>();
+  if (action == nullptr) {
+    action = entity->add_component<RpgCommanderActionComponent>();
+  }
+  auto const* definition =
+      Game::Systems::CombatActions::find_combat_action_definition(id);
+  if (action == nullptr || definition == nullptr) {
+    return action;
+  }
+  action->phase = RpgCommanderActionPhase::Strike;
+  action->combat_action_id = static_cast<std::uint8_t>(id);
+  action->action_duration = definition->duration_seconds;
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
+  (void)Game::Systems::CombatActions::advance_combat_action_events(
+      *action,
+      std::clamp(normalized_time, 0.0F, 1.0F) * definition->duration_seconds,
+      *definition);
+  return action;
+}
+
 auto make_enemy_soldier(World& world, float x, float z) -> Entity* {
   auto* enemy = world.create_entity();
   enemy->add_component<TransformComponent>(x, 0.0F, z);
   auto* unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = 2;
   return enemy;
+}
+
+auto make_enemy_cavalry(World& world, float x, float z) -> Entity* {
+  auto* enemy = make_enemy_soldier(world, x, z);
+  auto* unit = enemy != nullptr ? enemy->get_component<UnitComponent>() : nullptr;
+  if (unit != nullptr) {
+    unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+    unit->speed = 7.0F;
+  }
+  return enemy;
+}
+
+auto make_mounted_attacker(World& world, float x, float z) -> Entity* {
+  auto* attacker = world.create_entity();
+  attacker->add_component<TransformComponent>(x, 0.0F, z);
+  auto* unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->speed = 7.0F;
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_damage = 18;
+  return attacker;
+}
+
+auto make_fpv_mounted_sword_commander(World& world, float x, float z) -> Entity* {
+  auto* attacker = make_mounted_attacker(world, x, z);
+  if (attacker == nullptr) {
+    return nullptr;
+  }
+  auto* commander = attacker->add_component<CommanderComponent>();
+  if (commander != nullptr) {
+    commander->fpv_controlled = true;
+  }
+  auto* attack = attacker->get_component<AttackComponent>();
+  if (attack != nullptr) {
+    attack->melee_range = 2.4F;
+    attack->melee_damage = 18;
+  }
+  return attacker;
+}
+
+auto make_fpv_mounted_spear_commander(World& world, float x, float z) -> Entity* {
+  auto* attacker = make_fpv_mounted_sword_commander(world, x, z);
+  if (attacker == nullptr) {
+    return nullptr;
+  }
+  auto* unit = attacker->get_component<UnitComponent>();
+  if (unit != nullptr) {
+    unit->spawn_type = Game::Units::SpawnType::HorseSpearman;
+  }
+  auto* attack = attacker->get_component<AttackComponent>();
+  if (attack != nullptr) {
+    attack->melee_range = 3.2F;
+    attack->melee_damage = 20;
+  }
+  return attacker;
 }
 
 } // namespace
@@ -2489,6 +2615,1592 @@ TEST_F(CombatModeTest, CommanderStrikeDealsDamageAtImpactContact) {
 
   EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 90);
   EXPECT_TRUE(combat_state->damage_dealt_this_swing);
+}
+
+TEST_F(CombatModeTest, CommanderStrikeAdvancesAuthoredActionEvents) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* combat_state = begin_commander_strike(commander, 0U);
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+      0.36F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+
+  EXPECT_TRUE(action->action_active);
+  EXPECT_TRUE(action->weapon_trace_active);
+  EXPECT_TRUE(action->last_event_valid);
+  EXPECT_EQ(action->last_event_type,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart));
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.55F);
+
+  EXPECT_FALSE(action->action_active);
+  EXPECT_FALSE(action->weapon_trace_active);
+  EXPECT_TRUE(action->last_event_valid);
+  EXPECT_EQ(action->last_event_type,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionEventType::WeaponTraceEnd));
+}
+
+TEST_F(CombatModeTest, BowActiveWindowDoesNotEnableWeaponTrace) {
+  auto* commander = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* combat_state = begin_commander_strike(commander, 0U);
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      commander, Game::Systems::CombatActions::CombatActionId::RpgBowShot, 0.295F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.02F);
+
+  EXPECT_TRUE(action->action_active);
+  EXPECT_FALSE(action->weapon_trace_active);
+  EXPECT_TRUE(action->last_event_valid);
+  EXPECT_EQ(action->last_event_type,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionEventType::ActiveStart));
+}
+
+TEST_F(CombatModeTest, AuthoredActionTimelineDoesNotReadCompatibilityPhase) {
+  RpgCommanderActionComponent action;
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordThrust);
+  ASSERT_NE(definition, nullptr);
+  action.combat_action_id = static_cast<std::uint8_t>(definition->id);
+  action.action_duration = definition->duration_seconds;
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(action);
+
+  CombatStateComponent compatibility_state;
+  compatibility_state.animation_state = CombatAnimationState::Idle;
+  compatibility_state.state_time = 999.0F;
+
+  auto const events = Game::Systems::CombatActions::advance_combat_action_events(
+      action, definition->duration_seconds * 0.40F, *definition);
+
+  EXPECT_NEAR(action.normalized_action_time, 0.40F, 0.0001F);
+  EXPECT_TRUE(action.weapon_trace_active);
+  EXPECT_FALSE(events.empty());
+  EXPECT_EQ(compatibility_state.animation_state, CombatAnimationState::Idle);
+}
+
+TEST_F(CombatModeTest, SwordTraceRejectsTargetsBehindCommander) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, -1.2F);
+  ASSERT_NE(enemy, nullptr);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft);
+  ASSERT_NE(definition, nullptr);
+
+  auto const contact = Game::Systems::CombatActions::find_sword_trace_contact(
+      *world, *commander, *definition, enemy->get_id());
+
+  EXPECT_EQ(contact.target_id, 0U) << "local_forward=" << contact.local_forward
+                                   << " local_right=" << contact.local_right;
+}
+
+TEST_F(CombatModeTest, SpearTraceUsesLongNarrowThrustShape) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* forward_enemy = make_enemy_soldier(*world, 0.0F, 2.45F);
+  auto* side_enemy = make_enemy_soldier(*world, 2.0F, 2.0F);
+  ASSERT_NE(forward_enemy, nullptr);
+  ASSERT_NE(side_enemy, nullptr);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearThrust);
+  ASSERT_NE(definition, nullptr);
+  EXPECT_EQ(definition->weapon_family,
+            Game::Systems::CombatActions::WeaponFamily::Spear);
+  EXPECT_EQ(definition->attack_direction, AttackDirection::Thrust);
+  EXPECT_FLOAT_EQ(definition->hit_shape.radius, 0.16F);
+
+  auto const forward_contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world, *commander, *definition, forward_enemy->get_id());
+  EXPECT_EQ(forward_contact.target_id, forward_enemy->get_id());
+
+  std::array<EntityID, 1> const ignored_forward{forward_enemy->get_id()};
+  auto const side_contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world, *commander, *definition, side_enemy->get_id(), ignored_forward);
+  EXPECT_EQ(side_contact.target_id, 0U)
+      << "local_forward=" << side_contact.local_forward
+      << " local_right=" << side_contact.local_right;
+}
+
+TEST_F(CombatModeTest, TimedWeaponTraceHasNoSegmentOutsideAuthoredWindow) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft);
+  ASSERT_NE(definition, nullptr);
+
+  auto const segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.12F, .current_normalized_time = 0.24F});
+
+  EXPECT_FALSE(segment.valid);
+}
+
+TEST_F(CombatModeTest, TimedSwordTraceUsesBakedSocketSegmentWhenAvailable) {
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
+      Render::Creature::Bpat::k_species_humanoid_sword);
+  if (blob == nullptr) {
+    GTEST_SKIP() << "baked humanoid sword BPAT asset not loaded";
+  }
+
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft);
+  ASSERT_NE(definition, nullptr);
+
+  auto const segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F});
+
+  ASSERT_TRUE(segment.valid);
+  EXPECT_EQ(segment.source,
+            Game::Systems::CombatActions::WeaponTraceSegmentSource::BakedSocket);
+  EXPECT_GT((segment.current_base - segment.previous_base).length(), 0.005F);
+  EXPECT_NEAR((segment.current_tip - segment.current_base).length(), 0.84F, 0.08F);
+}
+
+TEST_F(CombatModeTest, TimedSpearTraceUsesBakedShaftSegmentWhenAvailable) {
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
+      Render::Creature::Bpat::k_species_humanoid_spear);
+  if (blob == nullptr) {
+    GTEST_SKIP() << "baked humanoid spear BPAT asset not loaded";
+  }
+
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* forward_enemy = make_enemy_soldier(*world, -0.30F, 2.45F);
+  auto* broad_shape_enemy = make_enemy_soldier(*world, 0.50F, 2.45F);
+  ASSERT_NE(forward_enemy, nullptr);
+  ASSERT_NE(broad_shape_enemy, nullptr);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearThrust);
+  ASSERT_NE(definition, nullptr);
+
+  auto const segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F});
+  ASSERT_TRUE(segment.valid);
+  EXPECT_EQ(segment.source,
+            Game::Systems::CombatActions::WeaponTraceSegmentSource::BakedSocket);
+  EXPECT_NEAR((segment.current_tip - segment.current_base).length(), 1.66F, 0.12F);
+
+  auto const forward_contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world,
+      *commander,
+      *definition,
+      {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F},
+      forward_enemy->get_id());
+  EXPECT_EQ(forward_contact.target_id, forward_enemy->get_id());
+
+  std::array<EntityID, 1> const ignored_forward{forward_enemy->get_id()};
+  auto const broad_shape_contact =
+      Game::Systems::CombatActions::find_weapon_trace_contact(
+          *world,
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F},
+          broad_shape_enemy->get_id(),
+          ignored_forward);
+  EXPECT_EQ(broad_shape_contact.target_id, 0U)
+      << "local_forward=" << broad_shape_contact.local_forward
+      << " local_right=" << broad_shape_contact.local_right;
+}
+
+TEST_F(CombatModeTest, TimedMountedSwordTraceUsesBakedRidingSocketSegment) {
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
+      Render::Creature::Bpat::k_species_humanoid_sword);
+  if (blob == nullptr) {
+    GTEST_SKIP() << "baked humanoid sword BPAT asset not loaded";
+  }
+
+  auto* commander = make_fpv_mounted_sword_commander(*world, 0.0F, 0.0F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedSwordSlash);
+  ASSERT_NE(definition, nullptr);
+
+  auto const segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.34F, .current_normalized_time = 0.48F});
+
+  ASSERT_TRUE(segment.valid);
+  EXPECT_EQ(segment.source,
+            Game::Systems::CombatActions::WeaponTraceSegmentSource::BakedSocket);
+  EXPECT_GT((segment.current_base - segment.previous_base).length(), 0.005F);
+  EXPECT_NEAR((segment.current_tip - segment.current_base).length(), 0.84F, 0.08F);
+}
+
+TEST_F(CombatModeTest, TimedMountedSpearTraceUsesBakedMountedClipSockets) {
+  auto* commander = make_fpv_mounted_spear_commander(*world, 0.0F, 0.0F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedSpearThrust);
+  ASSERT_NE(definition, nullptr);
+
+  auto const segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *commander,
+          *definition,
+          {.previous_normalized_time = 0.30F, .current_normalized_time = 0.48F});
+
+  ASSERT_TRUE(segment.valid);
+  EXPECT_EQ(segment.source,
+            Game::Systems::CombatActions::WeaponTraceSegmentSource::BakedSocket);
+  EXPECT_GT((segment.current_base - segment.previous_base).length(), 0.005F);
+  EXPECT_NEAR((segment.current_tip - segment.current_base).length(), 1.66F, 0.12F);
+}
+
+TEST_F(CombatModeTest, TimedSwordTraceRejectsBroadConeTargetOutsideBladeSegment) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* broad_shape_enemy = make_enemy_soldier(*world, 1.50F, 1.20F);
+  ASSERT_NE(broad_shape_enemy, nullptr);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft);
+  ASSERT_NE(definition, nullptr);
+
+  auto const contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world,
+      *commander,
+      *definition,
+      {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F},
+      broad_shape_enemy->get_id());
+
+  EXPECT_EQ(contact.target_id, 0U) << "local_forward=" << contact.local_forward
+                                   << " local_right=" << contact.local_right;
+}
+
+TEST_F(CombatModeTest, CombatHitResolverRoutesCommanderActionContactToUnitDamage) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* attack = commander->get_component<AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->melee_damage = 14;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = enemy->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::LeftSlash,
+                   .contact_point = QVector3D(0.0F, 0.0F, 1.4F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(result.raw_damage, 14);
+  EXPECT_FLOAT_EQ(result.contact.relative_speed, 0.0F);
+  EXPECT_EQ(result.contact.action_id,
+            Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft);
+  EXPECT_EQ(result.contact.weapon_family,
+            Game::Systems::CombatActions::WeaponFamily::Sword);
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 86);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverAppliesAuthoredDamageMultiplier) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* attack = commander->get_component<AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->melee_damage = 14;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher);
+  ASSERT_NE(definition, nullptr);
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = enemy->get_id(),
+                   .action_id = definition->id,
+                   .weapon_family = definition->weapon_family,
+                   .attack_family = definition->attack_family,
+                   .attack_direction = definition->attack_direction,
+                   .contact_point = QVector3D(0.0F, 0.0F, 1.4F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = definition->damage});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(result.raw_damage, 21);
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 79);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverDerivesRelativeSpeedFromMotionState) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* attacker_motion = commander->add_component<MotionPresentationComponent>();
+  attacker_motion->has_velocity = true;
+  attacker_motion->velocity_x = 3.0F;
+  attacker_motion->velocity_z = 4.0F;
+
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+  auto* target_motion = enemy->add_component<MotionPresentationComponent>();
+  target_motion->has_velocity = true;
+  target_motion->velocity_x = 0.0F;
+  target_motion->velocity_z = 0.0F;
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = enemy->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::LeftSlash},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_FLOAT_EQ(result.contact.relative_speed, 5.0F);
+}
+
+TEST_F(CombatModeTest, SpearThrustInterruptsFastMountedTarget) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* brace = commander->add_component<SpearBraceComponent>();
+  brace->active = true;
+
+  auto* cavalry = make_enemy_cavalry(*world, 0.0F, 2.4F);
+  auto* movement = cavalry->add_component<MovementComponent>();
+  movement->engage_manual_move(0.0F, -6.0F);
+  ASSERT_TRUE(movement->get_has_target());
+
+  auto* cavalry_motion = cavalry->add_component<MotionPresentationComponent>();
+  cavalry_motion->has_velocity = true;
+  cavalry_motion->velocity_x = 0.0F;
+  cavalry_motion->velocity_z = -5.5F;
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = cavalry->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSpearThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Spear,
+                   .attack_family = CombatAttackFamily::Spear,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 2.4F),
+                   .distance = 2.4F,
+                   .local_forward = 2.4F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_TRUE(result.interrupted_charge);
+  EXPECT_GE(result.contact.relative_speed, 5.5F);
+  EXPECT_FALSE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_vx(), 0.0F);
+  EXPECT_FLOAT_EQ(movement->get_vz(), 0.0F);
+  auto* stagger = cavalry->get_component<StaggerComponent>();
+  ASSERT_NE(stagger, nullptr);
+  EXPECT_EQ(stagger->tier, StaggerTier::Knockdown);
+}
+
+TEST_F(CombatModeTest, UnbracedSpearThrustDoesNotInterruptFastMountedTarget) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* cavalry = make_enemy_cavalry(*world, 0.0F, 2.4F);
+  auto* movement = cavalry->add_component<MovementComponent>();
+  movement->engage_manual_move(0.0F, -6.0F);
+  ASSERT_TRUE(movement->get_has_target());
+
+  auto* cavalry_motion = cavalry->add_component<MotionPresentationComponent>();
+  cavalry_motion->has_velocity = true;
+  cavalry_motion->velocity_x = 0.0F;
+  cavalry_motion->velocity_z = -5.5F;
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = cavalry->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSpearThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Spear,
+                   .attack_family = CombatAttackFamily::Spear,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 2.4F),
+                   .distance = 2.4F,
+                   .local_forward = 2.4F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_FALSE(result.interrupted_charge);
+  EXPECT_GE(result.contact.relative_speed, 5.5F);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_EQ(cavalry->get_component<StaggerComponent>(), nullptr);
+}
+
+TEST_F(CombatModeTest, HoldModeSpearBraceInterruptsFastMountedTarget) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* hold = commander->add_component<HoldModeComponent>();
+  hold->active = true;
+  hold->kneel_entry_progress = 1.0F;
+
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.0F);
+  auto* brace = commander->get_component<SpearBraceComponent>();
+  ASSERT_NE(brace, nullptr);
+  EXPECT_TRUE(brace->requested);
+  EXPECT_TRUE(brace->active);
+  EXPECT_EQ(brace->source, SpearBraceSource::HoldMode);
+
+  auto* cavalry = make_enemy_cavalry(*world, 0.0F, 2.4F);
+  auto* movement = cavalry->add_component<MovementComponent>();
+  movement->engage_manual_move(0.0F, -6.0F);
+  ASSERT_TRUE(movement->get_has_target());
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = cavalry->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSpearThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Spear,
+                   .attack_family = CombatAttackFamily::Spear,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 2.4F),
+                   .distance = 2.4F,
+                   .local_forward = 2.4F,
+                   .relative_speed = 5.5F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_TRUE(result.interrupted_charge);
+  EXPECT_FALSE(movement->get_has_target());
+  auto* stagger = cavalry->get_component<StaggerComponent>();
+  ASSERT_NE(stagger, nullptr);
+  EXPECT_EQ(stagger->tier, StaggerTier::Knockdown);
+}
+
+TEST_F(CombatModeTest, GuardModeSpearBraceRequiresPoseEntryBeforeActive) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* guard = commander->add_component<GuardModeComponent>();
+  guard->active = true;
+
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.10F);
+
+  auto* brace = commander->get_component<SpearBraceComponent>();
+  ASSERT_NE(brace, nullptr);
+  EXPECT_TRUE(brace->requested);
+  EXPECT_FALSE(brace->active);
+  EXPECT_EQ(brace->source, SpearBraceSource::GuardMode);
+  EXPECT_GT(brace->pose_progress, 0.0F);
+  EXPECT_LT(brace->pose_progress, 0.85F);
+
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.20F);
+  EXPECT_TRUE(brace->active);
+  EXPECT_FLOAT_EQ(brace->pose_progress, 1.0F);
+}
+
+TEST_F(CombatModeTest, DerivedSpearBraceExitsWhenGuardIntentEnds) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* guard = commander->add_component<GuardModeComponent>();
+  guard->active = true;
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.30F);
+
+  auto* brace = commander->get_component<SpearBraceComponent>();
+  ASSERT_NE(brace, nullptr);
+  ASSERT_TRUE(brace->active);
+
+  guard->active = false;
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.05F);
+
+  EXPECT_FALSE(brace->requested);
+  EXPECT_FALSE(brace->active);
+  EXPECT_GT(brace->pose_progress, 0.0F);
+
+  Game::Systems::Combat::process_spear_brace_state(world.get(), 0.20F);
+  EXPECT_FLOAT_EQ(brace->pose_progress, 0.0F);
+}
+
+TEST_F(CombatModeTest, SpearThrustDoesNotInterruptSlowMountedTarget) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* brace = commander->add_component<SpearBraceComponent>();
+  brace->active = true;
+
+  auto* cavalry = make_enemy_cavalry(*world, 0.0F, 2.4F);
+  auto* movement = cavalry->add_component<MovementComponent>();
+  movement->engage_manual_move(0.0F, -6.0F);
+  ASSERT_TRUE(movement->get_has_target());
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = commander->get_id(),
+                   .target_id = cavalry->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSpearThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Spear,
+                   .attack_family = CombatAttackFamily::Spear,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 2.4F),
+                   .distance = 2.4F,
+                   .local_forward = 2.4F,
+                   .relative_speed = 2.0F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_FALSE(result.interrupted_charge);
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_EQ(cavalry->get_component<StaggerComponent>(), nullptr);
+}
+
+TEST_F(CombatModeTest, MountedChargeImpactDefinitionUsesMountFamily) {
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedChargeImpact);
+  ASSERT_NE(definition, nullptr);
+
+  EXPECT_EQ(definition->weapon_family,
+            Game::Systems::CombatActions::WeaponFamily::Mount);
+  EXPECT_EQ(definition->attack_direction, AttackDirection::Thrust);
+  EXPECT_GT(definition->damage.base_multiplier, 1.0F);
+  EXPECT_GT(definition->max_targets, 1);
+  EXPECT_FALSE(definition->events.empty());
+  EXPECT_EQ(definition->rider_clip_id, Animation::k_humanoid_riding_charge_clip);
+}
+
+TEST_F(CombatModeTest, MountedChargeBodyImpactFindsForwardContact) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* forward_target = make_enemy_soldier(*world, 0.25F, 1.0F);
+  auto* side_target = make_enemy_soldier(*world, 20.0F, 1.0F);
+  forward_target->get_component<TransformComponent>()->scale = {1.0F, 1.0F, 1.0F};
+  side_target->get_component<TransformComponent>()->scale = {1.0F, 1.0F, 1.0F};
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedChargeImpact);
+  ASSERT_NE(definition, nullptr);
+
+  auto const forward_contact = Game::Systems::CombatActions::find_body_impact_contact(
+      *world, *attacker, *definition, forward_target->get_id());
+  EXPECT_EQ(forward_contact.target_id, forward_target->get_id());
+
+  std::array<EntityID, 1> ignored_forward{forward_target->get_id()};
+  auto const side_contact = Game::Systems::CombatActions::find_body_impact_contact(
+      *world, *attacker, *definition, side_target->get_id(), ignored_forward);
+  EXPECT_EQ(side_contact.target_id, 0U)
+      << "local_forward=" << side_contact.local_forward
+      << " local_right=" << side_contact.local_right
+      << " distance=" << side_contact.distance
+      << " radius=" << definition->hit_shape.radius;
+}
+
+TEST_F(CombatModeTest, MountedChargeImpactKnocksDownAtHighSpeed) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.2F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedChargeImpact);
+  ASSERT_NE(definition, nullptr);
+
+  auto result = Game::Systems::Combat::resolve_mounted_charge_impact_hit(
+      world.get(),
+      {.contact =
+           {.attacker_id = attacker->get_id(),
+            .target_id = target->get_id(),
+            .action_id =
+                Game::Systems::CombatActions::CombatActionId::MountedChargeImpact,
+            .weapon_family = Game::Systems::CombatActions::WeaponFamily::Mount,
+            .attack_family = CombatAttackFamily::None,
+            .attack_direction = AttackDirection::Thrust,
+            .contact_point = QVector3D(0.0F, 0.0F, 1.2F),
+            .distance = 1.2F,
+            .relative_speed = 6.5F},
+       .damage_profile = definition->damage,
+       .explicit_raw_damage = 20});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_TRUE(result.interrupted_charge);
+  EXPECT_EQ(result.raw_damage, 25);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 75);
+  auto* stagger = target->get_component<StaggerComponent>();
+  ASSERT_NE(stagger, nullptr);
+  EXPECT_EQ(stagger->tier, StaggerTier::Knockdown);
+}
+
+TEST_F(CombatModeTest, MountedChargeImpactAtLowSpeedDoesNotStagger) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.2F);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::MountedChargeImpact);
+  ASSERT_NE(definition, nullptr);
+
+  auto result = Game::Systems::Combat::resolve_mounted_charge_impact_hit(
+      world.get(),
+      {.contact =
+           {.attacker_id = attacker->get_id(),
+            .target_id = target->get_id(),
+            .action_id =
+                Game::Systems::CombatActions::CombatActionId::MountedChargeImpact,
+            .weapon_family = Game::Systems::CombatActions::WeaponFamily::Mount,
+            .attack_family = CombatAttackFamily::None,
+            .attack_direction = AttackDirection::Thrust,
+            .contact_point = QVector3D(0.0F, 0.0F, 1.2F),
+            .distance = 1.2F,
+            .relative_speed = 2.0F},
+       .damage_profile = definition->damage,
+       .explicit_raw_damage = 20});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_FALSE(result.interrupted_charge);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 75);
+  EXPECT_EQ(target->get_component<StaggerComponent>(), nullptr);
+}
+
+TEST_F(CombatModeTest, MountedChargeActionDealsBodyImpactDuringActiveWindow) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.1F);
+  auto* attacker_motion = attacker->add_component<MotionPresentationComponent>();
+  attacker_motion->has_velocity = true;
+  attacker_motion->velocity_x = 0.0F;
+  attacker_motion->velocity_z = 6.5F;
+
+  auto* combat_state = attacker->add_component<CombatStateComponent>();
+  combat_state->animation_state = CombatAnimationState::Strike;
+  combat_state->state_time = 0.0F;
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      attacker,
+      Game::Systems::CombatActions::CombatActionId::MountedChargeImpact,
+      0.18F);
+  action->active_target_id = target->get_id();
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.04F);
+
+  EXPECT_TRUE(action->action_active);
+  EXPECT_FALSE(action->weapon_trace_active);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 77);
+  EXPECT_EQ(action->last_hit_target_id, target->get_id());
+  EXPECT_EQ(action->last_damage, 23);
+  EXPECT_EQ(action->hit_target_count, 1U);
+  auto* stagger = target->get_component<StaggerComponent>();
+  ASSERT_NE(stagger, nullptr);
+  EXPECT_EQ(stagger->tier, StaggerTier::Knockdown);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.05F);
+
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 77);
+  EXPECT_EQ(action->hit_target_count, 1U);
+}
+
+TEST_F(CombatModeTest, MovingCavalryStartsMountedChargeImpactAction) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.1F);
+
+  EXPECT_EQ(attacker->get_component<CombatStateComponent>(), nullptr);
+  EXPECT_EQ(attacker->get_component<RpgCommanderActionComponent>(), nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.12F);
+
+  auto* combat_state = attacker->get_component<CombatStateComponent>();
+  auto* action = attacker->get_component<RpgCommanderActionComponent>();
+  auto* charge = attacker->get_component<MountedChargeComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  ASSERT_NE(action, nullptr);
+  ASSERT_NE(charge, nullptr);
+  EXPECT_EQ(combat_state->animation_state, CombatAnimationState::Strike);
+  EXPECT_EQ(action->combat_action_id,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionId::MountedChargeImpact));
+  EXPECT_EQ(action->active_target_id, target->get_id());
+  EXPECT_EQ(action->last_hit_target_id, 0U);
+  EXPECT_EQ(action->hit_target_count, 0U);
+  EXPECT_EQ(charge->state, MountedChargeState::Charging);
+  EXPECT_EQ(charge->active_target_id, target->get_id());
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.18F);
+
+  EXPECT_EQ(charge->state, MountedChargeState::ImpactActive);
+  EXPECT_EQ(action->last_hit_target_id, target->get_id());
+  EXPECT_EQ(action->hit_target_count, 1U);
+  EXPECT_EQ(charge->last_impact_target_id, target->get_id());
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 77);
+}
+
+TEST_F(CombatModeTest, MountedChargeRuntimeBlocksImmediateRestartUntilCooldown) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.1F);
+  auto* target_unit = target->get_component<UnitComponent>();
+  ASSERT_NE(target_unit, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.12F);
+  Game::Systems::Combat::process_combat_state(world.get(), 0.35F);
+
+  auto* charge = attacker->get_component<MountedChargeComponent>();
+  ASSERT_NE(charge, nullptr);
+  EXPECT_EQ(target_unit->health, 77);
+  EXPECT_EQ(charge->state, MountedChargeState::ImpactActive);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 1.20F);
+
+  EXPECT_EQ(target_unit->health, 77);
+  EXPECT_EQ(charge->state, MountedChargeState::Cooldown);
+  EXPECT_GT(charge->cooldown_remaining, 0.0F);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.10F);
+
+  EXPECT_EQ(target_unit->health, 77);
+  EXPECT_EQ(charge->state, MountedChargeState::Cooldown);
+
+  for (int i = 0; i < 64 && target_unit->health == 77; ++i) {
+    Game::Systems::Combat::process_combat_state(world.get(), 0.02F);
+  }
+
+  EXPECT_LT(target_unit->health, 77);
+  EXPECT_EQ(charge->last_impact_target_id, target->get_id());
+}
+
+TEST_F(CombatModeTest, PlayerChargeIntentStartsBeforeBodyContact) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* commander = attacker->add_component<CommanderComponent>();
+  commander->fpv_controlled = true;
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* charge = attacker->add_component<MountedChargeComponent>();
+  charge->auto_contact_enabled = false;
+
+  ASSERT_TRUE(Game::Systems::Combat::request_mounted_charge(
+      *attacker, MountedChargeIntentSource::Player));
+  Game::Systems::Combat::process_combat_state(world.get(), 0.05F);
+
+  auto* action = attacker->get_component<RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  EXPECT_EQ(charge->state, MountedChargeState::Charging);
+  EXPECT_EQ(charge->intent_source, MountedChargeIntentSource::Player);
+  EXPECT_EQ(charge->active_target_id, 0U);
+  EXPECT_TRUE(action->action_running);
+  EXPECT_EQ(action->combat_action_id,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionId::MountedChargeImpact));
+}
+
+TEST_F(CombatModeTest, MountedChargeCancelsAfterSustainedSpeedLoss) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* charge = attacker->add_component<MountedChargeComponent>();
+  charge->auto_contact_enabled = false;
+  charge->speed_loss_grace = 0.12F;
+
+  ASSERT_TRUE(Game::Systems::Combat::request_mounted_charge(
+      *attacker, MountedChargeIntentSource::AI));
+  Game::Systems::Combat::process_combat_state(world.get(), 0.05F);
+  ASSERT_EQ(charge->state, MountedChargeState::Charging);
+
+  movement->set_manual_velocity(0.0F, 0.0F);
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+  EXPECT_EQ(charge->state, MountedChargeState::Charging);
+  Game::Systems::Combat::process_combat_state(world.get(), 0.07F);
+
+  EXPECT_EQ(charge->state, MountedChargeState::Cooldown);
+  EXPECT_EQ(charge->last_cancel_reason, MountedChargeCancelReason::SpeedLost);
+  auto* action = attacker->get_component<RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  EXPECT_FALSE(action->action_running);
+  EXPECT_EQ(action->combat_action_id, 0U);
+}
+
+TEST_F(CombatModeTest, AiChargeIntentStartsAgainstForwardTargetBeforeContact) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 6.0F);
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = target->get_id();
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.05F);
+
+  auto* charge = attacker->get_component<MountedChargeComponent>();
+  ASSERT_NE(charge, nullptr);
+  EXPECT_EQ(charge->state, MountedChargeState::Charging);
+  EXPECT_EQ(charge->intent_source, MountedChargeIntentSource::AI);
+  EXPECT_EQ(charge->active_target_id, 0U);
+}
+
+TEST_F(CombatModeTest, MountedChargeRuntimeMinSpeedCanDelayChargeStart) {
+  auto* attacker = make_mounted_attacker(*world, 0.0F, 0.0F);
+  auto* movement = attacker->add_component<MovementComponent>();
+  movement->set_manual_velocity(0.0F, 6.5F);
+  auto* charge = attacker->add_component<MountedChargeComponent>();
+  charge->min_start_speed = 7.0F;
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.1F);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.12F);
+
+  EXPECT_EQ(attacker->get_component<CombatStateComponent>(), nullptr);
+  EXPECT_EQ(attacker->get_component<RpgCommanderActionComponent>(), nullptr);
+  EXPECT_EQ(charge->state, MountedChargeState::Ready);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 100);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverUsesCommanderGuardForCommanderTarget) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+  auto* attacker_cmd = attacker->get_component<CommanderComponent>();
+  ASSERT_NE(attacker_cmd, nullptr);
+  attacker_cmd->combo_step = 2;
+  attacker_cmd->power_strike_active = true;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  guard->perfect_guard_remaining = 0.1F;
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSwordThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 0.0F),
+                   .distance = 1.0F,
+                   .local_forward = 1.0F},
+       .damage_profile = {}});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_FALSE(result.applied);
+  EXPECT_TRUE(result.damage.perfect_guarded);
+  EXPECT_EQ(target_rpg->rpg_hp, 100);
+  EXPECT_TRUE(attacker->has_component<StaggerComponent>());
+  EXPECT_EQ(attacker_cmd->combo_step, 2);
+  EXPECT_TRUE(attacker_cmd->power_strike_active);
+  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverAppliesAuthoredPostureDamageToCommander) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher);
+  ASSERT_NE(definition, nullptr);
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id = definition->id,
+                   .weapon_family = definition->weapon_family,
+                   .attack_family = definition->attack_family,
+                   .attack_direction = definition->attack_direction,
+                   .contact_point = QVector3D(0.0F, 0.0F, 0.0F),
+                   .distance = 1.0F,
+                   .local_forward = 1.0F},
+       .damage_profile = definition->damage});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(result.raw_damage, 15);
+  EXPECT_EQ(target_rpg->rpg_hp, 85);
+  EXPECT_FLOAT_EQ(target_cmd->posture, definition->damage.posture_damage);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverAppliesAuthoredGuardPressure) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  target_cmd->posture = 80.0F;
+  target_cmd->posture_max = 100.0F;
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher);
+  ASSERT_NE(definition, nullptr);
+  ASSERT_GT(definition->damage.guard_pressure, 20.0F);
+
+  auto result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id = definition->id,
+                   .weapon_family = definition->weapon_family,
+                   .attack_family = definition->attack_family,
+                   .attack_direction = definition->attack_direction,
+                   .contact_point = QVector3D(0.0F, 0.0F, 0.0F),
+                   .distance = 1.0F,
+                   .local_forward = 1.0F},
+       .damage_profile = definition->damage});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_TRUE(result.damage.guard_broken);
+  EXPECT_FALSE(result.damage.blocked);
+  EXPECT_EQ(target_rpg->rpg_hp, 85);
+  EXPECT_FALSE(guard->active);
+  EXPECT_TRUE(guard->rearm_requires_release);
+  EXPECT_GT(guard->guard_break_remaining, 0.0F);
+  EXPECT_FLOAT_EQ(target_cmd->posture, target_cmd->posture_max);
+  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+}
+
+TEST_F(CombatModeTest, CommanderActionContactRespectsDodgeInvulnerability) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  target->add_component<CommanderComponent>();
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->dodge_invincible = true;
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordThrust);
+  ASSERT_NE(definition, nullptr);
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id = definition->id,
+                   .weapon_family = definition->weapon_family,
+                   .attack_family = definition->attack_family,
+                   .attack_direction = definition->attack_direction},
+       .damage_profile = definition->damage});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_FALSE(result.applied);
+  EXPECT_EQ(result.damage.effective_damage, 0);
+  EXPECT_EQ(target_rpg->rpg_hp, 100);
+}
+
+TEST_F(CombatModeTest, CommanderFinisherUsesPunishOpeningThroughSharedResolver) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+  auto* attacker_commander = attacker->get_component<CommanderComponent>();
+  ASSERT_NE(attacker_commander, nullptr);
+  attacker_commander->combo_step = 3;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* target_commander = target->add_component<CommanderComponent>();
+  target_commander->punish_window_remaining = 0.5F;
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher);
+  ASSERT_NE(definition, nullptr);
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id = definition->id,
+                   .weapon_family = definition->weapon_family,
+                   .attack_family = definition->attack_family,
+                   .attack_direction = definition->attack_direction},
+       .damage_profile = definition->damage});
+
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(result.raw_damage, 15);
+  EXPECT_EQ(result.damage.effective_damage, 31);
+  EXPECT_EQ(target_rpg->rpg_hp, 69);
+  EXPECT_EQ(attacker_commander->combo_step, 0);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverRoutesProjectileImpactWithExplicitDamage) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* attack = attacker->get_component<AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->damage = 99;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::CursedArrow;
+  special_attack->use_projectile_system = true;
+  special_attack->cursed_duration = 6.0F;
+  special_attack->cursed_morale_penalty_per_hit = 8.0F;
+  special_attack->cursed_stacks_per_hit = 1;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* morale = target->add_component<MoraleComponent>();
+  morale->morale = 70.0F;
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto result = Game::Systems::Combat::resolve_projectile_impact_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Bow,
+                   .attack_family = CombatAttackFamily::Bow,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 5.0F),
+                   .from_projectile = true,
+                   .projectile_kind = Game::Systems::ProjectileKind::CursedArrow},
+       .explicit_raw_damage = 17});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(result.raw_damage, 17);
+  EXPECT_TRUE(result.contact.from_projectile);
+  EXPECT_EQ(result.contact.projectile_kind, Game::Systems::ProjectileKind::CursedArrow);
+  EXPECT_EQ(target_rpg->rpg_hp, 83);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 100);
+  auto* cursed = target->get_component<CursedStatusComponent>();
+  ASSERT_NE(cursed, nullptr);
+  EXPECT_EQ(cursed->stacks, 1);
+  EXPECT_FLOAT_EQ(cursed->duration, 6.0F);
+  EXPECT_FLOAT_EQ(cursed->remaining_duration, 6.0F);
+  EXPECT_FLOAT_EQ(morale->morale, 62.0F);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverCursedProjectileSkipsUndeadTarget) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::CursedArrow;
+  special_attack->use_projectile_system = true;
+  special_attack->cursed_duration = 6.0F;
+  special_attack->cursed_morale_penalty_per_hit = 8.0F;
+  special_attack->cursed_stacks_per_hit = 1;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  target->add_component<UndeadComponent>();
+  auto* morale = target->add_component<MoraleComponent>();
+  morale->morale = 70.0F;
+
+  auto result = Game::Systems::Combat::resolve_projectile_impact_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Bow,
+                   .attack_family = CombatAttackFamily::Bow,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 5.0F),
+                   .from_projectile = true,
+                   .projectile_kind = Game::Systems::ProjectileKind::CursedArrow},
+       .explicit_raw_damage = 17});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 83);
+  EXPECT_EQ(target->get_component<CursedStatusComponent>(), nullptr);
+  EXPECT_FLOAT_EQ(morale->morale, 70.0F);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverFireballAppliesBurningStatus) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->burn_duration = 1.4F;
+  special_attack->burn_tick_interval = 0.25F;
+  special_attack->burn_damage_per_tick = 2;
+  special_attack->bonus_damage_multiplier_vs_fire_vulnerable = 1.7F;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+
+  auto result = Game::Systems::Combat::resolve_projectile_impact_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Bow,
+                   .attack_family = CombatAttackFamily::Bow,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 5.0F),
+                   .from_projectile = true,
+                   .projectile_kind = Game::Systems::ProjectileKind::Fireball},
+       .explicit_raw_damage = 17});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 83);
+  auto* burning = target->get_component<BurningStatusComponent>();
+  ASSERT_NE(burning, nullptr);
+  EXPECT_FLOAT_EQ(burning->duration, 1.4F);
+  EXPECT_FLOAT_EQ(burning->remaining_duration, 1.4F);
+  EXPECT_FLOAT_EQ(burning->ignition_elapsed, 0.08F);
+  EXPECT_FLOAT_EQ(burning->tick_interval, 0.25F);
+  EXPECT_EQ(burning->damage_per_tick, 2);
+  EXPECT_EQ(burning->attacker_id, attacker->get_id());
+  EXPECT_FLOAT_EQ(burning->fire_bonus_multiplier, 1.7F);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverFireballRefreshesExistingBurningStatus) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->burn_duration = 1.4F;
+  special_attack->burn_tick_interval = 0.25F;
+  special_attack->burn_damage_per_tick = 4;
+  special_attack->bonus_damage_multiplier_vs_fire_vulnerable = 1.8F;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* burning = target->add_component<BurningStatusComponent>();
+  burning->duration = 0.6F;
+  burning->remaining_duration = 0.2F;
+  burning->ignition_elapsed = 0.5F;
+  burning->tick_interval = 0.5F;
+  burning->damage_per_tick = 1;
+  burning->fire_bonus_multiplier = 1.0F;
+
+  auto result = Game::Systems::Combat::resolve_projectile_impact_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Bow,
+                   .attack_family = CombatAttackFamily::Bow,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.0F, 5.0F),
+                   .from_projectile = true,
+                   .projectile_kind = Game::Systems::ProjectileKind::Fireball},
+       .explicit_raw_damage = 17});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_TRUE(result.applied);
+  EXPECT_FLOAT_EQ(burning->duration, 1.4F);
+  EXPECT_FLOAT_EQ(burning->remaining_duration, 1.4F);
+  EXPECT_FLOAT_EQ(burning->ignition_elapsed, 0.5F);
+  EXPECT_FLOAT_EQ(burning->tick_interval, 0.25F);
+  EXPECT_EQ(burning->damage_per_tick, 4);
+  EXPECT_EQ(burning->attacker_id, attacker->get_id());
+  EXPECT_FLOAT_EQ(burning->fire_bonus_multiplier, 1.8F);
+}
+
+TEST_F(CombatModeTest, CombatHitResolverFireballAreaImpactSpawnsFirePatch) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 1.5F;
+  special_attack->splash_damage_multiplier = 0.5F;
+  special_attack->fire_patch_duration = 2.0F;
+  special_attack->fire_patch_radius = 1.4F;
+  special_attack->burn_duration = 1.2F;
+  special_attack->burn_tick_interval = 0.3F;
+  special_attack->burn_damage_per_tick = 3;
+
+  auto* primary = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* splash = make_enemy_soldier(*world, 0.6F, 5.2F);
+  auto* ally = world->create_entity();
+  ally->add_component<TransformComponent>(0.4F, 0.0F, 5.0F);
+  auto* ally_unit = ally->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(ally_unit, nullptr);
+  ally_unit->owner_id = 1;
+
+  auto result = Game::Systems::Combat::resolve_projectile_area_impact_hit(
+      world.get(),
+      {.attacker_id = attacker->get_id(),
+       .primary_target_id = primary->get_id(),
+       .impact_point = QVector3D(0.0F, 0.85F, 5.0F),
+       .projectile_kind = Game::Systems::ProjectileKind::Fireball,
+       .explicit_raw_damage = 20,
+       .radius = 1.5F,
+       .splash_damage_multiplier = 0.5F,
+       .friendly_fire = false});
+
+  EXPECT_EQ(result.attempted_hits, 2);
+  EXPECT_EQ(result.applied_hits, 2);
+  EXPECT_TRUE(result.fire_patch_spawned);
+  EXPECT_EQ(primary->get_component<UnitComponent>()->health, 80);
+  EXPECT_EQ(splash->get_component<UnitComponent>()->health, 90);
+  EXPECT_EQ(ally_unit->health, 100);
+  EXPECT_NE(primary->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_NE(splash->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_EQ(ally->get_component<BurningStatusComponent>(), nullptr);
+
+  auto fire_patches = world->get_entities_with<FirePatchComponent>();
+  ASSERT_EQ(fire_patches.size(), 1U);
+  auto* fire_patch = fire_patches.front()->get_component<FirePatchComponent>();
+  auto* fire_patch_transform =
+      fire_patches.front()->get_component<TransformComponent>();
+  ASSERT_NE(fire_patch, nullptr);
+  ASSERT_NE(fire_patch_transform, nullptr);
+  EXPECT_FLOAT_EQ(fire_patch->radius, 1.4F);
+  EXPECT_FLOAT_EQ(fire_patch->remaining_duration, 2.0F);
+  EXPECT_EQ(fire_patch->attacker_id, attacker->get_id());
+  EXPECT_EQ(fire_patch->attacker_owner_id, 1);
+  EXPECT_FALSE(fire_patch->friendly_fire);
+  EXPECT_FLOAT_EQ(fire_patch_transform->position.y, 0.0F);
+}
+
+TEST_F(CombatModeTest, CombatStatusEffectsBurningTickRoutesThroughHitResolver) {
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* target_unit = target->get_component<UnitComponent>();
+  ASSERT_NE(target_unit, nullptr);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto* burning = target->add_component<BurningStatusComponent>();
+  burning->remaining_duration = 1.0F;
+  burning->tick_interval = 0.25F;
+  burning->tick_accumulator = 0.0F;
+  burning->damage_per_tick = 7;
+  burning->attacker_id = attacker->get_id();
+
+  auto result =
+      Game::Systems::Combat::process_combat_status_effects(world.get(), 0.25F);
+
+  EXPECT_EQ(result.burning_ticks, 1);
+  EXPECT_EQ(result.expired_burning_statuses, 0);
+  EXPECT_EQ(target_rpg->rpg_hp, 93);
+  EXPECT_EQ(target_unit->health, 100);
+  ASSERT_NE(target->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_FLOAT_EQ(target->get_component<BurningStatusComponent>()->remaining_duration,
+                  0.75F);
+}
+
+TEST_F(CombatModeTest, CombatStatusEffectsExpireCursesAndFirePatches) {
+  auto* cursed_target = make_enemy_soldier(*world, 10.0F, 5.0F);
+  auto* cursed = cursed_target->add_component<CursedStatusComponent>();
+  cursed->remaining_duration = 0.1F;
+
+  auto* fire_patch_entity = world->create_entity();
+  fire_patch_entity->add_component<TransformComponent>(1.0F, 0.0F, 5.0F);
+  auto* fire_patch = fire_patch_entity->add_component<FirePatchComponent>();
+  fire_patch->radius = 1.25F;
+  fire_patch->duration = 0.3F;
+  fire_patch->remaining_duration = 0.3F;
+  fire_patch->burn_duration = 0.8F;
+  fire_patch->burn_tick_interval = 0.2F;
+  fire_patch->burn_damage_per_tick = 3;
+  fire_patch->attacker_owner_id = 1;
+  fire_patch->attacker_id = 77;
+  fire_patch->friendly_fire = false;
+
+  auto* burn_target = make_enemy_soldier(*world, 1.2F, 5.1F);
+  burn_target->get_component<UnitComponent>()->owner_id = 2;
+
+  auto first = Game::Systems::Combat::process_combat_status_effects(world.get(), 0.1F);
+
+  EXPECT_EQ(first.expired_curses, 1);
+  EXPECT_EQ(cursed_target->get_component<CursedStatusComponent>(), nullptr);
+  EXPECT_EQ(first.fire_patch_contacts, 1);
+  EXPECT_EQ(first.expired_fire_patches, 0);
+  ASSERT_NE(burn_target->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_FLOAT_EQ(
+      burn_target->get_component<BurningStatusComponent>()->remaining_duration, 0.8F);
+
+  auto second =
+      Game::Systems::Combat::process_combat_status_effects(world.get(), 0.25F);
+
+  EXPECT_EQ(second.expired_fire_patches, 1);
+  EXPECT_NE(fire_patch_entity->get_component<PendingRemovalComponent>(), nullptr);
+}
+
+TEST_F(CombatModeTest, CombatStatusEffectSystemTicksBurningDuringWorldUpdate) {
+  world->add_system(std::make_unique<Game::Systems::CombatStatusEffectSystem>());
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* target_unit = target->get_component<UnitComponent>();
+  ASSERT_NE(target_unit, nullptr);
+  auto* burning = target->add_component<BurningStatusComponent>();
+  burning->remaining_duration = 0.5F;
+  burning->tick_interval = 0.1F;
+  burning->damage_per_tick = 5;
+
+  world->update(0.1F);
+
+  EXPECT_EQ(target_unit->health, 95);
+  ASSERT_NE(target->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_FLOAT_EQ(target->get_component<BurningStatusComponent>()->remaining_duration,
+                  0.4F);
+}
+
+TEST_F(CombatModeTest, ProjectileSystemImpactRoutesThroughRpgResolver) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  projectile_system->spawn_arrow(QVector3D(0.0F, 1.15F, 0.0F),
+                                 QVector3D(0.0F, 0.85F, 5.0F),
+                                 QVector3D(1.0F, 1.0F, 1.0F),
+                                 30.0F,
+                                 false,
+                                 Game::Systems::ProjectileKind::Arrow,
+                                 true,
+                                 11,
+                                 attacker->get_id(),
+                                 target->get_id());
+
+  advance_projectiles(*world, 0.6F, 0.05F);
+
+  EXPECT_TRUE(projectile_system->projectiles().empty());
+  EXPECT_EQ(target_rpg->rpg_hp, 89);
+  EXPECT_EQ(target->get_component<UnitComponent>()->health, 100);
+}
+
+TEST_F(CombatModeTest, CommanderActionSwordTraceDealsDamageWhenBladeTouches) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.5F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+      0.33F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 100);
+  EXPECT_FALSE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, 0U);
+  EXPECT_EQ(action->hit_target_count, 0U);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.18F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 90);
+  EXPECT_TRUE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->hit_target_count, 1U);
+  EXPECT_EQ(action->hit_target_ids[0], enemy->get_id());
+}
+
+TEST_F(CombatModeTest, CommanderActionSwordTraceMissDoesNotUseImpactFallback) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, -1.2F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+      0.33F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+  Game::Systems::Combat::process_combat_state(world.get(), 0.24F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 100);
+  EXPECT_FALSE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, 0U);
+  EXPECT_EQ(action->hit_target_count, 0U);
+}
+
+TEST_F(CombatModeTest, CommanderDuelTargetIsHitOnlyOncePerAuthoredSwing) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.5F);
+  target->add_component<CommanderComponent>();
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+  auto* combat_state = begin_commander_strike(commander, target->get_id());
+  combat_state->state_duration = 0.30F;
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+      0.48F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = target->get_id();
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.04F);
+  int const hp_after_first_contact = target_rpg->rpg_hp;
+  Game::Systems::Combat::process_combat_state(world.get(), 0.04F);
+
+  EXPECT_LT(hp_after_first_contact, 100);
+  EXPECT_EQ(target_rpg->rpg_hp, hp_after_first_contact);
+  EXPECT_EQ(action->hit_target_count, 1U);
+  EXPECT_EQ(action->hit_target_ids[0], target->get_id());
+}
+
+TEST_F(CombatModeTest, CommanderActionSpearTraceDealsDamageDuringActiveWindow) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 2.45F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+  combat_state->attack_family = CombatAttackFamily::Spear;
+
+  auto* action = start_authored_action_at(
+      commander, Game::Systems::CombatActions::CombatActionId::RpgSpearThrust, 0.28F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 100);
+  EXPECT_FALSE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, 0U);
+  EXPECT_EQ(action->hit_target_count, 0U);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.25F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 89);
+  EXPECT_TRUE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->hit_target_count, 1U);
+}
+
+TEST_F(CombatModeTest, MountedSwordActionTraceDealsDamageDuringActiveWindow) {
+  auto* commander = make_fpv_mounted_sword_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, -0.45F, 0.32F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+  combat_state->attack_family = CombatAttackFamily::Sword;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::MountedSwordSlash,
+      0.28F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 79);
+  EXPECT_TRUE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->hit_target_count, 1U);
+}
+
+TEST_F(CombatModeTest, MountedSpearActionTraceDealsDamageDuringActiveWindow) {
+  auto* commander = make_fpv_mounted_spear_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, -0.10F, 2.0F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+  combat_state->attack_family = CombatAttackFamily::Spear;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::MountedSpearThrust,
+      0.24F);
+  ASSERT_NE(action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 78);
+  EXPECT_TRUE(combat_state->damage_dealt_this_swing);
+  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->hit_target_count, 1U);
+}
+
+TEST_F(CombatModeTest, MountedWeaponActionMissDoesNotUseBroadShapeFallback) {
+  auto* sword_commander = make_fpv_mounted_sword_commander(*world, 0.0F, 0.0F);
+  auto* sword_enemy = make_enemy_soldier(*world, 0.0F, 2.0F);
+  auto* sword_state = begin_commander_strike(sword_commander, sword_enemy->get_id());
+  sword_state->state_duration = 0.30F;
+  sword_state->attack_family = CombatAttackFamily::Sword;
+  auto* sword_action = start_authored_action_at(
+      sword_commander,
+      Game::Systems::CombatActions::CombatActionId::MountedSwordSlash,
+      0.28F);
+  ASSERT_NE(sword_action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.16F);
+
+  EXPECT_EQ(sword_enemy->get_component<UnitComponent>()->health, 100);
+  EXPECT_FALSE(sword_state->damage_dealt_this_swing);
+  EXPECT_EQ(sword_action->last_hit_target_id, 0U);
+  EXPECT_EQ(sword_action->hit_target_count, 0U);
+
+  auto* spear_commander = make_fpv_mounted_spear_commander(*world, 4.0F, 0.0F);
+  auto* spear_enemy = make_enemy_soldier(*world, 4.0F, 3.0F);
+  auto* spear_state = begin_commander_strike(spear_commander, spear_enemy->get_id());
+  spear_state->state_duration = 0.30F;
+  spear_state->attack_family = CombatAttackFamily::Spear;
+  auto* spear_action = start_authored_action_at(
+      spear_commander,
+      Game::Systems::CombatActions::CombatActionId::MountedSpearThrust,
+      0.24F);
+  ASSERT_NE(spear_action, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.16F);
+
+  EXPECT_EQ(spear_enemy->get_component<UnitComponent>()->health, 100);
+  EXPECT_FALSE(spear_state->damage_dealt_this_swing);
+  EXPECT_EQ(spear_action->last_hit_target_id, 0U);
+  EXPECT_EQ(spear_action->hit_target_count, 0U);
+}
+
+TEST_F(CombatModeTest, CommanderBowActionReleasesProjectileAtAuthoredEvent) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* commander = make_fpv_bow_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 5.0F);
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  combat_state->state_duration = 0.30F;
+  combat_state->attack_family = CombatAttackFamily::Bow;
+
+  auto* action = start_authored_action_at(
+      commander, Game::Systems::CombatActions::CombatActionId::RpgBowShot, 0.39F);
+  ASSERT_NE(action, nullptr);
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.12F);
+
+  EXPECT_TRUE(projectile_system->projectiles().empty());
+  EXPECT_FALSE(combat_state->damage_dealt_this_swing);
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.08F);
+
+  ASSERT_EQ(projectile_system->projectiles().size(), 1U);
+  auto const& projectile = projectile_system->projectiles().front();
+  EXPECT_TRUE(projectile->should_apply_damage());
+  EXPECT_EQ(projectile->get_attacker_id(), commander->get_id());
+  EXPECT_EQ(projectile->get_target_id(), enemy->get_id());
+  EXPECT_EQ(projectile->get_damage(), 13);
+  EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  EXPECT_EQ(action->last_damage, 13);
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 100);
 }
 
 TEST_F(CombatModeTest, CommanderStrikeWhiffsWhenTargetLeavesReach) {

@@ -682,6 +682,15 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (!elem.nation.isEmpty()) {
       json[MapJsonKeys::nation] = elem.nation;
     }
+    if (!elem.behavior.isEmpty()) {
+      json[MapJsonKeys::behavior] = elem.behavior;
+    }
+    if (elem.guard_radius != 10.0F) {
+      json[MapJsonKeys::guard_radius] = static_cast<double>(elem.guard_radius);
+    }
+    if (!elem.patrol_waypoints.isEmpty()) {
+      json[MapJsonKeys::patrol_waypoints] = elem.patrol_waypoints;
+    }
     for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
@@ -915,13 +924,20 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                 ? new_json[MapJsonKeys::max_population].toInt(100)
                                 : -1;
       elem.nation = new_json[MapJsonKeys::nation].toString();
+      elem.behavior = new_json[MapJsonKeys::behavior].toString();
+      elem.guard_radius =
+          static_cast<float>(new_json[MapJsonKeys::guard_radius].toDouble(10.0));
+      elem.patrol_waypoints = new_json[MapJsonKeys::patrol_waypoints].toArray();
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::x,
                                       MapJsonKeys::z,
                                       MapJsonKeys::player_id,
                                       MapJsonKeys::max_population,
-                                      MapJsonKeys::nation};
+                                      MapJsonKeys::nation,
+                                      MapJsonKeys::behavior,
+                                      MapJsonKeys::guard_radius,
+                                      MapJsonKeys::patrol_waypoints};
       for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];

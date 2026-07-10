@@ -37,6 +37,13 @@ std::unordered_map<int, int> s_player_team_overrides;
 
 constexpr float k_runtime_grid_center_offset = 0.5F;
 
+enum class AuthoredUnitBehavior {
+  Strategic,
+  Guard,
+  Hold,
+  Patrol
+};
+
 auto runtime_grid_offset(int grid_size) -> float {
   return -(static_cast<float>(grid_size) * k_runtime_grid_center_offset -
            k_runtime_grid_center_offset);
@@ -85,6 +92,87 @@ auto resolve_nation_id_for_map_owner(int effective_player_id,
   }
   return resolve_nation_id_for_map_owner(effective_player_id,
                                          std::optional<Game::Systems::NationID>{});
+}
+
+auto parse_authored_unit_behavior(const QString& value) -> AuthoredUnitBehavior {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == "guard" || lowered == "defend" || lowered == "defensive") {
+    return AuthoredUnitBehavior::Guard;
+  }
+  if (lowered == "hold" || lowered == "hold_position") {
+    return AuthoredUnitBehavior::Hold;
+  }
+  if (lowered == "patrol") {
+    return AuthoredUnitBehavior::Patrol;
+  }
+  return AuthoredUnitBehavior::Strategic;
+}
+
+auto is_scenario_controlled(AuthoredUnitBehavior behavior) -> bool {
+  return behavior == AuthoredUnitBehavior::Guard ||
+         behavior == AuthoredUnitBehavior::Hold ||
+         behavior == AuthoredUnitBehavior::Patrol;
+}
+
+auto map_spawn_point_to_world(const QVector3D& point,
+                              const MapDefinition& def) -> QVector3D {
+  if (def.coordSystem != CoordSystem::Grid) {
+    return point;
+  }
+  const float tile = std::max(0.0001F, def.grid.tile_size);
+  return {(point.x() - (def.grid.width * 0.5F - 0.5F)) * tile,
+          point.y(),
+          (point.z() - (def.grid.height * 0.5F - 0.5F)) * tile};
+}
+
+void apply_authored_unit_behavior(Engine::Core::Entity& entity,
+                                  AuthoredUnitBehavior behavior,
+                                  const UnitSpawn& spawn,
+                                  const QVector3D& world_pos,
+                                  const MapDefinition& def) {
+  if (behavior == AuthoredUnitBehavior::Guard) {
+    auto* guard = entity.get_component<Engine::Core::GuardModeComponent>();
+    if (guard == nullptr) {
+      guard = entity.add_component<Engine::Core::GuardModeComponent>();
+    }
+    if (guard != nullptr) {
+      guard->active = true;
+      guard->guarded_entity_id = 0;
+      guard->guard_position_x = world_pos.x();
+      guard->guard_position_z = world_pos.z();
+      guard->guard_radius = std::clamp(spawn.guard_radius, 2.0F, 60.0F);
+      guard->returning_to_guard_position = false;
+      guard->has_guard_target = true;
+    }
+  } else if (behavior == AuthoredUnitBehavior::Hold) {
+    auto* hold = entity.get_component<Engine::Core::HoldModeComponent>();
+    if (hold == nullptr) {
+      hold = entity.add_component<Engine::Core::HoldModeComponent>();
+    }
+    if (hold != nullptr) {
+      hold->active = true;
+    }
+  } else if (behavior == AuthoredUnitBehavior::Patrol) {
+    std::vector<std::pair<float, float>> waypoints;
+    waypoints.reserve(spawn.patrol_waypoints.size() + 1U);
+    waypoints.emplace_back(world_pos.x(), world_pos.z());
+    for (const auto& authored_waypoint : spawn.patrol_waypoints) {
+      const QVector3D waypoint = map_spawn_point_to_world(authored_waypoint, def);
+      waypoints.emplace_back(waypoint.x(), waypoint.z());
+    }
+
+    if (waypoints.size() >= 2U) {
+      auto* patrol = entity.get_component<Engine::Core::PatrolComponent>();
+      if (patrol == nullptr) {
+        patrol = entity.add_component<Engine::Core::PatrolComponent>();
+      }
+      if (patrol != nullptr) {
+        patrol->waypoints = std::move(waypoints);
+        patrol->current_waypoint = 1U;
+        patrol->patrolling = true;
+      }
+    }
+  }
 }
 
 auto spawn_map_unit(const Game::Units::SpawnParams& params,
@@ -273,11 +361,14 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
 
     Engine::Core::Entity* e = nullptr;
+    const AuthoredUnitBehavior authored_behavior =
+        parse_authored_unit_behavior(s.behavior);
     Game::Units::SpawnParams sp;
     sp.position = QVector3D(world_x, 0.0F, world_z);
     sp.player_id = effective_player_id;
     sp.spawn_type = s.type;
-    sp.ai_controlled = !owner_registry.is_player(effective_player_id);
+    sp.ai_controlled = !owner_registry.is_player(effective_player_id) &&
+                       !is_scenario_controlled(authored_behavior);
     sp.max_population = s.max_population;
     sp.nation_id = resolve_nation_id_for_map_owner(effective_player_id, s.nation);
 
@@ -285,6 +376,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     if (e == nullptr) {
       continue;
     }
+
+    apply_authored_unit_behavior(*e, authored_behavior, s, sp.position, def);
 
     if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
       qInfo() << "Spawned" << Game::Units::spawn_typeToQString(s.type)

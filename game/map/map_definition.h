@@ -66,6 +66,9 @@ struct UnitSpawn {
   int team_id = 0;
   int max_population = 100;
   std::optional<Game::Systems::NationID> nation;
+  QString behavior;
+  float guard_radius = 10.0F;
+  std::vector<QVector3D> patrol_waypoints;
 };
 
 struct BuildingEntry {

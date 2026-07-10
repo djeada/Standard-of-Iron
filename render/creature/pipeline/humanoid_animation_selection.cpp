@@ -38,6 +38,36 @@ void update_clip_id(HumanoidAnimationSelection& selection) noexcept {
   selection.clip_id = clip_id;
 }
 
+void apply_named_sword_attack_state(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_sword_attack_animation || !anim.inputs.is_attacking ||
+      anim.inputs.attack_family != Engine::Core::CombatAttackFamily::Sword) {
+    return;
+  }
+  auto const state =
+      Animation::state_for_sword_attack_animation(anim.inputs.sword_attack_animation);
+  if (state == Render::Creature::AnimationStateId::AttackSword) {
+    return;
+  }
+  selection.state = state;
+  selection.phase = humanoid_phase_for_state(anim, selection.state);
+  selection.clip_variant = 0U;
+  update_clip_id(selection);
+}
+
+void apply_authored_action_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_authored_action_clip || !anim.inputs.is_attacking ||
+      anim.inputs.authored_action_clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = anim.inputs.authored_action_clip;
+  selection.phase = std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F);
+  selection.clip_variant = 0U;
+}
+
 auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
   auto const profile = Animation::guard_shield_attachment_profile(pose);
   QMatrix4x4 guard_turn;
@@ -165,7 +195,9 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
     }
   }
 
+  apply_named_sword_attack_state(selection, anim);
   update_clip_id(selection);
+  apply_authored_action_clip(selection, anim);
   return selection;
 }
 
@@ -178,6 +210,7 @@ auto playback_layer_from_selection(const HumanoidAnimationSelection& selection,
   layer.state = selection.state;
   layer.phase = selection.phase;
   layer.clip_variant = selection.clip_variant;
+  layer.clip_id = selection.clip_id;
   layer.weight = std::clamp(weight, 0.0F, 1.0F);
   layer.mode = mode;
   return layer;
@@ -204,6 +237,8 @@ auto locomotion_only_pose(const Render::GL::HumanoidAnimationContext& anim) noex
   base_inputs.is_attacking = false;
   base_inputs.is_casting = false;
   base_inputs.combat_visual = {};
+  base_inputs.has_authored_action_clip = false;
+  base_inputs.authored_action_clip = Animation::k_unmapped_clip;
   return Render::Creature::resolve_pose(base_inputs);
 }
 
