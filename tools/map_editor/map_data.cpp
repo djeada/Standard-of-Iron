@@ -1181,6 +1181,10 @@ void MapData::parse_spawns_array(const QJsonArray& arr) {
                                 ? obj[MapJsonKeys::max_population].toInt(100)
                                 : -1;
       elem.nation = obj[MapJsonKeys::nation].toString();
+      elem.behavior = obj[MapJsonKeys::behavior].toString();
+      elem.guard_radius =
+          static_cast<float>(obj[MapJsonKeys::guard_radius].toDouble(10.0));
+      elem.patrol_waypoints = obj[MapJsonKeys::patrol_waypoints].toArray();
       elem.spawn_order = static_cast<int>(order);
 
       const QStringList known_keys = {MapJsonKeys::type,
@@ -1188,7 +1192,10 @@ void MapData::parse_spawns_array(const QJsonArray& arr) {
                                       MapJsonKeys::z,
                                       MapJsonKeys::player_id,
                                       MapJsonKeys::max_population,
-                                      MapJsonKeys::nation};
+                                      MapJsonKeys::nation,
+                                      MapJsonKeys::behavior,
+                                      MapJsonKeys::guard_radius,
+                                      MapJsonKeys::patrol_waypoints};
       elem.extra_fields = copyExtraFields(obj, known_keys);
 
       m_troop_spawns.append(elem);
@@ -1232,6 +1239,15 @@ QJsonObject MapData::troop_to_spawn_json(const TroopSpawnElement& elem) const {
   obj[MapJsonKeys::max_population] = elem.max_population;
   if (!elem.nation.isEmpty()) {
     obj[MapJsonKeys::nation] = elem.nation;
+  }
+  if (!elem.behavior.isEmpty()) {
+    obj[MapJsonKeys::behavior] = elem.behavior;
+  }
+  if (elem.guard_radius != 10.0F) {
+    obj[MapJsonKeys::guard_radius] = static_cast<double>(elem.guard_radius);
+  }
+  if (!elem.patrol_waypoints.isEmpty()) {
+    obj[MapJsonKeys::patrol_waypoints] = elem.patrol_waypoints;
   }
 
   for (const QString& key : elem.extra_fields.keys()) {

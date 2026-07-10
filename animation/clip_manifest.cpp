@@ -39,6 +39,50 @@ namespace {
   };
 }
 
+[[nodiscard]] constexpr auto
+rpg_sword_markers(SwordAttackAnimation animation) noexcept -> ClipMarkers {
+  switch (animation) {
+  case SwordAttackAnimation::RpgThrust:
+    return {
+        .anticipation_start = 0.08F,
+        .weapon_release = 0.34F,
+        .contact = 0.46F,
+        .recover_unlocked = 0.70F,
+        .exit_safe = 0.90F,
+    };
+  case SwordAttackAnimation::RpgOverhead:
+    return {
+        .anticipation_start = 0.10F,
+        .weapon_release = 0.44F,
+        .contact = 0.58F,
+        .recover_unlocked = 0.80F,
+        .exit_safe = 0.94F,
+    };
+  case SwordAttackAnimation::RpgFinisher:
+    return {
+        .anticipation_start = 0.06F,
+        .weapon_release = 0.50F,
+        .contact = 0.66F,
+        .recover_unlocked = 0.84F,
+        .exit_safe = 0.96F,
+    };
+  case SwordAttackAnimation::RpgSlashLeft:
+  case SwordAttackAnimation::RpgSlashRight:
+  case SwordAttackAnimation::InfantrySlashA:
+  case SwordAttackAnimation::InfantrySlashB:
+  case SwordAttackAnimation::InfantrySlashC:
+  case SwordAttackAnimation::MountedSlash:
+    break;
+  }
+  return {
+      .anticipation_start = 0.09F,
+      .weapon_release = 0.38F,
+      .contact = 0.52F,
+      .recover_unlocked = 0.74F,
+      .exit_safe = 0.92F,
+  };
+}
+
 [[nodiscard]] constexpr auto bow_markers() noexcept -> ClipMarkers {
   return {
       .anticipation_start = 0.20F,
@@ -82,6 +126,9 @@ auto humanoid_attack_clip(AttackClipFamily family,
         k_humanoid_attack_sword_a_clip +
         std::min<std::uint8_t>(variant, k_humanoid_attack_sword_variant_count - 1U));
   case AttackClipFamily::Spear:
+    if (mounted) {
+      return k_humanoid_riding_spear_thrust_clip;
+    }
     return static_cast<std::uint16_t>(
         k_humanoid_attack_spear_a_clip +
         std::min<std::uint8_t>(variant, k_humanoid_attack_spear_variant_count - 1U));
@@ -89,6 +136,56 @@ auto humanoid_attack_clip(AttackClipFamily family,
     return mounted ? k_humanoid_riding_bow_shot_clip : k_humanoid_attack_bow_clip;
   }
   return k_humanoid_hold_clip;
+}
+
+auto humanoid_sword_attack_clip(SwordAttackAnimation animation) noexcept
+    -> std::uint16_t {
+  switch (animation) {
+  case SwordAttackAnimation::InfantrySlashA:
+    return k_humanoid_attack_sword_a_clip;
+  case SwordAttackAnimation::InfantrySlashB:
+    return k_humanoid_attack_sword_b_clip;
+  case SwordAttackAnimation::InfantrySlashC:
+    return k_humanoid_attack_sword_c_clip;
+  case SwordAttackAnimation::RpgSlashLeft:
+    return k_humanoid_rpg_sword_slash_left_clip;
+  case SwordAttackAnimation::RpgSlashRight:
+    return k_humanoid_rpg_sword_slash_right_clip;
+  case SwordAttackAnimation::RpgOverhead:
+    return k_humanoid_rpg_sword_overhead_clip;
+  case SwordAttackAnimation::RpgThrust:
+    return k_humanoid_rpg_sword_thrust_clip;
+  case SwordAttackAnimation::RpgFinisher:
+    return k_humanoid_rpg_sword_finisher_clip;
+  case SwordAttackAnimation::MountedSlash:
+    return k_humanoid_riding_sword_strike_clip;
+  }
+  return k_humanoid_attack_sword_a_clip;
+}
+
+auto humanoid_sword_attack_name(SwordAttackAnimation animation) noexcept
+    -> std::string_view {
+  switch (animation) {
+  case SwordAttackAnimation::InfantrySlashA:
+    return "attack_sword_a";
+  case SwordAttackAnimation::InfantrySlashB:
+    return "attack_sword_b";
+  case SwordAttackAnimation::InfantrySlashC:
+    return "attack_sword_c";
+  case SwordAttackAnimation::RpgSlashLeft:
+    return "rpg_sword_slash_left";
+  case SwordAttackAnimation::RpgSlashRight:
+    return "rpg_sword_slash_right";
+  case SwordAttackAnimation::RpgOverhead:
+    return "rpg_sword_overhead";
+  case SwordAttackAnimation::RpgThrust:
+    return "rpg_sword_thrust";
+  case SwordAttackAnimation::RpgFinisher:
+    return "rpg_sword_finisher";
+  case SwordAttackAnimation::MountedSlash:
+    return "riding_sword_strike";
+  }
+  return "attack_sword_a";
 }
 
 auto humanoid_ambient_idle_clip_variant(HumanoidAmbientIdle idle) noexcept
@@ -203,6 +300,11 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   case StateId::RidingCharge:
   case StateId::RidingReining:
   case StateId::RidingBowShot:
+  case StateId::RpgSwordSlashLeft:
+  case StateId::RpgSwordSlashRight:
+  case StateId::RpgSwordOverhead:
+  case StateId::RpgSwordThrust:
+  case StateId::RpgSwordFinisher:
   case StateId::Count:
     break;
   }
@@ -228,9 +330,20 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_attack_spear_a_clip:
   case k_humanoid_attack_spear_b_clip:
   case k_humanoid_attack_spear_c_clip:
+  case k_humanoid_riding_spear_thrust_clip:
     return attack_spear_markers();
   case k_humanoid_riding_sword_strike_clip:
     return riding_sword_markers();
+  case k_humanoid_rpg_sword_slash_left_clip:
+    return rpg_sword_markers(SwordAttackAnimation::RpgSlashLeft);
+  case k_humanoid_rpg_sword_slash_right_clip:
+    return rpg_sword_markers(SwordAttackAnimation::RpgSlashRight);
+  case k_humanoid_rpg_sword_overhead_clip:
+    return rpg_sword_markers(SwordAttackAnimation::RpgOverhead);
+  case k_humanoid_rpg_sword_thrust_clip:
+    return rpg_sword_markers(SwordAttackAnimation::RpgThrust);
+  case k_humanoid_rpg_sword_finisher_clip:
+    return rpg_sword_markers(SwordAttackAnimation::RpgFinisher);
   case k_humanoid_attack_bow_clip:
   case k_humanoid_riding_bow_shot_clip:
     return bow_markers();

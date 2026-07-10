@@ -128,6 +128,16 @@ auto animation_state_name(Render::Creature::AnimationStateId state) noexcept -> 
     return "RidingReining";
   case A::RidingBowShot:
     return "RidingBowShot";
+  case A::RpgSwordSlashLeft:
+    return "RpgSwordSlashLeft";
+  case A::RpgSwordSlashRight:
+    return "RpgSwordSlashRight";
+  case A::RpgSwordOverhead:
+    return "RpgSwordOverhead";
+  case A::RpgSwordThrust:
+    return "RpgSwordThrust";
+  case A::RpgSwordFinisher:
+    return "RpgSwordFinisher";
   case A::Count:
     return "Count";
   }

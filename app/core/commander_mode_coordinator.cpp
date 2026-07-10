@@ -166,12 +166,19 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
               context.commander)) {
     rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
-    rpg_action->melee_attack_style = 0;
+    rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
     rpg_action->active_target_id = 0;
     rpg_action->last_hit_target_id = 0;
+    rpg_action->hit_target_ids.fill(0U);
+    rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;
-    rpg_action->phase_time = 0.0F;
+    rpg_action->normalized_action_time = 0.0F;
+    rpg_action->next_event_index = 0U;
+    rpg_action->last_event_type = 0U;
+    rpg_action->last_event_valid = false;
+    rpg_action->action_active = false;
+    rpg_action->weapon_trace_active = false;
   }
 
   return effects;
@@ -466,12 +473,19 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   if (auto* rpg_action =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
     rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
-    rpg_action->melee_attack_style = 0;
+    rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
     rpg_action->active_target_id = 0;
     rpg_action->last_hit_target_id = 0;
+    rpg_action->hit_target_ids.fill(0U);
+    rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;
-    rpg_action->phase_time = 0.0F;
+    rpg_action->normalized_action_time = 0.0F;
+    rpg_action->next_event_index = 0U;
+    rpg_action->last_event_type = 0U;
+    rpg_action->last_event_valid = false;
+    rpg_action->action_active = false;
+    rpg_action->weapon_trace_active = false;
   }
   InputCommandHandler::reset_movement(commander);
 }

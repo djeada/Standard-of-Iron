@@ -424,16 +424,23 @@ TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoT
   const auto root = find_repo_root();
   const auto source =
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto action_service = read_text(root / "game" / "systems" / "combat_actions" /
+                                        "combat_action_service.cpp");
   ASSERT_FALSE(source.empty());
+  ASSERT_FALSE(action_service.empty());
 
-  EXPECT_TRUE(contains(source,
-                       "combat_state->animation_state = "
-                       "Engine::Core::CombatAnimationState::Advance;"));
   EXPECT_TRUE(
       contains(source, "find_primary_target(world, commander_id, local_owner_id);"));
-  EXPECT_TRUE(contains(source, "if (target_id == 0) {"));
+  EXPECT_TRUE(contains(source, "CombatActionService::request_attack("));
+  EXPECT_TRUE(contains(source, ".target_hint_id = target_id,"));
 
-  EXPECT_TRUE(contains(source, "combat_state->damage_dealt_this_swing = false;"));
+  EXPECT_TRUE(contains(action_service,
+                       "combat_state->animation_state = "
+                       "Engine::Core::CombatAnimationState::Advance;"));
+  EXPECT_TRUE(contains(source, "if (!attack_result.accepted) {"));
+
+  EXPECT_TRUE(
+      contains(action_service, "combat_state->damage_dealt_this_swing = false;"));
   EXPECT_FALSE(contains(source, "target_comp->target_id = target_id;"));
 }
 

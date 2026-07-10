@@ -61,6 +61,12 @@ auto classify_wave_direction(const QVector3D& entry_point) -> QString {
   return QStringLiteral("northwest");
 }
 
+auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bool {
+  return behavior == Game::Mission::UnitBehavior::Guard ||
+         behavior == Game::Mission::UnitBehavior::Hold ||
+         behavior == Game::Mission::UnitBehavior::Patrol;
+}
+
 } // namespace
 
 auto MissionSetupCoordinator::apply_mission_setup(
@@ -265,7 +271,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
         sp.position = pos;
         sp.player_id = owner_id;
         sp.spawn_type = spawn_type.value();
-        sp.ai_controlled = ai_controlled;
+        sp.ai_controlled =
+            ai_controlled && !is_scenario_controlled_behavior(unit_setup.behavior);
         sp.nation_id = nation_id;
 
         auto unit = reg->create(sp.spawn_type, ctx.world, sp);
@@ -274,7 +281,68 @@ auto MissionSetupCoordinator::apply_mission_setup(
                      << "for owner" << owner_id;
           continue;
         }
-        apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
+        auto* entity = ctx.world.get_entity(unit->id());
+        apply_team_color(entity, owner_id);
+
+        if (entity == nullptr) {
+          continue;
+        }
+
+        if (unit_setup.behavior == Game::Mission::UnitBehavior::Guard) {
+          auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
+          if (guard == nullptr) {
+            guard = entity->add_component<Engine::Core::GuardModeComponent>();
+          }
+          if (guard != nullptr) {
+            guard->active = true;
+            guard->guarded_entity_id = 0;
+            guard->guard_position_x = pos.x();
+            guard->guard_position_z = pos.z();
+            guard->guard_radius = std::clamp(unit_setup.guard_radius, 2.0F, 60.0F);
+            guard->returning_to_guard_position = false;
+            guard->has_guard_target = true;
+          }
+        } else if (unit_setup.behavior == Game::Mission::UnitBehavior::Hold) {
+          auto* hold = entity->get_component<Engine::Core::HoldModeComponent>();
+          if (hold == nullptr) {
+            hold = entity->add_component<Engine::Core::HoldModeComponent>();
+          }
+          if (hold != nullptr) {
+            hold->active = true;
+          }
+        } else if (unit_setup.behavior == Game::Mission::UnitBehavior::Patrol) {
+          std::vector<std::pair<float, float>> waypoints;
+          waypoints.reserve(unit_setup.patrol_waypoints.size() + 1U);
+          waypoints.emplace_back(pos.x(), pos.z());
+          for (const auto& authored_waypoint : unit_setup.patrol_waypoints) {
+            const QVector3D waypoint = mission_position_to_world(authored_waypoint);
+            waypoints.emplace_back(waypoint.x(), waypoint.z());
+          }
+
+          if (waypoints.size() >= 2U) {
+            auto* patrol = entity->get_component<Engine::Core::PatrolComponent>();
+            if (patrol == nullptr) {
+              patrol = entity->add_component<Engine::Core::PatrolComponent>();
+            }
+            if (patrol != nullptr) {
+              patrol->waypoints = std::move(waypoints);
+              patrol->current_waypoint = 1U;
+              patrol->patrolling = true;
+            }
+          } else {
+            auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
+            if (guard == nullptr) {
+              guard = entity->add_component<Engine::Core::GuardModeComponent>();
+            }
+            if (guard != nullptr) {
+              guard->active = true;
+              guard->guard_position_x = pos.x();
+              guard->guard_position_z = pos.z();
+              guard->guard_radius = std::clamp(unit_setup.guard_radius, 2.0F, 60.0F);
+              guard->has_guard_target = true;
+            }
+          }
+        }
       }
     }
   };

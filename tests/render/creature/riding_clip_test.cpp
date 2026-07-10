@@ -100,3 +100,44 @@ TEST(RidingClip, RidingSwordStrikeClipIsNonLooping) {
   EXPECT_FALSE(clip.loops) << "riding_sword_strike must be non-looping";
   EXPECT_GT(clip.frame_count, 0U);
 }
+
+TEST(RidingClip, RidingSpearThrustClipIsNonLoopingAndDistinct) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid_spear.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_spear);
+  ASSERT_NE(blob, nullptr);
+  ASSERT_GT(blob->clip_count(),
+            static_cast<std::uint32_t>(
+                Render::Creature::k_humanoid_riding_spear_thrust_clip));
+
+  auto const spear_clip =
+      blob->clip(Render::Creature::k_humanoid_riding_spear_thrust_clip);
+  auto const charge_clip = blob->clip(Render::Creature::k_humanoid_riding_charge_clip);
+  EXPECT_FALSE(spear_clip.loops);
+  EXPECT_EQ(spear_clip.name, "riding_spear_thrust");
+  EXPECT_NE(spear_clip.frame_offset, charge_clip.frame_offset);
+
+  std::array<QMatrix4x4, 64> spear_palette{};
+  std::array<QMatrix4x4, 64> charge_palette{};
+  auto const spear_count =
+      reg.sample_palette(k_species_humanoid_spear,
+                         Render::Creature::k_humanoid_riding_spear_thrust_clip,
+                         spear_clip.frame_count / 2U,
+                         std::span<QMatrix4x4>(spear_palette));
+  auto const charge_count =
+      reg.sample_palette(k_species_humanoid_spear,
+                         Render::Creature::k_humanoid_riding_charge_clip,
+                         charge_clip.frame_count / 2U,
+                         std::span<QMatrix4x4>(charge_palette));
+  ASSERT_EQ(spear_count, charge_count);
+  bool any_different = false;
+  for (std::uint32_t i = 0; i < spear_count; ++i) {
+    any_different = any_different || spear_palette[i] != charge_palette[i];
+  }
+  EXPECT_TRUE(any_different);
+}

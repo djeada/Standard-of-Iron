@@ -75,6 +75,9 @@ struct TroopSpawnElement {
   int player_id = -1;
   int max_population = -1;
   QString nation;
+  QString behavior;
+  float guard_radius = 10.0F;
+  QJsonArray patrol_waypoints;
   QJsonObject extra_fields;
   int spawn_order = -1;
 };

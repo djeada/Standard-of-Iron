@@ -17,10 +17,12 @@
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pose_intent.h"
 #include "render/creature/render_request.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
@@ -281,6 +283,135 @@ TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
   EXPECT_EQ(reg.resolve_bpat_clip(
                 ArchetypeRegistry::k_rider_base, AnimationStateId::Dead, 3U),
             Render::Creature::k_humanoid_dead_mounted_clip);
+}
+
+TEST(ArchetypeRegistryBaseline, RpgSwordStatesResolveToDedicatedClips) {
+  const auto& reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::RpgSwordSlashLeft,
+                                  99U),
+            Render::Creature::k_humanoid_rpg_sword_slash_left_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::RpgSwordSlashRight,
+                                  99U),
+            Render::Creature::k_humanoid_rpg_sword_slash_right_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::RpgSwordOverhead,
+                                  99U),
+            Render::Creature::k_humanoid_rpg_sword_overhead_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::RpgSwordThrust,
+                                  99U),
+            Render::Creature::k_humanoid_rpg_sword_thrust_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::RpgSwordFinisher,
+                                  99U),
+            Render::Creature::k_humanoid_rpg_sword_finisher_clip);
+}
+
+TEST(HumanoidAnimationSelection, NamedRpgSwordAttackSelectsDedicatedClip) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.has_sword_attack_animation = true;
+  anim.inputs.sword_attack_animation = Animation::SwordAttackAnimation::RpgThrust;
+  anim.attack_phase = 0.46F;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  EXPECT_EQ(selection.state, AnimationStateId::RpgSwordThrust);
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_EQ(*selection.clip_id, Render::Creature::k_humanoid_rpg_sword_thrust_clip);
+  EXPECT_EQ(selection.clip_variant, 0U);
+}
+
+TEST(HumanoidAnimationSelection, AuthoredMountedClipOverridesGenericActionState) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_rider_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_mounted = true;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.has_authored_action_clip = true;
+  anim.inputs.authored_action_clip =
+      Render::Creature::k_humanoid_riding_spear_thrust_clip;
+  anim.inputs.authored_action_phase = 0.63F;
+  anim.attack_phase = 0.12F;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_EQ(*selection.clip_id, Render::Creature::k_humanoid_riding_spear_thrust_clip);
+  EXPECT_FLOAT_EQ(selection.phase, 0.63F);
+  EXPECT_EQ(selection.clip_variant, 0U);
+}
+
+TEST(HumanoidAnimationSelection, MovingMountedActionKeepsAuthoredPrimaryClip) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_rider_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_mounted = true;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Run;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.has_authored_action_clip = true;
+  anim.inputs.authored_action_clip =
+      Render::Creature::k_humanoid_riding_spear_thrust_clip;
+  anim.inputs.authored_action_phase = 0.58F;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.prioritize_action_over_locomotion = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.phase =
+      Render::Creature::CombatVisualTransactionPhase::Strike;
+  anim.inputs.combat_visual.phase_progress = 0.5F;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Spear;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  EXPECT_FALSE(selection.upper_body_overlay.active());
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_EQ(*selection.clip_id, Render::Creature::k_humanoid_riding_spear_thrust_clip);
+  EXPECT_FLOAT_EQ(selection.phase, 0.58F);
+}
+
+TEST(HumanoidAnimationSelection, AuthoredActionClipSurvivesUpperBodyLayerSelection) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Run;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.has_authored_action_clip = true;
+  anim.inputs.authored_action_clip =
+      Render::Creature::k_humanoid_riding_spear_thrust_clip;
+  anim.inputs.authored_action_phase = 0.58F;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.prioritize_action_over_locomotion = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.phase =
+      Render::Creature::CombatVisualTransactionPhase::Strike;
+  anim.inputs.combat_visual.phase_progress = 0.5F;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Spear;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  ASSERT_TRUE(selection.upper_body_overlay.active());
+  ASSERT_TRUE(selection.upper_body_overlay.clip_id.has_value());
+  EXPECT_EQ(*selection.upper_body_overlay.clip_id,
+            Render::Creature::k_humanoid_riding_spear_thrust_clip);
+  EXPECT_FLOAT_EQ(selection.upper_body_overlay.phase, 0.58F);
 }
 
 TEST(SubmitRequests, EmptySpanProducesZeroStats) {

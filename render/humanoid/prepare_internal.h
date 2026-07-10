@@ -138,11 +138,7 @@ public:
   explicit HumanoidPreparationModePolicy(const Engine::Core::Entity* entity)
       : m_commander(entity != nullptr
                         ? entity->get_component<Engine::Core::CommanderComponent>()
-                        : nullptr)
-      , m_action(
-            entity != nullptr
-                ? entity->get_component<Engine::Core::RpgCommanderActionComponent>()
-                : nullptr) {}
+                        : nullptr) {}
 
   [[nodiscard]] auto jump_pose() const -> Animation::HumanoidCommanderJumpPose {
     return Animation::resolve_humanoid_commander_jump_pose({
@@ -151,18 +147,6 @@ public:
         .phase = m_commander != nullptr ? m_commander->jump_phase : 0.0F,
         .height_offset =
             m_commander != nullptr ? m_commander->jump_height_offset : 0.0F,
-    });
-  }
-
-  [[nodiscard]] auto attack_pose(const AnimationInputs& anim) const
-      -> Animation::HumanoidCommanderAttackPose {
-    return Animation::resolve_humanoid_commander_attack_pose({
-        .has_commander = m_commander != nullptr,
-        .fpv_controlled = m_commander != nullptr && m_commander->fpv_controlled,
-        .is_melee = anim.is_melee,
-        .has_style = m_action != nullptr,
-        .style = m_action != nullptr ? m_action->melee_attack_style
-                                     : static_cast<std::uint8_t>(0U),
     });
   }
 
@@ -179,7 +163,6 @@ public:
 
 private:
   const Engine::Core::CommanderComponent* m_commander = nullptr;
-  const Engine::Core::RpgCommanderActionComponent* m_action = nullptr;
 };
 
 void reset_humanoid_locomotion_state(
