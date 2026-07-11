@@ -1,902 +1,621 @@
-# RPG Combat and Animation Architecture TODO
-
-## Goal
-
-Move RPG/commander combat from the current controller-driven and phase-transition-driven implementation to a clean, animation-synchronized combat action pipeline.
-
-The desired end state is:
-
-- Combat timing is authored by attack/action definitions, not hardcoded in the controller.
-- Damage is applied only when a weapon/projectile/body hit volume actually contacts a valid target during the authored active window.
-- Rendering reads combat/action state but does not own gameplay decisions.
-- Swords, spears, bows, cavalry attacks, commander-vs-commander, and commander-vs-unit fights all use the same core action, hit detection, and damage-resolution pipeline.
-- Existing RTS combat continues to work during migration.
-
-## Current Implementation Progress
-
-Implemented so far:
-
-- `CombatActionId`, `WeaponFamily`, `CombatActionEventType`,
-  `DamageProfile`, and `HitShapeProfile` exist under
-  `game/systems/combat_actions/`.
-- `CombatActionService::request_attack()` owns RPG commander attack startup for
-  sword, spear, and ranged-preferred bow commanders.
-- RPG sword actions, spear actions, and `RpgBowShot` are defined in
-  `combat_action_definition.*`.
-- `RpgCommanderActionComponent` stores action id, normalized action time, event
-  cursor, active trace state, and one-hit-per-action target runtime.
-- `combat_state_processor.cpp` advances authored action events.
-- `RpgCommanderActionComponent` now separates generic authored active windows
-  from weapon-trace windows, so bows/projectile releases, sword/spear traces,
-  and mounted body impacts do not share one ambiguous runtime flag.
-- Sword and spear commander damage now uses active-window weapon trace contact
-  for action-backed FPV attacks.
-- Infantry sword and spear traces can now receive previous/current authored
-  action time and test contact against swept weapon segments, with the older
-  transform/shape trace kept as fallback for unsupported actions.
-- Infantry RPG sword actions first sample interpolated baked BPAT `grip_r`
-  plus `sword_blade_base_r`/`sword_blade_tip_r` socket frames from
-  `humanoid_sword.bpat`, then fall back to deriving the blade segment from the
-  grip socket and finally authored pose math for older assets.
-- Infantry spear actions first sample interpolated baked BPAT
-  `spear_shaft_base_r`, `spear_shaft_tip_r`, and `spear_head_tip_r` socket
-  frames from `humanoid_spear.bpat`, then fall back to the authored attack pose
-  manifest for older assets.
-- Mounted sword actions sample baked BPAT `sword_blade_base_r` and
-  `sword_blade_tip_r` sockets from the riding sword strike clip in
-  `humanoid_sword.bpat`, so mounted sword damage follows the visible close
-  side strike instead of the old broad reach shape.
-- Mounted spear now has a dedicated non-looping `riding_spear_thrust` BPAT clip
-  with baked spear endpoint sockets. Mounted spear traces sample those sockets,
-  so contact and visible rider playback use the same authored asset and phase.
-- Mounted action definitions own their rider clip id. Animation input sampling
-  carries that clip plus `normalized_action_time` through primary and layered
-  render requests, so mounted sword, spear, and charge playback no longer gets
-  re-derived from generic attack family/state at draw time.
-- `CombatHitContact` and `resolve_commander_action_hit()` route commander
-  action contacts through the current RPG damage policy, including authored
-  action damage multipliers before combo/guard/unit damage resolution.
-- Commander-vs-commander action hits now carry authored posture damage and
-  guard pressure through the same resolver path while legacy RPG/RTS damage
-  calls keep their existing derived pressure behavior.
-- `RpgBowShot` emits a `ProjectileRelease` event and spawns a damaging
-  projectile through `ProjectileSystem`.
-- Projectile impacts now build contact-aware hit requests and route through
-  `resolve_projectile_impact_hit()` before applying RPG HP or unit damage.
-- Cursed-arrow projectile impacts now apply/refresh cursed status inside the
-  contact-aware projectile resolver; projectile flight no longer owns that
-  impact effect policy.
-- Fireball projectile direct impacts now apply/refresh burning status inside the
-  contact-aware projectile resolver; projectile flight no longer owns that
-  per-hit burning policy.
-- Fireball projectile area impacts now route splash target selection, per-target
-  damage, and fire patch creation through `resolve_projectile_area_impact_hit()`.
-- Fire patch contact refreshes now call `apply_fire_patch_contact_effect()`, so
-  target filtering and burning-status refresh policy live beside the projectile
-  hit resolver.
-- `process_combat_status_effects()` now owns cursed-status expiry, burning tick
-  damage, and fire patch lifetime/contact iteration in
-  `game/systems/combat_system/combat_status_effect_processor.*`. Burning ticks
-  route damage through `resolve_projectile_impact_hit()` so RPG commanders and
-  unit targets keep the same damage boundary as projectile impacts.
-- `CombatStatusEffectSystem` is registered in the world update order before
-  `ProjectileSystem`, so long-lived projectile-created effects tick outside
-  projectile flight while preserving the previous before-impact cadence.
-- `process_spear_brace_state()` now converts explicit, hold, guard, and FPV
-  commander-guard intent into one `SpearBraceComponent` runtime. The component
-  records its intent source, entry/exit progress, and readiness; a brace becomes
-  gameplay-active only after 85% of pose entry, while rendering reads the same
-  requested/active state for its guard transition.
-- Braced spear thrust contacts against fast mounted targets can interrupt
-  charge motion through the contact-aware resolver by applying knockdown-tier
-  stagger and stopping target movement. The resolver now consumes only the
-  explicit brace runtime instead of independently inferring hold/guard state.
-- `MountedChargeImpact` exists as an authored action definition, and mounted
-  charge impact contacts can route through `resolve_mounted_charge_impact_hit()`
-  for speed-scaled damage/stagger policy.
-- `MountedSwordSlash` and `MountedSpearThrust` exist as authored action
-  definitions, and FPV mounted commanders select them from the same action
-  service used by infantry sword/spear attacks.
-- `find_body_impact_contact()` can scan mount/body charge volumes, and
-  action-backed `MountedChargeImpact` runtime can apply body impacts during the
-  authored active window with same-target suppression.
-- Moving cavalry can now start the authored `MountedChargeImpact` action from
-  combat-state processing when current movement velocity and body contact meet
-  charge conditions.
-- `MountedChargeComponent` tracks mounted charge runtime state
-  (`Ready`, `Charging`, `ImpactActive`, `Cooldown`), player/AI/contact-auto
-  intent source, speed-loss grace, cancellation reason, cooldown, active target,
-  and last impacted target. The action begins before contact, becomes damaging
-  on authored `ActiveStart`, and cancels immediately on spear knockdown or after
-  sustained speed loss.
-- Mounted vanguard input requests player charge intent; non-FPV cavalry with a
-  forward attack target can request AI charge intent. Contact-auto remains as a
-  migration fallback for cavalry without explicit behavior integration.
-- Authored actions own duration and elapsed time. Event crossing, weapon traces,
-  projectile release, charge activation, animation phase, and clip phase now use
-  `RpgCommanderActionComponent` time rather than deriving normalized time from
-  `CombatStateComponent` phase durations.
-- `combat_action_processor.cpp` advances authored actions independently across
-  entities with `RpgCommanderActionComponent` and owns projectile release,
-  weapon traces, body impacts, hit-list updates, and resolver dispatch.
-  `combat_state_processor.cpp` now contains only legacy phase transitions and
-  the no-action-id commander contact fallback.
-- `melee_attack_style` and `legacy_rpg_melee_style` have been removed. Stable
-  action ids and definition-owned clips are the only RPG/mounted clip selectors.
-- Commander-vs-commander acceptance coverage now includes perfect guard, guard
-  break, authored posture/guard pressure, dodge invulnerability, finisher punish,
-  and same-swing target suppression through the shared hit resolver.
-
-Deferred compatibility cleanup:
-
-- Weapon tracing is no longer only transform/shape based for action-backed RPG
-  infantry and mounted weapon attacks. Compatibility transform/shape fallback
-  still exists for unsupported actions/assets.
-- `CombatStateComponent` remains for RTS combat, legacy commander attacks, input
-  buffer adaptation, and older animation consumers. It no longer owns authored
-  action timing or action-backed damage. Remove it from RPG action startup only
-  after RTS and presentation state have their own replacement contracts.
-
-This plan is based on the current code paths:
-
-- Player RPG input and attack start: `app/core/commander_control_controller.cpp`
-- Commander mode setup/tick: `app/core/commander_mode_coordinator.cpp`
-- Shared combat phase state and contact damage timing: `game/systems/combat_system/combat_state_processor.cpp`
-- RTS attack processing and enemy damage into RPG commander: `game/systems/combat_system/attack_processor.cpp`
-- RPG engagement/stagger/telegraph processing: `game/systems/rpg_combat_system/rpg_combat_processor.cpp`
-- RPG damage/guard/combo resolution: `game/systems/rpg_combat_system/rpg_commander_damage.cpp`
-- RPG HP/guard/action/combat components: `game/core/component.h`
-- Animation input sampling: `render/gl/humanoid/animation/animation_inputs.cpp`
-- Clip and RPG sword animation mapping: `animation/clip_manifest.cpp`, `animation/clip_manifest.h`
-- Animation core build list: `animation/CMakeLists.txt`
-- Game systems build list: `game/CMakeLists.txt`
-
-## Current State
-
-### Attack start
-
-`CommanderControlController::primary_action()` resolves player target/input hints
-and forwards an `AttackRequest` to `CombatActionService`. The service selects the
-action definition, initializes generic action runtime, writes the temporary
-presentation adapter, and spends definition-authored stamina cost. The controller
-does not select attack phases, clips, or action runtime fields.
-
-### Damage timing
-
-`process_combat_state()` still advances this compatibility state machine:
-
-`Advance -> WindUp -> Strike -> Impact -> Recover -> Reposition -> Idle`
-
-For legacy FPV commander attacks without an authored action id, damage can still
-be applied when the state transitions from `Strike` to `Impact`:
-
-- `deal_commander_contact_damage()`
-- `resolve_commander_contact_target()`
-- `target_in_swing_arc()`
-- `RpgCombat::deal_commander_attack_damage()`
-
-For action-backed attacks, `advance_combat_action_events()` advances definition
-duration using action-owned elapsed time. Sword/spear traces run while
-`weapon_trace_active` is true, bow shots release on `ProjectileRelease`, and
-mounted body impacts run during their authored active window. The phase-transition
-damage path executes only for legacy FPV attacks without an action id.
-
-### Damage resolution
-
-`rpg_commander_damage.cpp` contains the useful RPG gameplay rules:
-
-- combo multiplier,
-- finisher multiplier,
-- power strike multiplier,
-- punish-opening multiplier,
-- RPG HP routing,
-- unit HP routing,
-- perfect guard,
-- normal guard,
-- posture pressure,
-- guard break,
-- stagger,
-- hit feedback event publishing.
-
-This should remain mostly as the damage-resolution layer, but it should receive precise hit/contact information from a separate hit detection layer.
-
-### Animation selection
-
-Rendering samples `CombatStateComponent` and `RpgCommanderActionComponent` in `animation_inputs.cpp`.
-
-For FPV sword attacks, `CombatActionId` maps directly to:
-
-- `RpgSlashLeft`
-- `RpgSlashRight`
-- `RpgOverhead`
-- `RpgThrust`
-- `RpgFinisher`
-
-Those map to clips in `animation/clip_manifest.cpp`.
-
-Mounted definitions additionally own explicit rider BPAT clip ids. Render requests
-preserve explicit clips and normalized action phase through primary/full-body/
-upper-body playback instead of resolving them again from generic state.
-
-### Enemy behavior around commander
-
-`rpg_combat_processor.cpp` assigns nearby enemies into RPG engagement roles:
-
-- front attacker,
-- left threat,
-- right threat,
-- support.
-
-It also keeps active attackers at an ideal distance and support enemies circling. This is useful and should remain separate from hit detection and damage.
-
-## Desired Architecture
-
-### Layer 1: Input and Intent
-
-Owner:
-
-- `app/core/commander_control_controller.cpp`
-- later possibly AI behavior code for non-player commanders.
-
-Responsibility:
-
-- Convert input into requests such as:
-  - light sword attack,
-  - heavy sword attack,
-  - spear thrust,
-  - bow shot,
-  - guard,
-  - dodge,
-  - jump,
-  - shield bash,
-  - vanguard rush,
-  - cavalry slash,
-  - cavalry charge.
-
-Non-responsibility:
-
-- It should not decide combat phase durations.
-- It should not know exact damage contact timing.
-- It should not hardcode clip-specific hit windows.
-- It should not run hit detection.
-
-Target API shape:
-
-```cpp
-CombatActionService::request_attack(world, attacker_id, AttackRequest{
-    .action_id = CombatActionId::RpgSwordSlashLeft,
-    .target_hint_id = target_id,
-    .input_direction = AttackInputDirection::Left,
-    .charged = false,
-});
-```
-
-### Layer 2: Combat Action State
-
-Owner:
-
-- new files under `game/systems/combat_actions/` or `game/systems/combat_system/action_*`.
-
-Initial integration:
-
-- reuse `CombatStateComponent` where practical,
-- introduce focused runtime helpers before replacing the component.
-
-Desired state data:
-
-- current action id,
-- action family: sword, spear, bow, shield, horse, body,
-- clip id or clip selector,
-- normalized action time,
-- current authored phase,
-- event cursor,
-- input buffer state,
-- cancel window state,
-- target hint,
-- already-hit entity ids for the current swing,
-- hit trace runtime data.
-
-Migration note:
-
-- Do not rename `CombatStateComponent` immediately. It is used by render sampling and tests.
-- First add an action definition service that fills existing `CombatStateComponent`.
-- Later split or replace it with `CombatActionComponent` once the new pipeline is stable.
-
-### Layer 3: Action Definitions
-
-Owner:
-
-- new `game/systems/combat_actions/combat_action_definition.*`
-- possibly mirrored animation metadata in `animation/action_manifest.*` or `animation/clip_manifest.*`
-
-An action definition describes gameplay timing and hit behavior.
-
-Target data shape:
-
-```cpp
-struct CombatActionDefinition {
-  CombatActionId id;
-  WeaponFamily weapon_family;
-  Animation::SwordAttackAnimation sword_clip;
-  Engine::Core::CombatAttackFamily attack_family;
-  Engine::Core::AttackDirection attack_direction;
-  DamageProfile damage_profile;
-  HitShapeProfile hit_shape;
-  std::vector<CombatActionEvent> events;
-  float stamina_cost;
-  float posture_damage;
-  float guard_pressure;
-  int max_targets;
-  bool can_hit_same_target_once;
-  bool requires_projectile_release;
-};
-```
-
-Initial definitions:
-
-- `RpgSwordSlashLeft`
-- `RpgSwordSlashRight`
-- `RpgSwordOverhead`
-- `RpgSwordThrust`
-- `RpgSwordFinisher`
-
-Future definitions:
-
-- `RpgSpearThrust`
-- `RpgSpearSweep`
-- `RpgBowShot`
-- `MountedSwordSlash`
-- `MountedSpearThrust`
-- `CavalryChargeImpact`
-- `ShieldBash`
-- `VanguardRushImpact`
-
-### Layer 4: Animation-Authored Events
-
-Owner:
-
-- new combat action definition files,
-- later optionally generated or data-loaded from asset metadata.
-
-Events should be crossed by normalized action time. Example events:
-
-```cpp
-enum class CombatActionEventType {
-  WindupStart,
-  ActiveStart,
-  WeaponTraceStart,
-  WeaponTraceEnd,
-  ProjectileRelease,
-  RecoveryStart,
-  CancelWindowStart,
-  CancelWindowEnd,
-  ExitSafe
-};
-```
-
-For current sword attacks, seed event windows from existing clip marker knowledge in `animation/clip_manifest.cpp`:
-
-- `anticipation_start`
-- `weapon_release`
-- `contact`
-- `recover_unlocked`
-- `exit_safe`
-
-Important:
-
-- Current gameplay damage happens at one phase transition.
-- Desired gameplay damage happens while `WeaponTraceStart <= action_time <= WeaponTraceEnd`, and only if the weapon hit volume contacts a target.
-
-### Layer 5: Hit Detection
-
-Owner:
-
-- new `game/systems/combat_actions/weapon_trace.*`
-- use existing transform/unit/combat utility code from `game/systems/combat_system/combat_utils.*`
-
-Hit detection should produce contact facts, not apply damage directly.
-
-Target result shape:
-
-```cpp
-struct CombatHitContact {
-  Engine::Core::EntityID attacker_id;
-  Engine::Core::EntityID target_id;
-  WeaponFamily weapon_family;
-  QVector3D contact_point;
-  QVector3D contact_normal;
-  float action_time;
-  float relative_speed;
-  bool from_projectile;
-  bool from_mount_charge;
-};
-```
-
-Initial sword implementation:
-
-- Start with a swept capsule/arc in front of the commander using:
-  - `TransformComponent::position`,
-  - `TransformComponent::rotation.y`,
-  - current action progress,
-  - action definition reach/radius.
-- Use `UnitComponent` target validity and `OwnerRegistry` enemy checks.
-- Use `combat_radius()` from `combat_utils` for target size.
-- Track already-hit ids per swing.
-
-Later sword implementation:
-
-- Replace approximate arc with real weapon socket tracing.
-- Use animation pose/bone/socket data where available.
-- Trace previous sword blade segment to current sword blade segment.
-
-Spear implementation:
-
-- Use a long forward capsule during thrust active frames.
-- Narrower side tolerance than sword.
-- Higher anti-charge posture/interrupt value.
-
-Bow implementation:
-
-- Do not deal damage from animation impact.
-- On `ProjectileRelease`, spawn projectile from bow/hand socket.
-- Let projectile collision apply damage.
-- Existing projectile flow already routes projectile damage to `RpgCombat::deal_damage_to_rpg_commander()` in `game/systems/projectile_system.cpp`.
-
-Cavalry implementation:
-
-- Use two contact sources:
-  - rider weapon trace,
-  - mount/charge body volume.
-- Include relative speed in `CombatHitContact`.
-- Apply interrupt/stagger based on charge speed and target bracing/weapon family.
-
-### Layer 6: Damage Resolution
-
-Owner:
-
-- keep and refine `game/systems/rpg_combat_system/rpg_commander_damage.*`
-- possibly add `game/systems/combat_system/combat_hit_resolver.*`
-
-Desired direction:
-
-- Hit detection calls a resolver with `CombatHitContact`.
-- Resolver decides the outcome.
-
-Target API shape:
-
-```cpp
-CombatHitResult CombatHitResolver::resolve_contact(
-    Engine::Core::World& world,
-    const CombatHitContact& contact,
-    const CombatActionDefinition& action);
-```
-
-Routing rules:
-
-- Commander target with active `RpgHealthComponent`:
-  - use RPG HP,
-  - guard/perfect guard,
-  - posture,
-  - punish windows,
-  - stagger,
-  - commander hit feedback.
-- Soldier/unit target:
-  - use `apply_unit_damage()`,
-  - resolve multi-soldier health/count effects,
-  - apply stagger/flinch as appropriate.
-- Mounted/cavalry target:
-  - initially unit damage plus stagger,
-  - later rider/horse zones if the entity model supports it.
-- Projectile target:
-  - route from projectile collision into the same resolver when possible.
-
-Keep from current implementation:
-
-- combo multiplier,
-- finisher multiplier,
-- power-strike multiplier,
-- punish multiplier,
-- perfect guard and guard-break logic,
-- `CombatHitEvent` publishing,
-- `HitFeedbackComponent` integration.
-
-Change over time:
-
-- `deal_commander_attack_damage()` should eventually take an action/contact context instead of raw damage only.
-
-### Layer 7: Presentation and Render Sampling
-
-Owner:
-
-- `render/gl/humanoid/animation/animation_inputs.cpp`
-- `render/humanoid/*`
-- `animation/*`
-
-Desired direction:
-
-- Render reads the selected action/clip/progress.
-- Render does not infer gameplay timing.
-- The same action definition id should select:
-  - gameplay hit windows,
-  - animation clip,
-  - sword/spear/bow pose family,
-  - VFX trails,
-  - audio cues.
-
-Compatibility adapter:
-
-- Continue using `CombatStateComponent` fields:
-  - `animation_state`,
-  - `state_time`,
-  - `state_duration`,
-  - `attack_family`,
-  - `attack_direction`,
-  - `finisher_attack`.
-- Action ids and definition-owned clip ids are authoritative in render sampling.
-- `CombatStateComponent` values are populated only for older presentation and RTS
-  consumers while those systems migrate.
-
-## Phased Implementation Plan
-
-### Phase 0: Stabilize vocabulary and tests
-
-- Add combat action vocabulary:
-  - `CombatActionId`
-  - `WeaponFamily`
-  - `CombatActionEventType`
-  - `HitShapeProfile`
-  - `DamageProfile`
-- Add unit tests for the vocabulary/definition lookup.
-- No gameplay behavior change.
-
-Files likely touched:
-
-- new `game/systems/combat_actions/combat_action_types.h`
-- new `game/systems/combat_actions/combat_action_definition.*`
-- `game/CMakeLists.txt`
-- `tests/systems/*`
-
-Acceptance criteria:
-
-- Current commander attacks still behave the same.
-- New action definitions can be looked up by id.
-- Definitions exist for current five RPG sword attacks.
-
-### Phase 1: Extract attack request service from controller
-
-- Add `CombatActionService::request_attack()`.
-- Move the attack-start code out of `CommanderControlController::primary_action()` into the service.
-- The service should still populate existing `CombatStateComponent` and `RpgCommanderActionComponent`.
-- Keep target hint selection in the controller at first, or pass current soft/lock target into the service.
-
-Files likely touched:
-
-- `app/core/commander_control_controller.cpp`
-- new `game/systems/combat_actions/combat_action_service.*`
-- `game/CMakeLists.txt`
-- tests under `tests/core/commander_control_controller_test.cpp`
-
-Acceptance criteria:
-
-- Existing tests pass.
-- Controller no longer manually selects phase durations or writes most attack fields.
-- Existing RPG sword animations still play.
-
-### Phase 2: Introduce action event progression
-
-- Add event cursor/runtime helper for action state.
-- During `process_combat_state()`, detect crossed action events.
-- Initially only log/record crossed events or expose them to tests.
-- Do not change damage timing yet.
-
-Files likely touched:
-
-- `game/systems/combat_system/combat_state_processor.cpp`
-- new `game/systems/combat_actions/combat_action_events.*`
-- tests under `tests/systems/combat_mode_test.cpp`
-
-Acceptance criteria:
-
-- For each RPG sword action, tests can prove expected events are crossed in order.
-- No gameplay behavior change yet.
-
-### Phase 3: Add sword weapon tracing behind a feature-compatible path
-
-- Implement approximate sword trace using commander transform, action progress, reach, and sweep width.
-- Track already-hit targets for one swing.
-- Run trace during action active window.
-- At first, compare trace-selected target with existing cone-selected target in diagnostics/tests.
-
-Files likely touched:
-
-- new `game/systems/combat_actions/weapon_trace.*`
-- `game/systems/combat_system/combat_state_processor.cpp`
-- `game/systems/combat_system/combat_utils.*`
-- tests under `tests/systems/*`
-
-Acceptance criteria:
-
-- Sword trace detects enemies in front/side according to swing direction.
-- Same target cannot be damaged multiple times in one swing.
-- Trace can hit no target even when attack animation plays.
-
-### Phase 4: Switch commander sword damage to trace contact
-
-- Replace `Strike -> Impact` single-point damage with active-window trace contact damage.
-- Keep the old function temporarily as fallback or test helper.
-- Route contacts through `RpgCombat::deal_commander_attack_damage()` initially.
-
-Files likely touched:
-
-- `game/systems/combat_system/combat_state_processor.cpp`
-- `game/systems/rpg_combat_system/rpg_commander_damage.*`
-- `tests/core/commander_control_controller_test.cpp`
-- `tests/systems/combat_mode_test.cpp`
-
-Acceptance criteria:
-
-- Damage only applies if trace contacts a valid target.
-- Visual swing direction matters.
-- Combo/finisher/power-strike behavior remains intact.
-- Misses do not advance combo.
-- Existing damage numbers and hit events still work.
-
-### Phase 5: Add contact-aware damage context
-
-- Introduce `CombatHitContact` and `CombatHitResult`.
-- Add resolver that takes contact/action context.
-- Migrate `deal_commander_attack_damage()` to use context internally.
-- Preserve the old raw-damage API as a wrapper while projectile/RTS code migrates.
-
-Files likely touched:
-
-- new `game/systems/combat_system/combat_hit_types.h`
-- new `game/systems/combat_system/combat_hit_resolver.*`
-- `game/systems/rpg_combat_system/rpg_commander_damage.*`
-- `game/systems/projectile_system.cpp`
-- `game/systems/combat_system/attack_processor.cpp`
-
-Acceptance criteria:
-
-- Commander-vs-commander and commander-vs-unit route through the same resolver.
-- Guard/perfect guard has access to contact direction.
-- Relative speed and weapon family are available for future cavalry logic.
-
-### Phase 6: Data-drive animation/action mapping (implemented)
-
-- Use `CombatActionId` and definition-owned clip ids as the only selectors.
-- Remove the style compatibility field.
-- Render animation sampling maps action id to clip.
-- Action definitions own clip selection and gameplay event windows.
-
-Files likely touched:
-
-- `game/core/component.h`
-- `render/gl/humanoid/animation/animation_inputs.cpp`
-- `animation/clip_manifest.*`
-- `animation/action_manifest.*`
-- serialization tests if component state is serialized.
-
-Acceptance criteria:
-
-- Adding a new RPG sword animation means adding one definition and one clip mapping, not changing controller logic.
-- Tests prove action id selects expected RPG clip.
-
-### Phase 7: Spears
-
-- Add spear action definitions.
-- Add spear thrust/sweep hit shape.
-- Add anti-charge resolver hooks:
-  - higher posture damage to cavalry,
-  - interrupt if contact occurs in frontal brace/thrust window.
-- Derive a shared brace runtime from player/AI hold and guard intent, and gate
-  anti-charge readiness on pose entry progress.
-
-Files likely touched:
-
-- `game/systems/combat_actions/combat_action_definition.*`
-- `game/systems/combat_actions/weapon_trace.*`
-- `game/systems/combat_system/spear_brace_processor.*`
-- `render/gl/humanoid/animation/animation_inputs.cpp`
-- `animation/clip_manifest.*`
-
-Acceptance criteria:
-
-- Spear attack damage applies only during spear contact.
-- Spear reach is longer and narrower than sword.
-- Spear can interrupt a fast charging mounted entity when conditions match.
-
-### Phase 8: Bows and projectile release events
-
-- Add bow action definitions with `ProjectileRelease`.
-- Move commander bow shot timing to action event release.
-- Spawn projectile from action event.
-- Projectile collision routes through contact-aware resolver.
-
-Files likely touched:
-
-- `game/systems/projectile_system.*`
-- `game/systems/combat_status_effect_system.*`
-- `game/systems/combat_system/combat_status_effect_processor.*`
-- `game/systems/combat_actions/combat_action_events.*`
-- `game/systems/combat_actions/combat_action_service.*`
-- `animation/clip_manifest.*`
+# Production RTS Battlefield Architecture
 
-Acceptance criteria:
-
-- Arrow is created when visual bow release occurs.
-- Damage happens on projectile collision.
-- Commander and non-commander RPG targets use same projectile damage path.
-- Ongoing projectile-created statuses and fire patches update outside projectile
-  flight logic.
+## Purpose
 
-### Phase 9: Mounted/cavalry combat
+This document replaces the previous RPG-only combat plan. The current target is a
+credible early-2000s-scale RTS battlefield: formations move as organized bodies,
+soldiers turn and accelerate believably, ranged ranks fire under explicit doctrine,
+melee forms a readable contact line, casualties produce reactions and stable reflow,
+and gameplay events stay synchronized with animation.
 
-- Add mounted attack definitions.
-- Give each mounted action an authored rider clip and carry its normalized
-  action phase through primary and layered render playback.
-- Bake a dedicated mounted spear thrust clip with trace sockets.
-- Add charge state/contact shape.
-- Add charge runtime/cooldown state so body-impact actions cannot restart
-  continuously while cavalry remains in contact.
-- Use relative speed in damage/stagger resolution.
-- Add cavalry interruption rules for timed sword/spear hits.
+This is an architectural migration, not a request to tune constants or add visual
+exceptions. Existing commander combat work remains useful, but it becomes one client
+of a shared action and presentation model.
 
-Files likely touched:
+## Product Scale and Design Standard
 
-- `game/core/component.h` if a mounted/charge runtime component is needed.
-- `game/systems/combat_actions/weapon_trace.*`
-- `game/systems/combat_system/combat_hit_resolver.*`
-- mounted render/animation files under `render/entity/*mounted*`, `render/horse/*`, and `render/humanoid/*`.
+The goal is a full-scale early-2000s RTS, not a soldier simulation. The game should
+create convincing mass behavior, readable battles, responsive orders, and synchronized
+combat for hundreds to roughly one thousand visible soldiers on target hardware. It
+does not need modern crowd fidelity, per-foot navigation, physically simulated weapon
+collisions for every distant unit, or a designer control for every solver coefficient.
 
-Acceptance criteria:
+Spend complexity where the player can perceive or command it: group movement and
+silhouette, readable front lines, responsive orders, visible combat causality, distinct
+unit roles, stable frame time, and deterministic outcomes. Approximate below that
+level. A distant strike may use an authored contact event rather than a sampled blade
+trace; a formation may use one shared corridor rather than one optimal path per soldier.
 
-- Mounted sword/spear attacks use action definitions.
-- Charge impact can damage/stagger valid targets.
-- Commander sword/spear contact can interrupt or stop cavalry under defined conditions.
+## Architectural Principles
 
-### Phase 10: Commander-vs-commander polish
+### Four primary abstractions
 
-- Ensure both commanders use RPG HP/posture/guard/stagger consistently.
-- Add lock-on/facing/contact rules specific to commander duels.
-- Add tests for:
-  - perfect guard against commander sword,
-  - guard break,
-  - finisher punish,
-  - dodge invulnerability,
-  - same-swing one-hit-per-target.
-
-Files likely touched:
-
-- `game/systems/rpg_combat_system/rpg_commander_damage.*`
-- `game/systems/combat_system/combat_hit_resolver.*`
-- `app/core/commander_control_controller.cpp`
-- `tests/systems/combat_mode_test.cpp`
-
-Acceptance criteria:
-
-- Commander-vs-commander is not a special one-off path.
-- It uses the same action, hit contact, and resolver path as commander-vs-unit.
-
-## Cleanup Targets
-
-### `CommanderControlController`
-
-Desired cleanup:
-
-- Keep:
-  - input state,
-  - camera control,
-  - movement,
-  - lock-on target selection,
-  - ability request forwarding.
-- Move out:
-  - attack phase setup,
-  - attack duration choices,
-  - action clip/style selection,
-  - stamina cost calculation for attacks,
-  - direct writes to combat action fields.
-
-### `CombatStateComponent`
-
-Desired cleanup:
-
-- Short term: keep as compatibility state for animation sampling.
-- Medium term: add action id and hit runtime state.
-- Long term: split into:
-  - `CombatActionComponent`,
-  - `CombatAnimationPlaybackComponent` if needed,
-  - `CombatHitRuntimeComponent` if the hit-list/runtime grows too large.
-
-### `RpgCommanderActionComponent`
-
-Desired cleanup:
-
-- Current: owns stable action id, duration/elapsed/normalized time, event cursor,
-  active/cancel windows, input-buffer flag, target hint, and per-action hit list.
-- Long term: rename/generalize the component after all non-commander authored
-  actions use it; no gameplay field is now specific to sword animation style.
-
-### `combat_state_processor.cpp`
-
-Desired cleanup:
-
-- Completed for authored actions: action event advancement/contact dispatch lives
-  in `combat_action_processor.cpp`.
-- Remaining phase-triggered commander damage is explicitly the no-action-id
-  compatibility fallback and can be removed with legacy commander saves/callers.
-
-### `rpg_commander_damage.cpp`
-
-Desired cleanup:
-
-- Keep RPG damage policy.
-- Accept contact/action context.
-- Avoid doing target acquisition or hit detection.
-
-### Render animation sampling
-
-Desired cleanup:
-
-- Read action id/clip id.
-- Map action id to clip and pose families.
-- Keep guard/jump/hit-reaction sampling separate from gameplay logic.
-
-## Test Strategy
-
-Add tests in small layers:
-
-- Definition lookup tests:
-  - every current RPG sword action exists,
-  - clip mapping is correct,
-  - event order is valid.
-- Event progression tests:
-  - action time crossing emits expected events,
-  - buffered input works during recover/reposition.
-- Weapon trace tests:
-  - target inside swing arc is hit,
-  - target outside swing arc is missed,
-  - same target is hit once per swing,
-  - multiple targets respect `max_targets`.
-- Damage resolver tests:
-  - guard reduces damage,
-  - perfect guard staggers attacker,
-  - guard break opens punish window,
-  - dodge invulnerability ignores contact,
-  - commander target uses RPG HP,
-  - unit target uses Unit HP.
-- Integration tests:
-  - current sword attacks still advance combo,
-  - misses do not advance combo,
-  - finisher still knocks/staggers,
-  - projectile release spawns arrow once.
-
-Existing relevant test areas:
-
-- `tests/core/commander_control_controller_test.cpp`
-- `tests/systems/combat_mode_test.cpp`
-- `tests/systems/rpg_engagement_system_test.cpp`
-- `tests/render/creature/humanoid_prepare_test.cpp`
-- `tests/render/bpat/bpat_registry_test.cpp`
-
-## Implementation Rules
-
-- Do not rewrite all combat at once.
-- Keep current RTS combat stable.
-- Do not move rendering decisions into gameplay systems.
-- Do not make projectile, spear, and cavalry bespoke one-off paths.
-- New features should be expressible as action definitions plus hit shapes plus resolver policy.
-- Every migration phase should preserve current player sword behavior unless that phase explicitly changes hit timing.
-- Favor small adapters/wrappers first, then remove old paths once tests cover the replacement.
-
-## First Practical Milestone
-
-The first code milestone should be:
-
-1. Add action ids and action definitions for existing RPG sword attacks.
-2. Add `CombatActionService::request_attack()`.
-3. Move `CommanderControlController::primary_action()` attack setup into that service.
-4. Keep current phase-transition damage unchanged.
-5. Add tests proving current behavior is preserved.
-
-This gives the codebase a professional extension point before changing damage timing.
+The battlefield model should expose four concepts to the rest of the game:
+
+1. `TacticalGroup`: members, formation, anchor, order, doctrine, and cohesion.
+2. `SoldierAgent`: group slot, local motion, engagement assignment, health, and action.
+3. `Engagement`: a relationship between groups with a contact front and soldier pairs.
+4. `Action`: an authored movement/combat/reaction transaction with timed events.
+
+Navigation, slot matching, avoidance, kinematics, hit queries, and animation sampling
+are mechanisms behind these concepts. They must not become independent gameplay models
+that other systems manipulate directly.
+
+### Declarative policy, encapsulated mechanism
+
+Use declarative definitions for choices a designer should understand and reuse:
+formation archetype, movement class, engagement doctrine, fire doctrine, action set,
+reaction set, animation graph, and unit archetype composition.
+
+Keep algorithms and numerical solver internals in C++: pathfinding, slot assignment,
+avoidance, kinematic integration, front construction, spatial queries, hit detection,
+event scheduling, and replay determinism. Data chooses a named policy and a few
+meaningful parameters; it must not reproduce an algorithm as a large configuration.
+
+### Prefer capability composition over unit-type branching
+
+Generic runtime systems operate on capabilities and resolved definition IDs such as
+`movement_profile_id`, `formation_profile_id`, `action_set_id`, and `doctrine_id`.
+Avoid growing `switch (spawn_type)` blocks across movement, combat, and rendering.
+Special units receive a narrow capability or action, not a parallel pipeline.
+
+### One owner per transition
+
+- Orders choose intent; they do not write velocity.
+- Group planning chooses anchors and slots; it does not move transforms.
+- Steering chooses desired motion; kinematics alone commits transforms.
+- Actions alone advance attack and reaction timing.
+- Hit resolution alone changes health from combat contact.
+- Presentation only consumes snapshots.
+
+### Build the smallest complete vertical slice
+
+Prove the design with line infantry moving, turning, meeting another line, fighting,
+dying, and filling front vacancies. Generalize only when archers, spears, or cavalry
+demonstrate a real variation. Do not implement every policy or transition in advance.
+
+## Player-Observed Failures
+
+1. Troops rotate abruptly or in implausible directions while moving.
+2. Locomotion and transitions look clunky and can disagree with displacement.
+3. On contact, one ranged soldier fires while others remain grounded or idle.
+4. Enemy melee attacks sometimes apply damage without a visible attack animation.
+5. The front rank dies while rear ranks remain far away.
+6. Both armies can remain visually separated while simulation-level fighting continues.
+7. Survivors reform toward the rear or around stale positions instead of maintaining a
+   readable front.
+
+These are coupled failures. They cannot be solved independently without creating more
+state disagreement.
+
+## Verified Current Architecture
+
+### Runtime order
+
+`app/core/renderer_bootstrap.cpp` currently registers:
+
+`MovementSystem -> LocalAvoidanceSystem -> PatrolSystem -> GuardSystem -> CombatSystem`
+
+Important consequences:
+
+- Movement commits transforms before combat chooses chase/stop/face intents.
+- Combat movement requests generally take effect on the next simulation tick.
+- `EngagementSlotSystem` is implemented but not registered.
+- `TargetCommitmentSystem` is implemented but not registered.
+- `MovementIntentComponent` exists but is not the authoritative input to movement.
+- There is no explicit formation/cohesion update system in the runtime loop.
+
+### Formation commands are one-shot destinations
+
+`game/systems/formation_planner.h` calculates final per-unit points and facing angles.
+`CommandService::issue_ground_move()` writes desired yaw and calls `move_units()`.
+After that, units own independent paths and velocities in `MovementComponent`.
+
+There is no persistent formation entity or runtime state containing:
+
+- group identity and membership,
+- formation anchor and orientation,
+- stable rank/file slot,
+- cohesion and straggler state,
+- shared corridor/path,
+- speed matching,
+- casualty reflow policy,
+- combat frontage.
+
+The planner also sorts units into destination geometry but does not solve a minimum-cost
+assignment from current positions to stable slots. A new order can therefore induce
+crossing paths and surprising turns.
+
+### Movement and turning are per soldier
+
+`game/systems/movement_system.cpp` steers each entity directly toward its current
+waypoint. Velocity uses a proportional acceleration followed by damping. Facing is
+then derived from velocity and clamped to `720 deg/s` for ordinary infantry. There is
+no angular velocity, turn radius, turn-in-place state, formation heading, or speed
+reduction based on heading error.
+
+This permits soldiers to translate strongly sideways while their model catches up,
+and sharp waypoint changes can produce rapid visible snaps. Final formation yaw is
+only used after velocity becomes negligible because velocity-facing takes precedence.
+
+### Local avoidance is non-functional
+
+`game/systems/local_avoidance_system.cpp` detects overlaps and computes `sep_x` and
+`sep_z`, then discards both values. It only updates diagnostics. It cannot prevent
+overlap, crossing, jitter, or congestion.
+
+Even if those values were applied directly, pairwise separation alone would fight
+formation slot following. Avoidance needs a constrained steering contract that
+preserves group intent and gives engaged units different rules from marching units.
+
+### Combat independently selects individuals
+
+`game/systems/combat_system/attack_processor.cpp` performs target validation, nearest
+enemy search, chase destination creation, stopping, facing, mode selection, melee lock,
+attack cadence, projectile spawning, and damage scheduling in one large processor.
+
+The principal RTS melee relationship is `AttackComponent::in_melee_lock` plus one
+`melee_lock_target_id`. Reciprocal locking is attempted, but battle frontage and rank
+support are not represented. Chasing uses spread angles around individual targets,
+not opposing formation fronts.
+
+`EngagementSlotSystem` allocates eight radial slots around an individual target only
+after melee lock, but it is not running and its anchors are not consumed by movement.
+It would not by itself solve line-vs-line combat.
+
+### Damage and presentation use parallel timing models
+
+Normal RTS melee damage is deferred with fields on `AttackComponent`:
+
+- `has_pending_melee_strike`,
+- `pending_melee_target_id`,
+- `pending_melee_elapsed`,
+- `pending_melee_contact_time`.
+
+Animation is inferred separately from attack cooldown, melee lock, attack target,
+`CombatStateComponent`, render-time transaction state, and action manifests. This can
+produce simulation attacks without a matching visible transaction, especially when
+targets change, die, or leave range during the cycle.
+
+Ranged fire similarly spawns arrows when the combat cooldown fires. Formation volley
+intent, draw/release events, rank permissions, and animation readiness are not one
+authoritative transaction.
+
+### Casualties are scalar health, not formation vacancies
+
+The formation planner is invoked for commands, not continuously for battlefield
+casualties. A dead front soldier does not create a first-class vacant rank/file slot.
+Rear soldiers have no advance-to-fill policy and the group has no current front edge.
+Individual target chasing can pull some soldiers forward while others retain old move
+destinations, creating the large visual gap reported in playtesting.
+
+## Desired Battlefield Model
+
+### Declarative definition model
+
+Definitions are immutable during a match and referenced by stable IDs. Prefer the
+existing typed manifest style under `animation/` initially; JSON or YAML is a storage
+choice, not an architecture requirement.
+
+Keep the catalog deliberately coarse:
+
+- `FormationProfile`: shape family, preferred frontage, spacing class, turn style,
+  and reflow policy.
+- `MovementProfile`: infantry/cavalry/large-body kinematic class and animation graph.
+- `EngagementDoctrine`: active ranks, reach/support, replacement, and disengagement.
+- `FireDoctrine`: free fire, ripple volley, synchronized volley, or hold fire.
+- `ActionDefinition`: clip, duration, events, constraints, and hit/release contract.
+- `UnitArchetype`: profile/action references plus combat statistics and capabilities.
+
+Use named presets plus a small override surface. A unit may select
+`infantry_standard` and override speed; it should not configure angular acceleration,
+damping, avoidance horizons, blend thresholds, and every arrival coefficient.
+
+Every schema requires a stable ID and version, explicit defaults, startup validation,
+cross-reference checks, an immutable resolved representation, save/replay compatibility,
+and debug output identifying the selected definition. Do not add inheritance deeper
+than one preset plus overrides. Do not add a general scripting language, behavior tree,
+or node editor during this migration.
+
+### 1. Fixed simulation phases
+
+Replace implicit registration-order behavior with named phases and a fixed simulation
+step (for example 30 Hz):
+
+1. `Orders`: consume player and AI commands.
+2. `GroupPlanning`: update formation anchors, paths, facing, doctrine, and desired front.
+3. `SlotAssignment`: preserve or reassign stable march/combat slots.
+4. `Steering`: combine path, slot, avoidance, and combat approach into desired motion.
+5. `Kinematics`: apply acceleration, turn limits, terrain constraints, and transforms.
+6. `Engagement`: allocate opposing frontage pairs and reserve ranged lanes.
+7. `Actions`: start/advance authored attacks and cross animation events.
+8. `HitResolution`: validate contact/projectile events and apply damage/status.
+9. `CasualtyAndMorale`: mark deaths, release slots, update group integrity.
+10. `PresentationSnapshot`: publish immutable interpolation and animation state.
+
+Rendering must never infer whether gameplay attacked. It consumes the snapshot.
+
+### 2. Persistent tactical groups
+
+Introduce a persistent `TacticalGroup` runtime owned by one battlefield group module.
+Do not encode large dynamic group state inside every soldier component.
+
+Minimum group state:
+
+- stable `group_id`, owner, troop role, and ordered member IDs,
+- current and desired anchor position,
+- current and desired heading,
+- formation template, width, depth, spacing, and doctrine,
+- shared path/corridor and current path segment,
+- stable slot table with rank/file and local offsets,
+- current speed cap and cohesion envelope,
+- state: `Forming`, `Marching`, `Turning`, `Holding`, `Approaching`, `Engaged`,
+  `Disengaging`, `Routing`,
+- opposing group IDs and combat-front geometry,
+- dirty flags for membership, terrain, command, and casualty changes.
+
+Each soldier receives a small `GroupMemberComponent` containing `group_id`, stable
+`slot_id`, role, and temporary detached/engaged state.
+
+Formation commands move the group anchor. Soldiers follow transformed local slots.
+This is the central change needed to make an army read as an army.
+
+### 3. Stable slot assignment and casualty reflow
+
+Slots must survive orders and ordinary steering. Reassignment occurs only for explicit
+reasons: formation change, member death, blocked slot, split/merge, or excessive
+straggling.
+
+Use deterministic stable assignment when a group forms or changes shape. Begin with a
+bounded rank-preserving nearest assignment. Introduce Hungarian/min-cost matching only
+if replay metrics show crossing that the simpler method cannot solve. The abstraction
+is stable assignment; the solver remains replaceable.
+
+Casualty policy:
+
+- A dead member vacates a specific slot immediately.
+- Reflow is delayed briefly so the death remains readable.
+- The nearest suitable soldier from the next rank advances into that column.
+- Reassignment propagates rearward, preserving left/right ordering.
+- The formation front anchor does not jump backward because the front rank died.
+- Width shrinks from the flanks only when rank population falls below a configured
+  threshold.
+- Engaged soldiers are pinned to combat slots and do not reflow until their action can
+  safely transition.
+
+### 4. Formation-aware navigation and steering
+
+Pathfind the group anchor/corridor, not a separate global path for every soldier.
+Individual soldiers receive a local target derived from group anchor, heading, and
+slot. Detached units may request local recovery paths.
+
+Create a `SteeringRequest`/`SteeringResult` boundary:
+
+- Inputs: preferred velocity, preferred facing, max speed/acceleration/turn rate,
+  slot error, neighbor circles, terrain corridor, movement mode, priority.
+- Outputs: constrained velocity and facing intent.
+
+Avoidance must be velocity-based and predictive, with constraints for slot cohesion.
+Evaluate a proven ORCA/RVO implementation, but keep it behind the steering boundary so
+a simpler deterministic solver can ship if it meets acceptance and performance goals.
+Do not expose solver coefficients per unit archetype.
+
+Movement quality rules:
+
+- Slow translation when heading error is large.
+- Use explicit turn-in-place below a speed threshold.
+- Give cavalry a minimum practical turn radius and anticipation distance.
+- Use arrival curves with acceleration/deceleration limits, not frame-dependent
+  proportional acceleration plus damping.
+- Keep formation anchor speed limited by lagging percentile, not the single slowest
+  transient member.
+- Permit controlled compression near obstacles, followed by deterministic expansion.
+
+### 5. One authoritative motion state for animation
+
+Publish a simulation `MotionSnapshot` per soldier after kinematics:
+
+- previous/current transform for render interpolation,
+- planar velocity and acceleration,
+- signed local forward/lateral speed,
+- angular velocity and heading error,
+- grounded state and slope,
+- movement mode (`Idle`, `Start`, `Walk`, `Run`, `Stop`, `TurnLeft`, `TurnRight`,
+  `Strafe`, `Knockback`),
+- gait phase seed and continuity token.
+
+Animation selection must use actual local motion, not only `has_target`, attack target,
+or nominal unit speed. Add transition graphs with authored blend durations and phase
+matching for idle/start/loop/stop and walk/run changes. Preserve gait phase across clip
+changes where compatible. Root motion is not required for RTS locomotion, but clip
+speed must be warped within a bounded range to match displacement and prevent foot
+sliding.
+
+Simulation transforms remain authoritative. Rendering interpolates fixed ticks and
+does not feed pose state back into movement.
+
+### 6. Formation-vs-formation engagement
+
+Replace nearest-individual melee convergence with a two-level allocator:
+
+1. `GroupEngagementPlanner` pairs opposing groups and computes contact fronts from
+   anchors, headings, widths, terrain, and weapon reach.
+2. `CombatSlotAllocator` creates facing slot pairs along those fronts and assigns only
+   eligible soldiers.
+
+Soldier engagement states:
+
+- `Reserve`: holds formation slot.
+- `AdvancingToFront`: moves to an allocated combat slot.
+- `Ready`: in range and facing tolerance.
+- `Acting`: owns an active combat action.
+- `Recovering`: remains committed until safe release.
+- `ReplacingCasualty`: fills a released front slot.
+- `Disengaging`: returns through a reserved corridor.
+
+Only front-rank soldiers, or ranks permitted by weapon reach, may enter melee. Rear
+ranks advance as slots open. This prevents simulation combat across a visible gap.
+
+Engagement validity must require physical conditions: compatible slot pair, weapon
+reach, facing tolerance, line of approach, and target alive. A logical target ID alone
+is insufficient.
+
+### 7. Shared authored combat actions
+
+Extend the existing `game/systems/combat_actions/` architecture to ordinary RTS
+soldiers instead of maintaining cooldown-driven pending strikes.
+
+An action definition owns:
+
+- action and weapon identity,
+- full-body/upper-body clip,
+- duration and interrupt policy,
+- movement/facing constraints,
+- events such as `Windup`, `Release`, `TraceStart`, `TraceEnd`, `Impact`, `Recover`,
+- hit shape/socket data,
+- damage/stagger profile,
+- target and formation eligibility,
+- follow-up/cooldown policy.
+
+An `ActiveCombatActionComponent` owns runtime action ID, target, elapsed time, event
+cursor, hit suppression, and completion/cancellation reason. Gameplay and rendering
+read the same action clock.
+
+For melee, apply damage only from an authored contact event/trace while the pair is in
+a valid combat slot. For ranged attacks, spawn the projectile only at the authored
+release event. Remove `pending_melee_*` after all RTS attackers migrate.
+
+### 8. Ranged formation doctrine
+
+Ranged behavior must be group-authored rather than each archer independently firing
+whenever cooldown permits.
+
+Support at least:
+
+- `FreeFire`: individual cadence with deterministic phase staggering.
+- `RippleVolley`: rank or file waves.
+- `SynchronizedVolley`: group draw, hold, and release window.
+- `HoldFire` and `FireAtWill` orders.
+
+The planner determines which ranks have line of fire. Friendly soldiers and terrain
+must participate in line-of-fire checks. Rear ranks either use an authored overhead
+trajectory or do not fire; they must not visually shoot through the front rank.
+
+Every firing soldier starts a visible bow action. Deterministic small offsets avoid
+robotic synchronization while preventing the current one-active/all-idle appearance.
+
+### 9. Death, hit reaction, and action interruption
+
+Damage resolution publishes a `CombatOutcomeEvent`. A dedicated reaction system maps
+it to hit reaction, stagger, knockdown, or death action. Death must cancel locomotion,
+release engagement and formation occupancy, and start a non-looping death clip in the
+same simulation tick.
+
+The presentation snapshot retains the corpse pose until cleanup policy removes it.
+Enemy and friendly units use the same path. No renderer-side team-specific inference
+is allowed.
+
+## Module Boundaries
+
+Do not create one globally registered system for every responsibility below. Organize
+the implementation into four cohesive modules aligned with the primary abstractions:
+
+- `BattlefieldGroupModule`: group orders, formation geometry, slots, navigation, and
+  casualty reflow.
+- `AgentMotionModule`: preferred motion, avoidance, kinematics, and motion snapshots.
+- `EngagementModule`: group fronts, soldier pairing, reserves, and fire control.
+- `ActionModule`: combat/reaction actions, events, hit requests, and outcomes.
+
+Each module may contain internal processors, but exposes one narrow input/output
+contract. The scheduler coordinates phases instead of allowing processors to mutate
+one another's internal state.
+
+| Responsibility | Module owner | Existing code to migrate |
+|---|---|---|
+| Group membership, anchor, slots, corridor | `BattlefieldGroupModule` | one-shot formation/per-unit paths |
+| Preferred motion, avoidance, transforms | `AgentMotionModule` | direct chase/no-op avoidance/movement |
+| Opposing fronts, pairs, fire control | `EngagementModule` | nearest targets/melee locks/cooldowns |
+| Attack and reaction lifecycle | `ActionModule` | pending strike/render inference |
+| Damage | `CombatHitResolver` | direct calls in attack processor |
+| Presentation snapshots | motion/action modules | render-time inference |
+
+## Migration Roadmap
+
+### Phase 0: Capture, metrics, and acceptance scenes
+
+- [ ] Add a deterministic headless scenario runner with fixed seed and fixed timestep.
+- [ ] Add replayable scenes: 20v20 infantry approach, 20 archers vs infantry, mixed
+  formation, casualty reflow, cavalry turn/charge, narrow passage, commander in line.
+- [ ] Record per tick: transforms, group/slot IDs, target/action IDs, action events,
+  damage, death, and animation state.
+- [ ] Add debug overlays for group anchors, formation slots, paths, preferred/actual
+  velocity, combat fronts, engagement pairs, weapon range, and line of fire.
+- [ ] Add performance counters and a 60-second soak test.
+- [ ] Define visual acceptance captures at 30 and 60 render FPS from the same replay.
+
+Exit criteria: every reported symptom is reproducible without manual play and can be
+measured from logs or captures.
+
+### Phase 1: Definition contracts and vertical slice
+
+- [ ] Add typed schemas and registries for the six coarse definition types.
+- [ ] Author only the presets needed for standard sword infantry and line formation.
+- [ ] Validate IDs, clips, events, capabilities, and cross-references at startup.
+- [ ] Build a 10v10 line-infantry slice through group, motion, engagement, action, hit,
+  death, and reflow contracts.
+- [ ] Keep existing systems behind a scenario flag until the slice is complete.
+- [ ] Reject fields or components serving only one incidental implementation detail.
+
+Exit criteria: the complete scenario uses the new contracts, and adding a second
+sword-infantry archetype requires definitions rather than generic runtime branches.
+
+### Phase 2: Explicit simulation pipeline
+
+- [ ] Introduce named world phases and fixed-step accumulation.
+- [ ] Move render interpolation to immutable previous/current snapshots.
+- [ ] Register all systems through the phase scheduler, with assertions against
+  cross-phase writes.
+- [ ] Remove behavior that depends accidentally on vector registration order.
+- [ ] Add deterministic ordering by entity/group ID for allocation and event handling.
+
+Exit criteria: replays produce identical combat outcomes across render frame rates.
+
+### Phase 3: Persistent groups and stable slots
+
+- [ ] Add `TacticalGroupStore`, `GroupMemberComponent`, group state, and serialization.
+- [ ] Convert formation commands into group-anchor orders.
+- [ ] Implement deterministic stable slot assignment and slot retention.
+- [ ] Add formation turning, speed matching, straggler recovery, split, merge, and
+  explicit dissolve behavior.
+- [ ] Implement casualty vacancies and delayed front-to-rear reflow.
+- [ ] Keep legacy individual move orders for civilians, builders, and detached units.
+
+Exit criteria: formations retain rank/file identity through turns and front-rank
+casualties without path crossing or backward reforming.
+
+### Phase 4: Steering and movement quality
+
+- [ ] Replace direct waypoint velocity integration with preferred steering plus bounded
+  kinematics.
+- [ ] Replace the no-op avoidance system with predictive constrained avoidance.
+- [ ] Add heading-aware speed, angular velocity, turn-in-place, arrival, and cavalry
+  turn-radius policies.
+- [ ] Add group corridor compression/expansion and blocked-member recovery.
+- [ ] Delete duplicate direct transform/velocity writes from combat and order systems.
+
+Exit criteria: no visible yaw snaps; no routine overlap; units do not translate
+sideways through large heading errors; a 100-unit turn remains coherent.
+
+### Phase 5: Locomotion presentation
+
+- [ ] Publish authoritative motion snapshots after kinematics.
+- [ ] Build locomotion transition graphs with start/loop/stop/turn clips.
+- [ ] Add phase-preserving walk/run blends and bounded playback-rate matching.
+- [ ] Remove `has_target` and nominal-speed animation inference where snapshots exist.
+- [ ] Add animation continuity tests for waypoint changes, stopping, turning, and
+  action interruption.
+
+Exit criteria: feet and displacement agree within defined tolerance; no idle/walk
+flashing; animation remains continuous across fixed simulation ticks.
+
+### Phase 6: Battle fronts and melee allocation
+
+- [ ] Add group-vs-group contact front calculation.
+- [ ] Replace unused radial engagement slots with front-relative combat slots.
+- [ ] Assign stable attacker/defender pairs with leases and deterministic replacement.
+- [ ] Gate melee actions on slot arrival, distance, facing, and weapon reach.
+- [ ] Keep reserve ranks in formation and advance them only into vacancies.
+- [ ] Remove nearest-target chase from engaged group members.
+
+Exit criteria: damage cannot occur across a visible gap; opposing front ranks meet;
+rear ranks replace casualties without both armies reforming backward.
+
+### Phase 7: RTS action unification
+
+- [ ] Generalize existing authored commander actions to normal sword, spear, and bow
+  soldiers.
+- [ ] Start one action transaction for every gameplay attack.
+- [ ] Route melee trace/contact and projectile release through authored events.
+- [ ] Make death/hit reactions interrupt actions through explicit policies.
+- [ ] Remove `pending_melee_*` and cooldown-derived render transactions.
+- [ ] Retain cooldown as action eligibility/recovery policy, not hit timing.
+
+Exit criteria: every damage/projectile event references a visible action transaction;
+enemy and friendly attack/death reactions follow identical code paths.
+
+### Phase 8: Ranged doctrine
+
+- [ ] Add fire-control state to tactical groups.
+- [ ] Implement free fire, ripple volley, synchronized volley, and hold fire.
+- [ ] Add rank eligibility and terrain/friendly line-of-fire tests.
+- [ ] Drive bow draw/release animation from the same volley schedule.
+- [ ] Add deterministic cadence variation and target distribution.
+
+Exit criteria: eligible formations produce readable volleys; no invisible shots; idle
+ranks have an explicit hold/reload reason; projectiles release from visible bows.
+
+### Phase 9: Combined arms and commander integration
+
+- [ ] Integrate spear reach/support ranks and brace fronts.
+- [ ] Integrate cavalry approach lanes, momentum, impact, penetration, and disengagement.
+- [ ] Treat commanders as group members when attached and autonomous combatants when
+  detached.
+- [ ] Reuse authored weapon traces for commander-vs-soldier and commander-vs-commander.
+- [ ] Add morale/cohesion hooks only after movement and engagement are stable.
+
+Exit criteria: infantry, ranged, cavalry, and commanders share the same engagement,
+action, hit, and reaction contracts without unit-type branches in rendering.
+
+### Phase 10: Removal and production hardening
+
+- [ ] Remove obsolete melee lock, radial slot, render inference, and direct chase paths.
+- [ ] Version and migrate save data.
+- [ ] Profile 500, 1,000, and target maximum visible soldiers.
+- [ ] Add LOD update rates for distant group planning and animation without changing
+  deterministic combat outcomes.
+- [ ] Run replay, soak, sanitizer, and visual-regression suites in CI.
+
+## Non-Negotiable Acceptance Criteria
+
+- A soldier cannot deal melee damage unless its weapon event and combat slot permit it.
+- A ranged projectile cannot exist without a release event from a visible action.
+- A death outcome produces a death/reaction transaction for either team that tick.
+- Formation members retain stable slots unless a documented reassignment trigger fires.
+- Front-rank losses advance reserves forward; they do not move the battle backward.
+- No system directly changes movement velocity outside the steering/kinematics phases.
+- No renderer decides attacks, deaths, targets, or gameplay timing.
+- Simulation results are independent of render FPS.
+- All allocations and action schedules are deterministic under a fixed seed.
+- A normal unit archetype is assembled from definitions without editing generic
+  movement, engagement, action, or rendering code.
+- Declarative profiles do not expose avoidance, matching, interpolation, or numerical
+  integration internals.
+- The core battlefield remains understandable through four primary abstractions.
+
+## Complexity Budget and Rejection Rules
+
+Reject a proposed abstraction, definition field, component, or system unless it:
+
+- represents a player-visible distinction reused by multiple archetypes,
+- establishes a necessary ownership boundary,
+- enables deterministic testing or replay,
+- removes duplicated policy from two or more runtime paths, or
+- is required by a measured acceptance failure.
+
+Prefer named presets over independent numbers, one event stream over mirrored booleans,
+and derived presentation data over persistent duplicate state. Before exposing a field,
+ask whether a designer makes a meaningful choice with it, whether it can be derived,
+whether it preserves invariants, and whether two concrete content cases need it. If
+not, keep it internal until evidence requires exposure.
+
+## Implementation Sequence Warning
+
+Do not begin by polishing attack clips or changing movement constants. The first
+production implementation must establish deterministic captures and the standard
+infantry vertical slice, then explicit phases and persistent groups. Animation and
+combat synchronization depend on those contracts.
+
+The previous commander action work under `game/systems/combat_actions/` should be
+preserved and generalized during Phase 7. It is not the cause of the formation-level
+failures, and replacing it would discard the correct direction: authored events shared
+by gameplay and presentation.
