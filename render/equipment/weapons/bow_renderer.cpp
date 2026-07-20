@@ -283,8 +283,9 @@ void BowRenderer::submit(const BowRenderConfig& m_config,
   }
 
   bool const is_bow_attacking = anim.inputs.is_attacking && !anim.inputs.is_melee;
-  float const hold_blend =
-      is_bow_attacking ? 0.0F : hold_transition_amount(anim.inputs);
+  float const hold_blend = (is_bow_attacking && !anim.inputs.is_in_hold_mode)
+                               ? 0.0F
+                               : hold_transition_amount(anim.inputs);
   QVector3D bow_up = up;
   if (hold_blend > 1e-4F) {
     QVector3D const hold_axis(0.0F, 0.62F, 0.78F);

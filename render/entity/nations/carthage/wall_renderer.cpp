@@ -12,6 +12,7 @@ const WallPalette k_wall_palette{.wood_light = QVector3D(0.67F, 0.64F, 0.59F),
                                  .wood_dark = QVector3D(0.43F, 0.41F, 0.38F),
                                  .rope = QVector3D(0.60F, 0.58F, 0.53F),
                                  .shadow = QVector3D(0.31F, 0.29F, 0.27F),
+                                 .masonry_accent = QVector3D(0.68F, 0.38F, 0.27F),
                                  .alternate_starts_light = false};
 const WallGeometry k_wall_geometry{.solid_masonry = true,
                                    .connected_span_length = 1.04F,

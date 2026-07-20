@@ -13,6 +13,7 @@
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../defense_tower_renderer_common.h"
 #include "../../registry.h"
@@ -228,6 +229,16 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         QVector3D(-0.38F, 0.96F, -0.32F), QVector3D(0.22F, 0.12F, 0.18F), c.stone_dark);
     desc.add_box(
         QVector3D(0.22F, 0.82F, -0.42F), QVector3D(0.16F, 0.10F, 0.14F), c.brick_dark);
+  }
+
+  if (!destroyed) {
+    add_punic_tanit_relief(
+        desc,
+        QVector3D(0.0F, damaged ? 1.18F : 1.34F, damaged ? 0.70F : 0.80F),
+        BuildingFacadePlane::XY,
+        damaged ? 0.58F : 0.72F,
+        c.brick,
+        c.stone_dark);
   }
 
   return build_building_archetype(desc, state);

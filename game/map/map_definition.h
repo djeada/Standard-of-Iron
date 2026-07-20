@@ -40,6 +40,34 @@ inline auto lighting_for_time_of_day(TimeOfDay tod) -> LightingSettings {
   return {};
 }
 
+inline constexpr auto time_of_day_name(TimeOfDay tod) noexcept -> const char* {
+  switch (tod) {
+  case TimeOfDay::Morning:
+    return "Morning";
+  case TimeOfDay::Day:
+    return "Day";
+  case TimeOfDay::Afternoon:
+    return "Afternoon";
+  case TimeOfDay::Night:
+    return "Night";
+  }
+  return "Day";
+}
+
+inline constexpr auto representative_clock_time(TimeOfDay tod) noexcept -> const char* {
+  switch (tod) {
+  case TimeOfDay::Morning:
+    return "07:00";
+  case TimeOfDay::Day:
+    return "13:00";
+  case TimeOfDay::Afternoon:
+    return "17:00";
+  case TimeOfDay::Night:
+    return "22:00";
+  }
+  return "13:00";
+}
+
 struct GridDefinition {
   int width = 50;
   int height = 50;

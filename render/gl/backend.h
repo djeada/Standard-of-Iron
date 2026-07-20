@@ -66,6 +66,12 @@ public:
         light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
     m_ambient_strength = ambient_strength;
   }
+  [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& {
+    return m_light_dir;
+  }
+  [[nodiscard]] auto ambient_strength() const noexcept -> float {
+    return m_ambient_strength;
+  }
 
   [[nodiscard]] auto resources() const -> ResourceManager* override {
     return m_resources.get();

@@ -92,9 +92,20 @@ ArenaWindow::ArenaWindow(QWidget* parent)
 
   m_status_label = new QLabel("Ready", this);
   statusBar()->addWidget(m_status_label);
+  m_lighting_label =
+      new QLabel(QStringLiteral("Time: %1").arg(m_viewport->lighting_summary()), this);
+  m_lighting_label->setStyleSheet("color: #d6c990;");
+  statusBar()->addPermanentWidget(m_lighting_label);
   auto* version_label = new QLabel("Standard of Iron Arena v1.0", this);
   version_label->setStyleSheet("color: #4f6a75;");
   statusBar()->addPermanentWidget(version_label);
+
+  connect(m_viewport,
+          &ArenaViewport::lighting_changed,
+          this,
+          [this](const QString& summary) {
+            m_lighting_label->setText(QStringLiteral("Time: %1").arg(summary));
+          });
 
   connect(regenerate_action,
           &QAction::triggered,

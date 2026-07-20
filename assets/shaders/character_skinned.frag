@@ -14,6 +14,9 @@ uniform float u_alpha;
 uniform int u_material_id;
 uniform vec3 u_role_colors[32];
 uniform int u_role_color_count;
+uniform vec3 u_light_dir;
+uniform float u_ambient_strength;
+uniform vec3 u_camera_position;
 
 out vec4 frag_color;
 
@@ -135,6 +138,43 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
   return clamp(worn, 0.0, 1.0);
 }
 
+vec3 shade_readable_character(vec3 base,
+                              vec3 surface_normal,
+                              vec3 world_position,
+                              int material_id) {
+  vec3 light_dir = normalize(u_light_dir);
+  vec3 view_dir = normalize(u_camera_position - world_position);
+  float scene_ambient = clamp(u_ambient_strength, 0.12, 0.40);
+  float readable_ambient = max(scene_ambient, 0.18);
+  float daylight = smoothstep(0.14, 0.31, scene_ambient);
+
+  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04),
+                       vec3(1.08, 0.94, 0.78),
+                       daylight);
+  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82),
+                       vec3(0.72, 0.82, 1.00),
+                       daylight);
+
+  float ndl = dot(surface_normal, light_dir);
+  float wrapped_diffuse = clamp((ndl + 0.25) / 1.25, 0.0, 1.0);
+  float hemisphere = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
+  float fill = readable_ambient * (0.78 + hemisphere * 0.22);
+  float direct = wrapped_diffuse * (0.72 + daylight * 0.18);
+  vec3 light_tint = mix(sky_color, sun_color, wrapped_diffuse * 0.78);
+  vec3 color = base * (fill + direct) * light_tint;
+
+  float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);
+  float creature_scale = material_id == 6 ? 0.035 : 0.14;
+  color += sky_color * rim * creature_scale * (1.15 - daylight * 0.35);
+
+  if (material_id == 2) {
+    vec3 half_vector = normalize(light_dir + view_dir);
+    float metal_glint = pow(max(dot(surface_normal, half_vector), 0.0), 28.0);
+    color += sun_color * metal_glint * (0.13 + daylight * 0.08);
+  }
+  return clamp(color, 0.0, 1.0);
+}
+
 void main() {
   vec3 base = u_color;
   if (v_color_role > 0 && v_color_role <= u_role_color_count) {
@@ -146,20 +186,16 @@ void main() {
   base = apply_wear(base, u_material_id, v_color_role, v_pos_local, v_wear_params);
 
   vec3 surface_normal = normalize(v_normal_ws);
-  vec3 light_dir = normalize(vec3(0.65, 0.50, 0.40));
-
-  vec3 sun_color = vec3(1.08, 0.92, 0.74);
-  vec3 sky_color = vec3(0.72, 0.80, 1.00);
-
-  float wrap = 0.28;
-  float ndl = dot(surface_normal, light_dir);
-  float diff_raw = ndl * (1.0 - wrap) + wrap;
-  float diff = max(diff_raw, 0.15);
-
-  float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
-
-  vec3 color = clamp(base * diff * light_tint, 0.0, 1.0);
+  vec3 light_dir = normalize(u_light_dir);
+  float daylight = smoothstep(0.14, 0.31, clamp(u_ambient_strength, 0.12, 0.40));
+  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04),
+                       vec3(1.08, 0.94, 0.78),
+                       daylight);
+  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82),
+                       vec3(0.72, 0.82, 1.00),
+                       daylight);
+  vec3 color = shade_readable_character(
+      base, surface_normal, v_pos_ws, u_material_id);
   if (u_material_id == 6) {
     bool horse_hair = v_color_role == 5 || v_color_role == 6;
     bool dark_detail = v_color_role == 4 || v_color_role == 8;

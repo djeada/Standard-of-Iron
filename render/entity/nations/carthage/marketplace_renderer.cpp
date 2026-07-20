@@ -254,6 +254,13 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                        k_marketplace_team_slot,
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
+  add_punic_tanit_relief(desc,
+                         QVector3D(1.01F, 0.55F * height_multiplier, 0.28F),
+                         BuildingFacadePlane::ZY,
+                         0.68F,
+                         c.cloth_gold,
+                         c.brick_dark);
+
   return build_building_archetype(desc, state);
 }
 

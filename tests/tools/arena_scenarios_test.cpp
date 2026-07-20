@@ -25,6 +25,10 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
             ids.end());
   EXPECT_NE(std::find(ids.begin(),
                       ids.end(),
+                      QString::fromLatin1(Arena::Scenarios::k_held_weapon_stances_id)),
+            ids.end());
+  EXPECT_NE(std::find(ids.begin(),
+                      ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_mounted_charge_id)),
             ids.end());
   EXPECT_NE(std::find(ids.begin(),

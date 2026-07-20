@@ -85,3 +85,24 @@ TEST(ShaderSource, InstancedRiggedShaderGuardsRoleColorFetches) {
   EXPECT_NE(frag.find("v_color_role > 0 && v_color_role <= v_role_color_count"),
             std::string::npos);
 }
+
+TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
+  const auto root = find_repo_root();
+  const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
+  const auto instanced =
+      read_text(root / "assets" / "shaders" / "character_skinned_instanced.frag");
+  ASSERT_FALSE(single.empty());
+  ASSERT_FALSE(instanced.empty());
+
+  for (const auto* source : {&single, &instanced}) {
+    EXPECT_NE(source->find("uniform vec3 u_light_dir;"), std::string::npos);
+    EXPECT_NE(source->find("uniform float u_ambient_strength;"), std::string::npos);
+    EXPECT_NE(source->find("uniform vec3 u_camera_position;"), std::string::npos);
+    EXPECT_NE(source->find("shade_readable_character"), std::string::npos);
+    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.18);"),
+              std::string::npos);
+    EXPECT_NE(source->find("float rim = pow("), std::string::npos);
+    EXPECT_NE(source->find("if (material_id == 2)"), std::string::npos);
+    EXPECT_EQ(source->find("normalize(vec3(0.65, 0.50, 0.40))"), std::string::npos);
+  }
+}

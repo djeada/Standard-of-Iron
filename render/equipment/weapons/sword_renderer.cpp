@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -61,6 +62,8 @@ struct SwordArchetypeKey {
   int blade_curve_key{0};
   int guard_curve_key{0};
   int guard_spike_length_key{0};
+  int blade_back_spike_count{0};
+  int blade_back_spike_length_key{0};
   int material_id{0};
 };
 
@@ -78,6 +81,8 @@ auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> b
          lhs.blade_curve_key == rhs.blade_curve_key &&
          lhs.guard_curve_key == rhs.guard_curve_key &&
          lhs.guard_spike_length_key == rhs.guard_spike_length_key &&
+         lhs.blade_back_spike_count == rhs.blade_back_spike_count &&
+         lhs.blade_back_spike_length_key == rhs.blade_back_spike_length_key &&
          lhs.material_id == rhs.material_id;
 }
 
@@ -232,6 +237,8 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                               quantize_sword_value(config.blade_curve),
                               quantize_sword_value(config.guard_curve),
                               quantize_sword_value(config.guard_spike_length),
+                              std::clamp(config.blade_back_spike_count, 0, 4),
+                              quantize_sword_value(config.blade_back_spike_length),
                               config.material_id};
   for (const auto& entry : cache) {
     if (entry.key == key) {
@@ -280,6 +287,8 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                                  std::to_string(key.blade_curve_key) + "_" +
                                  std::to_string(key.guard_curve_key) + "_" +
                                  std::to_string(key.guard_spike_length_key) + "_" +
+                                 std::to_string(key.blade_back_spike_count) + "_" +
+                                 std::to_string(key.blade_back_spike_length_key) + "_" +
                                  std::to_string(key.material_id)};
 
   builder.add_palette_mesh(get_unit_cylinder(),
@@ -350,6 +359,26 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
   add_blade_segment(blade0, blade1, base_half_w, 1.00F, k_metal_slot);
   add_blade_segment(blade1, blade2, mid_half_w, 0.96F, k_metal_slot);
   add_blade_segment(blade2, blade3, upper_half_w, 0.86F, k_metal_slot);
+
+  const int back_spike_count = std::clamp(config.blade_back_spike_count, 0, 4);
+  const float back_spike_length =
+      clamp_f(config.blade_back_spike_length, 0.0F, l * 0.18F);
+  for (int i = 0; i < back_spike_count; ++i) {
+    const float t =
+        (static_cast<float>(i) + 1.0F) / (static_cast<float>(back_spike_count) + 1.5F);
+    const QVector3D spine = blade1 * (1.0F - t) + blade3 * t;
+    const float local_half_width = lerp(mid_half_w, upper_half_w, t);
+    const QVector3D root = spine + QVector3D(-local_half_width * 0.82F, 0.0F, 0.0F);
+    const QVector3D tip =
+        root + QVector3D(-back_spike_length, -back_spike_length * 0.32F, 0.0F);
+    builder.add_palette_mesh(
+        get_unit_cone(),
+        Render::Geom::cone_from_to(root, tip, blade_thickness * (0.80F - t * 0.22F)),
+        k_metal_dark_slot,
+        nullptr,
+        1.0F,
+        config.material_id);
+  }
 
   builder.add_palette_mesh(get_unit_cube(),
                            oriented_box_between(blade1 + QVector3D(0.0F, 0.01F, 0.0F),
@@ -592,10 +621,14 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     }
   }
 
-  std::array<QVector3D, 4> const palette_slots{m_config.metal_color,
-                                               m_config.metal_color * 0.92F,
-                                               m_config.metal_color * 0.65F,
-                                               palette.leather};
+  const QVector3D fuller = m_config.fuller_color.lengthSquared() > 1.0e-6F
+                               ? m_config.fuller_color
+                               : m_config.metal_color * 0.65F;
+  const QVector3D grip_tint = m_config.grip_color.lengthSquared() > 1.0e-6F
+                                  ? m_config.grip_color
+                                  : palette.leather;
+  std::array<QVector3D, 4> const palette_slots{
+      m_config.metal_color, m_config.metal_color * 0.82F, fuller, grip_tint};
   AttachmentFrame const grip =
       (use_authored_blade && frames.grip_r.radius > 0.0F)
           ? frames.grip_r
@@ -716,16 +749,19 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
 }
 
 auto sword_fill_role_colors(const HumanoidPalette& palette,
-                            const SwordRenderConfig&,
+                            const SwordRenderConfig& config,
                             QVector3D* out,
                             std::size_t max) -> std::uint32_t {
   if (max < k_sword_role_count) {
     return 0U;
   }
-  out[k_metal_slot] = palette.metal;
-  out[k_metal_dark_slot] = palette.metal * 0.92F;
-  out[k_fuller_slot] = palette.metal * 0.65F;
-  out[k_leather_slot] = palette.leather;
+  out[k_metal_slot] = config.metal_color;
+  out[k_metal_dark_slot] = config.metal_color * 0.82F;
+  out[k_fuller_slot] = config.fuller_color.lengthSquared() > 1.0e-6F
+                           ? config.fuller_color
+                           : palette.metal * 0.65F;
+  out[k_leather_slot] =
+      config.grip_color.lengthSquared() > 1.0e-6F ? config.grip_color : palette.leather;
   return k_sword_role_count;
 }
 

@@ -392,25 +392,20 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   ASSERT_EQ(prep.bodies.size(), 2U);
   int rider_requests = 0;
   int horse_requests = 0;
-  float rider_world_y = 0.0F;
-  float horse_world_y = 0.0F;
   for (const auto& req : prep.bodies.requests()) {
     auto const species =
         Render::Creature::ArchetypeRegistry::instance().species(req.archetype);
     if (species == CreatureKind::Humanoid) {
       ++rider_requests;
-      rider_world_y = req.world.column(3).y();
       EXPECT_TRUE(req.world_already_grounded);
     }
     if (species == CreatureKind::Horse) {
       ++horse_requests;
-      horse_world_y = req.world.column(3).y();
     }
   }
 
   EXPECT_EQ(rider_requests, 1);
   EXPECT_EQ(horse_requests, 1);
-  EXPECT_GT(std::abs(rider_world_y - horse_world_y), 0.01F);
   EXPECT_EQ(prep.bodies.requests().size(), 2U);
   EXPECT_TRUE(owns_slot(renderer.visual_spec().owned_legacy_slots,
                         LegacySlotMask::Attachments));

@@ -28,6 +28,7 @@ struct WallPalette {
   QVector3D wood_dark{0.36F, 0.25F, 0.14F};
   QVector3D rope{0.46F, 0.38F, 0.24F};
   QVector3D shadow{0.24F, 0.17F, 0.09F};
+  QVector3D masonry_accent{0.67F, 0.50F, 0.31F};
   bool alternate_starts_light{true};
 };
 

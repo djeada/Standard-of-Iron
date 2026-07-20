@@ -23,4 +23,5 @@ private:
   BuildingPanel* m_building_panel = nullptr;
   PropPanel* m_prop_panel = nullptr;
   QLabel* m_status_label = nullptr;
+  QLabel* m_lighting_label = nullptr;
 };

@@ -15,6 +15,9 @@ inline constexpr float k_damage_multiplier_spearman_hold = 1.5F;
 inline constexpr float k_damage_multiplier_default_hold = 1.75F;
 inline constexpr float k_health_multiplier_hold = 1.2F;
 inline constexpr float k_spearman_vs_cavalry_multiplier = 2.5F;
+// A crewed wooden engine is formidable at range but has no meaningful defence
+// once an infantry formation reaches it in melee.
+inline constexpr float k_infantry_melee_vs_siege_multiplier = 5.0F;
 inline constexpr float k_archer_vs_elephant_multiplier = 2.0F;
 inline constexpr float k_archer_high_ground_multiplier = 1.8F;
 inline constexpr float k_spearman_high_ground_multiplier = 1.8F;
