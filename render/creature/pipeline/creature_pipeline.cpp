@@ -1,5 +1,6 @@
 #include "creature_pipeline.h"
 
+#include <QQuaternion>
 #include <QVector4D>
 
 #include <algorithm>
@@ -14,7 +15,9 @@
 #include "../../../game/map/terrain_service.h"
 #include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
+#include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
+#include "../../profiling/combat_animation_diagnostics.h"
 #include "../../profiling/frame_profile.h"
 #include "../../rigged_mesh_cache.h"
 #include "../../scene_renderer.h"
@@ -283,17 +286,30 @@ auto frame_palette_for_global_frame(const Render::GL::RiggedMeshEntry& entry,
          static_cast<std::size_t>(global_frame) * entry.skinned_bone_count;
 }
 
-auto lerp_matrix(const QMatrix4x4& a,
-                 const QMatrix4x4& b,
-                 float t) noexcept -> QMatrix4x4 {
+auto rigid_lerp_matrix(const QMatrix4x4& a,
+                       const QMatrix4x4& b,
+                       float t) noexcept -> QMatrix4x4 {
+
+  auto rotation = [](const QMatrix4x4& matrix) {
+    QMatrix3x3 basis;
+    for (int col = 0; col < 3; ++col) {
+      QVector3D axis = matrix.column(col).toVector3D();
+      if (axis.lengthSquared() > 1.0e-8F) {
+        axis.normalize();
+      }
+      basis(0, col) = axis.x();
+      basis(1, col) = axis.y();
+      basis(2, col) = axis.z();
+    }
+    return QQuaternion::fromRotationMatrix(basis).normalized();
+  };
+
+  float const weight = std::clamp(t, 0.0F, 1.0F);
+  QVector3D const translation =
+      a.column(3).toVector3D() * (1.0F - weight) + b.column(3).toVector3D() * weight;
   QMatrix4x4 out;
-  float* dst = out.data();
-  const float* av = a.constData();
-  const float* bv = b.constData();
-  float const inv_t = 1.0F - t;
-  for (int i = 0; i < 16; ++i) {
-    dst[i] = av[i] * inv_t + bv[i] * t;
-  }
+  out.translate(translation);
+  out.rotate(QQuaternion::slerp(rotation(a), rotation(b), weight));
   return out;
 }
 
@@ -386,15 +402,57 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   }
   auto owned = acquire_pooled_palette();
   float const weight = std::clamp(secondary_weight, 0.0F, 1.0F);
+  if (upper_body_only && species_kind == CreatureKind::Humanoid) {
+
+    auto const bind = Render::Humanoid::humanoid_bind_palette();
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        primary_global{};
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        secondary_global{};
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        result_global{};
+    std::uint32_t const count =
+        std::min(bone_count,
+                 std::min(static_cast<std::uint32_t>(bind.size()),
+                          static_cast<std::uint32_t>(
+                              Render::GL::RiggedCreatureCmd::k_max_owned_bones)));
+    for (std::uint32_t bone = 0; bone < count; ++bone) {
+      primary_global[bone] = primary_palette[bone] * bind[bone];
+      secondary_global[bone] = secondary_palette[bone] * bind[bone];
+    }
+    for (std::uint32_t bone = 0; bone < count; ++bone) {
+      if (!is_humanoid_upper_body_bone(bone)) {
+        result_global[bone] = primary_global[bone];
+      } else {
+        auto const parent = Render::Humanoid::k_bone_parents[bone];
+        if (parent == Render::Humanoid::k_invalid_bone || parent >= count) {
+          result_global[bone] = primary_global[bone];
+        } else {
+          QMatrix4x4 const primary_local =
+              primary_global[parent].inverted() * primary_global[bone];
+          QMatrix4x4 const secondary_local =
+              secondary_global[parent].inverted() * secondary_global[bone];
+          result_global[bone] =
+              result_global[parent] *
+              rigid_lerp_matrix(primary_local, secondary_local, weight);
+        }
+      }
+      (*owned)[bone] = result_global[bone] * bind[bone].inverted();
+    }
+    for (std::uint32_t bone = count;
+         bone < bone_count && bone < Render::GL::RiggedCreatureCmd::k_max_owned_bones;
+         ++bone) {
+      (*owned)[bone] = primary_palette[bone];
+    }
+    return owned;
+  }
   for (std::uint32_t bone = 0;
        bone < bone_count && bone < Render::GL::RiggedCreatureCmd::k_max_owned_bones;
        ++bone) {
-    bool const apply_secondary =
-        !upper_body_only ||
-        (species_kind == CreatureKind::Humanoid && is_humanoid_upper_body_bone(bone));
+    bool const apply_secondary = !upper_body_only;
     (*owned)[bone] =
         apply_secondary
-            ? lerp_matrix(primary_palette[bone], secondary_palette[bone], weight)
+            ? rigid_lerp_matrix(primary_palette[bone], secondary_palette[bone], weight)
             : primary_palette[bone];
   }
   return owned;
@@ -479,6 +537,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             const ResolvedRequestPlayback* upper_body_overlay,
                             float full_body_blend_weight,
                             float upper_body_overlay_weight,
+                            std::uint32_t entity_id,
+                            std::uint16_t instance_index,
                             Render::GL::ISubmitter& out,
                             Render::GL::Renderer* renderer) {
   const CreatureAsset* asset = handle.asset;
@@ -590,6 +650,48 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                            cmd.bone_count);
     }
   }
+  if (handle.archetype->species == CreatureKind::Humanoid &&
+      cmd.bone_palette != nullptr &&
+      cmd.bone_count >
+          static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::HandR)) {
+    auto const pelvis_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
+    auto const neck_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Neck);
+    QMatrix4x4 const posed_pelvis =
+        cmd.bone_palette[pelvis_index] * handle.bind_palette[pelvis_index];
+    QMatrix4x4 const posed_neck =
+        cmd.bone_palette[neck_index] * handle.bind_palette[neck_index];
+    auto const shoulder_l_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderL);
+    auto const hand_l_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
+    auto const shoulder_r_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderR);
+    auto const hand_r_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
+    QMatrix4x4 const posed_shoulder_l =
+        cmd.bone_palette[shoulder_l_index] * handle.bind_palette[shoulder_l_index];
+    QMatrix4x4 const posed_hand_l =
+        cmd.bone_palette[hand_l_index] * handle.bind_palette[hand_l_index];
+    QMatrix4x4 const posed_shoulder_r =
+        cmd.bone_palette[shoulder_r_index] * handle.bind_palette[shoulder_r_index];
+    QMatrix4x4 const posed_hand_r =
+        cmd.bone_palette[hand_r_index] * handle.bind_palette[hand_r_index];
+    QVector3D const pelvis_world = draw_world.map(posed_pelvis.column(3).toVector3D());
+    QVector3D const neck_world = draw_world.map(posed_neck.column(3).toVector3D());
+    QVector3D const visible_torso = neck_world - pelvis_world;
+    float const body_up_y =
+        visible_torso.lengthSquared() > 1.0e-8F ? visible_torso.normalized().y() : 1.0F;
+    float const max_arm_reach = std::max(
+        (posed_hand_l.column(3).toVector3D() - posed_shoulder_l.column(3).toVector3D())
+            .length(),
+        (posed_hand_r.column(3).toVector3D() - posed_shoulder_r.column(3).toVector3D())
+            .length());
+    Render::Profiling::CombatAnimationDiagnostics::instance()
+        .record_submitted_body_pose(
+            entity_id, instance_index, body_up_y, max_arm_reach);
+  }
   out.rigged(cmd);
 }
 
@@ -608,6 +710,8 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                               const Render::Creature::Bpat::BpatBlob& blob,
                               std::uint32_t global_frame,
                               std::uint32_t frame_in_clip,
+                              std::uint32_t entity_id,
+                              std::uint16_t instance_index,
                               Render::GL::ISubmitter& out,
                               Render::GL::Renderer* renderer,
                               bool allow_bake_fallback = true) -> bool {
@@ -615,6 +719,42 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
   if (lod == CreatureLOD::Billboard || asset == nullptr || asset->spec == nullptr ||
       handle.bind_palette.empty()) {
     return false;
+  }
+
+  if (handle.archetype->species == CreatureKind::Humanoid) {
+    auto const palette = blob.frame_palette_view(global_frame);
+    auto const pelvis_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
+    auto const neck_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Neck);
+    auto const shoulder_l_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderL);
+    auto const hand_l_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
+    auto const shoulder_r_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderR);
+    auto const hand_r_index =
+        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
+    if (palette.size() > hand_r_index) {
+      QVector3D const pelvis_world =
+          world_from_unit.map(palette[pelvis_index].column(3).toVector3D());
+      QVector3D const neck_world =
+          world_from_unit.map(palette[neck_index].column(3).toVector3D());
+      QVector3D const visible_torso = neck_world - pelvis_world;
+      float const body_up_y = visible_torso.lengthSquared() > 1.0e-8F
+                                  ? visible_torso.normalized().y()
+                                  : 1.0F;
+      float const max_arm_reach =
+          std::max((palette[hand_l_index].column(3).toVector3D() -
+                    palette[shoulder_l_index].column(3).toVector3D())
+                       .length(),
+                   (palette[hand_r_index].column(3).toVector3D() -
+                    palette[shoulder_r_index].column(3).toVector3D())
+                       .length());
+      Render::Profiling::CombatAnimationDiagnostics::instance()
+          .record_submitted_body_pose(
+              entity_id, instance_index, body_up_y, max_arm_reach);
+    }
   }
 
   if (renderer == nullptr) {
@@ -914,6 +1054,8 @@ auto CreaturePipeline::submit_requests(
                                    *snapshot_playback.blob,
                                    snapshot_playback.global_frame,
                                    snapshot_playback.frame_in_clip,
+                                   req.entity_id,
+                                   req.instance_index,
                                    out,
                                    renderer,
                                    !prebaked_lowpoly_required);
@@ -956,6 +1098,8 @@ auto CreaturePipeline::submit_requests(
                            overlay.valid() ? &overlay : nullptr,
                            req.full_body_blend.weight,
                            req.upper_body_overlay.weight,
+                           req.entity_id,
+                           req.instance_index,
                            out,
                            renderer);
   };

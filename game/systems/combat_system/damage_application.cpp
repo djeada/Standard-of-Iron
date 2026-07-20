@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numbers>
 #include <optional>
 
@@ -12,9 +13,10 @@
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
-#include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
+#include "../command_service.h"
+#include "../formation_combat_geometry.h"
 #include "../marketplace_system.h"
 #include "../wall_network_service.h"
 #include "combat_types.h"
@@ -108,13 +110,6 @@ void apply_death_sequence(Engine::Core::DeathAnimationComponent& death,
   death.sequence_variant = timing.sequence_variant;
 }
 
-auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> int {
-  if (unit.render_individuals_per_unit_override > 0) {
-    return unit.render_individuals_per_unit_override;
-  }
-  return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
-}
-
 auto begin_soldier_casualties(Engine::Core::Entity* target,
                               Engine::Core::Entity* attacker,
                               int prev_health,
@@ -128,7 +123,8 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     return 0;
   }
 
-  int const individuals_per_unit = resolved_individuals_per_unit(*unit);
+  int const individuals_per_unit =
+      FormationCombat::resolve_definition(*unit).total_count;
   if (individuals_per_unit <= 1) {
     return 0;
   }
@@ -137,8 +133,9 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
       prev_health, unit->max_health, individuals_per_unit);
   int const new_survivors = Engine::Core::resolve_surviving_individual_count(
       new_health, unit->max_health, individuals_per_unit);
-  int const casualty_start = (new_health <= 0) ? 1 : new_survivors;
-  if (prev_survivors <= casualty_start) {
+  int const previous_front_casualties = individuals_per_unit - prev_survivors;
+  int const new_front_casualties = individuals_per_unit - new_survivors;
+  if (new_front_casualties <= previous_front_casualties) {
     return 0;
   }
 
@@ -152,7 +149,7 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
   auto const variant = resolve_death_variant(target, attacker, profile);
   auto const timing = resolve_death_timing(profile, variant);
   int queued_casualties = 0;
-  for (int slot = casualty_start; slot < prev_survivors; ++slot) {
+  for (int slot = previous_front_casualties; slot < new_front_casualties; ++slot) {
     Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
     entry.slot_index = static_cast<std::uint16_t>(slot);
     entry.profile = profile;
@@ -174,6 +171,58 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     ++queued_casualties;
   }
   return queued_casualties;
+}
+
+void fill_formation_front_vacancy(Engine::Core::World* world,
+                                  Engine::Core::Entity* casualty) {
+  if (world == nullptr || casualty == nullptr) {
+    return;
+  }
+  auto const* vacant = casualty->get_component<Engine::Core::FormationModeComponent>();
+  if (vacant == nullptr || !vacant->active || vacant->formation_id == 0 ||
+      vacant->stable_rank < 0 || vacant->stable_file < 0) {
+    return;
+  }
+  Engine::Core::Entity* replacement = nullptr;
+  int best_rank = std::numeric_limits<int>::max();
+  float best_distance_sq = std::numeric_limits<float>::max();
+  for (auto* candidate :
+       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+    auto* mode = candidate->get_component<Engine::Core::FormationModeComponent>();
+    auto* unit = candidate->get_component<Engine::Core::UnitComponent>();
+    auto* transform = candidate->get_component<Engine::Core::TransformComponent>();
+    if (candidate == casualty || mode == nullptr || unit == nullptr ||
+        transform == nullptr || unit->health <= 0 ||
+        mode->formation_id != vacant->formation_id ||
+        mode->stable_file != vacant->stable_file ||
+        mode->stable_rank <= vacant->stable_rank) {
+      continue;
+    }
+    float const dx = transform->position.x - vacant->stable_slot_x;
+    float const dz = transform->position.z - vacant->stable_slot_z;
+    float const distance_sq = dx * dx + dz * dz;
+    if (mode->stable_rank < best_rank ||
+        (mode->stable_rank == best_rank && distance_sq < best_distance_sq)) {
+      replacement = candidate;
+      best_rank = mode->stable_rank;
+      best_distance_sq = distance_sq;
+    }
+  }
+  if (replacement == nullptr) {
+    return;
+  }
+  auto* replacement_mode =
+      replacement->get_component<Engine::Core::FormationModeComponent>();
+  replacement_mode->stable_slot_id = vacant->stable_slot_id;
+  replacement_mode->stable_rank = vacant->stable_rank;
+  replacement_mode->stable_file = vacant->stable_file;
+  replacement_mode->stable_slot_x = vacant->stable_slot_x;
+  replacement_mode->stable_slot_z = vacant->stable_slot_z;
+  CommandService::move_unit(
+      *world,
+      replacement->get_id(),
+      QVector3D(vacant->stable_slot_x, 0.0F, vacant->stable_slot_z),
+      {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
 }
 
 void begin_death_sequence(Engine::Core::Entity* target,
@@ -532,6 +581,7 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
   }
 
   if (unit->health <= 0) {
+    fill_formation_front_vacancy(world, target);
     int const killer_owner_id = attacker_owner_id;
 
     Engine::Core::EventManager::instance().publish(
@@ -619,6 +669,7 @@ void apply_hit_feedback(Engine::Core::Entity* target,
   }
 
   feedback->is_reacting = true;
+  feedback->source_attacker_id = attacker_id;
   feedback->reaction_time = 0.0F;
   feedback->reaction_intensity = 0.85F;
 
@@ -661,16 +712,21 @@ void apply_hit_feedback(Engine::Core::Entity* target,
           feedback->knockback_x = (dx / dist) * knockback;
           feedback->knockback_z = (dz / dist) * knockback;
 
-          float const face_dx =
-              attacker_transform->position.x - target_transform->position.x;
-          float const face_dz =
-              attacker_transform->position.z - target_transform->position.z;
-          float const face_dist = std::sqrt(face_dx * face_dx + face_dz * face_dz);
-          if (face_dist > 0.001F) {
-            float const yaw =
-                std::atan2(face_dx, face_dz) * 180.0F / std::numbers::pi_v<float>;
-            target_transform->desired_yaw = yaw;
-            target_transform->has_desired_yaw = true;
+          bool const hit_controls_root_facing =
+              Game::Systems::CombatRules::uses_rpg_combat_rules(target) ||
+              !Game::Systems::FormationCombat::has_formation_slots(*target);
+          if (hit_controls_root_facing) {
+            float const face_dx =
+                attacker_transform->position.x - target_transform->position.x;
+            float const face_dz =
+                attacker_transform->position.z - target_transform->position.z;
+            float const face_dist = std::sqrt(face_dx * face_dx + face_dz * face_dz);
+            if (face_dist > 0.001F) {
+              float const yaw =
+                  std::atan2(face_dx, face_dz) * 180.0F / std::numbers::pi_v<float>;
+              target_transform->desired_yaw = yaw;
+              target_transform->has_desired_yaw = true;
+            }
           }
         }
       }

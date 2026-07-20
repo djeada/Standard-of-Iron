@@ -39,6 +39,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_light_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_heavy_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_light_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/historical_helmets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/roman_saddle_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/carthage_saddle_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/light_cavalry_saddle_renderer.cpp

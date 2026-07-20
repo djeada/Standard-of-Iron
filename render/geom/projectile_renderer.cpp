@@ -26,7 +26,9 @@ void render_arrow_projectile(Renderer* renderer,
 
   auto* arrow_shaft_mesh = Geom::Arrow::get_shaft();
   auto* arrow_tip_mesh = Geom::Arrow::get_tip();
-  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr)) {
+  auto* arrow_fletching_mesh = Geom::Arrow::get_fletching();
+  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr) ||
+      (arrow_fletching_mesh == nullptr)) {
     return;
   }
 
@@ -138,7 +140,7 @@ void render_arrow_projectile(Renderer* renderer,
         QVector3D(std::clamp(wood_color.x() * 1.15F, 0.0F, 1.0F),
                   std::clamp(wood_color.y() * 1.10F, 0.0F, 1.0F),
                   std::clamp(wood_color.z() * 0.95F, 0.0F, 1.0F));
-    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr, 0.7F);
+    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 0.85F);
 
     if (arrow.get_progress() > 0.15F) {
       float const trail_opacity =
@@ -199,13 +201,21 @@ void render_arrow_projectile(Renderer* renderer,
     renderer->mesh(arrow_shaft_mesh, model, shaft_color, nullptr, 1.0F);
     renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
 
+    QMatrix4x4 glow_model = model;
+    glow_model.scale(2.45F, 2.45F, 1.08F);
+    QVector3D const glow_color =
+        arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow
+            ? QVector3D(0.78F, 0.35F, 1.0F)
+            : Geom::Arrow::fletch_color(team_color);
+    renderer->mesh(arrow_shaft_mesh, glow_model, glow_color, nullptr, 0.30F);
+
     QMatrix4x4 fletch_model = model;
     fletch_model.translate(
         0.0F, 0.0F, -arrow_z_scale * Geom::Arrow::k_fletch_z_offset_factor);
     fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_z_scale);
-    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr, 0.7F);
+    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 0.85F);
   }
 }
 

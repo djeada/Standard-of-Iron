@@ -127,6 +127,7 @@ private:
   auto get_elbow(Side side) -> QVector3D&;
   auto compute_right_axis() const -> QVector3D;
   auto compute_outward_dir(Side side) const -> QVector3D;
+  void enforce_arm_reach(Side side);
 
   void
   apply_lean(const MountedAttachmentFrame& mount, float forward_lean, float side_lean);

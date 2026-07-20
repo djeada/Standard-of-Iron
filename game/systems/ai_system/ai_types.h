@@ -5,8 +5,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../../map/map_definition.h"
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
+#include "../resource_types.h"
 
 namespace Engine::Core {
 using EntityID = unsigned int;
@@ -43,8 +45,17 @@ enum class AICommandType {
   AttackTarget,
   StartProduction,
   StartBuilderConstruction,
+  StartBuilderHarvest,
   TriggerCommanderRally,
   TriggerCommanderAura
+};
+
+struct ResourceNodeSnapshot {
+  std::uint64_t id = 0;
+  Game::Map::WorldProp::Type type = Game::Map::WorldProp::Type::PineTree;
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
+  bool reserved = false;
 };
 
 enum class BehaviorPriority {
@@ -121,6 +132,9 @@ struct AISnapshot {
   std::vector<ContactSnapshot> visible_enemies;
   std::vector<ContactSnapshot> strategic_objectives;
   std::vector<ContactSnapshot> defense_anchors;
+  std::vector<ResourceNodeSnapshot> resource_nodes;
+  ResourceAmounts resources;
+  bool has_resource_snapshot = false;
 
   float game_time = 0.0F;
 };
@@ -290,6 +304,7 @@ struct AICommand {
   const char* construction_type = nullptr;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
+  std::uint64_t resource_target_id = 0;
 };
 
 struct AIResult {

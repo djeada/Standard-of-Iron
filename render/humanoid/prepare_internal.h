@@ -18,6 +18,7 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/systems/formation_combat_geometry.h"
 #include "../../game/systems/nation_id.h"
 #include "../../game/systems/troop_profile_service.h"
 #include "../../game/units/spawn_type.h"
@@ -81,8 +82,8 @@ extern HumanoidRenderStats s_render_stats;
 auto shared_guard_shield_pose(
     const Engine::Core::UnitComponent* unit,
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
-    const Engine::Core::FormationModeComponent* formation_mode,
-    const Engine::Core::GuardModeComponent* guard_mode,
+    bool formation_active,
+    bool guard_mode_active,
     int row,
     int col,
     int rows,
@@ -136,33 +137,35 @@ inline constexpr float k_visual_locomotion_speed_epsilon = 1.0e-4F;
 class HumanoidPreparationModePolicy {
 public:
   explicit HumanoidPreparationModePolicy(const Engine::Core::Entity* entity)
-      : m_commander(entity != nullptr
-                        ? entity->get_component<Engine::Core::CommanderComponent>()
-                        : nullptr) {}
+      : m_presentation(
+            entity != nullptr
+                ? entity->get_component<Engine::Core::CreaturePresentationComponent>()
+                : nullptr) {}
 
   [[nodiscard]] auto jump_pose() const -> Animation::HumanoidCommanderJumpPose {
     return Animation::resolve_humanoid_commander_jump_pose({
-        .has_commander = m_commander != nullptr,
-        .active = m_commander != nullptr && m_commander->jump_active,
-        .phase = m_commander != nullptr ? m_commander->jump_phase : 0.0F,
+        .has_commander = m_presentation != nullptr && m_presentation->has_commander,
+        .active = m_presentation != nullptr && m_presentation->jump_active,
+        .phase = m_presentation != nullptr ? m_presentation->jump_phase : 0.0F,
         .height_offset =
-            m_commander != nullptr ? m_commander->jump_height_offset : 0.0F,
+            m_presentation != nullptr ? m_presentation->jump_height_offset : 0.0F,
     });
   }
 
   [[nodiscard]] auto
   flag_rally_pose() const -> Animation::HumanoidCommanderFlagRallyPose {
     return Animation::resolve_humanoid_commander_flag_rally_pose({
-        .has_commander = m_commander != nullptr,
-        .planting = m_commander != nullptr && m_commander->is_flag_rally_planting(),
-        .animation_timer =
-            m_commander != nullptr ? m_commander->flag_rally_animation_timer : 0.0F,
-        .cost = m_commander != nullptr ? m_commander->flag_rally_cost : 0.0F,
+        .has_commander = m_presentation != nullptr && m_presentation->has_commander,
+        .planting = m_presentation != nullptr && m_presentation->flag_rally_planting,
+        .animation_timer = m_presentation != nullptr
+                               ? m_presentation->flag_rally_animation_timer
+                               : 0.0F,
+        .cost = m_presentation != nullptr ? m_presentation->flag_rally_cost : 0.0F,
     });
   }
 
 private:
-  const Engine::Core::CommanderComponent* m_commander = nullptr;
+  const Engine::Core::CreaturePresentationComponent* m_presentation = nullptr;
 };
 
 void reset_humanoid_locomotion_state(

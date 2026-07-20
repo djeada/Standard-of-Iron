@@ -41,6 +41,7 @@ struct HumanoidWeaponAttackPoseInputs {
 
 struct HumanoidSpearDirectionInputs {
   float hold_blend{0.0F};
+  bool is_mounted{false};
   bool is_attacking{false};
   bool is_melee{false};
   float attack_phase{0.0F};

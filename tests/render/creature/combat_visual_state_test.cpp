@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <set>
 
 #include "animation/combat_manifest.h"
 #include "render/creature/combat_visual_state.h"
@@ -581,6 +583,32 @@ TEST(CombatVisualState, SoldierLaneIsStableForMatchingInputs) {
   EXPECT_FLOAT_EQ(second.profile.phase_bias, first.profile.phase_bias);
 }
 
+TEST(CombatVisualState, FormationSoldiersReceiveStablePersonalAttackCadence) {
+  std::set<int> quantized_phase_biases;
+  float minimum_bias = 1.0F;
+  float maximum_bias = -1.0F;
+  for (std::uint32_t soldier = 0; soldier < 48U; ++soldier) {
+    Render::Creature::CombatLaneInputs inputs{};
+    inputs.unit_seed = 73U;
+    inputs.soldier_seed = 1000U + soldier;
+    inputs.row = static_cast<int>(soldier / 8U);
+    inputs.col = static_cast<int>(soldier % 8U);
+    inputs.rows = 6;
+    inputs.cols = 8;
+    inputs.is_melee = true;
+    inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+
+    auto const resolved = Render::Creature::resolve_soldier_combat_lane({}, inputs);
+    minimum_bias = std::min(minimum_bias, resolved.profile.phase_bias);
+    maximum_bias = std::max(maximum_bias, resolved.profile.phase_bias);
+    quantized_phase_biases.insert(
+        static_cast<int>(resolved.profile.phase_bias * 1000.0F));
+  }
+
+  EXPECT_GE(quantized_phase_biases.size(), 12U);
+  EXPECT_GE(maximum_bias - minimum_bias, 0.24F);
+}
+
 TEST(CombatVisualState, LocalEnemyPressureParticipatesInLaneSignature) {
   Render::Creature::CombatLaneInputs inputs{};
   inputs.unit_seed = 5U;
@@ -645,6 +673,86 @@ TEST(CombatVisualState, CombatPhaseProgressIsEasedIntoVisualAttackPhase) {
   auto strike = Render::Creature::resolve_combat_visual_state({}, raw, lane);
   EXPECT_GT(strike.resolved.attack_phase, 0.46F);
   EXPECT_LT(strike.resolved.attack_phase, 0.49F);
+}
+
+TEST(CombatVisualState, ActiveTransactionsRetainPersonalCadenceBias) {
+  Render::Creature::CombatLaneProfile early_lane{};
+  early_lane.lane = SoldierCombatLane::StepIn;
+  early_lane.phase_bias = -0.12F;
+  Render::Creature::CombatLaneProfile late_lane = early_lane;
+  late_lane.phase_bias = 0.12F;
+
+  Render::Creature::CombatVisualRawInputs raw{};
+  raw.sample_time = 0.10F;
+  raw.attack_requested = true;
+  raw.is_melee = true;
+  raw.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  raw.attack_target_id = 7U;
+  raw.attack_target_alive = true;
+  raw.combat_phase = Engine::Core::CombatAnimationState::WindUp;
+  raw.combat_phase_progress = 0.25F;
+
+  auto early = Render::Creature::resolve_combat_visual_state({}, raw, early_lane);
+  auto late = Render::Creature::resolve_combat_visual_state({}, raw, late_lane);
+  for (int frame = 0; frame < 6; ++frame) {
+    raw.sample_time += 0.05F;
+    raw.combat_phase = Engine::Core::CombatAnimationState::Strike;
+    raw.combat_phase_progress = 0.35F + static_cast<float>(frame) * 0.06F;
+    early = Render::Creature::resolve_combat_visual_state(
+        early.persistent, raw, early_lane);
+    late =
+        Render::Creature::resolve_combat_visual_state(late.persistent, raw, late_lane);
+  }
+
+  EXPECT_GT(late.resolved.attack_phase - early.resolved.attack_phase, 0.02F);
+}
+
+TEST(CombatVisualState, ContinuousFightDoesNotParkAtTerminalRecoveryPose) {
+  Render::Creature::CombatLaneProfile lane{};
+  lane.lane = SoldierCombatLane::StepIn;
+  lane.phase_bias = 0.04F;
+  lane.recover_scale = 1.0F;
+
+  Render::Creature::CombatVisualRawInputs raw{};
+  raw.attack_requested = true;
+  raw.is_melee = true;
+  raw.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  raw.attack_target_id = 11U;
+  raw.attack_target_alive = true;
+  raw.combat_phase = Engine::Core::CombatAnimationState::Advance;
+  raw.combat_phase_progress = 0.0F;
+
+  Render::Creature::CombatVisualPersistentState state{};
+  int terminal_frames = 0;
+  int maximum_terminal_frames = 0;
+  bool observed_followup_anticipation = false;
+  std::uint32_t maximum_transaction_id = 0U;
+  for (int frame = 0; frame < 60; ++frame) {
+    raw.sample_time = static_cast<float>(frame) * 0.05F;
+    if (frame == 1) {
+
+      raw.combat_phase = Engine::Core::CombatAnimationState::Reposition;
+      raw.combat_phase_progress = 1.0F;
+    }
+    auto const resolved =
+        Render::Creature::resolve_combat_visual_state(state, raw, lane);
+    state = resolved.persistent;
+    maximum_transaction_id =
+        std::max(maximum_transaction_id, resolved.resolved.transaction_id);
+    if (resolved.resolved.attack_phase >= 0.99F) {
+      ++terminal_frames;
+      maximum_terminal_frames = std::max(maximum_terminal_frames, terminal_frames);
+    } else {
+      terminal_frames = 0;
+    }
+    observed_followup_anticipation =
+        observed_followup_anticipation || (resolved.resolved.transaction_id > 1U &&
+                                           resolved.resolved.attack_phase < 0.20F);
+  }
+
+  EXPECT_GT(maximum_transaction_id, 1U);
+  EXPECT_TRUE(observed_followup_anticipation);
+  EXPECT_LE(maximum_terminal_frames, 5);
 }
 
 } // namespace

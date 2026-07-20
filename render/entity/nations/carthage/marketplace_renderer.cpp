@@ -138,6 +138,63 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.cloth_gold,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
+  desc.add_box(QVector3D(0.70F, wall_h * 0.52F + 0.14F, -0.82F),
+               QVector3D(0.32F, wall_h * 0.52F, 0.28F),
+               c.brick,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.70F, wall_h + 0.20F, -0.82F),
+               QVector3D(0.38F, 0.06F, 0.34F),
+               c.sandstone_dark,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.70F, wall_h + 0.29F, -0.82F),
+               QVector3D(0.34F, 0.07F, 0.30F),
+               c.brick_dark,
+               k_building_state_mask_intact,
+               BuildingLODMask::Full);
+  for (float const z : {-0.94F, -0.70F}) {
+    desc.add_box(QVector3D(0.34F, 0.52F, z),
+                 QVector3D(0.025F, 0.30F, 0.15F),
+                 c.wood_dark,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+  }
+
+  for (float const z : {-0.48F, 0.48F}) {
+    desc.add_box(QVector3D(-0.38F, 0.70F, z),
+                 QVector3D(0.72F, 0.025F, 0.25F),
+                 c.cloth_purple,
+                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
+    desc.add_box(QVector3D(-0.38F, 0.665F, z + (z < 0.0F ? -0.23F : 0.23F)),
+                 QVector3D(0.72F, 0.025F, 0.035F),
+                 c.cloth_gold,
+                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
+    for (float const x : {-0.98F, 0.22F}) {
+      desc.add_box(QVector3D(x, 0.40F, z),
+                   QVector3D(0.035F, 0.40F, 0.035F),
+                   c.wood_dark,
+                   k_building_state_mask_intact);
+    }
+  }
+
+  for (float const x : {-0.78F, -0.56F, -0.34F}) {
+    desc.add_cylinder(QVector3D(x, 0.14F, 0.84F),
+                      QVector3D(x, 0.43F, 0.84F),
+                      0.085F,
+                      x == -0.56F ? c.tile_red : c.ceramic,
+                      BuildingStateMask::Normal,
+                      BuildingLODMask::Full);
+  }
+  desc.add_box(QVector3D(0.44F, 0.30F, 0.72F),
+               QVector3D(0.26F, 0.16F, 0.22F),
+               c.wood_medium,
+               BuildingStateMask::Normal,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.44F, 0.47F, 0.72F),
+               QVector3D(0.27F, 0.025F, 0.23F),
+               c.wood_dark,
+               BuildingStateMask::Normal,
+               BuildingLODMask::Full);
+
   float const rear_awning_y = (post_h * 0.85F) + 0.04F;
   desc.add_box(QVector3D(0.52F, rear_awning_y, 0.0F),
                QVector3D(0.28F, 0.02F, 0.70F),

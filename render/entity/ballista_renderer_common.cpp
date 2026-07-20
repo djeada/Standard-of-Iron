@@ -19,12 +19,12 @@ void register_ballista_renderer_variant(EntityRendererRegistry& registry,
           unit = ctx.resources->unit();
           white = ctx.resources->white();
         }
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(&out)) {
+        if (auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }
 
-        if (unit == nullptr || white == nullptr) {
+        if (unit == nullptr) {
           return;
         }
 

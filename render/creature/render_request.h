@@ -64,6 +64,7 @@ struct CreatureRenderRequest {
   QMatrix4x4 world{};
 
   std::uint32_t entity_id{0};
+  std::uint16_t instance_index{0U};
   std::uint32_t seed{0};
   std::uint16_t creature_asset_id{0xFFFFu};
   CreatureRenderAssetHandleId render_asset_handle{

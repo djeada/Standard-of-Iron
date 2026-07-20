@@ -289,13 +289,24 @@ void MovementSystem::issue_move(Engine::Core::World& world,
     return;
   }
 
-  OrderService::prepare_for_move(e, options.kind, options.preserve_formation_mode);
-
   auto* atk = e->get_component<Engine::Core::AttackComponent>();
   if ((atk != nullptr) && atk->in_melee_lock &&
       CombatRules::participates_in_rts_melee_lock(e)) {
-    return;
+    auto* locked_target = world.get_entity(atk->melee_lock_target_id);
+    auto const* locked_unit =
+        locked_target != nullptr
+            ? locked_target->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    bool const locked_opponent_alive =
+        locked_unit != nullptr && locked_unit->health > 0 &&
+        !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
+    if (locked_opponent_alive) {
+      return;
+    }
+    CombatRules::clear_rts_melee_lock(e);
   }
+
+  OrderService::prepare_for_move(e, options.kind, options.preserve_formation_mode);
 
   auto* transform = e->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
@@ -310,7 +321,16 @@ void MovementSystem::issue_move(Engine::Core::World& world,
     return;
   }
 
+  bool const continuous_attack_chase =
+      options.kind == MoveOrderKind::AttackChase && mv->get_has_target();
+  float const previous_vx = mv->get_vx();
+  float const previous_vz = mv->get_vz();
+  mv->precise_arrival = options.kind == MoveOrderKind::AttackChase;
   assign_navigation_target(CommandService::get_pathfinder(), *transform, *mv, target);
+  if (continuous_attack_chase && mv->get_has_target()) {
+    mv->vx = previous_vx;
+    mv->vz = previous_vz;
+  }
 }
 
 void MovementSystem::issue_move_units(Engine::Core::World& world,

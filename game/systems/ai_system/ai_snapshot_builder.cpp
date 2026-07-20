@@ -9,6 +9,7 @@
 #include "../../core/world.h"
 #include "../../map/terrain_service.h"
 #include "../nation_registry.h"
+#include "../player_resource_registry.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace {
@@ -78,6 +79,23 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
                               int ai_owner_id) -> AISnapshot {
   AISnapshot snapshot;
   snapshot.player_id = ai_owner_id;
+  snapshot.resources =
+      Game::Systems::PlayerResourceRegistry::instance().get_all(ai_owner_id);
+  snapshot.has_resource_snapshot = true;
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  for (const auto& prop : terrain_service.world_props()) {
+    if (!Game::Map::is_harvestable_world_prop_type(prop.type)) {
+      continue;
+    }
+    const QVector3D position = terrain_service.world_prop_world_position(prop);
+    snapshot.resource_nodes.push_back(
+        {prop.id,
+         prop.type,
+         position.x(),
+         position.z(),
+         terrain_service.is_world_prop_reserved(prop.id)});
+  }
 
   auto friendlies = world.get_units_owned_by(ai_owner_id);
   const auto* nation =

@@ -2,6 +2,7 @@
 
 #include "../../game/core/component.h"
 #include "../gl/primitives.h"
+#include "../gl/resources.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -14,12 +15,16 @@ void register_catapult_renderer_variant(EntityRendererRegistry& registry,
         Mesh* unit = get_unit_cube();
         Texture* white = nullptr;
 
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(&out)) {
+        if (ctx.resources != nullptr) {
+          unit = ctx.resources->unit();
+          white = ctx.resources->white();
+        }
+        if (auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }
 
-        if (unit == nullptr || white == nullptr) {
+        if (unit == nullptr) {
           return;
         }
 

@@ -116,7 +116,7 @@ enum class CombatInterruptReason : std::uint8_t {
 struct CombatTimingConfig {
   float minimum_hold_duration{0.10F};
   float recover_duration{0.30F};
-  float exit_blend_duration{0.16F};
+  float exit_blend_duration{0.10F};
   float new_transaction_reset_threshold{0.18F};
 };
 
@@ -134,6 +134,7 @@ struct CombatPersistentState {
   bool is_casting{false};
   bool finisher_attack{false};
   bool amplified_attack{false};
+  bool presentation_driven_followup{false};
   SoldierCombatLane locked_lane{SoldierCombatLane::None};
   CombatQueuedAttack queued_next{};
   CombatTransactionPhase phase{CombatTransactionPhase::None};
@@ -144,6 +145,7 @@ struct CombatPersistentState {
   float last_sample_time{0.0F};
   float phase_start_time{0.0F};
   float transaction_start_time{0.0F};
+  float terminal_pose_start_time{-1.0F};
   float minimum_hold_until{0.0F};
   float exit_blend_progress{0.0F};
   float attack_emphasis{1.0F};
@@ -329,6 +331,17 @@ lane_profile_for_lane(SoldierCombatLane lane) noexcept -> CombatLaneProfile {
 [[nodiscard]] constexpr auto lane_profile_for_state(
     const SoldierCombatLaneState& state) noexcept -> CombatLaneProfile {
   CombatLaneProfile profile = lane_profile_for_lane(state.lane);
+  // Lane roles establish the broad cadence, while each soldier needs a stable
+  // personal timing offset. Without this second layer, a 48-body formation
+  // collapses into only two or three visibly synchronized pose clusters even
+  // though every soldier technically owns an attack transaction.
+  constexpr std::uint32_t k_phase_slots = 29U;
+  constexpr float k_phase_jitter_span = 0.28F;
+  std::uint32_t const phase_slot =
+      combat_combine_hash(state.lane_seed, 0x9e3779b9U) % k_phase_slots;
+  float const phase_unit =
+      static_cast<float>(phase_slot) / static_cast<float>(k_phase_slots - 1U);
+  profile.phase_bias += (phase_unit - 0.5F) * k_phase_jitter_span;
   profile.local_enemy_pressure = static_cast<float>(state.pressure_bucket) / 2.0F;
   profile.variant_bias = state.variant_bias;
   profile.lane_seed = state.lane_seed;
@@ -341,7 +354,11 @@ profile_with_lane(const CombatLaneProfile& base,
   CombatLaneProfile profile = base;
   CombatLaneProfile const lane_profile = lane_profile_for_lane(lane);
   profile.lane = lane;
-  profile.phase_bias = lane_profile.phase_bias;
+  // Preserve the soldier-specific part of the source profile while changing
+  // its role-specific base. This path is used when a defensive lane is
+  // promoted into an attack lane for the formation-wide fight contract.
+  float const source_lane_bias = lane_profile_for_lane(base.lane).phase_bias;
+  profile.phase_bias = lane_profile.phase_bias + (base.phase_bias - source_lane_bias);
   profile.recover_scale = lane_profile.recover_scale;
   profile.emphasis_scale = lane_profile.emphasis_scale;
   return profile;

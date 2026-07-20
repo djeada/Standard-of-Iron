@@ -31,12 +31,21 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_light");
   registry.register_equipment_id(EquipmentCategory::Helmet, "roman_heavy");
   registry.register_equipment_id(EquipmentCategory::Helmet, "roman_light");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "roman_montefortino");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "roman_boeotian_cavalry");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_punic_conical");
+  registry.register_equipment_id(EquipmentCategory::Helmet,
+                                 "carthage_thracian_crested");
   registry.register_equipment_id(EquipmentCategory::Helmet, "headwrap");
 
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_heavy_armor");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_light_armor");
   registry.register_equipment_id(EquipmentCategory::Armor, "armor_light_carthage");
   registry.register_equipment_id(EquipmentCategory::Armor, "armor_heavy_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_hamata_mail");
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_anatomical_cuirass");
+  registry.register_equipment_id(EquipmentCategory::Armor, "carthage_linothorax");
+  registry.register_equipment_id(EquipmentCategory::Armor, "carthage_gilded_scale");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_shoulder_cover");
   registry.register_equipment_id(EquipmentCategory::Armor,
                                  "roman_shoulder_cover_cavalry");

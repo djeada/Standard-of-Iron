@@ -80,6 +80,7 @@ struct CreatureGraphOutput {
   bool world_already_grounded{true};
 
   EntityId entity_id{0};
+  std::uint16_t instance_index{0U};
 
   UnitVisualSpec spec{};
   std::optional<HumanoidAnimationSelection> humanoid_selection{};

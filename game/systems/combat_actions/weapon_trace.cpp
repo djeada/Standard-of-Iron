@@ -134,6 +134,7 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RpgSwordOverhead:
     case CombatActionId::RpgSwordThrust:
     case CombatActionId::RpgSwordFinisher:
+    case CombatActionId::RtsSwordStrike:
       return {
           .valid = true,
           .species_id = Render::Creature::Bpat::k_species_humanoid_sword,
@@ -151,11 +152,14 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RpgBowShot:
     case CombatActionId::MountedSpearThrust:
     case CombatActionId::MountedChargeImpact:
+    case CombatActionId::RtsSpearThrust:
+    case CombatActionId::RtsBowShot:
       break;
     }
   } else if (definition.weapon_family == WeaponFamily::Spear) {
     switch (definition.id) {
     case CombatActionId::RpgSpearThrust:
+    case CombatActionId::RtsSpearThrust:
       return {
           .valid = true,
           .species_id = Render::Creature::Bpat::k_species_humanoid_spear,
@@ -182,6 +186,8 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RpgBowShot:
     case CombatActionId::MountedSwordSlash:
     case CombatActionId::MountedChargeImpact:
+    case CombatActionId::RtsSwordStrike:
+    case CombatActionId::RtsBowShot:
       break;
     }
   }

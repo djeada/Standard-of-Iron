@@ -561,6 +561,37 @@ TEST_F(AISystemTest, BuilderBehaviorRequestsBarracksWhenNoneExist) {
   EXPECT_STREQ(commands.front().construction_type, "barracks");
 }
 
+TEST_F(AISystemTest, BuilderBehaviorHarvestsMissingStoneBeforeConstruction) {
+  Game::Systems::AI::BuilderBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  snapshot.friendly_units = {make_builder(11, 18.0F, 12.0F)};
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 100);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 10);
+  snapshot.resource_nodes.push_back(
+      {77, Game::Map::WorldProp::Type::Boulder, 22.0F, 14.0F, false});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.builder_count = 1;
+  context.home_count = 2;
+  context.defense_tower_count = 1;
+  context.barracks_count = 0;
+  context.base_pos_x = 20.0F;
+  context.base_pos_z = 15.0F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.1F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type,
+            Game::Systems::AI::AICommandType::StartBuilderHarvest);
+  EXPECT_STREQ(commands.front().construction_type, "collect_stone");
+  EXPECT_EQ(commands.front().resource_target_id, 77U);
+}
+
 TEST_F(AISystemTest, BuilderBehaviorUsesStrategyDrivenBarracksTargets) {
   Game::Systems::AI::BuilderBehavior behavior;
 

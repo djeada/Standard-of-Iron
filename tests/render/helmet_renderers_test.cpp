@@ -7,6 +7,7 @@
 #include "render/equipment/helmets/carthage_light_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
 #include "render/equipment/helmets/helmet_alignment.h"
+#include "render/equipment/helmets/historical_helmets.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
 #include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/humanoid/humanoid_renderer_base.h"
@@ -243,6 +244,38 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
   EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "headwrap"),
             k_invalid_equipment_handle);
+
+  for (auto const* id : {"roman_montefortino",
+                         "roman_boeotian_cavalry",
+                         "carthage_punic_conical",
+                         "carthage_thracian_crested"}) {
+    EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, id));
+    EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, id),
+              k_invalid_equipment_handle);
+  }
+}
+
+TEST_F(HelmetRenderersTest, HistoricalHelmetArchetypesHaveDistinctSilhouettes) {
+  std::array<HistoricalHelmet, 4> const helmets{
+      HistoricalHelmet::RomanMontefortino,
+      HistoricalHelmet::RomanBoeotianCavalry,
+      HistoricalHelmet::CarthagePunicConical,
+      HistoricalHelmet::CarthageThracianCrested,
+  };
+  std::array<std::size_t, 4> draw_counts{};
+  std::array<std::string, 4> names{};
+  for (std::size_t i = 0; i < helmets.size(); ++i) {
+    auto const& archetype = historical_helmet_archetype(helmets[i]);
+    names[i] = archetype.debug_name;
+    draw_counts[i] = archetype.lods[0].draws.size();
+    EXPECT_FALSE(names[i].empty());
+    EXPECT_GT(draw_counts[i], 0U);
+  }
+  EXPECT_NE(names[0], names[1]);
+  EXPECT_NE(names[1], names[2]);
+  EXPECT_NE(names[2], names[3]);
+  EXPECT_NE(draw_counts[0], draw_counts[1]);
+  EXPECT_NE(draw_counts[2], draw_counts[3]);
 }
 
 TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {

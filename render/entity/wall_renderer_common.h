@@ -32,6 +32,8 @@ struct WallPalette {
 };
 
 struct WallGeometry {
+  bool solid_masonry{false};
+  bool earthwork_base{false};
   float connected_span_length{1.04F};
   float open_span_length{0.96F};
   float stake_center_y{1.18F};

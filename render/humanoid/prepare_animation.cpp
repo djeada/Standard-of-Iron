@@ -50,8 +50,6 @@ void sync_combat_visual_inputs(
   if (!visual.active) {
     if (visual.lane == Render::Creature::SoldierCombatLane::ShieldBrace) {
       inputs.is_guarding = true;
-    } else if (visual.lane == Render::Creature::SoldierCombatLane::StepOut) {
-      inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
     }
     inputs.combat_phase = Render::GL::CombatAnimPhase::Idle;
     inputs.combat_phase_progress = 0.0F;

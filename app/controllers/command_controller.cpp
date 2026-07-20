@@ -192,11 +192,27 @@ auto CommandController::on_hold_command() -> CommandResult {
     auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if (should_enable_hold) {
 
+      auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
+      if (attack_comp != nullptr && attack_comp->in_melee_lock &&
+          Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
+        auto* locked_target = m_world->get_entity(attack_comp->melee_lock_target_id);
+        auto const* locked_unit =
+            locked_target != nullptr
+                ? locked_target->get_component<Engine::Core::UnitComponent>()
+                : nullptr;
+        bool const locked_opponent_alive =
+            locked_unit != nullptr && locked_unit->health > 0 &&
+            !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
+        if (locked_opponent_alive) {
+          continue;
+        }
+        Game::Systems::CombatRules::clear_rts_melee_lock(entity);
+      }
+
       Game::Systems::OrderService::reset_movement(entity);
       Game::Systems::OrderService::clear_attack_target(entity);
       Game::Systems::OrderService::clear_player_order_intent(entity);
 
-      auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
       if (attack_comp != nullptr) {
         Game::Systems::CombatRules::clear_rts_melee_lock(entity);
       }
@@ -907,6 +923,16 @@ void CommandController::confirm_formation_placement() {
                                     : 0.0F;
       transform->desired_yaw = unit_facing + m_formation_placement_angle;
       transform->has_desired_yaw = true;
+    }
+    auto* formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if (formation_mode != nullptr && i < formation_result.stable_slot_ids.size()) {
+      formation_mode->formation_id = formation_result.formation_id;
+      formation_mode->stable_slot_id = formation_result.stable_slot_ids[i];
+      formation_mode->stable_rank = formation_result.stable_ranks[i];
+      formation_mode->stable_file = formation_result.stable_files[i];
+      formation_mode->stable_slot_x = formation_result.positions[i].x();
+      formation_mode->stable_slot_z = formation_result.positions[i].z();
     }
 
     Game::Systems::OrderService::clear_patrol(entity);

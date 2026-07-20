@@ -24,7 +24,8 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.sword, "sword_roman");
   EXPECT_EQ(loadout.ids.shield, "roman_scutum");
-  EXPECT_EQ(loadout.ids.armor, "roman_heavy_armor");
+  EXPECT_EQ(loadout.ids.helmet, "roman_boeotian_cavalry");
+  EXPECT_EQ(loadout.ids.armor, "roman_anatomical_cuirass");
   EXPECT_EQ(loadout.ids.shoulder, "roman_shoulder_cover_cavalry");
   EXPECT_EQ(loadout.ids.horse_saddle, "roman_horse_saddle");
   EXPECT_EQ(loadout.ids.horse_barding, "horse_scale_barding");
@@ -43,7 +44,7 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanHorseArcherLoadoutUsesRomanCloakHandle)
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_roman");
   EXPECT_EQ(loadout.ids.quiver, "quiver");
-  EXPECT_EQ(loadout.ids.helmet, "roman_light");
+  EXPECT_EQ(loadout.ids.helmet, "roman_boeotian_cavalry");
   EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
   EXPECT_EQ(loadout.ids.cloak, "cloak_roman");
   EXPECT_NE(loadout.bow_handle, k_invalid_equipment_handle);
@@ -60,7 +61,7 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanArcherLoadoutResolvesFootEquipment) {
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_roman");
   EXPECT_EQ(loadout.ids.quiver, "quiver_roman");
-  EXPECT_EQ(loadout.ids.helmet, "roman_light");
+  EXPECT_EQ(loadout.ids.helmet, "roman_montefortino");
   EXPECT_EQ(loadout.ids.greaves, "roman_greaves");
   EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
   EXPECT_EQ(loadout.ids.cloak, "cloak_roman");
@@ -78,9 +79,9 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanSpearmanLoadoutResolvesGreavesAndShould
 
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.spear, "spear");
-  EXPECT_EQ(loadout.ids.helmet, "roman_heavy");
+  EXPECT_EQ(loadout.ids.helmet, "roman_montefortino");
   EXPECT_EQ(loadout.ids.greaves, "roman_greaves");
-  EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
+  EXPECT_EQ(loadout.ids.armor, "roman_hamata_mail");
   EXPECT_EQ(loadout.ids.shoulder, "roman_shoulder_cover");
   EXPECT_NE(loadout.spear_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
@@ -97,8 +98,8 @@ TEST_F(EquipmentLoadoutCatalogTest,
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.sword, "sword_carthage");
   EXPECT_EQ(loadout.ids.shield, "shield_carthage");
-  EXPECT_EQ(loadout.ids.helmet, "carthage_heavy");
-  EXPECT_EQ(loadout.ids.armor, "armor_heavy_carthage");
+  EXPECT_EQ(loadout.ids.helmet, "carthage_thracian_crested");
+  EXPECT_EQ(loadout.ids.armor, "carthage_gilded_scale");
   EXPECT_EQ(loadout.ids.shoulder, "carthage_shoulder_cover");
   EXPECT_NE(loadout.sword_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.shield_handle, k_invalid_equipment_handle);
@@ -112,7 +113,7 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanHealerLoadoutResolvesSupportArmor) {
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/healer");
 
   ASSERT_TRUE(loadout.found);
-  EXPECT_EQ(loadout.ids.helmet, "roman_light");
+  EXPECT_EQ(loadout.ids.helmet, "roman_montefortino");
   EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
   EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
