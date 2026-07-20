@@ -325,6 +325,13 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                        BuildingStateMask::All,
                        BuildingLODMask::Full);
 
+  add_roman_aquila_relief(desc,
+                          QVector3D(0.0F, cornice_y + 0.34F, 0.985F),
+                          BuildingFacadePlane::XY,
+                          0.62F,
+                          c.gold,
+                          c.blue_accent);
+
   return build_building_archetype(desc, state);
 }
 

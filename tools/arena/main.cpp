@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImage>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSurfaceFormat>
@@ -13,6 +14,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include "arena_scenarios.h"
 #include "arena_viewport.h"
@@ -285,7 +287,24 @@ QStatusBar::item {
 }
 )";
 
+auto parse_time_of_day(const QString& value) -> std::optional<Game::Map::TimeOfDay> {
+  QString const normalized = value.trimmed().toLower();
+  if (normalized == QStringLiteral("morning")) {
+    return Game::Map::TimeOfDay::Morning;
+  }
+  if (normalized == QStringLiteral("day")) {
+    return Game::Map::TimeOfDay::Day;
+  }
+  if (normalized == QStringLiteral("afternoon")) {
+    return Game::Map::TimeOfDay::Afternoon;
+  }
+  if (normalized == QStringLiteral("night")) {
+    return Game::Map::TimeOfDay::Night;
+  }
+  return std::nullopt;
 }
+
+} // namespace
 
 auto main(int argc, char** argv) -> int {
   QSurfaceFormat fmt;
@@ -329,6 +348,11 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Deterministic Arena terrain seed."),
       QStringLiteral("seed"),
       QStringLiteral("1337"));
+  QCommandLineOption const time_of_day_option(
+      QStringList{QStringLiteral("time-of-day")},
+      QStringLiteral("Lighting preset: morning, day, afternoon, or night."),
+      QStringLiteral("preset"),
+      QStringLiteral("day"));
   QCommandLineOption const artifact_option(
       QStringList{QStringLiteral("artifact-dir")},
       QStringLiteral("Directory for reports, JSONL traces, and frame captures."),
@@ -347,6 +371,7 @@ auto main(int argc, char** argv) -> int {
                      duration_option,
                      fps_option,
                      seed_option,
+                     time_of_day_option,
                      artifact_option,
                      capture_interval_option,
                      list_option});
@@ -361,9 +386,18 @@ auto main(int argc, char** argv) -> int {
     return 0;
   }
 
+  auto const parsed_time_of_day = parse_time_of_day(parser.value(time_of_day_option));
+  if (!parsed_time_of_day.has_value()) {
+    qCritical().noquote() << QStringLiteral(
+        "Invalid --time-of-day value; expected morning, day, "
+        "afternoon, or night");
+    return 2;
+  }
+
   ArenaWindow window;
   window.resize(1600, 900);
   window.show();
+  window.viewport()->set_time_of_day(*parsed_time_of_day);
 
   if (!parser.isSet(batch_option)) {
     if (parser.isSet(scenario_option)) {
@@ -468,114 +502,129 @@ auto main(int argc, char** argv) -> int {
       Qt::QueuedConnection);
 
   auto start_next = std::make_shared<std::function<void()>>();
-  *start_next =
-      [state, viewport, &app, start_next, fps, seed, duration, capture_interval]() {
-        if (state->next_index >= state->scenarios.size()) {
-          qInfo().noquote()
-              << QStringLiteral(
-                     "Arena batch complete: %1 scenario(s), %2 failed; artifacts: %3")
-                     .arg(state->scenarios.size())
-                     .arg(state->failed)
-                     .arg(QDir(state->artifact_root).absolutePath());
-          QApplication::exit(state->failed == 0 ? 0 : 1);
-          return;
-        }
-        QString const id = state->scenarios[state->next_index++];
-        state->current_scenario = id;
-        int const generation = ++state->generation;
-        state->current_directory = QDir(state->artifact_root).filePath(id);
-        state->failure_context_started = false;
-        state->finishing = false;
-        state->capture_index = 0;
-        QDir scenario_artifacts(state->current_directory);
-        if (scenario_artifacts.exists() && !scenario_artifacts.removeRecursively()) {
-          qCritical().noquote()
-              << QStringLiteral("Could not replace stale Arena artifacts for %1: %2")
-                     .arg(id, state->current_directory);
-          ++state->failed;
-          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-          return;
-        }
-        if (!QDir().mkpath(state->current_directory)) {
-          qCritical().noquote()
-              << QStringLiteral("Could not create Arena artifact directory for %1: %2")
-                     .arg(id, state->current_directory);
-          ++state->failed;
-          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-          return;
-        }
-        QFile config_file(
-            QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
-        if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-          QJsonObject const config{
-              {QStringLiteral("scenario"), id},
-              {QStringLiteral("seed"), seed},
-              {QStringLiteral("fixed_fps"), fps},
-              {QStringLiteral("duration_override"), duration},
-              {QStringLiteral("capture_interval_seconds"), capture_interval},
-              {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")}};
-          config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
-        }
-        qInfo().noquote()
-            << QStringLiteral("Running rendered Arena scenario: %1").arg(id);
-        viewport->load_scenario(id);
+  *start_next = [state,
+                 viewport,
+                 &app,
+                 start_next,
+                 fps,
+                 seed,
+                 duration,
+                 capture_interval,
+                 parsed_time_of_day]() {
+    if (state->next_index >= state->scenarios.size()) {
+      qInfo().noquote()
+          << QStringLiteral(
+                 "Arena batch complete: %1 scenario(s), %2 failed; artifacts: %3")
+                 .arg(state->scenarios.size())
+                 .arg(state->failed)
+                 .arg(QDir(state->artifact_root).absolutePath());
+      QApplication::exit(state->failed == 0 ? 0 : 1);
+      return;
+    }
+    QString const id = state->scenarios[state->next_index++];
+    state->current_scenario = id;
+    int const generation = ++state->generation;
+    state->current_directory = QDir(state->artifact_root).filePath(id);
+    state->failure_context_started = false;
+    state->finishing = false;
+    state->capture_index = 0;
+    QDir scenario_artifacts(state->current_directory);
+    if (scenario_artifacts.exists() && !scenario_artifacts.removeRecursively()) {
+      qCritical().noquote() << QStringLiteral(
+                                   "Could not replace stale Arena artifacts for %1: %2")
+                                   .arg(id, state->current_directory);
+      ++state->failed;
+      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+      return;
+    }
+    if (!QDir().mkpath(state->current_directory)) {
+      qCritical().noquote()
+          << QStringLiteral("Could not create Arena artifact directory for %1: %2")
+                 .arg(id, state->current_directory);
+      ++state->failed;
+      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+      return;
+    }
+    QFile config_file(
+        QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
+    if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      auto const lighting = Game::Map::lighting_for_time_of_day(*parsed_time_of_day);
+      QJsonObject const config{
+          {QStringLiteral("scenario"), id},
+          {QStringLiteral("seed"), seed},
+          {QStringLiteral("time_of_day"),
+           QString::fromLatin1(Game::Map::time_of_day_name(*parsed_time_of_day))},
+          {QStringLiteral("representative_clock_time"),
+           QString::fromLatin1(
+               Game::Map::representative_clock_time(*parsed_time_of_day))},
+          {QStringLiteral("light_direction"),
+           QJsonArray{lighting.light_direction.x(),
+                      lighting.light_direction.y(),
+                      lighting.light_direction.z()}},
+          {QStringLiteral("ambient_strength"), lighting.ambient_strength},
+          {QStringLiteral("fixed_fps"), fps},
+          {QStringLiteral("duration_override"), duration},
+          {QStringLiteral("capture_interval_seconds"), capture_interval},
+          {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")}};
+      config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
+    }
+    qInfo().noquote() << QStringLiteral("Running rendered Arena scenario: %1").arg(id);
+    viewport->load_scenario(id);
 
-        if (capture_interval > 0.0F) {
-          int const capture_interval_ms =
-              std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
-          auto capture_next = std::make_shared<std::function<void()>>();
-          *capture_next =
-              [state, viewport, generation, capture_interval_ms, capture_next]() {
-                if (state->generation != generation || state->finishing) {
-                  return;
-                }
-                QImage const frame = viewport->grabFramebuffer();
-                if (!frame.isNull()) {
-                  frame.save(QDir(state->current_directory)
-                                 .filePath(QStringLiteral("frame_%1.png")
-                                               .arg(++state->capture_index,
-                                                    4,
-                                                    10,
-                                                    QLatin1Char('0'))));
-                }
-                QTimer::singleShot(capture_interval_ms,
-                                   [capture_next]() { (*capture_next)(); });
-              };
-          QTimer::singleShot(capture_interval_ms,
-                             [capture_next]() { (*capture_next)(); });
-        }
+    if (capture_interval > 0.0F) {
+      int const capture_interval_ms =
+          std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
+      auto capture_next = std::make_shared<std::function<void()>>();
+      *capture_next =
+          [state, viewport, generation, capture_interval_ms, capture_next]() {
+            if (state->generation != generation || state->finishing) {
+              return;
+            }
+            QImage const frame = viewport->grabFramebuffer();
+            if (!frame.isNull()) {
+              frame.save(
+                  QDir(state->current_directory)
+                      .filePath(
+                          QStringLiteral("frame_%1.png")
+                              .arg(++state->capture_index, 4, 10, QLatin1Char('0'))));
+            }
+            QTimer::singleShot(capture_interval_ms,
+                               [capture_next]() { (*capture_next)(); });
+          };
+      QTimer::singleShot(capture_interval_ms, [capture_next]() { (*capture_next)(); });
+    }
 
-        auto const* definition = Arena::Scenarios::find_definition(id);
-        float const effective_duration =
-            duration > 0.0F
-                ? duration
-                : (definition != nullptr ? definition->duration_seconds : 12.0F);
-        int const watchdog_ms =
-            static_cast<int>(std::max(15.0F, effective_duration * 3.0F) * 1000.0F);
-        QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
-          if (state->generation != generation || state->finishing) {
-            return;
-          }
-          state->finishing = true;
-          ++state->failed;
-          QImage const frame = viewport->grabFramebuffer();
-          if (!frame.isNull()) {
-            frame.save(
-                QDir(state->current_directory).filePath(QStringLiteral("timeout.png")));
-          }
-          QString ignored_error;
-          (void)viewport->write_scenario_artifacts(state->current_directory,
-                                                   &ignored_error);
-          QFile timeout_file(
-              QDir(state->current_directory).filePath(QStringLiteral("timeout.txt")));
-          if (timeout_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-            timeout_file.write("Scenario exceeded the local wall-clock watchdog.\n");
-          }
-          qCritical().noquote() << QStringLiteral("Arena scenario timed out: %1")
-                                       .arg(state->current_scenario);
-          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-        });
-      };
+    auto const* definition = Arena::Scenarios::find_definition(id);
+    float const effective_duration =
+        duration > 0.0F
+            ? duration
+            : (definition != nullptr ? definition->duration_seconds : 12.0F);
+    int const watchdog_ms =
+        static_cast<int>(std::max(15.0F, effective_duration * 3.0F) * 1000.0F);
+    QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
+      if (state->generation != generation || state->finishing) {
+        return;
+      }
+      state->finishing = true;
+      ++state->failed;
+      QImage const frame = viewport->grabFramebuffer();
+      if (!frame.isNull()) {
+        frame.save(
+            QDir(state->current_directory).filePath(QStringLiteral("timeout.png")));
+      }
+      QString ignored_error;
+      (void)viewport->write_scenario_artifacts(state->current_directory,
+                                               &ignored_error);
+      QFile timeout_file(
+          QDir(state->current_directory).filePath(QStringLiteral("timeout.txt")));
+      if (timeout_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        timeout_file.write("Scenario exceeded the local wall-clock watchdog.\n");
+      }
+      qCritical().noquote() << QStringLiteral("Arena scenario timed out: %1")
+                                   .arg(state->current_scenario);
+      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+    });
+  };
 
   QObject::connect(
       viewport,

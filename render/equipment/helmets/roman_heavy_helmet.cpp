@@ -37,19 +37,18 @@ auto roman_heavy_palette(const HumanoidPalette& palette) -> std::array<QVector3D
 auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     constexpr int k_fiber_count = 10;
-    constexpr int k_total = 9 + 3 + k_fiber_count;
+    constexpr int k_total = 18 + k_fiber_count;
     std::array<GeneratedEquipmentPrimitive, k_total> primitives{};
 
-    primitives[0] = generated_cylinder(QVector3D(0.0F, -0.28F, 0.0F),
-                                       QVector3D(0.0F, 1.40F, 0.0F),
-                                       1.14F,
-                                       k_steel_slot,
-                                       1.0F,
-                                       2);
+    primitives[0] = generated_ellipsoid(QVector3D(0.0F, 0.54F, -0.10F),
+                                        QVector3D(1.34F, 1.18F, 1.48F),
+                                        k_steel_slot,
+                                        1.0F,
+                                        2);
 
-    primitives[1] = generated_cone(QVector3D(0.0F, 1.40F, 0.0F),
-                                   QVector3D(0.0F, 2.18F, 0.0F),
-                                   1.11F,
+    primitives[1] = generated_cone(QVector3D(0.0F, 1.34F, -0.08F),
+                                   QVector3D(0.0F, 1.82F, -0.10F),
+                                   0.76F,
                                    k_steel_light_slot,
                                    1.0F,
                                    2);
@@ -103,15 +102,46 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                        1.0F,
                                        2);
 
-    QVector3D const crest_front{0.0F, 2.24F, 0.52F};
-    QVector3D const crest_back{0.0F, 2.06F, -0.64F};
+    // Reinforcing brows, ear bosses and articulated cheek flares are the
+    // characteristic Imperial Roman face of the heavy helmet.
+    primitives[9] = generated_cylinder(QVector3D(-0.08F, 0.78F, 1.00F),
+                                       QVector3D(-0.86F, 0.66F, 0.72F),
+                                       0.075F,
+                                       k_brass_slot,
+                                       1.0F,
+                                       2);
+    primitives[10] = generated_cylinder(QVector3D(0.08F, 0.78F, 1.00F),
+                                        QVector3D(0.86F, 0.66F, 0.72F),
+                                        0.075F,
+                                        k_brass_slot,
+                                        1.0F,
+                                        2);
+    primitives[11] =
+        generated_sphere(QVector3D(-1.16F, 0.00F, 0.06F), 0.16F, k_brass_slot, 1.0F, 2);
+    primitives[12] =
+        generated_sphere(QVector3D(1.16F, 0.00F, 0.06F), 0.16F, k_brass_slot, 1.0F, 2);
+    primitives[13] = generated_cylinder(QVector3D(-0.88F, -0.52F, 0.26F),
+                                        QVector3D(-0.66F, -0.76F, 0.50F),
+                                        0.18F,
+                                        k_steel_light_slot,
+                                        1.0F,
+                                        2);
+    primitives[14] = generated_cylinder(QVector3D(0.88F, -0.52F, 0.26F),
+                                        QVector3D(0.66F, -0.76F, 0.50F),
+                                        0.18F,
+                                        k_steel_light_slot,
+                                        1.0F,
+                                        2);
 
-    primitives[9] =
+    QVector3D const crest_front{0.0F, 1.90F, 0.52F};
+    QVector3D const crest_back{0.0F, 1.82F, -0.64F};
+
+    primitives[15] =
         generated_cylinder(crest_front, crest_back, 0.036F, k_brass_slot, 1.0F, 2);
 
-    primitives[10] = generated_sphere(crest_front, 0.058F, k_brass_slot, 1.0F, 2);
+    primitives[16] = generated_sphere(crest_front, 0.058F, k_brass_slot, 1.0F, 2);
 
-    primitives[11] = generated_sphere(crest_back, 0.048F, k_brass_slot, 1.0F, 2);
+    primitives[17] = generated_sphere(crest_back, 0.048F, k_brass_slot, 1.0F, 2);
 
     for (int i = 0; i < k_fiber_count; ++i) {
       float const t = static_cast<float>(i) / static_cast<float>(k_fiber_count - 1);
@@ -125,7 +155,7 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
       float const lateral = (i % 3 == 1) ? 0.022F : (i % 3 == 2) ? -0.022F : 0.0F;
 
       QVector3D const tip = base + QVector3D(lateral, lift, 0.0F);
-      primitives[12 + i] = generated_cylinder(base, tip, 0.052F, k_crest_slot, 1.0F, 0);
+      primitives[18 + i] = generated_cylinder(base, tip, 0.052F, k_crest_slot, 1.0F, 0);
     }
 
     return build_generated_equipment_archetype("roman_heavy_helmet", primitives);

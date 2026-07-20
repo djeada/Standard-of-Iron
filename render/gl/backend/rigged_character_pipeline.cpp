@@ -198,6 +198,10 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   m_instanced_view_proj = m_instanced_shader->uniform_handle("u_view_proj");
   m_instanced_role_color_tbo =
       m_instanced_shader->optional_uniform_handle("u_role_color_tbo");
+  m_instanced_light_dir = m_instanced_shader->uniform_handle("u_light_dir");
+  m_instanced_ambient_strength =
+      m_instanced_shader->uniform_handle("u_ambient_strength");
+  m_instanced_camera_position = m_instanced_shader->uniform_handle("u_camera_position");
   return true;
 }
 
@@ -208,6 +212,9 @@ void RiggedCharacterPipeline::shutdown() {
   m_uniforms = Uniforms{};
   m_instanced_view_proj = GL::Shader::InvalidUniform;
   m_instanced_role_color_tbo = GL::Shader::InvalidUniform;
+  m_instanced_light_dir = GL::Shader::InvalidUniform;
+  m_instanced_ambient_strength = GL::Shader::InvalidUniform;
+  m_instanced_camera_position = GL::Shader::InvalidUniform;
 
   auto* fn = gl_funcs();
   if (fn != nullptr) {
@@ -255,6 +262,9 @@ void RiggedCharacterPipeline::cache_uniforms() {
   m_uniforms.material_id = m_shader->optional_uniform_handle("u_material_id");
   m_uniforms.role_colors = m_shader->optional_uniform_handle("u_role_colors[0]");
   m_uniforms.role_color_count = m_shader->optional_uniform_handle("u_role_color_count");
+  m_uniforms.light_dir = m_shader->uniform_handle("u_light_dir");
+  m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambient_strength");
+  m_uniforms.camera_position = m_shader->uniform_handle("u_camera_position");
 }
 
 auto RiggedCharacterPipeline::is_initialized() const -> bool {
@@ -263,7 +273,8 @@ auto RiggedCharacterPipeline::is_initialized() const -> bool {
 }
 
 auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
-                                   const QMatrix4x4& view_proj) -> bool {
+                                   const QMatrix4x4& view_proj,
+                                   const QVector3D& camera_position) -> bool {
   if (!is_initialized() || cmd.mesh == nullptr) {
     return false;
   }
@@ -271,6 +282,9 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
   m_shader->use();
   m_shader->set_uniform(m_uniforms.view_proj, view_proj);
   m_shader->set_uniform(m_uniforms.model, cmd.world);
+  m_shader->set_uniform(m_uniforms.light_dir, m_backend->light_direction());
+  m_shader->set_uniform(m_uniforms.ambient_strength, m_backend->ambient_strength());
+  m_shader->set_uniform(m_uniforms.camera_position, camera_position);
   if (m_uniforms.variation_scale != GL::Shader::InvalidUniform) {
     m_shader->set_uniform(m_uniforms.variation_scale, cmd.variation_scale);
   }
@@ -485,7 +499,8 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned
 
 auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
                                              std::size_t count,
-                                             const QMatrix4x4& view_proj) -> bool {
+                                             const QMatrix4x4& view_proj,
+                                             const QVector3D& camera_position) -> bool {
   if (cmds == nullptr || count == 0) {
     return false;
   }
@@ -554,6 +569,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
+  m_instanced_shader->set_uniform(m_instanced_light_dir, m_backend->light_direction());
+  m_instanced_shader->set_uniform(m_instanced_ambient_strength,
+                                  m_backend->ambient_strength());
+  m_instanced_shader->set_uniform(m_instanced_camera_position, camera_position);
 
   pack_role_colors_to_scratch(
       m_role_color_scratch, count, [&](std::size_t k) -> const RiggedCreatureCmd& {
@@ -645,7 +664,8 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
 
 auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmds,
                                              std::size_t count,
-                                             const QMatrix4x4& view_proj) -> bool {
+                                             const QMatrix4x4& view_proj,
+                                             const QVector3D& camera_position) -> bool {
   if (cmds == nullptr || count == 0) {
     return false;
   }
@@ -714,6 +734,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
+  m_instanced_shader->set_uniform(m_instanced_light_dir, m_backend->light_direction());
+  m_instanced_shader->set_uniform(m_instanced_ambient_strength,
+                                  m_backend->ambient_strength());
+  m_instanced_shader->set_uniform(m_instanced_camera_position, camera_position);
 
   pack_role_colors_to_scratch(
       m_role_color_scratch, count, [&](std::size_t k) -> const RiggedCreatureCmd& {

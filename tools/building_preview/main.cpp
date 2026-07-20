@@ -261,7 +261,7 @@ auto main(int argc, char** argv) -> int {
       "home", "barracks", "defense_tower", "marketplace", "wall_segment_straight"};
   const std::vector<std::string> nations = {"roman", "carthage"};
   const QVector3D team_color(0.30F, 0.55F, 0.95F);
-  const QVector3D iso_dir(0.82F, -0.48F, 0.78F);
+  const QVector3D iso_dir(0.82F, 0.62F, 0.78F);
 
   const int tile_w = 460;
   const int tile_h = 460;

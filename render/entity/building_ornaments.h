@@ -5,7 +5,14 @@
 #include <algorithm>
 #include <cmath>
 
+#include "building_archetype_desc.h"
+
 namespace Render::GL {
+
+enum class BuildingFacadePlane {
+  XY,
+  ZY,
+};
 
 inline auto
 weathered(const QVector3D& color, int seed, float amount = 0.06F) -> QVector3D {
@@ -121,6 +128,136 @@ void add_gable_roof_z(AddRotatedBox&& add_rot,
           scale,
           QVector3D(0.0F, 0.0F, theta_deg),
           color);
+}
+
+namespace Detail {
+
+inline auto facade_point(const QVector3D& center,
+                         BuildingFacadePlane plane,
+                         float horizontal,
+                         float vertical,
+                         float normal_offset = 0.0F) -> QVector3D {
+  if (plane == BuildingFacadePlane::XY) {
+    return center + QVector3D(horizontal, vertical, normal_offset);
+  }
+  return center + QVector3D(normal_offset, vertical, horizontal);
+}
+
+inline auto facade_scale(BuildingFacadePlane plane,
+                         float horizontal,
+                         float vertical,
+                         float depth) -> QVector3D {
+  if (plane == BuildingFacadePlane::XY) {
+    return {horizontal, vertical, depth};
+  }
+  return {depth, vertical, horizontal};
+}
+
+inline auto facade_rotation(BuildingFacadePlane plane, float degrees) -> QVector3D {
+  if (plane == BuildingFacadePlane::XY) {
+    return {0.0F, 0.0F, degrees};
+  }
+  return {degrees, 0.0F, 0.0F};
+}
+
+} // namespace Detail
+
+// Broad-winged aquila relief used as a high-contrast Roman facade signature.
+// Its major shapes are intentionally large enough to remain legible at RTS zoom.
+inline void
+add_roman_aquila_relief(BuildingArchetypeDesc& desc,
+                        const QVector3D& center,
+                        BuildingFacadePlane plane,
+                        float scale,
+                        const QVector3D& bronze,
+                        const QVector3D& shadow,
+                        BuildingStateMask states = k_building_state_mask_intact) {
+  const float depth = 0.025F * scale;
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
+               Detail::facade_scale(plane, 0.62F * scale, 0.42F * scale, depth),
+               shadow,
+               states,
+               BuildingLODMask::Full);
+
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.01F, depth),
+               Detail::facade_scale(plane, 0.08F * scale, 0.25F * scale, depth),
+               bronze,
+               states,
+               BuildingLODMask::Full);
+  desc.add_box(
+      Detail::facade_point(center, plane, 0.035F * scale, 0.17F * scale, depth),
+      Detail::facade_scale(plane, 0.10F * scale, 0.09F * scale, depth),
+      bronze,
+      states,
+      BuildingLODMask::Full);
+
+  for (float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(
+        Detail::facade_point(center, plane, side * 0.16F * scale, 0.06F * scale, depth),
+        Detail::facade_scale(plane, 0.27F * scale, 0.065F * scale, depth),
+        Detail::facade_rotation(plane, side * 18.0F),
+        bronze,
+        states,
+        BuildingLODMask::Full);
+    desc.add_rotated_box(
+        Detail::facade_point(center, plane, side * 0.24F * scale, 0.13F * scale, depth),
+        Detail::facade_scale(plane, 0.20F * scale, 0.055F * scale, depth),
+        Detail::facade_rotation(plane, side * 38.0F),
+        bronze,
+        states,
+        BuildingLODMask::Full);
+    desc.add_rotated_box(
+        Detail::facade_point(
+            center, plane, side * 0.045F * scale, -0.15F * scale, depth),
+        Detail::facade_scale(plane, 0.055F * scale, 0.16F * scale, depth),
+        Detail::facade_rotation(plane, side * 20.0F),
+        bronze,
+        states,
+        BuildingLODMask::Full);
+  }
+}
+
+// Tanit relief: circular head, outstretched arms and triangular body. This is
+// the recurring Punic signature, paired with flat roofs and red masonry coping.
+inline void
+add_punic_tanit_relief(BuildingArchetypeDesc& desc,
+                       const QVector3D& center,
+                       BuildingFacadePlane plane,
+                       float scale,
+                       const QVector3D& symbol,
+                       const QVector3D& backing,
+                       BuildingStateMask states = k_building_state_mask_intact) {
+  const float depth = 0.025F * scale;
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
+               Detail::facade_scale(plane, 0.48F * scale, 0.52F * scale, depth),
+               backing,
+               states,
+               BuildingLODMask::Full);
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.08F * scale, depth),
+               Detail::facade_scale(plane, 0.38F * scale, 0.045F * scale, depth),
+               symbol,
+               states,
+               BuildingLODMask::Full);
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.20F * scale, depth),
+               Detail::facade_scale(plane, 0.11F * scale, 0.11F * scale, depth),
+               symbol,
+               states,
+               BuildingLODMask::Full);
+  for (float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(
+        Detail::facade_point(
+            center, plane, side * 0.075F * scale, -0.08F * scale, depth),
+        Detail::facade_scale(plane, 0.055F * scale, 0.27F * scale, depth),
+        Detail::facade_rotation(plane, side * 31.0F),
+        symbol,
+        states,
+        BuildingLODMask::Full);
+  }
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, -0.21F * scale, depth),
+               Detail::facade_scale(plane, 0.30F * scale, 0.045F * scale, depth),
+               symbol,
+               states,
+               BuildingLODMask::Full);
 }
 
 } // namespace Render::GL

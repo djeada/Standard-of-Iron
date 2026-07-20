@@ -64,6 +64,8 @@ struct CombatPlaybackLayerPolicyInputs {
   bool mounted{false};
   bool moving{false};
   bool forced_displacement{false};
+  // A persistent stance owns the complete pose, including weapon sockets.
+  bool preserve_base_stance{false};
   // The action belongs to a gameplay transaction that owns the creature root
   // (formation melee, for example). Keep locomotion/stance on the base layer
   // and apply the authored action to the upper body only.

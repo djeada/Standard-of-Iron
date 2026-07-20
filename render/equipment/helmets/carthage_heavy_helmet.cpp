@@ -38,7 +38,7 @@ auto carthage_heavy_palette(const HumanoidPalette& palette,
 
 auto carthage_heavy_helmet_shell_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+    std::array<GeneratedEquipmentPrimitive, 8> const primitives{{
         generated_sphere(QVector3D(0.0F, 0.60F, 0.0F), 1.65F, k_metal_slot, 1.0F, 2),
         generated_cylinder(QVector3D(0.0F, -0.44F, 0.0F),
                            QVector3D(0.0F, -0.06F, 0.0F),
@@ -54,6 +54,30 @@ auto carthage_heavy_helmet_shell_archetype() -> const RenderArchetype& {
                            2),
         generated_sphere(
             QVector3D(0.0F, 2.72F, 0.0F), 0.12F, k_metal_light_slot, 1.0F, 2),
+        generated_cone(QVector3D(-1.12F, 1.26F, -0.10F),
+                       QVector3D(-1.92F, 1.70F, -0.46F),
+                       0.22F,
+                       k_metal_dark_slot,
+                       1.0F,
+                       2),
+        generated_cone(QVector3D(1.12F, 1.26F, -0.10F),
+                       QVector3D(1.92F, 1.70F, -0.46F),
+                       0.22F,
+                       k_metal_dark_slot,
+                       1.0F,
+                       2),
+        generated_cylinder(QVector3D(-0.08F, 0.72F, 1.10F),
+                           QVector3D(-0.84F, 0.62F, 0.82F),
+                           0.075F,
+                           k_metal_light_slot,
+                           1.0F,
+                           2),
+        generated_cylinder(QVector3D(0.08F, 0.72F, 1.10F),
+                           QVector3D(0.84F, 0.62F, 0.82F),
+                           0.075F,
+                           k_metal_light_slot,
+                           1.0F,
+                           2),
     }};
     return build_generated_equipment_archetype("carthage_heavy_shell", primitives);
   }();

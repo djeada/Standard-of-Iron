@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -118,6 +119,38 @@ auto has_mesh_center_near_axis(const std::vector<RecordedMesh>& meshes,
 
     const float axis_value = use_x_axis ? center.x() : center.z();
     if (std::abs(axis_value - seam_position) <= tolerance) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto has_mesh_spanning_axis(const std::vector<RecordedMesh>& meshes,
+                            float seam_position,
+                            bool use_x_axis,
+                            float min_top_y) -> bool {
+  static const std::array<QVector3D, 8> k_unit_corners = {
+      QVector3D(-0.5F, -0.5F, -0.5F),
+      QVector3D(0.5F, -0.5F, -0.5F),
+      QVector3D(-0.5F, 0.5F, -0.5F),
+      QVector3D(0.5F, 0.5F, -0.5F),
+      QVector3D(-0.5F, -0.5F, 0.5F),
+      QVector3D(0.5F, -0.5F, 0.5F),
+      QVector3D(-0.5F, 0.5F, 0.5F),
+      QVector3D(0.5F, 0.5F, 0.5F),
+  };
+  for (const RecordedMesh& mesh : meshes) {
+    float axis_min = std::numeric_limits<float>::max();
+    float axis_max = std::numeric_limits<float>::lowest();
+    float top_y = std::numeric_limits<float>::lowest();
+    for (const QVector3D& corner : k_unit_corners) {
+      QVector3D const world = mesh.model.map(corner);
+      float const axis = use_x_axis ? world.x() : world.z();
+      axis_min = std::min(axis_min, axis);
+      axis_max = std::max(axis_max, axis);
+      top_y = std::max(top_y, world.y());
+    }
+    if (axis_min <= seam_position && axis_max >= seam_position && top_y >= min_top_y) {
       return true;
     }
   }
@@ -968,7 +1001,7 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
 }
 
-TEST(RenderArchetypeBuildings, CarthageStraightWallFormsTallContinuousPalisade) {
+TEST(RenderArchetypeBuildings, CarthageStraightWallFormsContinuousCrenellatedMasonry) {
   using namespace Render::GL;
 
   EntityRendererRegistry registry;
@@ -999,7 +1032,7 @@ TEST(RenderArchetypeBuildings, CarthageStraightWallFormsTallContinuousPalisade) 
   renderer(ctx, right_submitter);
   const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
 
-  EXPECT_GT(left_bounds.max.y(), 2.4F);
+  EXPECT_GT(left_bounds.max.y(), 1.75F);
   EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
   EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
 }
@@ -1164,7 +1197,7 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.08F, 1.0F));
 }
 
-TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSeam) {
+TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
   using namespace Render::GL;
 
   EntityRendererRegistry registry;
@@ -1200,7 +1233,7 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsPlaceTallBoardsAtEastWestSe
   meshes.insert(
       meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
 
-  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.05F, 1.5F));
+  EXPECT_TRUE(has_mesh_spanning_axis(meshes, 1.0F, true, 1.4F));
 }
 
 } // namespace

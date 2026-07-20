@@ -17,6 +17,8 @@ namespace Render::GL {
 
 struct SwordRenderConfig {
   QVector3D metal_color{0.72F, 0.73F, 0.78F};
+  QVector3D grip_color{};
+  QVector3D fuller_color{};
   float sword_length = 0.84F;
   float sword_width = 0.072F;
   float guard_half_width = 0.125F;
@@ -30,6 +32,8 @@ struct SwordRenderConfig {
   float blade_curve = 0.02F;
   float guard_curve = 0.03F;
   float guard_spike_length = 0.06F;
+  int blade_back_spike_count = 0;
+  float blade_back_spike_length = 0.06F;
   bool has_scabbard = true;
   int material_id = 3;
 };

@@ -231,6 +231,57 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_held_weapon_stances_id),
+        QStringLiteral("Held Spear and Bow Stances"),
+        QStringLiteral("Spearmen and archers stay fully kneeling with raised weapons "
+                       "while combat remains active."),
+        7.0F,
+        {10.0F, 30.0F, 0.0F});
+    s.groups = {
+        group(QStringLiteral("held_spear"),
+              Troop::Spearman,
+              1,
+              1,
+              {-1.6F, 0.0F, -1.0F},
+              1),
+        group(QStringLiteral("spear_target"),
+              Troop::Civilian,
+              2,
+              1,
+              {-1.6F, 0.0F, 1.1F},
+              1),
+        group(
+            QStringLiteral("held_archer"), Troop::Archer, 1, 1, {1.6F, 0.0F, -2.0F}, 1),
+        group(QStringLiteral("archer_target"),
+              Troop::Civilian,
+              2,
+              1,
+              {1.6F, 0.0F, 2.0F},
+              1),
+    };
+    s.groups[1].health_override = 5000;
+    s.groups[1].max_health_override = 5000;
+    s.groups[3].health_override = 5000;
+    s.groups[3].max_health_override = 5000;
+    s.steps = {
+        at(0.0F, Command::Hold, QStringLiteral("held_spear")),
+        at(0.0F, Command::Hold, QStringLiteral("held_archer")),
+    };
+    add_visual_stability(s,
+                         {QStringLiteral("held_spear"), QStringLiteral("held_archer")});
+    s.expectations.push_back(expectation(
+        Expect::HoldPoseMaintained, QStringLiteral("held_spear"), {}, 0.0F, 1.5F));
+    s.expectations.push_back(expectation(
+        Expect::HoldPoseMaintained, QStringLiteral("held_archer"), {}, 0.0F, 1.5F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("held_spear")));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("held_archer")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_mounted_charge_id),
         QStringLiteral("Mounted Charge"),
         QStringLiteral("Mounted approach and legitimate impact displacement."),
