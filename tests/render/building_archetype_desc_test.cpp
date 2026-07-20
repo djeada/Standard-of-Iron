@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_ornaments.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"
 
@@ -169,6 +170,37 @@ TEST(BuildingArchetypeDesc, RecordedLodsPreserveSeparateFullAndMinimalMeshes) {
   EXPECT_EQ(archetype.lods[0].draws[0].mesh, fake_mesh(11));
   EXPECT_EQ(archetype.lods[1].draws[0].mesh, fake_mesh(22));
   EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 72.0F);
+}
+
+TEST(BuildingCulturalOrnaments, RomanAndPunicReliefsKeepDistinctProfiles) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc roman("roman_aquila_test");
+  add_roman_aquila_relief(roman,
+                          QVector3D(0.0F, 1.0F, 0.0F),
+                          BuildingFacadePlane::XY,
+                          1.0F,
+                          QVector3D(0.8F, 0.6F, 0.2F),
+                          QVector3D(0.2F, 0.3F, 0.5F));
+  BuildingArchetypeDesc punic("punic_tanit_test");
+  add_punic_tanit_relief(punic,
+                         QVector3D(0.0F, 1.0F, 0.0F),
+                         BuildingFacadePlane::ZY,
+                         1.0F,
+                         QVector3D(0.7F, 0.5F, 0.2F),
+                         QVector3D(0.3F, 0.2F, 0.2F));
+
+  const RenderArchetype roman_archetype =
+      build_building_archetype(roman, BuildingState::Normal);
+  const RenderArchetype punic_archetype =
+      build_building_archetype(punic, BuildingState::Normal);
+
+  EXPECT_EQ(roman_archetype.lods[0].draws.size(), 9U);
+  EXPECT_EQ(punic_archetype.lods[0].draws.size(), 6U);
+  EXPECT_TRUE(roman_archetype.lods[1].draws.empty());
+  EXPECT_TRUE(punic_archetype.lods[1].draws.empty());
+  EXPECT_NE(roman_archetype.lods[0].draws[0].local_model,
+            punic_archetype.lods[0].draws[0].local_model);
 }
 
 } // namespace

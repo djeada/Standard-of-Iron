@@ -209,6 +209,39 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsOverextendedAliveSoldierArm) {
   diagnostics.set_enabled(false);
 }
 
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAttackClipReplacingActiveHoldPose) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::HoldPoseMaintained, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto* entity = world.get_entity(entity_id);
+  ASSERT_NE(entity, nullptr);
+  auto* hold = entity->add_component<Engine::Core::HoldModeComponent>();
+  ASSERT_NE(hold, nullptr);
+  hold->active = true;
+  hold->kneel_entry_progress = 1.0F;
+
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.animation_state = Render::Creature::AnimationStateId::AttackSpear;
+  sample.is_attacking = true;
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(4.0);
+
+  ASSERT_FALSE(runner.report().passed());
+  EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("hold_pose_replaced"));
+  diagnostics.set_enabled(false);
+}
+
 TEST(ArenaScenarioRunnerTest, RenderProbeRejectsMissingIndicatorDuringMeleeLock) {
   Engine::Core::World world;
   auto scenario = minimal_definition();

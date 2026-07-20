@@ -1264,7 +1264,25 @@ void ArenaViewport::configure_rendering_from_terrain() {
     m_boundary_fog->configure(
         height_map->get_width(), height_map->get_height(), height_map->get_tile_size());
   }
+  const auto lighting = Game::Map::lighting_for_time_of_day(m_time_of_day);
+  m_renderer->set_lighting(lighting.light_direction, lighting.ambient_strength);
   set_wireframe_enabled(m_wireframe_enabled);
+}
+
+void ArenaViewport::set_time_of_day(Game::Map::TimeOfDay time_of_day) {
+  m_time_of_day = time_of_day;
+  if (m_renderer != nullptr) {
+    const auto lighting = Game::Map::lighting_for_time_of_day(m_time_of_day);
+    m_renderer->set_lighting(lighting.light_direction, lighting.ambient_strength);
+  }
+  emit lighting_changed(lighting_summary());
+  update();
+}
+
+auto ArenaViewport::lighting_summary() const -> QString {
+  return QStringLiteral("%1 · %2").arg(
+      QString::fromLatin1(Game::Map::time_of_day_name(m_time_of_day)),
+      QString::fromLatin1(Game::Map::representative_clock_time(m_time_of_day)));
 }
 
 void ArenaViewport::set_terrain_seed(int seed) {
@@ -2718,6 +2736,7 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
   QStringList lines;
   auto const& profile = Render::Profiling::global_profile();
   lines << QStringLiteral("FPS: %1").arg(static_cast<int>(m_fps + 0.5F));
+  lines << QStringLiteral("Time: %1").arg(lighting_summary());
   lines << QStringLiteral("Player: %1").arg(player_count);
   lines << QStringLiteral("Enemy:  %1").arg(enemy_count);
   lines << QStringLiteral("Avg/P95: %1 / %2 ms")

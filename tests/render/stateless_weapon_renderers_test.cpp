@@ -17,7 +17,9 @@
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/spear_renderer.h"
+#include "render/equipment/weapons/sword_carthage.h"
 #include "render/equipment/weapons/sword_renderer.h"
+#include "render/equipment/weapons/sword_roman.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/skeleton.h"
 #include "render/palette.h"
@@ -29,6 +31,7 @@ using Render::GL::BowRenderConfig;
 using Render::GL::BowRenderer;
 using Render::GL::CarthageShieldConfig;
 using Render::GL::CarthageShieldRenderer;
+using Render::GL::CarthageSwordRenderer;
 using Render::GL::DrawContext;
 using Render::GL::EquipmentBatch;
 using Render::GL::HumanoidAnimationContext;
@@ -38,6 +41,7 @@ using Render::GL::QuiverRenderConfig;
 using Render::GL::QuiverRenderer;
 using Render::GL::RomanScutumConfig;
 using Render::GL::RomanScutumRenderer;
+using Render::GL::RomanSwordRenderer;
 using Render::GL::ShieldRenderConfig;
 using Render::GL::ShieldRenderer;
 using Render::GL::SpearRenderConfig;
@@ -317,6 +321,35 @@ TEST(StatelessWeaponRenderers, SwordUsesArchetypePath) {
   EXPECT_EQ(via_submit.archetypes.size(), 1U);
   EXPECT_EQ(draw_count_of(via_submit), 13);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, FactionSwordsUseDistinctDarkFantasyProfiles) {
+  RomanSwordRenderer roman;
+  CarthageSwordRenderer carthage;
+  const SwordRenderConfig& roman_config = roman.base_config();
+  const SwordRenderConfig& carthage_config = carthage.base_config();
+
+  EXPECT_FLOAT_EQ(roman_config.blade_curve, 0.0F);
+  EXPECT_GT(roman_config.blade_mid_width_scale, 1.25F);
+  EXPECT_EQ(roman_config.blade_back_spike_count, 0);
+  EXPECT_GT(roman_config.guard_spike_length, 0.07F);
+
+  EXPECT_GT(carthage_config.blade_curve, 0.18F);
+  EXPECT_EQ(carthage_config.blade_back_spike_count, 3);
+  EXPECT_GT(carthage_config.blade_back_spike_length, 0.08F);
+  EXPECT_GT(carthage_config.sword_length, roman_config.sword_length);
+  EXPECT_NE(carthage_config.grip_color, roman_config.grip_color);
+
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+  EquipmentBatch roman_batch;
+  EquipmentBatch carthage_batch;
+  SwordRenderer::submit(roman_config, ctx, frames, palette, anim, roman_batch);
+  SwordRenderer::submit(carthage_config, ctx, frames, palette, anim, carthage_batch);
+  EXPECT_EQ(draw_count_of(carthage_batch), draw_count_of(roman_batch) + 3);
+  EXPECT_NE(hash_batch(roman_batch), hash_batch(carthage_batch));
 }
 
 TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
@@ -650,6 +683,25 @@ TEST(StatelessWeaponRenderers, BowHoldTiltsUpperLimbForward) {
   auto anim = make_anim();
   anim.inputs.is_in_hold_mode = true;
   anim.inputs.hold_entry_progress = 1.0F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch;
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames, palette, anim, batch);
+
+  ASSERT_FALSE(batch.archetypes.empty());
+  QVector3D const bow_up = batch.archetypes.front().world.column(1).toVector3D();
+  EXPECT_GT(bow_up.z(), 0.45F);
+  EXPECT_GT(bow_up.y(), 0.45F);
+}
+
+TEST(StatelessWeaponRenderers, BowAttackDoesNotDropPersistentHoldAngle) {
+  const auto frames = make_frames();
+  auto anim = make_anim();
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = false;
   const auto palette = make_palette();
   const auto ctx = make_ctx();
 

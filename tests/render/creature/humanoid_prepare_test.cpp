@@ -3859,6 +3859,32 @@ TEST(AnimationCoreStateManifest, ActionFlagsGateHoldAndGuardTargets) {
   EXPECT_FALSE(ranged_attack_targets.exiting_hold);
   EXPECT_FLOAT_EQ(ranged_attack_targets.hold_entry_progress, 1.0F);
   EXPECT_FALSE(ranged_attack_targets.guard);
+
+  auto const spear_attack_targets = Animation::resolve_humanoid_stance_targets({
+      .hold_requested = true,
+      .hold_entry_progress = 1.0F,
+      .action =
+          {
+              .is_attacking = true,
+              .is_melee = true,
+              .preserves_hold_pose = true,
+          },
+  });
+  EXPECT_TRUE(spear_attack_targets.hold);
+  EXPECT_FALSE(spear_attack_targets.exiting_hold);
+  EXPECT_FLOAT_EQ(spear_attack_targets.hold_entry_progress, 1.0F);
+
+  auto const held_hit_targets = Animation::resolve_humanoid_stance_targets({
+      .hold_requested = true,
+      .hold_entry_progress = 1.0F,
+      .action =
+          {
+              .preserves_hold_pose = true,
+              .is_hit_reacting = true,
+          },
+  });
+  EXPECT_TRUE(held_hit_targets.hold);
+  EXPECT_FALSE(held_hit_targets.exiting_hold);
 }
 
 TEST(AnimationCoreStateManifest, HoldExitRequestCarriesAuthoredExitProgress) {
@@ -4088,6 +4114,18 @@ TEST(AnimationCoreSelectionManifest, CombatLayerPolicyOwnsBlendAndOverlayRules) 
   EXPECT_EQ(rooted_overlay.upper_body_source, Animation::PlaybackLayerSource::Action);
   EXPECT_EQ(rooted_overlay.full_body_source, Animation::PlaybackLayerSource::None);
 
+  auto const held_overlay = Animation::resolve_combat_playback_layer_policy({
+      .has_authoritative_combat = true,
+      .phase = Animation::CombatTransactionPhase::Strike,
+      .phase_progress = 0.5F,
+      .attack_emphasis = 1.0F,
+      .preserve_base_stance = true,
+      .action_state_differs_from_base = true,
+  });
+  EXPECT_TRUE(held_overlay.use_base_selection);
+  EXPECT_EQ(held_overlay.upper_body_source, Animation::PlaybackLayerSource::None);
+  EXPECT_EQ(held_overlay.full_body_source, Animation::PlaybackLayerSource::None);
+
   auto const enter_blend = Animation::resolve_combat_playback_layer_policy({
       .has_authoritative_combat = true,
       .phase = Animation::CombatTransactionPhase::Anticipation,
@@ -4286,6 +4324,74 @@ TEST(HumanoidPrepare, MovingCombatSelectionProducesUpperBodyOverlay) {
   EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
   EXPECT_NE(selection.upper_body_overlay.state, selection.state);
   EXPECT_GT(selection.upper_body_overlay.weight, 0.7F);
+}
+
+TEST(HumanoidPrepare, HeldSpearCombatKeepsCompleteKneelingWeaponPose) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::CombatVisualTransactionPhase;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/held_spear_overlay";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::Strike;
+  anim.inputs.combat_visual.phase_progress = 0.5F;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Spear;
+  anim.attack_phase = 0.44F;
+
+  auto const selection = resolve_humanoid_animation_selection(spec, anim, 41U);
+
+  EXPECT_EQ(selection.state, AnimationStateId::Hold);
+  EXPECT_GT(selection.phase, 0.99F);
+  EXPECT_FALSE(selection.upper_body_overlay.active());
+  EXPECT_FALSE(selection.full_body_blend.active());
+}
+
+TEST(HumanoidPrepare, HeldBowCombatKeepsCompleteKneelingWeaponPose) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::CombatVisualTransactionPhase;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/held_bow_overlay";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = false;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Bow;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.is_melee = false;
+  anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::Strike;
+  anim.inputs.combat_visual.phase_progress = 0.5F;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Bow;
+  anim.attack_phase = 0.52F;
+
+  auto const selection = resolve_humanoid_animation_selection(spec, anim, 43U);
+
+  EXPECT_EQ(selection.state, AnimationStateId::Hold);
+  EXPECT_GT(selection.phase, 0.99F);
+  EXPECT_FALSE(selection.upper_body_overlay.active());
+  EXPECT_FALSE(selection.full_body_blend.active());
 }
 
 TEST(HumanoidPrepare, FormationMeleeKeepsLowerBodyOnRootedBaseLayer) {
@@ -6346,6 +6452,53 @@ TEST(HumanoidPrepare, HoldSamplingBlendsKneelInAndOutFromVisualState) {
   EXPECT_TRUE(exit_mid.is_exiting_hold);
   EXPECT_NEAR(exit_mid.hold_exit_progress, 0.5F, 1.0e-3F);
   EXPECT_NEAR(Render::GL::hold_transition_amount(exit_mid), 0.5F, 1.0e-3F);
+}
+
+TEST(HumanoidPrepare, HeldSpearAndBowAttacksKeepPersistentKneelingState) {
+  std::array const families{Engine::Core::CombatAttackFamily::Spear,
+                            Engine::Core::CombatAttackFamily::Bow};
+  std::array const spawn_types{Game::Units::SpawnType::Spearman,
+                               Game::Units::SpawnType::Archer};
+  for (std::size_t index = 0; index < families.size(); ++index) {
+    Render::GL::DrawContext ctx{};
+    ctx.allow_template_cache = false;
+
+    Engine::Core::Entity entity(820 + index);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(unit, nullptr);
+    unit->spawn_type = spawn_types[index];
+    ASSERT_NE(entity.add_component<Render::Creature::HumanoidAnimationStateComponent>(),
+              nullptr);
+    auto* hold_mode = entity.add_component<Engine::Core::HoldModeComponent>();
+    ASSERT_NE(hold_mode, nullptr);
+    hold_mode->active = true;
+    hold_mode->kneel_entry_progress = 1.0F;
+    hold_mode->kneel_duration = 1.0F;
+    auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
+    ASSERT_NE(combat_state, nullptr);
+    ctx.entity = &entity;
+
+    ctx.animation_time = 1.0F;
+    (void)Render::GL::sample_anim_state(ctx);
+    ctx.animation_time = 2.0F;
+    auto const fully_knelt = Render::GL::sample_anim_state(ctx);
+    ASSERT_TRUE(fully_knelt.is_in_hold_mode);
+    ASSERT_FLOAT_EQ(fully_knelt.hold_entry_progress, 1.0F);
+
+    combat_state->animation_state = Engine::Core::CombatAnimationState::Strike;
+    combat_state->attack_family = families[index];
+    combat_state->state_time = 0.05F;
+    combat_state->state_duration =
+        Engine::Core::CombatStateComponent::k_strike_duration;
+    ctx.animation_time = 2.25F;
+    auto const attacking = Render::GL::sample_anim_state(ctx);
+
+    EXPECT_TRUE(attacking.is_attacking);
+    EXPECT_EQ(attacking.attack_family, families[index]);
+    EXPECT_TRUE(attacking.is_in_hold_mode);
+    EXPECT_FALSE(attacking.is_exiting_hold);
+    EXPECT_FLOAT_EQ(attacking.hold_entry_progress, 1.0F);
+  }
 }
 
 TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {

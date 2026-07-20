@@ -14,7 +14,9 @@ namespace {
 
 auto humanoid_action_blocks_hold_pose(const HumanoidActionBlockInputs& action) noexcept
     -> bool {
-  return (action.is_attacking && action.is_melee) || action.is_hit_reacting ||
+  bool const transient_combat_pose =
+      (action.is_attacking && action.is_melee) || action.is_hit_reacting;
+  return (transient_combat_pose && !action.preserves_hold_pose) ||
          action.is_constructing || action.is_healing || action.is_dying ||
          action.is_dead;
 }

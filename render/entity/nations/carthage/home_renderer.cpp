@@ -302,6 +302,13 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                        BuildingStateMask::All,
                        BuildingLODMask::Full);
 
+  add_punic_tanit_relief(desc,
+                         QVector3D(0.985F, 0.94F, 0.0F),
+                         BuildingFacadePlane::ZY,
+                         0.46F,
+                         c.royal_purple,
+                         c.stone_dark);
+
   return build_building_archetype(desc, state);
 }
 

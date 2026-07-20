@@ -13,6 +13,7 @@
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../defense_tower_renderer_common.h"
 #include "../../registry.h"
@@ -224,6 +225,16 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
     desc.add_box(
         QVector3D(0.28F, 1.36F, -0.20F), QVector3D(0.14F, 0.10F, 0.12F), c.terracotta);
+  }
+
+  if (!destroyed) {
+    add_roman_aquila_relief(
+        desc,
+        QVector3D(0.0F, damaged ? 1.43F : 1.62F, shaft_radius + 0.02F),
+        BuildingFacadePlane::XY,
+        damaged ? 0.54F : 0.68F,
+        c.gold,
+        c.blue_accent);
   }
 
   return build_building_archetype(desc, state);

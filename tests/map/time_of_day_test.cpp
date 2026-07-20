@@ -64,4 +64,15 @@ TEST(TimeOfDayTest, DefaultMapTimeOfDayIsDay) {
   EXPECT_EQ(map.time_of_day, TimeOfDay::Day);
 }
 
+TEST(TimeOfDayTest, PresetsHaveStableArenaLabelsAndRepresentativeClockTimes) {
+  EXPECT_STREQ(time_of_day_name(TimeOfDay::Morning), "Morning");
+  EXPECT_STREQ(representative_clock_time(TimeOfDay::Morning), "07:00");
+  EXPECT_STREQ(time_of_day_name(TimeOfDay::Day), "Day");
+  EXPECT_STREQ(representative_clock_time(TimeOfDay::Day), "13:00");
+  EXPECT_STREQ(time_of_day_name(TimeOfDay::Afternoon), "Afternoon");
+  EXPECT_STREQ(representative_clock_time(TimeOfDay::Afternoon), "17:00");
+  EXPECT_STREQ(time_of_day_name(TimeOfDay::Night), "Night");
+  EXPECT_STREQ(representative_clock_time(TimeOfDay::Night), "22:00");
+}
+
 } // namespace

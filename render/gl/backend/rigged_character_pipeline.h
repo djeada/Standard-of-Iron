@@ -42,14 +42,18 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  auto draw(const RiggedCreatureCmd& cmd, const QMatrix4x4& view_proj) -> bool;
+  auto draw(const RiggedCreatureCmd& cmd,
+            const QMatrix4x4& view_proj,
+            const QVector3D& camera_position = {}) -> bool;
 
   auto draw_instanced(const RiggedCreatureCmd* cmds,
                       std::size_t count,
-                      const QMatrix4x4& view_proj) -> bool;
+                      const QMatrix4x4& view_proj,
+                      const QVector3D& camera_position = {}) -> bool;
   auto draw_instanced(const RiggedCreatureCmd* const* cmds,
                       std::size_t count,
-                      const QMatrix4x4& view_proj) -> bool;
+                      const QMatrix4x4& view_proj,
+                      const QVector3D& camera_position = {}) -> bool;
 
   [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
   [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
@@ -93,6 +97,9 @@ public:
     GL::Shader::UniformHandle material_id{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle role_colors{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle role_color_count{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
   };
 
   [[nodiscard]] auto uniforms() const -> const Uniforms& { return m_uniforms; }
@@ -108,6 +115,9 @@ private:
 
   GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
   GL::Shader::UniformHandle m_instanced_role_color_tbo{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_light_dir{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_ambient_strength{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_camera_position{GL::Shader::InvalidUniform};
 
   std::size_t m_max_instances_per_batch = 0;
 

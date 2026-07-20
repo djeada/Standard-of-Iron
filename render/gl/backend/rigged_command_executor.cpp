@@ -72,7 +72,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         const std::size_t chunk_count = chunk_end - j;
         if (chunk_count < 2U) {
           const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
-          m_rigged_character_pipeline->draw(single, view_proj);
+          m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
           ++debug_rigged_single_draws;
           m_last_bound_shader = m_rigged_character_pipeline->shader();
           m_last_bound_texture = single.texture;
@@ -87,8 +87,10 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
               &std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
         }
         ++debug_rigged_instanced_attempts;
-        if (m_rigged_character_pipeline->draw_instanced(
-                rig_batch_refs.data(), rig_batch_refs.size(), view_proj)) {
+        if (m_rigged_character_pipeline->draw_instanced(rig_batch_refs.data(),
+                                                        rig_batch_refs.size(),
+                                                        view_proj,
+                                                        cam.get_position())) {
           ++debug_rigged_instanced_successes;
           m_last_bound_shader = m_rigged_character_pipeline->instanced_shader();
           m_last_bound_texture = nullptr;
@@ -105,7 +107,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
     if (rig_fallback_start < batch_end) {
       for (std::size_t j = rig_fallback_start; j < batch_end; ++j) {
         const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
-        m_rigged_character_pipeline->draw(single, view_proj);
+        m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
         ++debug_rigged_single_draws;
         m_last_bound_shader = m_rigged_character_pipeline->shader();
         m_last_bound_texture = single.texture;

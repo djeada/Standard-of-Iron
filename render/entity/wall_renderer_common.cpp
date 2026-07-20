@@ -209,7 +209,7 @@ void add_masonry_span(BuildingArchetypeDesc& desc,
   desc.add_box(QVector3D(center.x(), 1.48F, center.z()),
                along_x ? QVector3D(length + 0.12F, 0.12F, 0.46F)
                        : QVector3D(0.46F, 0.12F, length + 0.12F),
-               palette.wood_light);
+               palette.masonry_accent);
 
   constexpr int k_merlons = 4;
   for (int i = 0; i < k_merlons; ++i) {
@@ -221,7 +221,7 @@ void add_masonry_span(BuildingArchetypeDesc& desc,
     desc.add_box(merlon_center,
                  along_x ? QVector3D(0.18F, 0.26F, 0.44F)
                          : QVector3D(0.44F, 0.26F, 0.18F),
-                 (i % 2 == 0) ? palette.wood_light : palette.wood_mid,
+                 (i % 2 == 0) ? palette.masonry_accent : palette.wood_light,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
@@ -230,8 +230,9 @@ void add_masonry_span(BuildingArchetypeDesc& desc,
 void add_masonry_center(BuildingArchetypeDesc& desc, const WallPalette& palette) {
   desc.add_box(
       QVector3D(0.0F, 0.78F, 0.0F), QVector3D(0.52F, 1.40F, 0.52F), palette.wood_dark);
-  desc.add_box(
-      QVector3D(0.0F, 1.52F, 0.0F), QVector3D(0.58F, 0.14F, 0.58F), palette.wood_light);
+  desc.add_box(QVector3D(0.0F, 1.52F, 0.0F),
+               QVector3D(0.58F, 0.14F, 0.58F),
+               palette.masonry_accent);
 }
 
 void add_earthwork_span(BuildingArchetypeDesc& desc,

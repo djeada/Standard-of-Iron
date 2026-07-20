@@ -119,6 +119,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   AllLivingSoldiersFight,
   MovementAnimationObserved,
   AttackAnimationObserved,
+  HoldPoseMaintained,
   RepeatedAttackAnimationObserved,
   AttackHasVisibleContact,
   AttackRecoveryObserved,

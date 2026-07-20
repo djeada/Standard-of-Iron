@@ -146,6 +146,11 @@ auto resolve_combat_playback_layer_policy(
     return policy;
   }
 
+  if (inputs.preserve_base_stance) {
+    policy.use_base_selection = true;
+    return policy;
+  }
+
   if (inputs.rooted_action && inputs.action_state_differs_from_base &&
       policy.combat_weight > 0.01F) {
     policy.use_base_selection = true;
