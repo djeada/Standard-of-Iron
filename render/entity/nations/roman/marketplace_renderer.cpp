@@ -251,6 +251,13 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                        k_marketplace_team_slot,
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
+  add_roman_aquila_relief(desc,
+                          QVector3D(0.99F, 0.62F * height_multiplier, 0.0F),
+                          BuildingFacadePlane::ZY,
+                          0.72F,
+                          c.gold,
+                          c.blue_accent);
+
   return build_building_archetype(desc, state);
 }
 

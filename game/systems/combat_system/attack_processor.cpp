@@ -647,6 +647,23 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     -> float {
   float multiplier = 1.0F;
 
+  auto const* attack = attacker->get_component<Engine::Core::AttackComponent>();
+  bool const melee_attack =
+      attack != nullptr &&
+      attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+  bool const target_is_siege =
+      target_unit->spawn_type == Game::Units::SpawnType::Catapult ||
+      target_unit->spawn_type == Game::Units::SpawnType::Ballista;
+  bool const attacker_is_infantry =
+      !Game::Units::is_cavalry(attacker_unit->spawn_type) &&
+      attacker_unit->spawn_type != Game::Units::SpawnType::Elephant &&
+      attacker_unit->spawn_type != Game::Units::SpawnType::Catapult &&
+      attacker_unit->spawn_type != Game::Units::SpawnType::Ballista &&
+      attacker_unit->spawn_type != Game::Units::SpawnType::Barracks;
+  if (melee_attack && attacker_is_infantry && target_is_siege) {
+    multiplier *= Constants::k_infantry_melee_vs_siege_multiplier;
+  }
+
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
     if (target_unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
         target_unit->spawn_type == Game::Units::SpawnType::HorseSpearman ||

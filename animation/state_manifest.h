@@ -5,6 +5,7 @@ namespace Animation {
 struct HumanoidActionBlockInputs {
   bool is_attacking{false};
   bool is_melee{false};
+  bool preserves_hold_pose{false};
   bool is_hit_reacting{false};
   bool is_constructing{false};
   bool is_healing{false};

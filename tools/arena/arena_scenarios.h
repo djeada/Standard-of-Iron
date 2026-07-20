@@ -11,6 +11,7 @@ namespace Arena::Scenarios {
 inline constexpr char k_sword_duel_id[] = "sword_duel";
 inline constexpr char k_spear_duel_id[] = "spear_duel";
 inline constexpr char k_bow_exchange_id[] = "bow_exchange";
+inline constexpr char k_held_weapon_stances_id[] = "held_weapon_stances";
 inline constexpr char k_mounted_charge_id[] = "mounted_charge";
 inline constexpr char k_braced_spear_charge_id[] = "braced_spear_charge";
 inline constexpr char k_mounted_sword_duel_id[] = "mounted_sword_duel";

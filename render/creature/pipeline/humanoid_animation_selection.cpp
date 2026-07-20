@@ -313,6 +313,7 @@ auto resolve_humanoid_animation_selection(
       .mounted = anim.inputs.is_mounted,
       .moving = moving,
       .forced_displacement = anim.inputs.visual_movement.forced_displacement,
+      .preserve_base_stance = anim.inputs.is_in_hold_mode,
       .rooted_action = anim.inputs.is_in_melee_lock,
       .action_state_differs_from_base = action_selection.state != base_selection.state,
       .selection_state_differs_from_base = selection.state != base_selection.state,

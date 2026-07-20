@@ -79,6 +79,12 @@ public slots:
   void set_ground_type(const QString& ground_type);
   void set_rain_enabled(bool enabled);
   void set_rain_intensity(float intensity);
+  void set_time_of_day(Game::Map::TimeOfDay time_of_day);
+
+  [[nodiscard]] auto time_of_day() const noexcept -> Game::Map::TimeOfDay {
+    return m_time_of_day;
+  }
+  [[nodiscard]] auto lighting_summary() const -> QString;
 
   void set_spawn_owner(int owner_id);
   void set_spawn_nation(const QString& nation_id);
@@ -139,6 +145,7 @@ signals:
   void
   scenario_finished(const QString& scenario_id, bool passed, const QString& summary);
   void frame_rendered();
+  void lighting_changed(const QString& summary);
 
 protected:
   void initializeGL() override;
@@ -228,6 +235,7 @@ private:
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
+  Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   QString m_animation_name = QStringLiteral("Idle");
 
   std::unique_ptr<Engine::Core::World> m_world;

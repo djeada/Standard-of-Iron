@@ -25,7 +25,7 @@ enum CarthageLightPaletteSlot : std::uint8_t {
 
 auto carthage_light_helmet_shell_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
+    std::array<GeneratedEquipmentPrimitive, 7> const primitives{{
         generated_sphere(QVector3D(0.0F, 0.58F, 0.0F), 1.55F, k_metal_slot, 1.0F, 2),
         generated_cylinder(QVector3D(0.0F, -0.38F, 0.0F),
                            QVector3D(0.0F, -0.05F, 0.0F),
@@ -46,6 +46,18 @@ auto carthage_light_helmet_shell_archetype() -> const RenderArchetype& {
                        1.0F,
                        2),
         generated_sphere(QVector3D(0.0F, 3.76F, 0.47F), 0.155F, k_metal_slot, 1.0F, 2),
+        generated_cone(QVector3D(-1.06F, 1.18F, -0.10F),
+                       QVector3D(-1.72F, 1.52F, -0.42F),
+                       0.18F,
+                       k_metal_dark_slot,
+                       1.0F,
+                       2),
+        generated_cone(QVector3D(1.06F, 1.18F, -0.10F),
+                       QVector3D(1.72F, 1.52F, -0.42F),
+                       0.18F,
+                       k_metal_dark_slot,
+                       1.0F,
+                       2),
     }};
     return build_generated_equipment_archetype("carthage_light_shell", primitives);
   }();

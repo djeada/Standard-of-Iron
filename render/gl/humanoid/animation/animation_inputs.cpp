@@ -140,6 +140,7 @@ void reset_humanoid_animation_state(
   return {
       .is_attacking = anim.is_attacking,
       .is_melee = anim.is_melee,
+      .preserves_hold_pose = anim.hold_attack_preserves_pose,
       .is_hit_reacting = anim.is_hit_reacting,
       .is_constructing = anim.is_constructing,
       .is_healing = anim.is_healing,
@@ -508,6 +509,13 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     return finalize_sample(anim);
   }
 
+  if (auto const* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+      unit != nullptr) {
+    anim.hold_attack_preserves_pose =
+        unit->spawn_type == Game::Units::SpawnType::Spearman ||
+        unit->spawn_type == Game::Units::SpawnType::Archer;
+  }
+
   auto* humanoid_state = Engine::Core::get_or_add_component<
       Render::Creature::HumanoidAnimationStateComponent>(ctx.entity);
   auto* presentation =
@@ -523,6 +531,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.visual_movement = resolve_visual_movement_state(ctx);
     anim.movement_state = anim.visual_movement.movement_state;
     apply_presentation_sample(anim, *presentation);
+    if (anim.hold_attack_preserves_pose && presentation->hold_requested) {
+      anim.is_hit_reacting = false;
+      anim.hit_reaction_intensity = 0.0F;
+      anim.hit_recoil_x = 0.0F;
+      anim.hit_recoil_z = 0.0F;
+    }
     attack_from_combat_state = presentation->attack_from_combat_state;
     attack_from_melee_lock = presentation->attack_from_melee_lock;
 

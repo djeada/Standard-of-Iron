@@ -24,6 +24,7 @@
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_motion.h"
 #include "render/elephant/elephant_renderer_base.h"
+#include "render/elephant/elephant_source_asset.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/elephant/prepare.h"
 #include "render/gl/humanoid/humanoid_types.h"
@@ -358,15 +359,16 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
 
   Render::GL::ElephantMotionSample const motion =
       Render::GL::evaluate_elephant_motion(profile, anim);
+  auto expected_howdah = base_howdah;
+  ASSERT_TRUE(Render::Elephant::elephant_source_pose_howdah(
+      "Angry", motion.phase, expected_howdah));
 
   EXPECT_FLOAT_EQ(motion.gait.cycle_time, baseline_cycle);
   EXPECT_FLOAT_EQ(profile.gait.cycle_time, baseline_cycle);
-  EXPECT_NEAR(motion.howdah.howdah_center.y(),
-              base_howdah.howdah_center.y() + motion.bob,
-              0.0001F);
-  EXPECT_NEAR(motion.howdah.seat_position.y(),
-              base_howdah.seat_position.y() + motion.bob,
-              0.0001F);
+  EXPECT_NEAR(
+      motion.howdah.howdah_center.y(), expected_howdah.howdah_center.y(), 0.0001F);
+  EXPECT_NEAR(
+      motion.howdah.seat_position.y(), expected_howdah.seat_position.y(), 0.0001F);
   EXPECT_NEAR(
       motion.barrel_center.y(), profile.dims.barrel_center_y + motion.bob, 0.0001F);
   EXPECT_NEAR(motion.barrel_center.x(), motion.body_sway, 0.0001F);

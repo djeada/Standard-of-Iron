@@ -133,6 +133,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("MovementAnimationObserved");
   case ArenaExpectationKind::AttackAnimationObserved:
     return QStringLiteral("AttackAnimationObserved");
+  case ArenaExpectationKind::HoldPoseMaintained:
+    return QStringLiteral("HoldPoseMaintained");
   case ArenaExpectationKind::RepeatedAttackAnimationObserved:
     return QStringLiteral("RepeatedAttackAnimationObserved");
   case ArenaExpectationKind::AttackHasVisibleContact:
@@ -1386,6 +1388,23 @@ struct ArenaScenarioRunner::Impl {
                           .arg(elapsed - previous.terminal_pose_since, 0, 'f', 2),
                       entity_id,
                       soldier.soldier_index);
+          }
+        }
+        if (expectation.kind == ArenaExpectationKind::HoldPoseMaintained && !culled) {
+          auto const* hold = entity->get_component<Engine::Core::HoldModeComponent>();
+          if (hold != nullptr && hold->active &&
+              soldier.animation_state != Render::Creature::AnimationStateId::Hold) {
+            add_issue(
+                QStringLiteral("hold_pose_replaced"),
+                QStringLiteral("%1 entity %2 soldier %3 rendered %4 while Hold was "
+                               "active")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(soldier.soldier_index)
+                    .arg(QString::fromLatin1(Render::Profiling::animation_state_name(
+                        soldier.animation_state))),
+                entity_id,
+                soldier.soldier_index);
           }
         }
       }

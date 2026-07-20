@@ -57,6 +57,9 @@ struct AnimationInputs {
   bool is_attacking;
   bool is_melee;
   bool is_in_hold_mode;
+  // The unit's equipped role, rather than a transient combat frame, decides
+  // whether Hold owns the complete body and weapon-socket pose while firing.
+  bool hold_attack_preserves_pose{false};
   bool is_exiting_hold;
   float hold_exit_progress;
   float hold_entry_progress;
