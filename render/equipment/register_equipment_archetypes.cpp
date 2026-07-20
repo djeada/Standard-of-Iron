@@ -5,6 +5,7 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
+#include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "horse/armor/champion_renderer.h"
@@ -31,6 +32,18 @@ void register_equipment_archetypes() {
                         [] { (void)roman_light_helmet_archetype(); });
   ar.register_archetype("roman_heavy_helmet",
                         [] { (void)roman_heavy_helmet_archetype(); });
+  ar.register_archetype("roman_montefortino_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::RomanMontefortino);
+  });
+  ar.register_archetype("roman_boeotian_cavalry_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::RomanBoeotianCavalry);
+  });
+  ar.register_archetype("carthage_punic_conical_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::CarthagePunicConical);
+  });
+  ar.register_archetype("carthage_thracian_crested_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::CarthageThracianCrested);
+  });
   ar.register_archetype("headwrap_helmet", [] { (void)headwrap_helmet_archetype(); });
   ar.register_archetype("carthage_light_helmet_shell",
                         [] { (void)carthage_light_helmet_shell_archetype(); });

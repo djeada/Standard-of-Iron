@@ -62,19 +62,9 @@ auto resolve_soldier_layout_policy(const SoldierLayoutPolicyInputs& inputs) noex
         inputs.row, inputs.col, inputs.rows, inputs.cols, policy.inst_seed);
   }
 
-  if (inputs.melee_attack) {
-    float const combat_jitter_x =
-        (layout_random(rng_state) - 0.5F) * inputs.formation_spacing * 0.4F;
-    float const combat_jitter_z =
-        (layout_random(rng_state) - 0.5F) * inputs.formation_spacing * 0.3F;
-    float const sway_time = inputs.sample_time + policy.phase_offset * 2.0F;
-    float const sway_x = std::sin(sway_time * 1.5F) * 0.05F;
-    float const sway_z = std::cos(sway_time * 1.2F) * 0.04F;
-    float const combat_yaw = (layout_random(rng_state) - 0.5F) * 15.0F;
-    policy.offset_x_delta += combat_jitter_x + sway_x;
-    policy.offset_z_delta += combat_jitter_z + sway_z;
-    policy.yaw_delta += combat_yaw;
-  }
+  // Formation roots are authoritative spatial slots.  Combat variation belongs
+  // to the skeletal pose, never to root placement; otherwise gameplay contact
+  // and the visible soldier positions describe different battlefields.
 
   return policy;
 }

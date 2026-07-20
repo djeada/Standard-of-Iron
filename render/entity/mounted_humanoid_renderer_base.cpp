@@ -107,7 +107,7 @@ MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
 auto MountedHumanoidRendererBase::mounted_visual_spec() const
     -> const Render::Creature::Pipeline::MountedSpec& {
   if (!m_mounted_visual_spec_baked) {
-    m_mounted_visual_spec_cache.rider = HumanoidRendererBase::visual_spec();
+    m_mounted_visual_spec_cache.rider = visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
     if (m_mounted_visual_spec_cache.rider.archetype_id ==
@@ -119,6 +119,7 @@ auto MountedHumanoidRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.mount.kind =
         Render::Creature::Pipeline::CreatureKind::Horse;
     m_mounted_visual_spec_cache.mount.archetype_id = m_mount_archetype_id;
+    m_mounted_visual_spec_cache.mount.debug_name = m_mount_debug_name;
     m_mounted_visual_spec_cache.mount_socket = Render::Creature::k_invalid_socket;
     m_mounted_visual_spec_baked = true;
   }

@@ -1,6 +1,7 @@
 #include "combat_animation_diagnostics.h"
 
 #include <QDebug>
+#include <QtMath>
 
 #include <algorithm>
 #include <cmath>
@@ -15,6 +16,8 @@ namespace {
 constexpr float k_attack_phase_reset_epsilon = 0.02F;
 constexpr float k_churn_window_seconds = 1.0F;
 constexpr std::uint32_t k_churn_threshold = 5U;
+constexpr std::uint32_t k_extreme_churn_threshold = 8U;
+constexpr float k_rapid_cycle_seconds = 0.30F;
 
 auto visual_state_from_sample(const SoldierAnimationDebugSample& sample) noexcept
     -> SoldierVisualState {
@@ -23,6 +26,9 @@ auto visual_state_from_sample(const SoldierAnimationDebugSample& sample) noexcep
   }
   if (sample.animation_state == Render::Creature::AnimationStateId::Die) {
     return SoldierVisualState::Dying;
+  }
+  if (sample.is_hit_reacting) {
+    return SoldierVisualState::HitReaction;
   }
   if (sample.is_attacking) {
     return SoldierVisualState::Attack;
@@ -202,6 +208,7 @@ void CombatAnimationDiagnostics::begin_frame(std::uint64_t frame_index) {
     return;
   }
   m_units.clear();
+  m_mode_indicator_entities.clear();
 }
 
 void CombatAnimationDiagnostics::record_unit_sample(
@@ -252,20 +259,49 @@ void CombatAnimationDiagnostics::record_soldier_sample(
   }
 
   if (recorded.visual_state_changed) {
-    tracker.transition_times.push_back(recorded.sample_time);
+
+    bool const hit_transition =
+        recorded.visual_state == SoldierVisualState::HitReaction ||
+        tracker.last_visual_state == SoldierVisualState::HitReaction;
+    if (!hit_transition) {
+      tracker.transition_times.push_back(recorded.sample_time);
+      tracker.transition_states.push_back(recorded.visual_state);
+    }
   }
-  tracker.transition_times.erase(std::remove_if(tracker.transition_times.begin(),
-                                                tracker.transition_times.end(),
-                                                [&](float transition_time) {
-                                                  return recorded.sample_time -
-                                                             transition_time >
-                                                         k_churn_window_seconds;
-                                                }),
-                                 tracker.transition_times.end());
+  if (recorded.visual_state == SoldierVisualState::Dying ||
+      recorded.visual_state == SoldierVisualState::Dead) {
+
+    tracker.transition_times.clear();
+    tracker.transition_states.clear();
+  }
+  while (!tracker.transition_times.empty() &&
+         recorded.sample_time - tracker.transition_times.front() >
+             k_churn_window_seconds) {
+    tracker.transition_times.erase(tracker.transition_times.begin());
+    tracker.transition_states.erase(tracker.transition_states.begin());
+  }
 
   recorded.transitions_last_second =
       static_cast<std::uint32_t>(tracker.transition_times.size());
-  recorded.churn_flagged = recorded.transitions_last_second >= k_churn_threshold;
+  std::uint32_t rapid_cycle_returns = 0U;
+  for (std::size_t index = 2; index < tracker.transition_times.size(); ++index) {
+    for (std::size_t const cycle_length : {2U, 3U}) {
+      if (index >= cycle_length &&
+          tracker.transition_states[index] ==
+              tracker.transition_states[index - cycle_length] &&
+          tracker.transition_times[index] -
+                  tracker.transition_times[index - cycle_length] <
+              k_rapid_cycle_seconds) {
+        ++rapid_cycle_returns;
+        break;
+      }
+    }
+  }
+
+  recorded.churn_flagged =
+      (recorded.transitions_last_second >= k_churn_threshold &&
+       rapid_cycle_returns >= 2U) ||
+      recorded.transitions_last_second >= k_extreme_churn_threshold;
 
   if (recorded.churn_flagged && m_logging_enabled &&
       tracker.last_logged_frame != m_frame_index) {
@@ -293,6 +329,43 @@ void CombatAnimationDiagnostics::record_soldier_sample(
   if (recorded.churn_flagged) {
     ++unit.flagged_soldiers;
   }
+}
+
+void CombatAnimationDiagnostics::record_submitted_body_pose(std::uint32_t entity_id,
+                                                            std::uint16_t soldier_index,
+                                                            float body_up_y,
+                                                            float max_arm_reach) {
+  if (!active()) {
+    return;
+  }
+  auto found = m_units.find(entity_id);
+  if (found == m_units.end()) {
+    return;
+  }
+  auto& soldiers = found->second.soldiers;
+  auto const sample = std::find_if(
+      soldiers.rbegin(), soldiers.rend(), [soldier_index](const auto& soldier) {
+        return soldier.soldier_index == static_cast<int>(soldier_index);
+      });
+  if (sample == soldiers.rend()) {
+    return;
+  }
+  sample->submitted_body_up_y = std::clamp(body_up_y, -1.0F, 1.0F);
+  sample->submitted_body_tilt_degrees =
+      qRadiansToDegrees(std::acos(sample->submitted_body_up_y));
+  sample->submitted_max_arm_reach = std::max(0.0F, max_arm_reach);
+  sample->submitted_body_pose_valid = true;
+}
+
+void CombatAnimationDiagnostics::record_mode_indicator(std::uint32_t entity_id) {
+  if (active() && entity_id != 0U) {
+    m_mode_indicator_entities.insert(entity_id);
+  }
+}
+
+auto CombatAnimationDiagnostics::mode_indicator_submitted(
+    std::uint32_t entity_id) const noexcept -> bool {
+  return active() && m_mode_indicator_entities.contains(entity_id);
 }
 
 auto CombatAnimationDiagnostics::find_unit(std::uint32_t entity_id) const

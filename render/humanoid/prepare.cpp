@@ -23,13 +23,6 @@ auto HumanoidRendererBase::resolve_team_tint(const DrawContext& ctx) -> QVector3
   return tunic;
 }
 
-auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> int {
-  if (unit.render_individuals_per_unit_override > 0) {
-    return unit.render_individuals_per_unit_override;
-  }
-  return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
-}
-
 auto archetype_has_left_hand_attachment(
     Render::Creature::ArchetypeId archetype_id) noexcept -> bool {
   auto const* desc = Render::Creature::ArchetypeRegistry::instance().get(archetype_id);
@@ -66,8 +59,8 @@ auto guard_shield_family(const Engine::Core::UnitComponent* unit) noexcept
 auto shared_guard_shield_pose(
     const Engine::Core::UnitComponent* unit,
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
-    const Engine::Core::FormationModeComponent* formation_mode,
-    const Engine::Core::GuardModeComponent* guard_mode,
+    bool formation_active,
+    bool guard_mode_active,
     int row,
     int col,
     int rows,
@@ -80,8 +73,8 @@ auto shared_guard_shield_pose(
       .has_left_hand_shield =
           archetype_has_left_hand_attachment(visual_spec.archetype_id),
       .infantry_formation_unit = unit->spawn_type == Game::Units::SpawnType::Knight,
-      .formation_active = formation_mode != nullptr && formation_mode->active,
-      .guard_mode_active = guard_mode != nullptr && guard_mode->active,
+      .formation_active = formation_active,
+      .guard_mode_active = guard_mode_active,
       .shield_family = guard_shield_family(unit),
       .row = row,
       .col = col,
@@ -137,21 +130,19 @@ auto HumanoidRendererBase::resolve_formation(
   params.spacing = 0.75F;
 
   if (ctx.entity != nullptr) {
-    auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr) {
-      params.individuals_per_unit = resolved_individuals_per_unit(*unit);
-      params.max_per_row =
-          Game::Units::TroopConfig::instance().get_max_units_per_row(unit->spawn_type);
-      if (auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type)) {
-        auto const profile = Game::Systems::TroopProfileService::instance().get_profile(
-            unit->nation_id, *troop_type);
-        params.spacing = resolve_formation_spacing(unit->spawn_type,
-                                                   profile.visuals.formation_spacing,
-                                                   owner.get_mount_scale());
-      } else {
-        params.spacing =
-            resolve_formation_spacing(unit->spawn_type, 0.0F, owner.get_mount_scale());
-      }
+    auto const* presentation =
+        ctx.entity->get_component<Engine::Core::FormationPresentationComponent>();
+    if (presentation != nullptr && !presentation->soldiers.empty()) {
+      params.individuals_per_unit = static_cast<int>(presentation->soldiers.size());
+      params.max_per_row = static_cast<int>(presentation->cols);
+      params.spacing = presentation->spacing;
+    } else if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+               unit != nullptr) {
+
+      auto const definition = Game::Systems::FormationCombat::resolve_definition(*unit);
+      params.individuals_per_unit = definition.total_count;
+      params.max_per_row = definition.max_per_row;
+      params.spacing = definition.spacing;
     }
   } else if (owner.uses_mounted_pipeline()) {
     params.spacing = resolve_formation_spacing(

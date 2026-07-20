@@ -751,16 +751,15 @@ TEST_F(HumanoidPoseControllerTest, MeleeStrikeAppliesTorsoTwistAtStrike) {
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
 }
 
-TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtChamber) {
+TEST_F(HumanoidPoseControllerTest, SpearThrustMovesShouldersForwardTogether) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
   controller.spear_thrust(0.23F);
 
-  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
-
-  EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+  EXPECT_NEAR(pose.shoulder_l.z(), pose.shoulder_r.z(), 0.0001F);
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustReadyGripKeepsHandsClearAndAligned) {
@@ -769,8 +768,8 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustReadyGripKeepsHandsClearAndAligned
   controller.spear_thrust(0.0F);
 
   EXPECT_GT(pose.hand_r.x(), 0.5F * HumanProportions::SHOULDER_WIDTH);
-  EXPECT_GT(pose.hand_r.z(), 0.28F);
-  EXPECT_GT(pose.hand_l.x(), 0.18F);
+  EXPECT_GT(pose.hand_r.z(), 0.10F);
+  EXPECT_GT(pose.hand_l.x(), 0.15F);
   EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
   EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.04F);
 }
@@ -888,16 +887,15 @@ TEST_F(HumanoidPoseControllerTest,
   EXPECT_LT(combat_pose.pelvis_pos.y(), builder_pose.pelvis_pos.y());
 }
 
-TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {
+TEST_F(HumanoidPoseControllerTest, SpearThrustVariantMovesShouldersForwardTogether) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
   controller.spear_thrust_variant(0.23F, 0);
 
-  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
-
-  EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+  EXPECT_NEAR(pose.shoulder_l.z(), pose.shoulder_r.z(), 0.0001F);
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustVariantReadyGripMatchesNormalStance) {
@@ -906,8 +904,8 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustVariantReadyGripMatchesNormalStanc
   controller.spear_thrust_variant(0.0F, 0);
 
   EXPECT_GT(pose.hand_r.x(), 0.5F * HumanProportions::SHOULDER_WIDTH);
-  EXPECT_GT(pose.hand_r.z(), 0.28F);
-  EXPECT_GT(pose.hand_l.x(), 0.18F);
+  EXPECT_GT(pose.hand_r.z(), 0.10F);
+  EXPECT_GT(pose.hand_l.x(), 0.15F);
   EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
   EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.04F);
 }
@@ -920,7 +918,7 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustVariantDrivesPelvisAndHeadAtExtens
 
   controller.spear_thrust_variant(0.60F, 0);
 
-  EXPECT_LT(pose.pelvis_pos.y(), original_pelvis.y());
+  EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), original_pelvis.y());
   EXPECT_GT(pose.pelvis_pos.z(), original_pelvis.z());
   EXPECT_GT(pose.head_pos.z(), original_head.z());
 }

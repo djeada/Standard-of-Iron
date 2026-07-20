@@ -7,6 +7,7 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../combat_rules.h"
+#include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::Combat {
@@ -162,15 +163,26 @@ auto is_in_range(Engine::Core::Entity* attacker,
   float const dy = target_transform->position.y - attacker_transform->position.y;
   float const distance_squared = dx * dx + dz * dz;
 
-  float const effective_range = range + combat_radius(target);
+  auto* attacker_atk = attacker->get_component<Engine::Core::AttackComponent>();
+  bool const melee =
+      (attacker_atk != nullptr) &&
+      attacker_atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+  auto const formation_geometry =
+      Game::Systems::FormationCombat::contact_geometry(*attacker, *target);
+  if (melee && formation_geometry.uses_formation_slots) {
+    if (!Game::Systems::FormationCombat::contact_is_active(
+            *attacker, *target, formation_geometry)) {
+      return false;
+    }
+  } else {
+    float const effective_range = range + combat_radius(target);
 
-  if (distance_squared > effective_range * effective_range) {
-    return false;
+    if (distance_squared > effective_range * effective_range) {
+      return false;
+    }
   }
 
-  auto* attacker_atk = attacker->get_component<Engine::Core::AttackComponent>();
-  if ((attacker_atk != nullptr) &&
-      attacker_atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
+  if (melee) {
     float const height_diff = std::abs(dy);
     if (height_diff > attacker_atk->max_height_difference) {
       return false;

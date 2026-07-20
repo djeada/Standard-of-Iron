@@ -13,8 +13,11 @@
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
 #include "../arrow_system.h"
+#include "../combat_actions/combat_action_definition.h"
+#include "../combat_actions/combat_action_events.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
+#include "../formation_combat_geometry.h"
 #include "../order_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
@@ -155,7 +158,7 @@ auto should_queue_chase_command(Engine::Core::Entity* attacker,
     return false;
   }
 
-  if (is_in_range(attacker, target, range + Constants::k_chase_near_range_buffer)) {
+  if (is_in_range(attacker, target, range)) {
     return false;
   }
 
@@ -325,6 +328,42 @@ void face_target(Engine::Core::TransformComponent* attacker_transform,
   attacker_transform->has_desired_yaw = true;
 }
 
+void lock_facing(Engine::Core::TransformComponent* actor_transform,
+                 Engine::Core::TransformComponent* target_transform) {
+  if (actor_transform == nullptr || target_transform == nullptr) {
+    return;
+  }
+  float const dx = target_transform->position.x - actor_transform->position.x;
+  float const dz = target_transform->position.z - actor_transform->position.z;
+  if (dx * dx + dz * dz > 0.000001F) {
+    actor_transform->rotation.y =
+        std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+  }
+  actor_transform->desired_yaw = actor_transform->rotation.y;
+  actor_transform->has_desired_yaw = false;
+}
+
+[[nodiscard]] auto is_multi_body_formation(Engine::Core::Entity* actor) -> bool {
+  auto const* actor_unit =
+      actor != nullptr ? actor->get_component<Engine::Core::UnitComponent>() : nullptr;
+  bool const explicitly_single_body =
+      actor_unit != nullptr && actor_unit->render_individuals_per_unit_override == 1;
+  return actor != nullptr && !explicitly_single_body &&
+         FormationCombat::has_formation_slots(*actor);
+}
+
+void lock_combatant_facing(Engine::Core::Entity* actor,
+                           Engine::Core::TransformComponent* actor_transform,
+                           Engine::Core::TransformComponent* target_transform) {
+  if (is_multi_body_formation(actor)) {
+
+    actor_transform->desired_yaw = actor_transform->rotation.y;
+    actor_transform->has_desired_yaw = false;
+    return;
+  }
+  lock_facing(actor_transform, target_transform);
+}
+
 auto chase_spread_angle(Engine::Core::EntityID attacker_id) -> float {
   std::uint32_t const seed =
       static_cast<std::uint32_t>(attacker_id * 2654435761U) ^ 0x85EBCA6BU;
@@ -451,13 +490,13 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     return;
   }
 
-  face_target(att_t, tgt_t);
+  lock_combatant_facing(attacker, att_t, tgt_t);
   auto* lock_target_atk = lock_target->get_component<Engine::Core::AttackComponent>();
   bool const reciprocal_lock =
       (lock_target_atk != nullptr) && lock_target_atk->in_melee_lock &&
       lock_target_atk->melee_lock_target_id == attacker->get_id();
   if (reciprocal_lock || !has_valid_melee_lock(lock_target, world)) {
-    face_target(tgt_t, att_t);
+    lock_combatant_facing(lock_target, tgt_t, att_t);
   }
 
   (void)delta_time;
@@ -503,8 +542,22 @@ void sync_melee_lock_target(Engine::Core::Entity* attacker,
     attack_target = attacker->add_component<Engine::Core::AttackTargetComponent>();
   }
   if (attack_target != nullptr) {
+    auto const* commitment =
+        attacker->get_component<Engine::Core::TargetCommitmentComponent>();
+    bool const switch_blocked =
+        commitment != nullptr && commitment->committed_target_id != 0 &&
+        commitment->committed_target_id != attack_comp->melee_lock_target_id &&
+        (commitment->in_committed_phase || commitment->cooldown_remaining > 0.0F);
+    if (switch_blocked) {
+      attack_comp->in_melee_lock = false;
+      attack_comp->melee_lock_target_id = 0;
+      attack_target->target_id = commitment->committed_target_id;
+      attack_target->should_chase = true;
+      return;
+    }
     attack_target->target_id = attack_comp->melee_lock_target_id;
-    attack_target->should_chase = false;
+
+    attack_target->should_chase = true;
   }
 }
 
@@ -735,6 +788,17 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
     return;
   }
 
+  auto charge_precedes_melee = [](Engine::Core::Entity* entity) {
+    auto const* charge = entity->get_component<Engine::Core::MountedChargeComponent>();
+    return charge != nullptr &&
+           (charge->intent_requested ||
+            charge->state == Engine::Core::MountedChargeState::Charging ||
+            charge->state == Engine::Core::MountedChargeState::ImpactActive);
+  };
+  if (charge_precedes_melee(attacker) || charge_precedes_melee(target)) {
+    return;
+  }
+
   bool const attacker_uses_rts_lock =
       Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
   bool const target_uses_rts_lock =
@@ -767,6 +831,9 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
         target_atk->melee_lock_target_id = attacker->get_id();
       }
     }
+    if (att_t != nullptr && tgt_t != nullptr) {
+      lock_combatant_facing(attacker, att_t, tgt_t);
+    }
     return;
   }
 
@@ -788,71 +855,100 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   }
 
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
-    face_target(att_t, tgt_t);
+    lock_combatant_facing(attacker, att_t, tgt_t);
     auto* target_atk_after = target->get_component<Engine::Core::AttackComponent>();
     bool const reciprocal_lock =
         (target_atk_after != nullptr) && target_atk_after->in_melee_lock &&
         target_atk_after->melee_lock_target_id == attacker->get_id();
     if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
-      face_target(tgt_t, att_t);
+      lock_combatant_facing(target, tgt_t, att_t);
     }
   }
 }
 
-void clear_pending_melee_strike(Engine::Core::AttackComponent* attack_comp) {
-  attack_comp->has_pending_melee_strike = false;
-  attack_comp->pending_melee_target_id = 0;
-  attack_comp->pending_melee_damage = 0;
-  attack_comp->pending_melee_elapsed = 0.0F;
-  attack_comp->pending_melee_contact_time = 0.0F;
+auto is_formation_reserve(Engine::Core::Entity* entity,
+                          Engine::Core::World* world) -> bool {
+  auto const* mode = entity->get_component<Engine::Core::FormationModeComponent>();
+  if (mode == nullptr || !mode->active || mode->formation_id == 0 ||
+      mode->stable_rank < 0) {
+    return false;
+  }
+  int front_rank = mode->stable_rank;
+  for (auto* member :
+       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+    auto const* member_mode =
+        member->get_component<Engine::Core::FormationModeComponent>();
+    auto const* member_unit = member->get_component<Engine::Core::UnitComponent>();
+    if (member_mode != nullptr && member_unit != nullptr && member_unit->health > 0 &&
+        member_mode->active && member_mode->formation_id == mode->formation_id &&
+        member_mode->stable_rank >= 0) {
+      front_rank = std::min(front_rank, member_mode->stable_rank);
+    }
+  }
+  return mode->stable_rank > front_rank;
 }
 
-void apply_pending_melee_strike(Engine::Core::Entity* attacker,
-                                Engine::Core::AttackComponent* attack_comp,
-                                Engine::Core::Entity* target,
-                                Engine::Core::World* world) {
-  int const damage = attack_comp->pending_melee_damage;
-  clear_pending_melee_strike(attack_comp);
-  if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
-    Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
-        world, target, damage, attacker->get_id());
-  } else {
-    deal_damage(world, target, damage, attacker->get_id());
+void begin_rts_melee_action(Engine::Core::Entity* attacker,
+                            Engine::Core::Entity* target,
+                            int damage,
+                            float duration) {
+  auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* action =
+      Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
+          attacker);
+  if (unit == nullptr || action == nullptr) {
+    return;
   }
+  auto const family = Engine::Core::resolve_combat_attack_family(
+      unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
+  auto const id = family == Engine::Core::CombatAttackFamily::Spear
+                      ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
+                      : Game::Systems::CombatActions::CombatActionId::RtsSwordStrike;
+  action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
+  action->combat_action_id = static_cast<std::uint8_t>(id);
+  action->active_target_id = target->get_id();
+  action->requested_damage = damage;
+  action->action_duration = std::max(0.001F, duration);
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 }
 
-void process_pending_melee_strike(Engine::Core::Entity* attacker,
-                                  Engine::Core::AttackComponent* attack_comp,
-                                  Engine::Core::World* world,
-                                  float delta_time) {
-  if ((attack_comp == nullptr) || !attack_comp->has_pending_melee_strike) {
+void begin_rts_bow_action(Engine::Core::Entity* attacker,
+                          Engine::Core::Entity* target,
+                          int damage,
+                          float duration) {
+  auto* action =
+      Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
+          attacker);
+  if (action == nullptr) {
     return;
   }
-
-  attack_comp->pending_melee_elapsed += delta_time;
-  if (attack_comp->pending_melee_elapsed < attack_comp->pending_melee_contact_time) {
-    return;
-  }
-
-  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-  auto* target = world->get_entity(attack_comp->pending_melee_target_id);
-  if ((attacker_unit == nullptr) || (target == nullptr) ||
-      !is_valid_enemy_unit(attacker_unit, target, true)) {
-    clear_pending_melee_strike(attack_comp);
-    return;
-  }
-
-  float const grace_range = attack_comp->melee_range +
-                            Engine::Core::AttackComponent::k_melee_contact_range_grace;
-  if (!is_in_range(attacker, target, grace_range)) {
-    clear_pending_melee_strike(attack_comp);
-    return;
-  }
-
-  apply_pending_melee_strike(attacker, attack_comp, target, world);
+  action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RtsBowShot);
+  action->active_target_id = target->get_id();
+  action->requested_damage = damage;
+  action->action_duration = std::max(0.001F, duration);
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 }
 
 } // namespace
+
+bool release_rts_arrow_volley(Engine::Core::World& world,
+                              Engine::Core::Entity& attacker,
+                              Engine::Core::EntityID target_id,
+                              int damage) {
+  auto* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto* target = world.get_entity(target_id);
+  if (attacker_unit == nullptr || attacker_unit->health <= 0 ||
+      !is_valid_enemy_unit(attacker_unit, target, true)) {
+    return false;
+  }
+  if (auto* arrow_system = world.get_system<ArrowSystem>()) {
+    spawn_arrows(&attacker, target, arrow_system);
+  }
+  deal_damage(&world, target, std::max(1, damage), attacker.get_id());
+  return true;
+}
 
 void process_attacks(Engine::Core::World* world,
                      const CombatQueryContext& query_context,
@@ -885,9 +981,21 @@ void process_attacks(Engine::Core::World* world,
       continue;
     }
 
-    process_melee_lock(attacker, attacker_atk, world, delta_time);
+    if (is_formation_reserve(attacker, world)) {
+      Game::Systems::CombatRules::clear_rts_combat_tracking(attacker);
+      continue;
+    }
+
+    auto const* pending_charge =
+        attacker->get_component<Engine::Core::MountedChargeComponent>();
+    bool const resolving_charge_impact =
+        pending_charge != nullptr &&
+        (pending_charge->state == Engine::Core::MountedChargeState::Charging ||
+         pending_charge->state == Engine::Core::MountedChargeState::ImpactActive);
+    if (!resolving_charge_impact) {
+      process_melee_lock(attacker, attacker_atk, world, delta_time);
+    }
     sync_melee_lock_target(attacker, attacker_atk);
-    process_pending_melee_strike(attacker, attacker_atk, world, delta_time);
 
     float range = 2.0F;
     int damage = 10;
@@ -911,11 +1019,9 @@ void process_attacks(Engine::Core::World* world,
       t_accum = &tmp_accum;
     }
 
-    if (*t_accum < cooldown) {
-      continue;
-    }
+    bool const attack_ready = *t_accum >= cooldown;
 
-    if (should_prioritize_healing(attacker, world)) {
+    if (attack_ready && should_prioritize_healing(attacker, world)) {
       continue;
     }
 
@@ -924,7 +1030,7 @@ void process_attacks(Engine::Core::World* world,
         Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
 
     auto* attack_target =
-        Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)
+        !Game::Systems::CombatRules::uses_rpg_combat_rules(attacker)
             ? attacker->get_component<Engine::Core::AttackTargetComponent>()
             : nullptr;
     bool const suppress_opportunistic_combat =
@@ -943,9 +1049,6 @@ void process_attacks(Engine::Core::World* world,
         best_target_unit = best_target->get_component<Engine::Core::UnitComponent>();
         best_target_transform =
             best_target->get_component<Engine::Core::TransformComponent>();
-        if (best_target_transform != nullptr) {
-          face_target(attacker_transform, best_target_transform);
-        }
       }
     }
 
@@ -968,9 +1071,7 @@ void process_attacks(Engine::Core::World* world,
           best_target = target;
           best_target_unit = target_unit;
           best_target_transform = target_transform;
-          if (ranged_unit) {
-            stop_unit_movement(attacker, attacker_transform);
-          }
+          stop_unit_movement(attacker, attacker_transform);
           if (!in_melee_lock) {
             face_target(attacker_transform, target_transform);
           }
@@ -1044,18 +1145,31 @@ void process_attacks(Engine::Core::World* world,
             if (distance > 0.0F) {
               float const optimal_range = range * Constants::k_optimal_range_factor;
               if (distance > optimal_range + Constants::k_optimal_range_buffer) {
+
+                float const ranged_approach_angle =
+                    FormationCombat::has_formation_slots(*attacker) ? 0.0F
+                                                                    : spread_angle;
                 desired_pos = chase_destination(
-                    attacker_pos, target_pos, optimal_range, spread_angle);
+                    attacker_pos, target_pos, optimal_range, ranged_approach_angle);
               } else {
                 hold_position = true;
               }
             }
           } else {
             if (distance > 0.0F) {
-              float const desired_distance = std::max(range - 0.2F, 0.2F);
-              if (distance > desired_distance + 0.15F) {
+              auto const geometry =
+                  FormationCombat::contact_geometry(*attacker, *target);
+              float const desired_distance = geometry.uses_formation_slots
+                                                 ? geometry.engagement_center_distance
+                                                 : std::max(range - 0.2F, 0.2F);
+              if (geometry.uses_formation_slots ? !FormationCombat::contact_is_active(
+                                                      *attacker, *target, geometry)
+                                                : distance > desired_distance + 0.15F) {
                 desired_pos = chase_destination(
-                    attacker_pos, target_pos, desired_distance, spread_angle);
+                    attacker_pos,
+                    target_pos,
+                    desired_distance,
+                    geometry.uses_formation_slots ? 0.0F : spread_angle);
               } else {
                 hold_position = true;
               }
@@ -1131,11 +1245,29 @@ void process_attacks(Engine::Core::World* world,
 
       if (ranged_unit) {
         stop_unit_movement(attacker, attacker_transform);
-        begin_attack_animation(attacker);
       }
 
       if (!in_melee_lock) {
         face_target(attacker_transform, best_target_transform);
+      }
+
+      auto const* mounted_charge =
+          attacker->get_component<Engine::Core::MountedChargeComponent>();
+      bool const charge_impact_pending =
+          mounted_charge != nullptr &&
+          (mounted_charge->state == Engine::Core::MountedChargeState::Charging ||
+           mounted_charge->state == Engine::Core::MountedChargeState::ImpactActive);
+      if (charge_impact_pending) {
+
+        continue;
+      }
+
+      if (!attack_ready) {
+        continue;
+      }
+
+      if (ranged_unit) {
+        begin_attack_animation(attacker);
       }
 
       bool const should_show_arrow_vfx =
@@ -1164,12 +1296,16 @@ void process_attacks(Engine::Core::World* world,
       bool const use_special_projectile = ranged_unit && special_attack != nullptr &&
                                           special_attack->use_projectile_system &&
                                           projectile_sys != nullptr;
+      bool const use_rts_bow_action =
+          ranged_unit && !use_special_projectile &&
+          (attacker_unit->spawn_type == Game::Units::SpawnType::Archer ||
+           attacker_unit->spawn_type == Game::Units::SpawnType::HorseArcher);
 
       if (should_show_arrow_vfx &&
           ((attacker_atk == nullptr) ||
            attacker_atk->current_mode !=
                Engine::Core::AttackComponent::CombatMode::Melee) &&
-          !use_special_projectile) {
+          !use_special_projectile && !use_rts_bow_action) {
         spawn_arrows(attacker, best_target, arrow_sys);
       }
 
@@ -1185,14 +1321,10 @@ void process_attacks(Engine::Core::World* world,
 
       if (use_special_projectile) {
         launch_special_projectile(attacker, best_target, damage, projectile_sys);
+      } else if (use_rts_bow_action) {
+        begin_rts_bow_action(attacker, best_target, damage, cooldown);
       } else if (defer_melee_strike) {
-
-        attacker_atk->has_pending_melee_strike = true;
-        attacker_atk->pending_melee_target_id = best_target->get_id();
-        attacker_atk->pending_melee_damage = damage;
-        attacker_atk->pending_melee_elapsed = 0.0F;
-        attacker_atk->pending_melee_contact_time =
-            melee_contact_time_for_attack(attacker, cooldown);
+        begin_rts_melee_action(attacker, best_target, damage, cooldown);
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(

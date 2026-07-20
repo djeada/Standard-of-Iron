@@ -1,27 +1,7 @@
 #include "renderer_bootstrap.h"
 
 #include "game/core/world.h"
-#include "game/systems/ai_system.h"
-#include "game/systems/arrow_system.h"
-#include "game/systems/capture_system.h"
-#include "game/systems/civilian_delivery_system.h"
-#include "game/systems/cleanup_system.h"
-#include "game/systems/combat_status_effect_system.h"
-#include "game/systems/combat_system.h"
-#include "game/systems/commander_system.h"
-#include "game/systems/guard_system.h"
-#include "game/systems/healing_beam_system.h"
-#include "game/systems/healing_system.h"
-#include "game/systems/home_system.h"
-#include "game/systems/local_avoidance_system.h"
-#include "game/systems/movement_system.h"
-#include "game/systems/patrol_system.h"
-#include "game/systems/production_system.h"
-#include "game/systems/projectile_system.h"
-#include "game/systems/selection_system.h"
-#include "game/systems/stamina_system.h"
-#include "game/systems/terrain_alignment_system.h"
-#include "game/systems/undead_awakening_system.h"
+#include "game/systems/runtime_system_registry.h"
 #include "render/gl/camera.h"
 #include "render/graphics_settings.h"
 #include "render/ground/ambient_fog_renderer.h"
@@ -60,25 +40,5 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
 }
 
 void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
-  world.add_system(std::make_unique<Game::Systems::ArrowSystem>());
-  world.add_system(std::make_unique<Game::Systems::CombatStatusEffectSystem>());
-  world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
-  world.add_system(std::make_unique<Game::Systems::StaminaSystem>());
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
-  world.add_system(std::make_unique<Game::Systems::LocalAvoidanceSystem>());
-  world.add_system(std::make_unique<Game::Systems::PatrolSystem>());
-  world.add_system(std::make_unique<Game::Systems::GuardSystem>());
-  world.add_system(std::make_unique<Game::Systems::CombatSystem>());
-  world.add_system(std::make_unique<Game::Systems::CommanderSystem>());
-  world.add_system(std::make_unique<Game::Systems::HealingBeamSystem>());
-  world.add_system(std::make_unique<Game::Systems::HealingSystem>());
-  world.add_system(std::make_unique<Game::Systems::CaptureSystem>());
-  world.add_system(std::make_unique<Game::Systems::AISystem>());
-  world.add_system(std::make_unique<Game::Systems::UndeadAwakeningSystem>());
-  world.add_system(std::make_unique<Game::Systems::ProductionSystem>());
-  world.add_system(std::make_unique<Game::Systems::HomeSystem>());
-  world.add_system(std::make_unique<Game::Systems::CivilianDeliverySystem>());
-  world.add_system(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
-  world.add_system(std::make_unique<Game::Systems::CleanupSystem>());
-  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  Game::Systems::register_runtime_systems(world);
 }

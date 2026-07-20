@@ -1,7 +1,10 @@
 #pragma once
 
+#include <QVector3D>
+
 #include <cstdint>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "../creature/movement_state.h"
@@ -88,6 +91,7 @@ struct SoldierAnimationDebugSample {
   float attack_phase{0.0F};
   std::uint8_t attack_variant{0U};
   bool is_attacking{false};
+  bool is_hit_reacting{false};
   bool is_in_melee_lock{false};
   bool transient_recovery_override{false};
   Render::Creature::MovementAnimationState locomotion_state{
@@ -97,6 +101,17 @@ struct SoldierAnimationDebugSample {
   std::uint8_t lod{0U};
   SoldierCullReason cull_reason{SoldierCullReason::None};
   SoldierVisualState visual_state{SoldierVisualState::Idle};
+
+  QVector3D root_position{};
+  float root_up_y{1.0F};
+  float root_scale_y{1.0F};
+  float root_tilt_degrees{0.0F};
+  float hit_reaction_tilt_degrees{0.0F};
+
+  float submitted_body_up_y{1.0F};
+  float submitted_body_tilt_degrees{0.0F};
+  float submitted_max_arm_reach{0.0F};
+  bool submitted_body_pose_valid{false};
   bool visual_state_changed{false};
   bool movement_state_changed{false};
   bool variant_changed{false};
@@ -130,6 +145,13 @@ public:
   void mark_elephant_override(std::uint32_t entity_id);
   void record_soldier_sample(std::uint32_t entity_id,
                              const SoldierAnimationDebugSample& sample);
+  void record_submitted_body_pose(std::uint32_t entity_id,
+                                  std::uint16_t soldier_index,
+                                  float body_up_y,
+                                  float max_arm_reach);
+  void record_mode_indicator(std::uint32_t entity_id);
+  [[nodiscard]] auto
+  mode_indicator_submitted(std::uint32_t entity_id) const noexcept -> bool;
 
   [[nodiscard]] auto
   find_unit(std::uint32_t entity_id) const -> const CombatAnimationDebugUnit*;
@@ -146,6 +168,7 @@ private:
     SoldierVisualState last_visual_state{SoldierVisualState::Idle};
     bool has_previous{false};
     std::vector<float> transition_times{};
+    std::vector<SoldierVisualState> transition_states{};
     std::uint64_t last_logged_frame{0U};
   };
 
@@ -175,6 +198,7 @@ private:
   bool m_logging_enabled{false};
   std::uint64_t m_frame_index{0U};
   std::unordered_map<std::uint32_t, CombatAnimationDebugUnit> m_units{};
+  std::unordered_set<std::uint32_t> m_mode_indicator_entities{};
   std::unordered_map<SoldierKey, SoldierTracker, SoldierKeyHash> m_trackers{};
 };
 

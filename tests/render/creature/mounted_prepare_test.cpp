@@ -21,6 +21,7 @@
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/snapshot_mesh_registry.h"
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_humanoid_renderer_base.h"
@@ -40,6 +41,7 @@
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
+#include "render/humanoid/cache_control.h"
 #include "render/humanoid/pose_cache_components.h"
 #include "render/humanoid/prepare.h"
 #include "render/humanoid/skeleton.h"
@@ -332,6 +334,14 @@ TEST(MountedPrepare, RomanAndCarthageHorseMountArchetypesStayDistinct) {
 }
 
 TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
+  auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
+  ASSERT_FALSE(root.empty());
+  auto& snapshots = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  ASSERT_TRUE(snapshots.load_species(Render::Creature::Bpat::k_species_horse,
+                                     Render::Creature::CreatureLOD::Minimal,
+                                     root + "/horse_minimal.bpsm"))
+      << snapshots.last_error();
+  Render::GL::clear_humanoid_caches();
   Render::GL::MountedKnightRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;

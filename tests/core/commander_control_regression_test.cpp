@@ -498,10 +498,11 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       contains(attack_processor, "CombatRules::clear_rts_melee_lock(target);"));
   EXPECT_TRUE(contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(movement_orders, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(contains(scene_walk, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(
+
+  EXPECT_FALSE(contains(scene_walk, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_FALSE(
       contains(animation_inputs, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(contains(prepared_state, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_FALSE(contains(prepared_state, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
       contains(combat_dust_renderer, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(

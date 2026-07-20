@@ -8,7 +8,9 @@
 #include <QStringList>
 #include <QTimer>
 
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "game/core/component.h"
@@ -33,6 +35,11 @@ namespace Game::Units {
 class Unit;
 class UnitFactoryRegistry;
 } // namespace Game::Units
+
+namespace Arena {
+class ArenaScenarioRunner;
+struct ArenaScenarioReport;
+} // namespace Arena
 
 namespace Render::GL {
 class Renderer;
@@ -116,9 +123,22 @@ public slots:
   void pause_simulation(bool paused);
   void reset_camera();
 
+  void set_batch_fixed_step(float seconds);
+  void set_scenario_duration_override(float seconds);
+  [[nodiscard]] auto active_scenario_finished() const -> bool;
+  [[nodiscard]] auto
+  active_scenario_report() const -> const Arena::ArenaScenarioReport*;
+  [[nodiscard]] auto write_scenario_artifacts(const QString& directory,
+                                              QString* error = nullptr) const -> bool;
+
 signals:
   void paused_changed(bool paused);
   void selection_summary_changed(const QString& summary);
+  void scenario_issue_detected(const QString& scenario_id,
+                               const QString& issue_summary);
+  void
+  scenario_finished(const QString& scenario_id, bool passed, const QString& summary);
+  void frame_rendered();
 
 protected:
   void initializeGL() override;
@@ -179,10 +199,11 @@ private:
       -> Game::Units::TroopType;
   auto find_unit_handle(Engine::Core::EntityID entity_id) const -> Game::Units::Unit*;
   void reconfigure_terrain_from_state();
-  auto
-  spawn_single_building(int owner_id,
-                        Game::Systems::NationID nation_id,
-                        Game::Units::SpawnType building_type) -> Engine::Core::EntityID;
+  auto spawn_single_building(int owner_id,
+                             Game::Systems::NationID nation_id,
+                             Game::Units::SpawnType building_type,
+                             std::optional<QVector3D> requested_position = std::nullopt,
+                             bool ai_controlled = false) -> Engine::Core::EntityID;
   auto owner_display_name(int owner_id) const -> QString;
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
@@ -202,14 +223,6 @@ private:
   void capture_attack_scrub_anchor();
   void apply_attack_scrub_override();
   void set_force_full_creature_lod(bool enabled);
-
-  struct ActiveScenarioState {
-    QString id;
-    float elapsed = 0.0F;
-    std::vector<Engine::Core::EntityID> tracked_entities;
-    bool first_event_applied = false;
-    bool second_event_applied = false;
-  };
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -266,6 +279,7 @@ private:
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
   bool m_force_full_creature_lod = true;
+  bool m_batch_frame_in_progress = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;
   bool m_pan_left_pressed = false;
@@ -283,5 +297,9 @@ private:
   std::uint8_t m_attack_scrub_variant = 0U;
   float m_attack_scrub_offset = 0.0F;
   bool m_attack_scrub_finisher = false;
-  ActiveScenarioState m_active_scenario;
+  std::unique_ptr<Arena::ArenaScenarioRunner> m_scenario_runner;
+  float m_batch_fixed_step = 0.0F;
+  float m_scenario_duration_override = 0.0F;
+  std::size_t m_last_scenario_issue_revision = 0U;
+  bool m_scenario_finished_emitted = false;
 };

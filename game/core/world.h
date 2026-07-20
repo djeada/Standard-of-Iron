@@ -13,6 +13,10 @@
 
 namespace Engine::Core {
 
+class World;
+
+void publish_creature_presentation(Entity* entity, World* world);
+
 class World {
 public:
   using ObserverHandle = std::uint64_t;

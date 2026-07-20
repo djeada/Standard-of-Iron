@@ -62,6 +62,7 @@ void Swordsman::init(const SpawnParams& params) {
   m_r->renderer_id = profile.visuals.renderer_id;
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
+  m_u->uses_nation_formation_profile = true;
   m_u->spawn_type = params.spawn_type;
   m_u->health = profile.combat.health;
   m_u->max_health = profile.combat.max_health;

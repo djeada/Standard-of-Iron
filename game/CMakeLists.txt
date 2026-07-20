@@ -9,9 +9,11 @@ add_library(engine_core STATIC
 )
 
 target_include_directories(engine_core PUBLIC .)
-target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
+target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui animation_core)
 
 add_library(game_systems STATIC
+    systems/runtime_system_registry.cpp
+    systems/battlefield_capture.cpp
     systems/order_service.cpp
     systems/movement_system.cpp
     systems/combat_system.cpp
@@ -19,6 +21,7 @@ add_library(game_systems STATIC
     systems/combat_system/damage_application.cpp
     systems/combat_system/damage_processor.cpp
     systems/combat_system/combat_mode_processor.cpp
+    systems/combat_system/formation_contact_processor.cpp
     systems/combat_system/auto_engagement.cpp
     systems/combat_system/hit_feedback_processor.cpp
     systems/combat_system/combat_hit_resolver.cpp
@@ -104,6 +107,7 @@ add_library(game_systems STATIC
     systems/nation_registry.cpp
     systems/nation_loader.cpp
     systems/formation_system.cpp
+    systems/formation_combat_geometry.cpp
     systems/troop_profile_service.cpp
     systems/rain_manager.cpp
     systems/stamina_system.cpp

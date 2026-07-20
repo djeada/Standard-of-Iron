@@ -3,7 +3,7 @@
     "troops/roman/archer": {
       "bow": "bow_roman",
       "quiver": "quiver_roman",
-      "helmet": "roman_light",
+      "helmet": "roman_montefortino",
       "greaves": "roman_greaves",
       "armor": "roman_light_armor",
       "cloak": "cloak_roman"
@@ -17,34 +17,34 @@
     },
     "troops/roman/spearman": {
       "spear": "spear",
-      "helmet": "roman_heavy",
+      "helmet": "roman_montefortino",
       "greaves": "roman_greaves",
-      "armor": "roman_light_armor",
+      "armor": "roman_hamata_mail",
       "shoulder": "roman_shoulder_cover"
     },
     "troops/carthage/spearman": {
       "spear": "spear",
-      "helmet": "carthage_heavy",
-      "armor": "armor_light_carthage",
+      "helmet": "carthage_punic_conical",
+      "armor": "carthage_linothorax",
       "shoulder": "carthage_shoulder_cover"
     },
     "troops/roman/swordsman": {
       "sword": "sword_roman",
       "shield": "roman_scutum",
-      "helmet": "roman_heavy",
+      "helmet": "roman_montefortino",
       "greaves": "roman_greaves",
-      "armor": "roman_heavy_armor",
+      "armor": "roman_hamata_mail",
       "shoulder": "roman_shoulder_cover"
     },
     "troops/carthage/swordsman": {
       "sword": "sword_carthage",
       "shield": "shield_carthage",
-      "helmet": "carthage_heavy",
-      "armor": "armor_heavy_carthage",
+      "helmet": "carthage_thracian_crested",
+      "armor": "carthage_gilded_scale",
       "shoulder": "carthage_shoulder_cover"
     },
     "troops/roman/healer": {
-      "helmet": "roman_light",
+      "helmet": "roman_montefortino",
       "armor": "roman_light_armor"
     },
     "troops/carthage/healer": {
@@ -84,7 +84,7 @@
       "spear": "spear_fabius",
       "helmet": "roman_heavy",
       "greaves": "roman_greaves",
-      "armor": "roman_heavy_armor",
+      "armor": "roman_anatomical_cuirass",
       "shoulder": "roman_shoulder_cover"
     },
     "troops/roman/commanders/scipio_africanus": {
@@ -110,20 +110,20 @@
     "troops/carthage/commanders/hasdrubal_barca": {
       "bow": "bow_hasdrubal",
       "quiver": "quiver_hasdrubal",
-      "helmet": "carthage_light",
+      "helmet": "carthage_punic_conical",
       "armor": "armor_light_carthage"
     },
     "troops/carthage/commanders/hannibal_barca": {
       "sword": "sword_hannibal",
       "shield": "shield_carthage",
       "helmet": "carthage_heavy",
-      "armor": "armor_heavy_carthage",
+      "armor": "carthage_gilded_scale",
       "shoulder": "carthage_shoulder_cover"
     },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",
       "quiver": "quiver",
-      "helmet": "roman_light",
+      "helmet": "roman_boeotian_cavalry",
       "armor": "roman_light_armor",
       "cloak": "cloak_roman",
       "horse_saddle": "roman_horse_saddle",
@@ -146,8 +146,8 @@
     },
     "troops/roman/horse_spearman": {
       "spear": "spear",
-      "helmet": "roman_heavy",
-      "armor": "roman_heavy_armor",
+      "helmet": "roman_boeotian_cavalry",
+      "armor": "roman_anatomical_cuirass",
       "shoulder": "roman_shoulder_cover_cavalry",
       "horse_saddle": "roman_horse_saddle",
       "horse_bridle": "horse_bridle",
@@ -157,8 +157,8 @@
     },
     "troops/carthage/horse_spearman": {
       "spear": "spear",
-      "helmet": "carthage_heavy",
-      "armor": "armor_heavy_carthage",
+      "helmet": "carthage_thracian_crested",
+      "armor": "carthage_gilded_scale",
       "shoulder": "carthage_shoulder_cover_cavalry",
       "horse_saddle": "carthage_horse_saddle",
       "horse_bridle": "horse_bridle",
@@ -169,8 +169,8 @@
     "troops/roman/horse_swordsman": {
       "sword": "sword_roman",
       "shield": "roman_scutum",
-      "helmet": "roman_heavy",
-      "armor": "roman_heavy_armor",
+      "helmet": "roman_boeotian_cavalry",
+      "armor": "roman_anatomical_cuirass",
       "shoulder": "roman_shoulder_cover_cavalry",
       "horse_saddle": "roman_horse_saddle",
       "horse_bridle": "horse_bridle",
@@ -182,8 +182,8 @@
     "troops/carthage/horse_swordsman": {
       "sword": "sword_carthage",
       "shield": "shield_carthage",
-      "helmet": "carthage_heavy",
-      "armor": "armor_heavy_carthage",
+      "helmet": "carthage_thracian_crested",
+      "armor": "carthage_gilded_scale",
       "shoulder": "carthage_shoulder_cover_cavalry",
       "horse_saddle": "carthage_horse_saddle",
       "horse_bridle": "horse_bridle",

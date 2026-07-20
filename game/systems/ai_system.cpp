@@ -85,6 +85,9 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
 void AISystem::reinitialize() {
   shutdown_workers();
 
+  m_completed_decision_count = 0;
+  m_applied_command_count = 0;
+
   initialize_ai_players();
 }
 
@@ -202,6 +205,9 @@ void AISystem::process_results(Engine::Core::World& world) {
 
       auto filtered_commands =
           m_command_filter.filter(result.commands, m_total_game_time);
+
+      ++m_completed_decision_count;
+      m_applied_command_count += filtered_commands.size();
 
       Game::Systems::AI::AICommandApplier::apply(
           world, ai.context.player_id, filtered_commands);

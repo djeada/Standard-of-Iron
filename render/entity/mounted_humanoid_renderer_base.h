@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../humanoid/humanoid_renderer_base.h"
 #include "horse_renderer.h"
@@ -18,8 +21,9 @@ public:
 
   virtual auto get_mount_scale() const -> float = 0;
 
-  void set_mount_archetype_id(Render::Creature::ArchetypeId id) {
+  void set_mount_visual(Render::Creature::ArchetypeId id, std::string_view debug_name) {
     m_mount_archetype_id = id;
+    m_mount_debug_name = debug_name;
     m_mounted_visual_spec_baked = false;
   }
   [[nodiscard]] auto
@@ -32,6 +36,7 @@ protected:
   mutable bool m_mounted_visual_spec_baked{false};
   Render::Creature::ArchetypeId m_mount_archetype_id{
       Render::Creature::k_invalid_archetype};
+  std::string m_mount_debug_name{"troops/mounted/horse"};
 
   auto resolve_entity_ground_offset(
       const DrawContext& ctx,

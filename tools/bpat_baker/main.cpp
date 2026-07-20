@@ -1301,6 +1301,12 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     socket_inputs.is_melee = (clip.attack_type != BakerAttackType::Bow);
     socket_inputs.attack_variant = clip.attack_variant;
   }
+  if (clip.riding_type == BakerRidingType::SpearThrust) {
+
+    socket_inputs.is_mounted = true;
+    socket_inputs.is_attacking = true;
+    socket_inputs.is_melee = true;
+  }
   if (clip.hold_type != BakerHoldType::None) {
     socket_inputs.is_in_hold_mode = true;
     socket_inputs.hold_entry_progress = transition_phase(frame_index, clip.frames);

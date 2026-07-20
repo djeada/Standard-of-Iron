@@ -47,14 +47,18 @@ namespace {
   return add(scale(a, 1.0F - t), scale(b, t));
 }
 
+[[nodiscard]] auto smoothstep(float t) noexcept -> float {
+  t = std::clamp(t, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
 [[nodiscard]] auto spear_direction_for_thrust(float attack_phase) noexcept -> PoseVec3 {
-  PoseVec3 const rest = normalize({0.05F, 0.55F, 0.85F});
-  PoseVec3 const attack = normalize({0.03F, -0.15F, 1.0F});
-  if (attack_phase < 0.30F || attack_phase >= 0.50F) {
-    return rest;
-  }
-  float const t = std::clamp((attack_phase - 0.30F) / 0.20F, 0.0F, 1.0F);
-  return normalize(lerp(rest, attack, t));
+  // A thrust translates the shaft; it does not rotate it through a high guard.
+  // Keep the point on one torso-height rail for chamber, extension and recovery.
+  // The hands supply all visible fore/aft travel. Mounted spear direction is
+  // authored separately and retains its saddle-specific angle.
+  (void)attack_phase;
+  return normalize({0.02F, 0.10F, 1.0F});
 }
 
 [[nodiscard]] auto spear_braced_direction() noexcept -> PoseVec3 {
@@ -62,13 +66,34 @@ namespace {
 }
 
 [[nodiscard]] auto
-lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatOffset {
-  return add(scale(a, 1.0F - t), scale(b, t));
+mounted_spear_direction_for_thrust(float attack_phase) noexcept -> PoseVec3 {
+  PoseVec3 const couch = normalize({0.03F, 0.02F, 1.0F});
+  PoseVec3 const pierce = normalize({0.02F, -0.18F, 1.0F});
+  attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
+  float const commit =
+      smoothstep(std::clamp((attack_phase - 0.20F) / 0.28F, 0.0F, 1.0F));
+  float const recover =
+      smoothstep(std::clamp((attack_phase - 0.68F) / 0.25F, 0.0F, 1.0F));
+  return normalize(lerp(lerp(couch, pierce, commit), couch, recover));
 }
 
-[[nodiscard]] auto smoothstep(float t) noexcept -> float {
-  t = std::clamp(t, 0.0F, 1.0F);
-  return t * t * (3.0F - 2.0F * t);
+[[nodiscard]] auto spear_grip_extension(float attack_phase) noexcept -> float {
+  attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
+  if (attack_phase < 0.20F) {
+    return 0.0F;
+  }
+  if (attack_phase < 0.50F) {
+    return smoothstep((attack_phase - 0.20F) / 0.30F);
+  }
+  if (attack_phase < 0.68F) {
+    return 1.0F;
+  }
+  return 1.0F - smoothstep((attack_phase - 0.68F) / 0.32F);
+}
+
+[[nodiscard]] auto
+lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatOffset {
+  return add(scale(a, 1.0F - t), scale(b, t));
 }
 
 [[nodiscard]] auto ease_out(float t) noexcept -> float {
@@ -83,6 +108,67 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
 
 [[nodiscard]] auto clamp_attack_reach_scale(float reach_scale) noexcept -> float {
   return std::clamp(reach_scale, 0.70F, 1.35F);
+}
+
+// A spear thrust is a straight, two-handed push, not a swung strike. Keep both
+// hands on one longitudinal rail and let the planted rear leg, hips, and torso
+// provide the power. This common pose is used by every standing spearman so a
+// renderer/archetype cannot accidentally fall back to an axe-like attack.
+[[nodiscard]] auto resolve_infantry_spear_thrust_pose(
+    const HumanoidWeaponAttackPoseInputs& inputs) noexcept
+    -> HumanoidWeaponAttackPoseSample {
+  float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
+  float const shoulder_y = inputs.shoulder_y;
+  // Give the power hand only one visible degree of freedom: forward/back.
+  // Identical x/y endpoints prevent IK and clip interpolation from producing
+  // a circular wind-up or an overhead cutting arc.
+  PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F, 0.12F};
+  PoseVec3 const contact_rear{0.28F, shoulder_y + 0.035F, 0.42F};
+  PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F, 0.42F};
+  PoseVec3 const contact_front{-0.03F, shoulder_y + 0.035F, 0.72F};
+
+  HumanoidWeaponAttackPoseSample sample{};
+  float drive = 0.0F;
+  if (phase < 0.10F) {
+    sample.right_hand = retracted_rear;
+    sample.left_hand = retracted_front;
+  } else if (phase < 0.42F) {
+    drive = smoothstep((phase - 0.10F) / 0.32F);
+    sample.right_hand = lerp(retracted_rear, contact_rear, drive);
+    sample.left_hand = lerp(retracted_front, contact_front, drive);
+  } else if (phase < 0.62F) {
+    drive = 1.0F;
+    sample.right_hand = contact_rear;
+    sample.left_hand = contact_front;
+  } else {
+    float const recover = smoothstep((phase - 0.62F) / 0.38F);
+    drive = 1.0F - recover;
+    sample.right_hand = lerp(contact_rear, retracted_rear, recover);
+    sample.left_hand = lerp(contact_front, retracted_front, recover);
+  }
+
+  // Shoulders, hips and lead foot commit together. Opposing shoulder deltas
+  // rotate the weapon hand around the torso and read as a slash.
+  float const forward_commit = 0.075F * drive;
+  sample.shoulder_r_z_delta += forward_commit;
+  sample.shoulder_l_z_delta += forward_commit;
+  sample.neck_z_delta += forward_commit * 0.70F;
+  sample.head_z_delta += forward_commit * 0.60F;
+  sample.pelvis_z_delta += forward_commit * 0.55F;
+  sample.foot_r_z_delta += 0.060F * drive;
+  sample.knee_r_z_delta += 0.035F * drive;
+
+  sample.use_offhand_spear_grip = true;
+  sample.offhand_spear_direction = resolve_humanoid_spear_direction({
+      .is_attacking = true,
+      .is_melee = true,
+      .attack_phase = phase,
+  });
+  // Right hand powers from the rear; left hand guides farther down the shaft.
+  sample.offhand_along_offset = 0.30F;
+  sample.offhand_y_drop = 0.0F;
+  sample.offhand_lateral_offset = 0.0F;
+  return sample;
 }
 
 void apply_sword_body_drive(HumanoidWeaponAttackPoseSample& sample,
@@ -170,14 +256,14 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
 
   PoseVec3 rest_pos = combat_variant ? PoseVec3{0.23F, shoulder_y + 0.02F, 0.20F}
                                      : PoseVec3{0.21F, shoulder_y + 0.03F, 0.16F};
-  PoseVec3 chamber_pos = combat_variant ? PoseVec3{0.38F, shoulder_y + 0.18F, -0.16F}
+  PoseVec3 chamber_pos = combat_variant ? PoseVec3{0.43F, shoulder_y + 0.22F, -0.18F}
                                         : PoseVec3{0.35F, shoulder_y + 0.18F, -0.10F};
-  PoseVec3 apex_pos = combat_variant ? PoseVec3{0.44F, shoulder_y + 0.31F, -0.04F}
+  PoseVec3 apex_pos = combat_variant ? PoseVec3{0.50F, shoulder_y + 0.34F, -0.06F}
                                      : PoseVec3{0.39F, shoulder_y + 0.27F, 0.00F};
-  PoseVec3 strike_pos = combat_variant ? PoseVec3{0.02F, shoulder_y - 0.32F, 1.02F}
+  PoseVec3 strike_pos = combat_variant ? PoseVec3{-0.06F, shoulder_y - 0.32F, 1.07F}
                                        : PoseVec3{0.08F, shoulder_y - 0.30F, 0.90F};
   PoseVec3 followthrough_pos = combat_variant
-                                   ? PoseVec3{-0.26F, waist_y - 0.12F, 0.84F}
+                                   ? PoseVec3{-0.46F, waist_y - 0.14F, 0.98F}
                                    : PoseVec3{-0.12F, waist_y - 0.08F, 0.74F};
   PoseVec3 recover_pos =
       combat_variant ? PoseVec3{0.18F, shoulder_y - 0.01F, 0.30F} : rest_pos;
@@ -185,13 +271,13 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
   float strike_direction = k_strike_right_to_left;
   switch (inputs.variant % 3U) {
   case 1U:
-    chamber_pos = combat_variant ? PoseVec3{-0.22F, shoulder_y + 0.19F, -0.14F}
+    chamber_pos = combat_variant ? PoseVec3{-0.28F, shoulder_y + 0.23F, -0.17F}
                                  : PoseVec3{-0.18F, shoulder_y + 0.20F, -0.10F};
-    apex_pos = combat_variant ? PoseVec3{-0.18F, shoulder_y + 0.32F, -0.02F}
+    apex_pos = combat_variant ? PoseVec3{-0.25F, shoulder_y + 0.35F, -0.05F}
                               : PoseVec3{-0.16F, shoulder_y + 0.29F, 0.00F};
-    strike_pos = combat_variant ? PoseVec3{0.50F, shoulder_y - 0.30F, 0.98F}
+    strike_pos = combat_variant ? PoseVec3{0.58F, shoulder_y - 0.30F, 1.04F}
                                 : PoseVec3{0.44F, shoulder_y - 0.28F, 0.86F};
-    followthrough_pos = combat_variant ? PoseVec3{0.60F, waist_y - 0.10F, 0.82F}
+    followthrough_pos = combat_variant ? PoseVec3{0.79F, waist_y - 0.12F, 0.97F}
                                        : PoseVec3{0.54F, waist_y - 0.06F, 0.72F};
     if (combat_variant) {
       recover_pos = {0.28F, shoulder_y - 0.02F, 0.32F};
@@ -199,13 +285,13 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     strike_direction = k_strike_left_to_right;
     break;
   case 2U:
-    chamber_pos = combat_variant ? PoseVec3{0.30F, shoulder_y + 0.29F, -0.18F}
+    chamber_pos = combat_variant ? PoseVec3{0.36F, shoulder_y + 0.33F, -0.20F}
                                  : PoseVec3{0.42F, shoulder_y + 0.10F, -0.12F};
-    apex_pos = combat_variant ? PoseVec3{0.34F, shoulder_y + 0.36F, -0.04F}
+    apex_pos = combat_variant ? PoseVec3{0.41F, shoulder_y + 0.39F, -0.06F}
                               : PoseVec3{0.46F, shoulder_y + 0.12F, -0.02F};
-    strike_pos = combat_variant ? PoseVec3{-0.04F, waist_y - 0.14F, 1.08F}
+    strike_pos = combat_variant ? PoseVec3{-0.12F, waist_y - 0.14F, 1.12F}
                                 : PoseVec3{-0.02F, shoulder_y - 0.24F, 0.94F};
-    followthrough_pos = combat_variant ? PoseVec3{-0.20F, waist_y - 0.20F, 0.88F}
+    followthrough_pos = combat_variant ? PoseVec3{-0.40F, waist_y - 0.22F, 1.01F}
                                        : PoseVec3{-0.22F, shoulder_y - 0.30F, 0.80F};
     if (combat_variant) {
       recover_pos = {0.14F, shoulder_y - 0.04F, 0.34F};
@@ -270,16 +356,16 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
   float weight_shift = 0.0F;
 
   if (combat_variant) {
-    if (attack_phase < 0.22F) {
-      float const t = ease_in_out_cubic(attack_phase / 0.22F);
+    if (attack_phase < 0.18F) {
+      float const t = ease_in_out_cubic(attack_phase / 0.18F);
       sample.right_hand = lerp(rest_pos, chamber_pos, t);
       sample.left_hand = {-0.22F - 0.03F * strike_direction * amplified_weight,
                           shoulder_y - 0.02F - 0.01F * amplified_weight,
                           0.18F + 0.04F * t + 0.05F * amplified_weight};
       torso_twist = strike_direction * (-0.10F * t);
       shoulder_rotation = 0.06F * t;
-    } else if (attack_phase < 0.40F) {
-      float const t = smoothstep((attack_phase - 0.22F) / 0.18F);
+    } else if (attack_phase < 0.32F) {
+      float const t = smoothstep((attack_phase - 0.18F) / 0.14F);
       sample.right_hand = lerp(chamber_pos, apex_pos, t);
       sample.left_hand = {-0.22F - 0.05F * strike_direction * amplified_weight,
                           shoulder_y - 0.05F - 0.02F * amplified_weight,
@@ -288,37 +374,37 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       shoulder_rotation = 0.06F + 0.04F * t;
       forward_lean = 0.03F * t;
       weight_shift = -0.04F * t;
-    } else if (attack_phase < 0.63F) {
-      float const t = (attack_phase - 0.40F) / 0.23F;
+    } else if (attack_phase < 0.58F) {
+      float const t = (attack_phase - 0.32F) / 0.26F;
       float const power_t = t * t * t;
       sample.right_hand = lerp(apex_pos, strike_pos, power_t);
       sample.left_hand = {
           -0.22F + (0.16F + 0.07F * amplified_weight) * power_t,
           shoulder_y - 0.05F - (0.10F + 0.05F * amplified_weight) * power_t,
           0.20F +
-              (0.36F + 0.16F * amplified_weight + 0.10F * finisher_bonus) * power_t};
+              (0.24F + 0.10F * amplified_weight + 0.07F * finisher_bonus) * power_t};
       torso_twist = strike_direction * (-0.11F + 0.30F * power_t);
       forward_lean = 0.04F + 0.22F * power_t;
       shoulder_rotation = 0.10F - 0.22F * power_t;
       weight_shift = -0.04F + 0.20F * power_t;
-    } else if (attack_phase < 0.82F) {
-      float const t = ease_out((attack_phase - 0.63F) / 0.19F);
+    } else if (attack_phase < 0.90F) {
+      float const t = ease_out((attack_phase - 0.58F) / 0.32F);
       sample.right_hand = lerp(strike_pos, followthrough_pos, t);
       sample.left_hand = {-0.10F + 0.05F * strike_direction * amplified_weight,
                           shoulder_y - 0.12F - 0.03F * amplified_weight,
-                          0.54F + 0.14F * amplified_weight + 0.10F * finisher_bonus};
+                          0.46F + 0.08F * amplified_weight + 0.06F * finisher_bonus};
       torso_twist = strike_direction * (0.18F - 0.05F * t);
       forward_lean = 0.24F - 0.06F * t;
       weight_shift = 0.18F;
     } else {
-      float const t = ease_out((attack_phase - 0.82F) / 0.18F);
+      float const t = ease_out((attack_phase - 0.90F) / 0.10F);
       sample.right_hand =
           add(add(scale(followthrough_pos, 1.0F - t), scale(recover_pos, 0.55F * t)),
               scale(rest_pos, 0.45F * t));
       sample.left_hand = {
           -0.10F - (0.10F + 0.03F * amplified_weight) * t,
           shoulder_y - 0.12F * (1.0F - t) - 0.02F * amplified_weight * (1.0F - t),
-          (0.54F + 0.14F * amplified_weight + 0.10F * finisher_bonus) * (1.0F - t) +
+          (0.46F + 0.08F * amplified_weight + 0.06F * finisher_bonus) * (1.0F - t) +
               0.16F * t};
       torso_twist = 0.12F * strike_direction * (1.0F - t);
       forward_lean = 0.16F * (1.0F - t);
@@ -395,37 +481,39 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
   return sample;
 }
 
-[[nodiscard]] auto
+[[maybe_unused, nodiscard]] auto
 resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
     -> HumanoidWeaponAttackPoseSample {
   float const attack_phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
-  float const waist_y = inputs.waist_y;
   constexpr float k_thrust_high = 1.0F;
   constexpr float k_thrust_middle = 0.0F;
   constexpr float k_thrust_low = -1.0F;
 
-  PoseVec3 const guard_pos{0.30F, shoulder_y + 0.08F, 0.30F};
-  PoseVec3 chamber_pos{0.34F, shoulder_y + 0.08F, 0.00F};
-  PoseVec3 thrust_pos{0.28F, shoulder_y - 0.10F, 1.04F};
-  PoseVec3 extended_pos{0.24F, shoulder_y - 0.16F, 1.18F};
-  PoseVec3 recover_pos{0.30F, shoulder_y + 0.04F, 0.48F};
+  // The hand remains close to the body while the weapon supplies the reach.
+  // These points deliberately fit inside a human arm span; pushing the grip
+  // toward the target produces an impossible, folded pose once IK resolves it.
+  PoseVec3 const guard_pos{0.30F, shoulder_y + 0.02F, 0.30F};
+  PoseVec3 chamber_pos{0.32F, shoulder_y + 0.05F, 0.02F};
+  PoseVec3 thrust_pos{0.27F, shoulder_y + 0.01F, 0.64F};
+  PoseVec3 extended_pos{0.24F, shoulder_y + 0.03F, 0.72F};
+  PoseVec3 recover_pos{0.29F, shoulder_y + 0.01F, 0.40F};
   float thrust_height = k_thrust_middle;
   float crouch_amount = 0.0F;
 
   switch (inputs.variant % 3U) {
   case 1U:
-    chamber_pos = {0.30F, shoulder_y + 0.10F, 0.0F};
-    thrust_pos = {0.28F, waist_y + 0.03F, 1.06F};
-    extended_pos = {0.24F, waist_y - 0.03F, 1.20F};
-    recover_pos = {0.28F, shoulder_y - 0.08F, 0.42F};
+    chamber_pos = {0.31F, shoulder_y + 0.04F, 0.03F};
+    thrust_pos = {0.25F, shoulder_y - 0.05F, 0.62F};
+    extended_pos = {0.22F, shoulder_y - 0.03F, 0.70F};
+    recover_pos = {0.28F, shoulder_y - 0.04F, 0.38F};
     thrust_height = k_thrust_low;
-    crouch_amount = 0.08F;
+    crouch_amount = 0.03F;
     break;
   case 2U:
-    chamber_pos = {0.35F, shoulder_y + 0.02F, 0.08F};
-    thrust_pos = {0.30F, shoulder_y - 0.02F, 1.00F};
-    extended_pos = {0.28F, shoulder_y - 0.06F, 1.12F};
+    chamber_pos = {0.33F, shoulder_y + 0.04F, 0.04F};
+    thrust_pos = {0.28F, shoulder_y + 0.06F, 0.62F};
+    extended_pos = {0.25F, shoulder_y + 0.09F, 0.70F};
     thrust_height = k_thrust_high;
     break;
   default:
@@ -440,69 +528,69 @@ resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
   float hip_rotation = 0.0F;
   float crouch_factor = 0.0F;
 
-  if (attack_phase < 0.18F) {
-    float const t = ease_in_out_cubic(attack_phase / 0.18F);
+  if (attack_phase < 0.20F) {
+    float const t = ease_in_out_cubic(attack_phase / 0.20F);
     sample.right_hand = lerp(guard_pos, chamber_pos, t);
     sample.left_hand = {-0.08F, shoulder_y - 0.04F, 0.22F * (1.0F - t) + 0.06F * t};
-    torso_twist = -0.06F * t;
-    hip_rotation = -0.04F * t;
-    forward_lean = -0.03F * t;
+    torso_twist = -0.04F * t;
+    hip_rotation = -0.02F * t;
+    forward_lean = -0.015F * t;
     crouch_factor = crouch_amount * t;
-  } else if (attack_phase < 0.28F) {
+  } else if (attack_phase < 0.30F) {
     sample.right_hand = chamber_pos;
     sample.left_hand = {-0.08F, shoulder_y - 0.04F, 0.06F};
-    torso_twist = -0.06F;
-    hip_rotation = -0.04F;
-    forward_lean = -0.03F;
+    torso_twist = -0.04F;
+    hip_rotation = -0.02F;
+    forward_lean = -0.015F;
     crouch_factor = crouch_amount;
-  } else if (attack_phase < 0.48F) {
-    float const t = (attack_phase - 0.28F) / 0.20F;
+  } else if (attack_phase < 0.50F) {
+    float const t = (attack_phase - 0.30F) / 0.20F;
     float const power_t = t * t * t;
     sample.right_hand = lerp(chamber_pos, thrust_pos, power_t);
     sample.left_hand = {-0.08F + 0.06F * power_t,
                         shoulder_y - 0.04F + 0.02F * power_t,
                         0.06F + 0.50F * power_t};
-    torso_twist = -0.06F + 0.14F * power_t;
-    hip_rotation = -0.04F + 0.10F * power_t;
-    forward_lean = -0.05F + 0.26F * power_t;
-    shoulder_drop = 0.08F * power_t;
-    step_forward = 0.18F * power_t;
+    torso_twist = -0.04F + 0.09F * power_t;
+    hip_rotation = -0.02F + 0.05F * power_t;
+    forward_lean = -0.015F + 0.065F * power_t;
+    shoulder_drop = 0.02F * power_t;
+    step_forward = 0.04F * power_t;
     crouch_factor = crouch_amount * (1.0F - power_t * 0.3F);
     if (thrust_height < 0.0F) {
-      crouch_factor += 0.06F * power_t;
+      crouch_factor += 0.025F * power_t;
     } else if (thrust_height > 0.0F) {
-      crouch_factor += 0.02F * power_t;
+      crouch_factor += 0.01F * power_t;
     }
-  } else if (attack_phase < 0.60F) {
-    float const t = smoothstep((attack_phase - 0.48F) / 0.12F);
+  } else if (attack_phase < 0.66F) {
+    float const t = smoothstep((attack_phase - 0.50F) / 0.16F);
     sample.right_hand = lerp(thrust_pos, extended_pos, t);
     sample.left_hand = {-0.02F, shoulder_y - 0.02F, 0.56F + 0.10F * t};
-    torso_twist = 0.08F;
-    hip_rotation = 0.06F;
-    forward_lean = 0.21F + 0.06F * t;
-    shoulder_drop = 0.08F + 0.03F * t;
-    step_forward = 0.18F + 0.05F * t;
+    torso_twist = 0.05F;
+    hip_rotation = 0.03F;
+    forward_lean = 0.05F + 0.01F * t;
+    shoulder_drop = 0.02F;
+    step_forward = 0.04F + 0.01F * t;
     crouch_factor = crouch_amount * 0.7F;
-  } else if (attack_phase < 0.78F) {
-    float const t = ease_in_out_cubic((attack_phase - 0.60F) / 0.18F);
+  } else if (attack_phase < 0.84F) {
+    float const t = ease_in_out_cubic((attack_phase - 0.66F) / 0.18F);
     sample.right_hand = lerp(extended_pos, recover_pos, t);
     sample.left_hand = {-0.02F * (1.0F - t) - 0.08F * t,
                         shoulder_y - 0.02F * (1.0F - t) - 0.05F * t,
                         0.66F * (1.0F - t) + 0.38F * t};
-    torso_twist = 0.08F * (1.0F - t);
-    hip_rotation = 0.06F * (1.0F - t);
-    forward_lean = 0.25F * (1.0F - t) + 0.04F * t;
-    shoulder_drop = 0.10F * (1.0F - t);
-    step_forward = 0.22F * (1.0F - t * 0.5F);
+    torso_twist = 0.05F * (1.0F - t);
+    hip_rotation = 0.03F * (1.0F - t);
+    forward_lean = 0.06F * (1.0F - t) + 0.015F * t;
+    shoulder_drop = 0.02F * (1.0F - t);
+    step_forward = 0.05F * (1.0F - t * 0.5F);
     crouch_factor = crouch_amount * 0.7F * (1.0F - t);
   } else {
-    float const t = ease_out((attack_phase - 0.78F) / 0.22F);
+    float const t = ease_out((attack_phase - 0.84F) / 0.16F);
     sample.right_hand = lerp(recover_pos, guard_pos, t);
     sample.left_hand = {-0.08F,
                         shoulder_y - 0.05F * (1.0F - t) - 0.02F * t,
                         0.38F * (1.0F - t) + 0.22F * t};
-    forward_lean = 0.04F * (1.0F - t);
-    step_forward = 0.08F * (1.0F - t);
+    forward_lean = 0.015F * (1.0F - t);
+    step_forward = 0.025F * (1.0F - t);
   }
 
   sample.shoulder_r_z_delta += torso_twist;
@@ -531,11 +619,11 @@ resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
                std::numbers::pi_v<float>);
   float const height_abs = std::abs(thrust_height);
   float const pelvis_drop =
-      thrust_drive * (0.010F + 0.014F * height_abs + 0.020F * crouch_amount);
+      thrust_drive * (0.006F + 0.008F * height_abs + 0.012F * crouch_amount);
   float const pelvis_drive =
-      thrust_drive * (0.020F + 0.028F * height_abs + 0.030F * crouch_amount);
+      thrust_drive * (0.010F + 0.012F * height_abs + 0.015F * crouch_amount);
   float const head_drive =
-      thrust_drive * (0.014F + 0.020F * height_abs + 0.016F * crouch_amount);
+      thrust_drive * (0.006F + 0.008F * height_abs + 0.008F * crouch_amount);
   sample.pelvis_y_delta -= pelvis_drop;
   sample.pelvis_z_delta += pelvis_drive;
   sample.neck_y_delta -= pelvis_drop * 0.18F;
@@ -543,15 +631,15 @@ resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
   sample.head_y_delta -= pelvis_drop * 0.28F;
   sample.head_z_delta += head_drive;
 
-  float const thrust_extent = std::clamp((attack_phase - 0.18F) / 0.60F, 0.0F, 1.0F);
+  float const thrust_extent = spear_grip_extension(attack_phase);
   sample.use_offhand_spear_grip = true;
   sample.offhand_spear_direction = resolve_humanoid_spear_direction({
       .is_attacking = true,
       .is_melee = true,
       .attack_phase = attack_phase,
   });
-  sample.offhand_along_offset = -0.08F + 0.04F * thrust_extent;
-  sample.offhand_y_drop = 0.05F + 0.03F * thrust_extent;
+  sample.offhand_along_offset = -0.08F - 0.20F * thrust_extent;
+  sample.offhand_y_drop = 0.005F + 0.045F * thrust_extent;
   sample.offhand_lateral_offset = -0.05F;
   return sample;
 }
@@ -559,26 +647,29 @@ resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
 [[nodiscard]] auto
 resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
                            bool from_hold) noexcept -> HumanoidWeaponAttackPoseSample {
+  if (!from_hold) {
+    return resolve_infantry_spear_thrust_pose(inputs);
+  }
   float const attack_phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const hold_depth = std::clamp(inputs.hold_depth, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
   float const height_offset = from_hold ? -hold_depth * 0.35F : 0.0F;
 
   PoseVec3 const guard_pos =
-      from_hold ? PoseVec3{0.22F, shoulder_y + height_offset + 0.05F, 0.32F}
-                : PoseVec3{0.30F, shoulder_y + 0.08F, 0.30F};
+      from_hold ? PoseVec3{0.22F, shoulder_y + height_offset + 0.03F, 0.30F}
+                : PoseVec3{0.30F, shoulder_y + 0.03F, 0.30F};
   PoseVec3 const chamber_pos =
-      from_hold ? PoseVec3{0.28F, shoulder_y + height_offset + 0.10F, 0.08F}
-                : PoseVec3{0.34F, shoulder_y + 0.12F, 0.04F};
+      from_hold ? PoseVec3{0.28F, shoulder_y + height_offset + 0.05F, 0.06F}
+                : PoseVec3{0.32F, shoulder_y + 0.05F, 0.04F};
   PoseVec3 const thrust_pos =
-      from_hold ? PoseVec3{0.24F, shoulder_y + height_offset - 0.08F, 0.90F}
-                : PoseVec3{0.28F, shoulder_y + 0.05F, 0.95F};
+      from_hold ? PoseVec3{0.24F, shoulder_y + height_offset - 0.02F, 0.58F}
+                : PoseVec3{0.28F, shoulder_y + 0.03F, 0.60F};
   PoseVec3 const extended_pos =
-      from_hold ? PoseVec3{0.22F, shoulder_y + height_offset - 0.12F, 1.00F}
-                : PoseVec3{0.25F, shoulder_y + 0.02F, 1.05F};
+      from_hold ? PoseVec3{0.22F, shoulder_y + height_offset + 0.01F, 0.64F}
+                : PoseVec3{0.25F, shoulder_y + 0.07F, 0.66F};
   PoseVec3 const recover_pos =
-      from_hold ? PoseVec3{0.24F, shoulder_y + height_offset + 0.02F, 0.48F}
-                : PoseVec3{0.30F, shoulder_y + 0.06F, 0.48F};
+      from_hold ? PoseVec3{0.24F, shoulder_y + height_offset + 0.01F, 0.40F}
+                : PoseVec3{0.30F, shoulder_y + 0.02F, 0.40F};
 
   HumanoidWeaponAttackPoseSample sample{};
   float forward_lean = 0.0F;
@@ -609,16 +700,16 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
                           shoulder_y + height_offset - 0.03F + 0.01F * power_t,
                           0.10F + 0.48F * power_t};
       torso_twist = -0.04F + 0.10F * power_t;
-      forward_lean = 0.12F * power_t;
-      shoulder_extension = 0.06F * power_t;
+      forward_lean = 0.04F * power_t;
+      shoulder_extension = 0.025F * power_t;
     } else if (attack_phase < 0.55F) {
       float const t = smoothstep((attack_phase - 0.42F) / 0.13F);
       sample.right_hand = lerp(thrust_pos, extended_pos, t);
       sample.left_hand = {
           -0.01F, shoulder_y + height_offset - 0.02F, 0.58F + 0.08F * t};
       torso_twist = 0.06F;
-      forward_lean = 0.12F + 0.04F * t;
-      shoulder_extension = 0.06F + 0.03F * t;
+      forward_lean = 0.04F + 0.01F * t;
+      shoulder_extension = 0.025F + 0.01F * t;
     } else if (attack_phase < 0.75F) {
       float const t = smoothstep((attack_phase - 0.55F) / 0.20F);
       sample.right_hand = lerp(extended_pos, recover_pos, t);
@@ -626,15 +717,15 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
                           shoulder_y + height_offset - 0.02F * (1.0F - t) - 0.04F * t,
                           0.66F * (1.0F - t) + 0.40F * t};
       torso_twist = 0.06F * (1.0F - t);
-      forward_lean = 0.16F * (1.0F - t) + 0.03F * t;
-      shoulder_extension = 0.09F * (1.0F - t);
+      forward_lean = 0.05F * (1.0F - t) + 0.015F * t;
+      shoulder_extension = 0.035F * (1.0F - t);
     } else {
       float const t = ease_out((attack_phase - 0.75F) / 0.25F);
       sample.right_hand = lerp(recover_pos, guard_pos, t);
       sample.left_hand = {-0.05F - 0.01F * t,
                           shoulder_y + height_offset - 0.04F * (1.0F - t) - 0.03F * t,
                           0.40F * (1.0F - t) + 0.28F * t};
-      forward_lean = 0.03F * (1.0F - t);
+      forward_lean = 0.015F * (1.0F - t);
     }
 
     sample.shoulder_r_z_delta += torso_twist + shoulder_extension;
@@ -645,24 +736,24 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     sample.neck_z_delta += forward_lean * 0.9F;
     sample.head_z_delta += forward_lean * 0.75F;
 
-    float const thrust_extent = std::clamp((attack_phase - 0.15F) / 0.55F, 0.0F, 1.0F);
-    sample.offhand_along_offset = -0.06F + 0.03F * thrust_extent;
-    sample.offhand_y_drop = 0.06F + 0.02F * thrust_extent;
+    float const thrust_extent = spear_grip_extension(attack_phase);
+    sample.offhand_along_offset = -0.08F - 0.18F * thrust_extent;
+    sample.offhand_y_drop = 0.005F + 0.045F * thrust_extent;
   } else {
     if (attack_phase < 0.18F) {
       float const t = ease_in_out_cubic(attack_phase / 0.18F);
       sample.right_hand = lerp(guard_pos, chamber_pos, t);
       sample.left_hand = {-0.08F, shoulder_y - 0.04F, 0.22F * (1.0F - t) + 0.06F * t};
-      torso_twist = -0.06F * t;
-      hip_rotation = -0.04F * t;
-      forward_lean = -0.03F * t;
+      torso_twist = -0.04F * t;
+      hip_rotation = -0.02F * t;
+      forward_lean = -0.015F * t;
     } else if (attack_phase < 0.28F) {
       float const t = (attack_phase - 0.18F) / 0.10F;
       sample.right_hand = chamber_pos;
       sample.left_hand = {-0.08F, shoulder_y - 0.04F, 0.06F};
-      torso_twist = -0.06F;
-      hip_rotation = -0.04F;
-      forward_lean = -0.03F - 0.02F * t;
+      torso_twist = -0.04F;
+      hip_rotation = -0.02F;
+      forward_lean = -0.015F - 0.005F * t;
     } else if (attack_phase < 0.48F) {
       float const t = (attack_phase - 0.28F) / 0.20F;
       float const power_t = t * t * t;
@@ -670,39 +761,39 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       sample.left_hand = {-0.08F + 0.06F * power_t,
                           shoulder_y - 0.04F + 0.02F * power_t,
                           0.06F + 0.50F * power_t};
-      torso_twist = -0.06F + 0.14F * power_t;
-      hip_rotation = -0.04F + 0.10F * power_t;
-      forward_lean = -0.05F + 0.18F * power_t;
-      shoulder_drop = 0.05F * power_t;
-      step_forward = 0.10F * power_t;
+      torso_twist = -0.04F + 0.09F * power_t;
+      hip_rotation = -0.02F + 0.05F * power_t;
+      forward_lean = -0.02F + 0.07F * power_t;
+      shoulder_drop = 0.02F * power_t;
+      step_forward = 0.04F * power_t;
     } else if (attack_phase < 0.60F) {
       float const t = ease_out((attack_phase - 0.48F) / 0.12F);
       sample.right_hand = lerp(thrust_pos, extended_pos, t);
       sample.left_hand = {-0.02F, shoulder_y - 0.02F, 0.56F + 0.10F * t};
-      torso_twist = 0.08F;
-      hip_rotation = 0.06F;
-      forward_lean = 0.13F + 0.05F * t;
-      shoulder_drop = 0.05F + 0.02F * t;
-      step_forward = 0.10F + 0.04F * t;
+      torso_twist = 0.05F;
+      hip_rotation = 0.03F;
+      forward_lean = 0.05F + 0.01F * t;
+      shoulder_drop = 0.02F;
+      step_forward = 0.04F + 0.01F * t;
     } else if (attack_phase < 0.78F) {
       float const t = ease_out((attack_phase - 0.60F) / 0.18F);
       sample.right_hand = lerp(extended_pos, recover_pos, t);
       sample.left_hand = {-0.02F * (1.0F - t) - 0.08F * t,
                           shoulder_y - 0.02F * (1.0F - t) - 0.05F * t,
                           0.66F * (1.0F - t) + 0.38F * t};
-      torso_twist = 0.08F * (1.0F - t);
-      hip_rotation = 0.06F * (1.0F - t);
-      forward_lean = 0.18F * (1.0F - t) + 0.04F * t;
-      shoulder_drop = 0.07F * (1.0F - t);
-      step_forward = 0.14F * (1.0F - t * 0.5F);
+      torso_twist = 0.05F * (1.0F - t);
+      hip_rotation = 0.03F * (1.0F - t);
+      forward_lean = 0.06F * (1.0F - t) + 0.015F * t;
+      shoulder_drop = 0.02F * (1.0F - t);
+      step_forward = 0.05F * (1.0F - t * 0.5F);
     } else {
       float const t = ease_out((attack_phase - 0.78F) / 0.22F);
       sample.right_hand = lerp(recover_pos, guard_pos, t);
       sample.left_hand = {-0.08F,
                           shoulder_y - 0.05F * (1.0F - t) - 0.02F * t,
                           0.38F * (1.0F - t) + 0.22F * t};
-      forward_lean = 0.04F * (1.0F - t);
-      step_forward = 0.07F * (1.0F - t);
+      forward_lean = 0.015F * (1.0F - t);
+      step_forward = 0.025F * (1.0F - t);
     }
 
     sample.shoulder_r_z_delta += torso_twist;
@@ -718,9 +809,9 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     sample.knee_r_z_delta += step_forward * 0.6F;
     sample.foot_l_z_delta -= step_forward * 0.15F;
 
-    float const thrust_extent = std::clamp((attack_phase - 0.18F) / 0.60F, 0.0F, 1.0F);
-    sample.offhand_along_offset = -0.08F + 0.04F * thrust_extent;
-    sample.offhand_y_drop = 0.05F + 0.03F * thrust_extent;
+    float const thrust_extent = spear_grip_extension(attack_phase);
+    sample.offhand_along_offset = -0.08F - 0.20F * thrust_extent;
+    sample.offhand_y_drop = 0.005F + 0.045F * thrust_extent;
   }
 
   sample.use_offhand_spear_grip = true;
@@ -832,7 +923,7 @@ auto resolve_humanoid_weapon_attack_pose(
   case HumanoidWeaponAttackKind::SpearThrustFromHold:
     return resolve_classic_spear_pose(inputs, true);
   case HumanoidWeaponAttackKind::SpearThrust:
-    return resolve_spear_pose(inputs);
+    return resolve_infantry_spear_thrust_pose(inputs);
   case HumanoidWeaponAttackKind::BasicMeleeStrike:
     return resolve_basic_melee_pose(inputs);
   case HumanoidWeaponAttackKind::SwordSlash:
@@ -849,6 +940,9 @@ auto resolve_humanoid_spear_direction(
     return normalize(lerp(rest, spear_braced_direction(), hold_blend));
   }
   if (inputs.is_attacking && inputs.is_melee) {
+    if (inputs.is_mounted) {
+      return mounted_spear_direction_for_thrust(inputs.attack_phase);
+    }
     return spear_direction_for_thrust(inputs.attack_phase);
   }
   return rest;
@@ -1075,8 +1169,11 @@ auto resolve_mounted_sword_strike_pose(
   constexpr MountedSeatOffset rest_pos{0.08F, 0.24F, 0.12F};
   constexpr MountedSeatOffset chamber_pos{-0.09F, 0.34F, 0.44F};
   constexpr MountedSeatOffset apex_pos{-0.04F, 0.44F, 0.52F};
-  constexpr MountedSeatOffset strike_pos{0.78F, 0.58F, -0.22F};
-  constexpr MountedSeatOffset followthrough_pos{1.00F, 0.72F, -0.32F};
+  // Keep the weapon hand above the saddle and inside a credible mounted arm
+  // envelope. The old negative height drove the rider down toward the horse's
+  // shoulder and made the follow-through look like a fall.
+  constexpr MountedSeatOffset strike_pos{0.58F, 0.52F, 0.18F};
+  constexpr MountedSeatOffset followthrough_pos{0.66F, 0.62F, 0.08F};
 
   MountedSwordStrikePoseSample sample{};
 
@@ -1127,7 +1224,7 @@ auto resolve_mounted_sword_strike_pose(
     sample.debug_label = "sword_followthrough";
   } else {
     float const t = (attack_phase - 0.84F) / 0.16F;
-    float const ease_t = ease_out(t);
+    float const ease_t = smoothstep(t);
     sample.right_hand = lerp(followthrough_pos, rest_pos, ease_t);
     sample.torso_twist = 0.09F * (1.0F - ease_t);
     sample.side_lean = 0.05F * (1.0F - ease_t);
@@ -1148,8 +1245,10 @@ auto resolve_mounted_spear_thrust_pose(
 
   constexpr MountedSeatOffset guard_pos{0.12F, 0.15F, 0.15F};
   constexpr MountedSeatOffset couch_pos{0.05F, 0.12F, 0.08F};
-  constexpr MountedSeatOffset thrust_pos{0.95F, 0.08F, 0.18F};
-  constexpr MountedSeatOffset extended_pos{1.05F, 0.05F, 0.15F};
+  // The spear supplies reach; the rider's hands must not chase the spear point
+  // beyond arm length. A compact grip also keeps the torso seated at impact.
+  constexpr MountedSeatOffset thrust_pos{0.68F, 0.08F, 0.22F};
+  constexpr MountedSeatOffset extended_pos{0.76F, 0.05F, 0.19F};
 
   MountedSpearThrustPoseSample sample{};
 
@@ -1172,17 +1271,17 @@ auto resolve_mounted_spear_thrust_pose(
     sample.debug_label = "spear_tension";
   } else if (attack_phase < 0.50F) {
     float const t = (attack_phase - 0.30F) / 0.20F;
-    float const power_t = t * t * t;
+    float const power_t = smoothstep(t);
     sample.right_hand = lerp(couch_pos, thrust_pos, power_t);
     sample.left_hand = lerp(
         MountedSeatOffset{couch_pos.forward, couch_pos.right - 0.22F, couch_pos.up},
         MountedSeatOffset{thrust_pos.forward, thrust_pos.right - 0.28F, thrust_pos.up},
         power_t);
-    sample.forward_lean = 0.04F + 0.16F * power_t;
+    sample.forward_lean = 0.04F + 0.10F * power_t;
     sample.torso_twist = 0.05F * power_t;
     sample.shoulder_drop = 0.04F * power_t;
     sample.torso_compression = 0.03F * (1.0F - power_t * 0.5F);
-    sample.head_forward_tilt = 0.5F * power_t;
+    sample.head_forward_tilt = 0.30F * power_t;
     sample.debug_label = "spear_thrust";
   } else if (attack_phase < 0.65F) {
     float const t = (attack_phase - 0.50F) / 0.15F;
@@ -1193,10 +1292,10 @@ auto resolve_mounted_spear_thrust_pose(
         MountedSeatOffset{
             extended_pos.forward, extended_pos.right - 0.32F, extended_pos.up},
         ease_t);
-    sample.forward_lean = 0.20F;
+    sample.forward_lean = 0.14F;
     sample.torso_twist = 0.05F;
     sample.shoulder_drop = 0.04F;
-    sample.head_forward_tilt = 0.5F;
+    sample.head_forward_tilt = 0.30F;
     sample.debug_label = "spear_extend";
   } else {
     float const t = (attack_phase - 0.65F) / 0.35F;
@@ -1207,7 +1306,7 @@ auto resolve_mounted_spear_thrust_pose(
             extended_pos.forward, extended_pos.right - 0.32F, extended_pos.up},
         MountedSeatOffset{guard_pos.forward, guard_pos.right - 0.25F, guard_pos.up},
         ease_t);
-    sample.forward_lean = 0.20F * (1.0F - ease_t);
+    sample.forward_lean = 0.14F * (1.0F - ease_t);
     sample.torso_twist = 0.05F * (1.0F - ease_t);
     sample.shoulder_drop = 0.04F * (1.0F - ease_t);
     sample.debug_label = "spear_recover";
@@ -1246,9 +1345,11 @@ auto resolve_mounted_bow_draw_pose(const MountedBowDrawPoseInputs& inputs) noexc
     -> MountedBowDrawPoseSample {
   float const draw_phase = std::clamp(inputs.draw_phase, 0.0F, 1.0F);
 
-  constexpr MountedSeatOffset bow_hold_pos{0.25F, -0.08F, 0.25F};
-  constexpr MountedSeatOffset draw_start_pos{0.25F, 0.0F, 0.25F};
-  constexpr MountedSeatOffset draw_end_pos{0.0F, 0.12F, 0.18F};
+  // Aim at shoulder/eye height. The previous chest-level targets made the
+  // archer appear to pull the string into the sternum.
+  constexpr MountedSeatOffset bow_hold_pos{0.38F, -0.10F, 0.42F};
+  constexpr MountedSeatOffset draw_start_pos{0.34F, 0.02F, 0.40F};
+  constexpr MountedSeatOffset draw_end_pos{0.04F, 0.16F, 0.46F};
 
   MountedBowDrawPoseSample sample{};
   sample.left_hand = bow_hold_pos;
@@ -1257,14 +1358,14 @@ auto resolve_mounted_bow_draw_pose(const MountedBowDrawPoseInputs& inputs) noexc
     float const t = draw_phase / 0.30F;
     float const ease_t = t * t;
     sample.right_hand = lerp(draw_start_pos, draw_end_pos, ease_t);
-    sample.right_hand_world_y_offset = -0.05F * (1.0F - ease_t);
+    sample.right_hand_world_y_offset = -0.015F * (1.0F - ease_t);
   } else if (draw_phase < 0.65F) {
     sample.right_hand = draw_end_pos;
   } else {
     float const t = (draw_phase - 0.65F) / 0.35F;
     float const ease_t = t * t * t;
     sample.right_hand = lerp(draw_end_pos, draw_start_pos, ease_t);
-    sample.right_hand_world_y_offset = -0.05F * ease_t;
+    sample.right_hand_world_y_offset = -0.015F * ease_t;
   }
 
   return sample;

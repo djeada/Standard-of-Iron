@@ -11,6 +11,7 @@
 #include "combat_rules.h"
 #include "command_service.h"
 #include "core/component.h"
+#include "formation_combat_geometry.h"
 #include "order_service.h"
 #include "pathfinding.h"
 
@@ -25,6 +26,40 @@ namespace {
 
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
+constexpr float full_translation_heading_error_degrees = 20.0F;
+constexpr float stopped_translation_heading_error_degrees = 100.0F;
+
+auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
+                                  const Engine::Core::UnitComponent& unit,
+                                  float single_body_turn_speed) -> float {
+  auto const layout = FormationCombat::resolve_layout(entity);
+  float turn_radius = 0.0F;
+  for (auto const& slot : layout.live_slots) {
+    turn_radius = std::max(turn_radius, std::hypot(slot.local_x, slot.local_z));
+  }
+  if (layout.total_count <= 1 || turn_radius <= 0.5F) {
+    return single_body_turn_speed;
+  }
+
+  float const max_outer_speed = std::max(2.0F, unit.speed * 1.5F);
+  float const derived =
+      max_outer_speed / turn_radius * 180.0F / std::numbers::pi_v<float>;
+  return std::clamp(derived, 30.0F, single_body_turn_speed);
+}
+
+auto heading_translation_scale(float yaw_degrees, float vx, float vz) -> float {
+  if (vx * vx + vz * vz <= 1.0e-5F) {
+    return 1.0F;
+  }
+  float const velocity_yaw = std::atan2(vx, vz) * 180.0F / std::numbers::pi_v<float>;
+  float const error =
+      std::fabs(std::fmod((velocity_yaw - yaw_degrees + 540.0F), 360.0F) - 180.0F);
+  return 1.0F - std::clamp((error - full_translation_heading_error_degrees) /
+                               (stopped_translation_heading_error_degrees -
+                                full_translation_heading_error_degrees),
+                           0.0F,
+                           1.0F);
+}
 
 auto should_skip_navigation(const Engine::Core::Entity& entity) -> bool {
   auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
@@ -123,20 +158,25 @@ void finalize_orientation(Engine::Core::Entity* entity,
 
   float const speed2 =
       movement->get_vx() * movement->get_vx() + movement->get_vz() * movement->get_vz();
+  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  float const turn_speed =
+      unit != nullptr
+          ? formation_turn_speed_degrees(*entity, *unit, desired_yaw_turn_speed_degrees)
+          : desired_yaw_turn_speed_degrees;
   if (speed2 > 1e-5F) {
     float const target_yaw = std::atan2(movement->get_vx(), movement->get_vz()) *
                              180.0F / std::numbers::pi_v<float>;
     float const current = transform->rotation.y;
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-    float const step = std::clamp(diff,
-                                  -desired_yaw_turn_speed_degrees * delta_time,
-                                  desired_yaw_turn_speed_degrees * delta_time);
+    float const step =
+        std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
     transform->rotation.y = current + step;
   } else if (transform->has_desired_yaw) {
     float const current = transform->rotation.y;
     float const target_yaw = transform->desired_yaw;
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-    float const step = std::clamp(diff, -180.0F * delta_time, 180.0F * delta_time);
+    float const step =
+        std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
     transform->rotation.y = current + step;
     if (std::fabs(diff) < 0.5F) {
       transform->has_desired_yaw = false;
@@ -217,7 +257,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (in_hold_mode) {
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(transform, delta_time, hold_mode_turn_speed_degrees);
+      apply_desired_yaw(
+          transform,
+          delta_time,
+          formation_turn_speed_degrees(*entity, *unit, hold_mode_turn_speed_degrees));
     }
     return;
   }
@@ -230,9 +273,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->clear_path();
-    if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(transform, delta_time, melee_turn_speed_degrees(*unit));
-    }
+    transform->desired_yaw = transform->rotation.y;
+    transform->has_desired_yaw = false;
     return;
   }
 
@@ -364,12 +406,14 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
         !movement->has_waypoints() || movement->remaining_waypoints() <= 1;
     float const arrive_radius =
         current_target_is_final
-            ? std::max(
-                  waypoint_arrive_radius,
-                  std::clamp(CommandService::get_unit_radius(*world, entity->get_id()) *
-                                 1.1F,
-                             0.25F,
-                             0.9F))
+            ? (movement->precise_arrival
+                   ? waypoint_arrive_radius
+                   : std::max(waypoint_arrive_radius,
+                              std::clamp(CommandService::get_unit_radius(
+                                             *world, entity->get_id()) *
+                                             1.1F,
+                                         0.25F,
+                                         0.9F)))
             : waypoint_arrive_radius;
     float const arrive_radius_sq = arrive_radius * arrive_radius;
 
@@ -441,8 +485,15 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
-  float const new_x = old_x + movement->vx * delta_time;
-  float const new_z = old_z + movement->vz * delta_time;
+  float const translation_scale =
+      current_position_allowed
+          ? heading_translation_scale(transform->rotation.y, movement->vx, movement->vz)
+          : 1.0F;
+
+  float const translated_vx = movement->vx * translation_scale;
+  float const translated_vz = movement->vz * translation_scale;
+  float const new_x = old_x + translated_vx * delta_time;
+  float const new_z = old_z + translated_vz * delta_time;
 
   auto cell_walkable = [](float wx, float wz) -> bool {
     return CommandService::is_grid_walkable(CommandService::world_to_grid(wx, wz));

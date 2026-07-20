@@ -9,11 +9,15 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/nations/carthage/ballista_renderer.h"
 #include "render/entity/nations/carthage/barracks_renderer.h"
+#include "render/entity/nations/carthage/catapult_renderer.h"
 #include "render/entity/nations/carthage/defense_tower_renderer.h"
 #include "render/entity/nations/carthage/home_renderer.h"
 #include "render/entity/nations/carthage/wall_renderer.h"
+#include "render/entity/nations/roman/ballista_renderer.h"
 #include "render/entity/nations/roman/barracks_renderer.h"
+#include "render/entity/nations/roman/catapult_renderer.h"
 #include "render/entity/nations/roman/defense_tower_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/entity/nations/roman/wall_renderer.h"
@@ -415,6 +419,27 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   EXPECT_GT(submitter.meshes.size(), k_min_home_mesh_count);
 }
 
+TEST(RenderArchetypeSiege, NationVariantRenderersAreRegistered) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_catapult_renderer(registry);
+  Carthage::register_catapult_renderer(registry);
+  Roman::register_ballista_renderer(registry);
+  Carthage::register_ballista_renderer(registry);
+
+  std::array<const char*, 4> const renderer_keys = {
+      "troops/roman/catapult",
+      "troops/carthage/catapult",
+      "troops/roman/ballista",
+      "troops/carthage/ballista",
+  };
+  for (const char* renderer_key : renderer_keys) {
+    auto renderer = registry.get(renderer_key);
+    ASSERT_TRUE(static_cast<bool>(renderer)) << renderer_key;
+  }
+}
+
 TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   using namespace Render::GL;
 
@@ -603,7 +628,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   auto render_bounds = [](auto register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
-    EntityRendererRegistry registry;
+    EntityRendererRegistry const registry;
     register_renderer_fn(registry);
     const auto renderer = registry.get(key);
     EXPECT_TRUE(static_cast<bool>(renderer));

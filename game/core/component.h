@@ -118,6 +118,7 @@ public:
   int owner_id{0};
   float vision_range;
   Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+  bool uses_nation_formation_profile{false};
   int render_individuals_per_unit_override{0};
   bool render_rider{true};
   std::uint8_t death_sequence_override{0xFF};
@@ -178,6 +179,7 @@ public:
     clear_path();
     vx = 0.0F;
     vz = 0.0F;
+    precise_arrival = false;
   }
 
   [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
@@ -237,6 +239,8 @@ private:
   bool stuck_ref_valid{false};
   float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
   float stuck_timer{0.0F};
+
+  bool precise_arrival{false};
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {
@@ -349,12 +353,6 @@ public:
   bool in_melee_lock{false};
   EntityID melee_lock_target_id{0};
 
-  bool has_pending_melee_strike{false};
-  EntityID pending_melee_target_id{0};
-  int pending_melee_damage{0};
-  float pending_melee_elapsed{0.0F};
-  float pending_melee_contact_time{0.0F};
-
   static constexpr float k_melee_contact_range_grace = 0.75F;
 
   [[nodiscard]] auto is_in_melee_range(float distance,
@@ -420,6 +418,7 @@ public:
   std::array<EntityID, k_max_action_hit_targets> hit_target_ids{};
   std::uint8_t hit_target_count{0};
   int last_damage{0};
+  int requested_damage{0};
   float action_elapsed_time{0.0F};
   float action_duration{0.0F};
   float previous_normalized_action_time{0.0F};
@@ -573,6 +572,7 @@ class HitFeedbackComponent : public Component {
 public:
   HitFeedbackComponent() = default;
 
+  EntityID source_attacker_id{0};
   bool is_reacting{false};
   float reaction_time{0.0F};
   float reaction_intensity{0.0F};
@@ -868,6 +868,7 @@ public:
   float below_cancel_speed_time{0.0F};
   float cooldown_duration{0.65F};
   float cooldown_remaining{0.0F};
+  float impact_speed{0.0F};
   EntityID active_target_id{0};
   EntityID last_impact_target_id{0};
 };
@@ -1088,6 +1089,13 @@ public:
     float state_duration{1.0F};
     float dead_hold_duration{0.8F};
     std::uint8_t sequence_variant{0};
+    bool launched{false};
+    float launch_velocity_x{0.0F};
+    float launch_velocity_y{0.0F};
+    float launch_velocity_z{0.0F};
+
+    float launch_pitch_speed{0.0F};
+    float launch_roll_speed{0.0F};
   };
 
   std::vector<Entry> entries;
@@ -1220,6 +1228,12 @@ public:
   bool active{false};
   float formation_center_x{0.0F};
   float formation_center_z{0.0F};
+  std::uint64_t formation_id{0};
+  int stable_slot_id{-1};
+  int stable_rank{-1};
+  int stable_file{-1};
+  float stable_slot_x{0.0F};
+  float stable_slot_z{0.0F};
 };
 
 class StaminaComponent : public Component {
@@ -1370,6 +1384,139 @@ public:
   bool valid{true};
 
   float lease_remaining{2.0F};
+};
+
+struct FormationEngagementPair {
+  std::uint16_t attacker_slot{0};
+  std::uint16_t target_slot{0};
+  float root_distance{0.0F};
+  float surface_gap{0.0F};
+
+  auto operator==(const FormationEngagementPair&) const -> bool = default;
+};
+
+class FormationContactComponent : public Component {
+public:
+  FormationContactComponent() = default;
+
+  EntityID target_id{0};
+  float surface_gap{0.0F};
+  bool in_contact{false};
+  std::uint32_t revision{0};
+  std::vector<std::uint16_t> engaged_soldier_indices;
+
+  std::vector<FormationEngagementPair> engagement_pairs;
+};
+
+enum class FormationSoldierAction : std::uint8_t {
+  FollowUnit,
+  MeleeReady,
+  MeleeEngaged,
+
+  MeleeFollowThrough,
+};
+
+struct FormationSoldierPresentation {
+  std::uint16_t slot_index{0};
+  std::uint16_t row{0};
+  std::uint16_t col{0};
+  float local_x{0.0F};
+  float local_z{0.0F};
+  float local_yaw{0.0F};
+  bool alive{false};
+  FormationSoldierAction action{FormationSoldierAction::FollowUnit};
+  std::uint16_t target_slot{0};
+  float engagement_surface_gap{0.0F};
+
+  auto operator==(const FormationSoldierPresentation&) const -> bool = default;
+};
+
+class FormationPresentationComponent : public Component {
+public:
+  FormationPresentationComponent() = default;
+
+  std::uint32_t formation_seed{0};
+  std::uint16_t rows{1};
+  std::uint16_t cols{1};
+  float spacing{0.75F};
+  EntityID target_id{0};
+  bool target_alive{false};
+  bool melee_ordered{false};
+  bool allow_full_body_hit_reaction{true};
+  std::uint32_t revision{0};
+  std::vector<FormationSoldierPresentation> soldiers;
+};
+
+enum class CreatureCastPresentation : std::uint8_t {
+  None,
+  Fireball,
+};
+
+class CreaturePresentationComponent : public Component {
+public:
+  CreaturePresentationComponent() = default;
+
+  bool snapshot_valid{false};
+  std::uint32_t revision{0};
+
+  EntityID target_id{0};
+  bool target_alive{false};
+  bool combat_active{false};
+  bool attack_from_combat_state{false};
+  bool attack_from_melee_lock{false};
+  bool is_attacking{false};
+  bool is_melee{false};
+  bool is_in_melee_lock{false};
+  CombatAnimationState combat_phase{CombatAnimationState::Idle};
+  float combat_phase_progress{0.0F};
+  CombatAttackFamily attack_family{CombatAttackFamily::None};
+  std::uint8_t attack_variant{0};
+  bool finisher_attack{false};
+  float attack_offset{0.0F};
+  bool has_attack_offset{false};
+
+  bool is_casting{false};
+  CreatureCastPresentation cast{CreatureCastPresentation::None};
+  bool is_hit_reacting{false};
+  float hit_reaction_intensity{0.0F};
+  float hit_recoil_x{0.0F};
+  float hit_recoil_z{0.0F};
+  bool allow_full_body_hit_reaction{true};
+
+  bool is_healing{false};
+  float healing_target_dx{0.0F};
+  float healing_target_dz{0.0F};
+  bool is_constructing{false};
+  float construction_progress{0.0F};
+  bool is_dying{false};
+  bool is_dead{false};
+  float death_progress{0.0F};
+  std::uint8_t death_variant{0};
+
+  bool guard_requested{false};
+  bool formation_guard_active{false};
+  bool guard_mode_indicator{false};
+  bool hold_mode_indicator{false};
+  bool patrol_mode_indicator{false};
+  bool hold_requested{false};
+  bool hold_exit_requested{false};
+  float hold_entry_progress{0.0F};
+  float hold_exit_progress{0.0F};
+  float hold_enter_duration{Defaults::k_hold_kneel_duration};
+  float hold_exit_duration{Defaults::k_hold_stand_up_duration};
+
+  bool fpv_controlled{false};
+  bool has_commander{false};
+  bool jump_active{false};
+  float jump_phase{0.0F};
+  float jump_height_offset{0.0F};
+  bool flag_rally_planting{false};
+  float flag_rally_animation_timer{0.0F};
+  float flag_rally_cost{0.0F};
+  std::uint8_t authored_action_id{0};
+  bool authored_action_running{false};
+  bool authored_action_completed{false};
+  float authored_action_phase{0.0F};
 };
 
 class TargetCommitmentComponent : public Component {

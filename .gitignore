@@ -92,3 +92,6 @@ assets/campaing_map/
 tools/map_pipeline/assets/
 actionlint
 .codex
+
+# Generated Arena gameplay reports, traces, and frame captures
+/artifacts/

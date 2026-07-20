@@ -166,6 +166,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type));
     unit_obj["owner_id"] = unit->owner_id;
     unit_obj["nation_id"] = Game::Systems::nation_id_to_qstring(unit->nation_id);
+    unit_obj["uses_nation_formation_profile"] = unit->uses_nation_formation_profile;
     unit_obj["render_individuals_per_unit_override"] =
         unit->render_individuals_per_unit_override;
     unit_obj["render_rider"] = unit->render_rider;
@@ -184,6 +185,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     movement_obj["vx"] = movement->vx;
     movement_obj["vz"] = movement->vz;
     movement_obj["path_index"] = static_cast<int>(movement->path_index);
+    movement_obj["precise_arrival"] = movement->precise_arrival;
 
     QJsonArray path_array;
     for (const auto& waypoint : movement->path) {
@@ -220,12 +222,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     attack_obj["in_melee_lock"] = attack->in_melee_lock;
     attack_obj["melee_lock_target_id"] =
         static_cast<qint64>(attack->melee_lock_target_id);
-    attack_obj["has_pending_melee_strike"] = attack->has_pending_melee_strike;
-    attack_obj["pending_melee_target_id"] =
-        static_cast<qint64>(attack->pending_melee_target_id);
-    attack_obj["pending_melee_damage"] = attack->pending_melee_damage;
-    attack_obj["pending_melee_elapsed"] = attack->pending_melee_elapsed;
-    attack_obj["pending_melee_contact_time"] = attack->pending_melee_contact_time;
     entity_obj["attack"] = attack_obj;
   }
 
@@ -569,6 +565,8 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
 
   if (const auto* hit_feedback = entity->get_component<HitFeedbackComponent>()) {
     QJsonObject hit_feedback_obj;
+    hit_feedback_obj["source_attacker_id"] =
+        static_cast<qint64>(hit_feedback->source_attacker_id);
     hit_feedback_obj["is_reacting"] = hit_feedback->is_reacting;
     hit_feedback_obj["reaction_time"] =
         static_cast<double>(hit_feedback->reaction_time);
@@ -636,6 +634,12 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         static_cast<double>(formation->formation_center_x);
     formation_obj["formation_center_z"] =
         static_cast<double>(formation->formation_center_z);
+    formation_obj["formation_id"] = static_cast<qint64>(formation->formation_id);
+    formation_obj["stable_slot_id"] = formation->stable_slot_id;
+    formation_obj["stable_rank"] = formation->stable_rank;
+    formation_obj["stable_file"] = formation->stable_file;
+    formation_obj["stable_slot_x"] = formation->stable_slot_x;
+    formation_obj["stable_slot_z"] = formation->stable_slot_z;
     entity_obj["formation_mode"] = formation_obj;
   }
 
@@ -746,6 +750,10 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         unit->nation_id = Game::Systems::NationID::RomanRepublic;
       }
     }
+    unit->uses_nation_formation_profile =
+        unit_obj.contains("uses_nation_formation_profile")
+            ? unit_obj["uses_nation_formation_profile"].toBool(false)
+            : Game::Units::spawn_typeToTroopType(unit->spawn_type).has_value();
     unit->render_individuals_per_unit_override =
         unit_obj["render_individuals_per_unit_override"].toInt(0);
     unit->render_rider = unit_obj["render_rider"].toBool(true);
@@ -763,6 +771,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     movement->goal_y = static_cast<float>(movement_obj["goal_y"].toDouble());
     movement->vx = static_cast<float>(movement_obj["vx"].toDouble());
     movement->vz = static_cast<float>(movement_obj["vz"].toDouble());
+    movement->precise_arrival = movement_obj["precise_arrival"].toBool(false);
     movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());
@@ -817,15 +826,6 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     attack->in_melee_lock = attack_obj["in_melee_lock"].toBool(false);
     attack->melee_lock_target_id = static_cast<EntityID>(
         attack_obj["melee_lock_target_id"].toVariant().toULongLong());
-    attack->has_pending_melee_strike =
-        attack_obj["has_pending_melee_strike"].toBool(false);
-    attack->pending_melee_target_id = static_cast<EntityID>(
-        attack_obj["pending_melee_target_id"].toVariant().toULongLong());
-    attack->pending_melee_damage = attack_obj["pending_melee_damage"].toInt(0);
-    attack->pending_melee_elapsed =
-        static_cast<float>(attack_obj["pending_melee_elapsed"].toDouble());
-    attack->pending_melee_contact_time =
-        static_cast<float>(attack_obj["pending_melee_contact_time"].toDouble());
   }
 
   if (json.contains("attack_target")) {
@@ -1289,6 +1289,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
   if (json.contains("hit_feedback")) {
     const auto hit_feedback_obj = json["hit_feedback"].toObject();
     auto* hit_feedback = entity->add_component<HitFeedbackComponent>();
+    hit_feedback->source_attacker_id =
+        static_cast<EntityID>(hit_feedback_obj["source_attacker_id"].toInteger(0));
     hit_feedback->is_reacting = hit_feedback_obj["is_reacting"].toBool(false);
     hit_feedback->reaction_time =
         static_cast<float>(hit_feedback_obj["reaction_time"].toDouble(0.0));
@@ -1369,6 +1371,15 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(formation_obj["formation_center_x"].toDouble(0.0));
     formation->formation_center_z =
         static_cast<float>(formation_obj["formation_center_z"].toDouble(0.0));
+    formation->formation_id = static_cast<std::uint64_t>(
+        formation_obj["formation_id"].toVariant().toULongLong());
+    formation->stable_slot_id = formation_obj["stable_slot_id"].toInt(-1);
+    formation->stable_rank = formation_obj["stable_rank"].toInt(-1);
+    formation->stable_file = formation_obj["stable_file"].toInt(-1);
+    formation->stable_slot_x =
+        static_cast<float>(formation_obj["stable_slot_x"].toDouble(0.0));
+    formation->stable_slot_z =
+        static_cast<float>(formation_obj["stable_slot_z"].toDouble(0.0));
   }
 
   if (json.contains("stamina")) {

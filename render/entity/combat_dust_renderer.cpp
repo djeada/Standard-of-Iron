@@ -12,9 +12,9 @@
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/combat_rules.h"
+#include "../../game/systems/formation_combat_geometry.h"
 #include "../../game/systems/projectile_kind.h"
 #include "../../game/systems/projectile_system.h"
-#include "../../game/units/troop_config.h"
 #include "../combat_dust_defaults.h"
 #include "../scene_renderer.h"
 
@@ -108,11 +108,7 @@ auto transform_unit_anchor(const Engine::Core::TransformComponent& transform,
 
 auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
     -> int {
-  if (unit_comp.render_individuals_per_unit_override > 0) {
-    return unit_comp.render_individuals_per_unit_override;
-  }
-  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
-      unit_comp.spawn_type);
+  return Game::Systems::FormationCombat::resolve_definition(unit_comp).total_count;
 }
 } // namespace
 

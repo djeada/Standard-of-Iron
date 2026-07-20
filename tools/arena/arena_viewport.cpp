@@ -22,10 +22,12 @@
 
 #include "app/core/renderer_bootstrap.h"
 #include "app/utils/movement_utils.h"
+#include "arena_scenario.h"
 #include "arena_scenarios.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/map_transformer.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
@@ -36,11 +38,13 @@
 #include "game/systems/camera_service.h"
 #include "game/systems/camera_visibility_service.h"
 #include "game/systems/command_service.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/picking_service.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
@@ -229,10 +233,7 @@ auto is_mounted_spawn_type(Game::Units::SpawnType spawn_type) -> bool {
 }
 
 auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> int {
-  if (unit.render_individuals_per_unit_override > 0) {
-    return unit.render_individuals_per_unit_override;
-  }
-  return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
+  return Game::Systems::FormationCombat::resolve_definition(unit).total_count;
 }
 
 auto entity_spawn_clearance(const Engine::Core::Entity& entity) -> float {
@@ -305,7 +306,20 @@ ArenaViewport::ArenaViewport(QWidget* parent)
 
   m_frame_clock.start();
   m_frame_timer.setInterval(16);
-  connect(&m_frame_timer, &QTimer::timeout, this, qOverload<>(&ArenaViewport::update));
+  connect(&m_frame_timer, &QTimer::timeout, this, [this]() {
+    if (m_batch_fixed_step > 0.0F) {
+
+      if (context() != nullptr && context()->isValid()) {
+        m_batch_frame_in_progress = true;
+        makeCurrent();
+        paintGL();
+        doneCurrent();
+        m_batch_frame_in_progress = false;
+      }
+    } else {
+      update();
+    }
+  });
   m_frame_timer.start();
 }
 
@@ -340,6 +354,7 @@ void ArenaViewport::configure_runtime() {
 
   m_unit_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*m_unit_factory);
+  Game::Map::MapTransformer::setFactoryRegistry(m_unit_factory);
 
   setup_default_players();
   sync_spawn_selection_defaults();
@@ -402,13 +417,17 @@ void ArenaViewport::paintGL() {
     return;
   }
 
-  float real_dt = 1.0F / 60.0F;
-  if (m_frame_clock.isValid()) {
+  QElapsedTimer frame_work_clock;
+  frame_work_clock.start();
+
+  float real_dt = m_batch_fixed_step > 0.0F ? m_batch_fixed_step : 1.0F / 60.0F;
+  if (m_batch_fixed_step <= 0.0F && m_frame_clock.isValid()) {
     real_dt =
         std::clamp(static_cast<float>(m_frame_clock.restart()) / 1000.0F, 0.0F, 0.1F);
   }
   m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
-  float const simulation_dt = m_paused ? 0.0F : real_dt;
+  bool const sampled_frame = m_batch_fixed_step <= 0.0F || m_batch_frame_in_progress;
+  float const simulation_dt = (m_paused || !sampled_frame) ? 0.0F : real_dt;
 
   sanitize_selection();
   apply_keyboard_camera_controls(real_dt);
@@ -471,6 +490,25 @@ void ArenaViewport::paintGL() {
       draw_controls_overlay(stats_painter);
     }
   }
+
+  if (m_scenario_runner != nullptr && sampled_frame) {
+    double const frame_time_ms =
+        static_cast<double>(frame_work_clock.nsecsElapsed()) / 1'000'000.0;
+    m_scenario_runner->observe_rendered_frame(frame_time_ms);
+    std::size_t const issue_revision = m_scenario_runner->issue_revision();
+    if (issue_revision > m_last_scenario_issue_revision) {
+      auto const& issues = m_scenario_runner->report().issues;
+      m_last_scenario_issue_revision = issue_revision;
+      emit scenario_issue_detected(m_scenario_runner->definition().id,
+                                   issues.empty() ? QString{} : issues.back().message);
+    }
+    if (m_scenario_runner->finished() && !m_scenario_finished_emitted) {
+      m_scenario_finished_emitted = true;
+      auto const& report = m_scenario_runner->report();
+      emit scenario_finished(report.scenario_id, report.passed(), report.summary());
+    }
+  }
+  emit frame_rendered();
 }
 
 void ArenaViewport::keyPressEvent(QKeyEvent* event) {
@@ -1594,19 +1632,28 @@ void ArenaViewport::spawn_buildings(int count) {
 
 auto ArenaViewport::spawn_single_building(int owner_id,
                                           Game::Systems::NationID nation_id,
-                                          Game::Units::SpawnType building_type)
+                                          Game::Units::SpawnType building_type,
+                                          std::optional<QVector3D> requested_position,
+                                          bool ai_controlled)
     -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
-  QVector3D const spawn_position = find_available_spawn_position(
-      resolve_spawn_anchor_world(), k_building_spawn_clearance);
+  QVector3D const spawn_position =
+      requested_position.has_value()
+          ? Game::Map::TerrainService::instance().resolve_surface_world_position(
+                requested_position->x(),
+                requested_position->z(),
+                0.0F,
+                requested_position->y())
+          : find_available_spawn_position(resolve_spawn_anchor_world(),
+                                          k_building_spawn_clearance);
 
   Game::Units::SpawnParams params;
   params.position = spawn_position;
   params.player_id = owner_id;
   params.spawn_type = building_type;
-  params.ai_controlled = false;
+  params.ai_controlled = ai_controlled;
   params.nation_id = nation_id;
 
   auto unit = m_unit_factory->create(building_type, *m_world, params);
@@ -1714,341 +1761,204 @@ void ArenaViewport::clear_world_props_of_type() {
 }
 
 void ArenaViewport::reset_arena() {
+  m_scenario_runner.reset();
+  m_last_scenario_issue_revision = 0U;
+  m_scenario_finished_emitted = false;
   clear_units();
   clear_world_props();
-  m_active_scenario = {};
   m_attack_scrub_entity_id = 0;
   m_attack_scrub_enabled = false;
   m_attack_scrub_phase = 0.5F;
   set_force_full_creature_lod(true);
   pause_simulation(false);
   reset_camera();
+  if (!m_combat_debug_overlay_enabled) {
+    Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);
+  }
+}
+
+void ArenaViewport::set_batch_fixed_step(float seconds) {
+  m_batch_fixed_step = std::max(0.0F, seconds);
+
+  m_frame_timer.setTimerType(Qt::PreciseTimer);
+  int const interval_ms =
+      m_batch_fixed_step > 0.0F
+          ? std::max(1, static_cast<int>(std::lround(m_batch_fixed_step * 1000.0F)))
+          : 16;
+  m_frame_timer.setInterval(interval_ms);
+}
+
+void ArenaViewport::set_scenario_duration_override(float seconds) {
+  m_scenario_duration_override = std::max(0.0F, seconds);
+  if (m_scenario_runner != nullptr && m_scenario_duration_override > 0.0F) {
+    m_scenario_runner->set_duration_limit(m_scenario_duration_override);
+  }
+}
+
+auto ArenaViewport::active_scenario_finished() const -> bool {
+  return m_scenario_runner != nullptr && m_scenario_runner->finished();
+}
+
+auto ArenaViewport::active_scenario_report() const
+    -> const Arena::ArenaScenarioReport* {
+  return m_scenario_runner != nullptr ? &m_scenario_runner->report() : nullptr;
+}
+
+auto ArenaViewport::write_scenario_artifacts(const QString& directory,
+                                             QString* error) const -> bool {
+  if (m_scenario_runner == nullptr) {
+    if (error != nullptr) {
+      *error = QStringLiteral("no Arena scenario is active");
+    }
+    return false;
+  }
+  return m_scenario_runner->write_artifacts(directory, error);
 }
 
 void ArenaViewport::load_scenario(const QString& scenario_id) {
-  if (Arena::Scenarios::find_option(scenario_id) == nullptr || m_world == nullptr) {
+  auto const* definition = Arena::Scenarios::find_definition(scenario_id);
+  if (definition == nullptr || m_world == nullptr) {
     return;
   }
 
   reset_arena();
   clear_camera_key_state();
+  if (!definition->resource_patches.empty()) {
+    const auto& terrain_field = Game::Map::TerrainService::instance().terrain_field();
+    for (const auto& patch : definition->resource_patches) {
+      for (int index = 0; index < patch.count; ++index) {
+        const QVector3D world_position = patch.origin + patch.spacing * index;
+        const QVector2D grid_position =
+            grid_position_from_world(terrain_field, world_position);
+        Game::Map::WorldProp prop;
+        prop.type = world_prop_type_from_string(patch.prop_type);
+        prop.x = grid_position.x();
+        prop.z = grid_position.y();
+        prop.scale = patch.scale;
+        prop.persistent = true;
+        m_world_props.push_back(prop);
+      }
+    }
+    reconfigure_terrain_from_state();
+  }
 
-  auto set_attack_target =
-      [this](Engine::Core::EntityID attacker_id,
-             Engine::Core::EntityID target_id,
-             bool should_chase,
-             Engine::Core::AttackComponent::CombatMode preferred_mode) {
-        auto* attacker = m_world->get_entity(attacker_id);
-        auto* attack = attacker != nullptr
-                           ? attacker->get_component<Engine::Core::AttackComponent>()
-                           : nullptr;
-        if (attacker == nullptr || attack == nullptr) {
-          return;
-        }
-        auto* attack_target =
-            attacker->get_component<Engine::Core::AttackTargetComponent>();
-        if (attack_target == nullptr) {
-          attack_target =
-              attacker->add_component<Engine::Core::AttackTargetComponent>();
-        }
-        if (attack_target == nullptr) {
-          return;
-        }
-        attack_target->target_id = target_id;
-        attack_target->should_chase = should_chase;
-        attack->preferred_mode = preferred_mode;
-        attack->current_mode = preferred_mode;
-      };
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  bool has_scenario_ai = false;
+  for (auto const& group : definition->groups) {
+    if (!group.ai_controlled) {
+      continue;
+    }
+    has_scenario_ai = true;
+    owners.register_owner_with_id(
+        group.owner_id,
+        Game::Systems::OwnerType::AI,
+        QStringLiteral("Arena Economy AI %1").arg(group.owner_id).toStdString());
+    owners.set_owner_team(group.owner_id, group.owner_id);
+    nations.set_player_nation(group.owner_id, group.nation_id);
+    resources.ensure_owner(group.owner_id);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Gold, 150);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Food, 150);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Wood, 200);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Stone, 180);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Iron, 30);
+  }
+  QVector3D const scenario_origin = resolve_spawn_anchor_world();
 
-  auto set_unit_visuals = [this](Engine::Core::EntityID entity_id,
-                                 int individuals_per_unit,
-                                 bool render_rider) {
-    auto* entity = m_world->get_entity(entity_id);
+  Arena::ArenaScenarioHost host;
+  host.spawn_unit =
+      [this](const Arena::ArenaScenarioGroup& group,
+             const QVector3D& requested_position) -> Engine::Core::EntityID {
+    const bool building_group = group.spawn_type.has_value() &&
+                                Game::Units::is_building_spawn(*group.spawn_type);
+    QVector3D const position =
+        building_group ? requested_position
+                       : App::Utils::snap_to_walkable_ground(requested_position);
+    Engine::Core::EntityID const entity_id =
+        building_group ? spawn_single_building(group.owner_id,
+                                               group.nation_id,
+                                               *group.spawn_type,
+                                               position,
+                                               group.ai_controlled)
+                       : spawn_single_unit(group.owner_id,
+                                           group.nation_id,
+                                           group.troop_type,
+                                           position,
+                                           group.ai_controlled);
+    auto* entity = m_world != nullptr ? m_world->get_entity(entity_id) : nullptr;
+    auto* transform = entity != nullptr
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
     auto* unit = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
-    if (unit == nullptr) {
-      return;
+    if (transform != nullptr) {
+      transform->rotation.y = group.facing_degrees;
+      transform->desired_yaw = group.facing_degrees;
+      transform->has_desired_yaw = true;
     }
-    unit->render_individuals_per_unit_override = individuals_per_unit;
-    unit->render_rider = render_rider;
-  };
-
-  auto set_unit_health =
-      [this](Engine::Core::EntityID entity_id, int health, int max_health) {
-        auto* entity = m_world->get_entity(entity_id);
-        auto* unit = entity != nullptr
-                         ? entity->get_component<Engine::Core::UnitComponent>()
-                         : nullptr;
-        if (unit == nullptr) {
-          return;
-        }
-        unit->health = std::max(0, health);
-        unit->max_health = std::max(1, max_health);
-      };
-
-  QVector3D const anchor = resolve_spawn_anchor_world();
-  auto spawn_at = [this, anchor, &set_unit_visuals](int owner_id,
-                                                    Game::Systems::NationID nation_id,
-                                                    Game::Units::TroopType troop_type,
-                                                    const QVector3D& offset,
-                                                    int individuals_per_unit = 1,
-                                                    bool render_rider = true) {
-    QVector3D const world_position = App::Utils::snap_to_walkable_ground(QVector3D(
-        anchor.x() + offset.x(), anchor.y() + offset.y(), anchor.z() + offset.z()));
-    Engine::Core::EntityID const entity_id =
-        spawn_single_unit(owner_id, nation_id, troop_type, world_position, false);
-    if (entity_id != 0U) {
-      set_unit_visuals(entity_id, individuals_per_unit, render_rider);
+    if (unit != nullptr) {
+      unit->render_individuals_per_unit_override = group.individuals_per_unit;
+      unit->render_rider = group.render_rider;
+      if (group.max_health_override > 0) {
+        unit->max_health = group.max_health_override;
+      }
+      if (group.health_override > 0) {
+        unit->health = std::min(group.health_override, std::max(1, unit->max_health));
+      }
     }
     return entity_id;
   };
-
-  std::vector<Engine::Core::EntityID> spawned_ids;
-  auto finalize_scenario = [this,
-                            &spawned_ids](float distance, float angle, float yaw) {
-    m_active_scenario.tracked_entities = spawned_ids;
-    select_spawned_entities(spawned_ids);
+  host.find_unit = [this](Engine::Core::EntityID entity_id) {
+    return find_unit_handle(entity_id);
+  };
+  host.set_camera = [this](const std::vector<Engine::Core::EntityID>& entities,
+                           const Arena::ArenaCameraView& view) {
     if (m_camera != nullptr) {
-      m_camera->set_rts_view(
-          scenario_center(m_world.get(), spawned_ids), distance, angle, yaw);
+      m_camera->set_rts_view(scenario_center(m_world.get(), entities),
+                             view.distance,
+                             view.angle,
+                             view.yaw);
     }
-    update();
+  };
+  host.set_force_full_creature_lod = [this](bool enabled) {
+    set_force_full_creature_lod(enabled);
   };
 
-  m_active_scenario = {};
-  m_active_scenario.id = scenario_id;
+  m_scenario_runner = std::make_unique<Arena::ArenaScenarioRunner>(
+      *m_world, std::move(host), *definition, scenario_origin);
+  if (m_scenario_duration_override > 0.0F) {
+    m_scenario_runner->set_duration_limit(m_scenario_duration_override);
+  }
+  m_last_scenario_issue_revision = 0U;
+  m_scenario_finished_emitted = false;
+  Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(true);
 
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_sword_duel_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(-1.4F, 0.0F, 0.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(1.4F, 0.0F, 0.0F));
-    set_attack_target(
-        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    set_attack_target(
-        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(9.0F, 42.0F, 30.0F);
+  if (!m_scenario_runner->start()) {
+    qWarning().noquote() << QStringLiteral(
+                                "Arena scenario '%1' failed validation or startup")
+                                .arg(scenario_id);
+    m_scenario_runner.reset();
     return;
   }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_spear_duel_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Spearman,
-                                   QVector3D(-1.8F, 0.0F, 0.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Spearman,
-                                   QVector3D(1.8F, 0.0F, 0.0F));
-    set_attack_target(
-        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    set_attack_target(
-        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(9.5F, 42.0F, 30.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_bow_exchange_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Archer,
-                                   QVector3D(-8.0F, 0.0F, 0.0F),
-                                   6);
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Archer,
-                                   QVector3D(8.0F, 0.0F, 0.0F),
-                                   6);
-    set_attack_target(
-        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Ranged);
-    set_attack_target(
-        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Ranged);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(14.0F, 45.0F, 35.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_mounted_charge_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::MountedKnight,
-                                   QVector3D(0.0F, 0.0F, -10.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::HorseSpearman,
-                                   QVector3D(0.0F, 0.0F, 10.0F));
-    set_attack_target(
-        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    set_attack_target(
-        defender, attacker, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(18.0F, 48.0F, 20.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_melee_lock_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(-0.8F, 0.0F, 0.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.8F, 0.0F, 0.0F));
-    set_attack_target(
-        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    set_attack_target(
-        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    for (auto [entity_id, target_id] :
-         {std::pair{attacker, defender}, std::pair{defender, attacker}}) {
-      auto* entity = m_world->get_entity(entity_id);
-      auto* attack = entity != nullptr
-                         ? entity->get_component<Engine::Core::AttackComponent>()
-                         : nullptr;
-      if (attack == nullptr) {
-        continue;
+  if (has_scenario_ai) {
+    if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
+      ai_system->reinitialize();
+      for (const auto& group : definition->groups) {
+        if (!group.ai_controlled) {
+          continue;
+        }
+        const auto strategy = group.nation_id == Game::Systems::NationID::Carthage
+                                  ? Game::Systems::AI::AIStrategy::Economic
+                                  : Game::Systems::AI::AIStrategy::Defensive;
+        ai_system->set_ai_strategy(group.owner_id, strategy);
       }
-      attack->in_melee_lock = true;
-      attack->melee_lock_target_id = target_id;
-      attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
-      attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
     }
-    spawned_ids = {attacker, defender};
-    finalize_scenario(8.0F, 40.0F, 28.0F);
-    return;
   }
 
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_chase_to_attack_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, -10.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, 4.0F));
-    set_attack_target(
-        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(16.0F, 46.0F, 20.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_attack_to_chase_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, -2.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, 1.6F));
-    set_attack_target(
-        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    set_attack_target(
-        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(10.0F, 42.0F, 28.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_target_death_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, -2.0F));
-    auto const defender = spawn_at(k_enemy_owner_id,
-                                   Game::Systems::NationID::Carthage,
-                                   Game::Units::TroopType::Healer,
-                                   QVector3D(0.0F, 0.0F, 1.8F));
-    set_unit_health(defender, 6, 6);
-    set_attack_target(
-        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, defender};
-    finalize_scenario(10.0F, 42.0F, 28.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_retargeting_id)) {
-    auto const attacker = spawn_at(k_local_owner_id,
-                                   Game::Systems::NationID::RomanRepublic,
-                                   Game::Units::TroopType::Swordsman,
-                                   QVector3D(0.0F, 0.0F, -2.0F));
-    auto const primary = spawn_at(k_enemy_owner_id,
-                                  Game::Systems::NationID::Carthage,
-                                  Game::Units::TroopType::Healer,
-                                  QVector3D(-0.9F, 0.0F, 1.8F));
-    auto const secondary = spawn_at(k_enemy_owner_id,
-                                    Game::Systems::NationID::Carthage,
-                                    Game::Units::TroopType::Swordsman,
-                                    QVector3D(2.4F, 0.0F, 2.8F));
-    set_unit_health(primary, 6, 6);
-    set_attack_target(
-        attacker, primary, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {attacker, primary, secondary};
-    finalize_scenario(11.0F, 42.0F, 28.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_hold_guard_exit_id)) {
-    auto const hold_unit = spawn_at(k_local_owner_id,
-                                    Game::Systems::NationID::RomanRepublic,
-                                    Game::Units::TroopType::Spearman,
-                                    QVector3D(-1.8F, 0.0F, 0.0F));
-    auto const guard_unit = spawn_at(k_local_owner_id,
-                                     Game::Systems::NationID::RomanRepublic,
-                                     Game::Units::TroopType::Swordsman,
-                                     QVector3D(1.8F, 0.0F, 0.0F));
-    auto const enemy = spawn_at(k_enemy_owner_id,
-                                Game::Systems::NationID::Carthage,
-                                Game::Units::TroopType::Swordsman,
-                                QVector3D(0.0F, 0.0F, 7.0F));
-    if (auto* hold = find_unit_handle(hold_unit); hold != nullptr) {
-      hold->set_hold_mode(true);
-    }
-    if (auto* guard = find_unit_handle(guard_unit); guard != nullptr) {
-      guard->set_guard_mode(true);
-      guard->set_guard_target(hold_unit);
-    }
-    set_attack_target(
-        enemy, hold_unit, true, Engine::Core::AttackComponent::CombatMode::Melee);
-    spawned_ids = {hold_unit, guard_unit, enemy};
-    finalize_scenario(12.0F, 44.0F, 32.0F);
-    return;
-  }
-
-  if (scenario_id == QLatin1String(Arena::Scenarios::k_lod_switch_id)) {
-    set_force_full_creature_lod(false);
-    for (int lane = -2; lane <= 2; ++lane) {
-      QVector3D const local_offset(static_cast<float>(lane) * 5.0F, 0.0F, -10.0F);
-      QVector3D const enemy_offset(static_cast<float>(lane) * 5.0F, 0.0F, 10.0F);
-      auto const attacker = spawn_at(k_local_owner_id,
-                                     Game::Systems::NationID::RomanRepublic,
-                                     Game::Units::TroopType::Swordsman,
-                                     local_offset,
-                                     20);
-      auto const defender = spawn_at(k_enemy_owner_id,
-                                     Game::Systems::NationID::Carthage,
-                                     Game::Units::TroopType::Swordsman,
-                                     enemy_offset,
-                                     20);
-      set_attack_target(
-          attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
-      set_attack_target(
-          defender, attacker, true, Engine::Core::AttackComponent::CombatMode::Melee);
-      spawned_ids.push_back(attacker);
-      spawned_ids.push_back(defender);
-    }
-    finalize_scenario(34.0F, 52.0F, 24.0F);
-    return;
-  }
+  select_spawned_entities(m_scenario_runner->all_entities());
+  update();
 }
 
 void ArenaViewport::set_force_full_creature_lod(bool enabled) {
@@ -2134,106 +2044,8 @@ void ArenaViewport::play_idle_animation() {
 }
 
 void ArenaViewport::update_active_scenario(float simulation_dt) {
-  if (simulation_dt <= 0.0F || m_world == nullptr || m_active_scenario.id.isEmpty()) {
-    return;
-  }
-
-  m_active_scenario.elapsed += simulation_dt;
-
-  auto entity_alive = [this](Engine::Core::EntityID entity_id) {
-    auto* entity = m_world->get_entity(entity_id);
-    auto* unit = entity != nullptr
-                     ? entity->get_component<Engine::Core::UnitComponent>()
-                     : nullptr;
-    return entity != nullptr && unit != nullptr && unit->health > 0 &&
-           !entity->has_component<Engine::Core::PendingRemovalComponent>();
-  };
-
-  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_attack_to_chase_id)) {
-    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 0.85F &&
-        m_active_scenario.tracked_entities.size() >= 2) {
-      Engine::Core::EntityID const target_id = m_active_scenario.tracked_entities[1];
-      auto* target = m_world->get_entity(target_id);
-      auto* transform = target != nullptr
-                            ? target->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
-      auto* movement = target != nullptr
-                           ? target->get_component<Engine::Core::MovementComponent>()
-                           : nullptr;
-      if (transform != nullptr) {
-        if (movement != nullptr) {
-          movement->clear_path();
-          movement->engage_manual_move(transform->position.x,
-                                       transform->position.z + 8.0F);
-          movement->set_manual_velocity(0.0F, 0.0F);
-        }
-        m_active_scenario.first_event_applied = true;
-      }
-    }
-    return;
-  }
-
-  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_retargeting_id)) {
-    if (!m_active_scenario.first_event_applied &&
-        m_active_scenario.tracked_entities.size() >= 3 &&
-        !entity_alive(m_active_scenario.tracked_entities[1])) {
-      auto* attacker = m_world->get_entity(m_active_scenario.tracked_entities[0]);
-      auto* attack_target =
-          attacker != nullptr
-              ? attacker->get_component<Engine::Core::AttackTargetComponent>()
-              : nullptr;
-      if (attack_target != nullptr) {
-        attack_target->target_id = m_active_scenario.tracked_entities[2];
-        attack_target->should_chase = true;
-        m_active_scenario.first_event_applied = true;
-      }
-    }
-    return;
-  }
-
-  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_hold_guard_exit_id)) {
-    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 1.0F &&
-        m_active_scenario.tracked_entities.size() >= 3) {
-      if (auto* hold = find_unit_handle(m_active_scenario.tracked_entities[0]);
-          hold != nullptr) {
-        hold->set_hold_mode(false);
-      }
-      if (auto* guard = find_unit_handle(m_active_scenario.tracked_entities[1]);
-          guard != nullptr) {
-        guard->clear_guard_mode();
-      }
-
-      auto* guard_entity = m_world->get_entity(m_active_scenario.tracked_entities[1]);
-      auto* guard_attack =
-          guard_entity != nullptr
-              ? guard_entity->get_component<Engine::Core::AttackTargetComponent>()
-              : nullptr;
-      if (guard_attack == nullptr && guard_entity != nullptr) {
-        guard_attack =
-            guard_entity->add_component<Engine::Core::AttackTargetComponent>();
-      }
-      if (guard_attack != nullptr) {
-        guard_attack->target_id = m_active_scenario.tracked_entities[2];
-        guard_attack->should_chase = true;
-      }
-      m_active_scenario.first_event_applied = true;
-    }
-    return;
-  }
-
-  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_lod_switch_id) &&
-      m_camera != nullptr) {
-    QVector3D const center =
-        scenario_center(m_world.get(), m_active_scenario.tracked_entities);
-    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 1.5F) {
-      m_camera->set_rts_view(center, 12.0F, 44.0F, 28.0F);
-      m_active_scenario.first_event_applied = true;
-      return;
-    }
-    if (!m_active_scenario.second_event_applied && m_active_scenario.elapsed >= 3.0F) {
-      m_camera->set_rts_view(center, 34.0F, 52.0F, 24.0F);
-      m_active_scenario.second_event_applied = true;
-    }
+  if (m_scenario_runner != nullptr && simulation_dt > 0.0F) {
+    m_scenario_runner->update(simulation_dt);
   }
 }
 
