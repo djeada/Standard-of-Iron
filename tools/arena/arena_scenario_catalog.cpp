@@ -520,6 +520,39 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s = definition(QString::fromLatin1(k_elephant_locomotion_matrix_id),
+                        QStringLiteral("Elephant Locomotion Matrix"),
+                        QStringLiteral("War elephants start, travel, stop, and reverse "
+                                       "using the production authored skin."),
+                        13.0F,
+                        {24.0F, 48.0F, 28.0F});
+    s.groups = {group(QStringLiteral("elephants"),
+                      Troop::Elephant,
+                      2,
+                      3,
+                      {0.0F, 0.0F, -10.0F},
+                      1,
+                      {5.5F, 0.0F, 0.0F})};
+    s.steps = {at(0.5F, Command::FormationMove, QStringLiteral("elephants")),
+               at(6.0F, Command::Stop, QStringLiteral("elephants")),
+               at(8.0F, Command::FormationMove, QStringLiteral("elephants"))};
+    s.steps[0].destination = {0.0F, 0.0F, 9.0F};
+    s.steps[2].destination = {0.0F, 0.0F, -20.0F};
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("elephants")));
+    s.expectations.push_back(
+        expectation(Expect::NoRootTeleport, QStringLiteral("elephants")));
+    s.expectations.push_back(
+        expectation(Expect::MovementIsContinuous, QStringLiteral("elephants")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("elephants"), {}, 0.45F));
+    s.expectations.push_back(expectation(
+        Expect::FormationOrderPreserved, QStringLiteral("elephants"), {}, 0.8F));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(QString::fromLatin1(k_infantry_damage_matrix_id),
                         QStringLiteral("Infantry Damage Matrix"),
                         QStringLiteral("Archers, swordsmen, and spearmen absorb a hit "

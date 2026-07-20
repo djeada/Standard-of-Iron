@@ -11,6 +11,7 @@
 #include "../creature/spec.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "elephant_renderer_base.h"
+#include "elephant_source_asset.h"
 
 namespace Render::GL {
 class ISubmitter;
@@ -19,27 +20,59 @@ class ISubmitter;
 namespace Render::Elephant {
 
 enum class ElephantBone : std::uint8_t {
-  Root = 0,
-  Body,
-  ShoulderFL,
-  KneeFL,
-  FootFL,
-  ShoulderFR,
-  KneeFR,
-  FootFR,
-  ShoulderBL,
-  KneeBL,
-  FootBL,
-  ShoulderBR,
-  KneeBR,
-  FootBR,
-  Head,
-  TrunkTip,
-  Count,
+  SourceBone = 0,
+  SourceBone001 = 1,
+  SourceBone002 = 2,
+  SourceBone003 = 3,
+  SourceBone012 = 4,
+  SourceBone013 = 5,
+  SourceBone014 = 6,
+  SourceEarL = 7,
+  SourceEarR = 8,
+  SourceUpperFrontL = 9,
+  SourceLowerFrontL = 10,
+  SourceFootFrontL = 11,
+  SourceUpperFrontR = 12,
+  SourceLowerFrontR = 13,
+  SourceFootFrontR = 14,
+  SourceUpperBackL = 15,
+  SourceLowerBackL = 16,
+  SourceFootBackL = 17,
+  SourceUpperBackR = 18,
+  SourceLowerBackR = 19,
+  SourceFootBackR = 20,
+  SourceTail = 21,
+  SourceKneeBackL = 22,
+  SourceKneeFrontL = 23,
+  SourceBone016 = 24,
+  SourceBone017 = 25,
+  SourceBone018 = 26,
+  SourceTrunkIk = 27,
+  SourceKneeBackR = 28,
+  SourceKneeFrontR = 29,
+  SourceBone019 = 30,
+  SourceBone020 = 31,
+  Count = 32,
+
+  Root = SourceBone,
+  Body = SourceBone001,
+  ShoulderFL = SourceUpperFrontL,
+  KneeFL = SourceLowerFrontL,
+  FootFL = SourceFootFrontL,
+  ShoulderFR = SourceUpperFrontR,
+  KneeFR = SourceLowerFrontR,
+  FootFR = SourceFootFrontR,
+  ShoulderBL = SourceUpperBackL,
+  KneeBL = SourceLowerBackL,
+  FootBL = SourceFootBackL,
+  ShoulderBR = SourceUpperBackR,
+  KneeBR = SourceLowerBackR,
+  FootBR = SourceFootBackR,
+  Head = SourceBone003,
+  TrunkTip = SourceBone014,
 };
 
-inline constexpr std::size_t k_elephant_bone_count =
-    static_cast<std::size_t>(ElephantBone::Count);
+inline constexpr std::size_t k_elephant_bone_count = k_elephant_source_bone_count;
 
 using BonePalette = std::array<QMatrix4x4, k_elephant_bone_count>;
 

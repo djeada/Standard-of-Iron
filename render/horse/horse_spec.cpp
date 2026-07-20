@@ -13,8 +13,10 @@
 #include "../creature/part_graph.h"
 #include "../creature/skeleton.h"
 #include "../submitter.h"
+#include "horse_anatomy.h"
 #include "horse_layout.h"
 #include "horse_manifest.h"
+#include "horse_source_asset.h"
 
 namespace Render::Horse {
 
@@ -26,25 +28,6 @@ using Render::Creature::PartGraph;
 using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
-constexpr std::array<BoneDef, k_horse_bone_count> k_horse_bones = {{
-    {"Root", Render::Creature::k_invalid_bone},
-    {"Body", static_cast<BoneIndex>(HorseBone::Root)},
-    {"ShoulderFL", static_cast<BoneIndex>(HorseBone::Body)},
-    {"KneeFL", static_cast<BoneIndex>(HorseBone::ShoulderFL)},
-    {"FootFL", static_cast<BoneIndex>(HorseBone::KneeFL)},
-    {"ShoulderFR", static_cast<BoneIndex>(HorseBone::Body)},
-    {"KneeFR", static_cast<BoneIndex>(HorseBone::ShoulderFR)},
-    {"FootFR", static_cast<BoneIndex>(HorseBone::KneeFR)},
-    {"ShoulderBL", static_cast<BoneIndex>(HorseBone::Body)},
-    {"KneeBL", static_cast<BoneIndex>(HorseBone::ShoulderBL)},
-    {"FootBL", static_cast<BoneIndex>(HorseBone::KneeBL)},
-    {"ShoulderBR", static_cast<BoneIndex>(HorseBone::Body)},
-    {"KneeBR", static_cast<BoneIndex>(HorseBone::ShoulderBR)},
-    {"FootBR", static_cast<BoneIndex>(HorseBone::KneeBR)},
-    {"NeckTop", static_cast<BoneIndex>(HorseBone::Body)},
-    {"Head", static_cast<BoneIndex>(HorseBone::NeckTop)},
-}};
-
 constexpr std::array<Render::Creature::SocketDef, 0> k_horse_sockets{};
 constexpr std::uint8_t k_role_coat = 1;
 constexpr std::uint8_t k_role_hoof = 4;
@@ -53,11 +36,6 @@ constexpr std::uint8_t k_role_tail = 6;
 constexpr std::uint8_t k_role_muzzle = 7;
 constexpr std::uint8_t k_role_eye = 8;
 constexpr int k_horse_material_id = 6;
-
-constexpr SkeletonTopology k_horse_topology{
-    std::span<const BoneDef>(k_horse_bones),
-    std::span<const Render::Creature::SocketDef>(k_horse_sockets),
-};
 
 [[nodiscard]] auto translation_matrix(const QVector3D& origin) noexcept -> QMatrix4x4 {
   QMatrix4x4 m;
@@ -165,11 +143,17 @@ struct horse_pose_profile {
 } // namespace
 
 auto horse_topology() noexcept -> const SkeletonTopology& {
-  return k_horse_topology;
+  static const SkeletonTopology topology{
+      horse_source_bone_defs(),
+      std::span<const Render::Creature::SocketDef>(k_horse_sockets),
+  };
+  return topology;
 }
 
 void evaluate_horse_skeleton(const HorseSpecPose& pose,
                              BonePalette& out_palette) noexcept {
+  auto const source_bind = horse_source_bind_palette();
+  std::copy(source_bind.begin(), source_bind.end(), out_palette.begin());
   out_palette[static_cast<std::size_t>(HorseBone::Root)] =
       translation_matrix(pose.barrel_center);
 
@@ -229,15 +213,16 @@ void fill_horse_role_colors(const Render::GL::HorseVariant& variant,
 void make_horse_spec_pose(const Render::GL::HorseDimensions& dims,
                           float bob,
                           HorseSpecPose& out_pose) noexcept {
-  QVector3D const center(0.0F, dims.barrel_center_y + bob, 0.0F);
+  HorseAnatomy const anatomy = make_horse_anatomy(dims);
+  QVector3D const center = anatomy.barrel_center + QVector3D(0.0F, bob, 0.0F);
   float const body_width_vis = horse_body_visual_width(dims);
   float const body_height_vis = horse_body_visual_height(dims);
   float const body_length_vis = horse_body_visual_length(dims);
   float const head_width_vis = horse_head_visual_width(dims);
   float const head_height_vis = horse_head_visual_height(dims);
   float const head_length_vis = horse_head_visual_length(dims);
-  QVector3D const front_attach = horse_front_leg_attach_local(dims);
-  QVector3D const rear_attach = horse_rear_leg_attach_local(dims);
+  QVector3D const front_attach = anatomy.front_leg_root - anatomy.barrel_center;
+  QVector3D const rear_attach = anatomy.rear_leg_root - anatomy.barrel_center;
   out_pose.barrel_center = center;
 
   out_pose.body_ellipsoid_x = body_width_vis * 0.76F;
@@ -295,8 +280,8 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions& dims,
       shoulder_br, out_pose.foot_br, rear_upper_len, rear_lower_len, rear_bend_hint);
   out_pose.leg_radius = body_width_vis * 0.125F;
 
-  QVector3D const neck_top = horse_neck_top_local(dims);
-  out_pose.neck_base = center + horse_neck_base_local(dims);
+  QVector3D const neck_top = anatomy.poll - anatomy.barrel_center;
+  out_pose.neck_base = anatomy.neck_base + QVector3D(0.0F, bob, 0.0F);
   out_pose.neck_top = center + neck_top;
   float const neck_width_radius =
       body_width_vis * 0.16F * Render::Horse::k_horse_neck_width_boost;
@@ -577,19 +562,6 @@ namespace Render::Horse {
 
 namespace {
 
-auto build_baseline_pose() noexcept -> HorseSpecPose {
-  Render::GL::HorseDimensions const dims = Render::GL::make_horse_dimensions(0U);
-  Render::GL::HorseGait const gait{};
-  HorseSpecPose pose{};
-  make_horse_spec_pose_animated(dims, gait, HorsePoseMotion{}, pose);
-  return pose;
-}
-
-auto baseline_pose() noexcept -> const HorseSpecPose& {
-  static const HorseSpecPose pose = build_baseline_pose();
-  return pose;
-}
-
 auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(horse_manifest().lod_minimal);
@@ -600,16 +572,6 @@ auto static_full_parts() noexcept -> const Render::Creature::CompiledWholeMeshLo
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(horse_manifest().lod_full);
   return compiled;
-}
-
-auto build_horse_bind_palette() noexcept -> std::array<QMatrix4x4, k_horse_bone_count> {
-  std::array<QMatrix4x4, k_horse_bone_count> out{};
-  BonePalette tmp{};
-  evaluate_horse_skeleton(baseline_pose(), tmp);
-  for (std::size_t i = 0; i < k_horse_bone_count; ++i) {
-    out[i] = tmp[i];
-  }
-  return out;
 }
 
 } // namespace
@@ -641,9 +603,7 @@ auto compute_horse_bone_palette(const HorseSpecPose& pose,
 }
 
 auto horse_bind_palette() noexcept -> std::span<const QMatrix4x4> {
-  static const std::array<QMatrix4x4, k_horse_bone_count> palette =
-      build_horse_bind_palette();
-  return {palette.data(), palette.size()};
+  return horse_source_bind_palette();
 }
 
 } // namespace Render::Horse
