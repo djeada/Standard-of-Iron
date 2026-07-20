@@ -30,7 +30,7 @@ namespace Render::Creature::Pipeline {
 
 struct CreatureVisualDefinition;
 
-inline constexpr std::size_t k_max_creature_bones = 24;
+inline constexpr std::size_t k_max_creature_bones = 64;
 inline constexpr std::size_t k_max_attachment_set_specs = 16;
 using AttachmentSetId = std::uint32_t;
 inline constexpr AttachmentSetId k_invalid_attachment_set_id = 0U;

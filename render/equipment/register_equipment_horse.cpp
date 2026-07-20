@@ -17,28 +17,28 @@ namespace Render::GL::EquipmentRegistration {
 auto build_roman_horse_saddle_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::roman_saddle_make_static_attachment(
-      horse_root_bone(),
+      horse_back_bone(),
       base_role_byte,
       horse_baseline_back_center_frame(),
-      horse_root_bind_matrix())};
+      horse_back_bind_matrix())};
 }
 
 auto build_carthage_horse_saddle_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::carthage_saddle_make_static_attachment(
-      horse_root_bone(),
+      horse_back_bone(),
       base_role_byte,
       horse_baseline_back_center_frame(),
-      horse_root_bind_matrix())};
+      horse_back_bind_matrix())};
 }
 
 auto build_light_cavalry_saddle_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::light_cavalry_saddle_make_static_attachment(
-      horse_root_bone(),
+      horse_back_bone(),
       base_role_byte,
       horse_baseline_back_center_frame(),
-      horse_root_bind_matrix())};
+      horse_back_bind_matrix())};
 }
 
 auto build_horse_bridle_attachment(std::uint8_t base_role_byte)
@@ -51,18 +51,18 @@ auto build_horse_bridle_attachment(std::uint8_t base_role_byte)
 
 auto build_horse_reins_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::reins_make_static_attachment(horse_root_bone(),
+  return {Render::GL::reins_make_static_attachment(horse_back_bone(),
                                                    base_role_byte,
                                                    horse_baseline_back_center_frame(),
-                                                   horse_root_bind_matrix())};
+                                                   horse_back_bind_matrix())};
 }
 
 auto build_horse_blanket_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::blanket_make_static_attachment(horse_root_bone(),
+  return {Render::GL::blanket_make_static_attachment(horse_back_bone(),
                                                      base_role_byte,
                                                      horse_baseline_back_center_frame(),
-                                                     horse_root_bind_matrix())};
+                                                     horse_back_bind_matrix())};
 }
 
 auto build_leather_barding_attachments(std::uint8_t base_role_byte)
@@ -126,10 +126,10 @@ auto build_crupper_attachment(std::uint8_t base_role_byte)
 auto build_saddle_bag_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {
-      Render::GL::saddle_bag_make_static_attachment(horse_root_bone(),
+      Render::GL::saddle_bag_make_static_attachment(horse_back_bone(),
                                                     base_role_byte,
                                                     horse_baseline_back_center_frame(),
-                                                    horse_root_bind_matrix())};
+                                                    horse_back_bind_matrix())};
 }
 auto roman_horse_saddle_role_colors(const void* variant_void,
                                     QVector3D* out,

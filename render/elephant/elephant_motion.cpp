@@ -14,6 +14,7 @@
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "animation/elephant_gait_manifest.h"
 #include "dimensions.h"
+#include "elephant_source_asset.h"
 #include "elephant_spec.h"
 
 namespace Render::GL {
@@ -141,16 +142,11 @@ auto compute_howdah_frame(const ElephantProfile& profile) -> HowdahAttachmentFra
   frame.seat_right = QVector3D(1.0F, 0.0F, 0.0F);
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
 
-  frame.ground_offset = QVector3D(
-      0.0F, -d.barrel_center_y + d.leg_length * k_leg_reveal_lift_scale, 0.0F);
+  frame.ground_offset = QVector3D(0.0F, 0.0F, 0.0F);
 
-  frame.howdah_center =
-      QVector3D(0.0F,
-                d.barrel_center_y + d.body_height * k_howdah_body_height_offset,
-                d.body_length * k_howdah_body_length_offset);
+  frame.howdah_center = QVector3D(0.0F, 1.75F, -0.0875F);
 
-  frame.seat_position = frame.howdah_center +
-                        QVector3D(0.0F, d.howdah_height * k_seat_height_offset, 0.0F);
+  frame.seat_position = frame.howdah_center + QVector3D(0.0F, 0.19F, 0.0F);
 
   return frame;
 }
@@ -237,7 +233,15 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
                                   d.head_length * (0.35F + sample.trunk_swing * 0.04F));
 
   sample.howdah = compute_howdah_frame(profile);
-  apply_howdah_vertical_offset(sample.howdah, sample.bob);
+  std::string_view source_clip = "Idle";
+  if (sample.is_fighting) {
+    source_clip = "Angry";
+  } else if (sample.is_moving) {
+    source_clip =
+        Render::Creature::is_running_animation(movement_animation) ? "Run" : "Walk";
+  }
+  (void)Render::Elephant::elephant_source_pose_howdah(
+      source_clip, sample.phase, sample.howdah);
 
   return sample;
 }

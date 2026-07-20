@@ -137,6 +137,7 @@ add_executable(standard_of_iron_tests
     render/humanoid/skeleton_test.cpp
     render/humanoid/humanoid_spec_test.cpp
     render/horse/horse_spec_test.cpp
+    render/horse/horse_anatomy_test.cpp
     render/elephant/elephant_spec_test.cpp
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
@@ -222,6 +223,70 @@ endif()
 # Add tests to CTest after target properties are finalized.
 include(GoogleTest)
 gtest_discover_tests(standard_of_iron_tests
+    DISCOVERY_MODE PRE_TEST
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+# Focused horse contract binary. It remains runnable when an unrelated test
+# translation unit in the monolithic suite has interface drift.
+add_executable(horse_model_tests
+    render/horse/horse_anatomy_test.cpp
+    test_main.cpp
+)
+target_link_libraries(horse_model_tests
+    PRIVATE
+        GTest::gtest
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_systems
+)
+target_include_directories(horse_model_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/game
+)
+set_target_properties(horse_model_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    AUTOMOC ON
+)
+if(TARGET bake_creature_assets)
+    add_dependencies(horse_model_tests bake_creature_assets)
+endif()
+gtest_discover_tests(horse_model_tests
+    DISCOVERY_MODE PRE_TEST
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+add_executable(elephant_model_tests
+    render/elephant/elephant_source_asset_test.cpp
+    test_main.cpp
+)
+target_link_libraries(elephant_model_tests
+    PRIVATE
+        GTest::gtest
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_systems
+)
+target_include_directories(elephant_model_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/game
+)
+set_target_properties(elephant_model_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    AUTOMOC ON
+)
+if(TARGET bake_creature_assets)
+    add_dependencies(elephant_model_tests bake_creature_assets)
+endif()
+gtest_discover_tests(elephant_model_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <span>
 
 #include "../creature/part_graph.h"
@@ -24,35 +25,11 @@ using Render::Creature::PartGraph;
 using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
-constexpr std::array<BoneDef, k_elephant_bone_count> k_elephant_bones = {{
-    {"Root", Render::Creature::k_invalid_bone},
-    {"Body", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"ShoulderFL", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"KneeFL", static_cast<BoneIndex>(ElephantBone::ShoulderFL)},
-    {"FootFL", static_cast<BoneIndex>(ElephantBone::KneeFL)},
-    {"ShoulderFR", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"KneeFR", static_cast<BoneIndex>(ElephantBone::ShoulderFR)},
-    {"FootFR", static_cast<BoneIndex>(ElephantBone::KneeFR)},
-    {"ShoulderBL", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"KneeBL", static_cast<BoneIndex>(ElephantBone::ShoulderBL)},
-    {"FootBL", static_cast<BoneIndex>(ElephantBone::KneeBL)},
-    {"ShoulderBR", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"KneeBR", static_cast<BoneIndex>(ElephantBone::ShoulderBR)},
-    {"FootBR", static_cast<BoneIndex>(ElephantBone::KneeBR)},
-    {"Head", static_cast<BoneIndex>(ElephantBone::Root)},
-    {"TrunkTip", static_cast<BoneIndex>(ElephantBone::Head)},
-}};
-
 constexpr std::array<Render::Creature::SocketDef, 0> k_elephant_sockets{};
 constexpr std::uint8_t k_role_skin = 1;
 constexpr int k_elephant_material_id = 6;
 
-constexpr SkeletonTopology k_elephant_topology{
-    std::span<const BoneDef>(k_elephant_bones),
-    std::span<const Render::Creature::SocketDef>(k_elephant_sockets),
-};
-
-constexpr float k_pi = 3.14159265358979323846F;
+constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_rear_stride_scale = 0.58F;
 constexpr float k_rear_backward_stride_damping = 0.60F;
 constexpr float k_fight_leg_cycle_time = 0.95F;
@@ -75,7 +52,7 @@ solve_bent_leg_joint(const QVector3D& shoulder,
                      float upper_len,
                      float lower_len,
                      const QVector3D& bend_hint) noexcept -> QVector3D {
-  QVector3D shoulder_to_foot = foot - shoulder;
+  QVector3D const shoulder_to_foot = foot - shoulder;
   float const dist_sq = QVector3D::dotProduct(shoulder_to_foot, shoulder_to_foot);
   if (dist_sq <= 1.0e-6F) {
     return shoulder + QVector3D(0.0F, -upper_len, 0.0F);
@@ -198,11 +175,16 @@ struct LegResult {
 } // namespace
 
 auto elephant_topology() noexcept -> const SkeletonTopology& {
-  return k_elephant_topology;
+  static const SkeletonTopology topology{
+      elephant_source_bone_defs(),
+      std::span<const Render::Creature::SocketDef>(k_elephant_sockets)};
+  return topology;
 }
 
 void evaluate_elephant_skeleton(const ElephantSpecPose& pose,
                                 BonePalette& out_palette) noexcept {
+  auto const source_bind = elephant_source_bind_palette();
+  std::copy(source_bind.begin(), source_bind.end(), out_palette.begin());
   out_palette[static_cast<std::size_t>(ElephantBone::Root)] =
       translation_matrix(pose.barrel_center);
 
@@ -451,7 +433,7 @@ namespace {
 
 auto build_baseline_pose() noexcept -> ElephantSpecPose {
   Render::GL::ElephantDimensions const dims = Render::GL::make_elephant_dimensions(0U);
-  Render::GL::ElephantGait gait{};
+  Render::GL::ElephantGait const gait{};
   ElephantSpecPose pose{};
   make_elephant_spec_pose_animated(dims, gait, ElephantPoseMotion{}, pose);
   return pose;
@@ -514,9 +496,7 @@ auto compute_elephant_bone_palette(const ElephantSpecPose& pose,
 }
 
 auto elephant_bind_palette() noexcept -> std::span<const QMatrix4x4> {
-  static const std::array<QMatrix4x4, k_elephant_bone_count> palette =
-      build_elephant_bind_palette();
-  return std::span<const QMatrix4x4>(palette.data(), palette.size());
+  return elephant_source_bind_palette();
 }
 
 } // namespace Render::Elephant
