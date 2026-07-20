@@ -5,6 +5,7 @@
 #include "combat_system/combat_state_processor.h"
 #include "combat_system/combat_utils.h"
 #include "combat_system/elephant_special_processor.h"
+#include "combat_system/formation_contact_processor.h"
 #include "combat_system/hit_feedback_processor.h"
 #include "combat_system/siege_special_processor.h"
 
@@ -12,12 +13,16 @@ namespace Game::Systems {
 
 void CombatSystem::update(Engine::Core::World* world, float delta_time) {
   Combat::rebuild_combat_query_context(world, m_query_context);
+
+  m_target_commitment.update(world, delta_time);
   Combat::process_hit_feedback(world, delta_time);
   Combat::process_combat_state(world, delta_time);
   Combat::process_attacks(world, m_query_context, delta_time);
+  Combat::update_formation_contacts(world);
   Combat::process_siege_specials(world, m_query_context, delta_time);
   Combat::process_elephant_specials(world, m_query_context, delta_time);
   m_auto_engagement.process(world, m_query_context, delta_time);
+  m_target_commitment.update(world, 0.0F);
 }
 
 } // namespace Game::Systems

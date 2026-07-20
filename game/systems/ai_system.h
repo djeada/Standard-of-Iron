@@ -3,6 +3,7 @@
 #include <queue>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 
 #include "../core/event_manager.h"
@@ -41,6 +42,12 @@ public:
   [[nodiscard]] auto ai_update_timer(std::size_t index) const -> float {
     return (index < m_ai_instances.size()) ? m_ai_instances[index].update_timer : 0.0F;
   }
+  [[nodiscard]] auto completed_decision_count() const -> std::uint64_t {
+    return m_completed_decision_count;
+  }
+  [[nodiscard]] auto applied_command_count() const -> std::uint64_t {
+    return m_applied_command_count;
+  }
 
   void set_ai_strategy(int player_id,
                        AI::AIStrategy strategy,
@@ -68,6 +75,8 @@ private:
 
   float m_total_game_time = 0.0F;
   float m_update_interval = 0.3F;
+  std::uint64_t m_completed_decision_count{0};
+  std::uint64_t m_applied_command_count{0};
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_building_attacked_subscription;

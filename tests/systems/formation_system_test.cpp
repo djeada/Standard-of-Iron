@@ -8,9 +8,12 @@
 
 #include "core/component.h"
 #include "core/world.h"
+#include "systems/command_service.h"
+#include "systems/formation_combat_geometry.h"
 #include "systems/formation_planner.h"
 #include "systems/formation_system.h"
 #include "systems/nation_registry.h"
+#include "systems/troop_profile_service.h"
 
 using namespace Game::Systems;
 
@@ -89,7 +92,23 @@ auto add_unit(Engine::Core::World& world,
 
 class FormationSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override {}
+  void SetUp() override {
+    CommandService::initialize(256, 256);
+    auto& nations = NationRegistry::instance();
+    nations.clear();
+    nations.register_nation({.id = NationID::RomanRepublic,
+                             .display_name = "Roman Republic",
+                             .formation_type = FormationType::Roman});
+    nations.register_nation({.id = NationID::Carthage,
+                             .display_name = "Carthage",
+                             .formation_type = FormationType::Carthage});
+    TroopProfileService::instance().clear();
+  }
+
+  void TearDown() override {
+    TroopProfileService::instance().clear();
+    NationRegistry::instance().clear();
+  }
 };
 
 TEST_F(FormationSystemTest, RomanFormationCreatesRectangularGrid) {
@@ -105,6 +124,20 @@ TEST_F(FormationSystemTest, RomanFormationCreatesRectangularGrid) {
   for (const auto& pos : positions) {
     EXPECT_FLOAT_EQ(pos.y(), center.y());
   }
+}
+
+TEST_F(FormationSystemTest, TravellingBuildersUseNationInfantryRows) {
+  Engine::Core::UnitComponent roman_builder;
+  roman_builder.spawn_type = Game::Units::SpawnType::Builder;
+  roman_builder.nation_id = NationID::RomanRepublic;
+
+  Engine::Core::UnitComponent carthage_builder = roman_builder;
+  carthage_builder.nation_id = NationID::Carthage;
+
+  auto const roman = FormationCombat::resolve_definition(roman_builder);
+  auto const carthage = FormationCombat::resolve_definition(carthage_builder);
+  EXPECT_EQ(roman.category, FormationUnitCategory::Infantry);
+  EXPECT_EQ(carthage.category, FormationUnitCategory::Infantry);
 }
 
 TEST_F(FormationSystemTest, CarthageFormationHasJitter) {
@@ -441,7 +474,6 @@ TEST_F(FormationSystemTest, CavalryOnlySelectionsStayCompactWithoutCenterBody) {
 }
 
 TEST_F(FormationSystemTest, PlannerSeparatesRomanAndCarthageFormationGroups) {
-  NationRegistry::instance().initialize_defaults();
   Engine::Core::World world;
 
   std::vector<Engine::Core::EntityID> units;
@@ -472,7 +504,6 @@ TEST_F(FormationSystemTest, PlannerSeparatesRomanAndCarthageFormationGroups) {
 }
 
 TEST_F(FormationSystemTest, PlannerUsesActualGroupWidthsForMixedFactionCavalry) {
-  NationRegistry::instance().initialize_defaults();
   Engine::Core::World world;
 
   std::vector<Engine::Core::EntityID> units;
@@ -522,7 +553,6 @@ TEST_F(FormationSystemTest, PlannerUsesActualGroupWidthsForMixedFactionCavalry) 
 }
 
 TEST_F(FormationSystemTest, PlannerRotatesFrontlineTowardOrderDirection) {
-  NationRegistry::instance().initialize_defaults();
   Engine::Core::World world;
 
   auto const spearman = add_unit(
@@ -541,8 +571,38 @@ TEST_F(FormationSystemTest, PlannerRotatesFrontlineTowardOrderDirection) {
   EXPECT_NEAR(result.facing_angles[0], result.formation_facing, 5.0F);
 }
 
+TEST_F(FormationSystemTest, PlannerPreservesStableSlotsAcrossRepeatedOrders) {
+  Engine::Core::World world;
+  std::vector<Engine::Core::EntityID> units;
+  for (float const x : {-3.0F, -1.0F, 1.0F, 3.0F}) {
+    units.push_back(add_unit(
+        world, Game::Units::SpawnType::Spearman, NationID::RomanRepublic, true, x));
+  }
+
+  auto first = FormationPlanner::get_formation_with_facing(
+      world, units, QVector3D(0.0F, 0.0F, 10.0F), 1.0F);
+  ASSERT_EQ(first.stable_slot_ids.size(), units.size());
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    auto* mode = world.get_entity(units[i])
+                     ->get_component<Engine::Core::FormationModeComponent>();
+    ASSERT_NE(mode, nullptr);
+    mode->formation_id = first.formation_id;
+    mode->stable_slot_id = first.stable_slot_ids[i];
+  }
+
+  std::reverse(units.begin(), units.end());
+  auto second = FormationPlanner::get_formation_with_facing(
+      world, units, QVector3D(10.0F, 0.0F, 10.0F), 1.0F);
+  ASSERT_EQ(second.stable_slot_ids.size(), units.size());
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    auto const* mode = world.get_entity(units[i])
+                           ->get_component<Engine::Core::FormationModeComponent>();
+    ASSERT_NE(mode, nullptr);
+    EXPECT_EQ(second.stable_slot_ids[i], mode->stable_slot_id);
+  }
+}
+
 TEST_F(FormationSystemTest, PlannerCollapsesInvalidFormationSlotsToCenterTarget) {
-  NationRegistry::instance().initialize_defaults();
   Game::Systems::CommandService::initialize(32, 32);
   Engine::Core::World world;
 
@@ -581,7 +641,6 @@ TEST_F(FormationSystemTest, PlannerCollapsesInvalidFormationSlotsToCenterTarget)
 }
 
 TEST_F(FormationSystemTest, PlannerCollapsesTightFormationAreaToCenterTarget) {
-  NationRegistry::instance().initialize_defaults();
   Game::Systems::CommandService::initialize(32, 32);
   Engine::Core::World world;
 

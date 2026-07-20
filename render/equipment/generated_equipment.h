@@ -47,6 +47,21 @@ inline auto generated_sphere(const QVector3D& center,
           material_id};
 }
 
+inline auto generated_ellipsoid(const QVector3D& center,
+                                const QVector3D& radii,
+                                std::uint8_t palette_slot,
+                                float alpha = 1.0F,
+                                int material_id = 0) -> GeneratedEquipmentPrimitive {
+  return {GeneratedEquipmentPrimitiveKind::Sphere,
+          center,
+          {},
+          radii,
+          0.0F,
+          palette_slot,
+          alpha,
+          material_id};
+}
+
 inline auto generated_cylinder(const QVector3D& start,
                                const QVector3D& end,
                                float radius,
@@ -98,14 +113,22 @@ inline void
 add_generated_equipment_primitive(RenderArchetypeBuilder& builder,
                                   const GeneratedEquipmentPrimitive& primitive) {
   switch (primitive.kind) {
-  case GeneratedEquipmentPrimitiveKind::Sphere:
+  case GeneratedEquipmentPrimitiveKind::Sphere: {
+    QMatrix4x4 model;
+    model.translate(primitive.from);
+    if (primitive.radius > 0.0F) {
+      model.scale(primitive.radius);
+    } else {
+      model.scale(primitive.scale);
+    }
     builder.add_palette_mesh(get_unit_sphere(),
-                             Render::Geom::sphere_at(primitive.from, primitive.radius),
+                             model,
                              primitive.palette_slot,
                              nullptr,
                              primitive.alpha,
                              primitive.material_id);
     break;
+  }
   case GeneratedEquipmentPrimitiveKind::Cylinder:
     builder.add_palette_mesh(
         get_unit_cylinder(),

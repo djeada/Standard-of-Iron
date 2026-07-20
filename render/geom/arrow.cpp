@@ -25,7 +25,7 @@ static auto create_arrow_shaft_mesh() -> std::unique_ptr<GL::Mesh> {
   std::vector<unsigned int> idx;
 
   constexpr int k_arrow_radial_segments = 12;
-  const float shaft_radius = 0.05F;
+  const float shaft_radius = 0.027F;
   const float shaft_len = Arrow::k_shaft_length;
 
   int const base_index = 0;
@@ -65,7 +65,7 @@ static auto create_arrow_tip_mesh() -> std::unique_ptr<GL::Mesh> {
   std::vector<unsigned int> idx;
 
   constexpr int k_arrow_radial_segments = 12;
-  const float shaft_radius = 0.05F;
+  const float shaft_radius = 0.027F;
   const float shaft_len = Arrow::k_shaft_length;
   const float tip_len = Arrow::k_tip_length;
   const float tip_start_z = shaft_len;
@@ -96,6 +96,41 @@ static auto create_arrow_tip_mesh() -> std::unique_ptr<GL::Mesh> {
   return std::make_unique<GL::Mesh>(verts, idx);
 }
 
+static auto create_arrow_fletching_mesh() -> std::unique_ptr<GL::Mesh> {
+  using GL::Vertex;
+  constexpr float k_root_z = 0.035F;
+  constexpr float k_tail_z = 0.19F;
+  constexpr float k_fin_height = 0.105F;
+  std::vector<Vertex> verts;
+  std::vector<unsigned int> idx;
+  verts.reserve(16);
+  idx.reserve(24);
+
+  auto add_fin = [&](QVector3D normal, QVector3D edge) {
+    auto vertex =
+        [](float x, float y, float z, const QVector3D& normal_value, float u, float v)
+        -> Vertex {
+      return {
+          {x, y, z}, {normal_value.x(), normal_value.y(), normal_value.z()}, {u, v}};
+    };
+    auto const base = static_cast<unsigned int>(verts.size());
+    verts.push_back(vertex(0.0F, 0.0F, k_root_z, normal, 0.0F, 0.0F));
+    verts.push_back(vertex(edge.x(), edge.y(), k_tail_z, normal, 1.0F, 0.0F));
+    verts.push_back(
+        vertex(edge.x() * 0.72F, edge.y() * 0.72F, k_root_z, normal, 1.0F, 1.0F));
+    QVector3D const back_normal = -normal;
+    verts.push_back(vertex(0.0F, 0.0F, k_root_z, back_normal, 0.0F, 0.0F));
+    verts.push_back(
+        vertex(edge.x() * 0.72F, edge.y() * 0.72F, k_root_z, back_normal, 1.0F, 1.0F));
+    verts.push_back(vertex(edge.x(), edge.y(), k_tail_z, back_normal, 1.0F, 0.0F));
+    idx.insert(idx.end(),
+               {base, base + 1U, base + 2U, base + 3U, base + 4U, base + 5U});
+  };
+  add_fin({0.0F, 1.0F, 0.0F}, {k_fin_height, 0.0F, 0.0F});
+  add_fin({1.0F, 0.0F, 0.0F}, {0.0F, k_fin_height, 0.0F});
+  return std::make_unique<GL::Mesh>(verts, idx);
+}
+
 auto Arrow::get_shaft() -> GL::Mesh* {
   static std::unique_ptr<GL::Mesh> const mesh = create_arrow_shaft_mesh();
   return mesh.get();
@@ -106,6 +141,11 @@ auto Arrow::get_tip() -> GL::Mesh* {
   return mesh.get();
 }
 
+auto Arrow::get_fletching() -> GL::Mesh* {
+  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_fletching_mesh();
+  return mesh.get();
+}
+
 } // namespace Geom
 
 namespace GL {
@@ -113,7 +153,6 @@ namespace GL {
 namespace {
 
 constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
-constexpr float k_trail_radius = 0.018F;
 
 auto remap_alpha(float value, float begin, float end) -> float {
   if (end <= begin) {
@@ -200,6 +239,7 @@ auto build_arrow_model(const Game::Systems::ArrowInstance& arrow,
 void draw_arrow_mesh(Renderer* renderer,
                      GL::Mesh* arrow_shaft_mesh,
                      GL::Mesh* arrow_tip_mesh,
+                     GL::Mesh* arrow_fletching_mesh,
                      const QMatrix4x4& model,
                      const QVector3D& shaft_color,
                      const QVector3D& tip_color,
@@ -220,7 +260,8 @@ void draw_arrow_mesh(Renderer* renderer,
     fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_z_scale);
-    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr, alpha * 0.8F);
+    renderer->mesh(
+        arrow_fletching_mesh, fletch_model, fletch_color, nullptr, alpha * 0.92F);
   }
 }
 
@@ -234,7 +275,9 @@ void render_arrows(Renderer* renderer,
   }
   auto* arrow_shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* arrow_tip_mesh = Render::Geom::Arrow::get_tip();
-  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr)) {
+  auto* arrow_fletching_mesh = Render::Geom::Arrow::get_fletching();
+  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr) ||
+      (arrow_fletching_mesh == nullptr)) {
     return;
   }
 
@@ -257,14 +300,6 @@ void render_arrows(Renderer* renderer,
     if (arrow.trail_alpha > 0.001F && arrow.trail_length > 0.0F) {
       float const tail_t = std::max(0.0F, clamped_t - arrow.trail_length);
       if (tail_t < clamped_t) {
-        QVector3D const tail_pos = sample_arrow_position(arrow, tail_t);
-        QVector3D const trail_color =
-            scaled_color(shaft_color * 0.65F + QVector3D(0.18F, 0.18F, 0.20F), 0.9F);
-        renderer->cylinder(tail_pos,
-                           pos,
-                           k_trail_radius * arrow.scale,
-                           trail_color,
-                           arrow.trail_alpha * main_alpha);
       }
 
       int const trail_segments = trail_segments_for_style(arrow.style);
@@ -283,6 +318,7 @@ void render_arrows(Renderer* renderer,
         draw_arrow_mesh(renderer,
                         arrow_shaft_mesh,
                         arrow_tip_mesh,
+                        arrow_fletching_mesh,
                         ghost_model,
                         scaled_color(shaft_color, 0.78F),
                         scaled_color(tip_color, 0.82F),
@@ -294,9 +330,17 @@ void render_arrows(Renderer* renderer,
     }
 
     QMatrix4x4 const model = build_arrow_model(arrow, clamped_t, pos, 1.0F);
+    QMatrix4x4 glow_model = model;
+    glow_model.scale(2.45F, 2.45F, 1.08F);
+    renderer->mesh(arrow_shaft_mesh,
+                   glow_model,
+                   scaled_color(fletch_color + QVector3D(0.34F, 0.34F, 0.28F), 0.94F),
+                   nullptr,
+                   main_alpha * 0.30F);
     draw_arrow_mesh(renderer,
                     arrow_shaft_mesh,
                     arrow_tip_mesh,
+                    arrow_fletching_mesh,
                     model,
                     shaft_color,
                     tip_color,

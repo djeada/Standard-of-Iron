@@ -10,6 +10,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
+#include "../../map/terrain_service.h"
 #include "../../units/troop_config.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
@@ -29,11 +30,12 @@ constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 
-constexpr float BUILD_TIME_HOME = 20.0F;
-constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
-constexpr float BUILD_TIME_BARRACKS = 30.0F;
-constexpr float BUILD_TIME_MARKETPLACE = 25.0F;
-constexpr float BUILD_TIME_DEFAULT = 20.0F;
+constexpr float BUILD_TIME_HOME = 10.0F;
+constexpr float BUILD_TIME_DEFENSE_TOWER = 12.0F;
+constexpr float BUILD_TIME_BARRACKS = 15.0F;
+constexpr float BUILD_TIME_MARKETPLACE = 12.0F;
+constexpr float BUILD_TIME_DEFAULT = 10.0F;
+constexpr float HARVEST_TIME = 6.0F;
 } // namespace
 
 void AICommandApplier::apply(Engine::Core::World& world,
@@ -274,6 +276,60 @@ void AICommandApplier::apply(Engine::Core::World& world,
                                                                 resource_costs);
       }
 
+      break;
+    }
+
+    case AICommandType::StartBuilderHarvest: {
+      if (command.units.empty() || command.construction_type == nullptr ||
+          command.resource_target_id == 0) {
+        break;
+      }
+      auto& terrain = Game::Map::TerrainService::instance();
+      if (!terrain.reserve_world_prop(command.resource_target_id)) {
+        break;
+      }
+
+      bool assigned = false;
+      for (auto entity_id : command.units) {
+        auto* entity = world.get_entity(entity_id);
+        auto* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+        auto* builder =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+                : nullptr;
+        if (unit == nullptr || builder == nullptr || unit->owner_id != ai_owner_id ||
+            unit->spawn_type != Game::Units::SpawnType::Builder) {
+          continue;
+        }
+
+        builder->product_type = command.construction_type;
+        builder->build_time = HARVEST_TIME;
+        builder->time_remaining = HARVEST_TIME;
+        builder->has_construction_site = true;
+        builder->construction_site_x = command.construction_site_x;
+        builder->construction_site_z = command.construction_site_z;
+        builder->at_construction_site = false;
+        builder->in_progress = false;
+        builder->construction_complete = false;
+        builder->is_placement_preview = false;
+        builder->bypass_movement_active = false;
+        builder->has_task_target = true;
+        builder->task_target_id = command.resource_target_id;
+        builder->task_target_x = command.construction_site_x;
+        builder->task_target_z = command.construction_site_z;
+        builder->task_target_reserved = true;
+        if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
+          movement->set_rest_position(command.construction_site_x,
+                                      command.construction_site_z);
+        }
+        assigned = true;
+        break;
+      }
+      if (!assigned) {
+        terrain.release_world_prop(command.resource_target_id);
+      }
       break;
     }
     }

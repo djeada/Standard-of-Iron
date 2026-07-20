@@ -21,6 +21,9 @@ enum class CombatActionId : std::uint8_t {
   MountedSwordSlash,
   MountedSpearThrust,
   MountedChargeImpact,
+  RtsSwordStrike,
+  RtsSpearThrust,
+  RtsBowShot,
 };
 
 enum class WeaponFamily : std::uint8_t {

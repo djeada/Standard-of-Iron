@@ -11,6 +11,7 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
+#include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "horse/armor/champion_renderer.h"
@@ -152,6 +153,34 @@ void register_equipment_descriptors() {
            static_cast<std::uint8_t>(Render::GL::k_roman_light_helmet_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
+      "roman_montefortino",
+      {.build_attachments = &build_roman_montefortino_attachment,
+       .append_role_colors = &roman_montefortino_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "roman_boeotian_cavalry",
+      {.build_attachments = &build_roman_boeotian_cavalry_attachment,
+       .append_role_colors = &roman_boeotian_cavalry_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "carthage_punic_conical",
+      {.build_attachments = &build_carthage_punic_conical_attachment,
+       .append_role_colors = &carthage_punic_conical_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "carthage_thracian_crested",
+      {.build_attachments = &build_carthage_thracian_crested_attachment,
+       .append_role_colors = &carthage_thracian_crested_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
       "headwrap",
       {.build_attachments = &build_headwrap_attachment,
        .append_role_colors = [](const void* variant_void,
@@ -196,6 +225,34 @@ void register_equipment_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "armor_heavy_carthage",
+      {.build_attachments = &build_carthage_heavy_armor_attachment,
+       .append_role_colors = &carthage_heavy_armor_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_armor_heavy_carthage_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "roman_hamata_mail",
+      {.build_attachments = &build_roman_light_armor_attachment,
+       .append_role_colors = &roman_light_armor_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_roman_light_armor_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "roman_anatomical_cuirass",
+      {.build_attachments = &build_roman_heavy_armor_attachment,
+       .append_role_colors = &roman_heavy_armor_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_roman_heavy_armor_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "carthage_linothorax",
+      {.build_attachments = &build_carthage_light_armor_attachment,
+       .append_role_colors = &carthage_light_armor_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_armor_light_carthage_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "carthage_gilded_scale",
       {.build_attachments = &build_carthage_heavy_armor_attachment,
        .append_role_colors = &carthage_heavy_armor_role_colors,
        .role_count =

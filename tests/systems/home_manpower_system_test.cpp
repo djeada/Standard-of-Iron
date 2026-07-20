@@ -4,10 +4,12 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/home_system.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/barracks.h"
 #include "game/units/home.h"
 #include "game/units/spawn_type.h"
@@ -89,6 +91,7 @@ TEST_F(HomeManpowerSystemTest,
 
 TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQueued) {
   Engine::Core::World world;
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
 
   auto* barracks = world.create_entity();
   auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
@@ -101,6 +104,8 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   production->max_units = 500;
   production->produced_count = 500;
   production->manpower_available = 40;
+  Game::Systems::PlayerResourceRegistry::instance().set(
+      1, Game::Systems::ResourceType::Wood, 6);
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
@@ -117,7 +122,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
-  EXPECT_EQ(production->manpower_available, 10);
+  EXPECT_EQ(production->manpower_available, 60 - production->villager_cost);
 }
 
 TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {

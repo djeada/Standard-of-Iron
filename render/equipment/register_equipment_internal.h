@@ -150,6 +150,14 @@ auto build_roman_heavy_helmet_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_light_helmet_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
+auto build_roman_montefortino_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_roman_boeotian_cavalry_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_carthage_punic_conical_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_carthage_thracian_crested_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
 auto build_headwrap_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_light_armor_attachment(std::uint8_t base_role_byte)
@@ -302,6 +310,22 @@ auto roman_light_helmet_role_colors(const void* variant_void,
                                     QVector3D* out,
                                     std::uint32_t base_count,
                                     std::size_t max_count) -> std::uint32_t;
+auto roman_montefortino_role_colors(const void* variant_void,
+                                    QVector3D* out,
+                                    std::uint32_t base_count,
+                                    std::size_t max_count) -> std::uint32_t;
+auto roman_boeotian_cavalry_role_colors(const void* variant_void,
+                                        QVector3D* out,
+                                        std::uint32_t base_count,
+                                        std::size_t max_count) -> std::uint32_t;
+auto carthage_punic_conical_role_colors(const void* variant_void,
+                                        QVector3D* out,
+                                        std::uint32_t base_count,
+                                        std::size_t max_count) -> std::uint32_t;
+auto carthage_thracian_crested_role_colors(const void* variant_void,
+                                           QVector3D* out,
+                                           std::uint32_t base_count,
+                                           std::size_t max_count) -> std::uint32_t;
 auto roman_light_armor_role_colors(const void* variant_void,
                                    QVector3D* out,
                                    std::uint32_t base_count,

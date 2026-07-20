@@ -167,6 +167,30 @@ TEST_F(CommandServiceTest, InfantryMovementPublishesWalkAnimationStateImmediatel
   EXPECT_FALSE(Render::Creature::is_running_animation(anim.movement_state));
 }
 
+TEST_F(CommandServiceTest, ContinuousAttackChaseRetargetPreservesVelocity) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 4.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 4.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
+  movement->set_manual_velocity(1.25F, -0.5F);
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.kind = Game::Systems::MoveOrderKind::AttackChase;
+  Game::Systems::CommandService::move_unit(
+      world, unit->get_id(), QVector3D(5.0F, 0.0F, 1.0F), options);
+
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_FLOAT_EQ(movement->get_vx(), 1.25F);
+  EXPECT_FLOAT_EQ(movement->get_vz(), -0.5F);
+}
+
 TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
@@ -207,7 +231,7 @@ TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
   EXPECT_FALSE(Render::Creature::is_moving_animation(anim.movement_state));
 }
 
-TEST_F(CommandServiceTest, AttackRangeDoesNotCancelNavigationMotionPresentation) {
+TEST_F(CommandServiceTest, StationaryNavigationIntentDoesNotFakeLocomotion) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
   auto* target = create_unit(world, 0.75F, 0.0F, Game::Units::SpawnType::Knight);
@@ -237,8 +261,69 @@ TEST_F(CommandServiceTest, AttackRangeDoesNotCancelNavigationMotionPresentation)
   auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
   ASSERT_NE(motion, nullptr);
   EXPECT_TRUE(motion->attack_target_in_range);
-  EXPECT_TRUE(motion->has_locomotion());
+  EXPECT_FALSE(motion->has_locomotion());
+  EXPECT_TRUE(motion->is_idle_state());
+}
+
+TEST_F(CommandServiceTest, NewlyRetargetedChasePublishesWalkWithoutIdleFrame) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  auto* target = create_unit(world, 5.0F, 0.0F, Game::Units::SpawnType::Knight);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(target, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  auto* attack = unit->add_component<Engine::Core::AttackComponent>();
+  auto* attack_target = unit->add_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(attack_target, nullptr);
+
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 4.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 4.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
+  movement->set_manual_velocity(0.0F, 0.0F);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->range = 1.5F;
+  attack->melee_range = 1.5F;
+  attack_target->target_id = target->get_id();
+  attack_target->should_chase = true;
+
+  world.update(0.1F);
+
+  auto const* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_TRUE(motion->has_chase_intent);
   EXPECT_TRUE(motion->is_walk_state());
+}
+
+TEST_F(CommandServiceTest, SharpWaypointTurnLimitsSidewaysTranslation) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(entity, nullptr);
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+
+  transform->rotation.y = 0.0F;
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_target_x(*movement, 10.0F);
+  MovementTestAccess::set_target_y(*movement, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 10.0F);
+  MovementTestAccess::set_goal_y(*movement, 0.0F);
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.1F);
+
+  EXPECT_LT(transform->position.x, 0.05F);
+  EXPECT_GT(transform->rotation.y, 0.0F);
+
+  movement_system.update(&world, 0.1F);
+  EXPECT_GT(transform->position.x, 0.0F);
+  EXPECT_GT(std::hypot(movement->get_vx(), movement->get_vz()), 0.0F);
 }
 
 TEST_F(CommandServiceTest, MoveOptionsControlFormationModePersistence) {
@@ -437,6 +522,29 @@ TEST_F(CommandServiceTest, NewMoveOrderAssignsFreshTarget) {
       world, entity->get_id(), QVector3D(4.0F, 0.0F, 0.0F));
 
   EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(CommandServiceTest, ReverseMoveTurnsThenResumesTranslation) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Knight);
+  ASSERT_NE(entity, nullptr);
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  transform->rotation.y = 0.0F;
+
+  Game::Systems::CommandService::move_unit(
+      world, entity->get_id(), QVector3D(0.0F, 0.0F, -6.0F));
+  Game::Systems::MovementSystem movement_system;
+  for (int frame = 0; frame < 20; ++frame) {
+    movement_system.update(&world, 0.10F);
+  }
+
+  EXPECT_TRUE(movement->get_has_target());
+  EXPECT_GT(std::abs(transform->rotation.y), 90.0F);
+  EXPECT_LT(transform->position.z, -0.25F);
+  EXPECT_LT(movement->get_vz(), 0.0F);
 }
 
 TEST_F(CommandServiceTest, BlockedSegmentKeepsDirectOrderForRecovery) {
@@ -784,6 +892,28 @@ TEST_F(CommandServiceTest, PlannedMoveExpandsSharedDestinationIntoFormationSlots
   EXPECT_EQ(distinct_goal_count, 3U);
 }
 
+TEST_F(CommandServiceTest, FormationMovePreservesCurrentRelativeShape) {
+  Engine::Core::World world;
+  auto* first = create_unit(world, -8.0F, -3.0F, Game::Units::SpawnType::Spearman);
+  auto* second = create_unit(world, -5.0F, -3.0F, Game::Units::SpawnType::Spearman);
+  auto* third = create_unit(world, -2.0F, -3.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(third, nullptr);
+
+  std::vector<Engine::Core::EntityID> const units = {
+      first->get_id(), second->get_id(), third->get_id()};
+  auto const plan = Game::Systems::CommandService::plan_ground_move(
+      world, units, QVector3D(8.0F, 0.0F, 4.0F), true);
+
+  ASSERT_EQ(plan.positions.size(), 3U);
+  EXPECT_TRUE(plan.preserve_formation_mode);
+  EXPECT_LT(plan.positions[0].x(), plan.positions[1].x());
+  EXPECT_LT(plan.positions[1].x(), plan.positions[2].x());
+  EXPECT_NEAR(plan.positions[1].x() - plan.positions[0].x(), 3.0F, 0.01F);
+  EXPECT_NEAR(plan.positions[2].x() - plan.positions[1].x(), 3.0F, 0.01F);
+}
+
 TEST_F(CommandServiceTest, PlannedMoveUsesLargeUnitFootprintForSharedDestination) {
   Engine::Core::World world;
 
@@ -819,7 +949,7 @@ TEST_F(CommandServiceTest, PlannedMoveUsesLargeUnitFootprintForSharedDestination
   EXPECT_GT(min_distance_sq, 3.0F);
 }
 
-TEST_F(CommandServiceTest, AttackTargetAssignsDistinctApproachGoals) {
+TEST_F(CommandServiceTest, AttackTargetDefersApproachGeometryToCombatSystem) {
   Engine::Core::World world;
 
   auto* target = create_unit(world, 10.0F, 0.0F, Game::Units::SpawnType::Knight);
@@ -850,25 +980,19 @@ TEST_F(CommandServiceTest, AttackTargetAssignsDistinctApproachGoals) {
       target->get_id(),
       true);
 
-  std::vector<std::pair<float, float>> goals;
   for (auto* attacker : attackers) {
     auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
     auto* attack_target =
         attacker->get_component<Engine::Core::AttackTargetComponent>();
     ASSERT_NE(movement, nullptr);
     ASSERT_NE(attack_target, nullptr);
-    EXPECT_TRUE(movement->get_has_target());
+    EXPECT_FALSE(movement->get_has_target());
     EXPECT_EQ(attack_target->target_id, target->get_id());
     EXPECT_TRUE(attack_target->should_chase);
-    goals.emplace_back(movement->get_goal_x(), movement->get_goal_y());
   }
-
-  std::sort(goals.begin(), goals.end());
-  goals.erase(std::unique(goals.begin(), goals.end()), goals.end());
-  EXPECT_EQ(goals.size(), attackers.size());
 }
 
-TEST_F(CommandServiceTest, AttackTargetBreaksStaleMeleeLockOnRetarget) {
+TEST_F(CommandServiceTest, AttackTargetCannotReplaceALivingMeleeLock) {
   Engine::Core::World world;
 
   auto* old_target = create_unit(world, 1.0F, 0.0F, Game::Units::SpawnType::Knight);
@@ -890,6 +1014,14 @@ TEST_F(CommandServiceTest, AttackTargetBreaksStaleMeleeLockOnRetarget) {
   attack->in_melee_lock = true;
   attack->melee_lock_target_id = old_target->get_id();
 
+  Game::Systems::CommandService::attack_target(
+      world, {attacker->get_id()}, new_target->get_id(), true);
+
+  EXPECT_TRUE(attack->in_melee_lock);
+  EXPECT_EQ(attack->melee_lock_target_id, old_target->get_id());
+  EXPECT_EQ(attacker->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  old_target->get_component<Engine::Core::UnitComponent>()->health = 0;
   Game::Systems::CommandService::attack_target(
       world, {attacker->get_id()}, new_target->get_id(), true);
 

@@ -322,7 +322,8 @@ private:
                               Engine::Core::UnitComponent* unit_comp,
                               bool selected,
                               bool hovered);
-  void enqueue_mode_indicator(Engine::Core::TransformComponent* transform,
+  void enqueue_mode_indicator(std::uint32_t entity_id,
+                              Engine::Core::TransformComponent* transform,
                               Engine::Core::UnitComponent* unit_comp,
                               bool has_attack,
                               bool has_guard_mode,

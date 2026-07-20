@@ -68,9 +68,6 @@ public:
   HorseArcherRendererBase& operator=(HorseArcherRendererBase&&) = delete;
   ~HorseArcherRendererBase() override = default;
 
-  auto mounted_visual_spec() const
-      -> const Render::Creature::Pipeline::MountedSpec& override;
-
   auto
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override;
 

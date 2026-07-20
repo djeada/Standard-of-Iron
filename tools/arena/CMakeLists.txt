@@ -1,3 +1,17 @@
+add_library(arena_scenario_harness STATIC
+    arena_scenario.cpp
+    arena_scenario_catalog.cpp
+)
+target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
+target_link_libraries(arena_scenario_harness
+    PUBLIC
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Gui
+    engine_core
+    render_gl
+    game_systems
+)
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(arena_app
         main.cpp
@@ -37,6 +51,7 @@ target_link_libraries(arena_app
     engine_core
     render_gl
     game_systems
+    arena_scenario_harness
 )
 
 set_target_properties(arena_app PROPERTIES

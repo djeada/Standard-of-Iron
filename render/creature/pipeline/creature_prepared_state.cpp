@@ -9,7 +9,6 @@
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
-#include "../../../game/systems/combat_rules.h"
 #include "../../../game/units/spawn_type.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
@@ -54,33 +53,7 @@ auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
 
 auto resolve_elephant_animation_state(const Render::GL::DrawContext& ctx)
     -> PreparedAnimationState {
-  PreparedAnimationState state = resolve_humanoid_animation_state(ctx);
-
-  if (ctx.entity == nullptr || state.used_override) {
-    return state;
-  }
-  if (state.inputs.is_dying || state.inputs.is_dead) {
-    return state;
-  }
-
-  auto* combat_state = ctx.entity->get_component<Engine::Core::CombatStateComponent>();
-  if ((combat_state != nullptr) &&
-      combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
-    state.inputs.is_attacking = true;
-    state.inputs.is_melee = true;
-  }
-
-  auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
-  if ((attack != nullptr) && attack->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(ctx.entity)) {
-    state.inputs.is_attacking = true;
-    state.inputs.is_melee = true;
-  }
-
-  Render::Profiling::CombatAnimationDiagnostics::instance().mark_elephant_override(
-      ctx.entity->get_id());
-
-  return state;
+  return resolve_humanoid_animation_state(ctx);
 }
 
 auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)

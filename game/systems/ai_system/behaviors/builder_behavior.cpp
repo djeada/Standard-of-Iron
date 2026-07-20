@@ -1,12 +1,14 @@
 #include "builder_behavior.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <utility>
 #include <vector>
 
 #include "../../../map/terrain_service.h"
+#include "../../construction_cost_catalog.h"
 #include "../../nation_registry.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -22,6 +24,9 @@ constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
+constexpr const char* HARVEST_TREE = "cut_tree";
+constexpr const char* HARVEST_STONE = "collect_stone";
+constexpr const char* HARVEST_IRON = "collect_iron_ore";
 
 constexpr int MAX_HOMES = 20;
 constexpr int MAX_DEFENSE_TOWERS = 10;
@@ -30,7 +35,6 @@ constexpr int MAX_BARRACKS = 6;
 constexpr int MAX_MARKETPLACES = 2;
 constexpr int MAX_CATAPULTS = 5;
 
-constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
 constexpr float MAP_EDGE_PADDING = 5.0F;
 
 constexpr float GRID_CENTER_OFFSET = 0.5F;
@@ -134,6 +138,81 @@ auto select_best_builder(const AISnapshot& snapshot,
   }
 
   return best_id;
+}
+
+auto harvest_type_for_resource(ResourceType resource) -> const char* {
+  switch (resource) {
+  case ResourceType::Wood:
+    return HARVEST_TREE;
+  case ResourceType::Stone:
+    return HARVEST_STONE;
+  case ResourceType::Iron:
+    return HARVEST_IRON;
+  default:
+    return nullptr;
+  }
+}
+
+auto node_matches_resource(const ResourceNodeSnapshot& node,
+                           ResourceType resource) -> bool {
+  switch (resource) {
+  case ResourceType::Wood:
+    return Game::Map::is_tree_world_prop_type(node.type);
+  case ResourceType::Stone:
+    return Game::Map::is_boulder_world_prop_type(node.type);
+  case ResourceType::Iron:
+    return Game::Map::is_iron_ore_world_prop_type(node.type);
+  default:
+    return false;
+  }
+}
+
+auto planned_settlement_offset(const AIContext& context,
+                               const char* building_type,
+                               int construction_index) -> QVector3D {
+  const bool carthaginian =
+      context.nation != nullptr && context.nation->id == NationID::Carthage;
+  if (building_type == BUILDING_TYPE_DEFENSE_TOWER) {
+    static const std::array<QVector3D, 4> roman = {QVector3D{-8.0F, 0.0F, -8.0F},
+                                                   QVector3D{8.0F, 0.0F, -8.0F},
+                                                   QVector3D{8.0F, 0.0F, 8.0F},
+                                                   QVector3D{-8.0F, 0.0F, 8.0F}};
+    static const std::array<QVector3D, 4> punic = {QVector3D{-8.0F, 0.0F, -8.0F},
+                                                   QVector3D{8.0F, 0.0F, -8.0F},
+                                                   QVector3D{-8.0F, 0.0F, 8.0F},
+                                                   QVector3D{8.0F, 0.0F, 8.0F}};
+    const auto& offsets = carthaginian ? punic : roman;
+    return offsets[static_cast<std::size_t>(construction_index) % offsets.size()];
+  }
+  if (building_type == BUILDING_TYPE_HOME) {
+    static const std::array<QVector3D, 6> roman = {QVector3D{-8.0F, 0.0F, 5.0F},
+                                                   QVector3D{-4.0F, 0.0F, 5.0F},
+                                                   QVector3D{4.0F, 0.0F, 5.0F},
+                                                   QVector3D{8.0F, 0.0F, 5.0F},
+                                                   QVector3D{-8.0F, 0.0F, -5.0F},
+                                                   QVector3D{8.0F, 0.0F, -5.0F}};
+    static const std::array<QVector3D, 6> punic = {QVector3D{-6.0F, 0.0F, 4.0F},
+                                                   QVector3D{-2.0F, 0.0F, 6.0F},
+                                                   QVector3D{2.0F, 0.0F, 6.0F},
+                                                   QVector3D{6.0F, 0.0F, 4.0F},
+                                                   QVector3D{-5.0F, 0.0F, -5.0F},
+                                                   QVector3D{5.0F, 0.0F, -5.0F}};
+    const auto& offsets = carthaginian ? punic : roman;
+    return offsets[static_cast<std::size_t>(construction_index) % offsets.size()];
+  }
+  if (building_type == BUILDING_TYPE_MARKETPLACE) {
+    return carthaginian ? QVector3D{0.0F, 0.0F, 2.0F} : QVector3D{};
+  }
+  if (building_type == BUILDING_TYPE_BARRACKS) {
+    return QVector3D{0.0F, 0.0F, carthaginian ? -7.0F : -8.0F};
+  }
+  if (building_type == BUILDING_TYPE_WALL_SEGMENT) {
+    const int slot = construction_index % 11;
+    return QVector3D{
+        -10.0F + static_cast<float>(slot) * 2.0F, 0.0F, carthaginian ? -13.0F : -14.0F};
+  }
+  const float angle = static_cast<float>(construction_index) * 0.8F;
+  return {18.0F * std::cos(angle), 0.0F, 18.0F * std::sin(angle)};
 }
 
 } // namespace
@@ -240,18 +319,55 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       return;
     }
 
-    if (context.primary_barracks != 0) {
-      float const angle = m_construction_counter * 0.8F;
-      float radius = 15.0F + (m_construction_counter % 3) * 5.0F;
+    const auto costs = construction_cost_info(building_to_construct).resource_costs;
+    ResourceType missing_resource = ResourceType::Count;
+    int largest_deficit = 0;
+    if (snapshot.has_resource_snapshot) {
+      for (const ResourceType type : k_all_resource_types) {
+        const int deficit = costs.get(type) - snapshot.resources.get(type);
+        if (deficit > largest_deficit && harvest_type_for_resource(type) != nullptr) {
+          missing_resource = type;
+          largest_deficit = deficit;
+        }
+      }
+    }
 
-      if (building_to_construct == BUILDING_TYPE_DEFENSE_TOWER) {
-        radius = std::min(radius, DEFENSE_TOWER_CLOSE_RADIUS);
-      } else if (building_to_construct == BUILDING_TYPE_BARRACKS) {
-        radius += 5.0F;
+    if (missing_resource != ResourceType::Count) {
+      const ResourceNodeSnapshot* closest = nullptr;
+      float closest_distance_sq = std::numeric_limits<float>::infinity();
+      for (const auto& node : snapshot.resource_nodes) {
+        if (node.reserved || !node_matches_resource(node, missing_resource)) {
+          continue;
+        }
+        const float dx = node.pos_x - context.base_pos_x;
+        const float dz = node.pos_z - context.base_pos_z;
+        const float distance_sq = dx * dx + dz * dz;
+        if (distance_sq < closest_distance_sq) {
+          closest = &node;
+          closest_distance_sq = distance_sq;
+        }
+      }
+      if (closest == nullptr) {
+        return;
       }
 
-      construction_x += radius * std::cos(angle);
-      construction_z += radius * std::sin(angle);
+      AICommand command;
+      command.type = AICommandType::StartBuilderHarvest;
+      command.units.push_back(select_best_builder(
+          snapshot, available_builders, closest->pos_x, closest->pos_z));
+      command.construction_type = harvest_type_for_resource(missing_resource);
+      command.construction_site_x = closest->pos_x;
+      command.construction_site_z = closest->pos_z;
+      command.resource_target_id = closest->id;
+      out_commands.push_back(std::move(command));
+      return;
+    }
+
+    if (context.primary_barracks != 0) {
+      const QVector3D offset = planned_settlement_offset(
+          context, building_to_construct, m_construction_counter);
+      construction_x += offset.x();
+      construction_z += offset.z();
     }
   }
 

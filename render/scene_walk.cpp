@@ -13,6 +13,7 @@
 #include <mutex>
 #include <numbers>
 #include <optional>
+#include <span>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -21,7 +22,7 @@
 #include "../game/map/render_visibility_rules.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
-#include "../game/systems/combat_rules.h"
+#include "../game/systems/formation_combat_geometry.h"
 #include "../game/systems/nation_registry.h"
 #include "../game/systems/owner_registry.h"
 #include "../game/systems/troop_profile_service.h"
@@ -254,42 +255,13 @@ float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
 
 auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
     -> int {
-  if (unit_comp.render_individuals_per_unit_override > 0) {
-    return unit_comp.render_individuals_per_unit_override;
-  }
-  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
-      unit_comp.spawn_type);
+  return Game::Systems::FormationCombat::resolve_definition(unit_comp).total_count;
 }
 
-auto is_unit_combat_active(const Engine::Core::Entity* entity,
-                           const Engine::Core::AttackComponent* attack_comp,
-                           const Engine::Core::AttackTargetComponent* attack_target,
-                           const Engine::Core::CombatStateComponent* combat_state,
-                           const Engine::Core::HitFeedbackComponent* hit_feedback)
-    -> bool {
-  if ((hit_feedback != nullptr) && hit_feedback->is_reacting) {
-    return true;
-  }
-
-  if ((combat_state != nullptr) &&
-      (combat_state->animation_state != Engine::Core::CombatAnimationState::Idle)) {
-    return true;
-  }
-
-  if (attack_comp == nullptr) {
-    return false;
-  }
-
-  if (attack_comp->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
-    return true;
-  }
-
-  if ((attack_target == nullptr) || (attack_target->target_id == 0)) {
-    return false;
-  }
-
-  return attack_comp->time_since_last < attack_comp->get_current_cooldown();
+auto is_unit_combat_active(
+    const Engine::Core::CreaturePresentationComponent* presentation) -> bool {
+  return presentation != nullptr && presentation->snapshot_valid &&
+         presentation->combat_active;
 }
 
 auto stable_combat_creature_lod(const Engine::Core::UnitComponent* unit,
@@ -374,63 +346,34 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
     auto& config = Game::Units::TroopConfig::instance();
 
     if (troop_type_opt) {
-      const auto& nation_reg = Game::Systems::NationRegistry::instance();
-      const Game::Systems::Nation* nation =
-          nation_reg.get_nation_for_player(unit_comp->owner_id);
-      Game::Systems::NationID const nation_id =
-          nation != nullptr ? nation->id : nation_reg.default_nation_id();
-
       const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-          nation_id, *troop_type_opt);
+          unit_comp->nation_id, *troop_type_opt);
+      auto const formation =
+          Game::Systems::FormationCombat::resolve_definition(*unit_comp);
       int const individuals_per_unit = resolved_individuals_per_unit(*unit_comp);
-      int const max_units_per_row = config.get_max_units_per_row(unit_comp->spawn_type);
-      std::uint32_t layout_seed =
-          static_cast<std::uint32_t>(unit_comp->owner_id) * 2654435761U;
-      if (entity != nullptr) {
-        layout_seed ^= static_cast<std::uint32_t>(
-            reinterpret_cast<std::uintptr_t>(entity) & 0xFFFFFFFFU);
-      }
-      float const formation_spacing = resolve_formation_spacing(
-          unit_comp->spawn_type, profile.visuals.formation_spacing);
 
       ring_size =
           Detail::selection_ring_visual_size(unit_comp->spawn_type,
                                              individuals_per_unit,
                                              profile.visuals.selection_ring_size,
-                                             formation_spacing);
+                                             formation.spacing);
       ground_offset = profile.visuals.selection_ring_ground_offset;
 
-      bool is_builder_constructing = false;
-      if (entity != nullptr &&
-          unit_comp->spawn_type == Game::Units::SpawnType::Builder) {
-        auto* builder_prod =
-            entity->get_component<Engine::Core::BuilderProductionComponent>();
-        if (builder_prod != nullptr && builder_prod->in_progress &&
-            builder_prod->at_construction_site) {
-          is_builder_constructing = true;
-        }
+      auto const* formation_presentation =
+          entity != nullptr
+              ? entity->get_component<Engine::Core::FormationPresentationComponent>()
+              : nullptr;
+      std::span<const Engine::Core::FormationSoldierPresentation> soldiers;
+      if (formation_presentation != nullptr) {
+        soldiers = formation_presentation->soldiers;
       }
 
       placements = build_selection_ring_layout(
-          {.spawn_type = unit_comp->spawn_type,
-           .nation_id = unit_comp->nation_id,
-           .individuals_per_unit = individuals_per_unit,
-           .max_units_per_row = max_units_per_row,
-           .health_ratio =
-               unit_comp->max_health > 0
-                   ? std::clamp(
-                         unit_comp->health / float(unit_comp->max_health), 0.0F, 1.0F)
-                   : 1.0F,
+          {.soldiers = soldiers,
            .ring_size = ring_size,
-           .formation_spacing = formation_spacing,
-           .seed = layout_seed,
            .position = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
-           .rotation = QVector3D(
-               transform->rotation.x, transform->rotation.y, transform->rotation.z),
-           .scale =
-               QVector3D(transform->scale.x, transform->scale.y, transform->scale.z),
-           .is_builder_constructing = is_builder_constructing});
+           .yaw_degrees = transform->rotation.y});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);
@@ -466,7 +409,8 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
   }
 }
 
-void Renderer::enqueue_mode_indicator(Engine::Core::TransformComponent* transform,
+void Renderer::enqueue_mode_indicator(std::uint32_t entity_id,
+                                      Engine::Core::TransformComponent* transform,
                                       Engine::Core::UnitComponent* unit_comp,
                                       bool has_attack,
                                       bool has_guard_mode,
@@ -556,6 +500,8 @@ void Renderer::enqueue_mode_indicator(Engine::Core::TransformComponent* transfor
   }
 
   mode_indicator(indicator_model, mode_type, color, Render::Geom::k_indicator_alpha);
+  Render::Profiling::CombatAnimationDiagnostics::instance().record_mode_indicator(
+      entity_id);
 }
 
 void Renderer::render_world(Engine::Core::World* world) {
@@ -614,8 +560,11 @@ void Renderer::render_world(Engine::Core::World* world) {
     if (entity == nullptr) {
       continue;
     }
+    auto const* creature_presentation =
+        entity->get_component<Engine::Core::CreaturePresentationComponent>();
     bool const has_death_motion =
-        entity->get_component<Engine::Core::DeathAnimationComponent>() != nullptr;
+        creature_presentation != nullptr && creature_presentation->snapshot_valid &&
+        (creature_presentation->is_dying || creature_presentation->is_dead);
     if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
         !has_death_motion) {
       continue;
@@ -693,25 +642,18 @@ void Renderer::render_world(Engine::Core::World* world) {
                                                     cached.transform->position.z);
       }
 
-      auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
-      auto* attack_target =
-          entity->get_component<Engine::Core::AttackTargetComponent>();
-      auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
-      auto* hit_feedback = entity->get_component<Engine::Core::HitFeedbackComponent>();
-      entry.combat_active = is_unit_combat_active(
-          entity, attack_comp, attack_target, combat_state, hit_feedback);
-      entry.has_attack =
-          (attack_comp != nullptr) && attack_comp->in_melee_lock &&
-          Game::Systems::CombatRules::participates_in_rts_melee_lock(entity);
+      auto const* presentation =
+          entity->get_component<Engine::Core::CreaturePresentationComponent>();
+      entry.combat_active = is_unit_combat_active(presentation);
+      entry.has_attack = presentation != nullptr && presentation->snapshot_valid &&
+                         presentation->is_in_melee_lock;
 
-      auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-      entry.has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
-
-      auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-      entry.has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
-
-      auto* patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
-      entry.has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
+      entry.has_guard_mode = presentation != nullptr && presentation->snapshot_valid &&
+                             presentation->guard_mode_indicator;
+      entry.has_hold_mode = presentation != nullptr && presentation->snapshot_valid &&
+                            presentation->hold_mode_indicator;
+      entry.has_patrol = presentation != nullptr && presentation->snapshot_valid &&
+                         presentation->patrol_mode_indicator;
 
       unit_entries.push_back(std::move(entry));
     }
@@ -983,8 +925,20 @@ void Renderer::render_world(Engine::Core::World* world) {
                                            : static_cast<ISubmitter&>(*this));
         (*fn)(ctx, probe);
 
+        auto const* animation_debug =
+            Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(
+                entry.entity_id);
+        bool const all_published_soldiers_culled =
+            animation_debug != nullptr && !animation_debug->soldiers.empty() &&
+            std::all_of(animation_debug->soldiers.begin(),
+                        animation_debug->soldiers.end(),
+                        [](auto const& soldier) {
+                          return soldier.cull_reason !=
+                                 Render::Profiling::SoldierCullReason::None;
+                        });
         if (entry.unit != nullptr && probe.rigged_body_count() == 0U &&
-            unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal) {
+            unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
+            !all_published_soldiers_culled) {
           static std::mutex warning_mutex;
           static std::unordered_set<std::string> warned_units;
           const std::string warning_key =
@@ -1021,14 +975,14 @@ void Renderer::render_world(Engine::Core::World* world) {
         enqueue_selection_ring(
             entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
       }
-      if (!tier_is_minimal) {
-        enqueue_mode_indicator(entry.transform,
-                               entry.unit,
-                               entry.has_attack,
-                               entry.has_guard_mode,
-                               entry.has_hold_mode,
-                               entry.has_patrol);
-      }
+
+      enqueue_mode_indicator(entry.entity_id,
+                             entry.transform,
+                             entry.unit,
+                             entry.has_attack,
+                             entry.has_guard_mode,
+                             entry.has_hold_mode,
+                             entry.has_patrol);
       continue;
     }
 
@@ -1042,7 +996,8 @@ void Renderer::render_world(Engine::Core::World* world) {
       enqueue_selection_ring(
           entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
     }
-    enqueue_mode_indicator(entry.transform,
+    enqueue_mode_indicator(entry.entity_id,
+                           entry.transform,
                            entry.unit,
                            entry.has_attack,
                            entry.has_guard_mode,

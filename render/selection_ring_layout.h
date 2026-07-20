@@ -1,34 +1,25 @@
 #pragma once
 
-#include <QMatrix4x4>
 #include <QVector3D>
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
+#include <numbers>
+#include <span>
 #include <vector>
 
-#include "../game/systems/formation_system.h"
-#include "../game/systems/nation_id.h"
+#include "../game/core/component.h"
 #include "../game/units/spawn_type.h"
 #include "humanoid/formation_calculator.h"
 
 namespace Render::GL {
 
 struct SelectionRingLayoutInput {
-  Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
-  Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
-  int individuals_per_unit{1};
-  int max_units_per_row{1};
-  float health_ratio{1.0F};
-  float ring_size{0.5F};
-  float formation_spacing{0.0F};
-  std::uint32_t seed{0U};
-  QVector3D position{0.0F, 0.0F, 0.0F};
-  QVector3D rotation{0.0F, 0.0F, 0.0F};
-  QVector3D scale{1.0F, 1.0F, 1.0F};
 
-  bool is_builder_constructing{false};
+  std::span<const Engine::Core::FormationSoldierPresentation> soldiers{};
+  float ring_size{0.5F};
+  QVector3D position{0.0F, 0.0F, 0.0F};
+  float yaw_degrees{0.0F};
 };
 
 struct SelectionRingPlacement {
@@ -38,32 +29,6 @@ struct SelectionRingPlacement {
 };
 
 namespace Detail {
-
-[[nodiscard]] inline auto selection_ring_nation(Game::Systems::NationID nation_id)
-    -> FormationCalculatorFactory::Nation {
-  switch (nation_id) {
-  case Game::Systems::NationID::Carthage:
-    return FormationCalculatorFactory::Nation::Carthage;
-  case Game::Systems::NationID::RomanRepublic:
-    return FormationCalculatorFactory::Nation::Roman;
-  case Game::Systems::NationID::IronSepulcher:
-    return FormationCalculatorFactory::Nation::Carthage;
-  }
-  return FormationCalculatorFactory::Nation::Roman;
-}
-
-[[nodiscard]] inline auto selection_ring_category(Game::Units::SpawnType spawn_type)
-    -> FormationCalculatorFactory::UnitCategory {
-  switch (spawn_type) {
-  case Game::Units::SpawnType::MountedKnight:
-  case Game::Units::SpawnType::HorseArcher:
-  case Game::Units::SpawnType::HorseSpearman:
-    return FormationCalculatorFactory::UnitCategory::Cavalry;
-  default:
-    return FormationCalculatorFactory::UnitCategory::Infantry;
-  }
-}
-
 [[nodiscard]] inline auto selection_ring_spacing(Game::Units::SpawnType spawn_type,
                                                  float configured_spacing) -> float {
   return resolve_formation_spacing(spawn_type, configured_spacing);
@@ -83,61 +48,29 @@ selection_ring_visual_size(Game::Units::SpawnType spawn_type,
   return std::min(unit_ring_size * 0.25F, max_visual_size);
 }
 
-[[nodiscard]] inline auto fast_random(std::uint32_t& state) -> float {
-  state = state * 1664525U + 1013904223U;
-  return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
-}
-
 } // namespace Detail
 
 [[nodiscard]] inline auto build_selection_ring_layout(
     const SelectionRingLayoutInput& input) -> std::vector<SelectionRingPlacement> {
-  int const total_units = std::max(1, input.individuals_per_unit);
-  float const health_ratio = std::clamp(input.health_ratio, 0.0F, 1.0F);
-  int const visible_count = std::min(
-      total_units,
-      std::max(1, static_cast<int>(std::ceil(health_ratio * float(total_units)))));
-
   std::vector<SelectionRingPlacement> placements;
-  placements.reserve(static_cast<std::size_t>(visible_count));
-
-  auto const category =
-      input.is_builder_constructing
-          ? FormationCalculatorFactory::UnitCategory::BuilderConstruction
-          : Detail::selection_ring_category(input.spawn_type);
-  auto const* calculator = FormationCalculatorFactory::get_calculator(
-      Detail::selection_ring_nation(input.nation_id), category);
-  if (calculator == nullptr) {
+  if (input.soldiers.empty()) {
     placements.push_back({input.position.x(), input.position.z(), input.ring_size});
     return placements;
   }
 
-  int const cols = std::max(1, std::min(input.max_units_per_row, total_units));
-  int const rows = std::max(1, (total_units + cols - 1) / cols);
-  float const spacing =
-      Detail::selection_ring_spacing(input.spawn_type, input.formation_spacing);
-
-  for (int idx = 0; idx < visible_count; ++idx) {
-    int const row = idx / cols;
-    int const col = idx % cols;
-    auto const offset =
-        calculator->calculate_offset(idx, row, col, rows, cols, spacing, input.seed);
-
-    float yaw = input.rotation.y() + offset.yaw_offset;
-    if (total_units > 1) {
-      std::uint32_t rng_state = input.seed ^ static_cast<std::uint32_t>(idx * 9176U);
-      (void)Detail::fast_random(rng_state);
-      yaw += (Detail::fast_random(rng_state) - 0.5F) * 5.0F;
+  placements.reserve(input.soldiers.size());
+  float const yaw = input.yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  for (auto const& soldier : input.soldiers) {
+    if (!soldier.alive) {
+      continue;
     }
-
-    QMatrix4x4 model;
-    model.translate(input.position);
-    model.rotate(yaw, 0.0F, 1.0F, 0.0F);
-    model.scale(input.scale);
-    model.translate(offset.offset_x, 0.0F, offset.offset_z);
-
-    QVector3D const world = model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    placements.push_back({world.x(), world.z(), input.ring_size});
+    float const world_x =
+        input.position.x() + cos_yaw * soldier.local_x + sin_yaw * soldier.local_z;
+    float const world_z =
+        input.position.z() - sin_yaw * soldier.local_x + cos_yaw * soldier.local_z;
+    placements.push_back({world_x, world_z, input.ring_size});
   }
 
   return placements;

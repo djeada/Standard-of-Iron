@@ -18,6 +18,7 @@ inline auto resolve_spear_direction(const AnimationInputs& inputs,
   QVector3D spear_dir =
       spear_qvec_from_pose(Animation::resolve_humanoid_spear_direction({
           .hold_blend = hold_transition_amount(inputs),
+          .is_mounted = inputs.is_mounted,
           .is_attacking = inputs.is_attacking,
           .is_melee = inputs.is_melee,
           .attack_phase = attack_phase,

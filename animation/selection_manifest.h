@@ -64,6 +64,10 @@ struct CombatPlaybackLayerPolicyInputs {
   bool mounted{false};
   bool moving{false};
   bool forced_displacement{false};
+  // The action belongs to a gameplay transaction that owns the creature root
+  // (formation melee, for example). Keep locomotion/stance on the base layer
+  // and apply the authored action to the upper body only.
+  bool rooted_action{false};
   bool action_state_differs_from_base{false};
   bool selection_state_differs_from_base{false};
   bool action_state_differs_from_selection{false};

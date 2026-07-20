@@ -63,6 +63,7 @@ add_executable(standard_of_iron_tests
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
     systems/formation_system_test.cpp
+    systems/formation_combat_geometry_test.cpp
     systems/guard_system_test.cpp
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp
@@ -85,6 +86,7 @@ add_executable(standard_of_iron_tests
     systems/siege_special_processor_test.cpp
     systems/wall_system_test.cpp
     systems/battle_movement_refactor_test.cpp
+    systems/battlefield_capture_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
@@ -177,6 +179,7 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp
     tools/arena_scenarios_test.cpp
+    tools/arena_scenario_runner_test.cpp
     tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     test_main.cpp
@@ -195,6 +198,7 @@ target_link_libraries(standard_of_iron_tests
         engine_core
         render_gl
         game_systems
+        arena_scenario_harness
         audio_system
 )
 
@@ -253,6 +257,7 @@ target_link_libraries(standard_of_iron_tests_subset
         engine_core
         render_gl
         game_systems
+        arena_scenario_harness
         audio_system
 )
 target_include_directories(standard_of_iron_tests_subset

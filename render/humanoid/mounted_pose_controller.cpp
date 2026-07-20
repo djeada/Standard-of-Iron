@@ -243,6 +243,8 @@ void MountedPoseController::riding_melee_strike(const MountedAttachmentFrame& mo
 
   mount_on_horse(mount);
   apply_sword_strike(mount, attack_phase, false);
+  enforce_arm_reach(Side::Left);
+  enforce_arm_reach(Side::Right);
 }
 
 void MountedPoseController::riding_spear_thrust(const MountedAttachmentFrame& mount,
@@ -251,12 +253,16 @@ void MountedPoseController::riding_spear_thrust(const MountedAttachmentFrame& mo
 
   mount_on_horse(mount);
   apply_spear_thrust(mount, attack_phase);
+  enforce_arm_reach(Side::Left);
+  enforce_arm_reach(Side::Right);
 }
 
 void MountedPoseController::riding_bow_shot(const MountedAttachmentFrame& mount,
                                             float draw_phase) {
   mount_on_horse(mount);
   apply_bow_draw(mount, draw_phase);
+  enforce_arm_reach(Side::Left);
+  enforce_arm_reach(Side::Right);
 }
 
 void MountedPoseController::riding_shield_defense(const MountedAttachmentFrame& mount,
@@ -411,6 +417,9 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame& mount,
   default:
     break;
   }
+
+  enforce_arm_reach(Side::Left);
+  enforce_arm_reach(Side::Right);
 }
 
 void MountedPoseController::apply_lean(const MountedAttachmentFrame& mount,
@@ -914,6 +923,27 @@ auto MountedPoseController::compute_right_axis() const -> QVector3D {
 
 auto MountedPoseController::compute_outward_dir(Side side) const -> QVector3D {
   return Render::Humanoid::PosePrimitives::compute_outward_dir(m_pose, side);
+}
+
+void MountedPoseController::enforce_arm_reach(Side side) {
+  QVector3D const shoulder = get_shoulder(side);
+  QVector3D shoulder_to_hand = get_hand(side) - shoulder;
+  constexpr float k_max_arm_reach =
+      (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
+  float const requested_reach = shoulder_to_hand.length();
+  if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
+    shoulder_to_hand *= k_max_arm_reach / requested_reach;
+    get_hand(side) = shoulder + shoulder_to_hand;
+  }
+
+  get_elbow(side) = solve_elbow_ik(side,
+                                   shoulder,
+                                   get_hand(side),
+                                   compute_outward_dir(side),
+                                   0.48F,
+                                   0.10F,
+                                   -0.05F,
+                                   1.0F);
 }
 
 void MountedPoseController::apply_fixed_head_frame(const MountedAttachmentFrame& mount,

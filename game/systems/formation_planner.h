@@ -23,6 +23,10 @@ namespace Game::Systems {
 struct FormationResult {
   std::vector<QVector3D> positions;
   std::vector<float> facing_angles;
+  std::vector<int> stable_slot_ids;
+  std::vector<int> stable_ranks;
+  std::vector<int> stable_files;
+  std::uint64_t formation_id{0};
   float formation_facing = 0.0F;
   bool used_tactical_formation = false;
 };
@@ -103,6 +107,36 @@ public:
 
     result.positions = spread_formation(int(units.size()), center, spacing);
     result.facing_angles.resize(units.size(), 0.0F);
+    result.stable_slot_ids.resize(units.size(), -1);
+    result.stable_ranks.resize(units.size(), -1);
+    result.stable_files.resize(units.size(), -1);
+
+    std::vector<Engine::Core::EntityID> formation_members = units;
+    std::sort(formation_members.begin(), formation_members.end());
+    bool conflicting_formation_ids = false;
+    for (auto const member : formation_members) {
+      auto* entity = world.get_entity(member);
+      auto const* mode =
+          entity != nullptr
+              ? entity->get_component<Engine::Core::FormationModeComponent>()
+              : nullptr;
+      if (mode == nullptr || mode->formation_id == 0) {
+        continue;
+      }
+      if (result.formation_id == 0) {
+        result.formation_id = mode->formation_id;
+      } else if (result.formation_id != mode->formation_id) {
+        conflicting_formation_ids = true;
+      }
+    }
+    if (result.formation_id == 0 || conflicting_formation_ids) {
+      result.formation_id = 0;
+      for (auto const member : formation_members) {
+        result.formation_id ^= member + 0x9e3779b97f4a7c15ULL +
+                               (result.formation_id << 6U) +
+                               (result.formation_id >> 2U);
+      }
+    }
 
     QVector3D adjusted_center = find_nearest_walkable(center, 15);
 
@@ -299,11 +333,105 @@ public:
           return a.entity_id < b.entity_id;
         });
 
-    for (const auto& slot : planned_slots) {
+    std::vector<PlannedSlot> assigned_slots = planned_slots;
+    std::vector<int> canonical_ranks(planned_slots.size(), 0);
+    std::vector<int> canonical_files(planned_slots.size(), 0);
+    int rank = -1;
+    float previous_depth = 0.0F;
+    for (std::size_t i = 0; i < planned_slots.size(); ++i) {
+      if (i == 0 || std::fabs(planned_slots[i].local_offset.z() - previous_depth) >
+                        spacing * 0.35F) {
+        ++rank;
+        previous_depth = planned_slots[i].local_offset.z();
+      }
+      canonical_ranks[i] = rank;
+    }
+    for (int current_rank = 0; current_rank <= rank; ++current_rank) {
+      std::vector<std::size_t> rank_indices;
+      for (std::size_t i = 0; i < planned_slots.size(); ++i) {
+        if (canonical_ranks[i] == current_rank) {
+          rank_indices.push_back(i);
+        }
+      }
+      std::stable_sort(
+          rank_indices.begin(), rank_indices.end(), [&](auto lhs, auto rhs) {
+            if (planned_slots[lhs].local_offset.x() !=
+                planned_slots[rhs].local_offset.x()) {
+              return planned_slots[lhs].local_offset.x() <
+                     planned_slots[rhs].local_offset.x();
+            }
+            return planned_slots[lhs].entity_id < planned_slots[rhs].entity_id;
+          });
+      for (std::size_t file = 0; file < rank_indices.size(); ++file) {
+        canonical_files[rank_indices[file]] = static_cast<int>(file);
+      }
+    }
+    std::vector<bool> claimed(planned_slots.size(), false);
+    for (auto& assignment : assigned_slots) {
+      auto* entity = world.get_entity(assignment.entity_id);
+      auto const* mode =
+          entity != nullptr
+              ? entity->get_component<Engine::Core::FormationModeComponent>()
+              : nullptr;
+      if (mode == nullptr || mode->formation_id != result.formation_id ||
+          mode->stable_slot_id < 0 ||
+          static_cast<std::size_t>(mode->stable_slot_id) >= planned_slots.size() ||
+          claimed[static_cast<std::size_t>(mode->stable_slot_id)]) {
+        continue;
+      }
+      auto const entity_id = assignment.entity_id;
+      auto const original_idx = assignment.original_idx;
+      assignment = planned_slots[static_cast<std::size_t>(mode->stable_slot_id)];
+      assignment.entity_id = entity_id;
+      assignment.original_idx = original_idx;
+      claimed[static_cast<std::size_t>(mode->stable_slot_id)] = true;
+    }
+
+    for (auto& assignment : assigned_slots) {
+      auto* entity = world.get_entity(assignment.entity_id);
+      auto const* mode =
+          entity != nullptr
+              ? entity->get_component<Engine::Core::FormationModeComponent>()
+              : nullptr;
+      bool const retained =
+          mode != nullptr && mode->formation_id == result.formation_id &&
+          mode->stable_slot_id >= 0 &&
+          static_cast<std::size_t>(mode->stable_slot_id) < claimed.size() &&
+          claimed[static_cast<std::size_t>(mode->stable_slot_id)];
+      if (retained) {
+        continue;
+      }
+      auto free_slot = std::find(claimed.begin(), claimed.end(), false);
+      if (free_slot == claimed.end()) {
+        break;
+      }
+      auto const slot_index =
+          static_cast<std::size_t>(std::distance(claimed.begin(), free_slot));
+      auto const entity_id = assignment.entity_id;
+      auto const original_idx = assignment.original_idx;
+      assignment = planned_slots[slot_index];
+      assignment.entity_id = entity_id;
+      assignment.original_idx = original_idx;
+      claimed[slot_index] = true;
+    }
+
+    for (const auto& slot : assigned_slots) {
       QVector3D final_position =
           resolve_slot_target(adjusted_center + slot.local_offset, adjusted_center);
       result.positions[slot.original_idx] = final_position;
       result.facing_angles[slot.original_idx] = slot.facing_angle;
+      auto const canonical = std::find_if(
+          planned_slots.begin(), planned_slots.end(), [&](auto const& candidate) {
+            return candidate.local_offset == slot.local_offset &&
+                   candidate.facing_angle == slot.facing_angle;
+          });
+      if (canonical != planned_slots.end()) {
+        auto const index =
+            static_cast<std::size_t>(std::distance(planned_slots.begin(), canonical));
+        result.stable_slot_ids[slot.original_idx] = static_cast<int>(index);
+        result.stable_ranks[slot.original_idx] = canonical_ranks[index];
+        result.stable_files[slot.original_idx] = canonical_files[index];
+      }
     }
 
     result.used_tactical_formation = true;

@@ -100,7 +100,8 @@ void clear_charge_action(Engine::Core::Entity& entity) {
     Engine::Core::Entity& entity,
     Engine::Core::MountedChargeComponent& charge,
     const Game::Systems::CombatActions::CombatActionDefinition& definition,
-    Engine::Core::EntityID target_hint) -> bool {
+    Engine::Core::EntityID target_hint,
+    float impact_speed) -> bool {
   auto* combat =
       Engine::Core::get_or_add_component<Engine::Core::CombatStateComponent>(&entity);
   auto* action =
@@ -128,6 +129,7 @@ void clear_charge_action(Engine::Core::Entity& entity) {
   charge.intent_requested = false;
   charge.below_cancel_speed_time = 0.0F;
   charge.cooldown_remaining = 0.0F;
+  charge.impact_speed = impact_speed;
   charge.active_target_id = target_hint;
   charge.last_cancel_reason = Engine::Core::MountedChargeCancelReason::None;
   return true;
@@ -140,6 +142,7 @@ auto request_mounted_charge(Engine::Core::Entity& entity,
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
   if (unit == nullptr || unit->health <= 0 ||
       !Game::Units::is_cavalry(unit->spawn_type) ||
+      unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
       source == Engine::Core::MountedChargeIntentSource::None) {
     return false;
   }
@@ -186,7 +189,8 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     if (unit == nullptr || movement == nullptr ||
-        !Game::Units::is_cavalry(unit->spawn_type)) {
+        !Game::Units::is_cavalry(unit->spawn_type) ||
+        unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
       continue;
     }
 
@@ -221,8 +225,12 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
             *entity, Engine::Core::MountedChargeCancelReason::Interrupted);
         continue;
       }
+      auto const impact_contact =
+          Game::Systems::CombatActions::find_body_impact_contact(
+              *world, *entity, *definition, charge->active_target_id);
+      bool const has_reached_impact_contact = impact_contact.target_id != 0U;
       charge->below_cancel_speed_time =
-          speed < charge->cancel_speed
+          speed < charge->cancel_speed && !has_reached_impact_contact
               ? charge->below_cancel_speed_time + std::max(0.0F, delta_time)
               : 0.0F;
       if (charge->below_cancel_speed_time >= charge->speed_loss_grace) {
@@ -248,10 +256,24 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
       (void)request_mounted_charge(
           *entity, Engine::Core::MountedChargeIntentSource::ContactAuto);
     }
-    if (!charge->intent_requested || speed < charge->min_start_speed) {
+    if (charge->intent_requested && contact.target_id == 0U &&
+        speed < charge->cancel_speed) {
+      charge->below_cancel_speed_time += std::max(0.0F, delta_time);
+      if (charge->below_cancel_speed_time >= charge->speed_loss_grace) {
+        (void)cancel_mounted_charge(*entity,
+                                    Engine::Core::MountedChargeCancelReason::SpeedLost);
+      }
       continue;
     }
-    (void)start_charge_action(*entity, *charge, *definition, contact.target_id);
+    if (speed >= charge->cancel_speed) {
+      charge->below_cancel_speed_time = 0.0F;
+    }
+
+    if (!charge->intent_requested || speed < charge->min_start_speed ||
+        contact.target_id == 0U) {
+      continue;
+    }
+    (void)start_charge_action(*entity, *charge, *definition, contact.target_id, speed);
   }
 }
 

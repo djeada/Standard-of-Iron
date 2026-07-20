@@ -1,6 +1,8 @@
 #include "combat_action_processor.h"
 
 #include <algorithm>
+#include <cmath>
+#include <numbers>
 #include <span>
 
 #include "../../core/component.h"
@@ -11,12 +13,75 @@
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_actions/projectile_release.h"
 #include "../combat_actions/weapon_trace.h"
+#include "attack_processor.h"
 #include "combat_hit_resolver.h"
+#include "combat_utils.h"
+#include "damage_processor.h"
 #include "mounted_charge_processor.h"
 
 namespace Game::Systems::Combat {
 
 namespace {
+
+auto is_rts_melee_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
+  return id == Game::Systems::CombatActions::CombatActionId::RtsSwordStrike ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsSpearThrust;
+}
+
+auto is_rts_attack_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
+  return is_rts_melee_action(id) ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsBowShot;
+}
+
+void deal_rts_melee_contact_damage(
+    Engine::Core::World& world,
+    Engine::Core::Entity& attacker,
+    Engine::Core::RpgCommanderActionComponent& action,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition) {
+  auto* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto* attacker_transform = attacker.get_component<Engine::Core::TransformComponent>();
+  auto* target = world.get_entity(action.active_target_id);
+  auto* target_unit = target != nullptr
+                          ? target->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+  auto* target_transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (attacker_unit == nullptr || attacker_transform == nullptr || target == nullptr ||
+      target_unit == nullptr || target_transform == nullptr ||
+      attacker_unit->health <= 0 || target_unit->health <= 0 ||
+      attacker_unit->owner_id == target_unit->owner_id ||
+      target->has_component<Engine::Core::PendingRemovalComponent>()) {
+    action.action_running = false;
+    action.action_completed = true;
+    return;
+  }
+  float const dx = target_transform->position.x - attacker_transform->position.x;
+  float const dz = target_transform->position.z - attacker_transform->position.z;
+  float const distance = std::hypot(dx, dz);
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  float const reach =
+      attack != nullptr ? attack->melee_range : definition.hit_shape.reach;
+  float const yaw = attacker_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const facing =
+      (std::sin(yaw) * dx + std::cos(yaw) * dz) / std::max(distance, 0.0001F);
+
+  if (!is_in_range(&attacker,
+                   target,
+                   reach +
+                       Engine::Core::AttackComponent::k_melee_contact_range_grace) ||
+      facing < std::cos(80.0F * std::numbers::pi_v<float> / 180.0F)) {
+    action.action_running = false;
+    action.action_completed = true;
+    return;
+  }
+  int const damage = std::max(1, action.requested_damage);
+  deal_damage(&world, target, damage, attacker.get_id());
+  action.last_hit_target_id = target->get_id();
+  action.last_damage = damage;
+  action.hit_target_ids[0] = target->get_id();
+  action.hit_target_count = 1U;
+}
 
 void deal_weapon_trace_damage(
     Engine::Core::World& world,
@@ -139,8 +204,24 @@ void handle_action_events(
     std::span<const Game::Systems::CombatActions::CombatActionEvent> events) {
   handle_mounted_charge_action_events(entity, action, definition, events);
   for (auto const& event : events) {
+    auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+        action.combat_action_id);
+    if (event.type ==
+            Game::Systems::CombatActions::CombatActionEventType::ActiveStart &&
+        is_rts_melee_action(action_id) && action.hit_target_count == 0U) {
+      deal_rts_melee_contact_damage(world, entity, action, definition);
+      continue;
+    }
     if (event.type !=
         Game::Systems::CombatActions::CombatActionEventType::ProjectileRelease) {
+      continue;
+    }
+    if (action_id == Game::Systems::CombatActions::CombatActionId::RtsBowShot) {
+      if (release_rts_arrow_volley(
+              world, entity, action.active_target_id, action.requested_damage)) {
+        action.last_hit_target_id = action.active_target_id;
+        action.last_damage = std::max(1, action.requested_damage);
+      }
       continue;
     }
     auto const release = Game::Systems::CombatActions::release_projectile_for_action(
@@ -171,6 +252,23 @@ void process_authored_combat_action(
           action->combat_action_id));
   if (definition == nullptr) {
     return;
+  }
+  auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id);
+  if (is_rts_attack_action(action_id)) {
+    auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+    auto const* target = entity.get_component<Engine::Core::AttackTargetComponent>();
+    bool const interrupted = unit == nullptr || unit->health <= 0 ||
+                             entity.has_component<Engine::Core::StaggerComponent>() ||
+                             (target != nullptr && target->target_id != 0 &&
+                              target->target_id != action->active_target_id);
+    if (interrupted) {
+      action->action_running = false;
+      action->action_completed = true;
+      action->action_active = false;
+      action->weapon_trace_active = false;
+      return;
+    }
   }
 
   auto const events = Game::Systems::CombatActions::advance_combat_action_events(
