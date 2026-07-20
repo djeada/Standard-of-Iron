@@ -1,10 +1,12 @@
 # Creature/animation pipeline sources (humanoid, creature, horse, elephant).
 set(RENDER_CREATURE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_anatomy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_profile_data.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/horse/prepare.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_motion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/compiled_creature_assets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_profile_data.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_motion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/prepare.cpp

@@ -186,13 +186,13 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
   }
   dims = profile.dims;
   mount = compute_mount_frame(profile);
-  tune_mounted_knight_frame(dims, mount);
   motion = evaluate_horse_motion(
       profile,
       anim,
       anim_ctx,
       Engine::Core::get_or_add_component<
           Render::Creature::HorseAnimationStateComponent>(ctx.entity));
+  (void)apply_authored_horse_mount_pose(motion, mount);
 }
 
 auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) const

@@ -18,6 +18,9 @@ struct Vertex {
   std::array<float, 2> tex_coord{};
   std::uint8_t color_role{0};
   std::array<std::uint8_t, 3> padding{};
+
+  std::array<std::uint8_t, 4> bone_indices{};
+  std::array<float, 4> bone_weights{};
 };
 
 class Mesh : protected QOpenGLFunctions_3_3_Core {

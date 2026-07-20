@@ -19,19 +19,10 @@ struct HorseProfile;
 
 namespace MountFrameConstants {
 
-constexpr float k_saddle_thickness_offset = 0.05F;
-constexpr float k_saddle_body_length_offset = 0.08F;
-constexpr float k_saddle_seat_forward_scale = 0.15F;
-constexpr float k_seat_position_height_scale = 0.95F;
-constexpr float k_saddle_body_height_lift_scale = 0.18F;
-constexpr float k_seat_body_height_lift_scale = 0.26F;
-
 constexpr float k_stirrup_width_scale = 1.12F;
 constexpr float k_stirrup_thickness_offset = 0.10F;
 constexpr float k_stirrup_forward_scale = 0.40F;
 
-constexpr float k_neck_top_body_height_scale = 1.18F;
-constexpr float k_neck_top_body_length_scale = 0.71F;
 constexpr float k_head_center_height_scale = 0.12F;
 constexpr float k_head_center_length_scale = 0.30F;
 
@@ -83,5 +74,8 @@ auto evaluate_horse_motion(const HorseProfile& profile,
                            Render::Creature::HorseAnimationStateComponent* io_state =
                                nullptr) -> HorseMotionSample;
 void apply_mount_vertical_offset(MountedAttachmentFrame& frame, float bob);
+[[nodiscard]] auto
+apply_authored_horse_mount_pose(const HorseMotionSample& motion,
+                                MountedAttachmentFrame& frame) noexcept -> bool;
 
 } // namespace Render::GL

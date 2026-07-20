@@ -17,13 +17,13 @@ def parse_args() -> tuple[pathlib.Path, pathlib.Path]:
     argv = argv[argv.index("--") + 1 :] if "--" in argv else []
     if len(argv) != 2:
         raise SystemExit(
-            "usage: blender -b -P tools/mesh_preview/convert_reference_mesh.py -- "
+            "usage: blender -b -P tools/mesh_preview/convert_authored_mesh.py -- "
             "input_mesh output.obj"
         )
 
     input_path = pathlib.Path(argv[0]).expanduser().resolve()
     output_path = pathlib.Path(argv[1]).expanduser().resolve()
-    if input_path.suffix.lower() not in IMPORTERS:
+    if input_path.suffix.lower() not in {*IMPORTERS, ".blend"}:
         raise SystemExit(
             f"unsupported input format '{input_path.suffix}'; expected one of: "
             f"{', '.join(sorted(IMPORTERS))}"
@@ -36,12 +36,20 @@ def parse_args() -> tuple[pathlib.Path, pathlib.Path]:
 def main() -> None:
     input_path, output_path = parse_args()
 
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    IMPORTERS[input_path.suffix.lower()](filepath=str(input_path))
+    if input_path.suffix.lower() == ".blend":
+        bpy.ops.wm.open_mainfile(filepath=str(input_path))
+    else:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        IMPORTERS[input_path.suffix.lower()](filepath=str(input_path))
 
     mesh_objects = [obj for obj in bpy.data.objects if obj.type == "MESH"]
     if not mesh_objects:
         raise SystemExit("no mesh objects found in imported scene")
+
+    for obj in bpy.data.objects:
+        if obj.type == "ARMATURE":
+            obj.data.pose_position = "REST"
+            obj.animation_data_clear()
 
     for obj in bpy.data.objects:
         obj.select_set(obj in mesh_objects)
@@ -51,7 +59,7 @@ def main() -> None:
     bpy.ops.wm.obj_export(
         filepath=str(output_path),
         export_selected_objects=True,
-        export_materials=False,
+        export_materials=True,
     )
 
 

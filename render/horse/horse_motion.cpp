@@ -12,7 +12,9 @@
 #include "../gl/humanoid/humanoid_types.h"
 #include "animation/horse_gait_manifest.h"
 #include "dimensions.h"
+#include "horse_anatomy.h"
 #include "horse_layout.h"
+#include "horse_source_asset.h"
 #include "math/creature_math_utils.h"
 
 namespace Render::GL {
@@ -130,51 +132,37 @@ auto compute_mount_frame(const HorseProfile& profile) -> MountedAttachmentFrame 
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
   frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
 
-  float const body_height_vis = Render::Horse::horse_body_visual_height(d);
-  float const body_length_vis = Render::Horse::horse_body_visual_length(d);
-  float const torso_lift = Render::Horse::horse_torso_visual_lift(d);
-  QVector3D const back_center(0.0F,
-                              d.barrel_center_y + torso_lift + body_height_vis * 0.56F,
-                              body_length_vis * 0.02F);
-  float const back_top_y = d.barrel_center_y + torso_lift + body_height_vis * 1.06F;
-
-  frame.saddle_center =
-      QVector3D(0.0F,
-                back_top_y + d.saddle_thickness * k_saddle_thickness_offset +
-                    body_height_vis * k_saddle_body_height_lift_scale,
-                back_center.z() + body_length_vis * k_saddle_body_length_offset +
-                    d.seat_forward_offset * k_saddle_seat_forward_scale);
-
-  frame.seat_position = frame.saddle_center +
-                        QVector3D(0.0F,
-                                  d.saddle_thickness * k_seat_position_height_scale +
-                                      body_height_vis * k_seat_body_height_lift_scale,
-                                  body_length_vis * 0.035F);
+  Render::Horse::HorseAnatomy const anatomy = Render::Horse::make_horse_anatomy(d);
+  frame.saddle_center = anatomy.saddle_center;
+  frame.seat_position = anatomy.seat;
 
   frame.stirrup_attach_left =
-      frame.saddle_center + QVector3D(-d.body_width * k_stirrup_width_scale,
+      frame.saddle_center + QVector3D(-anatomy.body_width * 0.52F,
                                       -d.saddle_thickness * k_stirrup_thickness_offset,
-                                      d.seat_forward_offset * k_stirrup_forward_scale);
+                                      d.seat_forward_offset * k_stirrup_forward_scale *
+                                          Render::Horse::k_horse_length_scale);
   frame.stirrup_attach_right =
-      frame.saddle_center + QVector3D(d.body_width * k_stirrup_width_scale,
+      frame.saddle_center + QVector3D(anatomy.body_width * 0.52F,
                                       -d.saddle_thickness * k_stirrup_thickness_offset,
-                                      d.seat_forward_offset * k_stirrup_forward_scale);
+                                      d.seat_forward_offset * k_stirrup_forward_scale *
+                                          Render::Horse::k_horse_length_scale);
 
   frame.stirrup_bottom_left =
       frame.stirrup_attach_left + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
   frame.stirrup_bottom_right =
       frame.stirrup_attach_right + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
 
-  QVector3D const neck_top =
-      QVector3D(0.0F, d.barrel_center_y, 0.0F) + Render::Horse::horse_neck_top_local(d);
   QVector3D const head_center =
-      neck_top + QVector3D(0.0F,
-                           d.head_height * k_head_center_height_scale,
-                           d.head_length * k_head_center_length_scale);
+      anatomy.poll + QVector3D(0.0F,
+                               d.head_height * k_head_center_height_scale,
+                               d.head_length * k_head_center_length_scale *
+                                   Render::Horse::k_horse_length_scale);
   float const muzzle_forward = d.head_length * k_muzzle_length_offset *
-                               Render::Horse::k_horse_muzzle_length_scale;
-  float const muzzle_length =
-      d.muzzle_length * Render::Horse::k_horse_muzzle_length_scale;
+                               Render::Horse::k_horse_muzzle_length_scale *
+                               Render::Horse::k_horse_length_scale;
+  float const muzzle_length = d.muzzle_length *
+                              Render::Horse::k_horse_muzzle_length_scale *
+                              Render::Horse::k_horse_length_scale;
 
   QVector3D const muzzle_center =
       head_center +
@@ -529,6 +517,27 @@ void apply_mount_vertical_offset(MountedAttachmentFrame& frame, float bob) {
   frame.rein_bit_left += offset;
   frame.rein_bit_right += offset;
   frame.bridle_base += offset;
+}
+
+auto apply_authored_horse_mount_pose(const HorseMotionSample& motion,
+                                     MountedAttachmentFrame& frame) noexcept -> bool {
+  std::string_view source_clip = "Idle";
+  switch (motion.playback_gait_type) {
+  case GaitType::WALK:
+  case GaitType::TROT:
+    source_clip = "Walk";
+    break;
+  case GaitType::CANTER:
+  case GaitType::GALLOP:
+    source_clip = "Gallop";
+    break;
+  case GaitType::IDLE:
+    break;
+  }
+  if (motion.is_fighting) {
+    source_clip = "Attack_Kick";
+  }
+  return Render::Horse::horse_source_pose_mount_frame(source_clip, motion.phase, frame);
 }
 
 } // namespace Render::GL
