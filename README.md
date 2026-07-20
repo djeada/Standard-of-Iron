@@ -137,6 +137,7 @@ make arena
 
 * `make run` invokes the campaign map pipeline when required outputs are missing, including base textures, meshes, rivers, coastlines, provinces, and the Hannibal path.
 * `make arena` uses the same map-pipeline/bootstrap flow, then builds only `arena_app` before launching the standalone Qt/OpenGL playground.
+* Arena includes declarative rendered-gameplay scenarios for interactive inspection, local batch PASS/FAIL runs, and machine-readable traces. See [`tools/arena/README.md`](tools/arena/README.md) for commands and artifacts.
 * In the arena tool, controls mirror the main game more closely: left click or drag selects, right click issues move or attack orders, arrow keys pan, Q/E yaw, R/F orbit pitch, the mouse wheel zooms, and F1 or ? toggles the help overlay.
 * The arena unit panel supports batch spawning, opposing or mirrored quick-setup spawns, per-unit member-count overrides for single-soldier previews, riderless mounted previews, forced full-detail creature previews, and a live selection summary showing side, health, members, center, and composition.
 * The pipeline downloads Natural Earth data and installs Python dependencies, so it requires network access the first time it runs.

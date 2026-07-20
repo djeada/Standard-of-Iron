@@ -57,7 +57,8 @@ public:
                                       int max_search_radius) -> QVector3D;
   static auto plan_ground_move(Engine::Core::World& world,
                                const std::vector<Engine::Core::EntityID>& units,
-                               const QVector3D& target) -> GroundMovePlan;
+                               const QVector3D& target,
+                               bool preserve_current_shape = false) -> GroundMovePlan;
   static void issue_ground_move(Engine::Core::World& world,
                                 const std::vector<Engine::Core::EntityID>& units,
                                 const GroundMovePlan& plan);

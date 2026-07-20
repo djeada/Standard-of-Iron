@@ -6,20 +6,36 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/camera_visibility_service.h"
 #include "render/draw_queue.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/geom/mode_indicator.h"
+#include "render/profiling/combat_animation_diagnostics.h"
 
 namespace {
 
+class SceneRendererEffects : public ::testing::Test {
+protected:
+  void SetUp() override {
+    auto& fog = Game::Map::VisibilityService::instance();
+    fog.initialize(256, 256, 1.0F);
+    fog.reveal_all();
+    Game::Systems::CameraVisibilityService::instance().clear_camera();
+  }
+};
+
 TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   Render::GL::Renderer renderer;
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1U);
 
   Engine::Core::TransformComponent transform{};
   transform.position = {1.0F, 2.0F, 3.0F};
   transform.scale = {0.5F, 0.5F, 0.5F};
 
-  renderer.enqueue_mode_indicator(&transform, nullptr, true, false, false, false);
+  renderer.enqueue_mode_indicator(1U, &transform, nullptr, true, false, false, false);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
@@ -33,9 +49,11 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   EXPECT_FLOAT_EQ(translation.y(),
                   transform.position.y + Render::Geom::k_indicator_height_base);
   EXPECT_FLOAT_EQ(translation.z(), transform.position.z);
+  EXPECT_TRUE(diagnostics.mode_indicator_submitted(1U));
+  diagnostics.set_enabled(false);
 }
 
-TEST(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {
+TEST_F(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {
   Render::GL::Renderer renderer;
   QVector3D const position(1.0F, 0.02F, 3.0F);
 
@@ -58,7 +76,7 @@ TEST(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {
   EXPECT_FLOAT_EQ(cmd.seed, 0.33F);
 }
 
-TEST(SceneRendererEffects, FireballEnqueuesDedicatedEffectBatchCommand) {
+TEST_F(SceneRendererEffects, FireballEnqueuesDedicatedEffectBatchCommand) {
   Render::GL::Renderer renderer;
   QVector3D const position(2.0F, 1.1F, -4.0F);
 
@@ -78,7 +96,7 @@ TEST(SceneRendererEffects, FireballEnqueuesDedicatedEffectBatchCommand) {
   EXPECT_FLOAT_EQ(cmd.intensity, 1.25F);
 }
 
-TEST(SceneRendererEffects, BloodStainUsesTerrainAlignedHeight) {
+TEST_F(SceneRendererEffects, BloodStainUsesTerrainAlignedHeight) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -101,7 +119,7 @@ TEST(SceneRendererEffects, BloodStainUsesTerrainAlignedHeight) {
   EXPECT_FLOAT_EQ(cmd.position.z(), -2.0F);
 }
 
-TEST(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
+TEST_F(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -127,7 +145,7 @@ TEST(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
   EXPECT_FLOAT_EQ(cmd.intensity, 0.9F);
 }
 
-TEST(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
+TEST_F(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -159,7 +177,7 @@ TEST(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
   EXPECT_GT(max_y, 1.0F);
 }
 
-TEST(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
+TEST_F(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -187,7 +205,7 @@ TEST(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
   EXPECT_EQ(flame_count, 5);
 }
 
-TEST(SceneRendererEffects, BurningUnitsReduceFlameCoverageAfterCasualties) {
+TEST_F(SceneRendererEffects, BurningUnitsReduceFlameCoverageAfterCasualties) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -214,7 +232,7 @@ TEST(SceneRendererEffects, BurningUnitsReduceFlameCoverageAfterCasualties) {
   }
 }
 
-TEST(SceneRendererEffects, BurningFlameAnchorsFollowUnitTransformAndYaw) {
+TEST_F(SceneRendererEffects, BurningFlameAnchorsFollowUnitTransformAndYaw) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
@@ -253,7 +271,7 @@ TEST(SceneRendererEffects, BurningFlameAnchorsFollowUnitTransformAndYaw) {
   EXPECT_EQ(flame_count, 5);
 }
 
-TEST(SceneRendererEffects, FirePatchUsesGroundFlameClusterInsteadOfSingleChimney) {
+TEST_F(SceneRendererEffects, FirePatchUsesGroundFlameClusterInsteadOfSingleChimney) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 

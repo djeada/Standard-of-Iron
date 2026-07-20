@@ -223,6 +223,7 @@ build_request(const CreatureGraphOutput& output,
   req.phase = phase;
   req.world = output.world_matrix;
   req.entity_id = static_cast<std::uint32_t>(output.entity_id);
+  req.instance_index = output.instance_index;
   req.seed = output.seed;
   req.world_key = compose_world_key(req.entity_id, req.seed);
   req.lod = output.lod;

@@ -85,7 +85,23 @@ constexpr std::array<CombatActionEvent, 4> k_mounted_charge_impact_events{{
     {CombatActionEventType::ExitSafe, 0.90F},
 }};
 
-constexpr std::array<CombatActionDefinition, 11> k_definitions{{
+constexpr std::array<CombatActionEvent, 5> k_rts_melee_events{{
+    {CombatActionEventType::WindupStart, 0.08F},
+    {CombatActionEventType::ActiveStart, 0.40F},
+    {CombatActionEventType::WeaponTraceEnd, 0.56F},
+    {CombatActionEventType::RecoveryStart, 0.72F},
+    {CombatActionEventType::ExitSafe, 0.92F},
+}};
+
+constexpr std::array<CombatActionEvent, 5> k_rts_bow_events{{
+    {CombatActionEventType::WindupStart, 0.08F},
+    {CombatActionEventType::ActiveStart, 0.30F},
+    {CombatActionEventType::ProjectileRelease, 0.46F},
+    {CombatActionEventType::RecoveryStart, 0.70F},
+    {CombatActionEventType::ExitSafe, 0.90F},
+}};
+
+constexpr std::array<CombatActionDefinition, 14> k_definitions{{
     {
         .id = CombatActionId::RpgSwordSlashLeft,
         .weapon_family = WeaponFamily::Sword,
@@ -232,6 +248,35 @@ constexpr std::array<CombatActionDefinition, 11> k_definitions{{
         .rider_clip_id = Animation::k_humanoid_riding_charge_clip,
         .events = k_mounted_charge_impact_events,
         .max_targets = 3,
+    },
+    {
+        .id = CombatActionId::RtsSwordStrike,
+        .weapon_family = WeaponFamily::Sword,
+        .sword_clip = Animation::SwordAttackAnimation::InfantrySlashA,
+        .attack_family = Engine::Core::CombatAttackFamily::Sword,
+        .attack_direction = Engine::Core::AttackDirection::LeftSlash,
+        .hit_shape = {.reach = 1.8F, .radius = 0.35F},
+        .duration_seconds = 1.0F,
+        .events = k_rts_melee_events,
+    },
+    {
+        .id = CombatActionId::RtsSpearThrust,
+        .weapon_family = WeaponFamily::Spear,
+        .attack_family = Engine::Core::CombatAttackFamily::Spear,
+        .attack_direction = Engine::Core::AttackDirection::Thrust,
+        .hit_shape = {.reach = 2.6F, .radius = 0.18F},
+        .duration_seconds = 1.0F,
+        .events = k_rts_melee_events,
+    },
+    {
+        .id = CombatActionId::RtsBowShot,
+        .weapon_family = WeaponFamily::Bow,
+        .attack_family = Engine::Core::CombatAttackFamily::Bow,
+        .attack_direction = Engine::Core::AttackDirection::Thrust,
+        .hit_shape = {.reach = 12.0F, .radius = 0.10F},
+        .duration_seconds = 1.0F,
+        .events = k_rts_bow_events,
+        .requires_projectile_release = true,
     },
 }};
 

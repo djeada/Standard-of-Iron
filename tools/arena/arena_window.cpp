@@ -206,6 +206,32 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           m_viewport,
           &ArenaViewport::load_scenario);
   connect(m_unit_panel,
+          &UnitPanel::load_scenario_requested,
+          this,
+          [this](const QString& scenario_id) {
+            m_status_label->setStyleSheet(QStringLiteral("color: #9fd9ff;"));
+            m_status_label->setText(
+                QStringLiteral("Running scenario: %1").arg(scenario_id));
+          });
+  connect(m_viewport,
+          &ArenaViewport::scenario_issue_detected,
+          this,
+          [this](const QString& scenario_id, const QString& issue) {
+            m_status_label->setStyleSheet(QStringLiteral("color: #ff8d8d;"));
+            m_status_label->setText(
+                QStringLiteral("FAIL %1: %2").arg(scenario_id, issue));
+            statusBar()->showMessage(QStringLiteral("Scenario failure: %1").arg(issue),
+                                     10000);
+          });
+  connect(m_viewport,
+          &ArenaViewport::scenario_finished,
+          this,
+          [this](const QString&, bool passed, const QString& summary) {
+            m_status_label->setStyleSheet(passed ? QStringLiteral("color: #79dc91;")
+                                                 : QStringLiteral("color: #ff8d8d;"));
+            m_status_label->setText(summary);
+          });
+  connect(m_unit_panel,
           &UnitPanel::animation_selected,
           m_viewport,
           &ArenaViewport::set_animation_name);

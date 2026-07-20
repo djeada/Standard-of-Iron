@@ -38,7 +38,7 @@ auto is_target_valid(Engine::Core::World* world,
 } // namespace
 
 void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time <= 0.0F) {
+  if (world == nullptr || delta_time < 0.0F) {
     return;
   }
 
@@ -67,6 +67,8 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
         commitment = entity->add_component<Engine::Core::TargetCommitmentComponent>();
         if (commitment != nullptr) {
           commitment->committed_target_id = attack_target->target_id;
+          commitment->cooldown_remaining =
+              Engine::Core::TargetCommitmentComponent::k_switch_cooldown;
         }
       }
       continue;
@@ -96,6 +98,13 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
       if (in_committed || commitment->cooldown_remaining > 0.0F) {
 
         attack_target->target_id = commitment->committed_target_id;
+        attack_target->should_chase = true;
+        if (atk->in_melee_lock &&
+            atk->melee_lock_target_id != commitment->committed_target_id) {
+
+          atk->in_melee_lock = false;
+          atk->melee_lock_target_id = 0;
+        }
         ++m_diagnostics.switches_blocked;
       } else {
 

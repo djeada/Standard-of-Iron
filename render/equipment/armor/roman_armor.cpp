@@ -166,15 +166,16 @@ void RomanHeavyArmorRenderer::submit(const RomanHeavyArmorConfig&,
   using HP = HumanProportions;
 
   QVector3D const steel_color =
-      saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
+      saturate_color(palette.metal * QVector3D(1.34F, 1.08F, 0.62F));
   QVector3D const brass_color =
       saturate_color(palette.metal * QVector3D(1.25F, 1.05F, 0.62F));
 
   QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
-  QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D const right =
+      safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
   QVector3D forward = safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
-  QVector3D waist_up = safe_attachment_axis(waist.up, up);
-  QVector3D head_up = safe_attachment_axis(head.up, up);
+  QVector3D const waist_up = safe_attachment_axis(waist.up, up);
+  QVector3D const head_up = safe_attachment_axis(head.up, up);
   TorsoLocalFrame const torso_local = make_torso_local_frame(ctx.model, torso);
 
   float const torso_r = torso.radius;
@@ -187,7 +188,7 @@ void RomanHeavyArmorRenderer::submit(const RomanHeavyArmorConfig&,
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
   QVector3D top = torso.origin + up * (torso_r * 0.60F);
-  QVector3D head_guard = head.origin - head_up * (head_r * 1.30F);
+  QVector3D const head_guard = head.origin - head_up * (head_r * 1.30F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.05F);
   }
@@ -209,14 +210,14 @@ void RomanHeavyArmorRenderer::submit(const RomanHeavyArmorConfig&,
 
   auto build_shoulder_guard =
       [&](const QVector3D& shoulder_pos, const QVector3D& outward, int index) {
-        QVector3D upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
+        QVector3D const upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
         upper_guards[static_cast<std::size_t>(index)] =
             local_scale_model(torso_local.point(upper_pos),
                               QVector3D(HP::UPPER_ARM_R * 1.90F,
                                         HP::UPPER_ARM_R * 0.42F,
                                         HP::UPPER_ARM_R * 1.65F));
 
-        QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
+        QVector3D const lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
         lower_guards[static_cast<std::size_t>(index)] =
             local_scale_model(torso_local.point(lower_pos),
                               QVector3D(HP::UPPER_ARM_R * 1.68F,
@@ -266,9 +267,10 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
     return;
   }
 
-  QVector3D leather_color = QVector3D(0.44F, 0.30F, 0.19F);
-  QVector3D leather_shadow = leather_color * 0.90F;
-  QVector3D leather_highlight = leather_color * 1.08F;
+  QVector3D const leather_color =
+      saturate_color(palette.metal * QVector3D(0.78F, 0.84F, 0.94F));
+  QVector3D const leather_shadow = leather_color * 0.66F;
+  QVector3D const leather_highlight = saturate_color(leather_color * 1.12F);
 
   QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
@@ -280,11 +282,13 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
   float const waist_r = waist.radius > 0.0F ? waist.radius : torso.radius * 0.85F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.6F;
 
-  QVector3D head_up = (head.up.lengthSquared() > 1e-6F) ? head.up.normalized() : up;
-  QVector3D waist_up = (waist.up.lengthSquared() > 1e-6F) ? waist.up.normalized() : up;
+  QVector3D const head_up =
+      (head.up.lengthSquared() > 1e-6F) ? head.up.normalized() : up;
+  QVector3D const waist_up =
+      (waist.up.lengthSquared() > 1e-6F) ? waist.up.normalized() : up;
 
   QVector3D top = torso.origin + up * (torso_r * 0.50F);
-  QVector3D head_guard =
+  QVector3D const head_guard =
       head.origin - head_up * ((head_r > 0.0F ? head_r : torso_r * 0.6F) * 1.45F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.05F);
@@ -295,7 +299,7 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
   top += forward * (torso_r * 0.010F);
   bottom += forward * (torso_r * 0.010F);
 
-  float main_radius = torso_r * 1.26F;
+  float const main_radius = torso_r * 1.26F;
   float const main_depth = torso_depth * 1.24F;
 
   QMatrix4x4 cuirass =
@@ -308,9 +312,9 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
   std::array<QMatrix4x4, 2> straps{};
 
   auto strap = [&](float side) {
-    QVector3D shoulder_anchor =
+    QVector3D const shoulder_anchor =
         top + right * (torso_r * 0.54F * side) - up * (torso_r * 0.04F);
-    QVector3D chest_anchor =
+    QVector3D const chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
     return Render::Geom::cylinder_between(torso_local.point(shoulder_anchor),
                                           torso_local.point(chest_anchor),
@@ -319,9 +323,9 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
   straps[0] = strap(1.0F);
   straps[1] = strap(-1.0F);
 
-  QVector3D front_panel_top =
+  QVector3D const front_panel_top =
       top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
-  QVector3D front_panel_bottom =
+  QVector3D const front_panel_bottom =
       bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
   float const front_radius = torso_r * 0.48F;
   QMatrix4x4 front_panel = oriented_cylinder(
@@ -332,9 +336,9 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
       front_radius * std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
   align_torso_mesh_forward(front_panel);
 
-  QVector3D back_panel_top =
+  QVector3D const back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
-  QVector3D back_panel_bottom =
+  QVector3D const back_panel_bottom =
       bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
   float const back_radius = torso_r * 0.50F;
   QMatrix4x4 back_panel = oriented_cylinder(
@@ -361,7 +365,7 @@ auto roman_heavy_armor_fill_role_colors(const HumanoidPalette& palette,
     return 0U;
   }
   QVector3D const steel =
-      saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
+      saturate_color(palette.metal * QVector3D(1.34F, 1.08F, 0.62F));
   QVector3D const brass =
       saturate_color(palette.metal * QVector3D(1.25F, 1.05F, 0.62F));
   out[0] = steel;
@@ -381,10 +385,11 @@ auto roman_heavy_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
 
   using HP = HumanProportions;
   QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
-  QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D const right =
+      safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
   QVector3D forward = safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
-  QVector3D waist_up = safe_attachment_axis(waist.up, up);
-  QVector3D head_up = safe_attachment_axis(head.up, up);
+  QVector3D const waist_up = safe_attachment_axis(waist.up, up);
+  QVector3D const head_up = safe_attachment_axis(head.up, up);
   TorsoLocalFrame const torso_local = make_torso_local_frame(QMatrix4x4{}, torso);
 
   float const torso_r = torso.radius;
@@ -397,7 +402,7 @@ auto roman_heavy_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
   QVector3D top = torso.origin + up * (torso_r * 0.60F);
-  QVector3D head_guard = head.origin - head_up * (head_r * 1.30F);
+  QVector3D const head_guard = head.origin - head_up * (head_r * 1.30F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.05F);
   }
@@ -419,13 +424,13 @@ auto roman_heavy_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
 
   auto build_shoulder_guard =
       [&](const QVector3D& shoulder_pos, const QVector3D& outward, int index) {
-        QVector3D upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
+        QVector3D const upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
         upper_guards[static_cast<std::size_t>(index)] =
             local_scale_model(torso_local.point(upper_pos),
                               QVector3D(HP::UPPER_ARM_R * 1.90F,
                                         HP::UPPER_ARM_R * 0.42F,
                                         HP::UPPER_ARM_R * 1.65F));
-        QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
+        QVector3D const lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
         lower_guards[static_cast<std::size_t>(index)] =
             local_scale_model(torso_local.point(lower_pos),
                               QVector3D(HP::UPPER_ARM_R * 1.68F,
@@ -455,14 +460,13 @@ auto roman_heavy_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
 auto roman_light_armor_fill_role_colors(const HumanoidPalette& palette,
                                         QVector3D* out,
                                         std::size_t max) -> std::uint32_t {
-  (void)palette;
   if (max < k_roman_light_armor_role_count) {
     return 0U;
   }
-  QVector3D const leather_color = QVector3D(0.44F, 0.30F, 0.19F);
-  out[0] = leather_color * 1.08F;
-  out[1] = leather_color * 1.08F * 0.95F;
-  out[2] = leather_color * 0.90F;
+  QVector3D const iron = saturate_color(palette.metal * QVector3D(0.78F, 0.84F, 0.94F));
+  out[0] = saturate_color(iron * 1.12F);
+  out[1] = saturate_color(palette.leather_dark * 0.92F);
+  out[2] = iron * 0.66F;
   return k_roman_light_armor_role_count;
 }
 
@@ -484,11 +488,13 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
   float const waist_r = waist.radius > 0.0F ? waist.radius : torso.radius * 0.85F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.6F;
 
-  QVector3D head_up = (head.up.lengthSquared() > 1e-6F) ? head.up.normalized() : up;
-  QVector3D waist_up = (waist.up.lengthSquared() > 1e-6F) ? waist.up.normalized() : up;
+  QVector3D const head_up =
+      (head.up.lengthSquared() > 1e-6F) ? head.up.normalized() : up;
+  QVector3D const waist_up =
+      (waist.up.lengthSquared() > 1e-6F) ? waist.up.normalized() : up;
 
   QVector3D top = torso.origin + up * (torso_r * 0.50F);
-  QVector3D head_guard =
+  QVector3D const head_guard =
       head.origin - head_up * ((head_r > 0.0F ? head_r : torso_r * 0.6F) * 1.45F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.05F);
@@ -498,7 +504,7 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
   top += forward * (torso_r * 0.010F);
   bottom += forward * (torso_r * 0.010F);
 
-  float main_radius = torso_r * 1.26F;
+  float const main_radius = torso_r * 1.26F;
   float const main_depth = torso_depth * 1.24F;
 
   QMatrix4x4 cuirass =
@@ -511,9 +517,9 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
 
   std::array<QMatrix4x4, 2> straps{};
   auto strap = [&](float side) {
-    QVector3D shoulder_anchor =
+    QVector3D const shoulder_anchor =
         top + right * (torso_r * 0.54F * side) - up * (torso_r * 0.04F);
-    QVector3D chest_anchor =
+    QVector3D const chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
     return Render::Geom::cylinder_between(torso_local.point(shoulder_anchor),
                                           torso_local.point(chest_anchor),
@@ -522,9 +528,9 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
   straps[0] = strap(1.0F);
   straps[1] = strap(-1.0F);
 
-  QVector3D front_panel_top =
+  QVector3D const front_panel_top =
       top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
-  QVector3D front_panel_bottom =
+  QVector3D const front_panel_bottom =
       bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
   float const front_radius = torso_r * 0.48F;
   QMatrix4x4 front_panel = oriented_cylinder(
@@ -535,9 +541,9 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
       front_radius * std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
   align_torso_mesh_forward(front_panel);
 
-  QVector3D back_panel_top =
+  QVector3D const back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
-  QVector3D back_panel_bottom =
+  QVector3D const back_panel_bottom =
       bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
   float const back_radius = torso_r * 0.50F;
   QMatrix4x4 back_panel = oriented_cylinder(

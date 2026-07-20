@@ -146,6 +146,14 @@ auto resolve_combat_playback_layer_policy(
     return policy;
   }
 
+  if (inputs.rooted_action && inputs.action_state_differs_from_base &&
+      policy.combat_weight > 0.01F) {
+    policy.use_base_selection = true;
+    policy.upper_body_source = PlaybackLayerSource::Action;
+    policy.upper_body_weight = policy.combat_weight;
+    return policy;
+  }
+
   if (!inputs.mounted && inputs.moving && !inputs.forced_displacement &&
       inputs.phase != CombatTransactionPhase::Recover &&
       inputs.phase != CombatTransactionPhase::ExitBlend &&

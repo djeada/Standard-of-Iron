@@ -121,15 +121,29 @@ auto raw_attack_phase_hint(const CombatRawInputs& raw,
   if (raw.combat_phase != CombatPhase::Idle) {
     auto const window = attack_phase_window(
         raw.combat_phase, raw.amplified_attack, raw.finisher_attack);
-    float const biased_progress =
-        raw.combat_phase_progress + lane.phase_bias * window.offset_weight;
     float const progress =
-        eased_combat_phase_progress(raw.combat_phase, biased_progress);
-    return window.start + (window.end - window.start) * progress;
+        eased_combat_phase_progress(raw.combat_phase, raw.combat_phase_progress);
+    float const authored_phase = window.start + (window.end - window.start) * progress;
+    // The gameplay phase owns the broad action window, but it must not force
+    // every rendered body onto effectively the same frame. Apply cadence in
+    // normalized clip time so its visual separation survives narrow Strike
+    // and Impact windows; applying it to window progress reduced a meaningful
+    // 0.24 soldier offset to less than one rendered frame.
+    constexpr float k_visual_cadence_scale = 0.65F;
+    return std::clamp(
+        authored_phase + lane.phase_bias * k_visual_cadence_scale, 0.0F, 0.995F);
   }
 
   float const attack_offset = raw.has_attack_offset ? raw.attack_offset : 0.0F;
   return wrap_phase(raw.sample_time + attack_offset + lane.phase_bias);
+}
+
+auto attack_cycle_entry_phase(const CombatLaneProfile& lane) noexcept -> float {
+  // Follow-up presentation transactions always re-enter through anticipation,
+  // even when the gameplay attack state remains in Recover during cooldown.
+  // Keep a small amount of the personal cadence so the restart itself does
+  // not synchronize the formation.
+  return std::clamp(0.045F + lane.phase_bias * 0.30F, 0.0F, 0.13F);
 }
 
 auto interrupt_reason_for_exit_policy(CombatExitPolicy policy) noexcept
@@ -172,6 +186,7 @@ void begin_transaction(CombatPersistentState& state,
   state.last_sample_time = raw.sample_time;
   state.phase_start_time = raw.sample_time;
   state.transaction_start_time = raw.sample_time;
+  state.terminal_pose_start_time = -1.0F;
   state.minimum_hold_until = raw.sample_time + config.minimum_hold_duration;
   state.exit_blend_progress = 0.0F;
   state.attack_emphasis =
@@ -381,13 +396,23 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
       raw.attack_requested && !raw.is_healing && !raw.is_constructing;
   bool const request_attack_viable =
       request_attack && (raw.attack_target_id == 0U || raw.attack_target_alive);
+  // Keep the soldier's stable personal cadence while the transaction locks
+  // its semantic lane. Reconstructing only from the lane enum erased the
+  // per-soldier timing and synchronized whole formations after the first
+  // frame of combat.
   CombatLaneProfile const active_lane =
-      next.active ? lane_profile_for_lane(next.locked_lane) : lane;
+      next.active ? profile_with_lane(lane, next.locked_lane) : lane;
   auto const startup_attack_lane =
       attack_lane_profile_for_request(lane, previous.locked_lane, raw);
   float const current_lane_phase_hint = raw_attack_phase_hint(raw, lane);
   float const active_lane_phase_hint =
-      next.active ? raw_attack_phase_hint(raw, active_lane) : current_lane_phase_hint;
+      next.active && next.presentation_driven_followup
+          ? std::clamp(attack_cycle_entry_phase(active_lane) +
+                           (raw.sample_time - next.transaction_start_time) / 0.95F,
+                       0.0F,
+                       0.995F)
+          : (next.active ? raw_attack_phase_hint(raw, active_lane)
+                         : current_lane_phase_hint);
 
   if (!request_attack_viable) {
     next.queued_next = {};
@@ -417,11 +442,20 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
   bool const family_changed = next.locked_family != CombatAttackFamily::None &&
                               raw.attack_family != CombatAttackFamily::None &&
                               next.locked_family != raw.attack_family;
+  constexpr float k_max_continuous_visual_cycle_seconds = 0.95F;
+  constexpr float k_max_terminal_pose_seconds = 0.10F;
+  bool const terminal_pose_expired =
+      next.attack_phase >= 0.92F && next.terminal_pose_start_time >= 0.0F &&
+      raw.sample_time - next.terminal_pose_start_time >= k_max_terminal_pose_seconds;
+  bool const visual_cycle_expired =
+      next.attack_phase >= 0.92F && raw.sample_time - next.transaction_start_time >=
+                                        k_max_continuous_visual_cycle_seconds;
   bool const cycle_restart =
       request_attack_viable && next.phase != CombatTransactionPhase::ExitBlend &&
       next.attack_phase >= 0.92F &&
-      active_lane_phase_hint + config.new_transaction_reset_threshold <
-          next.attack_phase &&
+      (active_lane_phase_hint + config.new_transaction_reset_threshold <
+           next.attack_phase ||
+       visual_cycle_expired || terminal_pose_expired) &&
       same_target && !family_changed;
   bool const queued_followup_requested =
       request_attack_viable && (cycle_restart || target_changed || family_changed);
@@ -442,6 +476,11 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
     next.phase = transaction_phase_from_attack_phase(next.attack_phase);
     next.phase_progress =
         transaction_phase_progress_from_attack_phase(next.attack_phase, next.phase);
+    if (next.attack_phase >= 0.92F && next.terminal_pose_start_time < 0.0F) {
+      next.terminal_pose_start_time = raw.sample_time;
+    } else if (next.attack_phase < 0.92F) {
+      next.terminal_pose_start_time = -1.0F;
+    }
     next.exit_blend_progress = 0.0F;
   } else {
     if (next.exit_policy == CombatExitPolicy::None && !hold_attack_lifetime) {
@@ -493,13 +532,15 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
         next.interruption_reason = reason;
         next.locked_lane = last_attack_lane;
         if (queued_followup_valid(queued_next, raw)) {
-          CombatLaneProfile const queued_lane = lane_profile_for_lane(queued_next.lane);
+          CombatLaneProfile const queued_lane =
+              profile_with_lane(lane, queued_next.lane);
           begin_transaction(next,
                             raw,
                             queued_lane,
                             config,
                             transaction_id + 1U,
-                            raw_attack_phase_hint(raw, queued_lane));
+                            attack_cycle_entry_phase(queued_lane));
+          next.presentation_driven_followup = true;
         } else if (request_attack_viable && !target_died &&
                    startup_attack_lane.has_value()) {
           begin_transaction(next,

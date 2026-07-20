@@ -202,7 +202,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
-    config.desired_wall_segment_count = 1;
+
+    config.desired_wall_segment_count = 0;
     config.desired_catapult_count = 1;
     config.desired_assembly_size = 7;
     config.reactive_attack_size = 3;

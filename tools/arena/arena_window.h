@@ -14,6 +14,7 @@ class ArenaWindow : public QMainWindow {
 
 public:
   explicit ArenaWindow(QWidget* parent = nullptr);
+  [[nodiscard]] auto viewport() const noexcept -> ArenaViewport* { return m_viewport; }
 
 private:
   ArenaViewport* m_viewport = nullptr;

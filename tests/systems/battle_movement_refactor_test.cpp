@@ -30,7 +30,8 @@ protected:
 TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
 
   std::vector<Entity*> units;
-  for (int i = 0; i < 10; ++i) {
+  constexpr int k_crowded_unit_count = 256;
+  for (int i = 0; i < k_crowded_unit_count; ++i) {
     auto* entity = world->create_entity();
     entity->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
     auto* unit = entity->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
@@ -53,9 +54,7 @@ TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
     original_positions.emplace_back(transform->position.x, transform->position.z);
   }
 
-  for (int tick = 0; tick < 20; ++tick) {
-    system.update(world.get(), 0.1F);
-  }
+  system.update(world.get(), 0.1F);
 
   for (std::size_t i = 0; i < units.size(); ++i) {
     auto* transform = units[i]->get_component<TransformComponent>();
@@ -63,6 +62,7 @@ TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
     EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
   EXPECT_GT(system.diagnostics().overlaps_detected, 0U);
+  EXPECT_GT(system.diagnostics().average_neighbors_checked, 200U);
 }
 
 TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {
@@ -223,6 +223,42 @@ TEST_F(TargetCommitmentTest, CannotSwitchDuringWindUp) {
 
   EXPECT_EQ(attack_target->target_id, enemy1->get_id());
   EXPECT_GT(system.diagnostics().switches_blocked, 0U);
+}
+
+TEST_F(TargetCommitmentTest, BlockedSwitchReleasesConflictingReciprocalLock) {
+  auto* enemy1 = world->create_entity();
+  enemy1->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* enemy1_unit = enemy1->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy1_unit->owner_id = 2;
+
+  auto* enemy2 = world->create_entity();
+  enemy2->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto* enemy2_unit = enemy2->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy2_unit->owner_id = 2;
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit->owner_id = 1;
+  auto* atk = attacker->add_component<AttackComponent>(2.0F, 10, 1.0F);
+  atk->in_melee_lock = true;
+  atk->melee_lock_target_id = enemy1->get_id();
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy1->get_id();
+
+  TargetCommitmentSystem system;
+  system.update(world.get(), 0.016F);
+
+  attack_target->target_id = enemy2->get_id();
+  attack_target->should_chase = false;
+  atk->in_melee_lock = true;
+  atk->melee_lock_target_id = enemy2->get_id();
+  system.update(world.get(), 0.0F);
+
+  EXPECT_EQ(attack_target->target_id, enemy1->get_id());
+  EXPECT_TRUE(attack_target->should_chase);
+  EXPECT_FALSE(atk->in_melee_lock);
+  EXPECT_EQ(atk->melee_lock_target_id, static_cast<EntityID>(0));
 }
 
 TEST_F(TargetCommitmentTest, CanSwitchAfterRecovery) {

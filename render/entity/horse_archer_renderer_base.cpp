@@ -118,20 +118,6 @@ auto HorseArcherRendererBase::get_proportion_scaling() const -> QVector3D {
   return k_profile.as_vector();
 }
 
-auto HorseArcherRendererBase::mounted_visual_spec() const
-    -> const Render::Creature::Pipeline::MountedSpec& {
-  if (!m_mounted_visual_spec_baked) {
-    m_mounted_visual_spec_cache = MountedHumanoidRendererBase::mounted_visual_spec();
-    m_mounted_visual_spec_cache.rider = visual_spec();
-    m_mounted_visual_spec_cache.rider.kind =
-        Render::Creature::Pipeline::CreatureKind::Humanoid;
-    m_mounted_visual_spec_cache.rider.debug_name = m_config.rider_debug_name;
-    m_mounted_visual_spec_cache.mount.debug_name = m_config.mount_debug_name;
-    m_mounted_visual_spec_baked = true;
-  }
-  return m_mounted_visual_spec_cache;
-}
-
 auto HorseArcherRendererBase::visual_spec() const
     -> const Render::Creature::Pipeline::UnitVisualSpec& {
   return m_spec;
@@ -195,8 +181,9 @@ void HorseArcherRendererBase::build_visual_spec() {
       m_horse_crupper_handle,
       m_horse_decoration_handle,
   };
-  set_mount_archetype_id(resolve_horse_equipment_archetype(
-      m_config.mount_debug_name, base_mount_id, mount_handles));
+  set_mount_visual(resolve_horse_equipment_archetype(
+                       m_config.mount_debug_name, base_mount_id, mount_handles),
+                   m_config.mount_debug_name);
 }
 
 void HorseArcherRendererBase::append_companion_preparation(

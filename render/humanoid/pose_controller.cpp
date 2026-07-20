@@ -185,8 +185,20 @@ void apply_weapon_attack_sample(
     HumanoidPose& pose,
     const Animation::HumanoidWeaponAttackPoseSample& sample) {
   apply_weapon_attack_body_deltas(pose, sample);
-  controller.place_hand_at(Side::Right, to_qvec(sample.right_hand));
-  controller.place_hand_at(Side::Left, to_qvec(sample.left_hand));
+  auto clamp_to_attack_reach = [](const QVector3D& shoulder, QVector3D target) {
+    constexpr float k_max_arm_reach =
+        (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
+    QVector3D const shoulder_to_hand = target - shoulder;
+    float const requested_reach = shoulder_to_hand.length();
+    if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
+      target = shoulder + shoulder_to_hand * (k_max_arm_reach / requested_reach);
+    }
+    return target;
+  };
+  controller.place_hand_at(
+      Side::Right, clamp_to_attack_reach(pose.shoulder_r, to_qvec(sample.right_hand)));
+  controller.place_hand_at(
+      Side::Left, clamp_to_attack_reach(pose.shoulder_l, to_qvec(sample.left_hand)));
 }
 
 void apply_spear_attack_sample(
@@ -194,7 +206,20 @@ void apply_spear_attack_sample(
     HumanoidPose& pose,
     const Animation::HumanoidWeaponAttackPoseSample& sample) {
   apply_weapon_attack_body_deltas(pose, sample);
-  QVector3D const hand_r_target = to_qvec(sample.right_hand);
+
+  auto clamp_to_arm_reach = [](const QVector3D& shoulder, QVector3D target) {
+    using HP = HumanProportions;
+    constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
+    QVector3D const shoulder_to_hand = target - shoulder;
+    float const requested_reach = shoulder_to_hand.length();
+    if (requested_reach > k_max_arm_reach) {
+      target = shoulder + shoulder_to_hand * (k_max_arm_reach / requested_reach);
+    }
+    return target;
+  };
+
+  QVector3D const hand_r_target =
+      clamp_to_arm_reach(pose.shoulder_r, to_qvec(sample.right_hand));
   QVector3D hand_l_target = to_qvec(sample.left_hand);
   if (sample.use_offhand_spear_grip) {
     hand_l_target = compute_offhand_spear_grip(pose,
@@ -205,6 +230,7 @@ void apply_spear_attack_sample(
                                                sample.offhand_y_drop,
                                                sample.offhand_lateral_offset);
   }
+  hand_l_target = clamp_to_arm_reach(pose.shoulder_l, hand_l_target);
   controller.place_hand_at(Side::Right, hand_r_target);
   controller.place_hand_at(Side::Left, hand_l_target);
 }
@@ -309,7 +335,6 @@ void HumanoidPoseController::lean(const QVector3D& direction, float amount) {
 
 void HumanoidPoseController::place_hand_at(Side side,
                                            const QVector3D& target_position) {
-
   get_hand(side) = target_position;
 
   const QVector3D& shoulder = get_shoulder(side);

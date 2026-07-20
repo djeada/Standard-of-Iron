@@ -357,8 +357,7 @@ auto builder_circle_local_offset(
   float const yaw_offset =
       std::atan2(-world_x, -world_z) * (180.0F / std::numbers::pi_v<float>);
 
-  float const local_r = std::sqrt(world_x * world_x + world_z * world_z);
-  return {0.0F, -local_r, yaw_offset};
+  return {world_x, world_z, yaw_offset};
 }
 
 void center_positions_on_target(std::vector<FormationPosition>& positions,

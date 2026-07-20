@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -24,6 +25,87 @@ constexpr float k_initial_burning_visual_age = 0.08F;
 constexpr float k_min_projectile_area_radius = 0.1F;
 constexpr float k_min_fire_patch_radius = 0.5F;
 constexpr float k_fire_patch_ground_offset = 0.85F;
+constexpr float k_rts_charge_casualty_fraction = 0.25F;
+constexpr float k_braced_spear_charge_casualty_fraction = 0.50F;
+
+[[nodiscard]] auto
+is_rts_charge_attacker(const Engine::Core::UnitComponent& unit) -> bool {
+  return (unit.spawn_type == Game::Units::SpawnType::MountedKnight ||
+          unit.spawn_type == Game::Units::SpawnType::HorseSpearman);
+}
+
+[[nodiscard]] auto is_infantry(const Engine::Core::UnitComponent& unit) -> bool {
+  return !Game::Units::is_cavalry(unit.spawn_type) &&
+         unit.spawn_type != Game::Units::SpawnType::Elephant &&
+         unit.spawn_type != Game::Units::SpawnType::Catapult &&
+         unit.spawn_type != Game::Units::SpawnType::Ballista;
+}
+
+[[nodiscard]] auto proportional_charge_damage(const Engine::Core::UnitComponent& unit,
+                                              float fraction) -> int {
+  return std::clamp(
+      static_cast<int>(std::ceil(static_cast<float>(unit.health) * fraction)),
+      1,
+      unit.health);
+}
+
+void launch_new_casualties(Engine::Core::Entity& casualty_unit,
+                           const Engine::Core::Entity& impact_source,
+                           int casualty_count,
+                           float impact_speed) {
+  auto* casualties =
+      casualty_unit.get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  auto const* casualty_transform =
+      casualty_unit.get_component<Engine::Core::TransformComponent>();
+  auto const* source_transform =
+      impact_source.get_component<Engine::Core::TransformComponent>();
+  if (casualties == nullptr || casualty_transform == nullptr ||
+      source_transform == nullptr || casualty_count <= 0) {
+    return;
+  }
+  float dx = 0.0F;
+  float dz = 0.0F;
+  if (auto const* source_motion =
+          impact_source.get_component<Engine::Core::MotionPresentationComponent>();
+      source_motion != nullptr && source_motion->speed > 0.1F) {
+    dx = source_motion->velocity_x;
+    dz = source_motion->velocity_z;
+  } else {
+    dx = casualty_transform->position.x - source_transform->position.x;
+    dz = casualty_transform->position.z - source_transform->position.z;
+  }
+  float const length = std::hypot(dx, dz);
+  if (length > 0.001F) {
+    dx /= length;
+    dz /= length;
+  } else {
+    dx = 0.0F;
+    dz = 1.0F;
+  }
+  float const yaw = casualty_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const local_x = std::cos(yaw) * dx - std::sin(yaw) * dz;
+  float const local_z = std::sin(yaw) * dx + std::cos(yaw) * dz;
+  float const horizontal_impulse =
+      std::clamp(std::max(impact_speed, 4.0F) * 1.22F, 6.5F, 11.5F);
+  float const vertical_impulse =
+      std::clamp(6.8F + std::max(impact_speed - 4.0F, 0.0F) * 0.48F, 6.8F, 9.2F);
+  int remaining = casualty_count;
+  for (auto it = casualties->entries.rbegin();
+       it != casualties->entries.rend() && remaining > 0;
+       ++it, --remaining) {
+    float const side = (it->slot_index & 1U) == 0U ? -1.0F : 1.0F;
+    float const spread =
+        side * (0.85F + 0.22F * static_cast<float>(it->slot_index % 3U));
+    it->launched = true;
+    it->launch_velocity_x = local_x * horizontal_impulse + local_z * spread;
+    it->launch_velocity_y =
+        vertical_impulse + 0.28F * static_cast<float>(it->slot_index % 3U);
+    it->launch_velocity_z = local_z * horizontal_impulse - local_x * spread;
+    it->launch_pitch_speed = 235.0F + 28.0F * static_cast<float>(it->slot_index % 3U);
+    it->launch_roll_speed =
+        side * (95.0F + 17.0F * static_cast<float>(it->slot_index % 4U));
+  }
+}
 
 [[nodiscard]] auto commander_action_raw_damage(
     Engine::Core::Entity& attacker,
@@ -403,6 +485,11 @@ auto resolve_commander_action_hit(Engine::Core::World* world,
   if (result.contact.relative_speed <= 0.0F) {
     result.contact.relative_speed = relative_contact_speed(*attacker, *target);
   }
+  if (auto const* charge =
+          attacker->get_component<Engine::Core::MountedChargeComponent>()) {
+    result.contact.relative_speed =
+        std::max(result.contact.relative_speed, charge->impact_speed);
+  }
   result.attempted = true;
   result.raw_damage = commander_action_raw_damage(*attacker, request.damage_profile);
   result.damage = Game::Systems::RpgCombat::deal_commander_attack_damage(
@@ -594,11 +681,37 @@ auto resolve_mounted_charge_impact_hit(
     result.contact.relative_speed = relative_contact_speed(*attacker, *target);
   }
   result.attempted = true;
+  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+  bool const rts_cavalry_into_infantry =
+      attacker_unit != nullptr && target_unit != nullptr &&
+      is_rts_charge_attacker(*attacker_unit) && is_infantry(*target_unit);
+  auto const* target_hold = target->get_component<Engine::Core::HoldModeComponent>();
+  bool const braced_spears =
+      rts_cavalry_into_infantry &&
+      target_unit->spawn_type == Game::Units::SpawnType::Spearman &&
+      target_hold != nullptr && target_hold->active;
+  if (braced_spears) {
+    result.raw_damage = proportional_charge_damage(
+        *attacker_unit, k_braced_spear_charge_casualty_fraction);
+    auto const application = Game::Systems::Combat::apply_unit_damage(
+        world, attacker, result.raw_damage, target->get_id());
+    result.damage.effective_damage = application.applied_damage;
+    result.damage.killed = application.killed;
+    result.applied = application.applied_damage > 0;
+    launch_new_casualties(*attacker,
+                          *target,
+                          application.queued_soldier_casualties,
+                          result.contact.relative_speed);
+    return result;
+  }
   result.raw_damage =
-      std::max(1,
-               static_cast<int>(
-                   std::round(static_cast<float>(request.explicit_raw_damage) *
-                              std::max(0.0F, request.damage_profile.base_multiplier))));
+      rts_cavalry_into_infantry
+          ? proportional_charge_damage(*target_unit, k_rts_charge_casualty_fraction)
+          : std::max(1,
+                     static_cast<int>(std::round(
+                         static_cast<float>(request.explicit_raw_damage) *
+                         std::max(0.0F, request.damage_profile.base_multiplier))));
 
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
     result.damage = Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
@@ -614,6 +727,12 @@ auto resolve_mounted_charge_impact_hit(
     result.damage.effective_damage = application.applied_damage;
     result.damage.killed = application.killed;
     result.applied = application.applied_damage > 0;
+    if (rts_cavalry_into_infantry) {
+      launch_new_casualties(*target,
+                            *attacker,
+                            application.queued_soldier_casualties,
+                            result.contact.relative_speed);
+    }
   }
 
   result.interrupted_charge =

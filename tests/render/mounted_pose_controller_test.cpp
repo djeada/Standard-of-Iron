@@ -220,7 +220,8 @@ TEST_F(MountedPoseControllerTest, RidingMeleeStrikeAnimatesCorrectly) {
   EXPECT_GT(apex_y, chamber_y);
   EXPECT_GT(strike_x, chamber_x + 0.10F);
   EXPECT_LT(strike_y, chamber_y);
-  EXPECT_GT(strike_z, 0.6F);
+  EXPECT_GT(strike_z, 0.45F);
+  EXPECT_LT(strike_z, 0.65F);
   EXPECT_GT(strike_neck_z, chamber_neck_z);
   EXPECT_GT(strike_neck_y, chamber_neck_y - 0.03F);
   EXPECT_GT(strike_head_z, strike_neck_z + 0.02F);
@@ -394,6 +395,28 @@ TEST_F(MountedPoseControllerTest, ElbowPositionValidForAllActions) {
   EXPECT_GT(left_elbow_hand, 0.05F);
   EXPECT_LT(left_shoulder_elbow, 0.50F);
   EXPECT_LT(left_elbow_hand, 0.50F);
+}
+
+TEST_F(MountedPoseControllerTest, ComposedWeaponPosesRespectArmLength) {
+  constexpr float k_max_arm_reach =
+      (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
+  for (auto const weapon : {MountedPoseController::MountedWeaponPose::SwordStrike,
+                            MountedPoseController::MountedWeaponPose::SpearThrust,
+                            MountedPoseController::MountedWeaponPose::BowDraw}) {
+    for (int frame = 0; frame <= 100; ++frame) {
+      SetUp();
+      MountedPoseController controller(pose, anim_ctx);
+      MountedPoseController::MountedRiderPoseRequest request{};
+      request.weapon_pose = weapon;
+      request.action_phase = static_cast<float>(frame) / 100.0F;
+      controller.apply_pose(mount, request);
+
+      EXPECT_LE((pose.hand_l - pose.shoulder_l).length(), k_max_arm_reach + 1.0e-5F)
+          << "weapon=" << static_cast<int>(weapon) << " frame=" << frame;
+      EXPECT_LE((pose.hand_r - pose.shoulder_r).length(), k_max_arm_reach + 1.0e-5F)
+          << "weapon=" << static_cast<int>(weapon) << " frame=" << frame;
+    }
+  }
 }
 
 TEST_F(MountedPoseControllerTest, AllMethodsHandleEdgeCases) {

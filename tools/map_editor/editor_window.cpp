@@ -682,15 +682,6 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (!elem.nation.isEmpty()) {
       json[MapJsonKeys::nation] = elem.nation;
     }
-    if (!elem.behavior.isEmpty()) {
-      json[MapJsonKeys::behavior] = elem.behavior;
-    }
-    if (elem.guard_radius != 10.0F) {
-      json[MapJsonKeys::guard_radius] = static_cast<double>(elem.guard_radius);
-    }
-    if (!elem.patrol_waypoints.isEmpty()) {
-      json[MapJsonKeys::patrol_waypoints] = elem.patrol_waypoints;
-    }
     for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
@@ -714,6 +705,15 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     }
     if (!elem.nation.isEmpty()) {
       json[MapJsonKeys::nation] = elem.nation;
+    }
+    if (!elem.behavior.isEmpty()) {
+      json[MapJsonKeys::behavior] = elem.behavior;
+    }
+    if (elem.guard_radius != 10.0F) {
+      json[MapJsonKeys::guard_radius] = static_cast<double>(elem.guard_radius);
+    }
+    if (!elem.patrol_waypoints.isEmpty()) {
+      json[MapJsonKeys::patrol_waypoints] = elem.patrol_waypoints;
     }
     for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];

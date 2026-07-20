@@ -219,7 +219,7 @@ humanoid_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Die)] = k_humanoid_die_infantry_clip;
   t[state_index(StateId::Dead)] = k_humanoid_dead_infantry_clip;
   t[state_index(StateId::AttackSword)] = k_humanoid_attack_sword_a_clip;
-  t[state_index(StateId::AttackSpear)] = k_humanoid_riding_spear_thrust_clip;
+  t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_a_clip;
   t[state_index(StateId::AttackBow)] = k_humanoid_attack_bow_clip;
   t[state_index(StateId::Cast)] = k_humanoid_attack_bow_clip;
   t[state_index(StateId::RpgSwordSlashLeft)] = k_humanoid_rpg_sword_slash_left_clip;
@@ -264,7 +264,7 @@ rider_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Die)] = k_humanoid_die_mounted_clip;
   t[state_index(StateId::Dead)] = k_humanoid_dead_mounted_clip;
   t[state_index(StateId::AttackSword)] = k_humanoid_riding_sword_strike_clip;
-  t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_a_clip;
+  t[state_index(StateId::AttackSpear)] = k_humanoid_riding_spear_thrust_clip;
   t[state_index(StateId::AttackBow)] = k_humanoid_riding_bow_shot_clip;
   t[state_index(StateId::Cast)] = k_humanoid_riding_bow_shot_clip;
   t[state_index(StateId::RidingIdle)] = k_humanoid_riding_idle_clip;
@@ -278,7 +278,6 @@ rider_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
 rider_variant_count_table() noexcept -> std::array<std::uint8_t, state_count()> {
   auto t = make_variant_count_table_for_clips(rider_clip_table());
   t[state_index(StateId::AttackSword)] = k_humanoid_riding_sword_variant_count;
-  t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_variant_count;
   return t;
 }
 

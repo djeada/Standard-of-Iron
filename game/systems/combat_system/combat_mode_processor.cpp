@@ -7,6 +7,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
+#include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
 #include "combat_utils.h"
 
@@ -83,9 +84,12 @@ void update_combat_mode(Engine::Core::Entity* attacker,
     float const dx = target_transform->position.x - attacker_transform->position.x;
     float const dz = target_transform->position.z - attacker_transform->position.z;
     float const dy = target_transform->position.y - attacker_transform->position.y;
+    auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
     float const target_radius = combat_radius(target);
     float const surface_dist =
-        std::max(0.0F, std::sqrt(dx * dx + dz * dz) - target_radius);
+        geometry.uses_formation_slots
+            ? std::max(0.0F, geometry.surface_gap)
+            : std::max(0.0F, std::sqrt(dx * dx + dz * dz) - target_radius);
     float const dist_sq = surface_dist * surface_dist;
 
     if (dist_sq < closest_enemy_dist_sq) {

@@ -13,17 +13,18 @@ class Arrow {
 public:
   static auto get_shaft() -> GL::Mesh*;
   static auto get_tip() -> GL::Mesh*;
+  static auto get_fletching() -> GL::Mesh*;
 
-  static constexpr float k_shaft_length = 0.62F;
-  static constexpr float k_tip_length = 0.18F;
+  static constexpr float k_shaft_length = 0.58F;
+  static constexpr float k_tip_length = 0.22F;
   static constexpr float k_total_length = k_shaft_length + k_tip_length;
-  static constexpr float k_tip_base_radius_scale = 1.9F;
-  static constexpr float k_arrow_z_scale = 0.44F;
+  static constexpr float k_tip_base_radius_scale = 2.35F;
+  static constexpr float k_arrow_z_scale = 0.34F;
   static constexpr float k_arrow_xy_scale = 0.36F;
   static constexpr float k_arrow_z_translate_factor = k_total_length * 0.5F;
-  static constexpr float k_fletch_z_offset_factor = 0.2F;
-  static constexpr float k_fletch_xy_scale = 0.75F;
-  static constexpr float k_fletch_z_scale = 0.15F;
+  static constexpr float k_fletch_z_offset_factor = 0.08F;
+  static constexpr float k_fletch_xy_scale = 1.0F;
+  static constexpr float k_fletch_z_scale = 1.0F;
 
   static auto shaft_color(const QVector3D& team_color) -> QVector3D {
     return {std::clamp(team_color.x() * 0.6F + 0.35F, 0.0F, 1.0F),

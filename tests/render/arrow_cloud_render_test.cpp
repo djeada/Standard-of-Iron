@@ -82,12 +82,13 @@ auto luminance(const QVector3D& color) -> float {
 
 auto find_draw(const std::vector<RecordedMeshDraw>& meshes,
                Render::GL::Mesh* target) -> const RecordedMeshDraw* {
+  const RecordedMeshDraw* best = nullptr;
   for (const auto& draw : meshes) {
-    if (draw.mesh == target) {
-      return &draw;
+    if (draw.mesh == target && (best == nullptr || draw.alpha > best->alpha)) {
+      best = &draw;
     }
   }
-  return nullptr;
+  return best;
 }
 
 TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
@@ -110,7 +111,7 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
   ASSERT_NE(shaft_mesh, nullptr);
   ASSERT_NE(tip_mesh, nullptr);
-  ASSERT_EQ(renderer.meshes.size(), 2U);
+  ASSERT_EQ(renderer.meshes.size(), 3U);
 
   const RecordedMeshDraw* shaft_draw = find_draw(renderer.meshes, shaft_mesh);
   const RecordedMeshDraw* tip_draw = find_draw(renderer.meshes, tip_mesh);
@@ -128,6 +129,14 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
   EXPECT_NEAR(rendered_length / (Render::Geom::Arrow::k_arrow_z_scale * arrow.scale),
               0.8F,
               1.0e-4F);
+
+  auto const glow_draws =
+      std::count_if(renderer.meshes.begin(),
+                    renderer.meshes.end(),
+                    [&](const RecordedMeshDraw& draw) {
+                      return draw.mesh == shaft_mesh && draw.alpha < shaft_draw->alpha;
+                    });
+  EXPECT_EQ(glow_draws, 1);
 }
 
 TEST(ArrowCloudRender, MarkerArrowTipUsesBrightMetallicColor) {

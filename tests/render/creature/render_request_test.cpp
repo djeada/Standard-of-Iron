@@ -744,6 +744,43 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
   EXPECT_GT((sword_hand_r - default_hand_r).length(), 0.05F);
 }
 
+TEST(SubmitRequests, InterpolatedHandBoneRemainsRigidForShieldAttachments) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid_sword.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  CreatureRenderRequest req{};
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
+  req.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  req.state = AnimationStateId::AttackSword;
+  req.phase = 0.437F;
+  req.lod = Render::Creature::CreatureLOD::Full;
+
+  CreaturePipeline const pipeline;
+  CountingSubmitter sink;
+  std::array<CreatureRenderRequest, 1> requests{req};
+  pipeline.submit_requests(requests, sink);
+
+  ASSERT_EQ(sink.rigged_calls, 1U);
+  auto const hand_l = static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
+  ASSERT_GT(sink.last_bone_palette.size(), hand_l);
+  auto const& skin = sink.last_bone_palette[hand_l];
+  QVector3D const x = skin.column(0).toVector3D();
+  QVector3D const y = skin.column(1).toVector3D();
+  QVector3D const z = skin.column(2).toVector3D();
+  EXPECT_NEAR(x.length(), 1.0F, 1.0e-4F);
+  EXPECT_NEAR(y.length(), 1.0F, 1.0e-4F);
+  EXPECT_NEAR(z.length(), 1.0F, 1.0e-4F);
+  EXPECT_NEAR(QVector3D::dotProduct(x, y), 0.0F, 1.0e-4F);
+  EXPECT_NEAR(QVector3D::dotProduct(x, z), 0.0F, 1.0e-4F);
+  EXPECT_NEAR(QVector3D::dotProduct(y, z), 0.0F, 1.0e-4F);
+}
+
 TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {
   auto& reg = ArchetypeRegistry::instance();
   const auto baseline_size = reg.size();

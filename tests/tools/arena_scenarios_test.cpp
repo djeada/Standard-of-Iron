@@ -29,6 +29,20 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
             ids.end());
   EXPECT_NE(std::find(ids.begin(),
                       ids.end(),
+                      QString::fromLatin1(Arena::Scenarios::k_braced_spear_charge_id)),
+            ids.end());
+  for (auto const* transition_id :
+       {Arena::Scenarios::k_archer_action_transition_id,
+        Arena::Scenarios::k_swordsman_action_transition_id,
+        Arena::Scenarios::k_spearman_action_transition_id,
+        Arena::Scenarios::k_horse_archer_action_transition_id,
+        Arena::Scenarios::k_mounted_knight_action_transition_id,
+        Arena::Scenarios::k_horse_spearman_action_transition_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(transition_id)),
+              ids.end());
+  }
+  EXPECT_NE(std::find(ids.begin(),
+                      ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_melee_lock_id)),
             ids.end());
   EXPECT_NE(std::find(ids.begin(),
@@ -55,6 +69,12 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_lod_switch_id)),
             ids.end());
+  for (auto const* settlement_id : {Arena::Scenarios::k_roman_marching_camp_id,
+                                    Arena::Scenarios::k_carthage_trade_town_id,
+                                    Arena::Scenarios::k_rival_economies_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(settlement_id)),
+              ids.end());
+  }
 }
 
 TEST(ArenaScenariosTest, ResolvesDescriptionsForKnownScenarios) {

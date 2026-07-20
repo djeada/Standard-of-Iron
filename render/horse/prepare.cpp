@@ -37,14 +37,14 @@ auto default_full_horse_request_seed(const Render::GL::DrawContext& ctx) noexcep
                                     0xFFFFFFFFU);
 }
 
-auto horse_state_for_motion(
-    const Render::GL::HorseMotionSample& motion,
-    const Engine::Core::DeathAnimationComponent* death_anim) noexcept
+auto horse_state_for_motion(const Render::GL::HorseMotionSample& motion,
+                            const Render::GL::AnimationInputs& presentation) noexcept
     -> Render::Creature::AnimationStateId {
-  if (death_anim != nullptr) {
-    return death_anim->state == Engine::Core::DeathSequenceState::Dying
-               ? Render::Creature::AnimationStateId::Die
-               : Render::Creature::AnimationStateId::Dead;
+  if (presentation.is_dying) {
+    return Render::Creature::AnimationStateId::Die;
+  }
+  if (presentation.is_dead) {
+    return Render::Creature::AnimationStateId::Dead;
   }
   if (motion.is_fighting) {
     return Render::Creature::AnimationStateId::AttackMelee;
@@ -187,11 +187,6 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
                 Engine::Core::get_or_add_component<
                     Render::Creature::HorseAnimationStateComponent>(ctx.entity));
   (void)shared_mount;
-  auto* death_anim =
-      (ctx.entity != nullptr)
-          ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
-          : nullptr;
-
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = (shared_grounded_world != nullptr)
                         ? *shared_grounded_world
@@ -210,18 +205,9 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   RCP::PreparedHorseBodyState body_state;
   body_state.graph = graph_output;
   body_state.variant = v;
-  body_state.animation_state = horse_state_for_motion(motion, death_anim);
-  if (death_anim != nullptr &&
-      death_anim->state == Engine::Core::DeathSequenceState::Dying &&
-      death_anim->state_duration > 0.0F) {
-    body_state.phase =
-        std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
-  } else {
-    body_state.phase = 0.0F;
-    if (death_anim == nullptr) {
-      body_state.phase = motion.phase;
-    }
-  }
+  body_state.animation_state = horse_state_for_motion(motion, anim);
+  body_state.phase =
+      (anim.is_dying || anim.is_dead) ? anim.death_progress : motion.phase;
   out.bodies.add_quadruped(body_state);
 
   QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);

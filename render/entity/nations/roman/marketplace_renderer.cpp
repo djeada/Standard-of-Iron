@@ -160,6 +160,63 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.18F, 0.02F, 0.06F),
       c.terracotta_dark);
 
+  float const hall_roof_y = wall_h + 0.38F;
+  desc.add_rotated_box(QVector3D(0.72F, hall_roof_y, 0.0F),
+                       QVector3D(0.38F, 0.055F, 1.18F),
+                       QVector3D(0.0F, 0.0F, 12.0F),
+                       c.terracotta,
+                       k_building_state_mask_intact);
+  desc.add_rotated_box(QVector3D(0.72F, hall_roof_y + 0.01F, 0.0F),
+                       QVector3D(0.38F, 0.055F, 1.18F),
+                       QVector3D(0.0F, 0.0F, -12.0F),
+                       c.terracotta_dark,
+                       k_building_state_mask_intact,
+                       BuildingLODMask::Full);
+  for (float const z : {-0.86F, -0.43F, 0.0F, 0.43F, 0.86F}) {
+    desc.add_cylinder(QVector3D(0.34F, 0.16F, z),
+                      QVector3D(0.34F, 0.16F + col_height * 0.82F, z),
+                      0.045F,
+                      c.marble,
+                      k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.34F, 0.18F, z),
+                 QVector3D(0.065F, 0.025F, 0.065F),
+                 c.limestone_dark,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+  }
+
+  for (float const z : {-0.52F, 0.52F}) {
+    desc.add_box(QVector3D(-0.35F, 0.34F, z),
+                 QVector3D(0.42F, 0.055F, 0.22F),
+                 c.cedar,
+                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
+    for (float const x : {-0.68F, -0.02F}) {
+      desc.add_box(QVector3D(x, 0.22F, z),
+                   QVector3D(0.035F, 0.17F, 0.035F),
+                   c.cedar_dark,
+                   k_building_state_mask_intact,
+                   BuildingLODMask::Full);
+    }
+    for (float const x : {-0.58F, -0.36F, -0.14F}) {
+      desc.add_cylinder(QVector3D(x, 0.40F, z),
+                        QVector3D(x, 0.48F, z),
+                        0.055F,
+                        z < 0.0F ? c.terracotta : c.cloth_gold,
+                        BuildingStateMask::Normal,
+                        BuildingLODMask::Full);
+    }
+  }
+  desc.add_box(QVector3D(-0.92F, 0.35F, 0.0F),
+               QVector3D(0.13F, 0.20F, 0.13F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
+  desc.add_cylinder(QVector3D(-0.92F, 0.55F, 0.0F),
+                    QVector3D(-0.92F, 0.82F, 0.0F),
+                    0.055F,
+                    c.gold,
+                    BuildingStateMask::Normal,
+                    BuildingLODMask::Full);
+
   desc.add_box(QVector3D(0.50F, 0.28F, -0.70F),
                QVector3D(0.14F, 0.10F, 0.14F),
                c.cedar_dark,

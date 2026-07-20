@@ -1,6 +1,21 @@
 #include <QApplication>
+#include <QCommandLineParser>
+#include <QDir>
+#include <QFile>
+#include <QImage>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSurfaceFormat>
+#include <QTextStream>
+#include <QTimer>
 
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <memory>
+
+#include "arena_scenarios.h"
+#include "arena_viewport.h"
 #include "arena_window.h"
 
 namespace {
@@ -285,9 +300,314 @@ auto main(int argc, char** argv) -> int {
   QApplication::setApplicationVersion("1.0");
   app.setStyleSheet(QString::fromLatin1(k_dark_stylesheet));
 
+  QCommandLineParser parser;
+  parser.setApplicationDescription(
+      QStringLiteral("Interactive and automated rendered-gameplay Arena"));
+  parser.addHelpOption();
+  parser.addVersionOption();
+  QCommandLineOption const batch_option(
+      QStringList{QStringLiteral("batch")},
+      QStringLiteral("Run scenarios automatically through the real Arena renderer."));
+  QCommandLineOption const all_option(
+      QStringList{QStringLiteral("all")},
+      QStringLiteral("Run every registered Arena scenario."));
+  QCommandLineOption const scenario_option(QStringList{QStringLiteral("scenario")},
+                                           QStringLiteral("Scenario id to run."),
+                                           QStringLiteral("id"));
+  QCommandLineOption const duration_option(
+      QStringList{QStringLiteral("duration")},
+      QStringLiteral("Override scenario duration in simulated seconds."),
+      QStringLiteral("seconds"),
+      QStringLiteral("0"));
+  QCommandLineOption const fps_option(
+      QStringList{QStringLiteral("fps")},
+      QStringLiteral("Fixed simulation/render sampling rate for batch mode."),
+      QStringLiteral("fps"),
+      QStringLiteral("60"));
+  QCommandLineOption const seed_option(
+      QStringList{QStringLiteral("seed")},
+      QStringLiteral("Deterministic Arena terrain seed."),
+      QStringLiteral("seed"),
+      QStringLiteral("1337"));
+  QCommandLineOption const artifact_option(
+      QStringList{QStringLiteral("artifact-dir")},
+      QStringLiteral("Directory for reports, JSONL traces, and frame captures."),
+      QStringLiteral("directory"),
+      QStringLiteral("artifacts/arena"));
+  QCommandLineOption const capture_interval_option(
+      QStringList{QStringLiteral("capture-interval")},
+      QStringLiteral("Seconds between batch frame captures; zero disables them."),
+      QStringLiteral("seconds"),
+      QStringLiteral("1"));
+  QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
+                                       QStringLiteral("List scenario ids and exit."));
+  parser.addOptions({batch_option,
+                     all_option,
+                     scenario_option,
+                     duration_option,
+                     fps_option,
+                     seed_option,
+                     artifact_option,
+                     capture_interval_option,
+                     list_option});
+  parser.process(app);
+
+  if (parser.isSet(list_option)) {
+    QTextStream out(stdout);
+    for (auto const& scenario : Arena::Scenarios::definitions()) {
+      out << scenario.id << "\t" << scenario.label << "\t" << scenario.description
+          << "\n";
+    }
+    return 0;
+  }
+
   ArenaWindow window;
   window.resize(1600, 900);
   window.show();
 
-  return app.exec();
+  if (!parser.isSet(batch_option)) {
+    if (parser.isSet(scenario_option)) {
+      QString const scenario_id = parser.value(scenario_option).trimmed();
+      if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
+        qCritical().noquote()
+            << QStringLiteral("Unknown Arena scenario '%1'; use --list-scenarios")
+                   .arg(scenario_id);
+        return 2;
+      }
+      bool seed_ok = false;
+      int const seed = parser.value(seed_option).toInt(&seed_ok);
+      if (!seed_ok) {
+        qCritical() << "Invalid --seed value";
+        return 2;
+      }
+      window.viewport()->set_terrain_seed(seed);
+      QTimer::singleShot(
+          0, window.viewport(), [viewport = window.viewport(), scenario_id]() {
+            viewport->load_scenario(scenario_id);
+          });
+    }
+    return QApplication::exec();
+  }
+
+  bool fps_ok = false;
+  int const fps = parser.value(fps_option).toInt(&fps_ok);
+  bool duration_ok = false;
+  float const duration = parser.value(duration_option).toFloat(&duration_ok);
+  bool seed_ok = false;
+  int const seed = parser.value(seed_option).toInt(&seed_ok);
+  bool capture_interval_ok = false;
+  float const capture_interval =
+      parser.value(capture_interval_option).toFloat(&capture_interval_ok);
+  if (!fps_ok || fps < 1 || fps > 240 || !duration_ok || duration < 0.0F || !seed_ok ||
+      !capture_interval_ok || capture_interval < 0.0F) {
+    qCritical().noquote() << QStringLiteral(
+        "Invalid --fps, --duration, --seed, or --capture-interval value");
+    return 2;
+  }
+
+  struct BatchState {
+    QStringList scenarios;
+    int next_index{0};
+    int failed{0};
+    QString artifact_root;
+    QString current_directory;
+    QString current_scenario;
+    bool failure_context_started{false};
+    bool finishing{false};
+    int generation{0};
+    int capture_index{0};
+  };
+
+  auto state = std::make_shared<BatchState>();
+  state->artifact_root = QDir::cleanPath(parser.value(artifact_option));
+  if (parser.isSet(all_option)) {
+    for (auto const& scenario : Arena::Scenarios::definitions()) {
+      state->scenarios.push_back(scenario.id);
+    }
+  } else {
+    QString scenario_id = parser.value(scenario_option).trimmed();
+    if (scenario_id.isEmpty()) {
+      scenario_id =
+          QString::fromLatin1(Arena::Scenarios::k_three_swords_vs_two_spears_id);
+    }
+    if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
+      qCritical().noquote() << QStringLiteral(
+                                   "Unknown Arena scenario '%1'; use --list-scenarios")
+                                   .arg(scenario_id);
+      return 2;
+    }
+    state->scenarios.push_back(scenario_id);
+  }
+  if (state->scenarios.isEmpty()) {
+    qCritical() << "No Arena scenarios selected";
+    return 2;
+  }
+
+  auto* viewport = window.viewport();
+  viewport->set_terrain_seed(seed);
+  viewport->set_batch_fixed_step(1.0F / static_cast<float>(fps));
+  viewport->set_scenario_duration_override(duration);
+
+  QObject::connect(
+      viewport,
+      &ArenaViewport::scenario_issue_detected,
+      &app,
+      [state, viewport](const QString& scenario_id, const QString& issue) {
+        qWarning().noquote()
+            << QStringLiteral("Arena failure [%1]: %2").arg(scenario_id, issue);
+        if (state->failure_context_started) {
+          return;
+        }
+        state->failure_context_started = true;
+        QImage const current = viewport->grabFramebuffer();
+        if (!current.isNull()) {
+          current.save(QDir(state->current_directory)
+                           .filePath(QStringLiteral("failure_frame.png")));
+        }
+      },
+      Qt::QueuedConnection);
+
+  auto start_next = std::make_shared<std::function<void()>>();
+  *start_next =
+      [state, viewport, &app, start_next, fps, seed, duration, capture_interval]() {
+        if (state->next_index >= state->scenarios.size()) {
+          qInfo().noquote()
+              << QStringLiteral(
+                     "Arena batch complete: %1 scenario(s), %2 failed; artifacts: %3")
+                     .arg(state->scenarios.size())
+                     .arg(state->failed)
+                     .arg(QDir(state->artifact_root).absolutePath());
+          QApplication::exit(state->failed == 0 ? 0 : 1);
+          return;
+        }
+        QString const id = state->scenarios[state->next_index++];
+        state->current_scenario = id;
+        int const generation = ++state->generation;
+        state->current_directory = QDir(state->artifact_root).filePath(id);
+        state->failure_context_started = false;
+        state->finishing = false;
+        state->capture_index = 0;
+        QDir scenario_artifacts(state->current_directory);
+        if (scenario_artifacts.exists() && !scenario_artifacts.removeRecursively()) {
+          qCritical().noquote()
+              << QStringLiteral("Could not replace stale Arena artifacts for %1: %2")
+                     .arg(id, state->current_directory);
+          ++state->failed;
+          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+          return;
+        }
+        if (!QDir().mkpath(state->current_directory)) {
+          qCritical().noquote()
+              << QStringLiteral("Could not create Arena artifact directory for %1: %2")
+                     .arg(id, state->current_directory);
+          ++state->failed;
+          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+          return;
+        }
+        QFile config_file(
+            QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
+        if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+          QJsonObject const config{
+              {QStringLiteral("scenario"), id},
+              {QStringLiteral("seed"), seed},
+              {QStringLiteral("fixed_fps"), fps},
+              {QStringLiteral("duration_override"), duration},
+              {QStringLiteral("capture_interval_seconds"), capture_interval},
+              {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")}};
+          config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
+        }
+        qInfo().noquote()
+            << QStringLiteral("Running rendered Arena scenario: %1").arg(id);
+        viewport->load_scenario(id);
+
+        if (capture_interval > 0.0F) {
+          int const capture_interval_ms =
+              std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
+          auto capture_next = std::make_shared<std::function<void()>>();
+          *capture_next =
+              [state, viewport, generation, capture_interval_ms, capture_next]() {
+                if (state->generation != generation || state->finishing) {
+                  return;
+                }
+                QImage const frame = viewport->grabFramebuffer();
+                if (!frame.isNull()) {
+                  frame.save(QDir(state->current_directory)
+                                 .filePath(QStringLiteral("frame_%1.png")
+                                               .arg(++state->capture_index,
+                                                    4,
+                                                    10,
+                                                    QLatin1Char('0'))));
+                }
+                QTimer::singleShot(capture_interval_ms,
+                                   [capture_next]() { (*capture_next)(); });
+              };
+          QTimer::singleShot(capture_interval_ms,
+                             [capture_next]() { (*capture_next)(); });
+        }
+
+        auto const* definition = Arena::Scenarios::find_definition(id);
+        float const effective_duration =
+            duration > 0.0F
+                ? duration
+                : (definition != nullptr ? definition->duration_seconds : 12.0F);
+        int const watchdog_ms =
+            static_cast<int>(std::max(15.0F, effective_duration * 3.0F) * 1000.0F);
+        QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
+          if (state->generation != generation || state->finishing) {
+            return;
+          }
+          state->finishing = true;
+          ++state->failed;
+          QImage const frame = viewport->grabFramebuffer();
+          if (!frame.isNull()) {
+            frame.save(
+                QDir(state->current_directory).filePath(QStringLiteral("timeout.png")));
+          }
+          QString ignored_error;
+          (void)viewport->write_scenario_artifacts(state->current_directory,
+                                                   &ignored_error);
+          QFile timeout_file(
+              QDir(state->current_directory).filePath(QStringLiteral("timeout.txt")));
+          if (timeout_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            timeout_file.write("Scenario exceeded the local wall-clock watchdog.\n");
+          }
+          qCritical().noquote() << QStringLiteral("Arena scenario timed out: %1")
+                                       .arg(state->current_scenario);
+          QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+        });
+      };
+
+  QObject::connect(
+      viewport,
+      &ArenaViewport::scenario_finished,
+      &app,
+      [state, viewport, start_next](
+          const QString& scenario_id, bool passed, const QString& summary) {
+        if (state->finishing || scenario_id != state->current_scenario) {
+          return;
+        }
+        state->finishing = true;
+        QImage const final_frame = viewport->grabFramebuffer();
+        if (!final_frame.isNull()) {
+          final_frame.save(
+              QDir(state->current_directory).filePath(QStringLiteral("final.png")));
+        }
+        QString error;
+        if (!viewport->write_scenario_artifacts(state->current_directory, &error)) {
+          qCritical().noquote()
+              << QStringLiteral("Could not write artifacts for %1: %2")
+                     .arg(scenario_id, error);
+          passed = false;
+        }
+        if (!passed) {
+          ++state->failed;
+        }
+        qInfo().noquote() << summary;
+        QTimer::singleShot(25, [start_next]() { (*start_next)(); });
+      },
+      Qt::QueuedConnection);
+
+  QTimer::singleShot(250, [start_next]() { (*start_next)(); });
+
+  return QApplication::exec();
 }
