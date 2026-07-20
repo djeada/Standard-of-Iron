@@ -78,22 +78,22 @@ auto register_mount_saddle_archetype(
     return Render::Creature::k_invalid_archetype;
   }
 
-  constexpr std::uint16_t k_root_bone =
-      static_cast<std::uint16_t>(Render::Horse::HorseBone::Root);
+  constexpr auto k_back_bone =
+      static_cast<std::uint16_t>(Render::Horse::HorseBone::SourceBack);
 
   constexpr std::uint8_t k_saddle_base_role_byte = 9U;
-  constexpr std::uint8_t k_reins_base_role_byte =
+  constexpr auto k_reins_base_role_byte =
       static_cast<std::uint8_t>(k_saddle_base_role_byte + 1U);
 
-  auto const root_bind_matrix =
+  auto const back_bind_matrix =
       Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
-          Render::Horse::HorseBone::Root)];
+          Render::Horse::HorseBone::SourceBack)];
   auto const back_center_bind_frame = horse_baseline_back_center_frame();
 
   auto const saddle_spec = make_static_attachment(
-      k_root_bone, k_saddle_base_role_byte, back_center_bind_frame, root_bind_matrix);
+      k_back_bone, k_saddle_base_role_byte, back_center_bind_frame, back_bind_matrix);
   auto const reins_spec = reins_make_static_attachment(
-      k_root_bone, k_reins_base_role_byte, back_center_bind_frame, root_bind_matrix);
+      k_back_bone, k_reins_base_role_byte, back_center_bind_frame, back_bind_matrix);
 
   std::array<Render::Creature::StaticAttachmentSpec, 2> const attachments{saddle_spec,
                                                                           reins_spec};

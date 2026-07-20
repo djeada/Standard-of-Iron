@@ -44,9 +44,11 @@ auto humanoid_head_bind_matrix() -> const QMatrix4x4&;
 auto humanoid_shoulder_bind_matrix(bool left) -> const QMatrix4x4&;
 auto humanoid_shin_bind_matrix(bool left) -> const QMatrix4x4&;
 auto horse_root_bone() -> std::uint16_t;
+auto horse_back_bone() -> std::uint16_t;
 auto horse_head_bone() -> std::uint16_t;
 auto horse_neck_top_bone() -> std::uint16_t;
 auto horse_root_bind_matrix() -> const QMatrix4x4&;
+auto horse_back_bind_matrix() -> const QMatrix4x4&;
 auto horse_head_bind_matrix() -> const QMatrix4x4&;
 auto horse_neck_top_bind_matrix() -> const QMatrix4x4&;
 

@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/">
+        <!-- Generated internal creature packages -->
+        <file>assets/creatures/horse/horse.cmesh</file>
+        <file>assets/creatures/elephant/elephant.cmesh</file>
+
         <!-- Shader files -->
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>

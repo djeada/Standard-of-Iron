@@ -35,9 +35,9 @@ struct LegChain {
   std::uint8_t shoulder{};
   std::uint8_t knee{};
   std::uint8_t foot{};
-  QVector3D shoulder_pos{};
-  QVector3D knee_pos{};
-  QVector3D foot_pos{};
+  QVector3D shoulder_pos;
+  QVector3D knee_pos;
+  QVector3D foot_pos;
 };
 
 auto bone_world_offset(const QMatrix4x4& bone,
@@ -522,6 +522,10 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
       rv.bone_indices = {anchor, tail, 0, 0};
       rv.bone_weights = {1.0F - t, t, 0.0F, 0.0F};
     } else if (prim.shape == PrimitiveShape::Mesh &&
+               prim.mesh_skinning == MeshSkinning::Authored) {
+      rv.bone_indices = v.bone_indices;
+      rv.bone_weights = v.bone_weights;
+    } else if (prim.shape == PrimitiveShape::Mesh &&
                prim.mesh_skinning != MeshSkinning::Rigid) {
       VertexBoneBlend const blend = resolve_mesh_blend(prim, world_pos, bind_pose);
       rv.bone_indices = blend.indices;
@@ -535,7 +539,7 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
   }
 
   out.indices.reserve(out.indices.size() + src_idx.size());
-  for (unsigned int idx : src_idx) {
+  for (unsigned int const idx : src_idx) {
     out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
   }
 }
@@ -579,7 +583,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     }
 
     auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
-    auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFu);
+    auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFU);
 
     out.vertices.reserve(out.vertices.size() + src_verts.size());
     for (Render::GL::Vertex const& v : src_verts) {
@@ -599,7 +603,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     }
 
     out.indices.reserve(out.indices.size() + src_idx.size());
-    for (unsigned int idx : src_idx) {
+    for (unsigned int const idx : src_idx) {
       out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
     }
   }

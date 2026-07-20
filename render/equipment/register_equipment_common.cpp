@@ -83,6 +83,10 @@ auto horse_root_bone() -> std::uint16_t {
   return static_cast<std::uint16_t>(Render::Horse::HorseBone::Root);
 }
 
+auto horse_back_bone() -> std::uint16_t {
+  return static_cast<std::uint16_t>(Render::Horse::HorseBone::SourceBack);
+}
+
 auto horse_head_bone() -> std::uint16_t {
   return static_cast<std::uint16_t>(Render::Horse::HorseBone::Head);
 }
@@ -95,6 +99,13 @@ auto horse_root_bind_matrix() -> const QMatrix4x4& {
   static const QMatrix4x4 matrix =
       Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
           Render::Horse::HorseBone::Root)];
+  return matrix;
+}
+
+auto horse_back_bind_matrix() -> const QMatrix4x4& {
+  static const QMatrix4x4 matrix =
+      Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
+          Render::Horse::HorseBone::SourceBack)];
   return matrix;
 }
 

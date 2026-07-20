@@ -15,6 +15,7 @@
 #include "../gl/primitives.h"
 #include "dimensions.h"
 #include "elephant_gait.h"
+#include "elephant_source_asset.h"
 #include "elephant_spec.h"
 
 namespace Render::Elephant {
@@ -48,7 +49,7 @@ constexpr float k_elephant_hoof_thickness_scale = 0.8F;
 
 struct ElephantClipSpec {
   Render::Creature::BakeClipDescriptor desc;
-  bool is_moving;
+  bool is_moving{};
   Render::GL::ElephantGait gait;
   bool is_fighting{false};
   bool is_death{false};
@@ -491,8 +492,8 @@ auto build_elephant_leg_span_mesh(std::span<const ElephantLegRingProfile> rings)
   }
 
   for (std::size_t ring = 0; ring + 1U < rings.size(); ++ring) {
-    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
-    unsigned int const next = static_cast<unsigned int>((ring + 1U) * k_ring_vertices);
+    auto const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    auto const next = static_cast<unsigned int>((ring + 1U) * k_ring_vertices);
     for (int i = 0; i < k_ring_vertices; ++i) {
       unsigned int const a = base + static_cast<unsigned int>(i);
       unsigned int const b =
@@ -506,11 +507,11 @@ auto build_elephant_leg_span_mesh(std::span<const ElephantLegRingProfile> rings)
 
   auto add_cap = [&](std::size_t ring, bool top) {
     ElephantLegRingProfile const& profile = rings[ring];
-    unsigned int const center = static_cast<unsigned int>(vertices.size());
+    auto const center = static_cast<unsigned int>(vertices.size());
     vertices.push_back({{profile.x_shift, profile.y, profile.z_shift},
                         {0.0F, top ? -1.0F : 1.0F, 0.0F},
                         {0.5F, 0.5F}});
-    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    auto const base = static_cast<unsigned int>(ring * k_ring_vertices);
     for (int i = 0; i < k_ring_vertices; ++i) {
       unsigned int const a = base + static_cast<unsigned int>(i);
       unsigned int const b =
@@ -529,7 +530,7 @@ auto build_elephant_leg_span_mesh(std::span<const ElephantLegRingProfile> rings)
 }
 
 auto elephant_front_thigh_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto const rings = std::array<ElephantLegRingProfile, 4>{{
         {-0.50F, 0.00F, 0.08F, 0.82F, 0.76F, 0.96F, 0.58F},
         {-0.18F, 0.00F, 0.05F, 0.68F, 0.62F, 0.80F, 0.50F},
@@ -542,7 +543,7 @@ auto elephant_front_thigh_mesh() noexcept -> Render::GL::Mesh* {
 }
 
 auto elephant_rear_thigh_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto const rings = std::array<ElephantLegRingProfile, 4>{{
         {-0.50F, 0.00F, 0.12F, 0.86F, 0.80F, 0.86F, 0.52F},
         {-0.18F, 0.00F, 0.08F, 0.70F, 0.64F, 0.72F, 0.46F},
@@ -689,37 +690,23 @@ void bake_elephant_manifest_clip_palettes(std::size_t clip_index,
                                           std::uint32_t frame_index,
                                           std::vector<QMatrix4x4>& out_palettes) {
   auto const& clip = k_elephant_clips[clip_index];
-  Render::GL::ElephantDimensions const dims = Render::GL::make_elephant_dimensions(0U);
   float const phase =
       static_cast<float>(frame_index) /
       static_cast<float>(std::max<std::uint32_t>(clip.desc.frame_count, 1U));
 
-  Render::Elephant::ElephantPoseMotion motion{};
-  motion.phase = phase;
-  motion.is_moving = clip.is_moving;
-  motion.is_fighting = clip.is_fighting;
-  motion.anim_time = phase * clip.gait.cycle_time;
-  if (!clip.is_fighting) {
-    float const amp =
-        clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
-    float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
-    motion.bob = std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
-  }
-
-  Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_animated(dims, clip.gait, motion, pose);
-
   Render::Elephant::BonePalette palette{};
-  Render::Elephant::evaluate_elephant_skeleton(pose, palette);
-  if (clip.is_death) {
-    float death_phase = clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
-    QMatrix4x4 death_transform;
-    death_transform.translate(0.0F, -0.42F * death_phase, -0.12F * death_phase);
-    death_transform.rotate(72.0F * death_phase, 1.0F, 0.0F, 0.0F);
-    death_transform.rotate(10.0F * death_phase, 0.0F, 0.0F, 1.0F);
-    for (auto& bone : palette) {
-      bone = death_transform * bone;
-    }
+  std::string_view source_clip = "Idle";
+  if (clip.is_moving) {
+    source_clip = clip.desc.name == "run" ? "Run" : "Walk";
+  } else if (clip.is_fighting) {
+    source_clip = "Angry";
+  } else if (clip.is_death) {
+    source_clip = "Sitting";
+  }
+  float const source_phase = clip.is_dead_hold ? 1.0F : phase;
+  if (!elephant_source_sample_clip(source_clip, source_phase, palette)) {
+    auto const bind = elephant_source_bind_palette();
+    std::copy(bind.begin(), bind.end(), palette.begin());
   }
   out_palettes.insert(out_palettes.end(), palette.begin(), palette.end());
 }
@@ -733,27 +720,23 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
     m.species_id = Render::Creature::Bpat::k_species_elephant;
     m.bpat_file_name = "elephant.bpat";
     m.minimal_snapshot_file_name = "elephant_minimal.bpsm";
-    m.topology = &elephant_topology_ref();
+    m.topology = &elephant_topology();
     m.lod_full.primitive_name = "elephant.full.body";
     m.lod_full.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(ElephantBone::Root);
-    m.lod_full.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
+    m.lod_full.mesh_skinning = Render::Creature::MeshSkinning::Authored;
     m.lod_full.color_role = k_role_skin;
     m.lod_full.material_id = k_elephant_material_id;
     m.lod_full.lod_mask = Render::Creature::k_lod_full;
-    m.lod_full.mesh_nodes =
-        std::span<const Render::Creature::Quadruped::MeshNode>(k_elephant_whole_nodes);
-    m.lod_full.excluded_node_name_prefixes = k_elephant_full_excluded_prefixes;
-    m.lod_full.overlay_primitives = k_elephant_full_leg_overlays;
+    m.lod_full.mesh_nodes = elephant_source_mesh_nodes();
     m.lod_minimal.primitive_name = "elephant.minimal.whole";
     m.lod_minimal.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(ElephantBone::Root);
-    m.lod_minimal.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
+    m.lod_minimal.mesh_skinning = Render::Creature::MeshSkinning::Authored;
     m.lod_minimal.color_role = k_role_skin;
     m.lod_minimal.material_id = k_elephant_material_id;
     m.lod_minimal.lod_mask = Render::Creature::k_lod_minimal;
-    m.lod_minimal.mesh_nodes =
-        std::span<const Render::Creature::Quadruped::MeshNode>(k_elephant_whole_nodes);
+    m.lod_minimal.mesh_nodes = elephant_source_mesh_nodes();
     m.clips =
         std::span<const Render::Creature::BakeClipDescriptor>(k_elephant_clip_descs);
     m.bind_palette = &elephant_bind_palette;

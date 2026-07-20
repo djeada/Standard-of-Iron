@@ -37,6 +37,7 @@ enum class MeshSkinning : std::uint8_t {
   Rigid = 0,
   HorseWhole,
   ElephantWhole,
+  Authored,
 };
 
 enum class CreatureLOD : std::uint8_t {

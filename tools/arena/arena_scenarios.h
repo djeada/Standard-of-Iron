@@ -18,6 +18,7 @@ inline constexpr char k_mounted_spear_duel_id[] = "mounted_spear_duel";
 inline constexpr char k_mounted_bow_exchange_id[] = "mounted_bow_exchange";
 inline constexpr char k_infantry_locomotion_matrix_id[] = "infantry_locomotion_matrix";
 inline constexpr char k_mounted_locomotion_matrix_id[] = "mounted_locomotion_matrix";
+inline constexpr char k_elephant_locomotion_matrix_id[] = "elephant_locomotion_matrix";
 inline constexpr char k_infantry_damage_matrix_id[] = "infantry_damage_matrix";
 inline constexpr char k_mounted_damage_matrix_id[] = "mounted_damage_matrix";
 inline constexpr char k_archer_action_transition_id[] = "archer_action_transition";

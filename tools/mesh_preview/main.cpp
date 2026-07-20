@@ -12,6 +12,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -22,12 +23,19 @@
 #include <string_view>
 #include <vector>
 
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/spec.h"
 #include "render/elephant/dimensions.h"
+#include "render/elephant/elephant_source_asset.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/dimensions.h"
+#include "render/horse/horse_anatomy.h"
+#include "render/horse/horse_gait.h"
+#include "render/horse/horse_profile_data.h"
+#include "render/horse/horse_source_asset.h"
 #include "render/horse/horse_spec.h"
 #include "render/rigged_mesh_bake.h"
+#include "render/snapshot_mesh_bake.h"
 #include "render/software/software_rasterizer.h"
 
 namespace fs = std::filesystem;
@@ -54,6 +62,7 @@ enum class SourceKind {
   Species,
   Stl,
   Obj,
+  ShapeVerification,
 };
 
 enum class PartFocus {
@@ -63,13 +72,22 @@ enum class PartFocus {
   NeckHead,
 };
 
+enum class PoseMode {
+  Rest,
+  Walk,
+  Trot,
+  Run,
+  Gallop,
+};
+
 struct CliOptions {
   SourceKind source_kind{SourceKind::Species};
   Species species{Species::Horse};
-  fs::path input_path{};
+  fs::path input_path;
   fs::path out_dir{"dist/mesh"};
   PartFocus focus{PartFocus::Full};
-  std::string output_prefix{};
+  PoseMode pose{PoseMode::Rest};
+  std::string output_prefix;
 };
 
 struct TriangleMesh {
@@ -107,9 +125,45 @@ struct ViewSpec {
 void print_usage() {
   std::cerr << "usage:\n"
             << "  mesh_preview <horse|elephant> [output_dir] "
-               "[full|torso|legs|neck_head]\n"
+               "[full|torso|legs|neck_head] [rest|walk|trot|run|gallop]\n"
             << "  mesh_preview stl <path> [output_dir] [full|torso|legs|neck_head]\n"
-            << "  mesh_preview obj <path> [output_dir] [full|torso|legs|neck_head]\n";
+            << "  mesh_preview obj <path> [output_dir] [full|torso|legs|neck_head]\n"
+            << "  mesh_preview verify-<horse|elephant>-shape [output_dir]\n";
+}
+
+auto parse_pose_mode(std::string_view value) -> std::optional<PoseMode> {
+  if (value == "rest") {
+    return PoseMode::Rest;
+  }
+  if (value == "walk") {
+    return PoseMode::Walk;
+  }
+  if (value == "trot") {
+    return PoseMode::Trot;
+  }
+  if (value == "run") {
+    return PoseMode::Run;
+  }
+  if (value == "gallop") {
+    return PoseMode::Gallop;
+  }
+  return std::nullopt;
+}
+
+[[nodiscard]] auto pose_mode_name(PoseMode pose) -> std::string_view {
+  switch (pose) {
+  case PoseMode::Rest:
+    return "rest";
+  case PoseMode::Walk:
+    return "walk";
+  case PoseMode::Trot:
+    return "trot";
+  case PoseMode::Run:
+    return "run";
+  case PoseMode::Gallop:
+    return "gallop";
+  }
+  return "rest";
 }
 
 [[nodiscard]] auto species_name(Species species) -> std::string_view;
@@ -174,6 +228,20 @@ auto parse_cli(int argc, char** argv) -> CliOptions {
 
   CliOptions options;
   std::string_view const first = argv[1];
+  if (first == "verify-horse-shape" || first == "verify-elephant-shape") {
+    if (argc > 3) {
+      throw std::runtime_error("shape verification expects an optional output_dir");
+    }
+    options.source_kind = SourceKind::ShapeVerification;
+    options.species =
+        first == "verify-horse-shape" ? Species::Horse : Species::Elephant;
+    if (argc == 3) {
+      options.out_dir = fs::path(argv[2]);
+    }
+    options.output_prefix =
+        std::string(species_name(options.species)) + "_shape_verification";
+    return options;
+  }
   if (first == "stl" || first == "obj") {
     if (argc < 3) {
       throw std::runtime_error("missing mesh path");
@@ -214,15 +282,26 @@ auto parse_cli(int argc, char** argv) -> CliOptions {
       }
     } else {
       options.out_dir = fs::path(argv[index++]);
-      auto const focus = parse_part_focus(argv[index]);
+      auto const focus = parse_part_focus(argv[index++]);
       if (!focus.has_value()) {
         throw std::runtime_error("expected part focus after output_dir");
       }
       options.focus = *focus;
+      if (index < argc) {
+        auto const pose = parse_pose_mode(argv[index]);
+        if (!pose.has_value()) {
+          throw std::runtime_error("expected rest, walk, trot, or gallop after focus");
+        }
+        options.pose = *pose;
+      }
     }
   }
   options.output_prefix =
       make_output_prefix(species_name(options.species), options.focus);
+  if (options.pose != PoseMode::Rest) {
+    options.output_prefix += "_";
+    options.output_prefix += pose_mode_name(options.pose);
+  }
   return options;
 }
 
@@ -287,9 +366,9 @@ species_bind_palette(Species species) -> std::span<const QMatrix4x4> {
 }
 
 auto rest_position(const RiggedVertex& vertex) -> QVector3D {
-  return QVector3D(vertex.position_bone_local[0],
-                   vertex.position_bone_local[1],
-                   vertex.position_bone_local[2]);
+  return {vertex.position_bone_local[0],
+          vertex.position_bone_local[1],
+          vertex.position_bone_local[2]};
 }
 
 auto collect_world_positions(const BakedRiggedMeshCpu& baked)
@@ -298,6 +377,40 @@ auto collect_world_positions(const BakedRiggedMeshCpu& baked)
   positions.reserve(baked.vertices.size());
   for (auto const& vertex : baked.vertices) {
     positions.push_back(rest_position(vertex));
+  }
+  return positions;
+}
+
+auto collect_pose_positions(Species species,
+                            const BakedRiggedMeshCpu& baked,
+                            std::span<const QMatrix4x4> bind,
+                            PoseMode mode,
+                            float phase) -> std::vector<QVector3D> {
+  std::array<QMatrix4x4, Render::Creature::Pipeline::k_max_creature_bones> world{};
+  bool sampled = false;
+  if (species == Species::Horse) {
+    std::string_view const clip = mode == PoseMode::Gallop ? "Gallop" : "Walk";
+    sampled = Render::Horse::horse_source_sample_clip(clip, phase, world);
+  } else {
+    std::string_view const clip =
+        (mode == PoseMode::Run || mode == PoseMode::Gallop) ? "Run" : "Walk";
+    sampled = Render::Elephant::elephant_source_sample_clip(clip, phase, world);
+  }
+  if (!sampled) {
+    throw std::runtime_error("failed to sample source-authored creature clip");
+  }
+  std::array<QMatrix4x4, Render::Creature::Pipeline::k_max_creature_bones> delta{};
+  for (std::size_t i = 0; i < bind.size(); ++i) {
+    delta[i] = world[i] * bind[i].inverted();
+  }
+  auto const skinned = Render::GL::bake_snapshot_vertices(
+      baked.vertices, std::span<const QMatrix4x4>(delta.data(), bind.size()));
+  std::vector<QVector3D> positions;
+  positions.reserve(skinned.size());
+  for (auto const& vertex : skinned) {
+    positions.emplace_back(vertex.position_bone_local[0],
+                           vertex.position_bone_local[1],
+                           vertex.position_bone_local[2]);
   }
   return positions;
 }
@@ -383,15 +496,15 @@ auto collect_bounds_from_indices(std::span<const QVector3D> positions,
 auto collect_positions_from_indices(std::span<const QVector3D> positions,
                                     std::span<const std::uint32_t> indices)
     -> std::vector<QVector3D> {
-  std::vector<QVector3D> referenced;
-  referenced.reserve(indices.size());
+  std::vector<QVector3D> selected;
+  selected.reserve(indices.size());
   for (std::uint32_t const index : indices) {
     if (index >= positions.size()) {
       continue;
     }
-    referenced.push_back(positions[index]);
+    selected.push_back(positions[index]);
   }
-  return referenced;
+  return selected;
 }
 
 void submit_baked_mesh(const BakedRiggedMeshCpu& baked,
@@ -512,6 +625,33 @@ auto compose_contact_sheet(const std::vector<std::pair<std::string, QImage>>& im
   return sheet;
 }
 
+auto compose_comparison_sheet(const std::vector<std::pair<std::string, QImage>>& images)
+    -> QImage {
+  if (images.empty()) {
+    return {};
+  }
+  int const tile_w = images.front().second.width();
+  int const tile_h = images.front().second.height();
+  int const cols = 4;
+  int const rows = static_cast<int>((images.size() + cols - 1U) / cols);
+  int const label_h = 30;
+  QImage sheet(tile_w * cols, (tile_h + label_h) * rows, QImage::Format_ARGB32);
+  sheet.fill(QColor(238, 232, 220));
+  QPainter painter(&sheet);
+  painter.setPen(QColor(32, 24, 16));
+  painter.setFont(QFont("Sans", 11));
+  for (std::size_t i = 0U; i < images.size(); ++i) {
+    int const col = static_cast<int>(i % cols);
+    int const row = static_cast<int>(i / cols);
+    int const x = col * tile_w;
+    int const y = row * (tile_h + label_h);
+    painter.drawText(x + 7, y + 20, QString::fromStdString(images[i].first));
+    painter.drawImage(x, y + label_h, images[i].second);
+  }
+  painter.end();
+  return sheet;
+}
+
 template <typename T>
 auto read_little(const char* data) -> T {
   T value{};
@@ -529,7 +669,7 @@ auto load_binary_stl(const fs::path& path) -> TriangleMesh {
   if (bytes.size() < 84U) {
     throw std::runtime_error("binary STL too small");
   }
-  std::uint32_t const triangle_count = read_little<std::uint32_t>(bytes.data() + 80);
+  auto const triangle_count = read_little<std::uint32_t>(bytes.data() + 80);
   std::size_t const expected_size =
       84U + static_cast<std::size_t>(triangle_count) * 50U;
   if (expected_size != bytes.size()) {
@@ -543,9 +683,9 @@ auto load_binary_stl(const fs::path& path) -> TriangleMesh {
   for (std::uint32_t i = 0; i < triangle_count; ++i) {
     offset += 12U;
     for (int vertex = 0; vertex < 3; ++vertex) {
-      float const x = read_little<float>(bytes.data() + offset);
-      float const y = read_little<float>(bytes.data() + offset + 4U);
-      float const z = read_little<float>(bytes.data() + offset + 8U);
+      auto const x = read_little<float>(bytes.data() + offset);
+      auto const y = read_little<float>(bytes.data() + offset + 4U);
+      auto const z = read_little<float>(bytes.data() + offset + 8U);
       mesh.positions.emplace_back(x, y, z);
       mesh.indices.push_back(static_cast<std::uint32_t>(mesh.positions.size() - 1U));
       offset += 12U;
@@ -605,7 +745,7 @@ auto parse_obj_index(std::string_view token,
   std::size_t const slash = token.find('/');
   std::string_view const vertex_token = token.substr(0, slash);
   if (vertex_token.empty()) {
-    throw std::runtime_error("OBJ face index missing vertex reference");
+    throw std::runtime_error("OBJ face index is missing a vertex index");
   }
 
   int const index = std::stoi(std::string(vertex_token));
@@ -614,7 +754,7 @@ auto parse_obj_index(std::string_view token,
   }
 
   if (index > 0) {
-    std::size_t const obj_index = static_cast<std::size_t>(index - 1);
+    auto const obj_index = static_cast<std::size_t>(index - 1);
     if (obj_index >= vertex_count) {
       throw std::runtime_error("OBJ face index exceeds vertex count");
     }
@@ -679,10 +819,94 @@ auto load_obj_mesh(const fs::path& path) -> TriangleMesh {
   return mesh;
 }
 
+auto run_shape_verification(const CliOptions& options,
+                            const std::vector<ViewSpec>& views,
+                            RasterSettings settings) -> int {
+  auto const& spec = species_spec(options.species);
+  auto const bind = species_bind_palette(options.species);
+  BakedRiggedMeshCpu const mesh =
+      Render::Creature::bake_rigged_mesh_cpu({&spec.lod_full, bind});
+  std::vector<QVector3D> const positions = collect_world_positions(mesh);
+  if (positions.empty() || mesh.indices.empty()) {
+    std::cerr << "production " << species_name(options.species)
+              << " bake produced no geometry\n";
+    return 1;
+  }
+
+  std::size_t const expected_vertices =
+      options.species == Species::Horse ? 4400U : 1464U;
+  std::size_t const expected_triangles =
+      options.species == Species::Horse ? 2182U : 760U;
+  QVector3D const expected_span = options.species == Species::Horse
+                                      ? QVector3D(0.830092F, 2.84613F, 2.846574F)
+                                      : QVector3D(1.342232F, 1.73836F, 2.19962F);
+  constexpr float k_extent_tolerance = 5.0e-5F;
+  Bounds const bounds = collect_bounds(positions);
+  QVector3D const span = bounds.span();
+  bool passed = mesh.vertices.size() == expected_vertices &&
+                mesh.indices.size() / 3U == expected_triangles &&
+                std::abs(bounds.min.y()) <= 2.0e-6F;
+  for (int axis = 0; axis < 3; ++axis) {
+    passed = passed && std::isfinite(bounds.min[axis]) &&
+             std::isfinite(bounds.max[axis]) &&
+             std::abs(span[axis] - expected_span[axis]) <= k_extent_tolerance;
+  }
+
+  std::array<PartFocus, 4> const focuses{
+      PartFocus::Full, PartFocus::Torso, PartFocus::Legs, PartFocus::NeckHead};
+  std::vector<std::pair<std::string, QImage>> renders;
+  auto const role_colors = species_role_colors(options.species);
+  for (PartFocus const focus : focuses) {
+    auto const indices = filter_indices_for_focus(positions, mesh.indices, focus);
+    passed = passed && !indices.empty();
+    for (ViewSpec const& view : views) {
+      QMatrix4x4 const view_projection = make_view_projection(
+          bounds, positions, view, settings.width, settings.height);
+      SoftwareRasterizer rasterizer(settings);
+      rasterizer.set_view_projection(view_projection);
+      submit_baked_mesh(mesh, positions, role_colors, indices, rasterizer);
+      renders.emplace_back(std::string(part_focus_name(focus)) + '/' + view.name,
+                           rasterizer.render());
+    }
+  }
+
+  QImage const sheet = compose_comparison_sheet(renders);
+  fs::path const sheet_path =
+      options.out_dir /
+      (std::string(species_name(options.species)) + "_shape_verification.png");
+  sheet.save(QString::fromStdString(sheet_path.string()));
+
+  fs::path const report_path =
+      options.out_dir /
+      (std::string(species_name(options.species)) + "_shape_verification.json");
+  std::ofstream report(report_path);
+  report << std::fixed << std::setprecision(8) << "{\n"
+         << R"(  "species": ")" << species_name(options.species) << "\",\n"
+         << "  \"passed\": " << (passed ? "true" : "false") << ",\n"
+         << "  \"vertices\": " << mesh.vertices.size() << ",\n"
+         << "  \"triangles\": " << mesh.indices.size() / 3U << ",\n"
+         << "  \"bounds_min\": [" << bounds.min.x() << ", " << bounds.min.y() << ", "
+         << bounds.min.z() << "],\n"
+         << "  \"bounds_max\": [" << bounds.max.x() << ", " << bounds.max.y() << ", "
+         << bounds.max.z() << "],\n"
+         << "  \"span\": [" << span.x() << ", " << span.y() << ", " << span.z()
+         << "],\n"
+         << "  \"extent_tolerance\": " << k_extent_tolerance << "\n}\n";
+  report.close();
+
+  std::cout << (passed ? "PASS" : "FAIL") << ' ' << species_name(options.species)
+            << " shape verification: vertices=" << mesh.vertices.size()
+            << " triangles=" << mesh.indices.size() / 3U << " span=" << span.x() << ','
+            << span.y() << ',' << span.z() << '\n'
+            << "wrote " << sheet_path << '\n'
+            << "wrote " << report_path << '\n';
+  return passed ? 0 : 2;
+}
+
 } // namespace
 
 auto main(int argc, char** argv) -> int {
-  QGuiApplication app(argc, argv);
+  QGuiApplication const app(argc, argv);
 
   CliOptions options;
   try {
@@ -709,12 +933,41 @@ auto main(int argc, char** argv) -> int {
       {"top", QVector3D(0.05F, 1.0F, -0.05F), QVector3D(0.0F, 0.0F, -1.0F)},
   };
 
+  if (options.source_kind == SourceKind::ShapeVerification) {
+    try {
+      return run_shape_verification(options, views, settings);
+    } catch (std::runtime_error const& error) {
+      std::cerr << "shape verification failed: " << error.what() << '\n';
+      return 1;
+    }
+  }
+
   std::vector<std::pair<std::string, QImage>> rendered;
   rendered.reserve(views.size());
   if (options.source_kind == SourceKind::Species) {
+    if (options.species == Species::Horse) {
+      auto const& asset_status = Render::Horse::horse_source_asset_status();
+      if (!asset_status.loaded) {
+        std::cerr << "horse production asset failed: " << asset_status.error << '\n';
+        return 1;
+      }
+      auto const anatomy =
+          Render::Horse::make_horse_anatomy(Render::GL::make_horse_dimensions(0U));
+      auto const validation = Render::Horse::validate_horse_anatomy(anatomy);
+      if (!validation.valid()) {
+        std::cerr << "horse anatomy contract failed at fault indices:";
+        for (std::size_t index = 0; index < validation.faults.size(); ++index) {
+          if (validation.faults[index]) {
+            std::cerr << ' ' << index;
+          }
+        }
+        std::cerr << '\n';
+        return 1;
+      }
+    }
     auto const& spec = species_spec(options.species);
     auto const bind = species_bind_palette(options.species);
-    BakeInput input{&spec.lod_full, bind};
+    BakeInput const input{&spec.lod_full, bind};
     BakedRiggedMeshCpu const baked = Render::Creature::bake_rigged_mesh_cpu(input);
     if (baked.vertices.empty() || baked.indices.empty()) {
       std::cerr << species_name(options.species) << " bake produced no geometry\n";
@@ -722,6 +975,11 @@ auto main(int argc, char** argv) -> int {
     }
 
     auto const positions = collect_world_positions(baked);
+    Bounds const production_bounds = collect_bounds(positions);
+    std::cout << "bounds min " << production_bounds.min.x() << ' '
+              << production_bounds.min.y() << ' ' << production_bounds.min.z()
+              << " max " << production_bounds.max.x() << ' '
+              << production_bounds.max.y() << ' ' << production_bounds.max.z() << '\n';
     auto const filtered_indices =
         filter_indices_for_focus(positions, baked.indices, options.focus);
     if (filtered_indices.empty()) {
@@ -729,15 +987,35 @@ auto main(int argc, char** argv) -> int {
                 << "' produced no geometry\n";
       return 1;
     }
-    Bounds const bounds = collect_bounds_from_indices(positions, filtered_indices);
-    auto const framed_positions =
-        collect_positions_from_indices(positions, filtered_indices);
     auto const role_colors = species_role_colors(options.species);
-    for (auto const& view : views) {
+    std::vector<ViewSpec> render_views = views;
+    if (options.pose != PoseMode::Rest) {
+      render_views = {
+          {"phase_0", QVector3D(1.0F, 0.08F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F)},
+          {"phase_25", QVector3D(1.0F, 0.08F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F)},
+          {"phase_50", QVector3D(1.0F, 0.08F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F)},
+          {"phase_75", QVector3D(1.0F, 0.08F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F)}};
+    }
+    for (std::size_t view_index = 0; view_index < render_views.size(); ++view_index) {
+      auto const& view = render_views[view_index];
+      auto frame_positions = positions;
+      if (options.pose != PoseMode::Rest) {
+        frame_positions =
+            collect_pose_positions(options.species,
+                                   baked,
+                                   bind,
+                                   options.pose,
+                                   static_cast<float>(view_index) * 0.25F);
+      }
+      Bounds const frame_bounds =
+          collect_bounds_from_indices(frame_positions, filtered_indices);
+      auto const frame_framed_positions =
+          collect_positions_from_indices(frame_positions, filtered_indices);
       SoftwareRasterizer rasterizer(settings);
       rasterizer.set_view_projection(make_view_projection(
-          bounds, framed_positions, view, settings.width, settings.height));
-      submit_baked_mesh(baked, positions, role_colors, filtered_indices, rasterizer);
+          frame_bounds, frame_framed_positions, view, settings.width, settings.height));
+      submit_baked_mesh(
+          baked, frame_positions, role_colors, filtered_indices, rasterizer);
       QImage const image = rasterizer.render();
       fs::path const out_file =
           options.out_dir / (options.output_prefix + "_" + view.name + ".png");
@@ -781,9 +1059,10 @@ auto main(int argc, char** argv) -> int {
   sheet.save(QString::fromStdString(sheet_path.string()));
 
   std::cout << "wrote " << sheet_path << "\n";
-  for (auto const& view : views) {
+  for (auto const& [name, image] : rendered) {
+    (void)image;
     std::cout << "wrote "
-              << (options.out_dir / (options.output_prefix + "_" + view.name + ".png"))
+              << (options.out_dir / (options.output_prefix + "_" + name + ".png"))
               << "\n";
   }
   return 0;

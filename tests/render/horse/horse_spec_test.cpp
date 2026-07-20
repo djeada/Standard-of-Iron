@@ -431,7 +431,9 @@ TEST(HorseSpecTest, LayoutLowersTorsoChainBySharedTwentyPercentDrop) {
                   torso_drop,
               1.0e-6F);
   EXPECT_NEAR(Render::Horse::horse_tail_base_local(dims).y(),
-              body_height_vis * 1.82F - torso_drop,
+              body_height_vis *
+                      Render::Horse::k_cavalry_horse_conformation.tail_base_height -
+                  torso_drop,
               1.0e-6F);
 }
 
@@ -786,7 +788,7 @@ TEST(HorseSpecTest, ManifestTorsoEnvelopeContainsLegNeckAndTailAnchors) {
   EXPECT_LT(tail_base.y(), tail_top);
 }
 
-TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
+TEST(HorseSpecTest, ManifestTorsoSectionsPreserveReadableBodyLength) {
   auto const& manifest = Render::Horse::horse_manifest();
 
   auto const find_node =
@@ -821,7 +823,7 @@ TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
   Render::GL::Mesh const front_mesh(front->vertices, front->indices);
   float const body_length =
       Render::Horse::horse_body_visual_length(Render::GL::make_horse_dimensions(0U));
-  float const expected_section_span = body_length * 0.48F * 0.80F;
+  float const expected_section_span = body_length * 0.48F * 0.96F;
   float const expected_rear_span =
       expected_section_span * Render::Horse::k_horse_rear_torso_extra_length_scale;
 
