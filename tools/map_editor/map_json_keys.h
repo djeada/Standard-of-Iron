@@ -16,6 +16,7 @@ inline constexpr const char* spawns = Game::Map::JsonKeys::SPAWNS;
 inline constexpr const char* firecamps = Game::Map::JsonKeys::FIRECAMPS;
 inline constexpr const char* terrain = Game::Map::JsonKeys::TERRAIN;
 inline constexpr const char* rivers = Game::Map::JsonKeys::RIVERS;
+inline constexpr const char* lakes = Game::Map::JsonKeys::LAKES;
 inline constexpr const char* roads = Game::Map::JsonKeys::ROADS;
 inline constexpr const char* bridges = Game::Map::JsonKeys::BRIDGES;
 inline constexpr const char* victory = Game::Map::JsonKeys::VICTORY;

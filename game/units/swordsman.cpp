@@ -70,28 +70,7 @@ void Swordsman::init(const SpawnParams& params) {
   m_u->owner_id = params.player_id;
   m_u->vision_range = profile.combat.vision_range;
   m_u->nation_id = nation_id;
-  if (auto const* definition = commander_definition(troop_type)) {
-    auto* commander = e->add_component<Engine::Core::CommanderComponent>();
-    if (commander != nullptr) {
-      commander->commander_id = definition->id;
-      commander->display_name = definition->display_name;
-      commander->strategic_identity = definition->strategic_identity;
-      commander->passive_aura = definition->passive_aura;
-      commander->bonus_type = definition->bonus_type;
-      commander->bonus_summary = definition->bonus_summary;
-      commander->rally_ability = definition->rally_ability;
-      commander->death_consequence = definition->death_consequence;
-      commander->bodyguard_count = definition->bodyguard_count;
-      commander->aura_radius = definition->aura_radius;
-      commander->aura_morale_bonus = definition->aura_morale_bonus;
-      commander->aura_bonus_value = definition->aura_bonus_value;
-      commander->rally_range = definition->rally_range;
-      commander->rally_cooldown = definition->rally_cooldown;
-      commander->rally_morale_restore = definition->rally_morale_restore;
-      commander->death_shock_radius = definition->death_shock_radius;
-      commander->death_morale_shock = definition->death_morale_shock;
-    }
-  }
+  configure_commander_component(*e, troop_type);
 
   if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();

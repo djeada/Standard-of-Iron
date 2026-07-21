@@ -25,17 +25,18 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageMarketPalette {
-  QVector3D sandstone{0.88F, 0.82F, 0.68F};
-  QVector3D sandstone_dark{0.76F, 0.70F, 0.56F};
-  QVector3D wood_dark{0.36F, 0.24F, 0.14F};
-  QVector3D wood_medium{0.48F, 0.34F, 0.22F};
-  QVector3D cloth_purple{0.45F, 0.15F, 0.42F};
-  QVector3D cloth_gold{0.82F, 0.68F, 0.22F};
-  QVector3D brick{0.72F, 0.52F, 0.38F};
-  QVector3D brick_dark{0.60F, 0.42F, 0.30F};
-  QVector3D stone_light{0.62F, 0.60F, 0.58F};
-  QVector3D tile_red{0.72F, 0.40F, 0.30F};
-  QVector3D ceramic{0.78F, 0.58F, 0.36F};
+  QVector3D sandstone{0.68F, 0.54F, 0.37F};
+  QVector3D sandstone_dark{0.28F, 0.23F, 0.16F};
+  QVector3D wood_dark{0.075F, 0.052F, 0.03F};
+  QVector3D wood_medium{0.27F, 0.16F, 0.075F};
+  QVector3D cloth_oxblood{0.28F, 0.045F, 0.018F};
+  QVector3D cloth_gold{0.72F, 0.43F, 0.12F};
+  QVector3D brick{0.44F, 0.20F, 0.105F};
+  QVector3D brick_dark{0.20F, 0.075F, 0.04F};
+  QVector3D stone_light{0.64F, 0.51F, 0.36F};
+  QVector3D tile_red{0.31F, 0.085F, 0.04F};
+  QVector3D ceramic{0.62F, 0.32F, 0.12F};
+  QVector3D ember{0.68F, 0.22F, 0.045F};
 };
 
 constexpr std::uint8_t k_marketplace_team_slot = 1;
@@ -126,7 +127,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   float const awning_y = post_h + 0.04F;
   desc.add_box(QVector3D(-0.32F, awning_y, 0.0F),
                QVector3D(0.58F, 0.02F, 0.82F),
-               c.cloth_purple,
+               c.cloth_oxblood,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
   desc.add_box(QVector3D(-0.32F, awning_y - 0.03F, 0.80F),
@@ -162,7 +163,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   for (float const z : {-0.48F, 0.48F}) {
     desc.add_box(QVector3D(-0.38F, 0.70F, z),
                  QVector3D(0.72F, 0.025F, 0.25F),
-                 c.cloth_purple,
+                 c.cloth_oxblood,
                  BuildingStateMask::Normal | BuildingStateMask::Damaged);
     desc.add_box(QVector3D(-0.38F, 0.665F, z + (z < 0.0F ? -0.23F : 0.23F)),
                  QVector3D(0.72F, 0.025F, 0.035F),
@@ -198,7 +199,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   float const rear_awning_y = (post_h * 0.85F) + 0.04F;
   desc.add_box(QVector3D(0.52F, rear_awning_y, 0.0F),
                QVector3D(0.28F, 0.02F, 0.70F),
-               c.cloth_purple,
+               c.cloth_oxblood,
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
@@ -248,6 +249,12 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                c.wood_dark,
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
+  desc.add_cone(QVector3D(0.62F, 0.48F, -0.60F),
+                QVector3D(0.62F, 0.72F, -0.60F),
+                0.085F,
+                c.ember,
+                BuildingStateMask::Normal,
+                BuildingLODMask::Full);
 
   desc.add_palette_box(QVector3D(0.94F, 0.56F * height_multiplier, 0.0F),
                        QVector3D(0.02F, 0.20F, 0.14F),
@@ -260,6 +267,12 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                          0.68F,
                          c.cloth_gold,
                          c.brick_dark);
+  add_punic_horned_crown(desc,
+                         QVector3D(0.70F, wall_h + 0.38F, -0.82F),
+                         0.58F,
+                         c.wood_dark,
+                         c.cloth_gold,
+                         c.ember);
 
   return build_building_archetype(desc, state);
 }

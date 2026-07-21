@@ -37,6 +37,12 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Helmet,
                                  "carthage_thracian_crested");
   registry.register_equipment_id(EquipmentCategory::Helmet, "headwrap");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_fabius");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_scipio");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_marcellus");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_hanno");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_hasdrubal");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "commander_hannibal");
 
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_heavy_armor");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_light_armor");
@@ -58,6 +64,12 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_sepulcher");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman_mounted");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_fabius");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_scipio");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_marcellus");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_hanno");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_hasdrubal");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_hannibal");
   registry.register_equipment_id(EquipmentCategory::Armor, "work_apron_roman");
   registry.register_equipment_id(EquipmentCategory::Armor, "work_apron_carthage");
   registry.register_equipment_id(EquipmentCategory::Armor, "tool_belt_roman");

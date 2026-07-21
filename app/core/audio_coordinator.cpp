@@ -123,7 +123,7 @@ auto mission_terrain_to_ambience_biome(const QString& terrain_type) -> QString {
 }
 
 auto biome_to_ambience_biome(const Game::Map::MapDefinition& map_def) -> QString {
-  if (!map_def.rivers.empty()) {
+  if (!map_def.rivers.empty() || !map_def.lakes.empty()) {
     return QStringLiteral("river");
   }
 

@@ -21,7 +21,7 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  struct RiverUniforms {
+  struct WaterUniforms {
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};
@@ -32,6 +32,7 @@ public:
     GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {
@@ -45,6 +46,7 @@ public:
     GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
   };
 
   struct BridgeUniforms {
@@ -60,6 +62,7 @@ public:
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
@@ -67,12 +70,12 @@ public:
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader* m_river_shader = nullptr;
+  GL::Shader* m_water_shader = nullptr;
   GL::Shader* m_riverbank_shader = nullptr;
   GL::Shader* m_bridge_shader = nullptr;
   GL::Shader* m_road_shader = nullptr;
 
-  RiverUniforms m_river_uniforms;
+  WaterUniforms m_water_uniforms;
   RiverbankUniforms m_riverbank_uniforms;
   BridgeUniforms m_bridge_uniforms;
   RoadUniforms m_road_uniforms;
@@ -81,7 +84,7 @@ private:
   GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
 
-  void cache_river_uniforms();
+  void cache_water_uniforms();
   void cache_riverbank_uniforms();
   void cache_bridge_uniforms();
   void cache_road_uniforms();

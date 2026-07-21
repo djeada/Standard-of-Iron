@@ -1,11 +1,10 @@
 {
   "name": "Crossing the Alps",
-  "description": "A large survival campaign map. Lead Hannibal's army through the Alpine passes, choose between dangerous shortcuts and safer mule trails, survive avalanches and tribal ambushes, and reach the Italian foothills with enough troops alive.",
   "coord_system": "grid",
   "max_troops_per_player": 2200,
   "grid": {
-    "width": 260,
-    "height": 260,
+    "width": 650,
+    "height": 650,
     "tile_size": 1.0
   },
   "biome": {
@@ -54,1104 +53,1530 @@
     "sway_speed": 0.7,
     "sway_strength": 0.1
   },
+  "buildings": [
+    {
+      "type": "marketplace",
+      "x": 40.69,
+      "z": 75.97,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 26.45,
+      "z": 62.95,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 54.93,
+      "z": 84.65,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "marketplace",
+      "x": 146.48,
+      "z": 182.33,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 130.21,
+      "z": 169.3,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 162.76,
+      "z": 177.99,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 170.9,
+      "z": 149.77,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 162.76,
+      "z": 334.27,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 146.48,
+      "z": 323.41,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 179.03,
+      "z": 327.76,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 590,
+      "z": 529.62,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 565.59,
+      "z": 551.32,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.24,
+      "z": 544.81,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 585.93,
+      "z": 544.81,
+      "player_id": 4,
+      "nation": "roman_republic"
+    }
+  ],
   "camera": {
     "center": [
-      130,
+      295,
       0,
-      130
+      303.88
     ],
-    "distance": 92.0,
+    "distance": 273,
     "tilt_deg": 50.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 750.0
+    "far": 1462.5
   },
   "time_of_day": "morning",
   "terrain": [
     {
       "type": "hill",
-      "x": 24,
-      "z": 28,
-      "radius": 17,
+      "x": 48.83,
+      "z": 60.78,
+      "radius": 35.72,
       "height": 3.0,
-      "description": "Carthaginian starting camp in the lower western valley.",
       "entrances": [
         {
-          "x": 39,
-          "z": 32
+          "x": 79.34,
+          "z": 69.46
         },
         {
-          "x": 28,
-          "z": 45
+          "x": 56.97,
+          "z": 97.68
         }
       ]
     },
     {
-      "type": "pass",
-      "path": [
-        {
-          "x": 24,
-          "z": 28
-        },
-        {
-          "x": 44,
-          "z": 48
-        },
-        {
-          "x": 66,
-          "z": 62
-        },
-        {
-          "x": 88,
-          "z": 78
-        },
-        {
-          "x": 110,
-          "z": 96
-        },
-        {
-          "x": 128,
-          "z": 118
-        },
-        {
-          "x": 145,
-          "z": 145
-        },
-        {
-          "x": 168,
-          "z": 170
-        },
-        {
-          "x": 198,
-          "z": 196
-        },
-        {
-          "x": 232,
-          "z": 228
-        }
-      ],
-      "width": 11.0,
-      "description": "Main Alpine pass. This is the intended campaign spine: dangerous, readable, and suitable for elephants."
-    },
-    {
-      "type": "pass",
-      "path": [
-        {
-          "x": 44,
-          "z": 48
-        },
-        {
-          "x": 34,
-          "z": 76
-        },
-        {
-          "x": 45,
-          "z": 105
-        },
-        {
-          "x": 66,
-          "z": 133
-        },
-        {
-          "x": 92,
-          "z": 154
-        },
-        {
-          "x": 122,
-          "z": 164
-        },
-        {
-          "x": 145,
-          "z": 145
-        }
-      ],
-      "width": 7.5,
-      "description": "Western mule trail. Longer and slower, but it avoids the worst avalanche basin."
-    },
-    {
-      "type": "pass",
-      "path": [
-        {
-          "x": 88,
-          "z": 78
-        },
-        {
-          "x": 112,
-          "z": 70
-        },
-        {
-          "x": 140,
-          "z": 76
-        },
-        {
-          "x": 162,
-          "z": 98
-        },
-        {
-          "x": 180,
-          "z": 126
-        },
-        {
-          "x": 190,
-          "z": 158
-        },
-        {
-          "x": 198,
-          "z": 196
-        }
-      ],
-      "width": 6.0,
-      "description": "Eastern cliff traverse. Fastest route, but narrow, exposed, and heavily defended by mountain tribes."
-    },
-    {
-      "type": "pass",
-      "path": [
-        {
-          "x": 145,
-          "z": 145
-        },
-        {
-          "x": 158,
-          "z": 160
-        },
-        {
-          "x": 176,
-          "z": 176
-        },
-        {
-          "x": 198,
-          "z": 196
-        },
-        {
-          "x": 216,
-          "z": 214
-        },
-        {
-          "x": 232,
-          "z": 228
-        }
-      ],
-      "width": 12.0,
-      "description": "Final descent into Italy. Wider and visually calmer after the high pass."
+      "type": "mountain",
+      "x": 111.9,
+      "z": 52.09,
+      "radius": 52.54,
+      "height": 13.0
     },
     {
       "type": "mountain",
-      "x": 55,
-      "z": 24,
-      "radius": 25,
-      "height": 13.0,
-      "description": "First western peak blocking a direct march."
+      "x": 179.03,
+      "z": 91.16,
+      "radius": 54.64,
+      "height": 14.0
     },
     {
       "type": "mountain",
-      "x": 88,
-      "z": 42,
-      "radius": 26,
-      "height": 14.0,
-      "description": "Northern lower peak above the first torrent."
+      "x": 240.07,
+      "z": 169.3,
+      "radius": 65.14,
+      "height": 16.0
     },
     {
       "type": "mountain",
-      "x": 118,
-      "z": 78,
-      "radius": 31,
-      "height": 16.0,
-      "description": "High central Alpine wall. This creates the main route split."
+      "x": 146.48,
+      "z": 217.06,
+      "radius": 50.43,
+      "height": 12.5
     },
     {
       "type": "mountain",
-      "x": 72,
-      "z": 100,
-      "radius": 24,
-      "height": 12.5,
-      "description": "Western barrier separating the mule trail from the main pass."
+      "x": 69.17,
+      "z": 314.73,
+      "radius": 52.54,
+      "height": 12.0
     },
     {
       "type": "mountain",
-      "x": 34,
-      "z": 145,
-      "radius": 25,
-      "height": 12.0,
-      "description": "Far western ridge enclosing the mule trail."
+      "x": 240.07,
+      "z": 429.77,
+      "radius": 58.84,
+      "height": 13.5
     },
     {
       "type": "mountain",
-      "x": 118,
-      "z": 198,
-      "radius": 28,
-      "height": 13.5,
-      "description": "Southern snow wall above the rejoin point."
+      "x": 317.38,
+      "z": 269.15,
+      "radius": 67.25,
+      "height": 17.0
     },
     {
       "type": "mountain",
-      "x": 156,
-      "z": 124,
-      "radius": 32,
-      "height": 17.0,
-      "description": "Highest pass massif. This creates the main avalanche crisis."
+      "x": 398.76,
+      "z": 221.4,
+      "radius": 52.54,
+      "height": 13.0
     },
     {
       "type": "mountain",
-      "x": 196,
-      "z": 102,
-      "radius": 25,
-      "height": 13.0,
-      "description": "Eastern cliff wall overlooking the dangerous traverse."
+      "x": 431.31,
+      "z": 334.27,
+      "radius": 54.64,
+      "height": 13.5
     },
     {
       "type": "mountain",
-      "x": 212,
-      "z": 154,
-      "radius": 26,
-      "height": 13.5,
-      "description": "Eastern descent peak."
-    },
-    {
-      "type": "mountain",
-      "x": 178,
-      "z": 224,
-      "radius": 22,
-      "height": 10.5,
-      "description": "Italian-side mountain shoulder framing the final valley."
+      "x": 362.14,
+      "z": 486.21,
+      "radius": 46.23,
+      "height": 10.5
     },
     {
       "type": "hill",
-      "x": 66,
-      "z": 63,
-      "width": 18,
-      "depth": 12,
+      "x": 134.28,
+      "z": 136.75,
+      "width": 36.62,
+      "depth": 26.05,
       "height": 2.4,
       "rotation": -8,
-      "description": "First toll ridge. Mountain tribes can harass the first crossing here.",
       "entrances": [
         {
-          "x": 58,
-          "z": 58
+          "x": 118,
+          "z": 125.89
         },
         {
-          "x": 75,
-          "z": 66
+          "x": 152.59,
+          "z": 143.26
         }
       ]
     },
     {
       "type": "hill",
-      "x": 98,
-      "z": 86,
-      "width": 20,
-      "depth": 12,
+      "x": 199.38,
+      "z": 186.67,
+      "width": 40.69,
+      "depth": 26.05,
       "height": 2.6,
       "rotation": 12,
-      "description": "Fork overlook. The player sees the main pass, mule trail, and cliff traverse from here.",
       "entrances": [
         {
-          "x": 88,
-          "z": 80
+          "x": 179.03,
+          "z": 173.65
         },
         {
-          "x": 108,
-          "z": 91
+          "x": 219.72,
+          "z": 197.52
         }
       ]
     },
     {
       "type": "hill",
-      "x": 68,
-      "z": 139,
-      "width": 26,
-      "depth": 14,
+      "x": 138.34,
+      "z": 301.71,
+      "width": 52.9,
+      "depth": 30.39,
       "height": 2.3,
       "rotation": 5,
-      "description": "Mule trail shelter ridge near a temporary rest camp.",
       "entrances": [
         {
-          "x": 58,
-          "z": 135
+          "x": 118,
+          "z": 293.03
         },
         {
-          "x": 80,
-          "z": 142
+          "x": 162.76,
+          "z": 308.22
         }
       ]
     },
     {
       "type": "hill",
-      "x": 158,
-      "z": 91,
-      "width": 24,
-      "depth": 12,
+      "x": 321.45,
+      "z": 197.52,
+      "width": 48.83,
+      "depth": 26.05,
       "height": 2.8,
       "rotation": -15,
-      "description": "Cliff traverse ambush shelf. Dangerous for slow infantry and elephants.",
       "entrances": [
         {
-          "x": 145,
-          "z": 88
+          "x": 295,
+          "z": 191.01
         },
         {
-          "x": 169,
-          "z": 96
+          "x": 343.83,
+          "z": 208.37
         }
       ]
     },
     {
       "type": "hill",
-      "x": 140,
-      "z": 143,
-      "width": 26,
-      "depth": 16,
+      "x": 284.83,
+      "z": 310.39,
+      "width": 52.9,
+      "depth": 34.73,
       "height": 3.1,
       "rotation": 8,
-      "description": "High-pass saddle. This is the emotional midpoint of the mission.",
       "entrances": [
         {
-          "x": 128,
-          "z": 135
+          "x": 260.41,
+          "z": 293.03
         },
         {
-          "x": 151,
-          "z": 151
+          "x": 307.21,
+          "z": 327.76
         }
       ]
     },
     {
       "type": "hill",
-      "x": 184,
-      "z": 184,
-      "width": 30,
-      "depth": 14,
+      "x": 374.34,
+      "z": 399.38,
+      "width": 61.03,
+      "depth": 30.39,
       "height": 2.5,
       "rotation": -6,
-      "description": "Final descent lookout. The Italian valley becomes visible from here.",
       "entrances": [
         {
-          "x": 172,
-          "z": 178
+          "x": 349.93,
+          "z": 386.36
         },
         {
-          "x": 196,
-          "z": 191
+          "x": 398.76,
+          "z": 414.58
         }
       ]
     },
     {
       "type": "hill",
-      "x": 232,
-      "z": 228,
-      "radius": 18,
+      "x": 472,
+      "z": 494.89,
+      "radius": 37.83,
       "height": 2.4,
-      "description": "Italian foothill destination.",
       "entrances": [
         {
-          "x": 216,
-          "z": 214
+          "x": 439.45,
+          "z": 464.5
         },
         {
-          "x": 225,
-          "z": 235
+          "x": 457.76,
+          "z": 510.08
         }
       ]
     },
     {
-      "type": "avalanche_zone",
-      "x": 74,
-      "z": 66,
-      "radius": 16,
-      "description": "First avalanche zone. Small enough to teach the hazard without destroying the army."
-    },
-    {
-      "type": "avalanche_zone",
-      "x": 128,
-      "z": 118,
-      "radius": 22,
-      "description": "Central avalanche basin. The main pass is shortest, but this is its main punishment."
-    },
-    {
-      "type": "avalanche_zone",
-      "x": 150,
-      "z": 148,
-      "radius": 20,
-      "description": "High-pass avalanche field. This should create the largest survival pressure."
-    },
-    {
-      "type": "avalanche_zone",
-      "x": 188,
-      "z": 188,
-      "radius": 14,
-      "description": "Final descent rockslide area. Dangerous but avoidable if the player keeps formation."
+      "type": "forest",
+      "x": 93.59,
+      "z": 125.89,
+      "radius": 25.22
     },
     {
       "type": "forest",
-      "x": 46,
-      "z": 58,
-      "radius": 12,
-      "density": 0.45,
-      "description": "Lower pine shelter before the first climb."
+      "x": 154.62,
+      "z": 308.22,
+      "radius": 29.42
     },
     {
       "type": "forest",
-      "x": 76,
-      "z": 142,
-      "radius": 14,
-      "density": 0.55,
-      "description": "Mule trail shelter forest. This is the safest rest zone."
+      "x": 227.86,
+      "z": 360.31,
+      "radius": 25.22
     },
     {
       "type": "forest",
-      "x": 112,
-      "z": 166,
-      "radius": 12,
-      "density": 0.48,
-      "description": "High-altitude pine belt near the route rejoin."
+      "x": 427.24,
+      "z": 464.5,
+      "radius": 31.52
+    },
+    {
+      "type": "mountain",
+      "x": 557.45,
+      "z": 488.38,
+      "radius": 58.84,
+      "height": 10.5
     },
     {
       "type": "forest",
-      "x": 210,
-      "z": 214,
-      "radius": 15,
-      "density": 0.55,
-      "description": "Italian-side forest signaling the end of the crossing."
-    },
-    {
-      "type": "flat",
-      "x": 80,
-      "z": 144,
-      "description": "Abandoned mountain hamlet on the safer mule trail."
-    },
-    {
-      "type": "flat",
-      "x": 232,
-      "z": 228,
-      "description": "Italian frontier village and mission endpoint."
+      "x": 508.62,
+      "z": 573.03,
+      "radius": 42.03
     }
   ],
   "rivers": [
     {
       "start": [
-        42,
-        15
+        41,
+        0
       ],
       "end": [
-        86,
-        67
+        590,
+        649
       ],
-      "width": 3.4,
-      "description": "Lower meltwater torrent cutting across the first climb."
-    },
-    {
-      "start": [
-        112,
-        100
+      "waypoints": [
+        [
+          41,
+          0
+        ],
+        [
+          168,
+          10
+        ],
+        [
+          459,
+          193
+        ],
+        [
+          476,
+          213
+        ],
+        [
+          640,
+          478
+        ],
+        [
+          639,
+          515
+        ],
+        [
+          590,
+          649
+        ]
       ],
-      "end": [
-        158,
-        139
-      ],
-      "width": 3.2,
-      "description": "Glacial stream through the high pass."
-    },
-    {
-      "start": [
-        188,
-        188
-      ],
-      "end": [
-        248,
-        246
-      ],
-      "width": 3.6,
-      "description": "Italian runoff stream near the final descent."
+      "width": 4.76
     }
   ],
   "bridges": [
     {
       "start": [
-        61,
-        41
+        611.16,
+        571.54
       ],
       "end": [
-        70,
-        50
+        623.8,
+        576.17
       ],
-      "width": 4.2,
-      "height": 0.85,
-      "description": "Rope bridge over the lower meltwater torrent."
-    },
-    {
-      "start": [
-        128,
-        116
-      ],
-      "end": [
-        137,
-        125
-      ],
-      "width": 3.8,
-      "height": 0.7,
-      "description": "Ice-crusted plank bridge in the high pass."
-    },
-    {
-      "start": [
-        213,
-        209
-      ],
-      "end": [
-        222,
-        218
-      ],
-      "width": 4.2,
-      "height": 0.7,
-      "description": "Stone bridge on the Italian approach."
+      "width": 5.2,
+      "height": 0.55
     }
   ],
   "roads": [
     {
       "start": [
-        20,
-        24
+        89.52,
+        104.19
       ],
       "end": [
-        232,
-        228
+        312.15,
+        331.58
+      ],
+      "width": 3.19,
+      "style": "default",
+      "waypoints": [
+        [
+          89.52,
+          104.19
+        ],
+        [
+          85.37,
+          116.02
+        ],
+        [
+          83.54,
+          131.28
+        ],
+        [
+          81.71,
+          146.54
+        ],
+        [
+          79.87,
+          161.81
+        ],
+        [
+          78.04,
+          177.07
+        ],
+        [
+          76.5,
+          189.95
+        ],
+        [
+          74.95,
+          202.84
+        ],
+        [
+          74.09,
+          218.63
+        ],
+        [
+          73.24,
+          234.42
+        ],
+        [
+          75.28,
+          236.59
+        ],
+        [
+          78.31,
+          239.17
+        ],
+        [
+          81.87,
+          242.54
+        ],
+        [
+          95.87,
+          252.59
+        ],
+        [
+          109.86,
+          262.64
+        ],
+        [
+          113.24,
+          262.94
+        ],
+        [
+          123.2,
+          267.34
+        ],
+        [
+          133.16,
+          271.73
+        ],
+        [
+          143.12,
+          276.14
+        ],
+        [
+          153.07,
+          280.55
+        ],
+        [
+          161.22,
+          289.4
+        ],
+        [
+          169.38,
+          298.24
+        ],
+        [
+          170.92,
+          302.39
+        ],
+        [
+          170.65,
+          310.33
+        ],
+        [
+          183.58,
+          317.94
+        ],
+        [
+          196.51,
+          325.54
+        ],
+        [
+          209.43,
+          333.15
+        ],
+        [
+          222.35,
+          340.76
+        ],
+        [
+          235.28,
+          348.37
+        ],
+        [
+          248.21,
+          355.97
+        ],
+        [
+          261.95,
+          350.73
+        ],
+        [
+          275.69,
+          345.49
+        ],
+        [
+          287.84,
+          340.85
+        ],
+        [
+          300,
+          336.22
+        ],
+        [
+          312.15,
+          331.58
+        ]
+      ]
+    },
+    {
+      "start": [
+        151.12,
+        155.78
+      ],
+      "end": [
+        402.83,
+        425.43
+      ],
+      "width": 3,
+      "style": "default",
+      "waypoints": [
+        [
+          151.12,
+          155.78
+        ],
+        [
+          135.83,
+          164.07
+        ],
+        [
+          120.55,
+          172.35
+        ],
+        [
+          105.26,
+          180.64
+        ],
+        [
+          89.98,
+          188.93
+        ],
+        [
+          86.4,
+          191.58
+        ],
+        [
+          74.95,
+          202.84
+        ],
+        [
+          74.09,
+          218.63
+        ],
+        [
+          73.24,
+          234.42
+        ],
+        [
+          75.28,
+          236.59
+        ],
+        [
+          78.31,
+          239.17
+        ],
+        [
+          81.87,
+          242.54
+        ],
+        [
+          95.87,
+          252.59
+        ],
+        [
+          109.86,
+          262.64
+        ],
+        [
+          113.24,
+          262.94
+        ],
+        [
+          123.2,
+          267.34
+        ],
+        [
+          133.16,
+          271.73
+        ],
+        [
+          143.12,
+          276.14
+        ],
+        [
+          153.07,
+          280.55
+        ],
+        [
+          168.4,
+          288.67
+        ],
+        [
+          183.72,
+          296.79
+        ],
+        [
+          199.05,
+          304.9
+        ],
+        [
+          214.38,
+          313.02
+        ],
+        [
+          229.71,
+          321.14
+        ],
+        [
+          245.03,
+          329.25
+        ],
+        [
+          260.36,
+          337.37
+        ],
+        [
+          275.69,
+          345.49
+        ],
+        [
+          287.36,
+          356.63
+        ],
+        [
+          299.03,
+          367.76
+        ],
+        [
+          310.7,
+          378.9
+        ],
+        [
+          322.37,
+          390.04
+        ],
+        [
+          334.03,
+          401.17
+        ],
+        [
+          345.7,
+          412.31
+        ],
+        [
+          357.37,
+          423.45
+        ],
+        [
+          361.25,
+          425.02
+        ],
+        [
+          375.11,
+          425.16
+        ],
+        [
+          388.97,
+          425.29
+        ],
+        [
+          402.83,
+          425.43
+        ]
+      ]
+    },
+    {
+      "start": [
+        170.65,
+        310.33
+      ],
+      "end": [
+        248.21,
+        355.97
+      ],
+      "width": 3.07,
+      "style": "default",
+      "waypoints": [
+        [
+          170.65,
+          310.33
+        ],
+        [
+          183.58,
+          317.94
+        ],
+        [
+          196.51,
+          325.54
+        ],
+        [
+          209.43,
+          333.15
+        ],
+        [
+          222.35,
+          340.76
+        ],
+        [
+          235.28,
+          348.37
+        ],
+        [
+          248.21,
+          355.97
+        ]
+      ]
+    },
+    {
+      "start": [
+        58.37,
+        104.01
+      ],
+      "end": [
+        93.59,
+        125.89
+      ],
+      "width": 3.07,
+      "style": "default",
+      "waypoints": [
+        [
+          58.37,
+          104.01
+        ],
+        [
+          71.87,
+          110.02
+        ],
+        [
+          85.37,
+          116.02
+        ],
+        [
+          93.59,
+          125.89
+        ]
+      ]
+    },
+    {
+      "start": [
+        58.37,
+        104.01
+      ],
+      "end": [
+        2.03,
+        99.85
+      ],
+      "width": 3.78,
+      "style": "rough",
+      "waypoints": [
+        [
+          58.37,
+          104.01
+        ],
+        [
+          44.28,
+          102.97
+        ],
+        [
+          30.2,
+          101.93
+        ],
+        [
+          16.12,
+          100.89
+        ],
+        [
+          2.03,
+          99.85
+        ]
+      ]
+    },
+    {
+      "start": [
+        2.03,
+        99.85
+      ],
+      "end": [
+        4.07,
+        2.17
+      ],
+      "width": 3.78,
+      "style": "rough",
+      "waypoints": [
+        [
+          2.03,
+          99.85
+        ],
+        [
+          2.37,
+          83.57
+        ],
+        [
+          2.4,
+          82.03
+        ],
+        [
+          2.74,
+          66.06
+        ],
+        [
+          3.07,
+          50.09
+        ],
+        [
+          3.4,
+          34.11
+        ],
+        [
+          3.74,
+          18.14
+        ],
+        [
+          4.07,
+          2.17
+        ]
+      ]
+    },
+    {
+      "start": [
+        2.37,
+        83.57
+      ],
+      "end": [
+        1,
+        82
+      ],
+      "width": 3.2,
+      "style": "rough",
+      "waypoints": [
+        [
+          2.37,
+          83.57
+        ],
+        [
+          2.4,
+          82.03
+        ],
+        [
+          1,
+          82
+        ]
+      ]
+    },
+    {
+      "start": [
+        4.07,
+        2.17
+      ],
+      "end": [
+        6,
+        1
+      ],
+      "width": 3.2,
+      "style": "rough",
+      "waypoints": [
+        [
+          4.07,
+          2.17
+        ],
+        [
+          6,
+          1
+        ]
+      ]
+    },
+    {
+      "start": [
+        402.83,
+        425.43
+      ],
+      "end": [
+        566,
+        539
       ],
       "width": 4.2,
       "style": "default",
       "waypoints": [
         [
-          20,
-          24
+          402.83,
+          425.43
         ],
         [
-          36,
-          39
+          409.3,
+          439.61
         ],
         [
-          52,
-          53
+          415.76,
+          453.78
         ],
         [
-          68,
-          64
+          422.23,
+          467.96
         ],
         [
-          88,
-          78
+          428.69,
+          482.13
         ],
         [
-          110,
-          96
+          430.11,
+          488.15
         ],
         [
-          128,
-          118
+          430.5,
+          499.5
         ],
         [
-          145,
-          145
+          430.89,
+          510.85
         ],
         [
-          168,
-          170
+          433.28,
+          516.17
         ],
         [
-          198,
-          196
+          441.5,
+          524
         ],
         [
-          232,
-          228
+          449.72,
+          531.83
+        ],
+        [
+          455.12,
+          534.47
+        ],
+        [
+          468.88,
+          536.53
+        ],
+        [
+          475.15,
+          537.07
+        ],
+        [
+          493.12,
+          537.45
+        ],
+        [
+          511.09,
+          537.84
+        ],
+        [
+          529.06,
+          538.23
+        ],
+        [
+          547.03,
+          538.61
+        ],
+        [
+          565,
+          539
+        ],
+        [
+          566,
+          539
         ]
-      ],
-      "description": "Main Alpine pass route. Suitable for the whole army, including elephants, but exposed to the worst hazards."
+      ]
     },
     {
       "start": [
-        44,
-        48
+        93.59,
+        125.89
       ],
       "end": [
-        145,
-        145
+        402.83,
+        425.43
       ],
-      "width": 2.7,
-      "style": "default",
+      "width": 3.6,
+      "style": "rough",
       "waypoints": [
         [
-          44,
-          48
+          93.59,
+          125.89
         ],
         [
-          35,
-          72
+          88.41,
+          142.95
         ],
         [
-          45,
-          104
+          83.22,
+          160.01
         ],
         [
-          66,
-          133
+          78.04,
+          177.07
         ],
         [
-          92,
-          154
+          77.09,
+          190.15
         ],
         [
-          122,
-          164
+          76.14,
+          203.23
         ],
         [
-          145,
-          145
+          75.2,
+          216.31
+        ],
+        [
+          75.41,
+          221.67
+        ],
+        [
+          76.59,
+          229.33
+        ],
+        [
+          78.96,
+          233.85
+        ],
+        [
+          91.48,
+          245.68
+        ],
+        [
+          104,
+          257.5
+        ],
+        [
+          116.52,
+          269.32
+        ],
+        [
+          129.04,
+          281.15
+        ],
+        [
+          133.7,
+          283
+        ],
+        [
+          143,
+          283
+        ],
+        [
+          152.3,
+          283
+        ],
+        [
+          157.23,
+          284.52
+        ],
+        [
+          171.27,
+          294.05
+        ],
+        [
+          185.3,
+          303.58
+        ],
+        [
+          199.34,
+          313.11
+        ],
+        [
+          213.38,
+          322.64
+        ],
+        [
+          227.41,
+          332.17
+        ],
+        [
+          241.45,
+          341.7
+        ],
+        [
+          255.48,
+          351.23
+        ],
+        [
+          269.52,
+          360.77
+        ],
+        [
+          283.55,
+          370.3
+        ],
+        [
+          297.59,
+          379.83
+        ],
+        [
+          311.62,
+          389.36
+        ],
+        [
+          325.66,
+          398.89
+        ],
+        [
+          339.7,
+          408.42
+        ],
+        [
+          353.73,
+          417.95
+        ],
+        [
+          367.77,
+          427.48
+        ],
+        [
+          372.68,
+          428.71
+        ],
+        [
+          387.76,
+          427.07
+        ],
+        [
+          402.83,
+          425.43
         ]
-      ],
-      "description": "Western mule trail. Longer, safer, and better for preserving weak units."
+      ]
     },
     {
       "start": [
-        88,
-        78
+        566,
+        539
       ],
       "end": [
-        198,
-        196
-      ],
-      "width": 2.4,
-      "style": "default",
-      "waypoints": [
-        [
-          88,
-          78
-        ],
-        [
-          112,
-          70
-        ],
-        [
-          140,
-          76
-        ],
-        [
-          162,
-          98
-        ],
-        [
-          180,
-          126
-        ],
-        [
-          190,
-          158
-        ],
-        [
-          198,
-          196
-        ]
-      ],
-      "description": "Eastern cliff traverse. Fast but narrow and full of ambush positions."
-    },
-    {
-      "start": [
-        80,
-        144
-      ],
-      "end": [
-        122,
-        164
-      ],
-      "width": 2.6,
-      "style": "default",
-      "waypoints": [
-        [
-          80,
-          144
-        ],
-        [
-          92,
-          151
-        ],
-        [
-          106,
-          158
-        ],
-        [
-          122,
-          164
-        ]
-      ],
-      "description": "Hamlet connector path from the mule trail back to the main pass."
-    },
-    {
-      "start": [
-        145,
-        145
-      ],
-      "end": [
-        232,
-        228
+        648,
+        610
       ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
         [
-          145,
-          145
+          566,
+          539
         ],
         [
-          158,
-          160
+          577.29,
+          547.14
         ],
         [
-          176,
-          176
+          588.58,
+          555.27
         ],
         [
-          198,
-          196
+          599.87,
+          563.41
         ],
         [
-          216,
-          214
+          611.16,
+          571.54
         ],
         [
-          232,
-          228
+          623.8,
+          576.17
+        ],
+        [
+          631.87,
+          587.44
+        ],
+        [
+          639.93,
+          598.72
+        ],
+        [
+          648,
+          610
         ]
-      ],
-      "description": "Final descent road into Italy."
-    },
-    {
-      "start": [
-        24,
-        28
-      ],
-      "end": [
-        46,
-        58
-      ],
-      "width": 2.6,
-      "style": "default",
-      "waypoints": [
-        [
-          24,
-          28
-        ],
-        [
-          30,
-          38
-        ],
-        [
-          38,
-          49
-        ],
-        [
-          46,
-          58
-        ]
-      ],
-      "description": "Lower camp road to the first pine shelter."
+      ]
     }
   ],
   "spawns": [
     {
       "type": "barracks",
-      "x": 20,
-      "z": 24,
+      "x": 40.69,
+      "z": 52.09,
       "player_id": 1,
       "max_population": 160,
-      "nation": "carthage",
-      "description": "Starting Alpine camp"
+      "nation": "carthage"
     },
     {
       "type": "spearman",
-      "x": 25,
-      "z": 28,
+      "x": 50.86,
+      "z": 60.78,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 29,
-      "z": 31,
+      "x": 59,
+      "z": 67.29,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 22,
-      "z": 34,
+      "x": 44.76,
+      "z": 73.8,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 33,
-      "z": 29,
+      "x": 67.14,
+      "z": 62.95,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 30,
-      "z": 37,
+      "x": 61.03,
+      "z": 80.31,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 22,
-      "z": 40,
+      "x": 44.76,
+      "z": 86.82,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 37,
-      "z": 34,
+      "x": 75.28,
+      "z": 73.8,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 17,
-      "z": 34,
+      "x": 34.59,
+      "z": 73.8,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 35,
-      "z": 21,
+      "x": 71.21,
+      "z": 45.58,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 39,
-      "z": 41,
+      "x": 79.34,
+      "z": 88.99,
       "player_id": 1
     },
     {
       "type": "healer",
-      "x": 18,
-      "z": 22,
+      "x": 36.62,
+      "z": 47.75,
       "player_id": 1
     },
     {
       "type": "elephant",
-      "x": 28,
-      "z": 23,
-      "player_id": 1,
-      "description": "War elephant column"
+      "x": 56.97,
+      "z": 49.92,
+      "player_id": 1
     },
     {
       "type": "elephant",
-      "x": 23,
-      "z": 30,
+      "x": 46.79,
+      "z": 65.12,
       "player_id": 1
     },
     {
       "type": "catapult",
-      "x": 16,
-      "z": 31,
-      "player_id": 1,
-      "description": "Heavy baggage train escort"
+      "x": 32.55,
+      "z": 67.29,
+      "player_id": 1
     },
     {
       "type": "barracks",
-      "x": 72,
-      "z": 74,
+      "x": 146.48,
+      "z": 160.62,
       "player_id": 2,
       "max_population": 70,
-      "description": "First mountain tribe toll camp"
+      "nation": "roman_republic"
     },
     {
       "type": "spearman",
-      "x": 66,
-      "z": 70,
-      "player_id": 2,
-      "hidden": true,
-      "description": "First pass ambush"
+      "x": 134.28,
+      "z": 151.94,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 72,
-      "z": 74,
-      "player_id": 2,
-      "hidden": true
+      "x": 146.48,
+      "z": 160.62,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 76,
-      "z": 67,
-      "player_id": 2,
-      "hidden": true
+      "x": 154.62,
+      "z": 145.43,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 82,
-      "z": 77,
-      "player_id": 2,
-      "hidden": true
+      "x": 166.83,
+      "z": 167.13,
+      "player_id": 2
     },
     {
       "type": "barracks",
-      "x": 80,
-      "z": 144,
-      "player_id": 2,
+      "x": 162.76,
+      "z": 312.56,
+      "player_id": 3,
       "max_population": 70,
-      "description": "Mule trail hamlet defenders"
+      "nation": "roman_republic"
     },
     {
       "type": "spearman",
-      "x": 72,
-      "z": 139,
-      "player_id": 2,
-      "hidden": true
+      "x": 146.48,
+      "z": 301.71,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 78,
-      "z": 148,
-      "player_id": 2,
-      "hidden": true
+      "x": 158.69,
+      "z": 321.24,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 86,
-      "z": 144,
-      "player_id": 2,
-      "hidden": true
+      "x": 174.97,
+      "z": 312.56,
+      "player_id": 2
     },
     {
       "type": "barracks",
-      "x": 158,
-      "z": 92,
-      "player_id": 2,
+      "x": 565.59,
+      "z": 529.62,
+      "player_id": 4,
       "max_population": 85,
-      "description": "Eastern cliff tribe camp"
+      "nation": "roman_republic"
     },
     {
       "type": "archer",
-      "x": 148,
-      "z": 84,
-      "player_id": 2,
-      "hidden": true,
-      "description": "Cliff traverse archers"
+      "x": 301.1,
+      "z": 182.33,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 158,
-      "z": 88,
-      "player_id": 2,
-      "hidden": true
+      "x": 321.45,
+      "z": 191.01,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 166,
-      "z": 100,
-      "player_id": 2,
-      "hidden": true
+      "x": 337.72,
+      "z": 217.06,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 174,
-      "z": 110,
-      "player_id": 2,
-      "hidden": true
+      "x": 354,
+      "z": 238.76,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 132,
-      "z": 136,
-      "player_id": 2,
-      "hidden": true,
-      "description": "High-pass defense"
+      "x": 268.55,
+      "z": 295.2,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 140,
-      "z": 142,
-      "player_id": 2,
-      "hidden": true
+      "x": 284.83,
+      "z": 308.22,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 148,
-      "z": 148,
-      "player_id": 2,
-      "hidden": true
+      "x": 301.1,
+      "z": 321.24,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 136,
-      "z": 151,
-      "player_id": 2,
-      "hidden": true
+      "x": 276.69,
+      "z": 327.76,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 154,
-      "z": 140,
-      "player_id": 2,
-      "hidden": true
+      "x": 313.31,
+      "z": 303.88,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 184,
-      "z": 181,
-      "player_id": 2,
-      "hidden": true,
-      "description": "Final descent raiders"
+      "x": 374.34,
+      "z": 392.87,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 190,
-      "z": 186,
-      "player_id": 2,
-      "hidden": true
+      "x": 386.55,
+      "z": 403.73,
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
-      "x": 198,
-      "z": 192,
-      "player_id": 2,
-      "hidden": true
+      "x": 402.83,
+      "z": 416.75,
+      "player_id": 2
     },
     {
       "type": "archer",
-      "x": 178,
-      "z": 176,
-      "player_id": 2,
-      "hidden": true
+      "x": 362.14,
+      "z": 382.02,
+      "player_id": 2
     }
   ],
   "firecamps": [
     {
-      "x": 20,
-      "z": 24,
+      "x": 40.69,
+      "z": 52.09,
       "intensity": 1.35,
       "radius": 4.2
     },
     {
-      "x": 46,
-      "z": 58,
+      "x": 93.59,
+      "z": 125.89,
       "intensity": 1.05,
       "radius": 3.2
     },
     {
-      "x": 80,
-      "z": 144,
+      "x": 162.76,
+      "z": 312.56,
       "intensity": 1.05,
       "radius": 3.2
     },
     {
-      "x": 122,
-      "z": 164,
+      "x": 248.21,
+      "z": 355.97,
       "intensity": 0.95,
       "radius": 2.8
     },
     {
-      "x": 184,
-      "z": 184,
+      "x": 374.34,
+      "z": 399.38,
       "intensity": 0.9,
       "radius": 2.8
     },
     {
-      "x": 232,
-      "z": 228,
+      "x": 472,
+      "z": 494.89,
       "intensity": 1.35,
       "radius": 4.2
     }
@@ -1159,136 +1584,172 @@
   "world_props": [
     {
       "type": "tent",
-      "x": 18,
-      "z": 29,
+      "x": 36.62,
+      "z": 62.95,
       "scale": 1.0,
       "rotation": 0.5
     },
     {
       "type": "tent",
-      "x": 28,
-      "z": 18,
+      "x": 56.97,
+      "z": 39.07,
       "scale": 1.0,
       "rotation": 2.5
     },
     {
       "type": "supply_cart",
-      "x": 33,
-      "z": 35,
+      "x": 67.14,
+      "z": 75.97,
       "scale": 1.0,
       "rotation": 1.2
     },
     {
       "type": "weapon_rack",
-      "x": 15,
-      "z": 36,
+      "x": 30.52,
+      "z": 78.14,
       "scale": 1.0,
       "rotation": 4.0
     },
     {
       "type": "dead_tree",
-      "x": 44,
-      "z": 54,
+      "x": 89.52,
+      "z": 117.21,
       "scale": 1.2,
       "rotation": 0.7
     },
     {
       "type": "dead_tree",
-      "x": 52,
-      "z": 61,
+      "x": 105.79,
+      "z": 132.4,
       "scale": 1.0,
       "rotation": 2.6
     },
     {
       "type": "dead_tree",
-      "x": 69,
-      "z": 67,
+      "x": 140.38,
+      "z": 145.43,
       "scale": 1.1,
       "rotation": 4.8
     },
     {
       "type": "ruins",
-      "x": 78,
-      "z": 141,
+      "x": 158.69,
+      "z": 306.05,
       "scale": 1.0,
       "rotation": 1.0
     },
     {
       "type": "ruins",
-      "x": 84,
-      "z": 147,
+      "x": 170.9,
+      "z": 319.07,
       "scale": 0.9,
       "rotation": 3.4
     },
     {
       "type": "supply_cart",
-      "x": 88,
-      "z": 152,
+      "x": 179.03,
+      "z": 329.93,
       "scale": 0.9,
       "rotation": 5.2
     },
     {
       "type": "dead_tree",
-      "x": 114,
-      "z": 158,
+      "x": 231.93,
+      "z": 342.95,
       "scale": 1.0,
       "rotation": 2.0
     },
     {
       "type": "dead_tree",
-      "x": 127,
-      "z": 166,
+      "x": 258.38,
+      "z": 360.31,
       "scale": 1.1,
       "rotation": 5.4
     },
     {
       "type": "dead_tree",
-      "x": 150,
-      "z": 137,
+      "x": 305.17,
+      "z": 297.37,
       "scale": 1.2,
       "rotation": 1.3
     },
     {
       "type": "dead_tree",
-      "x": 160,
-      "z": 151,
+      "x": 325.52,
+      "z": 327.76,
       "scale": 1.0,
       "rotation": 3.2
     },
     {
       "type": "dead_tree",
-      "x": 184,
-      "z": 188,
+      "x": 374.34,
+      "z": 408.07,
       "scale": 1.1,
       "rotation": 5.4
     },
     {
       "type": "ruins",
-      "x": 226,
-      "z": 224,
+      "x": 459.79,
+      "z": 486.21,
       "scale": 1.1,
       "rotation": 1.5
     },
     {
       "type": "ruins",
-      "x": 234,
-      "z": 231,
+      "x": 476.07,
+      "z": 501.4,
       "scale": 1.0,
       "rotation": 3.4
     },
     {
       "type": "tent",
-      "x": 239,
-      "z": 224,
+      "x": 486.24,
+      "z": 486.21,
       "scale": 1.0,
       "rotation": 5.8
     },
     {
       "type": "supply_cart",
-      "x": 229,
-      "z": 236,
+      "x": 465.9,
+      "z": 512.25,
       "scale": 1.0,
       "rotation": 2.6
+    },
+    {
+      "type": "tent",
+      "x": 547.28,
+      "z": 533.96,
+      "scale": 0.9,
+      "rotation": 1.2
+    },
+    {
+      "type": "tent",
+      "x": 581.86,
+      "z": 538.3,
+      "scale": 0.9,
+      "rotation": 4.1
+    },
+    {
+      "type": "supply_cart",
+      "x": 565.59,
+      "z": 560.01,
+      "scale": 1.0,
+      "rotation": 2.5
+    },
+    {
+      "type": "weapon_rack",
+      "x": 577.79,
+      "z": 520.94,
+      "scale": 0.9,
+      "rotation": 0.6
+    },
+    {
+      "type": "firecamp",
+      "x": 565.59,
+      "z": 540.47,
+      "scale": 0.9,
+      "intensity": 1.1,
+      "radius": 3.2
     }
   ],
   "victory": {
@@ -1321,10 +1782,10 @@
     {
       "id": "pass_shrine",
       "anchor_type": "magic_shrine",
-      "x": 130,
-      "z": 50,
-      "radius": 8.0,
-      "leash_radius": 14.0,
+      "x": 264.48,
+      "z": 108.53,
+      "radius": 16.81,
+      "leash_radius": 29.42,
       "owner_id": 99,
       "team_id": 99,
       "awaken_on": [
@@ -1340,5 +1801,6 @@
         }
       ]
     }
-  ]
+  ],
+  "lakes": []
 }

@@ -248,12 +248,36 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
     }
   }
 
-  EXPECT_NEAR(min_x, bridge.start.x(), 0.0001F);
-  EXPECT_NEAR(max_x, bridge.end.x(), 0.0001F);
+  const float expected_approach =
+      std::min(bridge.width * 0.70F,
+               (bridge.end - bridge.start).length() * 0.14F);
+  EXPECT_NEAR(min_x, bridge.start.x() - expected_approach, 0.0001F);
+  EXPECT_NEAR(max_x, bridge.end.x() + expected_approach, 0.0001F);
   ASSERT_TRUE(found_start_band);
   ASSERT_TRUE(found_mid_band);
   EXPECT_GT(start_width, bridge.width * 0.95F);
   EXPECT_GT(mid_max_y, start_max_y + 0.05F);
+}
+
+TEST(LinearFeatureGeometryTest, BuildsSharedCapsForRiverJunctionsAndEndpoints) {
+  const std::vector<Render::Ground::LinearFeatureRibbonSegment> segments{
+      {{-4.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 2.0F},
+      {{0.0F, 0.0F, 0.0F}, {3.0F, 0.0F, 3.0F}, 2.4F},
+  };
+  const auto settings = Render::Ground::make_river_ribbon_settings();
+
+  auto junctions = Render::Ground::build_linear_feature_junction_meshes(
+      segments, 1.0F, settings);
+
+  ASSERT_EQ(junctions.size(), 3U);
+  const auto shared = std::find_if(junctions.begin(), junctions.end(), [](const auto& item) {
+    return std::abs(item.center.x()) < 0.001F &&
+           std::abs(item.center.z()) < 0.001F;
+  });
+  ASSERT_NE(shared, junctions.end());
+  ASSERT_NE(shared->mesh, nullptr);
+  EXPECT_GT(shared->mesh->get_vertices().size(), 16U);
+  EXPECT_FALSE(shared->mesh->get_indices().empty());
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
@@ -269,6 +293,40 @@ TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
   EXPECT_FALSE(result.mesh->get_vertices().empty());
   EXPECT_FALSE(result.mesh->get_indices().empty());
   EXPECT_FALSE(result.visibility_samples.empty());
+}
+
+TEST(LinearFeatureGeometryTest, ClipsRiverbanksOutOfTributaryMouths) {
+  Game::Map::TerrainHeightMap const height_map(32, 32, 1.0F);
+  const Game::Map::RiverSegment main_channel{
+      {-6.0F, 0.0F, 0.0F}, {6.0F, 0.0F, 0.0F}, 2.0F};
+  const std::vector<Game::Map::RiverSegment> network{
+      main_channel,
+      {{0.0F, 0.0F, 1.0F}, {0.0F, 0.0F, 6.0F}, 2.0F},
+  };
+
+  auto isolated = Render::Ground::build_riverbank_mesh(main_channel, height_map);
+  auto joined = Render::Ground::build_riverbank_mesh(network, 0U, height_map);
+
+  ASSERT_NE(isolated.mesh, nullptr);
+  ASSERT_NE(joined.mesh, nullptr);
+  EXPECT_LT(joined.mesh->get_indices().size(),
+            isolated.mesh->get_indices().size());
+}
+
+TEST(LinearFeatureGeometryTest, BuildsLakeSurfaceAndShorelineMeshes) {
+  Game::Map::TerrainHeightMap height_map(48, 48, 1.0F);
+  const Game::Map::Lake lake{{2.0F, 0.0F, -1.0F}, 16.0F, 10.0F, 23.0F};
+
+  auto water = Render::Ground::build_lake_surface_mesh(lake, 1.0F);
+  auto shore = Render::Ground::build_lake_shore_mesh(lake, height_map);
+
+  ASSERT_NE(water, nullptr);
+  EXPECT_GT(water->get_vertices().size(), 100U);
+  EXPECT_FALSE(water->get_indices().empty());
+  ASSERT_NE(shore.mesh, nullptr);
+  EXPECT_FALSE(shore.mesh->get_vertices().empty());
+  EXPECT_FALSE(shore.mesh->get_indices().empty());
+  EXPECT_FALSE(shore.visibility_samples.empty());
 }
 
 } // namespace

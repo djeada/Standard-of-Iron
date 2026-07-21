@@ -236,7 +236,7 @@ void PlantRenderer::generate_plant_instances() {
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(sample_x, sample_z);
       if (terrain_type == Game::Map::TerrainType::Mountain ||
-          terrain_type == Game::Map::TerrainType::River) {
+          Game::Map::is_water_terrain(terrain_type)) {
         continue;
       }
 

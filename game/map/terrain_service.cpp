@@ -346,12 +346,16 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map = std::make_unique<TerrainHeightMap>(
       map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
 
+  // Establish one authoritative battlefield surface before authored features
+  // are layered onto it. Roads, placement, pathing, and rendering all sample
+  // this same relief instead of relying on renderer-only displacement.
+  m_height_map->apply_biome_variation(map_def.biome);
   m_height_map->build_from_features(map_def.terrain);
+  m_height_map->add_lakes(map_def.lakes);
   m_height_map->add_river_segments(map_def.rivers);
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
   m_coord_system = map_def.coordSystem;
-  m_height_map->apply_biome_variation(m_biome_settings);
 
   m_road_segments = map_def.roads;
   m_authored_world_props = map_def.world_props;
@@ -685,9 +689,10 @@ void TerrainService::restore_from_serialized(
     const std::vector<Bridge>& bridges,
     const BiomeSettings& biome,
     const std::vector<WorldProp>& world_props,
-    const std::vector<WorldProp>& authored_world_props) {
+    const std::vector<WorldProp>& authored_world_props,
+    const std::vector<Lake>& lakes) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
-  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
+  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
   m_biome_settings = biome;
   m_coord_system = CoordSystem::Grid;
 
@@ -763,6 +768,23 @@ auto TerrainService::is_point_near_river(float world_x,
   for (const auto& river : m_height_map->get_river_segments()) {
     if (is_point_within_linear_feature(
             world_x, world_z, river.start, river.end, river.width, clearance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto TerrainService::is_point_near_water(float world_x,
+                                         float world_z,
+                                         float clearance) const -> bool {
+  if (is_point_near_river(world_x, world_z, clearance)) {
+    return true;
+  }
+  if (!m_height_map) {
+    return false;
+  }
+  for (const auto& lake : m_height_map->get_lakes()) {
+    if (point_in_lake(lake, world_x, world_z, clearance)) {
       return true;
     }
   }

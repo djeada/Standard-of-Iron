@@ -865,6 +865,9 @@ QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
     const float r = std::max(elem.radius, 1.0F);
     rx_cells = r * 1.8F;
     ry_cells = r * 0.22F;
+  } else if (elem.type == QStringLiteral("lake")) {
+    rx_cells = elem.width > 0.0F ? elem.width * 0.5F : std::max(elem.radius, 1.0F);
+    ry_cells = elem.depth > 0.0F ? elem.depth * 0.5F : std::max(elem.radius, 1.0F);
   } else {
 
     if (elem.width > 0.0F && elem.depth > 0.0F) {
@@ -933,13 +936,20 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.setBrush(peak);
     const double dot_r = std::max(2.5, std::min(rx, ry) * 0.18);
     painter.drawEllipse(QPointF(0, 0), dot_r, dot_r);
+  } else if (elem.type == QStringLiteral("lake")) {
+    painter.setPen(QPen(QColor(35, 80, 105), 2.0));
+    painter.setBrush(QColor(55, 135, 165, 205));
+    painter.drawEllipse(QPointF(0, 0), rx, ry);
+    painter.setPen(QPen(QColor(145, 205, 215, 175), 1.0));
+    painter.drawEllipse(QPointF(0, 0), rx * 0.82, ry * 0.82);
   }
 
   painter.restore();
 }
 
 int MapCanvas::terrain_marker_radius_px(const TerrainElement& elem) const {
-  if (elem.type != QStringLiteral("hill") && elem.type != QStringLiteral("mountain")) {
+  if (elem.type != QStringLiteral("hill") && elem.type != QStringLiteral("mountain") &&
+      elem.type != QStringLiteral("lake")) {
     return icon_size;
   }
   const QSizeF e = terrain_ellipse_px(elem);

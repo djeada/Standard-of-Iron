@@ -612,8 +612,28 @@ void MinimapGenerator::draw_forest_symbol(
 }
 
 void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def) {
-  if (map_def.rivers.empty()) {
+  if (map_def.rivers.empty() && map_def.lakes.empty()) {
     return;
+  }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+  for (const auto& lake : map_def.lakes) {
+    const auto [cx, cy] =
+        world_to_pixel(lake.center.x(), lake.center.z(), map_def.grid);
+    const float half_width =
+        std::max(world_to_pixel_size(lake.width, map_def.grid) * 0.5F, 2.0F);
+    const float half_depth =
+        std::max(world_to_pixel_size(lake.depth, map_def.grid) * 0.5F, 2.0F);
+    painter.save();
+    painter.translate(cx, cy);
+    painter.rotate(lake.rotation_deg);
+    painter.setPen(QPen(Palette::WATER_DARK, std::max(1.0F, half_width * 0.06F)));
+    painter.setBrush(Palette::WATER_MAIN);
+    painter.drawEllipse(QPointF(0.0, 0.0), half_width, half_depth);
+    painter.restore();
   }
 
   const QRectF river_rect(0.0,
@@ -660,10 +680,6 @@ void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def
       }
     }
   }
-
-  QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
   for (const auto& stroke : strokes) {
     draw_river_stroke_pass(
@@ -997,6 +1013,7 @@ auto MinimapGenerator::terrain_feature_color(TerrainType type) -> QColor {
   case TerrainType::Hill:
     return Palette::HILL_BASE;
   case TerrainType::River:
+  case TerrainType::Lake:
     return Palette::WATER_MAIN;
   case TerrainType::Forest:
     return Palette::FOREST_BASE;

@@ -42,6 +42,7 @@ public:
   void zoom(float delta);
 
   void zoom_distance(float delta);
+  void zoom_distance(float delta, float min_distance, float max_distance);
   void rotate(float yaw, float pitch);
 
   void pan(float right_dist, float forward_dist);

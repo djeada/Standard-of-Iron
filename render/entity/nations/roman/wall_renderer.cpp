@@ -7,13 +7,17 @@
 namespace Render::GL::Roman {
 namespace {
 
-const WallPalette k_wall_palette{.wood_light = QVector3D(0.72F, 0.58F, 0.38F),
-                                 .wood_mid = QVector3D(0.56F, 0.42F, 0.28F),
-                                 .wood_dark = QVector3D(0.40F, 0.28F, 0.16F),
-                                 .rope = QVector3D(0.60F, 0.52F, 0.34F),
-                                 .shadow = QVector3D(0.28F, 0.20F, 0.12F),
+const WallPalette k_wall_palette{.wood_light = QVector3D(0.62F, 0.43F, 0.23F),
+                                 .wood_mid = QVector3D(0.46F, 0.30F, 0.15F),
+                                 .wood_dark = QVector3D(0.27F, 0.17F, 0.085F),
+                                 .rope = QVector3D(0.55F, 0.44F, 0.25F),
+                                 .shadow = QVector3D(0.19F, 0.12F, 0.06F),
+                                 .masonry_accent = QVector3D(0.46F, 0.30F, 0.15F),
                                  .alternate_starts_light = true};
 const WallGeometry k_wall_geometry{.earthwork_base = true,
+                                   .cross_braced = false,
+                                   .metal_bands = false,
+                                   .irregular_stakes = false,
                                    .connected_span_length = 1.08F,
                                    .open_span_length = 1.00F,
                                    .stake_center_y = 1.24F,

@@ -93,13 +93,13 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
   DrawQueue queue;
 
   TerrainFeatureCmd first;
-  first.kind = Render::GL::LinearFeatureKind::Riverbank;
+  first.kind = Render::GL::LinearFeatureKind::Shoreline;
   first.visibility.texture =
       reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
-  second.kind = Render::GL::LinearFeatureKind::Riverbank;
+  second.kind = Render::GL::LinearFeatureKind::Shoreline;
   second.visibility.texture =
       reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
@@ -181,7 +181,7 @@ TEST(DrawQueuePreparedBatches,
 
   TerrainFeatureCmd first;
   first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
-  first.kind = Render::GL::LinearFeatureKind::Riverbank;
+  first.kind = Render::GL::LinearFeatureKind::Shoreline;
   first.visibility.enabled = true;
   first.visibility.texture =
       reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
@@ -189,7 +189,7 @@ TEST(DrawQueuePreparedBatches,
 
   TerrainFeatureCmd second;
   second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
-  second.kind = Render::GL::LinearFeatureKind::Riverbank;
+  second.kind = Render::GL::LinearFeatureKind::Shoreline;
   second.visibility.enabled = true;
   second.visibility.texture =
       reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));

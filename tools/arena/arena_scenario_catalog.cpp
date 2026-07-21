@@ -154,6 +154,132 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
 
   {
+    auto s = definition(
+        QString::fromLatin1(k_commander_aura_pulse_id),
+        QStringLiteral("Commander Aura Pulse"),
+        QStringLiteral(
+            "Explicitly activates a short command aura, verifies nearby "
+            "troops receive its visible timed bonus, verifies distant troops "
+            "do not, and waits for cooldown."),
+        5.0F,
+        {26.0F, 55.0F, 25.0F});
+    auto commander = group(QStringLiteral("commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.nation_id = Nation::RomanRepublic;
+    auto near_troops = group(QStringLiteral("near_troops"),
+                             Troop::Swordsman,
+                             1,
+                             2,
+                             {5.0F, 0.0F, 0.0F},
+                             4,
+                             {0.0F, 0.0F, 3.0F});
+    auto distant_troops = group(QStringLiteral("distant_troops"),
+                                Troop::Swordsman,
+                                1,
+                                1,
+                                {21.0F, 0.0F, 0.0F},
+                                4);
+    s.groups = {commander, near_troops, distant_troops};
+    auto activate =
+        at(0.5F, Command::TriggerCommanderAura, QStringLiteral("commander"));
+    activate.value = 2;
+    s.steps = {activate};
+    s.expectations = {
+        expectation(Expect::CommanderAuraActivated, QStringLiteral("commander")),
+        expectation(Expect::CommanderAuraBuffObserved, QStringLiteral("near_troops")),
+        expectation(Expect::NoCommanderAuraBuffObserved,
+                    QStringLiteral("distant_troops")),
+        expectation(Expect::CommanderAuraExpired, QStringLiteral("commander")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("commander")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("near_troops")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("distant_troops")),
+        expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_commander_identity_lineup_id),
+        QStringLiteral("Commander Identity Lineup"),
+        QStringLiteral("Displays all six commanders without bodyguards or supporting "
+                       "units for direct silhouette, weapon, scale, color, and "
+                       "ancient-dark-fantasy identity review."),
+        12.0F,
+        {9.8F, 36.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    struct CommanderLineupEntry {
+      const char* group_name;
+      Troop troop;
+      Nation nation;
+      int owner;
+      QVector3D position;
+      float facing;
+    };
+    const CommanderLineupEntry entries[] = {
+        {"fabius",
+         Troop::RomanLegionOrganizer,
+         Nation::RomanRepublic,
+         1,
+         {-3.0F, 0.0F, -1.6F},
+         0.0F},
+        {"scipio",
+         Troop::RomanVeteranConsul,
+         Nation::RomanRepublic,
+         2,
+         {0.0F, 0.0F, -1.6F},
+         0.0F},
+        {"marcellus",
+         Troop::RomanFieldCommander,
+         Nation::RomanRepublic,
+         3,
+         {3.0F, 0.0F, -1.6F},
+         0.0F},
+        {"hanno",
+         Troop::CarthageMercenaryBroker,
+         Nation::Carthage,
+         4,
+         {-3.0F, 0.0F, 1.6F},
+         0.0F},
+        {"hasdrubal",
+         Troop::CarthageCavalryPatron,
+         Nation::Carthage,
+         5,
+         {0.0F, 0.0F, 1.6F},
+         0.0F},
+        {"hannibal",
+         Troop::CarthageElephantMaster,
+         Nation::Carthage,
+         6,
+         {3.0F, 0.0F, 1.6F},
+         0.0F},
+    };
+    for (auto const& entry : entries) {
+      auto commander = group(QString::fromLatin1(entry.group_name),
+                             entry.troop,
+                             entry.owner,
+                             1,
+                             entry.position,
+                             1);
+      commander.nation_id = entry.nation;
+      commander.facing_degrees = entry.facing;
+      s.groups.push_back(std::move(commander));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+    }
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(QString::fromLatin1(k_sword_duel_id),
                         QStringLiteral("Sword Duel"),
                         QStringLiteral("Baseline reciprocal sword attack flow."),
@@ -1639,6 +1765,385 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_architecture_and_props_showcase_id),
+        QStringLiteral("Architecture and Dark Props"),
+        QStringLiteral("Clean side-by-side Roman and Carthaginian architecture "
+                       "review with authored ritual, ruin, and cursed-world props."),
+        12.0F,
+        {36.0F, 50.0F, 0.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("showcase_roman_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-9.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-3.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {3.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_tower"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {9.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_punic_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-9.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-3.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {3.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_tower"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {9.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_roman_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {-10.0F, 0.0F, -8.5F},
+                 {2.5F, 0.0F, 0.0F}),
+        building(QStringLiteral("showcase_punic_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 9,
+                 {-10.0F, 0.0F, 6.5F},
+                 {2.5F, 0.0F, 0.0F}),
+    };
+    s.resource_patches = {
+        {QStringLiteral("magic_shrine"), 1, {-8.0F, 0.0F, 10.5F}, {}, 0.78F},
+        {QStringLiteral("ruins"), 1, {-4.0F, 0.0F, 10.5F}, {}, 0.68F},
+        {QStringLiteral("dead_tree"), 1, {0.0F, 0.0F, 10.5F}, {}, 0.90F},
+        {QStringLiteral("iron_ore"), 1, {4.0F, 0.0F, 10.5F}, {}, 0.90F},
+        {QStringLiteral("weapon_rack"), 1, {8.0F, 0.0F, 10.5F}, {}, 0.85F},
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("showcase_roman_market"),
+                               QStringLiteral("showcase_roman_barracks"),
+                               QStringLiteral("showcase_roman_home"),
+                               QStringLiteral("showcase_roman_tower"),
+                               QStringLiteral("showcase_punic_market"),
+                               QStringLiteral("showcase_punic_barracks"),
+                               QStringLiteral("showcase_punic_home"),
+                               QStringLiteral("showcase_punic_tower"),
+                               QStringLiteral("showcase_roman_wall"),
+                               QStringLiteral("showcase_punic_wall")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_roman_fortification_showcase_id),
+        QStringLiteral("Roman Timber Fortification"),
+        QStringLiteral(
+            "Roman palisade review with disciplined wall runs, reinforced "
+            "corners, a defended gate opening, towers, and an occupied ward."),
+        16.0F,
+        {42.0F, 56.0F, 28.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("roman_fort_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {0.0F, 0.0F, -8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {-8.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("roman_fort_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {8.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("roman_fort_south_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 4,
+                 {-5.0F, 0.0F, 8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_south_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 4,
+                 {5.0F, 0.0F, 8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_tower_nw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-8.0F, 0.0F, -8.0F}),
+        building(QStringLiteral("roman_fort_tower_ne"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {8.0F, 0.0F, -8.0F}),
+        building(QStringLiteral("roman_fort_tower_sw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-8.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_tower_se"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {8.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_gate_left"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-2.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_gate_right"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {2.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-2.8F, 0.0F, -1.0F}),
+        building(QStringLiteral("roman_fort_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {3.2F, 0.0F, 1.5F}),
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("roman_fort_north"),
+                               QStringLiteral("roman_fort_west"),
+                               QStringLiteral("roman_fort_east"),
+                               QStringLiteral("roman_fort_south_west"),
+                               QStringLiteral("roman_fort_south_east"),
+                               QStringLiteral("roman_fort_tower_nw"),
+                               QStringLiteral("roman_fort_tower_ne"),
+                               QStringLiteral("roman_fort_tower_sw"),
+                               QStringLiteral("roman_fort_tower_se"),
+                               QStringLiteral("roman_fort_gate_left"),
+                               QStringLiteral("roman_fort_gate_right"),
+                               QStringLiteral("roman_fort_barracks"),
+                               QStringLiteral("roman_fort_market")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_carthage_fortification_showcase_id),
+        QStringLiteral("Carthaginian Dread Palisade"),
+        QStringLiteral("Carthaginian timber fortress with bronze-bound logs, jagged "
+                       "towers, a ritual gate, and a layered inner defensive ward."),
+        16.0F,
+        {46.0F, 60.0F, 330.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("punic_fort_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {0.0F, 0.0F, -10.0F},
+                 {2.0F, 0.0F, 0.0F},
+                 180.0F),
+        building(QStringLiteral("punic_fort_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {-10.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {10.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_south_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 4,
+                 {-7.0F, 0.0F, 10.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("punic_fort_south_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 4,
+                 {7.0F, 0.0F, 10.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("punic_fort_tower_nw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-10.0F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_tower_ne"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {10.0F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_tower_sw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-10.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_tower_se"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {10.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_gate_left"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-3.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_gate_right"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {3.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_inner_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 5,
+                 {0.0F, 0.0F, -2.0F},
+                 {2.0F, 0.0F, 0.0F},
+                 180.0F),
+        building(QStringLiteral("punic_inner_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {-4.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_inner_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {4.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {0.0F, 0.0F, 1.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {6.8F, 0.0F, 3.4F},
+                 {},
+                 180.0F),
+    };
+    s.resource_patches = {
+        {QStringLiteral("fire_camp"), 2, {-2.0F, 0.0F, 6.0F}, {4.0F, 0.0F, 0.0F}, 0.8F},
+        {QStringLiteral("weapon_rack"),
+         2,
+         {-6.5F, 0.0F, 5.2F},
+         {13.0F, 0.0F, 0.0F},
+         0.9F},
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("punic_fort_north"),
+                               QStringLiteral("punic_fort_west"),
+                               QStringLiteral("punic_fort_east"),
+                               QStringLiteral("punic_fort_south_west"),
+                               QStringLiteral("punic_fort_south_east"),
+                               QStringLiteral("punic_fort_tower_nw"),
+                               QStringLiteral("punic_fort_tower_ne"),
+                               QStringLiteral("punic_fort_tower_sw"),
+                               QStringLiteral("punic_fort_tower_se"),
+                               QStringLiteral("punic_fort_gate_left"),
+                               QStringLiteral("punic_fort_gate_right"),
+                               QStringLiteral("punic_inner_north"),
+                               QStringLiteral("punic_inner_west"),
+                               QStringLiteral("punic_inner_east"),
+                               QStringLiteral("punic_fort_barracks"),
+                               QStringLiteral("punic_fort_market")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_rival_economies_id),
         QStringLiteral("Rival Economies"),
         QStringLiteral("Roman and Carthaginian AI builders develop opposing starter "
@@ -1757,6 +2262,32 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("roman_economy_builders")));
     s.expectations.push_back(expectation(Expect::OwnerHarvestsResource,
                                          QStringLiteral("punic_economy_builders")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_water_showcase_id),
+        QStringLiteral("River and Lake Water Showcase"),
+        QStringLiteral(
+            "Places a flowing river and an irregular calm lake side by side for "
+            "shared material, foam, shoreline, depth, and silhouette review."),
+        10.0F,
+        {42.0F, 56.0F, 18.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.rivers.push_back(Game::Map::RiverSegment{
+        {-12.0F, 0.0F, -28.0F}, {-10.0F, 0.0F, 28.0F}, 5.5F});
+    s.lakes.push_back(
+        Game::Map::Lake{{10.0F, 0.0F, 1.0F}, 19.0F, 14.0F, -18.0F});
+    auto observer = group(
+        QStringLiteral("water_observer"), Troop::Archer, 1, 1, {0.0F, 0.0F, 0.0F}, 1);
+    observer.nation_id = Nation::Carthage;
+    s.groups = {observer};
+    s.expectations = {
+        expectation(Expect::GroupIsRendered, QStringLiteral("water_observer")),
+        expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
     result.push_back(std::move(s));
   }
 

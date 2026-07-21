@@ -15,6 +15,7 @@ inline constexpr const char* UNDEAD_ZONES = "undead_zones";
 inline constexpr const char* FIRECAMPS = "firecamps";
 inline constexpr const char* TERRAIN = "terrain";
 inline constexpr const char* RIVERS = "rivers";
+inline constexpr const char* LAKES = "lakes";
 inline constexpr const char* ROADS = "roads";
 inline constexpr const char* BRIDGES = "bridges";
 inline constexpr const char* VICTORY = "victory";
@@ -110,6 +111,7 @@ inline constexpr const char* END = "end";
 inline constexpr const char* BRIDGE_WIDTH = "width";
 
 inline constexpr const char* ROAD_STYLE = "style";
+inline constexpr const char* ROAD_WAYPOINTS = "waypoints";
 
 inline constexpr const char* RAIN = "rain";
 inline constexpr const char* RAIN_ENABLED = "enabled";

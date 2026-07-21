@@ -738,7 +738,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         float const magic_strength =
             (deco_cmd_.species == TerrainScatterCmd::Species::IronOre ||
              deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine)
-                ? 1.15F
+                ? (deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine ? 1.18F
+                                                                                : 1.15F)
                 : 0.0F;
         prop_shader->set_uniform(prop_uniforms->magic_strength, magic_strength);
       }

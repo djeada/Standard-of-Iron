@@ -237,6 +237,7 @@ public:
   Q_INVOKABLE void commander_primary_action_up();
   Q_INVOKABLE void commander_secondary_action_down();
   Q_INVOKABLE void commander_secondary_action_up();
+  Q_INVOKABLE void commander_trigger_aura();
   Q_INVOKABLE void commander_trigger_rally();
   Q_INVOKABLE void begin_commander_flag_rally();
   Q_INVOKABLE void confirm_commander_flag_rally(qreal sx, qreal sy);
@@ -388,6 +389,7 @@ public:
   void setWindow(QQuickWindow* w) { m_window = w; }
 
   void ensure_initialized();
+  [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);

@@ -19,8 +19,8 @@ TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
   EXPECT_EQ(commander.value("display_name").toString(),
             QStringLiteral("Hannibal Barca"));
   EXPECT_EQ(commander.value("battlefield_role").toString(),
-            QStringLiteral("Elite infantry commander with sacred-band bodyguard "
-                           "and iconic command standard."));
+            QStringLiteral("Elite sword commander with an iconic standard and "
+                           "sacred-band armor."));
 }
 
 TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {

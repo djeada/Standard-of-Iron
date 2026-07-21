@@ -24,13 +24,15 @@
 
 namespace Render::GL {
 
-RiverbankRenderer::RiverbankRenderer() = default;
-RiverbankRenderer::~RiverbankRenderer() = default;
+ShorelineRenderer::ShorelineRenderer() = default;
+ShorelineRenderer::~ShorelineRenderer() = default;
 
-void RiverbankRenderer::configure(
+void ShorelineRenderer::configure(
     const std::vector<Game::Map::RiverSegment>& river_segments,
+    const std::vector<Game::Map::Lake>& lakes,
     const Game::Map::TerrainHeightMap& height_map) {
   m_river_segments = river_segments;
+  m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
   m_visibility_texture.reset();
   m_cached_visibility_version = 0;
@@ -39,23 +41,33 @@ void RiverbankRenderer::configure(
   build_meshes(height_map);
 }
 
-void RiverbankRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_map) {
+void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_map) {
   m_meshes.clear();
   m_visibility_samples.clear();
+  m_water_kinds.clear();
 
-  if (m_river_segments.empty()) {
+  if (m_river_segments.empty() && m_lakes.empty()) {
     return;
   }
 
-  for (const auto& segment : m_river_segments) {
-    auto mesh_result = Ground::build_riverbank_mesh(segment, height_map);
+  for (std::size_t segment_index = 0; segment_index < m_river_segments.size();
+       ++segment_index) {
+    auto mesh_result = Ground::build_riverbank_mesh(
+        m_river_segments, segment_index, height_map);
     m_meshes.push_back(std::move(mesh_result.mesh));
     m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
+    m_water_kinds.push_back(WaterSurfaceKind::River);
+  }
+  for (const auto& lake : m_lakes) {
+    auto mesh_result = Ground::build_lake_shore_mesh(lake, height_map);
+    m_meshes.push_back(std::move(mesh_result.mesh));
+    m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
+    m_water_kinds.push_back(WaterSurfaceKind::Lake);
   }
 }
 
-void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  if (m_meshes.empty() || m_river_segments.empty()) {
+void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+  if (m_meshes.empty()) {
     return;
   }
 
@@ -75,7 +87,7 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   if (visibility_snapshot != nullptr) {
     if (gl_functions == nullptr) {
       qWarning()
-          << "RiverbankRenderer: no current OpenGL context for visibility upload";
+          << "ShorelineRenderer: no current OpenGL context for visibility upload";
     } else {
       const int vis_w = visibility_snapshot->width;
       const int vis_h = visibility_snapshot->height;
@@ -151,12 +163,8 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   visibility_resources.enabled = use_visibility && visibility_tex != nullptr;
 
   size_t mesh_index = 0;
-  for (const auto& segment : m_river_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto* mesh = m_meshes[mesh_index].get();
+  for (const auto& mesh_owner : m_meshes) {
+    auto* mesh = mesh_owner.get();
     ++mesh_index;
 
     if (mesh == nullptr) {
@@ -193,7 +201,8 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
     TerrainFeatureCmd cmd;
     cmd.mesh = mesh;
-    cmd.kind = LinearFeatureKind::Riverbank;
+    cmd.kind = LinearFeatureKind::Shoreline;
+    cmd.water_kind = m_water_kinds[mesh_index - 1];
     cmd.model = model;
     cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
     cmd.alpha = segment_visibility;

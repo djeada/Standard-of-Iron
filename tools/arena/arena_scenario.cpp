@@ -101,6 +101,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("MeleeLock");
   case ScenarioCommandKind::SetFullCreatureLod:
     return QStringLiteral("SetFullCreatureLod");
+  case ScenarioCommandKind::TriggerCommanderAura:
+    return QStringLiteral("TriggerCommanderAura");
   }
   return QStringLiteral("Unknown");
 }
@@ -161,6 +163,14 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("OwnerCompletesConstruction");
   case ArenaExpectationKind::OwnerHarvestsResource:
     return QStringLiteral("OwnerHarvestsResource");
+  case ArenaExpectationKind::CommanderAuraActivated:
+    return QStringLiteral("CommanderAuraActivated");
+  case ArenaExpectationKind::CommanderAuraBuffObserved:
+    return QStringLiteral("CommanderAuraBuffObserved");
+  case ArenaExpectationKind::CommanderAuraExpired:
+    return QStringLiteral("CommanderAuraExpired");
+  case ArenaExpectationKind::NoCommanderAuraBuffObserved:
+    return QStringLiteral("NoCommanderAuraBuffObserved");
   }
   return QStringLiteral("Unknown");
 }
@@ -347,6 +357,8 @@ struct ArenaScenarioRunner::Impl {
     bool construction_site{false};
     bool construction_in_progress{false};
     float construction_time_remaining{0.0F};
+    bool commander_aura_active{false};
+    bool commander_aura_buffed{false};
   };
 
   struct TraceSoldier {
@@ -400,6 +412,9 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> staggered_attack_phases;
   QHash<QString, bool> damage_seen;
   QHash<QString, bool> useful_bot_action;
+  QHash<QString, bool> commander_aura_active_seen;
+  QHash<QString, bool> commander_aura_expired_seen;
+  QHash<QString, bool> commander_aura_buff_seen;
   QHash<int, int> completed_construction_by_owner;
   QHash<int, int> completed_harvest_by_owner;
   QSet<Engine::Core::EntityID> latched_builder_completions;
@@ -803,6 +818,51 @@ struct ArenaScenarioRunner::Impl {
         host.set_force_full_creature_lod(step.enabled);
       }
       break;
+    case ScenarioCommandKind::TriggerCommanderAura:
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* commander =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::CommanderComponent>()
+                : nullptr;
+        if (commander == nullptr) {
+          add_issue(QStringLiteral("aura_commander_missing"),
+                    QStringLiteral("%1 contains no commander for aura activation")
+                        .arg(step.group),
+                    entity_id);
+          continue;
+        }
+        if (step.value > 0) {
+          commander->aura_ability_duration = static_cast<float>(step.value);
+        }
+        commander->request_aura_ability();
+      }
+      break;
+    }
+  }
+
+  void observe_commander_aura_state() {
+    for (auto const& group : scenario.groups) {
+      for (auto entity_id : ids(group.name)) {
+        auto* entity = world.get_entity(entity_id);
+        if (entity == nullptr) {
+          continue;
+        }
+        if (auto const* commander =
+                entity->get_component<Engine::Core::CommanderComponent>()) {
+          if (commander->aura_ability_active) {
+            commander_aura_active_seen[group.name] = true;
+          } else if (commander_aura_active_seen.value(group.name, false) &&
+                     commander->aura_ability_cooldown_remaining > 0.0F) {
+            commander_aura_expired_seen[group.name] = true;
+          }
+        }
+        if (auto const* buff =
+                entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+            buff != nullptr && buff->active) {
+          commander_aura_buff_seen[group.name] = true;
+        }
+      }
     }
   }
 
@@ -931,7 +991,17 @@ struct ArenaScenarioRunner::Impl {
          builder != nullptr ? QString::fromStdString(builder->product_type) : QString{},
          builder != nullptr && builder->has_construction_site,
          builder != nullptr && builder->in_progress,
-         builder != nullptr ? builder->time_remaining : 0.0F});
+         builder != nullptr ? builder->time_remaining : 0.0F,
+         [&]() {
+           auto const* commander =
+               entity->get_component<Engine::Core::CommanderComponent>();
+           return commander != nullptr && commander->aura_ability_active;
+         }(),
+         [&]() {
+           auto const* buff =
+               entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+           return buff != nullptr && buff->active;
+         }()});
 
     auto& previous = entity_states[entity_id];
 
@@ -1720,6 +1790,34 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::CommanderAuraActivated:
+        if (!commander_aura_active_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("commander_aura_not_activated"),
+                    QStringLiteral("%1 never entered its timed command aura state")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::CommanderAuraBuffObserved:
+        if (!commander_aura_buff_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("commander_aura_buff_not_observed"),
+                    QStringLiteral("%1 never received the nearby commander bonus")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::CommanderAuraExpired:
+        if (!commander_aura_expired_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("commander_aura_not_expired"),
+                    QStringLiteral("%1 command aura did not expire into cooldown")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::NoCommanderAuraBuffObserved:
+        if (commander_aura_buff_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("commander_aura_leaked_outside_radius"),
+                    QStringLiteral("%1 received a commander bonus outside the aura")
+                        .arg(expectation.group));
+        }
+        break;
       default:
         break;
       }
@@ -1777,6 +1875,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
       m_impl->execute_step(i, step);
     }
   }
+  m_impl->observe_commander_aura_state();
   for (auto const& expectation : m_impl->scenario.expectations) {
     if (expectation.kind == ArenaExpectationKind::FormationOrderPreserved &&
         m_impl->expectation_active(expectation)) {
@@ -1949,7 +2048,9 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("construction_site"), unit.construction_site},
           {QStringLiteral("construction_in_progress"), unit.construction_in_progress},
           {QStringLiteral("construction_time_remaining"),
-           unit.construction_time_remaining}});
+           unit.construction_time_remaining},
+          {QStringLiteral("commander_aura_active"), unit.commander_aura_active},
+          {QStringLiteral("commander_aura_buffed"), unit.commander_aura_buffed}});
     }
     QJsonArray soldiers;
     for (auto const& soldier : frame.soldiers) {

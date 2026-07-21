@@ -13,9 +13,9 @@ namespace {
 
 using namespace Render::Ground;
 
-constexpr float k_base_color_r = 0.55F;
-constexpr float k_base_color_g = 0.52F;
-constexpr float k_base_color_b = 0.46F;
+constexpr float k_base_color_r = 0.42F;
+constexpr float k_base_color_g = 0.37F;
+constexpr float k_base_color_b = 0.40F;
 
 } // namespace
 

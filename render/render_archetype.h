@@ -146,6 +146,14 @@ public:
                     float alpha = 1.0F,
                     int material_id = 0,
                     Material* material = nullptr);
+  void add_cone(const QVector3D& base,
+                const QVector3D& tip,
+                float radius,
+                const QVector3D& color,
+                Texture* texture = nullptr,
+                float alpha = 1.0F,
+                int material_id = 0,
+                Material* material = nullptr);
   void add_palette_cylinder(const QVector3D& start,
                             const QVector3D& end,
                             float radius,

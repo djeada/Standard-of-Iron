@@ -153,7 +153,7 @@ void StoneRenderer::generate_stone_instances() {
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(x, z);
       if (terrain_type == Game::Map::TerrainType::Mountain ||
-          terrain_type == Game::Map::TerrainType::River) {
+          Game::Map::is_water_terrain(terrain_type)) {
         continue;
       }
 

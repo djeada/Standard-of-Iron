@@ -1,2026 +1,4144 @@
 {
-    "biome": {
-        "blade_height": [
-            0.45,
-            1.1500000000000001
-        ],
-        "blade_width": [
-            0.03,
-            0.05
-        ],
-        "grass_dry": [
-            0.66,
-            0.5700000000000001,
-            0.34
-        ],
-        "grass_primary": [
-            0.42,
-            0.52,
-            0.25
-        ],
-        "grass_secondary": [
-            0.56,
-            0.58,
-            0.3
-        ],
-        "ground_irregularity_enabled": true,
-        "ground_type": "grass_dry",
-        "height_noise": [
-            0.18,
-            0.06
-        ],
-        "irregularity_amplitude": 0.08,
-        "irregularity_scale": 0.13,
-        "patch_density": 3.0500000000000003,
-        "patch_jitter": 0.8200000000000001,
-        "plant_density": 0.48,
-        "rock_high": [
-            0.66,
-            0.65,
-            0.61
-        ],
-        "rock_low": [
-            0.44,
-            0.42,
-            0.39
-        ],
-        "seed": 10017,
-        "soil_color": [
-            0.31,
-            0.25,
-            0.17
-        ],
-        "sway_speed": 1.1,
-        "sway_strength": 0.2
+  "biome": {
+    "blade_height": [
+      0.45,
+      1.1500000000000001
+    ],
+    "blade_width": [
+      0.03,
+      0.05
+    ],
+    "grass_dry": [
+      0.66,
+      0.5700000000000001,
+      0.34
+    ],
+    "grass_primary": [
+      0.42,
+      0.52,
+      0.25
+    ],
+    "grass_secondary": [
+      0.56,
+      0.58,
+      0.3
+    ],
+    "ground_irregularity_enabled": true,
+    "ground_type": "grass_dry",
+    "height_noise": [
+      0.18,
+      0.06
+    ],
+    "irregularity_amplitude": 0.08,
+    "irregularity_scale": 0.13,
+    "patch_density": 3.0500000000000003,
+    "patch_jitter": 0.8200000000000001,
+    "plant_density": 0.48,
+    "rock_high": [
+      0.66,
+      0.65,
+      0.61
+    ],
+    "rock_low": [
+      0.44,
+      0.42,
+      0.39
+    ],
+    "seed": 10017,
+    "soil_color": [
+      0.31,
+      0.25,
+      0.17
+    ],
+    "sway_speed": 1.1,
+    "sway_strength": 0.2
+  },
+  "bridges": [
+    {
+      "end": [
+        246.95,
+        189.55
+      ],
+      "height": 0.65,
+      "start": [
+        234.75,
+        189.53
+      ],
+      "width": 4.75
     },
-    "bridges": [
-        {
-            "can_be_retaken_by_rome": true,
-            "capture_zone_radius": 6,
-            "end": [
-                97,
-                55
-            ],
-            "height": 0.65,
-            "id": "northern_bridge",
-            "readability_props": [
-                "burnt_cart_north_approach",
-                "north_warning_banners"
-            ],
-            "role": "fast risky strike route",
-            "start": [
-                93,
-                55
-            ],
-            "width": 3.8000000000000003
-        },
-        {
-            "can_be_retaken_by_rome": true,
-            "capture_zone_radius": 7,
-            "end": [
-                97,
-                88
-            ],
-            "height": 0.75,
-            "id": "central_bridge",
-            "readability_props": [
-                "central_watch_fire",
-                "dead_tree_gate"
-            ],
-            "role": "hard control route",
-            "start": [
-                93,
-                88
-            ],
-            "width": 5.2
-        },
-        {
-            "can_be_retaken_by_rome": true,
-            "capture_zone_radius": 7,
-            "end": [
-                98,
-                118
-            ],
-            "height": 1.1500000000000001,
-            "id": "southern_bridge",
-            "readability_props": [
-                "gaul_guide_cart",
-                "southern_old_marker"
-            ],
-            "role": "ally and preparation route",
-            "start": [
-                93,
-                118
-            ],
-            "width": 5.8
-        },
-        {
-            "end": [
-                126,
-                102
-            ],
-            "height": 0.55,
-            "id": "south_branch_bridge",
-            "role": "central island to southern fort connector",
-            "start": [
-                125,
-                99
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                134,
-                71
-            ],
-            "height": 0.55,
-            "id": "east_branch_bridge",
-            "role": "central island to northern fort connector",
-            "start": [
-                134,
-                69
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                97,
-                31
-            ],
-            "height": 0.35000000000000003,
-            "id": "hidden_scout_plank",
-            "pathing_tags": [
-                "light_units_preferred",
-                "siege_blocked",
-                "elephant_blocked"
-            ],
-            "purpose": "gives skilled players a vision route, not a full army shortcut",
-            "role": "scout-only visual route; too narrow for siege and elephants",
-            "start": [
-                93,
-                31
-            ],
-            "width": 2.2
-        },
-        {
-            "end": [
-                71,
-                122
-            ],
-            "height": 0.5,
-            "start": [
-                72,
-                124
-            ],
-            "width": 4
-        }
+    {
+      "end": [
+        246.38,
+        302.66
+      ],
+      "height": 0.75,
+      "start": [
+        234.21,
+        301.89
+      ],
+      "width": 6.5
+    },
+    {
+      "end": [
+        335.97,
+        241.96
+      ],
+      "height": 0.55,
+      "start": [
+        335.66,
+        236.49
+      ],
+      "width": 5
+    },
+    {
+      "end": [
+        246.37,
+        106.39
+      ],
+      "height": 0.35000000000000003,
+      "start": [
+        234.18,
+        106.71
+      ],
+      "width": 4
+    },
+    {
+      "end": [
+        174.5,
+        417.58
+      ],
+      "height": 0.5,
+      "start": [
+        178.48,
+        421.75
+      ],
+      "width": 5
+    },
+    {
+      "start": [
+        247.06,
+        223.47
+      ],
+      "end": [
+        234.86,
+        223.56
+      ],
+      "width": 4.98,
+      "height": 0.55
+    }
+  ],
+  "buildings": [
+    {
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "defense_tower",
+      "x": 360.83,
+      "z": 54.94
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "defense_tower",
+      "x": 323.25,
+      "z": 51.51
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "defense_tower",
+      "x": 320.74,
+      "z": 10.3
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "home",
+      "x": 343.29,
+      "z": 44.64
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "home",
+      "x": 328.26,
+      "z": 27.47
+    },
+    {
+      "nation": "carthage",
+      "player_id": 1,
+      "type": "marketplace",
+      "x": 40.09,
+      "z": 164.83
+    },
+    {
+      "nation": "carthage",
+      "player_id": 1,
+      "type": "home",
+      "x": 25.06,
+      "z": 137.35
+    },
+    {
+      "nation": "carthage",
+      "player_id": 1,
+      "type": "home",
+      "x": 25.06,
+      "z": 192.3
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "barracks",
+      "x": 563.8,
+      "z": 532.25
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "marketplace",
+      "x": 563.8,
+      "z": 566.59
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "home",
+      "x": 541.25,
+      "z": 556.29
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "home",
+      "x": 586.36,
+      "z": 556.29
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "defense_tower",
+      "x": 528.72,
+      "z": 518.51
+    },
+    {
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "defense_tower",
+      "x": 598.88,
+      "z": 518.51
+    }
+  ],
+  "camera": {
+    "center": [
+      288.17,
+      0,
+      291.88
     ],
-    "buildings": [
-        {
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 144,
-            "z": 16
-        },
-        {
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 129,
-            "z": 15
-        },
-        {
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 128,
-            "z": 3
-        },
-        {
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 137,
-            "z": 13
-        },
-        {
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 131,
-            "z": 8
-        }
-    ],
-    "camera": {
-        "center": [
-            75,
-            0,
-            75
+    "distance": 299.2,
+    "far": 1462.5,
+    "fov_y": 45,
+    "near": 1,
+    "tilt_deg": 55,
+    "yaw": 210
+  },
+  "coord_system": "grid",
+  "grid": {
+    "height": 650,
+    "tile_size": 1,
+    "width": 650
+  },
+  "max_troops_per_player": 2200,
+  "name": "Crossing the Rhone - Polished Maze Version",
+  "rivers": [
+    {
+      "end": [
+        238,
+        649
+      ],
+      "start": [
+        238,
+        0
+      ],
+      "waypoints": [
+        [
+          238,
+          0
         ],
-        "distance": 88,
-        "far": 500,
-        "fov_y": 45,
-        "near": 1,
-        "tilt_deg": 55,
-        "yaw": 210
-    },
-    "coord_system": "grid",
-    "description": "Hannibal's Carthaginian force begins on the western bank and must break through a layered Roman river defense. The level is built around three viable crossings, a neutral Gallic faction, maze-like approach paths, meaningful route order, asymmetric Roman forts, active patrols, and a supply-line counterattack after the first fort falls.",
-    "grid": {
-        "height": 150,
-        "tile_size": 1,
-        "width": 200
-    },
-    "max_troops_per_player": 1400,
-    "name": "Crossing the Rhone - Polished Maze Version",
-    "rivers": [
-        {
-            "end": [
-                95,
-                150
-            ],
-            "id": "main_rhone",
-            "role": "primary map divider and commitment line",
-            "start": [
-                95,
-                0
-            ],
-            "width": 8
-        },
-        {
-            "end": [
-                200,
-                70
-            ],
-            "id": "south_branch",
-            "role": "separates the southern fort from the central island",
-            "start": [
-                12,
-                148
-            ],
-            "width": 3.4
-        },
-        {
-            "end": [
-                200,
-                70
-            ],
-            "id": "east_branch",
-            "role": "forces the northern route to pass through branch-bridge decisions",
-            "start": [
-                95,
-                70
-            ],
-            "width": 3.2
-        }
-    ],
-    "roads": [
-        {
-            "destination": "central_bridge",
-            "end": [
-                93,
-                88
-            ],
-            "id": "camp_to_central_bridge_main_road",
-            "purpose": "main readable road to the hardest crossing",
-            "start": [
-                0,
-                35
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    0,
-                    35
-                ],
-                [
-                    19,
-                    46
-                ],
-                [
-                    31,
-                    56
-                ],
-                [
-                    43,
-                    67
-                ],
-                [
-                    58,
-                    77
-                ],
-                [
-                    73,
-                    84
-                ],
-                [
-                    93,
-                    88
-                ]
-            ],
-            "width": 3.2
-        },
-        {
-            "destination": "northern_bridge",
-            "end": [
-                93,
-                55
-            ],
-            "id": "camp_to_northern_bridge_flank_road",
-            "purpose": "fast but narrow route for cavalry and early pressure",
-            "start": [
-                12,
-                42
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    12,
-                    42
-                ],
-                [
-                    25,
-                    35
-                ],
-                [
-                    40,
-                    33
-                ],
-                [
-                    57,
-                    39
-                ],
-                [
-                    72,
-                    48
-                ],
-                [
-                    93,
-                    55
-                ]
-            ],
-            "width": 2.4
-        },
-        {
-            "destination": "hidden_scout_plank",
-            "end": [
-                93,
-                31
-            ],
-            "id": "camp_to_hidden_scout_plank",
-            "pathing_tags": [
-                "light_units_preferred",
-                "siege_unfriendly"
-            ],
-            "purpose": "optional scout route ending in vision, not a full army attack path",
-            "start": [
-                1,
-                0
-            ],
-            "style": "rough",
-            "waypoints": [
-                [
-                    1,
-                    0
-                ],
-                [
-                    31,
-                    23
-                ],
-                [
-                    45,
-                    26
-                ],
-                [
-                    60,
-                    25
-                ],
-                [
-                    76,
-                    28
-                ],
-                [
-                    93,
-                    31
-                ]
-            ],
-            "width": 1.7
-        },
-        {
-            "destination": "central_gaul_warning_camp",
-            "end": [
-                71,
-                122
-            ],
-            "id": "western_ruins_loop_upper",
-            "purpose": "connects northern route to neutral Gallic warning camp",
-            "start": [
-                26,
-                9
-            ],
-            "style": "rough",
-            "waypoints": [
-                [
-                    26,
-                    9
-                ],
-                [
-                    32,
-                    43
-                ],
-                [
-                    41,
-                    49
-                ],
-                [
-                    71,
-                    122
-                ]
-            ],
-            "width": 2.1
-        },
-        {
-            "destination": "north_roman_fort_zone",
-            "end": [
-                131,
-                22
-            ],
-            "id": "northern_bridge_to_north_fort",
-            "purpose": "fast road to command fort",
-            "start": [
-                97,
-                55
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    97,
-                    55
-                ],
-                [
-                    111,
-                    48
-                ],
-                [
-                    120,
-                    38
-                ],
-                [
-                    126,
-                    29
-                ],
-                [
-                    131,
-                    22
-                ]
-            ],
-            "width": 2.6
-        },
-        {
-            "destination": "signal_tower_zone",
-            "end": [
-                134,
-                69
-            ],
-            "id": "hidden_plank_to_signal_ridge",
-            "purpose": "scout/raid route to signal rider and tower",
-            "start": [
-                97,
-                31
-            ],
-            "style": "rough",
-            "waypoints": [
-                [
-                    97,
-                    31
-                ],
-                [
-                    108,
-                    30
-                ],
-                [
-                    116,
-                    32
-                ],
-                [
-                    134,
-                    69
-                ]
-            ],
-            "width": 1.7
-        },
-        {
-            "destination": "south_roman_fort_zone",
-            "end": [
-                140,
-                134
-            ],
-            "id": "south_branch_bridge_to_south_fort",
-            "purpose": "central route into southern military fort",
-            "start": [
-                126,
-                102
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    126,
-                    102
-                ],
-                [
-                    128,
-                    113
-                ],
-                [
-                    132,
-                    123
-                ],
-                [
-                    140,
-                    134
-                ]
-            ],
-            "width": 3
-        },
-        {
-            "destination": "south_roman_fort_zone",
-            "end": [
-                140,
-                134
-            ],
-            "id": "southern_bridge_to_south_fort",
-            "purpose": "direct southern assault road",
-            "start": [
-                98,
-                118
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    98,
-                    118
-                ],
-                [
-                    114,
-                    119
-                ],
-                [
-                    126,
-                    123
-                ],
-                [
-                    134,
-                    130
-                ],
-                [
-                    140,
-                    134
-                ]
-            ],
-            "width": 3.1
-        },
-        {
-            "destination": "north_roman_fort_zone",
-            "end": [
-                131,
-                22
-            ],
-            "id": "east_branch_bridge_to_north_fort",
-            "purpose": "inner Roman response road from island to command fort",
-            "start": [
-                134,
-                69
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    134,
-                    69
-                ],
-                [
-                    136,
-                    61
-                ],
-                [
-                    133,
-                    48
-                ],
-                [
-                    130,
-                    36
-                ],
-                [
-                    131,
-                    22
-                ]
-            ],
-            "width": 2.4
-        },
-        {
-            "end": [
-                191,
-                20
-            ],
-            "start": [
-                131,
-                22
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                134,
-                68
-            ],
-            "start": [
-                191,
-                21
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                192,
-                4
-            ],
-            "start": [
-                192,
-                21
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                141,
-                5
-            ],
-            "start": [
-                192,
-                4
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                125,
-                99
-            ],
-            "start": [
-                134,
-                71
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                125,
-                99
-            ],
-            "start": [
-                98,
-                88
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                98,
-                88
-            ],
-            "start": [
-                134,
-                71
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                73,
-                124
-            ],
-            "start": [
-                94,
-                118
-            ],
-            "style": "default",
-            "width": 3
-        }
-    ],
-    "spawns": [
-        {
-            "capture_required": true,
-            "id": "rome_north_barracks",
-            "max_population": 150,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "role": "command_economy_fort",
-            "type": "barracks",
-            "x": 138,
-            "z": 8
-        },
-        {
-            "capture_required": true,
-            "id": "rome_south_barracks",
-            "max_population": 150,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "role": "military_fort",
-            "type": "barracks",
-            "x": 141,
-            "z": 135
-        },
-        {
-            "id": "p1_spearman_01",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "spearman",
-            "x": 5,
-            "z": 46
-        },
-        {
-            "id": "p1_spearman_02",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "spearman",
-            "x": 5,
-            "z": 50
-        },
-        {
-            "id": "p1_swordsman_01",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "swordsman",
-            "x": 5,
-            "z": 48
-        },
-        {
-            "id": "p1_archer_01",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "archer",
-            "x": 2,
-            "z": 46
-        },
-        {
-            "id": "p1_archer_02",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "archer",
-            "x": 2,
-            "z": 48
-        },
-        {
-            "id": "p1_horse_swordsman_01",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "horse_swordsman",
-            "x": 5,
-            "z": 44
-        },
-        {
-            "id": "p1_elephant_01",
-            "max_population": -1,
-            "player_id": 1,
-            "role": "bridge breaker",
-            "type": "elephant",
-            "x": 2,
-            "z": 44
-        },
-        {
-            "id": "p1_healer_01",
-            "max_population": -1,
-            "player_id": 1,
-            "type": "healer",
-            "x": 2,
-            "z": 50
-        },
-        {
-            "id": "rome_north_spearman_01",
-            "max_population": -1,
-            "player_id": 2,
-            "type": "spearman",
-            "x": 99,
-            "z": 27,
-            "behavior": "guard",
-            "guard_radius": 14
-        },
-        {
-            "id": "rome_north_spearman_02",
-            "max_population": -1,
-            "player_id": 2,
-            "type": "spearman",
-            "x": 119,
-            "z": 16,
-            "behavior": "guard",
-            "guard_radius": 12
-        },
-        {
-            "id": "rome_north_swordsman_01",
-            "max_population": -1,
-            "player_id": 2,
-            "type": "swordsman",
-            "x": 118,
-            "z": 22,
-            "behavior": "guard",
-            "guard_radius": 12
-        },
-        {
-            "id": "rome_north_archer_01",
-            "max_population": -1,
-            "player_id": 2,
-            "role": "hill defender",
-            "type": "archer",
-            "x": 101,
-            "z": 29,
-            "behavior": "hold"
-        },
-        {
-            "id": "rome_north_archer_02",
-            "max_population": -1,
-            "player_id": 2,
-            "role": "hill defender",
-            "type": "archer",
-            "x": 122,
-            "z": 20,
-            "behavior": "hold"
-        },
-        {
-            "id": "rome_north_archer_03",
-            "max_population": -1,
-            "player_id": 2,
-            "role": "anti-rush defender",
-            "type": "archer",
-            "x": 122,
-            "z": 23,
-            "behavior": "hold"
-        },
-        {
-            "id": "rome_north_catapult_01",
-            "max_population": -1,
-            "player_id": 2,
-            "role": "dangerous exposed target",
-            "type": "catapult",
-            "x": 125,
-            "z": 21,
-            "behavior": "hold"
-        },
-        {
-            "id": "rome_north_healer_01",
-            "max_population": -1,
-            "player_id": 2,
-            "type": "healer",
-            "x": 123,
-            "z": 17,
-            "behavior": "guard",
-            "guard_radius": 10
-        },
-        {
-            "id": "rome_north_signal_guard_01",
-            "max_population": -1,
-            "player_id": 2,
-            "role": "runs warning to south if not intercepted",
-            "type": "horse_swordsman",
-            "x": 116,
-            "z": 22,
-            "behavior": "patrol",
-            "patrol_waypoints": [
-                {
-                    "x": 125,
-                    "z": 24
-                },
-                {
-                    "x": 133,
-                    "z": 36
-                }
-            ]
-        },
-        {
-            "id": "gaul_center_spearman_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "neutral warning encounter",
-            "type": "spearman",
-            "x": 75,
-            "z": 56,
-            "behavior": "guard",
-            "guard_radius": 10
-        },
-        {
-            "id": "gaul_center_archer_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "neutral warning encounter",
-            "type": "archer",
-            "x": 76,
-            "z": 63,
-            "behavior": "hold"
-        },
-        {
-            "id": "gaul_center_swordsman_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "neutral warning encounter",
-            "type": "swordsman",
-            "x": 74,
-            "z": 65,
-            "behavior": "guard",
-            "guard_radius": 10
-        },
-        {
-            "id": "gaul_bridge_spearman_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "hints central crossing danger",
-            "type": "spearman",
-            "x": 72,
-            "z": 86,
-            "behavior": "guard",
-            "guard_radius": 10
-        },
-        {
-            "id": "gaul_bridge_archer_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "hints central crossing danger",
-            "type": "archer",
-            "x": 75,
-            "z": 83,
-            "behavior": "hold"
-        },
-        {
-            "id": "gaul_south_horse_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "draws attention to southern alliance route",
-            "type": "horse_swordsman",
-            "x": 149,
-            "z": 119,
-            "behavior": "patrol",
-            "patrol_waypoints": [
-                {
-                    "x": 141,
-                    "z": 124
-                },
-                {
-                    "x": 132,
-                    "z": 134
-                }
-            ]
-        },
-        {
-            "id": "gaul_south_bridge_horse_01",
-            "max_population": -1,
-            "player_id": 3,
-            "role": "visible guide toward southern bridge",
-            "type": "horse_swordsman",
-            "x": 82,
-            "z": 116,
-            "behavior": "patrol",
-            "patrol_waypoints": [
-                {
-                    "x": 88,
-                    "z": 116
-                },
-                {
-                    "x": 94,
-                    "z": 120
-                }
-            ]
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "archer",
-            "x": 100,
-            "z": 58,
-            "behavior": "hold"
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "archer",
-            "x": 101,
-            "z": 54,
-            "behavior": "hold"
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "carthage_elephant_master",
-            "x": 7,
-            "z": 45
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "swordsman",
-            "x": 144,
-            "z": 125,
-            "behavior": "guard",
-            "guard_radius": 12
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "swordsman",
-            "x": 141,
-            "z": 120,
-            "behavior": "guard",
-            "guard_radius": 12
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "archer",
-            "x": 135,
-            "z": 146,
-            "behavior": "hold"
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "archer",
-            "x": 129,
-            "z": 146,
-            "behavior": "hold"
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "spearman",
-            "x": 46,
-            "z": 109,
-            "behavior": "guard",
-            "guard_radius": 12
-        },
-        {
-            "max_population": -1,
-            "player_id": 3,
-            "type": "spearman",
-            "x": 50,
-            "z": 136,
-            "behavior": "guard",
-            "guard_radius": 12
-        }
-    ],
-    "starting_resources": {
-        "food": 200,
-        "gold": 200,
-        "iron": 100,
-        "stone": 100,
-        "wood": 150
-    },
-    "terrain": [
-        {
-            "depth": 19,
-            "description": "Island high ground that controls movement between north and south forts; central prize after crossing.",
-            "entrances": [
-                {
-                    "x": 138,
-                    "z": 75
-                },
-                {
-                    "radius": 2.5500000000000003,
-                    "x": 167.5,
-                    "z": 140.5
-                }
-            ],
-            "height": 2.35,
-            "id": "eastern_island_high_ground",
-            "rotation": 4,
-            "type": "hill",
-            "width": 15,
-            "x": 171,
-            "z": 126
-        },
-        {
-            "depth": 15,
-            "description": "Back hill behind the southern Roman fort; creates archer line and prevents the base from feeling flat.",
-            "entrances": [
-                {
-                    "radius": 1.8,
-                    "x": 155,
-                    "z": 106.5
-                }
-            ],
-            "height": 2.4,
-            "id": "south_fort_back_hill",
-            "rotation": -20,
-            "type": "hill",
-            "width": 13,
-            "x": 109,
-            "z": 137
-        },
-        {
-            "depth": 18,
-            "description": "Cliff above the east branch, compressing movement near the branch bridge.",
-            "entrances": [
-                {
-                    "x": 137,
-                    "z": 66
-                }
-            ],
-            "height": 2.7,
-            "id": "northeast_river_cliff",
-            "rotation": 18,
-            "type": "hill",
-            "width": 12,
-            "x": 183,
-            "z": 51
-        },
-        {
-            "description": "Northwestern rocky boundary",
-            "height": 8,
-            "id": "northwestern_rocky_boundary",
-            "radius": 7,
-            "type": "mountain",
-            "x": 27,
-            "z": 3
-        },
-        {
-            "description": "Northern valley wall",
-            "height": 8.5,
-            "id": "northern_valley_wall",
-            "radius": 13,
-            "type": "mountain",
-            "x": 66,
-            "z": 6
-        },
-        {
-            "description": "Southwestern rocky boundary",
-            "height": 8,
-            "id": "southwestern_rocky_boundary",
-            "radius": 6,
-            "type": "mountain",
-            "x": 11,
-            "z": 141
-        },
-        {
-            "description": "Southern valley wall",
-            "height": 9,
-            "id": "southern_valley_wall",
-            "radius": 15,
-            "type": "mountain",
-            "x": 63,
-            "z": 146
-        },
-        {
-            "description": "Far eastern ridge and visual boundary",
-            "height": 8,
-            "id": "far_eastern_ridge",
-            "radius": 8,
-            "type": "mountain",
-            "x": 169,
-            "z": 11
-        },
-        {
-            "height": 8,
-            "radius": 8,
-            "rotation": -30,
-            "type": "mountain",
-            "x": 111,
-            "z": 9
-        },
-        {
-            "height": 8,
-            "radius": 10,
-            "type": "mountain",
-            "x": 16,
-            "z": 71
-        },
-        {
-            "depth": 6,
-            "entrances": [
-                {
-                    "radius": 1.58,
-                    "x": 41.5,
-                    "z": 52.5
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 7,
-            "x": 29,
-            "z": 37
-        },
-        {
-            "depth": 11,
-            "entrances": [
-                {
-                    "radius": 1.58,
-                    "x": 52.5,
-                    "z": 88.5
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 11,
-            "x": 43,
-            "z": 91
-        },
-        {
-            "depth": 13,
-            "entrances": [
-                {
-                    "radius": 2.06,
-                    "x": 78,
-                    "z": 98.5
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 11,
-            "x": 79,
-            "z": 105
-        },
-        {
-            "depth": 11,
-            "entrances": [
-                {
-                    "radius": 1.41,
-                    "x": 117,
-                    "z": 20
-                },
-                {
-                    "radius": 1.8,
-                    "x": 107,
-                    "z": 29.5
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 11,
-            "x": 112,
-            "z": 25
-        },
-        {
-            "depth": 11,
-            "entrances": [
-                {
-                    "radius": 1.8,
-                    "x": 85,
-                    "z": 40.5
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 11,
-            "x": 80,
-            "z": 41
-        }
-    ],
-    "time_of_day": "afternoon",
-    "undead_zones": [
-        {
-            "anchor_type": "ruins",
-            "awaken_on": [
-                "unit_enters_radius"
-            ],
-            "id": "crossing_ruins",
-            "leash_radius": 13,
-            "owner_id": 99,
-            "radius": 7,
-            "team_id": 99,
-            "waves": [
-                {
-                    "trigger": "initial",
-                    "units": {
-                        "skeleton_archer": 1,
-                        "skeleton_swordsman": 2
-                    }
-                }
-            ],
-            "x": 15,
-            "z": 105
-        }
-    ],
-    "victory": {
-        "defeat_conditions": [
-            "no_commander",
-            "only_commander_remaining"
+        [
+          237.74,
+          15.09
         ],
-        "key_structures": [
-            "barracks"
+        [
+          237.74,
+          30.19
         ],
-        "min_count": 2,
-        "type": "capture_structures"
+        [
+          238.01,
+          45.28
+        ],
+        [
+          238.49,
+          60.37
+        ],
+        [
+          239.09,
+          75.47
+        ],
+        [
+          239.71,
+          90.56
+        ],
+        [
+          240.25,
+          105.65
+        ],
+        [
+          240.65,
+          120.74
+        ],
+        [
+          240.88,
+          135.84
+        ],
+        [
+          240.96,
+          150.93
+        ],
+        [
+          240.93,
+          166.02
+        ],
+        [
+          240.87,
+          181.12
+        ],
+        [
+          240.84,
+          196.21
+        ],
+        [
+          240.87,
+          211.3
+        ],
+        [
+          240.98,
+          226.4
+        ],
+        [
+          241.13,
+          241.49
+        ],
+        [
+          241.23,
+          256.58
+        ],
+        [
+          241.19,
+          271.67
+        ],
+        [
+          240.92,
+          286.77
+        ],
+        [
+          240.32,
+          301.86
+        ],
+        [
+          239.37,
+          316.95
+        ],
+        [
+          238.1,
+          332.05
+        ],
+        [
+          236.59,
+          347.14
+        ],
+        [
+          234.99,
+          362.23
+        ],
+        [
+          233.46,
+          377.33
+        ],
+        [
+          232.19,
+          392.42
+        ],
+        [
+          231.33,
+          407.51
+        ],
+        [
+          230.98,
+          422.6
+        ],
+        [
+          231.18,
+          437.7
+        ],
+        [
+          231.89,
+          452.79
+        ],
+        [
+          232.99,
+          467.88
+        ],
+        [
+          234.34,
+          482.98
+        ],
+        [
+          235.76,
+          498.07
+        ],
+        [
+          237.09,
+          513.16
+        ],
+        [
+          238.18,
+          528.26
+        ],
+        [
+          238.94,
+          543.35
+        ],
+        [
+          239.37,
+          558.44
+        ],
+        [
+          239.48,
+          573.53
+        ],
+        [
+          239.34,
+          588.63
+        ],
+        [
+          239.05,
+          603.72
+        ],
+        [
+          238.68,
+          618.81
+        ],
+        [
+          238.32,
+          633.91
+        ],
+        [
+          238,
+          649
+        ]
+      ],
+      "width": 11.2
     },
-    "walls": [
+    {
+      "end": [
+        227.26,
+        384.26
+      ],
+      "start": [
+        0,
+        508
+      ],
+      "waypoints": [
+        [
+          0,
+          508
+        ],
+        [
+          6.27,
+          507.54
+        ],
+        [
+          12.56,
+          507.35
+        ],
+        [
+          18.91,
+          507.89
+        ],
+        [
+          25.28,
+          508.77
+        ],
+        [
+          31.47,
+          507.25
+        ],
+        [
+          37.61,
+          504.87
+        ],
+        [
+          43.81,
+          503.43
+        ],
+        [
+          50.09,
+          503.08
+        ],
+        [
+          56.45,
+          503.83
+        ],
+        [
+          62.74,
+          503.57
+        ],
+        [
+          69,
+          503
+        ],
+        [
+          74.12,
+          499.6
+        ],
+        [
+          79.34,
+          496.33
+        ],
+        [
+          84.35,
+          492.78
+        ],
+        [
+          88.92,
+          488.68
+        ],
+        [
+          93.14,
+          484.11
+        ],
+        [
+          97.31,
+          479.47
+        ],
+        [
+          101.76,
+          475.21
+        ],
+        [
+          106.59,
+          471.44
+        ],
+        [
+          111.65,
+          467.95
+        ],
+        [
+          116.67,
+          464.43
+        ],
+        [
+          121.58,
+          460.75
+        ],
+        [
+          126.51,
+          457.11
+        ],
+        [
+          131.68,
+          453.77
+        ],
+        [
+          137.09,
+          450.75
+        ],
+        [
+          142.53,
+          447.76
+        ],
+        [
+          147.68,
+          444.39
+        ],
+        [
+          152.38,
+          440.46
+        ],
+        [
+          156.8,
+          436.15
+        ],
+        [
+          161.26,
+          431.89
+        ],
+        [
+          166,
+          428
+        ],
+        [
+          170.75,
+          424.41
+        ],
+        [
+          175.42,
+          420.69
+        ],
+        [
+          179.78,
+          416.52
+        ],
+        [
+          184.62,
+          413.06
+        ],
+        [
+          190.94,
+          411.76
+        ],
+        [
+          197.22,
+          410.4
+        ],
+        [
+          201.66,
+          406.35
+        ],
+        [
+          205.36,
+          401.22
+        ],
+        [
+          209.9,
+          397.31
+        ],
+        [
+          214.9,
+          394.08
+        ],
+        [
+          220,
+          391
+        ],
+        [
+          225.25,
+          387.68
+        ],
+        [
+          229.06,
+          382.68
+        ],
+        [
+          227.26,
+          384.26
+        ]
+      ],
+      "width": 4.76
+    },
+    {
+      "end": [
+        649,
+        240
+      ],
+      "start": [
+        246.72,
+        240.05
+      ],
+      "waypoints": [
+        [
+          246.72,
+          240.05
+        ],
+        [
+          250.04,
+          240.07
+        ],
+        [
+          256.09,
+          240.14
+        ],
+        [
+          262.13,
+          240.22
+        ],
+        [
+          268.18,
+          240.29
+        ],
+        [
+          274.22,
+          240.37
+        ],
+        [
+          280.27,
+          240.43
+        ],
+        [
+          286.31,
+          240.47
+        ],
+        [
+          292.36,
+          240.48
+        ],
+        [
+          298.4,
+          240.46
+        ],
+        [
+          304.45,
+          240.39
+        ],
+        [
+          310.49,
+          240.27
+        ],
+        [
+          316.54,
+          240.1
+        ],
+        [
+          322.58,
+          239.88
+        ],
+        [
+          328.63,
+          239.6
+        ],
+        [
+          334.67,
+          239.29
+        ],
+        [
+          340.72,
+          238.95
+        ],
+        [
+          346.76,
+          238.59
+        ],
+        [
+          352.81,
+          238.24
+        ],
+        [
+          358.85,
+          237.91
+        ],
+        [
+          364.9,
+          237.63
+        ],
+        [
+          370.94,
+          237.4
+        ],
+        [
+          376.99,
+          237.24
+        ],
+        [
+          383.03,
+          237.17
+        ],
+        [
+          389.07,
+          237.19
+        ],
+        [
+          395.12,
+          237.31
+        ],
+        [
+          401.16,
+          237.51
+        ],
+        [
+          407.21,
+          237.79
+        ],
+        [
+          413.25,
+          238.15
+        ],
+        [
+          419.3,
+          238.55
+        ],
+        [
+          425.34,
+          238.99
+        ],
+        [
+          431.39,
+          239.44
+        ],
+        [
+          437.43,
+          239.88
+        ],
+        [
+          443.48,
+          240.3
+        ],
+        [
+          449.52,
+          240.68
+        ],
+        [
+          455.57,
+          240.99
+        ],
+        [
+          461.61,
+          241.25
+        ],
+        [
+          467.66,
+          241.44
+        ],
+        [
+          473.7,
+          241.56
+        ],
+        [
+          479.75,
+          241.63
+        ],
+        [
+          485.79,
+          241.64
+        ],
+        [
+          491.84,
+          241.6
+        ],
+        [
+          497.88,
+          241.54
+        ],
+        [
+          503.93,
+          241.46
+        ],
+        [
+          509.97,
+          241.37
+        ],
+        [
+          516.01,
+          241.29
+        ],
+        [
+          522.06,
+          241.21
+        ],
+        [
+          528.1,
+          241.15
+        ],
+        [
+          534.15,
+          241.1
+        ],
+        [
+          540.19,
+          241.07
+        ],
+        [
+          546.24,
+          241.04
+        ],
+        [
+          552.28,
+          241.02
+        ],
+        [
+          558.33,
+          240.99
+        ],
+        [
+          564.37,
+          240.96
+        ],
+        [
+          570.42,
+          240.91
+        ],
+        [
+          576.46,
+          240.84
+        ],
+        [
+          582.51,
+          240.75
+        ],
+        [
+          588.55,
+          240.64
+        ],
+        [
+          594.6,
+          240.51
+        ],
+        [
+          600.64,
+          240.38
+        ],
+        [
+          606.69,
+          240.24
+        ],
+        [
+          612.73,
+          240.12
+        ],
+        [
+          618.78,
+          240.01
+        ],
+        [
+          624.82,
+          239.93
+        ],
+        [
+          630.87,
+          239.89
+        ],
+        [
+          636.91,
+          239.88
+        ],
+        [
+          642.96,
+          239.92
+        ],
+        [
+          649,
+          240
+        ]
+      ],
+      "width": 4.48
+    }
+  ],
+  "roads": [
+    {
+      "end": [
+        258.4,
+        301.73
+      ],
+      "start": [
+        42.6,
+        127.05
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          42.6,
+          127.05
+        ],
+        [
+          49.81,
+          140.54
+        ],
+        [
+          57.03,
+          154.03
+        ],
+        [
+          64.24,
+          167.52
+        ],
+        [
+          71.45,
+          181.01
+        ],
+        [
+          78.66,
+          194.5
+        ],
+        [
+          81.98,
+          199.03
+        ],
+        [
+          94.47,
+          211.88
+        ],
+        [
+          106.96,
+          224.72
+        ],
+        [
+          120.97,
+          234.43
+        ],
+        [
+          134.99,
+          244.14
+        ],
+        [
+          149,
+          253.85
+        ],
+        [
+          163.02,
+          263.56
+        ],
+        [
+          177.03,
+          273.26
+        ],
+        [
+          191.05,
+          282.97
+        ],
+        [
+          205.06,
+          292.68
+        ],
+        [
+          219.08,
+          302.39
+        ],
+        [
+          231.42,
+          302.2
+        ],
+        [
+          234.21,
+          301.89
+        ],
+        [
+          246.38,
+          302.66
+        ],
+        [
+          258.4,
+          301.73
+        ]
+      ],
+      "width": 3.78
+    },
+    {
+      "end": [
+        259.45,
+        105.8
+      ],
+      "start": [
+        2.51,
+        3.43
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          2.51,
+          3.43
+        ],
+        [
+          13.81,
+          14.74
+        ],
+        [
+          25.12,
+          26.05
+        ],
+        [
+          36.42,
+          37.36
+        ],
+        [
+          47.73,
+          48.67
+        ],
+        [
+          59.03,
+          59.98
+        ],
+        [
+          70.34,
+          71.29
+        ],
+        [
+          86.72,
+          74.83
+        ],
+        [
+          103.11,
+          78.37
+        ],
+        [
+          119.49,
+          81.92
+        ],
+        [
+          135.87,
+          85.46
+        ],
+        [
+          152.26,
+          89
+        ],
+        [
+          168.64,
+          92.54
+        ],
+        [
+          185.03,
+          96.09
+        ],
+        [
+          201.41,
+          99.63
+        ],
+        [
+          217.79,
+          103.17
+        ],
+        [
+          234.18,
+          106.71
+        ],
+        [
+          246.37,
+          106.39
+        ],
+        [
+          259.45,
+          105.8
+        ]
+      ],
+      "width": 3
+    },
+    {
+      "end": [
+        335.3,
+        257.98
+      ],
+      "start": [
+        259.47,
+        105.8
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          259.47,
+          105.8
+        ],
+        [
+          246.37,
+          106.39
+        ],
+        [
+          234.18,
+          106.71
+        ],
+        [
+          250,
+          107
+        ],
+        [
+          261.81,
+          119.98
+        ],
+        [
+          273.62,
+          132.96
+        ],
+        [
+          285.43,
+          145.93
+        ],
+        [
+          297.24,
+          158.91
+        ],
+        [
+          309.05,
+          171.89
+        ],
+        [
+          317.08,
+          185.73
+        ],
+        [
+          325.34,
+          199.99
+        ],
+        [
+          333.6,
+          214.24
+        ],
+        [
+          336.33,
+          220.59
+        ],
+        [
+          336.78,
+          220.61
+        ],
+        [
+          336.14,
+          233.07
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          335.49,
+          245.52
+        ],
+        [
+          335.3,
+          257.98
+        ]
+      ],
+      "width": 3
+    },
+    {
+      "end": [
+        353.32,
+        463.57
+      ],
+      "start": [
+        315.73,
+        350.25
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          315.73,
+          350.25
+        ],
+        [
+          320.74,
+          365.95
+        ],
+        [
+          325.75,
+          381.65
+        ],
+        [
+          330.76,
+          397.35
+        ],
+        [
+          335.78,
+          413.04
+        ],
+        [
+          340.79,
+          428.74
+        ],
+        [
+          345.8,
+          444.44
+        ],
+        [
+          350.81,
+          460.14
+        ],
+        [
+          353.32,
+          463.57
+        ]
+      ],
+      "width": 3.54
+    },
+    {
+      "end": [
+        328.26,
+        75.54
+      ],
+      "start": [
+        336.33,
+        220.59
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          336.33,
+          220.59
+        ],
+        [
+          336.78,
+          220.61
+        ],
+        [
+          336.14,
+          233.07
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          334.78,
+          228.1
+        ],
+        [
+          333.6,
+          214.24
+        ],
+        [
+          332.93,
+          196.9
+        ],
+        [
+          332.26,
+          179.56
+        ],
+        [
+          331.6,
+          162.23
+        ],
+        [
+          330.93,
+          144.89
+        ],
+        [
+          330.26,
+          127.55
+        ],
+        [
+          329.6,
+          110.22
+        ],
+        [
+          328.93,
+          92.88
+        ],
+        [
+          328.26,
+          75.54
+        ]
+      ],
+      "width": 3
+    },
+    {
+      "end": [
+        481.11,
+        68.68
+      ],
+      "start": [
+        328.26,
+        75.54
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          328.26,
+          75.54
+        ],
+        [
+          341.45,
+          75.24
+        ],
+        [
+          354.64,
+          74.94
+        ],
+        [
+          372.3,
+          74.54
+        ],
+        [
+          389.96,
+          74.13
+        ],
+        [
+          407.62,
+          73.73
+        ],
+        [
+          425.27,
+          73.33
+        ],
+        [
+          442.93,
+          72.93
+        ],
+        [
+          460.59,
+          72.52
+        ],
+        [
+          478.25,
+          72.12
+        ],
+        [
+          478.61,
+          72.11
+        ],
+        [
+          479.5,
+          70.91
+        ],
+        [
+          479.86,
+          70.43
+        ],
+        [
+          478.61,
+          68.78
+        ],
+        [
+          481.11,
+          68.68
+        ]
+      ]
+    },
+    {
+      "end": [
+        335.3,
+        257.98
+      ],
+      "start": [
+        478.61,
+        72.11
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          478.61,
+          72.11
+        ],
+        [
+          478.61,
+          68.78
+        ],
+        [
+          479.86,
+          70.43
+        ],
+        [
+          479.5,
+          70.91
+        ],
+        [
+          478.25,
+          72.12
+        ],
+        [
+          466.42,
+          84.49
+        ],
+        [
+          454.6,
+          96.87
+        ],
+        [
+          442.77,
+          109.24
+        ],
+        [
+          430.94,
+          121.61
+        ],
+        [
+          419.12,
+          133.98
+        ],
+        [
+          407.29,
+          146.36
+        ],
+        [
+          395.46,
+          158.73
+        ],
+        [
+          383.64,
+          171.1
+        ],
+        [
+          371.81,
+          183.47
+        ],
+        [
+          359.98,
+          195.85
+        ],
+        [
+          348.16,
+          208.22
+        ],
+        [
+          336.33,
+          220.59
+        ],
+        [
+          336.78,
+          220.61
+        ],
+        [
+          336.14,
+          233.07
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          335.49,
+          245.52
+        ],
+        [
+          335.3,
+          257.98
+        ]
+      ]
+    },
+    {
+      "end": [
+        481.11,
+        13.74
+      ],
+      "start": [
+        481.11,
+        72.11
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          481.11,
+          72.11
+        ],
+        [
+          478.61,
+          72.11
+        ],
+        [
+          479.42,
+          70.99
+        ],
+        [
+          479.85,
+          70.41
+        ],
+        [
+          481.11,
+          68.68
+        ],
+        [
+          481.11,
+          54.95
+        ],
+        [
+          481.11,
+          41.21
+        ],
+        [
+          481.11,
+          27.48
+        ],
+        [
+          481.11,
+          13.74
+        ]
+      ]
+    },
+    {
+      "end": [
+        353.32,
+        17.17
+      ],
+      "start": [
+        481.11,
+        13.74
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          481.11,
+          13.74
+        ],
+        [
+          465.14,
+          14.17
+        ],
+        [
+          449.16,
+          14.6
+        ],
+        [
+          433.19,
+          15.03
+        ],
+        [
+          417.22,
+          15.46
+        ],
+        [
+          401.24,
+          15.88
+        ],
+        [
+          385.27,
+          16.31
+        ],
+        [
+          369.29,
+          16.74
+        ],
+        [
+          353.32,
+          17.17
+        ]
+      ]
+    },
+    {
+      "end": [
+        313.22,
+        339.95
+      ],
+      "start": [
+        335.3,
+        257.99
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          335.3,
+          257.99
+        ],
+        [
+          335.49,
+          245.52
+        ],
+        [
+          335,
+          245
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          335,
+          245
+        ],
+        [
+          333.72,
+          245.66
+        ],
+        [
+          332.19,
+          258.19
+        ],
+        [
+          328.4,
+          274.54
+        ],
+        [
+          324.6,
+          290.89
+        ],
+        [
+          320.81,
+          307.25
+        ],
+        [
+          317.01,
+          323.6
+        ],
+        [
+          313.22,
+          339.95
+        ]
+      ]
+    },
+    {
+      "end": [
+        313.22,
+        339.95
+      ],
+      "start": [
+        258.4,
+        301.73
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          258.4,
+          301.73
+        ],
+        [
+          246.38,
+          302.66
+        ],
+        [
+          234.21,
+          301.89
+        ],
+        [
+          249.31,
+          305.63
+        ],
+        [
+          264.42,
+          309.36
+        ],
+        [
+          276.62,
+          317.01
+        ],
+        [
+          288.82,
+          324.65
+        ],
+        [
+          301.02,
+          332.3
+        ],
+        [
+          313.22,
+          339.95
+        ]
+      ]
+    },
+    {
+      "end": [
+        219.08,
+        302.59
+      ],
+      "start": [
+        335.3,
+        257.99
+      ],
+      "style": "default",
+      "width": 3.54,
+      "waypoints": [
+        [
+          335.3,
+          257.99
+        ],
+        [
+          335.49,
+          245.52
+        ],
+        [
+          335,
+          245
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          335,
+          245
+        ],
+        [
+          333.72,
+          245.66
+        ],
+        [
+          332.19,
+          258.19
+        ],
+        [
+          317.43,
+          266.92
+        ],
+        [
+          302.68,
+          275.66
+        ],
+        [
+          287.92,
+          284.39
+        ],
+        [
+          273.16,
+          293.12
+        ],
+        [
+          258.41,
+          301.85
+        ],
+        [
+          246.38,
+          302.66
+        ],
+        [
+          234.21,
+          301.89
+        ],
+        [
+          231.42,
+          302.27
+        ],
+        [
+          219.08,
+          302.59
+        ]
+      ]
+    },
+    {
+      "end": [
+        547.84,
+        473.87
+      ],
+      "start": [
+        353.32,
+        463.57
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          353.32,
+          463.57
+        ],
+        [
+          350.81,
+          460.14
+        ],
+        [
+          362.65,
+          449.76
+        ],
+        [
+          374.5,
+          439.38
+        ],
+        [
+          386.34,
+          429
+        ],
+        [
+          398.18,
+          418.63
+        ],
+        [
+          410.02,
+          408.25
+        ],
+        [
+          421.87,
+          397.87
+        ],
+        [
+          426.83,
+          396.15
+        ],
+        [
+          444.28,
+          397.05
+        ],
+        [
+          461.72,
+          397.95
+        ],
+        [
+          479.17,
+          398.85
+        ],
+        [
+          484.16,
+          400.83
+        ],
+        [
+          497.06,
+          411.78
+        ],
+        [
+          509.96,
+          422.73
+        ],
+        [
+          522.86,
+          433.67
+        ],
+        [
+          535.76,
+          444.62
+        ],
+        [
+          543.76,
+          456.7
+        ],
+        [
+          543.31,
+          461.37
+        ],
+        [
+          543.76,
+          466.46
+        ],
+        [
+          543.76,
+          473.87
+        ],
+        [
+          541.25,
+          477.31
+        ],
+        [
+          544.86,
+          474.83
+        ],
+        [
+          547.84,
+          473.87
+        ]
+      ],
+      "width": 3.78
+    },
+    {
+      "end": [
+        616.42,
+        611.23
+      ],
+      "start": [
+        335.3,
+        257.99
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          335.3,
+          257.99
+        ],
+        [
+          335.49,
+          245.52
+        ],
+        [
+          335.97,
+          241.96
+        ],
+        [
+          335.66,
+          236.49
+        ],
+        [
+          337.51,
+          244.8
+        ],
+        [
+          339.59,
+          248.59
+        ],
+        [
+          351.85,
+          260.84
+        ],
+        [
+          364.11,
+          273.09
+        ],
+        [
+          376.37,
+          285.35
+        ],
+        [
+          388.63,
+          297.6
+        ],
+        [
+          400.89,
+          309.85
+        ],
+        [
+          413.15,
+          322.1
+        ],
+        [
+          425.42,
+          334.35
+        ],
+        [
+          437.68,
+          346.61
+        ],
+        [
+          449.94,
+          358.86
+        ],
+        [
+          462.2,
+          371.11
+        ],
+        [
+          474.46,
+          383.36
+        ],
+        [
+          486.72,
+          395.61
+        ],
+        [
+          498.98,
+          407.86
+        ],
+        [
+          511.24,
+          420.12
+        ],
+        [
+          523.5,
+          432.37
+        ],
+        [
+          535.76,
+          444.62
+        ],
+        [
+          543.76,
+          456.7
+        ],
+        [
+          543.31,
+          461.37
+        ],
+        [
+          543.76,
+          466.46
+        ],
+        [
+          543.76,
+          473.87
+        ],
+        [
+          541.25,
+          477.31
+        ],
+        [
+          544.86,
+          474.83
+        ],
+        [
+          547.84,
+          473.87
+        ],
+        [
+          562.87,
+          477.75
+        ],
+        [
+          577.9,
+          481.63
+        ],
+        [
+          592.93,
+          485.5
+        ],
+        [
+          599.74,
+          491.72
+        ],
+        [
+          606.55,
+          497.93
+        ],
+        [
+          611.64,
+          503.2
+        ],
+        [
+          617.04,
+          511.2
+        ],
+        [
+          625,
+          525.4
+        ],
+        [
+          625,
+          535
+        ],
+        [
+          625,
+          544.6
+        ],
+        [
+          624.61,
+          549.9
+        ],
+        [
+          622.56,
+          565.23
+        ],
+        [
+          620.52,
+          580.57
+        ],
+        [
+          618.47,
+          595.9
+        ],
+        [
+          616.42,
+          611.23
+        ]
+      ],
+      "width": 3
+    },
+    {
+      "start": [
+        2.51,
+        3.43
+      ],
+      "end": [
+        1,
+        2
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          2.51,
+          3.43
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "start": [
+        1,
+        2
+      ],
+      "end": [
+        2,
+        1
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "start": [
+        315.73,
+        350.25
+      ],
+      "end": [
+        313.22,
+        339.95
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          315.73,
+          350.25
+        ],
+        [
+          313.22,
+          339.95
+        ]
+      ]
+    },
+    {
+      "start": [
+        481.11,
+        72.11
+      ],
+      "end": [
+        479.5,
+        70.91
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          481.11,
+          72.11
+        ],
+        [
+          479.5,
+          70.91
+        ]
+      ]
+    },
+    {
+      "start": [
+        353.32,
+        17.17
+      ],
+      "end": [
+        354.64,
+        74.94
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          353.32,
+          17.17
+        ],
+        [
+          353.65,
+          31.61
+        ],
+        [
+          353.98,
+          46.05
+        ],
+        [
+          354.31,
+          60.5
+        ],
+        [
+          354.64,
+          74.94
+        ]
+      ]
+    },
+    {
+      "start": [
+        616.42,
+        611.23
+      ],
+      "end": [
+        547.84,
+        473.87
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          616.42,
+          611.23
+        ],
+        [
+          618.47,
+          595.9
+        ],
+        [
+          620.52,
+          580.57
+        ],
+        [
+          622.56,
+          565.23
+        ],
+        [
+          624.61,
+          549.9
+        ],
+        [
+          625,
+          544.6
+        ],
+        [
+          625,
+          535
+        ],
+        [
+          625,
+          525.4
+        ],
+        [
+          617.04,
+          511.2
+        ],
+        [
+          611.64,
+          503.2
+        ],
+        [
+          606.55,
+          497.93
+        ],
+        [
+          599.74,
+          491.72
+        ],
+        [
+          592.93,
+          485.5
+        ],
+        [
+          577.9,
+          481.63
+        ],
+        [
+          562.87,
+          477.75
+        ],
+        [
+          547.84,
+          473.87
+        ]
+      ]
+    },
+    {
+      "start": [
+        42.6,
+        127.05
+      ],
+      "end": [
+        70.34,
+        71.29
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          42.6,
+          127.05
+        ],
+        [
+          49.54,
+          113.11
+        ],
+        [
+          56.47,
+          99.17
+        ],
+        [
+          63.41,
+          85.23
+        ],
+        [
+          70.34,
+          71.29
+        ]
+      ]
+    },
+    {
+      "start": [
+        234.75,
+        189.53
+      ],
+      "end": [
+        309.05,
+        171.89
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          234.75,
+          189.53
+        ],
+        [
+          246.95,
+          189.55
+        ],
+        [
+          262.48,
+          185.14
+        ],
+        [
+          278,
+          180.72
+        ],
+        [
+          293.53,
+          176.31
+        ],
+        [
+          309.05,
+          171.89
+        ]
+      ]
+    },
+    {
+      "start": [
+        178.48,
+        421.75
+      ],
+      "end": [
+        106.96,
+        224.72
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          178.48,
+          421.75
+        ],
+        [
+          174.5,
+          417.58
+        ],
+        [
+          169.07,
+          401.77
+        ],
+        [
+          163.63,
+          385.96
+        ],
+        [
+          158.19,
+          370.14
+        ],
+        [
+          152.76,
+          354.33
+        ],
+        [
+          147.32,
+          338.51
+        ],
+        [
+          141.89,
+          322.7
+        ],
+        [
+          136.45,
+          306.88
+        ],
+        [
+          131.02,
+          291.07
+        ],
+        [
+          125.58,
+          275.25
+        ],
+        [
+          120.15,
+          259.44
+        ],
+        [
+          114.71,
+          243.62
+        ],
+        [
+          109.28,
+          227.81
+        ],
+        [
+          108.43,
+          226.36
+        ],
+        [
+          106.96,
+          224.72
+        ]
+      ]
+    },
+    {
+      "start": [
+        247.06,
+        223.47
+      ],
+      "end": [
+        234.75,
+        189.53
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          247.06,
+          223.47
+        ],
+        [
+          234.86,
+          223.56
+        ],
+        [
+          250,
+          221.49
+        ],
+        [
+          250,
+          206.72
+        ],
+        [
+          250,
+          191.94
+        ],
+        [
+          249.15,
+          190.59
+        ],
+        [
+          246.95,
+          189.55
+        ],
+        [
+          234.75,
+          189.53
+        ]
+      ]
+    },
+    {
+      "start": [
+        247.06,
+        223.47
+      ],
+      "end": [
+        317.08,
+        185.73
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          247.06,
+          223.47
+        ],
+        [
+          234.86,
+          223.56
+        ],
+        [
+          250,
+          221.49
+        ],
+        [
+          263.42,
+          214.34
+        ],
+        [
+          276.83,
+          207.19
+        ],
+        [
+          290.25,
+          200.03
+        ],
+        [
+          303.66,
+          192.88
+        ],
+        [
+          317.08,
+          185.73
+        ]
+      ]
+    },
+    {
+      "start": [
+        234.75,
+        189.53
+      ],
+      "end": [
+        120.97,
+        234.43
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          234.75,
+          189.53
+        ],
+        [
+          218.5,
+          195.94
+        ],
+        [
+          202.24,
+          202.36
+        ],
+        [
+          185.99,
+          208.77
+        ],
+        [
+          169.74,
+          215.19
+        ],
+        [
+          153.48,
+          221.6
+        ],
+        [
+          137.22,
+          228.02
+        ],
+        [
+          120.97,
+          234.43
+        ]
+      ]
+    },
+    {
+      "start": [
+        243.52,
+        360.56
+      ],
+      "end": [
+        264.42,
+        309.36
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          243.52,
+          360.56
+        ],
+        [
+          245,
+          361
+        ],
+        [
+          249.86,
+          348.09
+        ],
+        [
+          254.71,
+          335.18
+        ],
+        [
+          259.56,
+          322.27
+        ],
+        [
+          264.42,
+          309.36
+        ]
+      ]
+    },
+    {
+      "start": [
+        178.48,
+        421.75
+      ],
+      "end": [
+        178,
+        648
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          178.48,
+          421.75
+        ],
+        [
+          186.54,
+          435.59
+        ],
+        [
+          194.6,
+          449.42
+        ],
+        [
+          202.67,
+          463.26
+        ],
+        [
+          210.73,
+          477.09
+        ],
+        [
+          218.79,
+          490.93
+        ],
+        [
+          220,
+          495.4
+        ],
+        [
+          220,
+          507
+        ],
+        [
+          220,
+          518.6
+        ],
+        [
+          219.25,
+          523.28
+        ],
+        [
+          214.09,
+          538.87
+        ],
+        [
+          208.93,
+          554.46
+        ],
+        [
+          203.78,
+          570.05
+        ],
+        [
+          198.62,
+          585.64
+        ],
+        [
+          193.47,
+          601.23
+        ],
+        [
+          188.31,
+          616.82
+        ],
+        [
+          183.16,
+          632.41
+        ],
+        [
+          178,
+          648
+        ]
+      ]
+    },
+    {
+      "start": [
+        247.06,
+        223.47
+      ],
+      "end": [
+        325.34,
+        199.99
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          247.06,
+          223.47
+        ],
+        [
+          262.72,
+          218.77
+        ],
+        [
+          278.37,
+          214.08
+        ],
+        [
+          294.03,
+          209.38
+        ],
+        [
+          309.68,
+          204.69
+        ],
+        [
+          325.34,
+          199.99
+        ]
+      ]
+    },
+    {
+      "start": [
+        234.86,
+        223.56
+      ],
+      "end": [
+        185.99,
+        208.77
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          234.86,
+          223.56
+        ],
+        [
+          218.57,
+          218.63
+        ],
+        [
+          202.28,
+          213.7
+        ],
+        [
+          185.99,
+          208.77
+        ]
+      ]
+    },
+    {
+      "start": [
+        243.52,
+        360.56
+      ],
+      "end": [
+        272.46,
+        314.4
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          243.52,
+          360.56
+        ],
+        [
+          245,
+          361
+        ],
+        [
+          251.87,
+          349.35
+        ],
+        [
+          258.73,
+          337.7
+        ],
+        [
+          265.6,
+          326.05
+        ],
+        [
+          272.46,
+          314.4
+        ]
+      ]
+    }
+  ],
+  "spawns": [
+    {
+      "max_population": 150,
+      "nation": "roman_republic",
+      "player_id": 2,
+      "type": "barracks",
+      "x": 345.8,
+      "z": 27.47
+    },
+    {
+      "max_population": 150,
+      "nation": "roman_republic",
+      "player_id": 3,
+      "type": "barracks",
+      "x": 353.32,
+      "z": 463.57
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "spearman",
+      "x": 12.53,
+      "z": 157.96
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "spearman",
+      "x": 12.53,
+      "z": 171.69
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "swordsman",
+      "x": 12.53,
+      "z": 164.83
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "archer",
+      "x": 5.01,
+      "z": 157.96
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "archer",
+      "x": 5.01,
+      "z": 164.83
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "horse_swordsman",
+      "x": 12.53,
+      "z": 151.09
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "elephant",
+      "x": 5.01,
+      "z": 151.09
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "healer",
+      "x": 5.01,
+      "z": 171.69
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "spearman",
+      "x": 248.07,
+      "z": 92.71,
+      "behavior": "guard",
+      "guard_radius": 14
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "spearman",
+      "x": 298.19,
+      "z": 54.94,
+      "behavior": "guard",
+      "guard_radius": 12
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "swordsman",
+      "x": 295.68,
+      "z": 75.54,
+      "behavior": "guard",
+      "guard_radius": 12
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "archer",
+      "x": 253.08,
+      "z": 99.58,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "archer",
+      "x": 305.71,
+      "z": 68.68,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "archer",
+      "x": 305.71,
+      "z": 78.98,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "catapult",
+      "x": 313.22,
+      "z": 72.11,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "healer",
+      "x": 308.21,
+      "z": 58.38,
+      "behavior": "guard",
+      "guard_radius": 10
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "horse_swordsman",
+      "x": 290.67,
+      "z": 75.54,
+      "behavior": "patrol",
+      "patrol_waypoints": [
         {
-            "end": [
-                131,
-                15
-            ],
-            "player_id": 2,
-            "start": [
-                143,
-                16
-            ],
-            "width": 2
+          "x": 125,
+          "z": 24
         },
         {
-            "end": [
-                128,
-                4
-            ],
-            "player_id": 2,
-            "start": [
-                129,
-                14
-            ],
-            "width": 2
-        },
-        {
-            "end": [
-                129,
-                0
-            ],
-            "player_id": 2,
-            "start": [
-                128,
-                2
-            ],
-            "width": 2
-        },
-        {
-            "end": [
-                147,
-                9
-            ],
-            "player_id": 2,
-            "start": [
-                145,
-                15
-            ],
-            "width": 2
-        },
-        {
-            "end": [
-                147,
-                9
-            ],
-            "player_id": 2,
-            "start": [
-                154,
-                11
-            ],
-            "width": 2
+          "x": 133,
+          "z": 36
         }
+      ]
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "spearman",
+      "x": 187.93,
+      "z": 192.3,
+      "behavior": "guard",
+      "guard_radius": 10
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "archer",
+      "x": 190.44,
+      "z": 216.33,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "swordsman",
+      "x": 185.43,
+      "z": 223.2,
+      "behavior": "guard",
+      "guard_radius": 10
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "spearman",
+      "x": 180.42,
+      "z": 295.31,
+      "behavior": "guard",
+      "guard_radius": 10
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "archer",
+      "x": 187.93,
+      "z": 285.01,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "horse_swordsman",
+      "x": 373.36,
+      "z": 408.63,
+      "behavior": "patrol",
+      "patrol_waypoints": [
+        {
+          "x": 141,
+          "z": 124
+        },
+        {
+          "x": 132,
+          "z": 134
+        }
+      ]
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "horse_swordsman",
+      "x": 205.47,
+      "z": 398.33,
+      "behavior": "patrol",
+      "patrol_waypoints": [
+        {
+          "x": 88,
+          "z": 116
+        },
+        {
+          "x": 94,
+          "z": 120
+        }
+      ]
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "archer",
+      "x": 250.58,
+      "z": 199.16,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 2,
+      "type": "archer",
+      "x": 253.08,
+      "z": 185.43,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 1,
+      "type": "carthage_elephant_master",
+      "x": 17.54,
+      "z": 154.52
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "swordsman",
+      "x": 360.83,
+      "z": 429.23,
+      "behavior": "guard",
+      "guard_radius": 12
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "swordsman",
+      "x": 353.32,
+      "z": 412.06,
+      "behavior": "guard",
+      "guard_radius": 12
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "archer",
+      "x": 338.28,
+      "z": 501.34,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "archer",
+      "x": 323.25,
+      "z": 501.34,
+      "behavior": "hold"
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "spearman",
+      "x": 115.27,
+      "z": 374.29,
+      "behavior": "guard",
+      "guard_radius": 12
+    },
+    {
+      "max_population": -1,
+      "player_id": 3,
+      "type": "spearman",
+      "x": 125.29,
+      "z": 467.01,
+      "behavior": "guard",
+      "guard_radius": 12
+    }
+  ],
+  "starting_resources": {
+    "food": 200,
+    "gold": 200,
+    "iron": 100,
+    "stone": 100,
+    "wood": 150
+  },
+  "terrain": [
+    {
+      "depth": 65.24,
+      "entrances": [
+        {
+          "x": 428.49,
+          "z": 398.33,
+          "radius": 2.2
+        },
+        {
+          "x": 428.49,
+          "z": 467.01,
+          "radius": 2.2
+        }
+      ],
+      "height": 2.35,
+      "rotation": 4,
+      "type": "hill",
+      "width": 37.59,
+      "x": 428.49,
+      "z": 432.67
+    },
+    {
+      "depth": 51.51,
+      "entrances": [
+        {
+          "x": 273.13,
+          "z": 442.97,
+          "radius": 2.0
+        },
+        {
+          "x": 273.13,
+          "z": 497.91,
+          "radius": 2.0
+        }
+      ],
+      "height": 2.4,
+      "rotation": -20,
+      "type": "hill",
+      "width": 32.58,
+      "x": 273.13,
+      "z": 470.44
+    },
+    {
+      "depth": 61.81,
+      "entrances": [
+        {
+          "x": 458.56,
+          "z": 144.22,
+          "radius": 2.0
+        },
+        {
+          "x": 458.56,
+          "z": 206.03,
+          "radius": 2.0
+        }
+      ],
+      "height": 2.7,
+      "rotation": 18,
+      "type": "hill",
+      "width": 30.07,
+      "x": 458.56,
+      "z": 175.13
+    },
+    {
+      "height": 8,
+      "radius": 20.53,
+      "type": "mountain",
+      "x": 67.66,
+      "z": 10.3
+    },
+    {
+      "height": 8.5,
+      "radius": 38.13,
+      "type": "mountain",
+      "x": 165.38,
+      "z": 20.6
+    },
+    {
+      "height": 8,
+      "radius": 17.6,
+      "type": "mountain",
+      "x": 27.56,
+      "z": 484.17
+    },
+    {
+      "height": 9,
+      "radius": 44,
+      "type": "mountain",
+      "x": 157.86,
+      "z": 501.34
+    },
+    {
+      "height": 8,
+      "radius": 23.47,
+      "type": "mountain",
+      "x": 423.48,
+      "z": 37.77
+    },
+    {
+      "height": 8,
+      "radius": 23.47,
+      "rotation": -30,
+      "type": "mountain",
+      "x": 278.14,
+      "z": 30.9
+    },
+    {
+      "height": 8,
+      "radius": 29.33,
+      "type": "mountain",
+      "x": 40.09,
+      "z": 243.8
+    },
+    {
+      "depth": 48.07,
+      "entrances": [
+        {
+          "x": 50.12,
+          "z": 127.05,
+          "radius": 2.0
+        },
+        {
+          "x": 95.22,
+          "z": 127.05,
+          "radius": 2.0
+        }
+      ],
+      "height": 3,
+      "type": "hill",
+      "width": 45.1,
+      "x": 72.67,
+      "z": 127.05
+    },
+    {
+      "depth": 54.94,
+      "entrances": [
+        {
+          "x": 82.69,
+          "z": 312.48,
+          "radius": 2.0
+        },
+        {
+          "x": 132.81,
+          "z": 312.48,
+          "radius": 2.0
+        }
+      ],
+      "height": 3,
+      "type": "hill",
+      "width": 50.12,
+      "x": 107.75,
+      "z": 312.48
+    },
+    {
+      "depth": 61.81,
+      "entrances": [
+        {
+          "x": 170.39,
+          "z": 360.56,
+          "radius": 2.0
+        },
+        {
+          "x": 225.52,
+          "z": 360.56,
+          "radius": 2.0
+        }
+      ],
+      "height": 3,
+      "type": "hill",
+      "width": 55.13,
+      "x": 197.96,
+      "z": 360.56
+    },
+    {
+      "depth": 37.77,
+      "entrances": [
+        {
+          "radius": 1.41,
+          "x": 293.18,
+          "z": 68.68
+        },
+        {
+          "radius": 1.8,
+          "x": 268.12,
+          "z": 101.3
+        }
+      ],
+      "height": 3,
+      "type": "hill",
+      "width": 27.56,
+      "x": 280.65,
+      "z": 85.85
+    },
+    {
+      "depth": 54.94,
+      "entrances": [
+        {
+          "x": 175.41,
+          "z": 140.79,
+          "radius": 2.0
+        },
+        {
+          "x": 225.52,
+          "z": 140.79,
+          "radius": 2.0
+        }
+      ],
+      "height": 3,
+      "type": "hill",
+      "width": 50.12,
+      "x": 200.46,
+      "z": 140.79
+    },
+    {
+      "depth": 116.75,
+      "entrances": [
+        {
+          "x": 506.17,
+          "z": 542.55
+        },
+        {
+          "x": 621.44,
+          "z": 542.55
+        }
+      ],
+      "height": 0.4,
+      "type": "hill",
+      "width": 115.27,
+      "x": 563.8,
+      "z": 542.55
+    },
+    {
+      "depth": 58.38,
+      "entrances": [
+        {
+          "x": 436.01,
+          "z": 477.31
+        },
+        {
+          "x": 536.24,
+          "z": 477.31
+        }
+      ],
+      "height": 2.4,
+      "rotation": -12,
+      "type": "hill",
+      "width": 100.23,
+      "x": 486.12,
+      "z": 477.31
+    },
+    {
+      "depth": 54.94,
+      "entrances": [
+        {
+          "x": 531.23,
+          "z": 367.42
+        },
+        {
+          "x": 621.44,
+          "z": 367.42
+        }
+      ],
+      "height": 2.1,
+      "rotation": 18,
+      "type": "hill",
+      "width": 90.21,
+      "x": 576.33,
+      "z": 367.42
+    }
+  ],
+  "time_of_day": "afternoon",
+  "undead_zones": [
+    {
+      "anchor_type": "ruins",
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "id": "crossing_ruins",
+      "leash_radius": 38.13,
+      "owner_id": 99,
+      "radius": 20.53,
+      "team_id": 99,
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_archer": 1,
+            "skeleton_swordsman": 2
+          }
+        }
+      ],
+      "x": 37.59,
+      "z": 360.56
+    }
+  ],
+  "victory": {
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
     ],
-    "world_props": [
-        {
-            "id": "carthage_tent_01",
-            "rotation": -10,
-            "scale": 1,
-            "type": "tent",
-            "x": 12,
-            "z": 34
-        },
-        {
-            "id": "carthage_tent_02",
-            "rotation": 17,
-            "scale": 1,
-            "type": "tent",
-            "x": 9,
-            "z": 56
-        },
-        {
-            "id": "carthage_tent_03",
-            "rotation": 8,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 7,
-            "z": 32
-        },
-        {
-            "id": "carthage_supply_cart_01",
-            "rotation": 65,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 16,
-            "z": 38
-        },
-        {
-            "id": "carthage_supply_cart_02",
-            "rotation": 20,
-            "scale": 0.85,
-            "type": "supply_cart",
-            "x": 11,
-            "z": 46
-        },
-        {
-            "id": "carthage_weapon_rack_01",
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 10,
-            "z": 51
-        },
-        {
-            "id": "carthage_weapon_rack_02",
-            "rotation": 80,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 19,
-            "z": 37
-        },
-        {
-            "id": "north_cache_broken_cart",
-            "purpose": "marks scout cache",
-            "rotation": 34,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 45,
-            "z": 26
-        },
-        {
-            "id": "north_cache_supply_cart",
-            "rotation": -18,
-            "scale": 0.75,
-            "type": "supply_cart",
-            "x": 47,
-            "z": 24
-        },
-        {
-            "id": "north_scout_dead_tree_01",
-            "rotation": 12,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 58,
-            "z": 28
-        },
-        {
-            "id": "north_scout_dead_tree_02",
-            "rotation": -30,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 68,
-            "z": 31
-        },
-        {
-            "id": "central_ruins_01",
-            "scale": 1,
-            "type": "ruins",
-            "x": 70,
-            "z": 59
-        },
-        {
-            "id": "central_ruins_02",
-            "rotation": 45,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 38,
-            "z": 92
-        },
-        {
-            "id": "central_dead_tree_01",
-            "rotation": 15,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 57,
-            "z": 74
-        },
-        {
-            "id": "central_dead_tree_02",
-            "rotation": -20,
-            "scale": 1.05,
-            "type": "dead_tree",
-            "x": 66,
-            "z": 82
-        },
-        {
-            "id": "river_overlook_ruins",
-            "rotation": 22,
-            "scale": 1,
-            "type": "ruins",
-            "x": 77,
-            "z": 87
-        },
-        {
-            "id": "dead_tree_gate",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 84,
-            "z": 91
-        },
-        {
-            "id": "south_route_dead_tree_01",
-            "rotation": -13,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 45,
-            "z": 120
-        },
-        {
-            "id": "south_route_ruins_01",
-            "rotation": 18,
-            "scale": 0.9500000000000001,
-            "type": "ruins",
-            "x": 33,
-            "z": 77
-        },
-        {
-            "id": "south_route_supply_cart_01",
-            "rotation": 89,
-            "scale": 0.8,
-            "type": "supply_cart",
-            "x": 62,
-            "z": 119
-        },
-        {
-            "id": "gaul_guide_cart",
-            "purpose": "draws eye to southern crossing",
-            "rotation": 70,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 82,
-            "z": 116
-        },
-        {
-            "id": "southern_old_marker",
-            "rotation": 35,
-            "scale": 0.75,
-            "type": "ruins",
-            "x": 87,
-            "z": 128
-        },
-        {
-            "id": "gaul_ruins_01",
-            "rotation": 12,
-            "scale": 1,
-            "type": "ruins",
-            "x": 30,
-            "z": 132
-        },
-        {
-            "id": "gaul_tent_01",
-            "rotation": -22,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 26,
-            "z": 124
-        },
-        {
-            "id": "gaul_tent_02",
-            "rotation": 31,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 34,
-            "z": 130
-        },
-        {
-            "id": "gaul_supply_cart_01",
-            "rotation": -5,
-            "scale": 0.85,
-            "type": "supply_cart",
-            "x": 28,
-            "z": 134
-        },
-        {
-            "id": "gaul_weapon_rack_01",
-            "rotation": 40,
-            "scale": 0.8,
-            "type": "weapon_rack",
-            "x": 36,
-            "z": 124
-        },
-        {
-            "id": "gaul_grove_dead_tree_01",
-            "rotation": 16,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 22,
-            "z": 123
-        },
-        {
-            "id": "gaul_grove_ruins_01",
-            "rotation": -16,
-            "scale": 0.7000000000000001,
-            "type": "ruins",
-            "x": 17,
-            "z": 84
-        },
-        {
-            "id": "roman_watch_weapon_rack",
-            "rotation": 95,
-            "scale": 0.85,
-            "type": "weapon_rack",
-            "x": 107,
-            "z": 80
-        },
-        {
-            "id": "roman_island_supply_cart",
-            "rotation": 18,
-            "scale": 0.85,
-            "type": "supply_cart",
-            "x": 119,
-            "z": 90
-        },
-        {
-            "id": "north_fort_tent_01",
-            "rotation": 12,
-            "scale": 1,
-            "type": "tent",
-            "x": 148,
-            "z": 38
-        },
-        {
-            "id": "north_fort_tent_02",
-            "rotation": -18,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 138,
-            "z": 39
-        },
-        {
-            "id": "north_fort_weapon_rack",
-            "rotation": 75,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 135,
-            "z": 28
-        },
-        {
-            "id": "north_fort_supply_cart",
-            "rotation": 25,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 141,
-            "z": 31
-        },
-        {
-            "id": "signal_tower",
-            "purpose": "north command identity and optional objective",
-            "scale": 1,
-            "type": "ruins",
-            "x": 108,
-            "z": 34
-        },
-        {
-            "id": "north_fort_ruins_01",
-            "rotation": 44,
-            "scale": 0.8,
-            "type": "ruins",
-            "x": 123,
-            "z": 42
-        },
-        {
-            "id": "north_fort_dead_tree",
-            "rotation": 5,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 143,
-            "z": 51
-        },
-        {
-            "id": "south_fort_tent_01",
-            "rotation": -9,
-            "scale": 1,
-            "type": "tent",
-            "x": 118,
-            "z": 138
-        },
-        {
-            "id": "south_fort_tent_02",
-            "rotation": 19,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 122,
-            "z": 134
-        },
-        {
-            "id": "south_fort_weapon_rack",
-            "rotation": 70,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 134,
-            "z": 139
-        },
-        {
-            "id": "south_fort_supply_cart",
-            "rotation": 35,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 124,
-            "z": 139
-        },
-        {
-            "id": "south_fort_ruins_01",
-            "rotation": 20,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 119,
-            "z": 115
-        },
-        {
-            "id": "south_fort_dead_tree",
-            "rotation": -25,
-            "scale": 0.85,
-            "type": "dead_tree",
-            "x": 128,
-            "z": 132
-        },
-        {
-            "id": "far_east_broken_cart_01",
-            "rotation": 4,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 114,
-            "z": 75
-        },
-        {
-            "id": "far_east_dead_tree_01",
-            "rotation": 30,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 155,
-            "z": 63
-        },
-        {
-            "id": "far_east_ruins_01",
-            "rotation": -40,
-            "scale": 0.8,
-            "type": "ruins",
-            "x": 143,
-            "z": 83
-        },
-        {
-            "id": "carthage_main_fire",
-            "intensity": 1.25,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 9,
-            "z": 35
-        },
-        {
-            "id": "carthage_outer_fire",
-            "intensity": 0.9,
-            "persistent": true,
-            "radius": 2.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 4,
-            "z": 54
-        },
-        {
-            "id": "north_scout_cache_fire",
-            "intensity": 0.5,
-            "persistent": true,
-            "radius": 1.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 45,
-            "z": 26
-        },
-        {
-            "id": "central_gaul_fire",
-            "intensity": 0.75,
-            "persistent": true,
-            "radius": 2.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 53,
-            "z": 56
-        },
-        {
-            "id": "gaul_village_fire",
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 30,
-            "z": 128
-        },
-        {
-            "id": "gaul_grove_fire",
-            "intensity": 0.65,
-            "persistent": true,
-            "radius": 1.8,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 19,
-            "z": 125
-        },
-        {
-            "id": "river_overlook_fire",
-            "intensity": 0.8,
-            "persistent": true,
-            "radius": 2.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 78,
-            "z": 84
-        },
-        {
-            "id": "roman_island_fire",
-            "intensity": 0.75,
-            "persistent": true,
-            "radius": 2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 122,
-            "z": 84
-        },
-        {
-            "id": "north_roman_fort_fire",
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 151,
-            "z": 29
-        },
-        {
-            "id": "south_roman_fort_fire",
-            "intensity": 1.1500000000000001,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 144,
-            "z": 133
-        },
-        {
-            "scale": 1,
-            "type": "magic_shrine",
-            "x": 7,
-            "z": 83
-        },
-        {
-            "scale": 1,
-            "type": "magic_shrine",
-            "x": 36,
-            "z": 108
-        },
-        {
-            "scale": 1,
-            "type": "magic_shrine",
-            "x": 11,
-            "z": 133
-        },
-        {
-            "scale": 1,
-            "type": "magic_shrine",
-            "x": 46,
-            "z": 93
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 4,
-            "z": 58
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 7,
-            "z": 52
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 3,
-            "z": 33
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 4,
-            "z": 40
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 2,
-            "z": 57
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 4,
-            "z": 28
-        },
-        {
-            "scale": 1,
-            "type": "ruins",
-            "x": 10,
-            "z": 17
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 20,
-            "z": 64
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 20,
-            "z": 22
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 174,
-            "z": 94
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 122,
-            "z": 107
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 72,
-            "z": 135
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 53,
-            "z": 123
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 127,
-            "z": 35
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 124,
-            "z": 9
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 135,
-            "z": 3
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 144,
-            "z": 11
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 134,
-            "z": 127
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 139,
-            "z": 143
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 147,
-            "z": 144
-        }
-    ]
+    "key_structures": [
+      "barracks"
+    ],
+    "min_count": 2,
+    "type": "capture_structures"
+  },
+  "walls": [
+    {
+      "end": [
+        328.26,
+        51.51
+      ],
+      "player_id": 2,
+      "start": [
+        358.33,
+        54.94
+      ],
+      "width": 2
+    },
+    {
+      "end": [
+        320.74,
+        13.74
+      ],
+      "player_id": 2,
+      "start": [
+        323.25,
+        48.07
+      ],
+      "width": 2
+    },
+    {
+      "end": [
+        323.25,
+        0
+      ],
+      "player_id": 2,
+      "start": [
+        320.74,
+        6.87
+      ],
+      "width": 2
+    },
+    {
+      "end": [
+        368.35,
+        30.9
+      ],
+      "player_id": 2,
+      "start": [
+        363.34,
+        51.51
+      ],
+      "width": 2
+    },
+    {
+      "end": [
+        368.35,
+        30.9
+      ],
+      "player_id": 2,
+      "start": [
+        385.89,
+        37.77
+      ],
+      "width": 2
+    }
+  ],
+  "world_props": [
+    {
+      "rotation": -10,
+      "scale": 1,
+      "type": "tent",
+      "x": 30.07,
+      "z": 116.75
+    },
+    {
+      "rotation": 17,
+      "scale": 1,
+      "type": "tent",
+      "x": 22.55,
+      "z": 192.3
+    },
+    {
+      "rotation": 8,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 17.54,
+      "z": 109.88
+    },
+    {
+      "rotation": 65,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 40.09,
+      "z": 130.49
+    },
+    {
+      "rotation": 20,
+      "scale": 0.85,
+      "type": "supply_cart",
+      "x": 27.56,
+      "z": 157.96
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 25.06,
+      "z": 175.13
+    },
+    {
+      "rotation": 80,
+      "scale": 0.9,
+      "type": "weapon_rack",
+      "x": 47.61,
+      "z": 127.05
+    },
+    {
+      "rotation": 34,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 112.76,
+      "z": 89.28
+    },
+    {
+      "rotation": -18,
+      "scale": 0.75,
+      "type": "supply_cart",
+      "x": 117.77,
+      "z": 82.41
+    },
+    {
+      "rotation": 12,
+      "scale": 1.1,
+      "type": "dead_tree",
+      "x": 145.34,
+      "z": 96.15
+    },
+    {
+      "rotation": -30,
+      "scale": 0.9,
+      "type": "dead_tree",
+      "x": 170.39,
+      "z": 106.45
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 175.41,
+      "z": 202.6
+    },
+    {
+      "rotation": 45,
+      "scale": 0.85,
+      "type": "ruins",
+      "x": 95.22,
+      "z": 315.92
+    },
+    {
+      "rotation": 15,
+      "scale": 0.9,
+      "type": "dead_tree",
+      "x": 142.83,
+      "z": 254.11
+    },
+    {
+      "rotation": -20,
+      "scale": 1.05,
+      "type": "dead_tree",
+      "x": 165.38,
+      "z": 281.58
+    },
+    {
+      "rotation": 22,
+      "scale": 1,
+      "type": "ruins",
+      "x": 192.95,
+      "z": 298.75
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 210.49,
+      "z": 312.48
+    },
+    {
+      "rotation": -13,
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 112.76,
+      "z": 412.06
+    },
+    {
+      "rotation": 18,
+      "scale": 0.9500000000000001,
+      "type": "ruins",
+      "x": 82.69,
+      "z": 264.41
+    },
+    {
+      "rotation": 89,
+      "scale": 0.8,
+      "type": "supply_cart",
+      "x": 155.36,
+      "z": 408.63
+    },
+    {
+      "rotation": 70,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 205.47,
+      "z": 398.33
+    },
+    {
+      "rotation": 35,
+      "scale": 0.75,
+      "type": "ruins",
+      "x": 218,
+      "z": 439.53
+    },
+    {
+      "rotation": 12,
+      "scale": 1,
+      "type": "ruins",
+      "x": 75.17,
+      "z": 453.27
+    },
+    {
+      "rotation": -22,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 65.15,
+      "z": 425.8
+    },
+    {
+      "rotation": 31,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 85.2,
+      "z": 446.4
+    },
+    {
+      "rotation": -5,
+      "scale": 0.85,
+      "type": "supply_cart",
+      "x": 70.16,
+      "z": 460.14
+    },
+    {
+      "rotation": 40,
+      "scale": 0.8,
+      "type": "weapon_rack",
+      "x": 90.21,
+      "z": 425.8
+    },
+    {
+      "rotation": 16,
+      "scale": 1.1,
+      "type": "dead_tree",
+      "x": 55.13,
+      "z": 422.37
+    },
+    {
+      "rotation": -16,
+      "scale": 0.7000000000000001,
+      "type": "ruins",
+      "x": 42.6,
+      "z": 288.44
+    },
+    {
+      "rotation": 95,
+      "scale": 0.85,
+      "type": "weapon_rack",
+      "x": 268.12,
+      "z": 274.71
+    },
+    {
+      "rotation": 18,
+      "scale": 0.85,
+      "type": "supply_cart",
+      "x": 298.19,
+      "z": 309.05
+    },
+    {
+      "rotation": 12,
+      "scale": 1,
+      "type": "tent",
+      "x": 370.86,
+      "z": 130.49
+    },
+    {
+      "rotation": -18,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 345.8,
+      "z": 133.92
+    },
+    {
+      "rotation": 75,
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 338.28,
+      "z": 96.15
+    },
+    {
+      "rotation": 25,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 353.32,
+      "z": 106.45
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 270.63,
+      "z": 116.75
+    },
+    {
+      "rotation": 44,
+      "scale": 0.8,
+      "type": "ruins",
+      "x": 308.21,
+      "z": 144.22
+    },
+    {
+      "rotation": 5,
+      "scale": 0.9,
+      "type": "dead_tree",
+      "x": 358.33,
+      "z": 175.13
+    },
+    {
+      "rotation": -9,
+      "scale": 1,
+      "type": "tent",
+      "x": 295.68,
+      "z": 473.87
+    },
+    {
+      "rotation": 19,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 305.71,
+      "z": 460.14
+    },
+    {
+      "rotation": 70,
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 335.78,
+      "z": 477.31
+    },
+    {
+      "rotation": 35,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 310.72,
+      "z": 477.31
+    },
+    {
+      "rotation": 20,
+      "scale": 0.85,
+      "type": "ruins",
+      "x": 298.19,
+      "z": 394.89
+    },
+    {
+      "rotation": -25,
+      "scale": 0.85,
+      "type": "dead_tree",
+      "x": 320.74,
+      "z": 453.27
+    },
+    {
+      "rotation": 4,
+      "scale": 0.9,
+      "type": "supply_cart",
+      "x": 285.66,
+      "z": 257.54
+    },
+    {
+      "rotation": 30,
+      "scale": 0.9,
+      "type": "dead_tree",
+      "x": 388.4,
+      "z": 216.33
+    },
+    {
+      "rotation": -40,
+      "scale": 0.8,
+      "type": "ruins",
+      "x": 358.33,
+      "z": 285.01
+    },
+    {
+      "intensity": 1.25,
+      "persistent": true,
+      "radius": 3.2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 22.55,
+      "z": 120.19
+    },
+    {
+      "intensity": 0.9,
+      "persistent": true,
+      "radius": 2.5,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 10.02,
+      "z": 185.43
+    },
+    {
+      "intensity": 0.5,
+      "persistent": true,
+      "radius": 1.6,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 112.76,
+      "z": 89.28
+    },
+    {
+      "intensity": 0.75,
+      "persistent": true,
+      "radius": 2.2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 132.81,
+      "z": 192.3
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 75.17,
+      "z": 439.53
+    },
+    {
+      "intensity": 0.65,
+      "persistent": true,
+      "radius": 1.8,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 47.61,
+      "z": 429.23
+    },
+    {
+      "intensity": 0.8,
+      "persistent": true,
+      "radius": 2.4,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 195.45,
+      "z": 288.44
+    },
+    {
+      "intensity": 0.75,
+      "persistent": true,
+      "radius": 2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 305.71,
+      "z": 288.44
+    },
+    {
+      "intensity": 1.1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 378.37,
+      "z": 99.58
+    },
+    {
+      "intensity": 1.1500000000000001,
+      "persistent": true,
+      "radius": 3.2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 360.83,
+      "z": 456.7
+    },
+    {
+      "scale": 1,
+      "type": "magic_shrine",
+      "x": 17.54,
+      "z": 285.01
+    },
+    {
+      "scale": 1,
+      "type": "magic_shrine",
+      "x": 90.21,
+      "z": 370.86
+    },
+    {
+      "scale": 1,
+      "type": "magic_shrine",
+      "x": 27.56,
+      "z": 456.7
+    },
+    {
+      "scale": 1,
+      "type": "magic_shrine",
+      "x": 115.27,
+      "z": 319.35
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 10.02,
+      "z": 199.16
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 17.54,
+      "z": 178.56
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 7.52,
+      "z": 113.32
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 10.02,
+      "z": 137.35
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 5.01,
+      "z": 195.73
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 10.02,
+      "z": 96.15
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 25.06,
+      "z": 58.38
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 50.12,
+      "z": 219.77
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 50.12,
+      "z": 75.54
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 436.01,
+      "z": 322.78
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 305.71,
+      "z": 367.42
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 180.42,
+      "z": 463.57
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 132.81,
+      "z": 422.37
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 318.24,
+      "z": 120.19
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 310.72,
+      "z": 30.9
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 338.28,
+      "z": 10.3
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 360.83,
+      "z": 37.77
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 335.78,
+      "z": 436.1
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 348.31,
+      "z": 491.04
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 368.35,
+      "z": 494.48
+    },
+    {
+      "persistent": true,
+      "rotation": 1.2,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 541.25,
+      "z": 535.68
+    },
+    {
+      "persistent": true,
+      "rotation": 4.1,
+      "scale": 0.9,
+      "type": "tent",
+      "x": 586.36,
+      "z": 539.12
+    },
+    {
+      "persistent": true,
+      "rotation": 2.6,
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 563.8,
+      "z": 580.32
+    },
+    {
+      "persistent": true,
+      "rotation": 5.0,
+      "scale": 0.9,
+      "type": "weapon_rack",
+      "x": 596.38,
+      "z": 518.51
+    },
+    {
+      "intensity": 1.1,
+      "persistent": true,
+      "radius": 3.2,
+      "scale": 0.9,
+      "type": "firecamp",
+      "x": 563.8,
+      "z": 545.98
+    }
+  ],
+  "lakes": []
 }

@@ -1275,6 +1275,39 @@ void GameEngine::commander_secondary_action_up() {
   }
 }
 
+void GameEngine::commander_trigger_aura() {
+  if (m_world == nullptr) {
+    return;
+  }
+
+  Engine::Core::Entity* commander_entity = nullptr;
+  if (m_control_mode == PlayerControlMode::Commander) {
+    commander_entity = controlled_commander_entity();
+  } else if (auto* selection =
+                 m_world->get_system<Game::Systems::SelectionSystem>()) {
+    for (const auto entity_id : selection->get_selected_units()) {
+      auto* candidate = m_world->get_entity(entity_id);
+      const auto* unit = candidate != nullptr
+                             ? candidate->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (candidate != nullptr && unit != nullptr &&
+          unit->owner_id == m_runtime.local_owner_id && unit->health > 0 &&
+          candidate->get_component<Engine::Core::CommanderComponent>() != nullptr) {
+        commander_entity = candidate;
+        break;
+      }
+    }
+  }
+
+  if (commander_entity == nullptr) {
+    return;
+  }
+  if (auto* commander =
+          commander_entity->get_component<Engine::Core::CommanderComponent>()) {
+    commander->request_aura_ability();
+  }
+}
+
 void GameEngine::commander_trigger_rally() {
   if (m_control_mode != PlayerControlMode::Commander) {
     return;

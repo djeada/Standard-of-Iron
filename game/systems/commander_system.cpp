@@ -138,6 +138,7 @@ auto try_trigger_rally(Engine::Core::World* world,
   }
 
   const float rally_radius_sq = commander.rally_range * commander.rally_range;
+  bool restored_any = false;
   for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == commander_entity) {
       continue;
@@ -160,12 +161,14 @@ auto try_trigger_rally(Engine::Core::World* world,
     morale->morale += commander.rally_morale_restore;
     morale->shock_timer = 0.0F;
     refresh_morale_state(*morale);
-    commander.rally_cooldown_remaining = commander.rally_cooldown;
-    commander.rally_feedback_time = 1.5F;
-    return true;
+    restored_any = true;
   }
 
-  return false;
+  if (restored_any) {
+    commander.rally_cooldown_remaining = commander.rally_cooldown;
+    commander.rally_feedback_time = 1.5F;
+  }
+  return restored_any;
 }
 
 void reset_commander_modified_stats(Engine::Core::World* world) {
@@ -187,6 +190,18 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
       attack->damage = profile.combat.ranged_damage;
       attack->melee_damage = profile.combat.melee_damage;
     }
+  }
+
+  for (auto* entity :
+       world->get_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
+    auto* buff =
+        entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+    if (buff == nullptr) {
+      continue;
+    }
+    buff->active = false;
+    buff->source_commander_id = 0;
+    buff->strength = 0.0F;
   }
 }
 
@@ -375,7 +390,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
       const float dist_sq = distance_sq(*transform, *candidate_transform);
       const bool candidate_is_troop = is_living_troop(candidate_unit);
-      if (dist_sq <= aura_radius_sq) {
+      if (dist_sq <= aura_radius_sq && commander->aura_ability_active) {
         if (candidate_is_troop) {
           auto* morale = morale_for(candidate);
           if (morale != nullptr) {
@@ -384,13 +399,34 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             morale->morale += commander->aura_morale_bonus * delta_time * 0.05F;
             refresh_morale_state(*morale);
           }
+
+          auto* buff = candidate->get_component<
+              Engine::Core::CommanderAuraBuffComponent>();
+          if (buff == nullptr) {
+            buff = candidate->add_component<
+                Engine::Core::CommanderAuraBuffComponent>();
+          }
+          if (buff != nullptr) {
+            buff->active = true;
+            buff->source_commander_id = commander_entity->get_id();
+            buff->strength = std::max(buff->strength, commander->aura_bonus_value);
+          }
         }
 
         if (candidate_is_troop && commander->bonus_type == "health_regen") {
-          candidate_unit->health = std::min(
-              candidate_unit->max_health,
-              candidate_unit->health + static_cast<int>(std::round(
-                                           commander->aura_bonus_value * delta_time)));
+          auto* buff = candidate->get_component<
+              Engine::Core::CommanderAuraBuffComponent>();
+          if (buff != nullptr) {
+            buff->health_regen_accumulator +=
+                std::max(0.0F, commander->aura_bonus_value) * delta_time;
+            const int restored =
+                static_cast<int>(std::floor(buff->health_regen_accumulator));
+            if (restored > 0) {
+              candidate_unit->health = std::min(candidate_unit->max_health,
+                                                candidate_unit->health + restored);
+              buff->health_regen_accumulator -= static_cast<float>(restored);
+            }
+          }
         } else if (candidate_is_troop && commander->bonus_type == "attack_boost") {
           if (auto* attack =
                   candidate->get_component<Engine::Core::AttackComponent>()) {
@@ -413,23 +449,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           }
         }
 
-        if (candidate_is_troop && commander->aura_ability_active) {
-
-          const int health_bonus = static_cast<int>(
-              std::round(static_cast<float>(candidate_unit->max_health) * 0.3F));
-          candidate_unit->health = std::min(candidate_unit->max_health + health_bonus,
-                                            candidate_unit->health + health_bonus);
-
-          if (candidate_unit->spawn_type == commander->aura_affinity_spawn_type) {
-            if (auto* attack =
-                    candidate->get_component<Engine::Core::AttackComponent>()) {
-              attack->damage =
-                  std::max(1, static_cast<int>(std::round(attack->damage * 1.5F)));
-              attack->melee_damage = std::max(
-                  1, static_cast<int>(std::round(attack->melee_damage * 1.5F)));
-            }
-          }
-        }
       }
 
       if (!commander->rally_requires_manual_trigger && !rallied_this_tick &&

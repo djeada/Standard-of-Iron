@@ -25,6 +25,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/tool_belt_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/arm_guards_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/cloak_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/commander_regalia.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/bow_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/quiver_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/roman_scutum.cpp
@@ -35,6 +36,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/shield_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/shield_carthage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/headwrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/commander_helmets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_heavy_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_light_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_heavy_helmet.cpp

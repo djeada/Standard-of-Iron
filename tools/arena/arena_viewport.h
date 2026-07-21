@@ -112,6 +112,12 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void load_scenario(const QString& scenario_id);
+  [[nodiscard]] auto load_terrain_review_map(const QString& map_path,
+                                             QString* error = nullptr) -> bool;
+  void set_terrain_review_overview_camera();
+  void set_terrain_review_gameplay_camera();
+  [[nodiscard]] auto terrain_review_definition() const
+      -> const Game::Map::MapDefinition*;
   void apply_visual_overrides_to_selection();
   void set_animation_name(const QString& animation_name);
   void play_selected_animation();
@@ -190,6 +196,7 @@ private:
                                                  float clearance) const -> bool;
   void apply_keyboard_camera_controls(float real_dt);
   void clear_camera_key_state();
+  [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
   void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
@@ -263,6 +270,8 @@ private:
   Game::Systems::NationID m_spawn_building_nation_id;
   Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
   std::vector<Game::Map::WorldProp> m_world_props;
+  std::vector<Game::Map::RiverSegment> m_arena_rivers;
+  std::vector<Game::Map::Lake> m_arena_lakes;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
   float m_spawn_world_prop_scale = 1.0F;
@@ -287,6 +296,7 @@ private:
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
   bool m_force_full_creature_lod = true;
+  bool m_terrain_review_mode = false;
   bool m_batch_frame_in_progress = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;
@@ -310,4 +320,5 @@ private:
   float m_scenario_duration_override = 0.0F;
   std::size_t m_last_scenario_issue_revision = 0U;
   bool m_scenario_finished_emitted = false;
+  std::optional<Game::Map::MapDefinition> m_terrain_review_definition;
 };

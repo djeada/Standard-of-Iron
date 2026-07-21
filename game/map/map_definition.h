@@ -332,6 +332,7 @@ struct MapDefinition {
   std::vector<UnitSpawn> spawns;
   std::vector<TerrainFeature> terrain;
   std::vector<RiverSegment> rivers;
+  std::vector<Lake> lakes;
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
   std::vector<WallLine> wall_lines;

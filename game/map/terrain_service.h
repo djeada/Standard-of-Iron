@@ -151,6 +151,8 @@ public:
   is_point_near_bridge(float world_x, float world_z, float clearance) const -> bool;
   [[nodiscard]] auto
   is_point_near_river(float world_x, float world_z, float clearance) const -> bool;
+  [[nodiscard]] auto
+  is_point_near_water(float world_x, float world_z, float clearance) const -> bool;
 
   [[nodiscard]] auto get_bridge_center_position(float world_x, float world_z) const
       -> std::optional<QVector3D>;
@@ -170,7 +172,8 @@ public:
                                const std::vector<Bridge>& bridges,
                                const BiomeSettings& biome,
                                const std::vector<WorldProp>& world_props = {},
-                               const std::vector<WorldProp>& authored_world_props = {});
+                               const std::vector<WorldProp>& authored_world_props = {},
+                               const std::vector<Lake>& lakes = {});
 
 private:
   TerrainService() = default;

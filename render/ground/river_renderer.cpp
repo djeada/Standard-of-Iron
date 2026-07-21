@@ -24,34 +24,30 @@
 
 namespace Render::GL {
 
-RiverRenderer::RiverRenderer() = default;
-RiverRenderer::~RiverRenderer() = default;
+WaterRenderer::WaterRenderer() = default;
+WaterRenderer::~WaterRenderer() = default;
 
-void RiverRenderer::configure(
-    const std::vector<Game::Map::RiverSegment>& river_segments, float tile_size) {
+void WaterRenderer::configure(const std::vector<Game::Map::RiverSegment>& river_segments,
+                              const std::vector<Game::Map::Lake>& lakes,
+                              const Game::Map::TerrainHeightMap& height_map) {
   m_river_segments = river_segments;
-  m_tile_size = tile_size;
+  m_lakes = lakes;
+  m_tile_size = height_map.get_tile_size();
+  m_height_map = &height_map;
   m_vis_helper.reset();
   build_meshes();
 }
 
-void RiverRenderer::build_meshes() {
+void WaterRenderer::build_meshes() {
   m_meshes.clear();
 
-  if (m_river_segments.empty()) {
+  if (m_river_segments.empty() && m_lakes.empty()) {
     return;
   }
 
-  Ground::LinearFeatureRibbonSettings settings;
-  settings.sample_step = 0.5F;
-  settings.min_length_steps = 8;
-  settings.edge_noise_frequencies = {2.0F, 5.0F, 10.0F};
-  settings.edge_noise_weights = {0.5F, 0.3F, 0.2F};
-  settings.width_variation_scale = 0.35F;
-  settings.meander_frequency = 3.0F;
-  settings.meander_length_scale = 0.1F;
-  settings.meander_amplitude = 0.3F;
-  settings.y_offset = 0.30F;
+  Ground::LinearFeatureRibbonSettings settings = Ground::make_river_ribbon_settings();
+  settings.height_map = m_height_map;
+  settings.follow_terrain_centerline = true;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());
@@ -59,13 +55,35 @@ void RiverRenderer::build_meshes() {
     segments.push_back({segment.start, segment.end, segment.width});
   }
 
-  m_meshes = Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
+  auto river_meshes =
+      Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
+  auto river_junctions =
+      Ground::build_linear_feature_junction_meshes(segments, m_tile_size, settings);
+  m_meshes.reserve(river_meshes.size() + river_junctions.size() + m_lakes.size());
+  for (std::size_t index = 0; index < river_meshes.size(); ++index) {
+    m_meshes.push_back({std::move(river_meshes[index]),
+                        WaterSurfaceKind::River,
+                        m_river_segments[index].start,
+                        m_river_segments[index].end});
+  }
+  for (auto& junction : river_junctions) {
+    m_meshes.push_back({std::move(junction.mesh),
+                        WaterSurfaceKind::River,
+                        junction.center,
+                        junction.center});
+  }
+  for (const auto& lake : m_lakes) {
+    m_meshes.push_back({Ground::build_lake_surface_mesh(lake, m_tile_size),
+                        WaterSurfaceKind::Lake,
+                        lake.center,
+                        lake.center});
+  }
 }
 
-void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
-  if (m_river_segments.empty() || m_meshes.empty()) {
+  if (m_meshes.empty()) {
     return;
   }
 
@@ -86,24 +104,21 @@ void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Ground::LinearFeatureVisibilityOptions vis_opts;
   vis_opts.treat_out_of_bounds_as_visible = true;
 
-  std::size_t mesh_index = 0;
-  for (const auto& segment : m_river_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto* mesh = m_meshes[mesh_index].get();
-    ++mesh_index;
+  for (const auto& surface : m_meshes) {
+    auto* mesh = surface.mesh.get();
     if (mesh == nullptr) {
       continue;
     }
 
-    if (vis_snapshot != nullptr) {
+    if (vis_snapshot != nullptr && surface.kind == WaterSurfaceKind::River) {
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
-              (segment.end - segment.start).length(), m_tile_size);
+              (surface.visibility_end - surface.visibility_start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot.get(), segment.start, segment.end, vis_opts);
+          vis_snapshot.get(),
+          surface.visibility_start,
+          surface.visibility_end,
+          vis_opts);
       if (!vis_result.visible) {
         continue;
       }
@@ -111,7 +126,8 @@ void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
     TerrainFeatureCmd cmd;
     cmd.mesh = mesh;
-    cmd.kind = LinearFeatureKind::River;
+    cmd.kind = LinearFeatureKind::Water;
+    cmd.water_kind = surface.kind;
     cmd.model = model;
     cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
     cmd.alpha = 1.0F;

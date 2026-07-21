@@ -20,20 +20,27 @@ public:
 
 signals:
   void engine_changed();
+  void renderer_ready();
+
+private slots:
+  void notify_renderer_ready();
 
 private:
   QPointer<GameEngine> m_engine;
+  bool m_renderer_ready = false;
 
   class GLRenderer : public QQuickFramebufferObject::Renderer {
   public:
-    explicit GLRenderer(QPointer<GameEngine> engine);
+    explicit GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engine);
     void render() override;
     auto
     createFramebufferObject(const QSize& size) -> QOpenGLFramebufferObject* override;
     void synchronize(QQuickFramebufferObject* item) override;
 
   private:
+    QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
+    bool m_ready_reported = false;
     QSize m_size;
     std::chrono::steady_clock::time_point m_last_frame_time{};
   };

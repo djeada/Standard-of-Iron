@@ -73,12 +73,25 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_lod_switch_id)),
             ids.end());
-  for (auto const* settlement_id : {Arena::Scenarios::k_roman_marching_camp_id,
-                                    Arena::Scenarios::k_carthage_trade_town_id,
-                                    Arena::Scenarios::k_rival_economies_id}) {
+  for (auto const* settlement_id :
+       {Arena::Scenarios::k_roman_marching_camp_id,
+        Arena::Scenarios::k_carthage_trade_town_id,
+        Arena::Scenarios::k_architecture_and_props_showcase_id,
+        Arena::Scenarios::k_roman_fortification_showcase_id,
+        Arena::Scenarios::k_carthage_fortification_showcase_id,
+        Arena::Scenarios::k_rival_economies_id}) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(settlement_id)),
               ids.end());
   }
+  for (auto const* commander_id : {Arena::Scenarios::k_commander_aura_pulse_id,
+                                   Arena::Scenarios::k_commander_identity_lineup_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(commander_id)),
+              ids.end());
+  }
+  EXPECT_NE(std::find(ids.begin(),
+                      ids.end(),
+                      QString::fromLatin1(Arena::Scenarios::k_water_showcase_id)),
+            ids.end());
 }
 
 TEST(ArenaScenariosTest, ResolvesDescriptionsForKnownScenarios) {

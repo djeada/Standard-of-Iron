@@ -77,6 +77,41 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
       }));
 }
 
+TEST_F(TerrainServiceTest, BattlefieldReliefIsBroadAndGameplayAuthoritative) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 80;
+  map_def.grid.height = 80;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.seed = 9917U;
+  map_def.biome.ground_irregularity_enabled = true;
+  map_def.biome.irregularity_scale = 0.12F;
+  map_def.biome.irregularity_amplitude = 0.10F;
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  const auto* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+  const auto& heights = height_map->get_height_data();
+  const auto [minimum, maximum] = std::minmax_element(heights.begin(), heights.end());
+  ASSERT_NE(minimum, heights.end());
+  EXPECT_GT(*maximum - *minimum, 0.25F);
+
+  float greatest_neighbor_step = 0.0F;
+  for (int z = 1; z < map_def.grid.height; ++z) {
+    for (int x = 1; x < map_def.grid.width; ++x) {
+      const float center = height_map->get_height_at_grid(x, z);
+      greatest_neighbor_step =
+          std::max(greatest_neighbor_step,
+                   std::abs(center - height_map->get_height_at_grid(x - 1, z)));
+      greatest_neighbor_step =
+          std::max(greatest_neighbor_step,
+                   std::abs(center - height_map->get_height_at_grid(x, z - 1)));
+    }
+  }
+  EXPECT_LT(greatest_neighbor_step, 0.25F);
+}
+
 TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 16;
@@ -200,6 +235,74 @@ TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
             height_map.get_height_at_grid(k_center_x, 15));
   EXPECT_LT(height_map.get_height_at_grid(k_center_x, 15),
             height_map.get_height_at_grid(k_center_x, 16));
+}
+
+TEST_F(TerrainServiceTest, ForestAndRiverAreaFeaturesKeepTheirRuntimeTypes) {
+  Game::Map::TerrainHeightMap height_map(21, 21, 1.0F);
+  const Game::Map::TerrainFeature forest{
+      .type = Game::Map::TerrainType::Forest,
+      .center_x = -5.0F,
+      .center_z = 0.0F,
+      .width = 8.0F,
+      .depth = 10.0F,
+  };
+  const Game::Map::TerrainFeature river{
+      .type = Game::Map::TerrainType::River,
+      .center_x = 5.0F,
+      .center_z = 0.0F,
+      .width = 8.0F,
+      .depth = 10.0F,
+  };
+
+  height_map.build_from_features({forest, river});
+
+  EXPECT_EQ(height_map.getTerrainType(5, 10), Game::Map::TerrainType::Forest);
+  EXPECT_EQ(height_map.getTerrainType(15, 10), Game::Map::TerrainType::River);
+  EXPECT_FLOAT_EQ(height_map.get_height_at_grid(5, 10), 0.0F);
+  EXPECT_FLOAT_EQ(height_map.get_height_at_grid(15, 10), 0.0F);
+  EXPECT_TRUE(height_map.is_walkable(5, 10));
+  EXPECT_FALSE(height_map.is_walkable(15, 10));
+}
+
+TEST_F(TerrainServiceTest, LakeBodyBlocksItsIrregularEllipseAndRemainsDistinct) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid = {41, 41, 1.0F};
+  map_def.lakes.push_back({QVector3D(0.0F, 0.0F, 0.0F), 14.0F, 8.0F, 25.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  EXPECT_EQ(terrain.get_terrain_type(20, 20), Game::Map::TerrainType::Lake);
+  EXPECT_FALSE(terrain.is_walkable(20, 20));
+  EXPECT_EQ(terrain.get_height_map()->get_lakes().size(), 1U);
+  EXPECT_EQ(terrain.get_terrain_type(2, 2), Game::Map::TerrainType::Flat);
+}
+
+TEST_F(TerrainServiceTest, FlatAreaUsesAuthoredRectangleAndClearsExistingHeight) {
+  Game::Map::TerrainHeightMap height_map(31, 31, 1.0F);
+  const Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 20.0F,
+      .depth = 20.0F,
+      .height = 4.0F,
+  };
+  const Game::Map::TerrainFeature clearing{
+      .type = Game::Map::TerrainType::Flat,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 8.0F,
+      .depth = 4.0F,
+      .height = 0.0F,
+  };
+
+  height_map.build_from_features({hill, clearing});
+
+  EXPECT_EQ(height_map.getTerrainType(15, 15), Game::Map::TerrainType::Flat);
+  EXPECT_FLOAT_EQ(height_map.get_height_at_grid(15, 15), 0.0F);
+  EXPECT_EQ(height_map.getTerrainType(15, 19), Game::Map::TerrainType::Hill);
+  EXPECT_GT(height_map.get_height_at_grid(15, 19), 0.0F);
 }
 
 TEST_F(TerrainServiceTest, RestoringTerrainRebuildsDerivedField) {
@@ -453,6 +556,25 @@ TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
     EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
     EXPECT_TRUE(height_map.is_walkable(x, z));
   }
+}
+
+TEST_F(TerrainServiceTest, TacticalHillKeepsBroadCrownAndNarrowShoulder) {
+  Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
+  Game::Map::TerrainFeature const hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 20.0F,
+      .depth = 20.0F,
+      .height = 4.0F,
+  };
+  height_map.build_from_features({hill});
+
+  EXPECT_FLOAT_EQ(height_map.get_height_at_grid(36, 30), hill.height);
+  const float shoulder = height_map.get_height_at_grid(38, 30);
+  EXPECT_GT(shoulder, 0.0F);
+  EXPECT_LT(shoulder, hill.height);
+  EXPECT_FLOAT_EQ(height_map.get_height_at_grid(41, 30), 0.0F);
 }
 
 TEST_F(TerrainServiceTest, TreeHelpersReserveAndHarvestTrees) {

@@ -239,6 +239,7 @@ private:
   std::vector<std::unique_ptr<Command>> m_redo_stack;
 
   void parse_terrain_array(const QJsonArray& arr);
+  void parse_lakes_array(const QJsonArray& arr);
   void parse_world_props_array(const QJsonArray& arr);
   void parse_legacy_firecamps_array(const QJsonArray& arr);
   void parse_rivers_array(const QJsonArray& arr);
@@ -251,6 +252,7 @@ private:
   void parse_walls_array(const QJsonArray& arr);
 
   [[nodiscard]] QJsonArray terrain_to_json() const;
+  [[nodiscard]] QJsonArray lakes_to_json() const;
   [[nodiscard]] QJsonArray world_props_to_json() const;
   [[nodiscard]] QJsonArray rivers_to_json() const;
   [[nodiscard]] QJsonArray roads_to_json() const;

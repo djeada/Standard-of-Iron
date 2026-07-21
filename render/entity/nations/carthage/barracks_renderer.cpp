@@ -31,17 +31,18 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 struct CarthagePalette {
-  QVector3D stone_light{0.62F, 0.60F, 0.58F};
-  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
-  QVector3D stone_base{0.55F, 0.53F, 0.51F};
-  QVector3D brick{0.75F, 0.52F, 0.42F};
-  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
-  QVector3D tile_red{0.72F, 0.40F, 0.30F};
-  QVector3D tile_dark{0.58F, 0.30F, 0.22F};
-  QVector3D wood{0.42F, 0.28F, 0.16F};
-  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
-  QVector3D iron{0.35F, 0.35F, 0.38F};
-  QVector3D royal_purple{0.46F, 0.22F, 0.44F};
+  QVector3D stone_light{0.66F, 0.53F, 0.38F};
+  QVector3D stone_dark{0.13F, 0.115F, 0.09F};
+  QVector3D stone_base{0.34F, 0.28F, 0.20F};
+  QVector3D brick{0.44F, 0.20F, 0.105F};
+  QVector3D brick_dark{0.20F, 0.075F, 0.04F};
+  QVector3D tile_red{0.31F, 0.085F, 0.04F};
+  QVector3D tile_dark{0.105F, 0.045F, 0.025F};
+  QVector3D wood{0.28F, 0.17F, 0.08F};
+  QVector3D wood_dark{0.075F, 0.052F, 0.03F};
+  QVector3D iron{0.10F, 0.095F, 0.08F};
+  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -516,6 +517,22 @@ void draw_corner_towers(const DrawContext& p,
                  QVector3D(corner.x(), 1.78F * height_multiplier, corner.z()),
                  QVector3D(0.05F, 0.08F, 0.05F),
                  c.stone_light);
+        if (state == BuildingState::Normal) {
+          draw_cyl(out,
+                   p.model,
+                   QVector3D(corner.x(), 1.72F, corner.z()),
+                   QVector3D(corner.x(), 2.18F, corner.z()),
+                   0.038F,
+                   c.iron,
+                   white);
+          draw_box(out,
+                   unit,
+                   white,
+                   p.model,
+                   QVector3D(corner.x(), 2.22F, corner.z()),
+                   QVector3D(0.075F, 0.12F, 0.075F),
+                   c.bronze);
+        }
       }
     }
   }
@@ -569,7 +586,7 @@ void draw_courtyard(const DrawContext& p,
              p.model,
              QVector3D(0.0F, 1.06F, 0.12F),
              QVector3D(0.42F, 0.06F, 0.28F),
-             c.royal_purple);
+             c.ember);
 
     draw_box(out,
              unit,
@@ -592,7 +609,7 @@ void draw_courtyard(const DrawContext& p,
              p.model,
              QVector3D(-1.52F, 0.80F, 0.0F),
              QVector3D(0.02F, 0.22F, 0.32F),
-             c.royal_purple);
+             c.ember);
 
     if (detailed) {
 
@@ -609,7 +626,7 @@ void draw_courtyard(const DrawContext& p,
                p.model,
                QVector3D(0.0F, 1.36F, 0.05F),
                QVector3D(0.10F, 0.08F, 0.10F),
-               c.royal_purple);
+               c.ember);
 
       draw_cyl(out,
                p.model,
@@ -703,6 +720,44 @@ void draw_carthage_roof(const DrawContext& p,
                QVector3D(dx, 2.06F, -0.12F),
                QVector3D(0.06F, 0.05F, 0.06F),
                c.brick);
+    }
+
+    draw_cyl(out,
+             p.model,
+             QVector3D(0.0F, 1.98F, -0.12F),
+             QVector3D(0.0F, 2.58F, -0.12F),
+             0.045F,
+             c.iron,
+             white);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 2.34F, -0.12F),
+             QVector3D(0.09F, 0.13F, 0.08F),
+             c.ember);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 2.62F, -0.12F),
+             QVector3D(0.08F, 0.14F, 0.08F),
+             c.bronze);
+    for (float const side : {-1.0F, 1.0F}) {
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(side * 0.20F, 2.42F, -0.12F),
+               QVector3D(0.16F, 0.045F, 0.06F),
+               c.bronze);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(side * 0.34F, 2.56F, -0.12F),
+               QVector3D(0.05F, 0.16F, 0.05F),
+               c.iron);
     }
   }
 }

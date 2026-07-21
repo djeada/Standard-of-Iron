@@ -37,7 +37,7 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
     return Pathfinding::CellValue::Walkable;
   }
 
-  if (terrain_type == Game::Map::TerrainType::River) {
+  if (Game::Map::is_water_terrain(terrain_type)) {
     return height_map->isBridgeCenterline(x, z) ? Pathfinding::CellValue::Walkable
                                                 : Pathfinding::CellValue::Blocked;
   }

@@ -94,7 +94,7 @@ Standard map format with:
 - Grid dimensions
 - Biome configuration
 - Terrain features
-- Rivers, roads, bridges
+- Rivers, lakes, roads, bridges
 - Spawn points (template, overridden by missions)
 
 ## Content Validation

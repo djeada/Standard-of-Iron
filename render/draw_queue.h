@@ -149,7 +149,9 @@ struct TerrainFeatureCmd {
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
-  LinearFeatureKind kind = LinearFeatureKind::River;
+  LinearFeatureKind kind = LinearFeatureKind::Water;
+  WaterSurfaceKind water_kind = WaterSurfaceKind::River;
+  RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;
   TerrainSurfaceCmd::VisibilityResources visibility{};
   CommandPriority priority{CommandPriority::High};
 };
@@ -497,9 +499,9 @@ private:
     TerrainScatterFireCamp = 13,
     Rain = 20,
     TerrainSurface = 21,
-    TerrainFeatureRiver = 22,
+    TerrainFeatureWater = 22,
     TerrainFeatureRoad = 23,
-    TerrainFeatureRiverbank = 24,
+    TerrainFeatureShoreline = 24,
     TerrainFeatureBridge = 25,
     PrimitiveSphere = 27,
     PrimitiveCylinder = 28,
@@ -601,7 +603,7 @@ private:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainSurface);
     } else if (cmd.index() == TerrainFeatureCmdIndex) {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
-      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainFeatureRiver) +
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainFeatureWater) +
                           static_cast<std::uint8_t>(feature.kind);
       identity.transparency_bucket = transparency_bucket(feature.alpha);
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
@@ -663,7 +665,7 @@ private:
       return true;
     case TerrainFeatureCmdIndex: {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
-      return feature.kind != LinearFeatureKind::Riverbank ||
+      return feature.kind != LinearFeatureKind::Shoreline ||
              !feature.visibility.enabled;
     }
     default:
@@ -920,6 +922,7 @@ private:
     const auto& feature_b = std::get<TerrainFeatureCmdIndex>(b);
     return feature_a.mesh != nullptr && feature_b.mesh != nullptr &&
            feature_a.kind == feature_b.kind &&
+           feature_a.road_surface_kind == feature_b.road_surface_kind &&
            transparency_bucket(feature_a.alpha) ==
                transparency_bucket(feature_b.alpha) &&
            feature_a.visibility.texture == feature_b.visibility.texture &&

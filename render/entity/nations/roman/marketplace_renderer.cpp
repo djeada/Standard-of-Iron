@@ -34,8 +34,8 @@ struct RomanMarketPalette {
   QVector3D cloth_red{0.72F, 0.18F, 0.14F};
   QVector3D cloth_gold{0.85F, 0.72F, 0.28F};
   QVector3D stone_base{0.80F, 0.76F, 0.70F};
-  QVector3D terracotta{0.82F, 0.62F, 0.45F};
-  QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
+  QVector3D terracotta{0.76F, 0.32F, 0.18F};
+  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
   QVector3D blue_accent{0.28F, 0.48F, 0.68F};
   QVector3D gold{0.85F, 0.72F, 0.35F};
 };
@@ -257,6 +257,8 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                           0.72F,
                           c.gold,
                           c.blue_accent);
+  add_roman_roof_standard(
+      desc, QVector3D(0.72F, hall_roof_y + 0.10F, 0.0F), 0.58F, c.gold, c.cloth_red);
 
   return build_building_archetype(desc, state);
 }

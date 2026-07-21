@@ -10,6 +10,7 @@ uniform float u_visibility_tile_size;
 uniform float u_explored_alpha;
 uniform int u_has_visibility;
 uniform float u_segment_visibility;
+uniform int u_water_surface_kind;
 
 const float PI = 3.14159265359;
 float saturate(float x) {
@@ -72,7 +73,8 @@ float ggx_spec(vec3 N, vec3 V, vec3 L, float rough, float F0) {
 
 float water_height(vec2 uv) {
   vec2 p = uv;
-  vec2 w1 = vec2(fbm(p * 0.6 + time * 0.05), fbm(p * 0.6 - time * 0.04));
+  vec2 w1 = vec2(fbm(p * 0.6 + time * 0.05),
+                 fbm(p * 0.6 - time * 0.04));
   vec2 w2 = vec2(fbm(rot(1.3) * p * 0.9 - time * 0.03),
                  fbm(rot(2.1) * p * 0.7 + time * 0.02));
   p += 0.75 * w1 + 0.45 * w2;
@@ -110,7 +112,9 @@ vec3 water_normal(vec2 uv, vec2 grad) {
   float k = 3.2;
   vec3 N = normalize(vec3(-grad.x * k, 1.0, -grad.y * k));
   return normalize(
-      mix(N, normalize(N + 0.22 * (micro_normal(uv) - vec3(0, 1, 0))), 0.35));
+      mix(N,
+          normalize(N + 0.22 * (micro_normal(uv) - vec3(0, 1, 0))),
+          0.35));
 }
 
 void main() {
@@ -128,8 +132,10 @@ void main() {
   float NdotV = max(dot(N, V), 0.0);
   float F0 = 0.02;
 
-  vec3 deep_water = vec3(0.008, 0.035, 0.080);
-  vec3 shallow_water = vec3(0.060, 0.180, 0.300);
+  // Rivers and lakes are one hydrological system. Sampling the same material
+  // in world space makes a tributary-to-lake join visually continuous.
+  vec3 deep_water = vec3(0.010, 0.044, 0.054);
+  vec3 shallow_water = vec3(0.034, 0.122, 0.128);
 
   float calm = smoothstep(0.0, 0.45, abs(h));
   float shallow = saturate(0.35 + 0.35 * (fbm(uv * 0.6) * (1.0 - calm)));
@@ -141,27 +147,31 @@ void main() {
 
   vec3 R = reflect(-V, N);
   vec3 reflection = sky_color(R, sun_dir);
-  reflection *= 0.70;
-  reflection *= vec3(0.60, 0.75, 1.00);
-  float F = fresnel_schlick(NdotV, F0) * 0.40;
+  reflection *= 0.32;
+  reflection *= vec3(0.48, 0.62, 0.72);
+  float F = fresnel_schlick(NdotV, F0) * 0.24;
 
   float NdotL = max(dot(N, sun_dir), 0.0);
-  float rough = mix(0.12, 0.26, smoothstep(0.0, 0.6, length(grad)));
+  float rough = mix(0.12,
+                    0.26,
+                    smoothstep(0.0, 0.6, length(grad)));
   float spec = ggx_spec(N, V, sun_dir, rough, F0) * 0.50;
-  vec3 spec_col = vec3(0.75, 0.85, 1.10) * spec;
+  vec3 spec_col = vec3(0.62, 0.70, 0.78) * spec;
   vec3 sun_diffuse = transmission * NdotL * 0.20;
 
-  float shore = 1.0 - (smoothstep(0.07, 0.28, tex_coord.y) *
-                       smoothstep(0.07, 0.28, 1.0 - tex_coord.y));
+  float shore_distance = u_water_surface_kind == 1
+                             ? tex_coord.y
+                             : min(tex_coord.x, 1.0 - tex_coord.x);
+  float shore = 1.0 - smoothstep(0.035, 0.20, shore_distance);
   float foam = shore * (0.45 + 0.55 * fbm(uv * 3.0 + time * 0.6));
   vec3 foam_col = vec3(0.92, 0.96, 1.0);
-  foam = clamp(foam * 0.35, 0.0, 1.0);
+  foam = clamp(foam * 0.24, 0.0, 1.0);
 
   vec3 color = transmission * (1.0 - F) + reflection * F;
   color += spec_col + sun_diffuse;
   color = mix(color, foam_col * mix(0.82, 1.0, NdotL), foam);
 
-  color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
+  color += vec3(0.012, 0.030, 0.040) * pow(1.0 - NdotV, 3.0);
 
   float visibility_factor = 1.0;
   if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
@@ -179,5 +189,8 @@ void main() {
   visibility_factor *= u_segment_visibility;
   color *= visibility_factor;
 
-  frag_color = vec4(saturate(color), 0.85);
+  // Water meshes overlap at authored bends and tributary junctions. Keep the
+  // surface opaque so those clean architectural joints do not turn into dark
+  // alpha seams.
+  frag_color = vec4(saturate(color), 1.0);
 }

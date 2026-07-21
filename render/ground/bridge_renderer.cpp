@@ -51,7 +51,7 @@ void BridgeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                                          m_bridges,
                                          m_meshes,
                                          LinearFeatureKind::Bridge,
-                                         QVector3D(0.55F, 0.52F, 0.48F));
+                                         QVector3D(0.36F, 0.33F, 0.29F));
 }
 
 } // namespace Render::GL

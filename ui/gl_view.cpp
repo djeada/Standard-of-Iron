@@ -1,5 +1,6 @@
 #include "gl_view.h"
 
+#include <QMetaObject>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
@@ -49,7 +50,7 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
             << version.second << "context OK";
   }
 
-  return new GLRenderer(m_engine);
+  return new GLRenderer(const_cast<GLView*>(this), m_engine);
 }
 
 auto GLView::engine() const -> QObject* {
@@ -65,8 +66,18 @@ void GLView::set_engine(QObject* eng) {
   update();
 }
 
-GLView::GLRenderer::GLRenderer(QPointer<GameEngine> engine)
-    : m_engine(std::move(std::move(engine))) {
+void GLView::notify_renderer_ready() {
+  if (m_renderer_ready) {
+    return;
+  }
+  m_renderer_ready = true;
+  qInfo() << "GLView: gameplay renderer produced its first frame";
+  emit renderer_ready();
+}
+
+GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engine)
+    : m_view(std::move(view))
+    , m_engine(std::move(engine)) {
 }
 
 void GLView::GLRenderer::render() {
@@ -83,6 +94,10 @@ void GLView::GLRenderer::render() {
 
   try {
     m_engine->ensure_initialized();
+    if (!m_engine->renderer_initialized()) {
+      qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
+      return;
+    }
 
     auto now = std::chrono::steady_clock::now();
     float dt = 1.0F / 60.0F;
@@ -94,6 +109,11 @@ void GLView::GLRenderer::render() {
 
     m_engine->update(dt);
     m_engine->render(m_size.width(), m_size.height());
+
+    if (!m_ready_reported && m_view != nullptr) {
+      m_ready_reported = true;
+      QMetaObject::invokeMethod(m_view, "notify_renderer_ready", Qt::QueuedConnection);
+    }
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
     return;

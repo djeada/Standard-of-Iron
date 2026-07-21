@@ -29,6 +29,11 @@ namespace Render::GL {
 class Renderer;
 class ResourceManager;
 
+struct TerrainSceneSubmitOptions {
+  bool include_scatters = true;
+  bool include_environment = true;
+};
+
 class TerrainSceneProxy {
 public:
   TerrainSceneProxy(TerrainSurfaceManager* surface,
@@ -63,11 +68,18 @@ public:
     m_passes.push_back(ambient_fog);
   }
 
-  void submit(Renderer& renderer, ResourceManager* resources) const {
+  void submit(Renderer& renderer,
+              ResourceManager* resources,
+              TerrainSceneSubmitOptions options = {}) const {
     submit_surfaces(renderer, resources);
     submit_features(renderer, resources);
-    submit_scatters(renderer, resources);
+    if (options.include_scatters) {
+      submit_scatters(renderer, resources);
+    }
 
+    if (!options.include_environment) {
+      return;
+    }
     for (auto* pass : {static_cast<IRenderPass*>(m_rain),
                        static_cast<IRenderPass*>(m_fog),
                        static_cast<IRenderPass*>(m_boundary_fog),
@@ -85,14 +97,14 @@ public:
   [[nodiscard]] auto terrain() const -> TerrainRenderer* {
     return m_surface != nullptr ? m_surface->terrain() : nullptr;
   }
-  [[nodiscard]] auto river() const -> RiverRenderer* {
-    return m_features != nullptr ? m_features->river() : nullptr;
+  [[nodiscard]] auto water() const -> WaterRenderer* {
+    return m_features != nullptr ? m_features->water() : nullptr;
   }
   [[nodiscard]] auto road() const -> RoadRenderer* {
     return m_features != nullptr ? m_features->road() : nullptr;
   }
-  [[nodiscard]] auto riverbank() const -> RiverbankRenderer* {
-    return m_features != nullptr ? m_features->riverbank() : nullptr;
+  [[nodiscard]] auto shoreline() const -> ShorelineRenderer* {
+    return m_features != nullptr ? m_features->shoreline() : nullptr;
   }
   [[nodiscard]] auto bridge() const -> BridgeRenderer* {
     return m_features != nullptr ? m_features->bridge() : nullptr;
@@ -158,15 +170,17 @@ public:
   [[nodiscard]] auto feature_chunks() const -> std::vector<LinearFeatureChunk> {
     auto& terrain = Game::Map::TerrainService::instance();
     auto const* height_map = terrain.get_height_map();
-    std::size_t const river_count =
-        (height_map != nullptr) ? height_map->get_river_segments().size() : 0U;
+    std::size_t const water_count = height_map != nullptr
+                                        ? height_map->get_river_segments().size() +
+                                              height_map->get_lakes().size()
+                                        : 0U;
     std::size_t const bridge_count =
         (height_map != nullptr) ? height_map->get_bridges().size() : 0U;
     if (m_features == nullptr) {
       return {};
     }
 
-    return m_features->chunks(river_count, road_segments().size(), bridge_count);
+    return m_features->chunks(water_count, road_segments().size(), bridge_count);
   }
 
   [[nodiscard]] auto scatter_chunks() const -> std::vector<ScatterChunk> {

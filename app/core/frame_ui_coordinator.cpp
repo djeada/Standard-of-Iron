@@ -15,6 +15,7 @@
 #include "game/units/spawn_type.h"
 #include "production_manager.h"
 #include "render/entity/combat_dust_renderer.h"
+#include "render/entity/commander_aura_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
@@ -93,6 +94,7 @@ void render_effects(const RenderEffectsContext& context,
   }
 
   Render::GL::render_healer_auras(context.renderer, res, context.world);
+  Render::GL::render_commander_auras(context.renderer, res, context.world);
   Render::GL::render_combat_dust(context.renderer, res, context.world);
 
   if (render_runtime_mode_effects) {

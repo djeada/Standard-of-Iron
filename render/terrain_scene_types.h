@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 #include "../game/map/terrain.h"
 #include "ground/scatter_runtime.h"
@@ -26,10 +27,21 @@ struct TerrainSurfaceChunk {
 };
 
 enum class LinearFeatureKind {
-  River,
+  Water,
   Road,
-  Riverbank,
+  Shoreline,
   Bridge
+};
+
+enum class WaterSurfaceKind : std::uint8_t {
+  River = 0,
+  Lake = 1,
+};
+
+enum class RoadSurfaceKind : std::uint8_t {
+  PackedEarth = 0,
+  RoughTrack = 1,
+  Paved = 2,
 };
 
 enum class LinearFeatureVisibilityMode {

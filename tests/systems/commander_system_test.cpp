@@ -1,5 +1,6 @@
 #include <cmath>
 #include <gtest/gtest.h>
+#include <array>
 #include <vector>
 
 #include "game/core/component.h"
@@ -43,6 +44,7 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
     EXPECT_FALSE(definition->bonus_type.empty());
     EXPECT_FALSE(definition->bonus_summary.empty());
     EXPECT_TRUE(Game::Units::is_commander_troop(definition->troop_type));
+    EXPECT_EQ(definition->bodyguard_count, 0);
 
     has_hannibal = has_hannibal || definition->display_name == "Hannibal Barca";
     has_health_bonus = has_health_bonus || definition->bonus_type == "health_regen";
@@ -135,6 +137,63 @@ TEST(CommanderFactoryTest, RefusesSecondLivingCommanderForOwner) {
   first_unit->health = 0;
   auto replacement = registry.create(params.spawn_type, world, params);
   EXPECT_NE(replacement, nullptr);
+}
+
+TEST(CommanderFactoryTest, CommanderCombatMatchesDistinctWeaponIdentity) {
+  Engine::Core::World world;
+  Game::Units::UnitFactoryRegistry registry;
+  Game::Units::register_built_in_units(registry);
+
+  struct Expectation {
+    Game::Units::SpawnType spawn_type;
+    Engine::Core::CombatAttackFamily family;
+    bool ranged;
+  };
+  const std::array<Expectation, 6> expectations{{
+      {Game::Units::SpawnType::RomanLegionOrganizer,
+       Engine::Core::CombatAttackFamily::Spear,
+       false},
+      {Game::Units::SpawnType::RomanVeteranConsul,
+       Engine::Core::CombatAttackFamily::Sword,
+       false},
+      {Game::Units::SpawnType::RomanFieldCommander,
+       Engine::Core::CombatAttackFamily::Bow,
+       true},
+      {Game::Units::SpawnType::CarthageMercenaryBroker,
+       Engine::Core::CombatAttackFamily::Spear,
+       false},
+      {Game::Units::SpawnType::CarthageCavalryPatron,
+       Engine::Core::CombatAttackFamily::Bow,
+       true},
+      {Game::Units::SpawnType::CarthageElephantMaster,
+       Engine::Core::CombatAttackFamily::Sword,
+       false},
+  }};
+
+  int owner_id = 1;
+  for (auto const& expectation : expectations) {
+    Game::Units::SpawnParams params;
+    params.player_id = owner_id++;
+    params.spawn_type = expectation.spawn_type;
+    params.nation_id = params.player_id <= 3
+                           ? Game::Systems::NationID::RomanRepublic
+                           : Game::Systems::NationID::Carthage;
+    auto created = registry.create(params.spawn_type, world, params);
+    ASSERT_NE(created, nullptr);
+    auto* entity = world.get_entity(created->id());
+    ASSERT_NE(entity, nullptr);
+    auto* attack = entity->get_component<Engine::Core::AttackComponent>();
+    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+    ASSERT_NE(attack, nullptr);
+    ASSERT_NE(commander, nullptr);
+    EXPECT_EQ(commander->bodyguard_count, 0);
+    EXPECT_EQ(attack->can_ranged, expectation.ranged);
+    const auto mode = expectation.ranged
+                          ? Engine::Core::AttackComponent::CombatMode::Ranged
+                          : Engine::Core::AttackComponent::CombatMode::Melee;
+    EXPECT_EQ(Engine::Core::resolve_combat_attack_family(params.spawn_type, mode),
+              expectation.family);
+  }
 }
 
 TEST(UndeadSpawnTypeTest, RoundTripsAndModesMatchDesign) {
@@ -306,6 +365,8 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   commander_data->bonus_type = "attack_boost";
   commander_data->aura_bonus_value = 0.25F;
   commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -369,6 +430,8 @@ TEST(CommanderSystemTest, AttackBoostFallsOffOutsideAura) {
   commander_data->bonus_type = "attack_boost";
   commander_data->aura_bonus_value = 0.25F;
   commander_data->aura_radius = 5.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -416,6 +479,8 @@ TEST(CommanderSystemTest, SpeedBoostFallsOffWhenCommanderIsWounded) {
   commander_data->bonus_type = "speed_boost";
   commander_data->aura_bonus_value = 0.20F;
   commander_data->aura_radius = 5.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -864,7 +929,7 @@ TEST(CommanderAuraAbilityTest, DeathDeactivatesAbility) {
   EXPECT_FALSE(commander_data->aura_ability_active);
 }
 
-TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
+TEST(CommanderAuraAbilityTest, ExplicitActivationAppliesConfiguredDamageBoost) {
   Engine::Core::World world;
 
   auto* commander = world.create_entity();
@@ -882,7 +947,8 @@ TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
   commander_data->aura_radius = 10.0F;
   commander_data->aura_ability_duration = 15.0F;
   commander_data->aura_ability_cooldown = 60.0F;
-  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  commander_data->bonus_type = "attack_boost";
+  commander_data->aura_bonus_value = 0.25F;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -902,17 +968,24 @@ TEST(CommanderAuraAbilityTest, SameTypeTroopsGetDamageBoost) {
   const int base_melee = ally_attack->melee_damage;
   ASSERT_GT(base_damage, 0);
   ASSERT_GT(base_melee, 0);
+  auto* inactive_buff =
+      ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
+  EXPECT_TRUE(inactive_buff == nullptr || !inactive_buff->active);
 
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
 
   EXPECT_EQ(ally_attack->damage,
-            std::max(1, static_cast<int>(std::round(base_damage * 1.5F))));
+            std::max(1, static_cast<int>(std::round(base_damage * 1.25F))));
   EXPECT_EQ(ally_attack->melee_damage,
-            std::max(1, static_cast<int>(std::round(base_melee * 1.5F))));
+            std::max(1, static_cast<int>(std::round(base_melee * 1.25F))));
+  auto* active_buff = ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
+  ASSERT_NE(active_buff, nullptr);
+  EXPECT_TRUE(active_buff->active);
+  EXPECT_EQ(active_buff->source_commander_id, commander->get_id());
 }
 
-TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
+TEST(CommanderAuraAbilityTest, ConfiguredBonusAppliesToAllNearbyTroopTypes) {
   Engine::Core::World world;
 
   auto* commander = world.create_entity();
@@ -930,7 +1003,8 @@ TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
   commander_data->aura_radius = 10.0F;
   commander_data->aura_ability_duration = 15.0F;
   commander_data->aura_ability_cooldown = 60.0F;
-  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  commander_data->bonus_type = "attack_boost";
+  commander_data->aura_bonus_value = 0.25F;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -952,11 +1026,13 @@ TEST(CommanderAuraAbilityTest, DifferentTypeTroopsDoNotGetDamageBoost) {
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
 
-  EXPECT_EQ(ally_attack->damage, base_damage);
-  EXPECT_EQ(ally_attack->melee_damage, base_melee);
+  EXPECT_EQ(ally_attack->damage,
+            std::max(1, static_cast<int>(std::round(base_damage * 1.25F))));
+  EXPECT_EQ(ally_attack->melee_damage,
+            std::max(1, static_cast<int>(std::round(base_melee * 1.25F))));
 }
 
-TEST(CommanderAuraAbilityTest, AllTroopsInRadiusGetHealthBoost) {
+TEST(CommanderAuraAbilityTest, AllTroopsInRadiusReceiveVisibleBuffMarker) {
   Engine::Core::World world;
 
   auto* commander = world.create_entity();
@@ -990,7 +1066,11 @@ TEST(CommanderAuraAbilityTest, AllTroopsInRadiusGetHealthBoost) {
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
 
-  EXPECT_EQ(ally_unit->health, 130);
+  EXPECT_EQ(ally_unit->health, 100);
+  auto* buff = ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
+  ASSERT_NE(buff, nullptr);
+  EXPECT_TRUE(buff->active);
+  EXPECT_EQ(buff->source_commander_id, commander->get_id());
 }
 
 TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
@@ -1036,6 +1116,8 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
 
   EXPECT_EQ(ally_attack->damage, base_damage);
   EXPECT_EQ(ally_unit->health, base_health);
+  auto* buff = ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
+  EXPECT_TRUE(buff == nullptr || !buff->active);
 }
 
 } // namespace

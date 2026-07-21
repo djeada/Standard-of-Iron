@@ -157,7 +157,9 @@ auto Backend::initialize() -> bool {
   qInfo() << "Backend: Creating ResourceManager...";
   m_resources = std::make_unique<ResourceManager>();
   if (!m_resources->initialize()) {
-    qWarning() << "Backend: failed to initialize ResourceManager";
+    qCritical()
+        << "Backend::initialize() FAILED: ResourceManager initialization failed";
+    return false;
   }
   qInfo() << "Backend: ResourceManager created";
 
@@ -169,93 +171,138 @@ auto Backend::initialize() -> bool {
   qInfo() << "Backend: Creating CylinderPipeline...";
   m_cylinder_pipeline =
       std::make_unique<BackendPipelines::CylinderPipeline>(m_shader_cache.get());
-  m_cylinder_pipeline->initialize();
+  if (!m_cylinder_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: CylinderPipeline";
+    return false;
+  }
   qInfo() << "Backend: CylinderPipeline initialized";
 
   qInfo() << "Backend: Creating VegetationPipeline...";
   m_vegetation_pipeline =
       std::make_unique<BackendPipelines::VegetationPipeline>(m_shader_cache.get());
-  m_vegetation_pipeline->initialize();
+  if (!m_vegetation_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: VegetationPipeline";
+    return false;
+  }
   qInfo() << "Backend: VegetationPipeline initialized";
 
   qInfo() << "Backend: Creating TerrainPipeline...";
   m_terrain_pipeline =
       std::make_unique<BackendPipelines::TerrainPipeline>(this, m_shader_cache.get());
-  m_terrain_pipeline->initialize();
+  if (!m_terrain_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: TerrainPipeline";
+    return false;
+  }
   qInfo() << "Backend: TerrainPipeline initialized";
 
   qInfo() << "Backend: Creating CharacterPipeline...";
   m_character_pipeline =
       std::make_unique<BackendPipelines::CharacterPipeline>(this, m_shader_cache.get());
-  m_character_pipeline->initialize();
+  if (!m_character_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: CharacterPipeline";
+    return false;
+  }
   qInfo() << "Backend: CharacterPipeline initialized";
 
   qInfo() << "Backend: Creating RiggedCharacterPipeline...";
   m_rigged_character_pipeline =
       std::make_unique<BackendPipelines::RiggedCharacterPipeline>(this,
                                                                   m_shader_cache.get());
-  m_rigged_character_pipeline->initialize();
+  if (!m_rigged_character_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: RiggedCharacterPipeline";
+    return false;
+  }
   qInfo() << "Backend: RiggedCharacterPipeline initialized";
 
   qInfo() << "Backend: Creating WaterPipeline...";
   m_water_pipeline =
       std::make_unique<BackendPipelines::WaterPipeline>(this, m_shader_cache.get());
-  m_water_pipeline->initialize();
+  if (!m_water_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: WaterPipeline";
+    return false;
+  }
   qInfo() << "Backend: WaterPipeline initialized";
 
   qInfo() << "Backend: Creating EffectsPipeline...";
   m_effects_pipeline =
       std::make_unique<BackendPipelines::EffectsPipeline>(this, m_shader_cache.get());
-  m_effects_pipeline->initialize();
+  if (!m_effects_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: EffectsPipeline";
+    return false;
+  }
   qInfo() << "Backend: EffectsPipeline initialized";
 
   qInfo() << "Backend: Creating PrimitiveBatchPipeline...";
   m_primitive_batch_pipeline =
       std::make_unique<BackendPipelines::PrimitiveBatchPipeline>(m_shader_cache.get());
-  m_primitive_batch_pipeline->initialize();
+  if (!m_primitive_batch_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: PrimitiveBatchPipeline";
+    return false;
+  }
   qInfo() << "Backend: PrimitiveBatchPipeline initialized";
 
   qInfo() << "Backend: Creating BannerPipeline...";
   m_banner_pipeline =
       std::make_unique<BackendPipelines::BannerPipeline>(this, m_shader_cache.get());
-  m_banner_pipeline->initialize();
+  if (!m_banner_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: BannerPipeline";
+    return false;
+  }
   qInfo() << "Backend: BannerPipeline initialized";
 
   qInfo() << "Backend: Creating HealingBeamPipeline...";
   m_healing_beam_pipeline = std::make_unique<BackendPipelines::HealingBeamPipeline>(
       this, m_shader_cache.get());
-  m_healing_beam_pipeline->initialize();
+  if (!m_healing_beam_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: HealingBeamPipeline";
+    return false;
+  }
   qInfo() << "Backend: HealingBeamPipeline initialized";
 
   qInfo() << "Backend: Creating HealerAuraPipeline...";
   m_healer_aura_pipeline = std::make_unique<BackendPipelines::HealerAuraPipeline>(
       this, m_shader_cache.get());
-  m_healer_aura_pipeline->initialize();
+  if (!m_healer_aura_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: HealerAuraPipeline";
+    return false;
+  }
   qInfo() << "Backend: HealerAuraPipeline initialized";
 
   qInfo() << "Backend: Creating CombatDustPipeline...";
   m_combat_dust_pipeline = std::make_unique<BackendPipelines::CombatDustPipeline>(
       this, m_shader_cache.get());
-  m_combat_dust_pipeline->initialize();
+  if (!m_combat_dust_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: CombatDustPipeline";
+    return false;
+  }
   qInfo() << "Backend: CombatDustPipeline initialized";
 
   qInfo() << "Backend: Creating RainPipeline...";
   m_rain_pipeline =
       std::make_unique<BackendPipelines::RainPipeline>(this, m_shader_cache.get());
-  m_rain_pipeline->initialize();
+  if (!m_rain_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: RainPipeline";
+    return false;
+  }
   qInfo() << "Backend: RainPipeline initialized";
 
   qInfo() << "Backend: Creating ModeIndicatorPipeline...";
   m_mode_indicator_pipeline = std::make_unique<BackendPipelines::ModeIndicatorPipeline>(
       this, m_shader_cache.get());
-  m_mode_indicator_pipeline->initialize();
+  if (!m_mode_indicator_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: ModeIndicatorPipeline";
+    return false;
+  }
   qInfo() << "Backend: ModeIndicatorPipeline initialized";
 
   qInfo() << "Backend: Creating MeshInstancingPipeline...";
   m_mesh_instancing_pipeline =
       std::make_unique<BackendPipelines::MeshInstancingPipeline>(this,
                                                                  m_shader_cache.get());
-  m_mesh_instancing_pipeline->initialize();
+  if (!m_mesh_instancing_pipeline->initialize()) {
+    qCritical() << "Backend::initialize() FAILED: MeshInstancingPipeline";
+    return false;
+  }
   qInfo() << "Backend: MeshInstancingPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
@@ -263,10 +310,16 @@ auto Backend::initialize() -> bool {
   m_grid_shader = m_shader_cache->get(QStringLiteral("grid"));
   m_shadow_shader = m_shader_cache->get(QStringLiteral("troop_shadow"));
   if (m_basic_shader == nullptr) {
-    qWarning() << "Backend: basic shader missing";
+    qCritical() << "Backend::initialize() FAILED: required basic shader missing";
+    return false;
   }
   if (m_grid_shader == nullptr) {
-    qWarning() << "Backend: grid shader missing";
+    qCritical() << "Backend::initialize() FAILED: required grid shader missing";
+    return false;
+  }
+  if (m_shadow_shader == nullptr) {
+    qCritical() << "Backend::initialize() FAILED: required troop shadow shader missing";
+    return false;
   }
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);

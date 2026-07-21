@@ -257,6 +257,15 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     commander_obj["death_shock_radius"] = commander->death_shock_radius;
     commander_obj["death_morale_shock"] = commander->death_morale_shock;
     commander_obj["aura_active"] = commander->aura_active;
+    commander_obj["aura_ability_active"] = commander->aura_ability_active;
+    commander_obj["aura_ability_requested"] = commander->aura_ability_requested;
+    commander_obj["aura_ability_duration"] = commander->aura_ability_duration;
+    commander_obj["aura_ability_remaining"] = commander->aura_ability_remaining;
+    commander_obj["aura_ability_cooldown"] = commander->aura_ability_cooldown;
+    commander_obj["aura_ability_cooldown_remaining"] =
+        commander->aura_ability_cooldown_remaining;
+    commander_obj["aura_affinity_spawn_type"] =
+        static_cast<int>(commander->aura_affinity_spawn_type);
     commander_obj["wounded"] = commander->wounded;
     commander_obj["rally_requested"] = commander->rally_requested;
     commander_obj["rally_requires_manual_trigger"] =
@@ -877,10 +886,26 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         commander_obj["death_morale_shock"].toDouble(commander->death_morale_shock));
     commander->aura_active =
         commander_obj["aura_active"].toBool(commander->aura_active);
+    commander->aura_ability_active = commander_obj["aura_ability_active"].toBool(false);
+    commander->aura_ability_requested =
+        commander_obj["aura_ability_requested"].toBool(false);
+    commander->aura_ability_duration = static_cast<float>(
+        commander_obj["aura_ability_duration"].toDouble(
+            commander->aura_ability_duration));
+    commander->aura_ability_remaining = static_cast<float>(
+        commander_obj["aura_ability_remaining"].toDouble(0.0));
+    commander->aura_ability_cooldown = static_cast<float>(
+        commander_obj["aura_ability_cooldown"].toDouble(
+            commander->aura_ability_cooldown));
+    commander->aura_ability_cooldown_remaining = static_cast<float>(
+        commander_obj["aura_ability_cooldown_remaining"].toDouble(0.0));
+    commander->aura_affinity_spawn_type = static_cast<Game::Units::SpawnType>(
+        commander_obj["aura_affinity_spawn_type"].toInt(
+            static_cast<int>(commander->aura_affinity_spawn_type)));
     commander->wounded = commander_obj["wounded"].toBool(commander->wounded);
     commander->rally_requested = commander_obj["rally_requested"].toBool(false);
     commander->rally_requires_manual_trigger =
-        commander_obj["rally_requires_manual_trigger"].toBool(false);
+        commander_obj["rally_requires_manual_trigger"].toBool(true);
     commander->fpv_controlled = commander_obj["fpv_controlled"].toBool(false);
     commander->flag_rally_cost = static_cast<float>(
         commander_obj["flag_rally_cost"].toDouble(commander->flag_rally_cost));
@@ -1475,6 +1500,19 @@ auto Serialization::serialize_terrain(
   }
   terrain_obj["rivers"] = rivers_array;
 
+  QJsonArray lakes_array;
+  for (const auto& lake : height_map->get_lakes()) {
+    QJsonObject lake_obj;
+    lake_obj["centerX"] = lake.center.x();
+    lake_obj["centerY"] = lake.center.y();
+    lake_obj["centerZ"] = lake.center.z();
+    lake_obj["width"] = lake.width;
+    lake_obj["depth"] = lake.depth;
+    lake_obj["rotation"] = lake.rotation_deg;
+    lakes_array.append(lake_obj);
+  }
+  terrain_obj["lakes"] = lakes_array;
+
   QJsonArray bridges_array;
   const auto& bridges = height_map->get_bridges();
   for (const auto& bridge : bridges) {
@@ -1773,6 +1811,26 @@ void Serialization::deserialize_terrain(
     }
   }
 
+  std::vector<Game::Map::Lake> lakes;
+  if (json.contains("lakes")) {
+    const auto lakes_array = json["lakes"].toArray();
+    lakes.reserve(lakes_array.size());
+    const Game::Map::Lake defaults{};
+    for (const auto& value : lakes_array) {
+      const auto lake_obj = value.toObject();
+      Game::Map::Lake lake;
+      lake.center = QVector3D(
+          static_cast<float>(lake_obj["centerX"].toDouble(0.0)),
+          static_cast<float>(lake_obj["centerY"].toDouble(0.0)),
+          static_cast<float>(lake_obj["centerZ"].toDouble(0.0)));
+      lake.width = static_cast<float>(lake_obj["width"].toDouble(defaults.width));
+      lake.depth = static_cast<float>(lake_obj["depth"].toDouble(defaults.depth));
+      lake.rotation_deg =
+          static_cast<float>(lake_obj["rotation"].toDouble(defaults.rotation_deg));
+      lakes.push_back(lake);
+    }
+  }
+
   roads.clear();
   if (json.contains("roads")) {
     const auto roads_array = json["roads"].toArray();
@@ -1856,7 +1914,7 @@ void Serialization::deserialize_terrain(
     authored_world_props = world_props;
   }
 
-  height_map->restore_from_data(heights, terrain_types, rivers, bridges);
+  height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
 }
 
 auto Serialization::serialize_world(const World* world) -> QJsonDocument {
@@ -1951,7 +2009,8 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
                                             temp_height_map->get_bridges(),
                                             biome,
                                             world_props,
-                                            authored_world_props);
+                                            authored_world_props,
+                                            temp_height_map->get_lakes());
   }
 }
 

@@ -3,7 +3,9 @@
   "title": "Battle of Ticino",
   "summary": "First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.",
   "teaching_goal": "Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.",
-  "narrative_intent": "Hannibal's first Italian victory is a test of tempo and cavalry control.",
+  "narrative_intent": "Hannibal's first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.",
+  "historical_context": "218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.",
+  "terrain_type": "po_valley_river_plain",
   "map_path": ":/assets/maps/map_battle_ticino.json",
   "player_setup": {
     "nation": "carthage",
@@ -51,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 175,
-            "z": 60
+            "x": 379.85,
+            "z": 206.03
           }
         },
         {
@@ -72,8 +74,8 @@
             }
           ],
           "entry_point": {
-            "x": 160,
-            "z": 32
+            "x": 347.29,
+            "z": 109.88
           }
         }
       ],
@@ -97,8 +99,8 @@
         {
           "type": "barracks",
           "position": {
-            "x": 178,
-            "z": 90
+            "x": 564.35,
+            "z": 363.99
           },
           "max_population": 150
         }
@@ -121,8 +123,8 @@
             }
           ],
           "entry_point": {
-            "x": 178,
-            "z": 90
+            "x": 564.35,
+            "z": 363.99
           }
         },
         {
@@ -142,8 +144,8 @@
             }
           ],
           "entry_point": {
-            "x": 178,
-            "z": 90
+            "x": 564.35,
+            "z": 363.99
           }
         }
       ],
@@ -156,8 +158,8 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 1,
-      "description": "Take the bridgehead before the Romans vanish into the fog."
+      "min_count": 3,
+      "description": "Take both bridge camps and the eastern reserve quarter before the Roman scouts vanish into the fog."
     }
   ],
   "defeat_conditions": [
@@ -172,7 +174,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -224,5 +226,6 @@
       ]
     }
   ],
+  "include_ambient_undead": false,
   "theme": "Hannibal's riders descend through river fog to trap Roman scouts before they escape across a torch-lit bridge."
 }

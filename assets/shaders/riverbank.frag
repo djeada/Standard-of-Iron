@@ -12,6 +12,7 @@ uniform float u_visibility_tile_size;
 uniform float u_explored_alpha;
 uniform int u_has_visibility;
 uniform float u_segment_visibility;
+uniform int u_water_surface_kind;
 
 float saturate(float x) {
   return clamp(x, 0.0, 1.0);
@@ -69,10 +70,11 @@ void main() {
   }
   visibility_factor *= u_segment_visibility;
 
-  vec3 wet_soil = vec3(0.20, 0.17, 0.14);
-  vec3 damp_soil = vec3(0.32, 0.27, 0.22);
-  vec3 dry_soil = vec3(0.46, 0.40, 0.33);
-  vec3 grass_tint = vec3(0.30, 0.50, 0.25);
+  float lake_shore = float(u_water_surface_kind == 1);
+  vec3 wet_soil = mix(vec3(0.20, 0.17, 0.14), vec3(0.12, 0.16, 0.13), lake_shore);
+  vec3 damp_soil = mix(vec3(0.32, 0.27, 0.22), vec3(0.20, 0.25, 0.18), lake_shore);
+  vec3 dry_soil = mix(vec3(0.46, 0.40, 0.33), vec3(0.29, 0.34, 0.23), lake_shore);
+  vec3 grass_tint = mix(vec3(0.30, 0.50, 0.25), vec3(0.22, 0.34, 0.18), lake_shore);
 
   float base_wet = smoothstep(0.30, 0.04, tex_coord.x);
 
@@ -100,7 +102,7 @@ void main() {
 
   float grass_mask = smoothstep(0.50, 0.92, 1.0 - wetness) *
                      smoothstep(0.25, 0.75, fbm(uv * 1.2 + 5.1));
-  base = mix(base, mix(base, grass_tint, 0.6), grass_mask);
+  base = mix(base, mix(base, grass_tint, mix(0.6, 0.35, lake_shore)), grass_mask);
 
   base = mix(base, base * vec3(0.92, 0.96, 1.02), contact * 0.35);
 

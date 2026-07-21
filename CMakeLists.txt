@@ -62,10 +62,9 @@ else()
     else()
         # GCC/Clang Release flags
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -funroll-loops -ftree-vectorize")
-        # x86-64-v2 targets SSE4.2/POPCNT — safe on x86_64 but invalid on arm64 (Apple Silicon)
-        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64-v2")
-        endif()
+        # Keep release artifacts on the compiler's portable architecture
+        # baseline. CI-runner-specific -march flags can make packaged builds
+        # crash on otherwise supported user CPUs.
     endif()
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
     message(STATUS "Building in RELEASE mode with optimizations")
@@ -99,6 +98,7 @@ if(QT_VERSION_MAJOR EQUAL 5)
 endif()
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 if(DEFINED ENV{CI} AND NOT "$ENV{CI}" STREQUAL "")
     set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT OFF)
@@ -251,6 +251,11 @@ endif()
 
 # ---- QML module ----
 if(QT_VERSION_MAJOR EQUAL 6)
+    # Compile the complete resource collections into the executable. Listing a
+    # .qrc file under qt_add_qml_module(RESOURCES) only embeds the XML file; it
+    # does not register the files referenced by that collection at runtime.
+    target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc)
+
     qt6_add_qml_module(standard_of_iron
         URI StandardOfIron
         VERSION 1.0
@@ -334,7 +339,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/campaigns/second_punic_war.json
             assets/campaign_map/campaign_state.json
             ${GENERATED_CAMPAIGN_MAP_RESOURCES}
-            assets.qrc
             assets/visuals/unit_visuals.json
             assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png

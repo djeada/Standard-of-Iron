@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "game/systems/nation_id.h"
+#include "game/map/terrain.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 
@@ -60,6 +61,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   ApplyDamage,
   MeleeLock,
   SetFullCreatureLod,
+  TriggerCommanderAura,
 };
 
 struct ArenaScenarioGroup {
@@ -133,6 +135,10 @@ enum class ArenaExpectationKind : std::uint8_t {
   GroupExists,
   OwnerCompletesConstruction,
   OwnerHarvestsResource,
+  CommanderAuraActivated,
+  CommanderAuraBuffObserved,
+  CommanderAuraExpired,
+  NoCommanderAuraBuffObserved,
 };
 
 struct ArenaExpectation {
@@ -157,6 +163,12 @@ struct ArenaScenarioDefinition {
   QString description;
   float duration_seconds{12.0F};
   ArenaCameraView camera;
+  bool suppress_terrain_scatter{false};
+  bool select_spawned_units{true};
+  bool suppress_spawn_anchor{false};
+  bool suppress_ui_overlays{false};
+  std::vector<Game::Map::RiverSegment> rivers;
+  std::vector<Game::Map::Lake> lakes;
   std::vector<ArenaScenarioGroup> groups;
   std::vector<ArenaScenarioResourcePatch> resource_patches;
   std::vector<ArenaScenarioStep> steps;

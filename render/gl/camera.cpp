@@ -278,9 +278,21 @@ void Camera::zoom(float delta) {
 }
 
 void Camera::zoom_distance(float delta) {
+  zoom_distance(delta, k_min_dist, k_max_dist);
+}
+
+void Camera::zoom_distance(float delta,
+                           float min_distance,
+                           float max_distance) {
   if (!finite(delta)) {
     return;
   }
+
+  if (!finite(min_distance) || !finite(max_distance)) {
+    return;
+  }
+  min_distance = std::max(min_distance, k_tiny);
+  max_distance = std::max(max_distance, min_distance);
 
   QVector3D const offset = m_position - m_target;
   float r = offset.length();
@@ -294,7 +306,7 @@ void Camera::zoom_distance(float delta) {
   }
   factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
 
-  float const new_r = std::clamp(r * factor, k_min_dist, k_max_dist);
+  float const new_r = std::clamp(r * factor, min_distance, max_distance);
   QVector3D const dir = safe_normalize(offset, QVector3D(0, 0, 1));
   QVector3D const new_pos = m_target + dir * new_r;
 

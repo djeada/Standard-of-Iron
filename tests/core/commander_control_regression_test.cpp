@@ -184,6 +184,22 @@ TEST(CommanderControlRegressionTest, CommanderRallyKeyIsWiredThroughAdapter) {
   EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_rally();"));
 }
 
+TEST(CommanderControlRegressionTest, CommanderAuraKeyIsWiredThroughAdapter) {
+  const auto root = find_repo_root();
+  const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto adapter_header =
+      read_text(root / "app" / "core" / "commander_input_adapter.h");
+  const auto adapter_source =
+      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_3:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_aura()"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_aura();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_aura();"));
+  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_aura();"));
+}
+
 TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   const auto root = find_repo_root();
   const auto source =
@@ -363,8 +379,9 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
   EXPECT_TRUE(contains(commander_hud_source, "qsTr(\"[Space] Dodge  [Alt] Jump\")"));
-  EXPECT_TRUE(
-      contains(commander_hud_source, "qsTr(\"[Tab] Cycle Target  [C] Camera\")"));
+  EXPECT_TRUE(contains(
+      commander_hud_source,
+      "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
   EXPECT_TRUE(

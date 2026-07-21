@@ -353,7 +353,8 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
       MapJsonKeys::grid,         MapJsonKeys::biome,       MapJsonKeys::camera,
       MapJsonKeys::spawns,       MapJsonKeys::victory,     MapJsonKeys::rain,
       MapJsonKeys::terrain,      MapJsonKeys::world_props, MapJsonKeys::firecamps,
-      MapJsonKeys::rivers,       MapJsonKeys::roads,       MapJsonKeys::bridges,
+      MapJsonKeys::rivers,       MapJsonKeys::lakes,       MapJsonKeys::roads,
+      MapJsonKeys::bridges,
       MapJsonKeys::undead_zones, MapJsonKeys::fog_zones,   MapJsonKeys::buildings,
       MapJsonKeys::walls};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
@@ -390,6 +391,9 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
 
   if (root.contains(MapJsonKeys::terrain)) {
     parse_terrain_array(root[MapJsonKeys::terrain].toArray());
+  }
+  if (root.contains(MapJsonKeys::lakes)) {
+    parse_lakes_array(root[MapJsonKeys::lakes].toArray());
   }
   if (root.contains(MapJsonKeys::world_props)) {
     parse_world_props_array(root[MapJsonKeys::world_props].toArray());
@@ -465,6 +469,11 @@ QJsonObject MapData::build_root_json() const {
   QJsonArray const terrain_arr = terrain_to_json();
   if (!terrain_arr.isEmpty()) {
     root[MapJsonKeys::terrain] = terrain_arr;
+  }
+
+  QJsonArray const lakes_arr = lakes_to_json();
+  if (!lakes_arr.isEmpty()) {
+    root[MapJsonKeys::lakes] = lakes_arr;
   }
 
   QJsonArray const world_props_arr = world_props_to_json();
@@ -613,6 +622,32 @@ void MapData::parse_terrain_array(const QJsonArray& arr) {
                                     MapJsonKeys::entrances};
     elem.extra_fields = copyExtraFields(obj, known_keys);
 
+    m_terrain.append(elem);
+  }
+}
+
+void MapData::parse_lakes_array(const QJsonArray& arr) {
+  for (const auto& value : arr) {
+    const QJsonObject obj = value.toObject();
+    TerrainElement elem;
+    elem.type = QStringLiteral("lake");
+    elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
+    elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
+    const float radius = static_cast<float>(obj[MapJsonKeys::radius].toDouble(0.0));
+    elem.radius = radius;
+    elem.width = static_cast<float>(
+        obj[MapJsonKeys::width].toDouble(radius > 0.0F ? radius * 2.0F : 8.0F));
+    elem.depth = static_cast<float>(
+        obj[MapJsonKeys::depth].toDouble(radius > 0.0F ? radius * 2.0F : 8.0F));
+    elem.height = 0.0F;
+    elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
+    const QStringList known_keys = {MapJsonKeys::x,
+                                    MapJsonKeys::z,
+                                    MapJsonKeys::radius,
+                                    MapJsonKeys::width,
+                                    MapJsonKeys::depth,
+                                    MapJsonKeys::rotation};
+    elem.extra_fields = copyExtraFields(obj, known_keys);
     m_terrain.append(elem);
   }
 }
@@ -768,6 +803,9 @@ void MapData::parse_walls_array(const QJsonArray& arr) {
 QJsonArray MapData::terrain_to_json() const {
   QJsonArray arr;
   for (const auto& elem : m_terrain) {
+    if (elem.type == QStringLiteral("lake")) {
+      continue;
+    }
     QJsonObject obj;
     obj[MapJsonKeys::type] = elem.type;
     obj[MapJsonKeys::x] = static_cast<double>(elem.x);
@@ -809,6 +847,25 @@ QJsonArray MapData::terrain_to_json() const {
       obj[key] = elem.extra_fields[key];
     }
 
+    arr.append(obj);
+  }
+  return arr;
+}
+
+QJsonArray MapData::lakes_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_terrain) {
+    if (elem.type != QStringLiteral("lake")) {
+      continue;
+    }
+    QJsonObject obj = elem.extra_fields;
+    obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+    obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+    obj[MapJsonKeys::width] = static_cast<double>(std::max(elem.width, 0.1F));
+    obj[MapJsonKeys::depth] = static_cast<double>(std::max(elem.depth, 0.1F));
+    if (elem.rotation != 0.0F) {
+      obj[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
+    }
     arr.append(obj);
   }
   return arr;

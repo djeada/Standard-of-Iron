@@ -13,7 +13,10 @@ build-debug/bin/arena_app --scenario spear_walk_contact
 # Settlement and economy inspection
 build-debug/bin/arena_app --scenario roman_marching_camp
 build-debug/bin/arena_app --scenario carthage_trade_town
+build-debug/bin/arena_app --scenario roman_fortification_showcase
+build-debug/bin/arena_app --scenario carthage_fortification_showcase
 build-debug/bin/arena_app --scenario rival_economies
+build-debug/bin/arena_app --scenario water_showcase
 ```
 
 This loads the named catalog scenario directly and runs it at real wall-clock
@@ -59,6 +62,30 @@ The `--duration` option can shorten a diagnostic run, but the catalog defaults
 should be used for acceptance runs because contact and retargeting expectations
 need time to complete.
 
+## Campaign terrain review
+
+Arena can render production campaign maps as terrain-only review scenes. This
+keeps each map's ground profile, hills, mountains, roads, rivers, lakes, shores,
+and bridges while suppressing units, buildings, scatter, weather, boundary fog,
+and UI overlays.
+
+```bash
+# Inspect one map interactively
+build-debug/bin/arena_app --terrain-map assets/maps/map_crossing_alps.json
+
+# Capture every mission map in campaign order
+build-debug/bin/arena_app \
+  --batch \
+  --campaign-terrain \
+  --artifact-dir artifacts/campaign-terrain-review
+```
+
+Each map directory contains `overview.png`, `gameplay.png`, `final.png`, and a
+`report.json` inventory of map dimensions and rendered terrain features. The
+overview camera fits the entire authored map; the gameplay capture uses that
+map's production camera. This path loads maps through `MapLoader` and configures
+the same `TerrainService` and renderer passes used by the game.
+
 ## Programmatic tests
 
 ```bash
@@ -86,11 +113,26 @@ in-game.
   settlements with finite stockpiles plus authored olive groves, stone, and iron.
   Builders must harvest missing materials and then complete construction. Roman
   AI uses a defensive camp plan; Carthaginian AI uses a compact economic plan.
+- `architecture_and_props_showcase` presents all Roman and Carthaginian building
+  families side by side with the authored shrine, ruin, cursed-tree, ore, and
+  armory props for clean silhouette, material, and readability review.
+- `roman_fortification_showcase` isolates disciplined timber runs, reinforced
+  corners, six tower sockets, and a defended gate opening around an occupied ward.
+- `carthage_fortification_showcase` presents bronze-bound irregular palisades,
+  jagged corner and gate towers, plus a layered inner ward for close visual review.
 
 Batch runs produce the normal report, trace, and framebuffer artifacts.
 `GroupExists` expectations protect required settlement anchors;
 `OwnerHarvestsResource` and `OwnerCompletesConstruction` prove the full economic
 loop, while the shared frame-budget contract catches overly expensive detail.
+
+## Water rendering contract
+
+`water_showcase` places a river ribbon and an irregular elliptical lake in the
+same camera view. Both use the production water material and visibility path;
+their geometry, motion profile, foam coordinates, and shoreline meshes remain
+shape-specific. Use its batch `final.png` to compare flow, calm-water motion,
+shore contact, and water/terrain overlap after renderer changes.
 
 ## Formation melee contract
 

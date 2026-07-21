@@ -25,15 +25,17 @@ namespace {
 using Render::Geom::clamp_vec_01;
 
 struct TowerPalette {
-  QVector3D stone_light{0.62F, 0.60F, 0.58F};
-  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
-  QVector3D stone_base{0.55F, 0.53F, 0.51F};
-  QVector3D brick{0.75F, 0.52F, 0.42F};
-  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
-  QVector3D tile_red{0.72F, 0.40F, 0.30F};
-  QVector3D wood{0.42F, 0.28F, 0.16F};
-  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
-  QVector3D iron{0.35F, 0.35F, 0.38F};
+  QVector3D stone_light{0.66F, 0.53F, 0.38F};
+  QVector3D stone_dark{0.13F, 0.115F, 0.09F};
+  QVector3D stone_base{0.34F, 0.28F, 0.20F};
+  QVector3D brick{0.44F, 0.20F, 0.105F};
+  QVector3D brick_dark{0.20F, 0.075F, 0.04F};
+  QVector3D tile_red{0.31F, 0.085F, 0.04F};
+  QVector3D wood{0.28F, 0.17F, 0.08F};
+  QVector3D wood_dark{0.075F, 0.052F, 0.03F};
+  QVector3D iron{0.10F, 0.095F, 0.08F};
+  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -239,6 +241,12 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         damaged ? 0.58F : 0.72F,
         c.brick,
         c.stone_dark);
+    add_punic_horned_crown(desc,
+                           QVector3D(0.0F, roof_y + 0.05F, 0.0F),
+                           damaged ? 0.54F : 0.78F,
+                           c.iron,
+                           c.bronze,
+                           c.ember);
   }
 
   return build_building_archetype(desc, state);

@@ -54,6 +54,7 @@ add_executable(standard_of_iron_tests
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/map_loader_test.cpp
+    map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp

@@ -1949,6 +1949,24 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_oriented_box(
       verts, idx, {-0.26F, 1.60F, 0.30F}, {0.10F, 1.30F, 0.26F}, 0.08F, 0.08F);
 
+  // Broken processional arch: a large negative-space landmark that remains
+  // readable above grass and rubble at RTS zoom.
+  append_vert_prism(verts, idx, -0.46F, 0.10F, 0.03F, 0.13F, 1.72F, 7);
+  append_vert_prism(verts, idx, 0.46F, 0.10F, 0.03F, 0.13F, 1.46F, 7);
+  append_oriented_box(
+      verts, idx, {-0.48F, 1.78F, 0.03F}, {-0.06F, 2.04F, 0.03F}, 0.11F, 0.10F);
+  append_oriented_box(
+      verts, idx, {-0.06F, 2.04F, 0.03F}, {0.34F, 1.76F, 0.03F}, 0.10F, 0.09F);
+  append_oriented_box(
+      verts, idx, {0.34F, 1.76F, 0.03F}, {0.51F, 1.58F, 0.03F}, 0.075F, 0.08F);
+
+  // Jagged sacrificial stelae turn the prop into a dark-fantasy skyline rather
+  // than an undifferentiated rubble mound.
+  append_oriented_box(
+      verts, idx, {-0.86F, 0.12F, 0.48F}, {-0.74F, 1.18F, 0.42F}, 0.075F, 0.08F);
+  append_oriented_box(
+      verts, idx, {0.78F, 0.10F, 0.42F}, {0.66F, 1.06F, 0.36F}, 0.07F, 0.075F);
+
   add_rubble({-0.82F, 0.02F, -0.64F}, {-0.54F, 0.16F, -0.44F});
   add_rubble({-0.40F, 0.02F, -0.64F}, {-0.08F, 0.18F, -0.46F});
   add_rubble({0.06F, 0.02F, -0.66F}, {0.34F, 0.12F, -0.46F});
@@ -2110,6 +2128,20 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   append_box(verts, idx, {-0.08F, 0.80F, 0.08F}, {0.08F, 0.92F, 0.26F});
   append_box(verts, idx, {-0.16F, 0.92F, -0.16F}, {0.16F, 1.00F, 0.16F});
 
+  // Central ritual needle and hooked crown. These shapes intentionally break
+  // the original low square silhouette and make the shrine visible behind
+  // troops, vegetation, and settlement walls.
+  append_vert_prism(verts, idx, 0.0F, 0.96F, 0.0F, 0.10F, 0.82F, 6);
+  append_vert_prism(verts, idx, 0.0F, 1.78F, 0.0F, 0.065F, 0.24F, 5);
+  append_oriented_box(
+      verts, idx, {-0.05F, 1.52F, 0.0F}, {-0.42F, 1.76F, 0.0F}, 0.055F, 0.065F);
+  append_oriented_box(
+      verts, idx, {0.05F, 1.52F, 0.0F}, {0.42F, 1.76F, 0.0F}, 0.055F, 0.065F);
+  append_oriented_box(
+      verts, idx, {-0.42F, 1.76F, 0.0F}, {-0.52F, 1.96F, 0.0F}, 0.045F, 0.055F);
+  append_oriented_box(
+      verts, idx, {0.42F, 1.76F, 0.0F}, {0.52F, 1.96F, 0.0F}, 0.045F, 0.055F);
+
   append_oriented_box(
       verts, idx, {-0.58F, 0.16F, -0.12F}, {-0.26F, 0.60F, -0.12F}, 0.055F, 0.06F);
   append_oriented_box(
@@ -2123,6 +2155,19 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   add_obelisk(0.54F, -0.54F);
   add_obelisk(-0.54F, 0.54F);
   add_obelisk(0.54F, 0.54F);
+
+  for (int i = 0; i < 8; ++i) {
+    float const angle = static_cast<float>(i) * 0.78539816F;
+    float const radius = (i % 2 == 0) ? 0.88F : 0.94F;
+    float const x = std::cos(angle) * radius;
+    float const z = std::sin(angle) * radius;
+    append_oriented_box(verts,
+                        idx,
+                        {x, 0.08F, z},
+                        {x * 0.88F, 0.60F + 0.08F * float(i % 3), z * 0.88F},
+                        0.045F,
+                        0.055F);
+  }
 
   append_box(verts, idx, {-0.58F, 1.12F, -0.60F}, {0.58F, 1.20F, -0.44F});
   append_box(verts, idx, {-0.58F, 1.12F, 0.44F}, {0.58F, 1.20F, 0.60F});

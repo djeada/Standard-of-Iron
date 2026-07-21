@@ -199,6 +199,24 @@ auto build_dead_tree_mesh() -> PropMeshData {
   append_oriented_box(
       verts, idx, {0.64F, 0.22F, 0.14F}, {0.88F, 0.38F, 0.23F}, 0.034F, 0.028F);
 
+  // A charred, antler-like crown grows out of the fallen trunk. Its tall forked
+  // profile gives this authored prop the cursed-wood silhouette its name
+  // promises, while the horizontal trunk still anchors it to the terrain.
+  append_oriented_box(
+      verts, idx, {-0.10F, 0.20F, 0.02F}, {-0.06F, 0.92F, 0.00F}, 0.095F, 0.085F);
+  append_oriented_box(
+      verts, idx, {-0.06F, 0.86F, 0.00F}, {-0.30F, 1.42F, -0.06F}, 0.070F, 0.060F);
+  append_oriented_box(
+      verts, idx, {-0.30F, 1.38F, -0.06F}, {-0.54F, 1.72F, -0.10F}, 0.045F, 0.042F);
+  append_oriented_box(
+      verts, idx, {-0.03F, 0.82F, 0.02F}, {0.30F, 1.26F, 0.10F}, 0.068F, 0.058F);
+  append_oriented_box(
+      verts, idx, {0.30F, 1.22F, 0.10F}, {0.56F, 1.55F, 0.18F}, 0.042F, 0.040F);
+  append_oriented_box(
+      verts, idx, {-0.18F, 0.66F, -0.02F}, {-0.58F, 0.94F, 0.18F}, 0.050F, 0.045F);
+  append_oriented_box(
+      verts, idx, {0.16F, 0.62F, 0.04F}, {0.58F, 0.88F, -0.18F}, 0.048F, 0.043F);
+
   append_box(verts, idx, {-0.48F, 0.01F, -0.34F}, {-0.24F, 0.05F, -0.24F});
   append_box(verts, idx, {0.20F, 0.00F, 0.24F}, {0.42F, 0.04F, 0.33F});
 
