@@ -61,7 +61,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(false);
+      DepthMaskScope const depth_mask(true);
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
@@ -159,7 +159,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(true);
+      DepthMaskScope const depth_mask(false);
       BlendScope const blend(false);
 
       Shader* stone_shader = m_vegetation_pipeline->stone_shader();
@@ -522,7 +522,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(true);
+      DepthMaskScope const depth_mask(false);
       glEnable(GL_DEPTH_TEST);
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

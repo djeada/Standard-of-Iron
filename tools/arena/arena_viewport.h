@@ -19,6 +19,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "arena_scenario.h"
 
 namespace Engine::Core {
 class World;
@@ -112,6 +113,7 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void load_scenario(const QString& scenario_id);
+  void set_terrain_review_content_enabled(bool enabled);
   [[nodiscard]] auto load_terrain_review_map(const QString& map_path,
                                              QString* error = nullptr) -> bool;
   void set_terrain_review_overview_camera();
@@ -226,6 +228,7 @@ private:
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
+  void spawn_terrain_review_structures();
   void draw_debug_overlay(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
   void draw_selection_marquee(QPainter& painter);
@@ -272,6 +275,8 @@ private:
   std::vector<Game::Map::WorldProp> m_world_props;
   std::vector<Game::Map::RiverSegment> m_arena_rivers;
   std::vector<Game::Map::Lake> m_arena_lakes;
+  std::vector<Game::Map::Bridge> m_arena_bridges;
+  std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
   float m_spawn_world_prop_scale = 1.0F;
@@ -297,6 +302,7 @@ private:
   bool m_controls_overlay_visible = true;
   bool m_force_full_creature_lod = true;
   bool m_terrain_review_mode = false;
+  bool m_terrain_review_content_enabled = false;
   bool m_batch_frame_in_progress = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;

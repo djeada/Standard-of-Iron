@@ -16,6 +16,7 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/command_service.h"
@@ -127,6 +128,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("FormationOrderPreserved");
   case ArenaExpectationKind::FormationEngagementIsStable:
     return QStringLiteral("FormationEngagementIsStable");
+  case ArenaExpectationKind::FormationBodyOverlapObserved:
+    return QStringLiteral("FormationBodyOverlapObserved");
   case ArenaExpectationKind::CombatIndicatorIsContinuous:
     return QStringLiteral("CombatIndicatorIsContinuous");
   case ArenaExpectationKind::AllLivingSoldiersFight:
@@ -143,10 +146,16 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("AttackHasVisibleContact");
   case ArenaExpectationKind::AttackRecoveryObserved:
     return QStringLiteral("AttackRecoveryObserved");
+  case ArenaExpectationKind::NoActiveCombatAtEnd:
+    return QStringLiteral("NoActiveCombatAtEnd");
   case ArenaExpectationKind::HitReactionObserved:
     return QStringLiteral("HitReactionObserved");
   case ArenaExpectationKind::DeathAnimationObserved:
     return QStringLiteral("DeathAnimationObserved");
+  case ArenaExpectationKind::LaunchedCasualtyObserved:
+    return QStringLiteral("LaunchedCasualtyObserved");
+  case ArenaExpectationKind::NoLaunchedCasualtyObserved:
+    return QStringLiteral("NoLaunchedCasualtyObserved");
   case ArenaExpectationKind::ChargeImpactPrecedesMeleeLock:
     return QStringLiteral("ChargeImpactPrecedesMeleeLock");
   case ArenaExpectationKind::TargetRetakenAfterDeath:
@@ -159,6 +168,16 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("GroupIsRendered");
   case ArenaExpectationKind::GroupExists:
     return QStringLiteral("GroupExists");
+  case ArenaExpectationKind::GroupDestroyed:
+    return QStringLiteral("GroupDestroyed");
+  case ArenaExpectationKind::GroupReachedDestination:
+    return QStringLiteral("GroupReachedDestination");
+  case ArenaExpectationKind::BridgeTraversalObserved:
+    return QStringLiteral("BridgeTraversalObserved");
+  case ArenaExpectationKind::BridgeCenterlineAligned:
+    return QStringLiteral("BridgeCenterlineAligned");
+  case ArenaExpectationKind::ElevationGainObserved:
+    return QStringLiteral("ElevationGainObserved");
   case ArenaExpectationKind::OwnerCompletesConstruction:
     return QStringLiteral("OwnerCompletesConstruction");
   case ArenaExpectationKind::OwnerHarvestsResource:
@@ -382,8 +401,15 @@ struct ArenaScenarioRunner::Impl {
   struct TraceFrame {
     float time_seconds{0.0F};
     double frame_time_ms{0.0};
+    ArenaRenderedFrameTimings timings;
     std::vector<TraceUnit> units;
     std::vector<TraceSoldier> soldiers;
+  };
+
+  struct BridgeAlignmentObservation {
+    bool sampled{false};
+    float midpoint_distance{std::numeric_limits<float>::infinity()};
+    float lateral_offset{std::numeric_limits<float>::infinity()};
   };
 
   Engine::Core::World& world;
@@ -402,6 +428,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> visible_attack_recoveries;
   QHash<QString, bool> visible_hit_reactions;
   QHash<QString, bool> visible_deaths;
+  QHash<QString, bool> launched_casualties;
   QHash<QString, bool> charge_impacts;
   QHash<QString, bool> melee_locks_after_charge;
   QHash<QString, bool> paired_visible_attacks;
@@ -411,6 +438,11 @@ struct ArenaScenarioRunner::Impl {
   QHash<std::uint64_t, int> attack_entries_by_soldier;
   QHash<QString, bool> staggered_attack_phases;
   QHash<QString, bool> damage_seen;
+  QHash<QString, float> minimum_formation_surface_gap;
+  QHash<QString, bool> bridge_traversal_seen;
+  QHash<QString, BridgeAlignmentObservation> bridge_alignment;
+  QHash<QString, float> initial_elevation;
+  QHash<QString, float> maximum_elevation;
   QHash<QString, bool> useful_bot_action;
   QHash<QString, bool> commander_aura_active_seen;
   QHash<QString, bool> commander_aura_expired_seen;
@@ -903,6 +935,16 @@ struct ArenaScenarioRunner::Impl {
       return;
     }
     QVector3D const position = vector_from_transform(*transform);
+    if (!initial_elevation.contains(group)) {
+      initial_elevation[group] = position.y();
+      maximum_elevation[group] = position.y();
+    } else {
+      maximum_elevation[group] = std::max(maximum_elevation.value(group), position.y());
+    }
+    if (Game::Map::TerrainService::instance().is_on_bridge(position.x(),
+                                                           position.z())) {
+      bridge_traversal_seen[group] = true;
+    }
     auto const* target = entity->get_component<Engine::Core::AttackTargetComponent>();
     auto const* motion =
         entity->get_component<Engine::Core::MotionPresentationComponent>();
@@ -914,6 +956,14 @@ struct ArenaScenarioRunner::Impl {
         entity->get_component<Engine::Core::MountedChargeComponent>();
     auto const* combat_action =
         entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+    if (auto const* casualties =
+            entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+        casualties != nullptr &&
+        std::any_of(casualties->entries.begin(),
+                    casualties->entries.end(),
+                    [](auto const& entry) { return entry.launched; })) {
+      launched_casualties[group] = true;
+    }
     auto const* builder =
         entity->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder != nullptr && builder->construction_complete &&
@@ -958,6 +1008,13 @@ struct ArenaScenarioRunner::Impl {
                         ? QStringLiteral("run")
                         : (motion->is_walk_state() ? QStringLiteral("walk")
                                                    : QStringLiteral("idle"));
+    }
+    if (formation_contact != nullptr && formation_contact->in_contact) {
+      auto const current = minimum_formation_surface_gap.find(group);
+      if (current == minimum_formation_surface_gap.end() ||
+          formation_contact->surface_gap < current.value()) {
+        minimum_formation_surface_gap[group] = formation_contact->surface_gap;
+      }
     }
     frame.units.push_back(
         {entity_id,
@@ -1210,6 +1267,56 @@ struct ArenaScenarioRunner::Impl {
     }
     if (target != nullptr && target->target_id != 0U) {
       useful_bot_action[group] = true;
+    }
+  }
+
+  void observe_bridge_centerline_alignment(const QString& group) {
+    QVector3D centroid;
+    int living = 0;
+    for (auto entity_id : ids(group)) {
+      auto* entity = world.get_entity(entity_id);
+      auto const* transform =
+          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                            : nullptr;
+      if (transform == nullptr || !entity_alive(entity_id)) {
+        continue;
+      }
+      centroid += vector_from_transform(*transform);
+      ++living;
+    }
+    if (living == 0) {
+      return;
+    }
+    centroid /= static_cast<float>(living);
+
+    auto const* height_map = Game::Map::TerrainService::instance().get_height_map();
+    if (height_map == nullptr) {
+      return;
+    }
+    for (auto const& bridge : height_map->get_bridges()) {
+      QVector3D direction = bridge.end - bridge.start;
+      direction.setY(0.0F);
+      float const length = direction.length();
+      if (length < 0.01F) {
+        continue;
+      }
+      direction /= length;
+      QVector3D const perpendicular(-direction.z(), 0.0F, direction.x());
+      QVector3D offset = centroid - bridge.start;
+      offset.setY(0.0F);
+      float const along = QVector3D::dotProduct(offset, direction);
+      float const lateral = std::abs(QVector3D::dotProduct(offset, perpendicular));
+      if (along < 0.0F || along > length || lateral > bridge.width * 0.5F) {
+        continue;
+      }
+
+      float const midpoint_distance = std::abs(along - length * 0.5F);
+      auto& observation = bridge_alignment[group];
+      if (!observation.sampled || midpoint_distance < observation.midpoint_distance) {
+        observation.sampled = true;
+        observation.midpoint_distance = midpoint_distance;
+        observation.lateral_offset = lateral;
+      }
     }
   }
 
@@ -1622,10 +1729,44 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group, expectation.target_group));
         }
         break;
+      case ArenaExpectationKind::FormationBodyOverlapObserved: {
+        float const required_overlap =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.20F;
+        auto const observed = minimum_formation_surface_gap.find(expectation.group);
+        if (observed == minimum_formation_surface_gap.end() ||
+            observed.value() > -required_overlap) {
+          add_issue(
+              QStringLiteral("formation_body_overlap_not_observed"),
+              observed == minimum_formation_surface_gap.end()
+                  ? QStringLiteral("%1 never established visible formation contact")
+                        .arg(expectation.group)
+                  : QStringLiteral("%1 reached only %2 m of body overlap (required "
+                                   "%3 m)")
+                        .arg(expectation.group)
+                        .arg(-observed.value(), 0, 'f', 2)
+                        .arg(required_overlap, 0, 'f', 2));
+        }
+        break;
+      }
       case ArenaExpectationKind::DeathAnimationObserved:
         if (!visible_deaths.value(expectation.group, false)) {
           add_issue(QStringLiteral("no_visible_death"),
                     QStringLiteral("%1 never produced a visible death animation")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::LaunchedCasualtyObserved:
+        if (!launched_casualties.value(expectation.group, false)) {
+          add_issue(QStringLiteral("no_launched_casualty"),
+                    QStringLiteral("%1 never produced an impact-launched casualty")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::NoLaunchedCasualtyObserved:
+        if (launched_casualties.value(expectation.group, false)) {
+          add_issue(QStringLiteral("unexpected_launched_casualty"),
+                    QStringLiteral("%1 produced a launched casualty despite its "
+                                   "braced hold")
                         .arg(expectation.group));
         }
         break;
@@ -1650,6 +1791,39 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::NoActiveCombatAtEnd: {
+        bool active_combat = false;
+        for (auto entity_id : ids(expectation.group)) {
+          auto* entity = world.get_entity(entity_id);
+          if (entity == nullptr || !entity_alive(entity_id)) {
+            continue;
+          }
+          auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
+          auto const* target =
+              entity->get_component<Engine::Core::AttackTargetComponent>();
+          auto const* combat =
+              entity->get_component<Engine::Core::CombatStateComponent>();
+          auto const* action =
+              entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+          auto const* presentation =
+              entity->get_component<Engine::Core::CreaturePresentationComponent>();
+          active_combat =
+              active_combat || (attack != nullptr && attack->in_melee_lock) ||
+              (target != nullptr && target->target_id != 0) ||
+              (combat != nullptr &&
+               combat->animation_state != Engine::Core::CombatAnimationState::Idle) ||
+              (action != nullptr &&
+               (action->action_running || action->action_active)) ||
+              (presentation != nullptr &&
+               (presentation->is_attacking || presentation->combat_active));
+        }
+        if (active_combat) {
+          add_issue(QStringLiteral("combat_continued_without_opponent"),
+                    QStringLiteral("%1 retained attack state at scenario end")
+                        .arg(expectation.group));
+        }
+        break;
+      }
       case ArenaExpectationKind::HitReactionObserved:
         if (!visible_hit_reactions.value(expectation.group, false)) {
           add_issue(QStringLiteral("no_visible_hit_reaction"),
@@ -1718,6 +1892,78 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::GroupDestroyed:
+        if (!group_destroyed(expectation.group)) {
+          add_issue(QStringLiteral("group_not_destroyed"),
+                    QStringLiteral("%1 retained a living scenario entity")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::GroupReachedDestination: {
+        QVector3D centroid;
+        int living = 0;
+        for (auto entity_id : ids(expectation.group)) {
+          auto* entity = world.get_entity(entity_id);
+          auto const* transform =
+              entity != nullptr
+                  ? entity->get_component<Engine::Core::TransformComponent>()
+                  : nullptr;
+          if (transform != nullptr && entity_alive(entity_id)) {
+            centroid += vector_from_transform(*transform);
+            ++living;
+          }
+        }
+        float const tolerance =
+            expectation.distance > 0.0F ? expectation.distance : 2.5F;
+        QVector3D const destination = world_origin + expectation.position;
+        if (living == 0 ||
+            horizontal_distance(centroid / static_cast<float>(std::max(living, 1)),
+                                destination) > tolerance) {
+          add_issue(QStringLiteral("group_missed_destination"),
+                    QStringLiteral("%1 did not reach its scenario destination")
+                        .arg(expectation.group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::BridgeTraversalObserved:
+        if (!bridge_traversal_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("bridge_not_traversed"),
+                    QStringLiteral("%1 never occupied the bridge deck")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::BridgeCenterlineAligned: {
+        auto const observation = bridge_alignment.value(expectation.group);
+        float const tolerance =
+            expectation.distance > 0.0F ? expectation.distance : 0.50F;
+        if (!observation.sampled || observation.lateral_offset > tolerance) {
+          add_issue(
+              QStringLiteral("bridge_centerline_missed"),
+              observation.sampled
+                  ? QStringLiteral("%1 crossed %2 m from the bridge centerline at "
+                                   "midspan (allowed %3 m)")
+                        .arg(expectation.group)
+                        .arg(observation.lateral_offset, 0, 'f', 2)
+                        .arg(tolerance, 0, 'f', 2)
+                  : QStringLiteral("%1 produced no bridge-midspan alignment sample")
+                        .arg(expectation.group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::ElevationGainObserved: {
+        float const required_gain =
+            expectation.threshold > 0.0F ? expectation.threshold : 1.0F;
+        float const gain = maximum_elevation.value(expectation.group) -
+                           initial_elevation.value(expectation.group);
+        if (gain < required_gain) {
+          add_issue(QStringLiteral("elevation_gain_not_observed"),
+                    QStringLiteral("%1 climbed only %2 m (required %3 m)")
+                        .arg(expectation.group)
+                        .arg(gain, 0, 'f', 2)
+                        .arg(required_gain, 0, 'f', 2));
+        }
+        break;
+      }
       case ArenaExpectationKind::OwnerCompletesConstruction: {
         int owner_id = 0;
         if (!ids(expectation.group).empty()) {
@@ -1889,13 +2135,21 @@ void ArenaScenarioRunner::update(float simulation_dt) {
 }
 
 void ArenaScenarioRunner::observe_rendered_frame(double frame_time_ms) {
+  ArenaRenderedFrameTimings timings;
+  timings.total_ms = frame_time_ms;
+  observe_rendered_frame(timings);
+}
+
+void ArenaScenarioRunner::observe_rendered_frame(
+    const ArenaRenderedFrameTimings& timings) {
   if (!m_impl->started) {
     return;
   }
   ++m_impl->report.rendered_frames;
   Impl::TraceFrame frame;
   frame.time_seconds = m_impl->elapsed;
-  frame.frame_time_ms = frame_time_ms;
+  frame.frame_time_ms = timings.total_ms;
+  frame.timings = timings;
   for (auto* entity :
        m_impl->world.get_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity == nullptr || m_impl->initial_building_ids.contains(entity->get_id()) ||
@@ -1913,6 +2167,7 @@ void ArenaScenarioRunner::observe_rendered_frame(double frame_time_ms) {
       m_impl->observe_entity(entity_id, group.name, frame);
       m_impl->observe_soldiers(entity_id, group.name, frame);
     }
+    m_impl->observe_bridge_centerline_alignment(group.name);
   }
   m_impl->trace.push_back(std::move(frame));
 }
@@ -2073,10 +2328,29 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
            static_cast<qint64>(soldier.transitions)},
           {QStringLiteral("culled"), soldier.culled}});
     }
-    QJsonObject const line{{QStringLiteral("time_seconds"), frame.time_seconds},
-                           {QStringLiteral("frame_time_ms"), frame.frame_time_ms},
-                           {QStringLiteral("units"), units},
-                           {QStringLiteral("soldiers"), soldiers}};
+    QJsonObject const line{
+        {QStringLiteral("time_seconds"), frame.time_seconds},
+        {QStringLiteral("frame_time_ms"), frame.frame_time_ms},
+        {QStringLiteral("frame_breakdown_ms"),
+         QJsonObject{
+             {QStringLiteral("simulation"), frame.timings.simulation_ms},
+             {QStringLiteral("terrain_submit"), frame.timings.terrain_submit_ms},
+             {QStringLiteral("world_submit"), frame.timings.world_submit_ms},
+             {QStringLiteral("effects_submit"), frame.timings.effects_submit_ms},
+             {QStringLiteral("playback"), frame.timings.playback_ms},
+             {QStringLiteral("overlays"), frame.timings.overlays_ms},
+             {QStringLiteral("humanoid_preparation"),
+              frame.timings.humanoid_preparation_ms},
+             {QStringLiteral("animation_sampling"),
+              frame.timings.animation_sampling_ms},
+             {QStringLiteral("bpat_playback"), frame.timings.bpat_playback_ms},
+             {QStringLiteral("layout_generation"),
+              frame.timings.layout_generation_ms}}},
+        {QStringLiteral("visible_soldiers"),
+         static_cast<qint64>(frame.timings.visible_soldiers)},
+        {QStringLiteral("draw_calls"), static_cast<qint64>(frame.timings.draw_calls)},
+        {QStringLiteral("units"), units},
+        {QStringLiteral("soldiers"), soldiers}};
     trace_file.write(QJsonDocument(line).toJson(QJsonDocument::Compact));
     trace_file.write("\n");
   }

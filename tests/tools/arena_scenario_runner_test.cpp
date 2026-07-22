@@ -92,6 +92,7 @@ TEST(ArenaScenarioDefinitionTest, CatalogIncludesRealBattlefieldRegressionCases)
   for (auto const* id : {Arena::Scenarios::k_three_swords_vs_two_spears_id,
                          Arena::Scenarios::k_spear_walk_contact_id,
                          Arena::Scenarios::k_archer_stability_id,
+                         Arena::Scenarios::k_archer_melee_lock_id,
                          Arena::Scenarios::k_flank_ambush_id,
                          Arena::Scenarios::k_reserve_release_id,
                          Arena::Scenarios::k_bot_skirmish_id}) {

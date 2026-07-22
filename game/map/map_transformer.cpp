@@ -258,6 +258,9 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
   std::unordered_map<int, int> player_id_to_team;
 
   for (const auto& spawn : def.spawns) {
+    if (Game::Units::is_building_spawn(spawn.type)) {
+      continue;
+    }
     if (spawn.player_id == Game::Core::NEUTRAL_OWNER_ID) {
       continue;
     }
@@ -268,18 +271,14 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
-  for (const auto& building : def.buildings) {
-    if (building.player_id == Game::Core::NEUTRAL_OWNER_ID) {
+  for (const auto& structure : def.structures) {
+    if (structure.player_id == Game::Core::NEUTRAL_OWNER_ID) {
       continue;
     }
-    unique_player_ids.insert(building.player_id);
-  }
-
-  for (const auto& wall : def.wall_lines) {
-    if (wall.player_id == Game::Core::NEUTRAL_OWNER_ID) {
-      continue;
+    unique_player_ids.insert(structure.player_id);
+    if (structure.team_id > 0) {
+      player_id_to_team[structure.player_id] = structure.team_id;
     }
-    unique_player_ids.insert(wall.player_id);
   }
 
   for (int const player_id : unique_player_ids) {
@@ -321,6 +320,12 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
   }
 
   for (const auto& s : def.spawns) {
+
+    if (Game::Units::is_building_spawn(s.type)) {
+      qWarning() << "MapTransformer: structure supplied through troop spawns; skipping"
+                 << Game::Units::spawn_typeToQString(s.type);
+      continue;
+    }
 
     int const effective_player_id = effective_player_id_for_map_owner(s.player_id);
 
@@ -388,42 +393,38 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
-  for (const auto& building : def.buildings) {
-    Game::Units::SpawnType building_type;
-    if (!Game::Units::try_parse_spawn_type(building.type, building_type) ||
-        !Game::Units::is_building_spawn(building_type) ||
-        building_type == Game::Units::SpawnType::WallSegment) {
-      qWarning() << "MapTransformer: unsupported building type" << building.type
-                 << "- skipping authored building";
+  for (const auto& structure : def.structures) {
+    Game::Units::SpawnParams sp;
+    sp.player_id = effective_player_id_for_map_owner(structure.player_id);
+    sp.spawn_type = structure.type;
+    sp.ai_controlled = !owner_registry.is_player(sp.player_id);
+    sp.max_population = structure.max_population;
+    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, structure.nation);
+
+    if (const auto* point =
+            std::get_if<PointStructureGeometry>(&structure.geometry)) {
+      sp.position = point->position;
+      spawn_map_unit(sp, world, visuals);
       continue;
     }
 
-    Game::Units::SpawnParams sp;
-    sp.position = QVector3D(building.x, 0.0F, building.z);
-    sp.player_id = effective_player_id_for_map_owner(building.player_id);
-    sp.spawn_type = building_type;
-    sp.ai_controlled = !owner_registry.is_player(sp.player_id);
-    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, building.nation);
-    spawn_map_unit(sp, world, visuals);
-  }
-
-  for (const auto& wall_line : def.wall_lines) {
-    Game::Units::SpawnParams sp;
-    sp.player_id = effective_player_id_for_map_owner(wall_line.player_id);
-    sp.spawn_type = Game::Units::SpawnType::WallSegment;
-    sp.ai_controlled = !owner_registry.is_player(sp.player_id);
-    sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, wall_line.nation);
+    const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry);
+    if (line == nullptr || structure.type != Game::Units::SpawnType::WallSegment) {
+      qWarning() << "MapTransformer: unsupported line geometry for structure"
+                 << Game::Units::spawn_typeToQString(structure.type);
+      continue;
+    }
 
     const auto snapped_start = Game::Systems::WallGridPosition{
         .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(wall_line.start.x(), def.grid.width)),
+            runtime_world_to_grid(line->start.x(), def.grid.width)),
         .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(wall_line.start.z(), def.grid.height))};
+            runtime_world_to_grid(line->start.z(), def.grid.height))};
     const auto snapped_end = Game::Systems::WallGridPosition{
         .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(wall_line.end.x(), def.grid.width)),
+            runtime_world_to_grid(line->end.x(), def.grid.width)),
         .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(wall_line.end.z(), def.grid.height))};
+            runtime_world_to_grid(line->end.z(), def.grid.height))};
 
     for (const auto& segment :
          Game::Systems::WallNetworkService::build_axis_aligned_chain(snapped_start,

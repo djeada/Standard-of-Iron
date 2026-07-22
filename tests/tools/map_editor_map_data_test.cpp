@@ -297,7 +297,7 @@ TEST(MapEditorMapDataTest, WorldPropsAlwaysWriteScaleRegardlessOfType) {
 }
 
 TEST(MapEditorMapDataTest,
-     TroopSpawnsRoundTripEditableFieldsOrderAndUnsupportedEntries) {
+     StructuresAndTroopSpawnsRoundTripInSeparateCanonicalCollections) {
   QTemporaryDir const temp_dir;
   ASSERT_TRUE(temp_dir.isValid());
 
@@ -311,12 +311,7 @@ TEST(MapEditorMapDataTest,
                    {MapJsonKeys::height, 48},
                    {MapJsonKeys::tile_size, 1.0}}},
       {MapJsonKeys::spawns,
-       QJsonArray{QJsonObject{{MapJsonKeys::type, "barracks"},
-                              {MapJsonKeys::x, 4},
-                              {MapJsonKeys::z, 6},
-                              {MapJsonKeys::player_id, 1},
-                              {MapJsonKeys::max_population, 120}},
-                  QJsonObject{{MapJsonKeys::type, "spearman"},
+       QJsonArray{QJsonObject{{MapJsonKeys::type, "spearman"},
                               {MapJsonKeys::x, 10},
                               {MapJsonKeys::z, 12},
                               {MapJsonKeys::player_id, 2},
@@ -330,6 +325,13 @@ TEST(MapEditorMapDataTest,
                               {MapJsonKeys::player_id, 0},
                               {MapJsonKeys::max_population, 80},
                               {MapJsonKeys::nation, "roman_republic"}},
+                  }},
+      {MapJsonKeys::structures,
+       QJsonArray{QJsonObject{{MapJsonKeys::type, "barracks"},
+                              {MapJsonKeys::x, 4},
+                              {MapJsonKeys::z, 6},
+                              {MapJsonKeys::player_id, 1},
+                              {MapJsonKeys::max_population, 120}},
                   QJsonObject{{MapJsonKeys::type, "defense_tower"},
                               {MapJsonKeys::x, 30},
                               {MapJsonKeys::z, 32},
@@ -369,12 +371,9 @@ TEST(MapEditorMapDataTest,
   ASSERT_TRUE(data.save_to_json(output_path));
 
   const QJsonArray spawns = read_json(output_path).value(MapJsonKeys::spawns).toArray();
-  ASSERT_EQ(spawns.size(), 4);
+  ASSERT_EQ(spawns.size(), 3);
 
-  const QJsonObject saved_structure = spawns[0].toObject();
-  EXPECT_EQ(saved_structure.value(MapJsonKeys::type).toString(), "barracks");
-
-  const QJsonObject saved_spearman = spawns[1].toObject();
+  const QJsonObject saved_spearman = spawns[0].toObject();
   EXPECT_EQ(saved_spearman.value(MapJsonKeys::type).toString(), "spearman");
   EXPECT_DOUBLE_EQ(saved_spearman.value(MapJsonKeys::x).toDouble(), 20.0);
   EXPECT_DOUBLE_EQ(saved_spearman.value(MapJsonKeys::z).toDouble(), 22.0);
@@ -389,22 +388,24 @@ TEST(MapEditorMapDataTest,
   EXPECT_TRUE(saved_spearman.value("hidden").toBool());
   EXPECT_EQ(saved_spearman.value("description").toString(), "Front line");
 
-  const QJsonObject saved_archer = spawns[2].toObject();
+  const QJsonObject saved_archer = spawns[1].toObject();
   EXPECT_EQ(saved_archer.value(MapJsonKeys::type).toString(), "archer");
   EXPECT_TRUE(saved_archer.contains(MapJsonKeys::player_id));
   EXPECT_EQ(saved_archer.value(MapJsonKeys::player_id).toInt(), 0);
   EXPECT_EQ(saved_archer.value(MapJsonKeys::nation).toString(), "roman_republic");
 
-  const QJsonObject saved_builder = spawns[3].toObject();
+  const QJsonObject saved_builder = spawns[2].toObject();
   EXPECT_EQ(saved_builder.value(MapJsonKeys::type).toString(), "builder");
   EXPECT_EQ(saved_builder.value(MapJsonKeys::player_id).toInt(), 4);
   EXPECT_EQ(saved_builder.value(MapJsonKeys::behavior).toString(), "hold");
   EXPECT_FALSE(saved_builder.value("hidden").toBool(true));
 
-  const QJsonArray buildings =
-      read_json(output_path).value(MapJsonKeys::buildings).toArray();
-  ASSERT_EQ(buildings.size(), 1);
-  const QJsonObject saved_tower = buildings[0].toObject();
+  const QJsonArray structures =
+      read_json(output_path).value(MapJsonKeys::structures).toArray();
+  ASSERT_EQ(structures.size(), 2);
+  EXPECT_EQ(structures[0].toObject().value(MapJsonKeys::type).toString(), "barracks");
+  EXPECT_EQ(structures[0].toObject().value(MapJsonKeys::max_population).toInt(), 120);
+  const QJsonObject saved_tower = structures[1].toObject();
   EXPECT_EQ(saved_tower.value(MapJsonKeys::type).toString(), "defense_tower");
   EXPECT_EQ(saved_tower.value("team_id").toInt(), 3);
 }
@@ -417,6 +418,8 @@ TEST(MapEditorMapDataTest, RealMapRoundTripsSpawnTypeSequenceWithoutDuplicates) 
   const QJsonObject original_root =
       QJsonDocument::fromJson(input_file.readAll()).object();
   const QJsonArray original_spawns = original_root.value(MapJsonKeys::spawns).toArray();
+  const QJsonArray original_structures =
+      original_root.value(MapJsonKeys::structures).toArray();
   ASSERT_FALSE(original_spawns.isEmpty());
 
   QTemporaryDir const temp_dir;
@@ -434,6 +437,33 @@ TEST(MapEditorMapDataTest, RealMapRoundTripsSpawnTypeSequenceWithoutDuplicates) 
     EXPECT_EQ(saved_spawns[i].toObject().value(MapJsonKeys::type).toString(),
               original_spawns[i].toObject().value(MapJsonKeys::type).toString())
         << "spawn index " << i;
+  }
+  const QJsonArray saved_structures =
+      read_json(output_path).value(MapJsonKeys::structures).toArray();
+  ASSERT_EQ(saved_structures.size(), original_structures.size());
+  for (qsizetype i = 0; i < original_structures.size(); ++i) {
+    EXPECT_EQ(saved_structures[i].toObject().value(MapJsonKeys::type).toString(),
+              original_structures[i].toObject().value(MapJsonKeys::type).toString())
+        << "structure index " << i;
+  }
+}
+
+TEST(MapEditorMapDataTest, RejectsRetiredBuildingAndWallCollections) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QJsonObject grid{{MapJsonKeys::width, 16},
+                         {MapJsonKeys::height, 16},
+                         {MapJsonKeys::tile_size, 1.0}};
+
+  for (const QString& retired_key : {QStringLiteral("buildings"),
+                                     QStringLiteral("walls")}) {
+    const QString input_path = temp_dir.filePath(retired_key + ".json");
+    write_json(input_path,
+               QJsonObject{{MapJsonKeys::grid, grid}, {retired_key, QJsonArray{}}});
+    MapEditor::MapData data;
+    QString error;
+    EXPECT_FALSE(data.load_from_json(input_path, &error));
+    EXPECT_TRUE(error.contains(QStringLiteral("structures")));
   }
 }
 
@@ -508,7 +538,7 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
            {MapJsonKeys::entrances,
             QJsonArray{QJsonObject{{"x", 11.5555}, {"z", 20.4444}}}},
        }}},
-      {MapJsonKeys::spawns,
+      {MapJsonKeys::structures,
        QJsonArray{QJsonObject{{MapJsonKeys::type, "defense_tower"},
                               {MapJsonKeys::x, 30.5678},
                               {MapJsonKeys::z, 40.1234},
@@ -545,7 +575,7 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
   EXPECT_DOUBLE_EQ(gust[1].toDouble(), 3.0);
 
   const QJsonObject raw_building =
-      output.value(MapJsonKeys::buildings).toArray().first().toObject();
+      output.value(MapJsonKeys::structures).toArray().first().toObject();
   EXPECT_DOUBLE_EQ(raw_building.value(MapJsonKeys::x).toDouble(), 30.57);
   EXPECT_DOUBLE_EQ(raw_building.value(MapJsonKeys::z).toDouble(), 40.12);
   EXPECT_DOUBLE_EQ(raw_building.value("strength").toDouble(), 77.78);
@@ -569,7 +599,7 @@ TEST(ComputeMinBridgeWidthTest, NoRiversReturnsAbsoluteMinimum) {
   QVector<MapEditor::LinearElement> const elements;
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_FLOAT_EQ(result, 1.0F);
+  EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
 }
 
 TEST(ComputeMinBridgeWidthTest, NonRiverElementsIgnored) {
@@ -583,27 +613,27 @@ TEST(ComputeMinBridgeWidthTest, NonRiverElementsIgnored) {
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_FLOAT_EQ(result, 1.0F);
+  EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
 }
 
 TEST(ComputeMinBridgeWidthTest, PerpendicularCrossingRequiresRiverWidth) {
 
   QVector<MapEditor::LinearElement> elements;
-  elements.append(make_river(5.0F, -5.0F, 5.0F, 5.0F, 4.0F));
+  elements.append(make_river(5.0F, -5.0F, 5.0F, 5.0F, 12.0F));
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_NEAR(static_cast<double>(result), 4.0, 1e-4);
+  EXPECT_NEAR(static_cast<double>(result), 12.0, 1e-4);
 }
 
 TEST(ComputeMinBridgeWidthTest, DiagonalCrossingIncreasesRequirement) {
 
   QVector<MapEditor::LinearElement> elements;
-  elements.append(make_river(0.0F, 0.0F, 10.0F, 10.0F, 4.0F));
+  elements.append(make_river(0.0F, 0.0F, 10.0F, 10.0F, 8.0F));
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 5.0F), QVector2D(10.0F, 5.0F), elements);
-  const double expected = 4.0 * std::numbers::sqrt2;
+  const double expected = 8.0 * std::numbers::sqrt2;
   EXPECT_NEAR(static_cast<double>(result), expected, 1e-3);
 }
 
@@ -614,18 +644,18 @@ TEST(ComputeMinBridgeWidthTest, NonIntersectingRiverIgnored) {
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_FLOAT_EQ(result, 1.0F);
+  EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
 }
 
 TEST(ComputeMinBridgeWidthTest, MultipleRiversUsesWidestRequirement) {
 
   QVector<MapEditor::LinearElement> elements;
   elements.append(make_river(3.0F, -5.0F, 3.0F, 5.0F, 2.0F));
-  elements.append(make_river(7.0F, -5.0F, 7.0F, 5.0F, 6.0F));
+  elements.append(make_river(7.0F, -5.0F, 7.0F, 5.0F, 12.0F));
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_NEAR(static_cast<double>(result), 6.0, 1e-4);
+  EXPECT_NEAR(static_cast<double>(result), 12.0, 1e-4);
 }
 
 TEST(ComputeMinBridgeWidthTest, ParallelRiverIgnored) {
@@ -635,7 +665,7 @@ TEST(ComputeMinBridgeWidthTest, ParallelRiverIgnored) {
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
-  EXPECT_FLOAT_EQ(result, 1.0F);
+  EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
 }
 
 TEST(ComputeMinBridgeWidthTest, ZeroLengthBridgeReturnsAbsoluteMinimum) {
@@ -644,5 +674,5 @@ TEST(ComputeMinBridgeWidthTest, ZeroLengthBridgeReturnsAbsoluteMinimum) {
 
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(0.0F, 0.0F), elements);
-  EXPECT_FLOAT_EQ(result, 1.0F);
+  EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
 }

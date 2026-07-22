@@ -20,7 +20,8 @@ public:
   ~TerrainFeatureManager() override;
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
-                 const std::vector<Game::Map::RoadSegment>& road_segments);
+                 const std::vector<Game::Map::RoadSegment>& road_segments,
+                 const Game::Map::BiomeSettings& biome_settings);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 

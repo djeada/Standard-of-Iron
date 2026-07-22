@@ -67,16 +67,25 @@ need time to complete.
 Arena can render production campaign maps as terrain-only review scenes. This
 keeps each map's ground profile, hills, mountains, roads, rivers, lakes, shores,
 and bridges while suppressing units, buildings, scatter, weather, boundary fog,
-and UI overlays.
+and UI overlays. Add `--map-preview-content` to also render biome scatter,
+authored and procedural world props, every authored point building, and wall
+networks from the same `structures` collection. Weather, troop spawns, and the
+review overlays remain suppressed.
 
 ```bash
 # Inspect one map interactively
 build-debug/bin/arena_app --terrain-map assets/maps/map_crossing_alps.json
 
+# Inspect terrain together with biome, props, and buildings
+build-debug/bin/arena_app \
+  --terrain-map assets/maps/map_crossing_rhone.json \
+  --map-preview-content
+
 # Capture every mission map in campaign order
 build-debug/bin/arena_app \
   --batch \
   --campaign-terrain \
+  --map-preview-content \
   --artifact-dir artifacts/campaign-terrain-review
 ```
 
@@ -151,3 +160,35 @@ It fails when any of these rules are violated:
 The trace records unit yaw and lock target plus each soldier's declared action,
 opponent slot, engagement gap, visual state, and attack phase. This lets CLI and
 LLM inspection verify the same presentation contract consumed by the renderer.
+
+## Commander duel matrix
+
+Three bodyguard-free reciprocal fights cover all six commanders:
+
+- `commander_consul_vs_broker`
+- `commander_field_vs_cavalry`
+- `commander_legion_vs_elephant`
+
+Each scene requires both commanders to render repeated authored attacks, register
+physical contact damage, show hit reactions, remain visually stable, and stay
+inside the frame budget. Their fixed midpoint camera keeps both silhouettes at
+the same depth for direct weapon and motion comparison.
+
+## Pathfinding showcase contracts
+
+- `path_bridge_crossing` uses production river, bank, bridge rendering, and
+  navigation. It requires a bridge-deck observation, formation-centroid alignment
+  within 0.50 metres of the bridge centerline at midspan, and arrival on the far
+  bank.
+- `path_uphill_advance` uses a smooth four-metre walkable relief patch. It requires
+  visible locomotion, at least 2.5 metres of measured elevation gain, and crown
+  arrival.
+- `path_wall_detour` keeps a full palisade alive and requires infantry to route
+  around its end before reaching the far side.
+- `path_wall_breach` destroys a low-health center section, waits on the actual
+  group-destroyed trigger, then requires the attackers to traverse the navigable
+  opening while both intact flanks survive.
+
+The path scenes suppress incidental scatter and use a fixed feature-centered
+camera so the route, obstacle, and formation motion remain readable in batch
+captures.

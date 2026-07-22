@@ -217,8 +217,10 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   float start_width = 0.0F;
   bool found_start_band = false;
   float start_max_y = std::numeric_limits<float>::lowest();
+  float start_deck_min_y = std::numeric_limits<float>::max();
   float mid_max_y = std::numeric_limits<float>::lowest();
   bool found_mid_band = false;
+  int visible_mid_parapet_top_vertices = 0;
   auto update_band_width =
       [&](float center_x, float half_band, float& width_out, bool& found) {
         float min_z = std::numeric_limits<float>::max();
@@ -240,23 +242,32 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   for (const auto& vertex : mesh->get_vertices()) {
     if (std::abs(vertex.position[0] - bridge.start.x()) <= 0.03F) {
       start_max_y = std::max(start_max_y, vertex.position[1]);
+      if (vertex.normal[1] > 0.99F) {
+        start_deck_min_y = std::min(start_deck_min_y, vertex.position[1]);
+      }
       found_start_band = true;
     }
     if (std::abs(vertex.position[0]) <= 0.15F) {
       mid_max_y = std::max(mid_max_y, vertex.position[1]);
+      if (vertex.normal[1] > 0.99F &&
+          std::abs(vertex.position[2]) > bridge.width * 0.40F &&
+          vertex.position[1] >
+              Game::Map::bridge_deck_world_y(bridge, 0.5F) + 0.08F) {
+        ++visible_mid_parapet_top_vertices;
+      }
       found_mid_band = true;
     }
   }
 
-  const float expected_approach =
-      std::min(bridge.width * 0.70F,
-               (bridge.end - bridge.start).length() * 0.14F);
-  EXPECT_NEAR(min_x, bridge.start.x() - expected_approach, 0.0001F);
-  EXPECT_NEAR(max_x, bridge.end.x() + expected_approach, 0.0001F);
+  EXPECT_NEAR(min_x, bridge.start.x(), 0.0001F);
+  EXPECT_NEAR(max_x, bridge.end.x(), 0.0001F);
   ASSERT_TRUE(found_start_band);
   ASSERT_TRUE(found_mid_band);
   EXPECT_GT(start_width, bridge.width * 0.95F);
+  EXPECT_GE(start_deck_min_y,
+            Game::Map::bridge_deck_world_y(bridge, 0.0F) - 0.021F);
   EXPECT_GT(mid_max_y, start_max_y + 0.05F);
+  EXPECT_GT(visible_mid_parapet_top_vertices, 0);
 }
 
 TEST(LinearFeatureGeometryTest, BuildsSharedCapsForRiverJunctionsAndEndpoints) {
@@ -293,6 +304,25 @@ TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
   EXPECT_FALSE(result.mesh->get_vertices().empty());
   EXPECT_FALSE(result.mesh->get_indices().empty());
   EXPECT_FALSE(result.visibility_samples.empty());
+  const auto widest_vertex = std::max_element(
+      result.mesh->get_vertices().begin(),
+      result.mesh->get_vertices().end(),
+      [](const auto& lhs, const auto& rhs) {
+        return std::abs(lhs.position[2]) < std::abs(rhs.position[2]);
+      });
+  ASSERT_NE(widest_vertex, result.mesh->get_vertices().end());
+  // Banks should frame the water without becoming a second broad ribbon.
+  EXPECT_LT(std::abs(widest_vertex->position[2]), 2.25F);
+  ASSERT_GE(result.mesh->get_vertices().size(), 10U);
+  // As on the main branch, both outer rings are buried beneath flat terrain;
+  // terrain depth, rather than transparency, supplies the final bank edge.
+  EXPECT_LT(result.mesh->get_vertices()[4].position[1], 0.0F);
+  EXPECT_LT(result.mesh->get_vertices()[9].position[1], 0.0F);
+  EXPECT_TRUE(std::all_of(result.mesh->get_vertices().begin(),
+                          result.mesh->get_vertices().end(),
+                          [](const auto& vertex) {
+                            return vertex.normal[1] > 0.0F;
+                          }));
 }
 
 TEST(LinearFeatureGeometryTest, ClipsRiverbanksOutOfTributaryMouths) {
@@ -311,6 +341,49 @@ TEST(LinearFeatureGeometryTest, ClipsRiverbanksOutOfTributaryMouths) {
   ASSERT_NE(joined.mesh, nullptr);
   EXPECT_LT(joined.mesh->get_indices().size(),
             isolated.mesh->get_indices().size());
+}
+
+TEST(LinearFeatureGeometryTest, JoinsRiverbankStripsAtWaypointBends) {
+  Game::Map::TerrainHeightMap const height_map(32, 32, 1.0F);
+  const std::vector<Game::Map::RiverSegment> network{
+      {{-6.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 2.0F},
+      {{0.0F, 0.0F, 0.0F}, {5.5F, 0.0F, 1.5F}, 2.0F},
+  };
+
+  auto first = Render::Ground::build_riverbank_mesh(network, 0U, height_map);
+  auto second = Render::Ground::build_riverbank_mesh(network, 1U, height_map);
+
+  ASSERT_NE(first.mesh, nullptr);
+  ASSERT_NE(second.mesh, nullptr);
+  ASSERT_GE(first.mesh->get_vertices().size(), 10U);
+  ASSERT_GE(second.mesh->get_vertices().size(), 10U);
+  const std::size_t first_last_row = first.mesh->get_vertices().size() - 10U;
+  for (std::size_t ring = 0; ring < 10U; ++ring) {
+    const auto& before = first.mesh->get_vertices()[first_last_row + ring];
+    const auto& after = second.mesh->get_vertices()[ring];
+    EXPECT_NEAR(before.position[0], after.position[0], 0.001F);
+    EXPECT_NEAR(before.position[2], after.position[2], 0.001F);
+  }
+}
+
+TEST(LinearFeatureGeometryTest, BuildsShorelineFillAtConnectedRiverJunction) {
+  Game::Map::TerrainHeightMap const height_map(32, 32, 1.0F);
+  const std::vector<Game::Map::RiverSegment> network{
+      {{-6.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 2.0F},
+      {{0.0F, 0.0F, 0.0F}, {5.0F, 0.0F, 3.0F}, 2.5F},
+  };
+
+  auto junctions =
+      Render::Ground::build_riverbank_junction_meshes(network, height_map);
+
+  ASSERT_EQ(junctions.size(), 1U);
+  ASSERT_NE(junctions.front().mesh, nullptr);
+  EXPECT_FALSE(junctions.front().mesh->get_indices().empty());
+  EXPECT_TRUE(std::all_of(junctions.front().mesh->get_vertices().begin(),
+                          junctions.front().mesh->get_vertices().end(),
+                          [](const auto& vertex) {
+                            return vertex.normal[1] > 0.0F;
+                          }));
 }
 
 TEST(LinearFeatureGeometryTest, BuildsLakeSurfaceAndShorelineMeshes) {

@@ -11,6 +11,7 @@ inline constexpr const char* BIOME = "biome";
 inline constexpr const char* GROUND_TYPE = "ground_type";
 inline constexpr const char* CAMERA = "camera";
 inline constexpr const char* SPAWNS = "spawns";
+inline constexpr const char* STRUCTURES = "structures";
 inline constexpr const char* UNDEAD_ZONES = "undead_zones";
 inline constexpr const char* FIRECAMPS = "firecamps";
 inline constexpr const char* TERRAIN = "terrain";
@@ -127,8 +128,6 @@ inline constexpr const char* FOG_ZONES = "fog_zones";
 inline constexpr const char* PERSISTENT = "persistent";
 inline constexpr const char* TIME_OF_DAY = "time_of_day";
 inline constexpr const char* STARTING_RESOURCES = "starting_resources";
-inline constexpr const char* BUILDINGS = "buildings";
-inline constexpr const char* WALLS = "walls";
 inline constexpr const char* DENSITY = "density";
 
 } // namespace Game::Map::JsonKeys

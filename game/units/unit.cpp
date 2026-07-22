@@ -100,6 +100,13 @@ void Unit::set_hold_mode(bool enabled) {
   auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
 
   if (enabled) {
+    auto const* unit_comp = e->get_component<Engine::Core::UnitComponent>();
+    if (unit_comp == nullptr || !can_use_hold_mode(unit_comp->spawn_type)) {
+      if (hold_comp != nullptr && hold_comp->active) {
+        hold_comp->begin_exit();
+      }
+      return;
+    }
     if (hold_comp == nullptr) {
       hold_comp = e->add_component<Engine::Core::HoldModeComponent>();
     }

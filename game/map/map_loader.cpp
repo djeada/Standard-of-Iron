@@ -861,7 +861,7 @@ void read_bridges(const QJsonArray& arr,
   constexpr float bridge_y_offset = 0.2F;
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
-  constexpr double default_bridge_width = 3.0;
+  constexpr double default_bridge_width = k_min_bridge_width;
   constexpr double default_bridge_height = 0.5;
 
   for (const auto& bridge_val : arr) {
@@ -909,7 +909,9 @@ void read_bridges(const QJsonArray& arr,
     }
 
     if (bridge_obj.contains("width")) {
-      bridge.width = float(bridge_obj.value("width").toDouble(default_bridge_width));
+      bridge.width = std::max(
+          k_min_bridge_width,
+          float(bridge_obj.value("width").toDouble(default_bridge_width)));
     }
 
     if (bridge_obj.contains("height")) {
@@ -929,98 +931,87 @@ void read_starting_resources(const QJsonObject& obj,
   }
 }
 
-void read_buildings(const QJsonArray& arr,
-                    std::vector<BuildingEntry>& out,
-                    const GridDefinition& grid,
-                    CoordSystem coord_sys) {
-  out.clear();
-  out.reserve(static_cast<std::size_t>(arr.size()));
+auto authored_position(float raw_x,
+                       float raw_z,
+                       const GridDefinition& grid,
+                       CoordSystem coord_sys) -> QVector3D {
+  if (coord_sys == CoordSystem::World) {
+    return QVector3D(raw_x, 0.0F, raw_z);
+  }
 
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
-
-  for (const auto& val : arr) {
-    auto obj = val.toObject();
-    BuildingEntry entry;
-    entry.type = obj.value("type").toString();
-    entry.player_id = obj.value("player_id").toInt(0);
-    entry.nation = obj.value("nation").toString();
-
-    const float raw_x = static_cast<float>(obj.value("x").toDouble(0.0));
-    const float raw_z = static_cast<float>(obj.value("z").toDouble(0.0));
-
-    if (coord_sys == CoordSystem::Grid) {
-      const float tile = std::max(min_tile_size, grid.tile_size);
-      entry.x = (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
-      entry.z =
-          (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
-    } else {
-      entry.x = raw_x;
-      entry.z = raw_z;
-    }
-
-    if (!entry.type.isEmpty()) {
-      out.push_back(entry);
-    }
-  }
+  const float tile = std::max(min_tile_size, grid.tile_size);
+  return QVector3D(
+      (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile,
+      0.0F,
+      (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
 }
 
-void read_wall_lines(const QJsonArray& arr,
-                     std::vector<WallLine>& out,
+auto read_structures(const QJsonArray& arr,
+                     std::vector<StructureEntry>& out,
                      const GridDefinition& grid,
-                     CoordSystem coord_sys) {
+                     CoordSystem coord_sys,
+                     QString* out_error) -> bool {
   out.clear();
   out.reserve(static_cast<std::size_t>(arr.size()));
 
-  constexpr float grid_center_offset = 0.5F;
-  constexpr float min_tile_size = 0.0001F;
-  constexpr float default_wall_width = 2.0F;
-
-  for (const auto& val : arr) {
-    auto obj = val.toObject();
-    WallLine wall;
-    wall.player_id = obj.value("player_id").toInt(0);
-    wall.nation = obj.value("nation").toString();
-    wall.width = static_cast<float>(obj.value("width").toDouble(default_wall_width));
-
-    if (obj.contains("start") && obj.value("start").isArray()) {
-      auto start_arr = obj.value("start").toArray();
-      if (start_arr.size() >= 2) {
-        const float sx = static_cast<float>(start_arr[0].toDouble(0.0));
-        const float sz = static_cast<float>(start_arr[1].toDouble(0.0));
-        if (coord_sys == CoordSystem::Grid) {
-          const float tile = std::max(min_tile_size, grid.tile_size);
-          wall.start.setX(
-              (sx - (grid.width * grid_center_offset - grid_center_offset)) * tile);
-          wall.start.setY(0.0F);
-          wall.start.setZ(
-              (sz - (grid.height * grid_center_offset - grid_center_offset)) * tile);
-        } else {
-          wall.start = QVector3D(sx, 0.0F, sz);
-        }
+  for (qsizetype index = 0; index < arr.size(); ++index) {
+    const QJsonObject obj = arr[index].toObject();
+    StructureEntry entry;
+    const QString type_name = obj.value(TYPE).toString();
+    if (!Game::Units::try_parse_spawn_type(type_name, entry.type) ||
+        !Game::Units::is_building_spawn(entry.type)) {
+      if (out_error != nullptr) {
+        *out_error = QString("Invalid structure type '%1' at structures[%2]")
+                         .arg(type_name)
+                         .arg(index);
       }
+      return false;
     }
+    entry.player_id = obj.value("player_id").toInt(0);
+    entry.team_id = obj.value(TEAM_ID).toInt(0);
+    entry.max_population = obj.value(MAX_POPULATION).toInt(100);
+    entry.nation = obj.value("nation").toString();
 
-    if (obj.contains("end") && obj.value("end").isArray()) {
-      auto end_arr = obj.value("end").toArray();
-      if (end_arr.size() >= 2) {
-        const float ex = static_cast<float>(end_arr[0].toDouble(0.0));
-        const float ez = static_cast<float>(end_arr[1].toDouble(0.0));
-        if (coord_sys == CoordSystem::Grid) {
-          const float tile = std::max(min_tile_size, grid.tile_size);
-          wall.end.setX((ex - (grid.width * grid_center_offset - grid_center_offset)) *
-                        tile);
-          wall.end.setY(0.0F);
-          wall.end.setZ((ez - (grid.height * grid_center_offset - grid_center_offset)) *
-                        tile);
-        } else {
-          wall.end = QVector3D(ex, 0.0F, ez);
+    if (entry.type == Game::Units::SpawnType::WallSegment) {
+      const QJsonArray start = obj.value(START).toArray();
+      const QJsonArray end = obj.value(END).toArray();
+      if (start.size() < 2 || end.size() < 2) {
+        if (out_error != nullptr) {
+          *out_error = QString("Wall structure at structures[%1] requires start and end")
+                           .arg(index);
         }
+        return false;
       }
+      entry.geometry = LineStructureGeometry{
+          .start = authored_position(float(start[0].toDouble()),
+                                     float(start[1].toDouble()),
+                                     grid,
+                                     coord_sys),
+          .end = authored_position(float(end[0].toDouble()),
+                                   float(end[1].toDouble()),
+                                   grid,
+                                   coord_sys),
+          .width = float(obj.value(WIDTH).toDouble(2.0)),
+      };
+    } else {
+      if (!obj.value(X).isDouble() || !obj.value(Z).isDouble()) {
+        if (out_error != nullptr) {
+          *out_error = QString("Point structure at structures[%1] requires x and z")
+                           .arg(index);
+        }
+        return false;
+      }
+      entry.geometry = PointStructureGeometry{authored_position(
+          float(obj.value(X).toDouble()),
+          float(obj.value(Z).toDouble()),
+          grid,
+          coord_sys)};
     }
-
-    out.push_back(wall);
+    out.push_back(std::move(entry));
   }
+  return true;
 }
 
 void read_fog_zones(const QJsonArray& arr,
@@ -1093,6 +1084,15 @@ auto MapLoader::load_from_json_file(const QString& path,
   }
   auto root = doc.object();
 
+  if (root.contains(QStringLiteral("buildings")) ||
+      root.contains(QStringLiteral("walls"))) {
+    if (out_error != nullptr) {
+      *out_error =
+          "Retired map keys 'buildings'/'walls' are not supported; use 'structures'";
+    }
+    return false;
+  }
+
   out_map.name = root.value(NAME).toString("Unnamed Map");
 
   if (root.contains(COORD_SYSTEM)) {
@@ -1125,7 +1125,41 @@ auto MapLoader::load_from_json_file(const QString& path,
   }
 
   if (root.contains(SPAWNS) && root.value(SPAWNS).isArray()) {
+    const QJsonArray authored_spawns = root.value(SPAWNS).toArray();
+    for (qsizetype index = 0; index < authored_spawns.size(); ++index) {
+      Game::Units::SpawnType type;
+      const QString type_name = authored_spawns[index].toObject().value(TYPE).toString();
+      if (Game::Units::try_parse_spawn_type(type_name, type) &&
+          Game::Units::is_building_spawn(type)) {
+        if (out_error != nullptr) {
+          *out_error = QString("Structure '%1' found in spawns[%2]; use 'structures'")
+                           .arg(type_name)
+                           .arg(index);
+        }
+        return false;
+      }
+    }
     read_spawns(root.value(SPAWNS).toArray(), out_map.spawns);
+  } else {
+    out_map.spawns.clear();
+  }
+
+  if (root.contains(STRUCTURES)) {
+    if (!root.value(STRUCTURES).isArray()) {
+      if (out_error != nullptr) {
+        *out_error = "Map 'structures' must be an array";
+      }
+      return false;
+    }
+    if (!read_structures(root.value(STRUCTURES).toArray(),
+                         out_map.structures,
+                         out_map.grid,
+                         out_map.coordSystem,
+                         out_error)) {
+      return false;
+    }
+  } else {
+    out_map.structures.clear();
   }
 
   out_map.world_props.clear();
@@ -1201,24 +1235,6 @@ auto MapLoader::load_from_json_file(const QString& path,
     for (Bridge& bridge : out_map.bridges) {
       extend_bridge_to_span_riverbanks(bridge, out_map.rivers);
     }
-  }
-
-  if (root.contains(BUILDINGS) && root.value(BUILDINGS).isArray()) {
-    read_buildings(root.value(BUILDINGS).toArray(),
-                   out_map.buildings,
-                   out_map.grid,
-                   out_map.coordSystem);
-  } else {
-    out_map.buildings.clear();
-  }
-
-  if (root.contains(WALLS) && root.value(WALLS).isArray()) {
-    read_wall_lines(root.value(WALLS).toArray(),
-                    out_map.wall_lines,
-                    out_map.grid,
-                    out_map.coordSystem);
-  } else {
-    out_map.wall_lines.clear();
   }
 
   if (root.contains(FOG_ZONES) && root.value(FOG_ZONES).isArray()) {

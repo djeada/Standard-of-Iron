@@ -13,6 +13,7 @@ inline constexpr const char* grid = Game::Map::JsonKeys::GRID;
 inline constexpr const char* biome = Game::Map::JsonKeys::BIOME;
 inline constexpr const char* camera = Game::Map::JsonKeys::CAMERA;
 inline constexpr const char* spawns = Game::Map::JsonKeys::SPAWNS;
+inline constexpr const char* structures = Game::Map::JsonKeys::STRUCTURES;
 inline constexpr const char* firecamps = Game::Map::JsonKeys::FIRECAMPS;
 inline constexpr const char* terrain = Game::Map::JsonKeys::TERRAIN;
 inline constexpr const char* rivers = Game::Map::JsonKeys::RIVERS;
@@ -51,7 +52,4 @@ inline constexpr const char* patrol_waypoints = "patrol_waypoints";
 inline constexpr const char* depth = "depth";
 inline constexpr const char* entrances = "entrances";
 inline constexpr const char* waypoints = "waypoints";
-inline constexpr const char* buildings = Game::Map::JsonKeys::BUILDINGS;
-inline constexpr const char* walls = Game::Map::JsonKeys::WALLS;
-
 } // namespace MapEditor::MapJsonKeys

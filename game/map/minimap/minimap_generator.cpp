@@ -815,39 +815,61 @@ void MinimapGenerator::render_bridges(QImage& image, const MapDefinition& map_de
 }
 
 void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map_def) {
-  if (map_def.spawns.empty()) {
+  if (map_def.structures.empty()) {
     return;
   }
 
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  for (const auto& spawn : map_def.spawns) {
-    if (!Game::Units::is_building_spawn(spawn.type)) {
+  for (const auto& structure : map_def.structures) {
+    const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry);
+    if (line == nullptr) {
       continue;
     }
+    const auto [x1, y1] =
+        world_to_pixel(line->start.x(), line->start.z(), map_def.grid);
+    const auto [x2, y2] = world_to_pixel(line->end.x(), line->end.z(), map_def.grid);
+    QColor wall_color = Palette::STRUCTURE_STONE;
+    if (structure.player_id == 1) {
+      wall_color = Palette::TEAM_BLUE_DARK;
+    } else if (structure.player_id == 2) {
+      wall_color = Palette::TEAM_RED_DARK;
+    }
+    painter.setPen(QPen(wall_color,
+                        std::max(1.5F,
+                                 world_to_pixel_size(line->width, map_def.grid)),
+                        Qt::SolidLine,
+                        Qt::SquareCap));
+    painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
+  }
 
-    const auto [world_x, world_z] = grid_to_world_coords(spawn.x, spawn.z, map_def);
-    const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
+  for (const auto& structure : map_def.structures) {
+    const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry);
+    if (point == nullptr) {
+      continue;
+    }
+    const auto [px, py] =
+        world_to_pixel(point->position.x(), point->position.z(), map_def.grid);
 
     QColor fill_color = Palette::STRUCTURE_STONE;
     QColor border_color = Palette::STRUCTURE_SHADOW;
 
-    if (spawn.player_id == 1) {
+    if (structure.player_id == 1) {
       fill_color = Palette::TEAM_BLUE;
       border_color = Palette::TEAM_BLUE_DARK;
-    } else if (spawn.player_id == 2) {
+    } else if (structure.player_id == 2) {
       fill_color = Palette::TEAM_RED;
       border_color = Palette::TEAM_RED_DARK;
-    } else if (spawn.player_id > 0) {
+    } else if (structure.player_id > 0) {
 
-      const int hue = (spawn.player_id * 47 + 30) % 360;
+      const int hue = (structure.player_id * 47 + 30) % 360;
       fill_color.setHsv(hue, 140, 180);
       border_color.setHsv(hue, 180, 100);
     }
 
     draw_fortress_icon(
-        painter, px, py, structure_icon_size(spawn.type), fill_color, border_color);
+        painter, px, py, structure_icon_size(structure.type), fill_color, border_color);
   }
 }
 

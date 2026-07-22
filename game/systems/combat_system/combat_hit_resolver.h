@@ -9,6 +9,11 @@ class World;
 
 namespace Game::Systems::Combat {
 
+void launch_new_casualties(Engine::Core::Entity& casualty_unit,
+                           const Engine::Core::Entity& impact_source,
+                           int casualty_count,
+                           float impact_speed);
+
 struct CombatHitResult {
   CombatHitContact contact;
   Game::Systems::RpgCombat::CommanderDamageResult damage;

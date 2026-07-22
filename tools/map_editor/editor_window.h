@@ -26,6 +26,7 @@ private slots:
   void save_map();
   void save_map_as();
   void resize_map();
+  void edit_biome();
   void undo();
   void redo();
   void on_tool_selected(ToolType tool);

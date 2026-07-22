@@ -62,6 +62,9 @@ struct DrawContext {
   bool template_prewarm = false;
   bool suppress_animation_state_persistence = false;
   bool force_single_soldier = false;
+  // Zero keeps every living formation member. Positive values let the world
+  // renderer retain an evenly distributed population at overview LOD.
+  int max_rendered_individuals = 0;
   bool skip_ground_offset = false;
   bool has_variant_override = false;
   std::uint8_t variant_override = 0;

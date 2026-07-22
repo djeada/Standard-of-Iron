@@ -23,15 +23,6 @@
   },
   "spawns": [
     {
-      "type": "barracks",
-      "x": 11,
-      "z": 36,
-      "player_id": 1,
-      "team_id": 1,
-      "nation": "roman_republic",
-      "max_population": 180
-    },
-    {
       "type": "roman_field_commander",
       "x": 13,
       "z": 34,
@@ -133,5 +124,16 @@
     "wood": 100,
     "stone": 200,
     "iron": 200
-  }
+  },
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 11,
+      "z": 36,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": 180
+    }
+  ]
 }

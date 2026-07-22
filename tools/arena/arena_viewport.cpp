@@ -19,19 +19,21 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <string>
 
 #include "app/core/renderer_bootstrap.h"
 #include "app/utils/movement_utils.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
 #include "game/core/component.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
-#include "game/map/map_loader.h"
 #include "game/map/visibility_service.h"
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
@@ -49,6 +51,7 @@
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
@@ -71,8 +74,8 @@
 #include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
-#include "utils/resource_utils.h"
 #include "unit_spawn_options.h"
+#include "utils/resource_utils.h"
 
 namespace {
 
@@ -83,6 +86,7 @@ constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr int k_selection_drag_threshold = 6;
+constexpr int k_interactive_frame_interval_ms = 8;
 
 constexpr float k_unit_spawn_clearance = 3.25F;
 constexpr float k_building_spawn_clearance = 5.0F;
@@ -308,7 +312,8 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   reset_camera();
 
   m_frame_clock.start();
-  m_frame_timer.setInterval(16);
+  m_frame_timer.setTimerType(Qt::PreciseTimer);
+  m_frame_timer.setInterval(k_interactive_frame_interval_ms);
   connect(&m_frame_timer, &QTimer::timeout, this, [this]() {
     if (m_batch_fixed_step > 0.0F) {
 
@@ -422,6 +427,14 @@ void ArenaViewport::paintGL() {
 
   QElapsedTimer frame_work_clock;
   frame_work_clock.start();
+  qint64 timing_checkpoint_ns = 0;
+  auto elapsed_phase_ms = [&]() {
+    qint64 const now_ns = frame_work_clock.nsecsElapsed();
+    double const elapsed =
+        static_cast<double>(now_ns - timing_checkpoint_ns) / 1'000'000.0;
+    timing_checkpoint_ns = now_ns;
+    return elapsed;
+  };
 
   float real_dt = m_batch_fixed_step > 0.0F ? m_batch_fixed_step : 1.0F / 60.0F;
   if (m_batch_fixed_step <= 0.0F && m_frame_clock.isValid()) {
@@ -444,6 +457,8 @@ void ArenaViewport::paintGL() {
     return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
   });
   update_active_scenario(simulation_dt);
+  Arena::ArenaRenderedFrameTimings timings;
+  timings.simulation_ms = elapsed_phase_ms();
 
   if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
@@ -459,14 +474,18 @@ void ArenaViewport::paintGL() {
   m_renderer->begin_frame();
   if (m_terrain_scene != nullptr) {
     Render::GL::TerrainSceneSubmitOptions terrain_options;
+    const bool include_review_content =
+        !m_terrain_review_mode || m_terrain_review_content_enabled;
     terrain_options.include_scatters =
-        !m_terrain_review_mode &&
+        include_review_content &&
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_scatter);
     terrain_options.include_environment = !m_terrain_review_mode;
     m_terrain_scene->submit(*m_renderer, m_renderer->resources(), terrain_options);
   }
+  timings.terrain_submit_ms = elapsed_phase_ms();
   m_renderer->render_world(m_world.get());
+  timings.world_submit_ms = elapsed_phase_ms();
   if (auto* res = m_renderer->resources(); res != nullptr) {
     if (auto* arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
       Render::GL::render_arrows(m_renderer.get(), res, *arrow_system);
@@ -484,12 +503,24 @@ void ArenaViewport::paintGL() {
     Render::GL::render_commander_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
   }
+  timings.effects_submit_ms = elapsed_phase_ms();
   m_renderer->end_frame();
+  timings.playback_ms = elapsed_phase_ms();
+  auto const& render_profile = Render::Profiling::global_profile();
+  timings.humanoid_preparation_ms =
+      static_cast<double>(render_profile.humanoid_preparation_us) / 1000.0;
+  timings.animation_sampling_ms =
+      static_cast<double>(render_profile.animation_input_sampling_us) / 1000.0;
+  timings.bpat_playback_ms =
+      static_cast<double>(render_profile.bpat_playback_us) / 1000.0;
+  timings.layout_generation_ms =
+      static_cast<double>(render_profile.soldier_layout_generation_us) / 1000.0;
+  timings.visible_soldiers = render_profile.visible_soldiers;
+  timings.draw_calls = render_profile.draw_calls;
 
   bool const suppress_ui_overlays =
-      m_terrain_review_mode ||
-      (m_scenario_runner != nullptr &&
-       m_scenario_runner->definition().suppress_ui_overlays);
+      m_terrain_review_mode || (m_scenario_runner != nullptr &&
+                                m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
     {
       QPainter painter(this);
@@ -506,11 +537,12 @@ void ArenaViewport::paintGL() {
       }
     }
   }
+  timings.overlays_ms = elapsed_phase_ms();
 
   if (m_scenario_runner != nullptr && sampled_frame) {
-    double const frame_time_ms =
+    timings.total_ms =
         static_cast<double>(frame_work_clock.nsecsElapsed()) / 1'000'000.0;
-    m_scenario_runner->observe_rendered_frame(frame_time_ms);
+    m_scenario_runner->observe_rendered_frame(timings);
     std::size_t const issue_revision = m_scenario_runner->issue_revision();
     if (issue_revision > m_last_scenario_issue_revision) {
       auto const& issues = m_scenario_runner->report().issues;
@@ -1001,10 +1033,9 @@ void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
     return;
   }
 
-  const bool fast =
-      (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
-  float const step = m_terrain_review_mode ? (fast ? 6.0F : 2.5F)
-                                           : (fast ? 2.0F : 1.0F);
+  const bool fast = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
+  float const step =
+      m_terrain_review_mode ? (fast ? 6.0F : 2.5F) : (fast ? 2.0F : 1.0F);
   float const frame_scale = std::clamp(real_dt * 60.0F, 0.5F, 2.0F);
   m_camera_service->move(*m_camera,
                          static_cast<float>(dx) * step * frame_scale,
@@ -1261,6 +1292,32 @@ void ArenaViewport::regenerate_terrain() {
     }
   }
 
+  // Arena slope scenarios use a smooth, fully walkable relief patch.  Keeping
+  // the cells Flat exercises height-aware movement and grounding without
+  // turning the showcase into a tactical-hill entrance test.
+  for (auto const& patch : m_arena_elevation_patches) {
+    float const radius = std::max(patch.radius, k_terrain_tile_size);
+    for (int z = 0; z < k_terrain_height; ++z) {
+      for (int x = 0; x < k_terrain_width; ++x) {
+        float const world_x =
+            (static_cast<float>(x) - half_width) * k_terrain_tile_size;
+        float const world_z =
+            (static_cast<float>(z) - half_height) * k_terrain_tile_size;
+        float const distance =
+            std::hypot(world_x - patch.center.x(), world_z - patch.center.z());
+        if (distance > radius) {
+          continue;
+        }
+        float t = std::clamp(1.0F - distance / radius, 0.0F, 1.0F);
+        t = t * t * (3.0F - 2.0F * t);
+        auto const index = static_cast<std::size_t>(z * k_terrain_width + x);
+        heights[index] =
+            std::max(heights[index], arena_floor_height + patch.height * t);
+        terrain_types[index] = Game::Map::TerrainType::Flat;
+      }
+    }
+  }
+
   Game::Map::BiomeSettings biome;
   Game::Map::apply_ground_type_defaults(biome, m_ground_type);
   biome.seed = static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed));
@@ -1273,10 +1330,12 @@ void ArenaViewport::regenerate_terrain() {
   water_mask.restore_from_data(heights, terrain_types, {}, {});
   water_mask.add_lakes(m_arena_lakes);
   water_mask.add_river_segments(m_arena_rivers);
+  water_mask.add_bridges(m_arena_bridges);
   heights = water_mask.get_height_data();
   terrain_types = water_mask.getTerrainTypes();
   const auto runtime_rivers = water_mask.get_river_segments();
   const auto runtime_lakes = water_mask.get_lakes();
+  const auto runtime_bridges = water_mask.get_bridges();
 
   Game::Map::TerrainService::instance().restore_from_serialized(k_terrain_width,
                                                                 k_terrain_height,
@@ -1285,7 +1344,7 @@ void ArenaViewport::regenerate_terrain() {
                                                                 terrain_types,
                                                                 runtime_rivers,
                                                                 {},
-                                                                {},
+                                                                runtime_bridges,
                                                                 biome,
                                                                 m_world_props,
                                                                 {},
@@ -1315,8 +1374,9 @@ void ArenaViewport::configure_rendering_from_terrain() {
       height_map->get_tile_size(), height_map->get_width(), height_map->get_height());
   m_surface->ground()->set_biome(terrain_service.biome_settings());
   m_surface->terrain()->configure(*height_map, terrain_service.biome_settings());
-  m_features->configure(*height_map, terrain_service.road_segments());
-  if (m_terrain_review_mode) {
+  m_features->configure(
+      *height_map, terrain_service.road_segments(), terrain_service.biome_settings());
+  if (m_terrain_review_mode && !m_terrain_review_content_enabled) {
     m_scatter->clear();
   } else {
     m_scatter->configure(*height_map,
@@ -1576,19 +1636,13 @@ auto ArenaViewport::spawn_single_unit() -> Engine::Core::EntityID {
 auto ArenaViewport::resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                             Game::Units::TroopType preferred) const
     -> Game::Units::TroopType {
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation(nation_id);
-  if (nation == nullptr || nation->available_troops.empty()) {
-    return preferred;
-  }
-
-  auto it = std::find_if(nation->available_troops.begin(),
-                         nation->available_troops.end(),
-                         [preferred](const Game::Systems::TroopType& troop) {
-                           return troop.unit_type == preferred;
-                         });
-  return it != nation->available_troops.end()
-             ? preferred
-             : nation->available_troops.front().unit_type;
+  // Arena declarations are executable test fixtures. Silently substituting a
+  // nation's first available troop makes the rendered scenario exercise a
+  // different unit than the catalog specifies (for example, an archer in an
+  // elephant test). The factory can build the requested troop with the chosen
+  // nation's presentation, so keep the declaration authoritative.
+  (void)nation_id;
+  return preferred;
 }
 
 auto ArenaViewport::spawn_single_unit(int owner_id,
@@ -1856,11 +1910,15 @@ void ArenaViewport::reset_arena() {
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
   clear_units();
-  const bool had_water = !m_arena_rivers.empty() || !m_arena_lakes.empty();
+  const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
+                                  !m_arena_bridges.empty() ||
+                                  !m_arena_elevation_patches.empty();
   m_arena_rivers.clear();
   m_arena_lakes.clear();
+  m_arena_bridges.clear();
+  m_arena_elevation_patches.clear();
   clear_world_props();
-  if (had_water && m_world_props.empty()) {
+  if (had_custom_terrain && m_world_props.empty()) {
     reconfigure_terrain_from_state();
   }
   m_attack_scrub_entity_id = 0;
@@ -1881,7 +1939,7 @@ void ArenaViewport::set_batch_fixed_step(float seconds) {
   int const interval_ms =
       m_batch_fixed_step > 0.0F
           ? std::max(1, static_cast<int>(std::lround(m_batch_fixed_step * 1000.0F)))
-          : 16;
+          : k_interactive_frame_interval_ms;
   m_frame_timer.setInterval(interval_ms);
 }
 
@@ -1902,7 +1960,7 @@ auto ArenaViewport::active_scenario_report() const
 }
 
 auto ArenaViewport::write_scenario_artifacts(const QString& directory,
-                                              QString* error) const -> bool {
+                                             QString* error) const -> bool {
   if (m_scenario_runner == nullptr) {
     if (error != nullptr) {
       *error = QStringLiteral("no Arena scenario is active");
@@ -1912,8 +1970,8 @@ auto ArenaViewport::write_scenario_artifacts(const QString& directory,
   return m_scenario_runner->write_artifacts(directory, error);
 }
 
-auto ArenaViewport::load_terrain_review_map(const QString& map_path, QString* error)
-    -> bool {
+auto ArenaViewport::load_terrain_review_map(const QString& map_path,
+                                            QString* error) -> bool {
   Game::Map::MapDefinition definition;
   const QString resolved_path = Utils::Resources::resolve_resource_path(map_path);
   if (!Game::Map::MapLoader::load_from_json_file(resolved_path, definition, error)) {
@@ -1938,12 +1996,121 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path, QString* er
   Game::Systems::CommandService::initialize(m_terrain_review_definition->grid.width,
                                             m_terrain_review_definition->grid.height);
 
+  if (m_terrain_review_content_enabled) {
+    spawn_terrain_review_structures();
+  }
+
   if (m_gl_initialized) {
     configure_rendering_from_terrain();
   }
   set_terrain_review_gameplay_camera();
   update();
   return true;
+}
+
+void ArenaViewport::set_terrain_review_content_enabled(bool enabled) {
+  m_terrain_review_content_enabled = enabled;
+}
+
+void ArenaViewport::spawn_terrain_review_structures() {
+  if (!m_terrain_review_definition.has_value()) {
+    return;
+  }
+
+  const auto& definition = *m_terrain_review_definition;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& nations = Game::Systems::NationRegistry::instance();
+  const auto resolve_nation =
+      [&owners, &nations](int owner_id,
+                          std::optional<Game::Systems::NationID> authored_nation) {
+        if (owner_id != Game::Core::NEUTRAL_OWNER_ID &&
+            owners.get_owner_type(owner_id) == Game::Systems::OwnerType::Neutral) {
+          owners.register_owner_with_id(owner_id,
+                                        Game::Systems::OwnerType::AI,
+                                        "Preview Player " + std::to_string(owner_id));
+          owners.set_owner_team(owner_id, owner_id);
+        }
+
+        Game::Systems::NationID nation_id = nations.default_nation_id();
+        if (authored_nation.has_value()) {
+          nation_id = *authored_nation;
+        } else if (const auto* owner_nation = nations.get_nation_for_player(owner_id)) {
+          nation_id = owner_nation->id;
+        }
+        if (owner_id != Game::Core::NEUTRAL_OWNER_ID) {
+          nations.set_player_nation(owner_id, nation_id);
+        }
+        return nation_id;
+      };
+
+  const auto parse_nation =
+      [](const QString& value) -> std::optional<Game::Systems::NationID> {
+    if (value.trimmed().isEmpty()) {
+      return std::nullopt;
+    }
+    Game::Systems::NationID nation_id;
+    if (!Game::Systems::try_parse_nation_id(value, nation_id)) {
+      qWarning() << "Arena terrain review: unknown building nation" << value
+                 << "- using the owner/default nation";
+      return std::nullopt;
+    }
+    return nation_id;
+  };
+
+  constexpr float k_grid_center_offset = 0.5F;
+  const auto grid_offset = [](int grid_size) {
+    return -(static_cast<float>(grid_size) * k_grid_center_offset -
+             k_grid_center_offset);
+  };
+  const auto world_to_grid = [&grid_offset](float world_coord, int grid_size) {
+    return static_cast<int>(std::round(world_coord - grid_offset(grid_size)));
+  };
+  const auto grid_to_world = [&grid_offset](int grid_coord, int grid_size) {
+    return static_cast<float>(grid_coord) + grid_offset(grid_size);
+  };
+
+  for (const auto& structure : definition.structures) {
+    if (const auto* point =
+            std::get_if<Game::Map::PointStructureGeometry>(&structure.geometry)) {
+      spawn_single_building(
+          structure.player_id,
+          resolve_nation(structure.player_id, parse_nation(structure.nation)),
+          structure.type,
+          point->position,
+          false);
+      continue;
+    }
+
+    const auto* line =
+        std::get_if<Game::Map::LineStructureGeometry>(&structure.geometry);
+    if (line == nullptr || structure.type != Game::Units::SpawnType::WallSegment) {
+      qWarning() << "Arena terrain review: unsupported line structure"
+                 << Game::Units::spawn_typeToQString(structure.type);
+      continue;
+    }
+    const auto start = Game::Systems::WallGridPosition{
+        .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            world_to_grid(line->start.x(), definition.grid.width)),
+        .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            world_to_grid(line->start.z(), definition.grid.height))};
+    const auto end = Game::Systems::WallGridPosition{
+        .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            world_to_grid(line->end.x(), definition.grid.width)),
+        .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
+            world_to_grid(line->end.z(), definition.grid.height))};
+    const auto nation_id =
+        resolve_nation(structure.player_id, parse_nation(structure.nation));
+    for (const auto& segment :
+         Game::Systems::WallNetworkService::build_axis_aligned_chain(start, end)) {
+      spawn_single_building(structure.player_id,
+                            nation_id,
+                            Game::Units::SpawnType::WallSegment,
+                            QVector3D(grid_to_world(segment.x, definition.grid.width),
+                                      0.0F,
+                                      grid_to_world(segment.z, definition.grid.height)),
+                            false);
+    }
+  }
 }
 
 void ArenaViewport::set_terrain_review_overview_camera() {
@@ -1957,13 +2124,11 @@ void ArenaViewport::set_terrain_review_overview_camera() {
       static_cast<float>(definition.grid.height) * definition.grid.tile_size;
   const float distance = std::max(world_width, world_height) * 1.28F;
   m_camera->set_rts_view({0.0F, 0.0F, 0.0F}, distance, 66.0F, 225.0F);
-  const float aspect = height() > 0 ? static_cast<float>(width()) /
-                                         static_cast<float>(height())
-                                   : 16.0F / 9.0F;
-  m_camera->set_perspective(45.0F,
-                            aspect,
-                            1.0F,
-                            std::max(definition.camera.far_plane, distance * 4.0F));
+  const float aspect = height() > 0
+                           ? static_cast<float>(width()) / static_cast<float>(height())
+                           : 16.0F / 9.0F;
+  m_camera->set_perspective(
+      45.0F, aspect, 1.0F, std::max(definition.camera.far_plane, distance * 4.0F));
   update();
 }
 
@@ -1974,20 +2139,20 @@ void ArenaViewport::set_terrain_review_gameplay_camera() {
   const auto& definition = *m_terrain_review_definition;
   QVector3D center = definition.camera.center;
   if (definition.coordSystem == Game::Map::CoordSystem::Grid) {
-    center.setX((center.x() -
-                 (static_cast<float>(definition.grid.width) * 0.5F - 0.5F)) *
-                definition.grid.tile_size);
-    center.setZ((center.z() -
-                 (static_cast<float>(definition.grid.height) * 0.5F - 0.5F)) *
-                definition.grid.tile_size);
+    center.setX(
+        (center.x() - (static_cast<float>(definition.grid.width) * 0.5F - 0.5F)) *
+        definition.grid.tile_size);
+    center.setZ(
+        (center.z() - (static_cast<float>(definition.grid.height) * 0.5F - 0.5F)) *
+        definition.grid.tile_size);
   }
   m_camera->set_rts_view(center,
                          definition.camera.distance,
                          definition.camera.tilt_deg,
                          definition.camera.yaw_deg);
-  const float aspect = height() > 0 ? static_cast<float>(width()) /
-                                         static_cast<float>(height())
-                                   : 16.0F / 9.0F;
+  const float aspect = height() > 0
+                           ? static_cast<float>(width()) / static_cast<float>(height())
+                           : 16.0F / 9.0F;
   m_camera->set_perspective(definition.camera.fov_y,
                             aspect,
                             definition.camera.near_plane,
@@ -1999,7 +2164,7 @@ void ArenaViewport::set_terrain_review_gameplay_camera() {
 auto ArenaViewport::terrain_review_definition() const
     -> const Game::Map::MapDefinition* {
   return m_terrain_review_definition.has_value() ? &*m_terrain_review_definition
-                                                  : nullptr;
+                                                 : nullptr;
 }
 
 void ArenaViewport::load_scenario(const QString& scenario_id) {
@@ -2017,7 +2182,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   clear_camera_key_state();
   m_arena_rivers = definition->rivers;
   m_arena_lakes = definition->lakes;
-  if (!m_arena_rivers.empty() || !m_arena_lakes.empty()) {
+  m_arena_bridges = definition->bridges;
+  m_arena_elevation_patches = definition->elevation_patches;
+  if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
+      !m_arena_elevation_patches.empty()) {
     reconfigure_terrain_from_state();
   }
   if (!definition->resource_patches.empty()) {
@@ -2110,13 +2278,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   host.find_unit = [this](Engine::Core::EntityID entity_id) {
     return find_unit_handle(entity_id);
   };
-  host.set_camera = [this](const std::vector<Engine::Core::EntityID>& entities,
-                           const Arena::ArenaCameraView& view) {
+  host.set_camera = [this, definition, scenario_origin](
+                        const std::vector<Engine::Core::EntityID>& entities,
+                        const Arena::ArenaCameraView& view) {
     if (m_camera != nullptr) {
-      m_camera->set_rts_view(scenario_center(m_world.get(), entities),
-                             view.distance,
-                             view.angle,
-                             view.yaw);
+      QVector3D const center = definition->camera_focus.has_value()
+                                   ? scenario_origin + *definition->camera_focus
+                                   : scenario_center(m_world.get(), entities);
+      m_camera->set_rts_view(center, view.distance, view.angle, view.yaw);
     }
   };
   host.set_force_full_creature_lod = [this](bool enabled) {
@@ -2130,7 +2299,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   }
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
-  Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(true);
+  set_force_full_creature_lod(definition->force_full_creature_lod);
+  Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(
+      definition->collect_animation_diagnostics);
 
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(

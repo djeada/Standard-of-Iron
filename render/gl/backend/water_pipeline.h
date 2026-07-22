@@ -33,6 +33,11 @@ public:
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {
@@ -47,6 +52,21 @@ public:
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_low{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_high{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
   struct BridgeUniforms {

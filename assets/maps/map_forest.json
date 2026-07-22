@@ -1423,16 +1423,6 @@
   ],
   "spawns": [
     {
-      "id": "player_1_main_barracks",
-      "type": "barracks",
-      "x": 60,
-      "z": 60,
-      "player_id": 1,
-      "max_population": 500,
-      "nation": "roman_republic",
-      "description": "Player 1 main barracks"
-    },
-    {
       "id": "p1_archer_01",
       "type": "archer",
       "x": 56,
@@ -1494,15 +1484,6 @@
       "x": 45,
       "z": 58,
       "player_id": 1
-    },
-    {
-      "id": "player_2_main_barracks",
-      "type": "barracks",
-      "x": 190,
-      "z": 190,
-      "player_id": 2,
-      "max_population": 500,
-      "description": "Player 2 main barracks"
     },
     {
       "id": "p2_archer_01",
@@ -1568,16 +1549,6 @@
       "player_id": 2
     },
     {
-      "id": "neutral_north_lodge_barracks",
-      "type": "barracks",
-      "x": 168,
-      "z": 76,
-      "player_id": 0,
-      "max_population": 120,
-      "description": "Neutral northern hunter lodge barracks. Can be captured by either active player.",
-      "capture_reward": "archer_support"
-    },
-    {
       "id": "neutral_north_archer_01",
       "type": "archer",
       "x": 164,
@@ -1597,16 +1568,6 @@
       "x": 168,
       "z": 84,
       "player_id": 0
-    },
-    {
-      "id": "neutral_south_lodge_barracks",
-      "type": "barracks",
-      "x": 82,
-      "z": 174,
-      "player_id": 0,
-      "max_population": 120,
-      "description": "Neutral southern hunter lodge barracks. Can be captured by either active player.",
-      "capture_reward": "spearman_support"
     },
     {
       "id": "neutral_south_spearman_01",
@@ -2129,5 +2090,46 @@
     "stone": 50,
     "iron": 100
   },
-  "theme": "Two armies fight over a rain-soaked woodland shrine where every path feels like an ambush."
+  "theme": "Two armies fight over a rain-soaked woodland shrine where every path feels like an ambush.",
+  "structures": [
+    {
+      "id": "player_1_main_barracks",
+      "type": "barracks",
+      "x": 60,
+      "z": 60,
+      "player_id": 1,
+      "max_population": 500,
+      "nation": "roman_republic",
+      "description": "Player 1 main barracks"
+    },
+    {
+      "id": "player_2_main_barracks",
+      "type": "barracks",
+      "x": 190,
+      "z": 190,
+      "player_id": 2,
+      "max_population": 500,
+      "description": "Player 2 main barracks"
+    },
+    {
+      "id": "neutral_north_lodge_barracks",
+      "type": "barracks",
+      "x": 168,
+      "z": 76,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral northern hunter lodge barracks. Can be captured by either active player.",
+      "capture_reward": "archer_support"
+    },
+    {
+      "id": "neutral_south_lodge_barracks",
+      "type": "barracks",
+      "x": 82,
+      "z": 174,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral southern hunter lodge barracks. Can be captured by either active player.",
+      "capture_reward": "spearman_support"
+    }
+  ]
 }

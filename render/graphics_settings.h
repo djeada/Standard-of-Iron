@@ -155,7 +155,10 @@ public:
   }
 
 private:
-  GraphicsSettings() { set_quality(GraphicsQuality::Ultra); }
+  // High keeps close combat at full fidelity while enabling the production LOD,
+  // visibility-budget, pose-cache, and batching paths required by campaign-scale
+  // battles. Ultra remains an explicit opt-in capture/debug preset.
+  GraphicsSettings() { set_quality(GraphicsQuality::High); }
 
   void apply_preset(GraphicsQuality q) noexcept {
     switch (q) {
@@ -288,7 +291,7 @@ private:
   static constexpr float k_base_elephant_minimal = 150.0F;
   static constexpr float k_base_elephant_billboard = 140.0F;
 
-  GraphicsQuality m_quality{GraphicsQuality::Ultra};
+  GraphicsQuality m_quality{GraphicsQuality::High};
   LODMultipliers m_lod_multipliers{};
   GraphicsFeatures m_features{};
   BatchingConfig m_batching_config{};

@@ -53,127 +53,6 @@
     "sway_speed": 0.9,
     "sway_strength": 0.13
   },
-  "buildings": [
-    {
-      "type": "marketplace",
-      "x": 121.55,
-      "z": 472.89,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 102.02,
-      "z": 453.32,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 141.09,
-      "z": 466.37,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "marketplace",
-      "x": 449.31,
-      "z": 293.52,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 429.77,
-      "z": 225.03,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 468.84,
-      "z": 228.29,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 429.77,
-      "z": 322.87,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 468.84,
-      "z": 326.13,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 418.92,
-      "z": 260.9,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 479.7,
-      "z": 260.9,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "marketplace",
-      "x": 486.21,
-      "z": 417.45,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 466.67,
-      "z": 401.14,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 505.74,
-      "z": 401.14,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 620.78,
-      "z": 136.97,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "marketplace",
-      "x": 594.74,
-      "z": 169.59,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 575.2,
-      "z": 159.8,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 614.27,
-      "z": 159.8,
-      "player_id": 3,
-      "nation": "roman_republic"
-    }
-  ],
   "camera": {
     "center": [
       303.88,
@@ -552,40 +431,40 @@
           405.05
         ],
         [
-          122.72,
-          388.98
+          121.49,
+          391.56
         ],
         [
-          130.39,
-          372.91
+          124.93,
+          384.36
         ],
         [
-          138.07,
-          356.84
+          132.64,
+          369.74
         ],
         [
-          145.75,
-          340.77
+          140.36,
+          355.12
         ],
         [
-          153.42,
-          324.7
+          148.08,
+          340.51
         ],
         [
-          161.1,
-          308.63
+          155.8,
+          325.89
         ],
         [
-          168.78,
-          292.56
+          163.52,
+          311.28
         ],
         [
-          171.68,
-          287.72
+          171.23,
+          296.66
         ],
         [
-          179.18,
-          277.57
+          178.95,
+          282.05
         ],
         [
           186.67,
@@ -938,36 +817,36 @@
           273.95
         ],
         [
-          411.62,
-          283.37
+          411.67,
+          285.37
         ],
         [
-          413.67,
-          288.07
+          413.69,
+          290.05
         ],
         [
-          424.23,
-          301.18
+          424.25,
+          302.88
         ],
         [
-          434.79,
-          314.3
+          434.8,
+          315.72
         ],
         [
-          445.35,
-          327.42
+          445.36,
+          328.55
         ],
         [
-          455.91,
-          340.53
+          455.92,
+          341.38
         ],
         [
           466.48,
-          353.65
+          354.21
         ],
         [
           477.04,
-          366.76
+          367.05
         ],
         [
           487.6,
@@ -1101,7 +980,7 @@
         333.76
       ],
       "width": 3.78,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           334.27,
@@ -1139,7 +1018,7 @@
         267.43
       ],
       "width": 3.78,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           8.68,
@@ -1161,7 +1040,7 @@
         189.16
       ],
       "width": 3.78,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           593.74,
@@ -1191,7 +1070,7 @@
         190
       ],
       "width": 3.2,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           646.83,
@@ -1213,7 +1092,7 @@
         266
       ],
       "width": 3.2,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           2.17,
@@ -1227,156 +1106,6 @@
     },
     {
       "start": [
-        117.21,
-        404.4
-      ],
-      "end": [
-        486.21,
-        417.45
-      ],
-      "width": 4.2,
-      "style": "default",
-      "waypoints": [
-        [
-          117.21,
-          404.4
-        ],
-        [
-          120.11,
-          395.69
-        ],
-        [
-          123.01,
-          386.99
-        ],
-        [
-          126.54,
-          382.14
-        ],
-        [
-          136.46,
-          374.86
-        ],
-        [
-          142.15,
-          373
-        ],
-        [
-          155,
-          373
-        ],
-        [
-          167.85,
-          373
-        ],
-        [
-          173.7,
-          374.62
-        ],
-        [
-          188.3,
-          383.38
-        ],
-        [
-          193.05,
-          387.39
-        ],
-        [
-          204.59,
-          400.81
-        ],
-        [
-          216.14,
-          414.23
-        ],
-        [
-          227.68,
-          427.65
-        ],
-        [
-          239.22,
-          441.07
-        ],
-        [
-          250.76,
-          454.48
-        ],
-        [
-          262.3,
-          467.9
-        ],
-        [
-          273.84,
-          481.32
-        ],
-        [
-          285.38,
-          494.74
-        ],
-        [
-          296.92,
-          508.16
-        ],
-        [
-          308.46,
-          521.58
-        ],
-        [
-          320,
-          535
-        ],
-        [
-          333.85,
-          525.2
-        ],
-        [
-          347.7,
-          515.41
-        ],
-        [
-          361.55,
-          505.61
-        ],
-        [
-          375.4,
-          495.82
-        ],
-        [
-          389.25,
-          486.02
-        ],
-        [
-          403.11,
-          476.23
-        ],
-        [
-          416.96,
-          466.43
-        ],
-        [
-          430.81,
-          456.63
-        ],
-        [
-          444.66,
-          446.84
-        ],
-        [
-          458.51,
-          437.04
-        ],
-        [
-          472.36,
-          427.25
-        ],
-        [
-          486.21,
-          417.45
-        ]
-      ]
-    },
-    {
-      "start": [
         320,
         535
       ],
@@ -1385,7 +1114,7 @@
         525
       ],
       "width": 3.8,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           320,
@@ -1479,7 +1208,7 @@
         648
       ],
       "width": 3.8,
-      "style": "rough",
+      "style": "default",
       "waypoints": [
         [
           320,
@@ -1512,6 +1241,266 @@
         [
           320,
           648
+        ]
+      ]
+    },
+    {
+      "start": [
+        490.55,
+        388.1
+      ],
+      "end": [
+        492.63,
+        529.74
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          490.55,
+          388.1
+        ],
+        [
+          490.81,
+          405.81
+        ],
+        [
+          491.07,
+          423.51
+        ],
+        [
+          491.33,
+          441.22
+        ],
+        [
+          491.59,
+          458.92
+        ],
+        [
+          491.85,
+          476.62
+        ],
+        [
+          492.11,
+          494.33
+        ],
+        [
+          492.37,
+          512.03
+        ],
+        [
+          492.63,
+          529.74
+        ]
+      ]
+    },
+    {
+      "start": [
+        499.23,
+        238.08
+      ],
+      "end": [
+        559.07,
+        281.64
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          499.23,
+          238.08
+        ],
+        [
+          506.65,
+          249.01
+        ],
+        [
+          510,
+          252.33
+        ],
+        [
+          515,
+          255.67
+        ],
+        [
+          519.07,
+          258.21
+        ],
+        [
+          532.4,
+          266.02
+        ],
+        [
+          545.74,
+          273.83
+        ],
+        [
+          559.07,
+          281.64
+        ]
+      ]
+    },
+    {
+      "start": [
+        186.67,
+        267.43
+      ],
+      "end": [
+        186.67,
+        260.9
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          186.67,
+          267.43
+        ],
+        [
+          186.67,
+          260.9
+        ]
+      ]
+    },
+    {
+      "start": [
+        394.93,
+        170.7
+      ],
+      "end": [
+        419.71,
+        173.61
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          394.93,
+          170.7
+        ],
+        [
+          407.32,
+          172.15
+        ],
+        [
+          419.71,
+          173.61
+        ]
+      ]
+    },
+    {
+      "start": [
+        197.37,
+        386.04
+      ],
+      "end": [
+        140.02,
+        355.76
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          197.37,
+          386.04
+        ],
+        [
+          183.03,
+          378.47
+        ],
+        [
+          168.7,
+          370.9
+        ],
+        [
+          154.36,
+          363.33
+        ],
+        [
+          140.02,
+          355.76
+        ]
+      ]
+    },
+    {
+      "start": [
+        425.58,
+        123.34
+      ],
+      "end": [
+        419.66,
+        173.6
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          425.58,
+          123.34
+        ],
+        [
+          423.61,
+          140.09
+        ],
+        [
+          421.63,
+          156.85
+        ],
+        [
+          419.66,
+          173.6
+        ]
+      ]
+    },
+    {
+      "start": [
+        486.21,
+        381.57
+      ],
+      "end": [
+        487.98,
+        380.94
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          486.21,
+          381.57
+        ],
+        [
+          487.98,
+          380.94
+        ]
+      ]
+    },
+    {
+      "start": [
+        594.74,
+        136.97
+      ],
+      "end": [
+        593.74,
+        187
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          594.74,
+          136.97
+        ],
+        [
+          594.41,
+          153.65
+        ],
+        [
+          594.07,
+          170.32
+        ],
+        [
+          593.74,
+          187
         ]
       ]
     }
@@ -1734,30 +1723,6 @@
     }
   ],
   "spawns": [
-    {
-      "type": "barracks",
-      "x": 121.55,
-      "z": 443.54,
-      "player_id": 1,
-      "max_population": 220,
-      "nation": "carthage"
-    },
-    {
-      "type": "barracks",
-      "x": 449.31,
-      "z": 260.9,
-      "player_id": 2,
-      "max_population": 260,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "barracks",
-      "x": 594.74,
-      "z": 136.97,
-      "player_id": 3,
-      "max_population": 160,
-      "nation": "roman_republic"
-    },
     {
       "type": "spearman",
       "x": 186.67,
@@ -2559,5 +2524,150 @@
       ]
     }
   ],
-  "lakes": []
+  "lakes": [],
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 121.55,
+      "z": 443.54,
+      "player_id": 1,
+      "max_population": 220,
+      "nation": "carthage"
+    },
+    {
+      "type": "barracks",
+      "x": 449.31,
+      "z": 260.9,
+      "player_id": 2,
+      "max_population": 260,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "barracks",
+      "x": 594.74,
+      "z": 136.97,
+      "player_id": 3,
+      "max_population": 160,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 121.55,
+      "z": 472.89,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 102.02,
+      "z": 453.32,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 141.09,
+      "z": 466.37,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "marketplace",
+      "x": 449.31,
+      "z": 293.52,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 429.77,
+      "z": 225.03,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 468.84,
+      "z": 228.29,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 429.77,
+      "z": 322.87,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 468.84,
+      "z": 326.13,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 418.92,
+      "z": 260.9,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 479.7,
+      "z": 260.9,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 486.21,
+      "z": 417.45,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 466.67,
+      "z": 401.14,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 505.74,
+      "z": 401.14,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 620.78,
+      "z": 136.97,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 594.74,
+      "z": 169.59,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 575.2,
+      "z": 159.8,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 614.27,
+      "z": 159.8,
+      "player_id": 3,
+      "nation": "roman_republic"
+    }
+  ]
 }

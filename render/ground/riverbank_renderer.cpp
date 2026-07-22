@@ -30,10 +30,12 @@ ShorelineRenderer::~ShorelineRenderer() = default;
 void ShorelineRenderer::configure(
     const std::vector<Game::Map::RiverSegment>& river_segments,
     const std::vector<Game::Map::Lake>& lakes,
-    const Game::Map::TerrainHeightMap& height_map) {
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings) {
   m_river_segments = river_segments;
   m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
+  m_biome_settings = biome_settings;
   m_visibility_texture.reset();
   m_cached_visibility_version = 0;
   m_visibility_width = 0;
@@ -162,6 +164,8 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   visibility_resources.explored_alpha = m_explored_dim_factor;
   visibility_resources.enabled = use_visibility && visibility_tex != nullptr;
 
+  const auto surface = Game::Map::make_surface_profile(m_biome_settings);
+  const auto climate = Game::Map::make_climate_profile(m_biome_settings);
   size_t mesh_index = 0;
   for (const auto& mesh_owner : m_meshes) {
     auto* mesh = mesh_owner.get();
@@ -204,7 +208,18 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.kind = LinearFeatureKind::Shoreline;
     cmd.water_kind = m_water_kinds[mesh_index - 1];
     cmd.model = model;
-    cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
+    // Carry the complete terrain palette into the shoreline. A single grass
+    // tint made dry, rocky, fertile, and alpine banks look interchangeable.
+    cmd.color = surface.grass_primary;
+    cmd.biome_grass_secondary = surface.grass_secondary;
+    cmd.biome_grass_dry = surface.grass_dry;
+    cmd.biome_soil_color = surface.soil_color;
+    cmd.biome_rock_low = surface.rock_low;
+    cmd.biome_rock_high = surface.rock_high;
+    cmd.biome_snow_color = climate.snow_color;
+    cmd.biome_moisture = climate.moisture_level;
+    cmd.biome_rock_exposure = climate.rock_exposure;
+    cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.alpha = segment_visibility;
     cmd.visibility = visibility_resources;
     renderer.terrain_feature(cmd);

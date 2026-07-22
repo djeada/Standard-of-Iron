@@ -220,10 +220,15 @@ TEST(UndeadSpawnTypeTest, RoundTripsAndModesMatchDesign) {
   EXPECT_TRUE(
       Game::Units::can_use_attack_mode(Game::Units::SpawnType::SkeletonSwordsman));
   EXPECT_TRUE(Game::Units::can_use_guard_mode(Game::Units::SpawnType::SkeletonArcher));
-  EXPECT_TRUE(
+  EXPECT_FALSE(
       Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonSwordsman));
-  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonArcher));
-  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::GravePriest));
+  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonArcher));
+  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::GravePriest));
+  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Knight));
+  EXPECT_FALSE(
+      Game::Units::can_use_hold_mode(Game::Units::SpawnType::MountedKnight));
+  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Archer));
+  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Spearman));
   EXPECT_TRUE(Game::Units::can_use_patrol_mode(Game::Units::SpawnType::GravePriest));
   EXPECT_FALSE(
       Game::Units::can_use_run_mode(Game::Units::SpawnType::SkeletonSwordsman));

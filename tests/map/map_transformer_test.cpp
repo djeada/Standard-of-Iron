@@ -56,17 +56,21 @@ TEST_F(MapTransformerStructureTest, SpawnsAuthoredBuildingsAndRegistersOwners) {
   Game::Map::MapDefinition def;
   def.grid.width = 16;
   def.grid.height = 16;
-  def.buildings.push_back({
-      .type = QStringLiteral("defense_tower"),
-      .x = runtime_world_from_grid(4, def.grid.width),
-      .z = runtime_world_from_grid(6, def.grid.height),
+  def.structures.push_back({
+      .type = Game::Units::SpawnType::DefenseTower,
+      .geometry = Game::Map::PointStructureGeometry{QVector3D(
+          runtime_world_from_grid(4, def.grid.width),
+          0.0F,
+          runtime_world_from_grid(6, def.grid.height))},
       .player_id = 2,
       .nation = QStringLiteral("carthage"),
   });
-  def.buildings.push_back({
-      .type = QStringLiteral("home"),
-      .x = runtime_world_from_grid(10, def.grid.width),
-      .z = runtime_world_from_grid(12, def.grid.height),
+  def.structures.push_back({
+      .type = Game::Units::SpawnType::Home,
+      .geometry = Game::Map::PointStructureGeometry{QVector3D(
+          runtime_world_from_grid(10, def.grid.width),
+          0.0F,
+          runtime_world_from_grid(12, def.grid.height))},
       .player_id = 2,
       .nation = QStringLiteral("carthage"),
   });
@@ -119,14 +123,17 @@ TEST_F(MapTransformerStructureTest,
   Game::Map::MapDefinition def;
   def.grid.width = 16;
   def.grid.height = 16;
-  def.wall_lines.push_back({
-      .start = QVector3D(runtime_world_from_grid(4, def.grid.width),
-                         0.0F,
-                         runtime_world_from_grid(8, def.grid.height)),
-      .end = QVector3D(runtime_world_from_grid(8, def.grid.width),
-                       0.0F,
-                       runtime_world_from_grid(8, def.grid.height)),
-      .width = 2.0F,
+  def.structures.push_back({
+      .type = Game::Units::SpawnType::WallSegment,
+      .geometry = Game::Map::LineStructureGeometry{
+          .start = QVector3D(runtime_world_from_grid(4, def.grid.width),
+                             0.0F,
+                             runtime_world_from_grid(8, def.grid.height)),
+          .end = QVector3D(runtime_world_from_grid(8, def.grid.width),
+                           0.0F,
+                           runtime_world_from_grid(8, def.grid.height)),
+          .width = 2.0F,
+      },
       .player_id = 2,
       .nation = QStringLiteral("carthage"),
   });
@@ -245,6 +252,20 @@ TEST_F(MapTransformerStructureTest, AuthoredGuardSpawnIsScenarioControlled) {
   ASSERT_NE(strategic_entity, nullptr);
   EXPECT_NE(strategic_entity->get_component<Engine::Core::AIControlledComponent>(),
             nullptr);
+}
+
+TEST_F(MapTransformerStructureTest, DoesNotAcceptBuildingsThroughTroopSpawns) {
+  Engine::Core::World world;
+  Game::Map::MapDefinition def;
+  def.spawns.push_back({
+      .type = Game::Units::SpawnType::Barracks,
+      .x = 4.0F,
+      .z = 4.0F,
+      .player_id = 1,
+  });
+
+  Game::Map::MapTransformer::apply_to_world(def, world);
+  EXPECT_TRUE(world.get_entities_with<Engine::Core::UnitComponent>().empty());
 }
 
 } // namespace

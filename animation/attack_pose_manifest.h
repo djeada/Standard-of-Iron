@@ -8,6 +8,7 @@ namespace Animation {
 
 enum class HumanoidWeaponAttackKind : std::uint8_t {
   BasicMeleeStrike,
+  BowMeleeStrike,
   SwordSlash,
   CombatSwordSlash,
   SpearThrustClassic,

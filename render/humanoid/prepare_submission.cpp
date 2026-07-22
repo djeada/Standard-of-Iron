@@ -102,6 +102,24 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   if (has_entity_death && live_slot_indices.empty()) {
     live_slot_indices.push_back(std::max(0, total_layout_count - 1));
   }
+  if (ctx.max_rendered_individuals > 0 &&
+      live_slot_indices.size() >
+          static_cast<std::size_t>(ctx.max_rendered_individuals)) {
+    std::vector<int> representative_slots;
+    auto const representative_count =
+        static_cast<std::size_t>(std::max(1, ctx.max_rendered_individuals));
+    representative_slots.reserve(representative_count);
+    if (representative_count == 1U) {
+      representative_slots.push_back(live_slot_indices[live_slot_indices.size() / 2U]);
+    } else {
+      for (std::size_t sample = 0; sample < representative_count; ++sample) {
+        std::size_t const source =
+            (sample * (live_slot_indices.size() - 1U)) / (representative_count - 1U);
+        representative_slots.push_back(live_slot_indices[source]);
+      }
+    }
+    live_slot_indices = std::move(representative_slots);
+  }
   int const visible_count = static_cast<int>(live_slot_indices.size());
   std::size_t active_casualty_count = 0U;
   if (!ctx.force_single_soldier && casualties_comp != nullptr) {
@@ -678,57 +696,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
 
     HumanoidPose pose{};
-    bool const requires_runtime_pose =
+    // Skeletal animation is authored and baked into BPAT. The preparation path
+    // must not reconstruct a second pose for shadows: sample the same baked clip
+    // for ground contact and let the creature pipeline play that clip in every
+    // pass.
+    bool const prepare_shadow_grounding =
         RCP::pass_intent_from_ctx(inst_ctx) == RCP::RenderPassIntent::Shadow;
-    if (requires_runtime_pose) {
-      HumanoidRendererBase::compute_locomotion_pose(
-          inst_seed, anim.time, locomotion_state.gait, variation, pose);
-
-      const float hold_kneel_depth = owner.get_hold_kneel_depth();
-      float const effective_kneel =
-          hold_transition_amount(anim_ctx.inputs) * hold_kneel_depth;
-      if (effective_kneel > 1e-4F) {
-        HumanoidPoseController kneel_ctrl(pose, anim_ctx);
-        kneel_ctrl.kneel(effective_kneel);
-      }
-      float const guard_amount = guard_pose_amount(anim_ctx.inputs);
-      if (guard_amount > 0.0F && !render_has_locomotion &&
-          !anim_ctx.inputs.is_attacking) {
-        HumanoidPoseController guard_ctrl(pose, anim_ctx);
-        guard_ctrl.guard_sword_and_shield_formation(
-            anim_ctx.inputs.shield_formation_pose, guard_amount);
-      }
-      if (anim_ctx.inputs.is_constructing) {
-        HumanoidPoseController construct_ctrl(pose, anim_ctx);
-        float const construct_phase = RCP::humanoid_phase_for_anim(anim_ctx);
-        switch (construction_role) {
-        case ConstructionRole::Saw:
-          construct_ctrl.construction_saw(construct_phase);
-          break;
-        case ConstructionRole::Chisel:
-          construct_ctrl.construction_chisel(construct_phase, false);
-          break;
-        case ConstructionRole::KneelingChisel:
-          construct_ctrl.kneel(0.84F);
-          construct_ctrl.construction_chisel(construct_phase, true);
-          break;
-        case ConstructionRole::Hammer:
-        case ConstructionRole::None:
-          construct_ctrl.sword_slash_variant(
-              construct_phase,
-              RCP::humanoid_clip_variant_for_anim(visual_spec.archetype_id, anim_ctx));
-          break;
-        }
-      }
-
-      apply_spec_pose_layer(visual_spec, inst_ctx, anim_ctx, variant, inst_seed, pose);
-      apply_combat_micro_variation(anim_ctx,
-                                   inst_seed,
-                                   !ctx.force_single_soldier && total_layout_count > 1,
-                                   pose);
-    }
-    bool const world_already_grounded = ctx.skip_ground_offset || requires_runtime_pose;
-    if (!ctx.skip_ground_offset && requires_runtime_pose) {
+    bool const world_already_grounded =
+        ctx.skip_ground_offset || prepare_shadow_grounding;
+    if (!ctx.skip_ground_offset && prepare_shadow_grounding) {
       auto const* grounding_asset =
           Render::Creature::Pipeline::CreatureAssetRegistry::instance().resolve(
               visual_spec);

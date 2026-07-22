@@ -237,6 +237,64 @@ TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
             height_map.get_height_at_grid(k_center_x, 16));
 }
 
+TEST_F(TerrainServiceTest, HillWithoutAuthoredEntranceGetsDeterministicAccess) {
+  Game::Map::TerrainHeightMap height_map(41, 41, 1.0F);
+  const Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 18.0F,
+      .depth = 14.0F,
+      .height = 5.0F,
+  };
+
+  height_map.build_from_features({hill});
+
+  int entrance_cells = 0;
+  for (int z = 0; z < height_map.get_height(); ++z) {
+    for (int x = 0; x < height_map.get_width(); ++x) {
+      entrance_cells += height_map.isHillEntrance(x, z) ? 1 : 0;
+    }
+  }
+
+  EXPECT_GT(entrance_cells, 0);
+  EXPECT_TRUE(height_map.is_walkable(20, 20));
+}
+
+TEST_F(TerrainServiceTest, HillEntranceApronBridgesAuthoredPointToIrregularFoot) {
+  Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
+  Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 20.0F,
+      .depth = 18.0F,
+      .height = 5.0F,
+      .rotation_deg = 27.0F,
+  };
+  hill.entrances.emplace_back(-14.0F, 0.0F, 0.0F);
+
+  height_map.build_from_features({hill});
+
+  // The authored marker lies outside the rotated procedural footprint. The
+  // full apron, including its zero-slope toe, must be one uninterrupted
+  // entrance/pathfinding corridor through the hill face and onto the crown.
+  float previous_height = height_map.get_height_at_grid(4, 30);
+  for (int x = 4; x <= 30; ++x) {
+    EXPECT_TRUE(height_map.isHillEntrance(x, 30)) << "x=" << x;
+    EXPECT_TRUE(height_map.is_walkable(x, 30)) << "x=" << x;
+    const float height = height_map.get_height_at_grid(x, 30);
+    EXPECT_GE(height + 0.08F, previous_height) << "x=" << x;
+    EXPECT_LT(std::abs(height - previous_height), 0.75F) << "x=" << x;
+    previous_height = height;
+  }
+  EXPECT_GT(height_map.get_height_at_grid(17, 30), 0.0F);
+  EXPECT_LT(height_map.get_height_at_grid(17, 30),
+            height_map.get_height_at_grid(20, 30));
+  EXPECT_LT(height_map.get_height_at_grid(20, 30),
+            height_map.get_height_at_grid(23, 30));
+}
+
 TEST_F(TerrainServiceTest, ForestAndRiverAreaFeaturesKeepTheirRuntimeTypes) {
   Game::Map::TerrainHeightMap height_map(21, 21, 1.0F);
   const Game::Map::TerrainFeature forest{
@@ -525,20 +583,22 @@ TEST_F(TerrainServiceTest, BridgeWalkabilityRespectsBridgeWidthWhenTileSizeExcee
   map_def.grid.tile_size = 2.0F;
   map_def.rivers.push_back(
       {QVector3D(0.0F, 0.0F, -8.0F), QVector3D(0.0F, 0.0F, 8.0F), 2.0F});
-  map_def.bridges.push_back(
-      {QVector3D(-4.0F, 0.0F, 0.0F), QVector3D(4.0F, 0.0F, 0.0F), 2.0F, 0.6F});
+  map_def.bridges.push_back({QVector3D(-4.0F, 0.0F, 0.0F),
+                             QVector3D(4.0F, 0.0F, 0.0F),
+                             Game::Map::k_min_bridge_width,
+                             0.6F});
 
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
   EXPECT_TRUE(terrain.is_on_bridge(0.0F, 0.0F));
-  EXPECT_FALSE(terrain.is_on_bridge(0.0F, 2.0F));
+  EXPECT_FALSE(terrain.is_on_bridge(0.0F, 6.0F));
 
   EXPECT_TRUE(terrain.is_walkable(4, 4));
-  EXPECT_FALSE(terrain.is_walkable(4, 5));
+  EXPECT_FALSE(terrain.is_walkable(4, 7));
 }
 
-TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
+TEST_F(TerrainServiceTest, HillFootprintOnlyExtendsAtItsWalkableEntranceApron) {
   Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
   Game::Map::TerrainFeature const hill{
       .type = Game::Map::TerrainType::Hill,
@@ -550,12 +610,22 @@ TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
   };
   height_map.build_from_features({hill});
 
-  for (auto const [x, z] :
-       {std::pair{30, 19}, std::pair{41, 30}, std::pair{30, 41}, std::pair{19, 30}}) {
+  for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30}, std::pair{30, 41}}) {
     EXPECT_FLOAT_EQ(height_map.get_height_at_grid(x, z), 0.0F);
     EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
     EXPECT_TRUE(height_map.is_walkable(x, z));
   }
+
+  // The deterministic west entrance now starts outside the old ellipse and
+  // rises progressively, instead of leaving a flat patch below a cliff.
+  EXPECT_GT(height_map.get_height_at_grid(19, 30), 0.0F);
+  EXPECT_LT(height_map.get_height_at_grid(19, 30),
+            height_map.get_height_at_grid(21, 30));
+  EXPECT_LT(height_map.get_height_at_grid(21, 30),
+            height_map.get_height_at_grid(23, 30));
+  EXPECT_EQ(height_map.getTerrainType(19, 30), Game::Map::TerrainType::Hill);
+  EXPECT_TRUE(height_map.isHillEntrance(19, 30));
+  EXPECT_TRUE(height_map.is_walkable(19, 30));
 }
 
 TEST_F(TerrainServiceTest, TacticalHillKeepsBroadCrownAndNarrowShoulder) {
@@ -575,6 +645,24 @@ TEST_F(TerrainServiceTest, TacticalHillKeepsBroadCrownAndNarrowShoulder) {
   EXPECT_GT(shoulder, 0.0F);
   EXPECT_LT(shoulder, hill.height);
   EXPECT_FLOAT_EQ(height_map.get_height_at_grid(41, 30), 0.0F);
+}
+
+TEST_F(TerrainServiceTest, CampaignHillHeightScalesWithPhysicalFootprint) {
+  Game::Map::TerrainHeightMap height_map(161, 161, 1.0F);
+  Game::Map::TerrainFeature const hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 100.0F,
+      .depth = 100.0F,
+      .height = 0.4F,
+  };
+  height_map.build_from_features({hill});
+
+  // Legacy height metadata must not turn a settlement-sized hill into an
+  // almost-flat disc. The physical footprint supplies a campaign-scale floor.
+  EXPECT_GT(height_map.get_height_at_grid(80, 80), 16.0F);
+  EXPECT_TRUE(height_map.is_walkable(80, 80));
 }
 
 TEST_F(TerrainServiceTest, TreeHelpersReserveAndHarvestTrees) {

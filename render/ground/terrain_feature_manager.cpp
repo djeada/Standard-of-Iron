@@ -19,7 +19,8 @@ TerrainFeatureManager::~TerrainFeatureManager() = default;
 
 void TerrainFeatureManager::configure(
     const Game::Map::TerrainHeightMap& height_map,
-    const std::vector<Game::Map::RoadSegment>& road_segments) {
+    const std::vector<Game::Map::RoadSegment>& road_segments,
+    const Game::Map::BiomeSettings& biome_settings) {
   const auto& river_segments = height_map.get_river_segments();
   const auto& lakes = height_map.get_lakes();
   const auto& bridges = height_map.get_bridges();
@@ -27,7 +28,7 @@ void TerrainFeatureManager::configure(
 
   m_water->configure(river_segments, lakes, height_map);
   m_road->configure(road_segments, height_map);
-  m_shoreline->configure(river_segments, lakes, height_map);
+  m_shoreline->configure(river_segments, lakes, height_map, biome_settings);
   m_bridge->configure(bridges, tile_size);
 }
 

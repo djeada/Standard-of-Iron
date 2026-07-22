@@ -460,6 +460,10 @@ auto main(int argc, char** argv) -> int {
   QCommandLineOption const campaign_terrain_option(
       QStringList{QStringLiteral("campaign-terrain")},
       QStringLiteral("Review every campaign mission map in campaign order."));
+  QCommandLineOption const map_preview_content_option(
+      QStringList{QStringLiteral("map-preview-content")},
+      QStringLiteral("Include biome scatter, world props, authored buildings, and "
+                     "walls in map previews."));
   QCommandLineOption const duration_option(
       QStringList{QStringLiteral("duration")},
       QStringLiteral("Override scenario duration in simulated seconds."),
@@ -497,6 +501,7 @@ auto main(int argc, char** argv) -> int {
                      scenario_option,
                      terrain_map_option,
                      campaign_terrain_option,
+                     map_preview_content_option,
                      duration_option,
                      fps_option,
                      seed_option,
@@ -523,10 +528,19 @@ auto main(int argc, char** argv) -> int {
     return 2;
   }
 
+  const bool include_map_preview_content = parser.isSet(map_preview_content_option);
+  if (include_map_preview_content && !parser.isSet(terrain_map_option) &&
+      !parser.isSet(campaign_terrain_option)) {
+    qCritical() << "--map-preview-content requires --terrain-map or "
+                   "--campaign-terrain";
+    return 2;
+  }
+
   ArenaWindow window;
   window.resize(1600, 900);
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
+  window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
 
   if (!parser.isSet(batch_option)) {
     if (parser.isSet(campaign_terrain_option)) {

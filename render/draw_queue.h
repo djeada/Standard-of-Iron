@@ -148,6 +148,17 @@ struct TerrainFeatureCmd {
   Mesh* mesh = nullptr;
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
+  // Shorelines need the authored terrain palette, not just a single tint, to
+  // carry muddy, dry, rocky, and alpine biomes through to the water's edge.
+  QVector3D biome_grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D biome_grass_dry{0.72F, 0.66F, 0.48F};
+  QVector3D biome_soil_color{0.28F, 0.24F, 0.18F};
+  QVector3D biome_rock_low{0.48F, 0.46F, 0.44F};
+  QVector3D biome_rock_high{0.68F, 0.69F, 0.73F};
+  QVector3D biome_snow_color{0.92F, 0.94F, 0.98F};
+  float biome_moisture = 0.5F;
+  float biome_rock_exposure = 0.3F;
+  float biome_snow_coverage = 0.0F;
   float alpha = 1.0F;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;

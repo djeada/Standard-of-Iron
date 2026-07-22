@@ -212,7 +212,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
 
   constexpr int k_n = 8;
   constexpr float k_tau = 6.28318530F;
-  constexpr int k_rings = 4;
+  constexpr int k_rings = 5;
 
   constexpr float k_perturb_amount = 0.07F;
   constexpr float k_perturb_freq_vertex = 2.3F;
@@ -222,9 +222,9 @@ void VegetationPipeline::initialize_stone_pipeline() {
   constexpr float k_y_jitter_freq_vertex = 1.9F;
   constexpr float k_y_jitter_freq_ring = 0.9F;
 
-  constexpr float k_apex_offset_x = 0.02F;
-  constexpr float k_apex_height = 0.64F;
-  constexpr float k_apex_offset_z = -0.04F;
+  constexpr float k_apex_offset_x = 0.08F;
+  constexpr float k_apex_height = 0.66F;
+  constexpr float k_apex_offset_z = -0.07F;
 
   struct Ring {
     float y;
@@ -232,12 +232,15 @@ void VegetationPipeline::initialize_stone_pipeline() {
     float phase;
     float sx;
     float sz;
+    float cx;
+    float cz;
   };
   const Ring rings[] = {
-      {0.00F, 0.38F, 0.12F, 1.00F, 1.10F},
-      {0.22F, 0.52F, 0.00F, 1.10F, 1.00F},
-      {0.40F, 0.38F, 0.20F, 0.95F, 1.05F},
-      {0.54F, 0.20F, 0.08F, 1.00F, 0.92F},
+      {-0.03F, 0.34F, 0.12F, 1.08F, 1.16F, -0.04F, 0.02F},
+      {0.12F, 0.50F, -0.04F, 1.12F, 0.96F, 0.01F, -0.02F},
+      {0.30F, 0.46F, 0.18F, 0.98F, 1.08F, 0.04F, -0.01F},
+      {0.47F, 0.31F, 0.06F, 1.06F, 0.90F, 0.01F, -0.05F},
+      {0.58F, 0.16F, 0.24F, 0.92F, 1.02F, 0.04F, -0.05F},
   };
 
   QVector3D ring_pts[k_rings][k_n];
@@ -256,7 +259,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
       float const ry =
           r.y + k_y_jitter_amount * std::cos(float(i) * k_y_jitter_freq_vertex +
                                              float(ri) * k_y_jitter_freq_ring);
-      ring_pts[ri][i] = QVector3D(rx, ry, rz);
+      ring_pts[ri][i] = QVector3D(rx + r.cx, ry, rz + r.cz);
     }
   }
 
@@ -531,7 +534,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
     QVector3D normal;
   };
 
-  constexpr int k_segments = 8;
+  constexpr int k_segments = 10;
   constexpr float k_two_pi = 6.28318530718F;
 
   std::vector<PineVertex> vertices;
@@ -578,31 +581,32 @@ void VegetationPipeline::initialize_pine_pipeline() {
     }
   };
 
-  const int trunk_bottom = add_ring(0.11F, 0.00F, -0.04F, 0.00F);
+  const int trunk_bottom = add_ring(0.14F, -0.01F, -0.08F, 0.00F);
   const int trunk_kink =
-      add_ring(0.10F, 0.18F, 0.00F, 0.08F, QVector2D(0.010F, 0.006F));
-  const int trunk_mid = add_ring(0.09F, 0.36F, 0.03F, 0.16F, QVector2D(0.018F, 0.010F));
+      add_ring(0.105F, 0.18F, 0.00F, 0.08F, QVector2D(0.010F, 0.006F));
+  const int trunk_mid =
+      add_ring(0.085F, 0.36F, 0.03F, 0.16F, QVector2D(0.022F, 0.012F));
   const int trunk_top =
       add_ring(0.075F, 0.56F, 0.08F, 0.26F, QVector2D(0.020F, 0.014F));
 
   const QVector2D t1o(-0.032F, 0.050F);
   const int c1_inner = add_ring(0.18F, 0.60F, 0.12F, 0.34F, t1o * 0.15F);
   const int c1_base = add_ring(0.34F, 0.65F, 0.24F, 0.42F, t1o * 0.40F);
-  const int c1_outer = add_ring(0.54F, 0.70F, 0.38F, 0.50F, t1o);
+  const int c1_outer = add_ring(0.50F, 0.70F, 0.34F, 0.50F, t1o);
   const int c1_mid = add_ring(0.45F, 0.77F, 0.56F, 0.58F, t1o * 0.55F);
   const int c1_top = add_ring(0.28F, 0.83F, 0.72F, 0.64F, t1o * 0.22F);
 
   const QVector2D t2o(0.040F, -0.026F);
   const int c2_inner = add_ring(0.15F, 0.85F, 0.16F, 0.66F, t2o * 0.12F);
   const int c2_base = add_ring(0.28F, 0.90F, 0.30F, 0.73F, t2o * 0.38F);
-  const int c2_outer = add_ring(0.40F, 0.95F, 0.46F, 0.80F, t2o);
+  const int c2_outer = add_ring(0.37F, 0.95F, 0.42F, 0.80F, t2o);
   const int c2_mid = add_ring(0.30F, 1.01F, 0.64F, 0.86F, t2o * 0.52F);
   const int c2_top = add_ring(0.18F, 1.06F, 0.78F, 0.90F, t2o * 0.20F);
 
   const QVector2D t3o(-0.022F, -0.032F);
   const int c3_inner = add_ring(0.10F, 1.08F, 0.20F, 0.91F, t3o * 0.10F);
   const int c3_base = add_ring(0.18F, 1.12F, 0.38F, 0.95F, t3o * 0.35F);
-  const int c3_outer = add_ring(0.28F, 1.16F, 0.56F, 0.98F, t3o);
+  const int c3_outer = add_ring(0.255F, 1.16F, 0.52F, 0.98F, t3o);
   const int c3_mid = add_ring(0.18F, 1.21F, 0.74F, 1.02F, t3o * 0.48F);
   const int c3_top = add_ring(0.09F, 1.25F, 0.86F, 1.06F, t3o * 0.15F);
 
@@ -795,10 +799,10 @@ void VegetationPipeline::initialize_olive_pipeline() {
     }
   };
 
-  int const t0 = add_ring(0.14F, 0.00F, -0.22F, 0.00F, QVector2D(-0.010F, 0.000F));
-  int const t1 = add_ring(0.13F, 0.09F, -0.05F, 0.07F, QVector2D(0.008F, -0.010F));
-  int const t2 = add_ring(0.11F, 0.18F, 0.08F, 0.14F, QVector2D(0.022F, 0.004F));
-  int const t3 = add_ring(0.085F, 0.28F, 0.20F, 0.22F, QVector2D(0.016F, 0.024F));
+  int const t0 = add_ring(0.19F, -0.015F, -0.30F, 0.00F, QVector2D(-0.018F, 0.004F));
+  int const t1 = add_ring(0.14F, 0.09F, -0.05F, 0.07F, QVector2D(0.012F, -0.014F));
+  int const t2 = add_ring(0.105F, 0.18F, 0.08F, 0.14F, QVector2D(0.030F, 0.006F));
+  int const t3 = add_ring(0.080F, 0.28F, 0.20F, 0.22F, QVector2D(0.012F, 0.030F));
   int const t4 = add_ring(0.065F, 0.36F, 0.34F, 0.29F, QVector2D(0.006F, 0.038F));
   connect_rings(t0, t1);
   connect_rings(t1, t2);
@@ -940,6 +944,26 @@ void VegetationPipeline::initialize_olive_pipeline() {
              0.14F,
              0.42F,
              0.16F);
+  add_branch(-0.96F,
+             -0.18F,
+             QVector2D(0.010F, 0.028F),
+             0.32F,
+             0.25F,
+             0.20F,
+             0.017F,
+             0.135F,
+             0.38F,
+             -0.24F);
+  add_branch(0.70F,
+             0.71F,
+             QVector2D(0.004F, 0.042F),
+             0.39F,
+             0.19F,
+             0.19F,
+             0.014F,
+             0.12F,
+             0.44F,
+             0.18F);
 
   m_olive_vertex_count = static_cast<GLsizei>(vertices.size());
   m_olive_index_count = static_cast<GLsizei>(indices.size());
@@ -1960,12 +1984,12 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_oriented_box(
       verts, idx, {0.34F, 1.76F, 0.03F}, {0.51F, 1.58F, 0.03F}, 0.075F, 0.08F);
 
-  // Jagged sacrificial stelae turn the prop into a dark-fantasy skyline rather
-  // than an undifferentiated rubble mound.
+  // Two weathered boundary stones break the skyline without suggesting a
+  // hostile site; their slight lean reads as age and settling at RTS distance.
   append_oriented_box(
-      verts, idx, {-0.86F, 0.12F, 0.48F}, {-0.74F, 1.18F, 0.42F}, 0.075F, 0.08F);
+      verts, idx, {-0.86F, 0.12F, 0.48F}, {-0.74F, 0.94F, 0.42F}, 0.075F, 0.08F);
   append_oriented_box(
-      verts, idx, {0.78F, 0.10F, 0.42F}, {0.66F, 1.06F, 0.36F}, 0.07F, 0.075F);
+      verts, idx, {0.78F, 0.10F, 0.42F}, {0.66F, 0.80F, 0.36F}, 0.07F, 0.075F);
 
   add_rubble({-0.82F, 0.02F, -0.64F}, {-0.54F, 0.16F, -0.44F});
   add_rubble({-0.40F, 0.02F, -0.64F}, {-0.08F, 0.18F, -0.46F});
@@ -2042,20 +2066,20 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.55F, -0.02F, -0.45F}, {0.55F, 0.10F, 0.45F});
-
-  append_box(verts, idx, {-0.42F, 0.08F, -0.35F}, {0.40F, 0.42F, 0.32F});
-
-  append_box(verts, idx, {-0.38F, 0.38F, -0.28F}, {-0.06F, 0.70F, 0.18F});
-
-  append_box(verts, idx, {0.06F, 0.34F, -0.22F}, {0.34F, 0.64F, 0.14F});
-
-  append_box(verts, idx, {-0.20F, 0.10F, 0.28F}, {0.18F, 0.42F, 0.50F});
-
-  append_box(verts, idx, {-0.28F, 0.12F, -0.50F}, {0.14F, 0.34F, -0.28F});
-
-  append_box(verts, idx, {-0.44F, 0.40F, -0.08F}, {-0.26F, 0.58F, 0.10F});
-  append_box(verts, idx, {0.22F, 0.38F, 0.08F}, {0.40F, 0.54F, 0.26F});
+  // A low, fractured outcrop: broad country rock at the base, with narrow
+  // hematite-bearing seams exposed where the cap has weathered away.
+  append_oriented_box(
+      verts, idx, {-0.58F, 0.02F, -0.20F}, {0.48F, 0.12F, 0.18F}, 0.24F, 0.18F);
+  append_oriented_box(
+      verts, idx, {-0.42F, 0.10F, -0.18F}, {0.26F, 0.38F, 0.08F}, 0.20F, 0.17F);
+  append_oriented_box(
+      verts, idx, {-0.30F, 0.34F, -0.12F}, {-0.04F, 0.66F, 0.02F}, 0.13F, 0.12F);
+  append_oriented_box(
+      verts, idx, {0.00F, 0.30F, -0.06F}, {0.30F, 0.56F, 0.10F}, 0.12F, 0.10F);
+  append_oriented_box(
+      verts, idx, {-0.18F, 0.10F, 0.24F}, {0.20F, 0.31F, 0.42F}, 0.14F, 0.10F);
+  append_oriented_box(
+      verts, idx, {-0.32F, 0.09F, -0.38F}, {0.08F, 0.27F, -0.30F}, 0.12F, 0.09F);
 
   upload_prop_mesh_impl(verts,
                         idx,

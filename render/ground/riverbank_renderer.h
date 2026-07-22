@@ -23,7 +23,8 @@ public:
 
   void configure(const std::vector<Game::Map::RiverSegment>& river_segments,
                  const std::vector<Game::Map::Lake>& lakes,
-                 const Game::Map::TerrainHeightMap& height_map);
+                 const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
@@ -33,6 +34,7 @@ private:
   std::vector<Game::Map::RiverSegment> m_river_segments;
   std::vector<Game::Map::Lake> m_lakes;
   float m_tile_size = 1.0F;
+  Game::Map::BiomeSettings m_biome_settings;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
   std::vector<std::vector<QVector3D>> m_visibility_samples;
   std::vector<WaterSurfaceKind> m_water_kinds;

@@ -887,7 +887,14 @@ def nearest_passable(field: RoutingField, point: Point, radius: int = 8) -> tupl
     return x, z
 
 
-def route_astar(field: RoutingField, start: Point, end: Point, guide: Sequence[Point]) -> list[Point]:
+def route_astar(
+    field: RoutingField,
+    start: Point,
+    end: Point,
+    guide: Sequence[Point],
+    *,
+    directional_state: bool = True,
+) -> list[Point]:
     start_cell = nearest_passable(field, start)
     end_cell = nearest_passable(field, end)
     if field.passable_component(start) != field.passable_component(end):
@@ -931,7 +938,7 @@ def route_astar(field: RoutingField, start: Point, end: Point, guide: Sequence[P
                     continue
 
             bend_cost = 0.0
-            if previous_direction < 8:
+            if directional_state and previous_direction < 8:
                 turn = abs(direction_index - previous_direction)
                 turn = min(turn, 8 - turn)
                 bend_cost = (0.10, 0.28, 0.70, 1.35, 2.4)[turn]
@@ -944,7 +951,12 @@ def route_astar(field: RoutingField, start: Point, end: Point, guide: Sequence[P
             edge_distance = min(nx, nz, field.width - 1 - nx, field.height - 1 - nz)
             edge_cost = max(0.0, 5.0 - edge_distance) * 0.35
             new_cost = current_cost + step_cost + bend_cost + preserve_cost + edge_cost
-            next_state = (nx, nz, direction_index)
+            # Authored roads benefit from direction-aware bend costs. Repair
+            # connectors need only one state per cell; carrying eight heading
+            # variants across a 650/800-cell map made a single legal detour
+            # take minutes. Corner rounding below still gives the resulting
+            # connector a smooth rendered shape.
+            next_state = (nx, nz, direction_index if directional_state else 8)
             if new_cost + 1.0e-6 >= costs.get(next_state, math.inf):
                 continue
             costs[next_state] = new_cost
@@ -1022,8 +1034,22 @@ def inject_bridge_endpoints(
             entry, exit_point = bridge.start, bridge.end
         else:
             entry, exit_point = bridge.end, bridge.start
-        result = result[:first] + [entry, exit_point] + result[last + 1 :]
-        fixed_points.extend((entry, exit_point))
+        crossing_direction = normalized(sub(exit_point, entry))
+        approach_distance = field.clearance + 2.0
+        entry_approach = sub(entry, mul(crossing_direction, approach_distance))
+        exit_approach = add(
+            exit_point, mul(crossing_direction, approach_distance)
+        )
+        # Keep the road collinear with the deck until it has cleared the
+        # rasterized water/shore margin on both banks. Turning immediately at
+        # the masonry endpoint creates the familiar disconnected-looking
+        # diagonal approach and can leave part of the road inside the river.
+        result = (
+            result[:first]
+            + [entry_approach, entry, exit_point, exit_approach]
+            + result[last + 1 :]
+        )
+        fixed_points.extend((entry_approach, entry, exit_point, exit_approach))
 
     result = deduplicate(result)
     fixed = {
@@ -1115,6 +1141,8 @@ def generate_road(
     road: dict,
     max_segment_length: float,
     anchors: Sequence[Point],
+    *,
+    directional_state: bool = True,
 ) -> RouteResult:
     authored_points = [field.coords.to_grid(point) for point in road_points(road)]
     legal_anchors = [field.legal_terminal(point) for point in anchors]
@@ -1132,7 +1160,13 @@ def generate_road(
     guide = [legal_anchors[0], *authored_points[1:-1], legal_anchors[-1]]
     routed: list[Point] = [legal_anchors[0]]
     for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:]):
-        leg = route_astar(field, leg_start, leg_end, guide)
+        leg = route_astar(
+            field,
+            leg_start,
+            leg_end,
+            guide,
+            directional_state=directional_state,
+        )
         routed.extend(leg[1:])
     with_bridges, fixed, bridge_ids = inject_bridge_endpoints(
         field, routed, required_points=legal_anchors
@@ -1345,16 +1379,7 @@ def validate_roads(field: RoutingField, roads: Sequence[dict]) -> ValidationResu
                 ):
                     invalid_bridge_crossings += 1
 
-    sets = DisjointSet(len(polylines))
-    for first in range(len(polylines)):
-        for second in range(first + 1, len(polylines)):
-            if any(
-                segments_intersect(a, b, c, d)
-                for a, b in zip(polylines[first], polylines[first][1:])
-                for c, d in zip(polylines[second], polylines[second][1:])
-            ):
-                sets.join(first, second)
-    components = len({sets.find(index) for index in range(len(polylines))}) if polylines else 0
+    components = len(road_components(field, roads))
     sides: set[str] = set()
     for points in polylines:
         for x, z in points:
@@ -1402,6 +1427,32 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
                 for c, d in zip(polylines[second], polylines[second][1:])
             ):
                 sets.join(first, second)
+
+    # A bridge deck is a network edge. Roads terminating at opposite bridge
+    # ends are connected even though their polylines correctly stop at the
+    # masonry rather than overlapping through the water. Treating those two
+    # approaches as disconnected made valid bridge networks fail validation
+    # and encouraged the repair pass to add redundant cross-country roads.
+    for bridge in field.bridges:
+        start_roads = [
+            index
+            for index, points in enumerate(polylines)
+            if any(
+                point_segment_distance(bridge.start, start, end) <= 0.35
+                for start, end in zip(points, points[1:])
+            )
+        ]
+        end_roads = [
+            index
+            for index, points in enumerate(polylines)
+            if any(
+                point_segment_distance(bridge.end, start, end) <= 0.35
+                for start, end in zip(points, points[1:])
+            )
+        ]
+        for start_road in start_roads:
+            for end_road in end_roads:
+                sets.join(start_road, end_road)
     grouped: dict[int, list[int]] = {}
     for index in range(len(polylines)):
         grouped.setdefault(sets.find(index), []).append(index)
@@ -1438,13 +1489,11 @@ def connect_road_components(
                         candidates.append((distance(first, second), first, second))
 
         connector: RouteResult | None = None
-        compatible = [
-            candidate
-            for candidate in candidates
-            if field.passable_component(candidate[1])
-            == field.passable_component(candidate[2])
-        ]
-        for _, start, end in sorted(compatible, key=lambda item: item[0])[:48]:
+        # Do not pre-filter different passable components here. A river is
+        # precisely what can divide two useful road components, and
+        # generate_road() is responsible for creating a short perpendicular
+        # bridge when that is the legal way to connect them.
+        for _, start, end in sorted(candidates, key=lambda item: item[0])[:96]:
             authored_start = field.coords.from_grid(start)
             authored_end = field.coords.from_grid(end)
             road = {
@@ -1455,7 +1504,11 @@ def connect_road_components(
             }
             try:
                 candidate = generate_road(
-                    field, road, max_segment_length, (start, end)
+                    field,
+                    road,
+                    max_segment_length,
+                    (start, end),
+                    directional_state=False,
                 )
             except RoadGenerationError:
                 continue
@@ -1512,13 +1565,6 @@ def connect_incomplete_terminals(
                     < 0.35
                 ):
                     continue
-                try:
-                    if field.passable_component(terminal) != field.passable_component(
-                        projected
-                    ):
-                        continue
-                except RoadGenerationError:
-                    continue
                 targets.append((distance(terminal, projected), projected))
 
         if required_outward is not None:
@@ -1534,13 +1580,6 @@ def connect_incomplete_terminals(
                     or dot(normalized(sub(target, terminal)), required_outward) < 0.35
                 ):
                     continue
-                try:
-                    if field.passable_component(terminal) != field.passable_component(
-                        target
-                    ):
-                        continue
-                except RoadGenerationError:
-                    continue
                 targets.append((distance(terminal, target), target))
 
         connector: RouteResult | None = None
@@ -1551,9 +1590,20 @@ def connect_incomplete_terminals(
                 "width": 3.2,
                 "style": "rough",
             }
+            connector_anchors: tuple[Point, ...] = (terminal, target)
+            if required_outward is not None:
+                aligned_approach = add(
+                    terminal,
+                    mul(required_outward, field.clearance + 2.0),
+                )
+                connector_anchors = (terminal, aligned_approach, target)
             try:
                 candidate = generate_road(
-                    field, road, max_segment_length, (terminal, target)
+                    field,
+                    road,
+                    max_segment_length,
+                    connector_anchors,
+                    directional_state=False,
                 )
             except RoadGenerationError:
                 continue
@@ -1641,7 +1691,11 @@ def add_boundary_connections(
             }
             try:
                 candidate = generate_road(
-                    field, road, max_segment_length, (start, end)
+                    field,
+                    road,
+                    max_segment_length,
+                    (start, end),
+                    directional_state=False,
                 )
             except RoadGenerationError:
                 continue

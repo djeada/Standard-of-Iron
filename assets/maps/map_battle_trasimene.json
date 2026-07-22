@@ -53,92 +53,6 @@
     "sway_speed": 0.8,
     "sway_strength": 0.12
   },
-  "buildings": [
-    {
-      "type": "marketplace",
-      "x": 325,
-      "z": 580,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 313,
-      "z": 590,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 337,
-      "z": 590,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "marketplace",
-      "x": 55,
-      "z": 170,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 43,
-      "z": 180,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 67,
-      "z": 180,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 78,
-      "z": 158,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "barracks",
-      "x": 595,
-      "z": 170,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "marketplace",
-      "x": 595,
-      "z": 182,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 583,
-      "z": 184,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 607,
-      "z": 184,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 574,
-      "z": 158,
-      "player_id": 3,
-      "nation": "roman_republic"
-    }
-  ],
   "camera": {
     "center": [
       325,
@@ -1075,14 +989,6 @@
   ],
   "spawns": [
     {
-      "type": "barracks",
-      "x": 325,
-      "z": 565,
-      "player_id": 1,
-      "max_population": 140,
-      "nation": "carthage"
-    },
-    {
       "type": "spearman",
       "x": 122,
       "z": 234,
@@ -1570,6 +1476,100 @@
           }
         }
       ]
+    }
+  ],
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 325,
+      "z": 565,
+      "player_id": 1,
+      "max_population": 140,
+      "nation": "carthage"
+    },
+    {
+      "type": "marketplace",
+      "x": 325,
+      "z": 580,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 313,
+      "z": 590,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 337,
+      "z": 590,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "marketplace",
+      "x": 55,
+      "z": 170,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 43,
+      "z": 180,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 67,
+      "z": 180,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 78,
+      "z": 158,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "barracks",
+      "x": 595,
+      "z": 170,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 595,
+      "z": 182,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 583,
+      "z": 184,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 607,
+      "z": 184,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 574,
+      "z": 158,
+      "player_id": 3,
+      "nation": "roman_republic"
     }
   ]
 }

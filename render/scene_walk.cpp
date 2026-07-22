@@ -710,7 +710,6 @@ void Renderer::render_world(Engine::Core::World* world) {
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
   auto& frame_profile = Render::Profiling::global_profile();
-  frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
   uint32_t const optimizer_frame = battle_optimizer.frame_counter();
 
   float batching_ratio =
@@ -902,6 +901,14 @@ void Renderer::render_world(Engine::Core::World* world) {
                               ? Render::Pipeline::LodTier::Full
                               : Render::Pipeline::select_lod(lod_in);
 
+        if (!entry.selected && !entry.hovered && !m_force_full_creature_lod) {
+          if (tier == Render::Pipeline::LodTier::Minimal) {
+            ctx.max_rendered_individuals = 4;
+          } else if (tier == Render::Pipeline::LodTier::Simplified) {
+            ctx.max_rendered_individuals = 8;
+          }
+        }
+
         if (m_force_full_creature_lod) {
           ctx.force_humanoid_lod = true;
           ctx.forced_humanoid_lod = HumanoidLOD::Full;
@@ -1009,6 +1016,10 @@ void Renderer::render_world(Engine::Core::World* world) {
          (res != nullptr) ? res->white() : nullptr,
          1.0F);
   }
+
+  // Humanoid preparation happens inside the unit renderer callbacks above, so
+  // publish the count only after that pass has populated the per-frame stats.
+  frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
 
   auto render_non_unit_entry = [&](const RenderEntry& entry) {
     const QMatrix4x4& model_matrix = m_model_matrix_cache.get_or_create(

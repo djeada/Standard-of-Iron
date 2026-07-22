@@ -1805,6 +1805,7 @@ void Serialization::deserialize_terrain(
                              static_cast<float>(bridge_obj["endZ"].toDouble(0.0)));
       bridge.width = static_cast<float>(
           bridge_obj["width"].toDouble(static_cast<double>(default_bridge.width)));
+      bridge.width = std::max(bridge.width, Game::Map::k_min_bridge_width);
       bridge.height = static_cast<float>(
           bridge_obj["height"].toDouble(static_cast<double>(default_bridge.height)));
       bridges.push_back(bridge);

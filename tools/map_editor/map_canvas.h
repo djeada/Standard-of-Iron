@@ -20,6 +20,7 @@ public:
   void clear_tool();
   void clear_selection();
   void set_current_player_id(int id);
+  void set_current_nation(const QString& nation);
 
   [[nodiscard]] int selected_element_type() const { return m_selected_type; }
   [[nodiscard]] int selected_element_index() const { return m_selected_index; }
@@ -119,6 +120,7 @@ private:
   UndeadZoneElement m_drag_pre_undead_zone;
 
   int m_current_player_id = 0;
+  QString m_current_nation;
 
   static constexpr int grid_cell_size = 8;
   static constexpr int icon_size = 16;
@@ -127,7 +129,6 @@ private:
   static constexpr int max_player_id = 4;
   static constexpr int default_max_population = 150;
   static constexpr int default_troop_max_population = -1;
-  static inline const QString default_nation = "roman_republic";
 };
 
 } // namespace MapEditor

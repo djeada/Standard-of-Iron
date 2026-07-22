@@ -36,6 +36,16 @@ QPointF snap_pos(const QPointF& gp) {
   return {std::round(gp.x()), std::round(gp.y())};
 }
 
+auto axis_aligned_endpoint(const QVector2D& anchor, QVector2D candidate) -> QVector2D {
+  const QVector2D delta = candidate - anchor;
+  if (std::abs(delta.x()) >= std::abs(delta.y())) {
+    candidate.setY(anchor.y());
+  } else {
+    candidate.setX(anchor.x());
+  }
+  return candidate;
+}
+
 auto world_prop_type_for_tool(ToolType tool) -> QString {
   switch (tool) {
   case ToolType::PropFirecamp:
@@ -54,6 +64,14 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
     return QStringLiteral("dead_tree");
   case ToolType::PropBoulder:
     return QStringLiteral("boulder");
+  case ToolType::PropPineTree:
+    return QStringLiteral("pine_tree");
+  case ToolType::PropOliveTree:
+    return QStringLiteral("olive_tree");
+  case ToolType::PropPlant:
+    return QStringLiteral("plant");
+  case ToolType::PropIronOre:
+    return QStringLiteral("iron_ore");
   default:
     return {};
   }
@@ -158,6 +176,10 @@ void MapCanvas::clear_selection() {
 
 void MapCanvas::set_current_player_id(int id) {
   m_current_player_id = id;
+}
+
+void MapCanvas::set_current_nation(const QString& nation) {
+  m_current_nation = nation;
 }
 
 QPointF MapCanvas::map_to_grid(const QPoint& widget_pos) const {
@@ -603,6 +625,10 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::PropMagicShrine:
   case ToolType::PropDeadTree:
   case ToolType::PropBoulder:
+  case ToolType::PropPineTree:
+  case ToolType::PropOliveTree:
+  case ToolType::PropPlant:
+  case ToolType::PropIronOre:
     type = world_prop_type_for_tool(m_current_tool);
     break;
   case ToolType::Barracks:
@@ -616,6 +642,9 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
     break;
   case ToolType::Home:
     type = "home";
+    break;
+  case ToolType::Marketplace:
+    type = "marketplace";
     break;
   default:
     break;
@@ -646,7 +675,8 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
     } else if (type == QStringLiteral("barracks") ||
                type == QStringLiteral("village") ||
                type == QStringLiteral("defense_tower") ||
-               type == QStringLiteral("home")) {
+               type == QStringLiteral("home") ||
+               type == QStringLiteral("marketplace")) {
       draw_element(painter, type, widget_pos, m_current_player_id);
     } else {
       draw_element(painter, type, widget_pos);
@@ -679,6 +709,9 @@ void MapCanvas::draw_element(QPainter& painter,
   } else if (type == "home") {
     fill_color = player_color_for_editor(player_id);
     symbol = "H";
+  } else if (type == "marketplace") {
+    fill_color = player_color_for_editor(player_id);
+    symbol = "M";
   } else {
     fill_color = QColor(128, 128, 128);
     symbol = "?";
@@ -686,7 +719,8 @@ void MapCanvas::draw_element(QPainter& painter,
 
   if (type == "firecamp" || type == "tent" || type == "supply_cart" ||
       type == "weapon_rack" || type == "ruins" || type == "magic_shrine" ||
-      type == "dead_tree" || type == "boulder") {
+      type == "dead_tree" || type == "boulder" || type == "pine_tree" ||
+      type == "olive_tree" || type == "plant" || type == "iron_ore") {
     draw_world_prop_icon(painter, type, pos, size);
   } else {
     painter.setBrush(fill_color);
@@ -702,7 +736,7 @@ void MapCanvas::draw_element(QPainter& painter,
                      Qt::AlignCenter,
                      symbol);
     if ((type == "barracks" || type == "village" || type == "defense_tower" ||
-         type == "home") &&
+         type == "home" || type == "marketplace") &&
         player_id >= 0) {
       QString const player_text = player_id == 0 ? "N" : QString::number(player_id);
       font.setPointSize(8);
@@ -851,6 +885,36 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     QPen const hp(QColor(215, 215, 215), std::max(1.0F, s * 0.10F));
     painter.setPen(hp);
     painter.drawLine(QPointF(-s * 0.30F, -s * 0.55F), QPointF(s * 0.40F, -s * 0.35F));
+  } else if (type == QStringLiteral("pine_tree") ||
+             type == QStringLiteral("olive_tree")) {
+    const QColor crown = type == QStringLiteral("pine_tree") ? QColor(38, 110, 70)
+                                                               : QColor(105, 126, 62);
+    painter.setBrush(crown.darker(145));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    painter.setPen(QPen(QColor(105, 72, 42), std::max(1.5F, s * 0.16F)));
+    painter.drawLine(QPointF(0, s * 0.55F), QPointF(0, -s * 0.15F));
+    painter.setBrush(crown);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, -s * 0.25F), s * 0.62F, s * 0.62F);
+  } else if (type == QStringLiteral("plant")) {
+    painter.setBrush(QColor(54, 122, 58));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    painter.setPen(QPen(QColor(150, 205, 92), std::max(1.5F, s * 0.14F)));
+    painter.drawLine(QPointF(0, s * 0.55F), QPointF(0, -s * 0.55F));
+    painter.drawLine(QPointF(0, 0), QPointF(-s * 0.5F, -s * 0.25F));
+    painter.drawLine(QPointF(0, s * 0.15F), QPointF(s * 0.5F, -s * 0.15F));
+  } else if (type == QStringLiteral("iron_ore")) {
+    painter.setBrush(QColor(68, 78, 88));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    QPolygonF ore;
+    ore << QPointF(0, -s * 0.75F) << QPointF(s * 0.65F, -s * 0.15F)
+        << QPointF(s * 0.35F, s * 0.7F) << QPointF(-s * 0.55F, s * 0.55F)
+        << QPointF(-s * 0.7F, -s * 0.2F);
+    painter.setBrush(QColor(150, 164, 176));
+    painter.drawPolygon(ore);
   }
 
   painter.restore();
@@ -1265,9 +1329,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
                                   static_cast<float>(grid_pos.y()));
 
           if (m_dragged_endpoint == 0) {
-            elem.start = new_pos;
+            elem.start = elem.type == QStringLiteral("wall")
+                             ? axis_aligned_endpoint(elem.end, new_pos)
+                             : new_pos;
           } else if (m_dragged_endpoint == 1) {
-            elem.end = new_pos;
+            elem.end = elem.type == QStringLiteral("wall")
+                           ? axis_aligned_endpoint(elem.start, new_pos)
+                           : new_pos;
           }
         } else {
           const QVector2D current_center = (elem.start + elem.end) * 0.5F;
@@ -1526,7 +1594,8 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
   } else if (m_current_tool == ToolType::Barracks ||
              m_current_tool == ToolType::Village ||
              m_current_tool == ToolType::DefenseTower ||
-             m_current_tool == ToolType::Home) {
+             m_current_tool == ToolType::Home ||
+             m_current_tool == ToolType::Marketplace) {
     StructureElement elem;
     switch (m_current_tool) {
     case ToolType::Barracks:
@@ -1541,6 +1610,9 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     case ToolType::Home:
       elem.type = "home";
       break;
+    case ToolType::Marketplace:
+      elem.type = "marketplace";
+      break;
     default:
       break;
     }
@@ -1548,7 +1620,7 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     elem.z = static_cast<float>(grid_pos.y());
     elem.player_id = m_current_player_id;
     elem.max_population = default_max_population;
-    elem.nation = default_nation;
+    elem.nation = m_current_nation;
     m_map_data->execute_command(std::make_unique<AddStructureCmd>(m_map_data, elem));
   } else if (is_troop_tool(m_current_tool)) {
     TroopSpawnElement elem;
@@ -1557,6 +1629,7 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     elem.z = static_cast<float>(grid_pos.y());
     elem.player_id = m_current_player_id;
     elem.max_population = default_troop_max_population;
+    elem.nation = m_current_nation;
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
   } else if (m_current_tool == ToolType::UndeadZone) {
     UndeadZoneElement elem;
@@ -1625,7 +1698,7 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
   case ToolType::Bridge:
     elem.type = "bridge";
     elem.width = std::max(
-        4.0F,
+        k_min_bridge_width,
         compute_min_bridge_width(elem.start, elem.end, m_map_data->linear_elements()));
     elem.height = 0.5F;
     break;
@@ -1633,6 +1706,8 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
     elem.type = "wall";
     elem.width = 2.0F;
     elem.player_id = m_current_player_id;
+    elem.nation = m_current_nation;
+    elem.end = axis_aligned_endpoint(elem.start, elem.end);
     break;
   default:
     break;

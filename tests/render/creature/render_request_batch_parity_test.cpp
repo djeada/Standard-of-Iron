@@ -143,7 +143,7 @@ TEST(CreatureRenderBatch, HoldExitUsesReverseStandUpProgressForRequestPhase) {
   EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.84375F);
 }
 
-TEST(CreatureRenderBatch, FullHoldKeepsTerminalKneelFrame) {
+TEST(CreatureRenderBatch, FullHoldLoopsSettledHoldClip) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Humanoid, 6U, 0.0F);
 
@@ -156,7 +156,7 @@ TEST(CreatureRenderBatch, FullHoldKeepsTerminalKneelFrame) {
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
-  EXPECT_GT(batch.requests()[0].phase, 0.99F);
+  EXPECT_GE(batch.requests()[0].phase, 0.0F);
   EXPECT_LT(batch.requests()[0].phase, 1.0F);
 }
 

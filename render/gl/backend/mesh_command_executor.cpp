@@ -80,12 +80,20 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
     if (m_banner_pipeline != nullptr &&
         active_shader == m_banner_pipeline->m_banner_shader) {
+      CullFaceScope const banner_cull(false);
       if (m_last_bound_shader != active_shader) {
         active_shader->use();
         active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.time,
                                    m_animation_time);
         active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.wind_strength,
                                    banner_wind_strength);
+        active_shader->set_uniform(
+            m_banner_pipeline->m_banner_uniforms.light_direction, m_light_dir);
+        active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.camera_pos,
+                                   cam.get_position());
+        active_shader->set_uniform(
+            m_banner_pipeline->m_banner_uniforms.ambient_strength,
+            m_ambient_strength);
         m_last_bound_shader = active_shader;
       }
 

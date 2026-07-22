@@ -137,7 +137,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilFertile) {
   EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.22F);
 
   EXPECT_FLOAT_EQ(settings.moisture_level, 0.80F);
-  EXPECT_FLOAT_EQ(settings.grass_saturation, 1.15F);
+  EXPECT_FLOAT_EQ(settings.grass_saturation, 0.94F);
   EXPECT_FLOAT_EQ(settings.rock_exposure, 0.12F);
 }
 

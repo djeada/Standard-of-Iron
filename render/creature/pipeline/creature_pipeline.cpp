@@ -402,7 +402,7 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   }
   auto owned = acquire_pooled_palette();
   float const weight = std::clamp(secondary_weight, 0.0F, 1.0F);
-  if (upper_body_only && species_kind == CreatureKind::Humanoid) {
+  if (species_kind == CreatureKind::Humanoid) {
 
     auto const bind = Render::Humanoid::humanoid_bind_palette();
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
@@ -421,12 +421,15 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
       secondary_global[bone] = secondary_palette[bone] * bind[bone];
     }
     for (std::uint32_t bone = 0; bone < count; ++bone) {
-      if (!is_humanoid_upper_body_bone(bone)) {
+      bool const blend_bone =
+          !upper_body_only || is_humanoid_upper_body_bone(bone);
+      if (!blend_bone) {
         result_global[bone] = primary_global[bone];
       } else {
         auto const parent = Render::Humanoid::k_bone_parents[bone];
         if (parent == Render::Humanoid::k_invalid_bone || parent >= count) {
-          result_global[bone] = primary_global[bone];
+          result_global[bone] =
+              rigid_lerp_matrix(primary_global[bone], secondary_global[bone], weight);
         } else {
           QMatrix4x4 const primary_local =
               primary_global[parent].inverted() * primary_global[bone];

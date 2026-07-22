@@ -27,6 +27,7 @@ public:
   void place_hand_at(Side side, const QVector3D& target_position);
 
   void aim_bow(float draw_phase);
+  void bow_melee_strike(float attack_phase);
   void melee_strike(float strike_phase);
   void grasp_two_handed(const QVector3D& grip_center, float hand_separation);
   void spear_thrust(float attack_phase);
@@ -45,8 +46,8 @@ public:
   void hold_spear_idle();
   void brace_spear_for_hold();
   void hold_bow_ready();
-  void brace_sword_and_shield_for_hold();
-  void hold_sword_and_shield();
+  void guard_sword_and_shield_for_defense();
+  void carry_sword_and_shield();
   void guard_sword_and_shield_formation(ShieldFormationPose pose, float amount);
   void look_at(const QVector3D& target);
   void hit_flinch(float intensity);

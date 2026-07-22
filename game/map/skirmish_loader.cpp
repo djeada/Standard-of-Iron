@@ -170,8 +170,7 @@ auto SkirmishLoader::start(const QString& map_path,
       };
 
       collect_player_ids(SPAWNS);
-      collect_player_ids(BUILDINGS);
-      collect_player_ids(WALLS);
+      collect_player_ids(STRUCTURES);
     }
   } else {
     qWarning() << "Could not open map file for reading player IDs:"
@@ -378,7 +377,8 @@ auto SkirmishLoader::start(const QString& map_path,
     if (terrain_service.is_initialized() &&
         (terrain_service.get_height_map() != nullptr)) {
       m_features->configure(*terrain_service.get_height_map(),
-                            terrain_service.road_segments());
+                            terrain_service.road_segments(),
+                            terrain_service.biome_settings());
     }
   }
 

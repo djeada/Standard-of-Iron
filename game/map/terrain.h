@@ -713,10 +713,12 @@ struct RoadSegment {
   QString style = QStringLiteral("default");
 };
 
+inline constexpr float k_min_bridge_width = 8.0F;
+
 struct Bridge {
   QVector3D start;
   QVector3D end;
-  float width = 3.0F;
+  float width = k_min_bridge_width;
   float height = 0.5F;
 };
 
@@ -785,14 +787,6 @@ inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
   }
 }
 
-struct WallLine {
-  QVector3D start;
-  QVector3D end;
-  float width = 2.0F;
-  int player_id = 0;
-  QString nation;
-};
-
 inline constexpr float k_road_surface_y_offset = 0.02F;
 
 [[nodiscard]] inline auto road_surface_world_y(float terrain_height) -> float {
@@ -804,9 +798,25 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
   return 4.0F * clamped_t * (1.0F - clamped_t);
 }
 
+inline constexpr float k_min_bridge_deck_rise = 0.72F;
+// Lift only the visible/contact surface above the terrain relief used to
+// derive navigation slopes. This keeps bridges clear of the water sheet
+// without making their approaches less attractive to pathfinding.
+inline constexpr float k_bridge_deck_visual_lift = 0.33F;
+
+[[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
+  return std::max(bridge.height, k_min_bridge_deck_rise);
+}
+
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
-  float const arch_height = bridge.height * bridge_arch_curve(t) * 0.8F;
-  return bridge.start.y() + bridge.height + arch_height * 0.3F;
+  float const clamped_t = std::clamp(t, 0.0F, 1.0F);
+  float const base_y = bridge.start.y() * (1.0F - clamped_t) +
+                       bridge.end.y() * clamped_t;
+  float const effective_height = bridge_effective_height(bridge);
+  float const arch_height =
+      effective_height * bridge_arch_curve(clamped_t) * 0.8F;
+  return base_y + effective_height + arch_height * 0.3F +
+         k_bridge_deck_visual_lift;
 }
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,

@@ -91,6 +91,11 @@ build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segmen
     std::size_t segment_index,
     const Game::Map::TerrainHeightMap& height_map) -> RiverbankMeshBuildResult;
 
+[[nodiscard]] auto build_riverbank_junction_meshes(
+    const std::vector<Game::Map::RiverSegment>& river_network,
+    const Game::Map::TerrainHeightMap& height_map)
+    -> std::vector<RiverbankMeshBuildResult>;
+
 [[nodiscard]] auto build_lake_shore_mesh(const Game::Map::Lake& lake,
                                          const Game::Map::TerrainHeightMap& height_map)
     -> RiverbankMeshBuildResult;

@@ -79,6 +79,13 @@ void WaterPipeline::cache_water_uniforms() {
       m_water_shader->optional_uniform_handle("u_segment_visibility");
   m_water_uniforms.surface_kind =
       m_water_shader->optional_uniform_handle("u_water_surface_kind");
+  m_water_uniforms.camera_position =
+      m_water_shader->optional_uniform_handle("u_camera_pos");
+  m_water_uniforms.light_direction =
+      m_water_shader->optional_uniform_handle("u_light_dir");
+  m_water_uniforms.fog_color = m_water_shader->optional_uniform_handle("u_fog_color");
+  m_water_uniforms.fog_start = m_water_shader->optional_uniform_handle("u_fog_start");
+  m_water_uniforms.fog_end = m_water_shader->optional_uniform_handle("u_fog_end");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {
@@ -104,6 +111,36 @@ void WaterPipeline::cache_riverbank_uniforms() {
       m_riverbank_shader->uniform_handle("u_segment_visibility");
   m_riverbank_uniforms.surface_kind =
       m_riverbank_shader->optional_uniform_handle("u_water_surface_kind");
+  m_riverbank_uniforms.ground_color =
+      m_riverbank_shader->optional_uniform_handle("u_ground_color");
+  m_riverbank_uniforms.grass_secondary =
+      m_riverbank_shader->optional_uniform_handle("u_grass_secondary");
+  m_riverbank_uniforms.grass_dry =
+      m_riverbank_shader->optional_uniform_handle("u_grass_dry");
+  m_riverbank_uniforms.soil_color =
+      m_riverbank_shader->optional_uniform_handle("u_soil_color");
+  m_riverbank_uniforms.rock_low =
+      m_riverbank_shader->optional_uniform_handle("u_rock_low");
+  m_riverbank_uniforms.rock_high =
+      m_riverbank_shader->optional_uniform_handle("u_rock_high");
+  m_riverbank_uniforms.snow_color =
+      m_riverbank_shader->optional_uniform_handle("u_snow_color");
+  m_riverbank_uniforms.moisture =
+      m_riverbank_shader->optional_uniform_handle("u_moisture_level");
+  m_riverbank_uniforms.rock_exposure =
+      m_riverbank_shader->optional_uniform_handle("u_rock_exposure");
+  m_riverbank_uniforms.snow_coverage =
+      m_riverbank_shader->optional_uniform_handle("u_snow_coverage");
+  m_riverbank_uniforms.camera_position =
+      m_riverbank_shader->optional_uniform_handle("u_camera_pos");
+  m_riverbank_uniforms.light_direction =
+      m_riverbank_shader->optional_uniform_handle("u_light_dir");
+  m_riverbank_uniforms.fog_color =
+      m_riverbank_shader->optional_uniform_handle("u_fog_color");
+  m_riverbank_uniforms.fog_start =
+      m_riverbank_shader->optional_uniform_handle("u_fog_start");
+  m_riverbank_uniforms.fog_end =
+      m_riverbank_shader->optional_uniform_handle("u_fog_end");
 }
 
 void WaterPipeline::cache_bridge_uniforms() {

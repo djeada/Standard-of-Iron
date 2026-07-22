@@ -152,13 +152,18 @@ namespace Render::Ground {
 
 auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   LinearFeatureRibbonSettings settings;
-  settings.sample_step = 0.5F;
+  settings.sample_step = 0.24F;
   settings.min_length_steps = 8;
   settings.cross_section_segments = 4;
-  settings.edge_noise_frequencies = {0.08F, 0.22F, 0.65F};
-  settings.edge_noise_weights = {0.62F, 0.28F, 0.10F};
-  settings.width_scale = 0.92F;
-  settings.width_variation_scale = 0.18F;
+  // Geometry carries watershed-scale variation; fine ripples belong in the
+  // material. Frequencies above this range visibly serrate the silhouette.
+  settings.edge_noise_frequencies = {0.008F, 0.025F, 0.065F};
+  settings.edge_noise_weights = {0.52F, 0.32F, 0.16F};
+  // Cover the discretely carved gameplay-water cells completely. A narrow
+  // render overhang prevents the lowered terrain mesh from appearing as a
+  // pale broken strip between water and the procedural shoreline.
+  settings.width_scale = 1.08F;
+  settings.width_variation_scale = 0.035F;
   settings.meander_frequency = 2.8F;
   // For rivers this value is a fraction of authored width. The endpoint fade
   // keeps independently authored segments watertight at junctions.
@@ -431,6 +436,10 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
   constexpr float deg_to_rad = 0.01745329251994329577F;
   const float half_width = std::max(lake.width * 0.5F, tile_size * 0.5F);
   const float half_depth = std::max(lake.depth * 0.5F, tile_size * 0.5F);
+  // Lake terrain has a submerged interpolation margin around its gameplay
+  // footprint. Let the visual water sheet cover that margin so coarse ground
+  // vertices can never show through as a false shoreline.
+  const float water_render_margin = std::max(tile_size * 0.70F, 0.10F);
   const int angular_segments = std::clamp(
       static_cast<int>(std::ceil(two_pi * std::max(half_width, half_depth) /
                                  std::max(tile_size * 0.65F, 0.25F))),
@@ -472,8 +481,10 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
       const float angle = two_pi * static_cast<float>(segment) /
                           static_cast<float>(angular_segments);
       const float boundary = Game::Map::lake_boundary_scale(lake, angle);
-      append_vertex(std::cos(angle) * half_width * radial_t * boundary,
-                    std::sin(angle) * half_depth * radial_t * boundary,
+      append_vertex(std::cos(angle) *
+                        (half_width * boundary + water_render_margin) * radial_t,
+                    std::sin(angle) *
+                        (half_depth * boundary + water_render_margin) * radial_t,
                     radial_t);
     }
   }
@@ -512,13 +523,16 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
 
   dir.normalize();
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-  float const half_width = bridge.width * 0.5F;
-  const float approach_length =
-      std::min(bridge.width * 0.70F, length * 0.14F);
-  const float visual_length = length + approach_length * 2.0F;
+  float const bridge_width =
+      std::max(bridge.width, Game::Map::k_min_bridge_width);
+  float const half_width = bridge_width * 0.5F;
+  // Authored endpoints already include the short bank bearing. Extending the
+  // render mesh beyond them made bridges look like causeways and allowed the
+  // stonework to overshoot the roads which terminate at the exact endpoints.
+  const float visual_length = length;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);
   float const end_fade_length =
-      std::min(std::clamp(bridge.width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
+      std::min(std::clamp(bridge_width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
                visual_length * 0.45F);
 
   int length_segments = static_cast<int>(std::ceil(visual_length / segment_step));
@@ -528,10 +542,12 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
 
-  constexpr int k_vertices_per_bridge_segment = 12;
-  float const deck_thickness = std::clamp(bridge.width * 0.24F, 0.32F, 0.72F);
-  float const parapet_height = std::clamp(bridge.width * 0.18F, 0.18F, 0.42F);
-  float const side_bevel = std::clamp(bridge.width * 0.12F, 0.10F, 0.30F);
+  constexpr int k_vertices_per_bridge_segment = 20;
+  float const deck_thickness = std::clamp(bridge_width * 0.26F, 0.42F, 0.86F);
+  float const parapet_height = std::clamp(bridge_width * 0.20F, 0.24F, 0.50F);
+  float const parapet_half_width =
+      std::clamp(bridge_width * 0.055F, 0.075F, 0.16F);
+  float const side_bevel = std::clamp(bridge_width * 0.12F, 0.10F, 0.30F);
 
   auto add_vertex =
       [&](const QVector3D& position, const QVector3D& normal, float u, float v) {
@@ -560,11 +576,10 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   for (int i = 0; i <= length_segments; ++i) {
     float const mesh_t = static_cast<float>(i) / static_cast<float>(length_segments);
     float const span_distance = visual_length * mesh_t;
-    const float authored_distance =
-        std::clamp(span_distance - approach_length, 0.0F, length);
+    const float authored_distance = span_distance;
     const float authored_t = authored_distance / length;
     QVector3D const center_pos =
-        bridge.start + dir * (span_distance - approach_length);
+        bridge.start + dir * span_distance;
 
     float const start_blend =
         smoothstep01(span_distance / std::max(end_fade_length, 0.001F));
@@ -573,8 +588,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                      std::max(end_fade_length, 0.001F));
     float const profile_blend = start_blend * end_blend;
 
-    float const arch_curve =
-        Game::Map::bridge_arch_curve(authored_t) * (0.85F + 0.15F * profile_blend);
+    float const arch_curve = Game::Map::bridge_arch_curve(authored_t);
     float const deck_height = Game::Map::bridge_deck_world_y(bridge, authored_t);
 
     float const stone_noise =
@@ -584,13 +598,15 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
         half_width - side_bevel * (0.55F + 0.45F * profile_blend), half_width * 0.68F);
     float const ring_thickness =
         mixf(deck_thickness * 0.72F, deck_thickness, profile_blend);
-    float const ring_parapet_height = parapet_height * (0.35F + 0.65F * profile_blend);
+    float const ring_parapet_height =
+        parapet_height * (0.60F + 0.40F * profile_blend);
     float const ring_parapet_offset =
-        half_width + side_bevel * (0.20F + 0.35F * profile_blend);
+        std::max(half_width - parapet_half_width * 0.45F, half_width * 0.72F);
 
     float const deck_y = deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
     float const underside_y =
-        deck_y - ring_thickness - arch_curve * bridge.height * 0.60F;
+        deck_y - ring_thickness -
+        arch_curve * Game::Map::bridge_effective_height(bridge) * 0.60F;
     float const rail_top_y = deck_y + ring_parapet_height;
 
     QVector3D top_left = center_pos + perpendicular * (-half_width);
@@ -619,15 +635,27 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
       right_normal = perpendicular.normalized();
     }
 
-    QVector3D parapet_left_bottom = center_pos + perpendicular * (-ring_parapet_offset);
-    parapet_left_bottom.setY(deck_y);
-    QVector3D parapet_left_top = parapet_left_bottom;
-    parapet_left_top.setY(rail_top_y);
-
-    QVector3D parapet_right_bottom = center_pos + perpendicular * ring_parapet_offset;
-    parapet_right_bottom.setY(deck_y);
-    QVector3D parapet_right_top = parapet_right_bottom;
-    parapet_right_top.setY(rail_top_y);
+    auto rail_point = [&](float offset, float height) {
+      QVector3D point = center_pos + perpendicular * offset;
+      point.setY(height);
+      return point;
+    };
+    const QVector3D left_outer_bottom =
+        rail_point(-ring_parapet_offset - parapet_half_width, deck_y);
+    const QVector3D left_outer_top =
+        rail_point(-ring_parapet_offset - parapet_half_width, rail_top_y);
+    const QVector3D left_inner_bottom =
+        rail_point(-ring_parapet_offset + parapet_half_width, deck_y);
+    const QVector3D left_inner_top =
+        rail_point(-ring_parapet_offset + parapet_half_width, rail_top_y);
+    const QVector3D right_inner_bottom =
+        rail_point(ring_parapet_offset - parapet_half_width, deck_y);
+    const QVector3D right_inner_top =
+        rail_point(ring_parapet_offset - parapet_half_width, rail_top_y);
+    const QVector3D right_outer_bottom =
+        rail_point(ring_parapet_offset + parapet_half_width, deck_y);
+    const QVector3D right_outer_top =
+        rail_point(ring_parapet_offset + parapet_half_width, rail_top_y);
 
     float const tex_u0 = 0.0F;
     float const tex_u1 = 1.0F;
@@ -641,10 +669,18 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     add_vertex(side_left_bottom, left_normal, tex_u0, tex_v);
     add_vertex(side_right_top, right_normal, tex_u1, tex_v);
     add_vertex(side_right_bottom, right_normal, tex_u1, tex_v);
-    add_vertex(parapet_left_top, left_normal, tex_u0, tex_v);
-    add_vertex(parapet_left_bottom, left_normal, tex_u0, tex_v);
-    add_vertex(parapet_right_top, right_normal, tex_u1, tex_v);
-    add_vertex(parapet_right_bottom, right_normal, tex_u1, tex_v);
+    add_vertex(left_outer_bottom, -perpendicular, tex_u0, tex_v);
+    add_vertex(left_outer_top, -perpendicular, tex_u0, tex_v);
+    add_vertex(left_inner_bottom, perpendicular, tex_u0, tex_v);
+    add_vertex(left_inner_top, perpendicular, tex_u0, tex_v);
+    add_vertex(left_outer_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
+    add_vertex(left_inner_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
+    add_vertex(right_inner_bottom, -perpendicular, tex_u1, tex_v);
+    add_vertex(right_inner_top, -perpendicular, tex_u1, tex_v);
+    add_vertex(right_outer_bottom, perpendicular, tex_u1, tex_v);
+    add_vertex(right_outer_top, perpendicular, tex_u1, tex_v);
+    add_vertex(right_inner_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
+    add_vertex(right_outer_top, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
 
     if (i < length_segments) {
       auto const base_idx =
@@ -655,8 +691,14 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
       push_quad(next_idx + 3, next_idx + 2, base_idx + 2, base_idx + 3);
       push_quad(base_idx + 4, base_idx + 5, next_idx + 5, next_idx + 4);
       push_quad(base_idx + 6, base_idx + 7, next_idx + 7, next_idx + 6);
-      push_quad(base_idx + 9, base_idx + 8, next_idx + 8, next_idx + 9);
+      // Solid parapets have outer, inner, and upward-facing top surfaces. The
+      // old zero-thickness side sheets disappeared when viewed from above.
+      push_quad(base_idx + 8, base_idx + 9, next_idx + 9, next_idx + 8);
       push_quad(base_idx + 11, base_idx + 10, next_idx + 10, next_idx + 11);
+      push_quad(base_idx + 12, base_idx + 13, next_idx + 13, next_idx + 12);
+      push_quad(base_idx + 14, base_idx + 15, next_idx + 15, next_idx + 14);
+      push_quad(base_idx + 17, base_idx + 16, next_idx + 16, next_idx + 17);
+      push_quad(base_idx + 18, base_idx + 19, next_idx + 19, next_idx + 18);
     }
   }
 
@@ -691,6 +733,19 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     add_cap(
         start_idx + 0, start_idx + 1, start_idx + 3, start_idx + 2, -forward_normal);
     add_cap(end_idx + 0, end_idx + 1, end_idx + 3, end_idx + 2, forward_normal);
+    add_cap(
+        start_idx + 8, start_idx + 10, start_idx + 11, start_idx + 9, -forward_normal);
+    add_cap(end_idx + 8, end_idx + 9, end_idx + 11, end_idx + 10, forward_normal);
+    add_cap(start_idx + 14,
+            start_idx + 16,
+            start_idx + 17,
+            start_idx + 15,
+            -forward_normal);
+    add_cap(end_idx + 14,
+            end_idx + 15,
+            end_idx + 17,
+            end_idx + 16,
+            forward_normal);
   }
 
   if (vertices.empty() || indices.empty()) {
@@ -719,7 +774,6 @@ auto build_riverbank_mesh(
   }
 
   dir.normalize();
-  QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const tile_size = height_map.get_tile_size();
   const auto ribbon_settings = make_river_ribbon_settings();
   const LinearFeatureRibbonSegment ribbon_segment{
@@ -728,8 +782,66 @@ auto build_riverbank_mesh(
   constexpr int k_rings_per_side = 5;
   constexpr int k_total_rings = k_rings_per_side * 2;
 
-  int length_steps = static_cast<int>(std::ceil(length / (tile_size * 0.5F))) + 1;
+  int length_steps = static_cast<int>(std::ceil(length / (tile_size * 0.22F))) + 1;
   length_steps = std::max(length_steps, 8);
+
+  auto endpoint_bank_direction = [&](const QVector3D& endpoint) {
+    QVector3D tangent = dir;
+    const float join_distance = std::max(tile_size * 0.30F, 0.05F);
+    const float join_distance_sq = join_distance * join_distance;
+    for (std::size_t other_index = 0; other_index < river_network.size();
+         ++other_index) {
+      if (other_index == segment_index) {
+        continue;
+      }
+      const auto& other = river_network[other_index];
+      const bool shares_start =
+          (other.start - endpoint).lengthSquared() <= join_distance_sq;
+      const bool shares_end =
+          (other.end - endpoint).lengthSquared() <= join_distance_sq;
+      if (!shares_start && !shares_end) {
+        continue;
+      }
+      QVector3D neighbor_direction = other.end - other.start;
+      if (neighbor_direction.lengthSquared() < 0.000001F) {
+        continue;
+      }
+      neighbor_direction.normalize();
+      float alignment = QVector3D::dotProduct(neighbor_direction, dir);
+      if (std::abs(alignment) < 0.50F) {
+        // Tributaries are clipped from the parent bank; they must not rotate
+        // the parent shoreline across the channel at a T-junction.
+        continue;
+      }
+      if (alignment < 0.0F) {
+        neighbor_direction = -neighbor_direction;
+      }
+      tangent += neighbor_direction;
+    }
+    return tangent.normalized();
+  };
+
+  auto local_bank_direction = [&](float t) {
+    if (t <= 0.0001F) {
+      return endpoint_bank_direction(segment.start);
+    }
+    if (t >= 0.9999F) {
+      return endpoint_bank_direction(segment.end);
+    }
+    const float tangent_step =
+        1.0F / static_cast<float>(std::max(length_steps - 1, 1));
+    const auto before = sample_linear_feature_cross_section(
+        ribbon_segment, std::max(0.0F, t - tangent_step), ribbon_settings);
+    const auto after = sample_linear_feature_cross_section(
+        ribbon_segment, std::min(1.0F, t + tangent_step), ribbon_settings);
+    QVector3D tangent = after.center - before.center;
+    if (tangent.lengthSquared() < 0.000001F) {
+      tangent = dir;
+    } else {
+      tangent.normalize();
+    }
+    return tangent;
+  };
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -773,6 +885,9 @@ auto build_riverbank_mesh(
         sample_linear_feature_cross_section(ribbon_segment, t, ribbon_settings);
     QVector3D center_pos = cross_section.center;
     const float bank_half_width = cross_section.half_width;
+    const QVector3D bank_direction = local_bank_direction(t);
+    const QVector3D bank_perpendicular(
+        -bank_direction.z(), 0.0F, bank_direction.x());
     float const center_height =
         sample_height_clamped(height_map, center_pos.x(), center_pos.z());
 
@@ -784,26 +899,36 @@ auto build_riverbank_mesh(
     constexpr RingProfile k_bank_rings[k_rings_per_side] = {
         {0.0F, 0.02F},
         {0.125F, 0.175F},
-        {0.25F, 0.3F},
+        {0.25F, 0.30F},
         {0.375F, 0.125F},
-        {0.5F, -0.15F},
+        {0.50F, -0.15F},
     };
 
+    // Match the compact bank footprint used on the main branch. A buried
+    // outer ring blends into terrain without a broad overlay ribbon.
     float const ring_noise =
         value_noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.075F;
-    float const base_bank_width = 0.5F + ring_noise;
+    float const base_bank_width = 0.50F + ring_noise;
+
+    auto bank_surface_height = [&](const QVector3D& position, int ring) {
+      float const terrain_height =
+          sample_height_clamped(height_map, position.x(), position.z());
+      // This is the important main-branch behavior: cap the bank against the
+      // riverbed instead of snapping its first dry ring to the much higher
+      // surrounding terrain. The last ring then sinks below the ground and
+      // lets the terrain depth-buffer provide a clean, fitted outer edge.
+      const float clamped_height = std::min(terrain_height, center_height + 0.05F);
+      return clamped_height + k_bank_rings[ring].height_offset;
+    };
 
     auto const ring_start_idx = static_cast<unsigned int>(vertices.size());
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
       float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
-      float const ring_height = k_bank_rings[ring].height_offset;
 
       QVector3D const ring_pos =
-          center_pos - perpendicular * (bank_half_width + ring_dist);
-      float const terrain_height =
-          sample_height_clamped(height_map, ring_pos.x(), ring_pos.z());
-      float const clamped_height = std::min(terrain_height, center_height + 0.05F);
+          center_pos - bank_perpendicular * (bank_half_width + ring_dist);
+      float const ring_height_y = bank_surface_height(ring_pos, ring);
 
       if (ring == 0) {
         result.visibility_samples.push_back(ring_pos);
@@ -811,56 +936,54 @@ auto build_riverbank_mesh(
 
       Render::GL::Vertex vtx{};
       vtx.position[0] = ring_pos.x();
-      vtx.position[1] = clamped_height + ring_height;
+      vtx.position[1] = ring_height_y;
       vtx.position[2] = ring_pos.z();
 
       QVector3D normal;
       if (ring == 0) {
         QVector3D const next_ring_pos =
             center_pos -
-            perpendicular * (bank_half_width +
-                             k_bank_rings[1].distance_from_water * base_bank_width);
-        float const next_terrain =
-            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+            bank_perpendicular *
+                (bank_half_width +
+                 k_bank_rings[1].distance_from_water * base_bank_width);
+        float const next_height = bank_surface_height(next_ring_pos, ring + 1);
         QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
-                                  (next_clamped + k_bank_rings[1].height_offset) -
-                                      (clamped_height + ring_height),
+                                  next_height - ring_height_y,
                                   next_ring_pos.z() - ring_pos.z());
-        normal = QVector3D::crossProduct(slope_vec, dir).normalized();
+        normal = QVector3D::crossProduct(bank_direction, slope_vec).normalized();
       } else if (ring == k_rings_per_side - 1) {
         unsigned int const prev_idx = ring_start_idx + ring - 1;
         QVector3D const prev_pos(vertices[prev_idx].position[0],
                                  vertices[prev_idx].position[1],
                                  vertices[prev_idx].position[2]);
         QVector3D const slope_vec(ring_pos.x() - prev_pos.x(),
-                                  (clamped_height + ring_height) - prev_pos.y(),
+                                  ring_height_y - prev_pos.y(),
                                   ring_pos.z() - prev_pos.z());
-        normal = QVector3D::crossProduct(slope_vec, dir).normalized();
+        normal = QVector3D::crossProduct(bank_direction, slope_vec).normalized();
       } else {
         unsigned int const prev_idx = ring_start_idx + ring - 1;
         QVector3D const prev_pos(vertices[prev_idx].position[0],
                                  vertices[prev_idx].position[1],
                                  vertices[prev_idx].position[2]);
         QVector3D const next_ring_pos =
-            center_pos - perpendicular * (bank_half_width +
-                                          k_bank_rings[ring + 1].distance_from_water *
-                                              base_bank_width);
-        float const next_terrain =
-            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+            center_pos -
+            bank_perpendicular *
+                (bank_half_width +
+                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
+        float const next_height = bank_surface_height(next_ring_pos, ring + 1);
 
         QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
-                                        (terrain_height + ring_height) - prev_pos.y(),
+                                        ring_height_y - prev_pos.y(),
                                         ring_pos.z() - prev_pos.z());
         QVector3D const slope_to_next(
             next_ring_pos.x() - ring_pos.x(),
-            (next_clamped + k_bank_rings[ring + 1].height_offset) -
-                (clamped_height + ring_height),
+            next_height - ring_height_y,
             next_ring_pos.z() - ring_pos.z());
 
-        QVector3D const n1 = QVector3D::crossProduct(slope_from_prev, dir).normalized();
-        QVector3D const n2 = QVector3D::crossProduct(slope_to_next, dir).normalized();
+        QVector3D const n1 =
+            QVector3D::crossProduct(bank_direction, slope_from_prev).normalized();
+        QVector3D const n2 =
+            QVector3D::crossProduct(bank_direction, slope_to_next).normalized();
         normal = ((n1 + n2) * 0.5F).normalized();
       }
 
@@ -874,13 +997,10 @@ auto build_riverbank_mesh(
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
       float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
-      float const ring_height = k_bank_rings[ring].height_offset;
 
       QVector3D const ring_pos =
-          center_pos + perpendicular * (bank_half_width + ring_dist);
-      float const terrain_height =
-          sample_height_clamped(height_map, ring_pos.x(), ring_pos.z());
-      float const clamped_height = std::min(terrain_height, center_height + 0.05F);
+          center_pos + bank_perpendicular * (bank_half_width + ring_dist);
+      float const ring_height_y = bank_surface_height(ring_pos, ring);
 
       if (ring == 0) {
         result.visibility_samples.push_back(ring_pos);
@@ -888,56 +1008,54 @@ auto build_riverbank_mesh(
 
       Render::GL::Vertex vtx{};
       vtx.position[0] = ring_pos.x();
-      vtx.position[1] = clamped_height + ring_height;
+      vtx.position[1] = ring_height_y;
       vtx.position[2] = ring_pos.z();
 
       QVector3D normal;
       if (ring == 0) {
         QVector3D const next_ring_pos =
             center_pos +
-            perpendicular * (bank_half_width +
-                             k_bank_rings[1].distance_from_water * base_bank_width);
-        float const next_terrain =
-            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+            bank_perpendicular *
+                (bank_half_width +
+                 k_bank_rings[1].distance_from_water * base_bank_width);
+        float const next_height = bank_surface_height(next_ring_pos, ring + 1);
         QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
-                                  (next_clamped + k_bank_rings[1].height_offset) -
-                                      (clamped_height + ring_height),
+                                  next_height - ring_height_y,
                                   next_ring_pos.z() - ring_pos.z());
-        normal = QVector3D::crossProduct(dir, slope_vec).normalized();
+        normal = QVector3D::crossProduct(slope_vec, bank_direction).normalized();
       } else if (ring == k_rings_per_side - 1) {
         unsigned int const prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
         QVector3D const prev_pos(vertices[prev_idx].position[0],
                                  vertices[prev_idx].position[1],
                                  vertices[prev_idx].position[2]);
         QVector3D const slope_vec(ring_pos.x() - prev_pos.x(),
-                                  (clamped_height + ring_height) - prev_pos.y(),
+                                  ring_height_y - prev_pos.y(),
                                   ring_pos.z() - prev_pos.z());
-        normal = QVector3D::crossProduct(dir, slope_vec).normalized();
+        normal = QVector3D::crossProduct(slope_vec, bank_direction).normalized();
       } else {
         unsigned int const prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
         QVector3D const prev_pos(vertices[prev_idx].position[0],
                                  vertices[prev_idx].position[1],
                                  vertices[prev_idx].position[2]);
         QVector3D const next_ring_pos =
-            center_pos + perpendicular * (bank_half_width +
-                                          k_bank_rings[ring + 1].distance_from_water *
-                                              base_bank_width);
-        float const next_terrain =
-            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+            center_pos +
+            bank_perpendicular *
+                (bank_half_width +
+                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
+        float const next_height = bank_surface_height(next_ring_pos, ring + 1);
 
         QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
-                                        (clamped_height + ring_height) - prev_pos.y(),
+                                        ring_height_y - prev_pos.y(),
                                         ring_pos.z() - prev_pos.z());
         QVector3D const slope_to_next(
             next_ring_pos.x() - ring_pos.x(),
-            (next_clamped + k_bank_rings[ring + 1].height_offset) -
-                (clamped_height + ring_height),
+            next_height - ring_height_y,
             next_ring_pos.z() - ring_pos.z());
 
-        QVector3D const n1 = QVector3D::crossProduct(dir, slope_from_prev).normalized();
-        QVector3D const n2 = QVector3D::crossProduct(dir, slope_to_next).normalized();
+        QVector3D const n1 =
+            QVector3D::crossProduct(slope_from_prev, bank_direction).normalized();
+        QVector3D const n2 =
+            QVector3D::crossProduct(slope_to_next, bank_direction).normalized();
         normal = ((n1 + n2) * 0.5F).normalized();
       }
 
@@ -949,39 +1067,21 @@ auto build_riverbank_mesh(
       vertices.push_back(vtx);
     }
 
-    {
-      Render::GL::Vertex const& water_edge_left = vertices[ring_start_idx];
-      Render::GL::Vertex skirt_vtx = water_edge_left;
-      skirt_vtx.position[1] = -0.05F;
-      skirt_vtx.normal[0] = -perpendicular.x();
-      skirt_vtx.normal[1] = 0.0F;
-      skirt_vtx.normal[2] = -perpendicular.z();
-      vertices.push_back(skirt_vtx);
-    }
-
-    {
-      Render::GL::Vertex const& water_edge_right =
-          vertices[ring_start_idx + k_rings_per_side];
-      Render::GL::Vertex skirt_vtx = water_edge_right;
-      skirt_vtx.position[1] = -0.05F;
-      skirt_vtx.normal[0] = perpendicular.x();
-      skirt_vtx.normal[1] = 0.0F;
-      skirt_vtx.normal[2] = perpendicular.z();
-      vertices.push_back(skirt_vtx);
-    }
-
     if (i < length_steps - 1) {
       unsigned int const base_idx = ring_start_idx;
-      unsigned int const next_base_idx = base_idx + k_total_rings + 2;
+      unsigned int const next_base_idx = base_idx + k_total_rings;
       const float midpoint_t =
           (static_cast<float>(i) + 0.5F) /
           static_cast<float>(length_steps - 1);
       const auto midpoint = sample_linear_feature_cross_section(
           ribbon_segment, midpoint_t, ribbon_settings);
+      const QVector3D midpoint_direction = local_bank_direction(midpoint_t);
+      const QVector3D midpoint_perpendicular(
+          -midpoint_direction.z(), 0.0F, midpoint_direction.x());
       const bool clip_left_bank = bank_point_inside_other_channel(
-          midpoint.center - perpendicular * midpoint.half_width);
+          midpoint.center - midpoint_perpendicular * midpoint.half_width);
       const bool clip_right_bank = bank_point_inside_other_channel(
-          midpoint.center + perpendicular * midpoint.half_width);
+          midpoint.center + midpoint_perpendicular * midpoint.half_width);
 
       for (int ring = 0; ring < k_rings_per_side - 1; ++ring) {
         unsigned int const idx0 = base_idx + ring;
@@ -1015,33 +1115,6 @@ auto build_riverbank_mesh(
         }
       }
 
-      unsigned int const left_top = base_idx;
-      unsigned int const left_bottom = base_idx + k_total_rings;
-      unsigned int const left_top_next = next_base_idx;
-      unsigned int const left_bottom_next = next_base_idx + k_total_rings;
-
-      if (!clip_left_bank) {
-        indices.push_back(left_top);
-        indices.push_back(left_bottom);
-        indices.push_back(left_top_next);
-        indices.push_back(left_bottom);
-        indices.push_back(left_bottom_next);
-        indices.push_back(left_top_next);
-      }
-
-      unsigned int const right_top = base_idx + k_rings_per_side;
-      unsigned int const right_bottom = base_idx + k_total_rings + 1;
-      unsigned int const right_top_next = next_base_idx + k_rings_per_side;
-      unsigned int const right_bottom_next = next_base_idx + k_total_rings + 1;
-
-      if (!clip_right_bank) {
-        indices.push_back(right_top);
-        indices.push_back(right_top_next);
-        indices.push_back(right_bottom);
-        indices.push_back(right_bottom);
-        indices.push_back(right_top_next);
-        indices.push_back(right_bottom_next);
-      }
     }
   }
 
@@ -1061,17 +1134,224 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment& segment,
       std::vector<Game::Map::RiverSegment>{segment}, 0U, height_map);
 }
 
+auto build_riverbank_junction_meshes(
+    const std::vector<Game::Map::RiverSegment>& river_network,
+    const Game::Map::TerrainHeightMap& height_map)
+    -> std::vector<RiverbankMeshBuildResult> {
+  struct Junction {
+    QVector3D center;
+    float water_radius = 0.0F;
+    float bank_width = 0.0F;
+    int samples = 0;
+  };
+
+  const float tile_size = height_map.get_tile_size();
+  const auto settings = make_river_ribbon_settings();
+  const float join_distance = std::max(tile_size * 0.30F, 0.05F);
+  const float join_distance_sq = join_distance * join_distance;
+  std::vector<Junction> junctions;
+
+  auto add_endpoint = [&](const LinearFeatureCrossSection& endpoint,
+                          float authored_width) {
+    auto match = std::find_if(junctions.begin(), junctions.end(), [&](const auto& item) {
+      const float dx = item.center.x() - endpoint.center.x();
+      const float dz = item.center.z() - endpoint.center.z();
+      return dx * dx + dz * dz <= join_distance_sq;
+    });
+    const float bank_width =
+        0.50F + std::min(authored_width * 0.0025F, 0.075F);
+    if (match == junctions.end()) {
+      junctions.push_back({endpoint.center, endpoint.half_width, bank_width, 1});
+      return;
+    }
+    match->center =
+        (match->center * static_cast<float>(match->samples) + endpoint.center) /
+        static_cast<float>(match->samples + 1);
+    match->water_radius = std::max(match->water_radius, endpoint.half_width);
+    match->bank_width = std::max(match->bank_width, bank_width);
+    ++match->samples;
+  };
+
+  for (const auto& segment : river_network) {
+    const LinearFeatureRibbonSegment ribbon{segment.start, segment.end, segment.width};
+    add_endpoint(sample_linear_feature_cross_section(ribbon, 0.0F, settings),
+                 segment.width);
+    add_endpoint(sample_linear_feature_cross_section(ribbon, 1.0F, settings),
+                 segment.width);
+  }
+
+  // A tributary may be authored into the middle of a main segment rather
+  // than into an explicitly split endpoint. Promote that endpoint to a real
+  // shoreline junction as well, matching the clipping rule used by banks.
+  for (auto& junction : junctions) {
+    if (junction.samples >= 2) {
+      continue;
+    }
+    int overlapping_channels = 0;
+    for (const auto& segment : river_network) {
+      const float dx = segment.end.x() - segment.start.x();
+      const float dz = segment.end.z() - segment.start.z();
+      const float length_squared = dx * dx + dz * dz;
+      const float projection =
+          length_squared > 0.0001F
+              ? std::clamp(((junction.center.x() - segment.start.x()) * dx +
+                            (junction.center.z() - segment.start.z()) * dz) /
+                               length_squared,
+                           0.0F,
+                           1.0F)
+              : 0.0F;
+      const float nearest_x = segment.start.x() + dx * projection;
+      const float nearest_z = segment.start.z() + dz * projection;
+      const float distance_x = junction.center.x() - nearest_x;
+      const float distance_z = junction.center.z() - nearest_z;
+      const float channel_radius = segment.width * settings.width_scale * 0.5F;
+      if (distance_x * distance_x + distance_z * distance_z <=
+          channel_radius * channel_radius) {
+        ++overlapping_channels;
+        junction.water_radius = std::max(junction.water_radius, channel_radius);
+        junction.bank_width = std::max(
+            junction.bank_width,
+            0.50F + std::min(segment.width * 0.0025F, 0.075F));
+      }
+    }
+    junction.samples = std::max(junction.samples, overlapping_channels);
+  }
+
+  constexpr int k_bank_rings = 6;
+  constexpr float two_pi = 2.0F * std::numbers::pi_v<float>;
+  std::vector<RiverbankMeshBuildResult> results;
+  for (const auto& junction : junctions) {
+    if (junction.samples < 2 || junction.water_radius <= 0.01F) {
+      continue;
+    }
+
+    const int angular_segments = std::clamp(
+        static_cast<int>(std::ceil(two_pi *
+                                   (junction.water_radius + junction.bank_width) /
+                                   std::max(tile_size * 0.28F, 0.18F))),
+        20,
+        64);
+    std::vector<Render::GL::Vertex> vertices;
+    std::vector<unsigned int> indices;
+    vertices.reserve(
+        1U + static_cast<std::size_t>(k_bank_rings * angular_segments));
+    indices.reserve(static_cast<std::size_t>(angular_segments) *
+                    (3U + static_cast<unsigned int>(k_bank_rings - 1) * 6U));
+
+    const float bed_height = sample_water_surface_height_clamped(
+        height_map, junction.center.x(), junction.center.z());
+    // Junction fill is an underlay: water owns the channel center and only
+    // the outer bank should emerge. Keep this safely below polygon offset.
+    const float waterline_height = bed_height + settings.y_offset - 0.320F;
+
+    Render::GL::Vertex center_vertex{};
+    center_vertex.position = {
+        junction.center.x(), waterline_height, junction.center.z()};
+    center_vertex.normal = {0.0F, 1.0F, 0.0F};
+    center_vertex.tex_coord = {0.0F, 0.0F};
+    vertices.push_back(center_vertex);
+
+    constexpr float radius_profile[k_bank_rings] = {
+        0.52F, 1.02F, 1.22F, 1.50F, 1.76F, 2.0F};
+    for (int ring = 0; ring < k_bank_rings; ++ring) {
+      const float shore_t = ring < 2
+                                ? 0.0F
+                                : static_cast<float>(ring - 1) /
+                                      static_cast<float>(k_bank_rings - 2);
+      const float radius =
+          ring < 2
+              ? junction.water_radius * radius_profile[ring]
+              : junction.water_radius +
+                    junction.bank_width * (radius_profile[ring] - 1.0F);
+      const float blend = smoothstep01(shore_t);
+      for (int segment = 0; segment < angular_segments; ++segment) {
+        const float angle_t = static_cast<float>(segment) /
+                              static_cast<float>(angular_segments);
+        const float angle = angle_t * two_pi;
+        const QVector3D outward(std::cos(angle), 0.0F, std::sin(angle));
+        const float world_x = junction.center.x() + outward.x() * radius;
+        const float world_z = junction.center.z() + outward.z() * radius;
+        const float terrain_height =
+            sample_height_clamped(height_map, world_x, world_z);
+        const float blended =
+            mixf(waterline_height, terrain_height + 0.055F, blend);
+        constexpr float k_junction_lift[k_bank_rings] = {
+            0.0F, 0.0F, 0.016F, 0.010F, 0.004F, 0.0F};
+        const float height =
+            ring < 2
+                ? waterline_height
+                : std::max(blended, terrain_height + k_junction_lift[ring]);
+        const float radial_slope = std::clamp(
+            (terrain_height + 0.055F - waterline_height) /
+                std::max(junction.bank_width, 0.01F),
+            -0.65F,
+            0.65F);
+        const QVector3D normal =
+            QVector3D(-outward.x() * radial_slope,
+                      1.0F,
+                      -outward.z() * radial_slope)
+                .normalized();
+
+        Render::GL::Vertex vertex{};
+        vertex.position = {world_x, height, world_z};
+        vertex.normal = {normal.x(), normal.y(), normal.z()};
+        vertex.tex_coord = {shore_t, angle_t};
+        vertices.push_back(vertex);
+      }
+    }
+
+    for (int segment = 0; segment < angular_segments; ++segment) {
+      const unsigned int current = 1U + static_cast<unsigned int>(segment);
+      const unsigned int next =
+          1U + static_cast<unsigned int>((segment + 1) % angular_segments);
+      indices.insert(indices.end(), {0U, next, current});
+    }
+    for (int ring = 0; ring < k_bank_rings - 1; ++ring) {
+      const unsigned int inner =
+          1U + static_cast<unsigned int>(ring * angular_segments);
+      const unsigned int outer =
+          1U + static_cast<unsigned int>((ring + 1) * angular_segments);
+      for (int segment = 0; segment < angular_segments; ++segment) {
+        const unsigned int next =
+            static_cast<unsigned int>((segment + 1) % angular_segments);
+        const unsigned int a = inner + static_cast<unsigned int>(segment);
+        const unsigned int b = outer + static_cast<unsigned int>(segment);
+        const unsigned int c = outer + next;
+        const unsigned int d = inner + next;
+        indices.insert(indices.end(), {a, d, b, d, c, b});
+      }
+    }
+
+    RiverbankMeshBuildResult result;
+    result.mesh = std::make_unique<Render::GL::Mesh>(vertices, indices);
+    for (int segment = 0; segment < angular_segments; segment += 3) {
+      const float angle = two_pi * static_cast<float>(segment) /
+                          static_cast<float>(angular_segments);
+      result.visibility_samples.emplace_back(
+          junction.center.x() +
+              std::cos(angle) * (junction.water_radius + junction.bank_width),
+          waterline_height,
+          junction.center.z() +
+              std::sin(angle) * (junction.water_radius + junction.bank_width));
+    }
+    results.push_back(std::move(result));
+  }
+
+  return results;
+}
+
 auto build_lake_shore_mesh(const Game::Map::Lake& lake,
                            const Game::Map::TerrainHeightMap& height_map)
     -> RiverbankMeshBuildResult {
   RiverbankMeshBuildResult result;
   constexpr float two_pi = 6.28318530717958647692F;
   constexpr float deg_to_rad = 0.01745329251994329577F;
-  constexpr int ring_count = 3;
+  constexpr int ring_count = 5;
   const float tile_size = height_map.get_tile_size();
   const float half_width = std::max(lake.width * 0.5F, tile_size * 0.5F);
   const float half_depth = std::max(lake.depth * 0.5F, tile_size * 0.5F);
-  const float shore_width = std::clamp(tile_size * 0.7F, 0.45F, 1.1F);
+  const float water_render_margin = std::max(tile_size * 0.70F, 0.10F);
+  const float shore_width = std::clamp(tile_size * 1.85F, 1.25F, 2.75F);
   const int angular_segments = std::clamp(
       static_cast<int>(std::ceil(two_pi * std::max(half_width, half_depth) /
                                  std::max(tile_size * 0.75F, 0.3F))),
@@ -1093,21 +1373,41 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
       const float angle = two_pi * static_cast<float>(segment) /
                           static_cast<float>(angular_segments);
       const float boundary = Game::Map::lake_boundary_scale(lake, angle);
-      const float local_x =
-          std::cos(angle) * (half_width * boundary + shore_width * shore_t);
-      const float local_z =
-          std::sin(angle) * (half_depth * boundary + shore_width * shore_t);
+      const float local_x = std::cos(angle) *
+                            (half_width * boundary + water_render_margin +
+                             shore_width * shore_t);
+      const float local_z = std::sin(angle) *
+                            (half_depth * boundary + water_render_margin +
+                             shore_width * shore_t);
       const float rotated_x = local_x * cos_rotation - local_z * sin_rotation;
       const float rotated_z = local_x * sin_rotation + local_z * cos_rotation;
       const float world_x = lake.center.x() + rotated_x;
       const float world_z = lake.center.z() + rotated_z;
       const float terrain_y = sample_height_clamped(height_map, world_x, world_z);
-      const float water_edge_y = lake.center.y() + 0.045F;
+      const float water_edge_y = lake.center.y() + 0.078F;
 
       Render::GL::Vertex vertex{};
-      vertex.position = {
-          world_x, mixf(water_edge_y, terrain_y + 0.015F, blend), world_z};
-      vertex.normal = {0.0F, 1.0F, 0.0F};
+      const float blended_height =
+          mixf(water_edge_y, terrain_y + 0.060F, blend);
+      const float overlay_lift =
+          ring == ring_count ? 0.0F : 0.020F * (1.0F - shore_t);
+      const float shore_height =
+          ring == 0
+              ? water_edge_y
+              : std::max(blended_height, terrain_y + overlay_lift);
+      vertex.position = {world_x, shore_height, world_z};
+      QVector3D outward(rotated_x, 0.0F, rotated_z);
+      outward.normalize();
+      const float radial_slope = std::clamp(
+          (terrain_y + 0.060F - water_edge_y) / std::max(shore_width, 0.01F),
+          -0.65F,
+          0.65F);
+      const QVector3D bank_normal =
+          QVector3D(-outward.x() * radial_slope,
+                    1.0F,
+                    -outward.z() * radial_slope)
+              .normalized();
+      vertex.normal = {bank_normal.x(), bank_normal.y(), bank_normal.z()};
       vertex.tex_coord = {shore_t,
                           static_cast<float>(segment) /
                               static_cast<float>(angular_segments)};

@@ -13,6 +13,7 @@ out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
+out vec3 v_local_normal;
 
 void main() {
   float scale = a_pos_scale.w;
@@ -34,6 +35,7 @@ void main() {
 
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;
+  v_local_normal = normalize(a_normal);
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }
