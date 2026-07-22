@@ -151,6 +151,8 @@ public:
         m_base_archetype,
         std::span<const EquipmentHandle>(handles.data(), m_profile.loadout_slot_count));
     spec.creature_asset_id = m_creature_asset_id;
+    spec.animation_manifest.melee_clip_override =
+        Render::Creature::k_humanoid_archer_melee_clip;
     m_visual_spec_cache = spec;
     m_visual_spec_baked = true;
     return m_visual_spec_cache;

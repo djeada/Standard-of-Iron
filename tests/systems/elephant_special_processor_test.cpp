@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cmath>
+
 #include <gtest/gtest.h>
 
 #include "core/component.h"
@@ -91,6 +94,28 @@ TEST_F(ElephantSpecialProcessorTest,
   update(1.0F);
 
   EXPECT_LT(enemy_unit->health, enemy_unit->max_health);
+}
+
+TEST_F(ElephantSpecialProcessorTest, TrampleLaunchesInfantryCasualties) {
+  auto* elephant = add_elephant(*world, 1);
+  auto* enemy = add_unit(*world, Game::Units::SpawnType::Spearman, 2, 1.0F, 0.0F);
+  auto* enemy_unit = enemy->get_component<UnitComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  enemy_unit->render_individuals_per_unit_override = 8;
+
+  update(1.0F);
+
+  auto* casualties = enemy->get_component<SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_FALSE(casualties->entries.empty());
+  EXPECT_TRUE(std::all_of(casualties->entries.begin(),
+                          casualties->entries.end(),
+                          [](auto const& entry) { return entry.launched; }));
+  EXPECT_TRUE(std::all_of(
+      casualties->entries.begin(), casualties->entries.end(), [](auto const& entry) {
+        return std::hypot(entry.launch_velocity_x, entry.launch_velocity_z) >= 5.0F &&
+               entry.launch_velocity_y >= 6.8F;
+      }));
 }
 
 TEST_F(ElephantSpecialProcessorTest, PanicDoesNotCreateHiddenRandomMoveTarget) {

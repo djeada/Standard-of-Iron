@@ -20,14 +20,21 @@ void update_combat_mode(Engine::Core::Entity* attacker,
     return;
   }
 
+  bool const in_melee_combat =
+      attack_comp->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
+  if (in_melee_combat && attack_comp->can_melee) {
+    // A reciprocal melee lock is a physical constraint, so even a troop whose
+    // normal preference is ranged must use its close-combat behavior here.
+    attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+    return;
+  }
+
   if (attack_comp->preferred_mode != Engine::Core::AttackComponent::CombatMode::Auto) {
     attack_comp->current_mode = attack_comp->preferred_mode;
     return;
   }
 
-  bool const in_melee_combat =
-      attack_comp->in_melee_lock &&
-      Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
   bool const has_attack_target =
       attacker->has_component<Engine::Core::AttackTargetComponent>();
 

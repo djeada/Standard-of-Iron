@@ -21,6 +21,7 @@ out vec2 v_tex_coord;
 out float v_foliage_mask;
 out float v_needle_seed;
 out float v_bark_seed;
+out vec3 v_local_pos;
 
 void main() {
   const float TWO_PI = 6.2831853;
@@ -71,13 +72,18 @@ void main() {
   float height_factor = clamp(model_pos.y, 0.0, 1.1);
   vec3 local_pos = model_pos * scale;
 
-  float sway = sin(u_time * u_wind_speed * 0.5 + sway_phase) * u_wind_strength * 0.8 *
+  float wind_time = u_time * u_wind_speed;
+  float gust = 0.62 + 0.38 * sin(wind_time * 0.19 + sway_phase * 0.37);
+  float sway = sin(wind_time * 0.48 + sway_phase) * u_wind_strength * gust *
                height_factor * height_factor;
+  float secondary = sin(wind_time * 0.73 + sway_phase * 1.71 + 1.4) *
+                    u_wind_strength * 0.34 * height_factor * height_factor;
 
-  float sway_influence = mix(0.04, 0.12, foliage_mask);
-  local_pos.x += sway * sway_influence;
-
-  local_pos.y -= sway * 0.02 * foliage_mask;
+  float sway_influence = mix(0.025, 0.105, foliage_mask);
+  vec2 wind_dir = normalize(vec2(0.78, 0.62));
+  vec2 cross_dir = vec2(-wind_dir.y, wind_dir.x);
+  local_pos.xz += (wind_dir * sway + cross_dir * secondary) * sway_influence;
+  local_pos.y -= abs(sway) * 0.012 * foliage_mask;
 
   vec3 local_normal = a_normal;
   if (foliage_mask > 0.0) {
@@ -106,6 +112,7 @@ void main() {
   v_foliage_mask = foliage_mask;
   v_needle_seed = needle_seed;
   v_bark_seed = bark_seed;
+  v_local_pos = model_pos;
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

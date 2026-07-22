@@ -181,12 +181,21 @@ Item {
         }
     }
 
-    Rectangle {
+    Item {
         id: perfectGuardFlash
-        anchors.fill: parent
-        color: "#ffffff"
+        anchors.centerIn: parent
+        width: 190
+        height: 190
         opacity: root.status_value("perfect_guard_active", false) === true ? 0.25 : 0.0
         visible: opacity > 0.0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.width: 5
+            border.color: "#ffffff"
+        }
 
         Behavior on opacity  {
             NumberAnimation {
@@ -195,12 +204,23 @@ Item {
         }
     }
 
-    Rectangle {
+    Item {
         id: combatEntryFlash
-        anchors.fill: parent
-        color: "#8bdcff"
+        anchors.centerIn: parent
+        width: 230
+        height: 230
+        property color accentColor: "#8bdcff"
         opacity: 0.0
         visible: opacity > 0.0
+
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.width: 4
+            border.color: combatEntryFlash.accentColor
+        }
     }
 
     Item {
@@ -334,12 +354,21 @@ Item {
         }
     }
 
-    Rectangle {
+    Item {
         id: guardBreakShock
-        anchors.fill: parent
-        color: "#ff6a36"
+        anchors.centerIn: parent
+        width: 260
+        height: 260
         opacity: 0.0
         visible: opacity > 0.0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.width: 6
+            border.color: "#ff6a36"
+        }
     }
 
     Item {
@@ -976,12 +1005,12 @@ Item {
         if (attacking && !_prevAttacking) {
             attackSweep.opacity = 0.85;
             attackSweepDecay.restart();
-            combatEntryFlash.color = hasLockedTarget ? "#79cfff" : "#ffb260";
+            combatEntryFlash.accentColor = hasLockedTarget ? "#79cfff" : "#ffb260";
             combatEntryFlash.opacity = 0.18;
             combatEntryDecay.restart();
         }
         if (perfectGuard && !_prevPerfectGuard) {
-            combatEntryFlash.color = "#bce7ff";
+            combatEntryFlash.accentColor = "#bce7ff";
             combatEntryFlash.opacity = 0.24;
             combatEntryDecay.restart();
         }
@@ -994,7 +1023,7 @@ Item {
             dodgeTrailDecay.restart();
         }
         if (hasLockedTarget && !_prevLockedTarget) {
-            combatEntryFlash.color = "#8ad6ff";
+            combatEntryFlash.accentColor = "#8ad6ff";
             combatEntryFlash.opacity = 0.14;
             combatEntryDecay.restart();
         }

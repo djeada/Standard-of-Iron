@@ -30,11 +30,15 @@ struct WallPalette {
   QVector3D shadow{0.24F, 0.17F, 0.09F};
   QVector3D masonry_accent{0.67F, 0.50F, 0.31F};
   bool alternate_starts_light{true};
+  bool horned_masonry{false};
 };
 
 struct WallGeometry {
   bool solid_masonry{false};
   bool earthwork_base{false};
+  bool cross_braced{false};
+  bool metal_bands{false};
+  bool irregular_stakes{false};
   float connected_span_length{1.04F};
   float open_span_length{0.96F};
   float stake_center_y{1.18F};

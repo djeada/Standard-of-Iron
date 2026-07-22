@@ -11,10 +11,12 @@ inline constexpr const char* BIOME = "biome";
 inline constexpr const char* GROUND_TYPE = "ground_type";
 inline constexpr const char* CAMERA = "camera";
 inline constexpr const char* SPAWNS = "spawns";
+inline constexpr const char* STRUCTURES = "structures";
 inline constexpr const char* UNDEAD_ZONES = "undead_zones";
 inline constexpr const char* FIRECAMPS = "firecamps";
 inline constexpr const char* TERRAIN = "terrain";
 inline constexpr const char* RIVERS = "rivers";
+inline constexpr const char* LAKES = "lakes";
 inline constexpr const char* ROADS = "roads";
 inline constexpr const char* BRIDGES = "bridges";
 inline constexpr const char* VICTORY = "victory";
@@ -110,6 +112,7 @@ inline constexpr const char* END = "end";
 inline constexpr const char* BRIDGE_WIDTH = "width";
 
 inline constexpr const char* ROAD_STYLE = "style";
+inline constexpr const char* ROAD_WAYPOINTS = "waypoints";
 
 inline constexpr const char* RAIN = "rain";
 inline constexpr const char* RAIN_ENABLED = "enabled";
@@ -125,8 +128,6 @@ inline constexpr const char* FOG_ZONES = "fog_zones";
 inline constexpr const char* PERSISTENT = "persistent";
 inline constexpr const char* TIME_OF_DAY = "time_of_day";
 inline constexpr const char* STARTING_RESOURCES = "starting_resources";
-inline constexpr const char* BUILDINGS = "buildings";
-inline constexpr const char* WALLS = "walls";
 inline constexpr const char* DENSITY = "density";
 
 } // namespace Game::Map::JsonKeys

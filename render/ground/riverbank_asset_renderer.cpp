@@ -77,21 +77,6 @@ void RiverbankAssetRenderer::set_light_direction(const QVector3D& dir) {
 
 void RiverbankAssetRenderer::submit(Renderer&, ResourceManager* resources) {
   Q_UNUSED(resources);
-
-  if (m_asset_state.instance_count == 0) {
-    return;
-  }
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_asset_state, [](const RiverbankAssetInstanceGpu& instance) {
-        return QVector3D(
-            instance.position[0], instance.position[1], instance.position[2]);
-      });
-
-  if (visible_count > 0) {
-    qDebug() << "RiverbankAssetRenderer: Would render" << visible_count << "of"
-             << m_asset_state.instance_count << "riverbank assets (fog of war applied)";
-  }
 }
 
 void RiverbankAssetRenderer::clear() {
@@ -250,7 +235,9 @@ void RiverbankAssetRenderer::generate_asset_instances() {
   asset_instances_dirty = true;
   m_asset_state.visibility_dirty = true;
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   qDebug() << "Generated" << asset_instance_count << "riverbank assets";
+#endif
 }
 
 } // namespace Render::GL

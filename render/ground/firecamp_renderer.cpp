@@ -14,6 +14,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 
 namespace {
 
@@ -43,9 +44,9 @@ void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   auto& firecamp_params = m_firecamp_state.params;
 
   firecamp_params.time = 0.0F;
-  firecamp_params.flicker_speed = 5.0F;
-  firecamp_params.flicker_amount = 0.02F;
-  firecamp_params.glow_strength = 1.1F;
+  firecamp_params.flicker_speed = 4.4F;
+  firecamp_params.flicker_amount = 0.028F;
+  firecamp_params.glow_strength = 1.16F;
 
   generate_firecamp_instances();
 }
@@ -56,8 +57,11 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const auto visible_count = Scatter::sync_filtered_state(
       m_firecamp_state, [](const FireCampInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_intensity;
-      });
-  if (visible_count == 0 || !m_firecamp_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -69,19 +73,22 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::FireCamp;
-  cmd.instance_buffer = m_firecamp_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.firecamp = params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_firecamp_state, cmd);
 
-  const QVector3D log_color(0.26F, 0.15F, 0.08F);
-  const QVector3D char_color(0.08F, 0.05F, 0.03F);
+  const QVector3D log_color(0.31F, 0.17F, 0.075F);
+  const QVector3D char_color(0.055F, 0.034F, 0.022F);
+  const QVector3D ember_color(0.58F, 0.105F, 0.025F);
 
   for (const auto& instance : m_firecamp_state.visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
     const QVector3D camp_pos = pos_intensity.toVector3D();
+    if (!renderer.submission_visibility().accepts_sphere(
+            camp_pos, 2.0F, SubmissionFogMode::VisibleOnly)) {
+      continue;
+    }
     const float intensity = std::clamp(pos_intensity.w(), 0.6F, 1.6F);
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 
@@ -92,11 +99,14 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                               HashConstants::k_temporal_variation_frequency));
 
     const float time = params.time;
-    const float char_amount =
-        std::clamp(time * 0.015F + rand_01(state) * 0.05F, 0.0F, 1.0F);
+    const float char_amount = remap(rand_01(state), 0.58F, 0.84F);
+    const float ember_pulse =
+        0.5F + 0.5F * std::sin(time * 3.8F + radius_phase.y() * 2.1F);
 
-    const QVector3D blended_log_color =
-        log_color * (1.0F - char_amount) + char_color * (char_amount + 0.15F);
+    QVector3D blended_log_color =
+        log_color * (1.0F - char_amount) + char_color * char_amount;
+    blended_log_color = blended_log_color * (1.0F - ember_pulse * 0.08F) +
+                        ember_color * (ember_pulse * 0.08F);
 
     const float log_length = std::clamp(base_radius * 0.85F, 0.45F, 1.1F);
     const float log_radius = std::clamp(base_radius * 0.08F, 0.03F, 0.08F);
@@ -132,6 +142,44 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                         top_center + top_half,
                         top_radius,
                         blended_log_color,
+                        1.0F);
+    }
+
+    const float ring_radius = std::clamp(base_radius * 0.23F, 0.52F, 0.82F);
+    const int stone_count = 9;
+    for (int stone = 0; stone < stone_count; ++stone) {
+      float const angle = MathConstants::k_two_pi * static_cast<float>(stone) /
+                              static_cast<float>(stone_count) +
+                          base_yaw * 0.35F;
+      float const jitter = remap(rand_01(state), -0.035F, 0.035F);
+      QVector3D const radial(std::cos(angle), 0.0F, std::sin(angle));
+      QVector3D const tangent(-radial.z(), 0.0F, radial.x());
+      QVector3D const stone_center =
+          camp_pos + radial * (ring_radius + jitter) + QVector3D(0.0F, 0.015F, 0.0F);
+      float const stone_half_length = remap(rand_01(state), 0.065F, 0.105F);
+      float const stone_radius = remap(rand_01(state), 0.075F, 0.115F);
+      float const stone_tone = remap(rand_01(state), 0.76F, 1.05F);
+      QVector3D const stone_color = QVector3D(0.25F, 0.235F, 0.21F) * stone_tone;
+      renderer.cylinder(stone_center - tangent * stone_half_length,
+                        stone_center + tangent * stone_half_length,
+                        stone_radius,
+                        stone_color,
+                        1.0F);
+    }
+
+    for (int coal = 0; coal < 5; ++coal) {
+      float const angle = rand_01(state) * MathConstants::k_two_pi;
+      float const distance = remap(rand_01(state), 0.08F, ring_radius * 0.48F);
+      QVector3D const coal_center =
+          camp_pos + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) * distance +
+          QVector3D(0.0F, 0.025F, 0.0F);
+      QVector3D const coal_axis(-std::sin(angle), 0.0F, std::cos(angle));
+      float const heat = remap(rand_01(state), 0.22F, 0.68F) * ember_pulse;
+      QVector3D const coal_color = char_color * (1.0F - heat) + ember_color * heat;
+      renderer.cylinder(coal_center - coal_axis * 0.035F,
+                        coal_center + coal_axis * 0.035F,
+                        0.032F,
+                        coal_color,
                         1.0F);
     }
   }

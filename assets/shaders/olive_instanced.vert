@@ -23,6 +23,7 @@ out float v_leaf_seed;
 out float v_bark_seed;
 out float v_branch_id;
 out vec2 v_local_pos_xz;
+out vec3 v_local_pos;
 
 void main() {
   const float TWO_PI = 6.2831853;
@@ -108,6 +109,7 @@ void main() {
   v_bark_seed = bark_seed;
   v_branch_id = branch_id;
   v_local_pos_xz = model_pos.xz;
+  v_local_pos = model_pos;
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

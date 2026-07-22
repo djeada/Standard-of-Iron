@@ -51,6 +51,7 @@ struct LinearElement {
 };
 
 inline constexpr float k_min_bridge_height = 0.1F;
+inline constexpr float k_min_bridge_width = 8.0F;
 
 [[nodiscard]] auto
 compute_min_bridge_width(const QVector2D& bridge_start,
@@ -134,6 +135,9 @@ public:
 
   [[nodiscard]] const GridSettings& grid() const { return m_grid; }
   void set_grid(const GridSettings& grid);
+
+  [[nodiscard]] const QJsonObject& biome() const { return m_biome; }
+  void set_biome(const QJsonObject& biome);
 
   [[nodiscard]] const QVector<TerrainElement>& terrain_elements() const {
     return m_terrain;
@@ -239,6 +243,7 @@ private:
   std::vector<std::unique_ptr<Command>> m_redo_stack;
 
   void parse_terrain_array(const QJsonArray& arr);
+  void parse_lakes_array(const QJsonArray& arr);
   void parse_world_props_array(const QJsonArray& arr);
   void parse_legacy_firecamps_array(const QJsonArray& arr);
   void parse_rivers_array(const QJsonArray& arr);
@@ -247,18 +252,16 @@ private:
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
   void parse_fog_zones_array(const QJsonArray& arr);
-  void parse_buildings_array(const QJsonArray& arr);
-  void parse_walls_array(const QJsonArray& arr);
+  void parse_structures_array(const QJsonArray& arr);
 
   [[nodiscard]] QJsonArray terrain_to_json() const;
+  [[nodiscard]] QJsonArray lakes_to_json() const;
   [[nodiscard]] QJsonArray world_props_to_json() const;
   [[nodiscard]] QJsonArray rivers_to_json() const;
   [[nodiscard]] QJsonArray roads_to_json() const;
   [[nodiscard]] QJsonArray bridges_to_json() const;
-  [[nodiscard]] QJsonArray buildings_to_json() const;
-  [[nodiscard]] QJsonArray walls_to_json() const;
+  [[nodiscard]] QJsonArray structures_to_json() const;
   [[nodiscard]] QJsonObject build_root_json() const;
-  [[nodiscard]] QJsonObject structure_to_spawn_json(const StructureElement& elem) const;
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;
   [[nodiscard]] QJsonArray fog_zones_to_json() const;
@@ -634,6 +637,22 @@ private:
   MapData* m_data;
   GridSettings m_before;
   GridSettings m_after;
+};
+
+class UpdateBiomeCmd : public Command {
+public:
+  UpdateBiomeCmd(MapData* data, QJsonObject before, QJsonObject after)
+      : m_data(data)
+      , m_before(std::move(before))
+      , m_after(std::move(after)) {}
+  void execute() override { m_data->set_biome(m_after); }
+  void undo() override { m_data->set_biome(m_before); }
+  [[nodiscard]] QString description() const override { return "Edit biome"; }
+
+private:
+  MapData* m_data;
+  QJsonObject m_before;
+  QJsonObject m_after;
 };
 
 } // namespace MapEditor

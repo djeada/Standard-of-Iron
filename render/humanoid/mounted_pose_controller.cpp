@@ -1,6 +1,5 @@
 #include "mounted_pose_controller.h"
 
-#include <QDebug>
 #include <QString>
 #include <QVector3D>
 
@@ -727,10 +726,12 @@ void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame& mount,
 
   if (apply_left) {
     apply_mounted_hand_target(mount, Side::Left, sample.left);
+    enforce_arm_reach(Side::Left);
   }
 
   if (apply_right) {
     apply_mounted_hand_target(mount, Side::Right, sample.right);
+    enforce_arm_reach(Side::Right);
   }
 }
 

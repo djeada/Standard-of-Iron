@@ -15,6 +15,7 @@
 #include <QSGRendererInterface>
 #include <QSurfaceFormat>
 #include <QTextStream>
+#include <QTimer>
 #include <QUrl>
 #include <qglobal.h>
 #include <qguiapplication.h>
@@ -134,7 +135,9 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/models/minimap_image_provider.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/profiling_hud.h"
+#endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
@@ -301,21 +304,29 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 #endif
 
 auto main(int argc, char* argv[]) -> int {
+  // QQuickFramebufferObject only works with the OpenGL scene graph. A global
+  // Qt Quick software backend would leave the menus visible but suppress the
+  // gameplay framebuffer, which is indistinguishable from the reported blank
+  // game view. Keep Qt Quick on OpenGL; platform software GL remains available.
+  if (qEnvironmentVariable("QT_QUICK_BACKEND")
+          .compare("software", Qt::CaseInsensitive) == 0) {
+    fprintf(stderr,
+            "[Pre-Init] QT_QUICK_BACKEND=software is incompatible with the "
+            "gameplay framebuffer; selecting the OpenGL scene graph instead\n");
+    qunsetenv("QT_QUICK_BACKEND");
+#ifdef Q_OS_WIN
+    if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
+      qputenv("QT_OPENGL", "software");
+    }
+#endif
+  }
+
 #ifdef Q_OS_WIN
 
   SetUnhandledExceptionFilter(crashHandler);
 
   if (windows_software_requested_from_argv(argc, argv)) {
     fprintf(stderr, "[Pre-Init] Command line requested software OpenGL fallback\n");
-    qputenv("QT_OPENGL", "software");
-  }
-
-  if (qEnvironmentVariable("QT_QUICK_BACKEND")
-          .compare("software", Qt::CaseInsensitive) == 0) {
-    fprintf(stderr,
-            "[Pre-Init] QT_QUICK_BACKEND=software disables QQuickFramebufferObject; "
-            "using QT_OPENGL=software instead\n");
-    qunsetenv("QT_QUICK_BACKEND");
     qputenv("QT_OPENGL", "software");
   }
 
@@ -387,8 +398,14 @@ auto main(int argc, char* argv[]) -> int {
                   file,
                   context.line,
                   function);
-          fprintf(out,
-                  "[CRITICAL] Try running with software rendering if this persists\n");
+          if (msg.contains("scene graph is not using OpenGL", Qt::CaseInsensitive)) {
+            fprintf(out,
+                    "[CRITICAL] Do not use QT_QUICK_BACKEND=software; the game "
+                    "requires Qt Quick's OpenGL backend\n");
+          } else {
+            fprintf(out,
+                    "[CRITICAL] Try running with software OpenGL if this persists\n");
+          }
           break;
         case QtFatalMsg:
           fprintf(out,
@@ -412,20 +429,13 @@ auto main(int argc, char* argv[]) -> int {
     qputenv("QML_XHR_ALLOW_FILE_READ", "1");
   }
 
-#ifdef Q_OS_LINUX
-  if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") &&
-      qEnvironmentVariableIsSet("DISPLAY")) {
-    qputenv("QT_QPA_PLATFORM", "xcb");
-    qInfo() << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
-  }
-#endif
-
   qInfo() << "Setting OpenGL environment...";
 
   if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
     qputenv("QT_OPENGL", "desktop");
   }
   qputenv("QSG_RHI_BACKEND", "opengl");
+  QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   qInfo() << "Setting graphics API to OpenGLRhi...";
@@ -434,12 +444,17 @@ auto main(int argc, char* argv[]) -> int {
 
   qInfo() << "Configuring OpenGL surface format...";
   QSurfaceFormat fmt;
+  fmt.setRenderableType(QSurfaceFormat::OpenGL);
   fmt.setVersion(3, 3);
-
   fmt.setProfile(QSurfaceFormat::CoreProfile);
+  fmt.setRedBufferSize(8);
+  fmt.setGreenBufferSize(8);
+  fmt.setBlueBufferSize(8);
+  fmt.setAlphaBufferSize(8);
   fmt.setDepthBufferSize(k_depth_buffer_bits);
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
+  fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: OpenGL" << fmt.majorVersion() << "."
@@ -448,8 +463,16 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Creating QGuiApplication...";
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
+  const bool renderer_self_test =
+      QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
 
   App::Core::UserSettings::apply_saved_graphics_quality();
+
+  QString direct_campaign_mission;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+  double runtime_benchmark_seconds = 0.0;
+  QString runtime_benchmark_output;
+#endif
 
   {
     QCommandLineParser parser;
@@ -462,9 +485,71 @@ auto main(int argc, char* argv[]) -> int {
         "quality",
         "Override shader quality: full | reduced | minimal | none.",
         "level");
+    QCommandLineOption const renderer_self_test_opt(
+        "renderer-self-test",
+        "Show the gameplay view, render and present one frame, then exit.");
+    QCommandLineOption const graphics_preset_opt(
+        "graphics-preset",
+        "Override the complete graphics preset: low | medium | high | ultra.",
+        "preset");
+    QCommandLineOption const campaign_mission_opt(
+        "campaign-mission",
+        "Start a campaign mission directly (campaign_id/mission_id).",
+        "path");
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    QCommandLineOption const benchmark_seconds_opt(
+        "benchmark-seconds",
+        "Measure the directly started mission after a two-second warm-up, then exit.",
+        "seconds");
+    QCommandLineOption const benchmark_output_opt(
+        "benchmark-output",
+        "Write the runtime benchmark JSON report to this path.",
+        "path");
+#endif
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
+    parser.addOption(renderer_self_test_opt);
+    parser.addOption(graphics_preset_opt);
+    parser.addOption(campaign_mission_opt);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    parser.addOption(benchmark_seconds_opt);
+    parser.addOption(benchmark_output_opt);
+#endif
     parser.process(app);
+
+    if (parser.isSet(graphics_preset_opt)) {
+      const QString preset = parser.value(graphics_preset_opt).trimmed().toLower();
+      auto& gfx = Render::GraphicsSettings::instance();
+      if (preset == QStringLiteral("low")) {
+        gfx.set_quality(Render::GraphicsQuality::Low);
+      } else if (preset == QStringLiteral("medium")) {
+        gfx.set_quality(Render::GraphicsQuality::Medium);
+      } else if (preset == QStringLiteral("high")) {
+        gfx.set_quality(Render::GraphicsQuality::High);
+      } else if (preset == QStringLiteral("ultra")) {
+        gfx.set_quality(Render::GraphicsQuality::Ultra);
+      } else {
+        qWarning() << "Unknown --graphics-preset value:" << preset;
+      }
+    }
+
+    direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    bool benchmark_seconds_valid = false;
+    runtime_benchmark_seconds =
+        parser.value(benchmark_seconds_opt).toDouble(&benchmark_seconds_valid);
+    if (!benchmark_seconds_valid || runtime_benchmark_seconds < 0.0) {
+      runtime_benchmark_seconds = 0.0;
+    }
+    runtime_benchmark_output = parser.value(benchmark_output_opt).trimmed();
+    if (runtime_benchmark_seconds > 0.0) {
+      qputenv("SOI_RUNTIME_BENCHMARK_SECONDS",
+              QByteArray::number(runtime_benchmark_seconds, 'f', 3));
+      if (!runtime_benchmark_output.isEmpty()) {
+        qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
+      }
+    }
+#endif
 
     std::optional<Render::ShaderQuality> requested;
     if (parser.isSet(quality_opt)) {
@@ -548,8 +633,10 @@ auto main(int argc, char* argv[]) -> int {
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
+#endif
 
   QObject::connect(
       game_engine.get(),
@@ -616,38 +703,73 @@ auto main(int argc, char* argv[]) -> int {
   game_engine->setWindow(window);
   qInfo() << "Window set successfully";
 
-  qInfo() << "Connecting scene graph signals...";
-  qInfo() << "Connecting scene graph signals...";
-  QObject::connect(window, &QQuickWindow::sceneGraphInitialized, window, [window]() {
-    qInfo() << "Scene graph initialized!";
-    if (auto* renderer_interface = window->rendererInterface()) {
-      const auto api = renderer_interface->graphicsApi();
-
-      QString name;
-      switch (api) {
-      case QSGRendererInterface::OpenGLRhi:
-        name = "OpenGLRhi";
-        break;
-      case QSGRendererInterface::VulkanRhi:
-        name = "VulkanRhi";
-        break;
-      case QSGRendererInterface::Direct3D11Rhi:
-        name = "D3D11Rhi";
-        break;
-      case QSGRendererInterface::MetalRhi:
-        name = "MetalRhi";
-        break;
-      case QSGRendererInterface::Software:
-        name = "Software";
-        break;
-      default:
-        name = "Unknown";
-        break;
-      }
-
-      qInfo() << "QSG graphicsApi:" << name;
+  if (!direct_campaign_mission.isEmpty()) {
+    if (!root_obj->setProperty("game_started", true) ||
+        !root_obj->setProperty("menu_visible", false)) {
+      qCritical() << "Could not expose GameView for direct campaign mission";
+      return 10;
     }
-  });
+    auto* gl_view = root_obj->findChild<GLView*>();
+    if (gl_view == nullptr) {
+      qCritical() << "Could not find gameplay GLView for direct campaign mission";
+      return 10;
+    }
+    QObject::connect(
+        gl_view,
+        &GLView::renderer_ready,
+        &app,
+        [game_engine_ptr = game_engine.get(), direct_campaign_mission]() {
+          qInfo() << "Starting campaign mission directly:"
+                  << direct_campaign_mission;
+          game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+        },
+        Qt::QueuedConnection);
+    window->show();
+    window->update();
+  }
+
+  qInfo() << "Connecting scene graph signals...";
+  qInfo() << "Connecting scene graph signals...";
+  QObject::connect(window,
+                   &QQuickWindow::sceneGraphInitialized,
+                   window,
+                   [window, renderer_self_test, &app]() {
+                     qInfo() << "Scene graph initialized!";
+                     if (auto* renderer_interface = window->rendererInterface()) {
+                       const auto api = renderer_interface->graphicsApi();
+
+                       QString name;
+                       switch (api) {
+                       case QSGRendererInterface::OpenGLRhi:
+                         name = "OpenGLRhi";
+                         break;
+                       case QSGRendererInterface::VulkanRhi:
+                         name = "VulkanRhi";
+                         break;
+                       case QSGRendererInterface::Direct3D11Rhi:
+                         name = "D3D11Rhi";
+                         break;
+                       case QSGRendererInterface::MetalRhi:
+                         name = "MetalRhi";
+                         break;
+                       case QSGRendererInterface::Software:
+                         name = "Software";
+                         break;
+                       default:
+                         name = "Unknown";
+                         break;
+                       }
+
+                       qInfo() << "QSG graphicsApi:" << name;
+                       if (api != QSGRendererInterface::OpenGLRhi) {
+                         qCritical() << "The Qt Quick scene graph is not using OpenGL; "
+                                        "the gameplay framebuffer cannot be displayed.";
+                         if (renderer_self_test) {
+                           app.exit(10);
+                         }
+                       }
+                     }
+                   });
 
   QObject::connect(window,
                    &QQuickWindow::sceneGraphError,
@@ -656,6 +778,44 @@ auto main(int argc, char* argv[]) -> int {
                      qCritical() << "Failed to initialize OpenGL scene graph:" << msg;
                      QGuiApplication::exit(3);
                    });
+
+  if (renderer_self_test) {
+    auto* gl_view = root_obj->findChild<GLView*>();
+    if (gl_view == nullptr) {
+      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - GLView was not created";
+      return 10;
+    }
+
+    auto renderer_ready = std::make_shared<bool>(false);
+    QObject::connect(
+        gl_view, &GLView::renderer_ready, &app, [window, renderer_ready]() {
+          *renderer_ready = true;
+          window->update();
+        });
+    QObject::connect(
+        window, &QQuickWindow::frameSwapped, &app, [&app, renderer_ready]() {
+          if (!*renderer_ready) {
+            return;
+          }
+          qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
+                     "frame rendered and presented";
+          app.exit(0);
+        });
+
+    if (!root_obj->setProperty("game_started", true) ||
+        !root_obj->setProperty("menu_visible", false)) {
+      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - could not expose GameView";
+      return 10;
+    }
+    window->show();
+    window->update();
+
+    QTimer::singleShot(30000, &app, [&app]() {
+      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
+                     "presented within 30 seconds";
+      app.exit(10);
+    });
+  }
 
   qInfo() << "Starting event loop...";
 

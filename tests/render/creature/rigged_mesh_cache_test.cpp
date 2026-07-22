@@ -197,6 +197,21 @@ TEST(RiggedMeshCache, FrameStatsTrackSkinUploadCounters) {
   EXPECT_EQ(cache.frame_stats().skin_ubo_uploads, 0U);
   EXPECT_EQ(cache.frame_stats().skin_ubo_bytes_uploaded, 0U);
 }
+
+TEST(RiggedMeshCache, DeferredSkinUploadRemainsQueuedWithoutRenderContext) {
+  RuntimeBakeGuardReset guard_reset;
+  RiggedMeshCache cache;
+
+  cache.mark_skin_ubo_upload_pending();
+  ASSERT_TRUE(cache.has_pending_skin_ubo_uploads());
+
+  Render::Creature::set_runtime_bake_forbidden(true);
+  cache.upload_pending_skin_ubos();
+
+  EXPECT_TRUE(cache.has_pending_skin_ubo_uploads());
+  EXPECT_TRUE(Render::Creature::runtime_bake_forbidden())
+      << "a failed initialization attempt must preserve the gameplay guard";
+}
 TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;

@@ -451,6 +451,8 @@ enum class CombatAttackFamily : std::uint8_t {
     case SpawnType::SkeletonArcher:
     case SpawnType::GravePriest:
     case SpawnType::HorseArcher:
+    case SpawnType::RomanFieldCommander:
+    case SpawnType::CarthageCavalryPatron:
       return CombatAttackFamily::Bow;
     default:
       return CombatAttackFamily::None;
@@ -464,15 +466,15 @@ enum class CombatAttackFamily : std::uint8_t {
   case SpawnType::HorseArcher:
   case SpawnType::SkeletonSwordsman:
   case SpawnType::SkeletonArcher:
-  case SpawnType::RomanLegionOrganizer:
   case SpawnType::RomanVeteranConsul:
   case SpawnType::RomanFieldCommander:
-  case SpawnType::CarthageMercenaryBroker:
   case SpawnType::CarthageCavalryPatron:
   case SpawnType::CarthageElephantMaster:
     return CombatAttackFamily::Sword;
   case SpawnType::Spearman:
   case SpawnType::HorseSpearman:
+  case SpawnType::RomanLegionOrganizer:
+  case SpawnType::CarthageMercenaryBroker:
     return CombatAttackFamily::Spear;
   case SpawnType::GravePriest:
     return CombatAttackFamily::Sword;
@@ -659,6 +661,16 @@ public:
   bool routing{false};
 };
 
+class CommanderAuraBuffComponent : public Component {
+public:
+  CommanderAuraBuffComponent() = default;
+
+  EntityID source_commander_id{0};
+  bool active{false};
+  float strength{0.0F};
+  float health_regen_accumulator{0.0F};
+};
+
 inline void refresh_morale_state(MoraleComponent& morale) noexcept {
   morale.morale = std::clamp(morale.morale, 0.0F, 100.0F);
   morale.routing = morale.morale < 20.0F;
@@ -731,10 +743,24 @@ public:
     flag_rally_animation_timer = 0.0F;
     flag_rally_in_progress = false;
     flag_rally_at_position = false;
+    rally_requested = true;
   }
 
   [[nodiscard]] auto is_flag_rally_planting() const noexcept -> bool {
     return flag_rally_in_progress && flag_rally_at_position;
+  }
+
+  [[nodiscard]] auto can_activate_aura_ability() const noexcept -> bool {
+    return aura_active && !wounded && !aura_ability_active &&
+           aura_ability_cooldown_remaining <= 0.0F;
+  }
+
+  auto request_aura_ability() noexcept -> bool {
+    if (!can_activate_aura_ability()) {
+      return false;
+    }
+    aura_ability_requested = true;
+    return true;
   }
 
   std::string commander_id;
@@ -745,7 +771,7 @@ public:
   std::string bonus_summary;
   std::string rally_ability;
   std::string death_consequence;
-  int bodyguard_count{6};
+  int bodyguard_count{0};
   float aura_radius{12.0F};
   float aura_morale_bonus{5.0F};
   float aura_bonus_value{0.0F};
@@ -755,7 +781,7 @@ public:
   float rally_cooldown_remaining{0.0F};
   float rally_feedback_time{0.0F};
   bool rally_requested{false};
-  bool rally_requires_manual_trigger{false};
+  bool rally_requires_manual_trigger{true};
   float death_shock_radius{14.0F};
   float death_morale_shock{25.0F};
   bool aura_active{true};

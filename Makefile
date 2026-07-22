@@ -6,6 +6,7 @@
 
 # Configuration
 BUILD_DIR := build
+DEBUG_BUILD_DIR := build-debug
 BUILD_TIDY_DIR := build-tidy
 BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
@@ -56,7 +57,7 @@ help:
 	@echo "  $(GREEN)build$(RESET)         - Build the project"
 	@echo "  $(GREEN)mesh$(RESET)          - Render creature mesh comparison sheet (use: make mesh horse)"
 	@echo "  $(GREEN)build-tidy$(RESET)    - Build with clang-tidy static analysis enabled"
-	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
+	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols, GDB support, and runtime tracing"
 	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
 	@echo "  $(GREEN)run$(RESET)           - Run the main application (includes map pipeline)"
 	@echo "  $(GREEN)arena$(RESET)         - Run the arena playground tool"
@@ -125,7 +126,7 @@ configure: build-dir
 	else \
 		rm -rf "$(BUILD_DIR)/_deps/googletest-subbuild"; \
 	fi
-	@cd $(BUILD_DIR) && cmake -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
 # Build the project
@@ -277,7 +278,7 @@ arena: run-map-pipeline configure
 .PHONY: clean
 clean:
 	@echo "$(BOLD)$(YELLOW)Cleaning build directory...$(RESET)"
-	@rm -rf $(BUILD_DIR) $(BUILD_TIDY_DIR)
+	@rm -rf $(BUILD_DIR) $(DEBUG_BUILD_DIR) $(BUILD_TIDY_DIR)
 	@echo "$(GREEN)✓ Clean complete$(RESET)"
 
 # Rebuild (clean + build)
@@ -335,7 +336,7 @@ test-validator: build
 # ---- Formatting and static fixers ----
 .PHONY: format format-check format-check-ci format-strip-comments clean-format-trash
 
-EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
+EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(DEBUG_BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_PATHS := */venv/* */.venv/*
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
 	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
@@ -347,7 +348,7 @@ PY_FORMAT_PATHS := scripts tests tools
 
 clean-format-trash:
 	@find . \
-		\( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o \
+		\( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(DEBUG_BUILD_DIR)" -o -path "./$(DEBUG_BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o \
 		-type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -print -exec rm -f {} +
 
 format-strip-comments:
@@ -383,7 +384,7 @@ format: clean-format-trash
 	@if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		find $(QML_FORMAT_PATHS) -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r -n 16 -P "$(FORMAT_JOBS)" $(QMLFORMAT) -i -w 4; \
-		find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +; \
+		find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(DEBUG_BUILD_DIR)" -o -path "./$(DEBUG_BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +; \
 		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML formatting.$(RESET)"; \
@@ -406,7 +407,7 @@ format: clean-format-trash
 	else \
 		echo "$(YELLOW)⚠ black not found. Skipping Python formatting.$(RESET)"; \
 	fi
-	@find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +
+	@find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(DEBUG_BUILD_DIR)" -o -path "./$(DEBUG_BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +
 
 	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
@@ -479,11 +480,12 @@ tidy-all:
 
 # Debug build
 .PHONY: debug
-debug: build-dir
-	@echo "$(BOLD)$(BLUE)Configuring debug build with GDB support...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+debug:
+	@echo "$(BOLD)$(BLUE)Configuring debug build with GDB support and runtime tracing...$(RESET)"
+	@mkdir -p $(DEBUG_BUILD_DIR)
+	@cd $(DEBUG_BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(BOLD)$(BLUE)Building debug version...$(RESET)"
-	@cd $(BUILD_DIR) && make -j$$(nproc)
+	@cd $(DEBUG_BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Debug build complete$(RESET)"
 	@echo "$(BOLD)Debug Info:$(RESET)"
 	@echo "  Debug symbols: $(GREEN)Enabled (-g3 -ggdb3)$(RESET)"
@@ -492,8 +494,8 @@ debug: build-dir
 	@echo "  Inlining: $(YELLOW)Disabled$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Run with GDB:$(RESET)"
-	@echo "  cd $(BUILD_DIR) && gdb ./$(BINARY_NAME)"
-	@echo "  cd $(BUILD_DIR) && gdb --args ./$(BINARY_NAME) [args]"
+	@echo "  cd $(DEBUG_BUILD_DIR) && gdb ./bin/$(BINARY_NAME)"
+	@echo "  cd $(DEBUG_BUILD_DIR) && gdb --args ./bin/$(BINARY_NAME) [args]"
 
 # Release build
 .PHONY: release

@@ -1,6 +1,7 @@
 #include "camera_viewport_layer.h"
 
 #include <QPainter>
+#include <QPainterPath>
 #include <QPen>
 
 #include <algorithm>
@@ -13,7 +14,7 @@ namespace Game::Map::Minimap {
 namespace {
 constexpr float k_corner_size_ratio = 0.15F;
 constexpr float k_min_corner_size = 4.0F;
-constexpr float k_corner_pen_offset = 1.0F;
+constexpr float k_halo_pen_offset = 1.75F;
 } // namespace
 
 void CameraViewportLayer::init(int width,
@@ -83,40 +84,37 @@ void CameraViewportLayer::draw_viewport_rect(
               static_cast<qreal>(pixel_width),
               static_cast<qreal>(pixel_height));
 
-  QColor border_color(m_border_r, m_border_g, m_border_b, m_border_a);
-  QPen pen(border_color);
-  pen.setWidthF(static_cast<qreal>(m_border_width));
-  painter.setPen(pen);
-  painter.setBrush(Qt::NoBrush);
-  painter.drawRect(rect);
-
   const float corner_size = std::min(pixel_width, pixel_height) * k_corner_size_ratio;
-  const float actual_corner = std::max(corner_size, k_min_corner_size);
+  const float actual_corner =
+      std::min(std::max(corner_size, k_min_corner_size),
+               std::min(pixel_width, pixel_height) * 0.45F);
 
-  QColor corner_color(m_border_r, m_border_g, m_border_b, 255);
-  QPen corner_pen(corner_color);
-  corner_pen.setWidthF(static_cast<qreal>(m_border_width) + k_corner_pen_offset);
-  painter.setPen(corner_pen);
+  QPainterPath brackets;
+  brackets.moveTo(rect.left() + actual_corner, rect.top());
+  brackets.lineTo(rect.left(), rect.top());
+  brackets.lineTo(rect.left(), rect.top() + actual_corner);
+  brackets.moveTo(rect.right() - actual_corner, rect.top());
+  brackets.lineTo(rect.right(), rect.top());
+  brackets.lineTo(rect.right(), rect.top() + actual_corner);
+  brackets.moveTo(rect.left() + actual_corner, rect.bottom());
+  brackets.lineTo(rect.left(), rect.bottom());
+  brackets.lineTo(rect.left(), rect.bottom() - actual_corner);
+  brackets.moveTo(rect.right() - actual_corner, rect.bottom());
+  brackets.lineTo(rect.right(), rect.bottom());
+  brackets.lineTo(rect.right(), rect.bottom() - actual_corner);
 
-  painter.drawLine(QPointF(rect.left(), rect.top()),
-                   QPointF(rect.left() + actual_corner, rect.top()));
-  painter.drawLine(QPointF(rect.left(), rect.top()),
-                   QPointF(rect.left(), rect.top() + actual_corner));
+  QPen halo(QColor(25, 20, 15, 135));
+  halo.setWidthF(static_cast<qreal>(m_border_width + k_halo_pen_offset));
+  halo.setJoinStyle(Qt::MiterJoin);
+  painter.setPen(halo);
+  painter.setBrush(Qt::NoBrush);
+  painter.drawPath(brackets);
 
-  painter.drawLine(QPointF(rect.right(), rect.top()),
-                   QPointF(rect.right() - actual_corner, rect.top()));
-  painter.drawLine(QPointF(rect.right(), rect.top()),
-                   QPointF(rect.right(), rect.top() + actual_corner));
-
-  painter.drawLine(QPointF(rect.left(), rect.bottom()),
-                   QPointF(rect.left() + actual_corner, rect.bottom()));
-  painter.drawLine(QPointF(rect.left(), rect.bottom()),
-                   QPointF(rect.left(), rect.bottom() - actual_corner));
-
-  painter.drawLine(QPointF(rect.right(), rect.bottom()),
-                   QPointF(rect.right() - actual_corner, rect.bottom()));
-  painter.drawLine(QPointF(rect.right(), rect.bottom()),
-                   QPointF(rect.right(), rect.bottom() - actual_corner));
+  QPen border(QColor(m_border_r, m_border_g, m_border_b, m_border_a));
+  border.setWidthF(static_cast<qreal>(m_border_width));
+  border.setJoinStyle(Qt::MiterJoin);
+  painter.setPen(border);
+  painter.drawPath(brackets);
 }
 
 } // namespace Game::Map::Minimap

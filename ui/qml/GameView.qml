@@ -149,6 +149,11 @@ Item {
                 game.commander_second_wind();
             event.accepted = true;
             return;
+        case Qt.Key_3:
+            if (!event.isAutoRepeat && game.commander_trigger_aura)
+                game.commander_trigger_aura();
+            event.accepted = true;
+            return;
         case Qt.Key_F:
             if (!event.isAutoRepeat && game.commander_special_action)
                 game.commander_special_action();

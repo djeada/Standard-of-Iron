@@ -82,43 +82,47 @@
     },
     "troops/roman/commanders/fabius_maximus": {
       "spear": "spear_fabius",
-      "helmet": "roman_heavy",
+      "helmet": "commander_fabius",
       "greaves": "roman_greaves",
       "armor": "roman_anatomical_cuirass",
-      "shoulder": "roman_shoulder_cover"
+      "shoulder": "roman_shoulder_cover",
+      "cloak": "cloak_fabius"
     },
     "troops/roman/commanders/scipio_africanus": {
       "sword": "sword_scipio",
       "shield": "roman_scutum",
-      "helmet": "roman_light",
+      "helmet": "commander_scipio",
       "greaves": "roman_greaves",
-      "armor": "roman_heavy_armor"
+      "armor": "roman_heavy_armor",
+      "cloak": "cloak_scipio"
     },
     "troops/roman/commanders/marcellus": {
       "bow": "bow_marcellus",
       "quiver": "quiver_marcellus",
-      "helmet": "roman_light",
+      "helmet": "commander_marcellus",
       "armor": "roman_light_armor",
-      "cloak": "cloak_roman"
+      "cloak": "cloak_marcellus"
     },
     "troops/carthage/commanders/hanno_the_great": {
       "spear": "spear_hanno",
-      "helmet": "headwrap",
+      "helmet": "commander_hanno",
       "armor": "armor_light_carthage",
-      "cloak": "cloak_carthage"
+      "cloak": "cloak_hanno"
     },
     "troops/carthage/commanders/hasdrubal_barca": {
       "bow": "bow_hasdrubal",
       "quiver": "quiver_hasdrubal",
-      "helmet": "carthage_punic_conical",
-      "armor": "armor_light_carthage"
+      "helmet": "commander_hasdrubal",
+      "armor": "armor_light_carthage",
+      "cloak": "cloak_hasdrubal"
     },
     "troops/carthage/commanders/hannibal_barca": {
       "sword": "sword_hannibal",
       "shield": "shield_carthage",
-      "helmet": "carthage_heavy",
+      "helmet": "commander_hannibal",
       "armor": "carthage_gilded_scale",
-      "shoulder": "carthage_shoulder_cover"
+      "shoulder": "carthage_shoulder_cover",
+      "cloak": "cloak_hannibal"
     },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",

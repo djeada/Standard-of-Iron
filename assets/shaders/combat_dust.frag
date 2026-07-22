@@ -44,7 +44,9 @@ float fbm(vec2 p) {
 }
 
 float inv_smoothstep(float edge0, float edge1, float x) {
-  return 1.0 - smoothstep(edge0, edge1, x);
+  float lower_edge = min(edge0, edge1);
+  float upper_edge = max(max(edge0, edge1), lower_edge + 0.00001);
+  return 1.0 - smoothstep(lower_edge, upper_edge, x);
 }
 
 void main() {
@@ -100,7 +102,7 @@ void main() {
     color = mix(color, white_hot, core_mask * pow(max(0.0, 1.0 - flame_height), 2.6));
     color = mix(color,
                 smoke_tip,
-                smoothstep(unit_flame ? 0.72 : 0.72, 1.0, flame_height) *
+                smoothstep(0.72, 1.0, flame_height) *
                     ((unit_flame ? 0.10 : 0.45) + 0.35 * soot_noise));
 
     float ember_band = smoothstep(0.05, 0.24, flame_height) *

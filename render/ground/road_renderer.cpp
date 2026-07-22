@@ -24,6 +24,32 @@
 
 namespace Render::GL {
 
+namespace {
+
+auto road_color_for_style(const QString& authored_style) -> QVector3D {
+  const QString style = authored_style.trimmed().toLower();
+  if (style == QStringLiteral("rough")) {
+    return {0.34F, 0.29F, 0.22F};
+  }
+  if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
+    return {0.48F, 0.47F, 0.44F};
+  }
+  return {0.45F, 0.42F, 0.38F};
+}
+
+auto road_surface_for_style(const QString& authored_style) -> RoadSurfaceKind {
+  const QString style = authored_style.trimmed().toLower();
+  if (style == QStringLiteral("rough")) {
+    return RoadSurfaceKind::RoughTrack;
+  }
+  if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
+    return RoadSurfaceKind::Paved;
+  }
+  return RoadSurfaceKind::PackedEarth;
+}
+
+} // namespace
+
 RoadRenderer::RoadRenderer() = default;
 RoadRenderer::~RoadRenderer() = default;
 
@@ -47,20 +73,28 @@ void RoadRenderer::build_meshes() {
   settings.sample_step = 0.5F;
   settings.min_length_steps = 8;
   settings.cross_section_segments = 4;
-  settings.edge_noise_frequencies = {1.5F, 4.0F, 0.0F};
-  settings.edge_noise_weights = {0.6F, 0.4F, 0.0F};
-  settings.width_variation_scale = 0.15F;
+  settings.edge_noise_frequencies = {0.18F, 0.55F, 1.35F};
+  settings.edge_noise_weights = {0.62F, 0.28F, 0.10F};
+  settings.width_variation_scale = 0.09F;
   settings.meander_frequency = 0.0F;
   settings.meander_length_scale = 0.1F;
   settings.meander_amplitude = 0.0F;
   settings.y_offset = Game::Map::k_road_surface_y_offset;
-  settings.sample_terrain_envelope = true;
+  settings.sample_terrain_envelope = false;
   settings.height_map = m_height_map;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_road_segments.size());
   for (const auto& segment : m_road_segments) {
-    segments.push_back({segment.start, segment.end, segment.width});
+    QVector3D direction = segment.end - segment.start;
+    direction.setY(0.0F);
+    if (direction.lengthSquared() > 0.0001F) {
+      direction.normalize();
+    }
+    const float join_overlap = segment.width * 0.45F;
+    segments.push_back({segment.start - direction * join_overlap,
+                        segment.end + direction * join_overlap,
+                        segment.width});
   }
 
   m_meshes = Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
@@ -73,11 +107,9 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-
-  auto vis_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const auto* vis_snapshot = renderer.static_world_visibility_filter_enabled()
+                                 ? renderer.submission_visibility().snapshot()
+                                 : nullptr;
 
   TerrainSurfaceCmd::VisibilityResources vis_res;
   if (vis_snapshot != nullptr) {
@@ -86,8 +118,6 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   QMatrix4x4 model;
   model.setToIdentity();
-  const QVector3D base_color(0.45F, 0.42F, 0.38F);
-
   std::size_t mesh_index = 0;
   for (const auto& segment : m_road_segments) {
     if (mesh_index >= m_meshes.size()) {
@@ -100,13 +130,21 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
+    const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                              ? SubmissionFogMode::Revealed
+                              : SubmissionFogMode::Ignore;
+    if (!renderer.submission_visibility().accepts_segment(
+            segment.start, segment.end, segment.width, fog_mode)) {
+      continue;
+    }
+
     if (vis_snapshot != nullptr) {
       Ground::LinearFeatureVisibilityOptions vis_opts;
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
               (segment.end - segment.start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot.get(), segment.start, segment.end, vis_opts);
+          vis_snapshot, segment.start, segment.end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }
@@ -116,7 +154,8 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.mesh = mesh;
     cmd.kind = LinearFeatureKind::Road;
     cmd.model = model;
-    cmd.color = base_color;
+    cmd.color = road_color_for_style(segment.style);
+    cmd.road_surface_kind = road_surface_for_style(segment.style);
     cmd.alpha = 1.0F;
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);

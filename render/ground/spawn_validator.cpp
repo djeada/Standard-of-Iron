@@ -214,6 +214,7 @@ auto SpawnValidator::check_terrain_type(int grid_x, int grid_z) const -> bool {
   case Game::Map::TerrainType::Mountain:
     return m_config.allow_mountain;
   case Game::Map::TerrainType::River:
+  case Game::Map::TerrainType::Lake:
     return m_config.allow_river;
   case Game::Map::TerrainType::Forest:
     return m_config.allow_flat;
@@ -232,7 +233,7 @@ auto SpawnValidator::check_river_margin(int grid_x, int grid_z) const -> bool {
       int const nx = grid_x + dx;
       int const nz = grid_z + dz;
       if (nx >= 0 && nx < m_config.grid_width && nz >= 0 && nz < m_config.grid_height) {
-        if (m_cache.get_terrain_type_at(nx, nz) == Game::Map::TerrainType::River) {
+        if (Game::Map::is_water_terrain(m_cache.get_terrain_type_at(nx, nz))) {
           return false;
         }
       }
@@ -270,7 +271,7 @@ auto SpawnValidator::check_bridge_collision(float world_x,
 
 auto SpawnValidator::check_river_clearance(float world_x, float world_z) const -> bool {
   auto& terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_point_near_river(
+  return !terrain_service.is_point_near_water(
       world_x, world_z, m_config.river_clearance);
 }
 

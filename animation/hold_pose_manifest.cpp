@@ -1,12 +1,16 @@
 #include "hold_pose_manifest.h"
 
 #include <algorithm>
+#include <cmath>
+#include <numbers>
 
 namespace Animation {
 
 auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     -> HumanoidHeldPoseSample {
   float const shoulder_y = inputs.shoulder_y;
+  float const hold_cycle =
+      std::sin(inputs.sample_time * (2.0F * std::numbers::pi_v<float>) / 1.8F);
   HumanoidHeldPoseSample sample{};
 
   switch (inputs.kind) {
@@ -27,7 +31,9 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.shoulder_l_z_delta = 0.020F;
     break;
   case HumanoidHeldPoseKind::SpearBrace:
-    sample.right_hand = {0.30F, shoulder_y - 0.10F, 0.58F};
+    sample.right_hand =
+        {0.30F, shoulder_y - 0.10F - 0.006F * hold_cycle,
+         0.58F + 0.014F * hold_cycle};
     sample.use_offhand_spear_grip = true;
     sample.offhand_spear_direction = {0.0502367F, 0.401893F, 0.914307F};
     sample.offhand_along_offset = -0.24F;
@@ -38,22 +44,26 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.shoulder_l_y_delta = -0.03F;
     sample.shoulder_r_z_delta = 0.08F;
     sample.shoulder_l_z_delta = 0.06F;
-    sample.neck_z_delta = 0.07F;
+    sample.neck_z_delta = 0.07F + 0.006F * hold_cycle;
     sample.head_z_delta = 0.06F;
     sample.head_y_delta = -0.01F;
     break;
   case HumanoidHeldPoseKind::BowReady:
-    sample.right_hand = {0.06F, shoulder_y + 0.08F, 0.70F};
-    sample.left_hand = {0.05F, shoulder_y + 0.04F, 0.34F};
+    sample.right_hand =
+        {0.06F, shoulder_y + 0.08F + 0.010F * hold_cycle,
+         0.70F - 0.008F * hold_cycle};
+    sample.left_hand =
+        {0.05F, shoulder_y + 0.04F + 0.006F * hold_cycle,
+         0.34F + 0.005F * hold_cycle};
     sample.shoulder_r_z_delta = 0.16F;
     sample.shoulder_l_y_delta = 0.02F;
     sample.shoulder_r_y_delta = -0.04F;
     sample.shoulder_l_z_delta = 0.01F;
     sample.neck_z_delta = 0.03F;
     sample.head_z_delta = 0.02F;
-    sample.head_y_delta = -0.01F;
+    sample.head_y_delta = -0.01F + 0.004F * hold_cycle;
     break;
-  case HumanoidHeldPoseKind::SwordShieldHold: {
+  case HumanoidHeldPoseKind::SwordShieldCarry: {
     float const moving_mix = inputs.moving ? 1.0F : 0.0F;
     sample.right_hand = {0.34F + moving_mix * 0.03F,
                          shoulder_y - 0.06F - moving_mix * 0.05F,

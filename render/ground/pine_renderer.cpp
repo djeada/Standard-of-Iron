@@ -103,8 +103,8 @@ void PineRenderer::generate_pine_instances() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x4A7F2C9EU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.16F, 0.34F, 0.20F);
-      const QVector3D var_color(0.24F, 0.44F, 0.28F);
+      const QVector3D base_color(0.12F, 0.24F, 0.17F);
+      const QVector3D var_color(0.19F, 0.33F, 0.23F);
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float silhouette_seed = rand_01(var_state);
@@ -194,17 +194,17 @@ void PineRenderer::generate_pine_instances() {
                         tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.16F + scene.shelter * 0.04F,
-                               0.34F + scene.shelter * 0.10F,
-                               0.20F + scene.shelter * 0.06F);
-    QVector3D const var_color(0.24F + scene.cluster_bias * 0.04F,
-                              0.44F + scene.shelter * 0.08F,
-                              0.28F + scene.cluster_bias * 0.04F);
+    QVector3D const base_color(0.12F + scene.shelter * 0.03F,
+                               0.24F + scene.shelter * 0.07F,
+                               0.17F + scene.shelter * 0.04F);
+    QVector3D const var_color(0.19F + scene.cluster_bias * 0.03F,
+                              0.33F + scene.shelter * 0.06F,
+                              0.23F + scene.cluster_bias * 0.03F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const brown_mix = remap(
         rand_01(state), 0.03F + scene.dryness * 0.05F, 0.10F + scene.rockiness * 0.06F);
-    QVector3D const brown_tint(0.32F, 0.29F, 0.19F);
+    QVector3D const brown_tint(0.27F, 0.25F, 0.19F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;

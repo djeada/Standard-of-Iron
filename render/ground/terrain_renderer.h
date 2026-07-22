@@ -59,6 +59,8 @@ private:
     QVector3D color = default_color();
     float average_height = 0.0F;
     float tint = 1.0F;
+    QVector3D cull_center;
+    float cull_radius = 0.0F;
     TerrainChunkParams params;
   };
 

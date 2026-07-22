@@ -91,6 +91,16 @@ public:
     ++m_frame_stats.skin_ubo_uploads;
     m_frame_stats.skin_ubo_bytes_uploaded += bytes;
   }
+  void mark_skin_ubo_upload_pending() noexcept {
+    m_has_pending_skin_ubo_uploads = true;
+  }
+  [[nodiscard]] auto has_pending_skin_ubo_uploads() const noexcept -> bool {
+    return m_has_pending_skin_ubo_uploads;
+  }
+  // GPU objects can only be created on the render thread with its context
+  // current. CPU mesh/skin baking queues these explicit initialization uploads
+  // instead of letting the first visible soldier allocate them on demand.
+  void upload_pending_skin_ubos();
 
   auto get_or_bake(const Render::Creature::CreatureSpec& spec,
                    Render::Creature::CreatureLOD lod,
@@ -116,13 +126,17 @@ public:
       std::uint32_t attachment_set_id,
       std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
 
-  void clear() { m_entries.clear(); }
+  void clear() {
+    m_entries.clear();
+    m_has_pending_skin_ubo_uploads = false;
+  }
 
   [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
 
 private:
   std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
   FrameStats m_frame_stats;
+  bool m_has_pending_skin_ubo_uploads{false};
 };
 
 void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,

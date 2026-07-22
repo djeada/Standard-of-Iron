@@ -832,15 +832,6 @@
   ],
   "spawns": [
     {
-      "type": "barracks",
-      "x": 64,
-      "z": 72,
-      "player_id": 1,
-      "max_population": 240,
-      "nation": "carthage",
-      "description": "Player 1 Carthaginian barracks"
-    },
-    {
       "type": "archer",
       "x": 60,
       "z": 78,
@@ -899,15 +890,6 @@
       "x": 48,
       "z": 72,
       "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 216,
-      "z": 208,
-      "player_id": 2,
-      "max_population": 240,
-      "nation": "roman_republic",
-      "description": "Player 2 Roman barracks"
     },
     {
       "type": "archer",
@@ -1177,5 +1159,25 @@
     "wood": 150,
     "stone": 100,
     "iron": 100
-  }
+  },
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 64,
+      "z": 72,
+      "player_id": 1,
+      "max_population": 240,
+      "nation": "carthage",
+      "description": "Player 1 Carthaginian barracks"
+    },
+    {
+      "type": "barracks",
+      "x": 216,
+      "z": 208,
+      "player_id": 2,
+      "max_population": 240,
+      "nation": "roman_republic",
+      "description": "Player 2 Roman barracks"
+    }
+  ]
 }

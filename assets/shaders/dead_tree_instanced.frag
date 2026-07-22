@@ -34,12 +34,12 @@ void main() {
   float ndotl = dot(normal, light_dir);
   float diffuse = max(ndotl, 0.0);
   float wrap = clamp((ndotl + 0.38) / 1.38, 0.0, 1.0);
-  float ambient = 0.34;
-  vec3 sun_color = vec3(1.06, 0.94, 0.78);
-  vec3 sky_color = vec3(0.68, 0.78, 1.00);
+  float ambient = 0.24;
+  vec3 sun_color = vec3(0.94, 0.84, 0.70);
+  vec3 sky_color = vec3(0.48, 0.56, 0.67);
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * 0.45, sun_color, lit_t);
-  float lighting = ambient + wrap * 0.54 + diffuse * 0.16;
+  vec3 light_tint = mix(sky_color * 0.58, sun_color, lit_t);
+  float lighting = ambient + wrap * 0.46 + diffuse * 0.14;
   vec3 view_dir = normalize(vec3(0.0, 0.85, 0.53));
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
@@ -77,8 +77,12 @@ void main() {
   float top_face = clamp(local_normal.y, 0.0, 1.0);
   float moss_density = top_face * top_face;
   float moss_noise = noise21(v_local_pos.xz * 3.1 + v_world_pos.xz * 0.6);
-  float moss_t =
-      clamp(moss_density * moss_noise * (1.0 - cut_face_mask) * 0.55, 0.0, 1.0);
+  float near_ground_moss =
+      1.0 - smoothstep(0.05, 0.48, max(v_local_pos.y, 0.0));
+  float moss_t = clamp(moss_density * (0.25 + near_ground_moss * 0.75) * moss_noise *
+                           (1.0 - cut_face_mask) * 0.48,
+                       0.0,
+                       1.0);
 
   vec3 bark_dark = v_color * vec3(0.54, 0.50, 0.46);
   vec3 bark_mid = v_color * vec3(0.82, 0.76, 0.68);
@@ -88,12 +92,12 @@ void main() {
       mix(bark_color, bark_light, smoothstep(0.70, 0.96, bark_variation) * 0.30);
   bark_color *= 1.0 - bark_crack * 0.20;
 
-  vec3 exposed_wood = mix(vec3(0.55, 0.43, 0.27),
-                          vec3(0.76, 0.63, 0.42),
+  vec3 exposed_wood = mix(vec3(0.39, 0.32, 0.23),
+                          vec3(0.57, 0.47, 0.33),
                           0.30 + end_rings * 0.35 + end_noise * 0.20);
   exposed_wood *= mix(1.0, 0.78, end_rim);
   exposed_wood *= 1.0 - end_cracks * 0.22;
-  vec3 moss_color = vec3(0.24, 0.38, 0.16);
+  vec3 moss_color = vec3(0.20, 0.27, 0.17);
 
   vec3 material_color = mix(bark_color, exposed_wood, cut_face_mask);
   material_color =
@@ -103,7 +107,7 @@ void main() {
 
   float specular = pow(spec_base, 20.0) * 0.008;
   float rim = 1.0 - max(dot(normal, view_dir), 0.0);
-  rim = pow(rim, 4.0) * 0.08;
+  rim = pow(rim, 4.0) * 0.045;
   vec3 rim_color = sky_color * rim;
   float ao = clamp(local_normal.y * 0.34 + 0.82, 0.56, 1.0);
   float underside = 1.0 - smoothstep(-0.88, -0.32, local_normal.y);

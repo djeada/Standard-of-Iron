@@ -20,7 +20,7 @@ jobs:
       # Qt (use either apt or install-qt-action; action ensures consistent Qt)
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.6.3'
+          version: '6.8.2'
           host: 'linux'
           arch: 'gcc_64'
           cache: true
@@ -30,7 +30,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ninja-build patchelf file rsync xvfb
 
       - name: Build
-        run: ./scripts/build-linux.sh ${BUILD_TYPE} en
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DDEFAULT_LANG=en
+          cmake --build build --config ${BUILD_TYPE}
 
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py
@@ -38,8 +42,9 @@ jobs:
       - name: Package AppImage
         run: ./scripts/package-appimage.sh ${APP_NAME} ${APP_DIR} ui/qml
 
-      - name: Smoke-test OpenGL 3.3 Core (Mesa software renderer)
+      - name: Verify packaged gameplay renderer (Mesa software OpenGL)
         run: |
+          set -o pipefail
           APPIMAGE=$(ls ./*.AppImage | head -1)
           chmod +x "$APPIMAGE"
 
@@ -50,37 +55,9 @@ jobs:
           export QT_OPENGL=desktop
           export QT_LOGGING_RULES="qt.rhi.*=false"
 
-          echo "=== Running AppImage smoke test (15 s timeout) ==="
-          timeout 15 xvfb-run --auto-servernum -- "$APPIMAGE" \
-            > smoke_out.txt 2>&1 || true
-
-          echo "=== Startup log (last 50 lines) ==="
-          tail -50 smoke_out.txt || true
-
-          # Best case: GL backend fully initialized.
-          if grep -q "Backend::initialize() - Complete!" smoke_out.txt; then
-            echo "✓ OpenGL 3.3 Core backend initialized (Mesa software renderer)"
-            exit 0
-          fi
-
-          # Acceptable: app reached QGuiApplication (GL init runs on the
-          # render thread and may need more time on a loaded CI machine).
-          if grep -q "QGuiApplication created successfully" smoke_out.txt; then
-            echo "✓ Application started; QGuiApplication initialized"
-            echo "  (GL backend init may need an interactive display for full verification)"
-            exit 0
-          fi
-
-          # Hard failure: explicit backend init failure logged.
-          if grep -q "FAILED: QOpenGLFunctions_3_3_Core" smoke_out.txt; then
-            echo "✗ OpenGL 3.3 Core Profile not supported by this renderer"
-            cat smoke_out.txt
-            exit 1
-          fi
-
-          echo "✗ No expected startup markers found -- possible crash or deployment issue"
-          cat smoke_out.txt
-          exit 1
+          xvfb-run --auto-servernum -- "$APPIMAGE" --renderer-self-test \
+            2>&1 | tee renderer_self_test.log
+          grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
 
       - uses: actions/upload-artifact@v4
         with:

@@ -685,7 +685,7 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   commander->bonus_summary = "Nearby allied troops gain attack damage.";
   commander->rally_ability = "Supreme Rally";
   commander->death_consequence = "Nearby allied morale takes a heavy shock.";
-  commander->bodyguard_count = 9;
+  commander->bodyguard_count = 0;
   commander->aura_radius = 12.0F;
   commander->aura_morale_bonus = 8.0F;
   commander->aura_bonus_value = 0.28F;
@@ -698,6 +698,14 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   commander->death_morale_shock = 34.0F;
   commander->aura_active = false;
   commander->wounded = true;
+  commander->rally_requires_manual_trigger = true;
+  commander->aura_ability_requested = true;
+  commander->aura_ability_active = true;
+  commander->aura_ability_duration = 11.0F;
+  commander->aura_ability_remaining = 4.5F;
+  commander->aura_ability_cooldown = 42.0F;
+  commander->aura_ability_cooldown_remaining = 7.0F;
+  commander->aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
   commander->flag_rally_cost = 2.5F;
   commander->flag_rally_pending_x = 14.0F;
   commander->flag_rally_pending_z = -6.0F;
@@ -738,6 +746,19 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->death_morale_shock, commander->death_morale_shock);
   EXPECT_FALSE(deserialized->aura_active);
   EXPECT_TRUE(deserialized->wounded);
+  EXPECT_TRUE(deserialized->rally_requires_manual_trigger);
+  EXPECT_TRUE(deserialized->aura_ability_requested);
+  EXPECT_TRUE(deserialized->aura_ability_active);
+  EXPECT_FLOAT_EQ(deserialized->aura_ability_duration,
+                  commander->aura_ability_duration);
+  EXPECT_FLOAT_EQ(deserialized->aura_ability_remaining,
+                  commander->aura_ability_remaining);
+  EXPECT_FLOAT_EQ(deserialized->aura_ability_cooldown,
+                  commander->aura_ability_cooldown);
+  EXPECT_FLOAT_EQ(deserialized->aura_ability_cooldown_remaining,
+                  commander->aura_ability_cooldown_remaining);
+  EXPECT_EQ(deserialized->aura_affinity_spawn_type,
+            commander->aura_affinity_spawn_type);
   EXPECT_FLOAT_EQ(deserialized->flag_rally_cost, commander->flag_rally_cost);
   EXPECT_FLOAT_EQ(deserialized->flag_rally_pending_x, commander->flag_rally_pending_x);
   EXPECT_FLOAT_EQ(deserialized->flag_rally_pending_z, commander->flag_rally_pending_z);

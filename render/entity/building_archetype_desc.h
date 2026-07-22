@@ -16,6 +16,7 @@ namespace Render::GL {
 enum class BuildingPartKind : std::uint8_t {
   Box,
   Cylinder,
+  Cone,
   PaletteBox,
   PaletteCylinder,
   RotatedBox,
@@ -95,6 +96,12 @@ public:
                     const QVector3D& color,
                     BuildingStateMask states = BuildingStateMask::All,
                     BuildingLODMask lod = BuildingLODMask::All);
+  void add_cone(const QVector3D& base,
+                const QVector3D& tip,
+                float radius,
+                const QVector3D& color,
+                BuildingStateMask states = BuildingStateMask::All,
+                BuildingLODMask lod = BuildingLODMask::All);
   void add_palette_cylinder(const QVector3D& start,
                             const QVector3D& end,
                             float radius,

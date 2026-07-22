@@ -24,14 +24,18 @@
 
 namespace Render::GL {
 
-RiverbankRenderer::RiverbankRenderer() = default;
-RiverbankRenderer::~RiverbankRenderer() = default;
+ShorelineRenderer::ShorelineRenderer() = default;
+ShorelineRenderer::~ShorelineRenderer() = default;
 
-void RiverbankRenderer::configure(
+void ShorelineRenderer::configure(
     const std::vector<Game::Map::RiverSegment>& river_segments,
-    const Game::Map::TerrainHeightMap& height_map) {
+    const std::vector<Game::Map::Lake>& lakes,
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings) {
   m_river_segments = river_segments;
+  m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
+  m_biome_settings = biome_settings;
   m_visibility_texture.reset();
   m_cached_visibility_version = 0;
   m_visibility_width = 0;
@@ -39,33 +43,42 @@ void RiverbankRenderer::configure(
   build_meshes(height_map);
 }
 
-void RiverbankRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_map) {
+void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_map) {
   m_meshes.clear();
   m_visibility_samples.clear();
+  m_water_kinds.clear();
 
-  if (m_river_segments.empty()) {
+  if (m_river_segments.empty() && m_lakes.empty()) {
     return;
   }
 
-  for (const auto& segment : m_river_segments) {
-    auto mesh_result = Ground::build_riverbank_mesh(segment, height_map);
+  for (std::size_t segment_index = 0; segment_index < m_river_segments.size();
+       ++segment_index) {
+    auto mesh_result = Ground::build_riverbank_mesh(
+        m_river_segments, segment_index, height_map);
     m_meshes.push_back(std::move(mesh_result.mesh));
     m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
+    m_water_kinds.push_back(WaterSurfaceKind::River);
+  }
+  for (const auto& lake : m_lakes) {
+    auto mesh_result = Ground::build_lake_shore_mesh(lake, height_map);
+    m_meshes.push_back(std::move(mesh_result.mesh));
+    m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
+    m_water_kinds.push_back(WaterSurfaceKind::Lake);
   }
 }
 
-void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  if (m_meshes.empty() || m_river_segments.empty()) {
+void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+  if (m_meshes.empty()) {
     return;
   }
 
   Q_UNUSED(resources);
 
   auto* backend = renderer.backend();
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const bool use_visibility = renderer.static_world_visibility_filter_enabled();
+  const auto* visibility_snapshot =
+      use_visibility ? renderer.submission_visibility().snapshot() : nullptr;
   auto* gl_context = QOpenGLContext::currentContext();
   auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
 
@@ -75,7 +88,7 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   if (visibility_snapshot != nullptr) {
     if (gl_functions == nullptr) {
       qWarning()
-          << "RiverbankRenderer: no current OpenGL context for visibility upload";
+          << "ShorelineRenderer: no current OpenGL context for visibility upload";
     } else {
       const int vis_w = visibility_snapshot->width;
       const int vis_h = visibility_snapshot->height;
@@ -150,17 +163,28 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   visibility_resources.explored_alpha = m_explored_dim_factor;
   visibility_resources.enabled = use_visibility && visibility_tex != nullptr;
 
+  const auto surface = Game::Map::make_surface_profile(m_biome_settings);
+  const auto climate = Game::Map::make_climate_profile(m_biome_settings);
   size_t mesh_index = 0;
-  for (const auto& segment : m_river_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto* mesh = m_meshes[mesh_index].get();
+  for (const auto& mesh_owner : m_meshes) {
+    auto* mesh = mesh_owner.get();
     ++mesh_index;
 
     if (mesh == nullptr) {
       continue;
+    }
+
+    const auto& cull_samples = m_visibility_samples[mesh_index - 1];
+    if (!cull_samples.empty()) {
+      const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                                ? SubmissionFogMode::Revealed
+                                : SubmissionFogMode::Ignore;
+      if (!renderer.submission_visibility().accepts_segment(cull_samples.front(),
+                                                            cull_samples.back(),
+                                                            m_tile_size,
+                                                            fog_mode)) {
+        continue;
+      }
     }
 
     float segment_visibility = 1.0F;
@@ -193,9 +217,21 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
     TerrainFeatureCmd cmd;
     cmd.mesh = mesh;
-    cmd.kind = LinearFeatureKind::Riverbank;
+    cmd.kind = LinearFeatureKind::Shoreline;
+    cmd.water_kind = m_water_kinds[mesh_index - 1];
     cmd.model = model;
-    cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
+    // Carry the complete terrain palette into the shoreline. A single grass
+    // tint made dry, rocky, fertile, and alpine banks look interchangeable.
+    cmd.color = surface.grass_primary;
+    cmd.biome_grass_secondary = surface.grass_secondary;
+    cmd.biome_grass_dry = surface.grass_dry;
+    cmd.biome_soil_color = surface.soil_color;
+    cmd.biome_rock_low = surface.rock_low;
+    cmd.biome_rock_high = surface.rock_high;
+    cmd.biome_snow_color = climate.snow_color;
+    cmd.biome_moisture = climate.moisture_level;
+    cmd.biome_rock_exposure = climate.rock_exposure;
+    cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.alpha = segment_visibility;
     cmd.visibility = visibility_resources;
     renderer.terrain_feature(cmd);

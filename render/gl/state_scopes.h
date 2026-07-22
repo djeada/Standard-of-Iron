@@ -49,8 +49,15 @@ struct PolygonModeScope {
 
 struct BlendScope {
   GLboolean prev_enable;
+  GLint prev_src_rgb{GL_ONE};
+  GLint prev_dst_rgb{GL_ZERO};
+  GLint prev_equation_rgb{GL_FUNC_ADD};
   BlendScope(bool enable = true)
       : prev_enable(glIsEnabled(GL_BLEND)) {
+
+    glGetIntegerv(GL_BLEND_SRC_RGB, &prev_src_rgb);
+    glGetIntegerv(GL_BLEND_DST_RGB, &prev_dst_rgb);
+    glGetIntegerv(GL_BLEND_EQUATION_RGB, &prev_equation_rgb);
 
     if (enable) {
       glEnable(GL_BLEND);
@@ -59,6 +66,8 @@ struct BlendScope {
     }
   }
   ~BlendScope() {
+    glBlendFunc(static_cast<GLenum>(prev_src_rgb), static_cast<GLenum>(prev_dst_rgb));
+    glBlendEquation(static_cast<GLenum>(prev_equation_rgb));
     if (prev_enable != 0U) {
       glEnable(GL_BLEND);
     } else {

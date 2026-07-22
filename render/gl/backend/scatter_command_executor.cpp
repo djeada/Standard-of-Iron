@@ -16,15 +16,6 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool const& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
-  std::size_t const& debug_rigged_batches = context.debug_rigged_batches;
-  std::size_t const& debug_rigged_cmds = context.debug_rigged_cmds;
-  std::size_t const& debug_rigged_instanced_attempts =
-      context.debug_rigged_instanced_attempts;
-  std::size_t const& debug_rigged_instanced_successes =
-      context.debug_rigged_instanced_successes;
-  std::size_t const& debug_rigged_instanced_failures =
-      context.debug_rigged_instanced_failures;
-  std::size_t const& debug_rigged_single_draws = context.debug_rigged_single_draws;
   (void)cam;
   (void)view;
   (void)projection;
@@ -32,12 +23,6 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
-  (void)debug_rigged_batches;
-  (void)debug_rigged_cmds;
-  (void)debug_rigged_instanced_attempts;
-  (void)debug_rigged_instanced_successes;
-  (void)debug_rigged_instanced_failures;
-  (void)debug_rigged_single_draws;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();
@@ -61,7 +46,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(false);
+      DepthMaskScope const depth_mask(true);
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
@@ -159,7 +144,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(true);
+      DepthMaskScope const depth_mask(false);
       BlendScope const blend(false);
 
       Shader* stone_shader = m_vegetation_pipeline->stone_shader();
@@ -522,7 +507,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(true);
+      DepthMaskScope const depth_mask(false);
       glEnable(GL_DEPTH_TEST);
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -738,7 +723,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         float const magic_strength =
             (deco_cmd_.species == TerrainScatterCmd::Species::IronOre ||
              deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine)
-                ? 1.15F
+                ? (deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine ? 1.18F
+                                                                                : 1.15F)
                 : 0.0F;
         prop_shader->set_uniform(prop_uniforms->magic_strength, magic_strength);
       }

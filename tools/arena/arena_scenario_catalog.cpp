@@ -154,6 +154,206 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
 
   {
+    auto s = definition(
+        QString::fromLatin1(k_commander_aura_pulse_id),
+        QStringLiteral("Commander Aura Pulse"),
+        QStringLiteral(
+            "Explicitly activates a short command aura, verifies nearby "
+            "troops receive its visible timed bonus, verifies distant troops "
+            "do not, and waits for cooldown."),
+        5.0F,
+        {26.0F, 55.0F, 25.0F});
+    auto commander = group(QStringLiteral("commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.nation_id = Nation::RomanRepublic;
+    auto near_troops = group(QStringLiteral("near_troops"),
+                             Troop::Swordsman,
+                             1,
+                             2,
+                             {5.0F, 0.0F, 0.0F},
+                             4,
+                             {0.0F, 0.0F, 3.0F});
+    auto distant_troops = group(QStringLiteral("distant_troops"),
+                                Troop::Swordsman,
+                                1,
+                                1,
+                                {21.0F, 0.0F, 0.0F},
+                                4);
+    s.groups = {commander, near_troops, distant_troops};
+    auto activate =
+        at(0.5F, Command::TriggerCommanderAura, QStringLiteral("commander"));
+    activate.value = 2;
+    s.steps = {activate};
+    s.expectations = {
+        expectation(Expect::CommanderAuraActivated, QStringLiteral("commander")),
+        expectation(Expect::CommanderAuraBuffObserved, QStringLiteral("near_troops")),
+        expectation(Expect::NoCommanderAuraBuffObserved,
+                    QStringLiteral("distant_troops")),
+        expectation(Expect::CommanderAuraExpired, QStringLiteral("commander")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("commander")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("near_troops")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("distant_troops")),
+        expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_commander_identity_lineup_id),
+        QStringLiteral("Commander Identity Lineup"),
+        QStringLiteral("Displays all six commanders without bodyguards or supporting "
+                       "units for direct silhouette, weapon, scale, color, and "
+                       "ancient-dark-fantasy identity review."),
+        12.0F,
+        {9.8F, 36.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    struct CommanderLineupEntry {
+      const char* group_name;
+      Troop troop;
+      Nation nation;
+      int owner;
+      QVector3D position;
+      float facing;
+    };
+    const CommanderLineupEntry entries[] = {
+        {"fabius",
+         Troop::RomanLegionOrganizer,
+         Nation::RomanRepublic,
+         1,
+         {-3.0F, 0.0F, -1.6F},
+         0.0F},
+        {"scipio",
+         Troop::RomanVeteranConsul,
+         Nation::RomanRepublic,
+         2,
+         {0.0F, 0.0F, -1.6F},
+         0.0F},
+        {"marcellus",
+         Troop::RomanFieldCommander,
+         Nation::RomanRepublic,
+         3,
+         {3.0F, 0.0F, -1.6F},
+         0.0F},
+        {"hanno",
+         Troop::CarthageMercenaryBroker,
+         Nation::Carthage,
+         4,
+         {-3.0F, 0.0F, 1.6F},
+         0.0F},
+        {"hasdrubal",
+         Troop::CarthageCavalryPatron,
+         Nation::Carthage,
+         5,
+         {0.0F, 0.0F, 1.6F},
+         0.0F},
+        {"hannibal",
+         Troop::CarthageElephantMaster,
+         Nation::Carthage,
+         6,
+         {3.0F, 0.0F, 1.6F},
+         0.0F},
+    };
+    for (auto const& entry : entries) {
+      auto commander = group(QString::fromLatin1(entry.group_name),
+                             entry.troop,
+                             entry.owner,
+                             1,
+                             entry.position,
+                             1);
+      commander.nation_id = entry.nation;
+      commander.facing_degrees = entry.facing;
+      s.groups.push_back(std::move(commander));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+    }
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    struct DuelSpec {
+      const char* id;
+      const char* label;
+      Troop roman;
+      Troop carthaginian;
+    };
+    constexpr DuelSpec duels[] = {
+        {k_commander_consul_vs_broker_id,
+         "Consul vs Mercenary Broker",
+         Troop::RomanVeteranConsul,
+         Troop::CarthageMercenaryBroker},
+        {k_commander_field_vs_cavalry_id,
+         "Field Commander vs Cavalry Patron",
+         Troop::RomanFieldCommander,
+         Troop::CarthageCavalryPatron},
+        {k_commander_legion_vs_elephant_id,
+         "Legion Organizer vs Elephant Master",
+         Troop::RomanLegionOrganizer,
+         Troop::CarthageElephantMaster},
+    };
+    for (auto const& duel : duels) {
+      auto s = definition(
+          QString::fromLatin1(duel.id),
+          QString::fromLatin1(duel.label),
+          QStringLiteral("A durable one-on-one commander duel validating distinct "
+                         "weapons, authored contact, reactions, attack cadence, and "
+                         "readable silhouettes without bodyguards."),
+          11.0F,
+          {10.5F, 52.0F, 90.0F});
+      s.suppress_terrain_scatter = true;
+      s.select_spawned_units = false;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      auto roman = group(
+          QStringLiteral("roman_commander"), duel.roman, 1, 1, {0.0F, 0.0F, -4.5F}, 1);
+      auto carthaginian = group(QStringLiteral("carthage_commander"),
+                                duel.carthaginian,
+                                2,
+                                1,
+                                {0.0F, 0.0F, 4.5F},
+                                1);
+      roman.health_override = roman.max_health_override = 1200;
+      carthaginian.health_override = carthaginian.max_health_override = 1200;
+      s.groups = {roman, carthaginian};
+      s.steps = {
+          at(0.4F,
+             Command::Attack,
+             QStringLiteral("roman_commander"),
+             QStringLiteral("carthage_commander")),
+          at(0.4F,
+             Command::Attack,
+             QStringLiteral("carthage_commander"),
+             QStringLiteral("roman_commander")),
+      };
+      add_visual_stability(
+          s, {QStringLiteral("roman_commander"), QStringLiteral("carthage_commander")});
+      for (auto const& name :
+           {QStringLiteral("roman_commander"), QStringLiteral("carthage_commander")}) {
+        QString const opponent = name == QStringLiteral("roman_commander")
+                                     ? QStringLiteral("carthage_commander")
+                                     : QStringLiteral("roman_commander");
+        s.expectations.push_back(expectation(Expect::AttackAnimationObserved, name));
+        s.expectations.push_back(
+            expectation(Expect::RepeatedAttackAnimationObserved, name, {}, 2.0F));
+        s.expectations.push_back(
+            expectation(Expect::AttackHasVisibleContact, name, opponent));
+        s.expectations.push_back(expectation(Expect::HitReactionObserved, name));
+      }
+      result.push_back(std::move(s));
+    }
+  }
+
+  {
     auto s = definition(QString::fromLatin1(k_sword_duel_id),
                         QStringLiteral("Sword Duel"),
                         QStringLiteral("Baseline reciprocal sword attack flow."),
@@ -303,7 +503,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                   Command::Charge,
                   QStringLiteral("blue_cavalry"),
                   QStringLiteral("red_infantry")),
-               at(0.0F, Command::Hold, QStringLiteral("red_infantry")),
                when_near(QStringLiteral("blue_cavalry"),
                          QStringLiteral("red_infantry"),
                          4.5F,
@@ -317,6 +516,11 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         Expect::AllGroupsRespondWithin, QStringLiteral("blue_cavalry"), {}, 0.45F));
     s.expectations.push_back(
         expectation(Expect::DeathAnimationObserved, QStringLiteral("red_infantry")));
+    s.expectations.push_back(
+        expectation(Expect::LaunchedCasualtyObserved, QStringLiteral("red_infantry")));
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("blue_cavalry"),
+                                         QStringLiteral("red_infantry")));
     s.expectations.push_back(expectation(Expect::ChargeImpactPrecedesMeleeLock,
                                          QStringLiteral("blue_cavalry")));
     result.push_back(std::move(s));
@@ -358,7 +562,78 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(
         expectation(Expect::DeathAnimationObserved, QStringLiteral("cavalry")));
     s.expectations.push_back(
+        expectation(Expect::LaunchedCasualtyObserved, QStringLiteral("cavalry")));
+    s.expectations.push_back(expectation(Expect::NoLaunchedCasualtyObserved,
+                                         QStringLiteral("braced_spears")));
+    s.expectations.push_back(
         expectation(Expect::ChargeImpactPrecedesMeleeLock, QStringLiteral("cavalry")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s =
+        definition(QString::fromLatin1(k_elephant_trample_id),
+                   QStringLiteral("Elephant Trample Impact"),
+                   QStringLiteral("A war elephant tramples infantry and launches fresh "
+                                  "casualties away from the impact."),
+                   10.0F,
+                   {18.0F, 47.0F, 18.0F});
+    s.groups = {
+        group(
+            QStringLiteral("elephant"), Troop::Elephant, 1, 1, {0.0F, 0.0F, -6.0F}, 1),
+        group(
+            QStringLiteral("infantry"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 2.0F}, 8)};
+    // Keep enough health for repeated trunk/leg strikes and a launched casualty,
+    // but guarantee a no-opponent tail where the elephant must recover to idle.
+    s.groups[1].health_override = 150;
+    s.groups[1].max_health_override = 150;
+    s.steps = {at(0.0F,
+                  Command::AttackMove,
+                  QStringLiteral("elephant"),
+                  QStringLiteral("infantry"))};
+    add_visual_stability(s, {QStringLiteral("infantry")});
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("elephant")));
+    s.expectations.push_back(expectation(
+        Expect::FormationBodyOverlapObserved, QStringLiteral("elephant"), {}, 1.10F));
+    s.expectations.push_back(
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("infantry")));
+    s.expectations.push_back(
+        expectation(Expect::LaunchedCasualtyObserved, QStringLiteral("infantry")));
+    s.expectations.push_back(
+        expectation(Expect::GroupDestroyed, QStringLiteral("infantry")));
+    s.expectations.push_back(
+        expectation(Expect::NoActiveCombatAtEnd, QStringLiteral("elephant")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_catapult_impact_id),
+        QStringLiteral("Catapult Infantry Impact"),
+        QStringLiteral("A catapult stone hits an infantry formation and launches "
+                       "fresh casualties from the impact."),
+        12.0F,
+        {22.0F, 50.0F, 12.0F});
+    s.groups = {
+        group(
+            QStringLiteral("catapult"), Troop::Catapult, 1, 1, {0.0F, 0.0F, -9.0F}, 1),
+        group(
+            QStringLiteral("infantry"), Troop::Spearman, 2, 1, {0.0F, 0.0F, 4.0F}, 8)};
+    s.groups[1].health_override = 240;
+    s.groups[1].max_health_override = 240;
+    s.steps = {at(0.0F, Command::Hold, QStringLiteral("infantry")),
+               at(0.0F,
+                  Command::Attack,
+                  QStringLiteral("catapult"),
+                  QStringLiteral("infantry"))};
+    add_visual_stability(s, {QStringLiteral("infantry")});
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("catapult")));
+    s.expectations.push_back(
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("infantry")));
+    s.expectations.push_back(
+        expectation(Expect::LaunchedCasualtyObserved, QStringLiteral("infantry")));
     result.push_back(std::move(s));
   }
 
@@ -1128,11 +1403,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         infantry.max_health_override = 2000;
       }
     }
-    s.steps = {at(0.5F,
-                  Command::Attack,
-                  QStringLiteral("archers"),
-                  QStringLiteral("infantry")),
-               at(0.0F, Command::Hold, QStringLiteral("infantry"))};
+    s.steps = {at(
+        0.5F, Command::Attack, QStringLiteral("archers"), QStringLiteral("infantry"))};
     add_visual_stability(s, {QStringLiteral("archers"), QStringLiteral("infantry")});
     s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
                                          QStringLiteral("archers"),
@@ -1141,6 +1413,42 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         Expect::RepeatedAttackAnimationObserved, QStringLiteral("archers"), {}, 2.0F));
     s.expectations.push_back(expectation(
         Expect::FormationOrderPreserved, QStringLiteral("archers"), {}, 0.9F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_archer_melee_lock_id),
+        QStringLiteral("Archers Forced Into Melee"),
+        QStringLiteral("Swordsmen close through bow fire; locked archers stop "
+                       "shooting and fight with a distinct two-handed bow strike."),
+        12.0F,
+        {18.0F, 48.0F, 24.0F});
+    s.groups = {
+        group(QStringLiteral("swords"), Troop::Swordsman, 1, 2, {0.0F, 0.0F, -7.0F}, 6),
+        group(QStringLiteral("archers"), Troop::Archer, 2, 2, {0.0F, 0.0F, 4.0F}, 6)};
+    for (auto& formation : s.groups) {
+      formation.health_override = 1200;
+      formation.max_health_override = 1200;
+    }
+    s.steps = {at(0.0F, Command::Hold, QStringLiteral("archers")),
+               at(0.35F,
+                  Command::Attack,
+                  QStringLiteral("swords"),
+                  QStringLiteral("archers"))};
+    add_visual_stability(s, {QStringLiteral("swords"), QStringLiteral("archers")});
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("swords"),
+                                         QStringLiteral("archers")));
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("archers"),
+                                         QStringLiteral("swords")));
+    s.expectations.push_back(
+        expectation(Expect::AllLivingSoldiersFight, QStringLiteral("archers")));
+    s.expectations.push_back(expectation(
+        Expect::RepeatedAttackAnimationObserved, QStringLiteral("archers"), {}, 2.0F));
+    s.expectations.push_back(
+        expectation(Expect::FormationEngagementIsStable, QStringLiteral("archers")));
     result.push_back(std::move(s));
   }
 
@@ -1297,6 +1605,216 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_path_bridge_crossing_id),
+        QStringLiteral("Pathfinding: Bridge Crossing"),
+        QStringLiteral("Two infantry files funnel onto a production bridge deck, "
+                       "cross the river, and reform on the far bank."),
+        15.0F,
+        {32.0F, 54.0F, 18.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.rivers.push_back(
+        Game::Map::RiverSegment{{-28.0F, 0.0F, 0.0F}, {28.0F, 0.0F, 0.0F}, 5.5F});
+    s.bridges.push_back(
+        Game::Map::Bridge{{0.0F, 0.0F, -5.0F}, {0.0F, 0.0F, 5.0F}, 4.5F, 0.45F});
+    s.groups = {group(QStringLiteral("crossers"),
+                      Troop::Swordsman,
+                      1,
+                      2,
+                      {-1.5F, 0.0F, -11.0F},
+                      6,
+                      {3.0F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("crossers"));
+    move.destination = {0.0F, 0.0F, 11.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("crossers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("crossers")));
+    s.expectations.push_back(
+        expectation(Expect::BridgeTraversalObserved, QStringLiteral("crossers")));
+    s.expectations.push_back(expectation(Expect::BridgeCenterlineAligned,
+                                         QStringLiteral("crossers"),
+                                         {},
+                                         0.0F,
+                                         0.0F,
+                                         0.50F));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("crossers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.0F);
+    reached.position = move.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_path_uphill_advance_id),
+        QStringLiteral("Pathfinding: Uphill Advance"),
+        QStringLiteral("Spearmen climb a smooth four-metre rise and settle on its "
+                       "crown with grounded, continuous locomotion."),
+        11.0F,
+        {27.0F, 48.0F, 16.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, -1.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.elevation_patches.push_back({{0.0F, 0.0F, 2.0F}, 10.0F, 4.0F});
+    s.groups = {group(QStringLiteral("climbers"),
+                      Troop::Spearman,
+                      1,
+                      2,
+                      {-1.5F, 0.0F, -10.0F},
+                      6,
+                      {3.0F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("climbers"));
+    move.destination = {0.0F, 0.0F, 2.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("climbers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("climbers")));
+    s.expectations.push_back(expectation(
+        Expect::ElevationGainObserved, QStringLiteral("climbers"), {}, 2.5F));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("climbers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               2.5F);
+    reached.position = move.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_path_wall_detour_id),
+        QStringLiteral("Pathfinding: Wall Detour"),
+        QStringLiteral("Infantry ordered through an intact palisade must remain "
+                       "blocked by its footprint and route around the visible end."),
+        15.0F,
+        {32.0F, 55.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        group(QStringLiteral("detour_troops"),
+              Troop::Swordsman,
+              1,
+              2,
+              {-1.5F, 0.0F, -9.0F},
+              6,
+              {3.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("blocking_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 9,
+                 {-8.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+    };
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("detour_troops"));
+    move.destination = {0.0F, 0.0F, 9.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("detour_troops")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("detour_troops")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("blocking_wall")));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("detour_troops"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.5F);
+    reached.position = move.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_path_wall_breach_id),
+        QStringLiteral("Pathfinding: Wall Breach"),
+        QStringLiteral("Swordsmen destroy a designated weak wall section, then "
+                       "path through the opened gap without crossing intact "
+                       "neighbouring segments."),
+        16.0F,
+        {30.0F, 53.0F, 18.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto breach = building(QStringLiteral("breach_wall"),
+                           Game::Units::SpawnType::WallSegment,
+                           Nation::Carthage,
+                           2,
+                           1,
+                           {0.0F, 0.0F, 0.0F});
+    breach.health_override = breach.max_health_override = 55;
+    s.groups = {
+        group(QStringLiteral("breachers"),
+              Troop::Swordsman,
+              1,
+              2,
+              {-1.5F, 0.0F, -8.0F},
+              8,
+              {3.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("left_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {-10.0F, 0.0F, 0.0F},
+                 {3.0F, 0.0F, 0.0F}),
+        breach,
+        building(QStringLiteral("right_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {4.0F, 0.0F, 0.0F},
+                 {3.0F, 0.0F, 0.0F}),
+    };
+    auto attack = at(0.4F,
+                     Command::Attack,
+                     QStringLiteral("breachers"),
+                     QStringLiteral("breach_wall"));
+    auto pass = when_destroyed(QStringLiteral("breach_wall"),
+                               Command::FormationMove,
+                               QStringLiteral("breachers"),
+                               {});
+    pass.destination = {0.0F, 0.0F, 8.0F};
+    s.steps = {attack, pass};
+    add_visual_stability(s, {QStringLiteral("breachers")});
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("breachers")));
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("breachers")));
+    s.expectations.push_back(
+        expectation(Expect::GroupDestroyed, QStringLiteral("breach_wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("left_wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("right_wall")));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("breachers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.0F);
+    reached.position = pass.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_crossing_formations_id),
         QStringLiteral("Crossing Formations"),
         QStringLiteral("Two friendly groups cross without formation collapse."),
@@ -1378,6 +1896,249 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                          {QStringLiteral("blue_swords"),
                           QStringLiteral("blue_archers"),
                           QStringLiteral("red_spears")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_render_continuity_id),
+        QStringLiteral("Render Continuity Stress"),
+        QStringLiteral("Fixed-camera Ultra battle that samples every frame for "
+                       "scene-wide flashes, rejects every reduced creature LOD, "
+                       "and tracks each living formation member for submission "
+                       "disappearance."),
+        14.0F,
+        {29.0F, 54.0F, 28.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.force_full_creature_lod = false;
+    s.collect_animation_diagnostics = true;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.groups = {
+        group(QStringLiteral("blue_swords"),
+              Troop::Swordsman,
+              1,
+              3,
+              {-5.0F, 0.0F, -9.0F},
+              16),
+        group(QStringLiteral("blue_archers"),
+              Troop::Archer,
+              1,
+              2,
+              {7.0F, 0.0F, -12.0F},
+              16),
+        group(QStringLiteral("blue_healer"),
+              Troop::Healer,
+              1,
+              1,
+              {-11.0F, 0.0F, -8.0F},
+              1),
+        group(QStringLiteral("blue_cavalry"),
+              Troop::MountedKnight,
+              1,
+              2,
+              {-12.0F, 0.0F, -16.0F},
+              12),
+        group(QStringLiteral("red_spears"),
+              Troop::Spearman,
+              2,
+              4,
+              {-4.0F, 0.0F, 9.0F},
+              16),
+        group(QStringLiteral("red_archers"),
+              Troop::Archer,
+              2,
+              2,
+              {8.0F, 0.0F, 12.0F},
+              16),
+        group(
+            QStringLiteral("red_healer"), Troop::Healer, 2, 1, {12.0F, 0.0F, 8.0F}, 1),
+        group(QStringLiteral("red_cavalry"),
+              Troop::HorseSpearman,
+              2,
+              2,
+              {-12.0F, 0.0F, 16.0F},
+              12),
+    };
+    for (auto& continuity_group : s.groups) {
+      continuity_group.max_health_override = 2000;
+      continuity_group.health_override = 2000;
+    }
+    s.steps = {
+        at(0.35F,
+           Command::AttackMove,
+           QStringLiteral("blue_swords"),
+           QStringLiteral("red_spears")),
+        at(0.35F,
+           Command::Attack,
+           QStringLiteral("blue_archers"),
+           QStringLiteral("red_spears")),
+        at(0.35F,
+           Command::Charge,
+           QStringLiteral("blue_cavalry"),
+           QStringLiteral("red_archers")),
+        at(0.35F,
+           Command::AttackMove,
+           QStringLiteral("red_spears"),
+           QStringLiteral("blue_swords")),
+        at(0.35F,
+           Command::Attack,
+           QStringLiteral("red_archers"),
+           QStringLiteral("blue_swords")),
+        at(0.35F,
+           Command::Charge,
+           QStringLiteral("red_cavalry"),
+           QStringLiteral("blue_archers")),
+    };
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    for (auto const& continuity_group : s.groups) {
+      s.expectations.push_back(expectation(
+          Expect::NoRenderVisibilityChurn, continuity_group.name, {}, 0.0F, 0.5F));
+      s.expectations.push_back(
+          expectation(Expect::FullCreatureDetailOnly, continuity_group.name));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, continuity_group.name));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_campaign_scale_battle_id),
+        QStringLiteral("Campaign-Scale Battle Performance"),
+        QStringLiteral("Cannae-sized 79-unit mixed battle using production LOD, "
+                       "batching, combat, cavalry, archery, and healing paths."),
+        15.0F,
+        {72.0F, 56.0F, 24.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = false;
+    s.collect_animation_diagnostics = false;
+    s.groups = {
+        group(QStringLiteral("blue_spears"),
+              Troop::Spearman,
+              1,
+              11,
+              {-15.0F, 0.0F, -18.0F},
+              16),
+        group(QStringLiteral("blue_swords"),
+              Troop::Swordsman,
+              1,
+              8,
+              {-11.0F, 0.0F, -12.0F},
+              16),
+        group(QStringLiteral("blue_archers"),
+              Troop::Archer,
+              1,
+              6,
+              {-8.0F, 0.0F, -25.0F},
+              16),
+        group(QStringLiteral("blue_healers"),
+              Troop::Healer,
+              1,
+              1,
+              {-2.0F, 0.0F, -28.0F},
+              16),
+        group(QStringLiteral("blue_horse_archers"),
+              Troop::HorseArcher,
+              1,
+              3,
+              {-25.0F, 0.0F, -22.0F},
+              16),
+        group(QStringLiteral("blue_cavalry"),
+              Troop::MountedKnight,
+              1,
+              6,
+              {9.0F, 0.0F, -20.0F},
+              16),
+        group(QStringLiteral("red_spears"),
+              Troop::Spearman,
+              2,
+              13,
+              {-17.0F, 0.0F, 17.0F},
+              16),
+        group(QStringLiteral("red_swords"),
+              Troop::Swordsman,
+              2,
+              11,
+              {-14.0F, 0.0F, 11.0F},
+              16),
+        group(QStringLiteral("red_archers"),
+              Troop::Archer,
+              2,
+              7,
+              {-9.0F, 0.0F, 25.0F},
+              16),
+        group(QStringLiteral("red_healers"),
+              Troop::Healer,
+              2,
+              2,
+              {0.0F, 0.0F, 28.0F},
+              16),
+        group(QStringLiteral("red_horse_archers"),
+              Troop::HorseArcher,
+              2,
+              2,
+              {-25.0F, 0.0F, 22.0F},
+              16),
+        group(QStringLiteral("red_cavalry"),
+              Troop::MountedKnight,
+              2,
+              9,
+              {7.0F, 0.0F, 20.0F},
+              16),
+    };
+    s.steps = {
+        at(0.25F,
+           Command::AttackMove,
+           QStringLiteral("blue_spears"),
+           QStringLiteral("red_swords")),
+        at(0.25F,
+           Command::AttackMove,
+           QStringLiteral("blue_swords"),
+           QStringLiteral("red_spears")),
+        at(0.25F,
+           Command::Attack,
+           QStringLiteral("blue_archers"),
+           QStringLiteral("red_spears")),
+        at(0.25F,
+           Command::Attack,
+           QStringLiteral("blue_horse_archers"),
+           QStringLiteral("red_swords")),
+        at(0.25F,
+           Command::Charge,
+           QStringLiteral("blue_cavalry"),
+           QStringLiteral("red_archers")),
+        at(0.25F,
+           Command::AttackMove,
+           QStringLiteral("red_spears"),
+           QStringLiteral("blue_swords")),
+        at(0.25F,
+           Command::AttackMove,
+           QStringLiteral("red_swords"),
+           QStringLiteral("blue_spears")),
+        at(0.25F,
+           Command::Attack,
+           QStringLiteral("red_archers"),
+           QStringLiteral("blue_spears")),
+        at(0.25F,
+           Command::Attack,
+           QStringLiteral("red_horse_archers"),
+           QStringLiteral("blue_swords")),
+        at(0.25F,
+           Command::Charge,
+           QStringLiteral("red_cavalry"),
+           QStringLiteral("blue_archers")),
+    };
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("blue_spears")),
+        expectation(Expect::GroupExists, QStringLiteral("red_spears")),
+        expectation(Expect::FrameBudget, {}, {}, 10.0F, 2.0F),
+    };
     result.push_back(std::move(s));
   }
 
@@ -1639,6 +2400,385 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_architecture_and_props_showcase_id),
+        QStringLiteral("Architecture and Dark Props"),
+        QStringLiteral("Clean side-by-side Roman and Carthaginian architecture "
+                       "review with authored ritual, ruin, and cursed-world props."),
+        12.0F,
+        {36.0F, 50.0F, 0.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("showcase_roman_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-9.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-3.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {3.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_roman_tower"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {9.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_punic_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-9.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-3.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {3.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_punic_tower"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {9.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("showcase_roman_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {-10.0F, 0.0F, -8.5F},
+                 {2.5F, 0.0F, 0.0F}),
+        building(QStringLiteral("showcase_punic_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 9,
+                 {-10.0F, 0.0F, 6.5F},
+                 {2.5F, 0.0F, 0.0F}),
+    };
+    s.resource_patches = {
+        {QStringLiteral("magic_shrine"), 1, {-8.0F, 0.0F, 10.5F}, {}, 0.78F},
+        {QStringLiteral("ruins"), 1, {-4.0F, 0.0F, 10.5F}, {}, 0.68F},
+        {QStringLiteral("dead_tree"), 1, {0.0F, 0.0F, 10.5F}, {}, 0.90F},
+        {QStringLiteral("iron_ore"), 1, {4.0F, 0.0F, 10.5F}, {}, 0.90F},
+        {QStringLiteral("weapon_rack"), 1, {8.0F, 0.0F, 10.5F}, {}, 0.85F},
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("showcase_roman_market"),
+                               QStringLiteral("showcase_roman_barracks"),
+                               QStringLiteral("showcase_roman_home"),
+                               QStringLiteral("showcase_roman_tower"),
+                               QStringLiteral("showcase_punic_market"),
+                               QStringLiteral("showcase_punic_barracks"),
+                               QStringLiteral("showcase_punic_home"),
+                               QStringLiteral("showcase_punic_tower"),
+                               QStringLiteral("showcase_roman_wall"),
+                               QStringLiteral("showcase_punic_wall")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_roman_fortification_showcase_id),
+        QStringLiteral("Roman Timber Fortification"),
+        QStringLiteral(
+            "Roman palisade review with disciplined wall runs, reinforced "
+            "corners, a defended gate opening, towers, and an occupied ward."),
+        16.0F,
+        {42.0F, 56.0F, 28.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("roman_fort_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {0.0F, 0.0F, -8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {-8.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("roman_fort_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 9,
+                 {8.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("roman_fort_south_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 4,
+                 {-5.0F, 0.0F, 8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_south_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 4,
+                 {5.0F, 0.0F, 8.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("roman_fort_tower_nw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-8.0F, 0.0F, -8.0F}),
+        building(QStringLiteral("roman_fort_tower_ne"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {8.0F, 0.0F, -8.0F}),
+        building(QStringLiteral("roman_fort_tower_sw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-8.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_tower_se"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {8.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_gate_left"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-2.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_gate_right"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {2.0F, 0.0F, 8.0F}),
+        building(QStringLiteral("roman_fort_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-2.8F, 0.0F, -1.0F}),
+        building(QStringLiteral("roman_fort_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {3.2F, 0.0F, 1.5F}),
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("roman_fort_north"),
+                               QStringLiteral("roman_fort_west"),
+                               QStringLiteral("roman_fort_east"),
+                               QStringLiteral("roman_fort_south_west"),
+                               QStringLiteral("roman_fort_south_east"),
+                               QStringLiteral("roman_fort_tower_nw"),
+                               QStringLiteral("roman_fort_tower_ne"),
+                               QStringLiteral("roman_fort_tower_sw"),
+                               QStringLiteral("roman_fort_tower_se"),
+                               QStringLiteral("roman_fort_gate_left"),
+                               QStringLiteral("roman_fort_gate_right"),
+                               QStringLiteral("roman_fort_barracks"),
+                               QStringLiteral("roman_fort_market")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_carthage_fortification_showcase_id),
+        QStringLiteral("Carthaginian Dread Palisade"),
+        QStringLiteral("Carthaginian timber fortress with bronze-bound logs, jagged "
+                       "towers, a ritual gate, and a layered inner defensive ward."),
+        16.0F,
+        {46.0F, 60.0F, 330.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        building(QStringLiteral("punic_fort_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {0.0F, 0.0F, -10.0F},
+                 {2.0F, 0.0F, 0.0F},
+                 180.0F),
+        building(QStringLiteral("punic_fort_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {-10.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 11,
+                 {10.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_south_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 4,
+                 {-7.0F, 0.0F, 10.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("punic_fort_south_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 4,
+                 {7.0F, 0.0F, 10.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("punic_fort_tower_nw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-10.0F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_tower_ne"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {10.0F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_tower_sw"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-10.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_tower_se"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {10.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_gate_left"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-3.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_fort_gate_right"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {3.0F, 0.0F, 10.0F}),
+        building(QStringLiteral("punic_inner_north"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 5,
+                 {0.0F, 0.0F, -2.0F},
+                 {2.0F, 0.0F, 0.0F},
+                 180.0F),
+        building(QStringLiteral("punic_inner_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {-4.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_inner_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 3,
+                 {4.0F, 0.0F, 0.0F},
+                 {0.0F, 0.0F, 2.0F},
+                 90.0F),
+        building(QStringLiteral("punic_fort_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {0.0F, 0.0F, 1.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_fort_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {6.8F, 0.0F, 3.4F},
+                 {},
+                 180.0F),
+    };
+    s.resource_patches = {
+        {QStringLiteral("fire_camp"), 2, {-2.0F, 0.0F, 6.0F}, {4.0F, 0.0F, 0.0F}, 0.8F},
+        {QStringLiteral("weapon_rack"),
+         2,
+         {-6.5F, 0.0F, 5.2F},
+         {13.0F, 0.0F, 0.0F},
+         0.9F},
+    };
+    add_settlement_acceptance(s,
+                              {QStringLiteral("punic_fort_north"),
+                               QStringLiteral("punic_fort_west"),
+                               QStringLiteral("punic_fort_east"),
+                               QStringLiteral("punic_fort_south_west"),
+                               QStringLiteral("punic_fort_south_east"),
+                               QStringLiteral("punic_fort_tower_nw"),
+                               QStringLiteral("punic_fort_tower_ne"),
+                               QStringLiteral("punic_fort_tower_sw"),
+                               QStringLiteral("punic_fort_tower_se"),
+                               QStringLiteral("punic_fort_gate_left"),
+                               QStringLiteral("punic_fort_gate_right"),
+                               QStringLiteral("punic_inner_north"),
+                               QStringLiteral("punic_inner_west"),
+                               QStringLiteral("punic_inner_east"),
+                               QStringLiteral("punic_fort_barracks"),
+                               QStringLiteral("punic_fort_market")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_rival_economies_id),
         QStringLiteral("Rival Economies"),
         QStringLiteral("Roman and Carthaginian AI builders develop opposing starter "
@@ -1757,6 +2897,31 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("roman_economy_builders")));
     s.expectations.push_back(expectation(Expect::OwnerHarvestsResource,
                                          QStringLiteral("punic_economy_builders")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_water_showcase_id),
+        QStringLiteral("River and Lake Water Showcase"),
+        QStringLiteral(
+            "Places a flowing river and an irregular calm lake side by side for "
+            "shared material, foam, shoreline, depth, and silhouette review."),
+        10.0F,
+        {42.0F, 56.0F, 18.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.rivers.push_back(
+        Game::Map::RiverSegment{{-12.0F, 0.0F, -28.0F}, {-10.0F, 0.0F, 28.0F}, 5.5F});
+    s.lakes.push_back(Game::Map::Lake{{10.0F, 0.0F, 1.0F}, 19.0F, 14.0F, -18.0F});
+    auto observer = group(
+        QStringLiteral("water_observer"), Troop::Archer, 1, 1, {0.0F, 0.0F, 0.0F}, 1);
+    observer.nation_id = Nation::Carthage;
+    s.groups = {observer};
+    s.expectations = {
+        expectation(Expect::GroupIsRendered, QStringLiteral("water_observer")),
+        expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
     result.push_back(std::move(s));
   }
 

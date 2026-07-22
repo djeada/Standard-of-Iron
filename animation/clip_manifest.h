@@ -135,7 +135,10 @@ inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_right_clip = 27U;
 inline constexpr std::uint16_t k_humanoid_rpg_sword_overhead_clip = 28U;
 inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip = 29U;
 inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip = 30U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 31U;
+inline constexpr std::uint16_t k_humanoid_archer_melee_clip = 31U;
+inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip = 32U;
+inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip = 33U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 34U;
 
 inline constexpr std::uint8_t k_humanoid_idle_variant_count = 5U;
 inline constexpr std::uint8_t k_humanoid_attack_sword_variant_count = 3U;

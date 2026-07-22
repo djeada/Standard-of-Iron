@@ -855,15 +855,6 @@
   ],
   "spawns": [
     {
-      "type": "barracks",
-      "x": 62,
-      "z": 62,
-      "player_id": 1,
-      "max_population": 220,
-      "nation": "roman_republic",
-      "description": "Player 1 mountain barracks"
-    },
-    {
       "type": "archer",
       "x": 58,
       "z": 68,
@@ -922,15 +913,6 @@
       "x": 46,
       "z": 64,
       "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 238,
-      "z": 238,
-      "player_id": 2,
-      "max_population": 220,
-      "nation": "roman_republic",
-      "description": "Player 2 mountain barracks"
     },
     {
       "type": "archer",
@@ -1187,5 +1169,25 @@
     "wood": 100,
     "stone": 300,
     "iron": 150
-  }
+  },
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 62,
+      "z": 62,
+      "player_id": 1,
+      "max_population": 220,
+      "nation": "roman_republic",
+      "description": "Player 1 mountain barracks"
+    },
+    {
+      "type": "barracks",
+      "x": 238,
+      "z": 238,
+      "player_id": 2,
+      "max_population": 220,
+      "nation": "roman_republic",
+      "description": "Player 2 mountain barracks"
+    }
+  ]
 }

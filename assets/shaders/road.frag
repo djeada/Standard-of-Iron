@@ -7,6 +7,7 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform vec3 u_light_direction;
 uniform float u_alpha;
+uniform int u_surface_kind;
 uniform sampler2D u_visibility_tex;
 uniform vec2 u_visibility_size;
 uniform float u_visibility_tile_size;
@@ -165,6 +166,20 @@ void main() {
   float spec = ggx_specular(n_final, view_dir, light_dir, roughness, f0);
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
+  if (u_surface_kind == 1) {
+    // Rough tracks retain the old shader's depth and lighting, but read as
+    // compacted earth rather than a second paved road material.
+    float across = clamp(v_tex_coord.x, 0.0, 1.0);
+    float ruts = max(1.0 - smoothstep(0.045, 0.085, abs(across - 0.30)),
+                     1.0 - smoothstep(0.045, 0.085, abs(across - 0.70)));
+    vec3 earth = stone_base * (0.90 + var_low * 0.8 + var_mid * 0.45);
+    earth *= 1.0 - ruts * 0.20;
+    base_color = mix(base_color, earth, 0.84);
+  } else if (u_surface_kind == 2) {
+    // Deliberately laid Roman paving has cleaner joints and slightly stronger
+    // stone contrast than the ordinary worn road surface.
+    base_color = mix(mortar_color * 0.92, stone_color * 1.06, stone_mask);
+  }
 
   vec3 hemi_sky = vec3(0.20, 0.25, 0.30);
   vec3 hemi_ground = vec3(0.10, 0.09, 0.08);

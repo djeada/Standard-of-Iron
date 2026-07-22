@@ -4,43 +4,46 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <math.h>
 #include <numbers>
 #include <vector>
 
+#include "terrain_landform.h"
+
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
-constexpr int k_hill_ramp_extra_steps = 18;
+constexpr int k_hill_ramp_extra_steps = 7;
 
-constexpr float k_hill_ramp_steepness_exponent = 1.05F;
+constexpr float k_hill_ramp_steepness_exponent = 0.92F;
 
 constexpr float k_entry_ramp_width = 3.0F;
 
-constexpr float k_width_falloff_padding = 0.75F;
+constexpr float k_width_falloff_padding = 2.50F;
 
-constexpr float k_entry_bowl_exponent = 2.0F;
+constexpr float k_entry_bowl_exponent = 1.30F;
 
-constexpr float k_entry_base_width_scale = 1.55F;
-constexpr float k_entry_top_width_scale = 0.70F;
+constexpr float k_entry_base_width_scale = 1.72F;
+constexpr float k_entry_top_width_scale = 1.12F;
 
-constexpr float k_entry_outward_steps_fraction = 0.50F;
-constexpr int k_entry_outward_steps_min = 6;
-constexpr int k_entry_outward_steps_max = 16;
+constexpr float k_entry_outward_steps_fraction = 1.08F;
+constexpr int k_entry_outward_steps_min = 12;
+constexpr int k_entry_outward_steps_max = 32;
 
-constexpr float k_entry_mid_dip_strength = 0.40F;
+constexpr float k_entry_mid_dip_strength = 0.08F;
 
-constexpr float k_entry_mid_depth_strength = 0.34F;
+constexpr float k_entry_mid_depth_strength = 0.06F;
 
-constexpr float k_entry_toe_height_fraction = 0.01F;
+constexpr float k_entry_toe_height_fraction = 0.0F;
 
 constexpr float k_walkable_width_threshold = 0.38F;
 
-constexpr float k_entry_lower_ramp_delay = 0.08F;
-constexpr float k_entry_mouth_flare_strength = 0.22F;
-constexpr float k_entry_mouth_soften_strength = 0.06F;
-constexpr float k_entry_floor_flatten_strength = 0.04F;
-constexpr float k_entry_shoulder_raise_strength = 0.06F;
+constexpr float k_entry_lower_ramp_delay = 0.0F;
+constexpr float k_entry_mouth_flare_strength = 0.38F;
+constexpr float k_entry_mouth_soften_strength = 0.045F;
+constexpr float k_entry_floor_flatten_strength = 0.075F;
+constexpr float k_entry_shoulder_raise_strength = 0.065F;
 
 inline auto hash_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -68,16 +71,22 @@ inline auto value_noise_2d(float x, float z, std::uint32_t seed) -> float {
 
   float const tx = x - static_cast<float>(ix0);
   float const tz = z - static_cast<float>(iz0);
+  const auto fade = [](float value) {
+    return value * value * value * (value * (value * 6.0F - 15.0F) + 10.0F);
+  };
+  const float sx = fade(tx);
+  const float sz = fade(tz);
 
   float const n00 = hash_to_float01(hash_coords(ix0, iz0, seed));
   float const n10 = hash_to_float01(hash_coords(ix1, iz0, seed));
   float const n01 = hash_to_float01(hash_coords(ix0, iz1, seed));
   float const n11 = hash_to_float01(hash_coords(ix1, iz1, seed));
 
-  float const nx0 = n00 * (1.0F - tx) + n10 * tx;
-  float const nx1 = n01 * (1.0F - tx) + n11 * tx;
-  return nx0 * (1.0F - tz) + nx1 * tz;
+  float const nx0 = n00 * (1.0F - sx) + n10 * sx;
+  float const nx1 = n01 * (1.0F - sx) + n11 * sx;
+  return nx0 * (1.0F - sz) + nx1 * sz;
 }
+
 } // namespace
 
 namespace Game::Map {
@@ -153,7 +162,15 @@ TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
 void TerrainHeightMap::build_from_features(
     const std::vector<TerrainFeature>& features) {
 
-  std::fill(m_heights.begin(), m_heights.end(), 0.0F);
+  // The existing heights are the authoritative battlefield relief. Authored
+  // features are layered onto that surface; clearing the array here would
+  // silently discard biome relief and leave rendering/pathing with different
+  // ideas of where the ground is.
+  const std::vector<float> base_heights = m_heights;
+  const int map_cell_count = m_width * m_height;
+  std::vector<float> erosion_strength(static_cast<std::size_t>(map_cell_count), 0.0F);
+  std::vector<std::uint8_t> erosion_protected(static_cast<std::size_t>(map_cell_count),
+                                              0);
   std::fill(m_terrain_types.begin(), m_terrain_types.end(), TerrainType::Flat);
   std::fill(m_hill_entrances.begin(), m_hill_entrances.end(), false);
   std::fill(m_hill_walkable.begin(), m_hill_walkable.end(), false);
@@ -168,17 +185,68 @@ void TerrainHeightMap::build_from_features(
     const float grid_radius = std::max(feature.radius / m_tile_size, 1.0F);
 
     if (feature.type == TerrainType::Mountain) {
-      const float major_radius = std::max(grid_radius * 1.8F, grid_radius + 3.0F);
-      const float minor_radius = std::max(grid_radius * 0.22F, 0.8F);
+      // Mountains form long, asymmetric ridges. They remain broad enough to
+      // read as landforms instead of walls, but the cross-section now has a
+      // rocky crest, talus shoulder, and naturally tapered ends.
+      const bool has_authored_extents = feature.width > 0.0F && feature.depth > 0.0F;
+      const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
+      const float mountain_height =
+          feature.height * (campaign_landform_scale ? 1.90F : 1.0F);
+      const float major_radius =
+          has_authored_extents ? std::max(feature.width * 0.5F / m_tile_size, 2.0F)
+                               : std::max(grid_radius * 1.38F, grid_radius + 6.0F);
+      const float minor_radius =
+          has_authored_extents ? std::max(feature.depth * 0.5F / m_tile_size, 2.0F)
+                               : std::max(grid_radius * 0.55F, 5.0F);
       const float bound = std::max(major_radius, minor_radius) + 2.0F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - bound)));
       const int max_x = std::min(m_width - 1, int(std::ceil(grid_center_x + bound)));
       const int min_z = std::max(0, int(std::floor(grid_center_z - bound)));
       const int max_z = std::min(m_height - 1, int(std::ceil(grid_center_z + bound)));
 
-      const float angle_rad = feature.rotation_deg * k_deg_to_rad;
+      float organic_rotation = 0.0F;
+      if (!has_authored_extents) {
+        // Radius-only mountains are authored as a chain of control points.
+        // Align each massif toward its nearest neighbour so those points read
+        // as one geological range instead of unrelated radial islands.
+        float nearest_distance_sq = std::numeric_limits<float>::max();
+        float nearest_angle = 0.0F;
+        for (const auto& candidate : features) {
+          if (&candidate == &feature || candidate.type != TerrainType::Mountain) {
+            continue;
+          }
+          const float dx = candidate.center_x - feature.center_x;
+          const float dz = candidate.center_z - feature.center_z;
+          const float distance_sq = dx * dx + dz * dz;
+          if (distance_sq < nearest_distance_sq) {
+            nearest_distance_sq = distance_sq;
+            nearest_angle = std::atan2(dz, dx) / k_deg_to_rad;
+          }
+        }
+        const float direction_jitter =
+            (hash_to_float01(hash_coords(int(std::round(grid_center_x)),
+                                           int(std::round(grid_center_z)),
+                                           0x5A17U)) -
+             0.5F) *
+            16.0F;
+        organic_rotation =
+            std::isfinite(nearest_distance_sq) ? nearest_angle + direction_jitter
+                                               : direction_jitter;
+      }
+      const float angle_rad = (feature.rotation_deg + organic_rotation) * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
       const float sin_a = std::sin(angle_rad);
+      const float feature_phase =
+          grid_center_x * 0.071F + grid_center_z * 0.113F + mountain_height * 0.19F;
+      const auto mountain_seed =
+          0xA17E35D9U ^ static_cast<std::uint32_t>(
+                            std::abs(grid_center_x * 31.0F + grid_center_z * 17.0F));
+      const Landform::MountainConfig mountain_config{
+          .ridge_radius = major_radius,
+          .slope_radius = minor_radius,
+          .phase = feature_phase,
+          .seed = mountain_seed,
+      };
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -187,25 +255,17 @@ void TerrainHeightMap::build_from_features(
 
           const float rotated_x = local_x * cos_a + local_z * sin_a;
           const float rotated_z = -local_x * sin_a + local_z * cos_a;
+          const auto landform =
+              Landform::sample_mountain(rotated_x, rotated_z, mountain_config);
+          const float feature_height = mountain_height * landform.elevation_fraction;
 
-          const float norm =
-              std::sqrt((rotated_x * rotated_x) / (major_radius * major_radius) +
-                        (rotated_z * rotated_z) / (minor_radius * minor_radius));
-
-          if (norm <= 1.0F) {
-            float const blend = std::clamp(1.0F - norm, 0.0F, 1.0F);
-
-            float height = feature.height * std::pow(blend, 3.5F);
-            if (blend > 0.92F) {
-              height = feature.height;
-            }
-
-            if (height > 0.01F) {
-              int const idx = indexAt(x, z);
-              if (height > m_heights[idx]) {
-                m_heights[idx] = height;
-                m_terrain_types[idx] = TerrainType::Mountain;
-              }
+          if (feature_height > 0.01F) {
+            int const idx = indexAt(x, z);
+            float const height = base_heights[idx] + feature_height;
+            if (height > m_heights[idx]) {
+              m_heights[idx] = height;
+              m_terrain_types[idx] = TerrainType::Mountain;
+              erosion_strength[idx] = std::max(erosion_strength[idx], 1.0F);
             }
           }
         }
@@ -214,15 +274,65 @@ void TerrainHeightMap::build_from_features(
     }
 
     if (feature.type == TerrainType::Hill) {
-      const float grid_width = std::max(feature.width / m_tile_size, 1.0F);
-      const float grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
+      float grid_width = std::max(feature.width / m_tile_size, 1.0F);
+      float grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
+      // Campaign hill heights were authored when hills were near-vertical
+      // decals. Give their now broader physical footprints enough relief to
+      // read as landforms, while keeping the authored relative scale intact.
+      const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
+      const bool radius_authored =
+          feature.radius > 0.0F &&
+          std::abs(feature.width - feature.radius * 2.0F) < 0.01F &&
+          std::abs(feature.depth - feature.radius * 2.0F) < 0.01F;
+      float hill_rotation_deg = feature.rotation_deg;
+      if (campaign_landform_scale && radius_authored) {
+        // A radius in legacy map JSON describes scale, not a request for a
+        // mathematically circular mound. Preserve every authored entrance by
+        // expanding one axis instead of shrinking the other.
+        grid_width *= 1.18F;
+        hill_rotation_deg +=
+            hash_to_float01(hash_coords(int(std::round(grid_center_x)),
+                                        int(std::round(grid_center_z)),
+                                        0x81E7U)) *
+            180.0F;
+      }
+      const float authored_hill_height =
+          feature.height * (campaign_landform_scale ? 2.80F : 1.0F);
+      // Height-only legacy authoring makes a 100 m hill scarcely taller than
+      // a 30 m knoll. Preserve the authored value as a minimum, then give
+      // campaign hills enough vertical mass for their physical footprint.
+      // The minor axis is used so long narrow ridges do not become mountains.
+      const float footprint_height =
+          std::min(grid_width, grid_depth) * m_tile_size * 0.18F;
+      const float hill_height = campaign_landform_scale
+                                    ? std::max(authored_hill_height, footprint_height)
+                                    : authored_hill_height;
 
-      const float plateau_width = std::max(1.5F, grid_width * 0.45F);
-      const float plateau_depth = std::max(1.5F, grid_depth * 0.45F);
-      const float slope_width = std::max(plateau_width + 1.5F, grid_width);
-      const float slope_depth = std::max(plateau_depth + 1.5F, grid_depth);
+      // Width/depth are the complete authored footprint. Slope run is a
+      // physical distance derived primarily from elevation, rather than a
+      // percentage of the footprint. Consequently a 100 m hill has space for
+      // a town on its crown while a 20 m knoll remains a small tactical perch.
+      const float slope_width = std::max(2.0F, grid_width * 0.50F);
+      const float slope_depth = std::max(2.0F, grid_depth * 0.50F);
+      const float elevation_cells = std::max(hill_height / m_tile_size, 0.25F);
+      const float slope_run = campaign_landform_scale
+                                  ? std::max(7.0F, elevation_cells * 4.2F)
+                                  : std::max(3.25F, elevation_cells * 3.15F);
+      const float minimum_crown_fraction = campaign_landform_scale ? 0.42F : 0.68F;
+      const float maximum_slope_fraction = campaign_landform_scale ? 0.62F : 0.46F;
+      const float plateau_width = std::max(
+          {1.5F,
+           slope_width * minimum_crown_fraction,
+           slope_width - std::min(slope_width * maximum_slope_fraction, slope_run)});
+      const float plateau_depth = std::max(
+          {1.5F,
+           slope_depth * minimum_crown_fraction,
+           slope_depth - std::min(slope_depth * maximum_slope_fraction, slope_run)});
 
-      const float max_extent = std::max(slope_width, slope_depth);
+      // Compound lobes can project slightly beyond the authored parent
+      // ellipse; leave enough sampling room so their toes taper naturally
+      // instead of being clipped by the feature loop's bounding box.
+      const float max_extent = std::max(slope_width, slope_depth) * 1.18F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
       const int max_x =
           std::min(m_width - 1, int(std::ceil(grid_center_x + max_extent + 1.0F)));
@@ -235,9 +345,42 @@ void TerrainHeightMap::build_from_features(
       std::vector<std::uint8_t> entrance_line_mask(map_cell_count, 0);
       std::vector<int> entrance_indices;
 
-      const float angle_rad = feature.rotation_deg * k_deg_to_rad;
+      const float angle_rad = hill_rotation_deg * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
       const float sin_a = std::sin(angle_rad);
+      const float feature_phase =
+          grid_center_x * 0.083F + grid_center_z * 0.127F + hill_height * 0.31F;
+      const auto hill_seed =
+          0x6A09E667U ^ static_cast<std::uint32_t>(
+                            std::abs(grid_center_x * 29.0F + grid_center_z * 43.0F));
+      const Landform::HillConfig hill_config{
+          .outer_radius_x = slope_width,
+          .outer_radius_z = slope_depth,
+          .crown_radius_x = plateau_width,
+          .crown_radius_z = plateau_depth,
+          .height = hill_height,
+          .phase = feature_phase,
+          .seed = hill_seed,
+          .rounded_crown = campaign_landform_scale,
+      };
+
+      std::vector<QVector3D> hill_entrances = feature.entrances;
+      if (hill_entrances.empty()) {
+        // Terrain JSON may omit entrances on custom maps. A tactical hill is
+        // never valid without access, so deterministically provide one at the
+        // major-axis foot instead of silently creating an unreachable crown.
+        const float fallback_distance = slope_width * m_tile_size * 0.98F;
+        hill_entrances.emplace_back(feature.center_x - cos_a * fallback_distance,
+                                    0.0F,
+                                    feature.center_z - sin_a * fallback_distance);
+      }
+
+      auto slope_distance = [&](float local_x, float local_z) {
+        return Landform::sample_hill(local_x, local_z, hill_config).outer_distance;
+      };
+      auto crown_distance = [&](float local_x, float local_z) {
+        return Landform::sample_hill(local_x, local_z, hill_config).crown_distance;
+      };
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -247,12 +390,10 @@ void TerrainHeightMap::build_from_features(
           const float rotated_x = dx * cos_a + dz * sin_a;
           const float rotated_z = -dx * sin_a + dz * cos_a;
 
-          const float norm_plateau_dist =
-              std::sqrt((rotated_x * rotated_x) / (plateau_width * plateau_width) +
-                        (rotated_z * rotated_z) / (plateau_depth * plateau_depth));
-          const float norm_slope_dist =
-              std::sqrt((rotated_x * rotated_x) / (slope_width * slope_width) +
-                        (rotated_z * rotated_z) / (slope_depth * slope_depth));
+          const auto landform =
+              Landform::sample_hill(rotated_x, rotated_z, hill_config);
+          const float norm_plateau_dist = landform.crown_distance;
+          const float norm_slope_dist = landform.outer_distance;
 
           if (norm_slope_dist > 1.0F) {
             continue;
@@ -260,32 +401,67 @@ void TerrainHeightMap::build_from_features(
 
           const int idx = indexAt(x, z);
 
-          float height = 0.0F;
-          if (norm_plateau_dist <= 1.0F) {
-            height = feature.height;
-          } else {
-            float const t = std::clamp((norm_slope_dist - norm_plateau_dist) /
-                                           (1.0F - norm_plateau_dist),
-                                       0.0F,
-                                       1.0F);
-            float const smooth =
-                0.5F * (1.0F + std::cos(t * std::numbers::pi_v<float>));
-            height = feature.height * smooth;
-          }
+          const float height = hill_height * landform.elevation_fraction;
 
-          if (height > m_heights[idx]) {
-            m_heights[idx] = height;
+          float const surface_height = base_heights[idx] + height;
+          if (surface_height > m_heights[idx]) {
+            m_heights[idx] = surface_height;
             m_terrain_types[idx] = TerrainType::Hill;
+            erosion_strength[idx] = std::max(
+                erosion_strength[idx],
+                0.50F + 0.18F * (1.0F - height / std::max(hill_height, 0.001F)));
           }
           if (norm_plateau_dist <= 1.0F && m_terrain_types[idx] == TerrainType::Hill) {
             walkable_mask[idx] = 1;
+            erosion_protected[idx] = 1;
           }
         }
       }
 
-      for (const auto& entrance : feature.entrances) {
+      struct EntranceCluster {
+        float grid_x{};
+        float grid_z{};
+        float radius{};
+        int samples{};
+      };
+      std::vector<EntranceCluster> entrance_clusters;
+      entrance_clusters.reserve(hill_entrances.size());
+      constexpr float k_entrance_cluster_distance = 5.0F;
+      for (const auto& entrance : hill_entrances) {
         const float entrance_gx = (entrance.x() / m_tile_size) + grid_half_width;
         const float entrance_gz = (entrance.z() / m_tile_size) + grid_half_height;
+        auto cluster_it =
+            std::find_if(entrance_clusters.begin(),
+                         entrance_clusters.end(),
+                         [&](const EntranceCluster& cluster) {
+                           return std::hypot(entrance_gx - cluster.grid_x,
+                                             entrance_gz - cluster.grid_z) <=
+                                  k_entrance_cluster_distance;
+                         });
+        if (cluster_it == entrance_clusters.end()) {
+          entrance_clusters.push_back({.grid_x = entrance_gx,
+                                       .grid_z = entrance_gz,
+                                       .radius = 0.0F,
+                                       .samples = 1});
+          continue;
+        }
+
+        const float previous_x = cluster_it->grid_x;
+        const float previous_z = cluster_it->grid_z;
+        cluster_it->samples += 1;
+        const float weight = 1.0F / float(cluster_it->samples);
+        cluster_it->grid_x += (entrance_gx - cluster_it->grid_x) * weight;
+        cluster_it->grid_z += (entrance_gz - cluster_it->grid_z) * weight;
+        const float center_shift = std::hypot(cluster_it->grid_x - previous_x,
+                                              cluster_it->grid_z - previous_z);
+        cluster_it->radius = std::max(cluster_it->radius + center_shift,
+                                      std::hypot(entrance_gx - cluster_it->grid_x,
+                                                 entrance_gz - cluster_it->grid_z));
+      }
+
+      for (const auto& entrance : entrance_clusters) {
+        const float entrance_gx = entrance.grid_x;
+        const float entrance_gz = entrance.grid_z;
         int const ex = int(std::round(entrance_gx));
         int const ez = int(std::round(entrance_gz));
         if (!in_bounds(ex, ez)) {
@@ -301,6 +477,7 @@ void TerrainHeightMap::build_from_features(
           }
           walkable_mask[entrance_idx] = 1;
           entrance_line_mask[entrance_idx] = 1;
+          erosion_protected[entrance_idx] = 1;
           m_hill_walkable[entrance_idx] = true;
           m_heights[entrance_idx] = std::max(m_heights[entrance_idx], 0.0F);
         }
@@ -343,9 +520,7 @@ void TerrainHeightMap::build_from_features(
             const float cell_dz = float(iz) - grid_center_z;
             const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
             const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
-            const float plateau_norm_dist =
-                std::sqrt((cell_rot_x * cell_rot_x) / (plateau_width * plateau_width) +
-                          (cell_rot_z * cell_rot_z) / (plateau_depth * plateau_depth));
+            const float plateau_norm_dist = crown_distance(cell_rot_x, cell_rot_z);
             if (plateau_norm_dist <= 1.0F) {
               plateau_steps = std::max(1, step);
               break;
@@ -364,8 +539,10 @@ void TerrainHeightMap::build_from_features(
         int const total_ramp_steps = outward_steps + ramp_steps;
 
         float const hill_min_extent = std::min(plateau_width, plateau_depth);
-        float const entry_width =
-            std::max(1.5F, std::min(k_entry_ramp_width, hill_min_extent * 0.35F));
+        const float authored_entry_width =
+            (campaign_landform_scale ? 7.25F : k_entry_ramp_width) + entrance.radius;
+        float const entry_width = std::max(
+            1.5F, std::min(authored_entry_width, hill_min_extent * 0.62F));
 
         float const perp_x = -dir_z;
         float const perp_z = dir_x;
@@ -378,29 +555,34 @@ void TerrainHeightMap::build_from_features(
           int const center_ix = int(std::round(cur_x));
           int const center_iz = int(std::round(cur_z));
           if (!in_bounds(center_ix, center_iz)) {
-            break;
+            // An outward apron may begin beyond a small test/map boundary.
+            // Keep advancing toward the authored entrance instead of
+            // discarding the entire otherwise valid ramp.
+            cur_x += dir_x;
+            cur_z += dir_z;
+            continue;
           }
 
           const float cell_dx = float(center_ix) - grid_center_x;
           const float cell_dz = float(center_iz) - grid_center_z;
           const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
           const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
-          const float cell_norm_dist =
-              std::sqrt((cell_rot_x * cell_rot_x) / (slope_width * slope_width) +
-                        (cell_rot_z * cell_rot_z) / (slope_depth * slope_depth));
-          const float plateau_norm_dist =
-              std::sqrt((cell_rot_x * cell_rot_x) / (plateau_width * plateau_width) +
-                        (cell_rot_z * cell_rot_z) / (plateau_depth * plateau_depth));
+          const float cell_norm_dist = slope_distance(cell_rot_x, cell_rot_z);
+          // Authored entrances are not guaranteed to land exactly on the
+          // procedurally distorted footprint. Treat every cell before the
+          // real hill boundary as apron; skipping that interval is what made
+          // the visible ramp detach from the entry cut.
+          bool const builds_apron = is_outward || cell_norm_dist > 1.0F;
 
-          if (!is_outward && cell_norm_dist > 1.1F) {
-            cur_x += dir_x;
-            cur_z += dir_z;
-            continue;
-          }
-
+          // Grade the full apron, including the authored point's outward
+          // extension. Previously the outward cells stayed flat and the
+          // complete elevation gain was compressed against the hill face.
           float const ramp_progress =
-              (total_ramp_steps > 1) ? (float(ramp_step) / float(total_ramp_steps - 1))
-                                     : 1.0F;
+              (total_ramp_steps > 1)
+                  ? std::clamp(float(ramp_step) / float(total_ramp_steps - 1),
+                               0.0F,
+                               1.0F)
+                  : 1.0F;
 
           float const delayed_progress =
               std::clamp((ramp_progress - k_entry_lower_ramp_delay) /
@@ -417,7 +599,7 @@ void TerrainHeightMap::build_from_features(
               height_base * (1.0F - k_entry_mid_dip_strength * mid), 0.0F, 1.0F);
 
           float const toe_frac = k_entry_toe_height_fraction * (1.0F - s) * (1.0F - s);
-          float center_ramp_height = feature.height * std::max(height_frac, toe_frac);
+          float center_ramp_height = hill_height * std::max(height_frac, toe_frac);
           center_ramp_height *=
               std::clamp(1.0F - k_entry_mid_depth_strength * mid, 0.0F, 1.0F);
 
@@ -431,12 +613,16 @@ void TerrainHeightMap::build_from_features(
           if (is_outward && outward_steps > 0) {
             float const outward_t =
                 float(ramp_step) / float(std::max(1, outward_steps));
+            // The toe is a continuation of the cut, not a narrow detached
+            // tongue. Keep most of the entrance width at ground level and
+            // ease into the full ramp width as elevation begins.
             float const outward_width_mul =
-                0.55F + 0.45F * std::clamp(outward_t, 0.0F, 1.0F);
+                0.82F + 0.18F * smootherstep(outward_t);
             tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
           }
 
-          int const width_radius = int(std::ceil(tapered_width));
+          int const width_radius =
+              int(std::ceil(tapered_width + k_width_falloff_padding));
           for (int w = -width_radius; w <= width_radius; ++w) {
             float const offset_x = cur_x + perp_x * float(w);
             float const offset_z = cur_z + perp_z * float(w);
@@ -447,52 +633,76 @@ void TerrainHeightMap::build_from_features(
               continue;
             }
 
-            float const edge_t = std::clamp(
-                std::abs(float(w)) / (tapered_width + k_width_falloff_padding),
-                0.0F,
-                1.0F);
+            // Reach the untouched terrain height before the last sampled
+            // cell. The previous denominator extended beyond width_radius,
+            // leaving a raised rectangular wall at every ramp shoulder.
+            float const edge_t = smooth_range(
+                tapered_width * 0.16F,
+                tapered_width + k_width_falloff_padding,
+                std::abs(float(w)));
 
             int const ramp_idx = indexAt(ix, iz);
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
               float const width_factor = 1.0F - edge_t;
-              if (!is_outward) {
-
-                if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
-                  m_terrain_types[ramp_idx] = TerrainType::Hill;
-                }
-                if (width_factor > k_walkable_width_threshold) {
-                  walkable_mask[ramp_idx] = 1;
-                  entrance_line_mask[ramp_idx] = 1;
-                  m_hill_entrances[ramp_idx] = true;
-                }
+              // Every sampled toe cell belongs to the entrance corridor,
+              // including the zero-height beginning of the apron. Leaving
+              // those first cells unmarked split the visual/pathfinding mask
+              // from the physical ramp and made a smooth grade look detached.
+              constexpr bool raised_apron = true;
+              if (m_terrain_types[ramp_idx] == TerrainType::Flat && raised_apron &&
+                  width_factor > 0.04F) {
+                m_terrain_types[ramp_idx] = TerrainType::Hill;
+              }
+              // The outward apron is a gentle continuation over otherwise
+              // walkable ground. Keeping only its narrow visual centre
+              // walkable creates two artificial shoulder walls; on small maps
+              // those walls can join the boundary and seal the hill entrance
+              // inside its own navigation component. Preserve the stricter
+              // centre corridor only once the ramp is actually on the hill.
+              if ((builds_apron || width_factor > k_walkable_width_threshold) &&
+                  raised_apron) {
+                walkable_mask[ramp_idx] = 1;
+                entrance_line_mask[ramp_idx] = 1;
+                erosion_protected[ramp_idx] = 1;
+                m_hill_entrances[ramp_idx] = true;
               }
 
               float const existing_height = m_heights[ramp_idx];
 
               float const bowl = std::pow(edge_t, k_entry_bowl_exponent);
               float target_height =
-                  (1.0F - bowl) * center_ramp_height + bowl * existing_height;
+                  (1.0F - bowl) * (base_heights[ramp_idx] + center_ramp_height) +
+                  bowl * existing_height;
               float const floor_core = smooth_range(0.22F, 0.82F, width_factor);
               float const shoulder_band =
                   smooth_range(0.16F, 0.46F, width_factor) *
                   (1.0F - smooth_range(0.60F, 0.90F, width_factor));
-              float const mouth_soften = feature.height *
-                                         k_entry_mouth_soften_strength * floor_core *
-                                         mouth * (1.0F - s);
-              float const floor_flatten = feature.height *
-                                          k_entry_floor_flatten_strength * floor_core *
+              float const mouth_soften = hill_height * k_entry_mouth_soften_strength *
+                                         floor_core * mouth * (1.0F - s);
+              // Concentrate the cut in the center of the entrance. A broad,
+              // saturated floor factor lowered the shoulders by almost the
+              // same amount and made the opening read as an unbroken blob.
+              float const center_channel =
+                  std::pow(std::clamp(width_factor, 0.0F, 1.0F), 4.0F);
+              float const floor_flatten = hill_height * k_entry_floor_flatten_strength *
+                                          center_channel *
                                           (0.35F + 0.65F * lower_ramp);
-              float const shoulder_raise = feature.height *
-                                           k_entry_shoulder_raise_strength *
-                                           shoulder_band * (0.25F + 0.75F * lower_ramp);
+              float const apron_shoulder_blend =
+                  builds_apron ? smooth_range(0.48F, 0.88F, ramp_progress) : 1.0F;
+              float const shoulder_raise =
+                  hill_height * k_entry_shoulder_raise_strength * shoulder_band *
+                  (0.25F + 0.75F * lower_ramp) * apron_shoulder_blend;
               target_height = std::max(
                   0.0F, target_height - mouth_soften - floor_flatten + shoulder_raise);
 
-              float const along =
-                  smootherstep(std::clamp((s - 0.28F) / 0.72F, 0.0F, 1.0F));
-              float const carved = std::min(existing_height, target_height);
-              float const joined = std::max(existing_height, target_height);
-              m_heights[ramp_idx] = (1.0F - along) * carved + along * joined;
+              // The ramp profile is authoritative across the entire corridor.
+              // Clamping it to the old procedural hill surface preserved every
+              // lobe and hollow under the cut, which could produce a cliff or
+              // even a downhill step exactly where the apron met the hill.
+              // `target_height` already blends back to the untouched surface
+              // across the ramp width, and reaches the crown height at the end,
+              // so using it directly gives one continuous toe-to-crown grade.
+              m_heights[ramp_idx] = target_height;
             }
           }
 
@@ -516,9 +726,7 @@ void TerrainHeightMap::build_from_features(
           const float dz = float(z) - grid_center_z;
           const float rotated_x = dx * cos_a + dz * sin_a;
           const float rotated_z = -dx * sin_a + dz * cos_a;
-          const float norm_plateau_dist =
-              std::sqrt((rotated_x * rotated_x) / (plateau_width * plateau_width) +
-                        (rotated_z * rotated_z) / (plateau_depth * plateau_depth));
+          const float norm_plateau_dist = crown_distance(rotated_x, rotated_z);
 
           if (norm_plateau_dist > 1.0F) {
             walkable_mask[idx] = 0;
@@ -622,40 +830,109 @@ void TerrainHeightMap::build_from_features(
       continue;
     }
 
-    const float flat_radius = grid_radius;
-    const int min_x = std::max(0, int(std::floor(grid_center_x - flat_radius)));
-    const int max_x =
-        std::min(m_width - 1, int(std::ceil(grid_center_x + flat_radius)));
-    const int min_z = std::max(0, int(std::floor(grid_center_z - flat_radius)));
-    const int max_z =
-        std::min(m_height - 1, int(std::ceil(grid_center_z + flat_radius)));
+    if (feature.type == TerrainType::Forest || feature.type == TerrainType::River) {
+      const float half_width =
+          feature.width > 0.0F ? feature.width * 0.5F / m_tile_size : grid_radius;
+      const float half_depth =
+          feature.depth > 0.0F ? feature.depth * 0.5F / m_tile_size : grid_radius;
+      const int min_x = std::max(0, int(std::floor(grid_center_x - half_width - 1.0F)));
+      const int max_x =
+          std::min(m_width - 1, int(std::ceil(grid_center_x + half_width + 1.0F)));
+      const int min_z = std::max(0, int(std::floor(grid_center_z - half_depth - 1.0F)));
+      const int max_z =
+          std::min(m_height - 1, int(std::ceil(grid_center_z + half_depth + 1.0F)));
+
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
+          const float normalized_x =
+              (float(x) - grid_center_x) / std::max(half_width, 0.0001F);
+          const float normalized_z =
+              (float(z) - grid_center_z) / std::max(half_depth, 0.0001F);
+          if (normalized_x * normalized_x + normalized_z * normalized_z > 1.0F) {
+            continue;
+          }
+
+          const int idx = indexAt(x, z);
+          if (feature.type == TerrainType::River) {
+            m_heights[idx] = 0.0F;
+            m_terrain_types[idx] = TerrainType::River;
+          } else if (m_terrain_types[idx] == TerrainType::Flat) {
+            m_terrain_types[idx] = TerrainType::Forest;
+          }
+        }
+      }
+      continue;
+    }
+
+    const float half_width =
+        feature.width > 0.0F ? feature.width * 0.5F / m_tile_size : grid_radius;
+    const float half_depth =
+        feature.depth > 0.0F ? feature.depth * 0.5F / m_tile_size : grid_radius;
+    const float bound = std::max(half_width, half_depth) + 1.0F;
+    const int min_x = std::max(0, int(std::floor(grid_center_x - bound)));
+    const int max_x = std::min(m_width - 1, int(std::ceil(grid_center_x + bound)));
+    const int min_z = std::max(0, int(std::floor(grid_center_z - bound)));
+    const int max_z = std::min(m_height - 1, int(std::ceil(grid_center_z + bound)));
+    const float angle_rad = feature.rotation_deg * k_deg_to_rad;
+    const float cos_a = std::cos(angle_rad);
+    const float sin_a = std::sin(angle_rad);
 
     for (int z = min_z; z <= max_z; ++z) {
       for (int x = min_x; x <= max_x; ++x) {
-        const float dx = float(x) - grid_center_x;
-        const float dz = float(z) - grid_center_z;
-        const float dist = std::sqrt(dx * dx + dz * dz);
-        if (dist > flat_radius) {
-          continue;
-        }
-
-        float const t = dist / std::max(flat_radius, 0.0001F);
-        float const height = feature.height * (1.0F - t);
-        if (height <= 0.0F) {
+        const float local_x = float(x) - grid_center_x;
+        const float local_z = float(z) - grid_center_z;
+        const float rotated_x = local_x * cos_a + local_z * sin_a;
+        const float rotated_z = -local_x * sin_a + local_z * cos_a;
+        const float normalized_x = rotated_x / std::max(half_width, 0.0001F);
+        const float normalized_z = rotated_z / std::max(half_depth, 0.0001F);
+        const float normalized_distance =
+            std::sqrt(normalized_x * normalized_x + normalized_z * normalized_z);
+        if (normalized_distance > 1.0F) {
           continue;
         }
 
         int const idx = indexAt(x, z);
-        if (height > m_heights[idx]) {
-          m_heights[idx] = height;
+        // Clearings, camps, and town pads should settle into the surrounding
+        // relief. A hard absolute-height ellipse creates a visible retaining
+        // wall around every settlement footprint.
+        const float feather =
+            std::clamp((1.0F - normalized_distance) / 0.20F, 0.0F, 1.0F);
+        const float blend = feather * feather * (3.0F - 2.0F * feather);
+        m_heights[idx] = m_heights[idx] * (1.0F - blend) + feature.height * blend;
+        if (blend >= 0.5F) {
           m_terrain_types[idx] = TerrainType::Flat;
+          m_hill_entrances[idx] = false;
+          m_hill_walkable[idx] = false;
+          erosion_strength[idx] = 0.0F;
+          erosion_protected[idx] = 1;
         }
       }
     }
   }
+
+  for (int idx = 0; idx < map_cell_count; ++idx) {
+    if (m_hill_walkable[idx]) {
+      erosion_protected[idx] = 1;
+    }
+  }
+  if (std::max(m_width, m_height) >= 128) {
+    Landform::apply_constrained_erosion(
+        m_heights, erosion_strength, erosion_protected, m_width, m_height, m_tile_size);
+  }
 }
 
 auto TerrainHeightMap::get_height_at(float world_x, float world_z) const -> float {
+  const float base_height = get_base_height_at(world_x, world_z);
+  if (isOnBridge(world_x, world_z)) {
+    if (auto const bridge_height = getBridgeDeckHeight(world_x, world_z);
+        bridge_height.has_value()) {
+      return *bridge_height;
+    }
+  }
+  return base_height;
+}
+
+auto TerrainHeightMap::get_base_height_at(float world_x, float world_z) const -> float {
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -683,16 +960,7 @@ auto TerrainHeightMap::get_height_at(float world_x, float world_z) const -> floa
   float const h0 = h00 * (1.0F - tx) + h10 * tx;
   float const h1 = h01 * (1.0F - tx) + h11 * tx;
 
-  float base_height = h0 * (1.0F - tz) + h1 * tz;
-
-  if (isOnBridge(world_x, world_z)) {
-    auto bridge_height_opt = getBridgeDeckHeight(world_x, world_z);
-    if (bridge_height_opt.has_value()) {
-      return bridge_height_opt.value();
-    }
-  }
-
-  return base_height;
+  return h0 * (1.0F - tz) + h1 * tz;
 }
 
 auto TerrainHeightMap::get_height_at_grid(int grid_x, int grid_z) const -> float {
@@ -718,7 +986,7 @@ auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
     return false;
   }
 
-  if (type == TerrainType::River) {
+  if (is_water_terrain(type)) {
     return false;
   }
 
@@ -750,7 +1018,7 @@ auto TerrainHeightMap::isRiverOrNearby(int grid_x,
     return false;
   }
 
-  if (m_terrain_types[indexAt(grid_x, grid_z)] == TerrainType::River) {
+  if (is_water_terrain(m_terrain_types[indexAt(grid_x, grid_z)])) {
     return true;
   }
 
@@ -761,7 +1029,7 @@ auto TerrainHeightMap::isRiverOrNearby(int grid_x,
       }
       int const nx = grid_x + dx;
       int const nz = grid_z + dz;
-      if (in_bounds(nx, nz) && m_terrain_types[indexAt(nx, nz)] == TerrainType::River) {
+      if (in_bounds(nx, nz) && is_water_terrain(m_terrain_types[indexAt(nx, nz)])) {
         return true;
       }
     }
@@ -803,11 +1071,17 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
   const auto surface_profile = make_surface_profile(settings);
 
   if (surface_profile.ground_irregularity_enabled) {
-    const float amplitude =
-        std::max(0.16F, std::max(0.0F, surface_profile.irregularity_amplitude) * 3.0F);
+    const float amplitude = std::clamp(
+        std::max(0.0F, surface_profile.irregularity_amplitude) * 18.0F, 0.75F, 2.20F);
     if (amplitude > 0.0001F) {
-      const float frequency =
-          std::max(0.22F, surface_profile.irregularity_scale * 1.8F);
+      const float authored_frequency =
+          std::clamp(surface_profile.irregularity_scale * 0.28F, 0.022F, 0.070F);
+      const float world_extent =
+          std::max(static_cast<float>(std::max(m_width, m_height) - 1) * m_tile_size,
+                   m_tile_size);
+      // Keep the broad profile visible on small test/skirmish maps without
+      // increasing the frequency on campaign-sized battlefields.
+      const float frequency = std::max(authored_frequency, 2.5F / world_extent);
       const float half_width = m_width * 0.5F - 0.5F;
       const float half_height = m_height * 0.5F - 0.5F;
 
@@ -820,27 +1094,56 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
             continue;
           }
 
-          if (isRiverOrNearby(x, z, 2)) {
-            continue;
-          }
-
           float const world_x = (static_cast<float>(x) - half_width) * m_tile_size;
           float const world_z = (static_cast<float>(z) - half_height) * m_tile_size;
           float const sample_x = world_x * frequency;
           float const sample_z = world_z * frequency;
 
-          float const base_noise =
-              value_noise_2d(sample_x, sample_z, surface_profile.seed);
-          float const detail_noise = value_noise_2d(
-              sample_x * 2.5F, sample_z * 2.5F, surface_profile.seed ^ 0xA21C9E37U);
-          float const fine_noise = value_noise_2d(
-              sample_x * 5.0F, sample_z * 5.0F, surface_profile.seed ^ 0x7E4B92F1U);
+          // Warp the broad relief before adding smaller octaves. Straight,
+          // uniformly scaled noise produces a pillowy carpet; this creates
+          // shallow swales, long rises, and irregular drainage-shaped ground.
+          const float warp_x = (value_noise_2d(sample_x * 0.43F,
+                                               sample_z * 0.43F,
+                                               surface_profile.seed ^ 0x19B4C7A1U) -
+                                0.5F) *
+                               1.65F;
+          const float warp_z = (value_noise_2d(sample_x * 0.43F + 23.7F,
+                                               sample_z * 0.43F - 11.3F,
+                                               surface_profile.seed ^ 0x63D2E95BU) -
+                                0.5F) *
+                               1.65F;
+          const float warped_x = sample_x + warp_x;
+          const float warped_z = sample_z + warp_z;
 
-          float const blended =
-              0.5F * base_noise + 0.35F * detail_noise + 0.15F * fine_noise;
-          float const perturb = (blended - 0.5F) * 2.0F * amplitude + amplitude * 0.42F;
+          const float regional_noise = value_noise_2d(
+              warped_x * 0.52F, warped_z * 0.52F, surface_profile.seed ^ 0xC36E71D9U);
+          const float base_noise =
+              value_noise_2d(warped_x, warped_z, surface_profile.seed);
+          const float detail_noise = value_noise_2d(
+              warped_x * 2.25F, warped_z * 2.25F, surface_profile.seed ^ 0xA21C9E37U);
+          const float fine_noise = value_noise_2d(
+              warped_x * 4.8F, warped_z * 4.8F, surface_profile.seed ^ 0x7E4B92F1U);
 
-          m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
+          const float regional_signed = regional_noise * 2.0F - 1.0F;
+          const float rolling_signed = base_noise * 2.0F - 1.0F;
+          const float detail_signed = detail_noise * 2.0F - 1.0F;
+          const float fine_signed = fine_noise * 2.0F - 1.0F;
+          const float drainage = std::pow(
+              std::clamp(1.0F - std::abs(detail_signed), 0.0F, 1.0F), 6.0F);
+
+          // Broad regional uplift establishes readable rolling ground; the
+          // smaller octaves add shallow banks and depressions without moving
+          // gameplay over noisy one-cell bumps. A positive datum keeps the
+          // battlefield mesh safely above its non-playable underlay. Scale the
+          // signed field around that datum instead of adding a nearly constant
+          // offset: the result remains gentle to traverse, but broad rises and
+          // swales are physically present at strategic camera distance.
+          const float relief = regional_signed * 0.46F + rolling_signed * 0.29F +
+                               detail_signed * 0.13F + fine_signed * 0.035F -
+                               drainage * 0.055F;
+          const float perturb = std::max(amplitude * (0.78F + relief), 0.10F);
+
+          m_heights[idx] += perturb;
         }
       }
     }
@@ -856,7 +1159,7 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
       for (int x = 0; x < m_width; ++x) {
         int const idx = indexAt(x, z);
         TerrainType const type = m_terrain_types[idx];
-        if (type == TerrainType::Mountain || type == TerrainType::River) {
+        if (type == TerrainType::Mountain || is_water_terrain(type)) {
           continue;
         }
 
@@ -887,12 +1190,29 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
 
 void TerrainHeightMap::add_river_segments(
     const std::vector<RiverSegment>& river_segments) {
-  m_river_segments = river_segments;
+  m_river_segments.clear();
+  m_river_segments.reserve(river_segments.size());
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
-  for (const auto& river : river_segments) {
+  auto water_surface_height = [this](const QVector3D& point) {
+    const float shoreline_blend = m_tile_size * 1.25F;
+    for (const auto& lake : m_lakes) {
+      if (point_in_lake(lake, point.x(), point.z(), shoreline_blend)) {
+        return lake.center.y();
+      }
+    }
+    return get_height_at(point.x(), point.z());
+  };
+
+  for (const auto& authored_river : river_segments) {
+    RiverSegment river = authored_river;
+    if (river.elevation_mode == WaterElevationMode::Terrain) {
+      river.start.setY(water_surface_height(river.start));
+      river.end.setY(water_surface_height(river.end));
+    }
+    m_river_segments.push_back(river);
     QVector3D dir = river.end - river.start;
     float const length = dir.length();
     if (length < 0.01F) {
@@ -935,9 +1255,63 @@ void TerrainHeightMap::add_river_segments(
             int const idx = indexAt(x, z);
             if (m_terrain_types[idx] != TerrainType::Mountain) {
               m_terrain_types[idx] = TerrainType::River;
-              m_heights[idx] = 0.0F;
+              m_heights[idx] = center_pos.y() - 0.10F;
             }
           }
+        }
+      }
+    }
+  }
+}
+
+void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
+  m_lakes.clear();
+  m_lakes.reserve(lakes.size());
+  const float half_grid_width = m_width * 0.5F - 0.5F;
+  const float half_grid_height = m_height * 0.5F - 0.5F;
+
+  for (const auto& authored_lake : lakes) {
+    Lake lake = authored_lake;
+    if (lake.elevation_mode == WaterElevationMode::Terrain) {
+      lake.center.setY(get_height_at(lake.center.x(), lake.center.z()));
+    }
+    m_lakes.push_back(lake);
+    const float extent = std::max(lake.width, lake.depth) * 0.55F;
+    const float grid_center_x = lake.center.x() / m_tile_size + half_grid_width;
+    const float grid_center_z = lake.center.z() / m_tile_size + half_grid_height;
+    const float grid_extent = extent / m_tile_size + 1.0F;
+    const int min_x =
+        std::max(0, static_cast<int>(std::floor(grid_center_x - grid_extent)));
+    const int max_x =
+        std::min(m_width - 1, static_cast<int>(std::ceil(grid_center_x + grid_extent)));
+    const int min_z =
+        std::max(0, static_cast<int>(std::floor(grid_center_z - grid_extent)));
+    const int max_z = std::min(
+        m_height - 1, static_cast<int>(std::ceil(grid_center_z + grid_extent)));
+
+    for (int z = min_z; z <= max_z; ++z) {
+      for (int x = min_x; x <= max_x; ++x) {
+        const float world_x = (static_cast<float>(x) - half_grid_width) * m_tile_size;
+        const float world_z = (static_cast<float>(z) - half_grid_height) * m_tile_size;
+        const bool gameplay_water = point_in_lake(lake, world_x, world_z);
+        // Terrain is sampled between grid vertices. A small submerged margin
+        // prevents interpolation from pushing coarse shoreline triangles up
+        // through the smooth lake mesh without enlarging the blocked area.
+        const bool submerged_margin =
+            point_in_lake(lake, world_x, world_z, m_tile_size * 0.85F);
+        if (!submerged_margin) {
+          continue;
+        }
+        const int index = indexAt(x, z);
+        if (m_terrain_types[index] == TerrainType::Mountain) {
+          continue;
+        }
+        const float bed_height = lake.center.y() - 0.10F;
+        if (gameplay_water) {
+          m_terrain_types[index] = TerrainType::Lake;
+          m_heights[index] = bed_height;
+        } else {
+          m_heights[index] = std::min(m_heights[index], bed_height);
         }
       }
     }
@@ -956,11 +1330,11 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
   for (const auto& bridge : bridges) {
-
-    const float sink_amount =
-        std::clamp(bridge.width * 0.25F, k_bridge_sink_min, k_bridge_sink_max);
-
     Bridge adjusted = bridge;
+    adjusted.width = std::max(adjusted.width, k_min_bridge_width);
+    const float sink_amount =
+        std::clamp(adjusted.width * 0.25F, k_bridge_sink_min, k_bridge_sink_max);
+    adjusted.height = bridge_effective_height(adjusted);
     float const start_ground = get_height_at(bridge.start.x(), bridge.start.z());
     float const end_ground = get_height_at(bridge.end.x(), bridge.end.z());
     adjusted.start.setY(std::max(bridge.start.y(), start_ground - sink_amount));
@@ -991,13 +1365,15 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
       float const t_curve = std::clamp(along / std::max(length, 0.01F), 0.0F, 1.0F);
       QVector3D const center_pos = stored_bridge.start + dir * along;
 
-      float const arch_curve = 4.0F * t_curve * (1.0F - t_curve);
-      float const arch_height = stored_bridge.height * arch_curve * 0.8F;
-      float const base_deck_height =
-          stored_bridge.start.y() + stored_bridge.height + arch_height * 0.5F;
+      float const visual_deck_height = bridge_deck_world_y(stored_bridge, t_curve);
+      // The visible/contact deck is deliberately higher than the terrain
+      // relief stamped below it. Neighboring slope derivation therefore keeps
+      // the established approach profile while units stand on the real mesh.
+      float const relief_deck_height =
+          visual_deck_height - k_bridge_deck_visual_lift;
       float const terrain_height = get_height_at(center_pos.x(), center_pos.z());
       float const deck_height =
-          std::max(base_deck_height - sink_amount, terrain_height - sink_amount);
+          std::max(relief_deck_height - sink_amount, terrain_height - sink_amount);
 
       float const grid_center_x = (center_pos.x() / m_tile_size) + grid_half_width;
       float const grid_center_z = (center_pos.z() / m_tile_size) + grid_half_height;
@@ -1124,7 +1500,8 @@ void TerrainHeightMap::precompute_bridge_data() {
 void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
                                          const std::vector<TerrainType>& terrain_types,
                                          const std::vector<RiverSegment>& rivers,
-                                         const std::vector<Bridge>& bridges) {
+                                         const std::vector<Bridge>& bridges,
+                                         const std::vector<Lake>& lakes) {
 
   const auto expected_size = static_cast<size_t>(m_width * m_height);
 
@@ -1148,7 +1525,11 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
   }
 
   m_river_segments = rivers;
+  m_lakes = lakes;
   m_bridges = bridges;
+  for (Bridge& bridge : m_bridges) {
+    bridge.width = std::max(bridge.width, k_min_bridge_width);
+  }
 
   precompute_bridge_data();
 }
@@ -1184,12 +1565,7 @@ auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
 
     float const t = std::clamp(along / length, 0.0F, 1.0F);
 
-    float const arch_curve = 4.0F * t * (1.0F - t);
-    float const arch_height = bridge.height * arch_curve * 0.8F;
-
-    float const deck_height = bridge.start.y() + bridge.height + arch_height * 0.3F;
-
-    return deck_height;
+    return bridge_deck_world_y(bridge, t);
   }
 
   return std::nullopt;

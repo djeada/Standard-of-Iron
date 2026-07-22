@@ -25,7 +25,10 @@ struct PendingMissionWave {
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   QString ai_id;
   float trigger_time = 0.0F;
+  int phase_index = 1;
+  int phase_count = 1;
   QVector3D entry_world_position{0.0F, 0.0F, 0.0F};
+  QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
   std::vector<Game::Mission::WaveComposition> composition;
   bool spawned = false;
 };

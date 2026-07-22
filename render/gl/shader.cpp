@@ -45,6 +45,7 @@ auto Shader::is_uniform_dirty(GLint location, const T& value) -> bool {
 }
 
 namespace {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 std::mutex& shader_audit_mutex() {
   static std::mutex mutex;
   return mutex;
@@ -70,6 +71,7 @@ void record_shader_bind(const QString& name) {
   entry.name = std::move(key);
   ++entry.bind_count;
 }
+#endif
 
 auto resolve_shader_includes(const QString& source,
                              const QString& base_dir) -> QString {
@@ -185,7 +187,9 @@ auto Shader::load_from_source(const QString& vertex_source,
 }
 
 void Shader::use() {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   record_shader_bind(m_debug_name);
+#endif
   glUseProgram(m_program);
 }
 
@@ -419,19 +423,30 @@ auto Shader::bind_uniform_block(const char* block_name,
 }
 
 void set_shader_bind_audit_enabled(bool enabled) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   shader_audit_flag() = enabled;
+#else
+  (void)enabled;
+#endif
 }
 
 auto shader_bind_audit_enabled() -> bool {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   return shader_audit_flag();
+#else
+  return false;
+#endif
 }
 
 void reset_shader_bind_audit() {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   std::scoped_lock const lock(shader_audit_mutex());
   shader_audit_counts().clear();
+#endif
 }
 
 auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   std::scoped_lock const lock(shader_audit_mutex());
   std::vector<ShaderBindAuditEntry> out;
   out.reserve(shader_audit_counts().size());
@@ -447,9 +462,13 @@ auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
               return a.name < b.name;
             });
   return out;
+#else
+  return {};
+#endif
 }
 
 auto classify_shader_for_audit(const QString& name) -> QString {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   static const QStringList pipeline_owned = {
       QStringLiteral("basic"),
       QStringLiteral("basic_instanced"),
@@ -495,9 +514,14 @@ auto classify_shader_for_audit(const QString& name) -> QString {
     return QStringLiteral("material/data-driven");
   }
   return QStringLiteral("unused/dead-or-dynamic");
+#else
+  (void)name;
+  return {};
+#endif
 }
 
 auto format_shader_bind_audit() -> QStringList {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   QStringList lines;
   for (const ShaderBindAuditEntry& entry : shader_bind_audit_snapshot()) {
     lines.push_back(QStringLiteral("%1\t%2\t%3")
@@ -506,6 +530,9 @@ auto format_shader_bind_audit() -> QStringList {
                         .arg(classify_shader_for_audit(entry.name)));
   }
   return lines;
+#else
+  return {};
+#endif
 }
 
 } // namespace Render::GL

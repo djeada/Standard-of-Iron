@@ -65,4 +65,35 @@ TEST(RtsActionModel, GuardModeStillReportsGuardCommandMode) {
   EXPECT_EQ(App::Core::get_current_action_mode(context), QStringLiteral("guard"));
 }
 
+TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* entity = add_selected_unit(
+      world, *selection, Game::Units::SpawnType::RomanVeteranConsul);
+  auto* commander = entity->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander, nullptr);
+
+  App::Core::ActionContext context;
+  context.world = &world;
+  auto aura = App::Core::get_action_states(context)[QStringLiteral("aura")].toMap();
+  EXPECT_TRUE(aura[QStringLiteral("enabled")].toBool());
+  EXPECT_FALSE(aura[QStringLiteral("active")].toBool());
+
+  commander->aura_ability_active = true;
+  commander->aura_ability_remaining = 3.0F;
+  aura = App::Core::get_action_states(context)[QStringLiteral("aura")].toMap();
+  EXPECT_FALSE(aura[QStringLiteral("enabled")].toBool());
+  EXPECT_TRUE(aura[QStringLiteral("active")].toBool());
+
+  commander->aura_ability_active = false;
+  commander->aura_ability_remaining = 0.0F;
+  commander->aura_ability_cooldown_remaining = 8.0F;
+  aura = App::Core::get_action_states(context)[QStringLiteral("aura")].toMap();
+  EXPECT_FALSE(aura[QStringLiteral("enabled")].toBool());
+  EXPECT_FALSE(aura[QStringLiteral("active")].toBool());
+}
+
 } // namespace

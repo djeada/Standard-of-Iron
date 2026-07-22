@@ -18,6 +18,7 @@
 #include "map/terrain_service.h"
 #include "scatter_composition.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 #include "spawn_validator.h"
 
 namespace {
@@ -28,6 +29,7 @@ using namespace Render::Ground;
 constexpr int k_plant_cell_span = 2;
 constexpr float k_plant_density_area_scale = 4.0F / 9.0F;
 constexpr float k_plant_edge_padding_scale = 0.35F;
+constexpr float k_reference_scatter_extent = 220.0F;
 
 } // namespace
 
@@ -72,8 +74,11 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const auto visible_count = Scatter::sync_filtered_state(
       m_plant_state, [](const PlantInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_scale;
-      });
-  if (visible_count == 0 || !m_plant_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -81,10 +86,8 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Plant;
-  cmd.instance_buffer = m_plant_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.plant = params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_plant_state, cmd);
 }
 
 void PlantRenderer::clear() {
@@ -115,8 +118,8 @@ void PlantRenderer::generate_plant_instances() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0xC2E84B6AU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.26F, 0.48F, 0.22F);
-      const QVector3D var_color(0.32F, 0.54F, 0.28F);
+      const QVector3D base_color(0.19F, 0.34F, 0.20F);
+      const QVector3D var_color(0.27F, 0.41F, 0.26F);
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float plant_type = std::floor(rand_01(var_state) * 4.0F);
@@ -208,7 +211,7 @@ void PlantRenderer::generate_plant_instances() {
 
     float const brown_mix = remap(
         rand_01(state), 0.08F + scene.dryness * 0.10F, 0.22F + scene.rockiness * 0.12F);
-    QVector3D const brown_tint(0.55F, 0.50F, 0.35F);
+    QVector3D const brown_tint(0.40F, 0.37F, 0.28F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
@@ -227,16 +230,21 @@ void PlantRenderer::generate_plant_instances() {
     return true;
   };
 
-  for (int z = 0; z < m_height; z += k_plant_cell_span) {
-    for (int x = 0; x < m_width; x += k_plant_cell_span) {
-      int const sample_x = std::min(x + k_plant_cell_span / 2, m_width - 1);
-      int const sample_z = std::min(z + k_plant_cell_span / 2, m_height - 1);
+  float const area_scale = std::sqrt(
+      static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
+      (k_reference_scatter_extent * k_reference_scatter_extent));
+  int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
+  int const cell_span = k_plant_cell_span * sampling_scale;
+  for (int z = 0; z < m_height; z += cell_span) {
+    for (int x = 0; x < m_width; x += cell_span) {
+      int const sample_x = std::min(x + cell_span / 2, m_width - 1);
+      int const sample_z = std::min(z + cell_span / 2, m_height - 1);
       int const idx = sample_z * m_width + sample_x;
 
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(sample_x, sample_z);
       if (terrain_type == Game::Map::TerrainType::Mountain ||
-          terrain_type == Game::Map::TerrainType::River) {
+          Game::Map::is_water_terrain(terrain_type)) {
         continue;
       }
 
@@ -271,8 +279,8 @@ void PlantRenderer::generate_plant_instances() {
       }
 
       for (int i = 0; i < plant_count; ++i) {
-        float const gx = float(x) + rand_01(state) * float(k_plant_cell_span);
-        float const gz = float(z) + rand_01(state) * float(k_plant_cell_span);
+        float const gx = float(x) + rand_01(state) * float(cell_span);
+        float const gz = float(z) + rand_01(state) * float(cell_span);
         if (!add_plant(gx, gz, state)) {
           continue;
         }

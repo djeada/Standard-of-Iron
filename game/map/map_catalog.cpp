@@ -167,15 +167,17 @@ auto MapCatalog::available_maps() -> QVariantList {
           desc = obj[DESCRIPTION].toString();
         }
 
-        if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
-          QJsonArray const spawns = obj[SPAWNS].toArray();
-          for (const QJsonValue& spawn_val : spawns) {
-            if (spawn_val.isObject()) {
-              QJsonObject spawn = spawn_val.toObject();
-              if (spawn.contains(PLAYER_ID)) {
-                int const player_id = spawn[PLAYER_ID].toInt();
-                if (player_id > 0) {
-                  player_ids.insert(player_id);
+        for (const char* collection : {SPAWNS, STRUCTURES}) {
+          if (obj.contains(collection) && obj[collection].isArray()) {
+            QJsonArray const entries = obj[collection].toArray();
+            for (const QJsonValue& entry_val : entries) {
+              if (entry_val.isObject()) {
+                QJsonObject entry = entry_val.toObject();
+                if (entry.contains(PLAYER_ID)) {
+                  int const player_id = entry[PLAYER_ID].toInt();
+                  if (player_id > 0) {
+                    player_ids.insert(player_id);
+                  }
                 }
               }
             }
@@ -315,15 +317,17 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
         desc = obj[DESCRIPTION].toString();
       }
 
-      if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
-        QJsonArray const spawns = obj[SPAWNS].toArray();
-        for (const QJsonValue& spawn_val : spawns) {
-          if (spawn_val.isObject()) {
-            QJsonObject spawn = spawn_val.toObject();
-            if (spawn.contains(PLAYER_ID)) {
-              int const player_id = spawn[PLAYER_ID].toInt();
-              if (player_id > 0) {
-                player_ids.insert(player_id);
+      for (const char* collection : {SPAWNS, STRUCTURES}) {
+        if (obj.contains(collection) && obj[collection].isArray()) {
+          QJsonArray const entries = obj[collection].toArray();
+          for (const QJsonValue& entry_val : entries) {
+            if (entry_val.isObject()) {
+              QJsonObject entry = entry_val.toObject();
+              if (entry.contains(PLAYER_ID)) {
+                int const player_id = entry[PLAYER_ID].toInt();
+                if (player_id > 0) {
+                  player_ids.insert(player_id);
+                }
               }
             }
           }

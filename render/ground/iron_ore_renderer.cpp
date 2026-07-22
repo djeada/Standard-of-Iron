@@ -76,9 +76,9 @@ void IronOreRenderer::generate_instances(
     QVector3D color = surface_profile.rock_low * (1.0F - color_var) +
                       surface_profile.rock_high * color_var;
 
-    color = color * 0.76F;
-    QVector3D const iron_tint(0.38F, 0.20F, 0.14F);
-    float const iron_mix = remap(rand_01(state), 0.14F, 0.34F);
+    color *= 0.58F;
+    QVector3D const iron_tint(0.30F, 0.16F, 0.11F);
+    float const iron_mix = remap(rand_01(state), 0.32F, 0.54F);
     color = color * (1.0F - iron_mix) + iron_tint * iron_mix;
 
     IronOreInstanceGpu inst;

@@ -2,10 +2,13 @@
 #include <QSet>
 #include <QTemporaryDir>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/systems/commander_system.h"
+#include "game/units/spawn_type.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
@@ -21,10 +24,14 @@ auto make_entity_host(Engine::Core::World& world) -> Arena::ArenaScenarioHost {
         position.x(), position.y(), position.z());
     auto* unit = entity->add_component<Engine::Core::UnitComponent>();
     unit->owner_id = group.owner_id;
+    unit->spawn_type = Game::Units::spawn_typeFromTroopType(group.troop_type);
     unit->health = group.health_override > 0 ? group.health_override : 100;
     unit->max_health = group.max_health_override > 0 ? group.max_health_override : 100;
     entity->add_component<Engine::Core::MovementComponent>();
     entity->add_component<Engine::Core::AttackComponent>();
+    if (Game::Units::is_commander_troop(group.troop_type)) {
+      entity->add_component<Engine::Core::CommanderComponent>();
+    }
     return entity->get_id();
   };
   host.find_unit = [](Engine::Core::EntityID) -> Game::Units::Unit* {
@@ -85,6 +92,7 @@ TEST(ArenaScenarioDefinitionTest, CatalogIncludesRealBattlefieldRegressionCases)
   for (auto const* id : {Arena::Scenarios::k_three_swords_vs_two_spears_id,
                          Arena::Scenarios::k_spear_walk_contact_id,
                          Arena::Scenarios::k_archer_stability_id,
+                         Arena::Scenarios::k_archer_melee_lock_id,
                          Arena::Scenarios::k_flank_ambush_id,
                          Arena::Scenarios::k_reserve_release_id,
                          Arena::Scenarios::k_bot_skirmish_id}) {
@@ -95,6 +103,47 @@ TEST(ArenaScenarioDefinitionTest, CatalogIncludesRealBattlefieldRegressionCases)
   }
 }
 
+TEST(ArenaScenarioDefinitionTest, RenderContinuityScenarioExercisesUltraPolicy) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_render_continuity_id));
+  ASSERT_NE(scenario, nullptr);
+  EXPECT_FALSE(scenario->force_full_creature_lod);
+  EXPECT_EQ(scenario->graphics_quality, Render::GraphicsQuality::Ultra);
+  EXPECT_TRUE(scenario->collect_animation_diagnostics);
+  EXPECT_TRUE(scenario->suppress_ui_overlays);
+  EXPECT_GE(scenario->groups.size(), 8U);
+
+  EXPECT_NE(std::find_if(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [](auto const& expectation) {
+                           return expectation.kind ==
+                                  Arena::ArenaExpectationKind::NoFullscreenFlash;
+                         }),
+            scenario->expectations.end());
+  for (auto const& group : scenario->groups) {
+    EXPECT_NE(std::find_if(
+                  scenario->expectations.begin(),
+                  scenario->expectations.end(),
+                  [&](auto const& expectation) {
+                    return expectation.kind ==
+                               Arena::ArenaExpectationKind::NoRenderVisibilityChurn &&
+                           expectation.group == group.name;
+                  }),
+              scenario->expectations.end())
+        << group.name.toStdString();
+    EXPECT_NE(
+        std::find_if(scenario->expectations.begin(),
+                     scenario->expectations.end(),
+                     [&](auto const& expectation) {
+                       return expectation.kind ==
+                                  Arena::ArenaExpectationKind::FullCreatureDetailOnly &&
+                              expectation.group == group.name;
+                     }),
+        scenario->expectations.end())
+        << group.name.toStdString();
+  }
+}
+
 TEST(ArenaScenarioDefinitionTest, BattlefieldScenariosUseNationFormationProfiles) {
   auto const* scenario = Arena::Scenarios::find_definition(
       QString::fromLatin1(Arena::Scenarios::k_spear_walk_contact_id));
@@ -102,6 +151,16 @@ TEST(ArenaScenarioDefinitionTest, BattlefieldScenariosUseNationFormationProfiles
   ASSERT_EQ(scenario->groups.size(), 2U);
   EXPECT_EQ(scenario->groups[0].individuals_per_unit, 0);
   EXPECT_EQ(scenario->groups[1].individuals_per_unit, 0);
+}
+
+TEST(ArenaScenarioDefinitionTest, WaterShowcaseOwnsDistinctRiverAndLakeGeometry) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_water_showcase_id));
+  ASSERT_NE(scenario, nullptr);
+  ASSERT_EQ(scenario->rivers.size(), 1U);
+  ASSERT_EQ(scenario->lakes.size(), 1U);
+  EXPECT_GT(scenario->rivers.front().width, 0.0F);
+  EXPECT_GT(scenario->lakes.front().width, scenario->lakes.front().depth);
 }
 
 TEST(ArenaScenarioDefinitionTest, SettlementScenariosOwnHistoricalBuildingProfiles) {
@@ -126,6 +185,39 @@ TEST(ArenaScenarioDefinitionTest, SettlementScenariosOwnHistoricalBuildingProfil
   };
   verify(*roman, Game::Systems::NationID::RomanRepublic);
   verify(*carthage, Game::Systems::NationID::Carthage);
+}
+
+TEST(ArenaScenarioDefinitionTest, FortificationShowcasesContainWallsTowersAndGateRuns) {
+  auto verify = [](const char* id, Game::Systems::NationID nation) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr);
+
+    int wall_groups = 0;
+    int wall_segments = 0;
+    int tower_groups = 0;
+    for (auto const& group : scenario->groups) {
+      if (!group.spawn_type.has_value()) {
+        continue;
+      }
+      EXPECT_EQ(group.nation_id, nation);
+      if (*group.spawn_type == Game::Units::SpawnType::WallSegment) {
+        ++wall_groups;
+        wall_segments += group.count;
+      } else if (*group.spawn_type == Game::Units::SpawnType::DefenseTower) {
+        ++tower_groups;
+      }
+    }
+
+    EXPECT_GE(wall_groups, 5);
+    EXPECT_GE(wall_segments, 30);
+    EXPECT_GE(tower_groups, 6);
+    EXPECT_TRUE(scenario->suppress_ui_overlays);
+  };
+
+  verify(Arena::Scenarios::k_roman_fortification_showcase_id,
+         Game::Systems::NationID::RomanRepublic);
+  verify(Arena::Scenarios::k_carthage_fortification_showcase_id,
+         Game::Systems::NationID::Carthage);
 }
 
 TEST(ArenaScenarioDefinitionTest, RejectsDuplicateAndUnknownGroupReferences) {
@@ -270,6 +362,115 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsMissingIndicatorDuringMeleeLock)
   diagnostics.set_enabled(false);
 }
 
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsVisibleSoldierBecomingCulled) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoRenderVisibilityChurn, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.sample_time = 0.0F;
+  diagnostics.begin_frame(1);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+  ASSERT_TRUE(runner.report().passed());
+
+  sample.sample_time = 1.0F / 60.0F;
+  sample.cull_reason = Render::Profiling::SoldierCullReason::Temporal;
+  diagnostics.begin_frame(2);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("soldier_submission_disappeared"));
+  EXPECT_TRUE(runner.report().issues.front().message.contains(
+      QStringLiteral("temporal"), Qt::CaseInsensitive));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAllowsDeadSoldierLeavingFrustum) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoRenderVisibilityChurn, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.animation_state = Render::Creature::AnimationStateId::Dead;
+  diagnostics.begin_frame(1);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  sample.sample_time = 1.0F / 60.0F;
+  sample.cull_reason = Render::Profiling::SoldierCullReason::Frustum;
+  diagnostics.begin_frame(2);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsReducedCreatureLodOnUltra) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::FullCreatureDetailOnly, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.lod = static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("ultra_creature_lod_used"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, ExternalFrameProbeFailureIsReported) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  runner.report_external_issue(QStringLiteral("fullscreen_flash"),
+                               QStringLiteral("synthetic flash"));
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("fullscreen_flash"));
+}
+
 TEST(ArenaScenarioRunnerTest, EventTriggerCanApplyScriptedEdgeCaseDamage) {
   Engine::Core::World world;
   auto scenario = minimal_definition();
@@ -293,6 +494,34 @@ TEST(ArenaScenarioRunnerTest, EventTriggerCanApplyScriptedEdgeCaseDamage) {
     ASSERT_NE(unit, nullptr);
     EXPECT_EQ(unit->health, 90);
   }
+}
+
+TEST(ArenaScenarioRunnerTest, CommanderAuraScenarioObservesActivationRadiusAndExpiry) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::CommanderSystem>());
+  auto const* catalog_scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_commander_aura_pulse_id));
+  ASSERT_NE(catalog_scenario, nullptr);
+  auto scenario = *catalog_scenario;
+  scenario.expectations.erase(
+      std::remove_if(scenario.expectations.begin(),
+                     scenario.expectations.end(),
+                     [](auto const& expectation) {
+                       return expectation.kind ==
+                                  Arena::ArenaExpectationKind::GroupIsRendered ||
+                              expectation.kind ==
+                                  Arena::ArenaExpectationKind::FrameBudget;
+                     }),
+      scenario.expectations.end());
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  for (int tick = 0; tick < 60 && !runner.finished(); ++tick) {
+    world.update(0.1F);
+    runner.update(0.1F);
+  }
+  ASSERT_TRUE(runner.finished());
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
 }
 
 TEST(ArenaScenarioRunnerTest, WritesStructuredReportAndRenderedTraceLocally) {

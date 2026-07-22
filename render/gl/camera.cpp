@@ -173,6 +173,7 @@ void Camera::set_up(const QVector3D& up) {
   }
 
   orthonormalize(m_target - m_position, m_front, m_right, m_up);
+  invalidate_cached_geometry();
 }
 
 void Camera::look_at(const QVector3D& position,
@@ -205,6 +206,7 @@ void Camera::set_perspective(float fov,
   m_aspect = std::max(aspect, 1e-6F);
   m_near_plane = std::max(near_plane, 1e-4F);
   m_far_plane = std::max(far_plane, m_near_plane + 1e-3F);
+  invalidate_cached_geometry();
 }
 
 void Camera::set_orthographic(float left,
@@ -226,6 +228,7 @@ void Camera::set_orthographic(float left,
   m_ortho_top = top;
   m_near_plane = std::min(near_plane, far_plane - 1e-3F);
   m_far_plane = std::max(far_plane, m_near_plane + 1e-3F);
+  invalidate_cached_geometry();
 }
 
 void Camera::move_forward(float distance) {
@@ -275,12 +278,25 @@ void Camera::zoom(float delta) {
     m_ortho_top *= scale;
     clamp_ortho_box(m_ortho_left, m_ortho_right, m_ortho_bottom, m_ortho_top);
   }
+  invalidate_cached_geometry();
 }
 
 void Camera::zoom_distance(float delta) {
+  zoom_distance(delta, k_min_dist, k_max_dist);
+}
+
+void Camera::zoom_distance(float delta,
+                           float min_distance,
+                           float max_distance) {
   if (!finite(delta)) {
     return;
   }
+
+  if (!finite(min_distance) || !finite(max_distance)) {
+    return;
+  }
+  min_distance = std::max(min_distance, k_tiny);
+  max_distance = std::max(max_distance, min_distance);
 
   QVector3D const offset = m_position - m_target;
   float r = offset.length();
@@ -294,7 +310,7 @@ void Camera::zoom_distance(float delta) {
   }
   factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
 
-  float const new_r = std::clamp(r * factor, k_min_dist, k_max_dist);
+  float const new_r = std::clamp(r * factor, min_distance, max_distance);
   QVector3D const dir = safe_normalize(offset, QVector3D(0, 0, 1));
   QVector3D const new_pos = m_target + dir * new_r;
 
@@ -453,7 +469,7 @@ auto Camera::screen_to_world_ray(qreal sx,
   double const y = k_ndc_offset - (k_ndc_scale * sy / screen_h);
 
   bool ok = false;
-  QMatrix4x4 const inv_vp = (get_projection_matrix() * get_view_matrix()).inverted(&ok);
+  QMatrix4x4 const inv_vp = get_view_projection_matrix().inverted(&ok);
   if (!ok) {
     return false;
   }
@@ -494,8 +510,7 @@ auto Camera::world_to_screen(const QVector3D& world,
     return false;
   }
 
-  QVector4D const clip =
-      get_projection_matrix() * get_view_matrix() * QVector4D(world, 1.0F);
+  QVector4D const clip = get_view_projection_matrix() * QVector4D(world, 1.0F);
   if (std::abs(clip.w()) < k_eps) {
     return false;
   }
@@ -587,28 +602,90 @@ void Camera::set_top_down_view(const QVector3D& center, float distance) {
 }
 
 auto Camera::get_view_matrix() const -> QMatrix4x4 {
-  QMatrix4x4 view;
-  view.lookAt(m_position, m_target, m_up);
-  return view;
+  rebuild_cached_geometry();
+  return m_cached_view;
 }
 
 auto Camera::get_projection_matrix() const -> QMatrix4x4 {
-  QMatrix4x4 projection;
+  rebuild_cached_geometry();
+  return m_cached_projection;
+}
+
+auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
+  rebuild_cached_geometry();
+  return m_cached_view_projection;
+}
+
+void Camera::rebuild_cached_geometry() const {
+  if (!m_cached_geometry_dirty) {
+    return;
+  }
+
+  m_cached_view.setToIdentity();
+  m_cached_view.lookAt(m_position, m_target, m_up);
+
+  m_cached_projection.setToIdentity();
   if (m_is_perspective) {
-    projection.perspective(m_fov, m_aspect, m_near_plane, m_far_plane);
+    m_cached_projection.perspective(m_fov, m_aspect, m_near_plane, m_far_plane);
   } else {
     float left = m_ortho_left;
     float right = m_ortho_right;
     float bottom = m_ortho_bottom;
     float top = m_ortho_top;
     clamp_ortho_box(left, right, bottom, top);
-    projection.ortho(left, right, bottom, top, m_near_plane, m_far_plane);
+    m_cached_projection.ortho(
+        left, right, bottom, top, m_near_plane, m_far_plane);
   }
-  return projection;
-}
+  m_cached_view_projection = m_cached_projection * m_cached_view;
 
-auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
-  return get_projection_matrix() * get_view_matrix();
+  const float* matrix = m_cached_view_projection.constData();
+  auto set_plane = [this](std::size_t index,
+                          float nx,
+                          float ny,
+                          float nz,
+                          float distance) {
+    const float length = std::sqrt(nx * nx + ny * ny + nz * nz);
+    if (length < k_eps) {
+      m_cached_frustum[index] = {QVector3D(), 1.0F};
+      return;
+    }
+    const float inverse_length = 1.0F / length;
+    m_cached_frustum[index] = {
+        QVector3D(nx * inverse_length, ny * inverse_length, nz * inverse_length),
+        distance * inverse_length};
+  };
+
+  set_plane(0,
+            matrix[index_3] + matrix[index_0],
+            matrix[index_7] + matrix[index_4],
+            matrix[index_11] + matrix[index_8],
+            matrix[15] + matrix[12]);
+  set_plane(1,
+            matrix[index_3] - matrix[index_0],
+            matrix[index_7] - matrix[index_4],
+            matrix[index_11] - matrix[index_8],
+            matrix[15] - matrix[12]);
+  set_plane(2,
+            matrix[index_3] + matrix[index_1],
+            matrix[index_7] + matrix[index_5],
+            matrix[index_11] + matrix[index_9],
+            matrix[15] + matrix[13]);
+  set_plane(3,
+            matrix[index_3] - matrix[index_1],
+            matrix[index_7] - matrix[index_5],
+            matrix[index_11] - matrix[index_9],
+            matrix[15] - matrix[13]);
+  set_plane(4,
+            matrix[index_3] + matrix[index_2],
+            matrix[index_7] + matrix[index_6],
+            matrix[index_11] + matrix[index_10],
+            matrix[15] + matrix[14]);
+  set_plane(5,
+            matrix[index_3] - matrix[index_2],
+            matrix[index_7] - matrix[index_6],
+            matrix[index_11] - matrix[index_10],
+            matrix[15] - matrix[14]);
+  m_cached_geometry_dirty = false;
 }
 
 auto Camera::get_distance() const -> float {
@@ -629,9 +706,11 @@ auto Camera::get_pitch_deg() const -> float {
 void Camera::update_vectors() {
   QVector3D const f = (m_target - m_position);
   orthonormalize(f, m_front, m_right, m_up);
+  invalidate_cached_geometry();
 }
 
 void Camera::apply_soft_boundaries(bool is_panning) {
+  invalidate_cached_geometry();
   if (!qIsFinite(m_position.y())) {
     return;
   }
@@ -750,6 +829,7 @@ void Camera::clamp_above_ground() {
 
   if (m_position.y() < m_ground_y + m_min_height) {
     m_position.setY(m_ground_y + m_min_height);
+    invalidate_cached_geometry();
   }
 }
 
@@ -770,51 +850,14 @@ void Camera::compute_yaw_pitch_from_offset(const QVector3D& off,
 }
 
 auto Camera::is_in_frustum(const QVector3D& center, float radius) const -> bool {
-
-  QMatrix4x4 const vp = get_view_projection_matrix();
-
-  float m[matrix_size];
-  const float* data = vp.constData();
-  for (int i = 0; i < matrix_size; ++i) {
-    m[i] = data[i];
-  }
-
-  QVector3D const left_n(
-      m[index_3] + m[index_0], m[index_7] + m[index_4], m[index_11] + m[index_8]);
-  float const left_d = m[15] + m[12];
-
-  QVector3D const right_n(
-      m[index_3] - m[index_0], m[index_7] - m[index_4], m[index_11] - m[index_8]);
-  float const right_d = m[15] - m[12];
-
-  QVector3D const bottom_n(
-      m[index_3] + m[index_1], m[index_7] + m[index_5], m[index_11] + m[index_9]);
-  float const bottom_d = m[15] + m[13];
-
-  QVector3D const top_n(
-      m[index_3] - m[index_1], m[index_7] - m[index_5], m[index_11] - m[index_9]);
-  float const top_d = m[15] - m[13];
-
-  QVector3D const near_n(
-      m[index_3] + m[index_2], m[index_7] + m[index_6], m[index_11] + m[index_10]);
-  float const near_d = m[15] + m[14];
-
-  QVector3D const far_n(
-      m[index_3] - m[index_2], m[index_7] - m[index_6], m[index_11] - m[index_10]);
-  float const far_d = m[15] - m[14];
-
-  auto test_plane = [&center, radius](const QVector3D& n, float d) -> bool {
-    float const len = n.length();
-    if (len < 1e-6F) {
-      return true;
+  rebuild_cached_geometry();
+  const float safe_radius = std::max(radius, 0.0F);
+  for (const FrustumPlane& plane : m_cached_frustum) {
+    if (QVector3D::dotProduct(center, plane.normal) + plane.distance < -safe_radius) {
+      return false;
     }
-    float const dist = QVector3D::dotProduct(center, n) + d;
-    return dist >= -radius * len;
-  };
-
-  return test_plane(left_n, left_d) && test_plane(right_n, right_d) &&
-         test_plane(bottom_n, bottom_d) && test_plane(top_n, top_d) &&
-         test_plane(near_n, near_d) && test_plane(far_n, far_d);
+  }
+  return true;
 }
 
 } // namespace Render::GL

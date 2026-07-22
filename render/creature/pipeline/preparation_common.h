@@ -84,12 +84,14 @@ palette_contact_y(CreatureKind kind,
 [[nodiscard]] auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> Render::GL::DrawContext;
 
-void ground_model_contact_to_surface(QMatrix4x4& model,
+auto ground_model_contact_to_surface(QMatrix4x4& model,
                                      float local_contact_y,
                                      float y_scale = 1.0F,
-                                     float entity_ground_offset = 0.0F) noexcept;
+                                     float entity_ground_offset = 0.0F) noexcept
+    -> float;
 
-void ground_model_to_terrain(QMatrix4x4& model, float world_y_offset = 0.0F) noexcept;
+auto ground_model_to_terrain(QMatrix4x4& model,
+                             float world_y_offset = 0.0F) noexcept -> float;
 
 void set_model_world_y(QMatrix4x4& model, float world_y) noexcept;
 

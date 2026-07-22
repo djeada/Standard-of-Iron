@@ -151,14 +151,9 @@ auto should_queue_chase_command(Engine::Core::Entity* attacker,
                                 Engine::Core::Entity* target,
                                 Engine::Core::TransformComponent* attacker_transform,
                                 Engine::Core::MovementComponent* movement,
-                                const QVector3D& desired_pos,
-                                float range) -> bool {
+                                const QVector3D& desired_pos) -> bool {
   if ((attacker == nullptr) || (target == nullptr) || (attacker_transform == nullptr) ||
       (movement == nullptr)) {
-    return false;
-  }
-
-  if (is_in_range(attacker, target, range)) {
     return false;
   }
 
@@ -180,6 +175,60 @@ void stop_unit_movement(Engine::Core::Entity* unit,
       movement->set_rest_position(transform->position.x, transform->position.z);
     }
   }
+}
+
+auto elephant_formation_penetration_distance(
+    const Engine::Core::Entity& attacker,
+    const Engine::Core::Entity& target,
+    const FormationCombat::ContactGeometry& geometry) -> std::optional<float> {
+  auto const* elephant = attacker.get_component<Engine::Core::ElephantComponent>();
+  if (elephant == nullptr || !FormationCombat::has_formation_slots(target) ||
+      geometry.formation_overlap_required) {
+    return std::nullopt;
+  }
+
+  // Contact geometry uses the authored animal's visible body radius and owns
+  // the modest front-rank penetration.  The much larger trample radius remains
+  // exclusively an area-of-effect damage reach.
+  return geometry.engagement_center_distance;
+}
+
+void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
+  if (attacker == nullptr ||
+      !Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
+    return;
+  }
+
+  if (auto* combat =
+          attacker->get_component<Engine::Core::CombatStateComponent>()) {
+    combat->animation_state = Engine::Core::CombatAnimationState::Idle;
+    combat->state_time = 0.0F;
+    combat->state_duration = 0.0F;
+    combat->damage_dealt_this_swing = false;
+    combat->input_buffered = false;
+  }
+
+  auto* action =
+      attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr) {
+    return;
+  }
+  auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id);
+  if (action_id != Game::Systems::CombatActions::CombatActionId::RtsSwordStrike &&
+      action_id != Game::Systems::CombatActions::CombatActionId::RtsSpearThrust &&
+      action_id != Game::Systems::CombatActions::CombatActionId::RtsBowShot) {
+    return;
+  }
+  action->combat_action_id = 0U;
+  action->active_target_id = 0U;
+  action->action_running = false;
+  action->action_completed = false;
+  action->action_active = false;
+  action->weapon_trace_active = false;
+  action->phase = Engine::Core::RpgCommanderActionPhase::None;
+  action->normalized_action_time = 0.0F;
+  action->previous_normalized_action_time = 0.0F;
 }
 
 auto matches_heal_affinity(const Engine::Core::Entity* target,
@@ -820,6 +869,16 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
       Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
   bool const target_uses_rts_lock =
       Game::Systems::CombatRules::participates_in_rts_melee_lock(target);
+  auto target_accepts_reciprocal_lock = [&]() {
+    if (!target->has_component<Engine::Core::ElephantComponent>() ||
+        !FormationCombat::has_formation_slots(*attacker)) {
+      return true;
+    }
+    auto const elephant_geometry =
+        FormationCombat::contact_geometry(*target, *attacker);
+    return FormationCombat::contact_is_active(
+        *target, *attacker, elephant_geometry);
+  };
   auto* att_t = attacker->get_component<Engine::Core::TransformComponent>();
   auto* tgt_t = target->get_component<Engine::Core::TransformComponent>();
 
@@ -835,7 +894,7 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   if (attack_comp->in_melee_lock &&
       attack_comp->melee_lock_target_id == target->get_id()) {
     begin_attack_animation(attacker, true);
-    if (target_atk != nullptr) {
+    if (target_atk != nullptr && target_accepts_reciprocal_lock()) {
       auto* existing_target = world->get_entity(target_atk->melee_lock_target_id);
       auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
       bool const has_valid_existing_lock =
@@ -858,7 +917,7 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   attack_comp->melee_lock_target_id = target->get_id();
   begin_attack_animation(attacker);
 
-  if (target_atk != nullptr) {
+  if (target_atk != nullptr && target_accepts_reciprocal_lock()) {
     auto* existing_target = world->get_entity(target_atk->melee_lock_target_id);
     auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
     bool const has_valid_existing_lock =
@@ -1084,7 +1143,21 @@ void process_attacks(Engine::Core::World* world,
       if ((target_unit != nullptr) && (target_transform != nullptr)) {
         bool const ranged_unit = is_ranged_mode(attacker_atk);
 
-        if (is_in_range(attacker, target, range)) {
+        bool target_reached = is_in_range(attacker, target, range);
+        if (target_reached && !is_ranged_mode(attacker_atk)) {
+          auto const geometry =
+              FormationCombat::contact_geometry(*attacker, *target);
+          if (auto const penetration = elephant_formation_penetration_distance(
+                  *attacker, *target, geometry)) {
+            float const dx = target_transform->position.x -
+                             attacker_transform->position.x;
+            float const dz = target_transform->position.z -
+                             attacker_transform->position.z;
+            target_reached = std::hypot(dx, dz) <= *penetration + 0.15F;
+          }
+        }
+
+        if (target_reached) {
           best_target = target;
           best_target_unit = target_unit;
           best_target_transform = target_transform;
@@ -1176,12 +1249,26 @@ void process_attacks(Engine::Core::World* world,
             if (distance > 0.0F) {
               auto const geometry =
                   FormationCombat::contact_geometry(*attacker, *target);
-              float const desired_distance = geometry.uses_formation_slots
-                                                 ? geometry.engagement_center_distance
-                                                 : std::max(range - 0.2F, 0.2F);
-              if (geometry.uses_formation_slots ? !FormationCombat::contact_is_active(
-                                                      *attacker, *target, geometry)
-                                                : distance > desired_distance + 0.15F) {
+              auto const elephant_penetration =
+                  elephant_formation_penetration_distance(
+                      *attacker, *target, geometry);
+              float const desired_distance =
+                  geometry.uses_formation_slots
+                      ? elephant_penetration.value_or(std::max(
+                            0.0F,
+                            geometry.engagement_center_distance -
+                                (geometry.formation_overlap_required
+                                     ? geometry.contact_tolerance * 2.0F
+                                     : 0.0F)))
+                      : std::max(range - 0.2F, 0.2F);
+              bool const engagement_reached =
+                  elephant_penetration.has_value()
+                      ? distance <= desired_distance + 0.15F
+                      : (geometry.uses_formation_slots
+                             ? FormationCombat::contact_is_active(
+                                   *attacker, *target, geometry)
+                             : distance <= desired_distance + 0.15F);
+              if (!engagement_reached) {
                 desired_pos = chase_destination(
                     attacker_pos,
                     target_pos,
@@ -1207,13 +1294,12 @@ void process_attacks(Engine::Core::World* world,
                                                   target,
                                                   attacker_transform,
                                                   movement,
-                                                  desired_pos,
-                                                  range)) {
+                                                  desired_pos)) {
               chase_move_intents.push_back({attacker->get_id(), desired_pos});
             }
           }
 
-          if (is_in_range(attacker, target, range)) {
+          if (target_reached) {
             best_target = target;
             best_target_unit = target_unit;
             best_target_transform = target_transform;
@@ -1358,6 +1444,7 @@ void process_attacks(Engine::Core::World* world,
         guard_mode->returning_to_guard_position = false;
       }
     } else {
+      clear_orphaned_rts_attack_presentation(attacker);
       if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker) &&
           (attack_target == nullptr) &&
           attacker->has_component<Engine::Core::AttackTargetComponent>()) {

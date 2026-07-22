@@ -55,6 +55,9 @@ struct EffectRenderState {
   GLboolean depth_test_enabled{GL_FALSE};
   GLboolean blend_enabled{GL_FALSE};
   GLboolean depth_mask_enabled{GL_TRUE};
+  GLint blend_src_rgb{GL_ONE};
+  GLint blend_dst_rgb{GL_ZERO};
+  GLint blend_equation_rgb{GL_FUNC_ADD};
 };
 
 auto capture_effect_render_state() -> EffectRenderState {
@@ -63,6 +66,9 @@ auto capture_effect_render_state() -> EffectRenderState {
   state.depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
   state.blend_enabled = glIsEnabled(GL_BLEND);
   glGetBooleanv(GL_DEPTH_WRITEMASK, &state.depth_mask_enabled);
+  glGetIntegerv(GL_BLEND_SRC_RGB, &state.blend_src_rgb);
+  glGetIntegerv(GL_BLEND_DST_RGB, &state.blend_dst_rgb);
+  glGetIntegerv(GL_BLEND_EQUATION_RGB, &state.blend_equation_rgb);
   return state;
 }
 
@@ -92,6 +98,9 @@ void apply_additive_effect_state() {
 
 void restore_effect_render_state(const EffectRenderState& state) {
   glDepthMask(state.depth_mask_enabled);
+  glBlendFunc(static_cast<GLenum>(state.blend_src_rgb),
+              static_cast<GLenum>(state.blend_dst_rgb));
+  glBlendEquation(static_cast<GLenum>(state.blend_equation_rgb));
   if (state.blend_enabled != 0U) {
     glEnable(GL_BLEND);
   } else {
@@ -896,7 +905,7 @@ void CombatDustPipeline::render(const Camera& cam, float animation_time) {
   clear_gl_errors();
 
   if (!m_dust_data.empty()) {
-    QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+    QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
     std::vector<DustInstanceData> instances;
     instances.reserve(m_dust_data.size());
     for (const auto& data : m_dust_data) {
@@ -921,7 +930,7 @@ void CombatDustPipeline::render_blood_pools(const Camera& cam) {
     return;
   }
 
-  QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
   std::vector<BloodPoolInstanceData> instances;
   instances.reserve(m_blood_data.size());
   for (const auto& blood : m_blood_data) {
@@ -936,7 +945,7 @@ void CombatDustPipeline::render_blood_pools(const Camera& cam) {
 }
 
 void CombatDustPipeline::render_dust(const CombatDustData& data, const Camera& cam) {
-  QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
   DustInstanceData const instance{.position = data.position,
                                   .color = data.color,
                                   .radius = data.radius,

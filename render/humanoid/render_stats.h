@@ -8,6 +8,7 @@ struct HumanoidRenderStats {
   uint32_t soldiers_total{0};
   uint32_t soldiers_rendered{0};
   uint32_t soldiers_skipped_frustum{0};
+  uint32_t soldiers_skipped_fog{0};
   uint32_t soldiers_skipped_lod{0};
   uint32_t soldiers_skipped_temporal{0};
   uint32_t facial_hair_skipped_distance{0};
@@ -18,6 +19,7 @@ struct HumanoidRenderStats {
     soldiers_total = 0;
     soldiers_rendered = 0;
     soldiers_skipped_frustum = 0;
+    soldiers_skipped_fog = 0;
     soldiers_skipped_lod = 0;
     soldiers_skipped_temporal = 0;
     facial_hair_skipped_distance = 0;

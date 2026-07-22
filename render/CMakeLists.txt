@@ -26,13 +26,12 @@ add_library(render_gl STATIC
 target_include_directories(render_gl PUBLIC .)
 target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core animation_core)
 
-# Optimization flags for render hot paths
+# Optimization flags for render hot paths. Distribution builds must not use
+# -march=native: that would make the artifact depend on the CI runner's CPU.
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(render_gl PRIVATE
-            -march=native          # Use CPU-specific instructions
-            -mtune=native         # Optimize for current CPU
-            -fno-math-errno       # Faster math
+            -fno-math-errno
             -fno-trapping-math
         )
     endif()

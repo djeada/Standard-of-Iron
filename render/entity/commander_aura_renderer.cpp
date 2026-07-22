@@ -4,6 +4,10 @@
 #include "../../game/core/world.h"
 #include "../../game/systems/nation_id.h"
 #include "../scene_renderer.h"
+#include "../selection_ring_layout.h"
+
+#include <algorithm>
+#include <cmath>
 
 namespace Render::GL {
 
@@ -57,13 +61,65 @@ void render_commander_auras(Renderer* renderer,
     QVector3D const position(
         transform->position.x, transform->position.y + 0.1F, transform->position.z);
     float const radius = commander->aura_radius;
-    float const intensity = 1.0F;
+    float const intensity = 0.10F;
 
     QVector3D const color = unit_comp != nullptr
                                 ? get_commander_aura_color(unit_comp->nation_id)
                                 : QVector3D(1.0F, 0.7F, 0.2F);
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
+  }
+
+  for (auto* entity :
+       world->get_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto const* buff =
+        entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+    auto const* transform =
+        entity->get_component<Engine::Core::TransformComponent>();
+    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (buff == nullptr || !buff->active || transform == nullptr || unit == nullptr ||
+        unit->health <= 0) {
+      continue;
+    }
+
+    Game::Systems::NationID glow_nation = unit->nation_id;
+    if (auto* source = world->get_entity(buff->source_commander_id)) {
+      if (auto const* source_unit =
+              source->get_component<Engine::Core::UnitComponent>()) {
+        glow_nation = source_unit->nation_id;
+      }
+    }
+
+    const float pulse = 0.26F + 0.08F * std::sin(animation_time * 5.5F +
+                                                 static_cast<float>(entity->get_id()));
+    std::span<const Engine::Core::FormationSoldierPresentation> soldiers;
+    if (auto const* formation =
+            entity->get_component<Engine::Core::FormationPresentationComponent>()) {
+      soldiers = formation->soldiers;
+    }
+    const float footprint = std::max(transform->scale.x, transform->scale.z);
+    const float glow_radius = std::clamp(0.72F + footprint * 0.35F, 0.78F, 1.15F);
+    const auto placements = build_selection_ring_layout(
+        {.soldiers = soldiers,
+         .ring_size = glow_radius,
+         .position = QVector3D(transform->position.x,
+                               transform->position.y,
+                               transform->position.z),
+         .yaw_degrees = transform->rotation.y});
+    for (auto const& placement : placements) {
+      renderer->healer_aura(QVector3D(placement.world_x,
+                                      transform->position.y + 0.35F,
+                                      placement.world_z),
+                            get_commander_aura_color(glow_nation),
+                            placement.ring_size,
+                            pulse,
+                            animation_time);
+    }
   }
 }
 

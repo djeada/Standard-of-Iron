@@ -260,4 +260,119 @@ add_punic_tanit_relief(BuildingArchetypeDesc& desc,
                BuildingLODMask::Full);
 }
 
+// Tall civic standard with an eagle-like wing profile. Unlike the facade
+// relief this changes the roof silhouette, so Roman buildings remain readable
+// from a steep gameplay camera and against dark terrain.
+inline void
+add_roman_roof_standard(BuildingArchetypeDesc& desc,
+                        const QVector3D& base,
+                        float scale,
+                        const QVector3D& bronze,
+                        const QVector3D& crimson,
+                        BuildingStateMask states = k_building_state_mask_intact) {
+  desc.add_box(base + QVector3D(0.0F, 0.035F * scale, 0.0F),
+               QVector3D(0.16F, 0.035F, 0.13F) * scale,
+               crimson,
+               states);
+  desc.add_box(base + QVector3D(0.0F, 0.09F * scale, 0.0F),
+               QVector3D(0.11F, 0.025F, 0.09F) * scale,
+               bronze,
+               states);
+  desc.add_cylinder(base + QVector3D(0.0F, 0.10F * scale, 0.0F),
+                    base + QVector3D(0.0F, 0.58F * scale, 0.0F),
+                    0.028F * scale,
+                    bronze,
+                    states);
+
+  desc.add_box(base + QVector3D(0.0F, 0.37F * scale, 0.0F),
+               QVector3D(0.15F, 0.09F, 0.035F) * scale,
+               crimson,
+               states);
+  desc.add_box(base + QVector3D(0.0F, 0.37F * scale, 0.038F * scale),
+               QVector3D(0.10F, 0.045F, 0.012F) * scale,
+               bronze,
+               states,
+               BuildingLODMask::Full);
+
+  for (float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(base + QVector3D(side * 0.15F * scale, 0.60F * scale, 0.0F),
+                         QVector3D(0.18F, 0.045F, 0.055F) * scale,
+                         QVector3D(0.0F, 0.0F, side * 18.0F),
+                         bronze,
+                         states);
+    desc.add_rotated_box(base + QVector3D(side * 0.25F * scale, 0.66F * scale, 0.0F),
+                         QVector3D(0.11F, 0.035F, 0.045F) * scale,
+                         QVector3D(0.0F, 0.0F, side * 36.0F),
+                         bronze,
+                         states,
+                         BuildingLODMask::Full);
+  }
+  desc.add_box(base + QVector3D(0.0F, 0.62F * scale, 0.0F),
+               QVector3D(0.065F, 0.13F, 0.065F) * scale,
+               bronze,
+               states);
+  desc.add_box(base + QVector3D(0.035F * scale, 0.73F * scale, 0.0F),
+               QVector3D(0.055F, 0.045F, 0.055F) * scale,
+               bronze,
+               states);
+}
+
+// Stepped crown with outward hooks and a central ritual shard. It deliberately
+// exaggerates Punic geometry into a dark-fantasy silhouette while retaining
+// the Tanit triangle/crescent language used on facades.
+inline void
+add_punic_horned_crown(BuildingArchetypeDesc& desc,
+                       const QVector3D& base,
+                       float scale,
+                       const QVector3D& obsidian,
+                       const QVector3D& bronze,
+                       const QVector3D& ember,
+                       BuildingStateMask states = k_building_state_mask_intact) {
+  desc.add_box(base + QVector3D(0.0F, 0.035F * scale, 0.0F),
+               QVector3D(0.28F, 0.035F, 0.22F) * scale,
+               obsidian,
+               states);
+  desc.add_box(base + QVector3D(0.0F, 0.10F * scale, 0.0F),
+               QVector3D(0.20F, 0.035F, 0.16F) * scale,
+               bronze,
+               states);
+  desc.add_box(base + QVector3D(0.0F, 0.17F * scale, 0.0F),
+               QVector3D(0.13F, 0.045F, 0.12F) * scale,
+               obsidian,
+               states);
+
+  desc.add_cylinder(base + QVector3D(0.0F, 0.17F * scale, 0.0F),
+                    base + QVector3D(0.0F, 0.62F * scale, 0.0F),
+                    0.055F * scale,
+                    obsidian,
+                    states);
+  desc.add_box(base + QVector3D(0.0F, 0.45F * scale, 0.0F),
+               QVector3D(0.075F, 0.13F, 0.075F) * scale,
+               ember,
+               states);
+  desc.add_rotated_box(base + QVector3D(0.0F, 0.69F * scale, 0.0F),
+                       QVector3D(0.075F, 0.16F, 0.075F) * scale,
+                       QVector3D(0.0F, 0.0F, 45.0F),
+                       bronze,
+                       states);
+
+  for (float side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(base + QVector3D(side * 0.16F * scale, 0.39F * scale, 0.0F),
+                         QVector3D(0.18F, 0.045F, 0.065F) * scale,
+                         QVector3D(0.0F, 0.0F, side * 43.0F),
+                         bronze,
+                         states);
+    desc.add_rotated_box(base + QVector3D(side * 0.29F * scale, 0.53F * scale, 0.0F),
+                         QVector3D(0.14F, 0.040F, 0.055F) * scale,
+                         QVector3D(0.0F, 0.0F, side * 67.0F),
+                         obsidian,
+                         states);
+    desc.add_box(base + QVector3D(side * 0.34F * scale, 0.65F * scale, 0.0F),
+                 QVector3D(0.045F, 0.10F, 0.045F) * scale,
+                 bronze,
+                 states,
+                 BuildingLODMask::Full);
+  }
+}
+
 } // namespace Render::GL

@@ -78,9 +78,9 @@ void main() {
   float stone_grain = fbm(p * 7.4 + vec3(8.0, 2.0, 4.0));
   float weathering = fbm(p * 12.0 + vec3(v_seed * 7.0));
 
-  vec3 basalt = v_color * vec3(0.44, 0.42, 0.56);
-  vec3 moonstone = v_color * vec3(0.84, 0.82, 1.02);
-  vec3 ash = vec3(0.36, 0.32, 0.44);
+  vec3 basalt = v_color * vec3(0.30, 0.27, 0.42);
+  vec3 moonstone = v_color * vec3(0.72, 0.62, 0.94);
+  vec3 ash = vec3(0.21, 0.16, 0.27);
   vec3 stone_color = mix(basalt, moonstone, stone_large);
   stone_color *= mix(0.72, 1.10, stone_grain);
   stone_color = mix(stone_color, ash, weathering * 0.18);
@@ -105,9 +105,9 @@ void main() {
   float rune = max(max(rune_line_x, rune_line_y) * step(0.46, rune_selector),
                    rune_diag * step(0.78, rune_selector));
 
-  vec3 magic_a = vec3(0.60, 0.12, 1.34);
-  vec3 magic_b = vec3(0.08, 0.82, 1.42);
-  vec3 sanctum_gold = vec3(1.14, 0.84, 0.48);
+  vec3 magic_a = vec3(0.66, 0.03, 1.18);
+  vec3 magic_b = vec3(0.03, 0.48, 1.08);
+  vec3 sanctum_gold = vec3(1.02, 0.54, 0.18);
 
   float magic_blend = fbm(p * 1.4 + vec3(v_seed * 4.2, 5.0, 1.0));
   vec3 magic_color = mix(magic_a, magic_b, magic_blend);

@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <iterator>
+#include <vector>
 
 #include "entity/registry.h"
 #include "graphics_settings.h"
@@ -17,6 +20,8 @@ public:
 
   void reset_frame() noexcept {
     m_full_detail_count.store(0, std::memory_order_relaxed);
+    m_contact_shadow_count = 0;
+    m_contact_shadow_formations.clear();
   }
 
   [[nodiscard]] auto
@@ -57,8 +62,42 @@ public:
     return m_full_detail_count.load(std::memory_order_relaxed);
   }
 
+  [[nodiscard]] auto request_contact_shadow(std::uint32_t formation_id,
+                                            bool standing_idle) noexcept -> bool {
+    const auto& budget = GraphicsSettings::instance().contact_shadow_budget();
+    if (!standing_idle || m_contact_shadow_count >= budget.max_casters) {
+      return false;
+    }
+    auto formation = std::find_if(
+        m_contact_shadow_formations.begin(),
+        m_contact_shadow_formations.end(),
+        [formation_id](const ContactShadowFormationUsage& usage) {
+          return usage.formation_id == formation_id;
+        });
+    if (formation != m_contact_shadow_formations.end() &&
+        formation->count >= budget.max_casters_per_formation) {
+      return false;
+    }
+    if (formation == m_contact_shadow_formations.end()) {
+      m_contact_shadow_formations.push_back({formation_id, 0});
+      formation = std::prev(m_contact_shadow_formations.end());
+    }
+    ++m_contact_shadow_count;
+    ++formation->count;
+    return true;
+  }
+
+  [[nodiscard]] auto contact_shadow_count() const noexcept -> int {
+    return m_contact_shadow_count;
+  }
+
 private:
   VisibilityBudgetTracker() = default;
+
+  struct ContactShadowFormationUsage {
+    std::uint32_t formation_id{0U};
+    int count{0};
+  };
 
   [[nodiscard]] auto try_consume_budget(int max_units) noexcept -> bool {
     int current = m_full_detail_count.load(std::memory_order_relaxed);
@@ -74,6 +113,8 @@ private:
   }
 
   std::atomic<int> m_full_detail_count{0};
+  int m_contact_shadow_count{0};
+  std::vector<ContactShadowFormationUsage> m_contact_shadow_formations;
 };
 
 } // namespace Render

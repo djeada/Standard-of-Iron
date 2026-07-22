@@ -428,6 +428,16 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   apply_bow_draw_body_deltas(m_pose, sample);
 }
 
+void HumanoidPoseController::bow_melee_strike(float attack_phase) {
+  auto const sample = Animation::resolve_humanoid_weapon_attack_pose(
+      weapon_attack_pose_inputs(Animation::HumanoidWeaponAttackKind::BowMeleeStrike,
+                                m_anim_ctx,
+                                attack_phase,
+                                0U,
+                                1.0F));
+  apply_weapon_attack_sample(*this, m_pose, sample);
+}
+
 void HumanoidPoseController::melee_strike(float strike_phase) {
   auto const sample = Animation::resolve_humanoid_weapon_attack_pose(
       weapon_attack_pose_inputs(Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
@@ -528,6 +538,7 @@ void HumanoidPoseController::hold_spear_idle() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::SpearIdle,
       .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
@@ -538,6 +549,7 @@ void HumanoidPoseController::brace_spear_for_hold() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::SpearBrace,
       .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
@@ -548,11 +560,12 @@ void HumanoidPoseController::hold_bow_ready() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::BowReady,
       .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }
 
-void HumanoidPoseController::brace_sword_and_shield_for_hold() {
+void HumanoidPoseController::guard_sword_and_shield_for_defense() {
   guard_sword_and_shield_formation(ShieldFormationPose::GuardDefault, 1.0F);
 }
 
@@ -582,11 +595,11 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
   m_pose.head_pos += to_qvec(sample.head_delta);
 }
 
-void HumanoidPoseController::hold_sword_and_shield() {
+void HumanoidPoseController::carry_sword_and_shield() {
   using HP = HumanProportions;
 
   auto const sample = Animation::resolve_humanoid_held_pose({
-      .kind = Animation::HumanoidHeldPoseKind::SwordShieldHold,
+      .kind = Animation::HumanoidHeldPoseKind::SwordShieldCarry,
       .shoulder_y = HP::SHOULDER_Y,
       .moving =
           Render::Creature::is_moving_animation(m_anim_ctx.inputs.movement_state) ||

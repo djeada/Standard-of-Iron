@@ -437,13 +437,18 @@ auto approximate_attack_phase(const AnimationInputs& anim) noexcept -> float {
 }
 
 auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& profile = Render::Profiling::global_profile();
   Render::Profiling::AccumulatorScope const scope(
       ctx.template_prewarm ? nullptr : &profile.animation_input_sampling_us);
+#endif
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   bool attack_from_combat_state = false;
   bool attack_from_melee_lock = false;
+#endif
   auto finalize_sample = [&](const AnimationInputs& sampled_anim) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (!ctx.template_prewarm && ctx.entity != nullptr) {
       Render::Profiling::UnitAnimationDebugSample debug_sample{};
       debug_sample.entity_id = ctx.entity->get_id();
@@ -465,6 +470,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       Render::Profiling::CombatAnimationDiagnostics::instance().record_unit_sample(
           debug_sample);
     }
+#endif
     return sampled_anim;
   };
 
@@ -537,8 +543,10 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       anim.hit_recoil_x = 0.0F;
       anim.hit_recoil_z = 0.0F;
     }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     attack_from_combat_state = presentation->attack_from_combat_state;
     attack_from_melee_lock = presentation->attack_from_melee_lock;
+#endif
 
     if (anim.is_dying || anim.is_dead) {
       if (humanoid_state != nullptr && should_persist_animation_state(ctx)) {

@@ -113,6 +113,16 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
                          part.material_id,
                          part.material);
     break;
+  case BuildingPartKind::Cone:
+    builder.add_cone(part.point_a,
+                     part.point_b,
+                     part.radius,
+                     part.color,
+                     part.texture,
+                     part.alpha,
+                     part.material_id,
+                     part.material);
+    break;
   case BuildingPartKind::PaletteCylinder:
     builder.add_palette_cylinder(part.point_a,
                                  part.point_b,
@@ -226,6 +236,23 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
   part.kind = BuildingPartKind::Cylinder;
   part.point_a = start;
   part.point_b = end;
+  part.color = color;
+  part.radius = radius;
+  part.states = states;
+  part.lod = lod;
+  m_parts.push_back(std::move(part));
+}
+
+void BuildingArchetypeDesc::add_cone(const QVector3D& base,
+                                     const QVector3D& tip,
+                                     float radius,
+                                     const QVector3D& color,
+                                     BuildingStateMask states,
+                                     BuildingLODMask lod) {
+  BuildingPartDesc part;
+  part.kind = BuildingPartKind::Cone;
+  part.point_a = base;
+  part.point_b = tip;
   part.color = color;
   part.radius = radius;
   part.states = states;

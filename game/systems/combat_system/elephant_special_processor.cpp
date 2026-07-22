@@ -11,8 +11,9 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "combat_random.h"
+#include "combat_hit_resolver.h"
 #include "combat_utils.h"
-#include "damage_processor.h"
+#include "damage_application.h"
 
 namespace Game::Systems::Combat {
 
@@ -231,7 +232,26 @@ void process_trample_damage(Engine::Core::Entity* elephant,
 
     if (dist <= elephant_comp->trample_radius) {
       int const old_health = other_unit->health;
-      deal_damage(world, other_entity, damage, elephant->get_id());
+      auto const application = apply_unit_damage(
+          world, other_entity, damage, elephant->get_id());
+
+      bool const infantry_target =
+          !Game::Units::is_cavalry(other_unit->spawn_type) &&
+          other_unit->spawn_type != Game::Units::SpawnType::Elephant &&
+          other_unit->spawn_type != Game::Units::SpawnType::Catapult &&
+          other_unit->spawn_type != Game::Units::SpawnType::Ballista;
+      if (infantry_target) {
+        float impact_speed = 5.5F;
+        if (auto const* motion =
+                elephant->get_component<Engine::Core::MotionPresentationComponent>();
+            motion != nullptr) {
+          impact_speed = std::max(impact_speed, motion->speed);
+        }
+        launch_new_casualties(*other_entity,
+                              *elephant,
+                              application.queued_soldier_casualties,
+                              impact_speed);
+      }
 
       if (old_health > 0 && other_unit->health < old_health) {
         hit_any = true;

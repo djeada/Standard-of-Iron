@@ -16,15 +16,6 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
-  std::size_t const& debug_rigged_batches = context.debug_rigged_batches;
-  std::size_t const& debug_rigged_cmds = context.debug_rigged_cmds;
-  std::size_t const& debug_rigged_instanced_attempts =
-      context.debug_rigged_instanced_attempts;
-  std::size_t const& debug_rigged_instanced_successes =
-      context.debug_rigged_instanced_successes;
-  std::size_t const& debug_rigged_instanced_failures =
-      context.debug_rigged_instanced_failures;
-  std::size_t const& debug_rigged_single_draws = context.debug_rigged_single_draws;
   (void)cam;
   (void)view;
   (void)projection;
@@ -32,12 +23,6 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
-  (void)debug_rigged_batches;
-  (void)debug_rigged_cmds;
-  (void)debug_rigged_instanced_attempts;
-  (void)debug_rigged_instanced_successes;
-  (void)debug_rigged_instanced_failures;
-  (void)debug_rigged_single_draws;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();
@@ -69,7 +54,8 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                                   GLint model_uniform,
                                   GLint mvp_uniform,
                                   GLint color_uniform,
-                                  GLint alpha_uniform = Shader::InvalidUniform) {
+                                  GLint alpha_uniform = Shader::InvalidUniform,
+                                  GLint road_surface_uniform = Shader::InvalidUniform) {
       if (shader == nullptr) {
         return;
       }
@@ -87,71 +73,112 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         if (alpha_uniform != Shader::InvalidUniform) {
           shader->set_uniform(alpha_uniform, single.alpha);
         }
+        if (road_surface_uniform != Shader::InvalidUniform) {
+          shader->set_uniform(road_surface_uniform,
+                              static_cast<int>(single.road_surface_kind));
+        }
         single.mesh->draw();
       }
     };
 
+    auto set_water_environment = [&](Shader* shader, const auto& uniforms) {
+      QVector3D const fog_color(
+          m_clear_color[red], m_clear_color[green], m_clear_color[blue]);
+      float const fog_start =
+          std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
+      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
+      if (uniforms.camera_position != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.camera_position, cam.get_position());
+      }
+      if (uniforms.light_direction != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.light_direction, m_light_dir);
+      }
+      if (uniforms.fog_color != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.fog_color, fog_color);
+      }
+      if (uniforms.fog_start != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.fog_start, fog_start);
+      }
+      if (uniforms.fog_end != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.fog_end, fog_end);
+      }
+    };
+
     switch (feature.kind) {
-    case LinearFeatureKind::River: {
-      Shader* river_shader = m_water_pipeline->m_river_shader;
-      if (river_shader == nullptr) {
+    case LinearFeatureKind::Water: {
+      Shader* water_shader = m_water_pipeline->m_water_shader;
+      if (water_shader == nullptr) {
         break;
       }
       const auto& visibility = feature.visibility;
-      if (m_last_bound_shader != river_shader) {
-        river_shader->use();
-        river_shader->set_uniform(m_water_pipeline->m_river_uniforms.view, view);
-        river_shader->set_uniform(m_water_pipeline->m_river_uniforms.projection,
+      if (m_last_bound_shader != water_shader) {
+        water_shader->use();
+        water_shader->set_uniform(m_water_pipeline->m_water_uniforms.view, view);
+        water_shader->set_uniform(m_water_pipeline->m_water_uniforms.projection,
                                   projection);
-        river_shader->set_uniform(m_water_pipeline->m_river_uniforms.time,
+        water_shader->set_uniform(m_water_pipeline->m_water_uniforms.time,
                                   m_animation_time);
-        m_last_bound_shader = river_shader;
+        set_water_environment(water_shader, m_water_pipeline->m_water_uniforms);
+        m_last_bound_shader = water_shader;
         m_last_bound_texture = nullptr;
       }
-      if (m_water_pipeline->m_river_uniforms.has_visibility != Shader::InvalidUniform) {
+      if (m_water_pipeline->m_water_uniforms.has_visibility != Shader::InvalidUniform) {
         int const has_vis =
             visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
-        river_shader->set_uniform(m_water_pipeline->m_river_uniforms.has_visibility,
+        water_shader->set_uniform(m_water_pipeline->m_water_uniforms.has_visibility,
                                   has_vis);
       }
       if (visibility.enabled && visibility.texture != nullptr) {
-        if (m_water_pipeline->m_river_uniforms.visibility_size !=
+        if (m_water_pipeline->m_water_uniforms.visibility_size !=
             Shader::InvalidUniform) {
-          river_shader->set_uniform(m_water_pipeline->m_river_uniforms.visibility_size,
+          water_shader->set_uniform(m_water_pipeline->m_water_uniforms.visibility_size,
                                     visibility.size);
         }
-        if (m_water_pipeline->m_river_uniforms.visibility_tile_size !=
+        if (m_water_pipeline->m_water_uniforms.visibility_tile_size !=
             Shader::InvalidUniform) {
-          river_shader->set_uniform(
-              m_water_pipeline->m_river_uniforms.visibility_tile_size,
+          water_shader->set_uniform(
+              m_water_pipeline->m_water_uniforms.visibility_tile_size,
               visibility.tile_size);
         }
-        if (m_water_pipeline->m_river_uniforms.explored_alpha !=
+        if (m_water_pipeline->m_water_uniforms.explored_alpha !=
             Shader::InvalidUniform) {
-          river_shader->set_uniform(m_water_pipeline->m_river_uniforms.explored_alpha,
+          water_shader->set_uniform(m_water_pipeline->m_water_uniforms.explored_alpha,
                                     visibility.explored_alpha);
         }
-        constexpr int k_river_vis_texture_unit = 7;
-        visibility.texture->bind(k_river_vis_texture_unit);
+        constexpr int k_water_vis_texture_unit = 7;
+        visibility.texture->bind(k_water_vis_texture_unit);
         m_last_bound_texture = visibility.texture;
-        if (m_water_pipeline->m_river_uniforms.visibility_texture !=
+        if (m_water_pipeline->m_water_uniforms.visibility_texture !=
             Shader::InvalidUniform) {
-          river_shader->set_uniform(
-              m_water_pipeline->m_river_uniforms.visibility_texture,
-              k_river_vis_texture_unit);
+          water_shader->set_uniform(
+              m_water_pipeline->m_water_uniforms.visibility_texture,
+              k_water_vis_texture_unit);
         }
       }
       {
         PolygonOffsetScope const poly(-1.0F, -1.0F);
-        draw_feature_model(river_shader,
-                           m_water_pipeline->m_river_uniforms.model,
-                           Shader::InvalidUniform,
-                           Shader::InvalidUniform,
-                           m_water_pipeline->m_river_uniforms.segment_visibility);
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto& single = std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
+          if (m_water_pipeline->m_water_uniforms.surface_kind !=
+              Shader::InvalidUniform) {
+            water_shader->set_uniform(
+                m_water_pipeline->m_water_uniforms.surface_kind,
+                static_cast<int>(single.water_kind));
+          }
+          water_shader->set_uniform(m_water_pipeline->m_water_uniforms.model,
+                                    single.model);
+          if (m_water_pipeline->m_water_uniforms.segment_visibility !=
+              Shader::InvalidUniform) {
+            water_shader->set_uniform(
+                m_water_pipeline->m_water_uniforms.segment_visibility,
+                single.alpha);
+          }
+          single.mesh->draw();
+        }
       }
       break;
     }
-    case LinearFeatureKind::Riverbank: {
+    case LinearFeatureKind::Shoreline: {
       Shader* riverbank_shader = m_water_pipeline->m_riverbank_shader;
       if (riverbank_shader == nullptr) {
         break;
@@ -165,6 +192,8 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                                       projection);
         riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.time,
                                       m_animation_time);
+        set_water_environment(riverbank_shader,
+                              m_water_pipeline->m_riverbank_uniforms);
         m_last_bound_shader = riverbank_shader;
       }
       if (m_water_pipeline->m_riverbank_uniforms.has_visibility !=
@@ -206,6 +235,72 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         PolygonOffsetScope const poly(-1.0F, -1.0F);
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto& single = std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
+          if (m_water_pipeline->m_riverbank_uniforms.surface_kind !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.surface_kind,
+                static_cast<int>(single.water_kind));
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.ground_color !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.ground_color,
+                single.color);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.grass_secondary !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.grass_secondary,
+                single.biome_grass_secondary);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.grass_dry !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.grass_dry,
+                single.biome_grass_dry);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.soil_color !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.soil_color,
+                single.biome_soil_color);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.rock_low !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.rock_low,
+                single.biome_rock_low);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.rock_high !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.rock_high,
+                single.biome_rock_high);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.snow_color !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.snow_color,
+                single.biome_snow_color);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.moisture !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.moisture,
+                single.biome_moisture);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.rock_exposure !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.rock_exposure,
+                single.biome_rock_exposure);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.snow_coverage !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.snow_coverage,
+                single.biome_snow_coverage);
+          }
           riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.model,
                                         single.model);
           if (m_water_pipeline->m_riverbank_uniforms.segment_visibility !=
@@ -288,7 +383,8 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                            m_water_pipeline->m_road_uniforms.model,
                            m_water_pipeline->m_road_uniforms.mvp,
                            m_water_pipeline->m_road_uniforms.color,
-                           m_water_pipeline->m_road_uniforms.alpha);
+                           m_water_pipeline->m_road_uniforms.alpha,
+                           m_water_pipeline->m_road_uniforms.surface_kind);
       }
       break;
     }

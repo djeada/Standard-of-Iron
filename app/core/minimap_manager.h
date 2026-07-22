@@ -53,6 +53,9 @@ public:
   [[nodiscard]] float get_world_height() const { return m_world_height; }
   [[nodiscard]] float get_tile_size() const { return m_tile_size; }
   [[nodiscard]] std::uint64_t fog_version() const { return m_fog_compositor.version(); }
+  [[nodiscard]] bool unit_overlay_stale() const {
+    return fog_version() != m_last_fog_composite_version;
+  }
 
 private:
   void mark_dirty() { m_dirty = true; }
@@ -60,6 +63,7 @@ private:
   QImage m_minimap_image;
   QImage m_minimap_base_image;
   QImage m_minimap_fog_image;
+  QImage m_minimap_units_image;
   Game::Map::Minimap::MinimapFogCompositor m_fog_compositor;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
   std::unique_ptr<Game::Map::Minimap::CameraViewportLayer> m_camera_viewport_layer;
@@ -68,6 +72,7 @@ private:
   float m_tile_size = 1.0F;
 
   bool m_dirty = false;
+  bool m_viewport_composite_dirty = false;
 
   std::uint64_t m_last_unit_hash = 0;
 

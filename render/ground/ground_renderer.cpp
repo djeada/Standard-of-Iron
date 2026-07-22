@@ -30,6 +30,11 @@ static auto clamp01(const QVector3D& c) -> QVector3D {
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
 
+  // This plane is the non-playable underlay around the authored height field.
+  // Keeping it coplanar with zero-height terrain causes broad z-fighting tears
+  // in overview cameras. It must remain below the authoritative gameplay mesh.
+  new_model.translate(0.0F, -0.08F, 0.0F);
+
   if (m_width > 0 && m_height > 0) {
     const float margin = k_non_playable_margin_tiles * m_tile_size;
     const float scale_x = float(m_width) * m_tile_size + margin * 2.0F;
@@ -108,19 +113,8 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   params.noise_offset = m_noise_offset;
   params.noise_angle = m_noise_angle;
 
-  float target_amp;
-  float target_freq;
-  if (surface_profile.ground_irregularity_enabled) {
-    target_amp =
-        std::clamp(surface_profile.irregularity_amplitude * 0.85F, 0.15F, 0.70F);
-    target_freq = std::max(0.45F, surface_profile.irregularity_scale * 2.5F);
-  } else {
-    target_amp =
-        std::clamp(surface_profile.height_noise_amplitude * 0.22F, 0.10F, 0.20F);
-    target_freq = std::max(0.6F, surface_profile.height_noise_frequency * 1.05F);
-  }
-  params.height_noise_strength = target_amp;
-  params.height_noise_frequency = target_freq;
+  params.height_noise_strength = 0.0F;
+  params.height_noise_frequency = 0.0F;
 
   params.rock_exposure = std::clamp(climate_profile.rock_exposure * 0.72F +
                                         climate_profile.crack_intensity * 0.18F +

@@ -162,6 +162,18 @@ auto build_carthage_thracian_crested_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_headwrap_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
+auto build_fabius_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_scipio_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_marcellus_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hanno_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hasdrubal_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hannibal_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
 auto build_roman_light_armor_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_heavy_armor_attachment(std::uint8_t base_role_byte)
@@ -229,6 +241,18 @@ auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_fabius_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_scipio_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_marcellus_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hanno_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hasdrubal_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hannibal_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_horse_saddle_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
@@ -328,6 +352,30 @@ auto carthage_thracian_crested_role_colors(const void* variant_void,
                                            QVector3D* out,
                                            std::uint32_t base_count,
                                            std::size_t max_count) -> std::uint32_t;
+auto fabius_helmet_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t;
+auto scipio_helmet_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t;
+auto marcellus_helmet_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t;
+auto hanno_helmet_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t;
+auto hasdrubal_helmet_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t;
+auto hannibal_helmet_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t;
 auto roman_light_armor_role_colors(const void* variant_void,
                                    QVector3D* out,
                                    std::uint32_t base_count,
@@ -356,6 +404,30 @@ auto carthage_shoulder_role_colors(const void* variant_void,
                                    QVector3D* out,
                                    std::uint32_t base_count,
                                    std::size_t max_count) -> std::uint32_t;
+auto fabius_cloak_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t;
+auto scipio_cloak_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t;
+auto marcellus_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t;
+auto hanno_cloak_role_colors(const void* variant_void,
+                             QVector3D* out,
+                             std::uint32_t base_count,
+                             std::size_t max_count) -> std::uint32_t;
+auto hasdrubal_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t;
+auto hannibal_cloak_role_colors(const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t;
 auto spear_role_colors(const void* variant_void,
                        QVector3D* out,
                        std::uint32_t base_count,
