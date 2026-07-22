@@ -1,25 +1,103 @@
 {
   "id": "campania_campaign",
-  "title": "Campania Campaign",
-  "summary": "Hold Campania against coordinated Roman counterattacks while keeping your villages supplied and your reserve intact.",
-  "teaching_goal": "Layered defense with selective counterattacks. Teaches distributed defense and reserve management.",
-  "narrative_intent": "A prolonged operational defense where Rome attacks from every axis to retake Campania.",
+  "title": "The Campanian Vigil",
+  "summary": "Defend Hannibal's fortified Campanian supply town for twenty minutes against three coordinated Roman assaults from separate consular roads.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
+  "teaching_goal": "Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.",
+  "narrative_intent": "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.",
+  "historical_context": "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.",
+  "terrain_type": "campanian_plain",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
+    "commander_troop": "carthage_elephant_master",
     "starting_units": [],
-    "starting_buildings": [],
+    "starting_buildings": [
+      {
+        "type": "marketplace",
+        "position": {
+          "x": 255.88,
+          "z": 246.57
+        },
+        "max_population": 220
+      },
+      {
+        "type": "home",
+        "position": {
+          "x": 234.94,
+          "z": 258.2
+        },
+        "max_population": 220
+      },
+      {
+        "type": "home",
+        "position": {
+          "x": 276.81,
+          "z": 258.2
+        },
+        "max_population": 220
+      },
+      {
+        "type": "home",
+        "position": {
+          "x": 234.94,
+          "z": 279.14
+        },
+        "max_population": 220
+      },
+      {
+        "type": "home",
+        "position": {
+          "x": 276.81,
+          "z": 279.14
+        },
+        "max_population": 220
+      },
+      {
+        "type": "defense_tower",
+        "position": {
+          "x": 218.66,
+          "z": 218.66
+        },
+        "max_population": 220
+      },
+      {
+        "type": "defense_tower",
+        "position": {
+          "x": 293.1,
+          "z": 218.66
+        },
+        "max_population": 220
+      },
+      {
+        "type": "defense_tower",
+        "position": {
+          "x": 218.66,
+          "z": 297.75
+        },
+        "max_population": 220
+      },
+      {
+        "type": "defense_tower",
+        "position": {
+          "x": 293.1,
+          "z": 297.75
+        },
+        "max_population": 220
+      }
+    ],
     "starting_resources": {
-      "gold": 1500,
-      "food": 1100
-    },
-    "commander_troop": "carthage_elephant_master"
+      "gold": 1800,
+      "food": 1500,
+      "wood": 900,
+      "stone": 700,
+      "iron": 450
+    }
   },
   "ai_setups": [
     {
-      "id": "northern_roman_legion",
+      "id": "northern_consular_legion",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
@@ -32,7 +110,32 @@
         "harassment": 0.45
       },
       "starting_units": [],
-      "starting_buildings": [],
+      "starting_buildings": [
+        {
+          "type": "marketplace",
+          "position": {
+            "x": 255.88,
+            "z": 472.21
+          },
+          "max_population": 240
+        },
+        {
+          "type": "home",
+          "position": {
+            "x": 234.94,
+            "z": 476.86
+          },
+          "max_population": 240
+        },
+        {
+          "type": "home",
+          "position": {
+            "x": 276.81,
+            "z": 476.86
+          },
+          "max_population": 240
+        }
+      ],
       "waves": [
         {
           "timing": 180.0,
@@ -51,12 +154,12 @@
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 155
+            "x": 255.88,
+            "z": 476.86
           }
         },
         {
-          "timing": 420.0,
+          "timing": 600.0,
           "composition": [
             {
               "type": "spearman",
@@ -67,21 +170,21 @@
               "count": 8
             },
             {
-              "type": "horse_swordsman",
-              "count": 3
+              "type": "archer",
+              "count": 5
             },
             {
-              "type": "archer",
-              "count": 4
+              "type": "horse_swordsman",
+              "count": 3
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 155
+            "x": 255.88,
+            "z": 476.86
           }
         },
         {
-          "timing": 720.0,
+          "timing": 1020.0,
           "composition": [
             {
               "type": "spearman",
@@ -92,8 +195,8 @@
               "count": 10
             },
             {
-              "type": "horse_swordsman",
-              "count": 4
+              "type": "archer",
+              "count": 6
             },
             {
               "type": "catapult",
@@ -101,15 +204,15 @@
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 155
+            "x": 255.88,
+            "z": 476.86
           }
         }
       ],
       "commander_troop": "roman_legion_organizer"
     },
     {
-      "id": "southern_roman_legion",
+      "id": "southern_allied_legion",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "orange",
@@ -117,36 +220,61 @@
       "difficulty": "hard",
       "strategy": "harasser",
       "personality": {
-        "aggression": 0.72,
-        "defense": 0.4,
-        "harassment": 0.75
+        "aggression": 0.74,
+        "defense": 0.42,
+        "harassment": 0.78
       },
       "starting_units": [],
-      "starting_buildings": [],
+      "starting_buildings": [
+        {
+          "type": "marketplace",
+          "position": {
+            "x": 255.88,
+            "z": 39.54
+          },
+          "max_population": 220
+        },
+        {
+          "type": "home",
+          "position": {
+            "x": 234.94,
+            "z": 34.89
+          },
+          "max_population": 220
+        },
+        {
+          "type": "home",
+          "position": {
+            "x": 276.81,
+            "z": 34.89
+          },
+          "max_population": 220
+        }
+      ],
       "waves": [
         {
-          "timing": 260.0,
+          "timing": 180.0,
           "composition": [
             {
               "type": "horse_swordsman",
               "count": 5
+            },
+            {
+              "type": "spearman",
+              "count": 6
             },
             {
               "type": "archer",
               "count": 4
-            },
-            {
-              "type": "spearman",
-              "count": 5
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 5
+            "x": 255.88,
+            "z": 34.89
           }
         },
         {
-          "timing": 540.0,
+          "timing": 600.0,
           "composition": [
             {
               "type": "spearman",
@@ -154,44 +282,52 @@
             },
             {
               "type": "swordsman",
-              "count": 6
-            },
-            {
-              "type": "horse_swordsman",
-              "count": 3
-            }
-          ],
-          "entry_point": {
-            "x": 70,
-            "z": 5
-          }
-        },
-        {
-          "timing": 780.0,
-          "composition": [
-            {
-              "type": "spearman",
-              "count": 10
-            },
-            {
-              "type": "swordsman",
-              "count": 8
+              "count": 7
             },
             {
               "type": "horse_swordsman",
               "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 4
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 5
+            "x": 255.88,
+            "z": 34.89
+          }
+        },
+        {
+          "timing": 1020.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 11
+            },
+            {
+              "type": "swordsman",
+              "count": 9
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 5
+            },
+            {
+              "type": "catapult",
+              "count": 1
+            }
+          ],
+          "entry_point": {
+            "x": 255.88,
+            "z": 34.89
           }
         }
       ],
       "commander_troop": "roman_veteran_consul"
     },
     {
-      "id": "western_raiders",
+      "id": "eastern_siege_column",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "yellow",
@@ -199,24 +335,40 @@
       "difficulty": "medium",
       "strategy": "rusher",
       "personality": {
-        "aggression": 0.75,
-        "defense": 0.35,
-        "harassment": 0.8
+        "aggression": 0.78,
+        "defense": 0.32,
+        "harassment": 0.86
       },
       "starting_units": [],
       "starting_buildings": [
         {
-          "type": "barracks",
+          "type": "home",
           "position": {
-            "x": 10,
-            "z": 80
+            "x": 581.54,
+            "z": 241.92
           },
-          "max_population": 140
+          "max_population": 200
+        },
+        {
+          "type": "home",
+          "position": {
+            "x": 581.54,
+            "z": 279.14
+          },
+          "max_population": 200
+        },
+        {
+          "type": "defense_tower",
+          "position": {
+            "x": 572.24,
+            "z": 260.53
+          },
+          "max_population": 200
         }
       ],
       "waves": [
         {
-          "timing": 360.0,
+          "timing": 180.0,
           "composition": [
             {
               "type": "horse_swordsman",
@@ -228,25 +380,50 @@
             }
           ],
           "entry_point": {
-            "x": 10,
-            "z": 80
+            "x": 600.15,
+            "z": 260.53
           }
         },
         {
-          "timing": 660.0,
+          "timing": 600.0,
           "composition": [
             {
               "type": "swordsman",
-              "count": 6
+              "count": 7
             },
             {
               "type": "spearman",
-              "count": 5
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 3
             }
           ],
           "entry_point": {
-            "x": 10,
-            "z": 80
+            "x": 600.15,
+            "z": 260.53
+          }
+        },
+        {
+          "timing": 1020.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 9
+            },
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 600.15,
+            "z": 260.53
           }
         }
       ],
@@ -256,37 +433,38 @@
   "victory_conditions": [
     {
       "type": "survive_duration",
-      "duration": 780.0,
-      "description": "Hold Campania for thirteen minutes of blood. Then hold it more."
+      "duration": 1200.0,
+      "description": "Keep the central Punic barracks standing for twenty minutes and break all three Roman assault phases."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Lose the stronghold and Campania is Roman again before morning."
+      "description": "If the central camp falls, the Campanian alliance dies with it."
     },
     {
       "type": "lose_all_units",
-      "description": "Every soldier lost is counted by the enemy tonight."
+      "description": "No living formation remains to hold the gates."
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "Hannibal falls, and the allied towns abandon the field."
     },
     {
       "type": "only_commander_remaining",
-      "description": "A general alone on a dead field is just the last corpse standing."
+      "description": "A commander alone cannot defend a city quarter."
     }
   ],
   "optional_objectives": [
     {
       "type": "control_structures",
       "structure_types": [
-        "village"
+        "marketplace",
+        "home"
       ],
-      "min_count": 3,
-      "description": "Hold three command posts when the dust settles. Show them the ground has changed hands."
+      "min_count": 5,
+      "description": "Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls."
     },
     {
       "type": "capture_structures",
@@ -294,19 +472,19 @@
         "barracks"
       ],
       "min_count": 1,
-      "description": "Drive into the Roman rear and seize a barracks. Let them taste the same fear."
+      "description": "Between assaults, seize the eastern Roman siege camp."
     }
   ],
   "events": [
     {
       "trigger": {
         "type": "timer",
-        "time": 90.0
+        "time": 120.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Scouts confirm attacks from north and south. Split your reserve early."
+          "text": "Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00."
         }
       ]
     },
@@ -318,46 +496,58 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "First northern wave is incoming."
+          "text": "ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 250.0
+        "time": 570.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Southern cavalry is moving. Guard your forward village."
+          "text": "ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 350.0
+        "time": 900.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Western raiders spotted near the supply road."
+          "text": "Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 700.0
+        "time": 990.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Final phase: heavy Roman formations are assembling for a decisive push."
+          "text": "ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 1140.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "One minute. Spend the reserve; save the camp."
         }
       ]
     }
   ],
-  "theme": "Roman columns gather on every horizon above the Carthaginian fields."
+  "include_ambient_undead": false
 }

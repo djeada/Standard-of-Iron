@@ -308,6 +308,48 @@ TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsResolveAllExpectedHandles) 
   }
 }
 
+TEST_F(EquipmentLoadoutCatalogTest, CommanderRegaliaUsesSixDistinctHelmetAndCloakSets) {
+  struct ExpectedRegalia {
+    const char* renderer_key;
+    const char* helmet;
+    const char* cloak;
+  };
+  constexpr std::array<ExpectedRegalia, 6> expected{{
+      {"troops/roman/commanders/fabius_maximus", "commander_fabius", "cloak_fabius"},
+      {"troops/roman/commanders/scipio_africanus", "commander_scipio", "cloak_scipio"},
+      {"troops/roman/commanders/marcellus", "commander_marcellus", "cloak_marcellus"},
+      {"troops/carthage/commanders/hanno_the_great", "commander_hanno", "cloak_hanno"},
+      {"troops/carthage/commanders/hasdrubal_barca",
+       "commander_hasdrubal",
+       "cloak_hasdrubal"},
+      {"troops/carthage/commanders/hannibal_barca",
+       "commander_hannibal",
+       "cloak_hannibal"},
+  }};
+
+  std::array<Render::GL::EquipmentHandle, expected.size()> helmet_handles{};
+  std::array<Render::GL::EquipmentHandle, expected.size()> cloak_handles{};
+  for (std::size_t index = 0; index < expected.size(); ++index) {
+    SCOPED_TRACE(expected[index].renderer_key);
+    auto const loadout =
+        Render::GL::Nation::resolve_equipment_loadout(expected[index].renderer_key);
+    ASSERT_TRUE(loadout.found);
+    EXPECT_EQ(loadout.ids.helmet, expected[index].helmet);
+    EXPECT_EQ(loadout.ids.cloak, expected[index].cloak);
+    EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
+    EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+    helmet_handles[index] = loadout.helmet_handle;
+    cloak_handles[index] = loadout.cloak_handle;
+  }
+
+  for (std::size_t left = 0; left < expected.size(); ++left) {
+    for (std::size_t right = left + 1U; right < expected.size(); ++right) {
+      EXPECT_NE(helmet_handles[left], helmet_handles[right]);
+      EXPECT_NE(cloak_handles[left], cloak_handles[right]);
+    }
+  }
+}
+
 TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsBakeDistinctArchetypesFromBase) {
   struct CommanderBakeExpectation {
     const char* renderer_key;

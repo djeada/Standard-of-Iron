@@ -149,7 +149,8 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   Render::GL::DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
-  Render::Creature::Pipeline::ground_model_to_terrain(elephant_ctx.model);
+  const float elephant_surface_world_y =
+      Render::Creature::Pipeline::ground_model_to_terrain(elephant_ctx.model);
 
   namespace RCP = Render::Creature::Pipeline;
   RCP::CreatureGraphInputs graph_inputs{};
@@ -182,6 +183,12 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   shadow_inputs.kind = RCP::CreatureKind::Elephant;
   shadow_inputs.lod = lod;
   shadow_inputs.camera_distance = camera_distance;
+  shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
+  shadow_inputs.standing_idle =
+      !motion.is_moving && !motion.is_fighting && !anim.is_attacking &&
+      !anim.is_hit_reacting && !anim.is_dying && !anim.is_dead;
+  shadow_inputs.surface_world_y = elephant_surface_world_y;
+  shadow_inputs.surface_height_valid = true;
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
   if (shadow_state.enabled) {
     if (out.shadow_batch.empty()) {

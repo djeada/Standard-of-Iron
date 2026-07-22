@@ -1,9 +1,11 @@
 #include "armor/carthage_shoulder_cover.h"
+#include "armor/commander_regalia.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
 #include "armor/tool_belt_renderer.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
+#include "helmets/commander_helmets.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -45,6 +47,24 @@ void register_equipment_archetypes() {
     (void)historical_helmet_archetype(HistoricalHelmet::CarthageThracianCrested);
   });
   ar.register_archetype("headwrap_helmet", [] { (void)headwrap_helmet_archetype(); });
+  ar.register_archetype("commander_helmet_fabius", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Fabius);
+  });
+  ar.register_archetype("commander_helmet_scipio", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Scipio);
+  });
+  ar.register_archetype("commander_helmet_marcellus", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Marcellus);
+  });
+  ar.register_archetype("commander_helmet_hanno", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Hanno);
+  });
+  ar.register_archetype("commander_helmet_hasdrubal", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Hasdrubal);
+  });
+  ar.register_archetype("commander_helmet_hannibal", [] {
+    (void)commander_helmet_archetype(CommanderHelmetStyle::Hannibal);
+  });
   ar.register_archetype("carthage_light_helmet_shell",
                         [] { (void)carthage_light_helmet_shell_archetype(); });
   ar.register_archetype("carthage_light_helmet_neck_guard",
@@ -79,6 +99,24 @@ void register_equipment_archetypes() {
   ar.register_archetype("roman_greaves", [] { (void)roman_greaves_archetype(); });
 
   ar.register_archetype("roman_scutum", [] { (void)roman_scutum_archetype(); });
+  ar.register_archetype("commander_regalia_fabius", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Fabius);
+  });
+  ar.register_archetype("commander_regalia_scipio", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Scipio);
+  });
+  ar.register_archetype("commander_regalia_marcellus", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Marcellus);
+  });
+  ar.register_archetype("commander_regalia_hanno", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Hanno);
+  });
+  ar.register_archetype("commander_regalia_hasdrubal", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Hasdrubal);
+  });
+  ar.register_archetype("commander_regalia_hannibal", [] {
+    (void)commander_regalia_archetype(CommanderRegaliaStyle::Hannibal);
+  });
 
   ar.register_archetype("tool_belt_ring", [] { (void)tool_belt_ring_archetype(); });
   ar.register_archetype("tool_belt_buckle", [] { (void)tool_belt_buckle_archetype(); });

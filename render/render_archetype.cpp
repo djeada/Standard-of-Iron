@@ -204,6 +204,23 @@ void RenderArchetypeBuilder::add_cylinder(const QVector3D& start,
            material);
 }
 
+void RenderArchetypeBuilder::add_cone(const QVector3D& base,
+                                      const QVector3D& tip,
+                                      float radius,
+                                      const QVector3D& color,
+                                      Texture* texture,
+                                      float alpha,
+                                      int material_id,
+                                      Material* material) {
+  add_mesh(get_unit_cone(8),
+           cylinder_local_model(base, tip, radius),
+           color,
+           texture,
+           alpha,
+           material_id,
+           material);
+}
+
 void RenderArchetypeBuilder::add_palette_cylinder(const QVector3D& start,
                                                   const QVector3D& end,
                                                   float radius,

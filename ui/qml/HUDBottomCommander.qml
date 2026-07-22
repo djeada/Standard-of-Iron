@@ -33,6 +33,12 @@ RowLayout {
             "rally_has_flag": false,
             "rally_action_progress": 0.0,
             "aura_active": false,
+            "aura_available": false,
+            "aura_duration": 0.0,
+            "aura_remaining": 0.0,
+            "aura_cooldown": 0.0,
+            "aura_cooldown_remaining": 0.0,
+            "aura_ready": false,
             "combo_step": 0,
             "posture": 0.0,
             "posture_max": 100.0,
@@ -150,6 +156,13 @@ RowLayout {
                 "readyKey": "shield_bash_ready",
                 "cooldownKey": "shield_bash_cooldown",
                 "remainingKey": "shield_bash_cooldown_remaining"
+            }, {
+                "title": qsTr("Command Aura"),
+                "key": "3",
+                "description": qsTr("Temporarily empower nearby troops. A glow marks every affected soldier."),
+                "readyKey": "aura_ready",
+                "cooldownKey": "aura_cooldown",
+                "remainingKey": "aura_cooldown_remaining"
             }];
     }
 
@@ -259,7 +272,7 @@ RowLayout {
                             id: auraText
 
                             anchors.verticalCenter: parent.verticalCenter
-                            text: bottomRoot.status_value("aura_active", false) ? qsTr("Aura online") : qsTr("Aura offline")
+                            text: bottomRoot.status_value("aura_active", false) ? qsTr("Aura active") : (bottomRoot.status_value("aura_ready", false) ? qsTr("Aura ready") : qsTr("Aura cooling"))
                             color: Theme.textMain
                             font.pointSize: 7
                             font.bold: true
@@ -548,6 +561,40 @@ RowLayout {
                         }
                     }
 
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
+                        text: bottomRoot.status_value("aura_active", false)
+                              ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1))
+                              : (bottomRoot.status_value("aura_ready", false)
+                                 ? qsTr("Activate Command Aura [3]")
+                                 : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
+                        enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
+                        focusPolicy: Qt.NoFocus
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.")
+                        onClicked: {
+                            if (typeof game !== 'undefined' && game.commander_trigger_aura)
+                                game.commander_trigger_aura();
+                        }
+
+                        background: Rectangle {
+                            color: bottomRoot.status_value("aura_active", false) ? hs.wax : (parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
+                            radius: 6
+                            border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (parent.enabled ? hs.bronze : hs.bronzeDeep)
+                            border.width: 2
+                        }
+
+                        contentItem: Text {
+                            text: parent.text
+                            color: parent.enabled || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
+                            font.pointSize: bottomRoot.fpv_mode ? 9 : 10
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
                     RowLayout {
                         spacing: 6
                         visible: bottomRoot.status_value("has_commander", false) && !bottomRoot.fpv_mode
@@ -700,7 +747,7 @@ RowLayout {
             }
 
             Text {
-                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [C] Camera") : qsTr("[Tab] Cycle Target  [1] Rush  [2] Second Wind  [F] Bash")
+                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera") : qsTr("[Tab] Target  [1] Rush  [2] Wind  [3] Aura  [F] Bash")
                 color: Theme.textMain
                 font.pointSize: 8
                 wrapMode: Text.WordWrap

@@ -48,7 +48,9 @@ float fbm(vec2 p) {
 }
 
 float inv_smoothstep(float edge0, float edge1, float x) {
-  return 1.0 - smoothstep(edge0, edge1, x);
+  float lower_edge = min(edge0, edge1);
+  float upper_edge = max(max(edge0, edge1), lower_edge + 0.00001);
+  return 1.0 - smoothstep(lower_edge, upper_edge, x);
 }
 
 void main() {

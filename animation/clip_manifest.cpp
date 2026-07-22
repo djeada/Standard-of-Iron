@@ -344,6 +344,11 @@ auto authored_humanoid_clip_markers(
     return rpg_sword_markers(SwordAttackAnimation::RpgThrust);
   case k_humanoid_rpg_sword_finisher_clip:
     return rpg_sword_markers(SwordAttackAnimation::RpgFinisher);
+  case k_humanoid_archer_melee_clip:
+    return attack_sword_markers(false);
+  case k_humanoid_hold_spear_attack_clip:
+    return attack_spear_markers();
+  case k_humanoid_hold_bow_attack_clip:
   case k_humanoid_attack_bow_clip:
   case k_humanoid_riding_bow_shot_clip:
     return bow_markers();

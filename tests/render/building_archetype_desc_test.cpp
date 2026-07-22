@@ -8,6 +8,7 @@
 
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_ornaments.h"
+#include "render/gl/primitives.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"
 
@@ -91,6 +92,22 @@ TEST(BuildingArchetypeDesc, PreservesPaletteDrivenParts) {
 
   ASSERT_EQ(submitter.meshes.size(), 1U);
   EXPECT_EQ(submitter.meshes[0].color, palette[0]);
+}
+
+TEST(BuildingArchetypeDesc, BuildsPointedConePartsForTimberSilhouettes) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc desc("cone_test");
+  desc.add_cone(QVector3D(0.0F, 1.0F, 0.0F),
+                QVector3D(0.0F, 1.5F, 0.0F),
+                0.2F,
+                QVector3D(0.3F, 0.2F, 0.1F));
+
+  RenderArchetype const archetype =
+      build_building_archetype(desc, BuildingState::Normal);
+
+  ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
+  EXPECT_EQ(archetype.lods[0].draws[0].mesh, get_unit_cone(8));
 }
 
 TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {
@@ -201,6 +218,35 @@ TEST(BuildingCulturalOrnaments, RomanAndPunicReliefsKeepDistinctProfiles) {
   EXPECT_TRUE(punic_archetype.lods[1].draws.empty());
   EXPECT_NE(roman_archetype.lods[0].draws[0].local_model,
             punic_archetype.lods[0].draws[0].local_model);
+}
+
+TEST(BuildingCulturalOrnaments, RoofSignaturesRemainVisibleAtMinimalLod) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc roman("roman_roof_standard_test");
+  add_roman_roof_standard(roman,
+                          QVector3D(0.0F, 1.0F, 0.0F),
+                          1.0F,
+                          QVector3D(0.85F, 0.62F, 0.20F),
+                          QVector3D(0.62F, 0.10F, 0.07F));
+  BuildingArchetypeDesc punic("punic_horned_crown_test");
+  add_punic_horned_crown(punic,
+                         QVector3D(0.0F, 1.0F, 0.0F),
+                         1.0F,
+                         QVector3D(0.10F, 0.08F, 0.12F),
+                         QVector3D(0.82F, 0.50F, 0.16F),
+                         QVector3D(0.60F, 0.10F, 0.70F));
+
+  const RenderArchetype roman_archetype =
+      build_building_archetype(roman, BuildingState::Normal);
+  const RenderArchetype punic_archetype =
+      build_building_archetype(punic, BuildingState::Normal);
+
+  EXPECT_GE(roman_archetype.lods[1].draws.size(), 8U);
+  EXPECT_GE(punic_archetype.lods[1].draws.size(), 10U);
+  EXPECT_NE(roman_archetype.lods[0].draws.size(), punic_archetype.lods[0].draws.size());
+  EXPECT_NE(roman_archetype.lods[0].draws.front().local_model,
+            punic_archetype.lods[0].draws.front().local_model);
 }
 
 } // namespace

@@ -1,9 +1,7 @@
 #include "stone_renderer.h"
 
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QVector2D>
-#include <qelapsedtimer.h>
 #include <qglobal.h>
 
 #include <algorithm>
@@ -29,6 +27,7 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
+constexpr float k_reference_scatter_extent = 220.0F;
 
 } // namespace
 
@@ -68,9 +67,6 @@ void StoneRenderer::clear() {
 }
 
 void StoneRenderer::generate_stone_instances() {
-  QElapsedTimer timer;
-  timer.start();
-
   auto& stone_instances = m_state.instances;
   auto& stone_instance_count = m_state.instance_count;
   auto& stone_instances_dirty = m_state.instances_dirty;
@@ -130,10 +126,11 @@ void StoneRenderer::generate_stone_instances() {
     QVector3D const high_rock = surface_profile.rock_high;
     QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
 
-    float const brown_mix = remap(
-        rand_01(state), 0.05F + scene.dryness * 0.10F, 0.35F + scene.rockiness * 0.15F);
-    QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
-    color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
+    float const earth_mix = remap(
+        rand_01(state), 0.08F + scene.dryness * 0.08F, 0.28F + scene.rockiness * 0.12F);
+    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
+    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
+    color *= 0.84F + scene.rockiness * 0.08F;
 
     float const rotation = rand_01(state) * MathConstants::k_two_pi;
 
@@ -146,14 +143,19 @@ void StoneRenderer::generate_stone_instances() {
 
   const float stone_density = 0.22F;
 
-  for (int z = 0; z < m_height; z += 4) {
-    for (int x = 0; x < m_width; x += 4) {
+  float const area_scale = std::sqrt(
+      static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
+      (k_reference_scatter_extent * k_reference_scatter_extent));
+  int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
+  int const cell_span = 4 * sampling_scale;
+  for (int z = 0; z < m_height; z += cell_span) {
+    for (int x = 0; x < m_width; x += cell_span) {
       int const idx = z * m_width + x;
 
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(x, z);
       if (terrain_type == Game::Map::TerrainType::Mountain ||
-          terrain_type == Game::Map::TerrainType::River) {
+          Game::Map::is_water_terrain(terrain_type)) {
         continue;
       }
 
@@ -164,8 +166,8 @@ void StoneRenderer::generate_stone_instances() {
 
       uint32_t state =
           hash_coords(x, z, m_noise_seed ^ 0xABCDEF12U ^ static_cast<uint32_t>(idx));
-      int const sample_x = std::min(x + 2, m_width - 1);
-      int const sample_z = std::min(z + 2, m_height - 1);
+      int const sample_x = std::min(x + cell_span / 2, m_width - 1);
+      int const sample_z = std::min(z + cell_span / 2, m_height - 1);
       auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
                                                       static_cast<float>(sample_z),
                                                       state ^ 0x3AA5B08BU);
@@ -189,8 +191,8 @@ void StoneRenderer::generate_stone_instances() {
       }
 
       for (int i = 0; i < stone_count; ++i) {
-        float const gx = float(x) + rand_01(state) * 4.0F;
-        float const gz = float(z) + rand_01(state) * 4.0F;
+        float const gx = float(x) + rand_01(state) * float(cell_span);
+        float const gz = float(z) + rand_01(state) * float(cell_span);
         if (!add_stone(gx, gz, state)) {
           continue;
         }

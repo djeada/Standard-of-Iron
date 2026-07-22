@@ -14,6 +14,8 @@ inline constexpr char k_bow_exchange_id[] = "bow_exchange";
 inline constexpr char k_held_weapon_stances_id[] = "held_weapon_stances";
 inline constexpr char k_mounted_charge_id[] = "mounted_charge";
 inline constexpr char k_braced_spear_charge_id[] = "braced_spear_charge";
+inline constexpr char k_elephant_trample_id[] = "elephant_trample";
+inline constexpr char k_catapult_impact_id[] = "catapult_impact";
 inline constexpr char k_mounted_sword_duel_id[] = "mounted_sword_duel";
 inline constexpr char k_mounted_spear_duel_id[] = "mounted_spear_duel";
 inline constexpr char k_mounted_bow_exchange_id[] = "mounted_bow_exchange";
@@ -39,10 +41,21 @@ inline constexpr char k_target_death_id[] = "target_death";
 inline constexpr char k_retargeting_id[] = "retargeting";
 inline constexpr char k_hold_guard_exit_id[] = "hold_guard_exit";
 inline constexpr char k_lod_switch_id[] = "lod_switch";
+inline constexpr char k_commander_aura_pulse_id[] = "commander_aura_pulse";
+inline constexpr char k_commander_identity_lineup_id[] = "commander_identity_lineup";
+inline constexpr char k_commander_consul_vs_broker_id[] = "commander_consul_vs_broker";
+inline constexpr char k_commander_field_vs_cavalry_id[] = "commander_field_vs_cavalry";
+inline constexpr char k_commander_legion_vs_elephant_id[] =
+    "commander_legion_vs_elephant";
+inline constexpr char k_path_bridge_crossing_id[] = "path_bridge_crossing";
+inline constexpr char k_path_uphill_advance_id[] = "path_uphill_advance";
+inline constexpr char k_path_wall_detour_id[] = "path_wall_detour";
+inline constexpr char k_path_wall_breach_id[] = "path_wall_breach";
 
 inline constexpr char k_three_swords_vs_two_spears_id[] = "three_swords_vs_two_spears";
 inline constexpr char k_spear_walk_contact_id[] = "spear_walk_contact";
 inline constexpr char k_archer_stability_id[] = "archer_stability";
+inline constexpr char k_archer_melee_lock_id[] = "archer_melee_lock";
 inline constexpr char k_infantry_charge_id[] = "infantry_charge";
 inline constexpr char k_flank_ambush_id[] = "flank_ambush";
 inline constexpr char k_reserve_release_id[] = "reserve_release";
@@ -50,9 +63,18 @@ inline constexpr char k_mixed_roles_id[] = "mixed_roles";
 inline constexpr char k_bot_skirmish_id[] = "bot_skirmish";
 inline constexpr char k_crossing_formations_id[] = "crossing_formations";
 inline constexpr char k_sustained_battle_id[] = "sustained_battle";
+inline constexpr char k_render_continuity_id[] = "render_continuity";
+inline constexpr char k_campaign_scale_battle_id[] = "campaign_scale_battle";
 inline constexpr char k_roman_marching_camp_id[] = "roman_marching_camp";
 inline constexpr char k_carthage_trade_town_id[] = "carthage_trade_town";
+inline constexpr char k_architecture_and_props_showcase_id[] =
+    "architecture_and_props_showcase";
+inline constexpr char k_roman_fortification_showcase_id[] =
+    "roman_fortification_showcase";
+inline constexpr char k_carthage_fortification_showcase_id[] =
+    "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
+inline constexpr char k_water_showcase_id[] = "water_showcase";
 
 struct ScenarioOption {
   QString id;

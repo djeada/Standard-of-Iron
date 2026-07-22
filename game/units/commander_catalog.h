@@ -7,6 +7,10 @@
 #include "spawn_type.h"
 #include "troop_type.h"
 
+namespace Engine::Core {
+class Entity;
+}
+
 namespace Game::Units {
 
 struct CommanderDefinition {
@@ -25,7 +29,7 @@ struct CommanderDefinition {
   std::string rally_ability;
   std::string death_consequence;
   std::string visual_requirements;
-  int bodyguard_count = 6;
+  int bodyguard_count = 0;
   float aura_radius = 12.0F;
   float aura_morale_bonus = 5.0F;
   float aura_bonus_value = 0.0F;
@@ -43,6 +47,8 @@ struct CommanderDefinition {
 all_commander_definitions() -> const std::vector<CommanderDefinition>&;
 [[nodiscard]] auto
 commander_definition(TroopType troop_type) -> const CommanderDefinition*;
+void configure_commander_component(Engine::Core::Entity& entity,
+                                   TroopType troop_type);
 [[nodiscard]] auto commander_definitions_for_nation(Game::Systems::NationID nation_id)
     -> std::vector<const CommanderDefinition*>;
 

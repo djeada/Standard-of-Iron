@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "core/component.h"
 #include "core/world.h"
+#include "systems/combat_actions/combat_action_definition.h"
 #include "systems/combat_system/attack_processor.h"
 #include "systems/combat_system/combat_action_processor.h"
 #include "systems/combat_system/combat_utils.h"
@@ -34,6 +36,27 @@ auto add_spearmen(Engine::Core::World& world,
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->melee_range = 2.5F;
+  return entity;
+}
+
+auto add_elephant(Engine::Core::World& world,
+                  int owner,
+                  float z) -> Engine::Core::Entity* {
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<Engine::Core::TransformComponent>();
+  auto* unit =
+      entity->add_component<Engine::Core::UnitComponent>(300, 300, 3.5F, 35.0F);
+  auto* attack = entity->add_component<Engine::Core::AttackComponent>();
+  auto* elephant = entity->add_component<Engine::Core::ElephantComponent>();
+  transform->position = {0.0F, 0.0F, z};
+  transform->scale = {2.0F, 2.0F, 2.0F};
+  unit->owner_id = owner;
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  attack->can_melee = true;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->melee_range = 3.5F;
+  elephant->trample_radius = 2.5F;
   return entity;
 }
 
@@ -105,6 +128,91 @@ TEST(FormationCombatGeometry, MeleeUsesVisibleFormationContactNotEntityRange) {
   EXPECT_TRUE(geometry.formation_overlap_required);
   EXPECT_LT(geometry.center_distance, geometry.contact_center_distance);
   EXPECT_TRUE(Game::Systems::Combat::is_in_range(attacker, target, 2.5F));
+}
+
+TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) {
+  Engine::Core::World world;
+  auto* elephant = add_elephant(world, 1, 0.0F);
+  auto* infantry = add_spearmen(world, 2, 10.0F, 180.0F);
+  auto const geometry =
+      Game::Systems::FormationCombat::contact_geometry(*elephant, *infantry);
+  ASSERT_TRUE(geometry.uses_formation_slots);
+  ASSERT_FALSE(geometry.formation_overlap_required);
+  ASSERT_GT(geometry.engagement_center_distance, 0.0F);
+  EXPECT_LT(geometry.engagement_center_distance,
+            geometry.center_distance - 1.40F);
+  EXPECT_NEAR(Game::Systems::FormationCombat::resolve_layout(*elephant).body_radius,
+              2.30F,
+              0.001F);
+
+  auto* target = elephant->add_component<Engine::Core::AttackTargetComponent>();
+  target->target_id = infantry->get_id();
+  target->should_chase = true;
+  elephant->get_component<Engine::Core::AttackComponent>()->time_since_last = 0.0F;
+  Game::Systems::Combat::process_attacks(
+      &world, Game::Systems::Combat::build_combat_query_context(&world), 0.016F);
+
+  auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_TRUE(movement->get_has_target() || movement->has_waypoints());
+  auto const* target_transform =
+      infantry->get_component<Engine::Core::TransformComponent>();
+  float const queued_center_distance =
+      std::hypot(target_transform->position.x - movement->get_target_x(),
+                 target_transform->position.z - movement->get_target_y());
+  float const expected_penetration_distance = geometry.engagement_center_distance;
+  EXPECT_NEAR(queued_center_distance, expected_penetration_distance, 0.05F);
+  EXPECT_LT(queued_center_distance, geometry.center_distance - 1.40F);
+
+  // First surface contact must not prematurely turn into a stationary fight.
+  auto* elephant_transform =
+      elephant->get_component<Engine::Core::TransformComponent>();
+  elephant_transform->position.z =
+      target_transform->position.z - geometry.contact_center_distance;
+  movement->stop();
+  Game::Systems::Combat::process_attacks(
+      &world, Game::Systems::Combat::build_combat_query_context(&world), 0.016F);
+  EXPECT_TRUE(movement->get_has_target() || movement->has_waypoints());
+  EXPECT_FALSE(elephant->get_component<Engine::Core::AttackComponent>()
+                   ->in_melee_lock);
+}
+
+TEST(FormationCombatGeometry, ElephantFightStateClearsWhenOpponentIsGone) {
+  Engine::Core::World world;
+  auto* elephant = add_elephant(world, 1, 0.0F);
+  auto* infantry = add_spearmen(world, 2, 1.0F, 180.0F);
+  infantry->get_component<Engine::Core::UnitComponent>()->health = 0;
+
+  auto* attack = elephant->get_component<Engine::Core::AttackComponent>();
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = infantry->get_id();
+  auto* target = elephant->add_component<Engine::Core::AttackTargetComponent>();
+  target->target_id = infantry->get_id();
+  target->should_chase = true;
+  auto* combat = elephant->add_component<Engine::Core::CombatStateComponent>();
+  combat->animation_state = Engine::Core::CombatAnimationState::Strike;
+  combat->state_time = 0.1F;
+  combat->state_duration = 0.5F;
+  auto* action = elephant->add_component<Engine::Core::RpgCommanderActionComponent>();
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RtsSwordStrike);
+  action->active_target_id = infantry->get_id();
+  action->action_running = true;
+
+  Game::Systems::Combat::process_attacks(
+      &world, Game::Systems::Combat::build_combat_query_context(&world), 0.016F);
+  Engine::Core::publish_creature_presentation(elephant, &world);
+
+  EXPECT_FALSE(attack->in_melee_lock);
+  EXPECT_EQ(elephant->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+  EXPECT_EQ(combat->animation_state, Engine::Core::CombatAnimationState::Idle);
+  EXPECT_EQ(action->combat_action_id, 0U);
+  EXPECT_FALSE(action->action_running);
+  auto const* presentation =
+      elephant->get_component<Engine::Core::CreaturePresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  EXPECT_FALSE(presentation->is_attacking);
+  EXPECT_FALSE(presentation->combat_active);
 }
 
 TEST(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
@@ -452,6 +560,36 @@ TEST(FormationCombatGeometry, ReinforcementJoinsAnExistingFormationFightAtItsEdg
         return !soldier.alive ||
                soldier.action == Engine::Core::FormationSoldierAction::MeleeEngaged;
       }));
+}
+
+TEST(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContact) {
+  Engine::Core::World world;
+  auto* cavalry = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* infantry = add_spearmen(world, 2, 3.0F, 180.0F);
+  cavalry->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::MountedKnight;
+
+  auto initial =
+      Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
+  auto* infantry_transform =
+      infantry->get_component<Engine::Core::TransformComponent>();
+  infantry_transform->position.z =
+      initial.engagement_center_distance + 0.06F;
+  auto const overlap =
+      Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
+  ASSERT_TRUE(overlap.formation_overlap_required);
+  ASSERT_GT(overlap.center_distance, overlap.engagement_center_distance);
+  ASSERT_LE(overlap.surface_gap, 0.0F);
+  EXPECT_FALSE(Game::Systems::FormationCombat::contact_is_active(
+      *cavalry, *infantry, overlap));
+
+  auto* attack = cavalry->get_component<Engine::Core::AttackComponent>();
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = infantry->get_id();
+
+  EXPECT_TRUE(Game::Systems::FormationCombat::contact_is_active(
+      *cavalry, *infantry, overlap));
+  EXPECT_TRUE(Game::Systems::Combat::is_in_range(cavalry, infantry, 2.5F));
 }
 
 TEST(FormationCombatGeometry, RtsMeleeLockSurvivesSeparationUntilTargetDeath) {

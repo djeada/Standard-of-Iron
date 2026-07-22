@@ -118,7 +118,7 @@ void main() {
   float grain = (noise(uv_var * 18.0) - 0.5) * 0.08;
 
   vec3 stone_color = u_color * (1.0 + var_low + var_mid + grain);
-  vec3 mortar_color = u_color * 0.55;
+  vec3 mortar_color = u_color * 0.72;
 
   float crack = smoothstep(0.02, 0.0, abs(noise(uv * 10.0) - 0.5)) * 0.25;
   stone_color *= (1.0 - crack * stone_mask);
@@ -153,13 +153,13 @@ void main() {
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  vec3 hemi_sky = vec3(0.18, 0.24, 0.30);
-  vec3 hemi_ground = vec3(0.12, 0.10, 0.09);
+  vec3 hemi_sky = vec3(0.13, 0.15, 0.16);
+  vec3 hemi_ground = vec3(0.09, 0.08, 0.07);
   float hemi = N.y * 0.5 + 0.5;
 
-  vec3 lit_color = base_color * (0.35 + 0.70 * diffuse) * ao;
-  lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.15;
-  lit_color += vec3(1.0) * spec * 0.25;
+  vec3 lit_color = base_color * (0.43 + 0.58 * diffuse) * ao;
+  lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.09;
+  lit_color += vec3(0.85) * spec * 0.14;
 
   float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(uv * 7.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));

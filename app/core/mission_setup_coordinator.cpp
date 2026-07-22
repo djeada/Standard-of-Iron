@@ -480,6 +480,27 @@ auto MissionSetupCoordinator::apply_mission_setup(
   spawn_buildings_for_owner(
       local_owner_id, player_nation_id, mission.player_setup.starting_buildings);
 
+  QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
+  int local_force_anchor_count = 0;
+  for (auto* entity : ctx.world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->owner_id != local_owner_id ||
+        unit->health <= 0) {
+      continue;
+    }
+    defense_reference_world_position += QVector3D(
+        transform->position.x, transform->position.y, transform->position.z);
+    local_force_anchor_count++;
+  }
+  if (local_force_anchor_count > 0) {
+    defense_reference_world_position /= static_cast<float>(local_force_anchor_count);
+  }
+
+  const std::size_t mission_wave_begin = ctx.pending_waves.size();
   int ai_owner_id = 2;
   int default_team_id = 1;
   for (const auto& ai_setup : mission.ai_setups) {
@@ -522,11 +543,48 @@ auto MissionSetupCoordinator::apply_mission_setup(
       pending_wave.ai_id = ai_setup.id;
       pending_wave.trigger_time = std::max(0.0F, wave.timing);
       pending_wave.entry_world_position = mission_position_to_world(wave.entry_point);
+      pending_wave.defense_reference_world_position = defense_reference_world_position;
       pending_wave.composition = wave.composition;
       ctx.pending_waves.push_back(std::move(pending_wave));
     }
 
     ai_owner_id++;
+  }
+
+  // Waves authored at the same time are one coordinated assault phase, even when
+  // several AI commanders enter from different roads.  Keeping the phase metadata
+  // on every pending group makes defensive missions readable without coupling the
+  // scheduler to a particular campaign map.
+  std::vector<float> assault_phase_times;
+  assault_phase_times.reserve(ctx.pending_waves.size() - mission_wave_begin);
+  for (std::size_t i = mission_wave_begin; i < ctx.pending_waves.size(); ++i) {
+    const float trigger_time = ctx.pending_waves[i].trigger_time;
+    const auto duplicate = std::find_if(
+        assault_phase_times.begin(),
+        assault_phase_times.end(),
+        [trigger_time](float existing) {
+          return std::abs(existing - trigger_time) < 0.01F;
+        });
+    if (duplicate == assault_phase_times.end()) {
+      assault_phase_times.push_back(trigger_time);
+    }
+  }
+  std::sort(assault_phase_times.begin(), assault_phase_times.end());
+  const int assault_phase_count =
+      std::max(1, static_cast<int>(assault_phase_times.size()));
+  for (std::size_t i = mission_wave_begin; i < ctx.pending_waves.size(); ++i) {
+    auto& pending_wave = ctx.pending_waves[i];
+    const auto phase = std::find_if(
+        assault_phase_times.begin(),
+        assault_phase_times.end(),
+        [&pending_wave](float trigger_time) {
+          return std::abs(trigger_time - pending_wave.trigger_time) < 0.01F;
+        });
+    pending_wave.phase_index =
+        phase == assault_phase_times.end()
+            ? 1
+            : static_cast<int>(std::distance(assault_phase_times.begin(), phase)) + 1;
+    pending_wave.phase_count = assault_phase_count;
   }
 
   auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
@@ -855,10 +913,14 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
       wave_name = QStringLiteral("Enemy");
     }
 
-    const QString direction = classify_wave_direction(wave.entry_world_position);
-    const QString announcement = QStringLiteral("%1 wave from the %2 (%3 units)")
-                                     .arg(wave_name, direction)
-                                     .arg(spawned_units);
+    const QString direction = classify_wave_direction(
+        wave.entry_world_position - wave.defense_reference_world_position);
+    const QString announcement =
+        QStringLiteral("Assault phase %1/%2: %3 from the %4 (%5 units)")
+            .arg(wave.phase_index)
+            .arg(wave.phase_count)
+            .arg(wave_name, direction)
+            .arg(spawned_units);
     effects.mission_announcements.append(announcement);
   }
   return effects;

@@ -156,6 +156,8 @@ auto soldier_cull_reason_name(SoldierCullReason reason) noexcept -> const char* 
     return "None";
   case SoldierCullReason::Frustum:
     return "Frustum";
+  case SoldierCullReason::Fog:
+    return "Fog";
   case SoldierCullReason::Billboard:
     return "Billboard";
   case SoldierCullReason::Temporal:

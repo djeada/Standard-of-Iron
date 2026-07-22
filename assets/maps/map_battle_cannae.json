@@ -1,11 +1,10 @@
 {
   "name": "Battle of Cannae",
-  "description": "A large campaign set-piece recreating Hannibal's double envelopment. Hold a fragile center, win the cavalry wings, close the Roman rear, and destroy the trapped army on the killing plain.",
   "coord_system": "grid",
   "max_troops_per_player": 3000,
   "grid": {
-    "width": 240,
-    "height": 160,
+    "width": 650,
+    "height": 650,
     "tile_size": 1.0
   },
   "biome": {
@@ -56,1208 +55,2195 @@
   },
   "camera": {
     "center": [
-      120,
+      303.88,
       0,
-      80
+      293.52
     ],
-    "distance": 74.0,
+    "distance": 273,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 650.0
+    "far": 1462.5
   },
   "time_of_day": "afternoon",
   "rivers": [
     {
       "start": [
-        42,
-        5
+        0,
+        9.78
       ],
       "end": [
-        112,
-        10
+        649,
+        130.45
       ],
-      "width": 8.5,
-      "description": "Aufidus River, forming the northern battlefield boundary."
-    },
-    {
-      "start": [
-        112,
-        10
+      "waypoints": [
+        [
+          0,
+          9.78
+        ],
+        [
+          20.47,
+          10.73
+        ],
+        [
+          40.94,
+          11.74
+        ],
+        [
+          61.32,
+          14.12
+        ],
+        [
+          81.55,
+          18.79
+        ],
+        [
+          101.65,
+          25.57
+        ],
+        [
+          121.7,
+          33.13
+        ],
+        [
+          141.82,
+          39.76
+        ],
+        [
+          162.08,
+          44.09
+        ],
+        [
+          182.5,
+          45.95
+        ],
+        [
+          203.01,
+          46.18
+        ],
+        [
+          223.53,
+          46.21
+        ],
+        [
+          243.99,
+          47.06
+        ],
+        [
+          264.42,
+          48.79
+        ],
+        [
+          284.82,
+          50.65
+        ],
+        [
+          305.29,
+          51.76
+        ],
+        [
+          325.8,
+          51.85
+        ],
+        [
+          346.36,
+          51.59
+        ],
+        [
+          366.83,
+          52.31
+        ],
+        [
+          387.19,
+          55.02
+        ],
+        [
+          407.42,
+          59.88
+        ],
+        [
+          427.56,
+          65.94
+        ],
+        [
+          447.72,
+          71.75
+        ],
+        [
+          468,
+          75.96
+        ],
+        [
+          488.38,
+          78.27
+        ],
+        [
+          505.85,
+          86.69
+        ],
+        [
+          523.37,
+          94.77
+        ],
+        [
+          541.21,
+          100.55
+        ],
+        [
+          561.01,
+          92.78
+        ],
+        [
+          579.8,
+          91.97
+        ],
+        [
+          595.69,
+          111.41
+        ],
+        [
+          612.56,
+          124.09
+        ],
+        [
+          630.81,
+          127.09
+        ],
+        [
+          649,
+          130.45
+        ]
       ],
-      "end": [
-        178,
-        21
-      ],
-      "width": 7.0,
-      "description": "Aufidus bend behind the Roman northern wing."
-    },
-    {
-      "start": [
-        178,
-        21
-      ],
-      "end": [
-        238,
-        31
-      ],
-      "width": 5.5,
-      "description": "Eastern river bend near the Roman logistics route."
+      "width": 9.8
     }
   ],
-  "bridges": [
-    {
-      "start": [
-        140,
-        15
-      ],
-      "end": [
-        149,
-        18
-      ],
-      "width": 4.5,
-      "height": 0.7,
-      "description": "Northern ford used by scouts and Roman baggage traffic."
-    },
-    {
-      "start": [
-        199,
-        26
-      ],
-      "end": [
-        208,
-        28
-      ],
-      "width": 4.0,
-      "height": 0.7,
-      "description": "Roman logistics bridge near the rear camp."
-    }
-  ],
+  "bridges": [],
   "roads": [
     {
       "start": [
-        4,
-        81
+        8.68,
+        264.17
       ],
       "end": [
-        238,
-        80
+        499.23,
+        238.08
       ],
-      "width": 4.2,
+      "width": 5.25,
       "style": "default",
       "waypoints": [
         [
-          4,
-          81
+          8.68,
+          264.17
         ],
         [
-          32,
-          80
+          24.6,
+          263.62
         ],
         [
-          62,
-          80
+          40.52,
+          263.08
         ],
         [
-          92,
-          80
+          56.43,
+          262.53
         ],
         [
-          122,
-          80
+          72.35,
+          261.99
         ],
         [
-          152,
-          80
+          88.27,
+          261.44
         ],
         [
-          184,
-          80
+          104.19,
+          260.9
         ],
         [
-          214,
-          81
+          106.01,
+          260.9
         ],
         [
-          238,
-          80
+          123.57,
+          260.9
+        ],
+        [
+          141.13,
+          260.9
+        ],
+        [
+          158.69,
+          260.9
+        ],
+        [
+          176.24,
+          260.9
+        ],
+        [
+          193.8,
+          260.9
+        ],
+        [
+          211.36,
+          260.9
+        ],
+        [
+          228.92,
+          260.9
+        ],
+        [
+          246.48,
+          260.9
+        ],
+        [
+          264.04,
+          260.9
+        ],
+        [
+          281.59,
+          260.9
+        ],
+        [
+          299.15,
+          260.9
+        ],
+        [
+          316.71,
+          260.9
+        ],
+        [
+          334.27,
+          260.9
+        ],
+        [
+          348.97,
+          260.9
+        ],
+        [
+          363.66,
+          260.9
+        ],
+        [
+          378.36,
+          260.9
+        ],
+        [
+          393.05,
+          260.9
+        ],
+        [
+          407.75,
+          260.9
+        ],
+        [
+          407.98,
+          271.17
+        ],
+        [
+          408.63,
+          272.55
+        ],
+        [
+          410.24,
+          273.95
+        ],
+        [
+          408.63,
+          271.11
+        ],
+        [
+          408,
+          268.73
+        ],
+        [
+          408,
+          258.5
+        ],
+        [
+          408,
+          248.27
+        ],
+        [
+          409.14,
+          244.04
+        ],
+        [
+          412.06,
+          239
+        ],
+        [
+          421.11,
+          230.36
+        ],
+        [
+          430.15,
+          221.72
+        ],
+        [
+          436.94,
+          219.08
+        ],
+        [
+          450.31,
+          219.36
+        ],
+        [
+          463.69,
+          219.64
+        ],
+        [
+          477.06,
+          219.92
+        ],
+        [
+          483.8,
+          222.77
+        ],
+        [
+          491.51,
+          230.43
+        ],
+        [
+          499.23,
+          238.08
         ]
-      ],
-      "description": "Main battlefield road. The Roman infantry mass advances along this axis."
+      ]
     },
     {
       "start": [
-        54,
-        136
+        117.21,
+        404.4
       ],
       "end": [
-        86,
-        82
+        186.67,
+        267.43
+      ],
+      "width": 3.78,
+      "style": "default",
+      "waypoints": [
+        [
+          117.21,
+          404.4
+        ],
+        [
+          115.04,
+          405.05
+        ],
+        [
+          121.49,
+          391.56
+        ],
+        [
+          124.93,
+          384.36
+        ],
+        [
+          132.64,
+          369.74
+        ],
+        [
+          140.36,
+          355.12
+        ],
+        [
+          148.08,
+          340.51
+        ],
+        [
+          155.8,
+          325.89
+        ],
+        [
+          163.52,
+          311.28
+        ],
+        [
+          171.23,
+          296.66
+        ],
+        [
+          178.95,
+          282.05
+        ],
+        [
+          186.67,
+          267.43
+        ]
+      ]
+    },
+    {
+      "start": [
+        117.21,
+        404.4
+      ],
+      "end": [
+        201.69,
+        123.73
+      ],
+      "width": 3.3,
+      "style": "default",
+      "waypoints": [
+        [
+          117.21,
+          404.4
+        ],
+        [
+          115.04,
+          405.05
+        ],
+        [
+          113.68,
+          387.85
+        ],
+        [
+          112.33,
+          370.64
+        ],
+        [
+          110.97,
+          353.44
+        ],
+        [
+          109.62,
+          336.24
+        ],
+        [
+          108.26,
+          319.04
+        ],
+        [
+          106.9,
+          301.84
+        ],
+        [
+          105.55,
+          284.63
+        ],
+        [
+          104.19,
+          267.43
+        ],
+        [
+          106.01,
+          260.9
+        ],
+        [
+          114.15,
+          245.28
+        ],
+        [
+          122.29,
+          229.66
+        ],
+        [
+          130.43,
+          214.05
+        ],
+        [
+          138.57,
+          198.43
+        ],
+        [
+          146.71,
+          182.81
+        ],
+        [
+          154.86,
+          167.19
+        ],
+        [
+          157.86,
+          163.37
+        ],
+        [
+          162.14,
+          159.63
+        ],
+        [
+          166.31,
+          157.12
+        ],
+        [
+          182.69,
+          150.88
+        ],
+        [
+          186.7,
+          148.2
+        ],
+        [
+          193.55,
+          140.94
+        ],
+        [
+          200.41,
+          133.68
+        ],
+        [
+          201.91,
+          129.68
+        ],
+        [
+          201.69,
+          123.73
+        ]
+      ]
+    },
+    {
+      "start": [
+        201.69,
+        123.73
+      ],
+      "end": [
+        394.93,
+        170.7
+      ],
+      "width": 3.3,
+      "style": "default",
+      "waypoints": [
+        [
+          201.69,
+          123.73
+        ],
+        [
+          219.38,
+          127.01
+        ],
+        [
+          237.07,
+          130.29
+        ],
+        [
+          254.75,
+          133.58
+        ],
+        [
+          272.44,
+          136.86
+        ],
+        [
+          290.13,
+          140.14
+        ],
+        [
+          307.82,
+          143.42
+        ],
+        [
+          325.5,
+          146.7
+        ],
+        [
+          343.19,
+          149.98
+        ],
+        [
+          360.88,
+          153.27
+        ],
+        [
+          378.57,
+          156.55
+        ],
+        [
+          382.76,
+          158.74
+        ],
+        [
+          394.93,
+          170.7
+        ]
+      ]
+    },
+    {
+      "start": [
+        197.37,
+        386.04
+      ],
+      "end": [
+        330.03,
+        333.76
+      ],
+      "width": 3.3,
+      "style": "default",
+      "waypoints": [
+        [
+          197.37,
+          386.04
+        ],
+        [
+          213.95,
+          379.5
+        ],
+        [
+          230.53,
+          372.97
+        ],
+        [
+          247.12,
+          366.44
+        ],
+        [
+          263.7,
+          359.9
+        ],
+        [
+          280.28,
+          353.37
+        ],
+        [
+          296.87,
+          346.83
+        ],
+        [
+          313.45,
+          340.3
+        ],
+        [
+          330.03,
+          333.76
+        ]
+      ]
+    },
+    {
+      "start": [
+        407.75,
+        260.9
+      ],
+      "end": [
+        425.58,
+        123.34
+      ],
+      "width": 3.54,
+      "style": "default",
+      "waypoints": [
+        [
+          407.75,
+          260.9
+        ],
+        [
+          407.98,
+          271.17
+        ],
+        [
+          408.63,
+          272.55
+        ],
+        [
+          410.24,
+          273.95
+        ],
+        [
+          408.63,
+          271.11
+        ],
+        [
+          408,
+          268.73
+        ],
+        [
+          408,
+          258.5
+        ],
+        [
+          408,
+          248.27
+        ],
+        [
+          409.14,
+          244.04
+        ],
+        [
+          412.06,
+          239
+        ],
+        [
+          413.99,
+          222.48
+        ],
+        [
+          415.92,
+          205.95
+        ],
+        [
+          417.85,
+          189.43
+        ],
+        [
+          419.79,
+          172.91
+        ],
+        [
+          421.72,
+          156.39
+        ],
+        [
+          423.65,
+          139.86
+        ],
+        [
+          425.58,
+          123.34
+        ]
+      ]
+    },
+    {
+      "start": [
+        407.75,
+        260.9
+      ],
+      "end": [
+        490.55,
+        388.1
+      ],
+      "width": 3.54,
+      "style": "default",
+      "waypoints": [
+        [
+          407.75,
+          260.9
+        ],
+        [
+          407.98,
+          271.17
+        ],
+        [
+          408.63,
+          272.55
+        ],
+        [
+          410.24,
+          273.95
+        ],
+        [
+          411.67,
+          285.37
+        ],
+        [
+          413.69,
+          290.05
+        ],
+        [
+          424.25,
+          302.88
+        ],
+        [
+          434.8,
+          315.72
+        ],
+        [
+          445.36,
+          328.55
+        ],
+        [
+          455.92,
+          341.38
+        ],
+        [
+          466.48,
+          354.21
+        ],
+        [
+          477.04,
+          367.05
+        ],
+        [
+          487.6,
+          379.88
+        ],
+        [
+          490.55,
+          388.1
+        ]
+      ]
+    },
+    {
+      "start": [
+        486.21,
+        381.57
+      ],
+      "end": [
+        594.74,
+        136.97
+      ],
+      "width": 3.66,
+      "style": "default",
+      "waypoints": [
+        [
+          486.21,
+          381.57
+        ],
+        [
+          487.6,
+          379.88
+        ],
+        [
+          497.98,
+          365.61
+        ],
+        [
+          508.36,
+          351.35
+        ],
+        [
+          518.74,
+          337.08
+        ],
+        [
+          529.11,
+          322.82
+        ],
+        [
+          539.49,
+          308.55
+        ],
+        [
+          549.87,
+          294.28
+        ],
+        [
+          560.25,
+          280.02
+        ],
+        [
+          570.63,
+          265.75
+        ],
+        [
+          581.01,
+          251.49
+        ],
+        [
+          591.39,
+          237.22
+        ],
+        [
+          593.04,
+          232.26
+        ],
+        [
+          593.27,
+          217.17
+        ],
+        [
+          593.51,
+          202.09
+        ],
+        [
+          593.74,
+          187
+        ],
+        [
+          594.07,
+          170.32
+        ],
+        [
+          594.41,
+          153.65
+        ],
+        [
+          594.74,
+          136.97
+        ]
+      ]
+    },
+    {
+      "start": [
+        104.19,
+        260.9
+      ],
+      "end": [
+        104.19,
+        267.43
+      ],
+      "width": 3.54,
+      "style": "default",
+      "waypoints": [
+        [
+          104.19,
+          260.9
+        ],
+        [
+          104.19,
+          267.43
+        ]
+      ]
+    },
+    {
+      "start": [
+        334.27,
+        260.9
+      ],
+      "end": [
+        330.03,
+        333.76
+      ],
+      "width": 3.78,
+      "style": "default",
+      "waypoints": [
+        [
+          334.27,
+          260.9
+        ],
+        [
+          333.42,
+          275.47
+        ],
+        [
+          332.57,
+          290.04
+        ],
+        [
+          331.73,
+          304.62
+        ],
+        [
+          330.88,
+          319.19
+        ],
+        [
+          330.03,
+          333.76
+        ]
+      ]
+    },
+    {
+      "start": [
+        8.68,
+        264.17
+      ],
+      "end": [
+        2.17,
+        267.43
+      ],
+      "width": 3.78,
+      "style": "default",
+      "waypoints": [
+        [
+          8.68,
+          264.17
+        ],
+        [
+          2.17,
+          267.43
+        ]
+      ]
+    },
+    {
+      "start": [
+        593.74,
+        187
+      ],
+      "end": [
+        646.83,
+        189.16
+      ],
+      "width": 3.78,
+      "style": "default",
+      "waypoints": [
+        [
+          593.74,
+          187
+        ],
+        [
+          611.44,
+          187.72
+        ],
+        [
+          629.13,
+          188.44
+        ],
+        [
+          646.83,
+          189.16
+        ]
+      ]
+    },
+    {
+      "start": [
+        646.83,
+        189.16
+      ],
+      "end": [
+        648,
+        190
       ],
       "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          54,
-          136
+          646.83,
+          189.16
         ],
         [
-          60,
-          124
-        ],
-        [
-          67,
-          112
-        ],
-        [
-          74,
-          100
-        ],
-        [
-          80,
-          90
-        ],
-        [
-          86,
-          82
+          648,
+          190
         ]
-      ],
-      "description": "Carthaginian center road. This visually shows the center's planned withdrawal line."
+      ]
     },
     {
       "start": [
-        52,
-        135
+        2.17,
+        267.43
       ],
       "end": [
-        78,
-        43
+        1,
+        266
       ],
-      "width": 2.8,
+      "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          52,
-          135
+          2.17,
+          267.43
         ],
         [
-          47,
-          118
-        ],
-        [
-          45,
-          100
-        ],
-        [
-          48,
-          82
-        ],
-        [
-          57,
-          64
-        ],
-        [
-          78,
-          43
+          1,
+          266
         ]
-      ],
-      "description": "Northern cavalry redeployment path toward the Aufidus wing."
+      ]
     },
     {
       "start": [
-        78,
-        43
+        320,
+        535
       ],
       "end": [
-        168,
-        55
+        648,
+        525
       ],
-      "width": 2.8,
+      "width": 3.8,
       "style": "default",
       "waypoints": [
         [
-          78,
-          43
+          320,
+          535
         ],
         [
-          98,
-          37
+          337.26,
+          534.47
         ],
         [
-          120,
-          39
+          354.53,
+          533.95
         ],
         [
-          144,
-          47
+          371.79,
+          533.42
         ],
         [
-          168,
-          55
+          389.05,
+          532.89
+        ],
+        [
+          406.32,
+          532.37
+        ],
+        [
+          423.58,
+          531.84
+        ],
+        [
+          440.84,
+          531.32
+        ],
+        [
+          458.11,
+          530.79
+        ],
+        [
+          475.37,
+          530.26
+        ],
+        [
+          492.63,
+          529.74
+        ],
+        [
+          509.89,
+          529.21
+        ],
+        [
+          527.16,
+          528.68
+        ],
+        [
+          544.42,
+          528.16
+        ],
+        [
+          561.68,
+          527.63
+        ],
+        [
+          578.95,
+          527.11
+        ],
+        [
+          596.21,
+          526.58
+        ],
+        [
+          613.47,
+          526.05
+        ],
+        [
+          630.74,
+          525.53
+        ],
+        [
+          648,
+          525
         ]
-      ],
-      "description": "Northern hook route. Fast cavalry can use this to reach the Roman rear."
+      ]
     },
     {
       "start": [
-        55,
-        136
+        320,
+        535
       ],
       "end": [
-        85,
-        122
+        320,
+        648
       ],
-      "width": 2.8,
+      "width": 3.8,
       "style": "default",
       "waypoints": [
         [
-          55,
-          136
+          320,
+          535
         ],
         [
-          65,
-          138
+          320,
+          551.14
         ],
         [
-          75,
-          133
+          320,
+          567.29
         ],
         [
-          85,
-          122
+          320,
+          583.43
+        ],
+        [
+          320,
+          599.57
+        ],
+        [
+          320,
+          615.71
+        ],
+        [
+          320,
+          631.86
+        ],
+        [
+          320,
+          648
         ]
-      ],
-      "description": "Southern cavalry staging path."
+      ]
     },
     {
       "start": [
-        85,
-        122
+        490.55,
+        388.1
       ],
       "end": [
-        166,
-        105
+        492.63,
+        529.74
       ],
-      "width": 2.8,
+      "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          85,
-          122
+          490.55,
+          388.1
         ],
         [
-          105,
-          126
+          490.81,
+          405.81
         ],
         [
-          126,
-          123
+          491.07,
+          423.51
         ],
         [
-          146,
-          116
+          491.33,
+          441.22
         ],
         [
-          166,
-          105
+          491.59,
+          458.92
+        ],
+        [
+          491.85,
+          476.62
+        ],
+        [
+          492.11,
+          494.33
+        ],
+        [
+          492.37,
+          512.03
+        ],
+        [
+          492.63,
+          529.74
         ]
-      ],
-      "description": "Southern hook route. This is the second half of the envelopment."
+      ]
     },
     {
       "start": [
-        202,
-        80
+        499.23,
+        238.08
       ],
       "end": [
-        211,
-        34
+        559.07,
+        281.64
       ],
-      "width": 3.0,
+      "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          202,
-          80
+          499.23,
+          238.08
         ],
         [
-          205,
-          65
+          506.65,
+          249.01
         ],
         [
-          208,
-          49
+          510,
+          252.33
         ],
         [
-          211,
-          34
+          515,
+          255.67
+        ],
+        [
+          519.07,
+          258.21
+        ],
+        [
+          532.4,
+          266.02
+        ],
+        [
+          545.74,
+          273.83
+        ],
+        [
+          559.07,
+          281.64
         ]
-      ],
-      "description": "Roman supply road toward the Aufidus ford."
+      ]
     },
     {
       "start": [
-        202,
-        80
+        186.67,
+        267.43
       ],
       "end": [
-        226,
-        119
+        186.67,
+        260.9
       ],
-      "width": 3.0,
+      "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          202,
-          80
+          186.67,
+          267.43
         ],
         [
-          210,
-          92
-        ],
-        [
-          219,
-          106
-        ],
-        [
-          226,
-          119
+          186.67,
+          260.9
         ]
-      ],
-      "description": "Roman baggage and retreat road. If the trap is late, Roman units can try to escape this way."
+      ]
     },
     {
       "start": [
-        28,
-        126
+        394.93,
+        170.7
       ],
       "end": [
-        58,
-        136
+        419.71,
+        173.61
       ],
-      "width": 2.5,
+      "width": 3.2,
       "style": "default",
       "waypoints": [
         [
-          28,
-          126
+          394.93,
+          170.7
         ],
         [
-          38,
-          132
+          407.32,
+          172.15
         ],
         [
-          48,
-          135
-        ],
-        [
-          58,
-          136
+          419.71,
+          173.61
         ]
+      ]
+    },
+    {
+      "start": [
+        197.37,
+        386.04
       ],
-      "description": "Cannae village track behind the Carthaginian camp."
+      "end": [
+        140.02,
+        355.76
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          197.37,
+          386.04
+        ],
+        [
+          183.03,
+          378.47
+        ],
+        [
+          168.7,
+          370.9
+        ],
+        [
+          154.36,
+          363.33
+        ],
+        [
+          140.02,
+          355.76
+        ]
+      ]
+    },
+    {
+      "start": [
+        425.58,
+        123.34
+      ],
+      "end": [
+        419.66,
+        173.6
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          425.58,
+          123.34
+        ],
+        [
+          423.61,
+          140.09
+        ],
+        [
+          421.63,
+          156.85
+        ],
+        [
+          419.66,
+          173.6
+        ]
+      ]
+    },
+    {
+      "start": [
+        486.21,
+        381.57
+      ],
+      "end": [
+        487.98,
+        380.94
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          486.21,
+          381.57
+        ],
+        [
+          487.98,
+          380.94
+        ]
+      ]
+    },
+    {
+      "start": [
+        594.74,
+        136.97
+      ],
+      "end": [
+        593.74,
+        187
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          594.74,
+          136.97
+        ],
+        [
+          594.41,
+          153.65
+        ],
+        [
+          594.07,
+          170.32
+        ],
+        [
+          593.74,
+          187
+        ]
+      ]
     }
   ],
   "terrain": [
     {
-      "type": "flat",
-      "x": 124,
-      "z": 80,
-      "width": 160,
-      "depth": 96,
-      "description": "The open killing plain. This area must stay readable and uncluttered for the main encirclement."
-    },
-    {
-      "type": "flat",
-      "x": 121,
-      "z": 80,
-      "width": 66,
-      "depth": 46,
-      "description": "Encirclement pocket. The Roman center should be drawn into this basin before the cavalry closes behind it."
-    },
-    {
       "type": "hill",
-      "x": 57,
-      "z": 136,
-      "width": 36,
-      "depth": 16,
+      "x": 123.72,
+      "z": 443.54,
+      "width": 78.14,
+      "depth": 52.18,
       "height": 2.4,
       "rotation": -8,
-      "description": "Carthaginian command camp overlooking the plain.",
       "entrances": [
         {
-          "x": 54,
-          "z": 124
+          "x": 117.21,
+          "z": 404.4
         },
         {
-          "x": 73,
-          "z": 132
+          "x": 158.45,
+          "z": 430.49
         }
       ]
     },
     {
       "type": "hill",
-      "x": 87,
-      "z": 55,
-      "width": 30,
-      "depth": 13,
+      "x": 188.84,
+      "z": 179.37,
+      "width": 65.12,
+      "depth": 42.4,
       "height": 1.8,
       "rotation": 6,
-      "description": "Northern infantry shoulder. One hinge of the trap.",
       "entrances": [
         {
-          "x": 76,
-          "z": 56
+          "x": 164.96,
+          "z": 182.63
         },
         {
-          "x": 99,
-          "z": 58
+          "x": 214.89,
+          "z": 189.16
         }
       ]
     },
     {
       "type": "hill",
-      "x": 87,
-      "z": 105,
-      "width": 30,
-      "depth": 13,
+      "x": 188.84,
+      "z": 342.44,
+      "width": 65.12,
+      "depth": 42.4,
       "height": 1.8,
       "rotation": -6,
-      "description": "Southern infantry shoulder. The second hinge of the trap.",
       "entrances": [
         {
-          "x": 76,
-          "z": 104
+          "x": 164.96,
+          "z": 339.18
         },
         {
-          "x": 99,
-          "z": 102
+          "x": 214.89,
+          "z": 332.65
         }
       ]
     },
     {
       "type": "hill",
-      "x": 73,
-      "z": 41,
-      "width": 32,
-      "depth": 12,
+      "x": 158.45,
+      "z": 133.71,
+      "width": 69.46,
+      "depth": 39.14,
       "height": 1.7,
       "rotation": -10,
-      "description": "Northern cavalry rise near the river. Carthage begins with a strong cavalry launch point.",
       "entrances": [
         {
-          "x": 60,
-          "z": 43
+          "x": 130.23,
+          "z": 140.24
         },
         {
-          "x": 86,
-          "z": 39
+          "x": 186.67,
+          "z": 127.19
         }
       ]
     },
     {
       "type": "hill",
-      "x": 74,
-      "z": 122,
-      "width": 32,
-      "depth": 12,
+      "x": 160.62,
+      "z": 397.88,
+      "width": 69.46,
+      "depth": 39.14,
       "height": 1.7,
       "rotation": 10,
-      "description": "Southern cavalry rise used to launch the second hook.",
       "entrances": [
         {
-          "x": 61,
-          "z": 121
+          "x": 132.4,
+          "z": 394.62
         },
         {
-          "x": 88,
-          "z": 119
+          "x": 191.01,
+          "z": 388.1
         }
       ]
     },
     {
       "type": "hill",
-      "x": 166,
-      "z": 55,
-      "width": 28,
-      "depth": 13,
+      "x": 360.31,
+      "z": 179.37,
+      "width": 60.78,
+      "depth": 42.4,
       "height": 1.6,
       "rotation": 8,
-      "description": "Roman northern cavalry position by the Aufidus bend.",
       "entrances": [
         {
-          "x": 154,
-          "z": 56
+          "x": 334.27,
+          "z": 182.63
         },
         {
-          "x": 178,
-          "z": 53
+          "x": 386.36,
+          "z": 172.85
         }
       ]
     },
     {
       "type": "hill",
-      "x": 168,
-      "z": 105,
-      "width": 28,
-      "depth": 14,
+      "x": 364.66,
+      "z": 342.44,
+      "width": 60.78,
+      "depth": 45.66,
       "height": 1.5,
       "rotation": -8,
-      "description": "Roman allied cavalry position on the southern wing.",
       "entrances": [
         {
-          "x": 156,
-          "z": 103
+          "x": 338.61,
+          "z": 335.91
         },
         {
-          "x": 180,
-          "z": 106
+          "x": 390.7,
+          "z": 345.7
         }
       ]
     },
     {
       "type": "hill",
-      "x": 207,
-      "z": 80,
-      "radius": 14,
+      "x": 449.31,
+      "z": 260.9,
+      "radius": 37.25,
       "height": 2.1,
-      "description": "Roman main camp elevation anchoring the rear.",
       "entrances": [
         {
-          "x": 192,
-          "z": 80
+          "x": 416.75,
+          "z": 260.9
         },
         {
-          "x": 208,
-          "z": 65
+          "x": 451.48,
+          "z": 211.98
         },
         {
-          "x": 210,
-          "z": 95
+          "x": 455.82,
+          "z": 309.82
         }
       ]
     },
     {
       "type": "hill",
-      "x": 213,
-      "z": 35,
-      "width": 30,
-      "depth": 13,
+      "x": 462.33,
+      "z": 114.15,
+      "width": 65.12,
+      "depth": 42.4,
       "height": 1.9,
       "rotation": 5,
-      "description": "Roman logistics ridge near the Aufidus ford.",
       "entrances": [
         {
-          "x": 201,
-          "z": 37
+          "x": 436.28,
+          "z": 120.67
         },
         {
-          "x": 226,
-          "z": 33
+          "x": 490.55,
+          "z": 107.62
         }
       ]
     },
     {
       "type": "forest",
-      "x": 48,
-      "z": 48,
-      "radius": 13,
-      "density": 0.42,
-      "description": "Dusty scrub masking Carthaginian northern cavalry movement."
+      "x": 104.19,
+      "z": 156.54,
+      "radius": 34.59
     },
     {
       "type": "forest",
-      "x": 48,
-      "z": 115,
-      "radius": 12,
-      "density": 0.4,
-      "description": "Southern scrub used by Numidian cavalry and reserve infantry."
+      "x": 104.19,
+      "z": 375.05,
+      "radius": 31.93
     },
     {
       "type": "forest",
-      "x": 181,
-      "z": 119,
-      "radius": 11,
-      "density": 0.38,
-      "description": "Thin scrub around the Roman baggage road."
+      "x": 392.87,
+      "z": 388.1,
+      "radius": 29.27
     },
     {
-      "type": "flat",
-      "x": 27,
-      "z": 126,
-      "description": "Cannae village ruins behind the Carthaginian position."
+      "type": "hill",
+      "x": 544.81,
+      "z": 238.08,
+      "width": 75.97,
+      "depth": 39.14,
+      "height": 1.4,
+      "entrances": [
+        {
+          "x": 505.74,
+          "z": 238.08
+        },
+        {
+          "x": 583.88,
+          "z": 238.08
+        }
+      ]
     },
     {
-      "type": "flat",
-      "x": 224,
-      "z": 117,
-      "description": "Roman baggage market and supply camp."
+      "type": "forest",
+      "x": 199.69,
+      "z": 573.99,
+      "radius": 45.23
     }
   ],
   "spawns": [
     {
-      "type": "barracks",
-      "x": 56,
-      "z": 136,
-      "player_id": 1,
-      "max_population": 220,
-      "nation": "carthage",
-      "description": "Carthaginian command camp"
-    },
-    {
-      "type": "barracks",
-      "x": 207,
-      "z": 80,
-      "player_id": 2,
-      "max_population": 260,
-      "nation": "roman_republic",
-      "description": "Roman main camp"
-    },
-    {
-      "type": "barracks",
-      "x": 224,
-      "z": 117,
-      "player_id": 2,
-      "max_population": 160,
-      "nation": "roman_republic",
-      "description": "Roman baggage camp"
-    },
-    {
       "type": "spearman",
-      "x": 86,
-      "z": 73,
-      "player_id": 1,
-      "description": "Weak Carthaginian center bait line"
-    },
-    {
-      "type": "spearman",
-      "x": 88,
-      "z": 78,
+      "x": 186.67,
+      "z": 238.08,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 88,
-      "z": 83,
+      "x": 191.01,
+      "z": 254.38,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 86,
-      "z": 88,
+      "x": 191.01,
+      "z": 270.69,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 186.67,
+      "z": 286.99,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 94,
-      "z": 76,
+      "x": 204.03,
+      "z": 247.86,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 96,
-      "z": 84,
+      "x": 208.37,
+      "z": 273.95,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 78,
-      "z": 75,
+      "x": 169.3,
+      "z": 244.6,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 78,
-      "z": 85,
+      "x": 169.3,
+      "z": 277.21,
       "player_id": 1
     },
     {
       "type": "healer",
-      "x": 72,
-      "z": 80,
+      "x": 156.28,
+      "z": 260.9,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 82,
-      "z": 55,
-      "player_id": 1,
-      "description": "Northern infantry shoulder"
+      "x": 177.99,
+      "z": 179.37,
+      "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 88,
-      "z": 52,
+      "x": 191.01,
+      "z": 169.59,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 94,
-      "z": 55,
+      "x": 204.03,
+      "z": 179.37,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 100,
-      "z": 58,
+      "x": 217.06,
+      "z": 189.16,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 86,
-      "z": 47,
+      "x": 186.67,
+      "z": 153.28,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 82,
-      "z": 105,
-      "player_id": 1,
-      "description": "Southern infantry shoulder"
+      "x": 177.99,
+      "z": 342.44,
+      "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 88,
-      "z": 108,
+      "x": 191.01,
+      "z": 352.22,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 94,
-      "z": 105,
+      "x": 204.03,
+      "z": 342.44,
       "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 100,
-      "z": 102,
+      "x": 217.06,
+      "z": 332.65,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 86,
-      "z": 113,
+      "x": 186.67,
+      "z": 368.53,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 62,
-      "z": 42,
-      "player_id": 1,
-      "description": "Heavy cavalry, northern wing"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 67,
-      "z": 39,
+      "x": 134.58,
+      "z": 136.97,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 72,
-      "z": 42,
+      "x": 145.43,
+      "z": 127.19,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 77,
-      "z": 45,
+      "x": 156.28,
+      "z": 136.97,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 167.13,
+      "z": 146.76,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 57,
-      "z": 47,
+      "x": 123.72,
+      "z": 153.28,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 70,
-      "z": 49,
+      "x": 151.94,
+      "z": 159.8,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 63,
-      "z": 120,
-      "player_id": 1,
-      "description": "Southern cavalry wing"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 69,
-      "z": 124,
+      "x": 136.75,
+      "z": 391.36,
       "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 76,
-      "z": 120,
+      "x": 149.77,
+      "z": 404.4,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 164.96,
+      "z": 391.36,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 56,
-      "z": 115,
+      "x": 121.55,
+      "z": 375.05,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 82,
-      "z": 116,
+      "x": 177.99,
+      "z": 378.31,
       "player_id": 1
     },
     {
       "type": "horse_archer",
-      "x": 72,
-      "z": 128,
+      "x": 156.28,
+      "z": 417.45,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 60,
-      "z": 132,
-      "player_id": 1,
-      "description": "Carthaginian reserve near command camp"
+      "x": 130.23,
+      "z": 430.49,
+      "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 65,
-      "z": 135,
+      "x": 141.09,
+      "z": 440.28,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 51,
-      "z": 131,
+      "x": 110.7,
+      "z": 427.23,
       "player_id": 1
     },
     {
       "type": "healer",
-      "x": 49,
-      "z": 137,
+      "x": 106.36,
+      "z": 446.8,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 132,
-      "z": 63,
-      "player_id": 2,
-      "description": "Roman dense center front rank"
-    },
-    {
-      "type": "spearman",
-      "x": 136,
-      "z": 68,
+      "x": 286.52,
+      "z": 205.46,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 138,
-      "z": 74,
+      "x": 295.2,
+      "z": 221.77,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 138,
-      "z": 80,
+      "x": 299.54,
+      "z": 241.34,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 138,
-      "z": 86,
+      "x": 299.54,
+      "z": 260.9,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 136,
-      "z": 92,
+      "x": 299.54,
+      "z": 280.47,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 132,
-      "z": 97,
+      "x": 295.2,
+      "z": 300.04,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 286.52,
+      "z": 316.35,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 148,
-      "z": 64,
-      "player_id": 2,
-      "description": "Roman heavy infantry second rank"
-    },
-    {
-      "type": "swordsman",
-      "x": 151,
-      "z": 70,
+      "x": 321.24,
+      "z": 208.72,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 153,
-      "z": 76,
+      "x": 327.76,
+      "z": 228.29,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 153,
-      "z": 84,
+      "x": 332.1,
+      "z": 247.86,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 151,
-      "z": 90,
+      "x": 332.1,
+      "z": 273.95,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 148,
-      "z": 96,
+      "x": 327.76,
+      "z": 293.52,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 321.24,
+      "z": 313.09,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 163,
-      "z": 66,
-      "player_id": 2,
-      "description": "Roman deep infantry reserve"
-    },
-    {
-      "type": "spearman",
-      "x": 166,
-      "z": 72,
+      "x": 353.8,
+      "z": 215.25,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 168,
-      "z": 80,
+      "x": 360.31,
+      "z": 234.81,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 166,
-      "z": 88,
+      "x": 364.66,
+      "z": 260.9,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 163,
-      "z": 94,
+      "x": 360.31,
+      "z": 286.99,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 353.8,
+      "z": 306.56,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 176,
-      "z": 72,
+      "x": 382.02,
+      "z": 234.81,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 178,
-      "z": 80,
+      "x": 386.36,
+      "z": 260.9,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 176,
-      "z": 88,
+      "x": 382.02,
+      "z": 286.99,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 181,
-      "z": 67,
-      "player_id": 2,
-      "description": "Roman rear missile support"
-    },
-    {
-      "type": "archer",
-      "x": 185,
-      "z": 74,
+      "x": 392.87,
+      "z": 218.51,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 186,
-      "z": 86,
+      "x": 401.56,
+      "z": 241.34,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 181,
-      "z": 93,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 151,
-      "z": 49,
-      "player_id": 2,
-      "description": "Roman northern cavalry"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 158,
-      "z": 46,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 166,
-      "z": 47,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 173,
-      "z": 51,
+      "x": 403.73,
+      "z": 280.47,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 166,
-      "z": 39,
+      "x": 392.87,
+      "z": 303.3,
       "player_id": 2
     },
     {
       "type": "horse_swordsman",
-      "x": 152,
-      "z": 111,
-      "player_id": 2,
-      "description": "Roman allied southern cavalry"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 160,
-      "z": 114,
+      "x": 327.76,
+      "z": 159.8,
       "player_id": 2
     },
     {
       "type": "horse_swordsman",
-      "x": 168,
-      "z": 113,
+      "x": 342.95,
+      "z": 150.02,
       "player_id": 2
     },
     {
       "type": "horse_swordsman",
-      "x": 176,
-      "z": 109,
+      "x": 360.31,
+      "z": 153.28,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 375.51,
+      "z": 166.33,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 166,
-      "z": 121,
+      "x": 360.31,
+      "z": 127.19,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 329.93,
+      "z": 362.01,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 347.29,
+      "z": 371.79,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 364.66,
+      "z": 368.53,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 382.02,
+      "z": 355.48,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 360.31,
+      "z": 394.62,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 199,
-      "z": 75,
-      "player_id": 2,
-      "description": "Roman camp guard"
+      "x": 431.94,
+      "z": 244.6,
+      "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 199,
-      "z": 85,
+      "x": 431.94,
+      "z": 277.21,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 207,
-      "z": 72,
+      "x": 449.31,
+      "z": 234.81,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 207,
-      "z": 88,
+      "x": 449.31,
+      "z": 286.99,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 215,
-      "z": 80,
+      "x": 466.67,
+      "z": 260.9,
       "player_id": 2
     },
     {
       "type": "healer",
-      "x": 211,
-      "z": 84,
+      "x": 457.99,
+      "z": 273.95,
       "player_id": 2
     },
     {
       "type": "spearman",
-      "x": 219,
-      "z": 112,
-      "player_id": 2,
-      "description": "Roman baggage guard"
+      "x": 475.35,
+      "z": 365.27,
+      "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 226,
-      "z": 121,
+      "x": 490.55,
+      "z": 394.62,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 230,
-      "z": 116,
+      "x": 499.23,
+      "z": 378.31,
       "player_id": 2
     }
   ],
   "firecamps": [
     {
-      "x": 54,
-      "z": 136,
+      "x": 117.21,
+      "z": 443.54,
       "intensity": 1.25,
       "radius": 3.8
     },
     {
-      "x": 65,
-      "z": 132,
+      "x": 141.09,
+      "z": 430.49,
       "intensity": 0.95,
       "radius": 2.8
     },
     {
-      "x": 206,
-      "z": 80,
+      "x": 447.14,
+      "z": 260.9,
       "intensity": 1.15,
       "radius": 3.4
     },
     {
-      "x": 214,
-      "z": 73,
+      "x": 464.5,
+      "z": 238.08,
       "intensity": 0.95,
       "radius": 2.8
     },
     {
-      "x": 224,
-      "z": 117,
+      "x": 486.21,
+      "z": 381.57,
       "intensity": 1.05,
       "radius": 3.2
     },
     {
-      "x": 29,
-      "z": 126,
+      "x": 62.95,
+      "z": 410.92,
       "intensity": 0.85,
       "radius": 2.6
     },
     {
-      "x": 169,
-      "z": 55,
+      "x": 366.83,
+      "z": 179.37,
       "intensity": 0.85,
       "radius": 2.4
     },
     {
-      "x": 170,
-      "z": 105,
+      "x": 369,
+      "z": 342.44,
       "intensity": 0.8,
       "radius": 2.4
     }
@@ -1265,192 +2251,228 @@
   "world_props": [
     {
       "type": "tent",
-      "x": 49,
-      "z": 139,
+      "x": 106.36,
+      "z": 453.32,
       "scale": 1.0,
       "rotation": 0.4
     },
     {
       "type": "tent",
-      "x": 62,
-      "z": 140,
+      "x": 134.58,
+      "z": 456.58,
       "scale": 1.0,
       "rotation": 2.0
     },
     {
       "type": "supply_cart",
-      "x": 58,
-      "z": 130,
+      "x": 125.89,
+      "z": 423.97,
       "scale": 1.0,
       "rotation": 1.2
     },
     {
       "type": "weapon_rack",
-      "x": 68,
-      "z": 134,
+      "x": 147.6,
+      "z": 437.02,
       "scale": 1.0,
       "rotation": 3.0
     },
     {
       "type": "ruins",
-      "x": 24,
-      "z": 124,
+      "x": 52.09,
+      "z": 404.4,
       "scale": 1.2,
       "rotation": 0.3
     },
     {
       "type": "ruins",
-      "x": 29,
-      "z": 128,
+      "x": 62.95,
+      "z": 417.45,
       "scale": 1.0,
       "rotation": 2.2
     },
     {
       "type": "ruins",
-      "x": 33,
-      "z": 122,
+      "x": 71.63,
+      "z": 397.88,
       "scale": 0.9,
       "rotation": 4.1
     },
     {
       "type": "dead_tree",
-      "x": 43,
-      "z": 47,
+      "x": 93.33,
+      "z": 153.28,
       "scale": 1.1,
       "rotation": 0.8
     },
     {
       "type": "dead_tree",
-      "x": 51,
-      "z": 43,
+      "x": 110.7,
+      "z": 140.24,
       "scale": 1.0,
       "rotation": 2.5
     },
     {
       "type": "dead_tree",
-      "x": 46,
-      "z": 55,
+      "x": 99.85,
+      "z": 179.37,
       "scale": 0.9,
       "rotation": 4.7
     },
     {
       "type": "dead_tree",
-      "x": 43,
-      "z": 117,
+      "x": 93.33,
+      "z": 381.57,
       "scale": 1.1,
       "rotation": 1.1
     },
     {
       "type": "dead_tree",
-      "x": 52,
-      "z": 112,
+      "x": 112.87,
+      "z": 365.27,
       "scale": 1.0,
       "rotation": 3.5
     },
     {
       "type": "weapon_rack",
-      "x": 83,
-      "z": 54,
+      "x": 180.16,
+      "z": 176.11,
       "scale": 1.0,
       "rotation": 2.1
     },
     {
       "type": "weapon_rack",
-      "x": 84,
-      "z": 106,
+      "x": 182.33,
+      "z": 345.7,
       "scale": 1.0,
       "rotation": 5.0
     },
     {
       "type": "dead_tree",
-      "x": 116,
-      "z": 66,
+      "x": 251.79,
+      "z": 215.25,
       "scale": 0.8,
       "rotation": 1.3
     },
     {
       "type": "dead_tree",
-      "x": 119,
-      "z": 94,
+      "x": 258.3,
+      "z": 306.56,
       "scale": 0.9,
       "rotation": 4.2
     },
     {
       "type": "ruins",
-      "x": 122,
-      "z": 80,
+      "x": 264.81,
+      "z": 260.9,
       "scale": 0.8,
       "rotation": 0.6
     },
     {
       "type": "tent",
-      "x": 201,
-      "z": 73,
+      "x": 436.28,
+      "z": 238.08,
       "scale": 1.0,
       "rotation": 0.9
     },
     {
       "type": "tent",
-      "x": 215,
-      "z": 88,
+      "x": 466.67,
+      "z": 286.99,
       "scale": 1.0,
       "rotation": 2.8
     },
     {
       "type": "supply_cart",
-      "x": 213,
-      "z": 78,
+      "x": 462.33,
+      "z": 254.38,
       "scale": 1.0,
       "rotation": 1.6
     },
     {
       "type": "weapon_rack",
-      "x": 200,
-      "z": 88,
+      "x": 434.11,
+      "z": 286.99,
       "scale": 1.0,
       "rotation": 3.9
     },
     {
       "type": "supply_cart",
-      "x": 222,
-      "z": 113,
+      "x": 481.87,
+      "z": 368.53,
       "scale": 1.0,
       "rotation": 0.5
     },
     {
       "type": "supply_cart",
-      "x": 230,
-      "z": 121,
+      "x": 499.23,
+      "z": 394.62,
       "scale": 1.0,
       "rotation": 2.3
     },
     {
       "type": "tent",
-      "x": 226,
-      "z": 124,
+      "x": 490.55,
+      "z": 404.4,
       "scale": 1.0,
       "rotation": 4.7
     },
     {
       "type": "ruins",
-      "x": 211,
-      "z": 35,
+      "x": 457.99,
+      "z": 114.15,
       "scale": 0.9,
       "rotation": 1.2
     },
     {
       "type": "dead_tree",
-      "x": 184,
-      "z": 119,
+      "x": 399.38,
+      "z": 388.1,
       "scale": 1.0,
       "rotation": 3.2
     },
     {
       "type": "dead_tree",
-      "x": 176,
-      "z": 124,
+      "x": 382.02,
+      "z": 404.4,
       "scale": 0.9,
       "rotation": 5.5
+    },
+    {
+      "type": "tent",
+      "x": 577.37,
+      "z": 143.5,
+      "scale": 0.9,
+      "rotation": 1.2
+    },
+    {
+      "type": "tent",
+      "x": 612.1,
+      "z": 146.76,
+      "scale": 0.9,
+      "rotation": 4.1
+    },
+    {
+      "type": "supply_cart",
+      "x": 594.74,
+      "z": 182.63,
+      "scale": 1.0,
+      "rotation": 2.6
+    },
+    {
+      "type": "weapon_rack",
+      "x": 621,
+      "z": 112,
+      "scale": 0.9,
+      "rotation": 5.0
+    },
+    {
+      "type": "firecamp",
+      "x": 594.74,
+      "z": 156.54,
+      "scale": 0.9,
+      "intensity": 1.1,
+      "radius": 3.0
     }
   ],
   "victory": {
@@ -1475,10 +2497,10 @@
     {
       "id": "old_grave",
       "anchor_type": "ruins",
-      "x": 50,
-      "z": 80,
-      "radius": 10.0,
-      "leash_radius": 18.0,
+      "x": 108.53,
+      "z": 260.9,
+      "radius": 26.61,
+      "leash_radius": 47.89,
       "owner_id": 99,
       "team_id": 99,
       "awaken_on": [
@@ -1500,6 +2522,152 @@
           }
         }
       ]
+    }
+  ],
+  "lakes": [],
+  "structures": [
+    {
+      "type": "barracks",
+      "x": 121.55,
+      "z": 443.54,
+      "player_id": 1,
+      "max_population": 220,
+      "nation": "carthage"
+    },
+    {
+      "type": "barracks",
+      "x": 449.31,
+      "z": 260.9,
+      "player_id": 2,
+      "max_population": 260,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "barracks",
+      "x": 594.74,
+      "z": 136.97,
+      "player_id": 3,
+      "max_population": 160,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 121.55,
+      "z": 472.89,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 102.02,
+      "z": 453.32,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 141.09,
+      "z": 466.37,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "marketplace",
+      "x": 449.31,
+      "z": 293.52,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 429.77,
+      "z": 225.03,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 468.84,
+      "z": 228.29,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 429.77,
+      "z": 322.87,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 468.84,
+      "z": 326.13,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 418.92,
+      "z": 260.9,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 479.7,
+      "z": 260.9,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 486.21,
+      "z": 417.45,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 466.67,
+      "z": 401.14,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 505.74,
+      "z": 401.14,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 620.78,
+      "z": 136.97,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 594.74,
+      "z": 169.59,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 575.2,
+      "z": 159.8,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 614.27,
+      "z": 159.8,
+      "player_id": 3,
+      "nation": "roman_republic"
     }
   ]
 }

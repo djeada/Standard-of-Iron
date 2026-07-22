@@ -23,7 +23,7 @@ void submit_as_cube(Render::Software::SoftwareRasterizer& r,
 } // namespace
 
 void SoftwareBackend::execute(const DrawQueue& queue, const Camera& cam) {
-  QMatrix4x4 const vp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const vp = cam.get_view_projection_matrix();
   m_rasterizer.set_view_projection(vp);
 
   auto submit_item = [&](const DrawCmd& item) {

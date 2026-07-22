@@ -53,12 +53,11 @@ namespace {
 }
 
 [[nodiscard]] auto spear_direction_for_thrust(float attack_phase) noexcept -> PoseVec3 {
-  // A thrust translates the shaft; it does not rotate it through a high guard.
-  // Keep the point on one torso-height rail for chamber, extension and recovery.
-  // The hands supply all visible fore/aft travel. Mounted spear direction is
-  // authored separately and retains its saddle-specific angle.
+  // Infantry drive the point forward and slightly upward under the opponent's
+  // guard. The shaft stays on this rail through chamber, contact and recovery;
+  // it never crosses the body like a bat or polearm swing.
   (void)attack_phase;
-  return normalize({0.02F, 0.10F, 1.0F});
+  return normalize({0.02F, 0.18F, 1.0F});
 }
 
 [[nodiscard]] auto spear_braced_direction() noexcept -> PoseVec3 {
@@ -68,7 +67,7 @@ namespace {
 [[nodiscard]] auto
 mounted_spear_direction_for_thrust(float attack_phase) noexcept -> PoseVec3 {
   PoseVec3 const couch = normalize({0.03F, 0.02F, 1.0F});
-  PoseVec3 const pierce = normalize({0.02F, -0.18F, 1.0F});
+  PoseVec3 const pierce = normalize({0.02F, -0.28F, 1.0F});
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
   float const commit =
       smoothstep(std::clamp((attack_phase - 0.20F) / 0.28F, 0.0F, 1.0F));
@@ -119,13 +118,13 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
     -> HumanoidWeaponAttackPoseSample {
   float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
-  // Give the power hand only one visible degree of freedom: forward/back.
-  // Identical x/y endpoints prevent IK and clip interpolation from producing
-  // a circular wind-up or an overhead cutting arc.
+  // Both hands travel on one shallow up-and-forward line. Matching lateral
+  // coordinates and proportional height/depth changes prevent interpolation
+  // from producing a circular wind-up or an overhead cutting arc.
   PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F, 0.12F};
-  PoseVec3 const contact_rear{0.28F, shoulder_y + 0.035F, 0.42F};
+  PoseVec3 const contact_rear{0.28F, shoulder_y + 0.095F, 0.42F};
   PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F, 0.42F};
-  PoseVec3 const contact_front{-0.03F, shoulder_y + 0.035F, 0.72F};
+  PoseVec3 const contact_front{-0.03F, shoulder_y + 0.095F, 0.72F};
 
   HumanoidWeaponAttackPoseSample sample{};
   float drive = 0.0F;
@@ -910,12 +909,65 @@ resolve_basic_melee_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
   return sample;
 }
 
+// Archers keep hold of the bow when an enemy reaches their line. The bow is
+// gripped as a short staff, pulled across the chest, then driven forward with
+// both hands. This is deliberately compact and linear so it cannot read as a
+// sword slash or as a ranged draw/release cycle.
+[[nodiscard]] auto
+resolve_bow_melee_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
+    -> HumanoidWeaponAttackPoseSample {
+  float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
+  float const shoulder_y = inputs.shoulder_y;
+  PoseVec3 const guard_r{0.18F, shoulder_y - 0.04F, 0.28F};
+  PoseVec3 const guard_l{-0.22F, shoulder_y + 0.02F, 0.34F};
+  PoseVec3 const chamber_r{0.32F, shoulder_y + 0.06F, 0.10F};
+  PoseVec3 const chamber_l{-0.10F, shoulder_y + 0.10F, 0.16F};
+  PoseVec3 const strike_r{0.18F, shoulder_y - 0.08F, 0.72F};
+  PoseVec3 const strike_l{-0.20F, shoulder_y - 0.03F, 0.76F};
+
+  HumanoidWeaponAttackPoseSample sample{};
+  float drive = 0.0F;
+  if (phase < 0.22F) {
+    float const t = smoothstep(phase / 0.22F);
+    sample.right_hand = lerp(guard_r, chamber_r, t);
+    sample.left_hand = lerp(guard_l, chamber_l, t);
+    drive = -0.22F * t;
+  } else if (phase < 0.52F) {
+    float const t = smoothstep((phase - 0.22F) / 0.30F);
+    sample.right_hand = lerp(chamber_r, strike_r, t);
+    sample.left_hand = lerp(chamber_l, strike_l, t);
+    drive = -0.22F + 1.22F * t;
+  } else if (phase < 0.68F) {
+    sample.right_hand = strike_r;
+    sample.left_hand = strike_l;
+    drive = 1.0F;
+  } else {
+    float const t = smoothstep((phase - 0.68F) / 0.32F);
+    sample.right_hand = lerp(strike_r, guard_r, t);
+    sample.left_hand = lerp(strike_l, guard_l, t);
+    drive = 1.0F - t;
+  }
+
+  float const commit = std::max(0.0F, drive);
+  sample.shoulder_l_z_delta += 0.10F * commit;
+  sample.shoulder_r_z_delta += 0.12F * commit;
+  sample.neck_z_delta += 0.065F * commit;
+  sample.head_z_delta += 0.045F * commit;
+  sample.pelvis_z_delta += 0.035F * commit;
+  sample.pelvis_y_delta -= 0.018F * commit;
+  sample.foot_r_z_delta += 0.075F * commit;
+  sample.knee_r_z_delta += 0.045F * commit;
+  return sample;
+}
+
 } // namespace
 
 auto resolve_humanoid_weapon_attack_pose(
     const HumanoidWeaponAttackPoseInputs& inputs) noexcept
     -> HumanoidWeaponAttackPoseSample {
   switch (inputs.kind) {
+  case HumanoidWeaponAttackKind::BowMeleeStrike:
+    return resolve_bow_melee_pose(inputs);
   case HumanoidWeaponAttackKind::CombatSwordSlash:
     return resolve_sword_pose(inputs, true);
   case HumanoidWeaponAttackKind::SpearThrustClassic:
@@ -1247,8 +1299,10 @@ auto resolve_mounted_spear_thrust_pose(
   constexpr MountedSeatOffset couch_pos{0.05F, 0.12F, 0.08F};
   // The spear supplies reach; the rider's hands must not chase the spear point
   // beyond arm length. A compact grip also keeps the torso seated at impact.
-  constexpr MountedSeatOffset thrust_pos{0.68F, 0.08F, 0.22F};
-  constexpr MountedSeatOffset extended_pos{0.76F, 0.05F, 0.19F};
+  // Unlike the infantry's rising thrust, the rider drives both hands down from
+  // the couch so the spear point pierces toward a target below the saddle.
+  constexpr MountedSeatOffset thrust_pos{0.46F, 0.08F, 0.02F};
+  constexpr MountedSeatOffset extended_pos{0.52F, 0.05F, -0.04F};
 
   MountedSpearThrustPoseSample sample{};
 

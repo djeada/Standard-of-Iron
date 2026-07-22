@@ -42,6 +42,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/software/software_rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_continuity_analyzer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_profile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/profiling_hud.cpp
 )

@@ -529,10 +529,10 @@ TEST_F(HumanoidPoseControllerTest, LeanClampsBounds) {
   EXPECT_NEAR(pose.shoulder_l.z(), max_lean_z, 0.001F);
 }
 
-TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
+TEST_F(HumanoidPoseControllerTest, CarrySwordAndShieldPositionsHandsCorrectly) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  controller.hold_sword_and_shield();
+  controller.carry_sword_and_shield();
 
   EXPECT_GT(pose.hand_r.x(), 0.28F);
   EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
@@ -546,18 +546,18 @@ TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
 }
 
-TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldCarriesFartherForwardWhileMoving) {
+TEST_F(HumanoidPoseControllerTest, SwordAndShieldCarryMovesForwardWhileMoving) {
   HumanoidPose idle_pose = pose;
   HumanoidAnimationContext const idle_anim = anim_ctx;
   HumanoidPoseController idle_controller(idle_pose, idle_anim);
-  idle_controller.hold_sword_and_shield();
+  idle_controller.carry_sword_and_shield();
 
   HumanoidPose moving_pose = pose;
   HumanoidAnimationContext moving_anim = anim_ctx;
   moving_anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
   moving_anim.gait.speed = 1.5F;
   HumanoidPoseController moving_controller(moving_pose, moving_anim);
-  moving_controller.hold_sword_and_shield();
+  moving_controller.carry_sword_and_shield();
 
   EXPECT_GT(moving_pose.hand_r.z(), idle_pose.hand_r.z());
   EXPECT_LT(moving_pose.hand_r.y(), idle_pose.hand_r.y());
@@ -631,14 +631,14 @@ TEST_F(HumanoidPoseControllerTest, AimBowFullDrawLoadsShouldersAndPullsBackStrin
 }
 
 TEST_F(HumanoidPoseControllerTest,
-       BraceSwordAndShieldForHoldRaisesShieldComparedToMarchHold) {
+       SwordAndShieldDefenseRaisesShieldComparedToMarchCarry) {
   HumanoidPose march_pose = pose;
   HumanoidPoseController march_controller(march_pose, anim_ctx);
-  march_controller.hold_sword_and_shield();
+  march_controller.carry_sword_and_shield();
 
   HumanoidPose brace_pose = pose;
   HumanoidPoseController brace_controller(brace_pose, anim_ctx);
-  brace_controller.brace_sword_and_shield_for_hold();
+  brace_controller.guard_sword_and_shield_for_defense();
 
   EXPECT_GT(brace_pose.hand_l.y(), march_pose.hand_l.y());
   EXPECT_GT(brace_pose.hand_l.z(), march_pose.hand_l.z());
@@ -1036,24 +1036,15 @@ TEST_F(HumanoidPoseControllerTest, SpearDirectionMatchesExitHoldDepth) {
   EXPECT_TRUE(approx_equal(entry_dir, exit_dir, 0.001F));
 }
 
-TEST_F(HumanoidPoseControllerTest,
-       KneelSwordsmanShallowestSpearmanMiddleArcherDeepest) {
+TEST_F(HumanoidPoseControllerTest, ArcherHoldKneelsDeeperThanSpearmanHold) {
   HumanoidPose spear_pose = pose;
   HumanoidPoseController spear_ctrl(spear_pose, anim_ctx);
   spear_ctrl.kneel(0.875F);
-
-  HumanoidPose sword_pose = pose;
-  HumanoidPoseController sword_ctrl(sword_pose, anim_ctx);
-  sword_ctrl.kneel(0.825F);
 
   HumanoidPose archer_pose = pose;
   HumanoidPoseController archer_ctrl(archer_pose, anim_ctx);
   archer_ctrl.kneel(1.125F);
 
-  EXPECT_GT(sword_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
-      << "Swordsman (0.825) should kneel less deeply than archer (1.125)";
-  EXPECT_GT(sword_pose.pelvis_pos.y(), spear_pose.pelvis_pos.y())
-      << "Swordsman (0.825) should kneel less deeply than spearman (0.875)";
   EXPECT_GT(spear_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
       << "Spearman (0.875) should kneel less deeply than archer (1.125)";
 }

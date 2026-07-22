@@ -222,7 +222,9 @@ void GameStateRestorer::restore_environment_from_metadata(
         scene.terrain->configure(*height_map, terrain_service.biome_settings());
       }
       if (scene.features != nullptr) {
-        scene.features->configure(*height_map, terrain_service.road_segments());
+        scene.features->configure(*height_map,
+                                  terrain_service.road_segments(),
+                                  terrain_service.biome_settings());
       }
       if (scene.scatter != nullptr) {
         scene.scatter->configure(*height_map,

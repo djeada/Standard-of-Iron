@@ -15,6 +15,7 @@
 #include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "../state_scopes.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -301,16 +302,10 @@ void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
 
   clear_gl_errors();
 
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean const depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean const blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
+  CullFaceScope const cull(false);
+  DepthTestScope const depth_test(true);
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_aura_shader->use();
@@ -321,20 +316,6 @@ void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
   }
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (blend_enabled == 0U) {
-    glDisable(GL_BLEND);
-  }
-  if (depth_test_enabled != 0U) {
-    glEnable(GL_DEPTH_TEST);
-  } else {
-    glDisable(GL_DEPTH_TEST);
-  }
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
 }
 
 void HealerAuraPipeline::render_aura(const HealerAuraData& data,
@@ -347,7 +328,7 @@ void HealerAuraPipeline::render_aura(const HealerAuraData& data,
 
   model.scale(data.radius);
 
-  QMatrix4x4 const vp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const vp = cam.get_view_projection_matrix();
   QMatrix4x4 const mvp = vp * model;
 
   m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
@@ -374,14 +355,10 @@ void HealerAuraPipeline::render_single_aura(const QVector3D& position,
     return;
   }
 
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
+  CullFaceScope const cull(false);
+  DepthTestScope const depth_test(true);
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_aura_shader->use();
@@ -404,12 +381,6 @@ void HealerAuraPipeline::render_single_aura(const QVector3D& position,
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
 }
 
 void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
@@ -419,14 +390,10 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
     return;
   }
 
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
+  CullFaceScope const cull(false);
+  DepthTestScope const depth_test(true);
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_aura_shader->use();
@@ -456,12 +423,6 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
   }
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
 }
 
 } // namespace Render::GL::BackendPipelines

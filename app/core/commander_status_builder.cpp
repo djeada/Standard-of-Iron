@@ -35,6 +35,12 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["rally_has_flag"] = false;
   result["rally_action_progress"] = 0.0;
   result["aura_active"] = false;
+  result["aura_available"] = false;
+  result["aura_duration"] = 0.0;
+  result["aura_remaining"] = 0.0;
+  result["aura_cooldown"] = 0.0;
+  result["aura_cooldown_remaining"] = 0.0;
+  result["aura_ready"] = false;
   result["posture"] = 0.0;
   result["posture_max"] = 100.0;
   result["posture_ratio"] = 0.0;
@@ -145,7 +151,13 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
           : (commander->flag_rally_flag_active ? 1.0 : 0.0);
   result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F &&
                           !commander->flag_rally_in_progress && !input.rally_placing;
-  result["aura_active"] = commander->aura_active && !commander->wounded;
+  result["aura_active"] = commander->aura_ability_active;
+  result["aura_available"] = commander->aura_active && !commander->wounded;
+  result["aura_duration"] = commander->aura_ability_duration;
+  result["aura_remaining"] = commander->aura_ability_remaining;
+  result["aura_cooldown"] = commander->aura_ability_cooldown;
+  result["aura_cooldown_remaining"] = commander->aura_ability_cooldown_remaining;
+  result["aura_ready"] = commander->can_activate_aura_ability();
   result["posture"] = static_cast<double>(commander->posture);
   result["posture_max"] = static_cast<double>(commander->posture_max);
   result["posture_ratio"] =

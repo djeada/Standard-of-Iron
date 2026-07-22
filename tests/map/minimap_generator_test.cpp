@@ -46,6 +46,17 @@ auto image_dimensions(const GridDefinition& grid,
   return {grid.width * pixels_per_tile, grid.height * pixels_per_tile};
 }
 
+auto point_structure(Game::Units::SpawnType type,
+                     float world_x,
+                     float world_z,
+                     int player_id) -> StructureEntry {
+  return StructureEntry{
+      .type = type,
+      .geometry = PointStructureGeometry{QVector3D(world_x, 0.0F, world_z)},
+      .player_id = player_id,
+  };
+}
+
 } // namespace
 
 class MinimapGeneratorTest : public ::testing::Test {
@@ -92,6 +103,18 @@ TEST_F(MinimapGeneratorTest, ImageDimensionsMatchGrid) {
 
   EXPECT_EQ(result.width(), expected_width);
   EXPECT_EQ(result.height(), expected_height);
+}
+
+TEST_F(MinimapGeneratorTest, LargeCampaignMapsAreCappedToHudUsefulResolution) {
+  test_map.grid.width = 650;
+  test_map.grid.height = 420;
+  MinimapGenerator generator;
+
+  QImage const result = generator.generate(test_map);
+
+  EXPECT_EQ(result.width(), 512);
+  EXPECT_EQ(result.height(), 331);
+  EXPECT_LE(std::max(result.width(), result.height()), 512);
 }
 
 TEST_F(MinimapGeneratorTest, RendersRivers) {
@@ -175,18 +198,32 @@ TEST_F(MinimapGeneratorTest, RendersRoads) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersStructures) {
-
-  UnitSpawn barracks;
-  barracks.type = Game::Units::SpawnType::Barracks;
-  barracks.x = 25.0F;
-  barracks.z = 25.0F;
-  barracks.player_id = 1;
-  test_map.spawns.push_back(barracks);
+  test_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::Barracks, 0.5F, 0.5F, 1));
 
   MinimapGenerator generator;
   QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
+}
+
+TEST_F(MinimapGeneratorTest, RendersWallStructures) {
+  MapDefinition empty_map = test_map;
+  test_map.structures.push_back({
+      .type = Game::Units::SpawnType::WallSegment,
+      .geometry = LineStructureGeometry{
+          .start = QVector3D(-10.0F, 0.0F, 0.0F),
+          .end = QVector3D(10.0F, 0.0F, 0.0F),
+          .width = 2.0F,
+      },
+      .player_id = 1,
+  });
+
+  MinimapGenerator generator;
+  const QImage empty = generator.generate(empty_map);
+  const QImage walls = generator.generate(test_map);
+  const QPoint center(walls.width() / 2, walls.height() / 2);
+  EXPECT_GT(color_distance(walls.pixelColor(center), empty.pixelColor(center)), 20);
 }
 
 TEST_F(MinimapGeneratorTest, RoadsRenderBelowTerrainFeatures) {
@@ -270,28 +307,19 @@ TEST_F(MinimapGeneratorTest, BarracksAndHomesExtendFartherThanOtherBuildingIcons
   MapDefinition const empty_map = test_map;
 
   MapDefinition barracks_map = test_map;
-  UnitSpawn barracks;
-  barracks.type = Game::Units::SpawnType::Barracks;
-  barracks.x = 25.0F;
-  barracks.z = 25.0F;
-  barracks.player_id = 1;
-  barracks_map.spawns.push_back(barracks);
+  barracks_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::Barracks,
+                      home_world_x,
+                      home_world_z,
+                      1));
 
   MapDefinition home_map = test_map;
-  UnitSpawn home;
-  home.type = Game::Units::SpawnType::Home;
-  home.x = 25.0F;
-  home.z = 25.0F;
-  home.player_id = 1;
-  home_map.spawns.push_back(home);
+  home_map.structures.push_back(point_structure(
+      Game::Units::SpawnType::Home, home_world_x, home_world_z, 1));
 
   MapDefinition tower_map = test_map;
-  UnitSpawn tower;
-  tower.type = Game::Units::SpawnType::DefenseTower;
-  tower.x = 25.0F;
-  tower.z = 25.0F;
-  tower.player_id = 1;
-  tower_map.spawns.push_back(tower);
+  tower_map.structures.push_back(point_structure(
+      Game::Units::SpawnType::DefenseTower, home_world_x, home_world_z, 1));
 
   const QColor empty_pixel = generator.generate(empty_map).pixelColor(sample);
   const QColor barracks_pixel = generator.generate(barracks_map).pixelColor(sample);

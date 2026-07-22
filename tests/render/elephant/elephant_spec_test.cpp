@@ -4,6 +4,8 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <span>
 #include <string_view>
@@ -117,6 +119,16 @@ auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
     return prim.debug_name == name;
   });
   return it == prims.end() ? nullptr : &*it;
+}
+
+auto matrix_max_delta(const QMatrix4x4& lhs, const QMatrix4x4& rhs) -> float {
+  float delta = 0.0F;
+  for (int row = 0; row < 4; ++row) {
+    for (int column = 0; column < 4; ++column) {
+      delta = std::max(delta, std::abs(lhs(row, column) - rhs(row, column)));
+    }
+  }
+  return delta;
 }
 
 auto mesh_axis_span(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
@@ -247,6 +259,35 @@ TEST(ElephantSpecTest, WholeMeshCompilationKeepsColoredFaceVertices) {
   EXPECT_GT(mesh_vertex_count_for_role(*minimal_whole->custom_mesh, 7U), 0U);
   EXPECT_GT(mesh_vertex_count_for_role(*full_body->custom_mesh, 6U), 0U);
   EXPECT_GT(mesh_vertex_count_for_role(*full_body->custom_mesh, 7U), 0U);
+}
+
+TEST(ElephantSpecTest, AuthoredFaceHasTwoSymmetricBlackEyes) {
+  auto const& spec = Render::Elephant::elephant_creature_spec();
+  auto const* full_body =
+      find_primitive(spec.lod_full.primitives, "elephant.full.body");
+  ASSERT_NE(full_body, nullptr);
+  ASSERT_NE(full_body->custom_mesh, nullptr);
+
+  auto const bind = Render::Elephant::elephant_bind_palette();
+  auto const root =
+      bind[static_cast<std::size_t>(Render::Elephant::ElephantBone::Root)];
+  std::size_t left_eye_vertices = 0U;
+  std::size_t right_eye_vertices = 0U;
+  for (auto const& vertex : full_body->custom_mesh->get_vertices()) {
+    if (vertex.color_role != 7U) {
+      continue;
+    }
+    QVector3D const rest = root.map(QVector3D(
+        vertex.position[0], vertex.position[1], vertex.position[2]));
+    if (rest.z() <= 0.0F) {
+      continue;
+    }
+    left_eye_vertices += rest.x() < 0.0F ? 1U : 0U;
+    right_eye_vertices += rest.x() > 0.0F ? 1U : 0U;
+  }
+
+  EXPECT_GT(left_eye_vertices, 0U);
+  EXPECT_EQ(left_eye_vertices, right_eye_vertices);
 }
 
 TEST(ElephantSpecTest, MinimalSnapshotBakeKeepsColoredFaceRoles) {
@@ -420,6 +461,61 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
   EXPECT_NEAR(fight_pose.head_center.x(), idle_pose.head_center.x(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.y(), idle_pose.head_center.y(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.z(), idle_pose.head_center.z(), 0.0001F);
+}
+
+TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
+  auto const& manifest = Render::Elephant::elephant_manifest();
+  auto const idle_it = std::find_if(manifest.clips.begin(),
+                                    manifest.clips.end(),
+                                    [](auto const& clip) { return clip.name == "idle"; });
+  auto const fight_it = std::find_if(manifest.clips.begin(),
+                                     manifest.clips.end(),
+                                     [](auto const& clip) { return clip.name == "fight"; });
+  ASSERT_NE(idle_it, manifest.clips.end());
+  ASSERT_NE(fight_it, manifest.clips.end());
+  ASSERT_NE(manifest.bake_clip_palette, nullptr);
+
+  std::vector<QMatrix4x4> idle;
+  std::vector<QMatrix4x4> fight;
+  constexpr std::uint32_t frame = 6U;
+  manifest.bake_clip_palette(
+      static_cast<std::size_t>(idle_it - manifest.clips.begin()), frame, idle);
+  manifest.bake_clip_palette(
+      static_cast<std::size_t>(fight_it - manifest.clips.begin()), frame, fight);
+  ASSERT_EQ(idle.size(), Render::Elephant::k_elephant_bone_count);
+  ASSERT_EQ(fight.size(), Render::Elephant::k_elephant_bone_count);
+
+  constexpr std::array<Render::Elephant::ElephantBone, 12> leg_bones{{
+      Render::Elephant::ElephantBone::ShoulderFL,
+      Render::Elephant::ElephantBone::KneeFL,
+      Render::Elephant::ElephantBone::FootFL,
+      Render::Elephant::ElephantBone::ShoulderFR,
+      Render::Elephant::ElephantBone::KneeFR,
+      Render::Elephant::ElephantBone::FootFR,
+      Render::Elephant::ElephantBone::ShoulderBL,
+      Render::Elephant::ElephantBone::KneeBL,
+      Render::Elephant::ElephantBone::FootBL,
+      Render::Elephant::ElephantBone::ShoulderBR,
+      Render::Elephant::ElephantBone::KneeBR,
+      Render::Elephant::ElephantBone::FootBR,
+  }};
+  auto const bone_defs = Render::Elephant::elephant_source_bone_defs();
+  int articulated_leg_bones = 0;
+  for (auto const bone : leg_bones) {
+    auto const index = static_cast<std::size_t>(bone);
+    auto const parent = static_cast<std::size_t>(bone_defs[index].parent);
+    ASSERT_LT(parent, idle.size());
+    QMatrix4x4 const idle_local = idle[parent].inverted() * idle[index];
+    QMatrix4x4 const fight_local = fight[parent].inverted() * fight[index];
+    if (matrix_max_delta(idle_local, fight_local) > 0.001F) {
+      ++articulated_leg_bones;
+    }
+  }
+  EXPECT_GE(articulated_leg_bones, 4);
+
+  auto const trunk_tip =
+      static_cast<std::size_t>(Render::Elephant::ElephantBone::TrunkTip);
+  EXPECT_GT(matrix_max_delta(idle[trunk_tip], fight[trunk_tip]), 0.01F);
 }
 
 TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {

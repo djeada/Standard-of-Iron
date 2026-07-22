@@ -41,6 +41,19 @@ const QVector2D k_shadow_dir_xz_normalized = []() {
   return v;
 }();
 
+auto admits_contact_shadow(const Render::GL::DrawContext& ctx,
+                           Render::Creature::CreatureLOD lod,
+                           float camera_distance,
+                           std::uint32_t formation_id,
+                           bool standing_idle) -> bool {
+  const auto& graphics = Render::GraphicsSettings::instance();
+  return ctx.allow_template_cache && graphics.shadows_enabled() &&
+         lod == Render::Creature::CreatureLOD::Full &&
+         camera_distance < graphics.shadow_max_distance() &&
+         Render::VisibilityBudgetTracker::instance().request_contact_shadow(
+             formation_id, standing_idle);
+}
+
 } // namespace
 
 auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
@@ -109,12 +122,7 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
 
   const auto& ctx = *inputs.ctx;
   const auto& graph = *inputs.graph;
-  const auto& gfx_settings = Render::GraphicsSettings::instance();
-  const bool should_render_shadow =
-      ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
-      inputs.lod == Render::Creature::CreatureLOD::Full &&
-      inputs.camera_distance < gfx_settings.shadow_max_distance();
-  if (!should_render_shadow || ctx.backend == nullptr || ctx.resources == nullptr) {
+  if (ctx.backend == nullptr || ctx.resources == nullptr) {
     return state;
   }
 
@@ -123,6 +131,16 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;
     state.mesh = nullptr;
+    return state;
+  }
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized() ||
+      !admits_contact_shadow(ctx,
+                             inputs.lod,
+                             inputs.camera_distance,
+                             inputs.formation_id,
+                             inputs.standing_idle)) {
     return state;
   }
 
@@ -156,17 +174,13 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
   float const shadow_depth =
       shadow_size * (inputs.mounted ? 1.30F : 1.10F) * depth_boost;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized()) {
-    return state;
-  }
-
-  QVector3D const shadow_pos =
-      terrain_service.resolve_surface_world_position(inputs.soldier_world_pos.x(),
-                                                     inputs.soldier_world_pos.z(),
-                                                     0.0F,
-                                                     inputs.soldier_world_pos.y());
-  float const shadow_y = shadow_pos.y();
+  const float shadow_y = inputs.surface_height_valid
+                             ? inputs.surface_world_y
+                             : terrain_service.resolve_surface_world_y(
+                                   inputs.soldier_world_pos.x(),
+                                   inputs.soldier_world_pos.z(),
+                                   0.0F,
+                                   inputs.soldier_world_pos.y());
 
   QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;
@@ -201,12 +215,7 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
 
   const auto& ctx = *inputs.ctx;
   const auto& graph = *inputs.graph;
-  const auto& gfx_settings = Render::GraphicsSettings::instance();
-  const bool should_render_shadow =
-      ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
-      inputs.lod == Render::Creature::CreatureLOD::Full &&
-      inputs.camera_distance < gfx_settings.shadow_max_distance();
-  if (!should_render_shadow || ctx.backend == nullptr || ctx.resources == nullptr) {
+  if (ctx.backend == nullptr || ctx.resources == nullptr) {
     return state;
   }
 
@@ -215,6 +224,16 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;
     state.mesh = nullptr;
+    return state;
+  }
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized() ||
+      !admits_contact_shadow(ctx,
+                             inputs.lod,
+                             inputs.camera_distance,
+                             inputs.formation_id,
+                             inputs.standing_idle)) {
     return state;
   }
 
@@ -230,14 +249,13 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
   float const shadow_width = shadow_size * width_mult;
   float const shadow_depth = shadow_size * depth_mult;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized()) {
-    return state;
-  }
-
-  QVector3D const shadow_pos = terrain_service.resolve_surface_world_position(
-      inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
-  float const shadow_y = shadow_pos.y();
+  const float shadow_y = inputs.surface_height_valid
+                             ? inputs.surface_world_y
+                             : terrain_service.resolve_surface_world_y(
+                                   inputs.world_pos.x(),
+                                   inputs.world_pos.z(),
+                                   0.0F,
+                                   inputs.world_pos.y());
 
   QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;

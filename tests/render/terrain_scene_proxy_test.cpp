@@ -36,9 +36,9 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
-  EXPECT_EQ(proxy.river(), features.river());
+  EXPECT_EQ(proxy.water(), features.water());
   EXPECT_EQ(proxy.road(), features.road());
-  EXPECT_EQ(proxy.riverbank(), features.riverbank());
+  EXPECT_EQ(proxy.shoreline(), features.shoreline());
   EXPECT_EQ(proxy.bridge(), features.bridge());
   EXPECT_NE(proxy.biome(), nullptr);
   EXPECT_NE(proxy.stone(), nullptr);
@@ -49,16 +49,16 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(proxy.rain(), &rain);
   EXPECT_EQ(proxy.fog(), &fog);
   EXPECT_EQ(proxy.boundary_fog(), &boundary_fog);
-  auto* river = proxy.river();
+  auto* water = proxy.water();
   auto* road = proxy.road();
-  auto* riverbank = proxy.riverbank();
+  auto* shoreline = proxy.shoreline();
   auto* bridge = proxy.bridge();
 
   EXPECT_EQ(passes[0], static_cast<Render::GL::IRenderPass*>(surface.ground()));
   EXPECT_EQ(passes[1], static_cast<Render::GL::IRenderPass*>(surface.terrain()));
-  EXPECT_EQ(passes[2], static_cast<Render::GL::IRenderPass*>(river));
+  EXPECT_EQ(passes[2], static_cast<Render::GL::IRenderPass*>(water));
   EXPECT_EQ(passes[3], static_cast<Render::GL::IRenderPass*>(road));
-  EXPECT_EQ(passes[4], static_cast<Render::GL::IRenderPass*>(riverbank));
+  EXPECT_EQ(passes[4], static_cast<Render::GL::IRenderPass*>(shoreline));
   EXPECT_EQ(passes[5], static_cast<Render::GL::IRenderPass*>(bridge));
   EXPECT_EQ(passes[6], static_cast<Render::GL::IRenderPass*>(proxy.biome()));
   EXPECT_EQ(passes[7], static_cast<Render::GL::IRenderPass*>(proxy.stone()));
@@ -121,13 +121,13 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
 
   const auto feature_chunks = proxy.feature_chunks();
   ASSERT_EQ(feature_chunks.size(), 4U);
-  EXPECT_EQ(feature_chunks[0].kind, Render::GL::LinearFeatureKind::River);
+  EXPECT_EQ(feature_chunks[0].kind, Render::GL::LinearFeatureKind::Water);
   EXPECT_EQ(feature_chunks[0].visibility_mode,
             Render::GL::LinearFeatureVisibilityMode::SegmentSampled);
   EXPECT_EQ(feature_chunks[0].geometry_count, 1U);
   EXPECT_EQ(feature_chunks[1].kind, Render::GL::LinearFeatureKind::Road);
   EXPECT_EQ(feature_chunks[1].geometry_count, 1U);
-  EXPECT_EQ(feature_chunks[2].kind, Render::GL::LinearFeatureKind::Riverbank);
+  EXPECT_EQ(feature_chunks[2].kind, Render::GL::LinearFeatureKind::Shoreline);
   EXPECT_EQ(feature_chunks[2].visibility_mode,
             Render::GL::LinearFeatureVisibilityMode::TextureDriven);
   EXPECT_EQ(feature_chunks[2].geometry_count, 1U);

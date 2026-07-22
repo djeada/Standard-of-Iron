@@ -20,6 +20,7 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
+constexpr float k_reference_scatter_extent = 220.0F;
 
 } // namespace
 
@@ -122,9 +123,11 @@ void BoulderRenderer::generate_instances(
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D color = surface_profile.rock_low * (1.0F - color_var) +
                       surface_profile.rock_high * color_var;
-    QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
-    float const brown_mix = remap(rand_01(state), 0.08F, 0.28F + scene.dryness * 0.12F);
-    color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
+    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
+    float const earth_mix =
+        remap(rand_01(state), 0.10F, 0.25F + scene.dryness * 0.10F);
+    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
+    color *= 0.82F + scene.rockiness * 0.08F;
 
     StoneInstanceGpu inst;
     float const scale = remap(rand_01(state), scale_min, scale_max) *
@@ -149,9 +152,10 @@ void BoulderRenderer::generate_instances(
     QVector3D const base_rock = surface_profile.rock_low;
     QVector3D const high_rock = surface_profile.rock_high;
     QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
-    float const brown_mix = remap(rand_01(state), 0.0F, 0.35F);
-    QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
-    color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
+    float const earth_mix = remap(rand_01(state), 0.08F, 0.30F);
+    QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
+    color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
+    color *= 0.86F;
 
     StoneInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),
@@ -175,10 +179,15 @@ void BoulderRenderer::generate_instances(
                        m_biome_settings.moisture_level * 0.020F,
                    0.055F,
                    0.200F);
-    for (int z = 0; z < map_height; z += 6) {
-      for (int x = 0; x < width; x += 6) {
-        int const sample_x = std::min(x + 3, width - 1);
-        int const sample_z = std::min(z + 3, map_height - 1);
+    float const area_scale = std::sqrt(
+        static_cast<float>(std::max(width, 1) * std::max(map_height, 1)) /
+        (k_reference_scatter_extent * k_reference_scatter_extent));
+    int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
+    int const cell_span = 6 * sampling_scale;
+    for (int z = 0; z < map_height; z += cell_span) {
+      for (int x = 0; x < width; x += cell_span) {
+        int const sample_x = std::min(x + cell_span / 2, width - 1);
+        int const sample_z = std::min(z + cell_span / 2, map_height - 1);
         uint32_t state = hash_coords(x, z, m_biome_settings.seed ^ 0x6D1A75B3U);
         auto const scene = composition.sample_grid(static_cast<float>(sample_x),
                                                    static_cast<float>(sample_z),
@@ -190,8 +199,8 @@ void BoulderRenderer::generate_instances(
         if (rand_01(state) > density) {
           continue;
         }
-        float const gx = static_cast<float>(x) + rand_01(state) * 6.0F;
-        float const gz = static_cast<float>(z) + rand_01(state) * 6.0F;
+        float const gx = static_cast<float>(x) + rand_01(state) * float(cell_span);
+        float const gz = static_cast<float>(z) + rand_01(state) * float(cell_span);
         add_boulder(gx, gz, 1.15F, 2.45F, state);
       }
     }

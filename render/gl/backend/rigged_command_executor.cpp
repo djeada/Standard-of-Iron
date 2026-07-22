@@ -16,6 +16,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   std::size_t& debug_rigged_batches = context.debug_rigged_batches;
   std::size_t& debug_rigged_cmds = context.debug_rigged_cmds;
   std::size_t& debug_rigged_instanced_attempts =
@@ -25,6 +26,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
   std::size_t& debug_rigged_instanced_failures =
       context.debug_rigged_instanced_failures;
   std::size_t& debug_rigged_single_draws = context.debug_rigged_single_draws;
+#endif
   (void)cam;
   (void)view;
   (void)projection;
@@ -32,20 +34,16 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
-  (void)debug_rigged_batches;
-  (void)debug_rigged_cmds;
-  (void)debug_rigged_instanced_attempts;
-  (void)debug_rigged_instanced_successes;
-  (void)debug_rigged_instanced_failures;
-  (void)debug_rigged_single_draws;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();
   const auto& cmd = queue.get_sorted(i);
   switch (cmd.index()) {
   case RiggedCreatureCmdIndex: {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     ++debug_rigged_batches;
     debug_rigged_cmds += prepared.count;
+#endif
     if (polygon_offset_enabled) {
       glDisable(GL_POLYGON_OFFSET_FILL);
       polygon_offset_enabled = false;
@@ -73,7 +71,9 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         if (chunk_count < 2U) {
           const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
           m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
           ++debug_rigged_single_draws;
+#endif
           m_last_bound_shader = m_rigged_character_pipeline->shader();
           m_last_bound_texture = single.texture;
           ++j;
@@ -86,12 +86,16 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
           rig_batch_refs.push_back(
               &std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
         }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
         ++debug_rigged_instanced_attempts;
+#endif
         if (m_rigged_character_pipeline->draw_instanced(rig_batch_refs.data(),
                                                         rig_batch_refs.size(),
                                                         view_proj,
                                                         cam.get_position())) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
           ++debug_rigged_instanced_successes;
+#endif
           m_last_bound_shader = m_rigged_character_pipeline->instanced_shader();
           m_last_bound_texture = nullptr;
           j = chunk_end;
@@ -99,7 +103,9 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
           continue;
         }
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
         ++debug_rigged_instanced_failures;
+#endif
         break;
       }
     }
@@ -108,7 +114,9 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
       for (std::size_t j = rig_fallback_start; j < batch_end; ++j) {
         const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
         m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
         ++debug_rigged_single_draws;
+#endif
         m_last_bound_shader = m_rigged_character_pipeline->shader();
         m_last_bound_texture = single.texture;
       }

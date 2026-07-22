@@ -184,6 +184,22 @@ TEST(CommanderControlRegressionTest, CommanderRallyKeyIsWiredThroughAdapter) {
   EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_rally();"));
 }
 
+TEST(CommanderControlRegressionTest, CommanderAuraKeyIsWiredThroughAdapter) {
+  const auto root = find_repo_root();
+  const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto adapter_header =
+      read_text(root / "app" / "core" / "commander_input_adapter.h");
+  const auto adapter_source =
+      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_3:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_aura()"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_aura();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_aura();"));
+  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_aura();"));
+}
+
 TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   const auto root = find_repo_root();
   const auto source =
@@ -363,8 +379,9 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
   EXPECT_TRUE(contains(commander_hud_source, "qsTr(\"[Space] Dodge  [Alt] Jump\")"));
-  EXPECT_TRUE(
-      contains(commander_hud_source, "qsTr(\"[Tab] Cycle Target  [C] Camera\")"));
+  EXPECT_TRUE(contains(
+      commander_hud_source,
+      "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
   EXPECT_TRUE(
@@ -373,7 +390,8 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
       contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 20"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderRpgHudAddsModernCombatFeedbackEffects) {
+TEST(CommanderControlRegressionTest,
+     CommanderRpgHudUsesLocalizedCombatFeedbackWithoutFullscreenFlashes) {
   const auto root = find_repo_root();
   const auto fpv_overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
   const auto damage_numbers_source =
@@ -388,11 +406,25 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudAddsModernCombatFeedbackEffe
   EXPECT_TRUE(contains(fpv_overlay_source, "id: attackSweep"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: dodgeTrail"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: guardBreakShock"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: perfectGuardFlash\n        anchors.centerIn: parent"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: combatEntryFlash\n        anchors.centerIn: parent"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: guardBreakShock\n        anchors.centerIn: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: perfectGuardFlash\n        anchors.fill: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: combatEntryFlash\n        anchors.fill: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: guardBreakShock\n        anchors.fill: parent"));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"F\""));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"2\""));
-  EXPECT_TRUE(contains(damage_numbers_source, "property real impactFlashOpacity"));
-  EXPECT_TRUE(contains(damage_numbers_source, "id: impactFlashDecay"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: burstCore"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: effectLayer"));
+  EXPECT_FALSE(contains(damage_numbers_source, "impactFlashOpacity"));
+  EXPECT_FALSE(contains(damage_numbers_source, "impactFlashDecay"));
 }
 
 TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGameplay) {

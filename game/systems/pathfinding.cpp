@@ -37,7 +37,7 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
     return Pathfinding::CellValue::Walkable;
   }
 
-  if (terrain_type == Game::Map::TerrainType::River) {
+  if (Game::Map::is_water_terrain(terrain_type)) {
     return height_map->isBridgeCenterline(x, z) ? Pathfinding::CellValue::Walkable
                                                 : Pathfinding::CellValue::Blocked;
   }
@@ -483,8 +483,6 @@ auto Pathfinding::find_path_internal(const Point& start,
   int best_reachable_g = 0;
 
   while (!m_open_heap.empty() && iterations < max_iterations) {
-    ++iterations;
-
     QueueNode const current = pop_open_node();
 
     if (current.g_cost > get_g_cost(current.index, generation)) {
@@ -495,6 +493,12 @@ auto Pathfinding::find_path_internal(const Point& start,
       continue;
     }
 
+    // Count expanded cells, not stale heap entries. A cell can be queued more
+    // than once while a cheaper route to it is discovered; charging those
+    // obsolete entries against the width*height safety limit made valid
+    // detours around hills and across large-map bridges terminate early with
+    // a misleading partial path.
+    ++iterations;
     set_closed(current.index, generation);
 
     Point const current_point = to_point(current.index);

@@ -132,17 +132,17 @@ void UnitLayer::draw_unit_marker(QPainter& painter,
   if (is_selected) {
     painter.setBrush(Qt::NoBrush);
     QPen glow_pen(
-        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 200));
-    glow_pen.setWidthF(2.0);
+        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 220));
+    glow_pen.setWidthF(1.4);
     painter.setPen(glow_pen);
-    painter.drawEllipse(center, m_unit_radius + 2.0, m_unit_radius + 2.0);
+    painter.drawEllipse(center, m_unit_radius + 1.8, m_unit_radius + 1.8);
   }
 
   QColor fill_color(colors.r, colors.g, colors.b);
   QColor border_color(colors.border_r, colors.border_g, colors.border_b);
 
   painter.setBrush(fill_color);
-  painter.setPen(QPen(border_color, 1.8));
+  painter.setPen(QPen(border_color, 1.1));
   painter.drawEllipse(center, m_unit_radius, m_unit_radius);
 }
 
@@ -157,23 +157,18 @@ void UnitLayer::draw_building_marker(QPainter& painter,
   if (is_selected) {
     painter.setBrush(Qt::NoBrush);
     QPen glow_pen(
-        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 200));
-    glow_pen.setWidthF(2.5);
+        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 220));
+    glow_pen.setWidthF(1.4);
     painter.setPen(glow_pen);
-    painter.drawRect(rect.adjusted(-2.5, -2.5, 2.5, 2.5));
+    painter.drawRect(rect.adjusted(-1.8, -1.8, 1.8, 1.8));
   }
 
   QColor fill_color(colors.r, colors.g, colors.b);
   QColor border_color(colors.border_r, colors.border_g, colors.border_b);
 
   painter.setBrush(fill_color);
-  painter.setPen(QPen(border_color, 2.2));
+  painter.setPen(QPen(border_color, 1.2));
   painter.drawRect(rect);
-
-  const qreal inner = half * 0.4;
-  painter.setBrush(border_color);
-  painter.setPen(Qt::NoPen);
-  painter.drawRect(QRectF(px - inner, py - inner, inner * 2.0, inner * 2.0));
 }
 
 } // namespace Game::Map::Minimap

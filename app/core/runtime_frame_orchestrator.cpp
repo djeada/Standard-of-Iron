@@ -1,5 +1,8 @@
 #include "runtime_frame_orchestrator.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "ambient_state_manager.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
@@ -14,7 +17,11 @@
 
 namespace {
 constexpr int k_selection_refresh_interval = 15;
-}
+constexpr float k_minimap_unit_update_interval = 0.05F;
+constexpr float k_simulation_step = 1.0F / 60.0F;
+constexpr float k_max_accumulated_simulation_time = 0.25F;
+constexpr int k_max_simulation_steps_per_frame = 8;
+} // namespace
 
 void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
                                       RuntimeFrameState& state,
@@ -38,8 +45,21 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.world != nullptr) {
-
-    simulation_step(dt);
+    state.simulation_accumulator =
+        std::min(state.simulation_accumulator + std::max(dt, 0.0F),
+                 k_max_accumulated_simulation_time);
+    int simulation_steps = 0;
+    while (state.simulation_accumulator >= k_simulation_step &&
+           simulation_steps < k_max_simulation_steps_per_frame) {
+      simulation_step(k_simulation_step);
+      state.simulation_accumulator -= k_simulation_step;
+      ++simulation_steps;
+    }
+    if (simulation_steps == k_max_simulation_steps_per_frame &&
+        state.simulation_accumulator >= k_simulation_step) {
+      state.simulation_accumulator =
+          std::fmod(state.simulation_accumulator, k_simulation_step);
+    }
 
     if (scene.visibility_coordinator != nullptr) {
       scene.visibility_coordinator->update(
@@ -53,8 +73,17 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     if (scene.minimap_manager != nullptr) {
       auto* selection_system =
           scene.world->get_system<Game::Systems::SelectionSystem>();
-      scene.minimap_manager->update_units(
-          scene.world, selection_system, state.local_owner_id);
+      state.minimap_unit_update_accumulator += std::max(dt, 0.0F);
+      const bool unit_update_due =
+          state.minimap_unit_update_accumulator >= k_minimap_unit_update_interval;
+      if (unit_update_due || scene.minimap_manager->unit_overlay_stale()) {
+        scene.minimap_manager->update_units(
+            scene.world, selection_system, state.local_owner_id);
+        if (unit_update_due) {
+          state.minimap_unit_update_accumulator = std::fmod(
+              state.minimap_unit_update_accumulator, k_minimap_unit_update_interval);
+        }
+      }
       scene.minimap_manager->update_camera_viewport(
           scene.active_camera,
           static_cast<float>(state.viewport_width),

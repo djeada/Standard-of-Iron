@@ -432,6 +432,94 @@ const auto k_elephant_whole_nodes = build_elephant_whole_nodes();
 const std::array<std::string_view, 1> k_elephant_full_excluded_prefixes{
     "elephant.leg."};
 
+auto build_elephant_production_nodes()
+    -> std::vector<Render::Creature::Quadruped::MeshNode> {
+  using Render::Creature::Quadruped::CustomMeshNode;
+  using Render::Creature::Quadruped::MeshNode;
+
+  auto const source_nodes = elephant_source_mesh_nodes();
+  std::vector<MeshNode> nodes(source_nodes.begin(), source_nodes.end());
+  auto const bind = elephant_source_bind_palette();
+
+  // The authored package contains one correctly skinned eye on the animal's
+  // left side.  Mirror that exact front-of-head geometry in bind space so both
+  // eyes share its shape, black material and head animation.  Do not mirror the
+  // dark toenail islands that share the source material farther down the mesh.
+  for (auto const& source : source_nodes) {
+    if (source.debug_name != "elephant.production.eyes" ||
+        source.anchor_bone >= bind.size()) {
+      continue;
+    }
+    auto const* source_mesh = std::get_if<CustomMeshNode>(&source.data);
+    if (source_mesh == nullptr) {
+      continue;
+    }
+
+    QMatrix4x4 const root_from_mesh = bind[source.anchor_bone];
+    QMatrix4x4 const mesh_from_root = root_from_mesh.inverted();
+    CustomMeshNode mirrored;
+    std::vector<int> mirrored_index(source_mesh->vertices.size(), -1);
+    auto append_mirrored_vertex = [&](unsigned int source_index) {
+      int& existing = mirrored_index[source_index];
+      if (existing >= 0) {
+        return static_cast<unsigned int>(existing);
+      }
+
+      auto vertex = source_mesh->vertices[source_index];
+      QVector3D rest = root_from_mesh.map(QVector3D(
+          vertex.position[0], vertex.position[1], vertex.position[2]));
+      rest.setX(-rest.x());
+      QVector3D const local = mesh_from_root.map(rest);
+      vertex.position = {local.x(), local.y(), local.z()};
+
+      QVector3D normal = root_from_mesh.mapVector(
+          QVector3D(vertex.normal[0], vertex.normal[1], vertex.normal[2]));
+      normal.setX(-normal.x());
+      normal = mesh_from_root.mapVector(normal).normalized();
+      vertex.normal = {normal.x(), normal.y(), normal.z()};
+
+      existing = static_cast<int>(mirrored.vertices.size());
+      mirrored.vertices.push_back(vertex);
+      return static_cast<unsigned int>(existing);
+    };
+
+    for (std::size_t index = 0U; index + 2U < source_mesh->indices.size();
+         index += 3U) {
+      unsigned int const a = source_mesh->indices[index];
+      unsigned int const b = source_mesh->indices[index + 1U];
+      unsigned int const c = source_mesh->indices[index + 2U];
+      auto is_front_eye_vertex = [&](unsigned int vertex_index) {
+        auto const& vertex = source_mesh->vertices[vertex_index];
+        QVector3D const rest = root_from_mesh.map(QVector3D(
+            vertex.position[0], vertex.position[1], vertex.position[2]));
+        return rest.z() > 0.0F;
+      };
+      if (!is_front_eye_vertex(a) || !is_front_eye_vertex(b) ||
+          !is_front_eye_vertex(c)) {
+        continue;
+      }
+
+      // Reflection reverses winding, so swap the final two indices.
+      mirrored.indices.push_back(append_mirrored_vertex(a));
+      mirrored.indices.push_back(append_mirrored_vertex(c));
+      mirrored.indices.push_back(append_mirrored_vertex(b));
+    }
+
+    if (!mirrored.indices.empty()) {
+      nodes.push_back(MeshNode{"elephant.production.eye.mirrored",
+                               source.anchor_bone,
+                               k_role_eye,
+                               Render::Creature::k_lod_all,
+                               k_elephant_material_id,
+                               std::move(mirrored)});
+    }
+    break;
+  }
+  return nodes;
+}
+
+const auto k_elephant_production_nodes = build_elephant_production_nodes();
+
 struct ElephantLegRingProfile {
   float y{};
   float x_shift{};
@@ -728,7 +816,7 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
     m.lod_full.color_role = k_role_skin;
     m.lod_full.material_id = k_elephant_material_id;
     m.lod_full.lod_mask = Render::Creature::k_lod_full;
-    m.lod_full.mesh_nodes = elephant_source_mesh_nodes();
+    m.lod_full.mesh_nodes = k_elephant_production_nodes;
     m.lod_minimal.primitive_name = "elephant.minimal.whole";
     m.lod_minimal.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(ElephantBone::Root);
@@ -736,7 +824,7 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
     m.lod_minimal.color_role = k_role_skin;
     m.lod_minimal.material_id = k_elephant_material_id;
     m.lod_minimal.lod_mask = Render::Creature::k_lod_minimal;
-    m.lod_minimal.mesh_nodes = elephant_source_mesh_nodes();
+    m.lod_minimal.mesh_nodes = k_elephant_production_nodes;
     m.clips =
         std::span<const Render::Creature::BakeClipDescriptor>(k_elephant_clip_descs);
     m.bind_palette = &elephant_bind_palette;

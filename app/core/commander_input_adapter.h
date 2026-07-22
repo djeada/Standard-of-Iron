@@ -16,6 +16,7 @@ public:
   Q_INVOKABLE void primary_action_up();
   Q_INVOKABLE void secondary_action_down();
   Q_INVOKABLE void secondary_action_up();
+  Q_INVOKABLE void trigger_aura();
   Q_INVOKABLE void trigger_rally();
   Q_INVOKABLE void dodge();
   Q_INVOKABLE void jump();

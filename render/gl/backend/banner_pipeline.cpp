@@ -23,8 +23,8 @@ auto BannerPipeline::initialize() -> bool {
     return false;
   }
 
-  m_banner_mesh16 = GL::create_plane_mesh(1.0F, 1.0F, 16);
-  m_banner_mesh8 = GL::create_plane_mesh(1.0F, 1.0F, 8);
+  m_banner_mesh16 = GL::create_plane_mesh(1.0F, 1.0F, 24);
+  m_banner_mesh8 = GL::create_plane_mesh(1.0F, 1.0F, 12);
 
   cache_uniforms();
 
@@ -61,6 +61,11 @@ void BannerPipeline::cache_banner_uniforms() {
   m_banner_uniforms.model = m_banner_shader->uniform_handle("u_model");
   m_banner_uniforms.time = m_banner_shader->uniform_handle("u_time");
   m_banner_uniforms.wind_strength = m_banner_shader->uniform_handle("u_wind_strength");
+  m_banner_uniforms.light_direction =
+      m_banner_shader->uniform_handle("u_light_direction");
+  m_banner_uniforms.camera_pos = m_banner_shader->uniform_handle("u_camera_pos");
+  m_banner_uniforms.ambient_strength =
+      m_banner_shader->uniform_handle("u_ambient_strength");
   m_banner_uniforms.color = m_banner_shader->uniform_handle("u_color");
   m_banner_uniforms.trim_color = m_banner_shader->uniform_handle("u_trim_color");
   m_banner_uniforms.texture = m_banner_shader->uniform_handle("u_texture");

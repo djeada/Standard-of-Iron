@@ -45,6 +45,7 @@ animation_state_name(Render::Creature::AnimationStateId state) noexcept -> const
 enum class SoldierCullReason : std::uint8_t {
   None = 0,
   Frustum,
+  Fog,
   Billboard,
   Temporal,
 };
@@ -155,6 +156,10 @@ public:
 
   [[nodiscard]] auto
   find_unit(std::uint32_t entity_id) const -> const CombatAnimationDebugUnit*;
+  [[nodiscard]] auto units() const noexcept
+      -> const std::unordered_map<std::uint32_t, CombatAnimationDebugUnit>& {
+    return m_units;
+  }
   [[nodiscard]] auto flagged_unit_count() const noexcept -> std::size_t;
 
 private:

@@ -23,12 +23,14 @@ enum class ActionId {
   Formation,
   Run,
   Rally,
+  Aura,
   Unknown
 };
 
 struct ActionStatus {
   int eligible_count = 0;
   int active_count = 0;
+  int ready_count = 0;
   bool enabled = false;
   bool active = false;
   bool mixed = false;
@@ -47,7 +49,8 @@ constexpr ActionId k_all_actions[] = {ActionId::Attack,
                                       ActionId::Build,
                                       ActionId::Formation,
                                       ActionId::Run,
-                                      ActionId::Rally};
+                                      ActionId::Rally,
+                                      ActionId::Aura};
 
 auto action_to_string(ActionId action) -> QString {
   switch (action) {
@@ -75,6 +78,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("run");
   case ActionId::Rally:
     return QStringLiteral("rally");
+  case ActionId::Aura:
+    return QStringLiteral("aura");
   case ActionId::Unknown:
     break;
   }
@@ -117,6 +122,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   }
   if (action_id == QStringLiteral("rally")) {
     return ActionId::Rally;
+  }
+  if (action_id == QStringLiteral("aura")) {
+    return ActionId::Aura;
   }
   return ActionId::Unknown;
 }
@@ -165,6 +173,7 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::Run:
     return (unit != nullptr) && Game::Units::can_use_run_mode(unit->spawn_type);
   case ActionId::Rally:
+  case ActionId::Aura:
     return entity.get_component<Engine::Core::CommanderComponent>() != nullptr;
   case ActionId::Unknown:
     break;
@@ -198,6 +207,11 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
     const auto* stamina = entity.get_component<Engine::Core::StaminaComponent>();
     return (stamina != nullptr) && stamina->run_requested;
   }
+  case ActionId::Aura: {
+    const auto* commander =
+        entity.get_component<Engine::Core::CommanderComponent>();
+    return commander != nullptr && commander->aura_ability_active;
+  }
   case ActionId::Heal:
   case ActionId::Stop:
   case ActionId::Deliver:
@@ -226,6 +240,12 @@ auto get_status(const App::Core::ActionContext& context,
 
     ++status.eligible_count;
     status.active_count += unit_is_active_for_action(*entity, action) ? 1 : 0;
+    if (action == ActionId::Aura) {
+      const auto* commander =
+          entity->get_component<Engine::Core::CommanderComponent>();
+      status.ready_count +=
+          commander != nullptr && commander->can_activate_aura_ability() ? 1 : 0;
+    }
   }
 
   switch (action) {
@@ -238,6 +258,9 @@ auto get_status(const App::Core::ActionContext& context,
   case ActionId::Heal:
     status.passive = status.eligible_count > 0;
     status.enabled = false;
+    break;
+  case ActionId::Aura:
+    status.enabled = status.ready_count > 0;
     break;
   default:
     status.enabled = status.eligible_count > 0;
@@ -373,6 +396,7 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canCollect")] = get_status(context, ActionId::Collect).enabled;
   result[QStringLiteral("canDeliver")] = get_status(context, ActionId::Deliver).enabled;
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
+  result[QStringLiteral("canAura")] = get_status(context, ActionId::Aura).enabled;
   return result;
 }
 

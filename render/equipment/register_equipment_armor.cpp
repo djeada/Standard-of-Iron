@@ -3,6 +3,7 @@
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/cloak_renderer.h"
+#include "armor/commander_regalia.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
@@ -11,6 +12,151 @@
 #include "register_equipment_internal.h"
 
 namespace Render::GL::EquipmentRegistration {
+namespace {
+
+enum class CommanderCloakStyle : std::uint8_t {
+  Fabius,
+  Scipio,
+  Marcellus,
+  Hanno,
+  Hasdrubal,
+  Hannibal,
+};
+
+auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
+  static const CloakConfig fabius = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.34F, 0.025F, 0.035F};
+    cfg.trim_color = {0.66F, 0.68F, 0.66F};
+    cfg.length_scale = 1.26F;
+    cfg.width_scale = 1.18F;
+    cfg.shoulder_anchor_up = 0.06F;
+    cfg.back_material_id = 12;
+    cfg.shoulder_material_id = 13;
+    return cfg;
+  }();
+  static const CloakConfig scipio = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.075F, 0.055F, 0.065F};
+    cfg.trim_color = {0.94F, 0.62F, 0.15F};
+    cfg.length_scale = 1.02F;
+    cfg.width_scale = 0.96F;
+    cfg.shoulder_anchor_up = 0.07F;
+    cfg.back_material_id = 12;
+    cfg.shoulder_material_id = 13;
+    return cfg;
+  }();
+  static const CloakConfig marcellus = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.56F, 0.055F, 0.045F};
+    cfg.trim_color = {0.18F, 0.16F, 0.15F};
+    cfg.length_scale = 0.68F;
+    cfg.width_scale = 0.78F;
+    cfg.shoulder_anchor_up = 0.12F;
+    cfg.show_clasp = false;
+    cfg.back_material_id = 12;
+    cfg.shoulder_material_id = 13;
+    return cfg;
+  }();
+  static const CloakConfig hanno = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.25F, 0.035F, 0.30F};
+    cfg.trim_color = {0.90F, 0.58F, 0.14F};
+    cfg.length_scale = 1.10F;
+    cfg.width_scale = 1.24F;
+    cfg.shoulder_anchor_up = 0.25F;
+    return cfg;
+  }();
+  static const CloakConfig hasdrubal = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.08F, 0.24F, 0.25F};
+    cfg.trim_color = {0.44F, 0.16F, 0.48F};
+    cfg.length_scale = 0.76F;
+    cfg.width_scale = 0.86F;
+    cfg.shoulder_anchor_up = 0.12F;
+    cfg.show_clasp = false;
+    return cfg;
+  }();
+  static const CloakConfig hannibal = [] {
+    CloakConfig cfg;
+    cfg.primary_color = {0.025F, 0.028F, 0.035F};
+    cfg.trim_color = {0.74F, 0.44F, 0.10F};
+    cfg.length_scale = 1.30F;
+    cfg.width_scale = 1.00F;
+    cfg.shoulder_anchor_up = 0.08F;
+    cfg.drape_anchor_back = 0.60F;
+    cfg.back_material_id = 12;
+    cfg.shoulder_material_id = 13;
+    return cfg;
+  }();
+  switch (style) {
+  case CommanderCloakStyle::Fabius:
+    return fabius;
+  case CommanderCloakStyle::Scipio:
+    return scipio;
+  case CommanderCloakStyle::Marcellus:
+    return marcellus;
+  case CommanderCloakStyle::Hanno:
+    return hanno;
+  case CommanderCloakStyle::Hasdrubal:
+    return hasdrubal;
+  case CommanderCloakStyle::Hannibal:
+    return hannibal;
+  }
+  return fabius;
+}
+
+template <CommanderCloakStyle Style>
+auto build_commander_cloak(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  constexpr auto regalia_style = [] {
+    if constexpr (Style == CommanderCloakStyle::Fabius) {
+      return CommanderRegaliaStyle::Fabius;
+    } else if constexpr (Style == CommanderCloakStyle::Scipio) {
+      return CommanderRegaliaStyle::Scipio;
+    } else if constexpr (Style == CommanderCloakStyle::Marcellus) {
+      return CommanderRegaliaStyle::Marcellus;
+    } else if constexpr (Style == CommanderCloakStyle::Hanno) {
+      return CommanderRegaliaStyle::Hanno;
+    } else if constexpr (Style == CommanderCloakStyle::Hasdrubal) {
+      return CommanderRegaliaStyle::Hasdrubal;
+    } else {
+      return CommanderRegaliaStyle::Hannibal;
+    }
+  }();
+  return {Render::GL::cloak_make_static_attachment(commander_cloak_config(Style),
+                                                   Render::GL::shared_cloak_meshes(),
+                                                   humanoid_chest_bone(),
+                                                   base_role_byte),
+          Render::GL::commander_regalia_make_static_attachment(
+              regalia_style, humanoid_chest_bone(), base_role_byte)};
+}
+
+template <CommanderCloakStyle Style>
+auto commander_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant&,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        if (max - count < Render::GL::k_cloak_role_count) {
+          return count;
+        }
+        auto const& config = commander_cloak_config(Style);
+        colors[count] = config.primary_color;
+        colors[count + 1U] = config.trim_color;
+        return count + Render::GL::k_cloak_role_count;
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+} // namespace
 
 auto carthage_cloak_config() -> const CloakConfig& {
   static const CloakConfig config = []() {
@@ -194,6 +340,36 @@ auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
                                                    Render::GL::shared_cloak_meshes(),
                                                    humanoid_chest_bone(),
                                                    base_role_byte)};
+}
+
+auto build_fabius_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Fabius>(base_role_byte);
+}
+
+auto build_scipio_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Scipio>(base_role_byte);
+}
+
+auto build_marcellus_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Marcellus>(base_role_byte);
+}
+
+auto build_hanno_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Hanno>(base_role_byte);
+}
+
+auto build_hasdrubal_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Hasdrubal>(base_role_byte);
+}
+
+auto build_hannibal_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_cloak<CommanderCloakStyle::Hannibal>(base_role_byte);
 }
 auto roman_light_armor_role_colors(const void* variant_void,
                                    QVector3D* out,
@@ -381,6 +557,54 @@ auto roman_cloak_role_colors(const void* variant_void,
       out,
       base_count,
       max_count);
+}
+
+auto fabius_cloak_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Fabius>(
+      variant_void, out, base_count, max_count);
+}
+
+auto scipio_cloak_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Scipio>(
+      variant_void, out, base_count, max_count);
+}
+
+auto marcellus_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Marcellus>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hanno_cloak_role_colors(const void* variant_void,
+                             QVector3D* out,
+                             std::uint32_t base_count,
+                             std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Hanno>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hasdrubal_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Hasdrubal>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hannibal_cloak_role_colors(const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+  return commander_cloak_role_colors<CommanderCloakStyle::Hannibal>(
+      variant_void, out, base_count, max_count);
 }
 
 auto roman_tool_belt_role_colors(const void* variant_void,

@@ -65,6 +65,11 @@ Item {
                 root.commanderInput.second_wind();
             event.accepted = true;
             return;
+        case Qt.Key_3:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.trigger_aura)
+                root.commanderInput.trigger_aura();
+            event.accepted = true;
+            return;
         case Qt.Key_F:
             if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.special_action)
                 root.commanderInput.special_action();

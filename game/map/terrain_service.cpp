@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -19,11 +20,7 @@ namespace {
 
 constexpr float k_min_tile_size = 0.0001F;
 constexpr float k_harvest_grid_snap_distance = 3.0F;
-
-struct SurfaceBaseSample {
-  float world_y{0.0F};
-  SurfaceHeightKind kind{SurfaceHeightKind::Fallback};
-};
+constexpr float k_road_index_tile_span = 8.0F;
 
 auto authored_grid_to_world(float grid_coord, int grid_size, float tile_size) -> float {
   float const safe_tile_size = std::max(tile_size, k_min_tile_size);
@@ -273,60 +270,6 @@ auto is_point_within_linear_feature(float world_x,
          effective_half_width * effective_half_width;
 }
 
-auto sample_surface_base_height(const TerrainHeightMap* height_map,
-                                const std::vector<RoadSegment>& road_segments,
-                                float world_x,
-                                float world_z,
-                                float fallback_y) -> SurfaceBaseSample {
-  if (height_map == nullptr) {
-    return {.world_y = fallback_y, .kind = SurfaceHeightKind::Fallback};
-  }
-
-  if (height_map->isOnBridge(world_x, world_z)) {
-    if (auto const bridge_height = height_map->getBridgeDeckHeight(world_x, world_z);
-        bridge_height.has_value()) {
-      return {.world_y = *bridge_height, .kind = SurfaceHeightKind::Bridge};
-    }
-  }
-
-  float const terrain_height = height_map->get_height_at(world_x, world_z);
-  for (const auto& segment : road_segments) {
-    const float dx = segment.end.x() - segment.start.x();
-    const float dz = segment.end.z() - segment.start.z();
-    const float segment_length_sq = dx * dx + dz * dz;
-
-    if (segment_length_sq < 0.0001F) {
-      const float dist_x = world_x - segment.start.x();
-      const float dist_z = world_z - segment.start.z();
-      const float dist_sq = dist_x * dist_x + dist_z * dist_z;
-      const float half_width = segment.width * 0.5F;
-      if (dist_sq <= half_width * half_width) {
-        return {.world_y = terrain_height, .kind = SurfaceHeightKind::Road};
-      }
-      continue;
-    }
-
-    const float px = world_x - segment.start.x();
-    const float pz = world_z - segment.start.z();
-    float t = (px * dx + pz * dz) / segment_length_sq;
-    t = std::clamp(t, 0.0F, 1.0F);
-
-    const float closest_x = segment.start.x() + t * dx;
-    const float closest_z = segment.start.z() + t * dz;
-
-    const float dist_x = world_x - closest_x;
-    const float dist_z = world_z - closest_z;
-    const float dist_sq = dist_x * dist_x + dist_z * dist_z;
-
-    const float half_width = segment.width * 0.5F;
-    if (dist_sq <= half_width * half_width) {
-      return {.world_y = terrain_height, .kind = SurfaceHeightKind::Road};
-    }
-  }
-
-  return {.world_y = terrain_height, .kind = SurfaceHeightKind::Terrain};
-}
-
 } // namespace
 
 auto TerrainService::instance() -> TerrainService& {
@@ -346,14 +289,19 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map = std::make_unique<TerrainHeightMap>(
       map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
 
+  // Establish one authoritative battlefield surface before authored features
+  // are layered onto it. Roads, placement, pathing, and rendering all sample
+  // this same relief instead of relying on renderer-only displacement.
+  m_height_map->apply_biome_variation(map_def.biome);
   m_height_map->build_from_features(map_def.terrain);
+  m_height_map->add_lakes(map_def.lakes);
   m_height_map->add_river_segments(map_def.rivers);
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
   m_coord_system = map_def.coordSystem;
-  m_height_map->apply_biome_variation(m_biome_settings);
 
   m_road_segments = map_def.roads;
+  rebuild_road_spatial_index();
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
   m_world_props = build_runtime_world_props(
@@ -373,6 +321,11 @@ void TerrainService::clear() {
   m_authored_world_props.clear();
   m_world_props.clear();
   m_road_segments.clear();
+  m_road_query_segments.clear();
+  m_road_index_offsets.clear();
+  m_road_index_segment_ids.clear();
+  m_road_index_columns = 0;
+  m_road_index_rows = 0;
   m_reserved_world_prop_ids.clear();
   m_next_world_prop_id = 1;
   bump_authored_world_props_revision();
@@ -560,10 +513,217 @@ auto TerrainService::get_terrain_height(float world_x, float world_z) const -> f
   return sample_surface_height(world_x, world_z).world_y;
 }
 
+void TerrainService::rebuild_road_spatial_index() {
+  m_road_index_offsets.clear();
+  m_road_index_segment_ids.clear();
+  m_road_query_segments.clear();
+  m_road_index_columns = 0;
+  m_road_index_rows = 0;
+
+  if (m_height_map == nullptr || m_road_segments.empty()) {
+    return;
+  }
+
+  const float tile_size = std::max(m_height_map->get_tile_size(), k_min_tile_size);
+  m_road_index_cell_size = std::max(1.0F, tile_size * k_road_index_tile_span);
+
+  const float half_world_width =
+      static_cast<float>(m_height_map->get_width()) * tile_size * 0.5F;
+  const float half_world_height =
+      static_cast<float>(m_height_map->get_height()) * tile_size * 0.5F;
+  float min_x = -half_world_width;
+  float max_x = half_world_width;
+  float min_z = -half_world_height;
+  float max_z = half_world_height;
+
+  m_road_query_segments.reserve(m_road_segments.size());
+  for (const auto& segment : m_road_segments) {
+    const float half_width = std::max(0.0F, segment.width * 0.5F);
+    const float start_x = segment.start.x();
+    const float start_z = segment.start.z();
+    const float delta_x = segment.end.x() - start_x;
+    const float delta_z = segment.end.z() - start_z;
+    const float length_sq = delta_x * delta_x + delta_z * delta_z;
+    RoadQuerySegment query{
+        .start_x = start_x,
+        .start_z = start_z,
+        .delta_x = delta_x,
+        .delta_z = delta_z,
+        .inverse_length_sq = length_sq >= 0.0001F ? 1.0F / length_sq : 0.0F,
+        .half_width = half_width,
+        .min_x = std::min(start_x, segment.end.x()) - half_width,
+        .max_x = std::max(start_x, segment.end.x()) + half_width,
+        .min_z = std::min(start_z, segment.end.z()) - half_width,
+        .max_z = std::max(start_z, segment.end.z()) + half_width,
+    };
+    min_x = std::min(min_x, query.min_x);
+    max_x = std::max(max_x, query.max_x);
+    min_z = std::min(min_z, query.min_z);
+    max_z = std::max(max_z, query.max_z);
+    m_road_query_segments.push_back(query);
+  }
+
+  m_road_index_origin_x = min_x;
+  m_road_index_origin_z = min_z;
+  m_road_index_columns = std::max(
+      1, static_cast<int>(std::floor((max_x - min_x) / m_road_index_cell_size)) + 1);
+  m_road_index_rows = std::max(
+      1, static_cast<int>(std::floor((max_z - min_z) / m_road_index_cell_size)) + 1);
+
+  const auto cell_x = [this](float world_x) {
+    return std::clamp(static_cast<int>(std::floor((world_x - m_road_index_origin_x) /
+                                                  m_road_index_cell_size)),
+                      0,
+                      m_road_index_columns - 1);
+  };
+  const auto cell_z = [this](float world_z) {
+    return std::clamp(static_cast<int>(std::floor((world_z - m_road_index_origin_z) /
+                                                  m_road_index_cell_size)),
+                      0,
+                      m_road_index_rows - 1);
+  };
+  const auto segment_cell_bounds = [&](const RoadQuerySegment& segment) {
+    return std::array<int, 4>{
+        cell_x(segment.min_x),
+        cell_x(segment.max_x),
+        cell_z(segment.min_z),
+        cell_z(segment.max_z)};
+  };
+
+  const std::size_t cell_count = static_cast<std::size_t>(m_road_index_columns) *
+                                 static_cast<std::size_t>(m_road_index_rows);
+  m_road_index_offsets.assign(cell_count + 1U, 0U);
+  for (const auto& segment : m_road_query_segments) {
+    const auto bounds = segment_cell_bounds(segment);
+    for (int z = bounds[2]; z <= bounds[3]; ++z) {
+      for (int x = bounds[0]; x <= bounds[1]; ++x) {
+        const std::size_t cell = static_cast<std::size_t>(z) *
+                                     static_cast<std::size_t>(m_road_index_columns) +
+                                 static_cast<std::size_t>(x);
+        ++m_road_index_offsets[cell + 1U];
+      }
+    }
+  }
+  for (std::size_t cell = 1; cell < m_road_index_offsets.size(); ++cell) {
+    m_road_index_offsets[cell] += m_road_index_offsets[cell - 1U];
+  }
+
+  m_road_index_segment_ids.resize(m_road_index_offsets.back());
+  auto cursors = m_road_index_offsets;
+  for (std::uint32_t segment_id = 0;
+       segment_id < static_cast<std::uint32_t>(m_road_segments.size());
+       ++segment_id) {
+    const auto bounds = segment_cell_bounds(m_road_query_segments[segment_id]);
+    for (int z = bounds[2]; z <= bounds[3]; ++z) {
+      for (int x = bounds[0]; x <= bounds[1]; ++x) {
+        const std::size_t cell = static_cast<std::size_t>(z) *
+                                     static_cast<std::size_t>(m_road_index_columns) +
+                                 static_cast<std::size_t>(x);
+        m_road_index_segment_ids[cursors[cell]++] = segment_id;
+      }
+    }
+  }
+}
+
+auto TerrainService::is_point_near_indexed_road(float world_x,
+                                                float world_z,
+                                                float clearance) const -> bool {
+  if (m_road_index_columns <= 0 || m_road_index_rows <= 0 ||
+      m_road_query_segments.empty()) {
+    return false;
+  }
+
+  const float expanded = std::max(clearance, 0.0F);
+  const float index_max_x =
+      m_road_index_origin_x + m_road_index_cell_size * m_road_index_columns;
+  const float index_max_z =
+      m_road_index_origin_z + m_road_index_cell_size * m_road_index_rows;
+  if (world_x + expanded < m_road_index_origin_x ||
+      world_z + expanded < m_road_index_origin_z ||
+      world_x - expanded >= index_max_x || world_z - expanded >= index_max_z) {
+    return false;
+  }
+
+  const auto cell_x = [&](float x) {
+    return std::clamp(static_cast<int>(
+                          std::floor((x - m_road_index_origin_x) /
+                                     m_road_index_cell_size)),
+                      0,
+                      m_road_index_columns - 1);
+  };
+  const auto cell_z = [&](float z) {
+    return std::clamp(static_cast<int>(
+                          std::floor((z - m_road_index_origin_z) /
+                                     m_road_index_cell_size)),
+                      0,
+                      m_road_index_rows - 1);
+  };
+  const int min_x = cell_x(world_x - expanded);
+  const int max_x = cell_x(world_x + expanded);
+  const int min_z = cell_z(world_z - expanded);
+  const int max_z = cell_z(world_z + expanded);
+
+  for (int cell_z_index = min_z; cell_z_index <= max_z; ++cell_z_index) {
+    for (int cell_x_index = min_x; cell_x_index <= max_x; ++cell_x_index) {
+      const std::size_t cell = static_cast<std::size_t>(cell_z_index) *
+                                   static_cast<std::size_t>(m_road_index_columns) +
+                               static_cast<std::size_t>(cell_x_index);
+      for (std::uint32_t cursor = m_road_index_offsets[cell];
+           cursor < m_road_index_offsets[cell + 1U];
+           ++cursor) {
+        const RoadQuerySegment& segment =
+            m_road_query_segments[m_road_index_segment_ids[cursor]];
+        const float radius = segment.half_width + expanded;
+        const float px = world_x - segment.start_x;
+        const float pz = world_z - segment.start_z;
+        float closest_x = segment.start_x;
+        float closest_z = segment.start_z;
+        if (segment.inverse_length_sq > 0.0F) {
+          float t = (px * segment.delta_x + pz * segment.delta_z) *
+                    segment.inverse_length_sq;
+          if (t <= 0.0F) {
+            t = 0.0F;
+          } else if (t >= 1.0F) {
+            t = 1.0F;
+          }
+          closest_x += t * segment.delta_x;
+          closest_z += t * segment.delta_z;
+        }
+        const float dx = world_x - closest_x;
+        const float dz = world_z - closest_z;
+        if (dx * dx + dz * dz <= radius * radius) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+auto TerrainService::sample_surface_base_height(
+    float world_x, float world_z, float fallback_y) const -> SurfaceHeightSample {
+  if (m_height_map == nullptr) {
+    return {.world_y = fallback_y, .kind = SurfaceHeightKind::Fallback};
+  }
+
+  if (m_height_map->isOnBridge(world_x, world_z)) {
+    if (auto const bridge_height = m_height_map->getBridgeDeckHeight(world_x, world_z);
+        bridge_height.has_value()) {
+      return {.world_y = *bridge_height, .kind = SurfaceHeightKind::Bridge};
+    }
+  }
+
+  const float terrain_height = m_height_map->get_base_height_at(world_x, world_z);
+  if (is_point_near_indexed_road(world_x, world_z, 0.0F)) {
+    return {.world_y = terrain_height, .kind = SurfaceHeightKind::Road};
+  }
+
+  return {.world_y = terrain_height, .kind = SurfaceHeightKind::Terrain};
+}
+
 auto TerrainService::sample_surface_height(
     float world_x, float world_z, float fallback_y) const -> SurfaceHeightSample {
-  auto const base_sample = sample_surface_base_height(
-      m_height_map.get(), m_road_segments, world_x, world_z, fallback_y);
+  auto const base_sample = sample_surface_base_height(world_x, world_z, fallback_y);
   if (base_sample.kind == SurfaceHeightKind::Road) {
     return {.world_y = road_surface_world_y(base_sample.world_y),
             .kind = base_sample.kind};
@@ -575,8 +735,7 @@ auto TerrainService::resolve_surface_world_y(float world_x,
                                              float world_z,
                                              float world_y_offset,
                                              float fallback_y) const -> float {
-  auto const base_sample = sample_surface_base_height(
-      m_height_map.get(), m_road_segments, world_x, world_z, fallback_y);
+  auto const base_sample = sample_surface_base_height(world_x, world_z, fallback_y);
 
   float const surface_world_y = base_sample.kind == SurfaceHeightKind::Road
                                     ? road_surface_world_y(base_sample.world_y)
@@ -685,13 +844,15 @@ void TerrainService::restore_from_serialized(
     const std::vector<Bridge>& bridges,
     const BiomeSettings& biome,
     const std::vector<WorldProp>& world_props,
-    const std::vector<WorldProp>& authored_world_props) {
+    const std::vector<WorldProp>& authored_world_props,
+    const std::vector<Lake>& lakes) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
-  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
+  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
   m_biome_settings = biome;
   m_coord_system = CoordSystem::Grid;
 
   m_road_segments = roads;
+  rebuild_road_spatial_index();
   if (authored_world_props.empty()) {
     m_authored_world_props = world_props;
     normalize_world_props(m_authored_world_props);
@@ -715,21 +876,14 @@ void TerrainService::restore_from_serialized(
 }
 
 auto TerrainService::is_point_on_road(float world_x, float world_z) const -> bool {
-  return sample_surface_base_height(
-             m_height_map.get(), m_road_segments, world_x, world_z, 0.0F)
-             .kind == SurfaceHeightKind::Road;
+  return sample_surface_base_height(world_x, world_z, 0.0F).kind ==
+         SurfaceHeightKind::Road;
 }
 
 auto TerrainService::is_point_near_road(float world_x,
                                         float world_z,
                                         float clearance) const -> bool {
-  for (const auto& segment : m_road_segments) {
-    if (is_point_within_linear_feature(
-            world_x, world_z, segment.start, segment.end, segment.width, clearance)) {
-      return true;
-    }
-  }
-  return false;
+  return is_point_near_indexed_road(world_x, world_z, clearance);
 }
 
 auto TerrainService::is_on_bridge(float world_x, float world_z) const -> bool {
@@ -763,6 +917,23 @@ auto TerrainService::is_point_near_river(float world_x,
   for (const auto& river : m_height_map->get_river_segments()) {
     if (is_point_within_linear_feature(
             world_x, world_z, river.start, river.end, river.width, clearance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto TerrainService::is_point_near_water(float world_x,
+                                         float world_z,
+                                         float clearance) const -> bool {
+  if (is_point_near_river(world_x, world_z, clearance)) {
+    return true;
+  }
+  if (!m_height_map) {
+    return false;
+  }
+  for (const auto& lake : m_height_map->get_lakes()) {
+    if (point_in_lake(lake, world_x, world_z, clearance)) {
       return true;
     }
   }

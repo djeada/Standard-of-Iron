@@ -11,13 +11,14 @@ enum class HumanoidHeldPoseKind : std::uint8_t {
   SpearIdle,
   SpearBrace,
   BowReady,
-  SwordShieldHold,
+  SwordShieldCarry,
 };
 
 struct HumanoidHeldPoseInputs {
   HumanoidHeldPoseKind kind{HumanoidHeldPoseKind::BowReady};
   float shoulder_y{0.0F};
   bool moving{false};
+  float sample_time{0.0F};
 };
 
 struct HumanoidHeldPoseSample {

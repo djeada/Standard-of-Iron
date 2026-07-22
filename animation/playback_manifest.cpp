@@ -92,6 +92,13 @@ auto resolve_humanoid_playback_phase(const HumanoidPlaybackPhaseInputs& inputs) 
     return 0.0F;
   }
   if (inputs.state == StateId::Hold) {
+    bool const settled_hold = inputs.is_in_hold_mode && !inputs.is_exiting_hold &&
+                              inputs.hold_entry_progress >= 0.999F;
+    bool const settled_guard = inputs.is_guarding && !inputs.is_exiting_guard &&
+                               inputs.guard_pose_progress >= 0.999F;
+    if (settled_hold || settled_guard) {
+      return normalize_clip_phase(inputs.gait_cycle_phase, true);
+    }
     return humanoid_hold_phase(hold_phase_inputs(inputs));
   }
   if (inputs.state == StateId::RidingCharge && inputs.is_mounted &&

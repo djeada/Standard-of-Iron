@@ -10,6 +10,7 @@ using Render::Profiling::FrameProfile;
 using Render::Profiling::Phase;
 using Render::Profiling::PhaseScope;
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 TEST(FrameProfileTest, ResetZeroes) {
   FrameProfile p;
   p.add_phase_us(Phase::Sort, 123);
@@ -124,6 +125,26 @@ TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
   EXPECT_NEAR(p.average_frame_ms, 3.0, 0.01);
   EXPECT_NEAR(p.p95_frame_ms, 5.0, 0.01);
 }
+#else
+TEST(FrameProfileTest, ReleaseBuildCompilesOutRuntimeTracing) {
+  FrameProfile p;
+  EXPECT_FALSE(p.enabled);
+
+  p.enabled = true;
+  p.add_phase_us(Phase::Collection, 1000);
+  {
+    PhaseScope const scope(&p, Phase::Playback);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  p.finish_frame_sample();
+
+  EXPECT_EQ(p.total_us(), 0U);
+  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Collection)], 0U);
+  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Playback)], 0U);
+  EXPECT_EQ(p.average_frame_ms, 0.0);
+  EXPECT_EQ(p.p95_frame_ms, 0.0);
+}
+#endif
 
 TEST(FrameProfileTest, PhaseNameMatchesEnum) {
   EXPECT_STREQ(Render::Profiling::phase_name(Phase::Collection), "collect");

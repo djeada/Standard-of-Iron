@@ -70,7 +70,10 @@ enum class BakerAttackType : std::uint8_t {
   None,
   Sword,
   Spear,
-  Bow
+  Bow,
+  BowMelee,
+  SpearFromHold,
+  BowFromHold,
 };
 enum class BakerHoldType : std::uint8_t {
   None,
@@ -145,6 +148,10 @@ struct HumanoidClipSpec {
 
 [[nodiscard]] auto is_rpg_sword_clip(const HumanoidClipSpec& clip) noexcept -> bool {
   return std::string_view{clip.name}.starts_with("rpg_sword_");
+}
+
+[[nodiscard]] auto is_ranged_attack_type(BakerAttackType type) noexcept -> bool {
+  return type == BakerAttackType::Bow || type == BakerAttackType::BowFromHold;
 }
 
 constexpr auto k_humanoid_baker_clip_count = Animation::k_humanoid_clip_count;
@@ -521,6 +528,42 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      24.0F,
      1.25F,
      false},
+    {"archer_melee",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::BowMelee,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     32U,
+     24.0F,
+     1.0F,
+     false},
+    {"hold_spear_attack",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::SpearFromHold,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     32U,
+     24.0F,
+     1.0F,
+     false},
+    {"hold_bow_attack",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::BowFromHold,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     32U,
+     24.0F,
+     1.0F,
+     false},
 }};
 
 struct HumanoidSocketSpec {
@@ -706,30 +749,6 @@ auto baked_spear_socket_matrix(const Render::GL::AttachmentFrame& grip,
       3,
       QVector4D(grip.origin + spear_dir * spear_endpoint_distance(kind, config), 1.0F));
   return socket;
-}
-
-auto blend_pose(const Render::GL::HumanoidPose& from,
-                const Render::GL::HumanoidPose& to,
-                float t) -> Render::GL::HumanoidPose {
-  Render::GL::HumanoidPose blended = from;
-  blended.head_pos = blend_vec(from.head_pos, to.head_pos, t);
-  blended.head_r = from.head_r * (1.0F - t) + to.head_r * t;
-  blended.neck_base = blend_vec(from.neck_base, to.neck_base, t);
-  blended.head_frame = blend_attachment_frame(from.head_frame, to.head_frame, t);
-  blended.body_frames = blend_body_frames(from.body_frames, to.body_frames, t);
-  blended.shoulder_l = blend_vec(from.shoulder_l, to.shoulder_l, t);
-  blended.shoulder_r = blend_vec(from.shoulder_r, to.shoulder_r, t);
-  blended.elbow_l = blend_vec(from.elbow_l, to.elbow_l, t);
-  blended.elbow_r = blend_vec(from.elbow_r, to.elbow_r, t);
-  blended.hand_l = blend_vec(from.hand_l, to.hand_l, t);
-  blended.hand_r = blend_vec(from.hand_r, to.hand_r, t);
-  blended.pelvis_pos = blend_vec(from.pelvis_pos, to.pelvis_pos, t);
-  blended.knee_l = blend_vec(from.knee_l, to.knee_l, t);
-  blended.knee_r = blend_vec(from.knee_r, to.knee_r, t);
-  blended.foot_y_offset = from.foot_y_offset * (1.0F - t) + to.foot_y_offset * t;
-  blended.foot_l = blend_vec(from.foot_l, to.foot_l, t);
-  blended.foot_r = blend_vec(from.foot_r, to.foot_r, t);
-  return blended;
 }
 
 auto transition_phase(std::uint32_t frame_index, std::uint32_t frame_count) -> float {
@@ -946,22 +965,16 @@ void apply_authored_rpg_sword_pose(std::uint8_t variant,
 
 void bake_hold_pose(HumanoidBakeProfile profile,
                     BakerHoldType hold_type,
-                    float blend,
+                    float sample_phase,
                     Render::GL::HumanoidPose& pose) {
-  float const mix = std::clamp(blend, 0.0F, 1.0F);
-  if (mix <= 0.0F) {
-    return;
-  }
-
-  Render::GL::HumanoidPose const standing_pose = pose;
   Render::GL::HumanoidAnimationContext anim_ctx{};
   anim_ctx.gait = hold_gait_descriptor();
   anim_ctx.gait.state = Render::GL::HumanoidMotionState::Hold;
   anim_ctx.inputs.is_in_hold_mode = true;
-  anim_ctx.inputs.hold_entry_progress = mix;
+  anim_ctx.inputs.hold_entry_progress = 1.0F;
+  anim_ctx.inputs.time = std::clamp(sample_phase, 0.0F, 1.0F) * 1.8F;
 
-  Render::GL::HumanoidPose held_pose = standing_pose;
-  Render::GL::HumanoidPoseController ctrl(held_pose, anim_ctx);
+  Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
 
   float kneel_depth = 0.875F;
   if (profile == HumanoidBakeProfile::SwordReady) {
@@ -972,15 +985,13 @@ void bake_hold_pose(HumanoidBakeProfile profile,
 
   ctrl.kneel(kneel_depth);
   if (profile == HumanoidBakeProfile::SwordReady) {
-    ctrl.brace_sword_and_shield_for_hold();
+    ctrl.guard_sword_and_shield_for_defense();
   } else if (hold_type == BakerHoldType::Bow) {
     ctrl.hold_bow_ready();
   } else {
     ctrl.brace_spear_for_hold();
   }
 
-  float const eased_mix = mix * mix * (3.0F - 2.0F * mix);
-  pose = blend_pose(standing_pose, held_pose, eased_mix);
 }
 
 void bake_death_pose(BakerDeathType death_type,
@@ -1078,7 +1089,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     anim_ctx.attack_phase = phase;
     anim_ctx.jitter_seed = 0U;
     anim_ctx.inputs.is_attacking = true;
-    anim_ctx.inputs.is_melee = (clip.attack_type != BakerAttackType::Bow);
+    anim_ctx.inputs.is_melee = !is_ranged_attack_type(clip.attack_type);
     anim_ctx.inputs.attack_variant = clip.attack_variant;
 
     Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
@@ -1099,6 +1110,17 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       ctrl.spear_thrust_variant(phase, clip.attack_variant);
       break;
     case BakerAttackType::Bow:
+      ctrl.aim_bow(phase);
+      break;
+    case BakerAttackType::BowMelee:
+      ctrl.bow_melee_strike(phase);
+      break;
+    case BakerAttackType::SpearFromHold:
+      ctrl.kneel(0.875F);
+      ctrl.spear_thrust_from_hold(phase, 0.875F);
+      break;
+    case BakerAttackType::BowFromHold:
+      ctrl.kneel(1.125F);
       ctrl.aim_bow(phase);
       break;
     default:
@@ -1220,7 +1242,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
       bake_hold_pose(
-          profile, clip.hold_type, transition_phase(frame_index, clip.frames), pose);
+          profile, clip.hold_type, phase, pose);
     } else if (clip.ambient_idle_type != BakerAmbientIdleType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
@@ -1232,7 +1254,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       if (profile == HumanoidBakeProfile::SwordReady) {
-        ctrl.hold_sword_and_shield();
+        ctrl.carry_sword_and_shield();
       } else if (profile == HumanoidBakeProfile::SpearReady) {
         ctrl.hold_spear_idle();
       }
@@ -1267,7 +1289,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
           (gait.speed > 0.1F) ? Render::Creature::MovementAnimationState::Walk
                               : Render::Creature::MovementAnimationState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      ctrl.hold_sword_and_shield();
+      ctrl.carry_sword_and_shield();
     }
     if (clip.state == Render::GL::HumanoidMotionState::Idle &&
         clip.riding_type == BakerRidingType::Idle &&
@@ -1282,6 +1304,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   }
 
   if (is_rpg_sword_clip(clip) || clip.attack_type == BakerAttackType::Spear ||
+      clip.attack_type == BakerAttackType::SpearFromHold ||
       clip.hold_type == BakerHoldType::Spear ||
       clip.riding_type == BakerRidingType::SwordStrike ||
       clip.riding_type == BakerRidingType::SpearThrust) {
@@ -1298,7 +1321,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   Render::GL::AnimationInputs socket_inputs{};
   if (clip.attack_type != BakerAttackType::None) {
     socket_inputs.is_attacking = true;
-    socket_inputs.is_melee = (clip.attack_type != BakerAttackType::Bow);
+    socket_inputs.is_melee = !is_ranged_attack_type(clip.attack_type);
     socket_inputs.attack_variant = clip.attack_variant;
   }
   if (clip.riding_type == BakerRidingType::SpearThrust) {
@@ -1309,7 +1332,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   }
   if (clip.hold_type != BakerHoldType::None) {
     socket_inputs.is_in_hold_mode = true;
-    socket_inputs.hold_entry_progress = transition_phase(frame_index, clip.frames);
+    socket_inputs.hold_entry_progress = 1.0F;
   }
 
   for (auto const& spec : k_humanoid_sockets) {

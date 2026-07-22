@@ -369,36 +369,6 @@
   ],
   "spawns": [
     {
-      "max_population": 180,
-      "nation": "carthage",
-      "player_id": 1,
-      "type": "barracks",
-      "x": 20,
-      "z": 20
-    },
-    {
-      "max_population": 180,
-      "nation": "carthage",
-      "player_id": 2,
-      "type": "barracks",
-      "x": 100,
-      "z": 100
-    },
-    {
-      "max_population": 130,
-      "nation": "carthage",
-      "type": "barracks",
-      "x": 20,
-      "z": 100
-    },
-    {
-      "max_population": 130,
-      "nation": "carthage",
-      "type": "barracks",
-      "x": 100,
-      "z": 20
-    },
-    {
       "player_id": 1,
       "type": "archer",
       "x": 18,
@@ -1057,5 +1027,37 @@
     "wood": 150,
     "stone": 100,
     "iron": 100
-  }
+  },
+  "structures": [
+    {
+      "max_population": 180,
+      "nation": "carthage",
+      "player_id": 1,
+      "type": "barracks",
+      "x": 20,
+      "z": 20
+    },
+    {
+      "max_population": 180,
+      "nation": "carthage",
+      "player_id": 2,
+      "type": "barracks",
+      "x": 100,
+      "z": 100
+    },
+    {
+      "max_population": 130,
+      "nation": "carthage",
+      "type": "barracks",
+      "x": 20,
+      "z": 100
+    },
+    {
+      "max_population": 130,
+      "nation": "carthage",
+      "type": "barracks",
+      "x": 100,
+      "z": 20
+    }
+  ]
 }

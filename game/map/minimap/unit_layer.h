@@ -114,7 +114,7 @@ private:
   float m_world_width = 0.0F;
   float m_world_height = 0.0F;
   float m_unit_radius = 3.0F;
-  float m_building_half_size = 5.0F;
+  float m_building_half_size = 4.25F;
 
   float m_scale_x = 1.0F;
   float m_scale_y = 1.0F;

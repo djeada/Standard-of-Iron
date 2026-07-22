@@ -992,6 +992,60 @@ RowLayout {
                     }
                 }
             }
+
+            Button {
+                id: auraButton
+
+                property var action_state: bottomRoot.action_state("aura")
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                text: action_state.active ? qsTr("Aura Active") : qsTr("Command Aura")
+                focusPolicy: Qt.NoFocus
+                enabled: action_state.enabled
+                ToolTip.visible: hovered
+                ToolTip.text: action_state.active
+                    ? qsTr("Nearby troops are empowered until the aura expires.")
+                    : (action_state.enabled
+                       ? qsTr("Temporarily empower nearby troops. A glow marks every affected soldier.")
+                       : qsTr("Select a ready commander to activate the aura"))
+                ToolTip.delay: 500
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.commander_trigger_aura) {
+                        game.commander_trigger_aura();
+                        bottomRoot.update_action_states();
+                    }
+                }
+
+                background: Rectangle {
+                    color: parent.enabled ? (auraButton.action_state.active ? hs.wax : (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight))) : hs.parchmentDark
+                    radius: 6
+                    border.color: auraButton.action_state.active ? Theme.accent : (parent.enabled ? hs.bronze : hs.bronzeDeep)
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    Image {
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
+                        source: bottomRoot.command_icon("aura_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        opacity: auraButton.enabled || auraButton.action_state.active ? 1 : 0.45
+                    }
+
+                    Text {
+                        text: auraButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: auraButton.enabled || auraButton.action_state.active ? Theme.textMain : Theme.textDim
+                    }
+                }
+            }
         }
     }
 

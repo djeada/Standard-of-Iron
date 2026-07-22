@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "../systems/nation_id.h"
@@ -99,11 +100,25 @@ struct UnitSpawn {
   std::vector<QVector3D> patrol_waypoints;
 };
 
-struct BuildingEntry {
-  QString type;
-  float x = 0.0F;
-  float z = 0.0F;
+struct PointStructureGeometry {
+  QVector3D position;
+};
+
+struct LineStructureGeometry {
+  QVector3D start;
+  QVector3D end;
+  float width = 2.0F;
+};
+
+using StructureGeometry =
+    std::variant<PointStructureGeometry, LineStructureGeometry>;
+
+struct StructureEntry {
+  Game::Units::SpawnType type = Game::Units::SpawnType::Barracks;
+  StructureGeometry geometry = PointStructureGeometry{};
   int player_id = 0;
+  int team_id = 0;
+  int max_population = 100;
   QString nation;
 };
 
@@ -332,12 +347,12 @@ struct MapDefinition {
   std::vector<UnitSpawn> spawns;
   std::vector<TerrainFeature> terrain;
   std::vector<RiverSegment> rivers;
+  std::vector<Lake> lakes;
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
-  std::vector<WallLine> wall_lines;
+  std::vector<StructureEntry> structures;
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
-  std::vector<BuildingEntry> buildings;
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;

@@ -18,8 +18,13 @@ enum class TerrainType {
   Hill,
   Mountain,
   River,
-  Forest
+  Forest,
+  Lake
 };
+
+[[nodiscard]] constexpr auto is_water_terrain(TerrainType type) noexcept -> bool {
+  return type == TerrainType::River || type == TerrainType::Lake;
+}
 
 enum class GroundType {
   ForestMud,
@@ -95,6 +100,8 @@ inline auto terrainTypeToQString(TerrainType type) -> QString {
     return QStringLiteral("river");
   case TerrainType::Forest:
     return QStringLiteral("forest");
+  case TerrainType::Lake:
+    return QStringLiteral("lake");
   }
   return QStringLiteral("flat");
 }
@@ -123,6 +130,10 @@ inline auto try_parse_terrain_type(const QString& value, TerrainType& out) -> bo
   }
   if (lowered == QStringLiteral("forest")) {
     out = TerrainType::Forest;
+    return true;
+  }
+  if (lowered == QStringLiteral("lake")) {
+    out = TerrainType::Lake;
     return true;
   }
   return false;
@@ -388,9 +399,9 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
   switch (ground_type) {
   case GroundType::ForestMud:
 
-    settings.grass_primary = QVector3D(0.26F, 0.52F, 0.24F);
-    settings.grass_secondary = QVector3D(0.38F, 0.61F, 0.28F);
-    settings.grass_dry = QVector3D(0.72F, 0.66F, 0.48F);
+    settings.grass_primary = QVector3D(0.28F, 0.58F, 0.26F);
+    settings.grass_secondary = QVector3D(0.40F, 0.68F, 0.30F);
+    settings.grass_dry = QVector3D(0.76F, 0.70F, 0.48F);
     settings.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
     settings.rock_low = QVector3D(0.48F, 0.46F, 0.44F);
     settings.rock_high = QVector3D(0.68F, 0.69F, 0.73F);
@@ -423,15 +434,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.70F;
     settings.crack_intensity = 0.0F;
     settings.rock_exposure = 0.25F;
-    settings.grass_saturation = 1.05F;
+    settings.grass_saturation = 1.10F;
     settings.soil_roughness = 0.55F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::GrassDry:
 
-    settings.grass_primary = QVector3D(0.52F, 0.48F, 0.29F);
-    settings.grass_secondary = QVector3D(0.58F, 0.54F, 0.34F);
+    settings.grass_primary = QVector3D(0.54F, 0.56F, 0.30F);
+    settings.grass_secondary = QVector3D(0.60F, 0.62F, 0.35F);
     settings.grass_dry = QVector3D(0.78F, 0.72F, 0.45F);
     settings.soil_color = QVector3D(0.52F, 0.44F, 0.32F);
     settings.rock_low = QVector3D(0.62F, 0.58F, 0.52F);
@@ -465,15 +476,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.15F;
     settings.crack_intensity = 0.65F;
     settings.rock_exposure = 0.35F;
-    settings.grass_saturation = 0.75F;
+    settings.grass_saturation = 0.90F;
     settings.soil_roughness = 0.72F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::SoilRocky:
 
-    settings.grass_primary = QVector3D(0.36F, 0.40F, 0.25F);
-    settings.grass_secondary = QVector3D(0.43F, 0.47F, 0.29F);
+    settings.grass_primary = QVector3D(0.38F, 0.46F, 0.27F);
+    settings.grass_secondary = QVector3D(0.45F, 0.54F, 0.31F);
     settings.grass_dry = QVector3D(0.58F, 0.52F, 0.38F);
     settings.soil_color = QVector3D(0.55F, 0.48F, 0.38F);
     settings.rock_low = QVector3D(0.52F, 0.50F, 0.46F);
@@ -507,15 +518,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.35F;
     settings.crack_intensity = 0.25F;
     settings.rock_exposure = 0.75F;
-    settings.grass_saturation = 0.85F;
+    settings.grass_saturation = 1.00F;
     settings.soil_roughness = 0.85F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::AlpineMix:
 
-    settings.grass_primary = QVector3D(0.29F, 0.36F, 0.27F);
-    settings.grass_secondary = QVector3D(0.34F, 0.41F, 0.32F);
+    settings.grass_primary = QVector3D(0.31F, 0.42F, 0.29F);
+    settings.grass_secondary = QVector3D(0.36F, 0.48F, 0.34F);
     settings.grass_dry = QVector3D(0.50F, 0.48F, 0.42F);
     settings.soil_color = QVector3D(0.42F, 0.40F, 0.38F);
     settings.rock_low = QVector3D(0.58F, 0.60F, 0.64F);
@@ -549,15 +560,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.45F;
     settings.crack_intensity = 0.10F;
     settings.rock_exposure = 0.60F;
-    settings.grass_saturation = 0.80F;
+    settings.grass_saturation = 0.95F;
     settings.soil_roughness = 0.62F;
     settings.snow_color = QVector3D(0.94F, 0.96F, 1.0F);
     break;
 
   case GroundType::SoilFertile:
 
-    settings.grass_primary = QVector3D(0.22F, 0.49F, 0.20F);
-    settings.grass_secondary = QVector3D(0.31F, 0.58F, 0.27F);
+    settings.grass_primary = QVector3D(0.24F, 0.56F, 0.22F);
+    settings.grass_secondary = QVector3D(0.33F, 0.65F, 0.29F);
     settings.grass_dry = QVector3D(0.52F, 0.48F, 0.32F);
     settings.soil_color = QVector3D(0.20F, 0.16F, 0.12F);
     settings.rock_low = QVector3D(0.38F, 0.36F, 0.34F);
@@ -591,7 +602,7 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.80F;
     settings.crack_intensity = 0.0F;
     settings.rock_exposure = 0.12F;
-    settings.grass_saturation = 1.15F;
+    settings.grass_saturation = 1.10F;
     settings.soil_roughness = 0.42F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
@@ -612,11 +623,88 @@ struct TerrainFeature {
   float rotation_deg = 0.0F;
 };
 
+enum class WaterElevationMode : std::uint8_t {
+  Terrain,
+  Authored,
+};
+
 struct RiverSegment {
   QVector3D start;
   QVector3D end;
   float width = 2.0F;
+  WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
 };
+
+struct Lake {
+  QVector3D center;
+  float width = 8.0F;
+  float depth = 8.0F;
+  float rotation_deg = 0.0F;
+  WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
+};
+
+[[nodiscard]] inline auto lake_boundary_scale(const Lake& lake,
+                                              float local_angle) noexcept -> float {
+  const float phase = lake.center.x() * 0.071F + lake.center.z() * 0.113F;
+  return std::clamp(1.0F + std::sin(local_angle * 3.0F + phase) * 0.055F +
+                        std::sin(local_angle * 7.0F - phase * 1.7F) * 0.025F,
+                    0.90F,
+                    1.10F);
+}
+
+[[nodiscard]] inline auto point_in_lake(const Lake& lake,
+                                        float world_x,
+                                        float world_z,
+                                        float padding = 0.0F) noexcept -> bool {
+  constexpr float deg_to_rad = 0.01745329251994329577F;
+  const float angle = -lake.rotation_deg * deg_to_rad;
+  const float cos_a = std::cos(angle);
+  const float sin_a = std::sin(angle);
+  const float dx = world_x - lake.center.x();
+  const float dz = world_z - lake.center.z();
+  const float local_x = dx * cos_a - dz * sin_a;
+  const float local_z = dx * sin_a + dz * cos_a;
+  const float half_width = std::max(lake.width * 0.5F + padding, 0.0001F);
+  const float half_depth = std::max(lake.depth * 0.5F + padding, 0.0001F);
+  const float normalized_x = local_x / half_width;
+  const float normalized_z = local_z / half_depth;
+  const float radial = std::hypot(normalized_x, normalized_z);
+  const float local_angle = std::atan2(normalized_z, normalized_x);
+  return radial <= lake_boundary_scale(lake, local_angle);
+}
+
+[[nodiscard]] inline auto point_on_lake_boundary(const Lake& lake,
+                                                 float world_x,
+                                                 float world_z,
+                                                 float tolerance) noexcept -> bool {
+  const float shoreline_band = std::max(tolerance, 0.0F);
+  return point_in_lake(lake, world_x, world_z, shoreline_band) &&
+         !point_in_lake(lake, world_x, world_z, -shoreline_band);
+}
+
+// Finds the first shoreline point while travelling from dry ground toward a lake.
+// The two points must bracket the shoreline. Keeping this here makes map loading,
+// validation, pathing, banks, minimaps, and rendering agree on the same irregular
+// lake outline.
+[[nodiscard]] inline auto
+lake_boundary_intersection(const Lake& lake,
+                           QVector3D dry_point,
+                           QVector3D wet_point) noexcept -> std::optional<QVector3D> {
+  if (point_in_lake(lake, dry_point.x(), dry_point.z()) ||
+      !point_in_lake(lake, wet_point.x(), wet_point.z())) {
+    return std::nullopt;
+  }
+
+  for (int iteration = 0; iteration < 28; ++iteration) {
+    const QVector3D midpoint = (dry_point + wet_point) * 0.5F;
+    if (point_in_lake(lake, midpoint.x(), midpoint.z())) {
+      wet_point = midpoint;
+    } else {
+      dry_point = midpoint;
+    }
+  }
+  return (dry_point + wet_point) * 0.5F;
+}
 
 struct RoadSegment {
   QVector3D start;
@@ -625,10 +713,12 @@ struct RoadSegment {
   QString style = QStringLiteral("default");
 };
 
+inline constexpr float k_min_bridge_width = 8.0F;
+
 struct Bridge {
   QVector3D start;
   QVector3D end;
-  float width = 3.0F;
+  float width = k_min_bridge_width;
   float height = 0.5F;
 };
 
@@ -697,14 +787,6 @@ inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
   }
 }
 
-struct WallLine {
-  QVector3D start;
-  QVector3D end;
-  float width = 2.0F;
-  int player_id = 0;
-  QString nation;
-};
-
 inline constexpr float k_road_surface_y_offset = 0.02F;
 
 [[nodiscard]] inline auto road_surface_world_y(float terrain_height) -> float {
@@ -716,9 +798,25 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
   return 4.0F * clamped_t * (1.0F - clamped_t);
 }
 
+inline constexpr float k_min_bridge_deck_rise = 0.72F;
+// Lift only the visible/contact surface above the terrain relief used to
+// derive navigation slopes. This keeps bridges clear of the water sheet
+// without making their approaches less attractive to pathfinding.
+inline constexpr float k_bridge_deck_visual_lift = 0.33F;
+
+[[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
+  return std::max(bridge.height, k_min_bridge_deck_rise);
+}
+
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
-  float const arch_height = bridge.height * bridge_arch_curve(t) * 0.8F;
-  return bridge.start.y() + bridge.height + arch_height * 0.3F;
+  float const clamped_t = std::clamp(t, 0.0F, 1.0F);
+  float const base_y = bridge.start.y() * (1.0F - clamped_t) +
+                       bridge.end.y() * clamped_t;
+  float const effective_height = bridge_effective_height(bridge);
+  float const arch_height =
+      effective_height * bridge_arch_curve(clamped_t) * 0.8F;
+  return base_y + effective_height + arch_height * 0.3F +
+         k_bridge_deck_visual_lift;
 }
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,
@@ -758,7 +856,11 @@ public:
 
   void add_river_segments(const std::vector<RiverSegment>& river_segments);
 
+  void add_lakes(const std::vector<Lake>& lakes);
+
   [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
+
+  [[nodiscard]] auto get_base_height_at(float world_x, float world_z) const -> float;
 
   [[nodiscard]] auto get_height_at_grid(int grid_x, int grid_z) const -> float;
 
@@ -787,6 +889,7 @@ public:
   [[nodiscard]] auto get_river_segments() const -> const std::vector<RiverSegment>& {
     return m_river_segments;
   }
+  [[nodiscard]] auto get_lakes() const -> const std::vector<Lake>& { return m_lakes; }
 
   void add_bridges(const std::vector<Bridge>& bridges);
   [[nodiscard]] auto get_bridges() const -> const std::vector<Bridge>& {
@@ -813,7 +916,8 @@ public:
   void restore_from_data(const std::vector<float>& heights,
                          const std::vector<TerrainType>& terrain_types,
                          const std::vector<RiverSegment>& rivers,
-                         const std::vector<Bridge>& bridges);
+                         const std::vector<Bridge>& bridges,
+                         const std::vector<Lake>& lakes = {});
 
 private:
   int m_width;
@@ -825,6 +929,7 @@ private:
   std::vector<bool> m_hill_entrances;
   std::vector<bool> m_hill_walkable;
   std::vector<RiverSegment> m_river_segments;
+  std::vector<Lake> m_lakes;
   std::vector<Bridge> m_bridges;
 
   std::vector<bool> m_on_bridge;

@@ -241,7 +241,6 @@ jobs:
           $scripts = @(
             "LAUNCH.bat",
             "run_debug.cmd",
-            "run_debug_angle.cmd",
             "run_debug_softwaregl.cmd"
           )
           
@@ -260,144 +259,39 @@ jobs:
           
           Write-Host "All launcher scripts deployed successfully."
 
-      # Add comprehensive README for users
       - name: Add README.txt for distribution
         shell: pwsh
         run: |
           @(
-            '==============================================================================='
-            '                          STANDARD OF IRON'
-            '                         Windows Distribution'
-            '==============================================================================='
+            'STANDARD OF IRON - Windows Distribution'
             ''
             'QUICK START'
-            '-----------'
-            '1. Double-click "LAUNCH.bat" to start the game'
-            '   OR'
-            '2. Double-click "standard_of_iron.exe" directly'
+            'Double-click standard_of_iron.exe or LAUNCH.bat.'
             ''
-            'If the game does not start, see TROUBLESHOOTING below.'
-            ''
+            'GRAPHICS REQUIREMENT'
+            'The game requires desktop OpenGL 3.3 Core Profile.'
+            'The package includes Qt software OpenGL for systems whose GPU driver'
+            'cannot provide a compatible context.'
             ''
             'TROUBLESHOOTING'
-            '---------------'
-            'If the game does not appear or crashes on startup, try these steps in order:'
+            '1. Run run_debug.cmd and attach runlog.txt to an issue report.'
+            '2. Update the graphics driver from the GPU manufacturer.'
+            '3. Run run_debug_softwaregl.cmd to use the bundled CPU renderer.'
             ''
-            '1. Run "run_debug.cmd"'
-            '   - This will start the game with diagnostic logging'
-            '   - Look for error messages in the console window'
-            '   - A log file "runlog.txt" will be created'
+            'Do not force ANGLE or QT_QUICK_BACKEND=software. ANGLE exposes'
+            'OpenGL ES, while the game uses desktop GLSL 3.3; Qt Quick software'
+            'rendering does not support the gameplay framebuffer object.'
             ''
-            '2. Run "run_debug_angle.cmd" (RECOMMENDED for compatibility)'
-            '   - Uses ANGLE rendering (OpenGL via DirectX)'
-            '   - Works on most systems, even with outdated GPU drivers'
-            '   - Creates "runlog_angle.txt" log file'
-            ''
-            '3. Run "run_debug_softwaregl.cmd" (FALLBACK - works everywhere)'
-            '   - Uses CPU-based software rendering'
-            '   - Guaranteed to work but with reduced performance'
-            '   - Creates "runlog_softwaregl.txt" log file'
-            ''
-            ''
-            'COMMON ISSUES'
-            '-------------'
-            'Q: I double-click the EXE and nothing happens'
-            'A: Your system may lack proper graphics drivers. Run "run_debug_softwaregl.cmd"'
-            ''
-            'Q: The game crashes immediately'
-            'A: Try "run_debug_angle.cmd" for better GPU driver compatibility'
-            ''
-            'Q: I see OpenGL errors in the log'
-            'A: Run "run_debug_softwaregl.cmd" to bypass GPU drivers entirely'
-            ''
-            'Q: Performance is slow'
-            'A: Make sure you are NOT using "run_debug_softwaregl.cmd"'
-            '   Try "run_debug.cmd" or "run_debug_angle.cmd" instead'
-            ''
-            ''
-            'GRAPHICS MODES EXPLAINED'
-            '------------------------'
-            'Desktop OpenGL (run_debug.cmd):'
-            '  - Best performance'
-            '  - Requires proper GPU drivers'
-            '  - Use this if your GPU drivers are up to date'
-            ''
-            'ANGLE (run_debug_angle.cmd):'
-            '  - Good performance'
-            '  - Compatible with most systems'
-            '  - Translates OpenGL to DirectX'
-            '  - RECOMMENDED for older or problematic GPUs'
-            ''
-            'Software OpenGL (run_debug_softwaregl.cmd):'
-            '  - CPU-based rendering'
-            '  - Works on ALL systems'
-            '  - Reduced performance'
-            '  - Use as last resort'
-            ''
-            ''
-            'LOG FILES'
-            '---------'
-            'When using the debug scripts, log files are created:'
-            '  - runlog.txt           (Desktop OpenGL mode)'
-            '  - runlog_angle.txt     (ANGLE mode)'
-            '  - runlog_softwaregl.txt (Software OpenGL mode)'
-            ''
-            'These files contain diagnostic information to help identify problems.'
-            'Include these files when reporting issues.'
-            ''
-            ''
-            'SYSTEM REQUIREMENTS'
-            '-------------------'
-            'Minimum:'
-            '  - Windows 10 or later'
-            '  - 4 GB RAM'
-            '  - Any GPU (software rendering supported)'
-            ''
-            'Recommended:'
-            '  - Windows 10/11'
-            '  - 8 GB RAM'
-            '  - GPU with OpenGL 3.3+ support'
-            '  - Updated graphics drivers'
-            ''
-            ''
-            'UPDATING GRAPHICS DRIVERS'
-            '-------------------------'
-            'For best performance, update your graphics drivers:'
-            ''
-            'NVIDIA: https://www.nvidia.com/Download/index.aspx'
-            'AMD:    https://www.amd.com/en/support'
-            'Intel:  https://www.intel.com/content/www/us/en/download-center/home.html'
-            ''
-            ''
-            'REPORTING ISSUES'
-            '----------------'
-            'If you encounter problems:'
-            ''
-            '1. Run one of the debug scripts (run_debug.cmd or run_debug_angle.cmd)'
-            '2. Save the generated log file (runlog.txt or runlog_angle.txt)'
-            '3. Report the issue at: https://github.com/djeada/Standard-of-Iron/issues'
-            '4. Include the log file and your system information:'
-            '   - Windows version'
-            '   - GPU model'
-            '   - Which startup method you tried'
-            ''
-            ''
-            'MORE INFORMATION'
-            '----------------'
-            'Website: https://github.com/djeada/Standard-of-Iron'
-            'License: See LICENSE file (MIT License)'
-            ''
-            'This software uses Qt Framework (LGPL v3)'
-            'See THIRD_PARTY_LICENSES.md for details'
-            ''
-            '==============================================================================='
+            'Report issues at: https://github.com/djeada/Standard-of-Iron/issues'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\README.txt"
-
-      - name: Add GL/ANGLE fallbacks (mandatory)
+      - name: Add software OpenGL fallback (mandatory)
         shell: pwsh
         run: |
           $qtbin = Join-Path $env:Qt6_DIR "bin"
-          $required = @("d3dcompiler_47.dll","opengl32sw.dll","libEGL.dll","libGLESv2.dll")
+          # The renderer uses desktop GLSL 3.3 Core. ANGLE's OpenGL ES DLLs
+          # cannot run those shaders; Qt's opengl32sw.dll is the compatible
+          # fallback for machines whose native OpenGL driver is insufficient.
+          $required = @("d3dcompiler_47.dll","opengl32sw.dll")
           $missing = @()
           
           foreach ($f in $required) {
@@ -445,9 +339,7 @@ jobs:
           # Graphics fallback DLLs (now mandatory)
           $graphics_fallbacks = @(
             "$env:APP_DIR\d3dcompiler_47.dll",
-            "$env:APP_DIR\opengl32sw.dll",
-            "$env:APP_DIR\libEGL.dll",
-            "$env:APP_DIR\libGLESv2.dll"
+            "$env:APP_DIR\opengl32sw.dll"
           )
           
           $missing = @()
@@ -573,181 +465,49 @@ jobs:
           
           Write-Host "All required dependencies are present"
 
-      - name: Smoke-run (software GL, capture exit)
+      - name: Verify packaged gameplay renderer (software OpenGL)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          
-          # Exit code constants for better readability
-          $EXIT_ACCESS_VIOLATION = -1073741819  # 0xC0000005 - Access violation (common OpenGL crash)
-          $EXIT_ORDINAL_NOT_FOUND = -1073741510  # 0xC000007A - Ordinal not found
-          $EXIT_DLL_NOT_FOUND = -1073741701      # 0xC0000135 - DLL not found
-          $EXIT_APPINIT_FAILURE = -1073741515    # 0xC0000139 - Entry point not found
-      
-          $env:QT_DEBUG_PLUGINS  = "1"
-          $env:QT_LOGGING_RULES  = "qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true"
-          $env:QT_OPENGL         = "software"
-          $env:QT_QPA_PLATFORM   = "windows"
-      
-          Write-Host "=== Smoke Test Configuration ==="
-          Write-Host "QT_OPENGL: $env:QT_OPENGL"
-          Write-Host "QT_QPA_PLATFORM: $env:QT_QPA_PLATFORM"
-          Write-Host "================================"
-          
+          $env:QT_OPENGL = 'software'
+          $env:QT_QPA_PLATFORM = 'windows'
+          $env:QT_LOGGING_RULES = 'qt.rhi.*=false'
+
           Push-Location "$env:APP_DIR"
           try {
-            $logFile = "smoke_test.log"
-            $errFile = "smoke_test_err.log"
-            
-            Write-Host "Starting application..."
             $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" `
-              -RedirectStandardOutput $logFile `
-              -RedirectStandardError $errFile `
+              -ArgumentList "--renderer-self-test" `
+              -RedirectStandardOutput "renderer_self_test_out.log" `
+              -RedirectStandardError "renderer_self_test_err.log" `
               -PassThru -NoNewWindow
-            
-            $timeoutSeconds = 8
-            $checkInterval = 1
-            $elapsed = 0
-            $exited = $false
-            $successMarkers = @()
-            
-            Write-Host "Monitoring startup for $timeoutSeconds seconds..."
-            
-            while ($elapsed -lt $timeoutSeconds) {
-              Start-Sleep -Seconds $checkInterval
-              $elapsed += $checkInterval
-              
-              # Check if process exited
-              if ($process.HasExited) {
-                $exited = $true
-                break
-              }
-              
-              # Check logs for success markers (use -notcontains to avoid duplicates)
-              if ((Test-Path $logFile)) {
-                $content = Get-Content $logFile -Raw
-                if ($content -match "QGuiApplication created successfully" -and
-                    $successMarkers -notcontains "QGuiApplication initialized") {
-                  $successMarkers += "QGuiApplication initialized"
-                }
-                if ($content -match "GameEngine created" -and
-                    $successMarkers -notcontains "GameEngine created") {
-                  $successMarkers += "GameEngine created"
-                }
-                if ($content -match "QML engine.*loading" -and
-                    $successMarkers -notcontains "QML loading") {
-                  $successMarkers += "QML loading"
-                }
-                # GL-specific markers: these prove the Core Profile backend
-                # actually initialized via QOpenGLFunctions_3_3_Core.
-                if ($content -match "Backend: OpenGL functions initialized" -and
-                    $successMarkers -notcontains "GL functions initialized") {
-                  $successMarkers += "GL functions initialized"
-                }
-                if ($content -match "Backend::initialize\(\) - Complete!" -and
-                    $successMarkers -notcontains "Backend init complete") {
-                  $successMarkers += "Backend init complete"
-                }
-              }
-              
-              Write-Host "  [$elapsed/$timeoutSeconds s] Process running, found markers: $($successMarkers.Count)"
-            }
 
-            # Process still running after timeout - this is GOOD
-            if (-not $exited) {
-              Write-Host "`n✓ SUCCESS: Application is running after $timeoutSeconds seconds"
-              Write-Host "  Found initialization markers: $($successMarkers -join ', ')"
-
-              # Report whether the GL backend itself was confirmed healthy.
-              if ($successMarkers -contains "Backend init complete") {
-                Write-Host "✓ OpenGL 3.3 Core Profile backend initialized successfully (Mesa software renderer)"
-              } elseif ($successMarkers -contains "GL functions initialized") {
-                Write-Host "✓ QOpenGLFunctions_3_3_Core loaded; backend pipeline initialization in progress"
-              } else {
-                Write-Warning "GL backend markers not yet visible in log within timeout."
-                Write-Warning "The render thread may need more time. Verify on a real machine."
-              }
-
-              # Kill process gracefully
+            if (-not $process.WaitForExit(90000)) {
               $process.Kill()
-              $process.WaitForExit(3000)
-
-              # Show relevant log excerpts
-              if (Test-Path $logFile) {
-                Write-Host "`n=== Application Output (last 30 lines) ==="
-                Get-Content $logFile -Tail 30 | Write-Host
-              }
-
-              Write-Host "`n✓ Smoke test PASSED - application starts and runs correctly"
-              exit 0
+              $process.WaitForExit()
+              Write-Error "Gameplay renderer self-test timed out"
             }
+            # Ensure redirected streams are completely flushed.
+            $process.WaitForExit()
 
-            # Process exited early - investigate why
-            $code = $process.ExitCode
-            Write-Host "`n⚠ Process exited early with code: $code (after $elapsed seconds)"
-            
-            # Show logs to help diagnose
-            if (Test-Path $logFile) {
-              Write-Host "`n=== Application Output ==="
-              Get-Content $logFile | Write-Host
+            $output = @()
+            if (Test-Path "renderer_self_test_out.log") {
+              $output += Get-Content "renderer_self_test_out.log"
             }
-            if (Test-Path $errFile) {
-              Write-Host "`n=== Error Output ==="
-              Get-Content $errFile | Write-Host
+            if (Test-Path "renderer_self_test_err.log") {
+              $output += Get-Content "renderer_self_test_err.log"
             }
+            $output | Write-Host
 
-            # Categorize exit codes
-            $expectedOnHeadless = @($EXIT_ACCESS_VIOLATION, $EXIT_ORDINAL_NOT_FOUND)
-            $deploymentIssues = @($EXIT_DLL_NOT_FOUND, $EXIT_APPINIT_FAILURE)
-
-            if ($deploymentIssues -contains $code) {
-              Write-Error "✗ DEPLOYMENT ISSUE: Missing DLL or symbol (exit code $code)"
-              Write-Error "This indicates incomplete deployment or missing dependencies"
-              exit 1
+            if ($process.ExitCode -ne 0) {
+              Write-Error "Gameplay renderer self-test failed with exit code $($process.ExitCode)"
             }
-
-            if ($expectedOnHeadless -contains $code) {
-              Write-Warning "⚠ Headless-expected exit code ($code)"
-              Write-Warning "This is expected on CI without display. Checking for fatal errors..."
-              
-              # Check if we got far enough in initialization
-              if ($successMarkers.Count -ge 2) {
-                Write-Host "✓ Found $($successMarkers.Count) success markers before exit"
-                Write-Host "  This suggests the app initializes correctly on systems with displays"
-                exit 0
-              }
-              
-              Write-Warning "Only found $($successMarkers.Count) success markers"
-              Write-Warning "Treating as PASS for headless CI, but verify on real systems"
-              exit 0
+            if (($output -join "`n") -notmatch "SOI_RENDERER_SELF_TEST: PASS") {
+              Write-Error "The executable exited without presenting a gameplay OpenGL frame"
             }
-
-            if ($code -eq 0) {
-              Write-Host "✓ App exited cleanly with code 0"
-              if ($successMarkers.Count -ge 2) {
-                Write-Host "✓ Found adequate success markers: $($successMarkers -join ', ')"
-                exit 0
-              }
-              Write-Warning "App exited cleanly but found only $($successMarkers.Count) success markers"
-              Write-Warning "This may indicate early/incomplete initialization"
-              exit 0
-            }
-
-            Write-Error "✗ UNEXPECTED EXIT: Exit code $code with only $($successMarkers.Count) success markers"
-            Write-Error "This suggests a real deployment or runtime issue"
-            exit 1
-            
-          } catch {
-            Write-Error "✗ Failed to start process: $_"
-            exit 1
           } finally {
             Pop-Location
           }
-
-      # ANGLE (OpenGL ES via D3D11) is NOT compatible with this game's shaders,
-      # which use desktop GLSL (#version 330 core, not GLSL ES).  The software-GL
-      # smoke test above already covers OpenGL 3.3 Core Profile validation via
-      # Mesa llvmpipe (opengl32sw.dll).  Run the static requirements check here.
+      # Keep a static guard alongside the packaged runtime self-test.
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py
 
@@ -763,11 +523,8 @@ jobs:
             "$env:APP_DIR\LAUNCH.bat",
             "$env:APP_DIR\README.txt",
             "$env:APP_DIR\run_debug.cmd",
-            "$env:APP_DIR\run_debug_angle.cmd",
             "$env:APP_DIR\run_debug_softwaregl.cmd",
             "$env:APP_DIR\opengl32sw.dll",
-            "$env:APP_DIR\libEGL.dll",
-            "$env:APP_DIR\libGLESv2.dll",
             "$env:APP_DIR\d3dcompiler_47.dll"
           )
           
@@ -796,8 +553,7 @@ jobs:
           Write-Host "  • User-friendly launcher (LAUNCH.bat)"
           Write-Host "  • Comprehensive documentation (README.txt)"
           Write-Host "  • Debug/troubleshooting scripts"
-          Write-Host "  • Software OpenGL fallback (CPU rendering)"
-          Write-Host "  • ANGLE fallback (OpenGL ES via DirectX)"
+          Write-Host "  • Software OpenGL fallback (desktop OpenGL 3.3)"
           Write-Host "  • All required Qt and system libraries"
           Write-Host ""
           Write-Host "Users can:"

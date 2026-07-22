@@ -84,7 +84,7 @@ auto elephant_lod_config() noexcept -> CreatureLodConfig {
 
 auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto& gs = Render::GraphicsSettings::instance();
-  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+  if (!gs.creature_lod_enabled()) {
     return ultra_troop_lod_config();
   }
 
@@ -99,7 +99,7 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
 
 auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto& gs = Render::GraphicsSettings::instance();
-  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+  if (!gs.creature_lod_enabled()) {
     return ultra_troop_lod_config();
   }
 
@@ -114,7 +114,7 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto& gs = Render::GraphicsSettings::instance();
-  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+  if (!gs.creature_lod_enabled()) {
     return ultra_troop_lod_config();
   }
 
@@ -461,14 +461,17 @@ void CreatureRenderBatch::add_humanoid(
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
+#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, selection.resolved_archetype, &created_handle);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -476,6 +479,7 @@ void CreatureRenderBatch::add_humanoid(
         ++profile.render_asset_cache_hits;
       }
     }
+#endif
   }
   req.clip_variant = selection.clip_variant;
   req.clip_id = selection.clip_id.value_or(Animation::k_unmapped_clip);
@@ -536,14 +540,17 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
+#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, archetype_id, &created_handle);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -551,6 +558,7 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
         ++profile.render_asset_cache_hits;
       }
     }
+#endif
   }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
@@ -596,14 +604,17 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
+#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, archetype_id, &created_handle);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -611,6 +622,7 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
         ++profile.render_asset_cache_hits;
       }
     }
+#endif
   }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);

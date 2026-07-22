@@ -10,6 +10,7 @@
 #include "armor/work_apron_renderer.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
+#include "helmets/commander_helmets.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -151,6 +152,42 @@ void register_equipment_descriptors() {
        .append_role_colors = &roman_light_helmet_role_colors,
        .role_count =
            static_cast<std::uint8_t>(Render::GL::k_roman_light_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_fabius",
+                               {.build_attachments = &build_fabius_helmet_attachment,
+                                .append_role_colors = &fabius_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_scipio",
+                               {.build_attachments = &build_scipio_helmet_attachment,
+                                .append_role_colors = &scipio_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_marcellus",
+                               {.build_attachments = &build_marcellus_helmet_attachment,
+                                .append_role_colors = &marcellus_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_hanno",
+                               {.build_attachments = &build_hanno_helmet_attachment,
+                                .append_role_colors = &hanno_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_hasdrubal",
+                               {.build_attachments = &build_hasdrubal_helmet_attachment,
+                                .append_role_colors = &hasdrubal_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Helmet,
+                               "commander_hannibal",
+                               {.build_attachments = &build_hannibal_helmet_attachment,
+                                .append_role_colors = &hannibal_helmet_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_commander_helmet_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
       "roman_montefortino",
@@ -424,6 +461,42 @@ void register_equipment_descriptors() {
       "cloak_sepulcher",
       {.build_attachments = &build_sepulcher_cloak_attachment,
        .append_role_colors = &sepulcher_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_fabius",
+      {.build_attachments = &build_fabius_cloak_attachment,
+       .append_role_colors = &fabius_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_scipio",
+      {.build_attachments = &build_scipio_cloak_attachment,
+       .append_role_colors = &scipio_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_marcellus",
+      {.build_attachments = &build_marcellus_cloak_attachment,
+       .append_role_colors = &marcellus_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_hanno",
+      {.build_attachments = &build_hanno_cloak_attachment,
+       .append_role_colors = &hanno_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_hasdrubal",
+      {.build_attachments = &build_hasdrubal_cloak_attachment,
+       .append_role_colors = &hasdrubal_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_hannibal",
+      {.build_attachments = &build_hannibal_cloak_attachment,
+       .append_role_colors = &hannibal_cloak_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,

@@ -1,70 +1,71 @@
 {
   "id": "second_punic_war",
-  "title": "The Second Punic War",
-  "description": "Follow Hannibal's legendary campaign against Rome through eight epic battles, from crossing the Rhône to the final confrontation at Zama. Master Carthaginian tactics and challenge the might of Rome.",
+  "title": "The Barcid Road",
+  "description": "Command Hannibal's Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic's answering legions while the Iron Sepulcher watches from roads older than either empire.",
   "missions": [
     {
       "mission_id": "crossing_the_rhone",
       "order_index": 0,
       "world_region_id": "transalpine_gaul",
-      "intro_text": "218 BC: Hannibal's army reaches the Rhône River. Roman forces block the crossing. Secure the river crossing and defeat the Roman advance guard to continue the march toward Italy.",
-      "outro_text": "The Rhône is crossed! Your army marches onward, one step closer to Rome. The Republic now knows that Hannibal cannot be stopped by rivers alone."
-    },
-    {
-      "mission_id": "battle_of_ticino",
-      "order_index": 1,
-      "world_region_id": "cisalpine_gaul",
-      "intro_text": "218 BC: First engagement on Italian soil. Consul Publius Scipio's cavalry meets Hannibal's forces at the Ticino River. Use your superior cavalry to outmaneuver the Romans.",
-      "outro_text": "Victory! The Roman consul is wounded and retreats. Your cavalry has proven its superiority. Rome begins to fear the Carthaginian threat.",
+      "intro_text": "218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.",
+      "outro_text": "The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.",
       "difficulty_modifier": 1.1
     },
     {
-      "mission_id": "battle_of_trebia",
+      "mission_id": "crossing_the_alps",
+      "order_index": 1,
+      "world_region_id": "alps",
+      "intro_text": "218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. Mountain peoples contest the passes while Roman gold travels ahead of the column. Open three camps and bring the army down alive; do not follow the grave-lights into the snow.",
+      "outro_text": "The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.",
+      "difficulty_modifier": 1.15
+    },
+    {
+      "mission_id": "battle_of_ticino",
       "order_index": 2,
       "world_region_id": "cisalpine_gaul",
-      "intro_text": "218 BC, Winter: The Trebia River runs cold. Consul Sempronius leads a full Roman army. Lure the enemy into the freezing waters, then strike from ambush with your concealed forces.",
-      "outro_text": "A crushing victory! The Roman army is shattered in the frozen river. Your ambush tactics have proven devastating. Rome's confidence wavers.",
-      "difficulty_modifier": 1.2
+      "intro_text": "218 BC: near the Ticinus, Scipio's reconnaissance force tests Hannibal's cavalry. Win the mounted engagement, cut the bridge road, and overrun the Roman marching camp before its scouts carry a clean account back to the consul.",
+      "outro_text": "The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.",
+      "difficulty_modifier": 1.18
+    },
+    {
+      "mission_id": "battle_of_trebia",
+      "order_index": 3,
+      "world_region_id": "cisalpine_gaul",
+      "intro_text": "218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, release Mago's hidden detachment from the scrub, then cross and take the Roman winter camp.",
+      "outro_text": "The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.",
+      "difficulty_modifier": 1.28
     },
     {
       "mission_id": "battle_of_trasimene",
-      "order_index": 3,
+      "order_index": 4,
       "world_region_id": "etruria",
-      "intro_text": "217 BC: Consul Flaminius pursues your army along Lake Trasimene. The morning mist conceals your trap. Execute the perfect ambush and annihilate the Roman legion.",
-      "outro_text": "Complete destruction! Flaminius is dead, his army annihilated in the greatest ambush in history. Rome appoints a dictator in desperation.",
-      "difficulty_modifier": 1.3
+      "intro_text": "217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height. Seal both exits, strike the length of the column, and seize the field posts before a cohort escapes the basin.",
+      "outro_text": "Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.",
+      "difficulty_modifier": 1.38
     },
     {
       "mission_id": "battle_of_cannae",
-      "order_index": 4,
-      "world_region_id": "southern_italy",
-      "intro_text": "216 BC: The decisive moment. Rome's largest army ever assembled stands before you at Cannae. Execute the double envelopment - your masterpiece of tactical warfare.",
-      "outro_text": "Immortal victory! The Roman army is encircled and destroyed. 50,000 Romans lie dead. Your name will echo through history as the greatest tactical commander.",
-      "difficulty_modifier": 1.5
+      "order_index": 5,
+      "world_region_id": "apulia",
+      "intro_text": "216 BC: the consuls mass Rome's greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp and the smaller camp across the river road.",
+      "outro_text": "The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher's iron bells sound beneath the earth for seven nights.",
+      "difficulty_modifier": 1.55
     },
     {
       "mission_id": "campania_campaign",
-      "order_index": 5,
-      "world_region_id": "southern_italy",
-      "intro_text": "215-212 BC: Control the rich region of Campania. Defend against Roman counterattacks while maintaining your army's strength. Hold the strategic cities and villages.",
-      "outro_text": "Campania secured! Your army has resupplied and allies have joined your cause. But Rome refuses to surrender, and the war grinds on.",
-      "difficulty_modifier": 1.4
-    },
-    {
-      "mission_id": "crossing_the_alps",
       "order_index": 6,
-      "world_region_id": "alps",
-      "intro_text": "218 BC (Flashback): Before Italy, before the victories - the impossible crossing. Lead your army through the snow-covered Alps. Survive nature's fury and hostile mountain tribes.",
-      "outro_text": "Against all odds, you have crossed the Alps! Though you've lost many men and elephants, you have achieved the impossible. Italy lies before you.",
-      "difficulty_modifier": 1.3
+      "world_region_id": "campania",
+      "intro_text": "215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and withstand three coordinated assaults over twenty minutes.",
+      "outro_text": "At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.",
+      "difficulty_modifier": 1.5
     },
     {
       "mission_id": "battle_of_zama",
       "order_index": 7,
       "world_region_id": "carthage_core",
-      "intro_text": "202 BC: Called back to Africa, you face Scipio Africanus - Rome's answer to your tactics. The final confrontation. Can you overcome Rome's best general?",
-      "outro_text": "The war ends. Whether in victory or honorable defeat, Hannibal's campaign has changed warfare forever. Rome has survived its greatest test, but will never forget Hannibal's genius.",
-      "difficulty_modifier": 1.6
+      "intro_text": "202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Defeat all three hostile commands.",
+      "outro_text": "The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.",
+      "difficulty_modifier": 1.7
     }
   ]
 }

@@ -23,9 +23,8 @@ namespace {
 namespace Palette {
 
 constexpr QColor PARCHMENT_BASE{235, 220, 190};
-constexpr QColor PARCHMENT_LIGHT{245, 235, 215};
 constexpr QColor PARCHMENT_DARK{200, 180, 150};
-constexpr QColor PARCHMENT_STAIN{180, 160, 130, 40};
+constexpr QColor PARCHMENT_STAIN{180, 160, 130, 24};
 
 constexpr QColor INK_DARK{45, 35, 25};
 constexpr QColor INK_MEDIUM{80, 65, 50};
@@ -42,12 +41,12 @@ constexpr QColor WATER_LIGHT{138, 169, 184};
 constexpr QColor WATER_WASH{120, 150, 165, 48};
 constexpr QColor WATER_GLOW{204, 219, 224, 88};
 
-constexpr QColor FOREST_BASE{50, 95, 40};
-constexpr QColor FOREST_DARK{28, 60, 20};
+constexpr QColor FOREST_BASE{73, 108, 61};
+constexpr QColor FOREST_DARK{42, 72, 37};
 
-constexpr QColor ROAD_MAIN{92, 66, 34};
-constexpr QColor ROAD_SHADOW{55, 38, 15};
-constexpr QColor ROAD_HIGHLIGHT{145, 112, 65};
+constexpr QColor ROAD_MAIN{112, 82, 47};
+constexpr QColor ROAD_SHADOW{69, 49, 27};
+constexpr QColor ROAD_HIGHLIGHT{166, 132, 82};
 
 constexpr QColor STRUCTURE_STONE{110, 95, 75};
 constexpr QColor STRUCTURE_SHADOW{62, 44, 28};
@@ -330,10 +329,11 @@ MinimapGenerator::MinimapGenerator(const Config& config)
 }
 
 auto MinimapGenerator::generate(const MapDefinition& map_def) -> QImage {
-
-  const int img_width = static_cast<int>(map_def.grid.width * m_config.pixels_per_tile);
+  const float pixels_per_tile = pixels_per_tile_for(map_def.grid);
+  const int img_width =
+      std::max(1, static_cast<int>(std::lround(map_def.grid.width * pixels_per_tile)));
   const int img_height =
-      static_cast<int>(map_def.grid.height * m_config.pixels_per_tile);
+      std::max(1, static_cast<int>(std::lround(map_def.grid.height * pixels_per_tile)));
 
   QImage image(img_width, img_height, QImage::Format_ARGB32);
   image.fill(Palette::PARCHMENT_BASE);
@@ -350,6 +350,21 @@ auto MinimapGenerator::generate(const MapDefinition& map_def) -> QImage {
   return image;
 }
 
+auto MinimapGenerator::pixels_per_tile_for(const GridDefinition& grid) const -> float {
+  const int largest_grid_dimension = std::max(grid.width, grid.height);
+  if (largest_grid_dimension <= 0) {
+    return std::max(m_config.pixels_per_tile, 0.01F);
+  }
+
+  const float configured = std::max(m_config.pixels_per_tile, 0.01F);
+  if (m_config.max_image_dimension <= 0) {
+    return configured;
+  }
+  const float capped = static_cast<float>(m_config.max_image_dimension) /
+                       static_cast<float>(largest_grid_dimension);
+  return std::min(configured, std::max(capped, 0.01F));
+}
+
 auto MinimapGenerator::world_to_pixel(float world_x,
                                       float world_z,
                                       const GridDefinition& grid) const
@@ -361,8 +376,9 @@ auto MinimapGenerator::world_to_pixel(float world_x,
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
-  const float img_width = grid.width * m_config.pixels_per_tile;
-  const float img_height = grid.height * m_config.pixels_per_tile;
+  const float pixels_per_tile = pixels_per_tile_for(grid);
+  const float img_width = grid.width * pixels_per_tile;
+  const float img_height = grid.height * pixels_per_tile;
 
   const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
   const float py = (rotated_z + world_height * 0.5F) * (img_height / world_height);
@@ -373,7 +389,7 @@ auto MinimapGenerator::world_to_pixel(float world_x,
 auto MinimapGenerator::world_to_pixel_size(float world_size,
                                            const GridDefinition& grid) const -> float {
 
-  return (world_size / grid.tile_size) * m_config.pixels_per_tile;
+  return (world_size / grid.tile_size) * pixels_per_tile_for(grid);
 }
 
 void MinimapGenerator::render_parchment_background(QImage& image) {
@@ -384,7 +400,7 @@ void MinimapGenerator::render_parchment_background(QImage& image) {
   for (int y = 0; y < image.height(); ++y) {
     auto* scanline = reinterpret_cast<uint32_t*>(image.scanLine(y));
     for (int x = 0; x < image.width(); ++x) {
-      const float noise = hash_coords(x / 3, y / 3, 42) * 0.08F;
+      const float noise = hash_coords(x / 5, y / 5, 42) * 0.045F;
 
       const int r = std::clamp(BASE_R + static_cast<int>(noise * 20), 0, 255);
       const int g = std::clamp(BASE_G + static_cast<int>(noise * 18), 0, 255);
@@ -401,10 +417,10 @@ void MinimapGenerator::render_parchment_background(QImage& image) {
   std::uniform_real_distribution<float> dist_x(0.0F, static_cast<float>(image.width()));
   std::uniform_real_distribution<float> dist_y(0.0F,
                                                static_cast<float>(image.height()));
-  std::uniform_real_distribution<float> dist_size(5.0F, 25.0F);
-  std::uniform_real_distribution<float> dist_alpha(0.02F, 0.06F);
+  std::uniform_real_distribution<float> dist_size(8.0F, 28.0F);
+  std::uniform_real_distribution<float> dist_alpha(0.01F, 0.03F);
 
-  const int num_stains = (image.width() * image.height()) / 8000;
+  const int num_stains = (image.width() * image.height()) / 30000;
   for (int i = 0; i < num_stains; ++i) {
     const float cx = dist_x(rng);
     const float cy = dist_y(rng);
@@ -442,14 +458,6 @@ void MinimapGenerator::render_terrain_features(QImage& image,
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  auto grid_to_world = [&](float grid_x, float grid_z) -> std::pair<float, float> {
-    const float half_w = map_def.grid.width * 0.5F - 0.5F;
-    const float half_h = map_def.grid.height * 0.5F - 0.5F;
-    const float world_x = (grid_x - half_w) * map_def.grid.tile_size;
-    const float world_z = (grid_z - half_h) * map_def.grid.tile_size;
-    return {world_x, world_z};
-  };
-
   for (const auto& feature : map_def.terrain) {
     const auto [px, py] =
         world_to_pixel(feature.center_x, feature.center_z, map_def.grid);
@@ -465,22 +473,6 @@ void MinimapGenerator::render_terrain_features(QImage& image,
       draw_mountain_symbol(painter, px, py, pixel_width, pixel_depth);
     } else if (feature.type == TerrainType::Hill) {
       draw_hill_symbol(painter, px, py, pixel_width, pixel_depth);
-      if (!feature.entrances.empty()) {
-        painter.setBrush(QColor(200, 40, 40));
-        painter.setPen(QPen(QColor(80, 15, 15), 1.0));
-        const float radius = std::max(2.0F, m_config.pixels_per_tile * 0.6F);
-        for (const auto& entrance : feature.entrances) {
-          float ex = entrance.x();
-          float ez = entrance.z();
-          if (map_def.coordSystem == CoordSystem::Grid) {
-            const auto [wx, wz] = grid_to_world(ex, ez);
-            ex = wx;
-            ez = wz;
-          }
-          const auto [epx, epy] = world_to_pixel(ex, ez, map_def.grid);
-          painter.drawEllipse(QPointF(epx, epy), radius, radius);
-        }
-      }
     } else if (feature.type == TerrainType::Forest) {
       draw_forest_symbol(painter, px, py, pixel_width, pixel_depth);
     } else if (feature.type == TerrainType::River) {
@@ -539,27 +531,25 @@ void MinimapGenerator::draw_mountain_symbol(
 
 void MinimapGenerator::draw_hill_symbol(
     QPainter& painter, float cx, float cy, float width, float height) {
+  QColor wash = Palette::HILL_BASE;
+  wash.setAlpha(62);
+  QColor contour = Palette::INK_LIGHT;
+  contour.setAlpha(175);
 
-  const float hill_height = height * 0.35F;
-  const float base_width = width * 0.6F;
-
-  QPainterPath hill_path;
-  hill_path.moveTo(cx - base_width, cy + hill_height * 0.2F);
-  hill_path.quadTo(cx - base_width * 0.3F, cy - hill_height, cx, cy - hill_height);
-  hill_path.quadTo(cx + base_width * 0.3F,
-                   cy - hill_height,
-                   cx + base_width,
-                   cy + hill_height * 0.2F);
-  hill_path.closeSubpath();
-
-  QLinearGradient gradient(cx - base_width, cy, cx + base_width, cy);
-  gradient.setColorAt(0.0, Palette::MOUNTAIN_SHADOW);
-  gradient.setColorAt(0.4, Palette::HILL_BASE);
-  gradient.setColorAt(1.0, Palette::MOUNTAIN_FACE);
-
-  painter.setBrush(gradient);
-  painter.setPen(QPen(Palette::INK_LIGHT, 0.6));
-  painter.drawPath(hill_path);
+  const QRectF outer(cx - width * 0.48F,
+                     cy - height * 0.34F,
+                     width * 0.96F,
+                     height * 0.68F);
+  const QRectF inner(cx - width * 0.30F,
+                     cy - height * 0.21F,
+                     width * 0.60F,
+                     height * 0.42F);
+  painter.setBrush(wash);
+  painter.setPen(QPen(contour, 0.8F));
+  painter.drawEllipse(outer);
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(QPen(contour, 0.65F));
+  painter.drawEllipse(inner);
 }
 
 void MinimapGenerator::draw_forest_symbol(
@@ -568,17 +558,28 @@ void MinimapGenerator::draw_forest_symbol(
   constexpr int JITTER_SEED_X = 123;
   constexpr int JITTER_SEED_Y = 456;
 
-  const float tree_size = std::min(width, height) * 0.35F;
-  const float spacing = tree_size * 1.2F;
+  QColor forest_wash = Palette::FOREST_BASE;
+  forest_wash.setAlpha(118);
+  QColor forest_edge = Palette::FOREST_DARK;
+  forest_edge.setAlpha(185);
+  painter.setBrush(forest_wash);
+  painter.setPen(QPen(forest_edge, 0.8F));
+  painter.drawEllipse(QRectF(cx - width * 0.48F,
+                             cy - height * 0.48F,
+                             width * 0.96F,
+                             height * 0.96F));
 
-  const int cols = std::max(2, static_cast<int>(width / spacing));
-  const int rows = std::max(2, static_cast<int>(height / spacing));
+  const float tree_size = std::clamp(std::min(width, height) * 0.16F, 1.8F, 5.0F);
+  const float spacing = tree_size * 2.7F;
+
+  const int cols = std::clamp(static_cast<int>(width / spacing), 2, 5);
+  const int rows = std::clamp(static_cast<int>(height / spacing), 2, 5);
 
   const float start_x = cx - (cols - 1) * spacing * 0.5F;
   const float start_y = cy - (rows - 1) * spacing * 0.5F;
 
-  painter.setBrush(Palette::FOREST_BASE);
-  painter.setPen(QPen(Palette::FOREST_DARK, 0.8));
+  painter.setBrush(Palette::FOREST_DARK);
+  painter.setPen(Qt::NoPen);
 
   for (int row = 0; row < rows; ++row) {
     for (int col = 0; col < cols; ++col) {
@@ -586,19 +587,19 @@ void MinimapGenerator::draw_forest_symbol(
       const float jitter_x =
           (hash_coords(
                col + static_cast<int>(cx), row + static_cast<int>(cy), JITTER_SEED_X) *
-           0.3F) *
+           0.22F) *
           tree_size;
       const float jitter_y =
           (hash_coords(
                row + static_cast<int>(cx), col + static_cast<int>(cy), JITTER_SEED_Y) *
-           0.3F) *
+           0.22F) *
           tree_size;
 
       const float tx = start_x + col * spacing + jitter_x;
       const float ty = start_y + row * spacing + jitter_y;
 
-      const float tree_h = tree_size * 0.8F;
-      const float tree_w = tree_size * 0.5F;
+      const float tree_h = tree_size * 0.72F;
+      const float tree_w = tree_size * 0.42F;
 
       QPainterPath tree_path;
       tree_path.moveTo(tx, ty - tree_h);
@@ -612,8 +613,28 @@ void MinimapGenerator::draw_forest_symbol(
 }
 
 void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def) {
-  if (map_def.rivers.empty()) {
+  if (map_def.rivers.empty() && map_def.lakes.empty()) {
     return;
+  }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+  for (const auto& lake : map_def.lakes) {
+    const auto [cx, cy] =
+        world_to_pixel(lake.center.x(), lake.center.z(), map_def.grid);
+    const float half_width =
+        std::max(world_to_pixel_size(lake.width, map_def.grid) * 0.5F, 2.0F);
+    const float half_depth =
+        std::max(world_to_pixel_size(lake.depth, map_def.grid) * 0.5F, 2.0F);
+    painter.save();
+    painter.translate(cx, cy);
+    painter.rotate(lake.rotation_deg);
+    painter.setPen(QPen(Palette::WATER_DARK, std::max(1.0F, half_width * 0.06F)));
+    painter.setBrush(Palette::WATER_MAIN);
+    painter.drawEllipse(QPointF(0.0, 0.0), half_width, half_depth);
+    painter.restore();
   }
 
   const QRectF river_rect(0.0,
@@ -661,13 +682,9 @@ void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def
     }
   }
 
-  QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
   for (const auto& stroke : strokes) {
     draw_river_stroke_pass(
-        painter, stroke.path, Palette::WATER_WASH, stroke.width * 2.15F);
+        painter, stroke.path, Palette::WATER_WASH, stroke.width * 1.75F);
   }
 
   for (const auto& pool : pools) {
@@ -676,7 +693,7 @@ void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def
 
   for (const auto& stroke : strokes) {
     draw_river_stroke_pass(
-        painter, stroke.path, Palette::WATER_DARK, stroke.width * 1.55F);
+        painter, stroke.path, Palette::WATER_DARK, stroke.width * 1.38F);
   }
 
   for (const auto& stroke : strokes) {
@@ -688,7 +705,7 @@ void MinimapGenerator::render_rivers(QImage& image, const MapDefinition& map_def
     draw_river_stroke_pass(painter,
                            stroke.path,
                            Palette::WATER_LIGHT,
-                           std::max(stroke.width * 0.38F, 1.1F));
+                           std::max(stroke.width * 0.26F, 0.8F));
   }
 }
 
@@ -799,39 +816,61 @@ void MinimapGenerator::render_bridges(QImage& image, const MapDefinition& map_de
 }
 
 void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map_def) {
-  if (map_def.spawns.empty()) {
+  if (map_def.structures.empty()) {
     return;
   }
 
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  for (const auto& spawn : map_def.spawns) {
-    if (!Game::Units::is_building_spawn(spawn.type)) {
+  for (const auto& structure : map_def.structures) {
+    const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry);
+    if (line == nullptr) {
       continue;
     }
+    const auto [x1, y1] =
+        world_to_pixel(line->start.x(), line->start.z(), map_def.grid);
+    const auto [x2, y2] = world_to_pixel(line->end.x(), line->end.z(), map_def.grid);
+    QColor wall_color = Palette::STRUCTURE_STONE;
+    if (structure.player_id == 1) {
+      wall_color = Palette::TEAM_BLUE_DARK;
+    } else if (structure.player_id == 2) {
+      wall_color = Palette::TEAM_RED_DARK;
+    }
+    painter.setPen(QPen(wall_color,
+                        std::max(1.5F,
+                                 world_to_pixel_size(line->width, map_def.grid)),
+                        Qt::SolidLine,
+                        Qt::SquareCap));
+    painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
+  }
 
-    const auto [world_x, world_z] = grid_to_world_coords(spawn.x, spawn.z, map_def);
-    const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
+  for (const auto& structure : map_def.structures) {
+    const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry);
+    if (point == nullptr) {
+      continue;
+    }
+    const auto [px, py] =
+        world_to_pixel(point->position.x(), point->position.z(), map_def.grid);
 
     QColor fill_color = Palette::STRUCTURE_STONE;
     QColor border_color = Palette::STRUCTURE_SHADOW;
 
-    if (spawn.player_id == 1) {
+    if (structure.player_id == 1) {
       fill_color = Palette::TEAM_BLUE;
       border_color = Palette::TEAM_BLUE_DARK;
-    } else if (spawn.player_id == 2) {
+    } else if (structure.player_id == 2) {
       fill_color = Palette::TEAM_RED;
       border_color = Palette::TEAM_RED_DARK;
-    } else if (spawn.player_id > 0) {
+    } else if (structure.player_id > 0) {
 
-      const int hue = (spawn.player_id * 47 + 30) % 360;
+      const int hue = (structure.player_id * 47 + 30) % 360;
       fill_color.setHsv(hue, 140, 180);
       border_color.setHsv(hue, 180, 100);
     }
 
     draw_fortress_icon(
-        painter, px, py, structure_icon_size(spawn.type), fill_color, border_color);
+        painter, px, py, structure_icon_size(structure.type), fill_color, border_color);
   }
 }
 
@@ -887,27 +926,18 @@ void MinimapGenerator::apply_historical_styling(QImage& image) {
   draw_map_border(painter, image.width(), image.height());
 
   apply_vignette(painter, image.width(), image.height());
-
-  draw_compass_rose(painter, image.width(), image.height());
 }
 
 void MinimapGenerator::draw_map_border(QPainter& painter, int width, int height) {
 
   constexpr float OUTER_MARGIN = 2.0F;
-  constexpr float INNER_MARGIN = 5.0F;
-
-  painter.setPen(QPen(Palette::INK_MEDIUM, 1.5));
+  painter.setPen(QPen(Palette::INK_MEDIUM, 1.25));
   painter.setBrush(Qt::NoBrush);
   painter.drawRect(QRectF(OUTER_MARGIN,
                           OUTER_MARGIN,
                           static_cast<float>(width) - OUTER_MARGIN * 2,
                           static_cast<float>(height) - OUTER_MARGIN * 2));
 
-  painter.setPen(QPen(Palette::INK_LIGHT, 0.8));
-  painter.drawRect(QRectF(INNER_MARGIN,
-                          INNER_MARGIN,
-                          static_cast<float>(width) - INNER_MARGIN * 2,
-                          static_cast<float>(height) - INNER_MARGIN * 2));
 }
 
 void MinimapGenerator::apply_vignette(QPainter& painter, int width, int height) {
@@ -916,62 +946,12 @@ void MinimapGenerator::apply_vignette(QPainter& painter, int width, int height) 
   QRadialGradient vignette(
       static_cast<float>(width) * 0.5F, static_cast<float>(height) * 0.5F, radius);
   vignette.setColorAt(0.0, Qt::transparent);
-  vignette.setColorAt(0.7, Qt::transparent);
-  vignette.setColorAt(1.0, QColor(60, 45, 30, 35));
+  vignette.setColorAt(0.78, Qt::transparent);
+  vignette.setColorAt(1.0, QColor(60, 45, 30, 22));
 
   painter.setCompositionMode(QPainter::CompositionMode_Multiply);
   painter.fillRect(0, 0, width, height, vignette);
   painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-}
-
-void MinimapGenerator::draw_compass_rose(QPainter& painter, int width, int height) {
-  const auto min_dim = static_cast<float>(std::min(width, height));
-  const float margin = std::clamp(min_dim * 0.06F, 12.0F, 32.0F);
-  const float SIZE = std::clamp(min_dim * 0.08F, 14.0F, 42.0F);
-  const float cx = static_cast<float>(width) - margin;
-  const float cy = static_cast<float>(height) - margin;
-
-  const float stroke = std::max(1.2F, SIZE * 0.08F);
-  painter.setPen(QPen(Palette::INK_MEDIUM, stroke));
-  painter.setBrush(Qt::NoBrush);
-
-  QPainterPath north_arrow;
-  north_arrow.moveTo(cx, cy - SIZE);
-  north_arrow.lineTo(cx - SIZE * 0.3F, cy);
-  north_arrow.lineTo(cx + SIZE * 0.3F, cy);
-  north_arrow.closeSubpath();
-
-  painter.setBrush(Palette::INK_DARK);
-  painter.drawPath(north_arrow);
-
-  QPainterPath south_arrow;
-  south_arrow.moveTo(cx, cy + SIZE);
-  south_arrow.lineTo(cx - SIZE * 0.3F, cy);
-  south_arrow.lineTo(cx + SIZE * 0.3F, cy);
-  south_arrow.closeSubpath();
-
-  painter.setBrush(Palette::PARCHMENT_LIGHT);
-  painter.drawPath(south_arrow);
-
-  painter.drawLine(QPointF(cx - SIZE * 0.7F, cy), QPointF(cx + SIZE * 0.7F, cy));
-
-  painter.setBrush(Palette::INK_MEDIUM);
-  const float dot_radius = std::max(2.0F, SIZE * 0.2F);
-  painter.drawEllipse(QPointF(cx, cy), dot_radius, dot_radius);
-
-  painter.setPen(QPen(Palette::INK_DARK, stroke));
-  const float n_half_width = SIZE * 0.35F;
-  const float n_left = cx - n_half_width;
-  const float n_right = cx + n_half_width;
-  const float n_top = cy - SIZE - SIZE * 0.7F;
-  const float n_bottom = cy - SIZE - SIZE * 0.15F;
-
-  QPainterPath n_path;
-  n_path.moveTo(n_left, n_bottom);
-  n_path.lineTo(n_left, n_top);
-  n_path.lineTo(n_right, n_bottom);
-  n_path.lineTo(n_right, n_top);
-  painter.drawPath(n_path);
 }
 
 auto MinimapGenerator::biome_to_base_color(const BiomeSettings& biome) -> QColor {
@@ -997,6 +977,7 @@ auto MinimapGenerator::terrain_feature_color(TerrainType type) -> QColor {
   case TerrainType::Hill:
     return Palette::HILL_BASE;
   case TerrainType::River:
+  case TerrainType::Lake:
     return Palette::WATER_MAIN;
   case TerrainType::Forest:
     return Palette::FOREST_BASE;
