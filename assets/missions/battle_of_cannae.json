@@ -4,8 +4,8 @@
   "summary": "Execute the encirclement, then seize both Roman camps before their reserves can restore the line.",
   "teaching_goal": "Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.",
   "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision.",
-  "historical_context": "216 BC: Hannibal faced a numerically superior Roman force near Cannae and won through coordinated enveloping tactics.",
-  "terrain_type": "plains",
+  "historical_context": "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.",
+  "terrain_type": "apulian_river_plain",
   "map_path": ":/assets/maps/map_battle_cannae.json",
   "player_setup": {
     "nation": "carthage",
@@ -53,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 155,
-            "z": 60
+            "x": 336.44,
+            "z": 195.68
           }
         },
         {
@@ -70,8 +70,8 @@
             }
           ],
           "entry_point": {
-            "x": 150,
-            "z": 40
+            "x": 325.59,
+            "z": 130.45
           }
         }
       ],
@@ -91,16 +91,7 @@
         "harassment": 0.35
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 160,
-            "z": 25
-          },
-          "max_population": 220
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 300.0,
@@ -119,8 +110,8 @@
             }
           ],
           "entry_point": {
-            "x": 160,
-            "z": 25
+            "x": 594.74,
+            "z": 136.97
           }
         },
         {
@@ -140,8 +131,8 @@
             }
           ],
           "entry_point": {
-            "x": 160,
-            "z": 25
+            "x": 594.74,
+            "z": 136.97
           }
         }
       ],
@@ -162,7 +153,7 @@
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls — and the wings fold inward."
+      "description": "Your command falls \u2014 and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -170,7 +161,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -225,5 +216,6 @@
       ]
     }
   ],
+  "include_ambient_undead": false,
   "theme": "The battlefield becomes a closing iron tomb."
 }

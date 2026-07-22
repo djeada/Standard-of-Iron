@@ -169,12 +169,14 @@ private:
     float banner_wind_strength;
     bool& polygon_offset_enabled;
     bool rigged_instancing_enabled;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     std::size_t& debug_rigged_batches;
     std::size_t& debug_rigged_cmds;
     std::size_t& debug_rigged_instanced_attempts;
     std::size_t& debug_rigged_instanced_successes;
     std::size_t& debug_rigged_instanced_failures;
     std::size_t& debug_rigged_single_draws;
+#endif
   };
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
@@ -194,7 +196,9 @@ private:
 
   int m_viewport_width{0};
   int m_viewport_height{0};
-  std::array<float, 4> m_clear_color{0.70F, 0.73F, 0.80F, 1.0F};
+  // If a surface is momentarily unavailable, expose a terrain/fog-neutral
+  // underlay instead of presenting a bright full-screen flash.
+  std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
   std::unique_ptr<ShaderCache> m_shader_cache;
   std::unique_ptr<ResourceManager> m_resources;
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;

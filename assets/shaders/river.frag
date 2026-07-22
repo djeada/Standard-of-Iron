@@ -1,4 +1,5 @@
 #version 330 core
+
 out vec4 frag_color;
 in vec2 tex_coord;
 in vec3 world_pos;
@@ -10,174 +11,209 @@ uniform float u_visibility_tile_size;
 uniform float u_explored_alpha;
 uniform int u_has_visibility;
 uniform float u_segment_visibility;
+uniform int u_water_surface_kind;
+uniform vec3 u_camera_pos;
+uniform vec3 u_light_dir;
+uniform vec3 u_fog_color;
+uniform float u_fog_start;
+uniform float u_fog_end;
 
 const float PI = 3.14159265359;
-float saturate(float x) {
-  return clamp(x, 0.0, 1.0);
+
+float saturate(float value) {
+  return clamp(value, 0.0, 1.0);
 }
-vec3 saturate(vec3 v) {
-  return clamp(v, vec3(0.0), vec3(1.0));
+
+vec3 saturate(vec3 value) {
+  return clamp(value, vec3(0.0), vec3(1.0));
 }
-mat2 rot(float a) {
-  float c = cos(a), s = sin(a);
+
+mat2 rotate2d(float angle) {
+  float c = cos(angle);
+  float s = sin(angle);
   return mat2(c, -s, s, c);
 }
 
-float hash(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
+float hash21(vec2 point) {
+  point = fract(point * vec2(123.34, 456.21));
+  point += dot(point, point + 45.32);
+  return fract(point.x * point.y);
 }
-float noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i), b = hash(i + vec2(1, 0)), c = hash(i + vec2(0, 1)),
-        d = hash(i + vec2(1, 1));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+
+float value_noise(vec2 point) {
+  vec2 cell = floor(point);
+  vec2 local = fract(point);
+  local = local * local * local * (local * (local * 6.0 - 15.0) + 10.0);
+  float a = hash21(cell);
+  float b = hash21(cell + vec2(1.0, 0.0));
+  float c = hash21(cell + vec2(0.0, 1.0));
+  float d = hash21(cell + vec2(1.0, 1.0));
+  return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
 }
-float fbm(vec2 p) {
-  float v = 0., a = .5, f = 1.;
-  for (int i = 0; i < 5; i++) {
-    v += a * noise(p * f);
-    f *= 2.;
-    a *= .5;
+
+float fbm(vec2 point) {
+  float result = 0.0;
+  float amplitude = 0.52;
+  mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
+  for (int octave = 0; octave < 4; ++octave) {
+    result += value_noise(point) * amplitude;
+    point = octave_rotation * point * 2.03 + vec2(7.1, -3.8);
+    amplitude *= 0.48;
   }
-  return v;
+  return result;
 }
 
-vec3 sky_color(vec3 rd, vec3 sun_dir) {
-  float t = saturate(rd.y * 0.5 + 0.5);
-  vec3 horizon = vec3(0.68, 0.84, 0.95), zenith = vec3(0.15, 0.36, 0.70);
-  vec3 sky = mix(horizon, zenith, t);
-  float sun = pow(max(dot(rd, sun_dir), 0.0), 260.0);
-  float halo = pow(max(dot(rd, sun_dir), 0.0), 6.0) * 0.03;
-  return sky + vec3(1.0, 0.96, 0.88) * (sun * 1.0 + halo);
-}
-float fresnel_schlick(float c, float F0) {
-  return F0 + (1.0 - F0) * pow(1.0 - c, 5.0);
-}
-float ggx_spec(vec3 N, vec3 V, vec3 L, float rough, float F0) {
-  vec3 H = normalize(V + L);
-  float NdotV = max(dot(N, V), 0.0), NdotL = max(dot(N, L), 0.0);
-  float NdotH = max(dot(N, H), 0.0), VdotH = max(dot(V, H), 0.0);
-  float a = max(rough * rough, 0.001), a2 = a * a;
-  float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
-  float D = a2 / (PI * denom * denom);
-  float k = (a + 1.0);
-  k = (k * k) / 8.0;
-  float Gv = NdotV / (NdotV * (1.0 - k) + k), Gl = NdotL / (NdotL * (1.0 - k) + k);
-  float F = fresnel_schlick(VdotH, F0);
-  return (D * Gv * Gl * F) / max(4.0 * NdotV * NdotL, 0.001);
+float water_height(vec2 point) {
+  float river = float(u_water_surface_kind == 0);
+  float speed = mix(0.055, 0.105, river);
+  vec2 flow = vec2(0.78, 0.62) * time * speed;
+  vec2 counter_flow = vec2(-0.42, 0.91) * time * speed * 0.62;
+  vec2 warp = vec2(fbm(point * 0.55 - flow),
+                   fbm(point * 0.55 + counter_flow));
+  vec2 warped = point + (warp - 0.5) * 0.72;
+  float height = (fbm(warped * 1.35 - flow * 1.4) - 0.5) * 0.58;
+  height += (fbm(rotate2d(1.17) * warped * 2.65 + counter_flow * 1.7) - 0.5) *
+            0.29;
+  height += (fbm(rotate2d(2.35) * warped * 5.3 - flow * 2.2) - 0.5) * 0.13;
+  return height;
 }
 
-float water_height(vec2 uv) {
-  vec2 p = uv;
-  vec2 w1 = vec2(fbm(p * 0.6 + time * 0.05), fbm(p * 0.6 - time * 0.04));
-  vec2 w2 = vec2(fbm(rot(1.3) * p * 0.9 - time * 0.03),
-                 fbm(rot(2.1) * p * 0.7 + time * 0.02));
-  p += 0.75 * w1 + 0.45 * w2;
-  float h = 0.0;
-  h += 0.55 * (fbm(p * 1.6 - time * 0.15) - 0.5);
-  h += 0.30 * (fbm(rot(0.8) * p * 2.8 + time * 0.20) - 0.5);
-  h += 0.15 * (fbm(rot(2.4) * p * 5.0 - time * 0.35) - 0.5);
-  return h;
+void water_derivatives(vec2 point, out float height, out vec2 gradient, out float lap) {
+  float step_size = max(0.003, length(fwidth(point)) * 0.42);
+  vec2 dx = vec2(step_size, 0.0);
+  vec2 dz = vec2(0.0, step_size);
+  float center = water_height(point);
+  float left = water_height(point - dx);
+  float right = water_height(point + dx);
+  float down = water_height(point - dz);
+  float up = water_height(point + dz);
+  gradient = vec2(right - left, up - down) / (2.0 * step_size);
+  lap = (left + right + down + up - 4.0 * center) /
+        max(step_size * step_size * 2.0, 1e-5);
+  height = center;
 }
 
-void height_deriv(vec2 uv, out float h, out vec2 grad, out float lap) {
-  float s = max(0.003, 0.35 * length(fwidth(uv)));
-  vec2 e = vec2(s);
-  float hc = water_height(uv);
-  float hx1 = water_height(uv + vec2(e.x, 0));
-  float hx2 = water_height(uv - vec2(e.x, 0));
-  float hy1 = water_height(uv + vec2(0, e.y));
-  float hy2 = water_height(uv - vec2(0, e.y));
-  grad = vec2((hx1 - hx2) / (2.0 * e.x), (hy1 - hy2) / (2.0 * e.y)) * 0.85;
-  lap = (hx1 + hx2 + hy1 + hy2 - 4.0 * hc) / (e.x * e.x + e.y * e.y);
-  h = hc;
+float fresnel_schlick(float cosine, float f0) {
+  return f0 + (1.0 - f0) * pow(1.0 - saturate(cosine), 5.0);
 }
 
-vec3 micro_normal(vec2 uv) {
-  float s = 7.0;
-  vec2 e = vec2(max(0.0015, 0.5 * length(fwidth(uv))));
-  float mx1 = fbm(uv * s + time * 0.6 + vec2(e.x, 0)),
-        mx2 = fbm(uv * s + time * 0.6 - vec2(e.x, 0));
-  float my1 = fbm(uv * s + time * 0.6 + vec2(0, e.y)),
-        my2 = fbm(uv * s + time * 0.6 - vec2(0, e.y));
-  vec2 g = vec2((mx1 - mx2) / (2.0 * e.x), (my1 - my2) / (2.0 * e.y));
-  return normalize(vec3(-g.x, 0.35, -g.y));
+float ggx_specular(vec3 normal,
+                   vec3 view_dir,
+                   vec3 light_dir,
+                   float roughness,
+                   float f0) {
+  vec3 half_dir = normalize(view_dir + light_dir);
+  float ndv = max(dot(normal, view_dir), 0.001);
+  float ndl = max(dot(normal, light_dir), 0.001);
+  float ndh = max(dot(normal, half_dir), 0.0);
+  float vdh = max(dot(view_dir, half_dir), 0.0);
+  float alpha = max(roughness * roughness, 0.002);
+  float alpha2 = alpha * alpha;
+  float denominator = ndh * ndh * (alpha2 - 1.0) + 1.0;
+  float distribution = alpha2 / max(PI * denominator * denominator, 0.001);
+  float k = (alpha + 1.0) * (alpha + 1.0) / 8.0;
+  float geometry_v = ndv / (ndv * (1.0 - k) + k);
+  float geometry_l = ndl / (ndl * (1.0 - k) + k);
+  float fresnel = fresnel_schlick(vdh, f0);
+  return distribution * geometry_v * geometry_l * fresnel /
+         max(4.0 * ndv * ndl, 0.001);
 }
-vec3 water_normal(vec2 uv, vec2 grad) {
-  float k = 3.2;
-  vec3 N = normalize(vec3(-grad.x * k, 1.0, -grad.y * k));
-  return normalize(
-      mix(N, normalize(N + 0.22 * (micro_normal(uv) - vec3(0, 1, 0))), 0.35));
+
+vec3 procedural_sky(vec3 direction, vec3 sun_dir) {
+  float elevation = saturate(direction.y * 0.5 + 0.5);
+  vec3 horizon = vec3(0.56, 0.70, 0.74);
+  vec3 zenith = vec3(0.16, 0.34, 0.48);
+  vec3 sky = mix(horizon, zenith, elevation);
+  float halo = pow(max(dot(direction, sun_dir), 0.0), 12.0);
+  return sky + vec3(0.95, 0.82, 0.62) * halo * 0.12;
 }
 
 void main() {
+  float lake = float(u_water_surface_kind == 1);
+  vec2 water_uv = rotate2d(0.31) * world_pos.xz * 0.115;
 
-  vec2 uv = rot(0.35) * (world_pos.xz * 0.38);
+  float height;
+  float laplacian;
+  vec2 gradient;
+  water_derivatives(water_uv, height, gradient, laplacian);
+  // Keep the optical response common across every connected water body.
+  // Rivers move faster, but are not assigned a brighter or rougher material.
+  float normal_strength = 0.58;
+  vec3 normal = normalize(vec3(-gradient.x * normal_strength,
+                               1.0,
+                               -gradient.y * normal_strength));
 
-  float h, lap;
-  vec2 grad;
-  height_deriv(uv, h, grad, lap);
-  vec3 N = water_normal(uv, grad);
+  vec3 view_dir = normalize(u_camera_pos - world_pos);
+  vec3 light_dir = normalize(u_light_dir);
+  float ndv = max(dot(normal, view_dir), 0.0);
+  float ndl = max(dot(normal, light_dir), 0.0);
 
-  vec3 sun_dir = normalize(vec3(0.28, 0.85, 0.43));
-  vec3 V = normalize(vec3(0.0, 0.7, 0.7));
+  // Both rivers and lakes use this exact optical palette. Their only visual
+  // difference is hydrodynamic energy; normalized shore depth is shared too.
+  const vec3 shallow_water = vec3(0.085, 0.285, 0.280);
+  const vec3 deep_water = vec3(0.070, 0.255, 0.270);
+  const vec3 suspended_silt = vec3(0.155, 0.270, 0.200);
 
-  float NdotV = max(dot(N, V), 0.0);
-  float F0 = 0.02;
+  float shore_distance = u_water_surface_kind == 1
+                             ? tex_coord.y
+                             : min(tex_coord.x, 1.0 - tex_coord.x);
+  float normalized_depth = smoothstep(0.018, 0.38, shore_distance);
+  float depth_variation = (fbm(world_pos.xz * 0.026 + vec2(17.0, -9.0)) - 0.5) *
+                          0.055;
+  float optical_depth = saturate(normalized_depth * 0.72 + depth_variation + 0.16);
+  vec3 body_color = mix(shallow_water, deep_water, optical_depth);
+  float silt = (1.0 - normalized_depth) *
+               smoothstep(0.45, 0.78, fbm(world_pos.xz * 0.075 + 31.0));
+  body_color = mix(body_color, suspended_silt, silt * 0.16);
 
-  vec3 deep_water = vec3(0.008, 0.035, 0.080);
-  vec3 shallow_water = vec3(0.060, 0.180, 0.300);
+  vec3 reflected_dir = reflect(-view_dir, normal);
+  vec3 reflection = procedural_sky(reflected_dir, light_dir);
+  float fresnel = fresnel_schlick(ndv, 0.020);
+  float reflection_weight = 0.035 + fresnel * 0.22;
+  vec3 color = mix(body_color * (0.91 + ndl * 0.12),
+                   reflection,
+                   reflection_weight);
 
-  float calm = smoothstep(0.0, 0.45, abs(h));
-  float shallow = saturate(0.35 + 0.35 * (fbm(uv * 0.6) * (1.0 - calm)));
+  float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));
+  float specular = ggx_specular(normal, view_dir, light_dir, roughness, 0.020);
+  color += vec3(0.92, 0.88, 0.76) * min(specular, 0.42) * 0.15;
 
-  vec3 absorb = vec3(0.90, 0.45, 0.12);
-  float thickness = mix(0.6, 3.5, 1.0 - shallow) * (0.35 + pow(1.0 - NdotV, 0.7));
-  vec3 trans_base = mix(deep_water, shallow_water, shallow);
-  vec3 transmission = trans_base * exp(-absorb * thickness);
-
-  vec3 R = reflect(-V, N);
-  vec3 reflection = sky_color(R, sun_dir);
-  reflection *= 0.70;
-  reflection *= vec3(0.60, 0.75, 1.00);
-  float F = fresnel_schlick(NdotV, F0) * 0.40;
-
-  float NdotL = max(dot(N, sun_dir), 0.0);
-  float rough = mix(0.12, 0.26, smoothstep(0.0, 0.6, length(grad)));
-  float spec = ggx_spec(N, V, sun_dir, rough, F0) * 0.50;
-  vec3 spec_col = vec3(0.75, 0.85, 1.10) * spec;
-  vec3 sun_diffuse = transmission * NdotL * 0.20;
-
-  float shore = 1.0 - (smoothstep(0.07, 0.28, tex_coord.y) *
-                       smoothstep(0.07, 0.28, 1.0 - tex_coord.y));
-  float foam = shore * (0.45 + 0.55 * fbm(uv * 3.0 + time * 0.6));
-  vec3 foam_col = vec3(0.92, 0.96, 1.0);
-  foam = clamp(foam * 0.35, 0.0, 1.0);
-
-  vec3 color = transmission * (1.0 - F) + reflection * F;
-  color += spec_col + sun_diffuse;
-  color = mix(color, foam_col * mix(0.82, 1.0, NdotL), foam);
-
-  color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
+  float river_energy = 1.0 - lake;
+  float shore_band = 1.0 - smoothstep(0.006, 0.060, shore_distance);
+  float broken_edge = smoothstep(
+      0.40,
+      0.78,
+      fbm(world_pos.xz * 0.72 + vec2(time * 0.12, -time * 0.08)));
+  float shore_foam = shore_band * broken_edge * 0.055;
+  float crest = smoothstep(0.64, 1.18, abs(laplacian) * 0.006 + length(gradient));
+  crest *= smoothstep(0.55, 0.86,
+                      fbm(world_pos.xz * 1.15 - vec2(time * 0.18, time * 0.08)));
+  float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy));
+  color = mix(color, vec3(0.76, 0.86, 0.84), foam);
 
   float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
+      u_visibility_size.y > 0.0) {
     float tile_size = max(u_visibility_tile_size, 0.0001);
-    vec2 grid = vec2(world_pos.x / tile_size, world_pos.z / tile_size);
+    vec2 grid = world_pos.xz / tile_size;
     grid += (u_visibility_size * 0.5) - vec2(0.5);
-    vec2 vis_uv = (grid + vec2(0.5)) / u_visibility_size;
-    float vis_sample = texture(u_visibility_tex, vis_uv).r;
-    if (vis_sample < 0.25) {
+    vec2 visibility_uv = (grid + vec2(0.5)) / u_visibility_size;
+    float visibility = texture(u_visibility_tex, visibility_uv).r;
+    if (visibility < 0.25) {
       discard;
-    } else if (vis_sample < 0.75) {
+    }
+    if (visibility < 0.75) {
       visibility_factor = u_explored_alpha;
     }
   }
-  visibility_factor *= u_segment_visibility;
-  color *= visibility_factor;
+  color *= visibility_factor * u_segment_visibility;
 
-  frag_color = vec4(saturate(color), 0.85);
+  float view_distance = length(u_camera_pos - world_pos);
+  float fog_amount = smoothstep(u_fog_start, max(u_fog_start + 0.001, u_fog_end),
+                                view_distance);
+  color = mix(color, u_fog_color, fog_amount);
+
+  // Opaque water keeps overlapping river segments and lake junctions free of
+  // dark alpha seams while depth and reflection provide the material response.
+  frag_color = vec4(saturate(color), 1.0);
 }

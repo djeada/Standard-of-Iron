@@ -3,7 +3,9 @@
   "title": "Battle of Trebia",
   "summary": "Hold the river line, spring the ambush, and seize the Roman winter camp before their reserves recover.",
   "teaching_goal": "Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.",
-  "narrative_intent": "The Romans are baited into the winter river and punished by coordinated counterattacks.",
+  "narrative_intent": "The Romans are baited into the winter river and punished by Mago's concealed force, then the defense becomes an assault on a complete winter camp.",
+  "historical_context": "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear.",
+  "terrain_type": "winter_river_plain",
   "map_path": ":/assets/maps/map_battle_trebia.json",
   "player_setup": {
     "nation": "carthage",
@@ -51,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 60,
-            "z": 8
+            "x": 139.57,
+            "z": 24.84
           }
         },
         {
@@ -72,8 +74,8 @@
             }
           ],
           "entry_point": {
-            "x": 70,
-            "z": 12
+            "x": 162.83,
+            "z": 37.26
           }
         }
       ],
@@ -93,16 +95,7 @@
         "harassment": 0.4
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 25,
-            "z": 12
-          },
-          "max_population": 160
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 210.0,
@@ -121,8 +114,8 @@
             }
           ],
           "entry_point": {
-            "x": 25,
-            "z": 12
+            "x": 581.54,
+            "z": 86.95
           }
         },
         {
@@ -138,8 +131,8 @@
             }
           ],
           "entry_point": {
-            "x": 25,
-            "z": 12
+            "x": 581.54,
+            "z": 86.95
           }
         }
       ],
@@ -152,8 +145,8 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 1,
-      "description": "Take the winter camp before the frozen river gives them an excuse to run."
+      "min_count": 2,
+      "description": "Take the principal winter camp and the eastern supply castrum before the frozen river gives them an excuse to run."
     }
   ],
   "defeat_conditions": [
@@ -168,7 +161,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -220,5 +213,6 @@
       ]
     }
   ],
+  "include_ambient_undead": false,
   "theme": "Freezing water, fog, and exhaustion turn the Roman advance into a ritual slaughter."
 }

@@ -20,7 +20,6 @@ if "%ERRORLEVEL%"=="0" (
     echo.
     echo If you encounter problems, try these troubleshooting scripts:
     echo   - run_debug.cmd            ^(Standard OpenGL mode with logging^)
-    echo   - run_debug_angle.cmd      ^(ANGLE mode - compatible with most GPUs^)
     echo   - run_debug_softwaregl.cmd ^(Software mode - works on all systems^)
     echo.
     echo See README.txt for more information.

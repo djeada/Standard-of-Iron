@@ -116,6 +116,13 @@ TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {
   ASSERT_NE(hasdrubal, nullptr);
   ASSERT_NE(hannibal, nullptr);
 
+  for (auto const* commander :
+       {fabius, scipio, marcellus, hanno, hasdrubal, hannibal}) {
+    EXPECT_GT(commander->visuals.render_scale, 0.60F);
+    EXPECT_EQ(commander->individuals_per_unit, 1);
+    EXPECT_EQ(commander->max_units_per_row, 1);
+  }
+
   EXPECT_EQ(fabius->visuals.renderer_id, "troops/roman/commanders/fabius_maximus");
   EXPECT_EQ(scipio->visuals.renderer_id, "troops/roman/commanders/scipio_africanus");
   EXPECT_EQ(marcellus->visuals.renderer_id, "troops/roman/commanders/marcellus");

@@ -15,9 +15,6 @@ out vec3 v_normal;
 void main() {
   vec3 pos = a_pos;
 
-  float sway = sin(a_pos.x * 0.3 + time * 0.5) * 0.005;
-  pos.y += sway;
-
   world_pos = (model * vec4(pos, 1.0)).xyz;
   v_normal = normalize(mat3(transpose(inverse(model))) * a_normal);
 

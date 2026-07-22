@@ -27,6 +27,7 @@ constexpr float k_min_fire_patch_radius = 0.5F;
 constexpr float k_fire_patch_ground_offset = 0.85F;
 constexpr float k_rts_charge_casualty_fraction = 0.25F;
 constexpr float k_braced_spear_charge_casualty_fraction = 0.50F;
+constexpr float k_catapult_stone_impact_speed = 8.0F;
 
 [[nodiscard]] auto
 is_rts_charge_attacker(const Engine::Core::UnitComponent& unit) -> bool {
@@ -48,6 +49,8 @@ is_rts_charge_attacker(const Engine::Core::UnitComponent& unit) -> bool {
       1,
       unit.health);
 }
+
+} // namespace
 
 void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            const Engine::Core::Entity& impact_source,
@@ -106,6 +109,8 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
         side * (95.0F + 17.0F * static_cast<float>(it->slot_index % 4U));
   }
 }
+
+namespace {
 
 [[nodiscard]] auto commander_action_raw_damage(
     Engine::Core::Entity& attacker,
@@ -545,6 +550,21 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
   result.damage.effective_damage = application.applied_damage;
   result.damage.killed = application.killed;
   result.applied = application.applied_damage > 0;
+  auto const* attacker_unit =
+      attacker != nullptr ? attacker->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+  auto const* target_unit = target->get_component<Engine::Core::UnitComponent>();
+  bool const catapult_stone_into_infantry =
+      attacker != nullptr && attacker_unit != nullptr && target_unit != nullptr &&
+      attacker_unit->spawn_type == Game::Units::SpawnType::Catapult &&
+      request.contact.projectile_kind == Game::Systems::ProjectileKind::Stone &&
+      is_infantry(*target_unit);
+  if (catapult_stone_into_infantry) {
+    launch_new_casualties(*target,
+                          *attacker,
+                          application.queued_soldier_casualties,
+                          k_catapult_stone_impact_speed);
+  }
   apply_projectile_impact_effects_if_needed(*target, special_attack, result.contact);
   return result;
 }

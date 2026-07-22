@@ -13,6 +13,7 @@
 #include "../i_render_pass.h"
 #include "../scene_renderer.h"
 #include "scatter_renderer_state.h"
+#include "scatter_submission.h"
 
 namespace Render::GL {
 
@@ -76,15 +77,16 @@ protected:
     const auto visible_count = Render::Ground::Scatter::sync_filtered_state(
         m_state, [](const Instance& instance) -> const QVector4D& {
           return instance.pos_scale;
-        });
-    if (visible_count == 0 || !m_state.instance_buffer) {
+        },
+        renderer.static_world_visibility_filter_enabled()
+            ? renderer.submission_visibility().snapshot()
+            : nullptr);
+    if (visible_count == 0) {
       return;
     }
 
     TerrainScatterCmd cmd;
     cmd.species = species;
-    cmd.instance_buffer = m_state.instance_buffer.get();
-    cmd.instance_count = visible_count;
     if constexpr (CopyTimeToParams) {
       Params params = m_state.params;
       params.time = renderer.get_animation_time();
@@ -92,7 +94,7 @@ protected:
     } else {
       assign_params(cmd, m_state.params);
     }
-    renderer.terrain_scatter(cmd);
+    Render::Ground::Scatter::submit_visible_chunks(renderer, m_state, cmd);
   }
 
   void clear_common() { m_state.reset_instances(); }

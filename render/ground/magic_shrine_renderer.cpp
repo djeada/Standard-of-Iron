@@ -7,14 +7,15 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 
 namespace {
 
 using namespace Render::Ground;
 
-constexpr float k_base_color_r = 0.42F;
-constexpr float k_base_color_g = 0.36F;
-constexpr float k_base_color_b = 0.52F;
+constexpr float k_base_color_r = 0.28F;
+constexpr float k_base_color_g = 0.20F;
+constexpr float k_base_color_b = 0.38F;
 
 } // namespace
 
@@ -45,8 +46,11 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
   const auto visible_count = Scatter::sync_filtered_state(
       m_state, [](const MagicShrineInstanceGpu& inst) -> const QVector4D& {
         return inst.pos_scale;
-      });
-  if (visible_count == 0 || !m_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -54,10 +58,8 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
 
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::MagicShrine;
-  cmd.instance_buffer = m_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.magic_shrine = m_state.params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_state, cmd);
 }
 
 void MagicShrineRenderer::clear() {

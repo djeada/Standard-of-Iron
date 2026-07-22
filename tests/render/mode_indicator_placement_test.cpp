@@ -11,7 +11,9 @@
 #include "render/draw_queue.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/geom/mode_indicator.h"
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/combat_animation_diagnostics.h"
+#endif
 
 namespace {
 
@@ -27,9 +29,11 @@ protected:
 
 TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   Render::GL::Renderer renderer;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
   diagnostics.set_enabled(true);
   diagnostics.begin_frame(1U);
+#endif
 
   Engine::Core::TransformComponent transform{};
   transform.position = {1.0F, 2.0F, 3.0F};
@@ -49,8 +53,10 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   EXPECT_FLOAT_EQ(translation.y(),
                   transform.position.y + Render::Geom::k_indicator_height_base);
   EXPECT_FLOAT_EQ(translation.z(), transform.position.z);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   EXPECT_TRUE(diagnostics.mode_indicator_submitted(1U));
   diagnostics.set_enabled(false);
+#endif
 }
 
 TEST_F(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {

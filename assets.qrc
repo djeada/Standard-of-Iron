@@ -9,6 +9,21 @@
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/basic_instanced.frag</file>
         <file>assets/shaders/basic_instanced.vert</file>
+        <file>assets/shaders/banner.frag</file>
+        <file>assets/shaders/banner.vert</file>
+        <file>assets/shaders/boundary_gas.frag</file>
+        <file>assets/shaders/boundary_gas.vert</file>
+        <file>assets/shaders/campaign_badge.frag</file>
+        <file>assets/shaders/campaign_badge.vert</file>
+        <file>assets/shaders/campaign_coastline.frag</file>
+        <file>assets/shaders/campaign_label.frag</file>
+        <file>assets/shaders/campaign_label.vert</file>
+        <file>assets/shaders/campaign_province.frag</file>
+        <file>assets/shaders/campaign_province.vert</file>
+        <file>assets/shaders/campaign_stroke.frag</file>
+        <file>assets/shaders/campaign_stroke.vert</file>
+        <file>assets/shaders/campaign_symbol.frag</file>
+        <file>assets/shaders/campaign_symbol.vert</file>
         <file>assets/shaders/character_skinned.vert</file>
         <file>assets/shaders/character_skinned.frag</file>
         <file>assets/shaders/character_skinned_instanced.vert</file>
@@ -38,10 +53,14 @@
         <file>assets/shaders/olive_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>
         <file>assets/shaders/plant_instanced.vert</file>
+        <file>assets/shaders/primitive_instanced.frag</file>
+        <file>assets/shaders/primitive_instanced.vert</file>
         <file>assets/shaders/river.frag</file>
         <file>assets/shaders/river.vert</file>
         <file>assets/shaders/riverbank.frag</file>
         <file>assets/shaders/riverbank.vert</file>
+        <file>assets/shaders/road.frag</file>
+        <file>assets/shaders/road.vert</file>
         <file>assets/shaders/stone_instanced.frag</file>
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>
@@ -76,7 +95,7 @@
         <file>assets/shaders/iron_ore_instanced.vert</file>
         <file>assets/shaders/magic_shrine_instanced.frag</file>
         <file>assets/shaders/magic_shrine_instanced.vert</file>
-        
+
         <!-- Map files -->
         <file>assets/maps/map_battle_trebia.json</file>
         <file>assets/maps/map_battle_ticino.json</file>
@@ -283,9 +302,5 @@
         <file>assets/data/nations/roman_republic.json</file>
         <file>assets/data/nations/carthage.json</file>
 
-        <!-- Shared shader includes -->
-        <file>assets/shaders/include/noise.glsl</file>
-        <file>assets/shaders/include/lighting.glsl</file>
-        <file>assets/shaders/include/materials.glsl</file>
     </qresource>
 </RCC>

@@ -266,16 +266,15 @@ inline void draw_hanging_banner(const DrawContext& p,
                                 const QVector3D& base_team_trim,
                                 const HangingBannerStyle& style,
                                 const ClothBannerResources* cloth = nullptr) {
-  QVector3D const pole_center(style.pole_base.x(),
-                              style.pole_base.y() + style.pole_height / 2.0F,
-                              style.pole_base.z());
-  QVector3D const pole_size(
-      style.pole_radius * 1.8F, style.pole_height / 2.0F, style.pole_radius * 1.8F);
-
-  QMatrix4x4 pole_transform = p.model;
-  pole_transform.translate(pole_center);
-  pole_transform.scale(pole_size);
-  out.mesh(unit, pole_transform, style.pole_color, white, 1.0F);
+  QVector3D const pole_top(style.pole_base.x(),
+                           style.pole_base.y() + style.pole_height,
+                           style.pole_base.z());
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(
+                         style.pole_base, pole_top, style.pole_radius),
+           style.pole_color,
+           white,
+           1.0F);
 
   auto capture_colors =
       get_capture_colors(p,
@@ -283,7 +282,7 @@ inline void draw_hanging_banner(const DrawContext& p,
                          base_team_trim,
                          style.pole_height * style.capture_lowering_ratio);
 
-  float const beam_length = style.banner_width * 0.5F;
+  float const beam_length = style.banner_width + style.pole_radius * 0.55F;
   float const beam_y = style.pole_base.y() + style.pole_height -
                        style.banner_height * 0.2F - capture_colors.lowering_offset;
   float const banner_y = style.pole_base.y() + style.pole_height -
@@ -312,8 +311,10 @@ inline void draw_hanging_banner(const DrawContext& p,
            white,
            1.0F);
 
-  QVector3D const banner_center(
-      beam_end.x(), banner_y, style.pole_base.z() + style.banner_z_offset);
+  QVector3D const banner_center(style.pole_base.x() + style.beam_inset +
+                                   style.banner_width * 0.5F,
+                               banner_y,
+                               style.pole_base.z() + style.banner_z_offset);
   draw_banner_with_tassels(p,
                            out,
                            unit,

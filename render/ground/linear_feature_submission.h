@@ -27,10 +27,9 @@ void submit_linear_feature_segments(
     return;
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const auto* visibility_snapshot = renderer.static_world_visibility_filter_enabled()
+                                        ? renderer.submission_visibility().snapshot()
+                                        : nullptr;
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -47,12 +46,20 @@ void submit_linear_feature_segments(
       continue;
     }
 
+    const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                              ? GL::SubmissionFogMode::Revealed
+                              : GL::SubmissionFogMode::Ignore;
+    if (!renderer.submission_visibility().accepts_segment(
+            segment.start, segment.end, segment.width, fog_mode)) {
+      continue;
+    }
+
     float alpha = 1.0F;
     QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
 
     if (visibility_snapshot != nullptr) {
       const auto visibility_result = evaluate_linear_feature_visibility(
-          visibility_snapshot.get(), segment.start, segment.end, visibility_options);
+          visibility_snapshot, segment.start, segment.end, visibility_options);
       if (!visibility_result.visible) {
         continue;
       }

@@ -1,5 +1,6 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
+#include "helmets/commander_helmets.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -38,6 +39,32 @@ auto historical_helmet_role_colors(const void* variant_void,
       max_count);
 }
 
+template <CommanderHelmetStyle Style>
+auto build_commander_helmet(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::commander_helmet_make_static_attachment(
+      Style, humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+template <CommanderHelmetStyle Style>
+auto commander_helmet_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::commander_helmet_fill_role_colors(
+                           Style, variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 } // namespace
 
 auto build_roman_montefortino_attachment(std::uint8_t base_role_byte)
@@ -61,6 +88,36 @@ auto build_carthage_thracian_crested_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return build_historical_helmet<HistoricalHelmet::CarthageThracianCrested>(
       base_role_byte);
+}
+
+auto build_fabius_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Fabius>(base_role_byte);
+}
+
+auto build_scipio_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Scipio>(base_role_byte);
+}
+
+auto build_marcellus_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Marcellus>(base_role_byte);
+}
+
+auto build_hanno_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Hanno>(base_role_byte);
+}
+
+auto build_hasdrubal_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Hasdrubal>(base_role_byte);
+}
+
+auto build_hannibal_helmet_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return build_commander_helmet<CommanderHelmetStyle::Hannibal>(base_role_byte);
 }
 
 auto roman_montefortino_role_colors(const void* variant_void,
@@ -92,6 +149,54 @@ auto carthage_thracian_crested_role_colors(const void* variant_void,
                                            std::uint32_t base_count,
                                            std::size_t max_count) -> std::uint32_t {
   return historical_helmet_role_colors<HistoricalHelmet::CarthageThracianCrested>(
+      variant_void, out, base_count, max_count);
+}
+
+auto fabius_helmet_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Fabius>(
+      variant_void, out, base_count, max_count);
+}
+
+auto scipio_helmet_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Scipio>(
+      variant_void, out, base_count, max_count);
+}
+
+auto marcellus_helmet_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Marcellus>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hanno_helmet_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Hanno>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hasdrubal_helmet_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Hasdrubal>(
+      variant_void, out, base_count, max_count);
+}
+
+auto hannibal_helmet_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return commander_helmet_role_colors<CommanderHelmetStyle::Hannibal>(
       variant_void, out, base_count, max_count);
 }
 

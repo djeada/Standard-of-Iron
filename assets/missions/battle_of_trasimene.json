@@ -3,7 +3,9 @@
   "title": "Battle of Lake Trasimene",
   "summary": "Spring the ambush, seal the escape routes, and capture both Roman field camps along the lakeside corridor.",
   "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.",
-  "narrative_intent": "The Roman column walks into a trap and is destroyed by converging attacks.",
+  "narrative_intent": "The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.",
+  "historical_context": "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.",
+  "terrain_type": "lakeside_hill_country",
   "map_path": ":/assets/maps/map_battle_trasimene.json",
   "player_setup": {
     "nation": "carthage",
@@ -36,8 +38,8 @@
         {
           "type": "barracks",
           "position": {
-            "x": 18,
-            "z": 50
+            "x": 55,
+            "z": 170
           },
           "max_population": 180
         }
@@ -56,8 +58,8 @@
             }
           ],
           "entry_point": {
-            "x": 10,
-            "z": 50
+            "x": 0,
+            "z": 150
           }
         },
         {
@@ -77,8 +79,8 @@
             }
           ],
           "entry_point": {
-            "x": 18,
-            "z": 40
+            "x": 32,
+            "z": 154
           }
         }
       ],
@@ -98,16 +100,7 @@
         "harassment": 0.6
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 35,
-            "z": 20
-          },
-          "max_population": 140
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 240.0,
@@ -122,8 +115,8 @@
             }
           ],
           "entry_point": {
-            "x": 35,
-            "z": 20
+            "x": 595,
+            "z": 170
           }
         }
       ],
@@ -204,5 +197,6 @@
       ]
     }
   ],
+  "include_ambient_undead": false,
   "theme": "Legions march in column through the shoreline corridor — and the hills swallow them whole."
 }

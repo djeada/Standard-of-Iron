@@ -26,6 +26,7 @@
 #include "persistent_render_registry.h"
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_cache.h"
+#include "submission_visibility.h"
 #include "submitter.h"
 #include "template_prewarm_catalog.h"
 #include "unit_render_cache.h"
@@ -93,6 +94,10 @@ public:
   }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
+  [[nodiscard]] auto submission_visibility() const noexcept
+      -> const SubmissionVisibilityPolicy& {
+    return m_submission_visibility;
+  }
 
   void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
@@ -375,6 +380,8 @@ private:
   bool m_force_full_creature_lod = false;
 
   QMatrix4x4 m_view_proj;
+  Game::Map::VisibilityService::SnapshotPtr m_frame_visibility_snapshot;
+  SubmissionVisibilityPolicy m_submission_visibility;
   Shader* m_current_shader = nullptr;
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};

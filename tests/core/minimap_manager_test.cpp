@@ -14,6 +14,7 @@
 #include "map/minimap/minimap_utils.h"
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
+#include "render/gl/camera.h"
 
 using namespace Game::Map;
 
@@ -134,7 +135,7 @@ void sync_minimap_fog_from_visibility(MinimapManager& manager) {
 
 } // namespace
 
-TEST(MinimapManagerTest, FogUpdatesOnlyWhenVisibilityVersionChanges) {
+TEST(MinimapManagerTest, FogUpdatesOnlyWhenVisibilityCellsChange) {
   MinimapManager manager;
   manager.generate_for_map(make_test_map());
   EXPECT_TRUE(manager.consume_dirty_flag());
@@ -152,6 +153,12 @@ TEST(MinimapManagerTest, FogUpdatesOnlyWhenVisibilityVersionChanges) {
 
   auto newer_snapshot = unseen_snapshot;
   newer_snapshot.version = 2;
+  manager.update_fog(newer_snapshot);
+  EXPECT_FALSE(manager.consume_dirty_flag());
+
+  newer_snapshot.version = 3;
+  newer_snapshot.cells[6 * 12 + 6] =
+      static_cast<std::uint8_t>(VisibilityState::Visible);
   manager.update_fog(newer_snapshot);
   EXPECT_TRUE(manager.consume_dirty_flag());
 }
@@ -235,9 +242,17 @@ TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
   (void)manager.consume_dirty_flag();
 
   manager.update_units(world.get(), nullptr, 1);
+  EXPECT_FALSE(manager.consume_dirty_flag())
+      << "A snapshot version bump with identical cells must not force a unit-layer "
+         "recomposition.";
+
+  visible_snapshot.version = 3;
+  visible_snapshot.cells[0] = static_cast<std::uint8_t>(VisibilityState::Explored);
+  manager.update_fog(visible_snapshot);
+  (void)manager.consume_dirty_flag();
+  manager.update_units(world.get(), nullptr, 1);
   EXPECT_TRUE(manager.consume_dirty_flag())
-      << "update_units() must mark dirty when the fog version changes, even if "
-         "the unit hash is unchanged.";
+      << "A real fog pixel change must invalidate the unit-layer composite.";
 }
 
 TEST(MinimapManagerTest, UpdateUnitsMarksDirtyWhenRenderedMarkerStateChanges) {
@@ -266,6 +281,23 @@ TEST(MinimapManagerTest, UpdateUnitsMarksDirtyWhenRenderedMarkerStateChanges) {
   manager.update_units(world.get(), nullptr, 2);
   EXPECT_TRUE(manager.consume_dirty_flag())
       << "local owner changes can change minimap visibility filtering.";
+}
+
+TEST(MinimapManagerTest, UnchangedCameraDoesNotRecomposeFullMinimapImage) {
+  MinimapManager manager;
+  manager.generate_for_map(make_test_map(64, 64));
+  (void)manager.consume_dirty_flag();
+
+  Render::GL::Camera camera;
+  camera.set_rts_view(QVector3D(3.0F, 0.0F, -4.0F), 18.0F, 45.0F, 30.0F);
+
+  manager.update_camera_viewport(&camera, 1920.0F, 1080.0F);
+  EXPECT_TRUE(manager.consume_dirty_flag());
+  const qint64 first_composite_key = manager.get_image().cacheKey();
+
+  manager.update_camera_viewport(&camera, 1920.0F, 1080.0F);
+  EXPECT_FALSE(manager.consume_dirty_flag());
+  EXPECT_EQ(manager.get_image().cacheKey(), first_composite_key);
 }
 
 TEST(MinimapManagerTest, NonLocalMarkersDisappearWhenCellsFallBackToExplored) {

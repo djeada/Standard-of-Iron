@@ -9,6 +9,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 #include "combat_rules.h"
 #include "command_service.h"
 #include "movement_system.h"
@@ -89,6 +90,41 @@ auto should_include_resolved_start_waypoint(const Point& start) -> bool {
   return !CommandService::is_grid_walkable(start);
 }
 
+auto segment_traverses_bridge(const QVector3D& from, const QVector3D& to) -> bool {
+  auto& terrain = Game::Map::TerrainService::instance();
+  auto const* height_map = terrain.get_height_map();
+  if (height_map == nullptr) {
+    return false;
+  }
+
+  QVector3D const delta = to - from;
+  float const length = std::hypot(delta.x(), delta.z());
+  float const sample_step = std::max(height_map->get_tile_size() * 0.5F, 0.25F);
+  int const sample_count = std::max(1, static_cast<int>(std::ceil(length / sample_step)));
+  for (int sample = 0; sample <= sample_count; ++sample) {
+    float const t = static_cast<float>(sample) / static_cast<float>(sample_count);
+    QVector3D const point = from + delta * t;
+    if (terrain.is_on_bridge(point.x(), point.z())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto align_bridge_waypoint(const QVector3D& waypoint, bool final_waypoint)
+    -> QVector3D {
+  if (final_waypoint) {
+    return waypoint;
+  }
+  auto const aligned =
+      Game::Map::TerrainService::instance().get_bridge_traversal_position(
+          waypoint.x(), waypoint.z());
+  if (!aligned.has_value()) {
+    return waypoint;
+  }
+  return QVector3D(aligned->x(), waypoint.y(), aligned->z());
+}
+
 } // namespace
 
 void MovementSystem::assign_direct_target(Engine::Core::MovementComponent& movement,
@@ -118,8 +154,18 @@ auto MovementSystem::assign_path_to_movement(
   std::size_t const first_waypoint_index = include_first_waypoint ? 0U : 1U;
   movement.path.reserve(path_points.size() - first_waypoint_index);
   for (std::size_t idx = first_waypoint_index; idx < path_points.size(); ++idx) {
-    QVector3D const waypoint =
+    QVector3D const raw_waypoint =
         pathfinder.path_waypoint_world_position(path_points[idx]);
+    QVector3D const waypoint =
+        align_bridge_waypoint(raw_waypoint, idx + 1U == path_points.size());
+    if (!movement.path.empty()) {
+      auto const& previous = movement.path.back();
+      float const dx = waypoint.x() - previous.first;
+      float const dz = waypoint.z() - previous.second;
+      if (dx * dx + dz * dz <= 1.0e-6F) {
+        continue;
+      }
+    }
     movement.path.emplace_back(waypoint.x(), waypoint.z());
   }
 
@@ -167,7 +213,9 @@ void MovementSystem::assign_navigation_target(
       CommandService::world_to_grid(requested_target.x(), requested_target.z());
   QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
 
-  if (start == end || is_direct_path_walkable(current_pos, requested_target)) {
+  bool const bridge_route = segment_traverses_bridge(current_pos, requested_target);
+  if (start == end ||
+      (is_direct_path_walkable(current_pos, requested_target) && !bridge_route)) {
     assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
     return;
   }

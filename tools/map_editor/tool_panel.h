@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QButtonGroup;
+class QComboBox;
 class QGridLayout;
 class QLabel;
 class QToolButton;
@@ -25,6 +26,10 @@ enum class ToolType {
   PropMagicShrine,
   PropDeadTree,
   PropBoulder,
+  PropPineTree,
+  PropOliveTree,
+  PropPlant,
+  PropIronOre,
   TroopArcher,
   TroopSwordsman,
   TroopSpearman,
@@ -51,6 +56,7 @@ enum class ToolType {
   Village,
   DefenseTower,
   Home,
+  Marketplace,
   Wall,
   Eraser
 };
@@ -63,11 +69,13 @@ public:
 
   [[nodiscard]] ToolType current_tool() const { return m_current_tool; }
   [[nodiscard]] int current_player_id() const { return m_current_player_id; }
+  [[nodiscard]] QString current_nation() const { return m_current_nation; }
   void clear_selection();
 
 signals:
   void tool_selected(ToolType tool);
   void player_id_changed(int player_id);
+  void nation_changed(const QString& nation);
 
 private:
   void setup_ui();
@@ -84,10 +92,12 @@ private:
 
   QButtonGroup* m_tool_group = nullptr;
   QButtonGroup* m_player_group = nullptr;
+  QComboBox* m_nation_box = nullptr;
   QLabel* m_active_tool_label = nullptr;
   QToolButton* m_select_button = nullptr;
   ToolType m_current_tool = ToolType::Select;
   int m_current_player_id = 0;
+  QString m_current_nation;
 };
 
 } // namespace MapEditor

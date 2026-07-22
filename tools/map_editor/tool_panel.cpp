@@ -1,6 +1,7 @@
 #include "tool_panel.h"
 
 #include <QButtonGroup>
+#include <QComboBox>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
@@ -51,6 +52,14 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place authored dead trees as explicit world props.";
   case ToolType::PropBoulder:
     return "Place authored boulders as explicit world props.";
+  case ToolType::PropPineTree:
+    return "Place authored pine trees as explicit world props.";
+  case ToolType::PropOliveTree:
+    return "Place authored olive trees as explicit world props.";
+  case ToolType::PropPlant:
+    return "Place authored ground plants as explicit world props.";
+  case ToolType::PropIronOre:
+    return "Place authored iron ore deposits as explicit world props.";
   case ToolType::Barracks:
     return "Place barracks and assign them to a player.";
   case ToolType::Village:
@@ -59,6 +68,8 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place a defense tower and assign it to a player.";
   case ToolType::Home:
     return "Place a home building and assign it to a player.";
+  case ToolType::Marketplace:
+    return "Place a marketplace building and assign it to a player.";
   case ToolType::Wall:
     return "Draw a wall segment between two points and assign it to a player.";
   case ToolType::Eraser:
@@ -235,6 +246,34 @@ void ToolPanel::setup_ui() {
                   "🪨",
                   "Place authored boulders.",
                   ToolType::PropBoulder);
+  add_tool_button(props_layout,
+                  4,
+                  0,
+                  "Pine Tree",
+                  "♠",
+                  "Place authored pine trees.",
+                  ToolType::PropPineTree);
+  add_tool_button(props_layout,
+                  4,
+                  1,
+                  "Olive Tree",
+                  "♣",
+                  "Place authored olive trees.",
+                  ToolType::PropOliveTree);
+  add_tool_button(props_layout,
+                  5,
+                  0,
+                  "Plant",
+                  "❧",
+                  "Place authored ground plants.",
+                  ToolType::PropPlant);
+  add_tool_button(props_layout,
+                  5,
+                  1,
+                  "Iron Ore",
+                  "◆",
+                  "Place authored iron ore deposits.",
+                  ToolType::PropIronOre);
   layout->addWidget(props_group);
 
   auto* ownership_group = new QGroupBox("Ownership", this);
@@ -262,6 +301,21 @@ void ToolPanel::setup_ui() {
       emit player_id_changed(pid);
     });
   }
+  ownership_layout->addWidget(
+      createInfoLabel("Nation:", "fieldLabel", ownership_group));
+  m_nation_box = new QComboBox(ownership_group);
+  m_nation_box->addItem("Owner default", QString());
+  m_nation_box->addItem("Roman", QStringLiteral("roman_republic"));
+  m_nation_box->addItem("Carthage", QStringLiteral("carthage"));
+  m_nation_box->addItem("Sepulcher", QStringLiteral("iron_sepulcher"));
+  connect(m_nation_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
+          [this](int index) {
+            m_current_nation = m_nation_box->itemData(index).toString();
+            emit nation_changed(m_current_nation);
+          });
+  ownership_layout->addWidget(m_nation_box);
   ownership_layout->addStretch(1);
   layout->addWidget(ownership_group);
 
@@ -368,6 +422,13 @@ void ToolPanel::setup_ui() {
                   "🏠",
                   "Place a home building and assign a player.",
                   ToolType::Home);
+  add_tool_button(structures_layout,
+                  2,
+                  0,
+                  "Marketplace",
+                  "⚖",
+                  "Place a marketplace and assign a player.",
+                  ToolType::Marketplace);
 
   layout->addWidget(structures_group);
 

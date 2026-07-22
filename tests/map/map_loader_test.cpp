@@ -1,12 +1,47 @@
+#include <QDir>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryFile>
 
+#include <cmath>
+
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
+#include "game/map/terrain.h"
 #include "game/systems/resource_types.h"
+
+TEST(MapLoaderTest, ExpandsRiverWaypointsIntoAContinuousRuntimeChain) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonArray waypoints{QJsonArray{0, 4},
+                             QJsonArray{8, 7},
+                             QJsonArray{12, 12},
+                             QJsonArray{20, 16}};
+  const QJsonObject river{{"start", QJsonArray{0, 4}},
+                          {"end", QJsonArray{20, 16}},
+                          {"width", 4.0},
+                          {"waypoints", waypoints}};
+  const QJsonObject root{
+      {"name", "River Chain Test"},
+      {"grid", QJsonObject{{"width", 21}, {"height", 21}, {"tile_size", 1.0}}},
+      {"rivers", QJsonArray{river}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map, &error))
+      << error.toStdString();
+  ASSERT_EQ(map.rivers.size(), 3U);
+  EXPECT_EQ(map.rivers[0].end, map.rivers[1].start);
+  EXPECT_EQ(map.rivers[1].end, map.rivers[2].start);
+  EXPECT_FLOAT_EQ(map.rivers[0].width, 4.0F);
+}
 
 TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   QTemporaryFile temp_file;
@@ -105,6 +140,109 @@ TEST(MapLoaderTest, StartingResourcesDefaultToZeroWhenAbsent) {
       << error.toStdString();
 
   EXPECT_TRUE(map_def.starting_resources.empty());
+}
+
+TEST(MapLoaderTest, ExpandsRoadWaypointsIntoConnectedRuntimeSegments) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Waypoint Road Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"roads",
+       QJsonArray{QJsonObject{
+           {"start", QJsonArray{0.0, 0.0}},
+           {"end", QJsonArray{10.0, 5.0}},
+           {"waypoints",
+            QJsonArray{QJsonArray{0.0, 0.0},
+                       QJsonArray{5.0, 0.0},
+                       QJsonArray{5.0, 5.0},
+                       QJsonArray{10.0, 5.0}}},
+           {"width", 2.5},
+           {"style", "rough"}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.roads.size(), 3U);
+  EXPECT_EQ(map_def.roads[0].start, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(map_def.roads[0].end, QVector3D(5.0F, 0.0F, 0.0F));
+  EXPECT_EQ(map_def.roads[1].end, QVector3D(5.0F, 0.0F, 5.0F));
+  EXPECT_EQ(map_def.roads[2].end, QVector3D(10.0F, 0.0F, 5.0F));
+  for (const auto& segment : map_def.roads) {
+    EXPECT_FLOAT_EQ(segment.width, 2.5F);
+    EXPECT_EQ(segment.style, QStringLiteral("rough"));
+  }
+}
+
+TEST(MapLoaderTest, ParsesLakesAsFirstClassWaterBodies) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Lake Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"lakes",
+       QJsonArray{QJsonObject{{"x", 4.0},
+                              {"z", -3.0},
+                              {"width", 18.0},
+                              {"depth", 10.0},
+                              {"rotation", 27.0}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.lakes.size(), 1U);
+  EXPECT_EQ(map_def.lakes.front().center, QVector3D(4.0F, 0.0F, -3.0F));
+  EXPECT_FLOAT_EQ(map_def.lakes.front().width, 18.0F);
+  EXPECT_FLOAT_EQ(map_def.lakes.front().depth, 10.0F);
+  EXPECT_FLOAT_EQ(map_def.lakes.front().rotation_deg, 27.0F);
+}
+
+TEST(MapLoaderTest, TrimsFeedingRiverAtIrregularLakeBoundary) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "River Lake Join Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"rivers",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-24.0, 0.0}},
+                              {"end", QJsonArray{0.0, 0.0}},
+                              {"width", 4.0}}}},
+      {"lakes",
+       QJsonArray{QJsonObject{{"x", 0.0},
+                              {"z", 0.0},
+                              {"width", 20.0},
+                              {"depth", 20.0}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.rivers.size(), 1U);
+  ASSERT_EQ(map_def.lakes.size(), 1U);
+  const auto& endpoint = map_def.rivers.front().end;
+  EXPECT_TRUE(Game::Map::point_on_lake_boundary(
+      map_def.lakes.front(), endpoint.x(), endpoint.z(), 0.01F));
+  EXPECT_GT(std::abs(endpoint.x()), 8.0F);
 }
 
 TEST(MapLoaderTest, ParsesAuthoredSpawnBehavior) {
@@ -239,21 +377,26 @@ TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
   EXPECT_TRUE(has_center);
 }
 
-TEST(MapLoaderTest, ParsesBuildingsArrayWithOwnership) {
+TEST(MapLoaderTest, ParsesPointAndLineStructuresWithOwnership) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
   const QJsonObject root{
       {"name", "Buildings Test"},
       {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
-      {"buildings",
+      {"structures",
        QJsonArray{
            QJsonObject{{"type", "defense_tower"},
                        {"x", 10},
                        {"z", 15},
                        {"player_id", 1},
                        {"nation", "rome"}},
-           QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}}}}};
+           QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}},
+           QJsonObject{{"type", "wall_segment"},
+                       {"start", QJsonArray{5, 10}},
+                       {"end", QJsonArray{30, 10}},
+                       {"player_id", 1},
+                       {"nation", "rome"}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
 
@@ -263,51 +406,27 @@ TEST(MapLoaderTest, ParsesBuildingsArrayWithOwnership) {
       Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
       << error.toStdString();
 
-  ASSERT_EQ(map_def.buildings.size(), 2U);
-  const auto& tower = map_def.buildings[0];
-  EXPECT_EQ(tower.type, QStringLiteral("defense_tower"));
+  ASSERT_EQ(map_def.structures.size(), 3U);
+  const auto& tower = map_def.structures[0];
+  EXPECT_EQ(tower.type, Game::Units::SpawnType::DefenseTower);
   EXPECT_EQ(tower.player_id, 1);
   EXPECT_EQ(tower.nation, QStringLiteral("rome"));
+  ASSERT_TRUE(std::holds_alternative<Game::Map::PointStructureGeometry>(
+      tower.geometry));
 
-  const auto& home = map_def.buildings[1];
-  EXPECT_EQ(home.type, QStringLiteral("home"));
+  const auto& home = map_def.structures[1];
+  EXPECT_EQ(home.type, Game::Units::SpawnType::Home);
   EXPECT_EQ(home.player_id, 2);
-}
-
-TEST(MapLoaderTest, ParsesWallsArrayWithOwnership) {
-  QTemporaryFile temp_file;
-  ASSERT_TRUE(temp_file.open());
-
-  const QJsonObject root{
-      {"name", "Walls Test"},
-      {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
-      {"walls",
-       QJsonArray{QJsonObject{{"start", QJsonArray{5, 10}},
-                              {"end", QJsonArray{30, 10}},
-                              {"player_id", 1},
-                              {"nation", "rome"}},
-                  QJsonObject{{"start", QJsonArray{5, 40}},
-                              {"end", QJsonArray{30, 40}},
-                              {"player_id", 2}}}}};
-  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
-  temp_file.flush();
-
-  Game::Map::MapDefinition map_def;
-  QString error;
+  const auto& wall = map_def.structures[2];
+  EXPECT_EQ(wall.type, Game::Units::SpawnType::WallSegment);
+  EXPECT_EQ(wall.player_id, 1);
   ASSERT_TRUE(
-      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
-      << error.toStdString();
-
-  ASSERT_EQ(map_def.wall_lines.size(), 2U);
-  const auto& wall0 = map_def.wall_lines[0];
-  EXPECT_EQ(wall0.player_id, 1);
-  EXPECT_EQ(wall0.nation, QStringLiteral("rome"));
-
-  const auto& wall1 = map_def.wall_lines[1];
-  EXPECT_EQ(wall1.player_id, 2);
+      std::holds_alternative<Game::Map::LineStructureGeometry>(wall.geometry));
+  const auto& line = std::get<Game::Map::LineStructureGeometry>(wall.geometry);
+  EXPECT_LT(line.start.x(), line.end.x());
 }
 
-TEST(MapLoaderTest, EmptyBuildingsAndWallsWhenArraysAbsent) {
+TEST(MapLoaderTest, EmptyStructuresWhenArrayAbsent) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
@@ -323,6 +442,44 @@ TEST(MapLoaderTest, EmptyBuildingsAndWallsWhenArraysAbsent) {
       Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
       << error.toStdString();
 
-  EXPECT_TRUE(map_def.buildings.empty());
-  EXPECT_TRUE(map_def.wall_lines.empty());
+  EXPECT_TRUE(map_def.structures.empty());
+}
+
+TEST(MapLoaderTest, RejectsRetiredStructureCollectionsAndBuildingSpawns) {
+  const auto expect_rejected = [](QJsonObject root) {
+    QTemporaryFile temp_file;
+    EXPECT_TRUE(temp_file.open());
+    temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+    temp_file.flush();
+    Game::Map::MapDefinition map_def;
+    QString error;
+    EXPECT_FALSE(Game::Map::MapLoader::load_from_json_file(
+        temp_file.fileName(), map_def, &error));
+    EXPECT_FALSE(error.isEmpty());
+  };
+
+  const QJsonObject grid{{"width", 16}, {"height", 16}, {"tile_size", 1.0}};
+  expect_rejected(QJsonObject{{"grid", grid}, {"buildings", QJsonArray{}}});
+  expect_rejected(QJsonObject{{"grid", grid}, {"walls", QJsonArray{}}});
+  expect_rejected(QJsonObject{
+      {"grid", grid},
+      {"spawns", QJsonArray{QJsonObject{{"type", "barracks"}, {"x", 2}, {"z", 2}}}}});
+}
+
+TEST(MapLoaderTest, LoadsEveryShippedMapWithTheCanonicalStructureSchema) {
+  QDir repo_root = QFileInfo(QString::fromUtf8(__FILE__)).absoluteDir();
+  ASSERT_TRUE(repo_root.cdUp());
+  ASSERT_TRUE(repo_root.cdUp());
+  QDir maps_dir(repo_root.filePath(QStringLiteral("assets/maps")));
+  const QStringList maps =
+      maps_dir.entryList(QStringList{QStringLiteral("*.json")}, QDir::Files);
+  ASSERT_FALSE(maps.isEmpty());
+
+  for (const QString& map_name : maps) {
+    Game::Map::MapDefinition map_def;
+    QString error;
+    EXPECT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        maps_dir.filePath(map_name), map_def, &error))
+        << map_name.toStdString() << ": " << error.toStdString();
+  }
 }

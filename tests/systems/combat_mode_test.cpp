@@ -126,6 +126,31 @@ TEST_F(CombatModeTest, AttackModeTriggersWhenEngaged) {
   EXPECT_EQ(attacker_attack->current_mode, AttackComponent::CombatMode::Melee);
 }
 
+TEST_F(CombatModeTest, MeleeLockOverridesArchersRangedPreference) {
+  auto* archer = world->create_entity();
+  archer->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* archer_unit = archer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  archer_unit->owner_id = 1;
+  archer_unit->spawn_type = Game::Units::SpawnType::Archer;
+  auto* archer_attack = archer->add_component<AttackComponent>();
+  archer_attack->can_melee = true;
+  archer_attack->can_ranged = true;
+  archer_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  archer_attack->in_melee_lock = true;
+  archer_attack->melee_lock_target_id = enemy->get_id();
+  Combat::update_combat_mode(archer, world.get(), archer_attack);
+
+  EXPECT_EQ(archer_attack->current_mode, AttackComponent::CombatMode::Melee);
+  EXPECT_EQ(archer_attack->preferred_mode, AttackComponent::CombatMode::Ranged);
+}
+
 TEST_F(CombatModeTest, UndeadHelpersMapCombatFamiliesAndAutoEngageRoles) {
   EXPECT_EQ(resolve_combat_attack_family(Game::Units::SpawnType::SkeletonSwordsman,
                                          AttackComponent::CombatMode::Melee),
@@ -3167,7 +3192,7 @@ TEST_F(CombatModeTest, TimedSpearTraceUsesBakedShaftSegmentWhenAvailable) {
   }
 
   auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
-  auto* forward_enemy = make_enemy_soldier(*world, -0.30F, 2.45F);
+  auto* forward_enemy = make_enemy_soldier(*world, -0.30F, 2.25F);
   auto* broad_shape_enemy = make_enemy_soldier(*world, 0.50F, 2.45F);
   ASSERT_NE(forward_enemy, nullptr);
   ASSERT_NE(broad_shape_enemy, nullptr);
@@ -3192,7 +3217,15 @@ TEST_F(CombatModeTest, TimedSpearTraceUsesBakedShaftSegmentWhenAvailable) {
       *definition,
       {.previous_normalized_time = 0.44F, .current_normalized_time = 0.52F},
       forward_enemy->get_id());
-  EXPECT_EQ(forward_contact.target_id, forward_enemy->get_id());
+  EXPECT_EQ(forward_contact.target_id, forward_enemy->get_id())
+      << "segment previous_base=" << segment.previous_base.x() << ","
+      << segment.previous_base.y() << "," << segment.previous_base.z()
+      << " previous_tip=" << segment.previous_tip.x() << ","
+      << segment.previous_tip.y() << "," << segment.previous_tip.z()
+      << " current_base=" << segment.current_base.x() << ","
+      << segment.current_base.y() << "," << segment.current_base.z()
+      << " current_tip=" << segment.current_tip.x() << ","
+      << segment.current_tip.y() << "," << segment.current_tip.z();
 
   std::array<EntityID, 1> const ignored_forward{forward_enemy->get_id()};
   auto const broad_shape_contact =
@@ -3796,6 +3829,63 @@ TEST_F(CombatModeTest, RunningRtsCavalryChargeKillsAndLaunchesInfantryOnce) {
   EXPECT_LT(casualties->entries[0].launch_velocity_x *
                 casualties->entries[1].launch_velocity_x,
             0.0F);
+}
+
+TEST_F(CombatModeTest, CatapultStoneLaunchesInfantryCasualties) {
+  auto* catapult = world->create_entity();
+  catapult->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* catapult_unit =
+      catapult->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  catapult_unit->owner_id = 1;
+  catapult_unit->spawn_type = Game::Units::SpawnType::Catapult;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 8.0F);
+  auto* target_unit = target->get_component<UnitComponent>();
+  target_unit->render_individuals_per_unit_override = 8;
+
+  auto result = Game::Systems::Combat::resolve_projectile_impact_hit(
+      world.get(),
+      {.contact = {.attacker_id = catapult->get_id(),
+                   .target_id = target->get_id(),
+                   .from_projectile = true,
+                   .projectile_kind = Game::Systems::ProjectileKind::Stone},
+       .explicit_raw_damage = 25});
+
+  EXPECT_TRUE(result.applied);
+  auto* casualties = target->get_component<SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_EQ(casualties->entries.size(), 2U);
+  EXPECT_TRUE(std::all_of(casualties->entries.begin(),
+                          casualties->entries.end(),
+                          [](auto const& entry) { return entry.launched; }));
+  EXPECT_TRUE(std::all_of(
+      casualties->entries.begin(), casualties->entries.end(), [](auto const& entry) {
+        return std::hypot(entry.launch_velocity_x, entry.launch_velocity_z) >= 5.0F &&
+               entry.launch_velocity_y >= 6.8F;
+      }));
+}
+
+TEST_F(CombatModeTest, ElephantMeleeAttackLaunchesInfantryCasualties) {
+  auto* elephant = world->create_entity();
+  elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* elephant_unit =
+      elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  elephant_unit->owner_id = 1;
+  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
+
+  auto* target = make_enemy_soldier(*world, 0.0F, 1.5F);
+  auto* target_unit = target->get_component<UnitComponent>();
+  target_unit->render_individuals_per_unit_override = 8;
+
+  Game::Systems::Combat::deal_damage(
+      world.get(), target, 25, elephant->get_id());
+
+  auto* casualties = target->get_component<SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_EQ(casualties->entries.size(), 2U);
+  EXPECT_TRUE(std::all_of(casualties->entries.begin(),
+                          casualties->entries.end(),
+                          [](auto const& entry) { return entry.launched; }));
 }
 
 TEST_F(CombatModeTest, HeldSpearsBraceAndKillHalfOfChargingCavalry) {

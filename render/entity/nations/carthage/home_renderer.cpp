@@ -23,16 +23,17 @@ using Render::Geom::clamp_vec_01;
 constexpr std::uint8_t k_home_team_slot = 0;
 
 struct CarthagePalette {
-  QVector3D stone_light{0.62F, 0.60F, 0.58F};
-  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
-  QVector3D stone_base{0.55F, 0.53F, 0.51F};
-  QVector3D brick{0.75F, 0.52F, 0.42F};
-  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
-  QVector3D tile_red{0.72F, 0.40F, 0.30F};
-  QVector3D tile_dark{0.58F, 0.30F, 0.22F};
-  QVector3D wood{0.42F, 0.28F, 0.16F};
-  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
-  QVector3D royal_purple{0.46F, 0.22F, 0.44F};
+  QVector3D stone_light{0.66F, 0.53F, 0.38F};
+  QVector3D stone_dark{0.13F, 0.115F, 0.09F};
+  QVector3D stone_base{0.34F, 0.28F, 0.20F};
+  QVector3D brick{0.44F, 0.20F, 0.105F};
+  QVector3D brick_dark{0.20F, 0.075F, 0.04F};
+  QVector3D tile_red{0.31F, 0.085F, 0.04F};
+  QVector3D tile_dark{0.105F, 0.045F, 0.025F};
+  QVector3D wood{0.28F, 0.17F, 0.08F};
+  QVector3D wood_dark{0.075F, 0.052F, 0.03F};
+  QVector3D bronze{0.72F, 0.43F, 0.12F};
+  QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -250,7 +251,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   if (state != BuildingState::Destroyed) {
     desc.add_box(QVector3D(0.0F, 0.78F, 1.04F),
                  QVector3D(0.44F, 0.05F, 0.10F),
-                 c.royal_purple,
+                 c.ember,
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
 
@@ -276,13 +277,35 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact,
                  BuildingLODMask::Full);
     if (state == BuildingState::Normal) {
-
       desc.add_box(QVector3D(0.0F, roof_y + 0.46F, -0.10F),
                    QVector3D(0.08F, 0.06F, 0.08F),
-                   c.royal_purple,
+                   c.ember,
                    BuildingStateMask::Normal,
                    BuildingLODMask::Full);
+      for (float x : {-0.76F, 0.76F}) {
+        for (float z : {-0.76F, 0.76F}) {
+          desc.add_cylinder(QVector3D(x, roof_y + 0.04F, z),
+                            QVector3D(x, roof_y + 0.34F, z),
+                            0.028F,
+                            c.bronze,
+                            BuildingStateMask::Normal);
+          desc.add_cone(QVector3D(x, roof_y + 0.32F, z),
+                        QVector3D(x, roof_y + 0.58F, z),
+                        0.075F,
+                        c.wood_dark,
+                        BuildingStateMask::Normal);
+        }
+      }
     }
+  }
+
+  for (float x : {-0.72F, 0.72F}) {
+    desc.add_cylinder(QVector3D(x * 1.12F, 0.20F, 1.00F),
+                      QVector3D(x, roof_y - 0.08F, 1.00F),
+                      0.038F,
+                      c.wood_dark,
+                      k_building_state_mask_intact,
+                      BuildingLODMask::Full);
   }
 
   desc.add_box(QVector3D(0.0F, 0.52F, -0.94F),
@@ -306,8 +329,14 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                          QVector3D(0.985F, 0.94F, 0.0F),
                          BuildingFacadePlane::ZY,
                          0.46F,
-                         c.royal_purple,
+                         c.ember,
                          c.stone_dark);
+  add_punic_horned_crown(desc,
+                         QVector3D(0.0F, roof_y + 0.10F, -0.10F),
+                         0.62F,
+                         c.wood_dark,
+                         c.bronze,
+                         c.ember);
 
   return build_building_archetype(desc, state);
 }

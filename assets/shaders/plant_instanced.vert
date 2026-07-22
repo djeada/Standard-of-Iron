@@ -45,12 +45,15 @@ void main() {
 
   float seed = h31(world_origin * 0.173 + vec3(0.27, 0.49, 0.19));
 
-  const float SIZE_MULT = 1.85;
-  float size_jitter = mix(0.90, 1.45, h11(seed * 3.9));
+  const float SIZE_MULT = 1.48;
+  float size_jitter = mix(0.82, 1.24, h11(seed * 3.9));
   float final_scale = scale * SIZE_MULT * size_jitter;
 
   vec3 local_pos = a_pos * final_scale;
   float h = clamp(a_pos.y, 0.0, 1.0);
+  float root_taper = mix(0.38, 1.0, smoothstep(0.0, 0.22, h));
+  float crown_taper = mix(1.0, 0.76, smoothstep(0.68, 1.0, h));
+  local_pos.xz *= root_taper * crown_taper;
 
   float lean_angle = (h11(seed * 2.1) - 0.5) * 0.18;
   float lean_yaw = h11(seed * 3.7) * 6.2831853;
@@ -67,7 +70,7 @@ void main() {
   float wind_yaw = seed * 9.0;
   vec2 wind_dir = normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
 
-  local_pos.xz += wind_dir * (0.10 * sway);
+  local_pos.xz += wind_dir * (0.075 * sway);
 
   float twist = (h11(seed * 5.5) - 0.5) * 0.30;
   float twist_angle = twist * h;

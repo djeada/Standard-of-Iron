@@ -82,6 +82,26 @@ void main() {
   float alpha = body_mask * base_fill * top_fade * tex_color.a * intensity_scale *
                 mix(0.78, 1.06, flicker);
 
+  vec2 spark_grid = vec2(centered_x * 7.0 + flame_phase * 2.3,
+                         height_t * 15.0 - u_time * 5.6);
+  vec2 spark_cell = floor(spark_grid);
+  vec2 spark_local = fract(spark_grid) - 0.5;
+  float spark_seed = hash(spark_cell + vec2(flame_phase * 3.7, 11.0));
+  spark_local.x += (spark_seed - 0.5) * 0.42;
+  float spark_dot = 1.0 - smoothstep(0.045, 0.14, length(spark_local));
+  float detached_sparks = spark_dot * smoothstep(0.82, 0.97, spark_seed) *
+                          smoothstep(0.20, 0.52, height_t) *
+                          (1.0 - smoothstep(0.88, 1.02, height_t));
+
+  float smoke_noise = fbm(vec2(centered_x * 2.4 + flame_phase,
+                               height_t * 4.2 - u_time * 0.72));
+  float smoke_wisp = (1.0 - smoothstep(0.24, 0.72,
+                                       abs(centered_x + (smoke_noise - 0.5) * 0.48))) *
+                     smoothstep(0.72, 0.94, height_t) *
+                     (1.0 - smoothstep(0.96, 1.05, height_t)) * 0.16;
+  alpha = max(alpha, detached_sparks * 0.92);
+  alpha = max(alpha, smoke_wisp);
+
   vec3 base_white = vec3(2.2, 1.9, 1.3);
   vec3 hot_core = vec3(1.85, 1.08, 0.3);
   vec3 mid_flame = vec3(1.2, 0.42, 0.08);
@@ -101,12 +121,14 @@ void main() {
       vec2(centered_x * 18.0 + flame_phase * 1.7, tex_coord.y * 25.0 - u_time * 6.5));
   float ember_sparks = pow(max(ember_noise - 0.72, 0.0) * 3.6, 3.0) * ember_band;
   flame += vec3(2.45, 1.2, 0.24) * ember_sparks * intensity_scale;
+  flame += vec3(2.8, 1.15, 0.16) * detached_sparks * intensity_scale;
 
   float blue_core = core_mask * (1.0 - smoothstep(0.0, 0.12, height_t));
   flame += vec3(0.08, 0.18, 0.42) * blue_core * 0.3;
 
   float glow = pow(1.0 - height_t, 2.2) * (0.35 + 0.65 * body_mask) * u_glow_strength;
   flame += vec3(1.32, 0.66, 0.18) * glow * intensity_scale;
+  flame = mix(flame, vec3(0.16, 0.15, 0.15), smoke_wisp * 0.82);
 
   flame *= flicker * mix(0.94, 1.08, tex_detail);
   flame = clamp(flame, 0.0, 4.0);

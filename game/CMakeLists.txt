@@ -120,7 +120,9 @@ add_library(game_systems STATIC
     map/map_transformer.cpp
     map/environment.cpp
     map/terrain.cpp
+    map/terrain_landform.cpp
     map/terrain_service.cpp
+    map/terrain_topology_audit.cpp
     map/visibility_service.cpp
     map/world_bootstrap.cpp
     map/map_catalog.cpp

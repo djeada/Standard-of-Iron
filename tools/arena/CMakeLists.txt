@@ -62,4 +62,28 @@ set_target_properties(arena_app PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/bin"
 )
 
+# Arena loads loose shaders beside its executable. Keep every renderer shader
+# in sync so visual reviews exercise current source instead of the configure-
+# time asset snapshot.
+file(GLOB _arena_shader_sources CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/assets/shaders/*.vert"
+    "${CMAKE_SOURCE_DIR}/assets/shaders/*.frag"
+)
+set(_arena_shader_outputs)
+foreach(_source IN LISTS _arena_shader_sources)
+    get_filename_component(_shader "${_source}" NAME)
+    set(_output "${CMAKE_BINARY_DIR}/bin/assets/shaders/${_shader}")
+    add_custom_command(
+        OUTPUT "${_output}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "${CMAKE_BINARY_DIR}/bin/assets/shaders"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_source}" "${_output}"
+        DEPENDS "${_source}"
+        VERBATIM
+    )
+    list(APPEND _arena_shader_outputs "${_output}")
+endforeach()
+add_custom_target(arena_shaders DEPENDS ${_arena_shader_outputs})
+add_dependencies(arena_app arena_shaders)
+
 install(TARGETS arena_app RUNTIME DESTINATION .)

@@ -291,7 +291,7 @@ void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
   m_rain_shader->use();
   glBindVertexArray(m_vao);
 
-  QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 view_proj = cam.get_view_projection_matrix();
   QVector3D camera_pos = cam.get_position();
 
   QVector3D particle_color;

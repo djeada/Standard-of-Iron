@@ -439,7 +439,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   if (auto* commander_data =
           commander->get_component<Engine::Core::CommanderComponent>()) {
     commander_data->rally_requested = false;
-    commander_data->rally_requires_manual_trigger = false;
+    commander_data->rally_requires_manual_trigger = true;
     commander_data->fpv_controlled = false;
     commander_data->power_strike_active = false;
     commander_data->just_struck_enemy = false;

@@ -3,7 +3,9 @@
   "title": "Battle of Zama",
   "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize the Roman camps before the rear guard stabilizes the field.",
   "teaching_goal": "Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.",
-  "narrative_intent": "The final confrontation becomes a layered battle of adaptation and endurance.",
+  "narrative_intent": "The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield's neglected flank.",
+  "historical_context": "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history.",
+  "terrain_type": "north_african_plain",
   "map_path": ":/assets/maps/map_battle_zama.json",
   "player_setup": {
     "nation": "carthage",
@@ -51,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 200,
-            "z": 60
+            "x": 500.94,
+            "z": 218.9
           }
         },
         {
@@ -68,8 +70,8 @@
             }
           ],
           "entry_point": {
-            "x": 170,
-            "z": 30
+            "x": 425.8,
+            "z": 109.45
           }
         }
       ],
@@ -89,16 +91,7 @@
         "harassment": 0.8
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 210,
-            "z": 30
-          },
-          "max_population": 180
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 180.0,
@@ -113,8 +106,8 @@
             }
           ],
           "entry_point": {
-            "x": 210,
-            "z": 30
+            "x": 706.33,
+            "z": 131.34
           }
         },
         {
@@ -134,8 +127,8 @@
             }
           ],
           "entry_point": {
-            "x": 210,
-            "z": 30
+            "x": 706.33,
+            "z": 131.34
           }
         }
       ],
@@ -155,16 +148,7 @@
         "harassment": 0.35
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 200,
-            "z": 95
-          },
-          "max_population": 170
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 520.0,
@@ -187,8 +171,8 @@
             }
           ],
           "entry_point": {
-            "x": 200,
-            "z": 95
+            "x": 716.34,
+            "z": 576.45
           }
         }
       ],
@@ -201,15 +185,21 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 2,
-      "description": "Seize two Roman camps before the cavalry rides back from the flanks."
+      "min_count": 4,
+      "description": "Seize the two consular camps, Masinissa's northern camp, and the Roman rear-guard camp before the cavalry closes your rear."
+    },
+    {
+      "type": "survive_undead_wave",
+      "zone_id": "sepulcher_vanguard",
+      "wave_count": 2,
+      "description": "Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls — and the wings fold inward."
+      "description": "Your command falls \u2014 and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -217,7 +207,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -244,6 +234,18 @@
         {
           "type": "show_message",
           "text": "Scipio extends the line. Keep your center steady and protect elephants from isolation."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 105.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Iron bells answer beneath the western flank. The Sepulcher is advancing on Carthage as well as Rome."
         }
       ]
     },
@@ -284,5 +286,6 @@
       ]
     }
   ],
-  "theme": "Two worlds collide on open sand. Only one general walks away."
+  "include_ambient_undead": true,
+  "theme": "Two worlds collide on open sand. A third has been waiting underneath it."
 }

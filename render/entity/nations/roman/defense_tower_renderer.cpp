@@ -32,8 +32,8 @@ struct TowerPalette {
   QVector3D sandstone_dark{0.70F, 0.62F, 0.50F};
   QVector3D sandstone_base{0.75F, 0.68F, 0.56F};
   QVector3D marble{0.98F, 0.97F, 0.95F};
-  QVector3D terracotta{0.80F, 0.55F, 0.38F};
-  QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
+  QVector3D terracotta{0.78F, 0.32F, 0.18F};
+  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
   QVector3D cedar{0.52F, 0.38F, 0.26F};
   QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
   QVector3D blue_accent{0.28F, 0.48F, 0.68F};
@@ -235,6 +235,11 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         damaged ? 0.54F : 0.68F,
         c.gold,
         c.blue_accent);
+    add_roman_roof_standard(desc,
+                            QVector3D(0.0F, battlement_y + 0.20F, 0.0F),
+                            damaged ? 0.48F : 0.66F,
+                            c.gold,
+                            c.terracotta_dark);
   }
 
   return build_building_archetype(desc, state);

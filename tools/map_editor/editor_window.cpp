@@ -204,6 +204,10 @@ void EditorWindow::setup_ui() {
           &ToolPanel::player_id_changed,
           m_canvas,
           &MapCanvas::set_current_player_id);
+  connect(m_tool_panel,
+          &ToolPanel::nation_changed,
+          m_canvas,
+          &MapCanvas::set_current_nation);
 
   auto* tools_scroll = new QScrollArea(sidebar_tabs);
   tools_scroll->setWidget(m_tool_panel);
@@ -324,6 +328,11 @@ void EditorWindow::setup_menus() {
   connect(resize_action, &QAction::triggered, this, &EditorWindow::resize_map);
   edit_menu->addAction(resize_action);
 
+  auto* biome_action = new QAction("Edit &Biome JSON...", this);
+  biome_action->setToolTip("Edit ground and biome rendering settings");
+  connect(biome_action, &QAction::triggered, this, &EditorWindow::edit_biome);
+  edit_menu->addAction(biome_action);
+
   auto* toolbar = addToolBar("Main");
   toolbar->setMovable(false);
   toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -442,6 +451,16 @@ void EditorWindow::resize_map() {
   }
 }
 
+void EditorWindow::edit_biome() {
+  const QJsonObject before = m_map_data->biome();
+  JsonEditDialog dialog("Edit Biome", before, false, this);
+  if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
+    m_map_data->execute_command(
+        std::make_unique<UpdateBiomeCmd>(m_map_data, before, dialog.get_json()));
+    show_action_feedback("Biome settings updated.");
+  }
+}
+
 void EditorWindow::undo() {
   const QString desc = m_map_data->undo_description();
   m_map_data->undo();
@@ -497,17 +516,47 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::PropRuins:
     tool_name = "Ruins";
     break;
+  case ToolType::PropMagicShrine:
+    tool_name = "Magic Shrine";
+    break;
   case ToolType::PropDeadTree:
     tool_name = "Dead Tree";
     break;
   case ToolType::PropBoulder:
     tool_name = "Boulder";
     break;
+  case ToolType::PropPineTree:
+    tool_name = "Pine Tree";
+    break;
+  case ToolType::PropOliveTree:
+    tool_name = "Olive Tree";
+    break;
+  case ToolType::PropPlant:
+    tool_name = "Plant";
+    break;
+  case ToolType::PropIronOre:
+    tool_name = "Iron Ore";
+    break;
   case ToolType::Barracks:
     tool_name = "Barracks";
     break;
   case ToolType::Village:
     tool_name = "Village";
+    break;
+  case ToolType::DefenseTower:
+    tool_name = "Defense Tower";
+    break;
+  case ToolType::Home:
+    tool_name = "Home";
+    break;
+  case ToolType::Marketplace:
+    tool_name = "Marketplace";
+    break;
+  case ToolType::Wall:
+    tool_name = "Wall (click start, then end)";
+    break;
+  case ToolType::UndeadZone:
+    tool_name = "Undead Zone";
     break;
   case ToolType::Eraser:
     tool_name = "Eraser";
@@ -528,6 +577,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::TroopCarthageMercenaryBroker:
   case ToolType::TroopCarthageCavalryPatron:
   case ToolType::TroopCarthageElephantMaster:
+  case ToolType::TroopSkeletonSwordsman:
+  case ToolType::TroopSkeletonArcher:
+  case ToolType::TroopGravePriest:
   case ToolType::TroopCivilian:
   case ToolType::TroopBuilder:
     break;
@@ -678,7 +730,9 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
     json[MapJsonKeys::z] = static_cast<double>(elem.z);
     json[MapJsonKeys::player_id] = elem.player_id;
-    json[MapJsonKeys::max_population] = elem.max_population;
+    if (elem.max_population != 100) {
+      json[MapJsonKeys::max_population] = elem.max_population;
+    }
     if (!elem.nation.isEmpty()) {
       json[MapJsonKeys::nation] = elem.nation;
     }
@@ -877,6 +931,14 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
           elem.width = required_width;
         }
       }
+      if (elem.type == QStringLiteral("wall")) {
+        const QVector2D delta = elem.end - elem.start;
+        if (std::abs(delta.x()) >= std::abs(delta.y())) {
+          elem.end.setY(elem.start.y());
+        } else {
+          elem.end.setX(elem.start.x());
+        }
+      }
 
       m_map_data->execute_command(
           std::make_unique<UpdateLinearCmd>(m_map_data,
@@ -890,8 +952,9 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
       elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
       elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
-      elem.max_population = new_json[MapJsonKeys::max_population].toInt(150);
+      elem.max_population = new_json[MapJsonKeys::max_population].toInt(100);
       elem.nation = new_json[MapJsonKeys::nation].toString();
+      elem.spawn_order = m_map_data->structures()[index].spawn_order;
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::x,

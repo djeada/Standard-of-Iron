@@ -106,3 +106,38 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
     EXPECT_EQ(source->find("normalize(vec3(0.65, 0.50, 0.40))"), std::string::npos);
   }
 }
+
+TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "riverbank.frag");
+  ASSERT_FALSE(frag.empty());
+
+  for (const auto* uniform : {"uniform vec3 u_grass_secondary;",
+                              "uniform vec3 u_grass_dry;",
+                              "uniform vec3 u_soil_color;",
+                              "uniform vec3 u_rock_low;",
+                              "uniform vec3 u_rock_high;",
+                              "uniform vec3 u_snow_color;",
+                              "uniform float u_moisture_level;",
+                              "uniform float u_rock_exposure;",
+                              "uniform float u_snow_coverage;"}) {
+    EXPECT_NE(frag.find(uniform), std::string::npos);
+  }
+
+  EXPECT_NE(frag.find("vec3 wet_silt =\n      soil *"), std::string::npos);
+  EXPECT_NE(frag.find("mix(earth, map_ground"), std::string::npos);
+  EXPECT_EQ(frag.find("if (shore_t > edge_limit)"), std::string::npos);
+  EXPECT_EQ(frag.find("float ground_blend"), std::string::npos);
+}
+
+TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(frag.empty());
+
+  EXPECT_NE(frag.find("float meadow_field = clamp("), std::string::npos);
+  EXPECT_NE(frag.find("float thatch_field = clamp("), std::string::npos);
+  EXPECT_NE(frag.find("float lush_patch = smoothstep("), std::string::npos);
+  EXPECT_NE(frag.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
+  EXPECT_NE(frag.find("0.055 * soil_mix"), std::string::npos);
+}

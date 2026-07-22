@@ -21,7 +21,7 @@ jobs:
         run: brew install ninja
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.6.3'
+          version: '6.8.2'
           host: 'mac'
           arch: 'clang_64'
           cache: true
@@ -43,6 +43,12 @@ jobs:
           # Place assets in Contents/Resources/assets/ (standard macOS bundle location)
           mkdir -p "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets"
           rsync -a assets/ "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets/"
+      - name: Verify packaged gameplay renderer
+        run: |
+          set -o pipefail
+          "${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}" \
+            --renderer-self-test 2>&1 | tee renderer_self_test.log
+          grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
       - name: Create DMG
         run: |
           hdiutil create -volname "Standard of Iron" -srcfolder "${APP_DIR}/${APP_NAME}.app" -ov -format UDZO "standard_of_iron-macos.dmg"

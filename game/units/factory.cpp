@@ -113,19 +113,40 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                          return Elephant::Create(world, params);
                        });
 
-  auto commander_factory = [](Engine::Core::World& world,
-                              const SpawnParams& params) -> std::unique_ptr<Unit> {
-    if (owner_has_living_commander(world, params.player_id)) {
-      return std::unique_ptr<Unit>{};
+  auto can_spawn_commander = [](Engine::Core::World& world,
+                                const SpawnParams& params) {
+    return !owner_has_living_commander(world, params.player_id);
+  };
+  auto sword_commander_factory =
+      [can_spawn_commander](Engine::Core::World& world,
+                            const SpawnParams& params) -> std::unique_ptr<Unit> {
+    if (!can_spawn_commander(world, params)) {
+      return {};
     }
     return Swordsman::Create(world, params);
   };
-  reg.register_factory(SpawnType::RomanLegionOrganizer, commander_factory);
-  reg.register_factory(SpawnType::RomanVeteranConsul, commander_factory);
-  reg.register_factory(SpawnType::RomanFieldCommander, commander_factory);
-  reg.register_factory(SpawnType::CarthageMercenaryBroker, commander_factory);
-  reg.register_factory(SpawnType::CarthageCavalryPatron, commander_factory);
-  reg.register_factory(SpawnType::CarthageElephantMaster, commander_factory);
+  auto spear_commander_factory =
+      [can_spawn_commander](Engine::Core::World& world,
+                            const SpawnParams& params) -> std::unique_ptr<Unit> {
+    if (!can_spawn_commander(world, params)) {
+      return {};
+    }
+    return Spearman::Create(world, params);
+  };
+  auto bow_commander_factory =
+      [can_spawn_commander](Engine::Core::World& world,
+                            const SpawnParams& params) -> std::unique_ptr<Unit> {
+    if (!can_spawn_commander(world, params)) {
+      return {};
+    }
+    return Archer::Create(world, params);
+  };
+  reg.register_factory(SpawnType::RomanLegionOrganizer, spear_commander_factory);
+  reg.register_factory(SpawnType::RomanVeteranConsul, sword_commander_factory);
+  reg.register_factory(SpawnType::RomanFieldCommander, bow_commander_factory);
+  reg.register_factory(SpawnType::CarthageMercenaryBroker, spear_commander_factory);
+  reg.register_factory(SpawnType::CarthageCavalryPatron, bow_commander_factory);
+  reg.register_factory(SpawnType::CarthageElephantMaster, sword_commander_factory);
 
   reg.register_factory(SpawnType::Civilian,
                        [](Engine::Core::World& world, const SpawnParams& params) {

@@ -16,15 +16,6 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
-  std::size_t const& debug_rigged_batches = context.debug_rigged_batches;
-  std::size_t const& debug_rigged_cmds = context.debug_rigged_cmds;
-  std::size_t const& debug_rigged_instanced_attempts =
-      context.debug_rigged_instanced_attempts;
-  std::size_t const& debug_rigged_instanced_successes =
-      context.debug_rigged_instanced_successes;
-  std::size_t const& debug_rigged_instanced_failures =
-      context.debug_rigged_instanced_failures;
-  std::size_t const& debug_rigged_single_draws = context.debug_rigged_single_draws;
   (void)cam;
   (void)view;
   (void)projection;
@@ -32,12 +23,6 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
-  (void)debug_rigged_batches;
-  (void)debug_rigged_cmds;
-  (void)debug_rigged_instanced_attempts;
-  (void)debug_rigged_instanced_successes;
-  (void)debug_rigged_instanced_failures;
-  (void)debug_rigged_single_draws;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();
@@ -80,12 +65,20 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
     if (m_banner_pipeline != nullptr &&
         active_shader == m_banner_pipeline->m_banner_shader) {
+      CullFaceScope const banner_cull(false);
       if (m_last_bound_shader != active_shader) {
         active_shader->use();
         active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.time,
                                    m_animation_time);
         active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.wind_strength,
                                    banner_wind_strength);
+        active_shader->set_uniform(
+            m_banner_pipeline->m_banner_uniforms.light_direction, m_light_dir);
+        active_shader->set_uniform(m_banner_pipeline->m_banner_uniforms.camera_pos,
+                                   cam.get_position());
+        active_shader->set_uniform(
+            m_banner_pipeline->m_banner_uniforms.ambient_strength,
+            m_ambient_strength);
         m_last_bound_shader = active_shader;
       }
 

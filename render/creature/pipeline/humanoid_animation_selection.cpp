@@ -12,6 +12,7 @@
 #include "../../humanoid/facial_hair_catalog.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
+#include "../runtime_bake_guard.h"
 #include "animation/selection_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -68,6 +69,32 @@ void apply_authored_action_clip(
   selection.clip_variant = 0U;
 }
 
+void apply_role_specific_combat_clip(
+    HumanoidAnimationSelection& selection,
+    const UnitVisualSpec& spec,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_attacking || anim.inputs.is_mounted) {
+    return;
+  }
+
+  if (anim.inputs.is_in_hold_mode) {
+    if (anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Spear) {
+      selection.clip_id = Animation::k_humanoid_hold_spear_attack_clip;
+      selection.clip_variant = 0U;
+    } else if (!anim.inputs.is_melee &&
+               anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Bow) {
+      selection.clip_id = Animation::k_humanoid_hold_bow_attack_clip;
+      selection.clip_variant = 0U;
+    }
+  }
+
+  if (anim.inputs.is_melee &&
+      spec.animation_manifest.melee_clip_override != Animation::k_unmapped_clip) {
+    selection.clip_id = spec.animation_manifest.melee_clip_override;
+    selection.clip_variant = 0U;
+  }
+}
+
 auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
   auto const profile = Animation::guard_shield_attachment_profile(pose);
   QMatrix4x4 guard_turn;
@@ -121,6 +148,13 @@ auto guard_shield_archetype(Render::Creature::ArchetypeId base_archetype,
   auto const* base_desc = registry.get(base_archetype);
   if (base_desc == nullptr || base_desc->bake_attachment_count == 0U) {
     cache.emplace(cache_key, base_archetype);
+    return base_archetype;
+  }
+
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::StaticArchetypeBuild,
+        base_desc->debug_name + guard_pose_suffix(pose));
     return base_archetype;
   }
 
@@ -198,6 +232,7 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
   apply_named_sword_attack_state(selection, anim);
   update_clip_id(selection);
   apply_authored_action_clip(selection, anim);
+  apply_role_specific_combat_clip(selection, spec, anim);
   return selection;
 }
 

@@ -93,6 +93,10 @@ struct HumanoidShadowStateInputs {
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
   float camera_distance{0.0F};
   bool mounted{false};
+  std::uint32_t formation_id{0U};
+  bool standing_idle{false};
+  float surface_world_y{0.0F};
+  bool surface_height_valid{false};
 };
 
 struct QuadrupedShadowStateInputs {
@@ -102,6 +106,10 @@ struct QuadrupedShadowStateInputs {
   CreatureKind kind{CreatureKind::Horse};
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
   float camera_distance{0.0F};
+  std::uint32_t formation_id{0U};
+  bool standing_idle{false};
+  float surface_world_y{0.0F};
+  bool surface_height_valid{false};
 };
 
 [[nodiscard]] inline auto

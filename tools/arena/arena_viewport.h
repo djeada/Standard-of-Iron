@@ -13,6 +13,7 @@
 #include <optional>
 #include <vector>
 
+#include "arena_scenario.h"
 #include "game/core/component.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
@@ -40,6 +41,10 @@ namespace Arena {
 class ArenaScenarioRunner;
 struct ArenaScenarioReport;
 } // namespace Arena
+
+namespace Render::Profiling {
+class FrameContinuityAnalyzer;
+} // namespace Render::Profiling
 
 namespace Render::GL {
 class Renderer;
@@ -112,6 +117,13 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void load_scenario(const QString& scenario_id);
+  void set_terrain_review_content_enabled(bool enabled);
+  [[nodiscard]] auto load_terrain_review_map(const QString& map_path,
+                                             QString* error = nullptr) -> bool;
+  void set_terrain_review_overview_camera();
+  void set_terrain_review_gameplay_camera();
+  [[nodiscard]] auto
+  terrain_review_definition() const -> const Game::Map::MapDefinition*;
   void apply_visual_overrides_to_selection();
   void set_animation_name(const QString& animation_name);
   void play_selected_animation();
@@ -190,6 +202,7 @@ private:
                                                  float clearance) const -> bool;
   void apply_keyboard_camera_controls(float real_dt);
   void clear_camera_key_state();
+  [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
   void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
@@ -219,6 +232,7 @@ private:
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
+  void spawn_terrain_review_structures();
   void draw_debug_overlay(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
   void draw_selection_marquee(QPainter& painter);
@@ -230,6 +244,7 @@ private:
   void capture_attack_scrub_anchor();
   void apply_attack_scrub_override();
   void set_force_full_creature_lod(bool enabled);
+  void sample_frame_continuity();
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -263,6 +278,10 @@ private:
   Game::Systems::NationID m_spawn_building_nation_id;
   Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
   std::vector<Game::Map::WorldProp> m_world_props;
+  std::vector<Game::Map::RiverSegment> m_arena_rivers;
+  std::vector<Game::Map::Lake> m_arena_lakes;
+  std::vector<Game::Map::Bridge> m_arena_bridges;
+  std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
   float m_spawn_world_prop_scale = 1.0F;
@@ -287,6 +306,8 @@ private:
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
   bool m_force_full_creature_lod = true;
+  bool m_terrain_review_mode = false;
+  bool m_terrain_review_content_enabled = false;
   bool m_batch_frame_in_progress = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;
@@ -306,8 +327,11 @@ private:
   float m_attack_scrub_offset = 0.0F;
   bool m_attack_scrub_finisher = false;
   std::unique_ptr<Arena::ArenaScenarioRunner> m_scenario_runner;
+  std::unique_ptr<Render::Profiling::FrameContinuityAnalyzer>
+      m_frame_continuity_analyzer;
   float m_batch_fixed_step = 0.0F;
   float m_scenario_duration_override = 0.0F;
   std::size_t m_last_scenario_issue_revision = 0U;
   bool m_scenario_finished_emitted = false;
+  std::optional<Game::Map::MapDefinition> m_terrain_review_definition;
 };

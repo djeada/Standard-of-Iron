@@ -40,8 +40,8 @@ struct RomanPalette {
   QVector3D marble{0.98F, 0.97F, 0.95F};
   QVector3D cedar{0.52F, 0.38F, 0.26F};
   QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
-  QVector3D terracotta{0.82F, 0.62F, 0.45F};
-  QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
+  QVector3D terracotta{0.76F, 0.32F, 0.18F};
+  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
   QVector3D blue_accent{0.28F, 0.48F, 0.68F};
   QVector3D blue_light{0.40F, 0.60F, 0.80F};
   QVector3D gold{0.85F, 0.72F, 0.35F};
@@ -663,6 +663,35 @@ void draw_roofline(const DrawContext& p,
                p.model,
                QVector3D(0.0F, 2.74F, 0.92F),
                QVector3D(0.08F, 0.10F, 0.04F),
+               c.gold);
+
+      draw_cyl(out,
+               p.model,
+               QVector3D(0.0F, 2.66F, 0.92F),
+               QVector3D(0.0F, 3.12F, 0.92F),
+               0.025F,
+               c.gold,
+               white);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, 2.90F, 0.92F),
+               QVector3D(0.12F, 0.07F, 0.035F),
+               c.terracotta_dark);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, 3.10F, 0.92F),
+               QVector3D(0.30F, 0.045F, 0.055F),
+               c.gold);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, 3.16F, 0.92F),
+               QVector3D(0.06F, 0.10F, 0.06F),
                c.gold);
     }
   }

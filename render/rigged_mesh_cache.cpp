@@ -227,6 +227,31 @@ RiggedMeshCache::~RiggedMeshCache() {
   }
 }
 
+void RiggedMeshCache::upload_pending_skin_ubos() {
+  if (!m_has_pending_skin_ubo_uploads || rigged_cache_gl_funcs() == nullptr) {
+    return;
+  }
+
+  // This is an explicit renderer-initialization phase, not an on-demand
+  // gameplay bake. It must run with the QSG render thread's GL context.
+  Render::Creature::RuntimeBakeAllowScope const initialization_scope;
+  m_has_pending_skin_ubo_uploads = false;
+  for (auto& [_, entry] : m_entries) {
+    if (entry.skin_palette_ubo != 0U || entry.skinned_palettes.empty() ||
+        entry.skinned_frame_total == 0U || entry.skinned_bone_count == 0U) {
+      continue;
+    }
+
+    rigged_entry_ensure_skin_ubo(entry);
+    if (entry.skin_palette_ubo == 0U) {
+      m_has_pending_skin_ubo_uploads = true;
+      continue;
+    }
+    record_skin_ubo_upload(static_cast<std::uint64_t>(entry.skinned_frame_total) *
+                           BonePaletteArena::k_palette_bytes);
+  }
+}
+
 namespace {
 auto matrix_from_row_major(std::span<const float> row) -> QMatrix4x4 {
   if (row.size() < 16) {

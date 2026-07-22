@@ -211,6 +211,14 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   out.bodies.add_quadruped(body_state);
 
   QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);
+  const float horse_y_scale =
+      horse_ctx.model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
+  const float horse_contact_y =
+      RCP::horse_clip_contact_y(horse_clip_for_motion(motion), motion.phase)
+          .value_or(0.0F);
+  const float horse_surface_world_y =
+      horse_world_pos.y() - k_ground_clearance_epsilon +
+      horse_contact_y * horse_y_scale;
   float camera_distance = 0.0F;
   if (horse_ctx.camera != nullptr) {
     camera_distance = (horse_world_pos - horse_ctx.camera->get_position()).length();
@@ -222,6 +230,12 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   shadow_inputs.kind = RCP::CreatureKind::Horse;
   shadow_inputs.lod = lod;
   shadow_inputs.camera_distance = camera_distance;
+  shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
+  shadow_inputs.standing_idle =
+      !motion.is_moving && !motion.is_fighting && !anim.is_attacking &&
+      !anim.is_hit_reacting && !anim.is_dying && !anim.is_dead;
+  shadow_inputs.surface_world_y = horse_surface_world_y;
+  shadow_inputs.surface_height_valid = true;
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
   if (shadow_state.enabled) {
     if (out.shadow_batch.empty()) {

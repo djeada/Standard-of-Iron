@@ -43,6 +43,12 @@ void CommanderInputAdapter::secondary_action_up() {
   }
 }
 
+void CommanderInputAdapter::trigger_aura() {
+  if (m_engine != nullptr) {
+    m_engine->commander_trigger_aura();
+  }
+}
+
 void CommanderInputAdapter::trigger_rally() {
   if (m_engine != nullptr) {
     m_engine->commander_trigger_rally();

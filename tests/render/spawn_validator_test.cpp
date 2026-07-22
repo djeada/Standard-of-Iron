@@ -327,14 +327,22 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRoadClearance) {
 }
 
 TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
+  // The production minimum bridge plus tree clearance is wider than the
+  // original 10x10 fixture, so use a field that contains both test points.
+  width = 24;
+  height = 24;
+  height_data.assign(static_cast<std::size_t>(width * height), 0.0F);
+  terrain_types.assign(static_cast<std::size_t>(width * height), TerrainType::Flat);
   build_cache();
 
   Game::Map::MapDefinition map_def;
   map_def.grid.width = width;
   map_def.grid.height = height;
   map_def.grid.tile_size = tile_size;
-  map_def.bridges.push_back(
-      {QVector3D(-3.0F, 0.0F, 0.0F), QVector3D(3.0F, 0.0F, 0.0F), 2.0F, 0.5F});
+  map_def.bridges.push_back({QVector3D(-3.0F, 0.0F, 0.0F),
+                             QVector3D(3.0F, 0.0F, 0.0F),
+                             Game::Map::k_min_bridge_width,
+                             0.5F});
   Game::Map::TerrainService::instance().initialize(map_def);
 
   SpawnValidationConfig config = make_tree_spawn_config();
@@ -347,9 +355,11 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
   config.river_clearance = 0.0F;
 
   SpawnValidator validator(terrain_cache, config);
+  float const exclusion_radius =
+      Game::Map::k_min_bridge_width * 0.5F + config.bridge_clearance;
 
-  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 1.8F));
-  EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 3.3F));
+  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, exclusion_radius - 0.1F));
+  EXPECT_TRUE(validator.can_spawn_at_world(0.0F, exclusion_radius + 0.1F));
 }
 
 TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRiverClearance) {

@@ -121,3 +121,78 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesAuthoredLocalAiRoles) {
   }
   EXPECT_GE(local_role_count, 20);
 }
+
+TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
+  const QJsonObject root =
+      load_json_object(asset_dir_path(QStringLiteral("maps/map_crossing_rhone.json")));
+  const QJsonArray structures = root.value("structures").toArray();
+  const QJsonArray props = root.value("world_props").toArray();
+
+  for (const auto& value : structures) {
+    const QJsonObject structure = value.toObject();
+    if (structure.value("type").toString() != QStringLiteral("wall_segment")) {
+      EXPECT_NE(structure.value("player_id").toInt(), 1)
+          << "The player camp must remain prop-only apart from its walls";
+    }
+  }
+
+  for (const int bot_id : {2, 3}) {
+    int tower_count = 0;
+    int home_count = 0;
+    int marketplace_count = 0;
+    int wall_line_count = 0;
+    bool has_barracks = false;
+    for (const auto& value : structures) {
+      const QJsonObject building = value.toObject();
+      if (building.value("player_id").toInt() != bot_id) {
+        continue;
+      }
+      const QString type = building.value("type").toString();
+      tower_count += type == QStringLiteral("defense_tower") ? 1 : 0;
+      home_count += type == QStringLiteral("home") ? 1 : 0;
+      marketplace_count += type == QStringLiteral("marketplace") ? 1 : 0;
+      has_barracks =
+          has_barracks || type == QStringLiteral("barracks");
+      wall_line_count += type == QStringLiteral("wall_segment") ? 1 : 0;
+    }
+
+    EXPECT_TRUE(has_barracks);
+    EXPECT_GE(tower_count, 4);
+    EXPECT_GE(home_count, 3);
+    EXPECT_GE(marketplace_count, 1);
+    EXPECT_GE(wall_line_count, 5);
+  }
+
+  int player_wall_lines = 0;
+  bool has_tent = false;
+  bool has_firecamp = false;
+  bool has_weapon_rack = false;
+  bool has_supply_cart = false;
+  for (const auto& value : structures) {
+    const QJsonObject structure = value.toObject();
+    player_wall_lines +=
+        structure.value("player_id").toInt() == 1 &&
+                structure.value("type").toString() == QStringLiteral("wall_segment")
+            ? 1
+            : 0;
+  }
+  for (const auto& value : props) {
+    const QJsonObject prop = value.toObject();
+    const double x = prop.value("x").toDouble();
+    const double z = prop.value("z").toDouble();
+    if (x < 8.0 || x > 54.0 || z < 136.0 || z > 212.0) {
+      continue;
+    }
+    const QString type = prop.value("type").toString();
+    has_tent = has_tent || type == QStringLiteral("tent");
+    has_firecamp = has_firecamp || type == QStringLiteral("firecamp");
+    has_weapon_rack = has_weapon_rack || type == QStringLiteral("weapon_rack");
+    has_supply_cart = has_supply_cart || type == QStringLiteral("supply_cart");
+  }
+
+  EXPECT_GE(player_wall_lines, 4);
+  EXPECT_TRUE(has_tent);
+  EXPECT_TRUE(has_firecamp);
+  EXPECT_TRUE(has_weapon_rack);
+  EXPECT_TRUE(has_supply_cart);
+}

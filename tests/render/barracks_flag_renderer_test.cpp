@@ -88,9 +88,9 @@ TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
        .ring_color = QVector3D(0.9F, 0.8F, 0.2F)});
 
   ASSERT_EQ(submitter.meshes.size(), 8u);
-  EXPECT_EQ(submitter.meshes[0].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[3].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[4].mesh, fake_mesh(1));
+  EXPECT_EQ(submitter.meshes[0].mesh, get_unit_cylinder());
   EXPECT_EQ(submitter.meshes[1].mesh, get_unit_cylinder());
   EXPECT_EQ(submitter.meshes[2].mesh, get_unit_cylinder());
   EXPECT_EQ(submitter.meshes[5].mesh, get_unit_cylinder());

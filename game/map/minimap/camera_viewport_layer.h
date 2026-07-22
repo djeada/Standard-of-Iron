@@ -51,7 +51,7 @@ private:
   float m_offset_x = 0.0F;
   float m_offset_y = 0.0F;
 
-  float m_border_width = 2.0F;
+  float m_border_width = 1.25F;
   std::uint8_t m_border_r = 255;
   std::uint8_t m_border_g = 255;
   std::uint8_t m_border_b = 255;

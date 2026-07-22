@@ -1,5 +1,6 @@
 #include "troop_catalog.h"
 
+#include <algorithm>
 #include <utility>
 
 namespace Game::Units {
@@ -266,6 +267,7 @@ void TroopCatalog::register_defaults() {
 
   register_class(std::move(horse_spearman));
 
+  enum class CommanderCombatStyle { Spear, Sword, Bow };
   auto register_commander = [this](Game::Units::TroopType unit_type,
                                    const char* display_name,
                                    int cost,
@@ -274,7 +276,8 @@ void TroopCatalog::register_defaults() {
                                    int health,
                                    float speed,
                                    float vision_range,
-                                   int melee_damage,
+                                   int combat_damage,
+                                   CommanderCombatStyle combat_style,
                                    float renderer_scale,
                                    float selection_ring_size,
                                    const char* renderer_id) {
@@ -284,19 +287,26 @@ void TroopCatalog::register_defaults() {
     commander.production.cost = cost;
     commander.production.build_time = build_time;
     commander.production.priority = priority;
-    commander.production.is_melee = true;
+    commander.production.is_melee = combat_style != CommanderCombatStyle::Bow;
 
     commander.combat.health = health;
     commander.combat.max_health = health;
     commander.combat.speed = speed;
     commander.combat.vision_range = vision_range;
-    commander.combat.ranged_range = 1.5F;
-    commander.combat.ranged_damage = 4;
-    commander.combat.ranged_cooldown = 2.0F;
-    commander.combat.melee_range = 1.8F;
-    commander.combat.melee_damage = melee_damage;
+    commander.combat.ranged_range =
+        combat_style == CommanderCombatStyle::Bow ? 12.0F : 1.5F;
+    commander.combat.ranged_damage =
+        combat_style == CommanderCombatStyle::Bow ? combat_damage : 4;
+    commander.combat.ranged_cooldown =
+        combat_style == CommanderCombatStyle::Bow ? 1.35F : 2.0F;
+    commander.combat.melee_range =
+        combat_style == CommanderCombatStyle::Spear ? 2.4F : 1.8F;
+    commander.combat.melee_damage =
+        combat_style == CommanderCombatStyle::Bow
+            ? std::max(6, combat_damage / 2)
+            : combat_damage;
     commander.combat.melee_cooldown = 1.0F;
-    commander.combat.can_ranged = false;
+    commander.combat.can_ranged = combat_style == CommanderCombatStyle::Bow;
     commander.combat.can_melee = true;
 
     commander.visuals.render_scale = renderer_scale;
@@ -319,6 +329,7 @@ void TroopCatalog::register_defaults() {
                      2.0F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Spear,
                      0.72F,
                      1.9F,
                      "troops/roman/commanders/fabius_maximus");
@@ -331,6 +342,7 @@ void TroopCatalog::register_defaults() {
                      2.15F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Sword,
                      0.72F,
                      1.85F,
                      "troops/roman/commanders/scipio_africanus");
@@ -343,6 +355,7 @@ void TroopCatalog::register_defaults() {
                      2.35F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Bow,
                      0.72F,
                      1.8F,
                      "troops/roman/commanders/marcellus");
@@ -355,6 +368,7 @@ void TroopCatalog::register_defaults() {
                      2.1F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Spear,
                      0.72F,
                      1.82F,
                      "troops/carthage/commanders/hanno_the_great");
@@ -367,6 +381,7 @@ void TroopCatalog::register_defaults() {
                      2.45F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Bow,
                      0.72F,
                      1.88F,
                      "troops/carthage/commanders/hasdrubal_barca");
@@ -379,6 +394,7 @@ void TroopCatalog::register_defaults() {
                      2.0F,
                      18.0F,
                      14,
+                     CommanderCombatStyle::Sword,
                      0.72F,
                      1.95F,
                      "troops/carthage/commanders/hannibal_barca");

@@ -13,6 +13,7 @@
 #include "../mesh.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "../state_scopes.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -248,21 +249,10 @@ void HealingBeamPipeline::render(const Game::Systems::HealingBeamSystem* beam_sy
 
   clear_gl_errors();
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  GLint prev_blend_src = 0;
-  GLint prev_blend_dst = 0;
-  glGetIntegerv(GL_BLEND_SRC_ALPHA, &prev_blend_src);
-  glGetIntegerv(GL_BLEND_DST_ALPHA, &prev_blend_dst);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
+  CullFaceScope const cull(false);
+  DepthTestScope const depth_test(true);
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_beam_shader->use();
@@ -275,26 +265,12 @@ void HealingBeamPipeline::render(const Game::Systems::HealingBeamSystem* beam_sy
   }
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  glBlendFunc(static_cast<GLenum>(prev_blend_src), static_cast<GLenum>(prev_blend_dst));
-  if (!blend_enabled) {
-    glDisable(GL_BLEND);
-  }
-  if (depth_test_enabled) {
-    glEnable(GL_DEPTH_TEST);
-  } else {
-    glDisable(GL_DEPTH_TEST);
-  }
-  if (cull_enabled) {
-    glEnable(GL_CULL_FACE);
-  }
 }
 
 void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam& beam,
                                       const Camera& cam,
                                       float animation_time) {
-  QMatrix4x4 mvp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 mvp = cam.get_view_projection_matrix();
 
   float progress = std::clamp(beam.get_progress(), 0.0F, 1.0F);
   float alpha = std::clamp(beam.get_intensity(), 0.0F, 1.0F);
@@ -330,14 +306,10 @@ void HealingBeamPipeline::render_single_beam(const QVector3D& start,
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
+  CullFaceScope const cull(false);
+  DepthTestScope const depth_test(true);
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_beam_shader->use();
@@ -355,12 +327,6 @@ void HealingBeamPipeline::render_single_beam(const QVector3D& start,
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cull_enabled) {
-    glEnable(GL_CULL_FACE);
-  }
 }
 
 } // namespace Render::GL::BackendPipelines

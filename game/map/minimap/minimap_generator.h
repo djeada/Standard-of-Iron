@@ -16,6 +16,7 @@ class MinimapGenerator {
 public:
   struct Config {
     float pixels_per_tile = 2.0F;
+    int max_image_dimension = 512;
 
     Config() = default;
   };
@@ -27,6 +28,8 @@ public:
 
 private:
   Config m_config;
+
+  [[nodiscard]] auto pixels_per_tile_for(const GridDefinition& grid) const -> float;
 
   void render_parchment_background(QImage& image);
   void render_terrain_base(QImage& image, const MapDefinition& map_def);
@@ -54,7 +57,6 @@ private:
 
   static void draw_map_border(QPainter& painter, int width, int height);
   static void apply_vignette(QPainter& painter, int width, int height);
-  static void draw_compass_rose(QPainter& painter, int width, int height);
 
   [[nodiscard]] auto
   world_to_pixel(float world_x,

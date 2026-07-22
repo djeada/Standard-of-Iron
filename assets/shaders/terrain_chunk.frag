@@ -12,7 +12,7 @@ layout(location = 0) out vec4 frag_color;
 uniform vec3 u_grass_primary, u_grass_secondary, u_grass_dry, u_soil_color;
 uniform vec3 u_rock_low, u_rock_high, u_tint, u_light_dir;
 uniform vec2 u_noise_offset;
-uniform float u_tile_size, u_macro_noise_scale, u_detail_noise_scale;
+uniform float u_tile_size, u_macro_noise_scale;
 uniform float u_slope_rock_threshold, u_slope_rock_sharpness;
 uniform float u_soil_blend_height, u_soil_blend_sharpness;
 uniform float u_height_noise_strength, u_height_noise_frequency;
@@ -62,48 +62,77 @@ float noise21(vec2 p) {
   float b = hash21(i + vec2(1.0, 0.0));
   float c = hash21(i + vec2(0.0, 1.0));
   float d = hash21(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
+  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-float fbm(vec2 p) {
-  float v = 0.0, a = 0.5;
+vec2 hash22(vec2 p) {
+  vec2 h = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return -1.0 + 2.0 * fract(sin(h) * 43758.5453123);
+}
+
+float gradient_noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float a = dot(hash22(i), f);
+  float b = dot(hash22(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  float c = dot(hash22(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  float d = dot(hash22(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y) * 1.55;
+}
+
+float gradient_fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.54;
+  mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
   for (int i = 0; i < 5; ++i) {
-    v += noise21(p) * a;
-    p = p * 2.07 + 13.17;
-    a *= 0.5;
+    value += gradient_noise(p) * amplitude;
+    p = octave_rotation * p * 2.03 + vec2(7.1, -3.8);
+    amplitude *= 0.49;
   }
-  return v;
+  return value;
 }
 
-float fbm_detail(vec2 p) {
-  float v = 0.0, a = 0.5;
-  for (int i = 0; i < 6; ++i) {
-    v += noise21(p) * a;
-    p = p * 2.13 + 7.89;
-    a *= 0.52;
+vec2 cellular_distances(vec2 p) {
+  vec2 cell = floor(p);
+  vec2 local = fract(p);
+  float nearest = 8.0;
+  float second = 8.0;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 point = 0.5 + 0.46 * hash22(cell + offset);
+      float distance_to_point = length(offset + point - local);
+      if (distance_to_point < nearest) {
+        second = nearest;
+        nearest = distance_to_point;
+      } else if (distance_to_point < second) {
+        second = distance_to_point;
+      }
+    }
   }
-  return v;
-}
-
-vec3 triplanar_weights(vec3 n) {
-  vec3 b = abs(n);
-  b = pow(b, vec3(4.0));
-  return b / (b.x + b.y + b.z + 1e-5);
-}
-
-float triplanar_noise(vec3 wp, float s) {
-  vec3 w = triplanar_weights(normalize(v_normal));
-  float xy = noise21(wp.xy * s);
-  float xz = noise21(wp.xz * s);
-  float yz = noise21(wp.yz * s);
-  return xy * w.z + xz * w.y + yz * w.x;
+  return vec2(nearest, second);
 }
 
 float compute_curvature() {
-  float hx = dFdx(v_world_pos.y);
-  float hy = dFdy(v_world_pos.y);
-  return 0.5 * (dFdx(hx) + dFdy(hy));
+  if (u_has_height_tex != 1) {
+    return 0.0;
+  }
+  vec2 uv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
+  vec2 du = vec2(u_height_texel_size.x * 2.0, 0.0);
+  vec2 dv = vec2(0.0, u_height_texel_size.y * 2.0);
+  float center = texture(u_height_tex, uv).r * u_height_tex_to_world;
+  float left = texture(u_height_tex, uv - du).r * u_height_tex_to_world;
+  float right = texture(u_height_tex, uv + du).r * u_height_tex_to_world;
+  float down = texture(u_height_tex, uv - dv).r * u_height_tex_to_world;
+  float up = texture(u_height_tex, uv + dv).r * u_height_tex_to_world;
+  vec2 world_span = abs(vec2(du.x, dv.y) /
+                        max(abs(u_height_uv_scale), vec2(1e-6)));
+  float curve_x = (left + right - 2.0 * center) /
+                  max(world_span.x * world_span.x, 1e-5);
+  float curve_z = (down + up - 2.0 * center) /
+                  max(world_span.y * world_span.y, 1e-5);
+  return 0.5 * (curve_x + curve_z);
 }
 
 vec3 geom_normal() {
@@ -123,8 +152,9 @@ vec2 uv_to_world(vec2 duv) {
 
 vec3 heightmap_normal(vec2 uv) {
 
-  vec2 du = vec2(u_height_texel_size.x, 0.0);
-  vec2 dv = vec2(0.0, u_height_texel_size.y);
+  const float normal_span = 2.0;
+  vec2 du = vec2(u_height_texel_size.x * normal_span, 0.0);
+  vec2 dv = vec2(0.0, u_height_texel_size.y * normal_span);
 
   float h_l = sample_height(uv - du);
   float h_r = sample_height(uv + du);
@@ -190,9 +220,8 @@ void main() {
     vec3 hm_n = heightmap_normal(huv);
     float slope0 = 1.0 - clamp(normal.y, 0.0, 1.0);
 
-    float w = 0.70 * (1.0 - smoothstep(0.70, 0.95, slope0));
-
-    w *= (1.0 - 0.50 * entry_mask - 0.20 * feature_foot);
+    float w = 0.90 * (1.0 - 0.24 * smoothstep(0.78, 0.98, slope0));
+    w *= (1.0 - 0.38 * entry_mask - 0.12 * feature_foot);
     normal = normalize(mix(normal, hm_n, w));
   }
 
@@ -202,9 +231,14 @@ void main() {
   slope *= (1.0 - 0.25 * entry_mask);
   slope *= (1.0 - 0.10 * feature_foot);
   float entry_shelter = entry_mask * (1.0 - smoothstep(0.18, 0.55, slope));
+  float entry_core = smoothstep(0.42, 0.82, entry_mask);
   float foot_shelter = feature_foot * (1.0 - smoothstep(0.34, 0.74, slope));
   float entry_toe =
       entry_mask * (1.0 - smoothstep(0.24, 0.62, slope * (1.0 - 0.25 * entry_mask)));
+  float entry_face = entry_core * smoothstep(0.045, 0.16, slope) *
+                     (1.0 - smoothstep(0.58, 0.82, slope));
+  float entry_signal =
+      entry_core * (0.30 + 0.70 * smoothstep(0.025, 0.14, slope));
   float curvature = compute_curvature();
   float curvature_response = clamp(u_curvature_response, 0.0, 1.0);
   float ridge_response = clamp(u_ridge_response, 0.0, 1.0);
@@ -220,164 +254,138 @@ void main() {
   float tile_scale = max(u_tile_size, 0.0001);
   vec2 world_coord = (v_world_pos.xz / tile_scale) + u_noise_offset;
 
-  float macro_noise = fbm(world_coord * u_macro_noise_scale);
-  float detail_noise =
-      triplanar_noise(v_world_pos, u_detail_noise_scale * 2.5 / tile_scale);
-  float erosion_noise =
-      triplanar_noise(v_world_pos, u_detail_noise_scale * 4.0 / tile_scale + 17.0);
-  float micro_variation = fbm_detail(world_coord * u_macro_noise_scale * 8.0);
-
-  float patch_noise = fbm(world_coord * u_macro_noise_scale * 0.4);
-  float moisture_var = smoothstep(0.3, 0.7, patch_noise);
-  float lush_factor = smoothstep(0.2, 0.8, macro_noise);
-  lush_factor = mix(lush_factor, moisture_var, 0.3);
-  vec3 lush_grass = mix(u_grass_primary, u_grass_secondary, lush_factor);
-  float dryness = clamp(0.55 * slope + 0.45 * detail_noise, 0.0, 1.0);
-  dryness = clamp(dryness + ridge_mask * 0.12 * ridge_response -
-                      gully_mask * 0.10 * gully_response,
-                  0.0,
-                  1.0);
-  dryness = clamp(dryness - entry_shelter * (0.14 + 0.10 * u_moisture_level), 0.0, 1.0);
-  dryness = clamp(dryness - foot_shelter * (0.08 + 0.08 * u_moisture_level), 0.0, 1.0);
-  dryness += moisture_var * 0.15;
-  dryness =
-      mix(dryness, dryness * 0.45 + moisture_var * 0.10, flat_terrain_mask * 0.80);
-
-  float height_fade = smoothstep(0.0, 2.5, v_world_pos.y);
-  float dryness_by_height = mix(dryness, dryness * 1.15, height_fade * 0.4);
-  vec3 grass_color = mix(lush_grass, u_grass_dry, dryness_by_height);
-  grass_color *= (1.0 + micro_variation * 0.08);
-  grass_color = mix(grass_color,
-                    mix(u_grass_secondary, u_soil_color, 0.20),
-                    entry_shelter * (0.10 + 0.10 * u_moisture_level));
-  grass_color =
-      mix(grass_color, mix(u_grass_primary, u_soil_color, 0.30), foot_shelter * 0.22);
-  vec3 flat_grass_color =
-      mix(u_grass_primary, u_grass_secondary, 0.18 + moisture_var * 0.22);
-  grass_color = mix(grass_color, flat_grass_color, flat_terrain_mask * 0.45);
-
-  float soil_width = max(0.01, 1.0 / max(u_soil_blend_sharpness, 0.001));
-
-  float height_noise =
-      (triplanar_noise(v_world_pos, max(0.0001, u_height_noise_frequency)) - 0.5) *
-      u_height_noise_strength;
-  height_noise *= mix(1.0, 0.68, flat_terrain_mask);
-
-  float toe_local = smoothstep(0.25, 0.9, slope);
-
-  vec2 dxxz = dFdx(v_world_pos.xz);
-  vec2 dyxz = dFdy(v_world_pos.xz);
-  float px_world = max(length(dxxz), length(dyxz));
-  float dh = max(abs(dFdx(v_world_pos.y)), abs(dFdy(v_world_pos.y)));
-  float toe_ss =
-      clamp((dh / max(px_world, 1e-6)) * u_screen_toe_mul, 0.0, u_screen_toe_clamp);
-
-  float toe_hm = 0.0;
-  if (u_has_height_tex == 1) {
-    vec2 huv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
-    float d_w =
-        min_cliff_distance_radial(huv, u_toe_tex_radius, max(1e-4, u_toe_height_delta));
-    float max_search_w = avg_world_per_texel() * float(u_toe_tex_radius);
-    if (d_w < 1e8) {
-      toe_hm = smoothstep(max_search_w, 0.0, d_w) * clamp(u_toe_strength, 0.0, 1.0);
-    }
-  }
-
-  float toe_proximity =
-      max(toe_local, max(toe_hm, toe_ss / max(1e-6, u_soil_foot_height)));
-  toe_proximity = max(toe_proximity, feature_foot * (0.45 + 0.25 * foot_shelter));
-
-  float concavity_lift =
-      gully_mask * ((0.25 + 0.25 * gully_response) * u_soil_foot_height);
-
-  float soil_height = u_soil_blend_height + height_noise + concavity_lift +
-                      entry_toe * u_soil_foot_height * 0.45;
-  float band_width =
-      soil_width + u_soil_foot_height * max(toe_proximity, entry_toe * 0.85);
-
-  float soil_mix =
-      1.0 -
-      smoothstep(soil_height - band_width, soil_height + band_width, v_world_pos.y);
-  soil_mix = clamp(soil_mix, 0.0, 1.0);
-  soil_mix = max(soil_mix, entry_shelter * (0.10 + 0.18 * (1.0 - slope)));
-  soil_mix = max(soil_mix, foot_shelter * (0.16 + 0.22 * (1.0 - slope)));
-
-  float mud_patch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
-  mud_patch =
-      smoothstep(0.57, 0.76, mud_patch + gully_mask * 0.10 + u_moisture_level * 0.08);
-  mud_patch *= (1.0 - flat_terrain_mask * 0.18);
-  soil_mix = max(soil_mix, mud_patch * 0.88 * (1.0 - slope * 0.55));
-  soil_mix *= (1.0 - flat_terrain_mask * (0.34 + 0.06 * u_moisture_level));
-
-  vec3 soil_blend = mix(grass_color, u_soil_color, soil_mix);
-
-  float slope_cut =
-      smoothstep(u_slope_rock_threshold, u_slope_rock_threshold + 0.02, slope);
-  float rock_mask = clamp(pow(slope_cut, max(1.0, u_slope_rock_sharpness)) +
-                              (erosion_noise - 0.5) * u_rock_detail_strength,
-                          0.0,
-                          1.0);
-  rock_mask *= 1.0 - soil_mix * 0.75;
-
-  rock_mask *= (1.0 - 0.50 * entry_shelter);
-  rock_mask *= (1.0 - 0.36 * foot_shelter);
-  rock_mask *= (1.0 - flat_terrain_mask * 0.85);
-
-  float rock_lerp = clamp(0.35 + detail_noise * 0.65, 0.0, 1.0);
-  vec3 rock_color = mix(u_rock_low, u_rock_high, rock_lerp);
-
-  float rock_detail_variation = fbm_detail(world_coord * 0.15) * 0.5 + 0.5;
-  rock_color *= mix(0.92, 1.08, rock_detail_variation);
-  rock_color =
-      mix(rock_color, rock_color * 1.12, clamp(u_rock_detail_strength * 1.3, 0.0, 1.0));
-
-  vec3 micro_normal = normal;
-  float micro_detail_scale = u_detail_noise_scale * 8.0 / tile_scale;
-  vec2 micro_offset = vec2(0.008, 0.0);
-  float h0 = triplanar_noise(v_world_pos, micro_detail_scale);
-  float hx =
-      triplanar_noise(v_world_pos + vec3(micro_offset.x, 0.0, 0.0), micro_detail_scale);
-  float hz =
-      triplanar_noise(v_world_pos + vec3(0.0, 0.0, micro_offset.x), micro_detail_scale);
-  vec3 micro_grad = vec3((hx - h0) / micro_offset.x, 0.0, (hz - h0) / micro_offset.x);
-  float micro_amp = 0.18 * u_rock_detail_strength * (0.15 + 0.85 * slope);
-  micro_amp *= mix(1.0, 0.72, flat_terrain_mask);
-  micro_normal = normalize(normal + micro_grad * micro_amp);
-
-  float fine_detail = triplanar_noise(v_world_pos, micro_detail_scale * 2.5);
-  vec3 fine_normal_perturb = vec3(
-      (fine_detail - 0.5) * 0.03,
+  // Low-frequency fields decide where materials occur; they never directly
+  // shade the surface. Fine gradient/cellular fields provide structure inside
+  // each material at a stable world scale without cloudy color noise.
+  float macro_scale = max(u_macro_noise_scale, 0.010);
+  vec2 domain_warp = vec2(gradient_fbm(world_coord * macro_scale * 0.43 + 13.7),
+                          gradient_fbm(world_coord * macro_scale * 0.43 - 9.2));
+  float regional_field = clamp(
+      0.5 + gradient_fbm(world_coord * macro_scale * 0.56 + domain_warp * 0.85) * 0.72,
       0.0,
-      (triplanar_noise(v_world_pos + vec3(0.1, 0.0, 0.0), micro_detail_scale * 2.5) -
-       0.5) *
-          0.03);
-  micro_normal =
-      normalize(micro_normal + fine_normal_perturb * (0.3 + 0.7 * rock_mask));
+      1.0);
+  float soil_field = clamp(
+      0.5 + gradient_fbm(world_coord * macro_scale * 4.80 + domain_warp * 0.65 + 31.0) *
+                0.72,
+      0.0,
+      1.0);
+  float moisture_field = clamp(
+      0.5 + gradient_fbm(world_coord * macro_scale * 1.80 - domain_warp * 0.60 + 73.0) *
+                0.68,
+      0.0,
+      1.0);
+  float meadow_field = clamp(
+      0.5 + gradient_fbm(world_coord * macro_scale * 1.05 + domain_warp * 0.48 +
+                         vec2(-47.0, 26.0)) *
+                0.70,
+      0.0,
+      1.0);
+  float thatch_field = clamp(
+      0.5 + gradient_fbm(world_coord * macro_scale * 2.60 - domain_warp * 0.32 +
+                         vec2(21.0, -39.0)) *
+                0.66,
+      0.0,
+      1.0);
+  float surface_detail = gradient_fbm(world_coord * 0.44 + vec2(5.7, -2.1));
+  float surface_grain = gradient_noise(world_coord * 1.75 + vec2(-17.0, 8.0));
+  float granular = gradient_noise(world_coord * 5.2 + vec2(42.0, 19.0));
 
-  float is_flat = 1.0 - smoothstep(0.10, 0.25, slope);
-  float is_high =
-      smoothstep(u_soil_blend_height + 0.5, u_soil_blend_height + 1.5, v_world_pos.y);
-  float plateau_factor = is_flat * is_high;
-  float is_gully = gully_mask * (1.0 - smoothstep(0.25, 0.6, slope));
-  float is_steep = smoothstep(0.3, 0.5, slope);
-  float is_rim = ridge_mask;
-  float rim_factor = is_steep * is_rim;
+  float grass_mix = 0.16 + regional_field * 0.68;
+  vec3 grass_color = mix(u_grass_primary, u_grass_secondary, grass_mix);
+  float green_excess = max(grass_color.g - max(grass_color.r, grass_color.b), 0.0);
+  float fertile_green = smoothstep(0.08, 0.24, green_excess);
+  grass_color *= mix(vec3(1.0), vec3(0.96, 0.78, 0.94), fertile_green);
+  float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
+  float exposed_ground = smoothstep(0.10, 0.42, slope) + ridge_mask * 0.20;
+  float dry_patch = smoothstep(0.56,
+                               0.78,
+                               regional_field * 0.58 + meadow_field * 0.42 +
+                                   (0.5 - u_moisture_level) * 0.16 +
+                                   high_ground * 0.08);
+  dry_patch = clamp(dry_patch + exposed_ground * 0.20, 0.0, 1.0);
+  dry_patch *= (1.0 - gully_mask * 0.40);
+  grass_color = mix(grass_color, u_grass_dry, dry_patch * 0.62);
+  float lush_patch = smoothstep(0.58,
+                                0.78,
+                                moisture_field * 0.68 + (1.0 - meadow_field) * 0.22 +
+                                    u_moisture_level * 0.16 + gully_mask * 0.10);
+  lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
+  grass_color = mix(grass_color, u_grass_secondary * 0.92, lush_patch * 0.24);
+  float grass_weave = gradient_fbm(world_coord * 0.16 + domain_warp * 0.12 + 18.0);
+  float grass_clumps = smoothstep(0.34, 0.76, thatch_field);
+  grass_color *= 0.94 + grass_clumps * 0.09 + surface_detail * 0.040 +
+                 grass_weave * 0.035 + surface_grain * 0.008;
 
-  rock_mask =
-      clamp(rock_mask + rim_factor * (0.10 + 0.16 * ridge_response) -
-                plateau_factor * 0.06 - is_gully * (0.08 + 0.12 * gully_response),
-            0.0,
-            1.0);
+  float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
+  float damp_patch = smoothstep(0.75, 0.86,
+                                moisture_field + u_moisture_level * 0.12 +
+                                    gully_mask * 0.12 + low_ground * 0.05);
+  damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
+  float bare_patch = smoothstep(0.57, 0.78,
+                                soil_field * 0.74 + meadow_field * 0.20 +
+                                    surface_detail * 0.08 + exposed_ground * 0.12 -
+                                    u_moisture_level * 0.04);
+  bare_patch *= smoothstep(0.24, 0.64,
+                           0.5 + surface_detail * 0.5);
+  bare_patch *= 1.0 - smoothstep(0.26, 0.60, slope);
 
-  rock_mask = clamp(rock_mask + (u_rock_exposure - 0.3) * 0.4, 0.0, 1.0);
+  float soil_mix = bare_patch * 0.52;
+  soil_mix = max(soil_mix, damp_patch * (0.30 + 0.18 * u_moisture_level));
+  soil_mix = max(soil_mix, gully_mask * (0.10 + 0.18 * gully_response));
+  soil_mix = max(soil_mix, foot_shelter * 0.12);
+  float level_ground = 1.0 - smoothstep(0.018, 0.075, slope);
+  soil_mix *= mix(1.0, 0.88, level_ground);
+  soil_mix = max(soil_mix,
+                 entry_signal * 0.30 + entry_face * 0.08 +
+                     entry_shelter * 0.035 + entry_toe * 0.015);
+  soil_mix = clamp(soil_mix, 0.0, 0.72);
+  vec3 ground_soil = mix(u_soil_color, u_grass_dry, level_ground * 0.24);
+  vec3 varied_soil = ground_soil *
+                     (1.0 + surface_detail * 0.075 + surface_grain * 0.045 +
+                      granular * 0.022);
+  vec3 compacted_entry_earth = mix(u_soil_color, u_grass_dry, 0.18);
+  varied_soil = mix(varied_soil,
+                    compacted_entry_earth,
+                    entry_signal * 0.38 + entry_face * 0.10);
+  varied_soil *= 1.0 - damp_patch * u_moisture_level * 0.16;
+  vec3 soil_blend = mix(grass_color, varied_soil, soil_mix);
+
+  float rock_threshold = clamp(u_slope_rock_threshold, 0.08, 0.88);
+  float rock_width = mix(0.19, 0.07, clamp(u_slope_rock_sharpness / 8.0, 0.0, 1.0));
+  float rock_mask = smoothstep(rock_threshold, rock_threshold + rock_width, slope);
+  float rock_breakup =
+      gradient_fbm(world_coord * 0.19 + vec2(11.0, -23.0)) * 0.5 + 0.5;
+  rock_mask = clamp(rock_mask + (rock_breakup - 0.54) *
+                                    u_rock_detail_strength * 0.38,
+                    0.0,
+                    1.0);
+  rock_mask = clamp(rock_mask + (u_rock_exposure - 0.3) * 0.20 +
+                              ridge_mask * 0.16 * ridge_response,
+                    0.0,
+                    1.0);
+  float weathered_exposure =
+      smoothstep(0.34, 0.70, rock_breakup + ridge_mask * 0.10);
+  rock_mask *= mix(weathered_exposure, 1.0, smoothstep(0.10, 0.34, slope));
+  rock_mask *= (1.0 - 0.55 * entry_shelter) * (1.0 - 0.30 * foot_shelter);
+  rock_mask *= smoothstep(0.010, 0.050, slope);
+  rock_mask *= 1.0 - soil_mix * 0.55;
+
+  vec2 rock_cells = cellular_distances(world_coord * 0.34 + vec2(8.0, -5.0));
+  float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
+  float rock_value =
+      clamp(0.48 + surface_detail * 0.31 + surface_grain * 0.12, 0.0, 1.0);
+  vec3 rock_color = mix(u_rock_low, u_rock_high, rock_value);
+  float rock_strata = gradient_noise(vec2(world_coord.x * 0.11 + v_world_pos.y * 0.32,
+                                           world_coord.y * 0.035));
+  rock_color *= 1.0 + rock_strata * 0.085;
+  rock_color *= 1.0 - fracture * (0.055 + 0.075 * u_rock_detail_strength);
+  rock_color *= 1.0 + granular * 0.028;
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);
-  terrain_color = mix(terrain_color, soil_blend, entry_shelter * 0.12);
-  terrain_color = mix(terrain_color, soil_blend, foot_shelter * 0.18);
 
   if (u_crack_intensity > 0.01) {
-    float crack_noise1 = noise21(world_coord * 8.0);
-    float crack_noise2 = noise21(world_coord * 16.0 + vec2(42.0, 17.0));
+    float crack_noise1 = noise21(world_coord * 4.0);
+    float crack_noise2 = noise21(world_coord * 8.0 + vec2(42.0, 17.0));
     float crack_pattern =
         smoothstep(0.45, 0.50, crack_noise1) * smoothstep(0.40, 0.55, crack_noise2);
     crack_pattern *= (1.0 - slope * 0.8);
@@ -386,87 +394,46 @@ void main() {
   }
 
   if (u_snow_coverage > 0.01) {
-    float snow_noise = fbm(world_coord * 0.5 + vec2(123.0, 456.0));
-    float snow_accumulation = smoothstep(0.3, 0.7, snow_noise);
+    float snow_accumulation = smoothstep(0.32, 0.72, regional_field);
+    float slope_snow_reduction = 1.0 - smoothstep(0.18, 0.52, slope);
+    float altitude_snow = smoothstep(6.0, 12.0, v_world_pos.y);
+    float snow_mask = clamp(altitude_snow * (0.45 + 0.55 * snow_accumulation) *
+                                slope_snow_reduction * u_snow_coverage * 1.20,
+                            0.0, 0.84);
 
-    float slope_snow_reduction = 1.0 - smoothstep(0.15, 0.45, slope);
-
-    float height_snow_bonus = smoothstep(-0.5, 1.5, v_world_pos.y) * 0.3;
-    float snow_mask = clamp(snow_accumulation * slope_snow_reduction *
-                                (u_snow_coverage + height_snow_bonus),
-                            0.0,
-                            1.0);
-
-    vec3 snow_tinted = u_snow_color * (1.0 + detail_noise * 0.1);
+    vec3 snow_tinted = u_snow_color * (1.0 + surface_detail * 0.08);
     terrain_color = mix(terrain_color, snow_tinted, snow_mask * 0.85);
   }
 
   vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
   terrain_color = mix(gray_level, terrain_color, u_grass_saturation);
 
-  float moisture_effect = u_moisture_level;
-
-  float wet_darkening = 1.0 - moisture_effect * 0.15 * (1.0 - rock_mask);
-  terrain_color *= wet_darkening;
-
-  float jitter_amp = 0.06 * (0.5 + u_soil_roughness * 0.5);
-  jitter_amp *= (1.0 - 0.16 * flat_terrain_mask);
-  float jitter = (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
-  float brightness_var = (moisture_var - 0.5) * 0.08 * (1.0 - rock_mask);
-  terrain_color *= (1.0 + jitter + brightness_var) * u_tint;
+  float wet_surface = damp_patch * soil_mix * u_moisture_level;
+  terrain_color *= 1.0 - u_moisture_level * 0.06 * (1.0 - rock_mask);
+  terrain_color *= 1.0 - wet_surface * 0.15;
+  terrain_color *= u_tint;
 
   vec3 L = normalize(u_light_dir);
-  float ndl = max(dot(micro_normal, L), 0.0);
-
-  float sky_occlusion =
-      max(smoothstep(-0.03, 0.01, -curvature), gully_mask * gully_response);
-  float ao =
-      mix(1.0, 0.75 - 0.08 * gully_response, sky_occlusion * (1.0 - slope * 0.5));
-
-  float ambient = 0.32 * ao;
-  float fresnel = pow(1.0 - max(dot(micro_normal, vec3(0.0, 1.0, 0.0)), 0.0), 2.2);
-
-  float surface_roughness = mix(0.65, 0.95, u_soil_roughness);
-  surface_roughness = mix(surface_roughness, 0.42, u_moisture_level * 0.5);
-
-  vec3 view_dir = normalize(vec3(0.0, 1.0, -0.5));
-  vec3 half_dir = normalize(L + view_dir);
-  float spec_angle = max(dot(micro_normal, half_dir), 0.0);
-  float specular = pow(spec_angle, mix(4.0, 32.0, 1.0 - surface_roughness));
-
-  float spec_contrib =
-      fresnel * 0.14 * (1.0 - surface_roughness) * (1.0 - rock_mask) * specular;
-
-  spec_contrib += u_moisture_level * 0.10 * fresnel * (1.0 - rock_mask);
-  float shade = ambient + ndl * 0.78 + spec_contrib;
-
-  float plateau_muted = plateau_factor * (1.0 - 0.70 * entry_mask);
-  float plateau_desat = clamp(0.75 * plateau_muted, 0.0, 0.75);
-  float plateau_dim = clamp(0.25 * plateau_muted, 0.0, 0.25);
-
-  float luma_p = dot(terrain_color, vec3(0.299, 0.587, 0.114));
-  terrain_color = mix(terrain_color, vec3(luma_p), plateau_desat);
-
-  float plateau_brightness = 1.0 - plateau_dim;
-  float gully_darkness = 1.0 - is_gully * (0.04 + 0.07 * gully_response);
-  float rim_contrast = 1.0 + rim_factor * (0.03 + 0.05 * ridge_response);
-
-  {
-    float track_strength =
-        smoothstep(0.2, 0.7, u_moisture_level) * (1.0 - rock_mask * 0.9);
-    float track1 = step(0.76, noise21(world_coord * 2.8 + vec2(3.17, 7.53)));
-    float track2 = step(0.76, noise21(world_coord * 2.8 + vec2(11.4, 2.81)));
-    float track3 = step(0.80, noise21(world_coord * 5.5 + vec2(19.2, 5.6)));
-    float track_mask = max(max(track1, track2), track3) * track_strength;
-    vec3 mud_color = mix(terrain_color * 0.68, vec3(0.30, 0.22, 0.14), 0.35);
-    terrain_color = mix(terrain_color, mud_color, clamp(track_mask, 0.0, 0.55));
-  }
-
-  terrain_color *= plateau_brightness * gully_darkness * rim_contrast;
+  float micro_h0 = gradient_noise(world_coord * 1.75 + vec2(-17.0, 8.0));
+  float hx = gradient_noise((world_coord + vec2(0.10, 0.0)) * 1.75 +
+                            vec2(-17.0, 8.0));
+  float hz = gradient_noise((world_coord + vec2(0.0, 0.10)) * 1.75 +
+                            vec2(-17.0, 8.0));
+  vec3 detail_normal = normalize(normal +
+                                 vec3(hx - micro_h0, 0.0, hz - micro_h0) *
+                                     (0.018 + 0.055 * soil_mix +
+                                      0.14 * rock_mask + 0.012 * exposed_ground));
+  float ndl = max(dot(detail_normal, L), 0.0);
+  float concavity = max(gully_mask * gully_response,
+                        smoothstep(-0.025, 0.01, -curvature) * 0.35);
+  float ambient_occlusion = mix(1.0, 0.78, concavity * (1.0 - 0.55 * entry_mask));
+  float ambient = 0.48 * ambient_occlusion;
+  float wet_glint = wet_surface * pow(max(dot(detail_normal, L), 0.0), 10.0) * 0.07;
+  float shade = ambient + ndl * 0.64 + wet_glint;
   vec3 lit_color = terrain_color * shade * u_ambient_boost;
 
-  vec3 sun_tint = vec3(1.08, 0.94, 0.80);
-  vec3 shadow_tint = vec3(0.78, 0.86, 1.04);
+  vec3 sun_tint = vec3(1.055, 0.965, 0.86);
+  vec3 shadow_tint = vec3(0.88, 0.91, 0.96);
   float grade_t = clamp(ndl * 1.4, 0.0, 1.0);
   lit_color *= mix(shadow_tint, sun_tint, grade_t);
 

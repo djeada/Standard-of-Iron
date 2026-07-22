@@ -93,18 +93,19 @@ void MapPreviewGenerator::draw_player_bases(
 
   constexpr float pixels_per_tile = 2.0F;
 
-  for (const auto& spawn : map_def.spawns) {
-    if (!Game::Units::is_building_spawn(spawn.type)) {
+  for (const auto& structure : map_def.structures) {
+    const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry);
+    if (point == nullptr) {
       continue;
     }
 
-    if (spawn.player_id <= 0) {
+    if (structure.player_id <= 0) {
       continue;
     }
 
     QColor player_color;
     for (const auto& config : player_configs) {
-      if (config.player_id == spawn.player_id) {
+      if (config.player_id == structure.player_id) {
         player_color = config.color;
         break;
       }
@@ -114,9 +115,8 @@ void MapPreviewGenerator::draw_player_bases(
       continue;
     }
 
-    const auto [world_x, world_z] = grid_to_world_coords(spawn.x, spawn.z, map_def);
-    const auto [px, py] =
-        world_to_pixel(world_x, world_z, map_def.grid, pixels_per_tile);
+    const auto [px, py] = world_to_pixel(
+        point->position.x(), point->position.z(), map_def.grid, pixels_per_tile);
 
     constexpr float HALF = BASE_SIZE * 0.5F;
 

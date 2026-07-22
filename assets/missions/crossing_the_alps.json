@@ -1,10 +1,10 @@
 {
   "id": "crossing_the_alps",
   "title": "Crossing the Alps",
-  "summary": "Force the mountain passes by capturing the tribal camps while preserving enough strength to finish the descent into Italy.",
+  "summary": "Open three Alpine pass camps and preserve Hannibal's mixed column through a long mountain road of switchbacks, bridges, ravines, and hostile heights.",
   "teaching_goal": "Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.",
-  "narrative_intent": "The crossing is a running battle through hostile high ground, not a single engagement.",
-  "historical_context": "218 BC: Hannibal's Alpine march depended on breaking hostile positions along narrow passes while preserving combat strength.",
+  "narrative_intent": "The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy.",
+  "historical_context": "218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.",
   "terrain_type": "mountain",
   "map_path": ":/assets/maps/map_crossing_alps.json",
   "player_setup": {
@@ -34,16 +34,7 @@
         "harassment": 0.65
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 75,
-            "z": 55
-          },
-          "max_population": 130
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 150.0,
@@ -58,8 +49,8 @@
             }
           ],
           "entry_point": {
-            "x": 75,
-            "z": 55
+            "x": 152.59,
+            "z": 119.38
           }
         },
         {
@@ -75,8 +66,8 @@
             }
           ],
           "entry_point": {
-            "x": 82,
-            "z": 62
+            "x": 166.83,
+            "z": 134.58
           }
         }
       ],
@@ -96,16 +87,7 @@
         "harassment": 0.8
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 105,
-            "z": 85
-          },
-          "max_population": 130
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 240.0,
@@ -120,8 +102,8 @@
             }
           ],
           "entry_point": {
-            "x": 105,
-            "z": 85
+            "x": 213.62,
+            "z": 184.5
           }
         },
         {
@@ -137,8 +119,8 @@
             }
           ],
           "entry_point": {
-            "x": 112,
-            "z": 92
+            "x": 227.86,
+            "z": 199.69
           }
         }
       ],
@@ -158,16 +140,7 @@
         "harassment": 0.6
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 125,
-            "z": 115
-          },
-          "max_population": 150
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 600.0,
@@ -186,8 +159,8 @@
             }
           ],
           "entry_point": {
-            "x": 125,
-            "z": 115
+            "x": 565.59,
+            "z": 529.62
           }
         },
         {
@@ -207,8 +180,8 @@
             }
           ],
           "entry_point": {
-            "x": 132,
-            "z": 122
+            "x": 585.93,
+            "z": 544.81
           }
         }
       ],
@@ -237,7 +210,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -289,5 +262,6 @@
       ]
     }
   ],
+  "include_ambient_undead": false,
   "theme": "The mountain takes more lives than any sword. Reach the valley or feed the snow."
 }

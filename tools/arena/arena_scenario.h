@@ -10,9 +10,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "render/graphics_settings.h"
 
 namespace Engine::Core {
 class World;
@@ -60,6 +62,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   ApplyDamage,
   MeleeLock,
   SetFullCreatureLod,
+  TriggerCommanderAura,
 };
 
 struct ArenaScenarioGroup {
@@ -90,6 +93,12 @@ struct ArenaScenarioResourcePatch {
   float scale{1.0F};
 };
 
+struct ArenaScenarioElevationPatch {
+  QVector3D center;
+  float radius{8.0F};
+  float height{3.0F};
+};
+
 struct ArenaScenarioStep {
   QString name;
   ScenarioTrigger trigger;
@@ -112,9 +121,13 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoRootTeleport,
   NoUnexpectedFallPose,
   NoLimbOverextension,
+  NoRenderVisibilityChurn,
+  FullCreatureDetailOnly,
+  NoFullscreenFlash,
   MovementIsContinuous,
   FormationOrderPreserved,
   FormationEngagementIsStable,
+  FormationBodyOverlapObserved,
   CombatIndicatorIsContinuous,
   AllLivingSoldiersFight,
   MovementAnimationObserved,
@@ -123,16 +136,28 @@ enum class ArenaExpectationKind : std::uint8_t {
   RepeatedAttackAnimationObserved,
   AttackHasVisibleContact,
   AttackRecoveryObserved,
+  NoActiveCombatAtEnd,
   HitReactionObserved,
   DeathAnimationObserved,
+  LaunchedCasualtyObserved,
+  NoLaunchedCasualtyObserved,
   ChargeImpactPrecedesMeleeLock,
   TargetRetakenAfterDeath,
   BotIssuesUsefulCommand,
   FrameBudget,
   GroupIsRendered,
   GroupExists,
+  GroupDestroyed,
+  GroupReachedDestination,
+  BridgeTraversalObserved,
+  BridgeCenterlineAligned,
+  ElevationGainObserved,
   OwnerCompletesConstruction,
   OwnerHarvestsResource,
+  CommanderAuraActivated,
+  CommanderAuraBuffObserved,
+  CommanderAuraExpired,
+  NoCommanderAuraBuffObserved,
 };
 
 struct ArenaExpectation {
@@ -143,6 +168,7 @@ struct ArenaExpectation {
   float end_seconds{0.0F};
   float threshold{0.0F};
   float distance{0.0F};
+  QVector3D position;
 };
 
 struct ArenaCameraView {
@@ -157,6 +183,18 @@ struct ArenaScenarioDefinition {
   QString description;
   float duration_seconds{12.0F};
   ArenaCameraView camera;
+  std::optional<QVector3D> camera_focus;
+  bool suppress_terrain_scatter{false};
+  bool select_spawned_units{true};
+  bool suppress_spawn_anchor{false};
+  bool suppress_ui_overlays{false};
+  bool force_full_creature_lod{true};
+  bool collect_animation_diagnostics{true};
+  Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
+  std::vector<Game::Map::RiverSegment> rivers;
+  std::vector<Game::Map::Lake> lakes;
+  std::vector<Game::Map::Bridge> bridges;
+  std::vector<ArenaScenarioElevationPatch> elevation_patches;
   std::vector<ArenaScenarioGroup> groups;
   std::vector<ArenaScenarioResourcePatch> resource_patches;
   std::vector<ArenaScenarioStep> steps;
@@ -200,6 +238,22 @@ struct ArenaScenarioHost {
   std::function<void(bool)> set_force_full_creature_lod;
 };
 
+struct ArenaRenderedFrameTimings {
+  double total_ms{0.0};
+  double simulation_ms{0.0};
+  double terrain_submit_ms{0.0};
+  double world_submit_ms{0.0};
+  double effects_submit_ms{0.0};
+  double playback_ms{0.0};
+  double overlays_ms{0.0};
+  double humanoid_preparation_ms{0.0};
+  double animation_sampling_ms{0.0};
+  double bpat_playback_ms{0.0};
+  double layout_generation_ms{0.0};
+  std::uint64_t visible_soldiers{0};
+  std::uint64_t draw_calls{0};
+};
+
 class ArenaScenarioRunner {
 public:
   ArenaScenarioRunner(Engine::Core::World& world,
@@ -214,6 +268,8 @@ public:
   [[nodiscard]] auto start() -> bool;
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
+  void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);
+  void report_external_issue(QString code, QString message);
   void set_duration_limit(float duration_seconds);
 
   [[nodiscard]] auto definition() const noexcept -> const ArenaScenarioDefinition&;

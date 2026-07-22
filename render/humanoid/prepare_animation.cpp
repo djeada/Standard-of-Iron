@@ -56,9 +56,9 @@ void sync_combat_visual_inputs(
     return;
   }
 
-  auto const scrubbed = Render::Profiling::scrubbed_combat_phase_from_attack_phase(
+  auto const scrubbed = Animation::scrubbed_combat_phase_from_attack_phase(
       visual.attack_phase, visual.amplified_attack, visual.finisher_attack);
-  inputs.combat_phase = scrubbed.phase;
+  inputs.combat_phase = Render::Creature::engine_combat_phase(scrubbed.phase);
   inputs.combat_phase_progress = scrubbed.progress;
 }
 

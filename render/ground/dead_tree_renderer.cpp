@@ -18,9 +18,9 @@ namespace {
 
 using namespace Render::Ground;
 
-constexpr float k_base_color_r = 0.43F;
-constexpr float k_base_color_g = 0.35F;
-constexpr float k_base_color_b = 0.24F;
+constexpr float k_base_color_r = 0.30F;
+constexpr float k_base_color_g = 0.27F;
+constexpr float k_base_color_b = 0.22F;
 
 auto resolve_tree_surface_position(float world_x,
                                    float world_z,
@@ -128,9 +128,12 @@ void DeadTreeRenderer::generate_instances(
 
     float const color_var = rand_01(state);
     QVector3D const base_color(k_base_color_r, k_base_color_g, k_base_color_b);
-    QVector3D const dry_color(0.53F, 0.43F, 0.30F);
+    QVector3D const dry_color(0.43F, 0.36F, 0.27F);
     QVector3D color = base_color * (1.0F - color_var) + dry_color * color_var;
-    color *= 0.92F + scene.dryness * 0.08F + scene.rockiness * 0.04F;
+    QVector3D const rain_dark(0.22F, 0.23F, 0.20F);
+    float const dampness = (1.0F - scene.dryness) * 0.24F;
+    color = color * (1.0F - dampness) + rain_dark * dampness;
+    color *= 0.88F + scene.dryness * 0.10F + scene.rockiness * 0.03F;
 
     DeadTreeInstanceGpu inst;
     float const scale = remap(rand_01(state), scale_min, scale_max) *

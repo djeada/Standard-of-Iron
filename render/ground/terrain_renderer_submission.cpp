@@ -23,10 +23,9 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   Q_UNUSED(resources);
 
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const auto* visibility_snapshot = renderer.static_world_visibility_filter_enabled()
+                                        ? renderer.submission_visibility().snapshot()
+                                        : nullptr;
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
   if (visibility_snapshot != nullptr) {
     visibility_resources =
@@ -39,6 +38,13 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   for (std::size_t chunk_index = 0; chunk_index < m_chunks.size(); ++chunk_index) {
     const auto& chunk = m_chunks[chunk_index];
     if (!chunk.mesh) {
+      continue;
+    }
+
+    if (!renderer.submission_visibility().accepts_sphere(
+            chunk.cull_center,
+            chunk.cull_radius,
+            SubmissionFogMode::Ignore)) {
       continue;
     }
 

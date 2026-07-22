@@ -9,6 +9,7 @@ flat in float v_seed;
 flat in float v_type;
 in vec3 v_tangent;
 in vec3 v_bitangent;
+in vec3 v_world_pos;
 
 uniform vec3 u_light_direction;
 
@@ -91,7 +92,7 @@ vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
 }
 
 void main() {
-  float type_val = fract(v_type);
+  float type_val = (mod(floor(v_type + 0.5), 4.0) + 0.5) * 0.25;
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
 
   float sdf_aa = clamp(fwidth(sdf) * 0.85, 0.0015, 0.025);
@@ -103,12 +104,12 @@ void main() {
 
   float dryness = mix(0.35, 0.92, h11(v_seed * 2.7 + v_type * 0.73));
 
-  vec3 lush = vec3(0.17, 0.32, 0.19);
-  vec3 dry = vec3(0.46, 0.44, 0.28);
+  vec3 lush = vec3(0.12, 0.24, 0.16);
+  vec3 dry = vec3(0.35, 0.34, 0.25);
 
   vec3 base = mix(lush, dry, dryness);
   base = mix(base, v_color, 0.40);
-  base *= 0.88;
+  base *= 0.82;
 
   vec2 uv2 = (v_tex_coord - 0.5) * 2.0;
   float r2 = clamp(dot(uv2, uv2), 0.0, 1.0);
@@ -139,7 +140,7 @@ void main() {
 
   float diffuse = mix(half_lambert, wrap, 0.30) * edge_atten;
   float sss = pow(clamp(dot(-N, L), 0.0, 1.0), 2.2) * 0.22 * edge_atten;
-  float ambient = 0.16;
+  float ambient = 0.13;
 
   float ao_stem = mix(0.50, 1.0, smoothstep(0.0, 0.55, v_height));
 
@@ -150,8 +151,22 @@ void main() {
   albedo *= mix(1.0, 1.08, tip);
   albedo *= mix(0.95, 1.0, inner);
 
-  vec3 color =
-      albedo * (ambient + diffuse * ao_stem) + albedo * sss * vec3(1.0, 0.95, 0.85);
+  float leaf_angle = atan(uv2.y, uv2.x);
+  float vein_count = mix(5.0, 9.0, h11(v_seed * 8.1));
+  float veins = pow(abs(sin(leaf_angle * vein_count + v_seed * 6.0)), 18.0) *
+                smoothstep(0.08, 0.80, sqrt(r2));
+  albedo *= mix(1.0, 0.76, veins * 0.34);
+
+  float blemish = h11(floor(v_world_pos.x * 19.0 + v_world_pos.z * 23.0) +
+                       floor(v_tex_coord.y * 17.0) + v_seed * 31.0);
+  float leaf_spot = smoothstep(0.965, 0.995, blemish) * (1.0 - rim);
+  albedo = mix(albedo, albedo * vec3(0.48, 0.42, 0.30), leaf_spot * 0.55);
+
+  vec3 sky = vec3(0.48, 0.57, 0.67);
+  vec3 sun = vec3(0.96, 0.85, 0.69);
+  float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+  vec3 illumination = sky * (ambient + hemi * 0.11) + sun * diffuse * ao_stem;
+  vec3 color = albedo * illumination + albedo * sss * vec3(0.92, 0.86, 0.73);
 
   frag_color = vec4(color, coverage);
 }

@@ -29,8 +29,8 @@ struct RomanPalette {
   QVector3D marble{0.98F, 0.97F, 0.95F};
   QVector3D cedar{0.52F, 0.38F, 0.26F};
   QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
-  QVector3D terracotta{0.82F, 0.62F, 0.45F};
-  QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
+  QVector3D terracotta{0.76F, 0.32F, 0.18F};
+  QVector3D terracotta_dark{0.46F, 0.12F, 0.07F};
   QVector3D blue_accent{0.28F, 0.48F, 0.68F};
   QVector3D blue_light{0.40F, 0.60F, 0.80F};
   QVector3D gold{0.85F, 0.72F, 0.35F};
@@ -331,6 +331,11 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                           0.62F,
                           c.gold,
                           c.blue_accent);
+  add_roman_roof_standard(desc,
+                          QVector3D(0.0F, eave_y + roof_rise + 0.04F, 0.0F),
+                          0.62F,
+                          c.gold,
+                          c.terracotta_dark);
 
   return build_building_archetype(desc, state);
 }

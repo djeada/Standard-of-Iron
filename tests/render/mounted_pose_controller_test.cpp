@@ -259,6 +259,16 @@ TEST_F(MountedPoseControllerTest, RidingSpearThrustAnimatesCorrectly) {
   EXPECT_GT(thrust_z, couch_z);
 }
 
+TEST_F(MountedPoseControllerTest, ChargingReinHandsRespectArmLength) {
+  MountedPoseController controller(pose, anim_ctx);
+  controller.riding_charging(mount, 1.0F);
+
+  constexpr float k_max_arm_reach =
+      (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
+  EXPECT_LE((pose.hand_l - pose.shoulder_l).length(), k_max_arm_reach + 1.0e-5F);
+  EXPECT_LE((pose.hand_r - pose.shoulder_r).length(), k_max_arm_reach + 1.0e-5F);
+}
+
 TEST_F(MountedPoseControllerTest, RidingBowShotAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
@@ -292,8 +302,8 @@ TEST_F(MountedPoseControllerTest, HoldReinsPositionsHandsCorrectly) {
 
   EXPECT_LT(std::abs(pose.hand_l.x()), mount.seat_position.x() + 0.30F);
   EXPECT_LT(std::abs(pose.hand_r.x()), mount.seat_position.x() + 0.30F);
-  EXPECT_LT(pose.hand_l.y(), mount.seat_position.y());
-  EXPECT_LT(pose.hand_r.y(), mount.seat_position.y());
+  EXPECT_LT(pose.hand_l.y(), pose.shoulder_l.y());
+  EXPECT_LT(pose.hand_r.y(), pose.shoulder_r.y());
 }
 
 TEST_F(MountedPoseControllerTest, HoldReinsSlackAffectsHandPosition) {

@@ -56,8 +56,10 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   }
 
   if (!m_minimap_base_image.isNull()) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     qDebug() << "MinimapManager: Generated minimap of size"
              << m_minimap_base_image.width() << "x" << m_minimap_base_image.height();
+#endif
 
     m_world_width = static_cast<float>(map_def.grid.width);
     m_world_height = static_cast<float>(map_def.grid.height);
@@ -65,15 +67,18 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
 
     m_fog_compositor.reset();
     m_minimap_fog_image = m_minimap_base_image.copy();
-    m_minimap_image = m_minimap_fog_image.copy();
+    m_minimap_units_image = m_minimap_fog_image;
+    m_minimap_image = m_minimap_units_image;
 
     m_unit_layer = std::make_unique<Game::Map::Minimap::UnitLayer>();
     m_unit_layer->init(m_minimap_base_image.width(),
                        m_minimap_base_image.height(),
                        m_world_width,
                        m_world_height);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     qDebug() << "MinimapManager: Initialized unit layer for world" << m_world_width
              << "x" << m_world_height;
+#endif
 
     m_camera_viewport_layer =
         std::make_unique<Game::Map::Minimap::CameraViewportLayer>();
@@ -83,6 +88,8 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
                                   m_world_height);
 
     m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
+    m_last_unit_hash = 0;
+    m_viewport_composite_dirty = true;
     mark_dirty();
   } else {
     qWarning() << "MinimapManager: Failed to generate minimap";
@@ -105,7 +112,9 @@ void MinimapManager::update_fog(
     return;
   }
 
-  m_minimap_image = m_minimap_fog_image.copy();
+  m_minimap_units_image = m_minimap_fog_image;
+  m_minimap_image = m_minimap_units_image;
+  m_viewport_composite_dirty = true;
   mark_dirty();
 }
 
@@ -119,7 +128,9 @@ void MinimapManager::clear_fog() {
   }
 
   m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
-  m_minimap_image = m_minimap_fog_image.copy();
+  m_minimap_units_image = m_minimap_fog_image;
+  m_minimap_image = m_minimap_units_image;
+  m_viewport_composite_dirty = true;
   mark_dirty();
 }
 
@@ -129,8 +140,6 @@ void MinimapManager::update_units(Engine::Core::World* world,
   if (m_minimap_fog_image.isNull() || !m_unit_layer || !world) {
     return;
   }
-
-  m_minimap_image = m_minimap_fog_image.copy();
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
 
@@ -205,13 +214,16 @@ void MinimapManager::update_units(Engine::Core::World* world,
     }
 
     m_unit_layer->update(markers, local_owner_id, visibility_check, nullptr);
-  }
 
-  const QImage& unit_overlay = m_unit_layer->get_image();
-  if (!unit_overlay.isNull()) {
-    QPainter painter(&m_minimap_image);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.drawImage(0, 0, unit_overlay);
+    m_minimap_units_image = m_minimap_fog_image;
+    const QImage& unit_overlay = m_unit_layer->get_image();
+    if (!unit_overlay.isNull()) {
+      QPainter painter(&m_minimap_units_image);
+      painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+      painter.drawImage(0, 0, unit_overlay);
+    }
+    m_minimap_image = m_minimap_units_image;
+    m_viewport_composite_dirty = true;
   }
 }
 
@@ -239,18 +251,24 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   const float camera_z = target.z() / m_tile_size;
 
   constexpr float EPSILON = 0.01F;
-  if (std::abs(camera_x - m_last_camera_x) > EPSILON ||
-      std::abs(camera_z - m_last_camera_z) > EPSILON ||
-      std::abs(viewport_width - m_last_viewport_w) > EPSILON ||
-      std::abs(viewport_height - m_last_viewport_h) > EPSILON) {
+  const bool camera_changed = std::abs(camera_x - m_last_camera_x) > EPSILON ||
+                              std::abs(camera_z - m_last_camera_z) > EPSILON ||
+                              std::abs(viewport_width - m_last_viewport_w) > EPSILON ||
+                              std::abs(viewport_height - m_last_viewport_h) > EPSILON;
+  if (!camera_changed && !m_viewport_composite_dirty) {
+    return;
+  }
+
+  if (camera_changed) {
     m_last_camera_x = camera_x;
     m_last_camera_z = camera_z;
     m_last_viewport_w = viewport_width;
     m_last_viewport_h = viewport_height;
-    mark_dirty();
+    m_camera_viewport_layer->update(
+        camera_x, camera_z, viewport_width, viewport_height);
   }
 
-  m_camera_viewport_layer->update(camera_x, camera_z, viewport_width, viewport_height);
+  m_minimap_image = m_minimap_units_image;
 
   const QImage& viewport_overlay = m_camera_viewport_layer->get_image();
   if (!viewport_overlay.isNull()) {
@@ -258,4 +276,6 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.drawImage(0, 0, viewport_overlay);
   }
+  m_viewport_composite_dirty = false;
+  mark_dirty();
 }
