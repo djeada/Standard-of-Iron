@@ -183,6 +183,12 @@ private:
   auto operator=(const TerrainService&) -> TerrainService& = delete;
 
   void rebuild_terrain_field();
+  void rebuild_road_spatial_index();
+  [[nodiscard]] auto is_point_near_indexed_road(float world_x,
+                                                float world_z,
+                                                float clearance) const -> bool;
+  [[nodiscard]] auto sample_surface_base_height(
+      float world_x, float world_z, float fallback_y) const -> SurfaceHeightSample;
   void normalize_world_props(std::vector<WorldProp>& world_props);
   void sync_world_prop_identity_state();
   void bump_world_props_revision();
@@ -195,6 +201,26 @@ private:
   std::vector<WorldProp> m_authored_world_props;
   std::vector<WorldProp> m_world_props;
   std::vector<RoadSegment> m_road_segments;
+  struct RoadQuerySegment {
+    float start_x{0.0F};
+    float start_z{0.0F};
+    float delta_x{0.0F};
+    float delta_z{0.0F};
+    float inverse_length_sq{0.0F};
+    float half_width{0.0F};
+    float min_x{0.0F};
+    float max_x{0.0F};
+    float min_z{0.0F};
+    float max_z{0.0F};
+  };
+  std::vector<RoadQuerySegment> m_road_query_segments;
+  float m_road_index_origin_x{0.0F};
+  float m_road_index_origin_z{0.0F};
+  float m_road_index_cell_size{1.0F};
+  int m_road_index_columns{0};
+  int m_road_index_rows{0};
+  std::vector<std::uint32_t> m_road_index_offsets;
+  std::vector<std::uint32_t> m_road_index_segment_ids;
   std::unordered_set<std::uint64_t> m_reserved_world_prop_ids;
   std::uint64_t m_next_world_prop_id{1};
   std::uint64_t m_authored_world_props_revision{0};

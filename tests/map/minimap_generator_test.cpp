@@ -105,6 +105,18 @@ TEST_F(MinimapGeneratorTest, ImageDimensionsMatchGrid) {
   EXPECT_EQ(result.height(), expected_height);
 }
 
+TEST_F(MinimapGeneratorTest, LargeCampaignMapsAreCappedToHudUsefulResolution) {
+  test_map.grid.width = 650;
+  test_map.grid.height = 420;
+  MinimapGenerator generator;
+
+  QImage const result = generator.generate(test_map);
+
+  EXPECT_EQ(result.width(), 512);
+  EXPECT_EQ(result.height(), 331);
+  EXPECT_LE(std::max(result.width(), result.height()), 512);
+}
+
 TEST_F(MinimapGeneratorTest, RendersRivers) {
 
   RiverSegment river;

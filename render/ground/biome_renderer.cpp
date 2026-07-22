@@ -1,9 +1,7 @@
 #include "biome_renderer.h"
 
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QVector2D>
-#include <qelapsedtimer.h>
 #include <qglobal.h>
 #include <qvectornd.h>
 
@@ -23,6 +21,7 @@
 #include "ground_utils.h"
 #include "map/terrain.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 #include "spawn_validator.h"
 
 namespace {
@@ -89,8 +88,11 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const auto visible_count = Scatter::sync_filtered_state(
       m_grass_state, [](const GrassInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_height;
-      });
-  if (visible_count == 0 || !m_grass_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -98,10 +100,8 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Grass;
-  cmd.instance_buffer = m_grass_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.grass = params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_grass_state, cmd);
 }
 
 void BiomeRenderer::clear() {
@@ -113,9 +113,6 @@ void BiomeRenderer::refresh_grass() {
 }
 
 void BiomeRenderer::generate_grass_instances() {
-  QElapsedTimer timer;
-  timer.start();
-
   auto& grass_instances = m_grass_state.instances;
   auto& grass_instance_count = m_grass_state.instance_count;
   auto& grass_instances_dirty = m_grass_state.instances_dirty;

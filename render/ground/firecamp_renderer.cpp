@@ -14,6 +14,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 
 namespace {
 
@@ -56,8 +57,11 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const auto visible_count = Scatter::sync_filtered_state(
       m_firecamp_state, [](const FireCampInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_intensity;
-      });
-  if (visible_count == 0 || !m_firecamp_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -69,10 +73,8 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::FireCamp;
-  cmd.instance_buffer = m_firecamp_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.firecamp = params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_firecamp_state, cmd);
 
   const QVector3D log_color(0.31F, 0.17F, 0.075F);
   const QVector3D char_color(0.055F, 0.034F, 0.022F);
@@ -83,6 +85,10 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     const QVector4D radius_phase = instance.radius_phase;
 
     const QVector3D camp_pos = pos_intensity.toVector3D();
+    if (!renderer.submission_visibility().accepts_sphere(
+            camp_pos, 2.0F, SubmissionFogMode::VisibleOnly)) {
+      continue;
+    }
     const float intensity = std::clamp(pos_intensity.w(), 0.6F, 1.6F);
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 

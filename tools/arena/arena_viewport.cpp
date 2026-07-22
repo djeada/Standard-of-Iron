@@ -9,6 +9,8 @@
 #include <QKeyEvent>
 #include <QMap>
 #include <QMouseEvent>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QPainter>
 #include <QPen>
 #include <QVector2D>
@@ -71,6 +73,7 @@
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
 #include "render/profiling/combat_animation_diagnostics.h"
+#include "render/profiling/frame_continuity_analyzer.h"
 #include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
@@ -506,6 +509,9 @@ void ArenaViewport::paintGL() {
   timings.effects_submit_ms = elapsed_phase_ms();
   m_renderer->end_frame();
   timings.playback_ms = elapsed_phase_ms();
+  if (sampled_frame) {
+    sample_frame_continuity();
+  }
   auto const& render_profile = Render::Profiling::global_profile();
   timings.humanoid_preparation_ms =
       static_cast<double>(render_profile.humanoid_preparation_us) / 1000.0;
@@ -1907,6 +1913,7 @@ void ArenaViewport::clear_world_props_of_type() {
 
 void ArenaViewport::reset_arena() {
   m_scenario_runner.reset();
+  m_frame_continuity_analyzer.reset();
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
   clear_units();
@@ -1925,6 +1932,7 @@ void ArenaViewport::reset_arena() {
   m_attack_scrub_enabled = false;
   m_attack_scrub_phase = 0.5F;
   set_force_full_creature_lod(true);
+  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::High);
   pause_simulation(false);
   reset_camera();
   if (!m_combat_debug_overlay_enabled) {
@@ -2179,6 +2187,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_renderer->set_clear_color(0.70F, 0.73F, 0.80F, 1.0F);
   }
   reset_arena();
+  Render::GraphicsSettings::instance().set_quality(definition->graphics_quality);
   clear_camera_key_state();
   m_arena_rivers = definition->rivers;
   m_arena_lakes = definition->lakes;
@@ -2294,6 +2303,16 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
 
   m_scenario_runner = std::make_unique<Arena::ArenaScenarioRunner>(
       *m_world, std::move(host), *definition, scenario_origin);
+  const bool verify_frame_continuity = std::any_of(
+      definition->expectations.begin(),
+      definition->expectations.end(),
+      [](const Arena::ArenaExpectation& expectation) {
+        return expectation.kind == Arena::ArenaExpectationKind::NoFullscreenFlash;
+      });
+  if (verify_frame_continuity) {
+    m_frame_continuity_analyzer =
+        std::make_unique<Render::Profiling::FrameContinuityAnalyzer>();
+  }
   if (m_scenario_duration_override > 0.0F) {
     m_scenario_runner->set_duration_limit(m_scenario_duration_override);
   }
@@ -2337,6 +2356,36 @@ void ArenaViewport::set_force_full_creature_lod(bool enabled) {
   m_force_full_creature_lod = enabled;
   if (m_renderer != nullptr) {
     m_renderer->set_force_full_creature_lod(enabled);
+  }
+}
+
+void ArenaViewport::sample_frame_continuity() {
+  if (m_frame_continuity_analyzer == nullptr || m_scenario_runner == nullptr ||
+      context() == nullptr || !context()->isValid()) {
+    return;
+  }
+  auto* functions = context()->functions();
+  if (functions == nullptr) {
+    return;
+  }
+
+  GLint viewport[4] = {0, 0, 0, 0};
+  functions->glGetIntegerv(GL_VIEWPORT, viewport);
+  const int pixel_width = std::max(1, viewport[2]);
+  const int pixel_height = std::max(1, viewport[3]);
+  QImage frame(pixel_width, pixel_height, QImage::Format_RGBA8888);
+
+  GLint previous_pack_alignment = 4;
+  functions->glGetIntegerv(GL_PACK_ALIGNMENT, &previous_pack_alignment);
+  functions->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  functions->glReadPixels(
+      0, 0, pixel_width, pixel_height, GL_RGBA, GL_UNSIGNED_BYTE, frame.bits());
+  functions->glPixelStorei(GL_PACK_ALIGNMENT, previous_pack_alignment);
+
+  const auto issue = m_frame_continuity_analyzer->observe(frame);
+  if (issue.has_value()) {
+    m_scenario_runner->report_external_issue(QStringLiteral("fullscreen_flash"),
+                                             issue->message());
   }
 }
 

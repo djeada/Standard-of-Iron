@@ -158,7 +158,6 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
-#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "renderer_bootstrap.h"
@@ -198,10 +197,13 @@ auto marketplace_trade_resource_label(QStringView key) -> QString {
   return key.toString();
 }
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
+#endif
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 void log_render_stage_once(const char* stage, const QString& detail) {
   if (!render_stage_logging_enabled()) {
     return;
@@ -219,6 +221,7 @@ void log_render_stage_once(const char* stage, const QString& detail) {
                            .arg(QString::fromLatin1(stage), detail)
                     << "thread" << QThread::currentThread();
 }
+#endif
 
 auto build_available_commander_entry(const Game::Units::CommanderDefinition& definition,
                                      bool is_default) -> QVariantMap {
@@ -1283,8 +1286,7 @@ void GameEngine::commander_trigger_aura() {
   Engine::Core::Entity* commander_entity = nullptr;
   if (m_control_mode == PlayerControlMode::Commander) {
     commander_entity = controlled_commander_entity();
-  } else if (auto* selection =
-                 m_world->get_system<Game::Systems::SelectionSystem>()) {
+  } else if (auto* selection = m_world->get_system<Game::Systems::SelectionSystem>()) {
     for (const auto entity_id : selection->get_selected_units()) {
       auto* candidate = m_world->get_entity(entity_id);
       const auto* unit = candidate != nullptr
@@ -1905,7 +1907,9 @@ void GameEngine::update(float dt) {
       .viewport_width = m_viewport.width,
       .viewport_height = m_viewport.height,
       .selection_refresh_enabled = (m_selected_units_model != nullptr),
-      .selection_refresh_counter = m_runtime.selection_refresh_counter};
+      .selection_refresh_counter = m_runtime.selection_refresh_counter,
+      .minimap_unit_update_accumulator = m_runtime.minimap_unit_update_accumulator,
+      .simulation_accumulator = m_runtime.simulation_accumulator};
   const FrameUpdateCallbacks callbacks{
       .on_minimap_image_changed = [this]() { emit minimap_image_changed(); },
       .on_selected_units_data_changed =
@@ -1923,13 +1927,18 @@ void GameEngine::update(float dt) {
       dt,
       callbacks,
       [this](float step_dt) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
         log_render_stage_once(
             "simulation-update",
             QStringLiteral(
                 "world systems run before render; combat queries rebuild here"));
+#endif
         update_active_runtime_simulation(step_dt);
       });
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
+  m_runtime.minimap_unit_update_accumulator =
+      frame_state.minimap_unit_update_accumulator;
+  m_runtime.simulation_accumulator = frame_state.simulation_accumulator;
   sync_scatter_world_props();
   sync_selected_player_state();
 }
@@ -1939,9 +1948,11 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     return;
   }
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   log_render_stage_once("render-submit",
                         QStringLiteral("records draw commands from existing "
                                        "visual state; no combat queries"));
+#endif
 
   Game::Systems::CameraVisibilityService::instance().set_camera(m_camera);
 
@@ -2736,7 +2747,6 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   }
 
   const auto& mission = *m_campaign_manager->current_mission_definition();
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   start_skirmish_internal(
       mission.map_path, build_campaign_player_configs(mission), false);
 }
@@ -2805,8 +2815,6 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     m_campaign_manager->set_skirmish_context(map_path);
   }
 
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
-
   if (!m_runtime.victory_state.isEmpty()) {
     m_runtime.victory_state = "";
     emit victory_state_changed();
@@ -2835,6 +2843,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   QTimer::singleShot(50, this, [this, map_path, player_configs]() {
     if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
       set_error("Cannot start skirmish: renderer not initialized");
@@ -3052,12 +3061,15 @@ void GameEngine::reset_preload_interaction_state() {
 
   m_follow_selection_enabled = false;
   m_runtime.selection_refresh_counter = 0;
+  m_runtime.minimap_unit_update_accumulator = 0.0F;
 
   emit selected_units_changed();
 }
 
 void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
+  m_runtime.minimap_unit_update_accumulator = 0.0F;
+  m_runtime.simulation_accumulator = 0.0F;
   m_pending_mission_waves.clear();
   Game::Systems::PlayerResourceRegistry::instance().clear();
   Game::Systems::MarketplaceSystem::instance().clear();

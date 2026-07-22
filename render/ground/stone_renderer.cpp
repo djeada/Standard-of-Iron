@@ -1,9 +1,7 @@
 #include "stone_renderer.h"
 
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QVector2D>
-#include <qelapsedtimer.h>
 #include <qglobal.h>
 
 #include <algorithm>
@@ -69,9 +67,6 @@ void StoneRenderer::clear() {
 }
 
 void StoneRenderer::generate_stone_instances() {
-  QElapsedTimer timer;
-  timer.start();
-
   auto& stone_instances = m_state.instances;
   auto& stone_instance_count = m_state.instance_count;
   auto& stone_instances_dirty = m_state.instances_dirty;

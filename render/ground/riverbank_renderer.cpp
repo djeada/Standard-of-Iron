@@ -76,10 +76,9 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   auto* backend = renderer.backend();
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const bool use_visibility = renderer.static_world_visibility_filter_enabled();
+  const auto* visibility_snapshot =
+      use_visibility ? renderer.submission_visibility().snapshot() : nullptr;
   auto* gl_context = QOpenGLContext::currentContext();
   auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
 
@@ -173,6 +172,19 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
     if (mesh == nullptr) {
       continue;
+    }
+
+    const auto& cull_samples = m_visibility_samples[mesh_index - 1];
+    if (!cull_samples.empty()) {
+      const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                                ? SubmissionFogMode::Revealed
+                                : SubmissionFogMode::Ignore;
+      if (!renderer.submission_visibility().accepts_segment(cull_samples.front(),
+                                                            cull_samples.back(),
+                                                            m_tile_size,
+                                                            fog_mode)) {
+        continue;
+      }
     }
 
     float segment_visibility = 1.0F;

@@ -6,8 +6,6 @@ Item {
 
     property var engine: null
     readonly property int maxActiveBursts: 48
-    property real impactFlashOpacity: 0.0
-    property color impactFlashColor: "#ffffff"
 
     function clamp01(value) {
         return Math.max(0.0, Math.min(1.0, value));
@@ -240,13 +238,6 @@ Item {
         anchors.fill: parent
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: root.impactFlashColor
-        opacity: root.impactFlashOpacity
-        visible: opacity > 0.0
-    }
-
     Timer {
         interval: 16
         running: root.engine !== null
@@ -261,16 +252,6 @@ Item {
                 if (!root.canSpawnBurst())
                     break;
                 var ev = events[i];
-                var severity = root.severityForEvent(ev);
-                if (ev.killingBlow) {
-                    root.impactFlashColor = "#ffb347";
-                    root.impactFlashOpacity = Math.max(root.impactFlashOpacity, 0.18);
-                    impactFlashDecay.restart();
-                } else if (severity >= 0.66) {
-                    root.impactFlashColor = "#ff7f50";
-                    root.impactFlashOpacity = Math.max(root.impactFlashOpacity, 0.11 + severity * 0.05);
-                    impactFlashDecay.restart();
-                }
                 damageBurst.createObject(effectLayer, {
                         "dmg": Number(ev.damage || 0),
                         "worldX": Number(ev.x || 0.0),
@@ -280,18 +261,6 @@ Item {
                         "lane": Number(ev.lane || 0),
                         "killingBlow": !!ev.killingBlow
                     });
-            }
-        }
-    }
-
-    Timer {
-        id: impactFlashDecay
-        interval: 16
-        repeat: true
-        onTriggered: {
-            root.impactFlashOpacity = Math.max(0.0, root.impactFlashOpacity - 0.02);
-            if (root.impactFlashOpacity <= 0.0) {
-                impactFlashDecay.stop();
             }
         }
     }

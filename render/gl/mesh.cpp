@@ -5,7 +5,9 @@
 #include <qopenglext.h>
 
 #include <GL/gl.h>
+#include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -21,6 +23,31 @@ Mesh::Mesh(const std::vector<Vertex>& vertices,
            const std::vector<unsigned int>& indices)
     : m_vertices(vertices)
     , m_indices(indices) {
+  if (!m_vertices.empty()) {
+    QVector3D min_pos(std::numeric_limits<float>::max(),
+                      std::numeric_limits<float>::max(),
+                      std::numeric_limits<float>::max());
+    QVector3D max_pos(std::numeric_limits<float>::lowest(),
+                      std::numeric_limits<float>::lowest(),
+                      std::numeric_limits<float>::lowest());
+    for (const auto& vertex : m_vertices) {
+      const QVector3D position(
+          vertex.position[0], vertex.position[1], vertex.position[2]);
+      min_pos.setX(std::min(min_pos.x(), position.x()));
+      min_pos.setY(std::min(min_pos.y(), position.y()));
+      min_pos.setZ(std::min(min_pos.z(), position.z()));
+      max_pos.setX(std::max(max_pos.x(), position.x()));
+      max_pos.setY(std::max(max_pos.y(), position.y()));
+      max_pos.setZ(std::max(max_pos.z(), position.z()));
+    }
+    m_bounds_center = (min_pos + max_pos) * 0.5F;
+    for (const auto& vertex : m_vertices) {
+      const QVector3D position(
+          vertex.position[0], vertex.position[1], vertex.position[2]);
+      m_bounds_radius =
+          std::max(m_bounds_radius, (position - m_bounds_center).length());
+    }
+  }
 }
 
 Mesh::~Mesh() = default;

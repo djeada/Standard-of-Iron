@@ -125,6 +125,9 @@ void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache& cache,
     const auto bytes = static_cast<std::uint64_t>(entry.skinned_frame_total) *
                        Render::GL::BonePaletteArena::k_palette_bytes;
     cache.record_skin_ubo_upload(bytes);
+  } else if (entry.skin_palette_ubo == 0U && !entry.skinned_palettes.empty() &&
+             entry.skinned_frame_total != 0U && entry.skinned_bone_count != 0U) {
+    cache.mark_skin_ubo_upload_pending();
   }
 }
 
@@ -421,8 +424,7 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
       secondary_global[bone] = secondary_palette[bone] * bind[bone];
     }
     for (std::uint32_t bone = 0; bone < count; ++bone) {
-      bool const blend_bone =
-          !upper_body_only || is_humanoid_upper_body_bone(bone);
+      bool const blend_bone = !upper_body_only || is_humanoid_upper_body_bone(bone);
       if (!blend_bone) {
         result_global[bone] = primary_global[bone];
       } else {
@@ -653,6 +655,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                            cmd.bone_count);
     }
   }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (handle.archetype->species == CreatureKind::Humanoid &&
       cmd.bone_palette != nullptr &&
       cmd.bone_count >
@@ -695,6 +698,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
         .record_submitted_body_pose(
             entity_id, instance_index, body_up_y, max_arm_reach);
   }
+#endif
   out.rigged(cmd);
 }
 
@@ -724,6 +728,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
     return false;
   }
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (handle.archetype->species == CreatureKind::Humanoid) {
     auto const palette = blob.frame_palette_view(global_frame);
     auto const pelvis_index =
@@ -759,6 +764,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
               entity_id, instance_index, body_up_y, max_arm_reach);
     }
   }
+#endif
 
   if (renderer == nullptr) {
     return false;
@@ -948,7 +954,9 @@ auto CreaturePipeline::submit_requests(
   }
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest& req) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
+#endif
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
 
@@ -980,8 +988,10 @@ auto CreaturePipeline::submit_requests(
     ResolvedRequestPlayback full_body{};
     ResolvedRequestPlayback overlay{};
     {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::AccumulatorScope const playback_scope(
           &profile.bpat_playback_us);
+#endif
       if (req.full_body_blend.active()) {
         full_body = resolve_request_playback(*handle,
                                              req.creature_asset_id,

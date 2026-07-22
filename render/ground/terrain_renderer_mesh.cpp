@@ -1,9 +1,7 @@
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QQuaternion>
 #include <QVector2D>
 #include <QtGlobal>
-#include <qelapsedtimer.h>
 #include <qglobal.h>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
@@ -75,9 +73,6 @@ auto TerrainRenderer::section_for(Game::Map::TerrainType type) -> int {
 }
 
 void TerrainRenderer::build_meshes() {
-  QElapsedTimer timer;
-  timer.start();
-
   m_chunks.clear();
   m_chunk_visibility_cache.clear();
 
@@ -435,6 +430,21 @@ void TerrainRenderer::build_meshes() {
         float entry_sum = 0.0F;
         float entry_peak = 0.0F;
         int entry_count = 0;
+        QVector3D bounds_min{std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max()};
+        QVector3D bounds_max{std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest()};
+      };
+
+      auto expand_bounds = [](SectionData& section, const QVector3D& position) {
+        section.bounds_min.setX(std::min(section.bounds_min.x(), position.x()));
+        section.bounds_min.setY(std::min(section.bounds_min.y(), position.y()));
+        section.bounds_min.setZ(std::min(section.bounds_min.z(), position.z()));
+        section.bounds_max.setX(std::max(section.bounds_max.x(), position.x()));
+        section.bounds_max.setY(std::max(section.bounds_max.y(), position.y()));
+        section.bounds_max.setZ(std::max(section.bounds_max.z(), position.z()));
       };
 
       SectionData sections[3];
@@ -461,6 +471,7 @@ void TerrainRenderer::build_meshes() {
         auto const local_index = static_cast<unsigned int>(section.vertices.size() - 1);
         section.remap.emplace(global_index, local_index);
         section.normal_sum += normal;
+        expand_bounds(section, pos);
         return local_index;
       };
 
@@ -483,6 +494,7 @@ void TerrainRenderer::build_meshes() {
         section.vertices.push_back(v);
         auto const local_index = static_cast<unsigned int>(section.vertices.size() - 1);
         section.normal_sum += normal;
+        expand_bounds(section, pos);
         return local_index;
       };
 
@@ -654,6 +666,9 @@ void TerrainRenderer::build_meshes() {
         chunk.average_height = (section.height_count > 0)
                                    ? section.height_sum / float(section.height_count)
                                    : 0.0F;
+        chunk.cull_center = (section.bounds_min + section.bounds_max) * 0.5F;
+        chunk.cull_radius =
+            (section.bounds_max - chunk.cull_center).length() + m_tile_size * 0.5F;
 
         const float nh_chunk = (chunk.average_height - min_h) / height_range;
         const float avg_slope = (section.stat_count > 0)

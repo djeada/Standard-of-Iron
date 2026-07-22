@@ -1901,6 +1901,112 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_render_continuity_id),
+        QStringLiteral("Render Continuity Stress"),
+        QStringLiteral("Fixed-camera Ultra battle that samples every frame for "
+                       "scene-wide flashes, rejects every reduced creature LOD, "
+                       "and tracks each living formation member for submission "
+                       "disappearance."),
+        14.0F,
+        {29.0F, 54.0F, 28.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.force_full_creature_lod = false;
+    s.collect_animation_diagnostics = true;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.groups = {
+        group(QStringLiteral("blue_swords"),
+              Troop::Swordsman,
+              1,
+              3,
+              {-5.0F, 0.0F, -9.0F},
+              16),
+        group(QStringLiteral("blue_archers"),
+              Troop::Archer,
+              1,
+              2,
+              {7.0F, 0.0F, -12.0F},
+              16),
+        group(QStringLiteral("blue_healer"),
+              Troop::Healer,
+              1,
+              1,
+              {-11.0F, 0.0F, -8.0F},
+              1),
+        group(QStringLiteral("blue_cavalry"),
+              Troop::MountedKnight,
+              1,
+              2,
+              {-12.0F, 0.0F, -16.0F},
+              12),
+        group(QStringLiteral("red_spears"),
+              Troop::Spearman,
+              2,
+              4,
+              {-4.0F, 0.0F, 9.0F},
+              16),
+        group(QStringLiteral("red_archers"),
+              Troop::Archer,
+              2,
+              2,
+              {8.0F, 0.0F, 12.0F},
+              16),
+        group(
+            QStringLiteral("red_healer"), Troop::Healer, 2, 1, {12.0F, 0.0F, 8.0F}, 1),
+        group(QStringLiteral("red_cavalry"),
+              Troop::HorseSpearman,
+              2,
+              2,
+              {-12.0F, 0.0F, 16.0F},
+              12),
+    };
+    for (auto& continuity_group : s.groups) {
+      continuity_group.max_health_override = 2000;
+      continuity_group.health_override = 2000;
+    }
+    s.steps = {
+        at(0.35F,
+           Command::AttackMove,
+           QStringLiteral("blue_swords"),
+           QStringLiteral("red_spears")),
+        at(0.35F,
+           Command::Attack,
+           QStringLiteral("blue_archers"),
+           QStringLiteral("red_spears")),
+        at(0.35F,
+           Command::Charge,
+           QStringLiteral("blue_cavalry"),
+           QStringLiteral("red_archers")),
+        at(0.35F,
+           Command::AttackMove,
+           QStringLiteral("red_spears"),
+           QStringLiteral("blue_swords")),
+        at(0.35F,
+           Command::Attack,
+           QStringLiteral("red_archers"),
+           QStringLiteral("blue_swords")),
+        at(0.35F,
+           Command::Charge,
+           QStringLiteral("red_cavalry"),
+           QStringLiteral("blue_archers")),
+    };
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    for (auto const& continuity_group : s.groups) {
+      s.expectations.push_back(expectation(
+          Expect::NoRenderVisibilityChurn, continuity_group.name, {}, 0.0F, 0.5F));
+      s.expectations.push_back(
+          expectation(Expect::FullCreatureDetailOnly, continuity_group.name));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, continuity_group.name));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_campaign_scale_battle_id),
         QStringLiteral("Campaign-Scale Battle Performance"),
         QStringLiteral("Cannae-sized 79-unit mixed battle using production LOD, "

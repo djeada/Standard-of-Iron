@@ -63,6 +63,7 @@ inline constexpr char k_mixed_roles_id[] = "mixed_roles";
 inline constexpr char k_bot_skirmish_id[] = "bot_skirmish";
 inline constexpr char k_crossing_formations_id[] = "crossing_formations";
 inline constexpr char k_sustained_battle_id[] = "sustained_battle";
+inline constexpr char k_render_continuity_id[] = "render_continuity";
 inline constexpr char k_campaign_scale_battle_id[] = "campaign_scale_battle";
 inline constexpr char k_roman_marching_camp_id[] = "roman_marching_camp";
 inline constexpr char k_carthage_trade_town_id[] = "carthage_trade_town";

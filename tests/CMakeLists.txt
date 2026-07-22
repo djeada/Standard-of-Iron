@@ -182,6 +182,7 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp
     tools/arena_scenarios_test.cpp
     tools/arena_scenario_runner_test.cpp
+    tools/arena_frame_continuity_test.cpp
     tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     test_main.cpp

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../creature/part_graph.h"
+#include "../submission_visibility.h"
 #include "../submitter.h"
 
 namespace Engine::Core {
@@ -49,6 +50,11 @@ struct DrawContext {
   RendererHandle renderer_handle = k_invalid_renderer_handle;
   class Backend* backend = nullptr;
   const Camera* camera = nullptr;
+  // Every dynamic entity uses the renderer's frame-coherent visibility
+  // policy. Fog mode is independent: local units ignore fog while remote
+  // units require currently visible cells.
+  const SubmissionVisibilityPolicy* submission_visibility = nullptr;
+  SubmissionFogMode submission_fog_mode = SubmissionFogMode::Ignore;
   float alpha_multiplier = 1.0F;
   bool animation_throttled = false;
   const AnimationInputs* animation_override = nullptr;

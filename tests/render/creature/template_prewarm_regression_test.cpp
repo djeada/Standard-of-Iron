@@ -13,6 +13,7 @@
 #include "game/systems/troop_profile_service.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/visibility_budget.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -468,6 +469,27 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
   auto const shadow = prepare_humanoid_shadow_state(inputs);
 
   EXPECT_FALSE(shadow.enabled);
+}
+
+TEST(TemplatePrewarmRegression, ContactShadowBudgetAdmitsOnlyIdleNearbyOrder) {
+  auto& graphics = Render::GraphicsSettings::instance();
+  const auto previous_quality = graphics.quality();
+  graphics.set_quality(Render::GraphicsQuality::Ultra);
+  auto& budget = Render::VisibilityBudgetTracker::instance();
+  budget.reset_frame();
+
+  EXPECT_FALSE(budget.request_contact_shadow(1U, false));
+  EXPECT_TRUE(budget.request_contact_shadow(1U, true));
+  EXPECT_TRUE(budget.request_contact_shadow(1U, true));
+  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
+  for (std::uint32_t formation = 2U; formation <= 7U; ++formation) {
+    EXPECT_TRUE(budget.request_contact_shadow(formation, true));
+  }
+  EXPECT_EQ(budget.contact_shadow_count(), 8);
+  EXPECT_FALSE(budget.request_contact_shadow(8U, true));
+
+  graphics.set_quality(previous_quality);
+  budget.reset_frame();
 }
 
 TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {

@@ -20,15 +20,6 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool const& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
-  std::size_t const& debug_rigged_batches = context.debug_rigged_batches;
-  std::size_t const& debug_rigged_cmds = context.debug_rigged_cmds;
-  std::size_t const& debug_rigged_instanced_attempts =
-      context.debug_rigged_instanced_attempts;
-  std::size_t const& debug_rigged_instanced_successes =
-      context.debug_rigged_instanced_successes;
-  std::size_t const& debug_rigged_instanced_failures =
-      context.debug_rigged_instanced_failures;
-  std::size_t const& debug_rigged_single_draws = context.debug_rigged_single_draws;
   (void)cam;
   (void)view;
   (void)projection;
@@ -36,12 +27,6 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
-  (void)debug_rigged_batches;
-  (void)debug_rigged_cmds;
-  (void)debug_rigged_instanced_attempts;
-  (void)debug_rigged_instanced_successes;
-  (void)debug_rigged_instanced_failures;
-  (void)debug_rigged_single_draws;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();

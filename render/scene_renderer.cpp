@@ -85,10 +85,13 @@ namespace {
 constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
+#endif
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 void log_render_first_use_once(const char* stage, const QString& detail) {
   if (!render_stage_logging_enabled()) {
     return;
@@ -105,6 +108,7 @@ void log_render_first_use_once(const char* stage, const QString& detail) {
   qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
                            .arg(QString::fromLatin1(stage), detail);
 }
+#endif
 } // namespace
 
 Renderer::Renderer(ShaderQuality quality)
@@ -147,9 +151,11 @@ auto Renderer::initialize() -> bool {
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
     m_gl_backend = dynamic_cast<Backend*>(m_backend.get());
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     log_render_first_use_once(
         "backend-create",
         QStringLiteral("created render backend for QSG/FBO render thread"));
+#endif
   }
   if (!m_backend->initialize()) {
     qCritical() << "Renderer::initialize() - backend initialization failed;"
@@ -160,11 +166,15 @@ auto Renderer::initialize() -> bool {
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
   const auto warmed_archetypes = RenderArchetypeRegistry::instance().warm_all();
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   log_render_first_use_once(
       "renderer-registries",
       QStringLiteral("registered entity renderers and equipment renderers; "
                      "warmed %1 render archetypes")
           .arg(static_cast<qulonglong>(warmed_archetypes)));
+#else
+  (void)warmed_archetypes;
+#endif
 
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all("assets/creatures");
@@ -176,9 +186,11 @@ auto Renderer::initialize() -> bool {
   }
   (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
       "assets/creatures");
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   log_render_first_use_once(
       "creature-assets",
       QStringLiteral("loaded BPAT and snapshot creature asset registries"));
+#endif
   return true;
 }
 
@@ -190,7 +202,7 @@ void Renderer::shutdown() {
 }
 
 void Renderer::begin_frame() {
-
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& profile = Render::Profiling::global_profile();
   profile.reset();
   profile.frame_index += 1;
@@ -198,6 +210,7 @@ void Renderer::begin_frame() {
       profile.frame_index);
   Render::Profiling::PhaseScope const collect_scope(
       &profile, Render::Profiling::Phase::Collection);
+#endif
 
   advance_pose_cache_frame();
 
@@ -215,14 +228,19 @@ void Renderer::begin_frame() {
   m_active_queue->reserve_for_frame();
 
   if (m_camera != nullptr) {
-    m_view_proj = m_camera->get_projection_matrix() * m_camera->get_view_matrix();
+    m_view_proj = m_camera->get_view_projection_matrix();
   }
+  auto& visibility = Game::Map::VisibilityService::instance();
+  m_frame_visibility_snapshot =
+      visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
+  m_submission_visibility.reset(m_camera, m_frame_visibility_snapshot.get());
 
   if (m_backend) {
     m_backend->begin_frame();
   }
 
   process_async_template_prewarm();
+  m_rigged_mesh_cache.upload_pending_skin_ubos();
 }
 
 void Renderer::end_frame() {
@@ -230,31 +248,42 @@ void Renderer::end_frame() {
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
+#endif
     std::swap(m_fill_queue_index, m_render_queue_index);
     DrawQueue& render_queue = m_queues[m_render_queue_index];
     {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::PhaseScope const sort_scope(&profile,
                                                      Render::Profiling::Phase::Sort);
+#endif
       render_queue.sort_for_batching();
     }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
+#endif
     m_backend->set_animation_time(m_accumulated_time);
     {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::PhaseScope const play_scope(
           &profile, Render::Profiling::Phase::Playback);
+#endif
 
       m_backend->execute(render_queue, *m_camera);
     }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =
         k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;
     profile.finish_frame_sample();
+#endif
   }
 }
 
 void Renderer::set_camera(Camera* camera) {
   m_camera = camera;
+  m_submission_visibility.reset(m_camera, m_frame_visibility_snapshot.get());
 }
 
 auto Renderer::render_software_preview(int width, int height) -> QImage {
@@ -474,6 +503,18 @@ void Renderer::terrain_surface(const TerrainSurfaceCmd& cmd) {
 
 void Renderer::terrain_feature(const TerrainFeatureCmd& cmd) {
   if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
+    return;
+  }
+  const QVector3D world_center = cmd.model.map(cmd.mesh->bounds_center());
+  const QVector3D scale_x(cmd.model(0, 0), cmd.model(1, 0), cmd.model(2, 0));
+  const QVector3D scale_y(cmd.model(0, 1), cmd.model(1, 1), cmd.model(2, 1));
+  const QVector3D scale_z(cmd.model(0, 2), cmd.model(1, 2), cmd.model(2, 2));
+  const float max_scale =
+      std::max({scale_x.length(), scale_y.length(), scale_z.length()});
+  if (!m_submission_visibility.accepts_sphere(
+          world_center,
+          cmd.mesh->bounds_radius() * max_scale,
+          SubmissionFogMode::Ignore)) {
     return;
   }
   TerrainFeatureCmd submitted = cmd;

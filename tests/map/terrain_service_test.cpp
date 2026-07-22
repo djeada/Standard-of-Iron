@@ -47,6 +47,34 @@ auto runtime_trees_respect_road_clearance(const Game::Map::TerrainService& terra
       });
 }
 
+auto brute_point_near_road(const std::vector<Game::Map::RoadSegment>& roads,
+                           float world_x,
+                           float world_z,
+                           float clearance) -> bool {
+  for (const auto& road : roads) {
+    const float radius =
+        std::max(0.0F, road.width * 0.5F + std::max(clearance, 0.0F));
+    const float dx = road.end.x() - road.start.x();
+    const float dz = road.end.z() - road.start.z();
+    const float length_sq = dx * dx + dz * dz;
+    float closest_x = road.start.x();
+    float closest_z = road.start.z();
+    if (length_sq >= 0.0001F) {
+      const float px = world_x - road.start.x();
+      const float pz = world_z - road.start.z();
+      const float t = std::clamp((px * dx + pz * dz) / length_sq, 0.0F, 1.0F);
+      closest_x += t * dx;
+      closest_z += t * dz;
+    }
+    const float point_dx = world_x - closest_x;
+    const float point_dz = world_z - closest_z;
+    if (point_dx * point_dx + point_dz * point_dz <= radius * radius) {
+      return true;
+    }
+  }
+  return false;
+}
+
 TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 6;
@@ -547,6 +575,42 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverMarksRoadSurface) {
               0.0001F);
   EXPECT_EQ(terrain.resolve_surface_world_position(0.5F, -0.5F, 0.30F, 0.0F),
             QVector3D(0.5F, road_surface_y + 0.30F, -0.5F));
+}
+
+TEST_F(TerrainServiceTest, IndexedRoadSurfaceMatchesExactRoadGeometryAcrossMap) {
+  constexpr int width = 101;
+  constexpr int height = 87;
+  std::vector<float> const heights(static_cast<std::size_t>(width * height), 1.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::RoadSegment> const roads{
+      {.start = QVector3D(-48.0F, 0.0F, -37.0F),
+       .end = QVector3D(47.0F, 0.0F, 35.0F),
+       .width = 2.25F},
+      {.start = QVector3D(-55.0F, 0.0F, 18.0F),
+       .end = QVector3D(54.0F, 0.0F, 18.0F),
+       .width = 5.0F},
+      {.start = QVector3D(13.0F, 0.0F, -49.0F),
+       .end = QVector3D(13.0F, 0.0F, 51.0F),
+       .width = 1.5F},
+      {.start = QVector3D(-22.0F, 0.0F, 11.0F),
+       .end = QVector3D(-22.0F, 0.0F, 11.0F),
+       .width = 4.0F}};
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(
+      width, height, 1.0F, heights, terrain_types, {}, roads, {}, {});
+
+  for (float z = -54.0F; z <= 54.0F; z += 1.75F) {
+    for (float x = -61.0F; x <= 61.0F; x += 1.5F) {
+      const bool expected = brute_point_near_road(roads, x, z, 0.0F);
+      EXPECT_EQ(terrain.is_point_on_road(x, z), expected)
+          << "at (" << x << ", " << z << ')';
+      EXPECT_EQ(terrain.is_point_near_road(x, z, 3.5F),
+                brute_point_near_road(roads, x, z, 3.5F))
+          << "with clearance at (" << x << ", " << z << ')';
+    }
+  }
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {

@@ -73,6 +73,7 @@
 #include "render/humanoid/pose_cache_components.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/prepare.h"
+#include "render/humanoid/render_stats.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
@@ -8809,6 +8810,84 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   float const baseline_head_height = baseline_head.y() - baseline_origin.y();
   float const hit_head_height = hit_head.y() - hit_origin.y();
   EXPECT_NEAR(hit_head_height, baseline_head_height, 0.0001F);
+}
+
+TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(422);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  Game::Map::VisibilityService::Snapshot snapshot;
+  snapshot.initialized = true;
+  snapshot.width = 3;
+  snapshot.height = 3;
+  snapshot.tile_size = 1.0F;
+  snapshot.half_width = 1.0F;
+  snapshot.half_height = 1.0F;
+  snapshot.cells.assign(9U,
+                        static_cast<std::uint8_t>(
+                            Game::Map::VisibilityState::Explored));
+  Render::GL::SubmissionVisibilityPolicy visibility_policy;
+  visibility_policy.reset(nullptr, &snapshot);
+  ctx.submission_visibility = &visibility_policy;
+  ctx.submission_fog_mode = Render::GL::SubmissionFogMode::VisibleOnly;
+
+  Render::GL::reset_humanoid_render_stats();
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+
+  EXPECT_TRUE(prep.bodies.requests().empty());
+  EXPECT_EQ(Render::GL::get_humanoid_render_stats().soldiers_skipped_fog, 1U);
+}
+
+TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(423);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  transform->position = {3.8F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  Render::GL::Camera camera;
+  camera.set_perspective(60.0F, 1.0F, 0.1F, 100.0F);
+  camera.look_at(
+      QVector3D(0.0F, 0.0F, 5.0F), QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0, 1, 0));
+  ASSERT_FALSE(camera.is_in_frustum(QVector3D(transform->position.x,
+                                              transform->position.y,
+                                              transform->position.z),
+                                    0.6F));
+
+  Render::GL::SubmissionVisibilityPolicy visibility_policy;
+  visibility_policy.reset(&camera, nullptr);
+  ctx.camera = &camera;
+  ctx.submission_visibility = &visibility_policy;
+  ctx.submission_fog_mode = Render::GL::SubmissionFogMode::Ignore;
+
+  Render::GL::reset_humanoid_render_stats();
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+
+  EXPECT_EQ(prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(Render::GL::get_humanoid_render_stats().soldiers_skipped_frustum, 0U);
 }
 
 } // namespace

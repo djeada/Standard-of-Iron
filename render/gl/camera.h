@@ -4,6 +4,8 @@
 #include <QPointF>
 #include <QVector3D>
 
+#include <array>
+
 namespace Render::GL {
 
 namespace CameraDefaults {
@@ -102,6 +104,11 @@ public:
   [[nodiscard]] auto is_in_frustum(const QVector3D& center, float radius) const -> bool;
 
 private:
+  struct FrustumPlane {
+    QVector3D normal;
+    float distance{0.0F};
+  };
+
   QVector3D m_position{0.0F, 0.0F, 0.0F};
   QVector3D m_target{0.0F, 0.0F, -1.0F};
   QVector3D m_up{0.0F, 1.0F, 0.0F};
@@ -139,7 +146,15 @@ private:
   float m_orbit_time = 0.0F;
   float m_orbit_duration = 0.12F;
 
+  mutable QMatrix4x4 m_cached_view;
+  mutable QMatrix4x4 m_cached_projection;
+  mutable QMatrix4x4 m_cached_view_projection;
+  mutable std::array<FrustumPlane, 6> m_cached_frustum{};
+  mutable bool m_cached_geometry_dirty{true};
+
   void update_vectors();
+  void invalidate_cached_geometry() noexcept { m_cached_geometry_dirty = true; }
+  void rebuild_cached_geometry() const;
 
   void clamp_above_ground();
   static void

@@ -87,11 +87,9 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-
-  auto vis_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const auto* vis_snapshot = renderer.static_world_visibility_filter_enabled()
+                                 ? renderer.submission_visibility().snapshot()
+                                 : nullptr;
 
   TerrainSurfaceCmd::VisibilityResources vis_res;
   if (vis_snapshot != nullptr) {
@@ -110,12 +108,25 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
+    if (surface.kind == WaterSurfaceKind::River) {
+      const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                                ? SubmissionFogMode::Revealed
+                                : SubmissionFogMode::Ignore;
+      if (!renderer.submission_visibility().accepts_segment(
+              surface.visibility_start,
+              surface.visibility_end,
+              m_tile_size,
+              fog_mode)) {
+        continue;
+      }
+    }
+
     if (vis_snapshot != nullptr && surface.kind == WaterSurfaceKind::River) {
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
               (surface.visibility_end - surface.visibility_start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot.get(),
+          vis_snapshot,
           surface.visibility_start,
           surface.visibility_end,
           vis_opts);

@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "app/core/minimap_manager.h"
 #include "app/core/runtime_frame_orchestrator.h"
@@ -63,7 +66,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
                       entity_cache,
                       nullptr,
                       QString(),
-                      0.016F,
+                      1.0F / 60.0F,
                       FrameUpdateCallbacks{.on_minimap_image_changed =
                                                [&]() {
                                                  EXPECT_TRUE(simulation_ran);
@@ -73,6 +76,89 @@ TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
 
   EXPECT_TRUE(simulation_ran);
   EXPECT_EQ(minimap_notifications, 1);
+}
+
+TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
+  Engine::Core::World world;
+  RuntimeFrameOrchestrator orchestrator;
+  RuntimeFrameState state;
+  EntityCache entity_cache;
+  std::vector<float> steps;
+  const auto simulation_step = [&](float dt) {
+    steps.push_back(dt);
+  };
+
+  orchestrator.update(AppSceneContext{.world = &world},
+                      state,
+                      entity_cache,
+                      nullptr,
+                      QString(),
+                      0.01F,
+                      {},
+                      simulation_step);
+  EXPECT_TRUE(steps.empty());
+
+  orchestrator.update(AppSceneContext{.world = &world},
+                      state,
+                      entity_cache,
+                      nullptr,
+                      QString(),
+                      0.01F,
+                      {},
+                      simulation_step);
+  ASSERT_EQ(steps.size(), 1U);
+  EXPECT_NEAR(steps.front(), 1.0F / 60.0F, 0.000001F);
+
+  orchestrator.update(AppSceneContext{.world = &world},
+                      state,
+                      entity_cache,
+                      nullptr,
+                      QString(),
+                      0.05F,
+                      {},
+                      simulation_step);
+  EXPECT_EQ(steps.size(), 4U);
+  EXPECT_TRUE(std::all_of(steps.begin(), steps.end(), [](float step) {
+    return std::abs(step - 1.0F / 60.0F) < 0.000001F;
+  }));
+}
+
+TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* unit = add_unit(world, 1.0F, 1.0F, 1);
+  ASSERT_NE(unit, nullptr);
+
+  MinimapManager minimap_manager;
+  minimap_manager.generate_for_map(make_test_map());
+  (void)minimap_manager.consume_dirty_flag();
+
+  RuntimeFrameOrchestrator orchestrator;
+  RuntimeFrameState state{.local_owner_id = 1};
+  EntityCache entity_cache;
+  int minimap_notifications = 0;
+  const AppSceneContext scene{.world = &world, .minimap_manager = &minimap_manager};
+  const FrameUpdateCallbacks callbacks{.on_minimap_image_changed = [&]() {
+    ++minimap_notifications;
+  }};
+
+  orchestrator.update(
+      scene, state, entity_cache, nullptr, QString(), 0.016F, callbacks, [](float) {});
+  EXPECT_EQ(minimap_notifications, 1);
+
+  auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 2.0F;
+
+  for (int frame = 0; frame < 3; ++frame) {
+    orchestrator.update(
+        scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, [](float) {});
+  }
+  EXPECT_EQ(minimap_notifications, 1);
+
+  orchestrator.update(
+      scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, [](float) {});
+  EXPECT_EQ(minimap_notifications, 2);
 }
 
 TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {

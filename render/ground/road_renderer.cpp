@@ -107,11 +107,9 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-
-  auto vis_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const auto* vis_snapshot = renderer.static_world_visibility_filter_enabled()
+                                 ? renderer.submission_visibility().snapshot()
+                                 : nullptr;
 
   TerrainSurfaceCmd::VisibilityResources vis_res;
   if (vis_snapshot != nullptr) {
@@ -132,13 +130,21 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
+    const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+                              ? SubmissionFogMode::Revealed
+                              : SubmissionFogMode::Ignore;
+    if (!renderer.submission_visibility().accepts_segment(
+            segment.start, segment.end, segment.width, fog_mode)) {
+      continue;
+    }
+
     if (vis_snapshot != nullptr) {
       Ground::LinearFeatureVisibilityOptions vis_opts;
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
               (segment.end - segment.start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot.get(), segment.start, segment.end, vis_opts);
+          vis_snapshot, segment.start, segment.end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }

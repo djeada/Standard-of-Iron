@@ -390,7 +390,8 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
       contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 20"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderRpgHudAddsModernCombatFeedbackEffects) {
+TEST(CommanderControlRegressionTest,
+     CommanderRpgHudUsesLocalizedCombatFeedbackWithoutFullscreenFlashes) {
   const auto root = find_repo_root();
   const auto fpv_overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
   const auto damage_numbers_source =
@@ -405,11 +406,25 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudAddsModernCombatFeedbackEffe
   EXPECT_TRUE(contains(fpv_overlay_source, "id: attackSweep"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: dodgeTrail"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: guardBreakShock"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: perfectGuardFlash\n        anchors.centerIn: parent"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: combatEntryFlash\n        anchors.centerIn: parent"));
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "id: guardBreakShock\n        anchors.centerIn: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: perfectGuardFlash\n        anchors.fill: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: combatEntryFlash\n        anchors.fill: parent"));
+  EXPECT_FALSE(contains(fpv_overlay_source,
+                        "id: guardBreakShock\n        anchors.fill: parent"));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"F\""));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"2\""));
-  EXPECT_TRUE(contains(damage_numbers_source, "property real impactFlashOpacity"));
-  EXPECT_TRUE(contains(damage_numbers_source, "id: impactFlashDecay"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: burstCore"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: effectLayer"));
+  EXPECT_FALSE(contains(damage_numbers_source, "impactFlashOpacity"));
+  EXPECT_FALSE(contains(damage_numbers_source, "impactFlashDecay"));
 }
 
 TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGameplay) {

@@ -12,6 +12,7 @@
 #include "../../humanoid/facial_hair_catalog.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
+#include "../runtime_bake_guard.h"
 #include "animation/selection_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -147,6 +148,13 @@ auto guard_shield_archetype(Render::Creature::ArchetypeId base_archetype,
   auto const* base_desc = registry.get(base_archetype);
   if (base_desc == nullptr || base_desc->bake_attachment_count == 0U) {
     cache.emplace(cache_key, base_archetype);
+    return base_archetype;
+  }
+
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::StaticArchetypeBuild,
+        base_desc->debug_name + guard_pose_suffix(pose));
     return base_archetype;
   }
 

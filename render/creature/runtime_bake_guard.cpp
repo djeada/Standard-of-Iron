@@ -2,6 +2,14 @@
 
 #include <atomic>
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+#include <QDebug>
+
+#include <mutex>
+#include <string>
+#include <unordered_set>
+#endif
+
 namespace Render::Creature {
 
 namespace {
@@ -39,14 +47,28 @@ auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_
     return "skin_ubo_upload";
   case RuntimeBakeOperation::CreatureSubmitMiss:
     return "creature_submit_miss";
+  case RuntimeBakeOperation::StaticArchetypeBuild:
+    return "static_archetype_build";
   }
   return "unknown";
 }
 
 void report_runtime_bake_violation(RuntimeBakeOperation operation,
                                    std::string_view detail) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+  static std::mutex mutex;
+  static std::unordered_set<std::string> reported;
+  const std::string key = std::string(runtime_bake_operation_name(operation)) + ":" +
+                          std::string(detail);
+  std::lock_guard<std::mutex> const lock(mutex);
+  if (reported.emplace(key).second) {
+    qCritical().noquote() << "Forbidden render-time bake:"
+                          << QString::fromStdString(key);
+  }
+#else
   (void)operation;
   (void)detail;
+#endif
 }
 
 } // namespace Render::Creature

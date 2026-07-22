@@ -62,6 +62,34 @@ The `--duration` option can shorten a diagnostic run, but the catalog defaults
 should be used for acceptance runs because contact and retargeting expectations
 need time to complete.
 
+## Temporal render continuity contract
+
+`render_continuity` is the focused regression scenario for intermittent bright
+frames and formation-member popping. It keeps the camera fixed, selects Ultra
+through the normal graphics-settings path, disables UI overlays and terrain
+scatter, and drives infantry, archers, cavalry, healers, missiles, and combat
+effects at the same time:
+
+```bash
+build-debug/bin/arena_app \
+  --batch \
+  --scenario render_continuity \
+  --fps 60 \
+  --seed 1337 \
+  --artifact-dir artifacts/render-continuity
+```
+
+This contract is Debug-only because per-soldier submission tracing is compiled
+only into Debug builds. It reads the actual OpenGL framebuffer on every fixed
+simulation frame and fails when a scene-wide luminance jump returns to its
+baseline within two frames. It separately tracks each living formation member
+and fails on visible-to-culled transitions, missing soldier samples, or an entire
+unit disappearing before submission. The report includes the entity, soldier,
+and exact frustum, fog, billboard, or temporal cull reason; the batch runner also
+captures `failure_frame.png` at the first detected failure. The scenario does not
+use Arena's force-full override, so it also proves that Ultra itself disables
+formation-count reduction, minimal meshes, billboards, and temporal LOD shedding.
+
 ## Campaign terrain review
 
 Arena can render production campaign maps as terrain-only review scenes. This

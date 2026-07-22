@@ -13,13 +13,13 @@
 #include <optional>
 #include <vector>
 
+#include "arena_scenario.h"
 #include "game/core/component.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
-#include "arena_scenario.h"
 
 namespace Engine::Core {
 class World;
@@ -41,6 +41,10 @@ namespace Arena {
 class ArenaScenarioRunner;
 struct ArenaScenarioReport;
 } // namespace Arena
+
+namespace Render::Profiling {
+class FrameContinuityAnalyzer;
+} // namespace Render::Profiling
 
 namespace Render::GL {
 class Renderer;
@@ -118,8 +122,8 @@ public slots:
                                              QString* error = nullptr) -> bool;
   void set_terrain_review_overview_camera();
   void set_terrain_review_gameplay_camera();
-  [[nodiscard]] auto terrain_review_definition() const
-      -> const Game::Map::MapDefinition*;
+  [[nodiscard]] auto
+  terrain_review_definition() const -> const Game::Map::MapDefinition*;
   void apply_visual_overrides_to_selection();
   void set_animation_name(const QString& animation_name);
   void play_selected_animation();
@@ -240,6 +244,7 @@ private:
   void capture_attack_scrub_anchor();
   void apply_attack_scrub_override();
   void set_force_full_creature_lod(bool enabled);
+  void sample_frame_continuity();
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -322,6 +327,8 @@ private:
   float m_attack_scrub_offset = 0.0F;
   bool m_attack_scrub_finisher = false;
   std::unique_ptr<Arena::ArenaScenarioRunner> m_scenario_runner;
+  std::unique_ptr<Render::Profiling::FrameContinuityAnalyzer>
+      m_frame_continuity_analyzer;
   float m_batch_fixed_step = 0.0F;
   float m_scenario_duration_override = 0.0F;
   std::size_t m_last_scenario_issue_revision = 0U;

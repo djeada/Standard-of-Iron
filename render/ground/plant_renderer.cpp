@@ -18,6 +18,7 @@
 #include "map/terrain_service.h"
 #include "scatter_composition.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 #include "spawn_validator.h"
 
 namespace {
@@ -73,8 +74,11 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const auto visible_count = Scatter::sync_filtered_state(
       m_plant_state, [](const PlantInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_scale;
-      });
-  if (visible_count == 0 || !m_plant_state.instance_buffer) {
+      },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -82,10 +86,8 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Plant;
-  cmd.instance_buffer = m_plant_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.plant = params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_plant_state, cmd);
 }
 
 void PlantRenderer::clear() {

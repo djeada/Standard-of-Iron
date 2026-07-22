@@ -14,6 +14,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "render/graphics_settings.h"
 
 namespace Engine::Core {
 class World;
@@ -120,6 +121,9 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoRootTeleport,
   NoUnexpectedFallPose,
   NoLimbOverextension,
+  NoRenderVisibilityChurn,
+  FullCreatureDetailOnly,
+  NoFullscreenFlash,
   MovementIsContinuous,
   FormationOrderPreserved,
   FormationEngagementIsStable,
@@ -186,6 +190,7 @@ struct ArenaScenarioDefinition {
   bool suppress_ui_overlays{false};
   bool force_full_creature_lod{true};
   bool collect_animation_diagnostics{true};
+  Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;
@@ -264,6 +269,7 @@ public:
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
   void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);
+  void report_external_issue(QString code, QString message);
   void set_duration_limit(float duration_seconds);
 
   [[nodiscard]] auto definition() const noexcept -> const ArenaScenarioDefinition&;

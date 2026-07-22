@@ -122,6 +122,12 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("NoUnexpectedFallPose");
   case ArenaExpectationKind::NoLimbOverextension:
     return QStringLiteral("NoLimbOverextension");
+  case ArenaExpectationKind::NoRenderVisibilityChurn:
+    return QStringLiteral("NoRenderVisibilityChurn");
+  case ArenaExpectationKind::FullCreatureDetailOnly:
+    return QStringLiteral("FullCreatureDetailOnly");
+  case ArenaExpectationKind::NoFullscreenFlash:
+    return QStringLiteral("NoFullscreenFlash");
   case ArenaExpectationKind::MovementIsContinuous:
     return QStringLiteral("MovementIsContinuous");
   case ArenaExpectationKind::FormationOrderPreserved:
@@ -346,6 +352,8 @@ struct ArenaScenarioRunner::Impl {
     bool culled{false};
     bool attacking{false};
     bool completed_attack_phase{false};
+    bool ever_visible{false};
+    bool alive{false};
   };
 
   struct TraceUnit {
@@ -396,6 +404,7 @@ struct ArenaScenarioRunner::Impl {
     float attack_phase{0.0F};
     std::uint32_t transitions{0};
     bool culled{false};
+    QString cull_reason;
   };
 
   struct TraceFrame {
@@ -422,6 +431,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<Engine::Core::EntityID, CommandResponse> responses;
   QHash<Engine::Core::EntityID, EntityState> entity_states;
   QHash<std::uint64_t, SoldierState> soldier_states;
+  QHash<Engine::Core::EntityID, QSet<int>> sampled_soldiers_by_entity;
+  QSet<Engine::Core::EntityID> entities_with_render_samples;
   QHash<Engine::Core::EntityID, float> idle_since;
   QHash<QString, bool> visible_attacks;
   QHash<QString, bool> visible_movement;
@@ -1330,9 +1341,35 @@ struct ArenaScenarioRunner::Impl {
             : nullptr;
     auto const* debug =
         Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(entity_id);
+    const bool verify_render_continuity = std::any_of(
+        scenario.expectations.begin(),
+        scenario.expectations.end(),
+        [&](const ArenaExpectation& expectation) {
+          return expectation.kind == ArenaExpectationKind::NoRenderVisibilityChurn &&
+                 expectation_active(expectation) && applies_to(expectation, group);
+        });
     if (debug == nullptr) {
+      const auto previous_samples = sampled_soldiers_by_entity.value(entity_id);
+      const bool had_living_render_sample = std::any_of(
+          previous_samples.begin(), previous_samples.end(), [&](int soldier_index) {
+            const auto state =
+                soldier_states.constFind(soldier_key(entity_id, soldier_index));
+            return state != soldier_states.cend() && state->alive;
+          });
+      if (verify_render_continuity && entity_alive(entity_id) &&
+          entities_with_render_samples.contains(entity_id) &&
+          had_living_render_sample) {
+        add_issue(QStringLiteral("unit_submission_disappeared"),
+                  QStringLiteral("%1 entity %2 disappeared before per-soldier "
+                                 "submission diagnostics")
+                      .arg(group)
+                      .arg(entity_id),
+                  entity_id);
+      }
       return;
     }
+    entities_with_render_samples.insert(entity_id);
+    QSet<int> sampled_this_frame;
     bool const formation_fight_active =
         presentation != nullptr && presentation->melee_ordered &&
         presentation->target_alive &&
@@ -1351,6 +1388,7 @@ struct ArenaScenarioRunner::Impl {
     QSet<int> attack_phase_bins;
     int visible_attack_count = 0;
     for (auto const& soldier : debug->soldiers) {
+      sampled_this_frame.insert(soldier.soldier_index);
       Engine::Core::FormationSoldierPresentation const* directive = nullptr;
       if (presentation != nullptr && soldier.soldier_index >= 0) {
         auto const slot = static_cast<std::size_t>(soldier.soldier_index);
@@ -1422,9 +1460,15 @@ struct ArenaScenarioRunner::Impl {
                Render::Profiling::soldier_visual_state_name(soldier.visual_state)),
            soldier.attack_phase,
            soldier.transitions_last_second,
-           culled});
+           culled,
+           QString::fromLatin1(
+               Render::Profiling::soldier_cull_reason_name(soldier.cull_reason))});
 
       std::uint64_t const key = soldier_key(entity_id, soldier.soldier_index);
+      const bool continuity_alive =
+          soldier.visual_state != Render::Profiling::SoldierVisualState::Dying &&
+          soldier.visual_state != Render::Profiling::SoldierVisualState::Dead &&
+          (directive == nullptr || directive->alive);
       if (directive != nullptr && directive->alive) {
         living_soldiers_by_group[group].insert(key);
         if (directive->action == Engine::Core::FormationSoldierAction::MeleeEngaged) {
@@ -1432,6 +1476,23 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       auto& previous = soldier_states[key];
+      if (verify_render_continuity && continuity_alive && culled &&
+          previous.ever_visible && (!previous.initialized || !previous.culled)) {
+        add_issue(
+            QStringLiteral("soldier_submission_disappeared"),
+            QStringLiteral("%1 entity %2 soldier %3 changed from submitted to "
+                           "culled (%4)")
+                .arg(group)
+                .arg(entity_id)
+                .arg(soldier.soldier_index)
+                .arg(QString::fromLatin1(
+                    Render::Profiling::soldier_cull_reason_name(soldier.cull_reason))),
+            entity_id,
+            soldier.soldier_index);
+      }
+      if (!culled) {
+        previous.ever_visible = true;
+      }
       if ((observed_attack && (!previous.initialized || !previous.attacking)) ||
           soldier.attack_phase_reset) {
         ++attack_entries_by_soldier[key];
@@ -1472,6 +1533,29 @@ struct ArenaScenarioRunner::Impl {
                         .arg(soldier.transitions_last_second),
                     entity_id,
                     soldier.soldier_index);
+        }
+        if (expectation.kind == ArenaExpectationKind::FullCreatureDetailOnly &&
+            continuity_alive) {
+          const bool lod_shed =
+              soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard ||
+              soldier.cull_reason == Render::Profiling::SoldierCullReason::Temporal;
+          const bool reduced_visible_mesh =
+              !culled && soldier.lod != static_cast<std::uint8_t>(
+                                            Render::Creature::CreatureLOD::Full);
+          if (lod_shed || reduced_visible_mesh) {
+            add_issue(QStringLiteral("ultra_creature_lod_used"),
+                      QStringLiteral("%1 entity %2 soldier %3 used LOD %4 (%5) while "
+                                     "full creature detail was required")
+                          .arg(group)
+                          .arg(entity_id)
+                          .arg(soldier.soldier_index)
+                          .arg(static_cast<int>(soldier.lod))
+                          .arg(QString::fromLatin1(
+                              Render::Profiling::soldier_cull_reason_name(
+                                  soldier.cull_reason))),
+                      entity_id,
+                      soldier.soldier_index);
+          }
         }
         if (expectation.kind == ArenaExpectationKind::NoRootTeleport &&
             previous.initialized && !previous.culled && !culled &&
@@ -1621,7 +1705,36 @@ struct ArenaScenarioRunner::Impl {
       previous.initialized = true;
       previous.culled = culled;
       previous.attacking = observed_attack;
+      previous.alive = continuity_alive;
     }
+
+    if (verify_render_continuity) {
+      const auto previous_samples = sampled_soldiers_by_entity.value(entity_id);
+      for (int soldier_index : previous_samples) {
+        if (sampled_this_frame.contains(soldier_index)) {
+          continue;
+        }
+        const auto previous =
+            soldier_states.constFind(soldier_key(entity_id, soldier_index));
+        bool still_alive = previous != soldier_states.cend() && previous->alive;
+        if (presentation != nullptr && soldier_index >= 0) {
+          const auto slot = static_cast<std::size_t>(soldier_index);
+          still_alive = still_alive && slot < presentation->soldiers.size() &&
+                        presentation->soldiers[slot].alive;
+        }
+        if (still_alive) {
+          add_issue(QStringLiteral("soldier_submission_missing"),
+                    QStringLiteral("%1 entity %2 soldier %3 vanished from the "
+                                   "render sample set")
+                        .arg(group)
+                        .arg(entity_id)
+                        .arg(soldier_index),
+                    entity_id,
+                    soldier_index);
+        }
+      }
+    }
+    sampled_soldiers_by_entity[entity_id] = std::move(sampled_this_frame);
     bool const small_group_staggered =
         visible_attack_count >= 2 && visible_attack_count < 8 &&
         maximum_attack_phase - minimum_attack_phase >= 0.02F;
@@ -2064,6 +2177,12 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::NoRenderVisibilityChurn:
+      case ArenaExpectationKind::FullCreatureDetailOnly:
+      case ArenaExpectationKind::NoFullscreenFlash:
+        // These temporal contracts are checked during rendered-frame
+        // observation, when the transition evidence is still available.
+        break;
       default:
         break;
       }
@@ -2170,6 +2289,13 @@ void ArenaScenarioRunner::observe_rendered_frame(
     m_impl->observe_bridge_centerline_alignment(group.name);
   }
   m_impl->trace.push_back(std::move(frame));
+}
+
+void ArenaScenarioRunner::report_external_issue(QString code, QString message) {
+  if (!m_impl->started || m_impl->complete) {
+    return;
+  }
+  m_impl->add_issue(std::move(code), std::move(message));
 }
 
 void ArenaScenarioRunner::set_duration_limit(float duration_seconds) {
@@ -2326,7 +2452,8 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("attack_phase"), soldier.attack_phase},
           {QStringLiteral("transitions_last_second"),
            static_cast<qint64>(soldier.transitions)},
-          {QStringLiteral("culled"), soldier.culled}});
+          {QStringLiteral("culled"), soldier.culled},
+          {QStringLiteral("cull_reason"), soldier.cull_reason}});
     }
     QJsonObject const line{
         {QStringLiteral("time_seconds"), frame.time_seconds},

@@ -13,7 +13,8 @@ enum class RuntimeBakeOperation : std::uint8_t {
   SnapshotMeshLoad,
   SkinAtlasBuild,
   SkinUboUpload,
-  CreatureSubmitMiss
+  CreatureSubmitMiss,
+  StaticArchetypeBuild
 };
 
 void set_runtime_bake_forbidden(bool forbidden) noexcept;

@@ -399,9 +399,9 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
   switch (ground_type) {
   case GroundType::ForestMud:
 
-    settings.grass_primary = QVector3D(0.26F, 0.52F, 0.24F);
-    settings.grass_secondary = QVector3D(0.38F, 0.61F, 0.28F);
-    settings.grass_dry = QVector3D(0.72F, 0.66F, 0.48F);
+    settings.grass_primary = QVector3D(0.28F, 0.58F, 0.26F);
+    settings.grass_secondary = QVector3D(0.40F, 0.68F, 0.30F);
+    settings.grass_dry = QVector3D(0.76F, 0.70F, 0.48F);
     settings.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
     settings.rock_low = QVector3D(0.48F, 0.46F, 0.44F);
     settings.rock_high = QVector3D(0.68F, 0.69F, 0.73F);
@@ -434,15 +434,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.70F;
     settings.crack_intensity = 0.0F;
     settings.rock_exposure = 0.25F;
-    settings.grass_saturation = 0.92F;
+    settings.grass_saturation = 1.10F;
     settings.soil_roughness = 0.55F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::GrassDry:
 
-    settings.grass_primary = QVector3D(0.52F, 0.48F, 0.29F);
-    settings.grass_secondary = QVector3D(0.58F, 0.54F, 0.34F);
+    settings.grass_primary = QVector3D(0.54F, 0.56F, 0.30F);
+    settings.grass_secondary = QVector3D(0.60F, 0.62F, 0.35F);
     settings.grass_dry = QVector3D(0.78F, 0.72F, 0.45F);
     settings.soil_color = QVector3D(0.52F, 0.44F, 0.32F);
     settings.rock_low = QVector3D(0.62F, 0.58F, 0.52F);
@@ -476,15 +476,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.15F;
     settings.crack_intensity = 0.65F;
     settings.rock_exposure = 0.35F;
-    settings.grass_saturation = 0.75F;
+    settings.grass_saturation = 0.90F;
     settings.soil_roughness = 0.72F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::SoilRocky:
 
-    settings.grass_primary = QVector3D(0.36F, 0.40F, 0.25F);
-    settings.grass_secondary = QVector3D(0.43F, 0.47F, 0.29F);
+    settings.grass_primary = QVector3D(0.38F, 0.46F, 0.27F);
+    settings.grass_secondary = QVector3D(0.45F, 0.54F, 0.31F);
     settings.grass_dry = QVector3D(0.58F, 0.52F, 0.38F);
     settings.soil_color = QVector3D(0.55F, 0.48F, 0.38F);
     settings.rock_low = QVector3D(0.52F, 0.50F, 0.46F);
@@ -518,15 +518,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.35F;
     settings.crack_intensity = 0.25F;
     settings.rock_exposure = 0.75F;
-    settings.grass_saturation = 0.85F;
+    settings.grass_saturation = 1.00F;
     settings.soil_roughness = 0.85F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
 
   case GroundType::AlpineMix:
 
-    settings.grass_primary = QVector3D(0.29F, 0.36F, 0.27F);
-    settings.grass_secondary = QVector3D(0.34F, 0.41F, 0.32F);
+    settings.grass_primary = QVector3D(0.31F, 0.42F, 0.29F);
+    settings.grass_secondary = QVector3D(0.36F, 0.48F, 0.34F);
     settings.grass_dry = QVector3D(0.50F, 0.48F, 0.42F);
     settings.soil_color = QVector3D(0.42F, 0.40F, 0.38F);
     settings.rock_low = QVector3D(0.58F, 0.60F, 0.64F);
@@ -560,15 +560,15 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.45F;
     settings.crack_intensity = 0.10F;
     settings.rock_exposure = 0.60F;
-    settings.grass_saturation = 0.80F;
+    settings.grass_saturation = 0.95F;
     settings.soil_roughness = 0.62F;
     settings.snow_color = QVector3D(0.94F, 0.96F, 1.0F);
     break;
 
   case GroundType::SoilFertile:
 
-    settings.grass_primary = QVector3D(0.22F, 0.49F, 0.20F);
-    settings.grass_secondary = QVector3D(0.31F, 0.58F, 0.27F);
+    settings.grass_primary = QVector3D(0.24F, 0.56F, 0.22F);
+    settings.grass_secondary = QVector3D(0.33F, 0.65F, 0.29F);
     settings.grass_dry = QVector3D(0.52F, 0.48F, 0.32F);
     settings.soil_color = QVector3D(0.20F, 0.16F, 0.12F);
     settings.rock_low = QVector3D(0.38F, 0.36F, 0.34F);
@@ -602,7 +602,7 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
     settings.moisture_level = 0.80F;
     settings.crack_intensity = 0.0F;
     settings.rock_exposure = 0.12F;
-    settings.grass_saturation = 0.94F;
+    settings.grass_saturation = 1.10F;
     settings.soil_roughness = 0.42F;
     settings.snow_color = QVector3D(0.92F, 0.94F, 0.98F);
     break;
@@ -859,6 +859,8 @@ public:
   void add_lakes(const std::vector<Lake>& lakes);
 
   [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
+
+  [[nodiscard]] auto get_base_height_at(float world_x, float world_z) const -> float;
 
   [[nodiscard]] auto get_height_at_grid(int grid_x, int grid_z) const -> float;
 

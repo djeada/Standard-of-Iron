@@ -135,7 +135,9 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/models/minimap_image_provider.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/profiling_hud.h"
+#endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
@@ -466,6 +468,12 @@ auto main(int argc, char* argv[]) -> int {
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 
+  QString direct_campaign_mission;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+  double runtime_benchmark_seconds = 0.0;
+  QString runtime_benchmark_output;
+#endif
+
   {
     QCommandLineParser parser;
     parser.setApplicationDescription("Standard of Iron");
@@ -480,10 +488,68 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineOption const renderer_self_test_opt(
         "renderer-self-test",
         "Show the gameplay view, render and present one frame, then exit.");
+    QCommandLineOption const graphics_preset_opt(
+        "graphics-preset",
+        "Override the complete graphics preset: low | medium | high | ultra.",
+        "preset");
+    QCommandLineOption const campaign_mission_opt(
+        "campaign-mission",
+        "Start a campaign mission directly (campaign_id/mission_id).",
+        "path");
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    QCommandLineOption const benchmark_seconds_opt(
+        "benchmark-seconds",
+        "Measure the directly started mission after a two-second warm-up, then exit.",
+        "seconds");
+    QCommandLineOption const benchmark_output_opt(
+        "benchmark-output",
+        "Write the runtime benchmark JSON report to this path.",
+        "path");
+#endif
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
+    parser.addOption(graphics_preset_opt);
+    parser.addOption(campaign_mission_opt);
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    parser.addOption(benchmark_seconds_opt);
+    parser.addOption(benchmark_output_opt);
+#endif
     parser.process(app);
+
+    if (parser.isSet(graphics_preset_opt)) {
+      const QString preset = parser.value(graphics_preset_opt).trimmed().toLower();
+      auto& gfx = Render::GraphicsSettings::instance();
+      if (preset == QStringLiteral("low")) {
+        gfx.set_quality(Render::GraphicsQuality::Low);
+      } else if (preset == QStringLiteral("medium")) {
+        gfx.set_quality(Render::GraphicsQuality::Medium);
+      } else if (preset == QStringLiteral("high")) {
+        gfx.set_quality(Render::GraphicsQuality::High);
+      } else if (preset == QStringLiteral("ultra")) {
+        gfx.set_quality(Render::GraphicsQuality::Ultra);
+      } else {
+        qWarning() << "Unknown --graphics-preset value:" << preset;
+      }
+    }
+
+    direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    bool benchmark_seconds_valid = false;
+    runtime_benchmark_seconds =
+        parser.value(benchmark_seconds_opt).toDouble(&benchmark_seconds_valid);
+    if (!benchmark_seconds_valid || runtime_benchmark_seconds < 0.0) {
+      runtime_benchmark_seconds = 0.0;
+    }
+    runtime_benchmark_output = parser.value(benchmark_output_opt).trimmed();
+    if (runtime_benchmark_seconds > 0.0) {
+      qputenv("SOI_RUNTIME_BENCHMARK_SECONDS",
+              QByteArray::number(runtime_benchmark_seconds, 'f', 3));
+      if (!runtime_benchmark_output.isEmpty()) {
+        qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
+      }
+    }
+#endif
 
     std::optional<Render::ShaderQuality> requested;
     if (parser.isSet(quality_opt)) {
@@ -567,8 +633,10 @@ auto main(int argc, char* argv[]) -> int {
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
+#endif
 
   QObject::connect(
       game_engine.get(),
@@ -634,6 +702,31 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Setting window in GameEngine...";
   game_engine->setWindow(window);
   qInfo() << "Window set successfully";
+
+  if (!direct_campaign_mission.isEmpty()) {
+    if (!root_obj->setProperty("game_started", true) ||
+        !root_obj->setProperty("menu_visible", false)) {
+      qCritical() << "Could not expose GameView for direct campaign mission";
+      return 10;
+    }
+    auto* gl_view = root_obj->findChild<GLView*>();
+    if (gl_view == nullptr) {
+      qCritical() << "Could not find gameplay GLView for direct campaign mission";
+      return 10;
+    }
+    QObject::connect(
+        gl_view,
+        &GLView::renderer_ready,
+        &app,
+        [game_engine_ptr = game_engine.get(), direct_campaign_mission]() {
+          qInfo() << "Starting campaign mission directly:"
+                  << direct_campaign_mission;
+          game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+        },
+        Qt::QueuedConnection);
+    window->show();
+    window->update();
+  }
 
   qInfo() << "Connecting scene graph signals...";
   qInfo() << "Connecting scene graph signals...";

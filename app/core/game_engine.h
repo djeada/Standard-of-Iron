@@ -426,6 +426,8 @@ private:
     qreal last_cursor_x = -1.0;
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
+    float minimap_unit_update_accumulator = 0.0F;
+    float simulation_accumulator = 0.0F;
   };
   using PendingMissionWave = App::Core::PendingMissionWave;
   enum class PlayerControlMode {

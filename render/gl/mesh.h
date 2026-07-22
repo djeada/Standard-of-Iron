@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QOpenGLFunctions_3_3_Core>
+#include <QVector3D>
 
 #include <array>
 #include <cstdint>
@@ -43,6 +44,12 @@ public:
   [[nodiscard]] auto get_indices() const -> const std::vector<unsigned int>& {
     return m_indices;
   }
+  [[nodiscard]] auto bounds_center() const noexcept -> const QVector3D& {
+    return m_bounds_center;
+  }
+  [[nodiscard]] auto bounds_radius() const noexcept -> float {
+    return m_bounds_radius;
+  }
 
   [[nodiscard]] auto clone_with_filtered_indices(
       const std::function<
@@ -75,6 +82,8 @@ public:
 private:
   std::vector<Vertex> m_vertices;
   std::vector<unsigned int> m_indices;
+  QVector3D m_bounds_center;
+  float m_bounds_radius = 0.0F;
 
   std::unique_ptr<VertexArray> m_vao;
   std::unique_ptr<Buffer> m_vbo;

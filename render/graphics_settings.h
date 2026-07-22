@@ -53,6 +53,11 @@ struct VisibilityBudget {
   bool enabled;
 };
 
+struct ContactShadowBudget {
+  int max_casters;
+  int max_casters_per_formation;
+};
+
 class GraphicsSettings {
 public:
   static auto instance() noexcept -> GraphicsSettings& {
@@ -81,6 +86,19 @@ public:
 
   [[nodiscard]] auto visibility_budget() const noexcept -> const VisibilityBudget& {
     return m_visibility_budget;
+  }
+
+  [[nodiscard]] auto
+  contact_shadow_budget() const noexcept -> const ContactShadowBudget& {
+    return m_contact_shadow_budget;
+  }
+
+  // Ultra is a fidelity contract, not a looser set of distance thresholds.
+  // Every submission layer uses this policy so formation-count reduction,
+  // minimal meshes, billboards, and temporal LOD shedding cannot re-enter
+  // through an independent renderer path.
+  [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
+    return m_quality != GraphicsQuality::Ultra;
   }
 
   [[nodiscard]] auto
@@ -188,6 +206,7 @@ private:
                            .batching_zoom_start = 0.0F,
                            .batching_zoom_full = 0.0F};
       m_visibility_budget = {.max_full_detail_units = 150, .enabled = true};
+      m_contact_shadow_budget = {.max_casters = 4, .max_casters_per_formation = 1};
       break;
 
     case GraphicsQuality::Medium:
@@ -217,6 +236,7 @@ private:
                            .batching_zoom_start = 60.0F,
                            .batching_zoom_full = 90.0F};
       m_visibility_budget = {.max_full_detail_units = 300, .enabled = true};
+      m_contact_shadow_budget = {.max_casters = 6, .max_casters_per_formation = 2};
       break;
 
     case GraphicsQuality::High:
@@ -246,6 +266,7 @@ private:
                            .batching_zoom_start = 80.0F,
                            .batching_zoom_full = 120.0F};
       m_visibility_budget = {.max_full_detail_units = 900, .enabled = true};
+      m_contact_shadow_budget = {.max_casters = 8, .max_casters_per_formation = 2};
       break;
 
     case GraphicsQuality::Ultra:
@@ -275,6 +296,7 @@ private:
                            .batching_zoom_start = 999999.0F,
                            .batching_zoom_full = 999999.0F};
       m_visibility_budget = {.max_full_detail_units = 5000, .enabled = false};
+      m_contact_shadow_budget = {.max_casters = 8, .max_casters_per_formation = 2};
       break;
     }
   }
@@ -296,6 +318,7 @@ private:
   GraphicsFeatures m_features{};
   BatchingConfig m_batching_config{};
   VisibilityBudget m_visibility_budget{};
+  ContactShadowBudget m_contact_shadow_budget{};
 };
 
 } // namespace Render

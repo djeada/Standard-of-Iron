@@ -37,6 +37,7 @@ endif()
 
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
     if(MSVC)
         # MSVC Debug flags
         set(CMAKE_CXX_FLAGS_DEBUG "/Od /Zi /DDEBUG")

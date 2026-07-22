@@ -62,10 +62,13 @@ namespace {
 
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
+#endif
 
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
 void log_render_first_use_once(const char* stage, const QString& detail) {
   if (!render_stage_logging_enabled()) {
     return;
@@ -82,6 +85,7 @@ void log_render_first_use_once(const char* stage, const QString& detail) {
   qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
                            .arg(QString::fromLatin1(stage), detail);
 }
+#endif
 
 } // namespace
 
@@ -91,12 +95,14 @@ Backend::Backend(ShaderQuality quality)
 }
 
 Backend::~Backend() {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (shader_bind_audit_enabled()) {
     qInfo() << "Shader bind audit:";
     for (const QString& line : format_shader_bind_audit()) {
       qInfo().noquote() << line;
     }
   }
+#endif
 
   if (QOpenGLContext::currentContext() == nullptr) {
 
@@ -356,6 +362,9 @@ void Backend::begin_frame() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glDepthMask(GL_TRUE);
+  glDisable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   if (m_cylinder_pipeline) {
     m_cylinder_pipeline->begin_frame();
@@ -402,13 +411,16 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   bool polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
 
   const auto& prepared_batches = queue.prepared_batches();
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   log_render_first_use_once(
       "backend-execute",
       QStringLiteral("first playback has %1 commands and %2 prepared batches")
           .arg(queue.size())
           .arg(prepared_batches.size()));
+#endif
   const bool rigged_instancing_enabled =
       !qEnvironmentVariableIsSet("SOI_RENDER_DISABLE_RIGGED_INSTANCING");
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   const bool debug_rigged = qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_RIGGED");
   std::size_t debug_rigged_batches = 0;
   std::size_t debug_rigged_cmds = 0;
@@ -416,6 +428,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   std::size_t debug_rigged_instanced_successes = 0;
   std::size_t debug_rigged_instanced_failures = 0;
   std::size_t debug_rigged_single_draws = 0;
+#endif
   CommandExecutionContext context{queue,
                                   cam,
                                   view,
@@ -423,13 +436,17 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                                   view_proj,
                                   banner_wind_strength,
                                   polygon_offset_enabled,
-                                  rigged_instancing_enabled,
+                                  rigged_instancing_enabled
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+                                  ,
                                   debug_rigged_batches,
                                   debug_rigged_cmds,
                                   debug_rigged_instanced_attempts,
                                   debug_rigged_instanced_successes,
                                   debug_rigged_instanced_failures,
-                                  debug_rigged_single_draws};
+                                  debug_rigged_single_draws
+#endif
+  };
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
@@ -509,6 +526,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 
     ++batch_index;
   }
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (debug_rigged && debug_rigged_cmds > 0U) {
     qInfo() << "Rigged playback: batches" << debug_rigged_batches << "cmds"
             << debug_rigged_cmds << "single_draws" << debug_rigged_single_draws
@@ -517,6 +535,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
             << debug_rigged_instanced_successes << "instanced_failures"
             << debug_rigged_instanced_failures;
   }
+#endif
   if (m_last_bound_shader != nullptr) {
     m_last_bound_shader->release();
     m_last_bound_shader = nullptr;

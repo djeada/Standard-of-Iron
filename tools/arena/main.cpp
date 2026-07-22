@@ -7,8 +7,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QSurfaceFormat>
 #include <QSet>
+#include <QSurfaceFormat>
 #include <QTextStream>
 #include <QTimer>
 
@@ -25,6 +25,7 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
+#include "render/graphics_settings.h"
 #include "utils/resource_utils.h"
 
 namespace {
@@ -311,6 +312,20 @@ auto parse_time_of_day(const QString& value) -> std::optional<Game::Map::TimeOfD
   return std::nullopt;
 }
 
+auto graphics_quality_name(Render::GraphicsQuality quality) -> QString {
+  switch (quality) {
+  case Render::GraphicsQuality::Low:
+    return QStringLiteral("Low");
+  case Render::GraphicsQuality::Medium:
+    return QStringLiteral("Medium");
+  case Render::GraphicsQuality::High:
+    return QStringLiteral("High");
+  case Render::GraphicsQuality::Ultra:
+    return QStringLiteral("Ultra");
+  }
+  return QStringLiteral("Unknown");
+}
+
 struct TerrainReviewEntry {
   QString id;
   QString map_path;
@@ -318,8 +333,7 @@ struct TerrainReviewEntry {
 
 auto resolve_terrain_review_path(const QString& path) -> QString {
   if (path.startsWith(QStringLiteral(":/"))) {
-    const QString source_candidate =
-        QDir::current().absoluteFilePath(path.mid(2));
+    const QString source_candidate = QDir::current().absoluteFilePath(path.mid(2));
     if (QFileInfo::exists(source_candidate)) {
       return QDir::cleanPath(source_candidate);
     }
@@ -327,11 +341,12 @@ auto resolve_terrain_review_path(const QString& path) -> QString {
   return Utils::Resources::resolve_resource_path(path);
 }
 
-auto campaign_terrain_review_entries(QString* error) -> std::vector<TerrainReviewEntry> {
+auto campaign_terrain_review_entries(QString* error)
+    -> std::vector<TerrainReviewEntry> {
   std::vector<TerrainReviewEntry> entries;
   QSet<QString> seen_maps;
-  const QString campaign_root = resolve_terrain_review_path(
-      QStringLiteral(":/assets/campaigns"));
+  const QString campaign_root =
+      resolve_terrain_review_path(QStringLiteral(":/assets/campaigns"));
   QDir const campaign_dir(campaign_root);
   const QStringList campaign_files =
       campaign_dir.entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name);
@@ -389,8 +404,7 @@ auto write_terrain_review_report(const QString& directory,
       {QStringLiteral("id"), entry.id},
       {QStringLiteral("map_path"), entry.map_path},
       {QStringLiteral("map_name"), definition.name},
-      {QStringLiteral("passed"),
-       overview_saved && gameplay_saved && topology.passed()},
+      {QStringLiteral("passed"), overview_saved && gameplay_saved && topology.passed()},
       {QStringLiteral("grid"),
        QJsonObject{{QStringLiteral("width"), definition.grid.width},
                    {QStringLiteral("height"), definition.grid.height},
@@ -414,7 +428,8 @@ auto write_terrain_review_report(const QString& directory,
                    {QStringLiteral("issues"), topology_issues}}},
       {QStringLiteral("overview_saved"), overview_saved},
       {QStringLiteral("gameplay_saved"), gameplay_saved},
-      {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL terrain review")}};
+      {QStringLiteral("renderer"),
+       QStringLiteral("ArenaViewport/OpenGL terrain review")}};
   QFile report_file(QDir(directory).filePath(QStringLiteral("report.json")));
   if (!report_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
     return false;
@@ -549,13 +564,14 @@ auto main(int argc, char** argv) -> int {
     }
     if (parser.isSet(terrain_map_option)) {
       const QString map_path = parser.value(terrain_map_option).trimmed();
-      QTimer::singleShot(0, window.viewport(), [viewport = window.viewport(), map_path]() {
-        QString error;
-        if (!viewport->load_terrain_review_map(map_path, &error)) {
-          qCritical().noquote()
-              << QStringLiteral("Could not load terrain review map: %1").arg(error);
-        }
-      });
+      QTimer::singleShot(
+          0, window.viewport(), [viewport = window.viewport(), map_path]() {
+            QString error;
+            if (!viewport->load_terrain_review_map(map_path, &error)) {
+              qCritical().noquote()
+                  << QStringLiteral("Could not load terrain review map: %1").arg(error);
+            }
+          });
     } else if (parser.isSet(scenario_option)) {
       QString const scenario_id = parser.value(scenario_option).trimmed();
       if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
@@ -608,15 +624,17 @@ auto main(int argc, char** argv) -> int {
       QString error;
       reviews = campaign_terrain_review_entries(&error);
       if (reviews.empty()) {
-        qCritical().noquote()
-            << QStringLiteral("Could not discover campaign terrain maps: %1").arg(error);
+        qCritical().noquote() << QStringLiteral(
+                                     "Could not discover campaign terrain maps: %1")
+                                     .arg(error);
         return 2;
       }
     } else {
-      const QString map_path = resolve_terrain_review_path(
-          parser.value(terrain_map_option).trimmed());
+      const QString map_path =
+          resolve_terrain_review_path(parser.value(terrain_map_option).trimmed());
       reviews.push_back(
-          {QFileInfo(map_path).completeBaseName().remove(QStringLiteral("map_")), map_path});
+          {QFileInfo(map_path).completeBaseName().remove(QStringLiteral("map_")),
+           map_path});
     }
 
     struct TerrainReviewState {
@@ -634,12 +652,11 @@ auto main(int argc, char** argv) -> int {
     auto start_next = std::make_shared<std::function<void()>>();
     *start_next = [state, viewport, &app, start_next]() {
       if (state->next_index >= state->entries.size()) {
-        qInfo().noquote()
-            << QStringLiteral(
-                   "Campaign terrain review complete: %1 map(s), %2 failed; artifacts: %3")
-                   .arg(state->entries.size())
-                   .arg(state->failed)
-                   .arg(QDir(state->artifact_root).absolutePath());
+        qInfo().noquote() << QStringLiteral("Campaign terrain review complete: %1 "
+                                            "map(s), %2 failed; artifacts: %3")
+                                 .arg(state->entries.size())
+                                 .arg(state->failed)
+                                 .arg(QDir(state->artifact_root).absolutePath());
         QApplication::exit(state->failed == 0 ? 0 : 1);
         return;
       }
@@ -649,9 +666,9 @@ auto main(int argc, char** argv) -> int {
       QDir output_dir(directory);
       if ((output_dir.exists() && !output_dir.removeRecursively()) ||
           !QDir().mkpath(directory)) {
-        qCritical().noquote()
-            << QStringLiteral("Could not prepare terrain review directory: %1")
-                   .arg(directory);
+        qCritical().noquote() << QStringLiteral(
+                                     "Could not prepare terrain review directory: %1")
+                                     .arg(directory);
         ++state->failed;
         QTimer::singleShot(25, [start_next]() { (*start_next)(); });
         return;
@@ -659,8 +676,8 @@ auto main(int argc, char** argv) -> int {
 
       QString error;
       if (!viewport->load_terrain_review_map(entry.map_path, &error)) {
-        qCritical().noquote()
-            << QStringLiteral("Terrain review failed to load %1: %2").arg(entry.id, error);
+        qCritical().noquote() << QStringLiteral("Terrain review failed to load %1: %2")
+                                     .arg(entry.id, error);
         ++state->failed;
         QTimer::singleShot(25, [start_next]() { (*start_next)(); });
         return;
@@ -676,13 +693,11 @@ auto main(int argc, char** argv) -> int {
             overview.save(QDir(directory).filePath(QStringLiteral("overview.png")));
         viewport->set_terrain_review_gameplay_camera();
         QTimer::singleShot(
-            350,
-            [state, viewport, start_next, entry, directory, overview_saved]() {
+            350, [state, viewport, start_next, entry, directory, overview_saved]() {
               const QImage gameplay = viewport->grabFramebuffer();
               const bool gameplay_saved =
-                  !gameplay.isNull() &&
-                  gameplay.save(
-                      QDir(directory).filePath(QStringLiteral("gameplay.png")));
+                  !gameplay.isNull() && gameplay.save(QDir(directory).filePath(
+                                            QStringLiteral("gameplay.png")));
               if (gameplay_saved) {
                 gameplay.save(QDir(directory).filePath(QStringLiteral("final.png")));
               }
@@ -816,8 +831,12 @@ auto main(int argc, char** argv) -> int {
         QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
     if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
       auto const lighting = Game::Map::lighting_for_time_of_day(*parsed_time_of_day);
+      auto const* scenario = Arena::Scenarios::find_definition(id);
       QJsonObject const config{
           {QStringLiteral("scenario"), id},
+          {QStringLiteral("graphics_quality"),
+           scenario != nullptr ? graphics_quality_name(scenario->graphics_quality)
+                               : QStringLiteral("Unknown")},
           {QStringLiteral("seed"), seed},
           {QStringLiteral("time_of_day"),
            QString::fromLatin1(Game::Map::time_of_day_name(*parsed_time_of_day))},

@@ -103,6 +103,47 @@ TEST(ArenaScenarioDefinitionTest, CatalogIncludesRealBattlefieldRegressionCases)
   }
 }
 
+TEST(ArenaScenarioDefinitionTest, RenderContinuityScenarioExercisesUltraPolicy) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_render_continuity_id));
+  ASSERT_NE(scenario, nullptr);
+  EXPECT_FALSE(scenario->force_full_creature_lod);
+  EXPECT_EQ(scenario->graphics_quality, Render::GraphicsQuality::Ultra);
+  EXPECT_TRUE(scenario->collect_animation_diagnostics);
+  EXPECT_TRUE(scenario->suppress_ui_overlays);
+  EXPECT_GE(scenario->groups.size(), 8U);
+
+  EXPECT_NE(std::find_if(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [](auto const& expectation) {
+                           return expectation.kind ==
+                                  Arena::ArenaExpectationKind::NoFullscreenFlash;
+                         }),
+            scenario->expectations.end());
+  for (auto const& group : scenario->groups) {
+    EXPECT_NE(std::find_if(
+                  scenario->expectations.begin(),
+                  scenario->expectations.end(),
+                  [&](auto const& expectation) {
+                    return expectation.kind ==
+                               Arena::ArenaExpectationKind::NoRenderVisibilityChurn &&
+                           expectation.group == group.name;
+                  }),
+              scenario->expectations.end())
+        << group.name.toStdString();
+    EXPECT_NE(
+        std::find_if(scenario->expectations.begin(),
+                     scenario->expectations.end(),
+                     [&](auto const& expectation) {
+                       return expectation.kind ==
+                                  Arena::ArenaExpectationKind::FullCreatureDetailOnly &&
+                              expectation.group == group.name;
+                     }),
+        scenario->expectations.end())
+        << group.name.toStdString();
+  }
+}
+
 TEST(ArenaScenarioDefinitionTest, BattlefieldScenariosUseNationFormationProfiles) {
   auto const* scenario = Arena::Scenarios::find_definition(
       QString::fromLatin1(Arena::Scenarios::k_spear_walk_contact_id));
@@ -319,6 +360,115 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsMissingIndicatorDuringMeleeLock)
   EXPECT_EQ(runner.report().issues.front().code,
             QStringLiteral("missing_combat_indicator"));
   diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsVisibleSoldierBecomingCulled) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoRenderVisibilityChurn, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.sample_time = 0.0F;
+  diagnostics.begin_frame(1);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+  ASSERT_TRUE(runner.report().passed());
+
+  sample.sample_time = 1.0F / 60.0F;
+  sample.cull_reason = Render::Profiling::SoldierCullReason::Temporal;
+  diagnostics.begin_frame(2);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("soldier_submission_disappeared"));
+  EXPECT_TRUE(runner.report().issues.front().message.contains(
+      QStringLiteral("temporal"), Qt::CaseInsensitive));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAllowsDeadSoldierLeavingFrustum) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoRenderVisibilityChurn, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.animation_state = Render::Creature::AnimationStateId::Dead;
+  diagnostics.begin_frame(1);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  sample.sample_time = 1.0F / 60.0F;
+  sample.cull_reason = Render::Profiling::SoldierCullReason::Frustum;
+  diagnostics.begin_frame(2);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsReducedCreatureLodOnUltra) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::FullCreatureDetailOnly, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.lod = static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal);
+  diagnostics.record_soldier_sample(entity_id, sample);
+  runner.observe_rendered_frame(1.0);
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("ultra_creature_lod_used"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, ExternalFrameProbeFailureIsReported) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  runner.report_external_issue(QStringLiteral("fullscreen_flash"),
+                               QStringLiteral("synthetic flash"));
+
+  ASSERT_FALSE(runner.report().passed());
+  ASSERT_FALSE(runner.report().issues.empty());
+  EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("fullscreen_flash"));
 }
 
 TEST(ArenaScenarioRunnerTest, EventTriggerCanApplyScriptedEdgeCaseDamage) {

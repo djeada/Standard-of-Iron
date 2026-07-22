@@ -922,6 +922,17 @@ void TerrainHeightMap::build_from_features(
 }
 
 auto TerrainHeightMap::get_height_at(float world_x, float world_z) const -> float {
+  const float base_height = get_base_height_at(world_x, world_z);
+  if (isOnBridge(world_x, world_z)) {
+    if (auto const bridge_height = getBridgeDeckHeight(world_x, world_z);
+        bridge_height.has_value()) {
+      return *bridge_height;
+    }
+  }
+  return base_height;
+}
+
+auto TerrainHeightMap::get_base_height_at(float world_x, float world_z) const -> float {
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -949,16 +960,7 @@ auto TerrainHeightMap::get_height_at(float world_x, float world_z) const -> floa
   float const h0 = h00 * (1.0F - tx) + h10 * tx;
   float const h1 = h01 * (1.0F - tx) + h11 * tx;
 
-  float base_height = h0 * (1.0F - tz) + h1 * tz;
-
-  if (isOnBridge(world_x, world_z)) {
-    auto bridge_height_opt = getBridgeDeckHeight(world_x, world_z);
-    if (bridge_height_opt.has_value()) {
-      return bridge_height_opt.value();
-    }
-  }
-
-  return base_height;
+  return h0 * (1.0F - tz) + h1 * tz;
 }
 
 auto TerrainHeightMap::get_height_at_grid(int grid_x, int grid_z) const -> float {

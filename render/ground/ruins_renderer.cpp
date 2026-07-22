@@ -9,6 +9,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
+#include "scatter_submission.h"
 
 namespace {
 
@@ -41,8 +42,11 @@ void RuinsRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   const auto visible_count = Scatter::sync_filtered_state(
       m_state,
-      [](const RuinsInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; });
-  if (visible_count == 0 || !m_state.instance_buffer) {
+      [](const RuinsInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; },
+      renderer.static_world_visibility_filter_enabled()
+          ? renderer.submission_visibility().snapshot()
+          : nullptr);
+  if (visible_count == 0) {
     return;
   }
 
@@ -50,10 +54,8 @@ void RuinsRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Ruins;
-  cmd.instance_buffer = m_state.instance_buffer.get();
-  cmd.instance_count = visible_count;
   cmd.ruins = m_state.params;
-  renderer.terrain_scatter(cmd);
+  Scatter::submit_visible_chunks(renderer, m_state, cmd);
 }
 
 void RuinsRenderer::clear() {

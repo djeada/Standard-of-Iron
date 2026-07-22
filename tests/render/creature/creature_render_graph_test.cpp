@@ -164,6 +164,7 @@ TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
 TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
   auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::Ultra);
+  EXPECT_FALSE(settings.creature_lod_enabled());
 
   CreatureGraphInputs inputs;
   inputs.camera_distance = 100000.0F;
@@ -184,6 +185,10 @@ TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
             CreatureLOD::Full);
   EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Elephant, 100000.0F),
             CreatureLOD::Full);
+
+  settings.set_quality(Render::GraphicsQuality::High);
+  EXPECT_TRUE(settings.creature_lod_enabled());
+  settings.set_quality(Render::GraphicsQuality::Ultra);
 }
 
 TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
