@@ -475,16 +475,25 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     // position. Everything below this boundary may ground the model, resolve
     // persistent combat state, select BPAT clips, or append draw rows.
     const QVector3D early_world_pos = inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    constexpr float k_soldier_cull_radius = 0.6F;
+    // The model-space origin is at the soldier's feet, but the body extends
+    // ~2 units upward. Testing a tight sphere at the feet drops soldiers whose
+    // feet leave the frustum while their body is still on-screen (common near
+    // the bottom edge under the tilted RTS camera). Center the broad-phase
+    // sphere at mid-body and size it to enclose the whole figure. Fog uses only
+    // the XZ position, so raising the center in Y affects only the frustum test.
+    constexpr float k_soldier_cull_center_y = 0.9F;
+    constexpr float k_soldier_cull_radius = 1.4F;
+    const QVector3D cull_center =
+        inst_model.map(QVector3D(0.0F, k_soldier_cull_center_y, 0.0F));
     const auto visibility_result = ctx.submission_visibility != nullptr
                                        ? ctx.submission_visibility->evaluate_sphere(
-                                             early_world_pos,
+                                             cull_center,
                                              k_soldier_cull_radius,
                                              ctx.submission_fog_mode)
                                        : SubmissionVisibilityResult{
                                              ctx.camera == nullptr ||
                                                  ctx.camera->is_in_frustum(
-                                                     early_world_pos,
+                                                     cull_center,
                                                      k_soldier_cull_radius),
                                              true};
     const bool outside_frustum = !visibility_result.in_frustum;

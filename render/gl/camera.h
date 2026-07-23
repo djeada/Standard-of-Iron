@@ -5,6 +5,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <mutex>
 
 namespace Render::GL {
 
@@ -109,6 +110,25 @@ private:
     float distance{0.0F};
   };
 
+  // A lock that is reset (not copied) on Camera copy/move so Camera stays
+  // copyable — copies are made single-threaded during setup (e.g. deriving the
+  // commander camera from the RTS camera), and each Camera owns its own lock.
+  // Satisfies BasicLockable so it works directly with std::lock_guard.
+  class CacheLock {
+  public:
+    CacheLock() = default;
+    CacheLock(const CacheLock&) noexcept {}
+    CacheLock(CacheLock&&) noexcept {}
+    auto operator=(const CacheLock&) noexcept -> CacheLock& { return *this; }
+    auto operator=(CacheLock&&) noexcept -> CacheLock& { return *this; }
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
+    auto try_lock() -> bool { return m_mutex.try_lock(); }
+
+  private:
+    std::mutex m_mutex;
+  };
+
   QVector3D m_position{0.0F, 0.0F, 0.0F};
   QVector3D m_target{0.0F, 0.0F, -1.0F};
   QVector3D m_up{0.0F, 1.0F, 0.0F};
@@ -146,6 +166,13 @@ private:
   float m_orbit_time = 0.0F;
   float m_orbit_duration = 0.12F;
 
+  // The cache is rebuilt lazily on the render thread (submission frustum tests,
+  // matrix accessors) while camera mutators run on the GUI thread in the
+  // threaded Qt Quick render loop. Without serialization a reader can observe a
+  // half-written view-projection matrix and derive a scrambled frustum that
+  // rejects the whole scene for one frame (a full-screen flash). The mutex
+  // guards every read/rebuild/invalidate of the cached geometry below.
+  mutable CacheLock m_cache_mutex;
   mutable QMatrix4x4 m_cached_view;
   mutable QMatrix4x4 m_cached_projection;
   mutable QMatrix4x4 m_cached_view_projection;
@@ -153,7 +180,11 @@ private:
   mutable bool m_cached_geometry_dirty{true};
 
   void update_vectors();
-  void invalidate_cached_geometry() noexcept { m_cached_geometry_dirty = true; }
+  void invalidate_cached_geometry() {
+    const std::lock_guard<CacheLock> guard(m_cache_mutex);
+    m_cached_geometry_dirty = true;
+  }
+  // Assumes m_cache_mutex is already held by the caller.
   void rebuild_cached_geometry() const;
 
   void clamp_above_ground();

@@ -602,16 +602,19 @@ void Camera::set_top_down_view(const QVector3D& center, float distance) {
 }
 
 auto Camera::get_view_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_view;
 }
 
 auto Camera::get_projection_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_projection;
 }
 
 auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_view_projection;
 }
@@ -850,6 +853,7 @@ void Camera::compute_yaw_pitch_from_offset(const QVector3D& off,
 }
 
 auto Camera::is_in_frustum(const QVector3D& center, float radius) const -> bool {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   const float safe_radius = std::max(radius, 0.0F);
   for (const FrustumPlane& plane : m_cached_frustum) {
