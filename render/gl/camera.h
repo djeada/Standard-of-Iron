@@ -5,6 +5,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <mutex>
 
 namespace Render::GL {
 
@@ -109,6 +110,21 @@ private:
     float distance{0.0F};
   };
 
+  class CacheLock {
+  public:
+    CacheLock() = default;
+    CacheLock(const CacheLock&) noexcept {}
+    CacheLock(CacheLock&&) noexcept {}
+    auto operator=(const CacheLock&) noexcept -> CacheLock& { return *this; }
+    auto operator=(CacheLock&&) noexcept -> CacheLock& { return *this; }
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
+    auto try_lock() -> bool { return m_mutex.try_lock(); }
+
+  private:
+    std::mutex m_mutex;
+  };
+
   QVector3D m_position{0.0F, 0.0F, 0.0F};
   QVector3D m_target{0.0F, 0.0F, -1.0F};
   QVector3D m_up{0.0F, 1.0F, 0.0F};
@@ -146,6 +162,7 @@ private:
   float m_orbit_time = 0.0F;
   float m_orbit_duration = 0.12F;
 
+  mutable CacheLock m_cache_mutex;
   mutable QMatrix4x4 m_cached_view;
   mutable QMatrix4x4 m_cached_projection;
   mutable QMatrix4x4 m_cached_view_projection;
@@ -153,7 +170,11 @@ private:
   mutable bool m_cached_geometry_dirty{true};
 
   void update_vectors();
-  void invalidate_cached_geometry() noexcept { m_cached_geometry_dirty = true; }
+  void invalidate_cached_geometry() {
+    const std::lock_guard<CacheLock> guard(m_cache_mutex);
+    m_cached_geometry_dirty = true;
+  }
+
   void rebuild_cached_geometry() const;
 
   void clamp_above_ground();

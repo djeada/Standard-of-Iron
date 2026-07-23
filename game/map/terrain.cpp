@@ -162,10 +162,6 @@ TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
 void TerrainHeightMap::build_from_features(
     const std::vector<TerrainFeature>& features) {
 
-  // The existing heights are the authoritative battlefield relief. Authored
-  // features are layered onto that surface; clearing the array here would
-  // silently discard biome relief and leave rendering/pathing with different
-  // ideas of where the ground is.
   const std::vector<float> base_heights = m_heights;
   const int map_cell_count = m_width * m_height;
   std::vector<float> erosion_strength(static_cast<std::size_t>(map_cell_count), 0.0F);
@@ -185,9 +181,7 @@ void TerrainHeightMap::build_from_features(
     const float grid_radius = std::max(feature.radius / m_tile_size, 1.0F);
 
     if (feature.type == TerrainType::Mountain) {
-      // Mountains form long, asymmetric ridges. They remain broad enough to
-      // read as landforms instead of walls, but the cross-section now has a
-      // rocky crest, talus shoulder, and naturally tapered ends.
+
       const bool has_authored_extents = feature.width > 0.0F && feature.depth > 0.0F;
       const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
       const float mountain_height =
@@ -206,9 +200,7 @@ void TerrainHeightMap::build_from_features(
 
       float organic_rotation = 0.0F;
       if (!has_authored_extents) {
-        // Radius-only mountains are authored as a chain of control points.
-        // Align each massif toward its nearest neighbour so those points read
-        // as one geological range instead of unrelated radial islands.
+
         float nearest_distance_sq = std::numeric_limits<float>::max();
         float nearest_angle = 0.0F;
         for (const auto& candidate : features) {
@@ -225,13 +217,13 @@ void TerrainHeightMap::build_from_features(
         }
         const float direction_jitter =
             (hash_to_float01(hash_coords(int(std::round(grid_center_x)),
-                                           int(std::round(grid_center_z)),
-                                           0x5A17U)) -
+                                         int(std::round(grid_center_z)),
+                                         0x5A17U)) -
              0.5F) *
             16.0F;
-        organic_rotation =
-            std::isfinite(nearest_distance_sq) ? nearest_angle + direction_jitter
-                                               : direction_jitter;
+        organic_rotation = std::isfinite(nearest_distance_sq)
+                               ? nearest_angle + direction_jitter
+                               : direction_jitter;
       }
       const float angle_rad = (feature.rotation_deg + organic_rotation) * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
@@ -276,9 +268,7 @@ void TerrainHeightMap::build_from_features(
     if (feature.type == TerrainType::Hill) {
       float grid_width = std::max(feature.width / m_tile_size, 1.0F);
       float grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
-      // Campaign hill heights were authored when hills were near-vertical
-      // decals. Give their now broader physical footprints enough relief to
-      // read as landforms, while keeping the authored relative scale intact.
+
       const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
       const bool radius_authored =
           feature.radius > 0.0F &&
@@ -286,32 +276,22 @@ void TerrainHeightMap::build_from_features(
           std::abs(feature.depth - feature.radius * 2.0F) < 0.01F;
       float hill_rotation_deg = feature.rotation_deg;
       if (campaign_landform_scale && radius_authored) {
-        // A radius in legacy map JSON describes scale, not a request for a
-        // mathematically circular mound. Preserve every authored entrance by
-        // expanding one axis instead of shrinking the other.
+
         grid_width *= 1.18F;
-        hill_rotation_deg +=
-            hash_to_float01(hash_coords(int(std::round(grid_center_x)),
-                                        int(std::round(grid_center_z)),
-                                        0x81E7U)) *
-            180.0F;
+        hill_rotation_deg += hash_to_float01(hash_coords(int(std::round(grid_center_x)),
+                                                         int(std::round(grid_center_z)),
+                                                         0x81E7U)) *
+                             180.0F;
       }
       const float authored_hill_height =
           feature.height * (campaign_landform_scale ? 2.80F : 1.0F);
-      // Height-only legacy authoring makes a 100 m hill scarcely taller than
-      // a 30 m knoll. Preserve the authored value as a minimum, then give
-      // campaign hills enough vertical mass for their physical footprint.
-      // The minor axis is used so long narrow ridges do not become mountains.
+
       const float footprint_height =
           std::min(grid_width, grid_depth) * m_tile_size * 0.18F;
       const float hill_height = campaign_landform_scale
                                     ? std::max(authored_hill_height, footprint_height)
                                     : authored_hill_height;
 
-      // Width/depth are the complete authored footprint. Slope run is a
-      // physical distance derived primarily from elevation, rather than a
-      // percentage of the footprint. Consequently a 100 m hill has space for
-      // a town on its crown while a 20 m knoll remains a small tactical perch.
       const float slope_width = std::max(2.0F, grid_width * 0.50F);
       const float slope_depth = std::max(2.0F, grid_depth * 0.50F);
       const float elevation_cells = std::max(hill_height / m_tile_size, 0.25F);
@@ -329,9 +309,6 @@ void TerrainHeightMap::build_from_features(
            slope_depth * minimum_crown_fraction,
            slope_depth - std::min(slope_depth * maximum_slope_fraction, slope_run)});
 
-      // Compound lobes can project slightly beyond the authored parent
-      // ellipse; leave enough sampling room so their toes taper naturally
-      // instead of being clipped by the feature loop's bounding box.
       const float max_extent = std::max(slope_width, slope_depth) * 1.18F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
       const int max_x =
@@ -366,9 +343,7 @@ void TerrainHeightMap::build_from_features(
 
       std::vector<QVector3D> hill_entrances = feature.entrances;
       if (hill_entrances.empty()) {
-        // Terrain JSON may omit entrances on custom maps. A tactical hill is
-        // never valid without access, so deterministically provide one at the
-        // major-axis foot instead of silently creating an unreachable crown.
+
         const float fallback_distance = slope_width * m_tile_size * 0.98F;
         hill_entrances.emplace_back(feature.center_x - cos_a * fallback_distance,
                                     0.0F,
@@ -541,8 +516,8 @@ void TerrainHeightMap::build_from_features(
         float const hill_min_extent = std::min(plateau_width, plateau_depth);
         const float authored_entry_width =
             (campaign_landform_scale ? 7.25F : k_entry_ramp_width) + entrance.radius;
-        float const entry_width = std::max(
-            1.5F, std::min(authored_entry_width, hill_min_extent * 0.62F));
+        float const entry_width =
+            std::max(1.5F, std::min(authored_entry_width, hill_min_extent * 0.62F));
 
         float const perp_x = -dir_z;
         float const perp_z = dir_x;
@@ -555,9 +530,7 @@ void TerrainHeightMap::build_from_features(
           int const center_ix = int(std::round(cur_x));
           int const center_iz = int(std::round(cur_z));
           if (!in_bounds(center_ix, center_iz)) {
-            // An outward apron may begin beyond a small test/map boundary.
-            // Keep advancing toward the authored entrance instead of
-            // discarding the entire otherwise valid ramp.
+
             cur_x += dir_x;
             cur_z += dir_z;
             continue;
@@ -568,20 +541,13 @@ void TerrainHeightMap::build_from_features(
           const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
           const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
           const float cell_norm_dist = slope_distance(cell_rot_x, cell_rot_z);
-          // Authored entrances are not guaranteed to land exactly on the
-          // procedurally distorted footprint. Treat every cell before the
-          // real hill boundary as apron; skipping that interval is what made
-          // the visible ramp detach from the entry cut.
+
           bool const builds_apron = is_outward || cell_norm_dist > 1.0F;
 
-          // Grade the full apron, including the authored point's outward
-          // extension. Previously the outward cells stayed flat and the
-          // complete elevation gain was compressed against the hill face.
           float const ramp_progress =
               (total_ramp_steps > 1)
-                  ? std::clamp(float(ramp_step) / float(total_ramp_steps - 1),
-                               0.0F,
-                               1.0F)
+                  ? std::clamp(
+                        float(ramp_step) / float(total_ramp_steps - 1), 0.0F, 1.0F)
                   : 1.0F;
 
           float const delayed_progress =
@@ -613,11 +579,8 @@ void TerrainHeightMap::build_from_features(
           if (is_outward && outward_steps > 0) {
             float const outward_t =
                 float(ramp_step) / float(std::max(1, outward_steps));
-            // The toe is a continuation of the cut, not a narrow detached
-            // tongue. Keep most of the entrance width at ground level and
-            // ease into the full ramp width as elevation begins.
-            float const outward_width_mul =
-                0.82F + 0.18F * smootherstep(outward_t);
+
+            float const outward_width_mul = 0.82F + 0.18F * smootherstep(outward_t);
             tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
           }
 
@@ -633,32 +596,20 @@ void TerrainHeightMap::build_from_features(
               continue;
             }
 
-            // Reach the untouched terrain height before the last sampled
-            // cell. The previous denominator extended beyond width_radius,
-            // leaving a raised rectangular wall at every ramp shoulder.
-            float const edge_t = smooth_range(
-                tapered_width * 0.16F,
-                tapered_width + k_width_falloff_padding,
-                std::abs(float(w)));
+            float const edge_t = smooth_range(tapered_width * 0.16F,
+                                              tapered_width + k_width_falloff_padding,
+                                              std::abs(float(w)));
 
             int const ramp_idx = indexAt(ix, iz);
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
               float const width_factor = 1.0F - edge_t;
-              // Every sampled toe cell belongs to the entrance corridor,
-              // including the zero-height beginning of the apron. Leaving
-              // those first cells unmarked split the visual/pathfinding mask
-              // from the physical ramp and made a smooth grade look detached.
+
               constexpr bool raised_apron = true;
               if (m_terrain_types[ramp_idx] == TerrainType::Flat && raised_apron &&
                   width_factor > 0.04F) {
                 m_terrain_types[ramp_idx] = TerrainType::Hill;
               }
-              // The outward apron is a gentle continuation over otherwise
-              // walkable ground. Keeping only its narrow visual centre
-              // walkable creates two artificial shoulder walls; on small maps
-              // those walls can join the boundary and seal the hill entrance
-              // inside its own navigation component. Preserve the stricter
-              // centre corridor only once the ramp is actually on the hill.
+
               if ((builds_apron || width_factor > k_walkable_width_threshold) &&
                   raised_apron) {
                 walkable_mask[ramp_idx] = 1;
@@ -679,14 +630,11 @@ void TerrainHeightMap::build_from_features(
                   (1.0F - smooth_range(0.60F, 0.90F, width_factor));
               float const mouth_soften = hill_height * k_entry_mouth_soften_strength *
                                          floor_core * mouth * (1.0F - s);
-              // Concentrate the cut in the center of the entrance. A broad,
-              // saturated floor factor lowered the shoulders by almost the
-              // same amount and made the opening read as an unbroken blob.
+
               float const center_channel =
                   std::pow(std::clamp(width_factor, 0.0F, 1.0F), 4.0F);
               float const floor_flatten = hill_height * k_entry_floor_flatten_strength *
-                                          center_channel *
-                                          (0.35F + 0.65F * lower_ramp);
+                                          center_channel * (0.35F + 0.65F * lower_ramp);
               float const apron_shoulder_blend =
                   builds_apron ? smooth_range(0.48F, 0.88F, ramp_progress) : 1.0F;
               float const shoulder_raise =
@@ -695,13 +643,6 @@ void TerrainHeightMap::build_from_features(
               target_height = std::max(
                   0.0F, target_height - mouth_soften - floor_flatten + shoulder_raise);
 
-              // The ramp profile is authoritative across the entire corridor.
-              // Clamping it to the old procedural hill surface preserved every
-              // lobe and hollow under the cut, which could produce a cliff or
-              // even a downhill step exactly where the apron met the hill.
-              // `target_height` already blends back to the untouched surface
-              // across the ramp width, and reaches the crown height at the end,
-              // so using it directly gives one continuous toe-to-crown grade.
               m_heights[ramp_idx] = target_height;
             }
           }
@@ -892,9 +833,7 @@ void TerrainHeightMap::build_from_features(
         }
 
         int const idx = indexAt(x, z);
-        // Clearings, camps, and town pads should settle into the surrounding
-        // relief. A hard absolute-height ellipse creates a visible retaining
-        // wall around every settlement footprint.
+
         const float feather =
             std::clamp((1.0F - normalized_distance) / 0.20F, 0.0F, 1.0F);
         const float blend = feather * feather * (3.0F - 2.0F * feather);
@@ -1079,8 +1018,7 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
       const float world_extent =
           std::max(static_cast<float>(std::max(m_width, m_height) - 1) * m_tile_size,
                    m_tile_size);
-      // Keep the broad profile visible on small test/skirmish maps without
-      // increasing the frequency on campaign-sized battlefields.
+
       const float frequency = std::max(authored_frequency, 2.5F / world_extent);
       const float half_width = m_width * 0.5F - 0.5F;
       const float half_height = m_height * 0.5F - 0.5F;
@@ -1099,9 +1037,6 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
           float const sample_x = world_x * frequency;
           float const sample_z = world_z * frequency;
 
-          // Warp the broad relief before adding smaller octaves. Straight,
-          // uniformly scaled noise produces a pillowy carpet; this creates
-          // shallow swales, long rises, and irregular drainage-shaped ground.
           const float warp_x = (value_noise_2d(sample_x * 0.43F,
                                                sample_z * 0.43F,
                                                surface_profile.seed ^ 0x19B4C7A1U) -
@@ -1128,16 +1063,9 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
           const float rolling_signed = base_noise * 2.0F - 1.0F;
           const float detail_signed = detail_noise * 2.0F - 1.0F;
           const float fine_signed = fine_noise * 2.0F - 1.0F;
-          const float drainage = std::pow(
-              std::clamp(1.0F - std::abs(detail_signed), 0.0F, 1.0F), 6.0F);
+          const float drainage =
+              std::pow(std::clamp(1.0F - std::abs(detail_signed), 0.0F, 1.0F), 6.0F);
 
-          // Broad regional uplift establishes readable rolling ground; the
-          // smaller octaves add shallow banks and depressions without moving
-          // gameplay over noisy one-cell bumps. A positive datum keeps the
-          // battlefield mesh safely above its non-playable underlay. Scale the
-          // signed field around that datum instead of adding a nearly constant
-          // offset: the result remains gentle to traverse, but broad rises and
-          // swales are physically present at strategic camera distance.
           const float relief = regional_signed * 0.46F + rolling_signed * 0.29F +
                                detail_signed * 0.13F + fine_signed * 0.035F -
                                drainage * 0.055F;
@@ -1294,9 +1222,7 @@ void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
         const float world_x = (static_cast<float>(x) - half_grid_width) * m_tile_size;
         const float world_z = (static_cast<float>(z) - half_grid_height) * m_tile_size;
         const bool gameplay_water = point_in_lake(lake, world_x, world_z);
-        // Terrain is sampled between grid vertices. A small submerged margin
-        // prevents interpolation from pushing coarse shoreline triangles up
-        // through the smooth lake mesh without enlarging the blocked area.
+
         const bool submerged_margin =
             point_in_lake(lake, world_x, world_z, m_tile_size * 0.85F);
         if (!submerged_margin) {
@@ -1366,11 +1292,8 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
       QVector3D const center_pos = stored_bridge.start + dir * along;
 
       float const visual_deck_height = bridge_deck_world_y(stored_bridge, t_curve);
-      // The visible/contact deck is deliberately higher than the terrain
-      // relief stamped below it. Neighboring slope derivation therefore keeps
-      // the established approach profile while units stand on the real mesh.
-      float const relief_deck_height =
-          visual_deck_height - k_bridge_deck_visual_lift;
+
+      float const relief_deck_height = visual_deck_height - k_bridge_deck_visual_lift;
       float const terrain_height = get_height_at(center_pos.x(), center_pos.z());
       float const deck_height =
           std::max(relief_deck_height - sink_amount, terrain_height - sink_amount);

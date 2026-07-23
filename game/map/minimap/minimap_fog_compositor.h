@@ -33,10 +33,10 @@ private:
   };
 
   void rebuild_lookup(int vis_width, int vis_height, int img_width, int img_height);
-  [[nodiscard]] auto compose_pixel(std::size_t pixel_index,
-                                   QRgb original,
-                                   const VisibilityService::Snapshot& snapshot) const
-      -> QRgb;
+  [[nodiscard]] auto
+  compose_pixel(std::size_t pixel_index,
+                QRgb original,
+                const VisibilityService::Snapshot& snapshot) const -> QRgb;
 
   std::uint64_t m_visibility_version = 0;
   std::uint64_t m_snapshot_version = 0;

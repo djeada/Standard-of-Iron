@@ -143,9 +143,9 @@ void StoneRenderer::generate_stone_instances() {
 
   const float stone_density = 0.22F;
 
-  float const area_scale = std::sqrt(
-      static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
-      (k_reference_scatter_extent * k_reference_scatter_extent));
+  float const area_scale =
+      std::sqrt(static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
+                (k_reference_scatter_extent * k_reference_scatter_extent));
   int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
   int const cell_span = 4 * sampling_scale;
   for (int z = 0; z < m_height; z += cell_span) {

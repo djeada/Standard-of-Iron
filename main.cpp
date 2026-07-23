@@ -304,10 +304,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 #endif
 
 auto main(int argc, char* argv[]) -> int {
-  // QQuickFramebufferObject only works with the OpenGL scene graph. A global
-  // Qt Quick software backend would leave the menus visible but suppress the
-  // gameplay framebuffer, which is indistinguishable from the reported blank
-  // game view. Keep Qt Quick on OpenGL; platform software GL remains available.
+
   if (qEnvironmentVariable("QT_QUICK_BACKEND")
           .compare("software", Qt::CaseInsensitive) == 0) {
     fprintf(stderr,
@@ -719,8 +716,7 @@ auto main(int argc, char* argv[]) -> int {
         &GLView::renderer_ready,
         &app,
         [game_engine_ptr = game_engine.get(), direct_campaign_mission]() {
-          qInfo() << "Starting campaign mission directly:"
-                  << direct_campaign_mission;
+          qInfo() << "Starting campaign mission directly:" << direct_campaign_mission;
           game_engine_ptr->start_campaign_mission(direct_campaign_mission);
         },
         Qt::QueuedConnection);

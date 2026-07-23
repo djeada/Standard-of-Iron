@@ -2,8 +2,8 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 
 #include "minimap_utils.h"
 
@@ -55,10 +55,10 @@ auto MinimapFogCompositor::apply(const QImage& base_image,
   }
 
   const bool valid_dimensions = snapshot.width > 0 && snapshot.height > 0;
-  const std::size_t expected_cells =
-      valid_dimensions ? static_cast<std::size_t>(snapshot.width) *
-                             static_cast<std::size_t>(snapshot.height)
-                       : 0U;
+  const std::size_t expected_cells = valid_dimensions
+                                         ? static_cast<std::size_t>(snapshot.width) *
+                                               static_cast<std::size_t>(snapshot.height)
+                                         : 0U;
   if (!snapshot.initialized || !valid_dimensions ||
       snapshot.cells.size() != expected_cells) {
     return clear(base_image, fogged_image);
@@ -85,15 +85,15 @@ auto MinimapFogCompositor::apply(const QImage& base_image,
     rebuild_lookup(snapshot.width, snapshot.height, img_width, img_height);
   }
 
-  const bool image_stale =
-      fogged_image.isNull() || fogged_image.size() != base_image.size() ||
-      fogged_image.format() != base_image.format();
+  const bool image_stale = fogged_image.isNull() ||
+                           fogged_image.size() != base_image.size() ||
+                           fogged_image.format() != base_image.format();
   if (image_stale) {
     fogged_image = base_image.copy();
   }
 
-  const bool full_recompose = lookup_stale || image_stale ||
-                              m_previous_cells.size() != snapshot.cells.size();
+  const bool full_recompose =
+      lookup_stale || image_stale || m_previous_cells.size() != snapshot.cells.size();
   if (full_recompose) {
     std::size_t pixel = 0;
     for (int y = 0; y < img_height; ++y) {

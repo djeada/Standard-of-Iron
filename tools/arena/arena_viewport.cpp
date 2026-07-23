@@ -1298,9 +1298,6 @@ void ArenaViewport::regenerate_terrain() {
     }
   }
 
-  // Arena slope scenarios use a smooth, fully walkable relief patch.  Keeping
-  // the cells Flat exercises height-aware movement and grounding without
-  // turning the showcase into a tactical-hill entrance test.
   for (auto const& patch : m_arena_elevation_patches) {
     float const radius = std::max(patch.radius, k_terrain_tile_size);
     for (int z = 0; z < k_terrain_height; ++z) {
@@ -1642,11 +1639,7 @@ auto ArenaViewport::spawn_single_unit() -> Engine::Core::EntityID {
 auto ArenaViewport::resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                             Game::Units::TroopType preferred) const
     -> Game::Units::TroopType {
-  // Arena declarations are executable test fixtures. Silently substituting a
-  // nation's first available troop makes the rendered scenario exercise a
-  // different unit than the catalog specifies (for example, an archer in an
-  // elephant test). The factory can build the requested troop with the chosen
-  // nation's presentation, so keep the declaration authoritative.
+
   (void)nation_id;
   return preferred;
 }

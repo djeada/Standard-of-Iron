@@ -232,8 +232,6 @@ void RiggedMeshCache::upload_pending_skin_ubos() {
     return;
   }
 
-  // This is an explicit renderer-initialization phase, not an on-demand
-  // gameplay bake. It must run with the QSG render thread's GL context.
   Render::Creature::RuntimeBakeAllowScope const initialization_scope;
   m_has_pending_skin_ubo_uploads = false;
   for (auto& [_, entry] : m_entries) {

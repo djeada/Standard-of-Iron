@@ -536,14 +536,10 @@ void MinimapGenerator::draw_hill_symbol(
   QColor contour = Palette::INK_LIGHT;
   contour.setAlpha(175);
 
-  const QRectF outer(cx - width * 0.48F,
-                     cy - height * 0.34F,
-                     width * 0.96F,
-                     height * 0.68F);
-  const QRectF inner(cx - width * 0.30F,
-                     cy - height * 0.21F,
-                     width * 0.60F,
-                     height * 0.42F);
+  const QRectF outer(
+      cx - width * 0.48F, cy - height * 0.34F, width * 0.96F, height * 0.68F);
+  const QRectF inner(
+      cx - width * 0.30F, cy - height * 0.21F, width * 0.60F, height * 0.42F);
   painter.setBrush(wash);
   painter.setPen(QPen(contour, 0.8F));
   painter.drawEllipse(outer);
@@ -564,10 +560,8 @@ void MinimapGenerator::draw_forest_symbol(
   forest_edge.setAlpha(185);
   painter.setBrush(forest_wash);
   painter.setPen(QPen(forest_edge, 0.8F));
-  painter.drawEllipse(QRectF(cx - width * 0.48F,
-                             cy - height * 0.48F,
-                             width * 0.96F,
-                             height * 0.96F));
+  painter.drawEllipse(
+      QRectF(cx - width * 0.48F, cy - height * 0.48F, width * 0.96F, height * 0.96F));
 
   const float tree_size = std::clamp(std::min(width, height) * 0.16F, 1.8F, 5.0F);
   const float spacing = tree_size * 2.7F;
@@ -838,8 +832,7 @@ void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map
       wall_color = Palette::TEAM_RED_DARK;
     }
     painter.setPen(QPen(wall_color,
-                        std::max(1.5F,
-                                 world_to_pixel_size(line->width, map_def.grid)),
+                        std::max(1.5F, world_to_pixel_size(line->width, map_def.grid)),
                         Qt::SolidLine,
                         Qt::SquareCap));
     painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
@@ -937,7 +930,6 @@ void MinimapGenerator::draw_map_border(QPainter& painter, int width, int height)
                           OUTER_MARGIN,
                           static_cast<float>(width) - OUTER_MARGIN * 2,
                           static_cast<float>(height) - OUTER_MARGIN * 2));
-
 }
 
 void MinimapGenerator::apply_vignette(QPainter& painter, int width, int height) {

@@ -211,11 +211,12 @@ TEST_F(MinimapGeneratorTest, RendersWallStructures) {
   MapDefinition empty_map = test_map;
   test_map.structures.push_back({
       .type = Game::Units::SpawnType::WallSegment,
-      .geometry = LineStructureGeometry{
-          .start = QVector3D(-10.0F, 0.0F, 0.0F),
-          .end = QVector3D(10.0F, 0.0F, 0.0F),
-          .width = 2.0F,
-      },
+      .geometry =
+          LineStructureGeometry{
+              .start = QVector3D(-10.0F, 0.0F, 0.0F),
+              .end = QVector3D(10.0F, 0.0F, 0.0F),
+              .width = 2.0F,
+          },
       .player_id = 1,
   });
 
@@ -308,14 +309,11 @@ TEST_F(MinimapGeneratorTest, BarracksAndHomesExtendFartherThanOtherBuildingIcons
 
   MapDefinition barracks_map = test_map;
   barracks_map.structures.push_back(
-      point_structure(Game::Units::SpawnType::Barracks,
-                      home_world_x,
-                      home_world_z,
-                      1));
+      point_structure(Game::Units::SpawnType::Barracks, home_world_x, home_world_z, 1));
 
   MapDefinition home_map = test_map;
-  home_map.structures.push_back(point_structure(
-      Game::Units::SpawnType::Home, home_world_x, home_world_z, 1));
+  home_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::Home, home_world_x, home_world_z, 1));
 
   MapDefinition tower_map = test_map;
   tower_map.structures.push_back(point_structure(

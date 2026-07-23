@@ -1973,8 +1973,6 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_oriented_box(
       verts, idx, {-0.26F, 1.60F, 0.30F}, {0.10F, 1.30F, 0.26F}, 0.08F, 0.08F);
 
-  // Broken processional arch: a large negative-space landmark that remains
-  // readable above grass and rubble at RTS zoom.
   append_vert_prism(verts, idx, -0.46F, 0.10F, 0.03F, 0.13F, 1.72F, 7);
   append_vert_prism(verts, idx, 0.46F, 0.10F, 0.03F, 0.13F, 1.46F, 7);
   append_oriented_box(
@@ -1984,8 +1982,6 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_oriented_box(
       verts, idx, {0.34F, 1.76F, 0.03F}, {0.51F, 1.58F, 0.03F}, 0.075F, 0.08F);
 
-  // Two weathered boundary stones break the skyline without suggesting a
-  // hostile site; their slight lean reads as age and settling at RTS distance.
   append_oriented_box(
       verts, idx, {-0.86F, 0.12F, 0.48F}, {-0.74F, 0.94F, 0.42F}, 0.075F, 0.08F);
   append_oriented_box(
@@ -2066,8 +2062,6 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  // A low, fractured outcrop: broad country rock at the base, with narrow
-  // hematite-bearing seams exposed where the cap has weathered away.
   append_oriented_box(
       verts, idx, {-0.58F, 0.02F, -0.20F}, {0.48F, 0.12F, 0.18F}, 0.24F, 0.18F);
   append_oriented_box(
@@ -2152,9 +2146,6 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   append_box(verts, idx, {-0.08F, 0.80F, 0.08F}, {0.08F, 0.92F, 0.26F});
   append_box(verts, idx, {-0.16F, 0.92F, -0.16F}, {0.16F, 1.00F, 0.16F});
 
-  // Central ritual needle and hooked crown. These shapes intentionally break
-  // the original low square silhouette and make the shrine visible behind
-  // troops, vegetation, and settlement walls.
   append_vert_prism(verts, idx, 0.0F, 0.96F, 0.0F, 0.10F, 0.82F, 6);
   append_vert_prism(verts, idx, 0.0F, 1.78F, 0.0F, 0.065F, 0.24F, 5);
   append_oriented_box(

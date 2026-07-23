@@ -30,7 +30,8 @@ float noise(vec2 p) {
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x), f.y);
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x),
+             f.y);
 }
 
 float fbm(vec2 p) {
@@ -58,8 +59,6 @@ float diamond_mask(vec2 uv, vec2 center, vec2 size) {
 void main() {
   vec2 uv = clamp(v_tex_coord, 0.0, 1.0);
 
-  // Every field standard shares a shallow swallowtail and lightly worn hem.
-  // Building banners and rally flags therefore read as one authored family.
   float fork_distance = abs(uv.y - 0.5);
   float tail_limit = mix(0.815, 1.015, smoothstep(0.02, 0.36, fork_distance));
   if (uv.x > tail_limit)
@@ -92,38 +91,38 @@ void main() {
 
   vec3 dyed_dark = u_color * vec3(0.58, 0.56, 0.54);
   vec3 dyed_light = min(u_color * vec3(1.13, 1.08, 1.02) + vec3(0.035), vec3(1.0));
-  vec3 cloth = mix(dyed_dark, dyed_light,
+  vec3 cloth = mix(dyed_dark,
+                   dyed_light,
                    broad_mottle * 0.62 + fiber_variation * 0.23 + weave * 0.15);
   cloth *= mix(0.91, 1.07, weave);
   cloth *= mix(1.0, 0.80, smoothstep(0.05, 0.20, abs(v_billow)));
 
-  float top_fade = (1.0 - smoothstep(0.0, 0.22, uv.y)) *
-                   smoothstep(0.18, 0.88, uv.x);
-  float trailing_fade = smoothstep(0.70, 1.0, uv.x) *
-                        smoothstep(0.30, 0.86, broad_mottle);
-  cloth = mix(cloth, cloth + vec3(0.11, 0.085, 0.055),
-              top_fade * 0.16 + trailing_fade * 0.10);
+  float top_fade = (1.0 - smoothstep(0.0, 0.22, uv.y)) * smoothstep(0.18, 0.88, uv.x);
+  float trailing_fade =
+      smoothstep(0.70, 1.0, uv.x) * smoothstep(0.30, 0.86, broad_mottle);
+  cloth = mix(
+      cloth, cloth + vec3(0.11, 0.085, 0.055), top_fade * 0.16 + trailing_fade * 0.10);
 
   float border_width = 0.066;
   float outer_border = 1.0 - smoothstep(border_width * 0.62, border_width, free_hem);
   float mast_binding = 1.0 - smoothstep(0.065, 0.115, abs(uv.x - 0.10));
   float center_ring = ring_mask(uv, vec2(0.49, 0.51), vec2(0.165, 0.205), 0.15);
   float center_diamond = diamond_mask(uv, vec2(0.49, 0.51), vec2(0.052, 0.086));
-  float embroidery = clamp(max(outer_border,
-                               max(mast_binding * 0.72,
-                                   max(center_ring, center_diamond * 0.90))),
-                           0.0, 1.0);
+  float embroidery =
+      clamp(max(outer_border,
+                max(mast_binding * 0.72, max(center_ring, center_diamond * 0.90))),
+            0.0,
+            1.0);
 
   float stitch = 0.5 + 0.5 * sin((uv.x + uv.y) * 245.0);
   vec3 trim_shadow = u_trim_color * vec3(0.48, 0.43, 0.34);
-  vec3 trim_light = min(u_trim_color * vec3(1.18, 1.12, 0.96) + vec3(0.025),
-                        vec3(1.0));
+  vec3 trim_light = min(u_trim_color * vec3(1.18, 1.12, 0.96) + vec3(0.025), vec3(1.0));
   vec3 trim = mix(trim_shadow, trim_light, 0.38 + stitch * 0.42 + weave * 0.20);
   vec3 albedo = mix(cloth, trim, embroidery * 0.96);
 
-  float lower_dirt = smoothstep(0.70, 1.0, uv.y) *
-                     smoothstep(0.44, 0.82,
-                                fbm(uv * vec2(22.0, 11.0) + vec2(9.0, v_banner_seed)));
+  float lower_dirt =
+      smoothstep(0.70, 1.0, uv.y) *
+      smoothstep(0.44, 0.82, fbm(uv * vec2(22.0, 11.0) + vec2(9.0, v_banner_seed)));
   albedo = mix(albedo, albedo * vec3(0.55, 0.50, 0.43), lower_dirt * 0.24);
 
   float ndotl = dot(N, L);
@@ -147,6 +146,5 @@ void main() {
   color += trim_light * sun * thread_sheen;
   color += sky * grazing;
 
-  frag_color = vec4(clamp(color * textile.rgb, 0.0, 1.0),
-                    textile.a * u_alpha);
+  frag_color = vec4(clamp(color * textile.rgb, 0.0, 1.0), textile.a * u_alpha);
 }

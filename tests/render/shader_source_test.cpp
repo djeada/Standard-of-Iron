@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <locale>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -39,6 +40,14 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
+auto parse_glsl_float(const std::string& text) -> float {
+  std::istringstream stream(text);
+  stream.imbue(std::locale::classic());
+  float value = 0.0F;
+  stream >> value;
+  return value;
+}
+
 void expect_literal_smoothstep_edges_are_ordered(const std::string& shader_source,
                                                  const char* shader_name) {
   const std::regex literal_call(
@@ -47,8 +56,8 @@ void expect_literal_smoothstep_edges_are_ordered(const std::string& shader_sourc
            shader_source.begin(), shader_source.end(), literal_call);
        it != std::sregex_iterator();
        ++it) {
-    const float edge0 = std::stof((*it)[1].str());
-    const float edge1 = std::stof((*it)[2].str());
+    const float edge0 = parse_glsl_float((*it)[1].str());
+    const float edge1 = parse_glsl_float((*it)[2].str());
     EXPECT_LT(edge0, edge1) << shader_name
                             << " contains reversed smoothstep edges: " << it->str();
   }

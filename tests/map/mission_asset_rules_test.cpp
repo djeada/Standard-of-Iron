@@ -151,8 +151,7 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
       tower_count += type == QStringLiteral("defense_tower") ? 1 : 0;
       home_count += type == QStringLiteral("home") ? 1 : 0;
       marketplace_count += type == QStringLiteral("marketplace") ? 1 : 0;
-      has_barracks =
-          has_barracks || type == QStringLiteral("barracks");
+      has_barracks = has_barracks || type == QStringLiteral("barracks");
       wall_line_count += type == QStringLiteral("wall_segment") ? 1 : 0;
     }
 

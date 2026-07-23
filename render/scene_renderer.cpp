@@ -511,10 +511,9 @@ void Renderer::terrain_feature(const TerrainFeatureCmd& cmd) {
   const QVector3D scale_z(cmd.model(0, 2), cmd.model(1, 2), cmd.model(2, 2));
   const float max_scale =
       std::max({scale_x.length(), scale_y.length(), scale_z.length()});
-  if (!m_submission_visibility.accepts_sphere(
-          world_center,
-          cmd.mesh->bounds_radius() * max_scale,
-          SubmissionFogMode::Ignore)) {
+  if (!m_submission_visibility.accepts_sphere(world_center,
+                                              cmd.mesh->bounds_radius() * max_scale,
+                                              SubmissionFogMode::Ignore)) {
     return;
   }
   TerrainFeatureCmd submitted = cmd;

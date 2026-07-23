@@ -86,7 +86,8 @@ void BiomeRenderer::set_light_direction(const QVector3D& dir) {
 void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
   const auto visible_count = Scatter::sync_filtered_state(
-      m_grass_state, [](const GrassInstanceGpu& instance) -> const QVector4D& {
+      m_grass_state,
+      [](const GrassInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_height;
       },
       renderer.static_world_visibility_filter_enabled()
@@ -178,8 +179,7 @@ void BiomeRenderer::generate_grass_instances() {
         int const nx = ix + dx;
         int const nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          if (Game::Map::is_water_terrain(
-                  terrain_cache.get_terrain_type_at(nx, nz))) {
+          if (Game::Map::is_water_terrain(terrain_cache.get_terrain_type_at(nx, nz))) {
             near_river_count++;
           }
         }

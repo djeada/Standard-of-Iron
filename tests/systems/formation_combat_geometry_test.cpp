@@ -139,8 +139,7 @@ TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) 
   ASSERT_TRUE(geometry.uses_formation_slots);
   ASSERT_FALSE(geometry.formation_overlap_required);
   ASSERT_GT(geometry.engagement_center_distance, 0.0F);
-  EXPECT_LT(geometry.engagement_center_distance,
-            geometry.center_distance - 1.40F);
+  EXPECT_LT(geometry.engagement_center_distance, geometry.center_distance - 1.40F);
   EXPECT_NEAR(Game::Systems::FormationCombat::resolve_layout(*elephant).body_radius,
               2.30F,
               0.001F);
@@ -164,7 +163,6 @@ TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) 
   EXPECT_NEAR(queued_center_distance, expected_penetration_distance, 0.05F);
   EXPECT_LT(queued_center_distance, geometry.center_distance - 1.40F);
 
-  // First surface contact must not prematurely turn into a stationary fight.
   auto* elephant_transform =
       elephant->get_component<Engine::Core::TransformComponent>();
   elephant_transform->position.z =
@@ -173,8 +171,7 @@ TEST(FormationCombatGeometry, ElephantChasePenetratesDeepIntoInfantryFootprint) 
   Game::Systems::Combat::process_attacks(
       &world, Game::Systems::Combat::build_combat_query_context(&world), 0.016F);
   EXPECT_TRUE(movement->get_has_target() || movement->has_waypoints());
-  EXPECT_FALSE(elephant->get_component<Engine::Core::AttackComponent>()
-                   ->in_melee_lock);
+  EXPECT_FALSE(elephant->get_component<Engine::Core::AttackComponent>()->in_melee_lock);
 }
 
 TEST(FormationCombatGeometry, ElephantFightStateClearsWhenOpponentIsGone) {
@@ -569,26 +566,24 @@ TEST(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContac
   cavalry->get_component<Engine::Core::UnitComponent>()->spawn_type =
       Game::Units::SpawnType::MountedKnight;
 
-  auto initial =
-      Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
+  auto initial = Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
   auto* infantry_transform =
       infantry->get_component<Engine::Core::TransformComponent>();
-  infantry_transform->position.z =
-      initial.engagement_center_distance + 0.06F;
+  infantry_transform->position.z = initial.engagement_center_distance + 0.06F;
   auto const overlap =
       Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
   ASSERT_TRUE(overlap.formation_overlap_required);
   ASSERT_GT(overlap.center_distance, overlap.engagement_center_distance);
   ASSERT_LE(overlap.surface_gap, 0.0F);
-  EXPECT_FALSE(Game::Systems::FormationCombat::contact_is_active(
-      *cavalry, *infantry, overlap));
+  EXPECT_FALSE(
+      Game::Systems::FormationCombat::contact_is_active(*cavalry, *infantry, overlap));
 
   auto* attack = cavalry->get_component<Engine::Core::AttackComponent>();
   attack->in_melee_lock = true;
   attack->melee_lock_target_id = infantry->get_id();
 
-  EXPECT_TRUE(Game::Systems::FormationCombat::contact_is_active(
-      *cavalry, *infantry, overlap));
+  EXPECT_TRUE(
+      Game::Systems::FormationCombat::contact_is_active(*cavalry, *infantry, overlap));
   EXPECT_TRUE(Game::Systems::Combat::is_in_range(cavalry, infantry, 2.5F));
 }
 

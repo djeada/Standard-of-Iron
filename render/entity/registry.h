@@ -50,9 +50,7 @@ struct DrawContext {
   RendererHandle renderer_handle = k_invalid_renderer_handle;
   class Backend* backend = nullptr;
   const Camera* camera = nullptr;
-  // Every dynamic entity uses the renderer's frame-coherent visibility
-  // policy. Fog mode is independent: local units ignore fog while remote
-  // units require currently visible cells.
+
   const SubmissionVisibilityPolicy* submission_visibility = nullptr;
   SubmissionFogMode submission_fog_mode = SubmissionFogMode::Ignore;
   float alpha_multiplier = 1.0F;
@@ -68,8 +66,7 @@ struct DrawContext {
   bool template_prewarm = false;
   bool suppress_animation_state_persistence = false;
   bool force_single_soldier = false;
-  // Zero keeps every living formation member. Positive values let the world
-  // renderer retain an evenly distributed population at overview LOD.
+
   int max_rendered_individuals = 0;
   bool skip_ground_offset = false;
   bool has_variant_override = false;

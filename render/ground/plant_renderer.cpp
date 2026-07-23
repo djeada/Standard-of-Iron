@@ -72,7 +72,8 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_plant_state, [](const PlantInstanceGpu& instance) -> const QVector4D& {
+      m_plant_state,
+      [](const PlantInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_scale;
       },
       renderer.static_world_visibility_filter_enabled()
@@ -230,9 +231,9 @@ void PlantRenderer::generate_plant_instances() {
     return true;
   };
 
-  float const area_scale = std::sqrt(
-      static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
-      (k_reference_scatter_extent * k_reference_scatter_extent));
+  float const area_scale =
+      std::sqrt(static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /
+                (k_reference_scatter_extent * k_reference_scatter_extent));
   int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
   int const cell_span = k_plant_cell_span * sampling_scale;
   for (int z = 0; z < m_height; z += cell_span) {

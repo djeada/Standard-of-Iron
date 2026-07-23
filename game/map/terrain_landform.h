@@ -48,9 +48,6 @@ struct ErosionConfig {
   float channel_strength = 0.025F;
 };
 
-// Applies a deterministic, constrained erosion pass to authored uplift. A
-// zero strength cell is outside a landform; protected cells are tactical
-// crowns, settlements, and hill entries that erosion must not deform.
 void apply_constrained_erosion(std::vector<float>& heights,
                                const std::vector<float>& strength,
                                const std::vector<std::uint8_t>& protected_cells,

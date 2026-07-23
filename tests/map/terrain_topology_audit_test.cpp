@@ -5,10 +5,8 @@
 TEST(TerrainTopologyAuditTest, AcceptsConnectedRoutesBoundaryWaterAndDefendedHill) {
   Game::Map::MapDefinition map;
   map.grid = {.width = 101, .height = 101, .tile_size = 1.0F};
-  map.roads = {{{-50, 0, 0}, {0, 0, 0}, 3.0F},
-               {{0, 0, 0}, {50, 0, 20}, 3.0F}};
-  map.rivers = {{{-50, 0, -20}, {0, 0, -18}, 4.0F},
-                {{0, 0, -18}, {50, 0, -10}, 4.0F}};
+  map.roads = {{{-50, 0, 0}, {0, 0, 0}, 3.0F}, {{0, 0, 0}, {50, 0, 20}, 3.0F}};
+  map.rivers = {{{-50, 0, -20}, {0, 0, -18}, 4.0F}, {{0, 0, -18}, {50, 0, -10}, 4.0F}};
   Game::Map::TerrainFeature hill;
   hill.type = Game::Map::TerrainType::Hill;
   hill.width = 24.0F;
@@ -26,8 +24,7 @@ TEST(TerrainTopologyAuditTest, AcceptsConnectedRoutesBoundaryWaterAndDefendedHil
 TEST(TerrainTopologyAuditTest, RejectsPatchworkRoutesAndInteriorWaterEnds) {
   Game::Map::MapDefinition map;
   map.grid = {.width = 101, .height = 101, .tile_size = 1.0F};
-  map.roads = {{{-40, 0, -20}, {-20, 0, -20}, 3.0F},
-               {{20, 0, 20}, {40, 0, 20}, 3.0F}};
+  map.roads = {{{-40, 0, -20}, {-20, 0, -20}, 3.0F}, {{20, 0, 20}, {40, 0, 20}, 3.0F}};
   map.rivers = {{{-10, 0, 0}, {10, 0, 0}, 4.0F}};
 
   const auto audit = Game::Map::audit_terrain_topology(map);

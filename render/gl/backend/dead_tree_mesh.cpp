@@ -199,8 +199,6 @@ auto build_dead_tree_mesh() -> PropMeshData {
   append_oriented_box(
       verts, idx, {0.64F, 0.22F, 0.14F}, {0.88F, 0.38F, 0.23F}, 0.034F, 0.028F);
 
-  // A storm-broken crown remains attached to the fallen trunk. The uneven forks
-  // keep a mournful dark-fantasy silhouette while still reading as natural wood.
   append_oriented_box(
       verts, idx, {-0.10F, 0.20F, 0.02F}, {-0.06F, 0.92F, 0.00F}, 0.095F, 0.085F);
   append_oriented_box(
@@ -216,8 +214,6 @@ auto build_dead_tree_mesh() -> PropMeshData {
   append_oriented_box(
       verts, idx, {0.16F, 0.62F, 0.04F}, {0.58F, 0.88F, -0.18F}, 0.048F, 0.043F);
 
-  // Splayed roots and a snapped side limb settle the mesh into the ground and
-  // avoid the weightless appearance of a clean cylinder resting on its side.
   append_oriented_box(
       verts, idx, {-1.02F, 0.15F, -0.08F}, {-1.30F, 0.04F, -0.31F}, 0.060F, 0.045F);
   append_oriented_box(

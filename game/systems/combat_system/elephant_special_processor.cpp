@@ -10,8 +10,8 @@
 #include "../../core/entity.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
-#include "combat_random.h"
 #include "combat_hit_resolver.h"
+#include "combat_random.h"
 #include "combat_utils.h"
 #include "damage_application.h"
 
@@ -232,8 +232,8 @@ void process_trample_damage(Engine::Core::Entity* elephant,
 
     if (dist <= elephant_comp->trample_radius) {
       int const old_health = other_unit->health;
-      auto const application = apply_unit_damage(
-          world, other_entity, damage, elephant->get_id());
+      auto const application =
+          apply_unit_damage(world, other_entity, damage, elephant->get_id());
 
       bool const infantry_target =
           !Game::Units::is_cavalry(other_unit->spawn_type) &&

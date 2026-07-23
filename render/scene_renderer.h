@@ -94,8 +94,8 @@ public:
   }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
-  [[nodiscard]] auto submission_visibility() const noexcept
-      -> const SubmissionVisibilityPolicy& {
+  [[nodiscard]] auto
+  submission_visibility() const noexcept -> const SubmissionVisibilityPolicy& {
     return m_submission_visibility;
   }
 

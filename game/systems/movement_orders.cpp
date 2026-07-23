@@ -100,7 +100,8 @@ auto segment_traverses_bridge(const QVector3D& from, const QVector3D& to) -> boo
   QVector3D const delta = to - from;
   float const length = std::hypot(delta.x(), delta.z());
   float const sample_step = std::max(height_map->get_tile_size() * 0.5F, 0.25F);
-  int const sample_count = std::max(1, static_cast<int>(std::ceil(length / sample_step)));
+  int const sample_count =
+      std::max(1, static_cast<int>(std::ceil(length / sample_step)));
   for (int sample = 0; sample <= sample_count; ++sample) {
     float const t = static_cast<float>(sample) / static_cast<float>(sample_count);
     QVector3D const point = from + delta * t;
@@ -111,14 +112,14 @@ auto segment_traverses_bridge(const QVector3D& from, const QVector3D& to) -> boo
   return false;
 }
 
-auto align_bridge_waypoint(const QVector3D& waypoint, bool final_waypoint)
-    -> QVector3D {
+auto align_bridge_waypoint(const QVector3D& waypoint,
+                           bool final_waypoint) -> QVector3D {
   if (final_waypoint) {
     return waypoint;
   }
   auto const aligned =
-      Game::Map::TerrainService::instance().get_bridge_traversal_position(
-          waypoint.x(), waypoint.z());
+      Game::Map::TerrainService::instance().get_bridge_traversal_position(waypoint.x(),
+                                                                          waypoint.z());
   if (!aligned.has_value()) {
     return waypoint;
   }

@@ -285,9 +285,7 @@ void Camera::zoom_distance(float delta) {
   zoom_distance(delta, k_min_dist, k_max_dist);
 }
 
-void Camera::zoom_distance(float delta,
-                           float min_distance,
-                           float max_distance) {
+void Camera::zoom_distance(float delta, float min_distance, float max_distance) {
   if (!finite(delta)) {
     return;
   }
@@ -602,16 +600,19 @@ void Camera::set_top_down_view(const QVector3D& center, float distance) {
 }
 
 auto Camera::get_view_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_view;
 }
 
 auto Camera::get_projection_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_projection;
 }
 
 auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   return m_cached_view_projection;
 }
@@ -633,27 +634,23 @@ void Camera::rebuild_cached_geometry() const {
     float bottom = m_ortho_bottom;
     float top = m_ortho_top;
     clamp_ortho_box(left, right, bottom, top);
-    m_cached_projection.ortho(
-        left, right, bottom, top, m_near_plane, m_far_plane);
+    m_cached_projection.ortho(left, right, bottom, top, m_near_plane, m_far_plane);
   }
   m_cached_view_projection = m_cached_projection * m_cached_view;
 
   const float* matrix = m_cached_view_projection.constData();
-  auto set_plane = [this](std::size_t index,
-                          float nx,
-                          float ny,
-                          float nz,
-                          float distance) {
-    const float length = std::sqrt(nx * nx + ny * ny + nz * nz);
-    if (length < k_eps) {
-      m_cached_frustum[index] = {QVector3D(), 1.0F};
-      return;
-    }
-    const float inverse_length = 1.0F / length;
-    m_cached_frustum[index] = {
-        QVector3D(nx * inverse_length, ny * inverse_length, nz * inverse_length),
-        distance * inverse_length};
-  };
+  auto set_plane =
+      [this](std::size_t index, float nx, float ny, float nz, float distance) {
+        const float length = std::sqrt(nx * nx + ny * ny + nz * nz);
+        if (length < k_eps) {
+          m_cached_frustum[index] = {QVector3D(), 1.0F};
+          return;
+        }
+        const float inverse_length = 1.0F / length;
+        m_cached_frustum[index] = {
+            QVector3D(nx * inverse_length, ny * inverse_length, nz * inverse_length),
+            distance * inverse_length};
+      };
 
   set_plane(0,
             matrix[index_3] + matrix[index_0],
@@ -850,6 +847,7 @@ void Camera::compute_yaw_pitch_from_offset(const QVector3D& off,
 }
 
 auto Camera::is_in_frustum(const QVector3D& center, float radius) const -> bool {
+  const std::lock_guard<CacheLock> guard(m_cache_mutex);
   rebuild_cached_geometry();
   const float safe_radius = std::max(radius, 0.0F);
   for (const FrustumPlane& plane : m_cached_frustum) {

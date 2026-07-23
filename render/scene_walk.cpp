@@ -1055,8 +1055,6 @@ void Renderer::render_world(Engine::Core::World* world) {
          1.0F);
   }
 
-  // Humanoid preparation happens inside the unit renderer callbacks above, so
-  // publish the count only after that pass has populated the per-frame stats.
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
 #endif

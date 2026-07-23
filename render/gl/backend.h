@@ -196,8 +196,7 @@ private:
 
   int m_viewport_width{0};
   int m_viewport_height{0};
-  // If a surface is momentarily unavailable, expose a terrain/fog-neutral
-  // underlay instead of presenting a bright full-screen flash.
+
   std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
   std::unique_ptr<ShaderCache> m_shader_cache;
   std::unique_ptr<ResourceManager> m_resources;
