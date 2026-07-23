@@ -9,9 +9,7 @@ namespace {
 constexpr float k_byte_scale = 1.0F / 255.0F;
 
 auto byte_luminance(const uchar* rgba) noexcept -> std::uint8_t {
-  // Integer Rec. 709 approximation. The exact transfer curve is unimportant
-  // for temporal comparison, while integer sampling keeps the probe cheap
-  // enough to run on every diagnostic frame.
+
   return static_cast<std::uint8_t>((54U * rgba[0] + 183U * rgba[1] + 19U * rgba[2]) >>
                                    8U);
 }

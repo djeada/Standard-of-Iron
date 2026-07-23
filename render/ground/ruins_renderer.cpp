@@ -15,7 +15,7 @@ namespace {
 
 using namespace Render::Ground;
 
-} // namespace
+}
 
 namespace Render::GL {
 

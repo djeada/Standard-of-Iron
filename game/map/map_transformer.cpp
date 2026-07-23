@@ -401,8 +401,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.max_population = structure.max_population;
     sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, structure.nation);
 
-    if (const auto* point =
-            std::get_if<PointStructureGeometry>(&structure.geometry)) {
+    if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
       sp.position = point->position;
       spawn_map_unit(sp, world, visuals);
       continue;

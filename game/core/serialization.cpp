@@ -889,13 +889,13 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     commander->aura_ability_active = commander_obj["aura_ability_active"].toBool(false);
     commander->aura_ability_requested =
         commander_obj["aura_ability_requested"].toBool(false);
-    commander->aura_ability_duration = static_cast<float>(
-        commander_obj["aura_ability_duration"].toDouble(
+    commander->aura_ability_duration =
+        static_cast<float>(commander_obj["aura_ability_duration"].toDouble(
             commander->aura_ability_duration));
-    commander->aura_ability_remaining = static_cast<float>(
-        commander_obj["aura_ability_remaining"].toDouble(0.0));
-    commander->aura_ability_cooldown = static_cast<float>(
-        commander_obj["aura_ability_cooldown"].toDouble(
+    commander->aura_ability_remaining =
+        static_cast<float>(commander_obj["aura_ability_remaining"].toDouble(0.0));
+    commander->aura_ability_cooldown =
+        static_cast<float>(commander_obj["aura_ability_cooldown"].toDouble(
             commander->aura_ability_cooldown));
     commander->aura_ability_cooldown_remaining = static_cast<float>(
         commander_obj["aura_ability_cooldown_remaining"].toDouble(0.0));
@@ -1820,10 +1820,9 @@ void Serialization::deserialize_terrain(
     for (const auto& value : lakes_array) {
       const auto lake_obj = value.toObject();
       Game::Map::Lake lake;
-      lake.center = QVector3D(
-          static_cast<float>(lake_obj["centerX"].toDouble(0.0)),
-          static_cast<float>(lake_obj["centerY"].toDouble(0.0)),
-          static_cast<float>(lake_obj["centerZ"].toDouble(0.0)));
+      lake.center = QVector3D(static_cast<float>(lake_obj["centerX"].toDouble(0.0)),
+                              static_cast<float>(lake_obj["centerY"].toDouble(0.0)),
+                              static_cast<float>(lake_obj["centerZ"].toDouble(0.0)));
       lake.width = static_cast<float>(lake_obj["width"].toDouble(defaults.width));
       lake.depth = static_cast<float>(lake_obj["depth"].toDouble(defaults.depth));
       lake.rotation_deg =

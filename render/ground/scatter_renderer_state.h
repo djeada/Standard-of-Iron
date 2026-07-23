@@ -136,10 +136,10 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
       continue;
     }
     state.visible_instances.push_back(instance);
-    const auto chunk_x = static_cast<std::int32_t>(
-        std::floor(position.x() / k_chunk_world_size));
-    const auto chunk_z = static_cast<std::int32_t>(
-        std::floor(position.z() / k_chunk_world_size));
+    const auto chunk_x =
+        static_cast<std::int32_t>(std::floor(position.x() / k_chunk_world_size));
+    const auto chunk_z =
+        static_cast<std::int32_t>(std::floor(position.z() / k_chunk_world_size));
     const std::uint64_t key =
         (static_cast<std::uint64_t>(static_cast<std::uint32_t>(chunk_x)) << 32U) |
         static_cast<std::uint32_t>(chunk_z);

@@ -277,8 +277,8 @@ TEST(ElephantSpecTest, AuthoredFaceHasTwoSymmetricBlackEyes) {
     if (vertex.color_role != 7U) {
       continue;
     }
-    QVector3D const rest = root.map(QVector3D(
-        vertex.position[0], vertex.position[1], vertex.position[2]));
+    QVector3D const rest =
+        root.map(QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
     if (rest.z() <= 0.0F) {
       continue;
     }
@@ -465,12 +465,14 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
 
 TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
   auto const& manifest = Render::Elephant::elephant_manifest();
-  auto const idle_it = std::find_if(manifest.clips.begin(),
-                                    manifest.clips.end(),
-                                    [](auto const& clip) { return clip.name == "idle"; });
-  auto const fight_it = std::find_if(manifest.clips.begin(),
-                                     manifest.clips.end(),
-                                     [](auto const& clip) { return clip.name == "fight"; });
+  auto const idle_it =
+      std::find_if(manifest.clips.begin(), manifest.clips.end(), [](auto const& clip) {
+        return clip.name == "idle";
+      });
+  auto const fight_it =
+      std::find_if(manifest.clips.begin(), manifest.clips.end(), [](auto const& clip) {
+        return clip.name == "fight";
+      });
   ASSERT_NE(idle_it, manifest.clips.end());
   ASSERT_NE(fight_it, manifest.clips.end());
   ASSERT_NE(manifest.bake_clip_palette, nullptr);

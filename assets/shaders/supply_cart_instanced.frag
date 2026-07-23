@@ -30,10 +30,10 @@ void main() {
   vec2 wheel_center = mix(vec2(0.24, -0.48), vec2(0.30, 0.42), rear);
   float wheel_radius = mix(0.22, 0.28, rear);
   float radial = length(v_local_pos.yz - wheel_center);
-  float wheel_mask = wheel_x * (1.0 - smoothstep(wheel_radius + 0.01,
-                                                 wheel_radius + 0.045, radial));
-  float tyre_mask = wheel_mask * smoothstep(wheel_radius - 0.055,
-                                             wheel_radius - 0.018, radial);
+  float wheel_mask =
+      wheel_x * (1.0 - smoothstep(wheel_radius + 0.01, wheel_radius + 0.045, radial));
+  float tyre_mask =
+      wheel_mask * smoothstep(wheel_radius - 0.055, wheel_radius - 0.018, radial);
   float hub_mask = wheel_mask * (1.0 - smoothstep(0.055, 0.105, radial));
 
   float cargo_core = (1.0 - smoothstep(0.43, 0.50, abs(v_local_pos.x))) *
@@ -43,28 +43,28 @@ void main() {
   float crate_mask = cargo_core * smoothstep(0.12, 0.25, abs(v_local_pos.z));
   float canvas_mask = cargo_core * smoothstep(0.80, 0.88, v_local_pos.y);
 
-  float longitudinal_grain = 0.5 + 0.5 * sin(v_local_pos.z * 31.0 +
-                                              v_local_pos.y * 5.0);
+  float longitudinal_grain =
+      0.5 + 0.5 * sin(v_local_pos.z * 31.0 + v_local_pos.y * 5.0);
   float cross_grain = hash12(floor(v_local_pos.zy * 18.0) + v_world_pos.xz * 0.15);
   vec3 dark_wood = v_color * vec3(0.62, 0.58, 0.52);
   vec3 fresh_wood = v_color * vec3(1.28, 1.12, 0.88);
-  vec3 wood = mix(dark_wood, fresh_wood,
-                  longitudinal_grain * 0.62 + cross_grain * 0.38);
+  vec3 wood =
+      mix(dark_wood, fresh_wood, longitudinal_grain * 0.62 + cross_grain * 0.38);
 
   float plank_line = max(band(fract((v_local_pos.z + 0.72) * 4.2), 0.5, 0.025, 0.018),
                          band(fract((v_local_pos.y - 0.30) * 6.0), 0.5, 0.020, 0.016));
   wood *= mix(1.0, 0.62, plank_line * 0.46);
 
-  vec3 wheel_wood = mix(vec3(0.23, 0.115, 0.045), vec3(0.52, 0.29, 0.10),
-                        longitudinal_grain);
-  vec3 iron = mix(vec3(0.12, 0.14, 0.16), vec3(0.38, 0.36, 0.32),
-                  hash12(v_world_pos.xz * 8.0));
-  vec3 barrel = mix(vec3(0.35, 0.18, 0.07), vec3(0.67, 0.39, 0.13),
-                    longitudinal_grain);
+  vec3 wheel_wood =
+      mix(vec3(0.23, 0.115, 0.045), vec3(0.52, 0.29, 0.10), longitudinal_grain);
+  vec3 iron =
+      mix(vec3(0.12, 0.14, 0.16), vec3(0.38, 0.36, 0.32), hash12(v_world_pos.xz * 8.0));
+  vec3 barrel = mix(vec3(0.35, 0.18, 0.07), vec3(0.67, 0.39, 0.13), longitudinal_grain);
   float barrel_band = band(fract((v_local_pos.y - 0.50) * 5.2), 0.5, 0.055, 0.025);
   barrel = mix(barrel, vec3(0.16, 0.17, 0.18), barrel_band * 0.72);
   vec3 crate = mix(vec3(0.40, 0.24, 0.09), vec3(0.70, 0.47, 0.19), cross_grain);
-  vec3 canvas = mix(vec3(0.36, 0.39, 0.23), vec3(0.60, 0.53, 0.31),
+  vec3 canvas = mix(vec3(0.36, 0.39, 0.23),
+                    vec3(0.60, 0.53, 0.31),
                     hash12(floor(v_local_pos.xz * 12.0)));
 
   vec3 albedo = wood;

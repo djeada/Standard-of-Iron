@@ -682,10 +682,6 @@ struct Lake {
          !point_in_lake(lake, world_x, world_z, -shoreline_band);
 }
 
-// Finds the first shoreline point while travelling from dry ground toward a lake.
-// The two points must bracket the shoreline. Keeping this here makes map loading,
-// validation, pathing, banks, minimaps, and rendering agree on the same irregular
-// lake outline.
 [[nodiscard]] inline auto
 lake_boundary_intersection(const Lake& lake,
                            QVector3D dry_point,
@@ -799,9 +795,7 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
 }
 
 inline constexpr float k_min_bridge_deck_rise = 0.72F;
-// Lift only the visible/contact surface above the terrain relief used to
-// derive navigation slopes. This keeps bridges clear of the water sheet
-// without making their approaches less attractive to pathfinding.
+
 inline constexpr float k_bridge_deck_visual_lift = 0.33F;
 
 [[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
@@ -810,13 +804,11 @@ inline constexpr float k_bridge_deck_visual_lift = 0.33F;
 
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
   float const clamped_t = std::clamp(t, 0.0F, 1.0F);
-  float const base_y = bridge.start.y() * (1.0F - clamped_t) +
-                       bridge.end.y() * clamped_t;
+  float const base_y =
+      bridge.start.y() * (1.0F - clamped_t) + bridge.end.y() * clamped_t;
   float const effective_height = bridge_effective_height(bridge);
-  float const arch_height =
-      effective_height * bridge_arch_curve(clamped_t) * 0.8F;
-  return base_y + effective_height + arch_height * 0.3F +
-         k_bridge_deck_visual_lift;
+  float const arch_height = effective_height * bridge_arch_curve(clamped_t) * 0.8F;
+  return base_y + effective_height + arch_height * 0.3F + k_bridge_deck_visual_lift;
 }
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,

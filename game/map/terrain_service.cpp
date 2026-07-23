@@ -289,9 +289,6 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map = std::make_unique<TerrainHeightMap>(
       map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
 
-  // Establish one authoritative battlefield surface before authored features
-  // are layered onto it. Roads, placement, pathing, and rendering all sample
-  // this same relief instead of relying on renderer-only displacement.
   m_height_map->apply_biome_variation(map_def.biome);
   m_height_map->build_from_features(map_def.terrain);
   m_height_map->add_lakes(map_def.lakes);
@@ -583,11 +580,10 @@ void TerrainService::rebuild_road_spatial_index() {
                       m_road_index_rows - 1);
   };
   const auto segment_cell_bounds = [&](const RoadQuerySegment& segment) {
-    return std::array<int, 4>{
-        cell_x(segment.min_x),
-        cell_x(segment.max_x),
-        cell_z(segment.min_z),
-        cell_z(segment.max_z)};
+    return std::array<int, 4>{cell_x(segment.min_x),
+                              cell_x(segment.max_x),
+                              cell_z(segment.min_z),
+                              cell_z(segment.max_z)};
   };
 
   const std::size_t cell_count = static_cast<std::size_t>(m_road_index_columns) *
@@ -639,22 +635,20 @@ auto TerrainService::is_point_near_indexed_road(float world_x,
   const float index_max_z =
       m_road_index_origin_z + m_road_index_cell_size * m_road_index_rows;
   if (world_x + expanded < m_road_index_origin_x ||
-      world_z + expanded < m_road_index_origin_z ||
-      world_x - expanded >= index_max_x || world_z - expanded >= index_max_z) {
+      world_z + expanded < m_road_index_origin_z || world_x - expanded >= index_max_x ||
+      world_z - expanded >= index_max_z) {
     return false;
   }
 
   const auto cell_x = [&](float x) {
-    return std::clamp(static_cast<int>(
-                          std::floor((x - m_road_index_origin_x) /
-                                     m_road_index_cell_size)),
+    return std::clamp(static_cast<int>(std::floor((x - m_road_index_origin_x) /
+                                                  m_road_index_cell_size)),
                       0,
                       m_road_index_columns - 1);
   };
   const auto cell_z = [&](float z) {
-    return std::clamp(static_cast<int>(
-                          std::floor((z - m_road_index_origin_z) /
-                                     m_road_index_cell_size)),
+    return std::clamp(static_cast<int>(std::floor((z - m_road_index_origin_z) /
+                                                  m_road_index_cell_size)),
                       0,
                       m_road_index_rows - 1);
   };
@@ -679,8 +673,8 @@ auto TerrainService::is_point_near_indexed_road(float world_x,
         float closest_x = segment.start_x;
         float closest_z = segment.start_z;
         if (segment.inverse_length_sq > 0.0F) {
-          float t = (px * segment.delta_x + pz * segment.delta_z) *
-                    segment.inverse_length_sq;
+          float t =
+              (px * segment.delta_x + pz * segment.delta_z) * segment.inverse_length_sq;
           if (t <= 0.0F) {
             t = 0.0F;
           } else if (t >= 1.0F) {

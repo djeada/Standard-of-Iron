@@ -54,8 +54,8 @@ void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_m
 
   for (std::size_t segment_index = 0; segment_index < m_river_segments.size();
        ++segment_index) {
-    auto mesh_result = Ground::build_riverbank_mesh(
-        m_river_segments, segment_index, height_map);
+    auto mesh_result =
+        Ground::build_riverbank_mesh(m_river_segments, segment_index, height_map);
     m_meshes.push_back(std::move(mesh_result.mesh));
     m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
     m_water_kinds.push_back(WaterSurfaceKind::River);
@@ -179,10 +179,8 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       const auto fog_mode = renderer.static_world_visibility_filter_enabled()
                                 ? SubmissionFogMode::Revealed
                                 : SubmissionFogMode::Ignore;
-      if (!renderer.submission_visibility().accepts_segment(cull_samples.front(),
-                                                            cull_samples.back(),
-                                                            m_tile_size,
-                                                            fog_mode)) {
+      if (!renderer.submission_visibility().accepts_segment(
+              cull_samples.front(), cull_samples.back(), m_tile_size, fog_mode)) {
         continue;
       }
     }
@@ -220,8 +218,7 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.kind = LinearFeatureKind::Shoreline;
     cmd.water_kind = m_water_kinds[mesh_index - 1];
     cmd.model = model;
-    // Carry the complete terrain palette into the shoreline. A single grass
-    // tint made dry, rocky, fertile, and alpine banks look interchangeable.
+
     cmd.color = surface.grass_primary;
     cmd.biome_grass_secondary = surface.grass_secondary;
     cmd.biome_grass_dry = surface.grass_dry;

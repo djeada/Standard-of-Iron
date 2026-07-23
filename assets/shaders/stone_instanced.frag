@@ -19,13 +19,14 @@ float noise3(vec3 p) {
   vec3 i = floor(p);
   vec3 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(mix(hash31(i), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
-                 mix(hash31(i + vec3(0.0, 1.0, 0.0)),
-                     hash31(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
-             mix(mix(hash31(i + vec3(0.0, 0.0, 1.0)),
-                     hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
-                 mix(hash31(i + vec3(0.0, 1.0, 1.0)),
-                     hash31(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
+  return mix(
+      mix(mix(hash31(i), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+          mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+          f.y),
+      mix(mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+          mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+          f.y),
+      f.z);
 }
 
 void main() {

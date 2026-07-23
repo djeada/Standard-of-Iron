@@ -2180,8 +2180,7 @@ struct ArenaScenarioRunner::Impl {
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::FullCreatureDetailOnly:
       case ArenaExpectationKind::NoFullscreenFlash:
-        // These temporal contracts are checked during rendered-frame
-        // observation, when the transition evidence is still available.
+
         break;
       default:
         break;

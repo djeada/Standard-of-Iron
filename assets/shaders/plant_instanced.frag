@@ -158,7 +158,7 @@ void main() {
   albedo *= mix(1.0, 0.76, veins * 0.34);
 
   float blemish = h11(floor(v_world_pos.x * 19.0 + v_world_pos.z * 23.0) +
-                       floor(v_tex_coord.y * 17.0) + v_seed * 31.0);
+                      floor(v_tex_coord.y * 17.0) + v_seed * 31.0);
   float leaf_spot = smoothstep(0.965, 0.995, blemish) * (1.0 - rim);
   albedo = mix(albedo, albedo * vec3(0.48, 0.42, 0.30), leaf_spot * 0.55);
 

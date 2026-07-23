@@ -8834,9 +8834,8 @@ TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
   snapshot.tile_size = 1.0F;
   snapshot.half_width = 1.0F;
   snapshot.half_height = 1.0F;
-  snapshot.cells.assign(9U,
-                        static_cast<std::uint8_t>(
-                            Game::Map::VisibilityState::Explored));
+  snapshot.cells.assign(
+      9U, static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored));
   Render::GL::SubmissionVisibilityPolicy visibility_policy;
   visibility_policy.reset(nullptr, &snapshot);
   ctx.submission_visibility = &visibility_policy;
@@ -8870,10 +8869,9 @@ TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
   camera.set_perspective(60.0F, 1.0F, 0.1F, 100.0F);
   camera.look_at(
       QVector3D(0.0F, 0.0F, 5.0F), QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0, 1, 0));
-  ASSERT_FALSE(camera.is_in_frustum(QVector3D(transform->position.x,
-                                              transform->position.y,
-                                              transform->position.z),
-                                    0.6F));
+  ASSERT_FALSE(camera.is_in_frustum(
+      QVector3D(transform->position.x, transform->position.y, transform->position.z),
+      0.6F));
 
   Render::GL::SubmissionVisibilityPolicy visibility_policy;
   visibility_policy.reset(&camera, nullptr);

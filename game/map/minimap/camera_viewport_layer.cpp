@@ -85,9 +85,8 @@ void CameraViewportLayer::draw_viewport_rect(
               static_cast<qreal>(pixel_height));
 
   const float corner_size = std::min(pixel_width, pixel_height) * k_corner_size_ratio;
-  const float actual_corner =
-      std::min(std::max(corner_size, k_min_corner_size),
-               std::min(pixel_width, pixel_height) * 0.45F);
+  const float actual_corner = std::min(std::max(corner_size, k_min_corner_size),
+                                       std::min(pixel_width, pixel_height) * 0.45F);
 
   QPainterPath brackets;
   brackets.moveTo(rect.left() + actual_corner, rect.top());

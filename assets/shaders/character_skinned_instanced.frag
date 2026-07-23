@@ -147,12 +147,8 @@ vec3 shade_readable_character(vec3 base,
   float readable_ambient = max(scene_ambient, 0.18);
   float daylight = smoothstep(0.14, 0.31, scene_ambient);
 
-  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04),
-                       vec3(1.08, 0.94, 0.78),
-                       daylight);
-  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82),
-                       vec3(0.72, 0.82, 1.00),
-                       daylight);
+  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04), vec3(1.08, 0.94, 0.78), daylight);
+  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82), vec3(0.72, 0.82, 1.00), daylight);
 
   float ndl = dot(surface_normal, light_dir);
   float wrapped_diffuse = clamp((ndl + 0.25) / 1.25, 0.0, 1.0);
@@ -184,14 +180,9 @@ void main() {
   vec3 surface_normal = normalize(v_normal_ws);
   vec3 light_dir = normalize(u_light_dir);
   float daylight = smoothstep(0.14, 0.31, clamp(u_ambient_strength, 0.12, 0.40));
-  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04),
-                       vec3(1.08, 0.94, 0.78),
-                       daylight);
-  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82),
-                       vec3(0.72, 0.82, 1.00),
-                       daylight);
-  vec3 color = shade_readable_character(
-      base, surface_normal, v_pos_ws, v_material_id);
+  vec3 sun_color = mix(vec3(0.68, 0.77, 1.04), vec3(1.08, 0.94, 0.78), daylight);
+  vec3 sky_color = mix(vec3(0.42, 0.53, 0.82), vec3(0.72, 0.82, 1.00), daylight);
+  vec3 color = shade_readable_character(base, surface_normal, v_pos_ws, v_material_id);
   if (v_material_id == 6) {
     bool horse_hair = v_color_role == 5 || v_color_role == 6;
     bool dark_detail = v_color_role == 4 || v_color_role == 8;

@@ -3220,12 +3220,11 @@ TEST_F(CombatModeTest, TimedSpearTraceUsesBakedShaftSegmentWhenAvailable) {
   EXPECT_EQ(forward_contact.target_id, forward_enemy->get_id())
       << "segment previous_base=" << segment.previous_base.x() << ","
       << segment.previous_base.y() << "," << segment.previous_base.z()
-      << " previous_tip=" << segment.previous_tip.x() << ","
-      << segment.previous_tip.y() << "," << segment.previous_tip.z()
-      << " current_base=" << segment.current_base.x() << ","
-      << segment.current_base.y() << "," << segment.current_base.z()
-      << " current_tip=" << segment.current_tip.x() << ","
-      << segment.current_tip.y() << "," << segment.current_tip.z();
+      << " previous_tip=" << segment.previous_tip.x() << "," << segment.previous_tip.y()
+      << "," << segment.previous_tip.z() << " current_base=" << segment.current_base.x()
+      << "," << segment.current_base.y() << "," << segment.current_base.z()
+      << " current_tip=" << segment.current_tip.x() << "," << segment.current_tip.y()
+      << "," << segment.current_tip.z();
 
   std::array<EntityID, 1> const ignored_forward{forward_enemy->get_id()};
   auto const broad_shape_contact =
@@ -3834,8 +3833,7 @@ TEST_F(CombatModeTest, RunningRtsCavalryChargeKillsAndLaunchesInfantryOnce) {
 TEST_F(CombatModeTest, CatapultStoneLaunchesInfantryCasualties) {
   auto* catapult = world->create_entity();
   catapult->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto* catapult_unit =
-      catapult->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* catapult_unit = catapult->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   catapult_unit->owner_id = 1;
   catapult_unit->spawn_type = Game::Units::SpawnType::Catapult;
 
@@ -3868,8 +3866,7 @@ TEST_F(CombatModeTest, CatapultStoneLaunchesInfantryCasualties) {
 TEST_F(CombatModeTest, ElephantMeleeAttackLaunchesInfantryCasualties) {
   auto* elephant = world->create_entity();
   elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto* elephant_unit =
-      elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  auto* elephant_unit = elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
   elephant_unit->owner_id = 1;
   elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
 
@@ -3877,8 +3874,7 @@ TEST_F(CombatModeTest, ElephantMeleeAttackLaunchesInfantryCasualties) {
   auto* target_unit = target->get_component<UnitComponent>();
   target_unit->render_individuals_per_unit_override = 8;
 
-  Game::Systems::Combat::deal_damage(
-      world.get(), target, 25, elephant->get_id());
+  Game::Systems::Combat::deal_damage(world.get(), target, 25, elephant->get_id());
 
   auto* casualties = target->get_component<SoldierCasualtyAnimationComponent>();
   ASSERT_NE(casualties, nullptr);

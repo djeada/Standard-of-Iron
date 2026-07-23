@@ -1,13 +1,13 @@
 #include "commander_aura_renderer.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
 #include "../../game/systems/nation_id.h"
 #include "../scene_renderer.h"
 #include "../selection_ring_layout.h"
-
-#include <algorithm>
-#include <cmath>
 
 namespace Render::GL {
 
@@ -79,8 +79,7 @@ void render_commander_auras(Renderer* renderer,
 
     auto const* buff =
         entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
-    auto const* transform =
-        entity->get_component<Engine::Core::TransformComponent>();
+    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (buff == nullptr || !buff->active || transform == nullptr || unit == nullptr ||
         unit->health <= 0) {
@@ -107,9 +106,8 @@ void render_commander_auras(Renderer* renderer,
     const auto placements = build_selection_ring_layout(
         {.soldiers = soldiers,
          .ring_size = glow_radius,
-         .position = QVector3D(transform->position.x,
-                               transform->position.y,
-                               transform->position.z),
+         .position = QVector3D(
+             transform->position.x, transform->position.y, transform->position.z),
          .yaw_degrees = transform->rotation.y});
     for (auto const& placement : placements) {
       renderer->healer_aura(QVector3D(placement.world_x,

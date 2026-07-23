@@ -213,7 +213,6 @@ Item {
         opacity: 0.0
         visible: opacity > 0.0
 
-
         Rectangle {
             anchors.fill: parent
             radius: width / 2

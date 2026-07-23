@@ -888,7 +888,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
   } else if (type == QStringLiteral("pine_tree") ||
              type == QStringLiteral("olive_tree")) {
     const QColor crown = type == QStringLiteral("pine_tree") ? QColor(38, 110, 70)
-                                                               : QColor(105, 126, 62);
+                                                             : QColor(105, 126, 62);
     painter.setBrush(crown.darker(145));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);

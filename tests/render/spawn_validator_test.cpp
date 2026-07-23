@@ -327,8 +327,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRoadClearance) {
 }
 
 TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
-  // The production minimum bridge plus tree clearance is wider than the
-  // original 10x10 fixture, so use a field that contains both test points.
+
   width = 24;
   height = 24;
   height_data.assign(static_cast<std::size_t>(width * height), 0.0F);

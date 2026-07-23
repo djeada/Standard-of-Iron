@@ -110,10 +110,6 @@ private:
     float distance{0.0F};
   };
 
-  // A lock that is reset (not copied) on Camera copy/move so Camera stays
-  // copyable — copies are made single-threaded during setup (e.g. deriving the
-  // commander camera from the RTS camera), and each Camera owns its own lock.
-  // Satisfies BasicLockable so it works directly with std::lock_guard.
   class CacheLock {
   public:
     CacheLock() = default;
@@ -166,12 +162,6 @@ private:
   float m_orbit_time = 0.0F;
   float m_orbit_duration = 0.12F;
 
-  // The cache is rebuilt lazily on the render thread (submission frustum tests,
-  // matrix accessors) while camera mutators run on the GUI thread in the
-  // threaded Qt Quick render loop. Without serialization a reader can observe a
-  // half-written view-projection matrix and derive a scrambled frustum that
-  // rejects the whole scene for one frame (a full-screen flash). The mutex
-  // guards every read/rebuild/invalidate of the cached geometry below.
   mutable CacheLock m_cache_mutex;
   mutable QMatrix4x4 m_cached_view;
   mutable QMatrix4x4 m_cached_projection;
@@ -184,7 +174,7 @@ private:
     const std::lock_guard<CacheLock> guard(m_cache_mutex);
     m_cached_geometry_dirty = true;
   }
-  // Assumes m_cache_mutex is already held by the caller.
+
   void rebuild_cached_geometry() const;
 
   void clamp_above_ground();

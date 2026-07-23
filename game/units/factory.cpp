@@ -113,8 +113,7 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                          return Elephant::Create(world, params);
                        });
 
-  auto can_spawn_commander = [](Engine::Core::World& world,
-                                const SpawnParams& params) {
+  auto can_spawn_commander = [](Engine::Core::World& world, const SpawnParams& params) {
     return !owner_has_living_commander(world, params.player_id);
   };
   auto sword_commander_factory =

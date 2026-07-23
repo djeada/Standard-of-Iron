@@ -208,8 +208,7 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
     return (stamina != nullptr) && stamina->run_requested;
   }
   case ActionId::Aura: {
-    const auto* commander =
-        entity.get_component<Engine::Core::CommanderComponent>();
+    const auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
     return commander != nullptr && commander->aura_ability_active;
   }
   case ActionId::Heal:
@@ -241,8 +240,7 @@ auto get_status(const App::Core::ActionContext& context,
     ++status.eligible_count;
     status.active_count += unit_is_active_for_action(*entity, action) ? 1 : 0;
     if (action == ActionId::Aura) {
-      const auto* commander =
-          entity->get_component<Engine::Core::CommanderComponent>();
+      const auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
       status.ready_count +=
           commander != nullptr && commander->can_activate_aura_ability() ? 1 : 0;
     }

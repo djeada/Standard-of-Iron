@@ -125,15 +125,16 @@ TEST_F(MapTransformerStructureTest,
   def.grid.height = 16;
   def.structures.push_back({
       .type = Game::Units::SpawnType::WallSegment,
-      .geometry = Game::Map::LineStructureGeometry{
-          .start = QVector3D(runtime_world_from_grid(4, def.grid.width),
-                             0.0F,
-                             runtime_world_from_grid(8, def.grid.height)),
-          .end = QVector3D(runtime_world_from_grid(8, def.grid.width),
-                           0.0F,
-                           runtime_world_from_grid(8, def.grid.height)),
-          .width = 2.0F,
-      },
+      .geometry =
+          Game::Map::LineStructureGeometry{
+              .start = QVector3D(runtime_world_from_grid(4, def.grid.width),
+                                 0.0F,
+                                 runtime_world_from_grid(8, def.grid.height)),
+              .end = QVector3D(runtime_world_from_grid(8, def.grid.width),
+                               0.0F,
+                               runtime_world_from_grid(8, def.grid.height)),
+              .width = 2.0F,
+          },
       .player_id = 2,
       .nation = QStringLiteral("carthage"),
   });

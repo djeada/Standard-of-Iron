@@ -18,7 +18,8 @@ float noise21(vec2 p) {
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
-             mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0)), f.x), f.y);
+             mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0)), f.x),
+             f.y);
 }
 
 void main() {
@@ -39,14 +40,14 @@ void main() {
   stone = mix(stone, vec3(0.22, 0.27, 0.20), lichen);
 
   float vertical_face = 1.0 - smoothstep(0.35, 0.82, abs(N.y));
-  float rain_path = noise21(vec2(v_world_pos.x * 2.2 + v_world_pos.z,
-                                  floor(v_local_pos.y * 3.0) * 0.37));
+  float rain_path = noise21(
+      vec2(v_world_pos.x * 2.2 + v_world_pos.z, floor(v_local_pos.y * 3.0) * 0.37));
   float rain_stain = vertical_face * smoothstep(0.60, 0.88, rain_path) *
                      (1.0 - smoothstep(0.35, 1.65, v_local_pos.y));
   stone = mix(stone, stone * vec3(0.48, 0.54, 0.53), rain_stain * 0.60);
 
   float fracture_field = abs(sin(v_local_pos.x * 15.0 - v_local_pos.z * 11.0 +
-                                  v_local_pos.y * 8.0 + coarse * 3.0));
+                                 v_local_pos.y * 8.0 + coarse * 3.0));
   float fracture = 1.0 - smoothstep(0.025, 0.11, fracture_field);
   stone *= mix(1.0, 0.58, fracture * 0.55);
 

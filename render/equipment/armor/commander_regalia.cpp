@@ -24,8 +24,12 @@ void add_fabius_regalia(std::vector<Primitive>& p) {
       {-0.34F, 0.02F, 0.0F}, {0.23F, 0.10F, 0.21F}, k_trim_slot, 1.0F, 2));
   p.push_back(generated_ellipsoid(
       {0.34F, 0.02F, 0.0F}, {0.23F, 0.10F, 0.21F}, k_trim_slot, 1.0F, 2));
-  p.push_back(generated_cone(
-      {-0.31F, -0.03F, -0.01F}, {-0.55F, -0.13F, -0.04F}, 0.11F, k_cloth_slot, 1.0F, 2));
+  p.push_back(generated_cone({-0.31F, -0.03F, -0.01F},
+                             {-0.55F, -0.13F, -0.04F},
+                             0.11F,
+                             k_cloth_slot,
+                             1.0F,
+                             2));
   p.push_back(generated_cone(
       {0.31F, -0.03F, -0.01F}, {0.55F, -0.13F, -0.04F}, 0.11F, k_cloth_slot, 1.0F, 2));
   p.push_back(generated_cylinder(

@@ -110,30 +110,21 @@ auto sample_hill(float local_x, float local_z, const HillConfig& config) -> Hill
                                          config.rounded_crown ? 0.21F : 0.075F,
                                          config.seed ^ 0x13198A2EU);
   if (!config.rounded_crown) {
-    // Small tactical/test hills historically guarantee the complete authored
-    // ellipse as usable crown. Organic edge noise may extend that crown, but
-    // must not bite into it and turn a broad plateau into a narrow summit.
+
     const float authored_crown_distance =
         std::hypot(local_x / std::max(config.crown_radius_x, 0.001F),
                    local_z / std::max(config.crown_radius_z, 0.001F));
     crown_distance = std::min(crown_distance, authored_crown_distance);
   }
   if (config.rounded_crown) {
-    // A low, overlapping uplift lobe makes campaign hills into irregular
-    // ridges and mesas. Using a smooth distance union keeps one continuous
-    // slope and summit for pathing, unlike adding a second visual-only mound.
-    const float side = signed_fbm(config.phase,
-                                  -0.83F,
-                                  config.seed ^ 0x9E3779B9U,
-                                  3) >= 0.0F
-                           ? 1.0F
-                           : -1.0F;
+
+    const float side =
+        signed_fbm(config.phase, -0.83F, config.seed ^ 0x9E3779B9U, 3) >= 0.0F ? 1.0F
+                                                                               : -1.0F;
     const float lobe_x = side * config.outer_radius_x * 0.20F;
-    const float lobe_z = signed_fbm(-1.17F,
-                                    config.phase,
-                                    config.seed ^ 0xBB67AE85U,
-                                    3) *
-                         config.outer_radius_z * 0.12F;
+    const float lobe_z =
+        signed_fbm(-1.17F, config.phase, config.seed ^ 0xBB67AE85U, 3) *
+        config.outer_radius_z * 0.12F;
     const float outer_lobe = organic_ellipse(x - lobe_x,
                                              z - lobe_z,
                                              config.outer_radius_x * 0.79F,
@@ -155,9 +146,6 @@ auto sample_hill(float local_x, float local_z, const HillConfig& config) -> Hill
     return {.outer_distance = outer_distance, .crown_distance = crown_distance};
   }
 
-  // Parameterise the slope between the independently organic outer and crown
-  // contours. This gives each lobe its own real slope run instead of wrapping
-  // a circular height profile around a non-circular silhouette.
   const float slope_band = std::max(crown_distance - outer_distance, 0.08F);
   const float slope_position =
       std::clamp((1.0F - outer_distance) / slope_band, 0.0F, 1.0F);
@@ -181,8 +169,6 @@ auto sample_hill(float local_x, float local_z, const HillConfig& config) -> Hill
   const float drainage = std::max(drainage_a, drainage_b * 0.72F);
   elevation *= 1.0F - drainage * mid_slope * 0.11F;
 
-  // Small, slope-following erosion breaks up the profile without roughening
-  // the tactical summit or turning the silhouette into high-frequency noise.
   const float weathering = signed_fbm(domain_x * 3.1F + config.phase,
                                       domain_z * 3.1F - config.phase,
                                       config.seed ^ 0xC2B2AE35U,
@@ -197,8 +183,7 @@ auto sample_hill(float local_x, float local_z, const HillConfig& config) -> Hill
                          toe * 0.055F;
   elevation = std::clamp(elevation + sediment, 0.0F, 1.0F);
   if (crown_distance <= 1.0F) {
-    // Preserve a useful flat summit, but round its outer shoulder into the
-    // natural slope. The previous full-radius flat crown was the visible disc.
+
     const float summit_core = smoothstep01((1.0F - crown_distance) / 0.22F);
     elevation = config.rounded_crown ? 0.94F + 0.06F * summit_core : 1.0F;
   }
@@ -220,23 +205,18 @@ auto sample_mountain(float local_x,
     return {};
   }
 
-  // One continuous uplift field. Longitudinal taper and a wandering crest
-  // create a range rather than a radial cone, while the low foothill envelope
-  // keeps overlapping authored features seamless.
   const float envelope_position = std::max(1.0F - outer_distance, 0.0F);
   const float edge_fade = smoothstep01(envelope_position / 0.16F);
   const float centerline =
-      std::sin(nx * 3.1F + config.phase) * 0.10F +
-      signed_fbm(nx * 1.7F + config.phase,
-                 config.phase * 0.31F,
-                 config.seed ^ 0xD1B54A35U,
-                 3) *
-          0.075F;
+      std::sin(nx * 3.1F + config.phase) * 0.10F + signed_fbm(nx * 1.7F + config.phase,
+                                                              config.phase * 0.31F,
+                                                              config.seed ^ 0xD1B54A35U,
+                                                              3) *
+                                                       0.075F;
   const float cross_distance = std::abs(nz - centerline);
-  const float longitudinal_taper =
-      std::pow(std::max(1.0F - std::abs(nx), 0.0F), 0.30F);
-  const float main_fold = std::pow(
-      std::max(1.0F - cross_distance / 0.82F, 0.0F), 1.18F);
+  const float longitudinal_taper = std::pow(std::max(1.0F - std::abs(nx), 0.0F), 0.30F);
+  const float main_fold =
+      std::pow(std::max(1.0F - cross_distance / 0.82F, 0.0F), 1.18F);
   const float branch_centerline =
       -0.34F * nx + std::sin(nx * 4.6F - config.phase) * 0.10F;
   const float branch_window = smoothstep01((0.72F - std::abs(nx + 0.10F)) / 0.38F);
@@ -252,8 +232,8 @@ auto sample_mountain(float local_x,
                                  nz * 5.2F - broad_noise * 0.55F,
                                  config.seed ^ 0x369DEA0FU,
                                  4));
-  const float gully = std::pow(std::clamp(drainage_ridge, 0.0F, 1.0F), 8.0F) *
-                      main_fold * edge_fade;
+  const float gully =
+      std::pow(std::clamp(drainage_ridge, 0.0F, 1.0F), 8.0F) * main_fold * edge_fade;
   const float peak_chain = std::clamp(0.74F + signed_fbm(nx * 3.0F + config.phase,
                                                          config.phase * 0.47F,
                                                          config.seed ^ 0xA4093822U,
@@ -265,10 +245,9 @@ auto sample_mountain(float local_x,
   const float ridge = main_fold * longitudinal_taper * peak_chain * 0.78F;
   const float folded_relief = branch_fold * longitudinal_taper * 0.18F;
   const float weathering = broad_noise * 0.075F + fine_noise * 0.026F - gully * 0.075F;
-  const float height = edge_fade *
-                       std::clamp(foothill + ridge + folded_relief + weathering,
-                                  0.0F,
-                                  1.08F);
+  const float height =
+      edge_fade *
+      std::clamp(foothill + ridge + folded_relief + weathering, 0.0F, 1.08F);
   return {.footprint = smoothstep01(envelope_position / 0.12F),
           .elevation_fraction = std::clamp(height, 0.0F, 1.06F)};
 }

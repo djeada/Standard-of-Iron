@@ -6,7 +6,6 @@
 #include <QTemporaryFile>
 
 #include <cmath>
-
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
@@ -17,10 +16,8 @@ TEST(MapLoaderTest, ExpandsRiverWaypointsIntoAContinuousRuntimeChain) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
-  const QJsonArray waypoints{QJsonArray{0, 4},
-                             QJsonArray{8, 7},
-                             QJsonArray{12, 12},
-                             QJsonArray{20, 16}};
+  const QJsonArray waypoints{
+      QJsonArray{0, 4}, QJsonArray{8, 7}, QJsonArray{12, 12}, QJsonArray{20, 16}};
   const QJsonObject river{{"start", QJsonArray{0, 4}},
                           {"end", QJsonArray{20, 16}},
                           {"width", 4.0},
@@ -34,8 +31,8 @@ TEST(MapLoaderTest, ExpandsRiverWaypointsIntoAContinuousRuntimeChain) {
 
   Game::Map::MapDefinition map;
   QString error;
-  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
-      temp_file.fileName(), map, &error))
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
       << error.toStdString();
   ASSERT_EQ(map.rivers.size(), 3U);
   EXPECT_EQ(map.rivers[0].end, map.rivers[1].start);
@@ -151,16 +148,15 @@ TEST(MapLoaderTest, ExpandsRoadWaypointsIntoConnectedRuntimeSegments) {
       {"coord_system", "world"},
       {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
       {"roads",
-       QJsonArray{QJsonObject{
-           {"start", QJsonArray{0.0, 0.0}},
-           {"end", QJsonArray{10.0, 5.0}},
-           {"waypoints",
-            QJsonArray{QJsonArray{0.0, 0.0},
-                       QJsonArray{5.0, 0.0},
-                       QJsonArray{5.0, 5.0},
-                       QJsonArray{10.0, 5.0}}},
-           {"width", 2.5},
-           {"style", "rough"}}}}};
+       QJsonArray{QJsonObject{{"start", QJsonArray{0.0, 0.0}},
+                              {"end", QJsonArray{10.0, 5.0}},
+                              {"waypoints",
+                               QJsonArray{QJsonArray{0.0, 0.0},
+                                          QJsonArray{5.0, 0.0},
+                                          QJsonArray{5.0, 5.0},
+                                          QJsonArray{10.0, 5.0}}},
+                              {"width", 2.5},
+                              {"style", "rough"}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
 
@@ -224,10 +220,8 @@ TEST(MapLoaderTest, TrimsFeedingRiverAtIrregularLakeBoundary) {
                               {"end", QJsonArray{0.0, 0.0}},
                               {"width", 4.0}}}},
       {"lakes",
-       QJsonArray{QJsonObject{{"x", 0.0},
-                              {"z", 0.0},
-                              {"width", 20.0},
-                              {"depth", 20.0}}}}};
+       QJsonArray{
+           QJsonObject{{"x", 0.0}, {"z", 0.0}, {"width", 20.0}, {"depth", 20.0}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
 
@@ -385,18 +379,17 @@ TEST(MapLoaderTest, ParsesPointAndLineStructuresWithOwnership) {
       {"name", "Buildings Test"},
       {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
       {"structures",
-       QJsonArray{
-           QJsonObject{{"type", "defense_tower"},
-                       {"x", 10},
-                       {"z", 15},
-                       {"player_id", 1},
-                       {"nation", "rome"}},
-           QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}},
-           QJsonObject{{"type", "wall_segment"},
-                       {"start", QJsonArray{5, 10}},
-                       {"end", QJsonArray{30, 10}},
-                       {"player_id", 1},
-                       {"nation", "rome"}}}}};
+       QJsonArray{QJsonObject{{"type", "defense_tower"},
+                              {"x", 10},
+                              {"z", 15},
+                              {"player_id", 1},
+                              {"nation", "rome"}},
+                  QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}},
+                  QJsonObject{{"type", "wall_segment"},
+                              {"start", QJsonArray{5, 10}},
+                              {"end", QJsonArray{30, 10}},
+                              {"player_id", 1},
+                              {"nation", "rome"}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
 
@@ -411,8 +404,8 @@ TEST(MapLoaderTest, ParsesPointAndLineStructuresWithOwnership) {
   EXPECT_EQ(tower.type, Game::Units::SpawnType::DefenseTower);
   EXPECT_EQ(tower.player_id, 1);
   EXPECT_EQ(tower.nation, QStringLiteral("rome"));
-  ASSERT_TRUE(std::holds_alternative<Game::Map::PointStructureGeometry>(
-      tower.geometry));
+  ASSERT_TRUE(
+      std::holds_alternative<Game::Map::PointStructureGeometry>(tower.geometry));
 
   const auto& home = map_def.structures[1];
   EXPECT_EQ(home.type, Game::Units::SpawnType::Home);
@@ -420,8 +413,7 @@ TEST(MapLoaderTest, ParsesPointAndLineStructuresWithOwnership) {
   const auto& wall = map_def.structures[2];
   EXPECT_EQ(wall.type, Game::Units::SpawnType::WallSegment);
   EXPECT_EQ(wall.player_id, 1);
-  ASSERT_TRUE(
-      std::holds_alternative<Game::Map::LineStructureGeometry>(wall.geometry));
+  ASSERT_TRUE(std::holds_alternative<Game::Map::LineStructureGeometry>(wall.geometry));
   const auto& line = std::get<Game::Map::LineStructureGeometry>(wall.geometry);
   EXPECT_LT(line.start.x(), line.end.x());
 }

@@ -533,19 +533,16 @@ void read_terrain(const QJsonArray& arr,
 
     if (feature.type == TerrainType::Hill && feature.width == 0.0F &&
         feature.depth == 0.0F) {
-      // Radius is a radial measure in authored JSON; width/depth are full
-      // extents for tactical hills. Mountains intentionally retain the radial
-      // form so the terrain builder can turn them into broad, irregular
-      // ridges instead of identical circular domes.
+
       feature.width = feature.radius * 2.0F;
       feature.depth = feature.radius * 2.0F;
     }
 
-    const double default_feature_height =
-        feature.type == TerrainType::Flat || feature.type == TerrainType::Forest ||
-                is_water_terrain(feature.type)
-            ? 0.0
-            : default_terrain_height;
+    const double default_feature_height = feature.type == TerrainType::Flat ||
+                                                  feature.type == TerrainType::Forest ||
+                                                  is_water_terrain(feature.type)
+                                              ? 0.0
+                                              : default_terrain_height;
     feature.height =
         float(terrain_obj.value("height").toDouble(default_feature_height));
     feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
@@ -663,23 +660,22 @@ void read_rivers(const QJsonArray& arr,
 
   for (const auto& river_val : arr) {
     const auto river_obj = river_val.toObject();
-    const float width =
-        float(river_obj.value("width").toDouble(default_river_width));
+    const float width = float(river_obj.value("width").toDouble(default_river_width));
     const bool authored_height = river_obj.contains("height");
     const float height = float(river_obj.value("height").toDouble(0.0));
 
     std::vector<QVector3D> points;
-    auto append_point = [&points, duplicate_point_epsilon_sq](
-                            const std::optional<QVector3D>& point) {
-      if (!point.has_value()) {
-        return;
-      }
-      if (!points.empty() &&
-          (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
-        return;
-      }
-      points.push_back(*point);
-    };
+    auto append_point =
+        [&points, duplicate_point_epsilon_sq](const std::optional<QVector3D>& point) {
+          if (!point.has_value()) {
+            return;
+          }
+          if (!points.empty() &&
+              (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
+            return;
+          }
+          points.push_back(*point);
+        };
 
     append_point(point_to_world(river_obj.value("start")));
     if (river_obj.value(ROAD_WAYPOINTS).isArray()) {
@@ -728,20 +724,19 @@ void read_lakes(const QJsonArray& arr,
       lake.center = {
           (authored_x - (grid.width * grid_center_offset - grid_center_offset)) * tile,
           0.0F,
-          (authored_z - (grid.height * grid_center_offset - grid_center_offset)) * tile};
+          (authored_z - (grid.height * grid_center_offset - grid_center_offset)) *
+              tile};
     } else {
       lake.center = {authored_x, 0.0F, authored_z};
     }
 
     const float radius = float(lake_obj.value("radius").toDouble(0.0));
-    lake.width = std::max(
-        min_tile_size,
-        float(lake_obj.value("width").toDouble(radius > 0.0F ? radius * 2.0F
-                                                               : default_lake_size)));
-    lake.depth = std::max(
-        min_tile_size,
-        float(lake_obj.value("depth").toDouble(radius > 0.0F ? radius * 2.0F
-                                                               : default_lake_size)));
+    lake.width = std::max(min_tile_size,
+                          float(lake_obj.value("width").toDouble(
+                              radius > 0.0F ? radius * 2.0F : default_lake_size)));
+    lake.depth = std::max(min_tile_size,
+                          float(lake_obj.value("depth").toDouble(
+                              radius > 0.0F ? radius * 2.0F : default_lake_size)));
     lake.rotation_deg = float(lake_obj.value("rotation").toDouble(0.0));
     if (lake_obj.contains("height")) {
       lake.center.setY(float(lake_obj.value("height").toDouble(0.0)));
@@ -770,7 +765,6 @@ void trim_rivers_at_lake_boundaries(std::vector<RiverSegment>& rivers,
     }
   }
 
-  // A segment completely submerged by a lake has no gameplay or rendering role.
   std::erase_if(rivers, [&lakes](const RiverSegment& river) {
     return std::any_of(lakes.begin(), lakes.end(), [&river](const Lake& lake) {
       return point_in_lake(lake, river.start.x(), river.start.z()) &&
@@ -814,22 +808,21 @@ void read_roads(const QJsonArray& arr,
 
   for (const auto& road_val : arr) {
     const auto road_obj = road_val.toObject();
-    const float width =
-        float(road_obj.value("width").toDouble(default_road_width));
+    const float width = float(road_obj.value("width").toDouble(default_road_width));
     const QString style = road_obj.value("style").toString("default");
 
     std::vector<QVector3D> points;
-    auto append_point = [&points, duplicate_point_epsilon_sq](
-                            const std::optional<QVector3D>& point) {
-      if (!point.has_value()) {
-        return;
-      }
-      if (!points.empty() &&
-          (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
-        return;
-      }
-      points.push_back(*point);
-    };
+    auto append_point =
+        [&points, duplicate_point_epsilon_sq](const std::optional<QVector3D>& point) {
+          if (!point.has_value()) {
+            return;
+          }
+          if (!points.empty() &&
+              (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
+            return;
+          }
+          points.push_back(*point);
+        };
 
     append_point(point_to_world(road_obj.value("start")));
     if (road_obj.value(ROAD_WAYPOINTS).isArray()) {
@@ -909,9 +902,9 @@ void read_bridges(const QJsonArray& arr,
     }
 
     if (bridge_obj.contains("width")) {
-      bridge.width = std::max(
-          k_min_bridge_width,
-          float(bridge_obj.value("width").toDouble(default_bridge_width)));
+      bridge.width =
+          std::max(k_min_bridge_width,
+                   float(bridge_obj.value("width").toDouble(default_bridge_width)));
     }
 
     if (bridge_obj.contains("height")) {
@@ -979,35 +972,32 @@ auto read_structures(const QJsonArray& arr,
       const QJsonArray end = obj.value(END).toArray();
       if (start.size() < 2 || end.size() < 2) {
         if (out_error != nullptr) {
-          *out_error = QString("Wall structure at structures[%1] requires start and end")
-                           .arg(index);
+          *out_error =
+              QString("Wall structure at structures[%1] requires start and end")
+                  .arg(index);
         }
         return false;
       }
       entry.geometry = LineStructureGeometry{
-          .start = authored_position(float(start[0].toDouble()),
-                                     float(start[1].toDouble()),
-                                     grid,
-                                     coord_sys),
-          .end = authored_position(float(end[0].toDouble()),
-                                   float(end[1].toDouble()),
-                                   grid,
-                                   coord_sys),
+          .start = authored_position(
+              float(start[0].toDouble()), float(start[1].toDouble()), grid, coord_sys),
+          .end = authored_position(
+              float(end[0].toDouble()), float(end[1].toDouble()), grid, coord_sys),
           .width = float(obj.value(WIDTH).toDouble(2.0)),
       };
     } else {
       if (!obj.value(X).isDouble() || !obj.value(Z).isDouble()) {
         if (out_error != nullptr) {
-          *out_error = QString("Point structure at structures[%1] requires x and z")
-                           .arg(index);
+          *out_error =
+              QString("Point structure at structures[%1] requires x and z").arg(index);
         }
         return false;
       }
-      entry.geometry = PointStructureGeometry{authored_position(
-          float(obj.value(X).toDouble()),
-          float(obj.value(Z).toDouble()),
-          grid,
-          coord_sys)};
+      entry.geometry =
+          PointStructureGeometry{authored_position(float(obj.value(X).toDouble()),
+                                                   float(obj.value(Z).toDouble()),
+                                                   grid,
+                                                   coord_sys)};
     }
     out.push_back(std::move(entry));
   }
@@ -1128,7 +1118,8 @@ auto MapLoader::load_from_json_file(const QString& path,
     const QJsonArray authored_spawns = root.value(SPAWNS).toArray();
     for (qsizetype index = 0; index < authored_spawns.size(); ++index) {
       Game::Units::SpawnType type;
-      const QString type_name = authored_spawns[index].toObject().value(TYPE).toString();
+      const QString type_name =
+          authored_spawns[index].toObject().value(TYPE).toString();
       if (Game::Units::try_parse_spawn_type(type_name, type) &&
           Game::Units::is_building_spawn(type)) {
         if (out_error != nullptr) {
@@ -1185,18 +1176,15 @@ auto MapLoader::load_from_json_file(const QString& path,
                  out_map.grid,
                  out_map.coordSystem);
 
-    // Compatibility for maps that used a lake terrain region before lakes became
-    // first-class water bodies.
     for (const auto& feature : out_map.terrain) {
       if (feature.type != TerrainType::Lake) {
         continue;
       }
-      out_map.lakes.push_back({QVector3D(feature.center_x, 0.0F, feature.center_z),
-                               feature.width > 0.0F ? feature.width
-                                                    : feature.radius * 2.0F,
-                               feature.depth > 0.0F ? feature.depth
-                                                    : feature.radius * 2.0F,
-                               feature.rotation_deg});
+      out_map.lakes.push_back(
+          {QVector3D(feature.center_x, 0.0F, feature.center_z),
+           feature.width > 0.0F ? feature.width : feature.radius * 2.0F,
+           feature.depth > 0.0F ? feature.depth : feature.radius * 2.0F,
+           feature.rotation_deg});
     }
     std::erase_if(out_map.terrain, [](const TerrainFeature& feature) {
       return feature.type == TerrainType::Lake;
@@ -1212,10 +1200,8 @@ auto MapLoader::load_from_json_file(const QString& path,
 
   if (root.contains(LAKES) && root.value(LAKES).isArray()) {
     std::vector<Lake> authored_lakes;
-    read_lakes(root.value(LAKES).toArray(),
-               authored_lakes,
-               out_map.grid,
-               out_map.coordSystem);
+    read_lakes(
+        root.value(LAKES).toArray(), authored_lakes, out_map.grid, out_map.coordSystem);
     out_map.lakes.insert(
         out_map.lakes.end(), authored_lakes.begin(), authored_lakes.end());
   }

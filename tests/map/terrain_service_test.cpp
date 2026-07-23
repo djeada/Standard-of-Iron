@@ -52,8 +52,7 @@ auto brute_point_near_road(const std::vector<Game::Map::RoadSegment>& roads,
                            float world_z,
                            float clearance) -> bool {
   for (const auto& road : roads) {
-    const float radius =
-        std::max(0.0F, road.width * 0.5F + std::max(clearance, 0.0F));
+    const float radius = std::max(0.0F, road.width * 0.5F + std::max(clearance, 0.0F));
     const float dx = road.end.x() - road.start.x();
     const float dz = road.end.z() - road.start.z();
     const float length_sq = dx * dx + dz * dz;
@@ -304,9 +303,6 @@ TEST_F(TerrainServiceTest, HillEntranceApronBridgesAuthoredPointToIrregularFoot)
 
   height_map.build_from_features({hill});
 
-  // The authored marker lies outside the rotated procedural footprint. The
-  // full apron, including its zero-slope toe, must be one uninterrupted
-  // entrance/pathfinding corridor through the hill face and onto the crown.
   float previous_height = height_map.get_height_at_grid(4, 30);
   for (int x = 4; x <= 30; ++x) {
     EXPECT_TRUE(height_map.isHillEntrance(x, 30)) << "x=" << x;
@@ -680,8 +676,6 @@ TEST_F(TerrainServiceTest, HillFootprintOnlyExtendsAtItsWalkableEntranceApron) {
     EXPECT_TRUE(height_map.is_walkable(x, z));
   }
 
-  // The deterministic west entrance now starts outside the old ellipse and
-  // rises progressively, instead of leaving a flat patch below a cliff.
   EXPECT_GT(height_map.get_height_at_grid(19, 30), 0.0F);
   EXPECT_LT(height_map.get_height_at_grid(19, 30),
             height_map.get_height_at_grid(21, 30));
@@ -723,8 +717,6 @@ TEST_F(TerrainServiceTest, CampaignHillHeightScalesWithPhysicalFootprint) {
   };
   height_map.build_from_features({hill});
 
-  // Legacy height metadata must not turn a settlement-sized hill into an
-  // almost-flat disc. The physical footprint supplies a campaign-scale floor.
   EXPECT_GT(height_map.get_height_at_grid(80, 80), 16.0F);
   EXPECT_TRUE(height_map.is_walkable(80, 80));
 }

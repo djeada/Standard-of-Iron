@@ -810,10 +810,7 @@ void TerrainRenderer::build_meshes() {
           slope_threshold = std::min(slope_threshold - 0.16F, 0.045F);
           sharpness_mul = 1.60F;
         }
-        // Material classification is evaluated per fragment from slope,
-        // curvature, entry, and foot masks. Feeding chunk averages back into
-        // the uniforms made 32x32 m material seams visible on otherwise
-        // continuous ground.
+
         slope_threshold = std::clamp(slope_threshold, 0.018F, 0.9F);
 
         params.slope_rock_threshold = slope_threshold;
@@ -842,9 +839,6 @@ void TerrainRenderer::build_meshes() {
         params.noise_offset = QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
                                         hash_to_01(noise_key_b) * k_noise_offset_scale);
 
-        // Macro relief is already part of TerrainHeightMap. Keep material
-        // detail in the fragment shader without moving the rendered surface
-        // away from the height queried by gameplay and linear features.
         params.height_noise_strength = 0.0F;
         params.height_noise_frequency = surface_profile.height_noise_frequency;
 

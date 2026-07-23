@@ -74,8 +74,9 @@ void main() {
   float translucency =
       backlight * backlight * (0.12 + tip_blend * 0.16) * v_foliage_mask;
   color += needle_color * vec3(0.15, 0.19, 0.10) * translucency;
-  float needle_sheen = pow(max(dot(n, normalize(l + vec3(0.0, 0.8, 0.35))), 0.0),
-                           18.0) * v_foliage_mask * 0.045;
+  float needle_sheen =
+      pow(max(dot(n, normalize(l + vec3(0.0, 0.8, 0.35))), 0.0), 18.0) *
+      v_foliage_mask * 0.045;
   color += sky_color * needle_sheen;
 
   if (v_tex_coord.y < 0.028)

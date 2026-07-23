@@ -1,5 +1,5 @@
-#include "prepare_internal.h"
 #include "../submission_visibility.h"
+#include "prepare_internal.h"
 
 namespace Render::Humanoid {
 
@@ -471,31 +471,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
     }
 
-    // Reject at the first point where the formation member has a world-space
-    // position. Everything below this boundary may ground the model, resolve
-    // persistent combat state, select BPAT clips, or append draw rows.
     const QVector3D early_world_pos = inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    // The model-space origin is at the soldier's feet, but the body extends
-    // ~2 units upward. Testing a tight sphere at the feet drops soldiers whose
-    // feet leave the frustum while their body is still on-screen (common near
-    // the bottom edge under the tilted RTS camera). Center the broad-phase
-    // sphere at mid-body and size it to enclose the whole figure. Fog uses only
-    // the XZ position, so raising the center in Y affects only the frustum test.
+
     constexpr float k_soldier_cull_center_y = 0.9F;
     constexpr float k_soldier_cull_radius = 1.4F;
     const QVector3D cull_center =
         inst_model.map(QVector3D(0.0F, k_soldier_cull_center_y, 0.0F));
-    const auto visibility_result = ctx.submission_visibility != nullptr
-                                       ? ctx.submission_visibility->evaluate_sphere(
-                                             cull_center,
-                                             k_soldier_cull_radius,
-                                             ctx.submission_fog_mode)
-                                       : SubmissionVisibilityResult{
-                                             ctx.camera == nullptr ||
-                                                 ctx.camera->is_in_frustum(
-                                                     cull_center,
-                                                     k_soldier_cull_radius),
-                                             true};
+    const auto visibility_result =
+        ctx.submission_visibility != nullptr
+            ? ctx.submission_visibility->evaluate_sphere(
+                  cull_center, k_soldier_cull_radius, ctx.submission_fog_mode)
+            : SubmissionVisibilityResult{
+                  ctx.camera == nullptr ||
+                      ctx.camera->is_in_frustum(cull_center, k_soldier_cull_radius),
+                  true};
     const bool outside_frustum = !visibility_result.in_frustum;
     const bool hidden_by_fog = !visibility_result.fog_visible;
     if (outside_frustum || hidden_by_fog) {
@@ -777,11 +766,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       anim_ctx.ambient_idle_phase = ambient_selection.phase;
     }
 
-    HumanoidPose pose{};
-    // Skeletal animation is authored and baked into BPAT. The preparation path
-    // must not reconstruct a second pose for shadows: sample the same baked clip
-    // for ground contact and let the creature pipeline play that clip in every
-    // pass.
+    HumanoidPose const pose{};
+
     bool const prepare_shadow_grounding =
         RCP::pass_intent_from_ctx(inst_ctx) == RCP::RenderPassIntent::Shadow;
     bool const world_already_grounded =
@@ -801,11 +787,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
               : Render::Creature::ArchetypeRegistry::k_humanoid_base;
       float const grounded_contact_y = RCP::grounded_humanoid_contact_y(
           grounding_archetype, grounding_species, pose, anim_ctx);
-      shadow_surface_world_y = RCP::ground_model_contact_to_surface(
-          inst_ctx.model,
-          grounded_contact_y,
-          combined_height_scale,
-          entity_ground_offset);
+      shadow_surface_world_y =
+          RCP::ground_model_contact_to_surface(inst_ctx.model,
+                                               grounded_contact_y,
+                                               combined_height_scale,
+                                               entity_ground_offset);
       shadow_surface_height_valid = true;
     } else if (!world_already_grounded) {
       shadow_surface_world_y = RCP::ground_model_contact_to_surface(
@@ -910,15 +896,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     shadow_inputs.lod = soldier_lod;
     shadow_inputs.camera_distance = lod_state.camera_distance;
     shadow_inputs.mounted = is_mounted_spawn;
-    shadow_inputs.formation_id =
-        ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
+    shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
     shadow_inputs.standing_idle =
         !is_mounted_spawn &&
         soldier_render_anim.movement_state ==
             Render::Creature::MovementAnimationState::Idle &&
-        !soldier_render_anim.is_attacking &&
-        !soldier_render_anim.is_hit_reacting && !soldier_render_anim.is_dying &&
-        !soldier_render_anim.is_dead && !commander_jump.active;
+        !soldier_render_anim.is_attacking && !soldier_render_anim.is_hit_reacting &&
+        !soldier_render_anim.is_dying && !soldier_render_anim.is_dead &&
+        !commander_jump.active;
     shadow_inputs.surface_world_y = shadow_surface_world_y;
     shadow_inputs.surface_height_valid = shadow_surface_height_valid;
     const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);

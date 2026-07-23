@@ -40,11 +40,6 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
-// GLSL literals always use '.' as the decimal separator, but std::stof goes
-// through strtof and honours LC_NUMERIC. Qt calls setlocale(LC_ALL, "") during
-// startup, so on a system locale that uses ',' every literal would silently
-// lose its fractional part ("0.15" -> 0) and ordered edges would look reversed.
-// Parse through the classic locale so the check is environment-independent.
 auto parse_glsl_float(const std::string& text) -> float {
   std::istringstream stream(text);
   stream.imbue(std::locale::classic());

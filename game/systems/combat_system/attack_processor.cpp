@@ -187,9 +187,6 @@ auto elephant_formation_penetration_distance(
     return std::nullopt;
   }
 
-  // Contact geometry uses the authored animal's visible body radius and owns
-  // the modest front-rank penetration.  The much larger trample radius remains
-  // exclusively an area-of-effect damage reach.
   return geometry.engagement_center_distance;
 }
 
@@ -199,8 +196,7 @@ void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
     return;
   }
 
-  if (auto* combat =
-          attacker->get_component<Engine::Core::CombatStateComponent>()) {
+  if (auto* combat = attacker->get_component<Engine::Core::CombatStateComponent>()) {
     combat->animation_state = Engine::Core::CombatAnimationState::Idle;
     combat->state_time = 0.0F;
     combat->state_duration = 0.0F;
@@ -208,8 +204,7 @@ void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
     combat->input_buffered = false;
   }
 
-  auto* action =
-      attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto* action = attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr) {
     return;
   }
@@ -876,8 +871,7 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
     }
     auto const elephant_geometry =
         FormationCombat::contact_geometry(*target, *attacker);
-    return FormationCombat::contact_is_active(
-        *target, *attacker, elephant_geometry);
+    return FormationCombat::contact_is_active(*target, *attacker, elephant_geometry);
   };
   auto* att_t = attacker->get_component<Engine::Core::TransformComponent>();
   auto* tgt_t = target->get_component<Engine::Core::TransformComponent>();
@@ -1145,14 +1139,13 @@ void process_attacks(Engine::Core::World* world,
 
         bool target_reached = is_in_range(attacker, target, range);
         if (target_reached && !is_ranged_mode(attacker_atk)) {
-          auto const geometry =
-              FormationCombat::contact_geometry(*attacker, *target);
+          auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
           if (auto const penetration = elephant_formation_penetration_distance(
                   *attacker, *target, geometry)) {
-            float const dx = target_transform->position.x -
-                             attacker_transform->position.x;
-            float const dz = target_transform->position.z -
-                             attacker_transform->position.z;
+            float const dx =
+                target_transform->position.x - attacker_transform->position.x;
+            float const dz =
+                target_transform->position.z - attacker_transform->position.z;
             target_reached = std::hypot(dx, dz) <= *penetration + 0.15F;
           }
         }
@@ -1250,16 +1243,15 @@ void process_attacks(Engine::Core::World* world,
               auto const geometry =
                   FormationCombat::contact_geometry(*attacker, *target);
               auto const elephant_penetration =
-                  elephant_formation_penetration_distance(
-                      *attacker, *target, geometry);
+                  elephant_formation_penetration_distance(*attacker, *target, geometry);
               float const desired_distance =
                   geometry.uses_formation_slots
-                      ? elephant_penetration.value_or(std::max(
-                            0.0F,
-                            geometry.engagement_center_distance -
-                                (geometry.formation_overlap_required
-                                     ? geometry.contact_tolerance * 2.0F
-                                     : 0.0F)))
+                      ? elephant_penetration.value_or(
+                            std::max(0.0F,
+                                     geometry.engagement_center_distance -
+                                         (geometry.formation_overlap_required
+                                              ? geometry.contact_tolerance * 2.0F
+                                              : 0.0F)))
                       : std::max(range - 0.2F, 0.2F);
               bool const engagement_reached =
                   elephant_penetration.has_value()

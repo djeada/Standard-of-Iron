@@ -110,8 +110,7 @@ struct LineStructureGeometry {
   float width = 2.0F;
 };
 
-using StructureGeometry =
-    std::variant<PointStructureGeometry, LineStructureGeometry>;
+using StructureGeometry = std::variant<PointStructureGeometry, LineStructureGeometry>;
 
 struct StructureEntry {
   Game::Units::SpawnType type = Game::Units::SpawnType::Barracks;

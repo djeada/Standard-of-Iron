@@ -285,9 +285,7 @@ void Camera::zoom_distance(float delta) {
   zoom_distance(delta, k_min_dist, k_max_dist);
 }
 
-void Camera::zoom_distance(float delta,
-                           float min_distance,
-                           float max_distance) {
+void Camera::zoom_distance(float delta, float min_distance, float max_distance) {
   if (!finite(delta)) {
     return;
   }
@@ -636,27 +634,23 @@ void Camera::rebuild_cached_geometry() const {
     float bottom = m_ortho_bottom;
     float top = m_ortho_top;
     clamp_ortho_box(left, right, bottom, top);
-    m_cached_projection.ortho(
-        left, right, bottom, top, m_near_plane, m_far_plane);
+    m_cached_projection.ortho(left, right, bottom, top, m_near_plane, m_far_plane);
   }
   m_cached_view_projection = m_cached_projection * m_cached_view;
 
   const float* matrix = m_cached_view_projection.constData();
-  auto set_plane = [this](std::size_t index,
-                          float nx,
-                          float ny,
-                          float nz,
-                          float distance) {
-    const float length = std::sqrt(nx * nx + ny * ny + nz * nz);
-    if (length < k_eps) {
-      m_cached_frustum[index] = {QVector3D(), 1.0F};
-      return;
-    }
-    const float inverse_length = 1.0F / length;
-    m_cached_frustum[index] = {
-        QVector3D(nx * inverse_length, ny * inverse_length, nz * inverse_length),
-        distance * inverse_length};
-  };
+  auto set_plane =
+      [this](std::size_t index, float nx, float ny, float nz, float distance) {
+        const float length = std::sqrt(nx * nx + ny * ny + nz * nz);
+        if (length < k_eps) {
+          m_cached_frustum[index] = {QVector3D(), 1.0F};
+          return;
+        }
+        const float inverse_length = 1.0F / length;
+        m_cached_frustum[index] = {
+            QVector3D(nx * inverse_length, ny * inverse_length, nz * inverse_length),
+            distance * inverse_length};
+      };
 
   set_plane(0,
             matrix[index_3] + matrix[index_0],

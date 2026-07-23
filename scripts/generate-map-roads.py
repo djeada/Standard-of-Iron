@@ -140,7 +140,9 @@ def point_segment_distance(point: Point, start: Point, end: Point) -> float:
     return distance(point, add(start, mul(segment, t)))
 
 
-def project_point_to_segment(point: Point, start: Point, end: Point) -> tuple[float, Point]:
+def project_point_to_segment(
+    point: Point, start: Point, end: Point
+) -> tuple[float, Point]:
     segment = sub(end, start)
     segment_length_sq = dot(segment, segment)
     if segment_length_sq <= 1.0e-8:
@@ -225,8 +227,6 @@ def network_anchors(
                     if crossing is not None:
                         add_common(first, second, crossing)
 
-            # Map authors commonly stop a side road just short of the main
-            # road. Snap those visual T-junctions to one exact shared point.
             for endpoint in (first_points[0], first_points[-1]):
                 candidates = [
                     project_point_to_segment(endpoint, start, end)[1]
@@ -246,7 +246,9 @@ def network_anchors(
 
     result: list[list[Point]] = []
     for points, road_anchors in zip(polylines, anchors):
-        ordered = sorted(road_anchors, key=lambda point: polyline_location(point, points))
+        ordered = sorted(
+            road_anchors, key=lambda point: polyline_location(point, points)
+        )
         result.append(deduplicate(ordered, epsilon=0.25))
     return result
 
@@ -344,9 +346,13 @@ class RoutingField:
                             nx, nz = current_x + dx, current_z + dz
                             if not self.passable(nx, nz):
                                 continue
-                            if dx and dz and (
-                                not self.passable(current_x + dx, current_z)
-                                or not self.passable(current_x, current_z + dz)
+                            if (
+                                dx
+                                and dz
+                                and (
+                                    not self.passable(current_x + dx, current_z)
+                                    or not self.passable(current_x, current_z + dz)
+                                )
                             ):
                                 continue
                             next_cell = self.index(nx, nz)
@@ -382,15 +388,17 @@ class RoutingField:
             river_start, river_end, river_width = min(
                 intersecting or self.river_segments,
                 key=lambda segment: (
-                    abs(dot(authored_direction, normalized(sub(segment[1], segment[0]))))
-                    if intersecting
-                    else point_segment_distance(
-                        authored_center, segment[0], segment[1]
+                    abs(
+                        dot(authored_direction, normalized(sub(segment[1], segment[0])))
                     )
+                    if intersecting
+                    else point_segment_distance(authored_center, segment[0], segment[1])
                 ),
             )
             river_direction = normalized(sub(river_end, river_start))
-            river_length_sq = dot(sub(river_end, river_start), sub(river_end, river_start))
+            river_length_sq = dot(
+                sub(river_end, river_start), sub(river_end, river_start)
+            )
             projection_t = max(
                 0.0,
                 min(
@@ -405,9 +413,7 @@ class RoutingField:
             crossing_direction = (-river_direction[1], river_direction[0])
             if dot(crossing_direction, authored_direction) < 0.0:
                 crossing_direction = mul(crossing_direction, -1.0)
-            # A bridge is a deck across the visible channel, not a causeway
-            # across the routing clearance raster. Keep only a small bank
-            # bearing beyond the authored river width.
+
             crossing_length = river_width + self.coords.distance_to_grid(1.0)
             candidate = Bridge(
                 sub(crossing_center, mul(crossing_direction, crossing_length * 0.5)),
@@ -427,9 +433,6 @@ class RoutingField:
             result.append(candidate)
             self.bridge_sources.append(dict(item))
 
-        # Existing road geometry is also design intent. If it crosses a river
-        # far from any authored bridge, create the missing crossing rather than
-        # sending the repaired road on a map-spanning detour.
         for road in self.definition.get("roads") or []:
             raw_points = road.get("waypoints") or [road.get("start"), road.get("end")]
             points = [self.coords.to_grid(point) for point in raw_points if point]
@@ -447,7 +450,8 @@ class RoutingField:
                         distance(
                             crossing_center,
                             mul(add(bridge.start, bridge.end), 0.5),
-                        ) <= nearby_distance
+                        )
+                        <= nearby_distance
                         for bridge in result
                     ):
                         continue
@@ -485,7 +489,10 @@ class RoutingField:
     def _read_river_segments(self) -> list[tuple[Point, Point, float]]:
         result: list[tuple[Point, Point, float]] = []
         for river in self.definition.get("rivers") or []:
-            raw_points = river.get("waypoints") or [river.get("start"), river.get("end")]
+            raw_points = river.get("waypoints") or [
+                river.get("start"),
+                river.get("end"),
+            ]
             points = [self.coords.to_grid(point) for point in raw_points if point]
             width = self.coords.distance_to_grid(float(river.get("width", 3.0)))
             result.extend((start, end, width) for start, end in zip(points, points[1:]))
@@ -529,17 +536,13 @@ class RoutingField:
                 continue
             center = mul(add(bridge.start, bridge.end), 0.5)
             candidates: list[tuple[float, Bridge]] = []
-            # Search the complete river polyline. Curved rivers require the
-            # bridge angle to be recomputed at its relocated segment; merely
-            # translating the old deck eventually produces diagonal crossings.
+
             for river_start, river_end, river_width in self.river_segments:
                 river_direction = normalized(sub(river_end, river_start))
                 crossing_direction = (-river_direction[1], river_direction[0])
                 if dot(crossing_direction, bridge.direction) < 0.0:
                     crossing_direction = mul(crossing_direction, -1.0)
-                local_bridge_length = (
-                    river_width + self.coords.distance_to_grid(1.0)
-                )
+                local_bridge_length = river_width + self.coords.distance_to_grid(1.0)
                 sample_count = max(1, int(math.ceil(distance(river_start, river_end))))
                 for sample in range(sample_count):
                     candidate_center = add(
@@ -569,8 +572,12 @@ class RoutingField:
                         <= duplicate_radius
                         for existing in result
                     ):
-                        candidates.append((distance(center, candidate_center), candidate))
-            replacement = min(candidates, key=lambda item: item[0])[1] if candidates else None
+                        candidates.append(
+                            (distance(center, candidate_center), candidate)
+                        )
+            replacement = (
+                min(candidates, key=lambda item: item[0])[1] if candidates else None
+            )
             if replacement is None:
                 raise RoadGenerationError(
                     f"bridge near {center} cannot avoid protected terrain"
@@ -644,9 +651,7 @@ class RoutingField:
             terrain_type = str(feature.get("type", "")).lower()
             if terrain_type not in {"hill", "mountain", "lake"}:
                 continue
-            center = self.coords.to_grid(
-                (feature.get("x", 0.0), feature.get("z", 0.0))
-            )
+            center = self.coords.to_grid((feature.get("x", 0.0), feature.get("z", 0.0)))
             if terrain_type == "hill":
                 for entrance in feature.get("entrances") or []:
                     if isinstance(entrance, dict):
@@ -682,7 +687,10 @@ class RoutingField:
 
     def _raster_water(self) -> None:
         for river in self.definition.get("rivers") or []:
-            raw_points = river.get("waypoints") or [river.get("start"), river.get("end")]
+            raw_points = river.get("waypoints") or [
+                river.get("start"),
+                river.get("end"),
+            ]
             points = [self.coords.to_grid(point) for point in raw_points if point]
             radius = self.coords.distance_to_grid(float(river.get("width", 3.0))) * 0.5
             radius += self.clearance
@@ -724,9 +732,13 @@ class RoutingField:
         end = add(bridge.end, mul(direction, extension))
         corridor_radius = max(0.8, min(bridge.width * 0.38, 2.6))
         min_x = max(0, int(math.floor(min(start[0], end[0]) - corridor_radius)))
-        max_x = min(self.width - 1, int(math.ceil(max(start[0], end[0]) + corridor_radius)))
+        max_x = min(
+            self.width - 1, int(math.ceil(max(start[0], end[0]) + corridor_radius))
+        )
         min_z = max(0, int(math.floor(min(start[1], end[1]) - corridor_radius)))
-        max_z = min(self.height - 1, int(math.ceil(max(start[1], end[1]) + corridor_radius)))
+        max_z = min(
+            self.height - 1, int(math.ceil(max(start[1], end[1]) + corridor_radius))
+        )
         for z in range(min_z, max_z + 1):
             for x in range(min_x, max_x + 1):
                 if point_segment_distance((x, z), start, end) <= corridor_radius:
@@ -760,9 +772,7 @@ class RoutingField:
                 deck_span = distance(candidate.start, candidate.end)
                 deck_samples = max(1, int(math.ceil(deck_span / 0.25)))
                 if any(
-                    not self.in_bounds(
-                        int(round(point[0])), int(round(point[1]))
-                    )
+                    not self.in_bounds(int(round(point[0])), int(round(point[1])))
                     or self.terrain_core[
                         self.index(int(round(point[0])), int(round(point[1])))
                     ]
@@ -829,7 +839,7 @@ class RoutingField:
         return float(x), float(z)
 
     def line_passable(self, start: Point, end: Point, step: float = 0.20) -> bool:
-        del step  # Kept for compatibility with older callers.
+        del step
         x, z = int(math.floor(start[0] + 0.5)), int(math.floor(start[1] + 0.5))
         end_x = int(math.floor(end[0] + 0.5))
         end_z = int(math.floor(end[1] + 0.5))
@@ -849,11 +859,8 @@ class RoutingField:
             if x == end_x and z == end_z:
                 return True
             if abs(next_x - next_z) <= 1.0e-10:
-                # A corner touch must not squeeze a wide road diagonally
-                # between two protected cells.
-                if not self.passable(x + step_x, z) or not self.passable(
-                    x, z + step_z
-                ):
+
+                if not self.passable(x + step_x, z) or not self.passable(x, z + step_z):
                     return False
                 x += step_x
                 z += step_z
@@ -871,7 +878,9 @@ def guide_distance(point: Point, guide: Sequence[Point]) -> float:
     return min(point_segment_distance(point, a, b) for a, b in zip(guide, guide[1:]))
 
 
-def nearest_passable(field: RoutingField, point: Point, radius: int = 8) -> tuple[int, int]:
+def nearest_passable(
+    field: RoutingField, point: Point, radius: int = 8
+) -> tuple[int, int]:
     origin = int(round(point[0])), int(round(point[1]))
     if field.passable(*origin):
         return origin
@@ -925,8 +934,10 @@ def route_astar(
             nx, nz = x + dx, z + dz
             if not field.passable(nx, nz):
                 continue
-            if dx and dz and (
-                not field.passable(x + dx, z) or not field.passable(x, z + dz)
+            if (
+                dx
+                and dz
+                and (not field.passable(x + dx, z) or not field.passable(x, z + dz))
             ):
                 continue
 
@@ -951,11 +962,7 @@ def route_astar(
             edge_distance = min(nx, nz, field.width - 1 - nx, field.height - 1 - nz)
             edge_cost = max(0.0, 5.0 - edge_distance) * 0.35
             new_cost = current_cost + step_cost + bend_cost + preserve_cost + edge_cost
-            # Authored roads benefit from direction-aware bend costs. Repair
-            # connectors need only one state per cell; carrying eight heading
-            # variants across a 650/800-cell map made a single legal detour
-            # take minutes. Corner rounding below still gives the resulting
-            # connector a smooth rendered shape.
+
             next_state = (nx, nz, direction_index if directional_state else 8)
             if new_cost + 1.0e-6 >= costs.get(next_state, math.inf):
                 continue
@@ -1037,13 +1044,8 @@ def inject_bridge_endpoints(
         crossing_direction = normalized(sub(exit_point, entry))
         approach_distance = field.clearance + 2.0
         entry_approach = sub(entry, mul(crossing_direction, approach_distance))
-        exit_approach = add(
-            exit_point, mul(crossing_direction, approach_distance)
-        )
-        # Keep the road collinear with the deck until it has cleared the
-        # rasterized water/shore margin on both banks. Turning immediately at
-        # the masonry endpoint creates the familiar disconnected-looking
-        # diagonal approach and can leave part of the road inside the river.
+        exit_approach = add(exit_point, mul(crossing_direction, approach_distance))
+
         result = (
             result[:first]
             + [entry_approach, entry, exit_point, exit_approach]
@@ -1107,13 +1109,17 @@ def rounded_polyline(
             continue
         incoming_length = distance(points[index - 1], corner)
         outgoing_length = distance(corner, points[index + 1])
-        radius = min(max(1.4, road_width * 0.75), incoming_length * 0.28, outgoing_length * 0.28)
+        radius = min(
+            max(1.4, road_width * 0.75), incoming_length * 0.28, outgoing_length * 0.28
+        )
         if radius < 0.6:
             result.append(corner)
             continue
         before = add(corner, mul(normalized(sub(points[index - 1], corner)), radius))
         after = add(corner, mul(normalized(sub(points[index + 1], corner)), radius))
-        if field.line_passable(result[-1], before) and field.line_passable(before, after):
+        if field.line_passable(result[-1], before) and field.line_passable(
+            before, after
+        ):
             result.extend((before, after))
         else:
             result.append(corner)
@@ -1121,7 +1127,9 @@ def rounded_polyline(
     return deduplicate(result)
 
 
-def resample_polyline(points: Sequence[Point], max_segment_length: float) -> list[Point]:
+def resample_polyline(
+    points: Sequence[Point], max_segment_length: float
+) -> list[Point]:
     result = [points[0]]
     for start, end in zip(points, points[1:]):
         span = distance(start, end)
@@ -1216,7 +1224,9 @@ def orientation(a: Point, b: Point, c: Point) -> float:
     return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 
 
-def segments_intersect(a: Point, b: Point, c: Point, d: Point, tolerance: float = 0.35) -> bool:
+def segments_intersect(
+    a: Point, b: Point, c: Point, d: Point, tolerance: float = 0.35
+) -> bool:
     if (
         point_segment_distance(a, c, d) <= tolerance
         or point_segment_distance(b, c, d) <= tolerance
@@ -1224,7 +1234,10 @@ def segments_intersect(a: Point, b: Point, c: Point, d: Point, tolerance: float 
         or point_segment_distance(d, a, b) <= tolerance
     ):
         return True
-    return orientation(a, b, c) * orientation(a, b, d) <= 0.0 and orientation(c, d, a) * orientation(c, d, b) <= 0.0
+    return (
+        orientation(a, b, c) * orientation(a, b, d) <= 0.0
+        and orientation(c, d, a) * orientation(c, d, b) <= 0.0
+    )
 
 
 def dangling_road_endpoints(
@@ -1242,12 +1255,15 @@ def dangling_road_endpoints(
     dangling: list[tuple[int, Point]] = []
     for index, points in enumerate(polylines):
         for endpoint in (points[0], points[-1]):
-            on_edge = min(
-                endpoint[0],
-                endpoint[1],
-                field.width - 1 - endpoint[0],
-                field.height - 1 - endpoint[1],
-            ) <= 1.5
+            on_edge = (
+                min(
+                    endpoint[0],
+                    endpoint[1],
+                    field.width - 1 - endpoint[0],
+                    field.height - 1 - endpoint[1],
+                )
+                <= 1.5
+            )
             joins_road = any(
                 point_segment_distance(endpoint, start, end) <= tolerance
                 for other, polyline in enumerate(polylines)
@@ -1316,16 +1332,15 @@ def invalid_bridge_geometry(
             for segment in field.river_segments
             if segment_intersection_point(
                 bridge.start, bridge.end, segment[0], segment[1]
-            ) is not None
+            )
+            is not None
         ]
         if not intersecting:
             invalid += 1
             continue
         river = min(
             intersecting,
-            key=lambda segment: point_segment_distance(
-                center, segment[0], segment[1]
-            ),
+            key=lambda segment: point_segment_distance(center, segment[0], segment[1]),
         )
         river_direction = normalized(sub(river[1], river[0]))
         bridge_length = distance(bridge.start, bridge.end)
@@ -1368,9 +1383,7 @@ def validate_roads(field: RoutingField, roads: Sequence[dict]) -> ValidationResu
                         )
             road_direction = normalized(sub(end, start))
             for bridge_id, sample_count in water_bridge_samples.items():
-                # An approach segment may touch one rasterized shoreline cell.
-                # Only require deck alignment when the segment has travelled a
-                # meaningful distance across water.
+
                 water_distance = sample_count * span / samples
                 if (
                     water_distance >= 2.0
@@ -1428,11 +1441,6 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
             ):
                 sets.join(first, second)
 
-    # A bridge deck is a network edge. Roads terminating at opposite bridge
-    # ends are connected even though their polylines correctly stop at the
-    # masonry rather than overlapping through the water. Treating those two
-    # approaches as disconnected made valid bridge networks fail validation
-    # and encouraged the repair pass to add redundant cross-country roads.
     for bridge in field.bridges:
         start_roads = [
             index
@@ -1489,10 +1497,7 @@ def connect_road_components(
                         candidates.append((distance(first, second), first, second))
 
         connector: RouteResult | None = None
-        # Do not pre-filter different passable components here. A river is
-        # precisely what can divide two useful road components, and
-        # generate_road() is responsible for creating a short perpendicular
-        # bridge when that is the legal way to connect them.
+
         for _, start, end in sorted(candidates, key=lambda item: item[0])[:96]:
             authored_start = field.coords.from_grid(start)
             authored_end = field.coords.from_grid(end)
@@ -1638,9 +1643,7 @@ def add_boundary_connections(
     def touched_sides() -> set[str]:
         result: set[str] = set()
         for road in roads:
-            for x, z in (
-                field.coords.to_grid(point) for point in road_points(road)
-            ):
+            for x, z in (field.coords.to_grid(point) for point in road_points(road)):
                 if x <= 1.5:
                     result.add("west")
                 if x >= field.width - 2.5:
@@ -1655,20 +1658,16 @@ def add_boundary_connections(
     while len(touched_sides()) < 2:
         existing_sides = touched_sides()
         network_points = [
-            field.coords.to_grid(point)
-            for road in roads
-            for point in road_points(road)
+            field.coords.to_grid(point) for road in roads for point in road_points(road)
         ]
         side_targets: dict[str, list[Point]] = {
             "west": [(1.0, float(z)) for z in range(2, field.height - 2, 4)],
             "east": [
-                (field.width - 2.0, float(z))
-                for z in range(2, field.height - 2, 4)
+                (field.width - 2.0, float(z)) for z in range(2, field.height - 2, 4)
             ],
             "north": [(float(x), 1.0) for x in range(2, field.width - 2, 4)],
             "south": [
-                (float(x), field.height - 2.0)
-                for x in range(2, field.width - 2, 4)
+                (float(x), field.height - 2.0) for x in range(2, field.width - 2, 4)
             ],
         }
         candidates: list[tuple[float, Point, Point]] = []
@@ -1718,19 +1717,10 @@ def replace_top_level_array(source: str, key: str, value: list[dict]) -> str:
         if closing < 0:
             raise RoadGenerationError("map has no top-level JSON object")
         before = source[:closing].rstrip()
-        rendered = json.dumps(value, indent=2, ensure_ascii=False).replace(
-            "\n", "\n  "
-        )
+        rendered = json.dumps(value, indent=2, ensure_ascii=False).replace("\n", "\n  ")
         separator = "\n" if before.endswith("{") else ",\n"
         suffix = source[closing + 1 :]
-        return (
-            before
-            + separator
-            + f'  "{key}": '
-            + rendered
-            + "\n}"
-            + suffix
-        )
+        return before + separator + f'  "{key}": ' + rendered + "\n}" + suffix
     start = source.find("[", match.end())
     if start < 0:
         raise RoadGenerationError(f'"{key}" is not an array')
@@ -1845,9 +1835,7 @@ def process_map(
             f"{len(connector.road['waypoints']):2d} points"
         )
 
-    edge_connectors = add_boundary_connections(
-        field, generated, max_segment_length
-    )
+    edge_connectors = add_boundary_connections(field, generated, max_segment_length)
     for connector_index, connector in enumerate(edge_connectors, 1):
         old_total += connector.old_length
         new_total += connector.new_length
@@ -1871,8 +1859,6 @@ def process_map(
             f"{len(connector.road['waypoints']):2d} points"
         )
 
-    # Road material is a map-level art direction choice. Generated repairs
-    # must not leave a patchwork of unrelated styles on one battlefield.
     for road in generated:
         road["style"] = map_road_style
 
