@@ -84,8 +84,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
     auto set_water_environment = [&](Shader* shader, const auto& uniforms) {
       QVector3D const fog_color(
           m_clear_color[red], m_clear_color[green], m_clear_color[blue]);
-      float const fog_start =
-          std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
+      float const fog_start = std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
       float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
       if (uniforms.camera_position != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.camera_position, cam.get_position());
@@ -161,17 +160,15 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
           const auto& single = std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
           if (m_water_pipeline->m_water_uniforms.surface_kind !=
               Shader::InvalidUniform) {
-            water_shader->set_uniform(
-                m_water_pipeline->m_water_uniforms.surface_kind,
-                static_cast<int>(single.water_kind));
+            water_shader->set_uniform(m_water_pipeline->m_water_uniforms.surface_kind,
+                                      static_cast<int>(single.water_kind));
           }
           water_shader->set_uniform(m_water_pipeline->m_water_uniforms.model,
                                     single.model);
           if (m_water_pipeline->m_water_uniforms.segment_visibility !=
               Shader::InvalidUniform) {
             water_shader->set_uniform(
-                m_water_pipeline->m_water_uniforms.segment_visibility,
-                single.alpha);
+                m_water_pipeline->m_water_uniforms.segment_visibility, single.alpha);
           }
           single.mesh->draw();
         }
@@ -192,8 +189,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                                       projection);
         riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.time,
                                       m_animation_time);
-        set_water_environment(riverbank_shader,
-                              m_water_pipeline->m_riverbank_uniforms);
+        set_water_environment(riverbank_shader, m_water_pipeline->m_riverbank_uniforms);
         m_last_bound_shader = riverbank_shader;
       }
       if (m_water_pipeline->m_riverbank_uniforms.has_visibility !=
@@ -244,8 +240,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
           if (m_water_pipeline->m_riverbank_uniforms.ground_color !=
               Shader::InvalidUniform) {
             riverbank_shader->set_uniform(
-                m_water_pipeline->m_riverbank_uniforms.ground_color,
-                single.color);
+                m_water_pipeline->m_riverbank_uniforms.ground_color, single.color);
           }
           if (m_water_pipeline->m_riverbank_uniforms.grass_secondary !=
               Shader::InvalidUniform) {
@@ -268,8 +263,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
           if (m_water_pipeline->m_riverbank_uniforms.rock_low !=
               Shader::InvalidUniform) {
             riverbank_shader->set_uniform(
-                m_water_pipeline->m_riverbank_uniforms.rock_low,
-                single.biome_rock_low);
+                m_water_pipeline->m_riverbank_uniforms.rock_low, single.biome_rock_low);
           }
           if (m_water_pipeline->m_riverbank_uniforms.rock_high !=
               Shader::InvalidUniform) {
@@ -286,8 +280,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
           if (m_water_pipeline->m_riverbank_uniforms.moisture !=
               Shader::InvalidUniform) {
             riverbank_shader->set_uniform(
-                m_water_pipeline->m_riverbank_uniforms.moisture,
-                single.biome_moisture);
+                m_water_pipeline->m_riverbank_uniforms.moisture, single.biome_moisture);
           }
           if (m_water_pipeline->m_riverbank_uniforms.rock_exposure !=
               Shader::InvalidUniform) {

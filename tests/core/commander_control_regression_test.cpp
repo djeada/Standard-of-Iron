@@ -379,9 +379,8 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
   EXPECT_TRUE(contains(commander_hud_source, "qsTr(\"[Space] Dodge  [Alt] Jump\")"));
-  EXPECT_TRUE(contains(
-      commander_hud_source,
-      "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
+  EXPECT_TRUE(contains(commander_hud_source,
+                       "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
   EXPECT_TRUE(

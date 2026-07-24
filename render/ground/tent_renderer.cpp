@@ -15,7 +15,7 @@ namespace {
 
 using namespace Render::Ground;
 
-} // namespace
+}
 
 namespace Render::GL {
 
@@ -102,8 +102,8 @@ void TentRenderer::generate_instances(
                                resolved.z(),
                                prop.scale * Game::Map::world_prop_render_scale(
                                                 Game::Map::WorldProp::Type::Tent));
-    inst.color_rot = QVector4D(
-        canvas_color.x(), canvas_color.y(), canvas_color.z(), prop.rotation);
+    inst.color_rot =
+        QVector4D(canvas_color.x(), canvas_color.y(), canvas_color.z(), prop.rotation);
     m_state.instances.push_back(inst);
   }
 

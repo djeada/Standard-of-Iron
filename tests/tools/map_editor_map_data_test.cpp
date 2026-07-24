@@ -304,38 +304,38 @@ TEST(MapEditorMapDataTest,
   const QString input_path = temp_dir.filePath("input.json");
   const QString output_path = temp_dir.filePath("output.json");
 
-  QJsonObject const input{
-      {"name", "Troop Spawns"},
-      {MapJsonKeys::grid,
-       QJsonObject{{MapJsonKeys::width, 64},
-                   {MapJsonKeys::height, 48},
-                   {MapJsonKeys::tile_size, 1.0}}},
-      {MapJsonKeys::spawns,
-       QJsonArray{QJsonObject{{MapJsonKeys::type, "spearman"},
-                              {MapJsonKeys::x, 10},
-                              {MapJsonKeys::z, 12},
-                              {MapJsonKeys::player_id, 2},
-                              {MapJsonKeys::behavior, "guard"},
-                              {MapJsonKeys::guard_radius, 18.0},
-                              {"hidden", true},
-                              {"description", "Front line"}},
-                  QJsonObject{{MapJsonKeys::type, "archer"},
-                              {MapJsonKeys::x, 14},
-                              {MapJsonKeys::z, 16},
-                              {MapJsonKeys::player_id, 0},
-                              {MapJsonKeys::max_population, 80},
-                              {MapJsonKeys::nation, "roman_republic"}},
-                  }},
-      {MapJsonKeys::structures,
-       QJsonArray{QJsonObject{{MapJsonKeys::type, "barracks"},
-                              {MapJsonKeys::x, 4},
-                              {MapJsonKeys::z, 6},
-                              {MapJsonKeys::player_id, 1},
-                              {MapJsonKeys::max_population, 120}},
-                  QJsonObject{{MapJsonKeys::type, "defense_tower"},
-                              {MapJsonKeys::x, 30},
-                              {MapJsonKeys::z, 32},
-                              {"team_id", 3}}}}};
+  QJsonObject const input{{"name", "Troop Spawns"},
+                          {MapJsonKeys::grid,
+                           QJsonObject{{MapJsonKeys::width, 64},
+                                       {MapJsonKeys::height, 48},
+                                       {MapJsonKeys::tile_size, 1.0}}},
+                          {MapJsonKeys::spawns,
+                           QJsonArray{
+                               QJsonObject{{MapJsonKeys::type, "spearman"},
+                                           {MapJsonKeys::x, 10},
+                                           {MapJsonKeys::z, 12},
+                                           {MapJsonKeys::player_id, 2},
+                                           {MapJsonKeys::behavior, "guard"},
+                                           {MapJsonKeys::guard_radius, 18.0},
+                                           {"hidden", true},
+                                           {"description", "Front line"}},
+                               QJsonObject{{MapJsonKeys::type, "archer"},
+                                           {MapJsonKeys::x, 14},
+                                           {MapJsonKeys::z, 16},
+                                           {MapJsonKeys::player_id, 0},
+                                           {MapJsonKeys::max_population, 80},
+                                           {MapJsonKeys::nation, "roman_republic"}},
+                           }},
+                          {MapJsonKeys::structures,
+                           QJsonArray{QJsonObject{{MapJsonKeys::type, "barracks"},
+                                                  {MapJsonKeys::x, 4},
+                                                  {MapJsonKeys::z, 6},
+                                                  {MapJsonKeys::player_id, 1},
+                                                  {MapJsonKeys::max_population, 120}},
+                                      QJsonObject{{MapJsonKeys::type, "defense_tower"},
+                                                  {MapJsonKeys::x, 30},
+                                                  {MapJsonKeys::z, 32},
+                                                  {"team_id", 3}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -455,8 +455,8 @@ TEST(MapEditorMapDataTest, RejectsRetiredBuildingAndWallCollections) {
                          {MapJsonKeys::height, 16},
                          {MapJsonKeys::tile_size, 1.0}};
 
-  for (const QString& retired_key : {QStringLiteral("buildings"),
-                                     QStringLiteral("walls")}) {
+  for (const QString& retired_key :
+       {QStringLiteral("buildings"), QStringLiteral("walls")}) {
     const QString input_path = temp_dir.filePath(retired_key + ".json");
     write_json(input_path,
                QJsonObject{{MapJsonKeys::grid, grid}, {retired_key, QJsonArray{}}});

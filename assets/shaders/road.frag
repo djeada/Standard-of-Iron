@@ -167,8 +167,7 @@ void main() {
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
   if (u_surface_kind == 1) {
-    // Rough tracks retain the old shader's depth and lighting, but read as
-    // compacted earth rather than a second paved road material.
+
     float across = clamp(v_tex_coord.x, 0.0, 1.0);
     float ruts = max(1.0 - smoothstep(0.045, 0.085, abs(across - 0.30)),
                      1.0 - smoothstep(0.045, 0.085, abs(across - 0.70)));
@@ -176,8 +175,7 @@ void main() {
     earth *= 1.0 - ruts * 0.20;
     base_color = mix(base_color, earth, 0.84);
   } else if (u_surface_kind == 2) {
-    // Deliberately laid Roman paving has cleaner joints and slightly stronger
-    // stone contrast than the ordinary worn road surface.
+
     base_color = mix(mortar_color * 0.92, stone_color * 1.06, stone_mask);
   }
 

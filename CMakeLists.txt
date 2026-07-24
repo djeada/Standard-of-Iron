@@ -111,18 +111,36 @@ option(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS
     "Embed generated campaign map assets produced by tools/map_pipeline"
     ${ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT})
 
+# Pipeline outputs from tools/map_pipeline. These are .gitignored and are not
+# produced on CI (scripts/run-map-pipeline.sh skips itself there), so they must
+# never be listed in a checked-in .qrc: AUTORCC would turn them into hard build
+# dependencies and fail the configure-time-clean CI build. They are instead
+# embedded through a .qrc generated below, only when the option is enabled.
+# hannibal_path.json is deliberately absent -- it is tracked in git and stays in
+# assets.qrc so it is always embedded.
 set(GENERATED_CAMPAIGN_MAP_RESOURCES
     assets/campaign_map/campaign_base_color.png
     assets/campaign_map/campaign_water.png
     assets/campaign_map/coastlines_uv.json
     assets/campaign_map/rivers_uv.json
     assets/campaign_map/land_mesh.bin
-    assets/campaign_map/hannibal_path.json
     assets/campaign_map/provinces.json
 )
 
+set(GENERATED_CAMPAIGN_MAP_QRC)
 if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
     message(STATUS "Generated campaign map assets enabled")
+    set(GENERATED_CAMPAIGN_MAP_QRC
+        "${CMAKE_CURRENT_BINARY_DIR}/campaign_map_generated.qrc")
+    # Absolute paths plus an alias keep the runtime lookup at
+    # ":/assets/campaign_map/..." even though the .qrc lives in the build tree.
+    set(_campaign_map_qrc_entries "")
+    foreach(_campaign_map_resource IN LISTS GENERATED_CAMPAIGN_MAP_RESOURCES)
+        string(APPEND _campaign_map_qrc_entries
+            "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n")
+    endforeach()
+    file(WRITE "${GENERATED_CAMPAIGN_MAP_QRC}"
+        "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n")
 else()
     message(STATUS "Generated campaign map assets disabled")
     set(GENERATED_CAMPAIGN_MAP_RESOURCES)
@@ -255,7 +273,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # Compile the complete resource collections into the executable. Listing a
     # .qrc file under qt_add_qml_module(RESOURCES) only embeds the XML file; it
     # does not register the files referenced by that collection at runtime.
-    target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc)
+    target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc
+        ${GENERATED_CAMPAIGN_MAP_QRC})
 
     qt6_add_qml_module(standard_of_iron
         URI StandardOfIron
@@ -339,7 +358,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_mountain.json
             assets/campaigns/second_punic_war.json
             assets/campaign_map/campaign_state.json
-            ${GENERATED_CAMPAIGN_MAP_RESOURCES}
             assets/visuals/unit_visuals.json
             assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png
@@ -403,7 +421,11 @@ else()
     qt5_add_resources(qml_resources qml_resources.qrc)
     qt5_add_resources(assets_resources assets.qrc)
     qt5_add_resources(translations_resources translations.qrc)
-    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources} ${translations_resources})
+    set(campaign_map_resources)
+    if(GENERATED_CAMPAIGN_MAP_QRC)
+        qt5_add_resources(campaign_map_resources ${GENERATED_CAMPAIGN_MAP_QRC})
+    endif()
+    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources} ${translations_resources} ${campaign_map_resources})
 endif()
 
 target_link_libraries(standard_of_iron

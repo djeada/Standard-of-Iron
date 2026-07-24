@@ -28,9 +28,6 @@ struct SubmissionVisibilityResult {
 
 class SubmissionVisibilityPolicy {
 public:
-  // Submission is a conservative broad phase.  A small guard band avoids
-  // repeatedly rebuilding and dropping work when an object straddles a
-  // frustum plane; the GPU remains the exact clipper.
   static constexpr float k_frustum_guard_band = 1.5F;
 
   void reset(const Camera* camera,
@@ -100,9 +97,6 @@ private:
       return false;
     }
 
-    // Scan the visibility cells touched by the XZ bounds.  This is
-    // deliberately conservative: broad-phase rejection must not discard a
-    // formation merely because its center is one cell outside vision.
     const float safe_radius = std::max(radius, 0.1F);
     const auto world_to_grid = [&snapshot](float world, float half) {
       const float grid = world / snapshot.tile_size + half;

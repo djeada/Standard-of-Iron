@@ -82,8 +82,8 @@ void main() {
   float alpha = body_mask * base_fill * top_fade * tex_color.a * intensity_scale *
                 mix(0.78, 1.06, flicker);
 
-  vec2 spark_grid = vec2(centered_x * 7.0 + flame_phase * 2.3,
-                         height_t * 15.0 - u_time * 5.6);
+  vec2 spark_grid =
+      vec2(centered_x * 7.0 + flame_phase * 2.3, height_t * 15.0 - u_time * 5.6);
   vec2 spark_cell = floor(spark_grid);
   vec2 spark_local = fract(spark_grid) - 0.5;
   float spark_seed = hash(spark_cell + vec2(flame_phase * 3.7, 11.0));
@@ -93,12 +93,12 @@ void main() {
                           smoothstep(0.20, 0.52, height_t) *
                           (1.0 - smoothstep(0.88, 1.02, height_t));
 
-  float smoke_noise = fbm(vec2(centered_x * 2.4 + flame_phase,
-                               height_t * 4.2 - u_time * 0.72));
-  float smoke_wisp = (1.0 - smoothstep(0.24, 0.72,
-                                       abs(centered_x + (smoke_noise - 0.5) * 0.48))) *
-                     smoothstep(0.72, 0.94, height_t) *
-                     (1.0 - smoothstep(0.96, 1.05, height_t)) * 0.16;
+  float smoke_noise =
+      fbm(vec2(centered_x * 2.4 + flame_phase, height_t * 4.2 - u_time * 0.72));
+  float smoke_wisp =
+      (1.0 - smoothstep(0.24, 0.72, abs(centered_x + (smoke_noise - 0.5) * 0.48))) *
+      smoothstep(0.72, 0.94, height_t) * (1.0 - smoothstep(0.96, 1.05, height_t)) *
+      0.16;
   alpha = max(alpha, detached_sparks * 0.92);
   alpha = max(alpha, smoke_wisp);
 

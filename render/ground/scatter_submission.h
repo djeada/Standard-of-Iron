@@ -6,10 +6,9 @@
 namespace Render::Ground::Scatter {
 
 template <typename Instance, typename Params>
-void submit_visible_chunks(
-    Render::GL::Renderer& renderer,
-    const FilteredRendererState<Instance, Params>& state,
-    Render::GL::TerrainScatterCmd command) {
+void submit_visible_chunks(Render::GL::Renderer& renderer,
+                           const FilteredRendererState<Instance, Params>& state,
+                           Render::GL::TerrainScatterCmd command) {
   for (const auto& chunk : state.spatial_chunks) {
     if (chunk.instances.empty() || chunk.buffer == nullptr) {
       continue;

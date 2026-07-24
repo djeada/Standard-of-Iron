@@ -68,12 +68,12 @@ public:
     if (!standing_idle || m_contact_shadow_count >= budget.max_casters) {
       return false;
     }
-    auto formation = std::find_if(
-        m_contact_shadow_formations.begin(),
-        m_contact_shadow_formations.end(),
-        [formation_id](const ContactShadowFormationUsage& usage) {
-          return usage.formation_id == formation_id;
-        });
+    auto formation =
+        std::find_if(m_contact_shadow_formations.begin(),
+                     m_contact_shadow_formations.end(),
+                     [formation_id](const ContactShadowFormationUsage& usage) {
+                       return usage.formation_id == formation_id;
+                     });
     if (formation != m_contact_shadow_formations.end() &&
         formation->count >= budget.max_casters_per_formation) {
       return false;

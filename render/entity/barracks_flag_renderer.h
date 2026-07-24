@@ -312,9 +312,9 @@ inline void draw_hanging_banner(const DrawContext& p,
            1.0F);
 
   QVector3D const banner_center(style.pole_base.x() + style.beam_inset +
-                                   style.banner_width * 0.5F,
-                               banner_y,
-                               style.pole_base.z() + style.banner_z_offset);
+                                    style.banner_width * 0.5F,
+                                banner_y,
+                                style.pole_base.z() + style.banner_z_offset);
   draw_banner_with_tassels(p,
                            out,
                            unit,

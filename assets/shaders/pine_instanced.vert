@@ -76,8 +76,8 @@ void main() {
   float gust = 0.62 + 0.38 * sin(wind_time * 0.19 + sway_phase * 0.37);
   float sway = sin(wind_time * 0.48 + sway_phase) * u_wind_strength * gust *
                height_factor * height_factor;
-  float secondary = sin(wind_time * 0.73 + sway_phase * 1.71 + 1.4) *
-                    u_wind_strength * 0.34 * height_factor * height_factor;
+  float secondary = sin(wind_time * 0.73 + sway_phase * 1.71 + 1.4) * u_wind_strength *
+                    0.34 * height_factor * height_factor;
 
   float sway_influence = mix(0.025, 0.105, foliage_mask);
   vec2 wind_dir = normalize(vec2(0.78, 0.62));

@@ -102,8 +102,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                        1.0F,
                                        2);
 
-    // Reinforcing brows, ear bosses and articulated cheek flares are the
-    // characteristic Imperial Roman face of the heavy helmet.
     primitives[9] = generated_cylinder(QVector3D(-0.08F, 0.78F, 1.00F),
                                        QVector3D(-0.86F, 0.66F, 0.72F),
                                        0.075F,

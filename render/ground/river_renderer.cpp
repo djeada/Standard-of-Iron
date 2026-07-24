@@ -27,9 +27,10 @@ namespace Render::GL {
 WaterRenderer::WaterRenderer() = default;
 WaterRenderer::~WaterRenderer() = default;
 
-void WaterRenderer::configure(const std::vector<Game::Map::RiverSegment>& river_segments,
-                              const std::vector<Game::Map::Lake>& lakes,
-                              const Game::Map::TerrainHeightMap& height_map) {
+void WaterRenderer::configure(
+    const std::vector<Game::Map::RiverSegment>& river_segments,
+    const std::vector<Game::Map::Lake>& lakes,
+    const Game::Map::TerrainHeightMap& height_map) {
   m_river_segments = river_segments;
   m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
@@ -112,11 +113,10 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       const auto fog_mode = renderer.static_world_visibility_filter_enabled()
                                 ? SubmissionFogMode::Revealed
                                 : SubmissionFogMode::Ignore;
-      if (!renderer.submission_visibility().accepts_segment(
-              surface.visibility_start,
-              surface.visibility_end,
-              m_tile_size,
-              fog_mode)) {
+      if (!renderer.submission_visibility().accepts_segment(surface.visibility_start,
+                                                            surface.visibility_end,
+                                                            m_tile_size,
+                                                            fog_mode)) {
         continue;
       }
     }
@@ -124,12 +124,10 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     if (vis_snapshot != nullptr && surface.kind == WaterSurfaceKind::River) {
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
-              (surface.visibility_end - surface.visibility_start).length(), m_tile_size);
+              (surface.visibility_end - surface.visibility_start).length(),
+              m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot,
-          surface.visibility_start,
-          surface.visibility_end,
-          vis_opts);
+          vis_snapshot, surface.visibility_start, surface.visibility_end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }

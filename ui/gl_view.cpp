@@ -13,9 +13,9 @@
 #endif
 #include <QMetaObject>
 #include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
+#include <QOpenGLFunctions>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
 #include <qglobal.h>
@@ -263,8 +263,8 @@ void GLView::GLRenderer::observe_runtime_continuity() {
       0, 0, m_size.width(), m_size.height(), GL_RGBA, GL_UNSIGNED_BYTE, frame.bits());
   functions->glPixelStorei(GL_PACK_ALIGNMENT, previous_pack_alignment);
 
-  probe.recent_frames.push_back({probe.framebuffer_analyzer.observed_frames() + 1U,
-                                 frame});
+  probe.recent_frames.push_back(
+      {probe.framebuffer_analyzer.observed_frames() + 1U, frame});
   while (probe.recent_frames.size() > 4U) {
     probe.recent_frames.pop_front();
   }
@@ -426,9 +426,9 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
     report.insert(QStringLiteral("frame_continuity_samples"),
                   static_cast<qint64>(
                       m_continuity_probe->framebuffer_analyzer.observed_frames()));
-    report.insert(QStringLiteral("soldier_visibility_transitions"),
-                  static_cast<qint64>(
-                      m_continuity_probe->soldier_visibility_transitions));
+    report.insert(
+        QStringLiteral("soldier_visibility_transitions"),
+        static_cast<qint64>(m_continuity_probe->soldier_visibility_transitions));
     report.insert(QStringLiteral("soldier_visibility_churn"),
                   static_cast<qint64>(m_continuity_probe->soldier_visibility_churn));
     report.insert(QStringLiteral("ultra_lod_culls"),

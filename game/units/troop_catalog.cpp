@@ -267,7 +267,11 @@ void TroopCatalog::register_defaults() {
 
   register_class(std::move(horse_spearman));
 
-  enum class CommanderCombatStyle { Spear, Sword, Bow };
+  enum class CommanderCombatStyle {
+    Spear,
+    Sword,
+    Bow
+  };
   auto register_commander = [this](Game::Units::TroopType unit_type,
                                    const char* display_name,
                                    int cost,
@@ -301,10 +305,9 @@ void TroopCatalog::register_defaults() {
         combat_style == CommanderCombatStyle::Bow ? 1.35F : 2.0F;
     commander.combat.melee_range =
         combat_style == CommanderCombatStyle::Spear ? 2.4F : 1.8F;
-    commander.combat.melee_damage =
-        combat_style == CommanderCombatStyle::Bow
-            ? std::max(6, combat_damage / 2)
-            : combat_damage;
+    commander.combat.melee_damage = combat_style == CommanderCombatStyle::Bow
+                                        ? std::max(6, combat_damage / 2)
+                                        : combat_damage;
     commander.combat.melee_cooldown = 1.0F;
     commander.combat.can_ranged = combat_style == CommanderCombatStyle::Bow;
     commander.combat.can_melee = true;

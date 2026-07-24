@@ -30,9 +30,6 @@ static auto clamp01(const QVector3D& c) -> QVector3D {
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
 
-  // This plane is the non-playable underlay around the authored height field.
-  // Keeping it coplanar with zero-height terrain causes broad z-fighting tears
-  // in overview cameras. It must remain below the authoritative gameplay mesh.
   new_model.translate(0.0F, -0.08F, 0.0F);
 
   if (m_width > 0 && m_height > 0) {

@@ -202,8 +202,14 @@ class WaterField:
         radius = math.hypot(half_width, half_depth)
         angle = math.radians(rotation)
         cosine, sine = math.cos(angle), math.sin(angle)
-        for z in range(max(0, int(center[1] - radius) - 1), min(self.height, int(center[1] + radius) + 2)):
-            for x in range(max(0, int(center[0] - radius) - 1), min(self.width, int(center[0] + radius) + 2)):
+        for z in range(
+            max(0, int(center[1] - radius) - 1),
+            min(self.height, int(center[1] + radius) + 2),
+        ):
+            for x in range(
+                max(0, int(center[0] - radius) - 1),
+                min(self.width, int(center[0] + radius) + 2),
+            ):
                 dx, dz = x - center[0], z - center[1]
                 local_x = dx * cosine + dz * sine
                 local_z = -dx * sine + dz * cosine
@@ -227,9 +233,7 @@ class WaterField:
                     target[self.index(x, z)] = value
 
     def _raster_roads(self) -> None:
-        # Rivers may cross roads, but should not run along them. A broad soft
-        # cost separates the two networks; bridge decks reopen intentional
-        # perpendicular crossings.
+
         for road in self.definition.get("roads") or []:
             points = [self.coords.to_grid(point) for point in feature_points(road)]
             radius = float(road.get("width", 3.0)) * 0.5 / self.coords.tile_size + 3.0
@@ -250,8 +254,14 @@ class WaterField:
                 continue
             center = self.coords.to_grid((feature.get("x", 0), feature.get("z", 0)))
             radius = float(feature.get("radius", 5.0)) / self.coords.tile_size
-            width = float(feature.get("width", radius * self.coords.tile_size * 2.0)) / self.coords.tile_size
-            depth = float(feature.get("depth", radius * self.coords.tile_size * 2.0)) / self.coords.tile_size
+            width = (
+                float(feature.get("width", radius * self.coords.tile_size * 2.0))
+                / self.coords.tile_size
+            )
+            depth = (
+                float(feature.get("depth", radius * self.coords.tile_size * 2.0))
+                / self.coords.tile_size
+            )
             if kind == "mountain" and "width" not in feature:
                 width, depth = radius * 2.68, radius * 1.60
             self._raster_ellipse(
@@ -281,8 +291,16 @@ class WaterField:
         step_z = 1 if dz > 0 else -1 if dz < 0 else 0
         delta_x = math.inf if step_x == 0 else 1.0 / abs(dx)
         delta_z = math.inf if step_z == 0 else 1.0 / abs(dz)
-        next_x = math.inf if step_x == 0 else (x + (0.5 if step_x > 0 else -0.5) - start[0]) / dx
-        next_z = math.inf if step_z == 0 else (z + (0.5 if step_z > 0 else -0.5) - start[1]) / dz
+        next_x = (
+            math.inf
+            if step_x == 0
+            else (x + (0.5 if step_x > 0 else -0.5) - start[0]) / dx
+        )
+        next_z = (
+            math.inf
+            if step_z == 0
+            else (z + (0.5 if step_z > 0 else -0.5) - start[1]) / dz
+        )
         while True:
             if not self.passable(x, z):
                 return False
@@ -305,10 +323,15 @@ def guide_distance(point: Point, guide: Sequence[Point]) -> float:
     return min(point_segment_distance(point, a, b) for a, b in zip(guide, guide[1:]))
 
 
-def route(field: WaterField, start: Point, end: Point, guide: Sequence[Point]) -> list[Point]:
+def route(
+    field: WaterField, start: Point, end: Point, guide: Sequence[Point]
+) -> list[Point]:
     start = field.nearest_passable(start)
     end = field.nearest_passable(end)
-    start_cell, end_cell = (round(start[0]), round(start[1])), (round(end[0]), round(end[1]))
+    start_cell, end_cell = (round(start[0]), round(start[1])), (
+        round(end[0]),
+        round(end[1]),
+    )
     initial = (start_cell[0], start_cell[1], 8)
     queue = [(distance(start_cell, end_cell), 0.0, initial)]
     costs = {initial: 0.0}
@@ -327,7 +350,11 @@ def route(field: WaterField, start: Point, end: Point, guide: Sequence[Point]) -
             nx, nz = x + dx, z + dz
             if not field.passable(nx, nz):
                 continue
-            if dx and dz and (not field.passable(x + dx, z) or not field.passable(x, z + dz)):
+            if (
+                dx
+                and dz
+                and (not field.passable(x + dx, z) or not field.passable(x, z + dz))
+            ):
                 continue
             turn = 0
             if previous < 8:
@@ -343,7 +370,9 @@ def route(field: WaterField, start: Point, end: Point, guide: Sequence[Point]) -
                 continue
             costs[candidate] = new_cost
             parents[candidate] = state
-            heapq.heappush(queue, (new_cost + distance((nx, nz), end_cell), new_cost, candidate))
+            heapq.heappush(
+                queue, (new_cost + distance((nx, nz), end_cell), new_cost, candidate)
+            )
     if final is None:
         raise WaterGenerationError(f"no river route from {start} to {end}")
     cells: list[Point] = []
@@ -358,7 +387,9 @@ def route(field: WaterField, start: Point, end: Point, guide: Sequence[Point]) -
     return cells
 
 
-def simplify(field: WaterField, points: Sequence[Point], mandatory: Sequence[Point]) -> list[Point]:
+def simplify(
+    field: WaterField, points: Sequence[Point], mandatory: Sequence[Point]
+) -> list[Point]:
     fixed = sorted(
         {0, len(points) - 1}
         | {
@@ -372,7 +403,9 @@ def simplify(field: WaterField, points: Sequence[Point], mandatory: Sequence[Poi
         chunk = [points[cursor]]
         while cursor < last:
             candidate = last
-            while candidate > cursor + 1 and not field.line_passable(points[cursor], points[candidate]):
+            while candidate > cursor + 1 and not field.line_passable(
+                points[cursor], points[candidate]
+            ):
                 candidate -= 1
             chunk.append(points[candidate])
             cursor = candidate
@@ -380,7 +413,9 @@ def simplify(field: WaterField, points: Sequence[Point], mandatory: Sequence[Poi
     return deduplicate(result)
 
 
-def meander(field: WaterField, points: Sequence[Point], width: float, seed: float) -> list[Point]:
+def meander(
+    field: WaterField, points: Sequence[Point], width: float, seed: float
+) -> list[Point]:
     result = [points[0]]
     spacing = max(6.0, width * 1.35)
     for segment_index, (start, end) in enumerate(zip(points, points[1:])):
@@ -416,12 +451,16 @@ def polyline_location(point: Point, points: Sequence[Point]) -> float:
     travelled = 0.0
     for start, end in zip(points, points[1:]):
         t, projected = project_point(point, start, end)
-        best = min(best, (distance(point, projected), travelled + distance(start, end) * t))
+        best = min(
+            best, (distance(point, projected), travelled + distance(start, end) * t)
+        )
         travelled += distance(start, end)
     return best[1]
 
 
-def network_anchors(polylines: Sequence[Sequence[Point]], tolerance: float = 2.0) -> list[list[Point]]:
+def network_anchors(
+    polylines: Sequence[Sequence[Point]], tolerance: float = 2.0
+) -> list[list[Point]]:
     anchors = [[points[0], points[-1]] for points in polylines]
     for first in range(len(polylines)):
         for second in range(first + 1, len(polylines)):
@@ -433,14 +472,20 @@ def network_anchors(polylines: Sequence[Sequence[Point]], tolerance: float = 2.0
                         common.append(crossing)
             for endpoint in (polylines[first][0], polylines[first][-1]):
                 projected = min(
-                    (project_point(endpoint, c, d)[1] for c, d in zip(polylines[second], polylines[second][1:])),
+                    (
+                        project_point(endpoint, c, d)[1]
+                        for c, d in zip(polylines[second], polylines[second][1:])
+                    ),
                     key=lambda point: distance(endpoint, point),
                 )
                 if distance(endpoint, projected) <= tolerance:
                     common.append(projected)
             for endpoint in (polylines[second][0], polylines[second][-1]):
                 projected = min(
-                    (project_point(endpoint, a, b)[1] for a, b in zip(polylines[first], polylines[first][1:])),
+                    (
+                        project_point(endpoint, a, b)[1]
+                        for a, b in zip(polylines[first], polylines[first][1:])
+                    ),
                     key=lambda point: distance(endpoint, point),
                 )
                 if distance(endpoint, projected) <= tolerance:
@@ -449,15 +494,27 @@ def network_anchors(polylines: Sequence[Sequence[Point]], tolerance: float = 2.0
                 anchors[first].append(point)
                 anchors[second].append(point)
     return [
-        deduplicate(sorted(items, key=lambda point: polyline_location(point, polyline)), 0.25)
+        deduplicate(
+            sorted(items, key=lambda point: polyline_location(point, polyline)), 0.25
+        )
         for items, polyline in zip(anchors, polylines)
     ]
 
 
-def lake_contains(field: WaterField, lake: dict, point: Point, padding: float = 0.0) -> bool:
+def lake_contains(
+    field: WaterField, lake: dict, point: Point, padding: float = 0.0
+) -> bool:
     center = field.coords.to_grid((lake.get("x", 0), lake.get("z", 0)))
-    width = float(lake.get("width", float(lake.get("radius", 4)) * 2)) / field.coords.tile_size + padding * 2
-    depth = float(lake.get("depth", float(lake.get("radius", 4)) * 2)) / field.coords.tile_size + padding * 2
+    width = (
+        float(lake.get("width", float(lake.get("radius", 4)) * 2))
+        / field.coords.tile_size
+        + padding * 2
+    )
+    depth = (
+        float(lake.get("depth", float(lake.get("radius", 4)) * 2))
+        / field.coords.tile_size
+        + padding * 2
+    )
     angle = math.radians(-float(lake.get("rotation", 0)))
     dx, dz = point[0] - center[0], point[1] - center[1]
     x = dx * math.cos(angle) - dz * math.sin(angle)
@@ -485,18 +542,28 @@ def lake_contains(field: WaterField, lake: dict, point: Point, padding: float = 
     return math.hypot(normalized_x, normalized_z) <= boundary_scale
 
 
-def on_lake_boundary(field: WaterField, lake: dict, point: Point, tolerance: float = 2.0) -> bool:
+def on_lake_boundary(
+    field: WaterField, lake: dict, point: Point, tolerance: float = 2.0
+) -> bool:
     return lake_contains(field, lake, point, tolerance) and not lake_contains(
         field, lake, point, -tolerance
     )
 
 
 def on_boundary(field: WaterField, point: Point, tolerance: float = 1.5) -> bool:
-    return min(point[0], point[1], field.width - 1 - point[0], field.height - 1 - point[1]) <= tolerance
+    return (
+        min(point[0], point[1], field.width - 1 - point[0], field.height - 1 - point[1])
+        <= tolerance
+    )
 
 
 def snap_boundary(field: WaterField, point: Point) -> Point:
-    candidates = ((0.0, point[1]), (field.width - 1.0, point[1]), (point[0], 0.0), (point[0], field.height - 1.0))
+    candidates = (
+        (0.0, point[1]),
+        (field.width - 1.0, point[1]),
+        (point[0], 0.0),
+        (point[0], field.height - 1.0),
+    )
     return min(candidates, key=lambda candidate: distance(point, candidate))
 
 
@@ -542,8 +609,6 @@ def trim_terminal_to_riverbank(
     if not candidates:
         return endpoint
 
-    # Prefer the deepest containing channel. At a multi-river confluence this
-    # reliably selects the wide receiving river rather than a sibling branch.
     _, receiving = max(candidates)
     receiving_segments = list(zip(polylines[receiving], polylines[receiving][1:]))
     target_distance = widths[receiving] * 0.5
@@ -603,8 +668,6 @@ def truncate_at_receiving_river(
                 for start, end in receiving_segments
             )
 
-        # A branch intentionally flowing out of a channel begins on its bank;
-        # terminal normalization handles that direction without truncation.
         if distance_to_receiving(points[0]) <= bank_distance + 0.25:
             continue
         for segment_index, (start, end) in enumerate(zip(points, points[1:])):
@@ -618,7 +681,9 @@ def truncate_at_receiving_river(
                         low = middle
                     else:
                         high = middle
-                segment_fraction = distance(start, high) / max(distance(start, end), 1.0e-8)
+                segment_fraction = distance(start, high) / max(
+                    distance(start, end), 1.0e-8
+                )
                 candidate = (segment_index, segment_fraction, high)
                 if best is None or candidate[:2] < best[:2]:
                     best = candidate
@@ -650,9 +715,7 @@ def snap_terminal_to_nearby_riverbank(
         return endpoint
     _, projected, receiving = min(candidates, key=lambda item: item[0])
     bank_distance = widths[receiving] * 0.5
-    receiving_segments = list(
-        zip(polylines[receiving], polylines[receiving][1:])
-    )
+    receiving_segments = list(zip(polylines[receiving], polylines[receiving][1:]))
 
     def distance_to_receiving(point: Point) -> float:
         return min(
@@ -687,13 +750,21 @@ def encode_point(point: Point) -> list[int | float]:
     def number(value: float) -> int | float:
         rounded = round(value, 2)
         return int(rounded) if abs(rounded - round(rounded)) < 1.0e-7 else rounded
+
     return [number(point[0]), number(point[1])]
 
 
-def generate_rivers(definition: dict, field: WaterField, lakes: Sequence[dict]) -> list[dict]:
+def generate_rivers(
+    definition: dict, field: WaterField, lakes: Sequence[dict]
+) -> list[dict]:
     rivers = definition.get("rivers") or []
-    authored = [[field.coords.to_grid(point) for point in feature_points(river)] for river in rivers]
-    widths = [float(river.get("width", 3.0)) / field.coords.tile_size for river in rivers]
+    authored = [
+        [field.coords.to_grid(point) for point in feature_points(river)]
+        for river in rivers
+    ]
+    widths = [
+        float(river.get("width", 3.0)) / field.coords.tile_size for river in rivers
+    ]
     authored = [
         truncate_at_receiving_river(index, points, authored, widths)
         for index, points in enumerate(authored)
@@ -726,25 +797,29 @@ def generate_rivers(definition: dict, field: WaterField, lakes: Sequence[dict]) 
         if all(field.line_passable(a, b) for a, b in zip(meandered, meandered[1:])):
             routed = meandered
         if not all(field.line_passable(a, b) for a, b in zip(routed, routed[1:])):
-            raise WaterGenerationError(f"river {index + 1} smoothing left protected terrain")
+            raise WaterGenerationError(
+                f"river {index + 1} smoothing left protected terrain"
+            )
         coordinates = [encode_point(field.coords.from_grid(point)) for point in routed]
         encoded_grid = [field.coords.to_grid(point) for point in coordinates]
         if not all(
-            field.line_passable(a, b)
-            for a, b in zip(encoded_grid, encoded_grid[1:])
+            field.line_passable(a, b) for a, b in zip(encoded_grid, encoded_grid[1:])
         ):
             routed = base_route
             coordinates = [
                 encode_point(field.coords.from_grid(point)) for point in routed
             ]
         item = dict(river)
-        item["start"], item["end"], item["waypoints"] = coordinates[0], coordinates[-1], coordinates
+        item["start"], item["end"], item["waypoints"] = (
+            coordinates[0],
+            coordinates[-1],
+            coordinates,
+        )
         output.append(item)
-        print(f"  river {index + 1:02d}: {polyline_length(guide):6.1f} -> {polyline_length(routed):6.1f}, {len(routed):2d} points")
+        print(
+            f"  river {index + 1:02d}: {polyline_length(guide):6.1f} -> {polyline_length(routed):6.1f}, {len(routed):2d} points"
+        )
 
-    # The receiving channel may meander slightly during its own generation.
-    # Re-snap branch terminals against the final centerlines so water and bank
-    # meshes meet exactly without either overlap or a hairline gap.
     final_polylines = [
         [field.coords.to_grid(point) for point in feature_points(river)]
         for river in output
@@ -758,9 +833,7 @@ def generate_rivers(definition: dict, field: WaterField, lakes: Sequence[dict]) 
             points[-1] = snap_terminal_to_nearby_riverbank(
                 index, points[-1], points[-2], final_polylines, widths
             )
-        coordinates = [
-            encode_point(field.coords.from_grid(point)) for point in points
-        ]
+        coordinates = [encode_point(field.coords.from_grid(point)) for point in points]
         item["start"], item["end"], item["waypoints"] = (
             coordinates[0],
             coordinates[-1],
@@ -777,12 +850,17 @@ def nearest_road_distance(definition: dict, point: Point) -> float:
     )
 
 
-def add_strategic_lake(path: Path, definition: dict, field: WaterField, rivers: Sequence[dict], lakes: list[dict]) -> None:
+def add_strategic_lake(
+    path: Path,
+    definition: dict,
+    field: WaterField,
+    rivers: Sequence[dict],
+    lakes: list[dict],
+) -> None:
     if path.name not in STRATEGIC_LAKE_MAPS:
         return
     width, depth = STRATEGIC_LAKE_MAPS[path.name]
-    # Replace our previous deterministic suggestion on repeated runs while
-    # preserving genuinely authored lakes (for example Lake Trasimene).
+
     lakes[:] = [
         lake
         for lake in lakes
@@ -793,7 +871,13 @@ def add_strategic_lake(path: Path, definition: dict, field: WaterField, rivers: 
         return
     candidates: list[tuple[float, Point, float]] = []
     bridge_centers = [
-        mul(add(field.coords.to_grid(bridge["start"]), field.coords.to_grid(bridge["end"])), 0.5)
+        mul(
+            add(
+                field.coords.to_grid(bridge["start"]),
+                field.coords.to_grid(bridge["end"]),
+            ),
+            0.5,
+        )
         for bridge in definition.get("bridges") or []
         if bridge.get("start") and bridge.get("end")
     ]
@@ -802,15 +886,25 @@ def add_strategic_lake(path: Path, definition: dict, field: WaterField, rivers: 
         for start, end in zip(points, points[1:]):
             span = distance(start, end)
             for sample in range(1, max(2, int(span // 8))):
-                point = add(start, mul(sub(end, start), sample / max(2, int(span // 8))))
-                if on_boundary(field, point, 18.0) or any(distance(point, bridge) < 20.0 for bridge in bridge_centers):
+                point = add(
+                    start, mul(sub(end, start), sample / max(2, int(span // 8)))
+                )
+                if on_boundary(field, point, 18.0) or any(
+                    distance(point, bridge) < 20.0 for bridge in bridge_centers
+                ):
                     continue
                 road_distance = nearest_road_distance(definition, point)
                 safe_road_distance = max(width, depth) * 0.5 + 5.0
                 if not safe_road_distance <= road_distance <= safe_road_distance + 25.0:
                     continue
                 radius = math.hypot(width, depth) * 0.5 / field.coords.tile_size
-                if any(not field.passable(round(point[0] + math.cos(angle) * radius), round(point[1] + math.sin(angle) * radius)) for angle in (0, math.pi * 0.5, math.pi, math.pi * 1.5)):
+                if any(
+                    not field.passable(
+                        round(point[0] + math.cos(angle) * radius),
+                        round(point[1] + math.sin(angle) * radius),
+                    )
+                    for angle in (0, math.pi * 0.5, math.pi, math.pi * 1.5)
+                ):
                     continue
                 direction = normalized(sub(end, start))
                 rotation = math.degrees(math.atan2(direction[1], direction[0]))
@@ -822,13 +916,28 @@ def add_strategic_lake(path: Path, definition: dict, field: WaterField, rivers: 
         return
     _, center, rotation = min(candidates)
     world = field.coords.from_grid(center)
-    lakes.append({"x": encode_point(world)[0], "z": encode_point(world)[1], "width": width, "depth": depth, "rotation": round(rotation, 1)})
+    lakes.append(
+        {
+            "x": encode_point(world)[0],
+            "z": encode_point(world)[1],
+            "width": width,
+            "depth": depth,
+            "rotation": round(rotation, 1),
+        }
+    )
     print(f"  strategic lake: added at {encode_point(world)}")
 
 
-def validate(definition: dict, field: WaterField, rivers: Sequence[dict], lakes: Sequence[dict]) -> Validation:
-    polylines = [[field.coords.to_grid(point) for point in feature_points(river)] for river in rivers]
-    widths = [float(river.get("width", 3.0)) / field.coords.tile_size for river in rivers]
+def validate(
+    definition: dict, field: WaterField, rivers: Sequence[dict], lakes: Sequence[dict]
+) -> Validation:
+    polylines = [
+        [field.coords.to_grid(point) for point in feature_points(river)]
+        for river in rivers
+    ]
+    widths = [
+        float(river.get("width", 3.0)) / field.coords.tile_size for river in rivers
+    ]
     obstacle_crossings = sum(
         not field.line_passable(start, end)
         for points in polylines
@@ -864,8 +973,14 @@ def validate(definition: dict, field: WaterField, rivers: Sequence[dict], lakes:
     roads = definition.get("roads") or []
     for lake in lakes:
         center = field.coords.to_grid((lake.get("x", 0), lake.get("z", 0)))
-        width = float(lake.get("width", float(lake.get("radius", 4)) * 2)) / field.coords.tile_size
-        depth = float(lake.get("depth", float(lake.get("radius", 4)) * 2)) / field.coords.tile_size
+        width = (
+            float(lake.get("width", float(lake.get("radius", 4)) * 2))
+            / field.coords.tile_size
+        )
+        depth = (
+            float(lake.get("depth", float(lake.get("radius", 4)) * 2))
+            / field.coords.tile_size
+        )
         lake_samples = [
             (
                 round(center[0] + math.cos(angle) * width * 0.5),
@@ -874,8 +989,7 @@ def validate(definition: dict, field: WaterField, rivers: Sequence[dict], lakes:
             for angle in (0, math.pi * 0.5, math.pi, math.pi * 1.5)
         ]
         if any(
-            field.in_bounds(x, z) and not field.passable(x, z)
-            for x, z in lake_samples
+            field.in_bounds(x, z) and not field.passable(x, z) for x, z in lake_samples
         ):
             invalid_lakes += 1
             continue
@@ -885,11 +999,18 @@ def validate(definition: dict, field: WaterField, rivers: Sequence[dict], lakes:
             for start, end in zip(points, points[1:])
         )
         road_link = any(
-            point_segment_distance(center, field.coords.to_grid(a), field.coords.to_grid(b)) <= max(width, depth) * 0.5 + 4.0
+            point_segment_distance(
+                center, field.coords.to_grid(a), field.coords.to_grid(b)
+            )
+            <= max(width, depth) * 0.5 + 4.0
             for road in roads
             for a, b in zip(feature_points(road), feature_points(road)[1:])
         )
-        if not river_link and not road_link and not on_boundary(field, center, max(width, depth) * 0.5):
+        if (
+            not river_link
+            and not road_link
+            and not on_boundary(field, center, max(width, depth) * 0.5)
+        ):
             invalid_lakes += 1
     return Validation(
         len(rivers),
@@ -936,7 +1057,13 @@ def replace_array(source: str, key: str, value: list[dict]) -> str:
     raise WaterGenerationError(f"unterminated {key} array")
 
 
-def process(path: Path, write: bool, validate_only: bool, strategic_lakes: bool, clearance: float) -> bool:
+def process(
+    path: Path,
+    write: bool,
+    validate_only: bool,
+    strategic_lakes: bool,
+    clearance: float,
+) -> bool:
     source = path.read_text(encoding="utf-8")
     definition = json.loads(source)
     rivers = definition.get("rivers") or []
@@ -977,7 +1104,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--campaign", action="store_true")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--validate-only", action="store_true")
-    parser.add_argument("--strategic-lakes", action="store_true", help="add lakes only on campaign maps with an explicit historical/geographic policy")
+    parser.add_argument(
+        "--strategic-lakes",
+        action="store_true",
+        help="add lakes only on campaign maps with an explicit historical/geographic policy",
+    )
     parser.add_argument("--clearance", type=float, default=1.25)
     args = parser.parse_args(argv)
     if not args.campaign and not args.maps:
@@ -996,7 +1127,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     failures = 0
     for path in dict.fromkeys(path.resolve() for path in paths):
         try:
-            if not process(path, args.write, args.validate_only, args.strategic_lakes, args.clearance):
+            if not process(
+                path,
+                args.write,
+                args.validate_only,
+                args.strategic_lakes,
+                args.clearance,
+            ):
                 failures += 1
         except (OSError, json.JSONDecodeError, WaterGenerationError) as error:
             print(f"{path}: ERROR: {error}", file=sys.stderr)

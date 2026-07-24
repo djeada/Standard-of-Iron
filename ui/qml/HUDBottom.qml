@@ -1004,11 +1004,7 @@ RowLayout {
                 focusPolicy: Qt.NoFocus
                 enabled: action_state.enabled
                 ToolTip.visible: hovered
-                ToolTip.text: action_state.active
-                    ? qsTr("Nearby troops are empowered until the aura expires.")
-                    : (action_state.enabled
-                       ? qsTr("Temporarily empower nearby troops. A glow marks every affected soldier.")
-                       : qsTr("Select a ready commander to activate the aura"))
+                ToolTip.text: action_state.active ? qsTr("Nearby troops are empowered until the aura expires.") : (action_state.enabled ? qsTr("Temporarily empower nearby troops. A glow marks every affected soldier.") : qsTr("Select a ready commander to activate the aura"))
                 ToolTip.delay: 500
                 onClicked: {
                     if (typeof game !== 'undefined' && game.commander_trigger_aura) {

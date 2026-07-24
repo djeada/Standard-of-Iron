@@ -42,9 +42,7 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
 
     if (!renderer.submission_visibility().accepts_sphere(
-            chunk.cull_center,
-            chunk.cull_radius,
-            SubmissionFogMode::Ignore)) {
+            chunk.cull_center, chunk.cull_radius, SubmissionFogMode::Ignore)) {
       continue;
     }
 

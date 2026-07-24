@@ -441,10 +441,6 @@ auto build_elephant_production_nodes()
   std::vector<MeshNode> nodes(source_nodes.begin(), source_nodes.end());
   auto const bind = elephant_source_bind_palette();
 
-  // The authored package contains one correctly skinned eye on the animal's
-  // left side.  Mirror that exact front-of-head geometry in bind space so both
-  // eyes share its shape, black material and head animation.  Do not mirror the
-  // dark toenail islands that share the source material farther down the mesh.
   for (auto const& source : source_nodes) {
     if (source.debug_name != "elephant.production.eyes" ||
         source.anchor_bone >= bind.size()) {
@@ -466,8 +462,8 @@ auto build_elephant_production_nodes()
       }
 
       auto vertex = source_mesh->vertices[source_index];
-      QVector3D rest = root_from_mesh.map(QVector3D(
-          vertex.position[0], vertex.position[1], vertex.position[2]));
+      QVector3D rest = root_from_mesh.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
       rest.setX(-rest.x());
       QVector3D const local = mesh_from_root.map(rest);
       vertex.position = {local.x(), local.y(), local.z()};
@@ -490,8 +486,8 @@ auto build_elephant_production_nodes()
       unsigned int const c = source_mesh->indices[index + 2U];
       auto is_front_eye_vertex = [&](unsigned int vertex_index) {
         auto const& vertex = source_mesh->vertices[vertex_index];
-        QVector3D const rest = root_from_mesh.map(QVector3D(
-            vertex.position[0], vertex.position[1], vertex.position[2]));
+        QVector3D const rest = root_from_mesh.map(
+            QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
         return rest.z() > 0.0F;
       };
       if (!is_front_eye_vertex(a) || !is_front_eye_vertex(b) ||
@@ -499,7 +495,6 @@ auto build_elephant_production_nodes()
         continue;
       }
 
-      // Reflection reverses winding, so swap the final two indices.
       mirrored.indices.push_back(append_mirrored_vertex(a));
       mirrored.indices.push_back(append_mirrored_vertex(c));
       mirrored.indices.push_back(append_mirrored_vertex(b));

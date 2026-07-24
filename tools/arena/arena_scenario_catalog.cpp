@@ -215,12 +215,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
     struct CommanderLineupEntry {
-      const char* group_name;
+      const char* group_name{};
       Troop troop;
       Nation nation;
-      int owner;
+      int owner{};
       QVector3D position;
-      float facing;
+      float facing{};
     };
     const CommanderLineupEntry entries[] = {
         {"fabius",
@@ -583,8 +583,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
             QStringLiteral("elephant"), Troop::Elephant, 1, 1, {0.0F, 0.0F, -6.0F}, 1),
         group(
             QStringLiteral("infantry"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 2.0F}, 8)};
-    // Keep enough health for repeated trunk/leg strikes and a launched casualty,
-    // but guarantee a no-opponent tail where the elephant must recover to idle.
+
     s.groups[1].health_override = 150;
     s.groups[1].max_health_override = 150;
     s.steps = {at(0.0F,

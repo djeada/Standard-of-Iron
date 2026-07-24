@@ -14,14 +14,8 @@
 namespace Game::Systems::FormationCombat {
 namespace {
 
-// The elephant's trample radius is an area-of-effect gameplay radius, not the
-// visible animal's collision radius.  Treating the full 2.5 m trample reach as
-// body geometry makes melee lock several metres before the head reaches a
-// soldier.  This radius follows the authored mesh's roughly 1.1 m half-length.
 constexpr float k_elephant_visual_body_radius = 1.15F;
-// Drive through roughly one infantry rank before locking.  The chase target is
-// intentionally deeper than the accepted contact depth so movement's arrival
-// tolerance cannot turn this back into a shallow front-line touch.
+
 constexpr float k_elephant_chase_penetration = 1.50F;
 constexpr float k_elephant_contact_penetration = 1.10F;
 
@@ -134,10 +128,10 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
     result.body_radius = std::max(
         0.05F, std::max(resolved_transform.scale.x, resolved_transform.scale.z) * 0.5F);
     if (entity.has_component<Engine::Core::ElephantComponent>()) {
-      float const visual_scale = std::max(
-          0.05F,
-          std::max(std::abs(resolved_transform.scale.x),
-                   std::abs(resolved_transform.scale.z)));
+      float const visual_scale =
+          std::max(0.05F,
+                   std::max(std::abs(resolved_transform.scale.x),
+                            std::abs(resolved_transform.scale.z)));
       result.body_radius =
           std::max(result.body_radius, k_elephant_visual_body_radius * visual_scale);
     }
@@ -313,13 +307,10 @@ auto contact_geometry(const Engine::Core::Entity& attacker,
                  std::max(rank_spacing * 0.30F, body_radius * 0.5F));
   } else if (attacker.has_component<Engine::Core::ElephantComponent>() &&
              has_formation_slots(target)) {
-    // A war elephant must drive into the infantry footprint before combat
-    // locks it in place.  Crossing a full front rank gives the charge the
-    // intended mass instead of merely touching the leading soldier.
+
     result.engagement_center_distance = std::max(
         0.0F,
-        result.center_distance -
-            (result.surface_gap + k_elephant_chase_penetration));
+        result.center_distance - (result.surface_gap + k_elephant_chase_penetration));
   } else {
     result.engagement_center_distance = result.contact_center_distance;
   }
@@ -345,10 +336,7 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
         geometry.engagement_center_distance + k_contact_numeric_epsilon;
     auto const* attacker_attack =
         attacker.get_component<Engine::Core::AttackComponent>();
-    // A mounted charge can establish the melee lock while the two formation
-    // roots are still slightly outside the normal deep-overlap center. Once
-    // their visible soldier footprints overlap, that committed lock is valid
-    // contact and must be allowed to transition into ordinary melee attacks.
+
     bool const locked_visible_overlap =
         attacker_attack != nullptr && attacker_attack->in_melee_lock &&
         attacker_attack->melee_lock_target_id == target.get_id() &&

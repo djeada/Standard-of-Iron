@@ -97,9 +97,7 @@ public:
   [[nodiscard]] auto has_pending_skin_ubo_uploads() const noexcept -> bool {
     return m_has_pending_skin_ubo_uploads;
   }
-  // GPU objects can only be created on the render thread with its context
-  // current. CPU mesh/skin baking queues these explicit initialization uploads
-  // instead of letting the first visible soldier allocate them on demand.
+
   void upload_pending_skin_ubos();
 
   auto get_or_bake(const Render::Creature::CreatureSpec& spec,
