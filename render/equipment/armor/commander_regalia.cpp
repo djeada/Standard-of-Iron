@@ -37,8 +37,8 @@ void add_fabius_regalia(std::vector<Primitive>& p) {
 }
 
 void add_scipio_regalia(std::vector<Primitive>& p) {
-  for (int side : {-1, 1}) {
-    float const s = static_cast<float>(side);
+  for (int const side : {-1, 1}) {
+    auto const s = static_cast<float>(side);
     p.push_back(generated_cone({s * 0.27F, -0.01F, 0.02F},
                                {s * 0.53F, 0.07F, -0.02F},
                                0.11F,
@@ -80,8 +80,8 @@ void add_hanno_regalia(std::vector<Primitive>& p) {
 }
 
 void add_hasdrubal_regalia(std::vector<Primitive>& p) {
-  for (int side : {-1, 1}) {
-    float const s = static_cast<float>(side);
+  for (int const side : {-1, 1}) {
+    auto const s = static_cast<float>(side);
     p.push_back(generated_cone({s * 0.24F, 0.16F, 0.0F},
                                {s * 0.59F, 0.30F, -0.15F},
                                0.12F,

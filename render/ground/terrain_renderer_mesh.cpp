@@ -914,10 +914,10 @@ void TerrainRenderer::build_meshes() {
         params.snow_color = clamp01(climate_profile.snow_color);
         if (chunk.type == Game::Map::TerrainType::Hill ||
             chunk.type == Game::Map::TerrainType::Mountain) {
-          float soil_foot_height =
+          float const soil_foot_height =
               (chunk.type == Game::Map::TerrainType::Mountain) ? 0.16F : 0.22F;
           params.soil_foot_height = std::clamp(soil_foot_height, 0.08F, 0.36F);
-          float screen_toe_mul =
+          float const screen_toe_mul =
               (chunk.type == Game::Map::TerrainType::Mountain) ? 0.75F : 0.95F;
           params.screen_toe_mul = screen_toe_mul;
           params.screen_toe_clamp =

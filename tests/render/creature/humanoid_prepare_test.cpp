@@ -8521,7 +8521,7 @@ TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint)
   entity.add_component<Engine::Core::TransformComponent>();
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 

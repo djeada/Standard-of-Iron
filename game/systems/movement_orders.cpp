@@ -123,7 +123,7 @@ auto align_bridge_waypoint(const QVector3D& waypoint,
   if (!aligned.has_value()) {
     return waypoint;
   }
-  return QVector3D(aligned->x(), waypoint.y(), aligned->z());
+  return {aligned->x(), waypoint.y(), aligned->z()};
 }
 
 } // namespace

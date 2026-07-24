@@ -64,7 +64,7 @@ void append_oriented_box(std::vector<PropMeshVertex>& verts,
                          const V3& b,
                          float half_width,
                          float half_depth) {
-  V3 axis = b - a;
+  V3 const axis = b - a;
   V3 side(-axis.y(), axis.x(), 0.0F);
   if (side.lengthSquared() < 1.0e-8F) {
     side = {1.0F, 0.0F, 0.0F};

@@ -761,7 +761,7 @@ auto main(int argc, char* argv[]) -> int {
                          qCritical() << "The Qt Quick scene graph is not using OpenGL; "
                                         "the gameplay framebuffer cannot be displayed.";
                          if (renderer_self_test) {
-                           app.exit(10);
+                           QGuiApplication::exit(10);
                          }
                        }
                      }
@@ -795,7 +795,7 @@ auto main(int argc, char* argv[]) -> int {
           }
           qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
                      "frame rendered and presented";
-          app.exit(0);
+          QGuiApplication::exit(0);
         });
 
     if (!root_obj->setProperty("game_started", true) ||
@@ -809,7 +809,7 @@ auto main(int argc, char* argv[]) -> int {
     QTimer::singleShot(30000, &app, [&app]() {
       qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
                      "presented within 30 seconds";
-      app.exit(10);
+      QGuiApplication::exit(10);
     });
   }
 

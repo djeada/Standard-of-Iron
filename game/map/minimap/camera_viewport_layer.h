@@ -37,8 +37,11 @@ private:
   [[nodiscard]] auto world_to_pixel(float world_x,
                                     float world_z) const -> std::pair<float, float>;
 
-  void draw_viewport_rect(
-      QPainter& painter, float px, float py, float pixel_width, float pixel_height);
+  void draw_viewport_rect(QPainter& painter,
+                          float px,
+                          float py,
+                          float pixel_width,
+                          float pixel_height) const;
 
   QImage m_image;
   int m_width = 0;

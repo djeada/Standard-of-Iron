@@ -929,16 +929,15 @@ auto authored_position(float raw_x,
                        const GridDefinition& grid,
                        CoordSystem coord_sys) -> QVector3D {
   if (coord_sys == CoordSystem::World) {
-    return QVector3D(raw_x, 0.0F, raw_z);
+    return {raw_x, 0.0F, raw_z};
   }
 
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
   const float tile = std::max(min_tile_size, grid.tile_size);
-  return QVector3D(
-      (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile,
-      0.0F,
-      (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
+  return {(raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile,
+          0.0F,
+          (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile};
 }
 
 auto read_structures(const QJsonArray& arr,

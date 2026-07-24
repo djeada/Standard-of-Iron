@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <math.h>
 #include <numbers>
 #include <vector>
 
@@ -267,7 +266,7 @@ void TerrainHeightMap::build_from_features(
 
     if (feature.type == TerrainType::Hill) {
       float grid_width = std::max(feature.width / m_tile_size, 1.0F);
-      float grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
+      float const grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
 
       const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
       const bool radius_authored =
@@ -734,7 +733,7 @@ void TerrainHeightMap::build_from_features(
         queue.reserve(entrance_indices.size());
 
         for (int const entrance_idx : entrance_indices) {
-          if (visited[entrance_idx] || walkable_mask[entrance_idx] == 0) {
+          if ((visited[entrance_idx] != 0U) || walkable_mask[entrance_idx] == 0) {
             continue;
           }
           visited[entrance_idx] = 1;
@@ -756,7 +755,7 @@ void TerrainHeightMap::build_from_features(
                 continue;
               }
               int const n_idx = indexAt(nx, nz);
-              if (visited[n_idx] || walkable_mask[n_idx] == 0) {
+              if ((visited[n_idx] != 0U) || walkable_mask[n_idx] == 0) {
                 continue;
               }
 
@@ -1337,7 +1336,7 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
 
 void TerrainHeightMap::precompute_bridge_data() {
 
-  const size_t grid_size = static_cast<size_t>(m_width * m_height);
+  const auto grid_size = static_cast<size_t>(m_width * m_height);
   m_on_bridge.clear();
   m_on_bridge.resize(grid_size, false);
   m_bridge_centerline.clear();

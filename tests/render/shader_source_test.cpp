@@ -1,3 +1,4 @@
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -38,6 +39,24 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   std::ostringstream buffer;
   buffer << input.rdbuf();
   return buffer.str();
+}
+
+auto collapse_whitespace(const std::string& text) -> std::string {
+  std::string collapsed;
+  collapsed.reserve(text.size());
+  bool in_space = false;
+  for (const char character : text) {
+    if (std::isspace(static_cast<unsigned char>(character)) != 0) {
+      in_space = true;
+      continue;
+    }
+    if (in_space && !collapsed.empty()) {
+      collapsed.push_back(' ');
+    }
+    in_space = false;
+    collapsed.push_back(character);
+  }
+  return collapsed;
 }
 
 auto parse_glsl_float(const std::string& text) -> float {
@@ -120,6 +139,7 @@ TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "riverbank.frag");
   ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
 
   for (const auto* uniform : {"uniform vec3 u_grass_secondary;",
                               "uniform vec3 u_grass_dry;",
@@ -133,20 +153,21 @@ TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
     EXPECT_NE(frag.find(uniform), std::string::npos);
   }
 
-  EXPECT_NE(frag.find("vec3 wet_silt =\n      soil *"), std::string::npos);
-  EXPECT_NE(frag.find("mix(earth, map_ground"), std::string::npos);
-  EXPECT_EQ(frag.find("if (shore_t > edge_limit)"), std::string::npos);
-  EXPECT_EQ(frag.find("float ground_blend"), std::string::npos);
+  EXPECT_NE(flat.find("vec3 wet_silt = soil *"), std::string::npos);
+  EXPECT_NE(flat.find("mix(earth, map_ground"), std::string::npos);
+  EXPECT_EQ(flat.find("if (shore_t > edge_limit)"), std::string::npos);
+  EXPECT_EQ(flat.find("float ground_blend"), std::string::npos);
 }
 
 TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
   ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
 
-  EXPECT_NE(frag.find("float meadow_field = clamp("), std::string::npos);
-  EXPECT_NE(frag.find("float thatch_field = clamp("), std::string::npos);
-  EXPECT_NE(frag.find("float lush_patch = smoothstep("), std::string::npos);
-  EXPECT_NE(frag.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
-  EXPECT_NE(frag.find("0.055 * soil_mix"), std::string::npos);
+  EXPECT_NE(flat.find("float meadow_field = clamp("), std::string::npos);
+  EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
+  EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
+  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
+  EXPECT_NE(flat.find("0.055 * soil_mix"), std::string::npos);
 }

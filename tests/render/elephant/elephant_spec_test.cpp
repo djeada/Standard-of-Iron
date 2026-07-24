@@ -26,8 +26,8 @@ using Render::GL::ISubmitter;
 
 struct Call {
   Render::GL::Mesh* mesh{nullptr};
-  QMatrix4x4 model{};
-  QVector3D color{};
+  QMatrix4x4 model;
+  QVector3D color;
   int material_id{0};
 };
 
@@ -166,11 +166,11 @@ auto shader_role_color(
     const std::array<QVector3D, Render::Elephant::k_elephant_role_count>& roles,
     std::uint8_t role) -> QVector3D {
   if (role == 0U) {
-    return QVector3D();
+    return {};
   }
-  std::size_t const index = static_cast<std::size_t>(role - 1U);
+  auto const index = static_cast<std::size_t>(role - 1U);
   if (index >= roles.size()) {
-    return QVector3D();
+    return {};
   }
   return roles[index];
 }
@@ -408,7 +408,7 @@ TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
 TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
   auto dims = make_dims();
   dims.move_bob_amplitude = 0.06F;
-  Render::GL::ElephantGait walk{1.2F, 0.25F, 0.0F, 0.30F, 0.10F};
+  Render::GL::ElephantGait const walk{1.2F, 0.25F, 0.0F, 0.30F, 0.10F};
 
   Render::Elephant::ElephantSpecPose pose_zero{};
   Render::Elephant::ElephantPoseMotion motion_zero{};
@@ -444,7 +444,7 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
       dims, gait, fight_motion, fight_pose);
 
   Render::Elephant::ElephantSpecPose idle_pose{};
-  Render::Elephant::ElephantPoseMotion idle_motion{};
+  Render::Elephant::ElephantPoseMotion const idle_motion{};
   Render::Elephant::make_elephant_spec_pose_animated(
       dims, gait, idle_motion, idle_pose);
 

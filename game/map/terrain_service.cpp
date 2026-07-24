@@ -541,7 +541,7 @@ void TerrainService::rebuild_road_spatial_index() {
     const float delta_x = segment.end.x() - start_x;
     const float delta_z = segment.end.z() - start_z;
     const float length_sq = delta_x * delta_x + delta_z * delta_z;
-    RoadQuerySegment query{
+    RoadQuerySegment const query{
         .start_x = start_x,
         .start_z = start_z,
         .delta_x = delta_x,

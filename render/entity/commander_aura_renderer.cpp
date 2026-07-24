@@ -16,11 +16,11 @@ namespace {
 auto get_commander_aura_color(Game::Systems::NationID nation_id) -> QVector3D {
   switch (nation_id) {
   case Game::Systems::NationID::RomanRepublic:
-    return QVector3D(1.0F, 0.85F, 0.3F);
+    return {1.0F, 0.85F, 0.3F};
   case Game::Systems::NationID::Carthage:
-    return QVector3D(0.9F, 0.4F, 1.0F);
+    return {0.9F, 0.4F, 1.0F};
   default:
-    return QVector3D(1.0F, 0.7F, 0.2F);
+    return {1.0F, 0.7F, 0.2F};
   }
 }
 

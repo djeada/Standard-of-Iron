@@ -378,7 +378,7 @@ TEST(LinearFeatureGeometryTest, BuildsShorelineFillAtConnectedRiverJunction) {
 }
 
 TEST(LinearFeatureGeometryTest, BuildsLakeSurfaceAndShorelineMeshes) {
-  Game::Map::TerrainHeightMap height_map(48, 48, 1.0F);
+  Game::Map::TerrainHeightMap const height_map(48, 48, 1.0F);
   const Game::Map::Lake lake{{2.0F, 0.0F, -1.0F}, 16.0F, 10.0F, 23.0F};
 
   auto water = Render::Ground::build_lake_surface_mesh(lake, 1.0F);

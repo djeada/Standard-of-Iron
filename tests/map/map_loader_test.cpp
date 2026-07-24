@@ -438,7 +438,7 @@ TEST(MapLoaderTest, EmptyStructuresWhenArrayAbsent) {
 }
 
 TEST(MapLoaderTest, RejectsRetiredStructureCollectionsAndBuildingSpawns) {
-  const auto expect_rejected = [](QJsonObject root) {
+  const auto expect_rejected = [](const QJsonObject& root) {
     QTemporaryFile temp_file;
     EXPECT_TRUE(temp_file.open());
     temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
@@ -462,7 +462,7 @@ TEST(MapLoaderTest, LoadsEveryShippedMapWithTheCanonicalStructureSchema) {
   QDir repo_root = QFileInfo(QString::fromUtf8(__FILE__)).absoluteDir();
   ASSERT_TRUE(repo_root.cdUp());
   ASSERT_TRUE(repo_root.cdUp());
-  QDir maps_dir(repo_root.filePath(QStringLiteral("assets/maps")));
+  QDir const maps_dir(repo_root.filePath(QStringLiteral("assets/maps")));
   const QStringList maps =
       maps_dir.entryList(QStringList{QStringLiteral("*.json")}, QDir::Files);
   ASSERT_FALSE(maps.isEmpty());

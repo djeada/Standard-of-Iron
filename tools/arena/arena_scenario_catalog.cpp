@@ -215,12 +215,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
     struct CommanderLineupEntry {
-      const char* group_name;
+      const char* group_name{};
       Troop troop;
       Nation nation;
-      int owner;
+      int owner{};
       QVector3D position;
-      float facing;
+      float facing{};
     };
     const CommanderLineupEntry entries[] = {
         {"fabius",

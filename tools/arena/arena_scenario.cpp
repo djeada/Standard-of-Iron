@@ -1710,7 +1710,7 @@ struct ArenaScenarioRunner::Impl {
 
     if (verify_render_continuity) {
       const auto previous_samples = sampled_soldiers_by_entity.value(entity_id);
-      for (int soldier_index : previous_samples) {
+      for (int const soldier_index : previous_samples) {
         if (sampled_this_frame.contains(soldier_index)) {
           continue;
         }

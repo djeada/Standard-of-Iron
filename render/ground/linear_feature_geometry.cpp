@@ -488,8 +488,7 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
         1U + static_cast<unsigned int>((ring - 1) * angular_segments);
     const unsigned int outer = 1U + static_cast<unsigned int>(ring * angular_segments);
     for (int segment = 0; segment < angular_segments; ++segment) {
-      const unsigned int next =
-          static_cast<unsigned int>((segment + 1) % angular_segments);
+      const auto next = static_cast<unsigned int>((segment + 1) % angular_segments);
       const unsigned int a = inner + static_cast<unsigned int>(segment);
       const unsigned int b = outer + static_cast<unsigned int>(segment);
       const unsigned int c = outer + next;
@@ -782,7 +781,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
         continue;
       }
       neighbor_direction.normalize();
-      float alignment = QVector3D::dotProduct(neighbor_direction, dir);
+      float const alignment = QVector3D::dotProduct(neighbor_direction, dir);
       if (std::abs(alignment) < 0.50F) {
 
         continue;
@@ -854,7 +853,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
     float const t = static_cast<float>(i) / static_cast<float>(length_steps - 1);
     const auto cross_section =
         sample_linear_feature_cross_section(ribbon_segment, t, ribbon_settings);
-    QVector3D center_pos = cross_section.center;
+    QVector3D const center_pos = cross_section.center;
     const float bank_half_width = cross_section.half_width;
     const QVector3D bank_direction = local_bank_direction(t);
     const QVector3D bank_perpendicular(-bank_direction.z(), 0.0F, bank_direction.x());
@@ -1259,8 +1258,7 @@ auto build_riverbank_junction_meshes(
       const unsigned int outer =
           1U + static_cast<unsigned int>((ring + 1) * angular_segments);
       for (int segment = 0; segment < angular_segments; ++segment) {
-        const unsigned int next =
-            static_cast<unsigned int>((segment + 1) % angular_segments);
+        const auto next = static_cast<unsigned int>((segment + 1) % angular_segments);
         const unsigned int a = inner + static_cast<unsigned int>(segment);
         const unsigned int b = outer + static_cast<unsigned int>(segment);
         const unsigned int c = outer + next;
@@ -1359,11 +1357,10 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
   }
 
   for (int ring = 0; ring < ring_count; ++ring) {
-    const unsigned int inner = static_cast<unsigned int>(ring * angular_segments);
-    const unsigned int outer = static_cast<unsigned int>((ring + 1) * angular_segments);
+    const auto inner = static_cast<unsigned int>(ring * angular_segments);
+    const auto outer = static_cast<unsigned int>((ring + 1) * angular_segments);
     for (int segment = 0; segment < angular_segments; ++segment) {
-      const unsigned int next =
-          static_cast<unsigned int>((segment + 1) % angular_segments);
+      const auto next = static_cast<unsigned int>((segment + 1) % angular_segments);
       const unsigned int a = inner + static_cast<unsigned int>(segment);
       const unsigned int b = outer + static_cast<unsigned int>(segment);
       const unsigned int c = outer + next;

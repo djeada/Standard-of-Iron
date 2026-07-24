@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <numeric>
 #include <vector>
 
@@ -334,7 +335,8 @@ void apply_constrained_erosion(std::vector<float>& heights,
           if (protected_cells[neighbor] != 0 || strength[neighbor] <= 0.0F) {
             continue;
           }
-          const float diagonal = (dir[0] != 0 && dir[1] != 0) ? 1.41421356F : 1.0F;
+          const float diagonal =
+              (dir[0] != 0 && dir[1] != 0) ? std::numbers::sqrt2_v<float> : 1.0F;
           const float drop = heights[idx] - heights[neighbor] - talus * diagonal;
           if (drop > largest_drop) {
             largest_drop = drop;

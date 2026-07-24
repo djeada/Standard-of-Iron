@@ -208,7 +208,7 @@ TEST_F(MinimapGeneratorTest, RendersStructures) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersWallStructures) {
-  MapDefinition empty_map = test_map;
+  MapDefinition const empty_map = test_map;
   test_map.structures.push_back({
       .type = Game::Units::SpawnType::WallSegment,
       .geometry =
