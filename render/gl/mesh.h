@@ -47,9 +47,7 @@ public:
   [[nodiscard]] auto bounds_center() const noexcept -> const QVector3D& {
     return m_bounds_center;
   }
-  [[nodiscard]] auto bounds_radius() const noexcept -> float {
-    return m_bounds_radius;
-  }
+  [[nodiscard]] auto bounds_radius() const noexcept -> float { return m_bounds_radius; }
 
   [[nodiscard]] auto clone_with_filtered_indices(
       const std::function<

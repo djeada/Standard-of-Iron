@@ -28,9 +28,6 @@ struct FrameContinuityIssue {
   [[nodiscard]] auto message() const -> QString;
 };
 
-// Detects transient scene-wide bright frames. Local effects and ordinary
-// animation may change many pixels, so a failure requires a broad luminance
-// jump followed by a return to the pre-jump image within a short window.
 class FrameContinuityAnalyzer {
 public:
   explicit FrameContinuityAnalyzer(FrameContinuityConfig config = {});

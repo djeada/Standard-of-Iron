@@ -31,9 +31,8 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.shoulder_l_z_delta = 0.020F;
     break;
   case HumanoidHeldPoseKind::SpearBrace:
-    sample.right_hand =
-        {0.30F, shoulder_y - 0.10F - 0.006F * hold_cycle,
-         0.58F + 0.014F * hold_cycle};
+    sample.right_hand = {
+        0.30F, shoulder_y - 0.10F - 0.006F * hold_cycle, 0.58F + 0.014F * hold_cycle};
     sample.use_offhand_spear_grip = true;
     sample.offhand_spear_direction = {0.0502367F, 0.401893F, 0.914307F};
     sample.offhand_along_offset = -0.24F;
@@ -49,12 +48,10 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.head_y_delta = -0.01F;
     break;
   case HumanoidHeldPoseKind::BowReady:
-    sample.right_hand =
-        {0.06F, shoulder_y + 0.08F + 0.010F * hold_cycle,
-         0.70F - 0.008F * hold_cycle};
-    sample.left_hand =
-        {0.05F, shoulder_y + 0.04F + 0.006F * hold_cycle,
-         0.34F + 0.005F * hold_cycle};
+    sample.right_hand = {
+        0.06F, shoulder_y + 0.08F + 0.010F * hold_cycle, 0.70F - 0.008F * hold_cycle};
+    sample.left_hand = {
+        0.05F, shoulder_y + 0.04F + 0.006F * hold_cycle, 0.34F + 0.005F * hold_cycle};
     sample.shoulder_r_z_delta = 0.16F;
     sample.shoulder_l_y_delta = 0.02F;
     sample.shoulder_r_y_delta = -0.04F;

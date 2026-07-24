@@ -76,8 +76,6 @@ TEST(RendererVisibilityPolicyTest, BoundsRemainVisibleWhenCenterCrossesFogCell) 
   Render::GL::SubmissionVisibilityPolicy policy;
   policy.reset(nullptr, &snapshot);
 
-  // The center has crossed into x=1, but the formation still overlaps the
-  // visible x=0 cell.  Rejecting on the center alone caused whole-unit pops.
   EXPECT_TRUE(policy.accepts_sphere(
       QVector3D(0.65F, 0.0F, 0.0F), 0.7F, Render::GL::SubmissionFogMode::VisibleOnly));
   EXPECT_FALSE(policy.accepts_sphere(

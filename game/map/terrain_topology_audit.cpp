@@ -52,11 +52,10 @@ auto segment_distance_sq(const QVector3D& point,
   QVector2D const b(end.x(), end.z());
   QVector2D const ab = b - a;
   const float length_sq = ab.lengthSquared();
-  const float t = length_sq > 0.0001F
-                      ? std::clamp(QVector2D::dotProduct(p - a, ab) / length_sq,
-                                   0.0F,
-                                   1.0F)
-                      : 0.0F;
+  const float t =
+      length_sq > 0.0001F
+          ? std::clamp(QVector2D::dotProduct(p - a, ab) / length_sq, 0.0F, 1.0F)
+          : 0.0F;
   return (p - (a + ab * t)).lengthSquared();
 }
 
@@ -64,26 +63,20 @@ auto segments_intersect(const QVector3D& a0,
                         const QVector3D& a1,
                         const QVector3D& b0,
                         const QVector3D& b1) -> bool {
-  auto cross = [](const QVector3D& origin,
-                  const QVector3D& first,
-                  const QVector3D& second) {
-    return (first.x() - origin.x()) * (second.z() - origin.z()) -
-           (first.z() - origin.z()) * (second.x() - origin.x());
-  };
+  auto cross =
+      [](const QVector3D& origin, const QVector3D& first, const QVector3D& second) {
+        return (first.x() - origin.x()) * (second.z() - origin.z()) -
+               (first.z() - origin.z()) * (second.x() - origin.x());
+      };
   const float ab0 = cross(a0, a1, b0);
   const float ab1 = cross(a0, a1, b1);
   const float ba0 = cross(b0, b1, a0);
   const float ba1 = cross(b0, b1, a1);
   constexpr float epsilon = 0.0001F;
-  const bool collinear = std::abs(ab0) <= epsilon &&
-                         std::abs(ab1) <= epsilon &&
-                         std::abs(ba0) <= epsilon &&
-                         std::abs(ba1) <= epsilon;
+  const bool collinear = std::abs(ab0) <= epsilon && std::abs(ab1) <= epsilon &&
+                         std::abs(ba0) <= epsilon && std::abs(ba1) <= epsilon;
   if (collinear) {
-    const auto overlaps = [](float a_start,
-                             float a_end,
-                             float b_start,
-                             float b_end) {
+    const auto overlaps = [](float a_start, float a_end, float b_start, float b_end) {
       constexpr float overlap_epsilon = 0.0001F;
       return std::max(std::min(a_start, a_end), std::min(b_start, b_end)) <=
              std::min(std::max(a_start, a_end), std::max(b_start, b_end)) +
@@ -92,10 +85,8 @@ auto segments_intersect(const QVector3D& a0,
     return overlaps(a0.x(), a1.x(), b0.x(), b1.x()) &&
            overlaps(a0.z(), a1.z(), b0.z(), b1.z());
   }
-  return ((ab0 <= epsilon && ab1 >= -epsilon) ||
-          (ab1 <= epsilon && ab0 >= -epsilon)) &&
-         ((ba0 <= epsilon && ba1 >= -epsilon) ||
-          (ba1 <= epsilon && ba0 >= -epsilon));
+  return ((ab0 <= epsilon && ab1 >= -epsilon) || (ab1 <= epsilon && ab0 >= -epsilon)) &&
+         ((ba0 <= epsilon && ba1 >= -epsilon) || (ba1 <= epsilon && ba0 >= -epsilon));
 }
 
 template <typename Segment>
@@ -229,17 +220,14 @@ auto audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit {
   std::vector<RoadSegment> navigable_roads = map.roads;
   navigable_roads.reserve(map.roads.size() + map.bridges.size());
   for (const auto& bridge : map.bridges) {
-    navigable_roads.push_back({bridge.start,
-                               bridge.end,
-                               bridge.width,
-                               QStringLiteral("paved")});
+    navigable_roads.push_back(
+        {bridge.start, bridge.end, bridge.width, QStringLiteral("paved")});
   }
   audit.road_components =
       segment_component_count(navigable_roads, join_distance, map.roads.size());
   if (audit.road_components > 1) {
-    audit.issues.push_back(
-        QStringLiteral("road network has %1 disconnected components")
-            .arg(audit.road_components));
+    audit.issues.push_back(QStringLiteral("road network has %1 disconnected components")
+                               .arg(audit.road_components));
   }
 
   audit.river_components = river_component_count(map.rivers, join_distance);

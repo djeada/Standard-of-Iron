@@ -17,7 +17,7 @@ struct TerrainTopologyAudit {
   [[nodiscard]] auto passed() const -> bool { return issues.isEmpty(); }
 };
 
-[[nodiscard]] auto audit_terrain_topology(const MapDefinition& map)
-    -> TerrainTopologyAudit;
+[[nodiscard]] auto
+audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit;
 
 } // namespace Game::Map

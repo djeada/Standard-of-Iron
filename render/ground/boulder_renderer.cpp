@@ -124,8 +124,7 @@ void BoulderRenderer::generate_instances(
     QVector3D color = surface_profile.rock_low * (1.0F - color_var) +
                       surface_profile.rock_high * color_var;
     QVector3D const earth_tint(0.34F, 0.31F, 0.27F);
-    float const earth_mix =
-        remap(rand_01(state), 0.10F, 0.25F + scene.dryness * 0.10F);
+    float const earth_mix = remap(rand_01(state), 0.10F, 0.25F + scene.dryness * 0.10F);
     color = color * (1.0F - earth_mix) + earth_tint * earth_mix;
     color *= 0.82F + scene.rockiness * 0.08F;
 
@@ -179,9 +178,9 @@ void BoulderRenderer::generate_instances(
                        m_biome_settings.moisture_level * 0.020F,
                    0.055F,
                    0.200F);
-    float const area_scale = std::sqrt(
-        static_cast<float>(std::max(width, 1) * std::max(map_height, 1)) /
-        (k_reference_scatter_extent * k_reference_scatter_extent));
+    float const area_scale =
+        std::sqrt(static_cast<float>(std::max(width, 1) * std::max(map_height, 1)) /
+                  (k_reference_scatter_extent * k_reference_scatter_extent));
     int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
     int const cell_span = 6 * sampling_scale;
     for (int z = 0; z < map_height; z += cell_span) {

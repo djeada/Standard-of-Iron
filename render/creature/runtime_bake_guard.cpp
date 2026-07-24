@@ -58,8 +58,8 @@ void report_runtime_bake_violation(RuntimeBakeOperation operation,
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   static std::mutex mutex;
   static std::unordered_set<std::string> reported;
-  const std::string key = std::string(runtime_bake_operation_name(operation)) + ":" +
-                          std::string(detail);
+  const std::string key =
+      std::string(runtime_bake_operation_name(operation)) + ":" + std::string(detail);
   std::lock_guard<std::mutex> const lock(mutex);
   if (reported.emplace(key).second) {
     qCritical().noquote() << "Forbidden render-time bake:"

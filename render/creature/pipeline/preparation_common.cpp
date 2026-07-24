@@ -365,8 +365,8 @@ auto ground_model_contact_to_surface(QMatrix4x4& model,
   return ground_model_to_terrain(model, world_y_offset);
 }
 
-auto ground_model_to_terrain(QMatrix4x4& model, float world_y_offset) noexcept
-    -> float {
+auto ground_model_to_terrain(QMatrix4x4& model,
+                             float world_y_offset) noexcept -> float {
   QVector3D const origin = model_world_origin(model);
   auto& terrain_service = Game::Map::TerrainService::instance();
   QVector3D const grounded_origin = terrain_service.resolve_surface_world_position(

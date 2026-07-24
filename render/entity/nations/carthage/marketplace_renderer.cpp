@@ -261,8 +261,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
     desc.add_rotated_box(QVector3D(-0.32F, awning_y - sag, z),
                          QVector3D(0.60F, 0.012F, 0.098F),
                          QVector3D(0.0F, 0.0F, -5.5F),
-                         (panel % 2 == 0) ? c.cloth_oxblood
-                                          : c.cloth_oxblood_faded,
+                         (panel % 2 == 0) ? c.cloth_oxblood : c.cloth_oxblood_faded,
                          BuildingStateMask::Normal | BuildingStateMask::Damaged);
   }
 
@@ -310,8 +309,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
       desc.add_rotated_box(QVector3D(x, 0.70F - (panel == 2 ? 0.018F : 0.0F), z),
                            QVector3D(0.132F, 0.012F, 0.26F),
                            QVector3D(z < 0.0F ? 4.0F : -4.0F, 0.0F, 0.0F),
-                           (panel % 2 == 0) ? c.cloth_oxblood
-                                            : c.cloth_oxblood_faded,
+                           (panel % 2 == 0) ? c.cloth_oxblood : c.cloth_oxblood_faded,
                            BuildingStateMask::Normal | BuildingStateMask::Damaged);
     }
     desc.add_box(QVector3D(-0.38F, 0.665F, z + (z < 0.0F ? -0.23F : 0.23F)),
@@ -358,15 +356,10 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                          BuildingLODMask::Full);
   }
 
-  add_spice_basket(
-      desc, QVector3D(-0.53F, counter_h + 0.06F, -0.36F), c.saffron, c);
-  add_spice_basket(
-      desc, QVector3D(-0.19F, counter_h + 0.06F, 0.39F), c.spice_red, c);
+  add_spice_basket(desc, QVector3D(-0.53F, counter_h + 0.06F, -0.36F), c.saffron, c);
+  add_spice_basket(desc, QVector3D(-0.19F, counter_h + 0.06F, 0.39F), c.spice_red, c);
   add_spice_basket(desc, QVector3D(-0.58F, counter_h + 0.06F, 0.20F), c.herb, c);
-  add_punic_amphora(desc,
-                    QVector3D(0.34F, 0.14F, 0.30F),
-                    c.ceramic,
-                    c.indigo);
+  add_punic_amphora(desc, QVector3D(0.34F, 0.14F, 0.30F), c.ceramic, c.indigo);
 
   desc.add_cylinder(QVector3D(-1.05F, 0.14F, 0.0F),
                     QVector3D(-1.05F, 0.14F + 0.62F * height_multiplier, 0.0F),

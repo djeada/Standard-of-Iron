@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <math.h>
 
 #include "canvas_transform.h"
 #include "spawn_icon_library.h"
@@ -888,7 +887,7 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
   } else if (type == QStringLiteral("pine_tree") ||
              type == QStringLiteral("olive_tree")) {
     const QColor crown = type == QStringLiteral("pine_tree") ? QColor(38, 110, 70)
-                                                               : QColor(105, 126, 62);
+                                                             : QColor(105, 126, 62);
     painter.setBrush(crown.darker(145));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
@@ -1047,9 +1046,12 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
                 static_cast<unsigned int>(
                     static_cast<int>(
                         static_cast<unsigned int>(
-                            static_cast<int>(static_cast<unsigned int>(
-                                                 Qt::ShiftModifier != 0U) != 0U) !=
-                            0U) != 0U) != 0U) != 0U) != 0U != 0u);
+                            static_cast<int>(
+                                static_cast<unsigned int>(
+                                    static_cast<int>(static_cast<unsigned int>(
+                                                         Qt::ShiftModifier != 0U) !=
+                                                     0U) != 0U) != 0U) != 0U) != 0U) !=
+                    0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     switch (m_current_tool) {
@@ -1298,9 +1300,12 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
                 static_cast<unsigned int>(
                     static_cast<int>(
                         static_cast<unsigned int>(
-                            static_cast<int>(static_cast<unsigned int>(
-                                                 Qt::ShiftModifier != 0U) != 0U) !=
-                            0U) != 0U) != 0U) != 0U) != 0U != 0u);
+                            static_cast<int>(
+                                static_cast<unsigned int>(
+                                    static_cast<int>(static_cast<unsigned int>(
+                                                         Qt::ShiftModifier != 0U) !=
+                                                     0U) != 0U) != 0U) != 0U) != 0U) !=
+                    0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     if (m_selected_type == 0) {

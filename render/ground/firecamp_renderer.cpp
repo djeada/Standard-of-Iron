@@ -55,7 +55,8 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_firecamp_state, [](const FireCampInstanceGpu& instance) -> const QVector4D& {
+      m_firecamp_state,
+      [](const FireCampInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_intensity;
       },
       renderer.static_world_visibility_filter_enabled()

@@ -15,7 +15,7 @@ namespace {
 
 using namespace Render::Ground;
 
-} // namespace
+}
 
 namespace Render::GL {
 
@@ -42,7 +42,8 @@ void SupplyCartRenderer::submit(Renderer& renderer, ResourceManager* resources) 
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state, [](const SupplyCartInstanceGpu& inst) -> const QVector4D& {
+      m_state,
+      [](const SupplyCartInstanceGpu& inst) -> const QVector4D& {
         return inst.pos_scale;
       },
       renderer.static_world_visibility_filter_enabled()

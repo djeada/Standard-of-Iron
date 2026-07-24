@@ -83,9 +83,13 @@ def check_release_renderer_self_tests(root: Path) -> list[str]:
             continue
         content = workflow.read_text(encoding="utf-8")
         if "--renderer-self-test" not in content:
-            errors.append(f"{workflow.relative_to(root)}: packaged renderer test missing")
+            errors.append(
+                f"{workflow.relative_to(root)}: packaged renderer test missing"
+            )
         if "SOI_RENDERER_SELF_TEST: PASS" not in content:
-            errors.append(f"{workflow.relative_to(root)}: strict PASS marker check missing")
+            errors.append(
+                f"{workflow.relative_to(root)}: strict PASS marker check missing"
+            )
     return errors
 
 

@@ -194,8 +194,7 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
 
   for (auto* entity :
        world->get_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
-    auto* buff =
-        entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+    auto* buff = entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
     if (buff == nullptr) {
       continue;
     }
@@ -400,11 +399,10 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             refresh_morale_state(*morale);
           }
 
-          auto* buff = candidate->get_component<
-              Engine::Core::CommanderAuraBuffComponent>();
+          auto* buff =
+              candidate->get_component<Engine::Core::CommanderAuraBuffComponent>();
           if (buff == nullptr) {
-            buff = candidate->add_component<
-                Engine::Core::CommanderAuraBuffComponent>();
+            buff = candidate->add_component<Engine::Core::CommanderAuraBuffComponent>();
           }
           if (buff != nullptr) {
             buff->active = true;
@@ -414,8 +412,8 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         }
 
         if (candidate_is_troop && commander->bonus_type == "health_regen") {
-          auto* buff = candidate->get_component<
-              Engine::Core::CommanderAuraBuffComponent>();
+          auto* buff =
+              candidate->get_component<Engine::Core::CommanderAuraBuffComponent>();
           if (buff != nullptr) {
             buff->health_regen_accumulator +=
                 std::max(0.0F, commander->aura_bonus_value) * delta_time;
@@ -448,7 +446,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             }
           }
         }
-
       }
 
       if (!commander->rally_requires_manual_trigger && !rallied_this_tick &&

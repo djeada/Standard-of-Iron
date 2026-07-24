@@ -564,11 +564,7 @@ RowLayout {
                     Button {
                         Layout.fillWidth: true
                         Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
-                        text: bottomRoot.status_value("aura_active", false)
-                              ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1))
-                              : (bottomRoot.status_value("aura_ready", false)
-                                 ? qsTr("Activate Command Aura [3]")
-                                 : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
+                        text: bottomRoot.status_value("aura_active", false) ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1)) : (bottomRoot.status_value("aura_ready", false) ? qsTr("Activate Command Aura [3]") : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
                         enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
                         focusPolicy: Qt.NoFocus
                         ToolTip.visible: hovered

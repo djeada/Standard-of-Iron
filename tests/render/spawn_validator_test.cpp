@@ -62,7 +62,7 @@ TEST_F(SpawnValidatorTest, TerrainCacheSampleHeightFlat) {
 TEST_F(SpawnValidatorTest, TerrainCacheGetSlopeFlat) {
   build_cache();
 
-  float slope = terrain_cache.get_slope_at(5, 5);
+  float const slope = terrain_cache.get_slope_at(5, 5);
   EXPECT_LT(slope, 0.01F);
 }
 
@@ -87,7 +87,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorAllowsFlatTerrain) {
   config.tile_size = tile_size;
   config.edge_padding = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_TRUE(validator.can_spawn_at_grid(5.0F, 5.0F));
 }
@@ -104,7 +104,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksMountainTerrain) {
   config.edge_padding = 0.0F;
   config.allow_mountain = false;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
 }
@@ -121,7 +121,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRiverTerrain) {
   config.edge_padding = 0.0F;
   config.allow_river = false;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
 }
@@ -139,7 +139,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorRiverMarginCheck) {
   config.river_margin = 1;
   config.check_river_margin = true;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(4.0F, 5.0F));
   EXPECT_FALSE(validator.can_spawn_at_grid(6.0F, 5.0F));
@@ -158,7 +158,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorEdgePaddingCheck) {
   config.tile_size = tile_size;
   config.edge_padding = 0.2F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(0.0F, 5.0F));
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 0.0F));
@@ -177,7 +177,7 @@ TEST_F(SpawnValidatorTest, GridToWorldConversion) {
   config.tile_size = 2.0F;
   config.edge_padding = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   float world_x = 0.0F;
   float world_z = 0.0F;
@@ -188,7 +188,7 @@ TEST_F(SpawnValidatorTest, GridToWorldConversion) {
 }
 
 TEST_F(SpawnValidatorTest, MakePlantSpawnConfigDefaults) {
-  SpawnValidationConfig config = make_plant_spawn_config();
+  SpawnValidationConfig const config = make_plant_spawn_config();
 
   EXPECT_TRUE(config.allow_flat);
   EXPECT_FALSE(config.allow_hill);
@@ -202,7 +202,7 @@ TEST_F(SpawnValidatorTest, MakePlantSpawnConfigDefaults) {
 }
 
 TEST_F(SpawnValidatorTest, MakeStoneSpawnConfigDefaults) {
-  SpawnValidationConfig config = make_stone_spawn_config();
+  SpawnValidationConfig const config = make_stone_spawn_config();
 
   EXPECT_TRUE(config.allow_flat);
   EXPECT_FALSE(config.allow_hill);
@@ -214,7 +214,7 @@ TEST_F(SpawnValidatorTest, MakeStoneSpawnConfigDefaults) {
 }
 
 TEST_F(SpawnValidatorTest, MakeFirecampSpawnConfigDefaults) {
-  SpawnValidationConfig config = make_firecamp_spawn_config();
+  SpawnValidationConfig const config = make_firecamp_spawn_config();
 
   EXPECT_TRUE(config.allow_flat);
   EXPECT_TRUE(config.allow_hill);
@@ -225,7 +225,7 @@ TEST_F(SpawnValidatorTest, MakeFirecampSpawnConfigDefaults) {
 }
 
 TEST_F(SpawnValidatorTest, MakeGrassSpawnConfigDefaults) {
-  SpawnValidationConfig config = make_grass_spawn_config();
+  SpawnValidationConfig const config = make_grass_spawn_config();
 
   EXPECT_TRUE(config.allow_flat);
   EXPECT_FALSE(config.allow_hill);
@@ -246,7 +246,7 @@ TEST_F(SpawnValidatorTest, PlantSpawnConfigBlocksHills) {
   config.tile_size = tile_size;
   config.edge_padding = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
 
@@ -264,7 +264,7 @@ TEST_F(SpawnValidatorTest, TreeSpawnConfigRespectsRiverMargin) {
   config.tile_size = tile_size;
   config.edge_padding = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
 
@@ -293,7 +293,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBuildingClearance) {
   config.check_river_margin = false;
   config.river_clearance = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 0.0F));
   EXPECT_FALSE(validator.can_spawn_at_world(3.5F, 0.0F));
@@ -320,15 +320,14 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRoadClearance) {
   config.check_river_margin = false;
   config.river_clearance = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 1.2F));
   EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 1.8F));
 }
 
 TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
-  // The production minimum bridge plus tree clearance is wider than the
-  // original 10x10 fixture, so use a field that contains both test points.
+
   width = 24;
   height = 24;
   height_data.assign(static_cast<std::size_t>(width * height), 0.0F);
@@ -354,7 +353,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
   config.check_river_margin = false;
   config.river_clearance = 0.0F;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
   float const exclusion_radius =
       Game::Map::k_min_bridge_width * 0.5F + config.bridge_clearance;
 
@@ -382,7 +381,7 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRiverClearance) {
   config.check_bridges = false;
   config.check_river_margin = false;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator const validator(terrain_cache, config);
 
   EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 2.2F));
   EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 2.8F));

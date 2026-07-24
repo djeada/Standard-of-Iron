@@ -93,10 +93,6 @@ public:
     return m_contact_shadow_budget;
   }
 
-  // Ultra is a fidelity contract, not a looser set of distance thresholds.
-  // Every submission layer uses this policy so formation-count reduction,
-  // minimal meshes, billboards, and temporal LOD shedding cannot re-enter
-  // through an independent renderer path.
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
     return m_quality != GraphicsQuality::Ultra;
   }
@@ -173,9 +169,6 @@ public:
   }
 
 private:
-  // High keeps close combat at full fidelity while enabling the production LOD,
-  // visibility-budget, pose-cache, and batching paths required by campaign-scale
-  // battles. Ultra remains an explicit opt-in capture/debug preset.
   GraphicsSettings() { set_quality(GraphicsQuality::High); }
 
   void apply_preset(GraphicsQuality q) noexcept {
