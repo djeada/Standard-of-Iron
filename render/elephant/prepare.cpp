@@ -184,9 +184,9 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   shadow_inputs.lod = lod;
   shadow_inputs.camera_distance = camera_distance;
   shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
-  shadow_inputs.standing_idle =
-      !motion.is_moving && !motion.is_fighting && !anim.is_attacking &&
-      !anim.is_hit_reacting && !anim.is_dying && !anim.is_dead;
+  shadow_inputs.standing_idle = !motion.is_moving && !motion.is_fighting &&
+                                !anim.is_attacking && !anim.is_hit_reacting &&
+                                !anim.is_dying && !anim.is_dead;
   shadow_inputs.surface_world_y = elephant_surface_world_y;
   shadow_inputs.surface_height_valid = true;
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);

@@ -117,7 +117,7 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
     for (std::uint32_t b = entry.skinned_bone_count;
          b < BonePaletteArena::k_palette_width;
          ++b) {
-      QMatrix4x4 ident;
+      QMatrix4x4 const ident;
       std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   ident.constData(),
                   sizeof(float) * BonePaletteArena::k_matrix_floats);
@@ -232,8 +232,6 @@ void RiggedMeshCache::upload_pending_skin_ubos() {
     return;
   }
 
-  // This is an explicit renderer-initialization phase, not an on-demand
-  // gameplay bake. It must run with the QSG render thread's GL context.
   Render::Creature::RuntimeBakeAllowScope const initialization_scope;
   m_has_pending_skin_ubo_uploads = false;
   for (auto& [_, entry] : m_entries) {

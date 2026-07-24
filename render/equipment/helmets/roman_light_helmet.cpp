@@ -136,8 +136,6 @@ auto roman_light_helmet_archetype() -> const RenderArchetype& {
     primitives[14] = generated_sphere(crest_front, 0.06F, k_metal_slot, 1.0F, 2);
     primitives[15] = generated_sphere(crest_back, 0.05F, k_metal_slot, 1.0F, 2);
 
-    // Imperial-style embossed brows and ear bosses give the small helmet a
-    // readable Roman galea face even when the crest is partly occluded.
     primitives[16] = generated_cylinder(QVector3D(-0.08F, 0.78F, 0.98F),
                                         QVector3D(-0.82F, 0.66F, 0.72F),
                                         0.065F,

@@ -75,9 +75,8 @@ protected:
     (void)resources;
 
     const auto visible_count = Render::Ground::Scatter::sync_filtered_state(
-        m_state, [](const Instance& instance) -> const QVector4D& {
-          return instance.pos_scale;
-        },
+        m_state,
+        [](const Instance& instance) -> const QVector4D& { return instance.pos_scale; },
         renderer.static_world_visibility_filter_enabled()
             ? renderer.submission_visibility().snapshot()
             : nullptr);

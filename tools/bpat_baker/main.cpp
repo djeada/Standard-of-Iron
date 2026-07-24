@@ -991,7 +991,6 @@ void bake_hold_pose(HumanoidBakeProfile profile,
   } else {
     ctrl.brace_spear_for_hold();
   }
-
 }
 
 void bake_death_pose(BakerDeathType death_type,
@@ -1241,8 +1240,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
-      bake_hold_pose(
-          profile, clip.hold_type, phase, pose);
+      bake_hold_pose(profile, clip.hold_type, phase, pose);
     } else if (clip.ambient_idle_type != BakerAmbientIdleType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(

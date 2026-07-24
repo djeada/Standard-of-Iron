@@ -1,6 +1,6 @@
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
-#include <array>
 #include <vector>
 
 #include "game/core/component.h"
@@ -175,9 +175,8 @@ TEST(CommanderFactoryTest, CommanderCombatMatchesDistinctWeaponIdentity) {
     Game::Units::SpawnParams params;
     params.player_id = owner_id++;
     params.spawn_type = expectation.spawn_type;
-    params.nation_id = params.player_id <= 3
-                           ? Game::Systems::NationID::RomanRepublic
-                           : Game::Systems::NationID::Carthage;
+    params.nation_id = params.player_id <= 3 ? Game::Systems::NationID::RomanRepublic
+                                             : Game::Systems::NationID::Carthage;
     auto created = registry.create(params.spawn_type, world, params);
     ASSERT_NE(created, nullptr);
     auto* entity = world.get_entity(created->id());
@@ -225,8 +224,7 @@ TEST(UndeadSpawnTypeTest, RoundTripsAndModesMatchDesign) {
   EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonArcher));
   EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::GravePriest));
   EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Knight));
-  EXPECT_FALSE(
-      Game::Units::can_use_hold_mode(Game::Units::SpawnType::MountedKnight));
+  EXPECT_FALSE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::MountedKnight));
   EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Archer));
   EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::Spearman));
   EXPECT_TRUE(Game::Units::can_use_patrol_mode(Game::Units::SpawnType::GravePriest));
@@ -973,8 +971,7 @@ TEST(CommanderAuraAbilityTest, ExplicitActivationAppliesConfiguredDamageBoost) {
   const int base_melee = ally_attack->melee_damage;
   ASSERT_GT(base_damage, 0);
   ASSERT_GT(base_melee, 0);
-  auto* inactive_buff =
-      ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
+  auto* inactive_buff = ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
   EXPECT_TRUE(inactive_buff == nullptr || !inactive_buff->active);
 
   commander_data->aura_ability_requested = true;

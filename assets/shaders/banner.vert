@@ -30,8 +30,6 @@ void main() {
   float spatial_phase = banner_seed * 6.2831853;
   float wind = clamp(u_wind_strength, 0.0, 1.35);
 
-  // The cloth mesh is authored in XZ with Y as its surface normal. Billowing
-  // therefore belongs on local Y; local Z is reserved for gravity and flutter.
   float attached = smoothstep(0.015, 0.16, u);
   float free_edge = attached * pow(u, 0.72);
   float free_edge_sq = free_edge * free_edge;
@@ -46,8 +44,7 @@ void main() {
   float primary_amp = wind * gust * free_edge * mix(0.055, 0.145, u);
   float cross_amp = wind * free_edge * (0.020 + free_edge_sq * 0.030);
   float flutter_amp = wind * free_edge_sq * 0.014;
-  float billow = sin(primary_phase) * primary_amp +
-                 sin(cross_phase) * cross_amp +
+  float billow = sin(primary_phase) * primary_amp + sin(cross_phase) * cross_amp +
                  sin(flutter_phase) * flutter_amp;
 
   float lower_weight = smoothstep(0.38, 1.0, v);

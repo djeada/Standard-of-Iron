@@ -342,11 +342,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                        z < 0.0F ? c.ochre : c.olive,
                        z < 0.0F ? c.terracotta : c.grape,
                        c);
-    add_produce_basket(desc,
-                       QVector3D(-0.20F, 0.395F, z),
-                       c.olive,
-                       c.ochre,
-                       c);
+    add_produce_basket(desc, QVector3D(-0.20F, 0.395F, z), c.olive, c.ochre, c);
   }
   desc.add_box(QVector3D(-0.92F, 0.35F, 0.0F),
                QVector3D(0.13F, 0.20F, 0.13F),
@@ -380,12 +376,8 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
               QVector3D(0.02F, counter_h + 0.06F, -0.46F),
               c.terracotta,
               c.terracotta_dark);
-  add_amphora(desc,
-              QVector3D(0.42F, 0.18F, 0.37F),
-              c.terracotta_dark,
-              c.cloth_gold);
+  add_amphora(desc, QVector3D(0.42F, 0.18F, 0.37F), c.terracotta_dark, c.cloth_gold);
 
-  // Small bronze balance: a strong mercantile silhouette even at gameplay scale.
   desc.add_cylinder(QVector3D(0.20F, counter_h + 0.06F, 0.28F),
                     QVector3D(0.20F, counter_h + 0.32F, 0.28F),
                     0.012F,

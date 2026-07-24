@@ -493,11 +493,6 @@ auto Pathfinding::find_path_internal(const Point& start,
       continue;
     }
 
-    // Count expanded cells, not stale heap entries. A cell can be queued more
-    // than once while a cheaper route to it is discovered; charging those
-    // obsolete entries against the width*height safety limit made valid
-    // detours around hills and across large-map bridges terminate early with
-    // a misleading partial path.
     ++iterations;
     set_closed(current.index, generation);
 

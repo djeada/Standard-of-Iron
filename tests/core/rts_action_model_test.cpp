@@ -71,8 +71,8 @@ TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) 
   auto* selection = world.get_system<Game::Systems::SelectionSystem>();
   ASSERT_NE(selection, nullptr);
 
-  auto* entity = add_selected_unit(
-      world, *selection, Game::Units::SpawnType::RomanVeteranConsul);
+  auto* entity =
+      add_selected_unit(world, *selection, Game::Units::SpawnType::RomanVeteranConsul);
   auto* commander = entity->add_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander, nullptr);
 

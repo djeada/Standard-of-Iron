@@ -304,10 +304,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 #endif
 
 auto main(int argc, char* argv[]) -> int {
-  // QQuickFramebufferObject only works with the OpenGL scene graph. A global
-  // Qt Quick software backend would leave the menus visible but suppress the
-  // gameplay framebuffer, which is indistinguishable from the reported blank
-  // game view. Keep Qt Quick on OpenGL; platform software GL remains available.
+
   if (qEnvironmentVariable("QT_QUICK_BACKEND")
           .compare("software", Qt::CaseInsensitive) == 0) {
     fprintf(stderr,
@@ -719,8 +716,7 @@ auto main(int argc, char* argv[]) -> int {
         &GLView::renderer_ready,
         &app,
         [game_engine_ptr = game_engine.get(), direct_campaign_mission]() {
-          qInfo() << "Starting campaign mission directly:"
-                  << direct_campaign_mission;
+          qInfo() << "Starting campaign mission directly:" << direct_campaign_mission;
           game_engine_ptr->start_campaign_mission(direct_campaign_mission);
         },
         Qt::QueuedConnection);
@@ -765,7 +761,7 @@ auto main(int argc, char* argv[]) -> int {
                          qCritical() << "The Qt Quick scene graph is not using OpenGL; "
                                         "the gameplay framebuffer cannot be displayed.";
                          if (renderer_self_test) {
-                           app.exit(10);
+                           QGuiApplication::exit(10);
                          }
                        }
                      }
@@ -799,7 +795,7 @@ auto main(int argc, char* argv[]) -> int {
           }
           qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
                      "frame rendered and presented";
-          app.exit(0);
+          QGuiApplication::exit(0);
         });
 
     if (!root_obj->setProperty("game_started", true) ||
@@ -813,7 +809,7 @@ auto main(int argc, char* argv[]) -> int {
     QTimer::singleShot(30000, &app, [&app]() {
       qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
                      "presented within 30 seconds";
-      app.exit(10);
+      QGuiApplication::exit(10);
     });
   }
 

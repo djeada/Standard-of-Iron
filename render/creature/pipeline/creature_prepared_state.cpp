@@ -174,13 +174,13 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
   float const shadow_depth =
       shadow_size * (inputs.mounted ? 1.30F : 1.10F) * depth_boost;
 
-  const float shadow_y = inputs.surface_height_valid
-                             ? inputs.surface_world_y
-                             : terrain_service.resolve_surface_world_y(
-                                   inputs.soldier_world_pos.x(),
-                                   inputs.soldier_world_pos.z(),
-                                   0.0F,
-                                   inputs.soldier_world_pos.y());
+  const float shadow_y =
+      inputs.surface_height_valid
+          ? inputs.surface_world_y
+          : terrain_service.resolve_surface_world_y(inputs.soldier_world_pos.x(),
+                                                    inputs.soldier_world_pos.z(),
+                                                    0.0F,
+                                                    inputs.soldier_world_pos.y());
 
   QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;
@@ -249,13 +249,11 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
   float const shadow_width = shadow_size * width_mult;
   float const shadow_depth = shadow_size * depth_mult;
 
-  const float shadow_y = inputs.surface_height_valid
-                             ? inputs.surface_world_y
-                             : terrain_service.resolve_surface_world_y(
-                                   inputs.world_pos.x(),
-                                   inputs.world_pos.z(),
-                                   0.0F,
-                                   inputs.world_pos.y());
+  const float shadow_y =
+      inputs.surface_height_valid
+          ? inputs.surface_world_y
+          : terrain_service.resolve_surface_world_y(
+                inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
 
   QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;

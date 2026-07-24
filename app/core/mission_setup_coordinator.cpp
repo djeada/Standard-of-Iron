@@ -492,8 +492,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
         unit->health <= 0) {
       continue;
     }
-    defense_reference_world_position += QVector3D(
-        transform->position.x, transform->position.y, transform->position.z);
+    defense_reference_world_position +=
+        QVector3D(transform->position.x, transform->position.y, transform->position.z);
     local_force_anchor_count++;
   }
   if (local_force_anchor_count > 0) {
@@ -551,20 +551,16 @@ auto MissionSetupCoordinator::apply_mission_setup(
     ai_owner_id++;
   }
 
-  // Waves authored at the same time are one coordinated assault phase, even when
-  // several AI commanders enter from different roads.  Keeping the phase metadata
-  // on every pending group makes defensive missions readable without coupling the
-  // scheduler to a particular campaign map.
   std::vector<float> assault_phase_times;
   assault_phase_times.reserve(ctx.pending_waves.size() - mission_wave_begin);
   for (std::size_t i = mission_wave_begin; i < ctx.pending_waves.size(); ++i) {
     const float trigger_time = ctx.pending_waves[i].trigger_time;
-    const auto duplicate = std::find_if(
-        assault_phase_times.begin(),
-        assault_phase_times.end(),
-        [trigger_time](float existing) {
-          return std::abs(existing - trigger_time) < 0.01F;
-        });
+    const auto duplicate =
+        std::find_if(assault_phase_times.begin(),
+                     assault_phase_times.end(),
+                     [trigger_time](float existing) {
+                       return std::abs(existing - trigger_time) < 0.01F;
+                     });
     if (duplicate == assault_phase_times.end()) {
       assault_phase_times.push_back(trigger_time);
     }

@@ -284,8 +284,6 @@ TEST_F(HelmetRenderersTest, FactionHelmetSilhouettesRetainSignatureDetails) {
   EXPECT_EQ(carthage_light_helmet_shell_archetype().lods[0].draws.size(), 7U);
   EXPECT_EQ(carthage_heavy_helmet_shell_archetype().lods[0].draws.size(), 8U);
 
-  // The Punic crests remain denser and taller; Roman identity comes from the
-  // paired brow reinforcements, articulated cheeks and disciplined red comb.
   EXPECT_GT(carthage_heavy_helmet_crest_archetype().lods[0].draws.size(), 10U);
   EXPECT_GT(roman_heavy_helmet_archetype().lods[0].draws.size(),
             carthage_heavy_helmet_shell_archetype().lods[0].draws.size());

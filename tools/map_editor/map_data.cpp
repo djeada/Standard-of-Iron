@@ -380,14 +380,13 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
     }
   }
   const QStringList known_root_keys = {
-      MapJsonKeys::name,         MapJsonKeys::description, coord_system_key,
-      legacy_coord_system_key,   max_troops_key,           legacy_max_troops_key,
-      MapJsonKeys::grid,         MapJsonKeys::biome,       MapJsonKeys::camera,
-      MapJsonKeys::spawns,       MapJsonKeys::structures,  MapJsonKeys::victory,
-      MapJsonKeys::rain,
-      MapJsonKeys::terrain,      MapJsonKeys::world_props, MapJsonKeys::firecamps,
-      MapJsonKeys::rivers,       MapJsonKeys::lakes,       MapJsonKeys::roads,
-      MapJsonKeys::bridges,      MapJsonKeys::undead_zones,
+      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
+      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
+      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
+      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
+      MapJsonKeys::rain,       MapJsonKeys::terrain,     MapJsonKeys::world_props,
+      MapJsonKeys::firecamps,  MapJsonKeys::rivers,      MapJsonKeys::lakes,
+      MapJsonKeys::roads,      MapJsonKeys::bridges,     MapJsonKeys::undead_zones,
       MapJsonKeys::fog_zones};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 

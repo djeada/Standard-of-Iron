@@ -44,7 +44,7 @@ struct ArenaScenarioReport;
 
 namespace Render::Profiling {
 class FrameContinuityAnalyzer;
-} // namespace Render::Profiling
+}
 
 namespace Render::GL {
 class Renderer;

@@ -201,8 +201,7 @@ auto commander_definition(TroopType troop_type) -> const CommanderDefinition* {
   return nullptr;
 }
 
-void configure_commander_component(Engine::Core::Entity& entity,
-                                   TroopType troop_type) {
+void configure_commander_component(Engine::Core::Entity& entity, TroopType troop_type) {
   auto const* definition = commander_definition(troop_type);
   if (definition == nullptr) {
     return;

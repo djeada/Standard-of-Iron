@@ -162,8 +162,6 @@ inline auto facade_rotation(BuildingFacadePlane plane, float degrees) -> QVector
 
 } // namespace Detail
 
-// Broad-winged aquila relief used as a high-contrast Roman facade signature.
-// Its major shapes are intentionally large enough to remain legible at RTS zoom.
 inline void
 add_roman_aquila_relief(BuildingArchetypeDesc& desc,
                         const QVector3D& center,
@@ -217,8 +215,6 @@ add_roman_aquila_relief(BuildingArchetypeDesc& desc,
   }
 }
 
-// Tanit relief: circular head, outstretched arms and triangular body. This is
-// the recurring Punic signature, paired with flat roofs and red masonry coping.
 inline void
 add_punic_tanit_relief(BuildingArchetypeDesc& desc,
                        const QVector3D& center,
@@ -260,9 +256,6 @@ add_punic_tanit_relief(BuildingArchetypeDesc& desc,
                BuildingLODMask::Full);
 }
 
-// Tall civic standard with an eagle-like wing profile. Unlike the facade
-// relief this changes the roof silhouette, so Roman buildings remain readable
-// from a steep gameplay camera and against dark terrain.
 inline void
 add_roman_roof_standard(BuildingArchetypeDesc& desc,
                         const QVector3D& base,
@@ -317,9 +310,6 @@ add_roman_roof_standard(BuildingArchetypeDesc& desc,
                states);
 }
 
-// Stepped crown with outward hooks and a central ritual shard. It deliberately
-// exaggerates Punic geometry into a dark-fantasy silhouette while retaining
-// the Tanit triangle/crescent language used on facades.
 inline void
 add_punic_horned_crown(BuildingArchetypeDesc& desc,
                        const QVector3D& base,

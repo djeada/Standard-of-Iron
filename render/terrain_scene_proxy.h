@@ -170,10 +170,10 @@ public:
   [[nodiscard]] auto feature_chunks() const -> std::vector<LinearFeatureChunk> {
     auto& terrain = Game::Map::TerrainService::instance();
     auto const* height_map = terrain.get_height_map();
-    std::size_t const water_count = height_map != nullptr
-                                        ? height_map->get_river_segments().size() +
-                                              height_map->get_lakes().size()
-                                        : 0U;
+    std::size_t const water_count =
+        height_map != nullptr
+            ? height_map->get_river_segments().size() + height_map->get_lakes().size()
+            : 0U;
     std::size_t const bridge_count =
         (height_map != nullptr) ? height_map->get_bridges().size() : 0U;
     if (m_features == nullptr) {

@@ -46,12 +46,12 @@ void main() {
   float spear_tip_r = range_mask(v_local_pos.x, 0.54, 0.82, 0.035) *
                       range_mask(v_local_pos.y, 1.56, 2.06, 0.035) *
                       range_mask(v_local_pos.z, 0.01, 0.17, 0.035);
-  float blade_facet = 1.0 - smoothstep(0.93, 0.995,
-                                      max(abs(LN.x), max(abs(LN.y), abs(LN.z))));
-  float blade_mask = clamp(max(max(sword_a, sword_b),
-                               max(spear_tip_l, spear_tip_r)) *
+  float blade_facet =
+      1.0 - smoothstep(0.93, 0.995, max(abs(LN.x), max(abs(LN.y), abs(LN.z))));
+  float blade_mask = clamp(max(max(sword_a, sword_b), max(spear_tip_l, spear_tip_r)) *
                                mix(0.72, 1.0, blade_facet),
-                           0.0, 1.0);
+                           0.0,
+                           1.0);
 
   float guard_a = band(v_local_pos.y, 0.39, 0.065, 0.025) *
                   range_mask(v_local_pos.x, -0.55, 0.05, 0.035) *
@@ -73,33 +73,33 @@ void main() {
                    range_mask(v_local_pos.y, 0.04, 1.98, 0.035) *
                    range_mask(v_local_pos.z, -0.14, 0.04, 0.035);
 
-  float wood_grain = 0.5 + 0.5 * sin(v_local_pos.y * 29.0 +
-                                      v_local_pos.x * 8.0 + v_local_pos.z * 5.0);
+  float wood_grain =
+      0.5 + 0.5 * sin(v_local_pos.y * 29.0 + v_local_pos.x * 8.0 + v_local_pos.z * 5.0);
   float wood_mottle = hash12(floor(v_local_pos.xy * 13.0) + v_world_pos.xz * 0.2);
   vec3 dark_oak = v_color * vec3(0.58, 0.54, 0.48);
   vec3 warm_oak = v_color * vec3(1.34, 1.13, 0.78);
   vec3 timber = mix(dark_oak, warm_oak, wood_grain * 0.68 + wood_mottle * 0.32);
-  float nick = smoothstep(0.88, 0.97,
-                          hash12(floor(v_local_pos.zy * 24.0) + floor(v_local_pos.xy * 7.0)));
+  float nick = smoothstep(
+      0.88, 0.97, hash12(floor(v_local_pos.zy * 24.0) + floor(v_local_pos.xy * 7.0)));
   timber *= mix(1.0, 0.64, nick * 0.38);
 
   vec3 yew = mix(vec3(0.30, 0.12, 0.045), vec3(0.66, 0.31, 0.08), wood_grain);
-  vec3 leather = mix(vec3(0.24, 0.055, 0.025), vec3(0.58, 0.17, 0.055),
-                     wood_mottle);
+  vec3 leather = mix(vec3(0.24, 0.055, 0.025), vec3(0.58, 0.17, 0.055), wood_mottle);
   float wrap_lines = band(fract(v_local_pos.y * 22.0), 0.5, 0.12, 0.06);
   leather *= mix(0.70, 1.10, wrap_lines);
-  vec3 brass = mix(vec3(0.42, 0.22, 0.045), vec3(0.82, 0.58, 0.17),
-                   hash12(v_world_pos.xz * 9.0));
+  vec3 brass = mix(
+      vec3(0.42, 0.22, 0.045), vec3(0.82, 0.58, 0.17), hash12(v_world_pos.xz * 9.0));
 
   float blade_length = max(sword_a_t, sword_b_t);
   float steel_variation = 0.5 + 0.5 * sin(v_local_pos.y * 47.0 + v_local_pos.x * 9.0);
   vec3 steel_dark = vec3(0.25, 0.30, 0.35);
   vec3 steel_bright = vec3(0.72, 0.80, 0.86);
-  vec3 steel = mix(steel_dark, steel_bright, steel_variation * 0.36 + blade_facet * 0.64);
+  vec3 steel =
+      mix(steel_dark, steel_bright, steel_variation * 0.36 + blade_facet * 0.64);
   float edge = smoothstep(0.58, 0.94, blade_facet) * blade_length;
   steel = mix(steel, vec3(0.90, 0.93, 0.91), edge * 0.48);
-  float rust = smoothstep(0.88, 0.97,
-                          hash12(floor(v_local_pos.xy * 19.0) + vec2(4.0, 9.0)));
+  float rust =
+      smoothstep(0.88, 0.97, hash12(floor(v_local_pos.xy * 19.0) + vec2(4.0, 9.0)));
   steel = mix(steel, vec3(0.48, 0.16, 0.045), rust * 0.22);
 
   vec3 albedo = mix(timber, yew, bow_mask);
@@ -115,8 +115,7 @@ void main() {
   float ao = mix(0.54, 1.0, hemi);
   float metal_mask = max(blade_mask, brass_mask);
   float spec_power = mix(24.0, 76.0, blade_mask);
-  float specular = pow(max(dot(N, H), 0.0), spec_power) *
-                   mix(0.035, 0.48, metal_mask);
+  float specular = pow(max(dot(N, H), 0.0), spec_power) * mix(0.035, 0.48, metal_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.05;
 
   vec3 color = albedo * illumination * ao;

@@ -13,7 +13,6 @@
 #include "game/systems/troop_profile_service.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
-#include "render/visibility_budget.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -30,6 +29,7 @@
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 #include "render/template_prewarm_catalog.h"
+#include "render/visibility_budget.h"
 
 namespace {
 

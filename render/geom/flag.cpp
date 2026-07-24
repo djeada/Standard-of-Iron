@@ -28,14 +28,12 @@ auto Flag::create(float world_x,
   result.pole_end = QVector3D(world_x, pole_top_y, world_z);
   result.pole_radius = 0.028F * scale;
 
-  // Keep the portable standards in the same 3:2 family as the building
-  // banners. The cloth shader supplies the common shallow swallowtail.
   float const pennant_width = 0.50F * scale;
   float const pennant_height = (pennant_width / 1.5F);
   float const crossbeam_y = pole_top_y - 0.13F * scale;
   result.crossbeam_start = QVector3D(world_x - 0.015F * scale, crossbeam_y, world_z);
-  result.crossbeam_end = QVector3D(
-      world_x + pennant_width + 0.025F * scale, crossbeam_y, world_z);
+  result.crossbeam_end =
+      QVector3D(world_x + pennant_width + 0.025F * scale, crossbeam_y, world_z);
   result.crossbeam_radius = 0.013F * scale;
 
   QVector3D const pennant_center(world_x + pennant_width * 0.50F,

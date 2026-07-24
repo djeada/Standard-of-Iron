@@ -74,8 +74,7 @@ using VariantHookFn = void (*)(const Render::GL::DrawContext& ctx,
 struct HumanoidAnimationManifest {
   const Render::Creature::ArchetypeVariantTable* variant_table{nullptr};
   PoseLayerFn pose_layer{nullptr};
-  // Optional authored clip used when this equipment role is forced into
-  // infantry melee (for example, an archer using the bow as a staff).
+
   std::uint16_t melee_clip_override{0xFFFFU};
 };
 

@@ -77,8 +77,7 @@ void main() {
   float top_face = clamp(local_normal.y, 0.0, 1.0);
   float moss_density = top_face * top_face;
   float moss_noise = noise21(v_local_pos.xz * 3.1 + v_world_pos.xz * 0.6);
-  float near_ground_moss =
-      1.0 - smoothstep(0.05, 0.48, max(v_local_pos.y, 0.0));
+  float near_ground_moss = 1.0 - smoothstep(0.05, 0.48, max(v_local_pos.y, 0.0));
   float moss_t = clamp(moss_density * (0.25 + near_ground_moss * 0.75) * moss_noise *
                            (1.0 - cut_face_mask) * 0.48,
                        0.0,
