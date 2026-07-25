@@ -7,6 +7,7 @@
 #include <QScrollArea>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QStyle>
 #include <QTabWidget>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -94,10 +95,10 @@ ArenaWindow::ArenaWindow(QWidget* parent)
   statusBar()->addWidget(m_status_label);
   m_lighting_label =
       new QLabel(QStringLiteral("Time: %1").arg(m_viewport->lighting_summary()), this);
-  m_lighting_label->setStyleSheet("color: #d6c990;");
+  m_lighting_label->setProperty("status", "warning");
   statusBar()->addPermanentWidget(m_lighting_label);
   auto* version_label = new QLabel("Standard of Iron Arena v1.0", this);
-  version_label->setStyleSheet("color: #4f6a75;");
+  version_label->setProperty("status", "muted");
   statusBar()->addPermanentWidget(version_label);
 
   connect(m_viewport,
@@ -220,7 +221,9 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           &UnitPanel::load_scenario_requested,
           this,
           [this](const QString& scenario_id) {
-            m_status_label->setStyleSheet(QStringLiteral("color: #9fd9ff;"));
+            m_status_label->setProperty("status", "success");
+            m_status_label->style()->unpolish(m_status_label);
+            m_status_label->style()->polish(m_status_label);
             m_status_label->setText(
                 QStringLiteral("Running scenario: %1").arg(scenario_id));
           });
@@ -228,7 +231,9 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           &ArenaViewport::scenario_issue_detected,
           this,
           [this](const QString& scenario_id, const QString& issue) {
-            m_status_label->setStyleSheet(QStringLiteral("color: #ff8d8d;"));
+            m_status_label->setProperty("status", "error");
+            m_status_label->style()->unpolish(m_status_label);
+            m_status_label->style()->polish(m_status_label);
             m_status_label->setText(
                 QStringLiteral("FAIL %1: %2").arg(scenario_id, issue));
             statusBar()->showMessage(QStringLiteral("Scenario failure: %1").arg(issue),
@@ -238,8 +243,9 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           &ArenaViewport::scenario_finished,
           this,
           [this](const QString&, bool passed, const QString& summary) {
-            m_status_label->setStyleSheet(passed ? QStringLiteral("color: #79dc91;")
-                                                 : QStringLiteral("color: #ff8d8d;"));
+            m_status_label->setProperty("status", passed ? "success" : "error");
+            m_status_label->style()->unpolish(m_status_label);
+            m_status_label->style()->polish(m_status_label);
             m_status_label->setText(summary);
           });
   connect(m_unit_panel,

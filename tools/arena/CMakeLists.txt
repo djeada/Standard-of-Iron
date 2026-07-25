@@ -24,6 +24,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
+        ../../ui/theme.cpp
     )
 else()
     add_executable(arena_app
@@ -36,6 +37,7 @@ else()
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
+        ../../ui/theme.cpp
     )
 endif()
 
@@ -46,6 +48,7 @@ target_link_libraries(arena_app
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Qml
     Qt${QT_VERSION_MAJOR}::OpenGL
     $<$<TARGET_EXISTS:Qt${QT_VERSION_MAJOR}::OpenGLWidgets>:Qt${QT_VERSION_MAJOR}::OpenGLWidgets>
     ${OPENGL_LIBRARIES}

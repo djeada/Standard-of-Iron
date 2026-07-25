@@ -2,7 +2,9 @@
 
 #include <QAction>
 #include <QCloseEvent>
+#include <QCoreApplication>
 #include <QDir>
+#include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFont>
@@ -14,10 +16,12 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPlainTextEdit>
+#include <QProcess>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QStyle>
 #include <QTabWidget>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -124,7 +128,8 @@ namespace MapEditor {
 
 EditorWindow::EditorWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_map_data(new MapData(this)) {
+    , m_map_data(new MapData(this))
+    , m_mission_data(new MissionData(this)) {
 
   setup_ui();
   setup_menus();
@@ -139,6 +144,14 @@ EditorWindow::EditorWindow(QWidget* parent)
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_dimensions_label);
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::refresh_json_preview);
+  connect(m_mission_data,
+          &MissionData::modified_changed,
+          this,
+          &EditorWindow::on_modified_changed);
+  connect(m_mission_data,
+          &MissionData::data_changed,
+          this,
+          &EditorWindow::refresh_json_preview);
 
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
@@ -193,11 +206,11 @@ void EditorWindow::setup_ui() {
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_selection_info);
 
-  auto* sidebar_tabs = new QTabWidget(splitter);
-  sidebar_tabs->setMinimumWidth(300);
-  sidebar_tabs->setMaximumWidth(420);
+  m_sidebar_tabs = new QTabWidget(splitter);
+  m_sidebar_tabs->setMinimumWidth(300);
+  m_sidebar_tabs->setMaximumWidth(460);
 
-  m_tool_panel = new ToolPanel(sidebar_tabs);
+  m_tool_panel = new ToolPanel(m_sidebar_tabs);
   connect(
       m_tool_panel, &ToolPanel::tool_selected, this, &EditorWindow::on_tool_selected);
   connect(m_tool_panel,
@@ -209,19 +222,42 @@ void EditorWindow::setup_ui() {
           m_canvas,
           &MapCanvas::set_current_nation);
 
-  auto* tools_scroll = new QScrollArea(sidebar_tabs);
+  auto* tools_scroll = new QScrollArea(m_sidebar_tabs);
   tools_scroll->setWidget(m_tool_panel);
   tools_scroll->setWidgetResizable(true);
   tools_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  sidebar_tabs->addTab(tools_scroll, "Tools");
+  m_sidebar_tabs->addTab(tools_scroll, "Tools");
 
-  auto* guide_scroll = new QScrollArea(sidebar_tabs);
+  m_mission_panel = new MissionPanel(m_mission_data, m_map_data, m_sidebar_tabs);
+  connect(m_mission_panel,
+          &MissionPanel::map_path_changed,
+          this,
+          &EditorWindow::on_mission_map_path_changed);
+  connect(m_mission_panel,
+          &MissionPanel::validate_requested,
+          this,
+          &EditorWindow::validate_mission);
+  connect(m_mission_panel,
+          &MissionPanel::launch_game_requested,
+          this,
+          &EditorWindow::launch_mission_game);
+  connect(m_mission_panel,
+          &MissionPanel::launch_arena_requested,
+          this,
+          &EditorWindow::launch_mission_arena);
+  m_mission_scroll = new QScrollArea(m_sidebar_tabs);
+  m_mission_scroll->setWidget(m_mission_panel);
+  m_mission_scroll->setWidgetResizable(true);
+  m_mission_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_sidebar_tabs->addTab(m_mission_scroll, "Mission");
+
+  auto* guide_scroll = new QScrollArea(m_sidebar_tabs);
   guide_scroll->setWidget(createGuidePanel(guide_scroll));
   guide_scroll->setWidgetResizable(true);
   guide_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  sidebar_tabs->addTab(guide_scroll, "Guide");
+  m_sidebar_tabs->addTab(guide_scroll, "Guide");
 
-  m_json_preview = new QPlainTextEdit(sidebar_tabs);
+  m_json_preview = new QPlainTextEdit(m_sidebar_tabs);
   m_json_preview->setReadOnly(true);
   m_json_preview->setLineWrapMode(QPlainTextEdit::NoWrap);
   QFont mono_font("Monospace");
@@ -229,13 +265,14 @@ void EditorWindow::setup_ui() {
   mono_font.setPointSize(9);
   m_json_preview->setFont(mono_font);
   m_json_preview->setPlaceholderText("JSON preview will appear here…");
-  sidebar_tabs->addTab(m_json_preview, "JSON");
+  m_sidebar_tabs->addTab(m_json_preview, "JSON");
 
   splitter->addWidget(m_canvas);
-  splitter->addWidget(sidebar_tabs);
+  splitter->addWidget(m_sidebar_tabs);
   splitter->setStretchFactor(0, 1);
   splitter->setStretchFactor(1, 0);
   splitter->setSizes({1160, 340});
+  set_mission_mode(false);
 
   main_layout->addWidget(splitter);
 
@@ -263,8 +300,8 @@ void EditorWindow::setup_ui() {
   statusBar()->addPermanentWidget(m_file_label);
   statusBar()->addPermanentWidget(m_zoom_label);
   statusBar()->addPermanentWidget(m_dimensions_label);
-  auto* version_label = new QLabel("Map Editor v1.0", this);
-  version_label->setStyleSheet("color: #4f6a75;");
+  auto* version_label = new QLabel("Mission Editor v2.0", this);
+  version_label->setProperty("status", "muted");
   statusBar()->addPermanentWidget(version_label);
 }
 
@@ -277,6 +314,12 @@ void EditorWindow::setup_menus() {
   new_action->setToolTip("Create a new map (Ctrl+N)");
   connect(new_action, &QAction::triggered, this, &EditorWindow::new_map);
   file_menu->addAction(new_action);
+
+  auto* new_mission_action = new QAction("New &Mission", this);
+  new_mission_action->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_N));
+  new_mission_action->setToolTip("Create a complete mission definition");
+  connect(new_mission_action, &QAction::triggered, this, &EditorWindow::new_mission);
+  file_menu->addAction(new_mission_action);
 
   auto* open_action = new QAction("&Open...", this);
   open_action->setShortcut(QKeySequence::Open);
@@ -337,6 +380,7 @@ void EditorWindow::setup_menus() {
   toolbar->setMovable(false);
   toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
   toolbar->addAction(new_action);
+  toolbar->addAction(new_mission_action);
   toolbar->addAction(open_action);
   toolbar->addAction(save_action);
   toolbar->addSeparator();
@@ -344,6 +388,23 @@ void EditorWindow::setup_menus() {
   toolbar->addAction(m_redo_action);
   toolbar->addSeparator();
   toolbar->addAction(resize_action);
+
+  auto* test_menu = menuBar()->addMenu("&Test");
+  auto* validate_action = new QAction("&Validate Mission", this);
+  connect(validate_action, &QAction::triggered, this, &EditorWindow::validate_mission);
+  test_menu->addAction(validate_action);
+  auto* launch_game_action = new QAction("Validate && Launch &Game", this);
+  connect(launch_game_action,
+          &QAction::triggered,
+          this,
+          &EditorWindow::launch_mission_game);
+  test_menu->addAction(launch_game_action);
+  auto* launch_arena_action = new QAction("Validate && Launch &Arena", this);
+  connect(launch_arena_action,
+          &QAction::triggered,
+          this,
+          &EditorWindow::launch_mission_arena);
+  test_menu->addAction(launch_arena_action);
 }
 
 void EditorWindow::new_map() {
@@ -352,10 +413,30 @@ void EditorWindow::new_map() {
   }
 
   m_map_data->clear();
+  set_mission_mode(false);
   m_current_file_path.clear();
+  m_linked_map_file_path.clear();
   update_window_title();
   update_current_file_label();
   show_action_feedback("Created a new unsaved map.");
+}
+
+void EditorWindow::new_mission() {
+  if (!maybe_save()) {
+    return;
+  }
+
+  m_mission_data->clear();
+  m_map_data->clear();
+  set_mission_mode(true);
+  m_current_file_path.clear();
+  m_linked_map_file_path.clear();
+  QString map_error;
+  load_linked_map(m_mission_data->map_path(), &map_error);
+  update_window_title();
+  update_current_file_label();
+  m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
+  show_action_feedback(QStringLiteral("Created a new unsaved mission."));
 }
 
 void EditorWindow::open_map() {
@@ -373,23 +454,59 @@ void EditorWindow::open_map() {
     return;
   }
 
-  QString error_message;
-  if (m_map_data->load_from_json(file_path, &error_message)) {
-    m_current_file_path = QFileInfo(file_path).absoluteFilePath();
-    update_window_title();
-    update_current_file_label();
-    show_action_feedback(
-        QString("Loaded \"%1\" from %2")
-            .arg(m_map_data->name(), normalizedDisplayPath(file_path)));
-  } else {
-    show_load_failure(file_path, error_message);
-  }
+  load_file(file_path);
 }
 
 bool EditorWindow::load_file(const QString& file_path) {
+  QFile probe(file_path);
+  if (!probe.open(QIODevice::ReadOnly)) {
+    show_load_failure(file_path, probe.errorString());
+    return false;
+  }
+  QJsonParseError parse_error;
+  const QJsonDocument probe_document =
+      QJsonDocument::fromJson(probe.readAll(), &parse_error);
+  if (parse_error.error != QJsonParseError::NoError || !probe_document.isObject()) {
+    show_load_failure(file_path, parse_error.errorString());
+    return false;
+  }
+  const QJsonObject probe_root = probe_document.object();
+  const bool is_mission = probe_root.contains(QStringLiteral("map_path")) &&
+                          probe_root.contains(QStringLiteral("player_setup"));
+
   QString error_message;
-  if (m_map_data->load_from_json(file_path, &error_message)) {
+  if (is_mission) {
+    if (!m_mission_data->load_from_json(file_path, &error_message)) {
+      show_load_failure(file_path, error_message);
+      return false;
+    }
+    set_mission_mode(true);
     m_current_file_path = QFileInfo(file_path).absoluteFilePath();
+    QString map_error;
+    if (!load_linked_map(m_mission_data->map_path(), &map_error)) {
+      show_action_feedback(
+          QStringLiteral("Mission loaded; linked map failed: ") + map_error, false);
+      QMessageBox::warning(
+          this,
+          QStringLiteral("Linked Map Missing"),
+          QStringLiteral(
+              "The mission loaded, but its battlefield could not be opened:\n%1")
+              .arg(map_error));
+    } else {
+      show_action_feedback(
+          QStringLiteral("Loaded mission \"%1\" from %2")
+              .arg(m_mission_data->title(), normalizedDisplayPath(file_path)));
+    }
+    update_window_title();
+    update_current_file_label();
+    m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
+    return true;
+  }
+
+  if (m_map_data->load_from_json(file_path, &error_message)) {
+    set_mission_mode(false);
+    m_current_file_path = QFileInfo(file_path).absoluteFilePath();
+    m_linked_map_file_path.clear();
     update_window_title();
     update_current_file_label();
     show_action_feedback(
@@ -404,23 +521,37 @@ bool EditorWindow::load_file(const QString& file_path) {
 void EditorWindow::save_map() {
   if (m_current_file_path.isEmpty()) {
     save_map_as();
+  } else if (m_mission_mode) {
+    save_mission_to_path(m_current_file_path, true);
   } else {
     save_map_to_path(m_current_file_path, true);
   }
 }
 
 void EditorWindow::save_map_as() {
-  QString suggested_name = m_map_data->name().trimmed();
+  QString suggested_name =
+      m_mission_mode ? m_mission_data->id().trimmed() : m_map_data->name().trimmed();
   if (suggested_name.isEmpty()) {
-    suggested_name = "untitled_map";
+    suggested_name = m_mission_mode ? "untitled_mission" : "untitled_map";
   }
   suggested_name.replace(' ', '_');
   suggested_name = suggested_name.toLower();
 
+  QString initial_path;
+  if (m_mission_mode && m_current_file_path.isEmpty()) {
+    const QDir mission_dir(repository_root() + QStringLiteral("/assets/missions"));
+    initial_path =
+        mission_dir.exists()
+            ? mission_dir.filePath(suggested_name + QStringLiteral(".json"))
+            : default_map_dialog_path(suggested_name + QStringLiteral(".json"));
+  } else {
+    initial_path = default_map_dialog_path(suggested_name + QStringLiteral(".json"));
+  }
   QString file_path =
       QFileDialog::getSaveFileName(this,
-                                   "Save Map As",
-                                   default_map_dialog_path(suggested_name + ".json"),
+                                   m_mission_mode ? QStringLiteral("Save Mission As")
+                                                  : QStringLiteral("Save Map As"),
+                                   initial_path,
                                    "JSON Files (*.json);;All Files (*)");
 
   if (file_path.isEmpty()) {
@@ -432,7 +563,11 @@ void EditorWindow::save_map_as() {
     file_path += ".json";
   }
 
-  save_map_to_path(file_path, true);
+  if (m_mission_mode) {
+    save_mission_to_path(file_path, true);
+  } else {
+    save_map_to_path(file_path, true);
+  }
 }
 
 void EditorWindow::resize_map() {
@@ -1049,7 +1184,8 @@ void EditorWindow::update_current_file_label() {
 
   if (m_current_file_path.isEmpty()) {
     m_file_label->setText("File: unsaved");
-    m_file_label->setToolTip("This map has not been saved yet.");
+    m_file_label->setToolTip(m_mission_mode ? "This mission has not been saved yet."
+                                            : "This map has not been saved yet.");
     return;
   }
 
@@ -1064,7 +1200,9 @@ void EditorWindow::show_action_feedback(const QString& message, bool success) {
   }
 
   m_feedback_label->setText(message);
-  m_feedback_label->setStyleSheet(success ? "color: #9fd9ff;" : "color: #ff9b9b;");
+  m_feedback_label->setProperty("status", success ? "success" : "error");
+  m_feedback_label->style()->unpolish(m_feedback_label);
+  m_feedback_label->style()->polish(m_feedback_label);
   m_feedback_label->setToolTip(message);
 }
 
@@ -1072,13 +1210,13 @@ void EditorWindow::show_load_failure(const QString& file_path,
                                      const QString& error_message) {
   const QString display_path = normalizedDisplayPath(file_path);
   const QString detail = error_message.trimmed().isEmpty()
-                             ? QString("Unable to load the map file.")
+                             ? QString("Unable to load the JSON file.")
                              : error_message;
   show_action_feedback("Load failed: " + display_path, false);
   QMessageBox::critical(
       this,
       "Load Failed",
-      QString("Could not load map file:\n%1\n\nReason: %2").arg(display_path, detail));
+      QString("Could not load file:\n%1\n\nReason: %2").arg(display_path, detail));
 }
 
 void EditorWindow::show_save_failure(const QString& file_path,
@@ -1088,10 +1226,13 @@ void EditorWindow::show_save_failure(const QString& file_path,
                              ? QString("Unable to write the map file.")
                              : error_message;
   show_action_feedback("Save failed: " + display_path, false);
-  QMessageBox::critical(this,
-                        "Save Failed",
-                        QString("Could not save map \"%1\" to:\n%2\n\nReason: %3")
-                            .arg(m_map_data->name(), display_path, detail));
+  QMessageBox::critical(
+      this,
+      "Save Failed",
+      QString("Could not save \"%1\" to:\n%2\n\nReason: %3")
+          .arg(m_mission_mode ? m_mission_data->title() : m_map_data->name(),
+               display_path,
+               detail));
 }
 
 QString EditorWindow::default_map_dialog_path(const QString& fallback_name) const {
@@ -1134,33 +1275,318 @@ bool EditorWindow::save_map_to_path(const QString& file_path,
   return true;
 }
 
+bool EditorWindow::save_mission_to_path(const QString& file_path,
+                                        bool update_current_path) {
+  const QString absolute_path = QFileInfo(file_path).absoluteFilePath();
+  QString error_message;
+
+  if (m_map_data->is_modified()) {
+    if (m_linked_map_file_path.isEmpty()) {
+      show_save_failure(
+          absolute_path,
+          QStringLiteral("The linked battlefield has changes but no writable path."));
+      return false;
+    }
+    if (!m_map_data->save_to_json(m_linked_map_file_path, &error_message)) {
+      show_save_failure(m_linked_map_file_path, error_message);
+      return false;
+    }
+    m_map_data->set_modified(false);
+  }
+
+  if (!m_mission_data->save_to_json(absolute_path, &error_message)) {
+    show_save_failure(absolute_path, error_message);
+    return false;
+  }
+  if (update_current_path) {
+    m_current_file_path = absolute_path;
+  }
+  m_mission_data->set_modified(false);
+  update_window_title();
+  update_current_file_label();
+  show_action_feedback(
+      QStringLiteral("Saved mission \"%1\" to %2")
+          .arg(m_mission_data->title(), normalizedDisplayPath(absolute_path)));
+  return true;
+}
+
+bool EditorWindow::save_current_document() {
+  save_map();
+  return m_mission_mode
+             ? !m_mission_data->is_modified() && !m_map_data->is_modified() &&
+                   !m_current_file_path.isEmpty()
+             : !m_map_data->is_modified() && !m_current_file_path.isEmpty();
+}
+
+QString EditorWindow::repository_root() const {
+  QStringList starts = {QDir::currentPath(), QCoreApplication::applicationDirPath()};
+  if (!m_current_file_path.isEmpty()) {
+    starts.prepend(QFileInfo(m_current_file_path).absolutePath());
+  }
+  for (const QString& start : starts) {
+    QDir directory(start);
+    for (int depth = 0; depth < 8; ++depth) {
+      if (QFileInfo::exists(directory.filePath(QStringLiteral("CMakeLists.txt"))) &&
+          QDir(directory.filePath(QStringLiteral("assets"))).exists()) {
+        return directory.absolutePath();
+      }
+      if (!directory.cdUp()) {
+        break;
+      }
+    }
+  }
+  return QDir::currentPath();
+}
+
+QString EditorWindow::resolve_authored_path(const QString& authored_path) const {
+  const QString trimmed = authored_path.trimmed();
+  if (trimmed.isEmpty()) {
+    return {};
+  }
+  if (QFileInfo(trimmed).isAbsolute() && !trimmed.startsWith(":/")) {
+    return QFileInfo(trimmed).absoluteFilePath();
+  }
+
+  QString relative = trimmed;
+  if (relative.startsWith(":/")) {
+    relative = relative.mid(2);
+  }
+  const QString root_candidate = QDir(repository_root()).filePath(relative);
+  if (QFileInfo::exists(root_candidate)) {
+    return QFileInfo(root_candidate).absoluteFilePath();
+  }
+  if (!m_current_file_path.isEmpty()) {
+    const QString mission_relative =
+        QDir(QFileInfo(m_current_file_path).absolutePath()).filePath(relative);
+    if (QFileInfo::exists(mission_relative)) {
+      return QFileInfo(mission_relative).absoluteFilePath();
+    }
+  }
+  return QFileInfo(root_candidate).absoluteFilePath();
+}
+
+bool EditorWindow::load_linked_map(const QString& authored_path, QString* out_error) {
+  const QString resolved = resolve_authored_path(authored_path);
+  if (resolved.isEmpty() || !QFileInfo::exists(resolved)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Map '%1' does not exist.").arg(authored_path);
+    }
+    return false;
+  }
+  QString error;
+  if (!m_map_data->load_from_json(resolved, &error)) {
+    if (out_error != nullptr) {
+      *out_error = error;
+    }
+    return false;
+  }
+  m_linked_map_file_path = resolved;
+  m_canvas->clear_selection();
+  m_mission_panel->refresh();
+  return true;
+}
+
+QString EditorWindow::tool_executable(const QString& name) const {
+#ifdef Q_OS_WIN
+  const QString executable_name = name + QStringLiteral(".exe");
+#else
+  const QString executable_name = name;
+#endif
+  const QString alongside =
+      QDir(QCoreApplication::applicationDirPath()).filePath(executable_name);
+  if (QFileInfo::exists(alongside)) {
+    return alongside;
+  }
+  const QString root = repository_root();
+  const QStringList build_dirs = {QStringLiteral("build-debug/bin"),
+                                  QStringLiteral("build/bin"),
+                                  QStringLiteral("build-release/bin")};
+  for (const QString& build_dir : build_dirs) {
+    const QString candidate =
+        QDir(root).filePath(build_dir + QLatin1Char('/') + executable_name);
+    if (QFileInfo::exists(candidate)) {
+      return candidate;
+    }
+  }
+  return {};
+}
+
+bool EditorWindow::validate_current_mission(bool show_success) {
+  if (!m_mission_mode) {
+    show_action_feedback(QStringLiteral("Open or create a mission first."), false);
+    return false;
+  }
+  QStringList errors = m_mission_data->validate();
+  const QString resolved_map = resolve_authored_path(m_mission_data->map_path());
+  if (!QFileInfo::exists(resolved_map)) {
+    errors.append(QStringLiteral("Linked battlefield map does not exist: %1")
+                      .arg(m_mission_data->map_path()));
+  }
+  if (!errors.isEmpty()) {
+    show_action_feedback(QStringLiteral("Mission validation failed with %1 issue(s).")
+                             .arg(errors.size()),
+                         false);
+    QMessageBox::critical(
+        this,
+        QStringLiteral("Mission Validation Failed"),
+        errors.join(QStringLiteral("\n• ")).prepend(QStringLiteral("• ")));
+    return false;
+  }
+
+  if (!m_current_file_path.isEmpty()) {
+    const QString validator = tool_executable(QStringLiteral("content_validator"));
+    if (!validator.isEmpty()) {
+      QProcess process;
+      process.setWorkingDirectory(repository_root());
+      process.start(validator, {QStringLiteral("--mission"), m_current_file_path});
+      if (!process.waitForFinished(30000) ||
+          process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
+        const QString output = QString::fromUtf8(process.readAllStandardError()) +
+                               QString::fromUtf8(process.readAllStandardOutput());
+        show_action_feedback(QStringLiteral("content_validator rejected the mission."),
+                             false);
+        QMessageBox::critical(
+            this, QStringLiteral("Content Validation Failed"), output.trimmed());
+        return false;
+      }
+    }
+  }
+
+  if (show_success) {
+    show_action_feedback(QStringLiteral("Mission and linked battlefield are valid."));
+    QMessageBox::information(
+        this,
+        QStringLiteral("Mission Valid"),
+        QStringLiteral(
+            "The mission uses supported runtime options and passed validation."));
+  }
+  return true;
+}
+
+void EditorWindow::validate_mission() {
+  validate_current_mission(true);
+}
+
+void EditorWindow::launch_mission_game() {
+  if (!m_mission_mode || !save_current_document() || !validate_current_mission(false)) {
+    return;
+  }
+  const QString game = tool_executable(QStringLiteral("standard_of_iron"));
+  if (game.isEmpty()) {
+    QMessageBox::warning(
+        this,
+        QStringLiteral("Game Not Built"),
+        QStringLiteral("Build standard_of_iron before launching a mission preview."));
+    return;
+  }
+  if (!QProcess::startDetached(game,
+                               {QStringLiteral("--mission-file"), m_current_file_path},
+                               repository_root())) {
+    show_action_feedback(QStringLiteral("Could not launch the game."), false);
+    return;
+  }
+  show_action_feedback(QStringLiteral("Mission launched in the game."));
+}
+
+void EditorWindow::launch_mission_arena() {
+  if (!m_mission_mode || !save_current_document() || !validate_current_mission(false)) {
+    return;
+  }
+  const QString arena = tool_executable(QStringLiteral("arena_app"));
+  if (arena.isEmpty()) {
+    QMessageBox::warning(
+        this,
+        QStringLiteral("Arena Not Built"),
+        QStringLiteral("Build arena_app before launching a battlefield preview."));
+    return;
+  }
+  const QString map_path = resolve_authored_path(m_mission_data->map_path());
+  if (!QProcess::startDetached(
+          arena, {QStringLiteral("--terrain-map"), map_path}, repository_root())) {
+    show_action_feedback(QStringLiteral("Could not launch Arena."), false);
+    return;
+  }
+  show_action_feedback(QStringLiteral("Linked battlefield launched in Arena."));
+}
+
+void EditorWindow::on_mission_map_path_changed(const QString& map_path) {
+  if (!m_mission_mode) {
+    return;
+  }
+  const QString resolved = resolve_authored_path(map_path);
+  if (resolved == m_linked_map_file_path) {
+    return;
+  }
+  if (m_map_data->is_modified() && !m_linked_map_file_path.isEmpty()) {
+    const auto choice = QMessageBox::question(
+        this,
+        QStringLiteral("Save Battlefield Changes"),
+        QStringLiteral(
+            "Save changes to the current linked battlefield before switching?"),
+        QMessageBox::Save | QMessageBox::Discard,
+        QMessageBox::Save);
+    if (choice == QMessageBox::Save) {
+      QString error;
+      if (!m_map_data->save_to_json(m_linked_map_file_path, &error)) {
+        show_save_failure(m_linked_map_file_path, error);
+        return;
+      }
+    }
+  }
+  QString error;
+  if (!load_linked_map(map_path, &error)) {
+    show_action_feedback(QStringLiteral("Could not load linked map: ") + error, false);
+  } else {
+    show_action_feedback(QStringLiteral("Loaded linked battlefield %1")
+                             .arg(normalizedDisplayPath(m_linked_map_file_path)));
+  }
+}
+
+void EditorWindow::set_mission_mode(bool enabled) {
+  m_mission_mode = enabled;
+  if (m_canvas != nullptr) {
+    m_canvas->set_mission_data(enabled ? m_mission_data : nullptr);
+  }
+  if (m_sidebar_tabs != nullptr && m_mission_scroll != nullptr) {
+    const int index = m_sidebar_tabs->indexOf(m_mission_scroll);
+    if (index >= 0) {
+      m_sidebar_tabs->setTabVisible(index, enabled);
+    }
+  }
+  refresh_json_preview();
+  update_window_title();
+}
+
 void EditorWindow::update_window_title() {
-  QString title = "Standard of Iron - Map Editor";
+  QString title = m_mission_mode ? "Standard of Iron - Mission Editor"
+                                 : "Standard of Iron - Map Editor";
   if (!m_current_file_path.isEmpty()) {
     title += " - " + QFileInfo(m_current_file_path).fileName();
   } else {
-    title += " - " + m_map_data->name();
+    title += " - " + (m_mission_mode ? m_mission_data->title() : m_map_data->name());
   }
-  if (m_map_data->is_modified()) {
+  if (m_map_data->is_modified() || (m_mission_mode && m_mission_data->is_modified())) {
     title += " *";
   }
   setWindowTitle(title);
 }
 
 bool EditorWindow::maybe_save() {
-  if (!m_map_data->is_modified()) {
+  if (!m_map_data->is_modified() &&
+      (!m_mission_mode || !m_mission_data->is_modified())) {
     return true;
   }
 
   QMessageBox::StandardButton const ret = QMessageBox::warning(
       this,
       "Unsaved Changes",
-      "The map has been modified.\nDo you want to save your changes?",
+      m_mission_mode ? "The mission or linked battlefield has been modified.\n"
+                       "Do you want to save your changes?"
+                     : "The map has been modified.\nDo you want to save your changes?",
       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
   if (ret == QMessageBox::Save) {
-    save_map();
-    return !m_map_data->is_modified();
+    return save_current_document();
   }
   if (ret == QMessageBox::Cancel) {
     return false;
@@ -1279,7 +1705,8 @@ void EditorWindow::refresh_json_preview() {
   if (m_json_preview == nullptr) {
     return;
   }
-  const QString json = m_map_data->to_json_string();
+  const QString json =
+      m_mission_mode ? m_mission_data->to_json_string() : m_map_data->to_json_string();
 
   if (m_json_preview->toPlainText() != json) {
     const int scroll_pos = m_json_preview->verticalScrollBar()->value();

@@ -466,6 +466,7 @@ auto main(int argc, char* argv[]) -> int {
   App::Core::UserSettings::apply_saved_graphics_quality();
 
   QString direct_campaign_mission;
+  QString direct_mission_file;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
@@ -493,6 +494,10 @@ auto main(int argc, char* argv[]) -> int {
         "campaign-mission",
         "Start a campaign mission directly (campaign_id/mission_id).",
         "path");
+    QCommandLineOption const mission_file_opt(
+        "mission-file",
+        "Start a mission definition file directly for editor testing.",
+        "path");
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     QCommandLineOption const benchmark_seconds_opt(
         "benchmark-seconds",
@@ -508,6 +513,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(renderer_self_test_opt);
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
+    parser.addOption(mission_file_opt);
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
@@ -531,6 +537,7 @@ auto main(int argc, char* argv[]) -> int {
     }
 
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
+    direct_mission_file = parser.value(mission_file_opt).trimmed();
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     bool benchmark_seconds_valid = false;
     runtime_benchmark_seconds =
@@ -629,6 +636,7 @@ auto main(int argc, char* argv[]) -> int {
                                             map_preview_provider);
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
+  engine->rootContext()->setContextProperty("CoreTheme", Theme::instance());
 
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
@@ -700,7 +708,7 @@ auto main(int argc, char* argv[]) -> int {
   game_engine->setWindow(window);
   qInfo() << "Window set successfully";
 
-  if (!direct_campaign_mission.isEmpty()) {
+  if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty()) {
     if (!root_obj->setProperty("game_started", true) ||
         !root_obj->setProperty("menu_visible", false)) {
       qCritical() << "Could not expose GameView for direct campaign mission";
@@ -715,9 +723,16 @@ auto main(int argc, char* argv[]) -> int {
         gl_view,
         &GLView::renderer_ready,
         &app,
-        [game_engine_ptr = game_engine.get(), direct_campaign_mission]() {
-          qInfo() << "Starting campaign mission directly:" << direct_campaign_mission;
-          game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+        [game_engine_ptr = game_engine.get(),
+         direct_campaign_mission,
+         direct_mission_file]() {
+          if (!direct_mission_file.isEmpty()) {
+            qInfo() << "Starting mission file directly:" << direct_mission_file;
+            game_engine_ptr->start_mission_file(direct_mission_file);
+          } else {
+            qInfo() << "Starting campaign mission directly:" << direct_campaign_mission;
+            game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+          }
         },
         Qt::QueuedConnection);
     window->show();

@@ -199,8 +199,17 @@ void printResults(const ValidationResult& result, const QString& file_name) {
 auto main(int argc, char* argv[]) -> int {
   QCoreApplication app(argc, argv);
 
+  if (argc == 3 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("--mission")) {
+    const QString mission_path = QString::fromLocal8Bit(argv[2]);
+    const ValidationResult result = validateMissionFile(mission_path);
+    printResults(result, mission_path);
+    return result.success ? 0 : 1;
+  }
+
   if (argc < 2) {
-    std::cerr << "Usage: content_validator <assets_directory>" << std::endl;
+    std::cerr << "Usage: content_validator <assets_directory>\n"
+                 "       content_validator --mission <mission.json>"
+              << std::endl;
     std::cerr << "  Validates all mission and campaign JSON files in the "
                  "assets directory"
               << std::endl;

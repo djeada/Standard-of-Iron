@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include "map_data.h"
+#include "mission_data.h"
 #include "tool_panel.h"
 
 namespace MapEditor {
@@ -16,6 +17,7 @@ public:
   explicit MapCanvas(QWidget* parent = nullptr);
 
   void set_map_data(MapData* data);
+  void set_mission_data(MissionData* data);
   void set_current_tool(ToolType tool);
   void clear_tool();
   void clear_selection();
@@ -50,12 +52,14 @@ private:
   [[nodiscard]] QPoint grid_to_widget(float grid_x, float grid_z) const;
 
   void draw_grid(QPainter& painter);
+  void draw_fog_zones(QPainter& painter);
   void draw_terrain_elements(QPainter& painter);
   void draw_world_props(QPainter& painter);
   void draw_structures(QPainter& painter);
   void draw_troop_spawns(QPainter& painter);
   void draw_linear_elements(QPainter& painter);
   void draw_undead_zones(QPainter& painter);
+  void draw_mission_overlays(QPainter& painter);
   void draw_current_placement(QPainter& painter);
   void draw_terrain_feature(QPainter& painter,
                             const TerrainElement& elem,
@@ -91,6 +95,7 @@ private:
   void erase_at_position(const QPointF& grid_pos);
 
   MapData* m_map_data = nullptr;
+  MissionData* m_mission_data = nullptr;
   ToolType m_current_tool = ToolType::Select;
 
   float m_zoom = 1.0F;

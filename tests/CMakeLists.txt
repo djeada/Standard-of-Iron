@@ -13,6 +13,7 @@ add_executable(standard_of_iron_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     ${CMAKE_SOURCE_DIR}/translations.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
+    ${CMAKE_SOURCE_DIR}/tools/map_editor/mission_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/visibility_coordinator.cpp
@@ -176,6 +177,7 @@ add_executable(standard_of_iron_tests
     render/software/render_backend_factory_test.cpp
     render/profiling/frame_profile_test.cpp
     tools/map_editor_map_data_test.cpp
+    tools/map_editor_mission_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
     tools/hill_projection_model_test.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp

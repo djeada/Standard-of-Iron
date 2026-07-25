@@ -1,0 +1,8 @@
+module StandardOfIron.Design
+singleton Theme 1.0 Theme.qml
+singleton Metrics 1.0 Metrics.qml
+singleton Typography 1.0 Typography.qml
+singleton Motion 1.0 Motion.qml
+singleton Icons 1.0 Icons.qml
+singleton UiSound 1.0 UiSound.qml
+ComponentGallery 1.0 ComponentGallery.qml

@@ -346,6 +346,7 @@ public:
   Q_INVOKABLE void start_skirmish(const QString& map_path,
                                   const QVariantList& player_configs = QVariantList());
   Q_INVOKABLE void start_campaign_mission(const QString& campaign_id);
+  Q_INVOKABLE void start_mission_file(const QString& file_path);
   Q_INVOKABLE void mark_current_mission_completed();
   Q_INVOKABLE [[nodiscard]] QVariantMap get_current_mission_objectives() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap

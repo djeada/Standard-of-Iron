@@ -110,6 +110,20 @@ void MapCanvas::set_map_data(MapData* data) {
   update();
 }
 
+void MapCanvas::set_mission_data(MissionData* data) {
+  if (m_mission_data != nullptr) {
+    disconnect(m_mission_data, nullptr, this, nullptr);
+  }
+  m_mission_data = data;
+  if (m_mission_data != nullptr) {
+    connect(m_mission_data,
+            &MissionData::data_changed,
+            this,
+            qOverload<>(&QWidget::update));
+  }
+  update();
+}
+
 void MapCanvas::set_current_tool(ToolType tool) {
   m_current_tool = tool;
   m_is_placing_linear = false;
@@ -227,12 +241,14 @@ void MapCanvas::paintEvent(QPaintEvent*) {
   }
 
   draw_grid(painter);
+  draw_fog_zones(painter);
   draw_terrain_elements(painter);
   draw_linear_elements(painter);
   draw_world_props(painter);
   draw_structures(painter);
   draw_troop_spawns(painter);
   draw_undead_zones(painter);
+  draw_mission_overlays(painter);
   draw_current_placement(painter);
 
   const bool is_empty =
@@ -250,6 +266,32 @@ void MapCanvas::paintEvent(QPaintEvent*) {
                      "Select a tool from the panel and click to add elements");
     painter.setOpacity(1.0);
   }
+}
+
+void MapCanvas::draw_fog_zones(QPainter& painter) {
+  if (m_map_data == nullptr) {
+    return;
+  }
+
+  painter.save();
+  for (const FogZoneElement& zone : m_map_data->fog_zones()) {
+    const QPoint center = grid_to_widget(zone.x, zone.z);
+    const int width_px =
+        std::max(1, static_cast<int>(zone.width * m_zoom * grid_cell_size));
+    const int height_px =
+        std::max(1, static_cast<int>(zone.height * m_zoom * grid_cell_size));
+    const QRect bounds(
+        center.x() - width_px / 2, center.y() - height_px / 2, width_px, height_px);
+    const int alpha = std::clamp(static_cast<int>(zone.density * 105.0F), 20, 125);
+    painter.setBrush(QColor(150, 175, 190, alpha));
+    painter.setPen(QPen(QColor(190, 220, 235, 170), 1, Qt::DashLine));
+    painter.drawRect(bounds);
+    painter.setPen(QColor(220, 235, 245, 210));
+    painter.drawText(bounds.adjusted(4, 2, -4, -2),
+                     Qt::AlignLeft | Qt::AlignTop,
+                     QStringLiteral("FOG %1%").arg(qRound(zone.density * 100.0F)));
+  }
+  painter.restore();
 }
 
 void MapCanvas::draw_grid(QPainter& painter) {
@@ -594,6 +636,103 @@ void MapCanvas::draw_undead_zones(QPainter& painter) {
 
     painter.restore();
   }
+}
+
+void MapCanvas::draw_mission_overlays(QPainter& painter) {
+  if (m_mission_data == nullptr || m_map_data == nullptr) {
+    return;
+  }
+
+  painter.save();
+  const QJsonArray ai_setups = m_mission_data->array(QStringLiteral("ai_setups"));
+  int owner_id = 2;
+  for (const QJsonValue& ai_value : ai_setups) {
+    const QJsonObject ai = ai_value.toObject();
+    const QString ai_id = ai.value(QStringLiteral("id")).toString();
+
+    for (const QJsonValue& wave_value : ai.value(QStringLiteral("waves")).toArray()) {
+      const QJsonObject wave = wave_value.toObject();
+      const QJsonObject entry = wave.value(QStringLiteral("entry_point")).toObject();
+      const QPoint pos =
+          grid_to_widget(static_cast<float>(entry.value("x").toDouble()),
+                         static_cast<float>(entry.value("z").toDouble()));
+      painter.setBrush(QColor(255, 145, 40, 55));
+      painter.setPen(QPen(QColor(255, 170, 70, 230), 2, Qt::DashLine));
+      painter.drawEllipse(pos, 14, 14);
+      painter.drawLine(pos + QPoint(-19, 0), pos + QPoint(19, 0));
+      painter.drawLine(pos + QPoint(0, -19), pos + QPoint(0, 19));
+      painter.setPen(QColor(255, 205, 130));
+      painter.drawText(QRect(pos.x() - 70, pos.y() + 18, 140, 18),
+                       Qt::AlignHCenter | Qt::AlignTop,
+                       QStringLiteral("%1 wave @ %2s")
+                           .arg(ai_id)
+                           .arg(wave.value("timing").toDouble(), 0, 'f', 0));
+    }
+
+    const auto draw_setup_marker = [this, &painter, owner_id](const QJsonObject& setup,
+                                                              const QString& label,
+                                                              bool building) {
+      const QJsonObject position = setup.value("position").toObject();
+      const QPoint pos =
+          grid_to_widget(static_cast<float>(position.value("x").toDouble()),
+                         static_cast<float>(position.value("z").toDouble()));
+      if (building) {
+        painter.setBrush(player_color_for_editor(owner_id));
+        painter.setPen(QPen(Qt::white, 1));
+        painter.drawRect(QRect(pos.x() - 6, pos.y() - 6, 12, 12));
+      } else {
+        draw_troop_marker(painter, pos, setup.value("type").toString(), owner_id);
+      }
+      painter.setPen(QColor(180, 225, 255));
+      painter.drawText(QRect(pos.x() - 55, pos.y() + 10, 110, 16),
+                       Qt::AlignHCenter | Qt::AlignTop,
+                       label);
+    };
+
+    for (const QJsonValue& unit_value :
+         ai.value(QStringLiteral("starting_units")).toArray()) {
+      const QJsonObject unit = unit_value.toObject();
+      draw_setup_marker(
+          unit, ai_id + QStringLiteral(": ") + unit.value("type").toString(), false);
+    }
+    for (const QJsonValue& building_value :
+         ai.value(QStringLiteral("starting_buildings")).toArray()) {
+      const QJsonObject building = building_value.toObject();
+      draw_setup_marker(building,
+                        ai_id + QStringLiteral(": ") +
+                            building.value("type").toString(),
+                        true);
+    }
+    ++owner_id;
+  }
+
+  const QStringList objective_keys = {QStringLiteral("victory_conditions"),
+                                      QStringLiteral("optional_objectives")};
+  for (const QString& key : objective_keys) {
+    for (const QJsonValue& condition_value : m_mission_data->array(key)) {
+      const QJsonObject condition = condition_value.toObject();
+      const QString zone_id = condition.value(QStringLiteral("zone_id")).toString();
+      if (zone_id.isEmpty()) {
+        continue;
+      }
+      for (const UndeadZoneElement& zone : m_map_data->undead_zones()) {
+        if (zone.id != zone_id) {
+          continue;
+        }
+        const QPoint pos = grid_to_widget(zone.x, zone.z);
+        const int radius =
+            std::max(12, static_cast<int>(zone.radius * m_zoom * grid_cell_size));
+        painter.setBrush(Qt::NoBrush);
+        painter.setPen(QPen(QColor(255, 220, 70), 3));
+        painter.drawEllipse(pos, radius + 4, radius + 4);
+        painter.setPen(QColor(255, 235, 130));
+        painter.drawText(QRect(pos.x() - 90, pos.y() - radius - 24, 180, 18),
+                         Qt::AlignCenter,
+                         QStringLiteral("OBJECTIVE: %1").arg(zone_id));
+      }
+    }
+  }
+  painter.restore();
 }
 
 void MapCanvas::draw_current_placement(QPainter& painter) {
