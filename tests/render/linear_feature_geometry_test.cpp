@@ -310,11 +310,13 @@ TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
                        });
   ASSERT_NE(widest_vertex, result.mesh->get_vertices().end());
 
-  EXPECT_LT(std::abs(widest_vertex->position[2]), 2.25F);
-  ASSERT_GE(result.mesh->get_vertices().size(), 10U);
+  EXPECT_LT(std::abs(widest_vertex->position[2]), 2.75F);
+  ASSERT_GE(result.mesh->get_vertices().size(), 14U);
 
-  EXPECT_LT(result.mesh->get_vertices()[4].position[1], 0.0F);
-  EXPECT_LT(result.mesh->get_vertices()[9].position[1], 0.0F);
+  EXPECT_LT(result.mesh->get_vertices()[0].position[1], 0.0F);
+  EXPECT_LT(result.mesh->get_vertices()[7].position[1], 0.0F);
+  EXPECT_NEAR(result.mesh->get_vertices()[6].position[1], 0.025F, 0.001F);
+  EXPECT_NEAR(result.mesh->get_vertices()[13].position[1], 0.025F, 0.001F);
   EXPECT_TRUE(std::all_of(result.mesh->get_vertices().begin(),
                           result.mesh->get_vertices().end(),
                           [](const auto& vertex) { return vertex.normal[1] > 0.0F; }));
@@ -349,10 +351,12 @@ TEST(LinearFeatureGeometryTest, JoinsRiverbankStripsAtWaypointBends) {
 
   ASSERT_NE(first.mesh, nullptr);
   ASSERT_NE(second.mesh, nullptr);
-  ASSERT_GE(first.mesh->get_vertices().size(), 10U);
-  ASSERT_GE(second.mesh->get_vertices().size(), 10U);
-  const std::size_t first_last_row = first.mesh->get_vertices().size() - 10U;
-  for (std::size_t ring = 0; ring < 10U; ++ring) {
+  constexpr std::size_t k_bank_row_vertices = 14U;
+  ASSERT_GE(first.mesh->get_vertices().size(), k_bank_row_vertices);
+  ASSERT_GE(second.mesh->get_vertices().size(), k_bank_row_vertices);
+  const std::size_t first_last_row =
+      first.mesh->get_vertices().size() - k_bank_row_vertices;
+  for (std::size_t ring = 0; ring < k_bank_row_vertices; ++ring) {
     const auto& before = first.mesh->get_vertices()[first_last_row + ring];
     const auto& after = second.mesh->get_vertices()[ring];
     EXPECT_NEAR(before.position[0], after.position[0], 0.001F);

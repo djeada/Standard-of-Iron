@@ -158,6 +158,8 @@ struct TerrainFeatureCmd {
   float biome_moisture = 0.5F;
   float biome_rock_exposure = 0.3F;
   float biome_snow_coverage = 0.0F;
+
+  float ambient_boost = TerrainChunkParams::k_default_ambient_boost;
   float alpha = 1.0F;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;

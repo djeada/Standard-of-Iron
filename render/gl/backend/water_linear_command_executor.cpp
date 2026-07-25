@@ -180,6 +180,12 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       if (riverbank_shader == nullptr) {
         break;
       }
+
+      std::optional<BlendScope> shore_blend_scope;
+      if (!is_transparent) {
+        shore_blend_scope.emplace(true);
+      }
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       const auto& visibility = feature.visibility;
       if (m_last_bound_shader != riverbank_shader) {
         riverbank_shader->use();
@@ -293,6 +299,12 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
             riverbank_shader->set_uniform(
                 m_water_pipeline->m_riverbank_uniforms.snow_coverage,
                 single.biome_snow_coverage);
+          }
+          if (m_water_pipeline->m_riverbank_uniforms.ambient_boost !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.ambient_boost,
+                single.ambient_boost);
           }
           riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.model,
                                         single.model);
