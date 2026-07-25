@@ -1187,10 +1187,13 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
                         static_cast<unsigned int>(
                             static_cast<int>(
                                 static_cast<unsigned int>(
-                                    static_cast<int>(static_cast<unsigned int>(
-                                                         Qt::ShiftModifier != 0U) !=
-                                                     0U) != 0U) != 0U) != 0U) != 0U) !=
-                    0U) != 0U) != 0U != 0u);
+                                    static_cast<int>(
+                                        static_cast<unsigned int>(
+                                            static_cast<int>(static_cast<unsigned int>(
+                                                                 Qt::ShiftModifier !=
+                                                                 0U) != 0U) != 0U) !=
+                                        0U) != 0U) != 0U) != 0U) != 0U) != 0U) != 0U) !=
+            0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     switch (m_current_tool) {
@@ -1441,10 +1444,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
                         static_cast<unsigned int>(
                             static_cast<int>(
                                 static_cast<unsigned int>(
-                                    static_cast<int>(static_cast<unsigned int>(
-                                                         Qt::ShiftModifier != 0U) !=
-                                                     0U) != 0U) != 0U) != 0U) != 0U) !=
-                    0U) != 0U) != 0U != 0u);
+                                    static_cast<int>(
+                                        static_cast<unsigned int>(
+                                            static_cast<int>(static_cast<unsigned int>(
+                                                                 Qt::ShiftModifier !=
+                                                                 0U) != 0U) != 0U) !=
+                                        0U) != 0U) != 0U) != 0U) != 0U) != 0U) != 0U) !=
+            0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     if (m_selected_type == 0) {

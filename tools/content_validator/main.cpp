@@ -30,7 +30,7 @@ struct ValidationResult {
 auto validateMissionFile(const QString& file_path) -> ValidationResult {
   ValidationResult result;
 
-  QFileInfo file_info(file_path);
+  QFileInfo const file_info(file_path);
   if (!file_info.exists()) {
     result.addError(QString("Mission file not found: %1").arg(file_path));
     return result;
@@ -64,13 +64,14 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
       map_path = map_path.mid(2);
     }
 
-    QString abs_map_path = QDir::currentPath() + "/" + map_path.replace("assets/", "");
+    QString const abs_map_path =
+        QDir::currentPath() + "/" + map_path.replace("assets/", "");
 
     bool map_found = false;
-    QStringList search_paths = {abs_map_path,
-                                QDir::currentPath() + "/assets/maps/" +
-                                    QFileInfo(map_path).fileName(),
-                                mission.map_path};
+    QStringList const search_paths = {abs_map_path,
+                                      QDir::currentPath() + "/assets/maps/" +
+                                          QFileInfo(map_path).fileName(),
+                                      mission.map_path};
 
     for (const auto& search_path : search_paths) {
       if (QFile::exists(search_path)) {
@@ -110,7 +111,7 @@ auto validateCampaignFile(const QString& file_path,
     -> ValidationResult {
   ValidationResult result;
 
-  QFileInfo file_info(file_path);
+  QFileInfo const file_info(file_path);
   if (!file_info.exists()) {
     result.addError(QString("Campaign file not found: %1").arg(file_path));
     return result;
@@ -141,14 +142,15 @@ auto validateCampaignFile(const QString& file_path,
 
   std::set<int> order_indices;
   for (const auto& mission : campaign.missions) {
-    if (order_indices.count(mission.order_index) > 0) {
+    if (order_indices.contains(mission.order_index)) {
       result.addError(QString("Campaign %1: duplicate order_index %2")
                           .arg(file_path)
                           .arg(mission.order_index));
     }
     order_indices.insert(mission.order_index);
 
-    if (!available_missions.count(mission.mission_id)) {
+    if (static_cast<unsigned int>(available_missions.contains(mission.mission_id)) ==
+        0U) {
       result.addError(QString("Campaign %1: references unknown mission '%2'")
                           .arg(file_path)
                           .arg(mission.mission_id));
@@ -179,25 +181,25 @@ auto validateCampaignFile(const QString& file_path,
 void printResults(const ValidationResult& result, const QString& file_name) {
   if (!result.warnings.empty()) {
     for (const auto& warning : result.warnings) {
-      std::cout << "[WARNING] " << warning.toStdString() << std::endl;
+      std::cout << "[WARNING] " << warning.toStdString() << '\n';
     }
   }
 
   if (!result.errors.empty()) {
     for (const auto& error : result.errors) {
-      std::cerr << "[ERROR] " << error.toStdString() << std::endl;
+      std::cerr << "[ERROR] " << error.toStdString() << '\n';
     }
   }
 
   if (result.success && result.warnings.empty()) {
-    std::cout << "[OK] " << file_name.toStdString() << std::endl;
+    std::cout << "[OK] " << file_name.toStdString() << '\n';
   }
 }
 
 } // namespace
 
 auto main(int argc, char* argv[]) -> int {
-  QCoreApplication app(argc, argv);
+  QCoreApplication const app(argc, argv);
 
   if (argc == 3 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("--mission")) {
     const QString mission_path = QString::fromLocal8Bit(argv[2]);
@@ -209,10 +211,10 @@ auto main(int argc, char* argv[]) -> int {
   if (argc < 2) {
     std::cerr << "Usage: content_validator <assets_directory>\n"
                  "       content_validator --mission <mission.json>"
-              << std::endl;
+              << '\n';
     std::cerr << "  Validates all mission and campaign JSON files in the "
                  "assets directory"
-              << std::endl;
+              << '\n';
     return 1;
   }
 
@@ -221,12 +223,12 @@ auto main(int argc, char* argv[]) -> int {
 
   if (!base_dir.exists()) {
     std::cerr << "Error: Assets directory not found: " << assets_dir.toStdString()
-              << std::endl;
+              << '\n';
     return 1;
   }
 
-  std::cout << "Validating content in: " << assets_dir.toStdString() << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << "Validating content in: " << assets_dir.toStdString() << '\n';
+  std::cout << "========================================" << '\n';
 
   bool all_valid = true;
   std::set<QString> mission_ids;
@@ -236,8 +238,7 @@ auto main(int argc, char* argv[]) -> int {
     const QStringList mission_files =
         missions_dir.entryList(QStringList() << "*.json", QDir::Files);
 
-    std::cout << "\nValidating " << mission_files.size() << " mission(s)..."
-              << std::endl;
+    std::cout << "\nValidating " << mission_files.size() << " mission(s)..." << '\n';
 
     for (const auto& mission_file : mission_files) {
       const QString mission_path = missions_dir.filePath(mission_file);
@@ -256,7 +257,7 @@ auto main(int argc, char* argv[]) -> int {
       }
     }
   } else {
-    std::cout << "\nNo missions directory found (this is OK)" << std::endl;
+    std::cout << "\nNo missions directory found (this is OK)" << '\n';
   }
 
   const QDir campaigns_dir = base_dir.filePath("campaigns");
@@ -264,8 +265,7 @@ auto main(int argc, char* argv[]) -> int {
     const QStringList campaign_files =
         campaigns_dir.entryList(QStringList() << "*.json", QDir::Files);
 
-    std::cout << "\nValidating " << campaign_files.size() << " campaign(s)..."
-              << std::endl;
+    std::cout << "\nValidating " << campaign_files.size() << " campaign(s)..." << '\n';
 
     for (const auto& campaign_file : campaign_files) {
       const QString campaign_path = campaigns_dir.filePath(campaign_file);
@@ -278,14 +278,14 @@ auto main(int argc, char* argv[]) -> int {
       }
     }
   } else {
-    std::cout << "\nNo campaigns directory found (this is OK)" << std::endl;
+    std::cout << "\nNo campaigns directory found (this is OK)" << '\n';
   }
 
-  std::cout << "\n========================================" << std::endl;
+  std::cout << "\n========================================" << '\n';
   if (all_valid) {
-    std::cout << "✓ All content validation passed!" << std::endl;
+    std::cout << "✓ All content validation passed!" << '\n';
     return 0;
   }
-  std::cerr << "✗ Content validation failed!" << std::endl;
+  std::cerr << "✗ Content validation failed!" << '\n';
   return 1;
 }

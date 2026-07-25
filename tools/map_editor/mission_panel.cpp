@@ -441,8 +441,8 @@ auto edit_wave_dialog(const QJsonArray& ai_setups,
   for (int i = 0; i < composition->count(); ++i) {
     composition_array.append(composition->item(i)->data(Qt::UserRole).toJsonObject());
   }
-  WaveLocation location{ai->currentData().toInt(), initial_location.wave_index};
-  QJsonObject result{
+  WaveLocation const location{ai->currentData().toInt(), initial_location.wave_index};
+  QJsonObject const result{
       {"timing", timing->value()},
       {"composition", composition_array},
       {"entry_point", QJsonObject{{"x", x->value()}, {"z", z->value()}}}};

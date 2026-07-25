@@ -1390,7 +1390,7 @@ QString EditorWindow::tool_executable(const QString& name) const {
 #ifdef Q_OS_WIN
   const QString executable_name = name + QStringLiteral(".exe");
 #else
-  const QString executable_name = name;
+  const QString& executable_name = name;
 #endif
   const QString alongside =
       QDir(QCoreApplication::applicationDirPath()).filePath(executable_name);

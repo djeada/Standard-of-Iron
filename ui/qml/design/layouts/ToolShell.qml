@@ -8,7 +8,10 @@ Item {
     property alias workspace: workspaceHost.data
     property alias statusBar: statusHost.data
 
-    Rectangle { anchors.fill: parent; color: Design.Theme.backgroundDeep }
+    Rectangle {
+        anchors.fill: parent
+        color: Design.Theme.backgroundDeep
+    }
     Item {
         id: toolbarHost
         anchors.left: parent.left

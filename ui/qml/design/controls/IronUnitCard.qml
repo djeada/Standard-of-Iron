@@ -25,6 +25,9 @@ Surfaces.IronPanel {
             color: Design.Theme.textSecondary
             font.pixelSize: Design.Typography.caption
         }
-        IronProgressBar { width: parent.width; value: root.health }
+        IronProgressBar {
+            width: parent.width
+            value: root.health
+        }
     }
 }

@@ -10,8 +10,7 @@ Surfaces.IronPanel {
     property int count: 1
     implicitWidth: 360
     implicitHeight: label.implicitHeight + Design.Metrics.space24
-    border.color: priority === "critical" ? Design.Theme.danger :
-                  priority === "urgent" ? Design.Theme.warning : Design.Theme.borderStrong
+    border.color: priority === "critical" ? Design.Theme.danger : priority === "urgent" ? Design.Theme.warning : Design.Theme.borderStrong
     Text {
         id: label
         anchors.fill: parent

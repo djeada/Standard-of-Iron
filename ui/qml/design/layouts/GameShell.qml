@@ -9,8 +9,14 @@ Item {
         anchors.fill: parent
         color: Design.Theme.backgroundDeep
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Design.Theme.backgroundRaised }
-            GradientStop { position: 1.0; color: Design.Theme.backgroundDeep }
+            GradientStop {
+                position: 0.0
+                color: Design.Theme.backgroundRaised
+            }
+            GradientStop {
+                position: 1.0
+                color: Design.Theme.backgroundDeep
+            }
         }
     }
     Rectangle {

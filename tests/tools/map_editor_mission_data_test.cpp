@@ -11,7 +11,7 @@
 namespace {
 
 TEST(MapEditorMissionDataTest, DefaultMissionUsesSupportedRuntimeOptions) {
-  MapEditor::MissionData mission;
+  MapEditor::MissionData const mission;
 
   EXPECT_TRUE(mission.validate().isEmpty());
   EXPECT_EQ(mission.value("player_setup").toObject().value("nation").toString(),
@@ -23,7 +23,7 @@ TEST(MapEditorMissionDataTest, DefaultMissionUsesSupportedRuntimeOptions) {
 }
 
 TEST(MapEditorMissionDataTest, RoundTripsEditorAuthoredMission) {
-  QTemporaryDir directory;
+  QTemporaryDir const directory;
   ASSERT_TRUE(directory.isValid());
   const QString path = directory.filePath(QStringLiteral("mission.json"));
 

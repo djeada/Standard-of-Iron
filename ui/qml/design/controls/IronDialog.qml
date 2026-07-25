@@ -15,5 +15,7 @@ Dialog {
         border.width: Design.Metrics.borderThin
         border.color: Design.Theme.borderStrong
     }
-    Overlay.modal: Rectangle { color: "#99000000" }
+    Overlay.modal: Rectangle {
+        color: "#99000000"
+    }
 }

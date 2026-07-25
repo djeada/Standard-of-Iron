@@ -60,8 +60,6 @@ class Theme : public QObject {
 
   Q_PROPERTY(QColor warningText READ warningText CONSTANT)
 
-  // Iron and Ember semantic aliases. New QML and all QWidget tools use these
-  // names; the older names remain available while existing screens migrate.
   Q_PROPERTY(QColor backgroundDeep READ backgroundDeep CONSTANT)
   Q_PROPERTY(QColor backgroundRaised READ backgroundRaised CONSTANT)
   Q_PROPERTY(QColor panelIron READ panelIron CONSTANT)

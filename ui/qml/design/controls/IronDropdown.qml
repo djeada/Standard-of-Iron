@@ -18,7 +18,6 @@ ComboBox {
         color: Design.Theme.panelIron
         radius: Design.Metrics.radiusSmall
         border.width: control.activeFocus ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: control.activeFocus ? Design.Theme.focus :
-                      control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
+        border.color: control.activeFocus ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
     }
 }
