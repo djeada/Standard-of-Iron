@@ -532,6 +532,14 @@ GameEngine::GameEngine(QObject* parent)
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
           [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); });
 
+  m_mission_announcement_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>(
+          [this](const Engine::Core::MissionAnnouncementEvent& e) {
+            if (!e.text.isEmpty()) {
+              emit mission_announcement(e.text);
+            }
+          });
+
   m_combat_hit_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
           [this](const Engine::Core::CombatHitEvent& e) {

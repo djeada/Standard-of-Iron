@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "game/map/map_definition.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
@@ -250,6 +251,169 @@ TEST(ArenaScenariosTest, WallCornerShowcaseCoversEveryJoinShape) {
           << "owner " << owner_id << " never produces " << shape;
     }
   }
+}
+
+TEST(ArenaScenariosTest, ListsEveryIronSepulcherScenario) {
+  for (auto const* id : {Arena::Scenarios::k_sepulcher_roster_lineup_id,
+                         Arena::Scenarios::k_sepulcher_vs_rome_infantry_id,
+                         Arena::Scenarios::k_sepulcher_vs_rome_ranged_id,
+                         Arena::Scenarios::k_sepulcher_vs_carthage_infantry_id,
+                         Arena::Scenarios::k_sepulcher_vs_carthage_cavalry_id,
+                         Arena::Scenarios::k_sepulcher_shrine_awakening_id,
+                         Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id,
+                         Arena::Scenarios::k_sepulcher_shrine_siege_id}) {
+    EXPECT_NE(Arena::Scenarios::find_option(QString::fromLatin1(id)), nullptr) << id;
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_FALSE(scenario->expectations.empty()) << id;
+  }
+}
+
+TEST(ArenaScenariosTest, SepulcherRosterLineupCoversEveryUndeadTroop) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_roster_lineup_id));
+  ASSERT_NE(scenario, nullptr);
+
+  std::set<Game::Units::TroopType> sepulcher_troops;
+  for (auto const& group : scenario->groups) {
+    if (group.nation_id == Game::Systems::NationID::IronSepulcher) {
+      sepulcher_troops.insert(group.troop_type);
+    }
+  }
+
+  EXPECT_EQ(sepulcher_troops,
+            (std::set<Game::Units::TroopType>{Game::Units::TroopType::SkeletonSwordsman,
+                                              Game::Units::TroopType::SkeletonArcher,
+                                              Game::Units::TroopType::GravePriest}));
+}
+
+TEST(ArenaScenariosTest, SepulcherBattlesPitUndeadAgainstBothPlayableNations) {
+  const std::map<const char*, Game::Systems::NationID> battles{
+      {Arena::Scenarios::k_sepulcher_vs_rome_infantry_id,
+       Game::Systems::NationID::RomanRepublic},
+      {Arena::Scenarios::k_sepulcher_vs_rome_ranged_id,
+       Game::Systems::NationID::RomanRepublic},
+      {Arena::Scenarios::k_sepulcher_vs_carthage_infantry_id,
+       Game::Systems::NationID::Carthage},
+      {Arena::Scenarios::k_sepulcher_vs_carthage_cavalry_id,
+       Game::Systems::NationID::Carthage}};
+
+  for (auto const& [id, opponent_nation] : battles) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+
+    bool has_undead = false;
+    bool has_opponent = false;
+    for (auto const& group : scenario->groups) {
+      if (group.nation_id == Game::Systems::NationID::IronSepulcher) {
+        has_undead = true;
+        EXPECT_NE(group.owner_id, 1) << id << " undead must not own the player slot";
+      } else if (group.nation_id == opponent_nation) {
+        has_opponent = true;
+      }
+    }
+    EXPECT_TRUE(has_undead) << id;
+    EXPECT_TRUE(has_opponent) << id;
+    EXPECT_FALSE(scenario->steps.empty()) << id;
+  }
+}
+
+TEST(ArenaScenariosTest, SepulcherZonesCarryTheirOwnHazeAndAnchorRole) {
+  auto const* shrine = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_awakening_id));
+  ASSERT_NE(shrine, nullptr);
+  ASSERT_EQ(shrine->undead_zones.size(), 1U);
+
+  auto const& shrine_zone = shrine->undead_zones.front();
+  EXPECT_GT(shrine_zone.fog_density, 0.0F);
+  EXPECT_TRUE(Game::Map::zone_has_structural_anchor(shrine_zone))
+      << "a shrine garrisons a capturable sepulcher barracks";
+  EXPECT_TRUE(shrine_zone.waves.empty())
+      << "the shrine scene exercises the default garrison";
+
+  auto const* ruins = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id));
+  ASSERT_NE(ruins, nullptr);
+  ASSERT_EQ(ruins->undead_zones.size(), 1U);
+  EXPECT_FALSE(Game::Map::zone_has_structural_anchor(ruins->undead_zones.front()))
+      << "ruins stay decorative";
+}
+
+TEST(ArenaScenariosTest, ShrineSiegeRequiresTheZoneToBeClearedByLosingItsAnchor) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_siege_id));
+  ASSERT_NE(scenario, nullptr);
+  ASSERT_EQ(scenario->undead_zones.size(), 1U);
+  EXPECT_TRUE(Game::Map::zone_has_structural_anchor(scenario->undead_zones.front()));
+
+  EXPECT_NE(std::find_if(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [](auto const& item) {
+                           return item.kind ==
+                                  Arena::ArenaExpectationKind::UndeadZoneCleared;
+                         }),
+            scenario->expectations.end());
+}
+
+TEST(ArenaScenariosTest, AwakeningScenariosStayDormantUntilIntrudersArrive) {
+  for (auto const* id : {Arena::Scenarios::k_sepulcher_shrine_awakening_id,
+                         Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+
+    ASSERT_EQ(scenario->undead_zones.size(), 1U) << id;
+    auto const& zone = scenario->undead_zones.front();
+    EXPECT_NE(std::find(zone.awaken_on.begin(),
+                        zone.awaken_on.end(),
+                        QStringLiteral("unit_enters_radius")),
+              zone.awaken_on.end())
+        << id;
+
+    ASSERT_FALSE(scenario->resource_patches.empty()) << id;
+    EXPECT_FLOAT_EQ(scenario->resource_patches.front().origin.x(), zone.x) << id;
+    EXPECT_FLOAT_EQ(scenario->resource_patches.front().origin.z(), zone.z) << id;
+
+    bool const no_group_owns_the_zone = std::none_of(
+        scenario->groups.begin(), scenario->groups.end(), [&zone](auto const& group) {
+          return group.owner_id == zone.owner_id;
+        });
+    EXPECT_TRUE(no_group_owns_the_zone)
+        << id << " guardians must come from the awakening system, not authored groups";
+
+    auto const dormant = std::find_if(
+        scenario->expectations.begin(),
+        scenario->expectations.end(),
+        [&zone](auto const& item) {
+          return item.kind == Arena::ArenaExpectationKind::UndeadZoneDormantBefore &&
+                 item.zone_id == zone.id;
+        });
+    ASSERT_NE(dormant, scenario->expectations.end()) << id;
+    EXPECT_GT(dormant->end_seconds, 0.0F) << id;
+
+    EXPECT_NE(
+        std::find_if(scenario->expectations.begin(),
+                     scenario->expectations.end(),
+                     [&zone](auto const& item) {
+                       return item.kind ==
+                                  Arena::ArenaExpectationKind::UndeadZoneAwakened &&
+                              item.zone_id == zone.id;
+                     }),
+        scenario->expectations.end())
+        << id;
+  }
+}
+
+TEST(ArenaScenariosTest,
+     RuinsAwakeningReleasesAFollowUpWaveOnlyAfterTheFirstIsCleared) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id));
+  ASSERT_NE(scenario, nullptr);
+  ASSERT_EQ(scenario->undead_zones.size(), 1U);
+
+  auto const& waves = scenario->undead_zones.front().waves;
+  ASSERT_EQ(waves.size(), 2U);
+  EXPECT_EQ(waves[0].trigger, QStringLiteral("initial"));
+  EXPECT_EQ(waves[1].trigger, QStringLiteral("after_clear"));
 }
 
 TEST(ArenaScenariosTest, RejectsUnknownScenarioIds) {

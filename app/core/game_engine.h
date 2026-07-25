@@ -601,6 +601,8 @@ private:
       m_unit_spawned_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>
       m_combat_hit_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
+      m_mission_announcement_subscription;
 
   struct RpgDamageEvent {
     float wx{0.0F};

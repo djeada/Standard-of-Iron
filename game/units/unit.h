@@ -33,6 +33,8 @@ struct SpawnParams {
   int max_population = 100;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   bool is_initial_spawn = true;
+
+  bool enables_production = true;
 };
 
 class Unit {

@@ -415,7 +415,11 @@ auto SkirmishLoader::start(const QString& map_path,
   }
 
   if (m_ambient_fog != nullptr && !level_result.fog_zones.empty()) {
-    m_ambient_fog->configure(level_result.fog_zones);
+    std::vector<Game::Map::FogZone> fog_zones = level_result.fog_zones;
+    for (auto& zone : fog_zones) {
+      zone.y = terrain_service.resolve_surface_world_y(zone.x, zone.z, 0.0F);
+    }
+    m_ambient_fog->configure(fog_zones);
   }
 
   constexpr int default_map_size = 100;

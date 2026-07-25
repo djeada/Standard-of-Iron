@@ -90,20 +90,22 @@ void main() {
         fbm(vec2(v_texcoord.x * 11.0 - u_time * 0.25, flame_height * 13.0 + 6.0));
 
     vec3 white_hot = vec3(2.10, 1.85, 1.35);
-    vec3 hot_core = vec3(1.75, 1.05, 0.28);
-    vec3 orange_body = vec3(1.28, 0.48, 0.08);
-    vec3 ember_red = vec3(0.72, 0.12, 0.03);
-    vec3 smoke_tip = vec3(0.14, 0.14, 0.16);
+    vec3 hot_core = vec3(1.70, 0.94, 0.22);
+
+    vec3 orange_body = vec3(1.18, 0.38, 0.05);
+    vec3 ember_red = vec3(0.62, 0.09, 0.02);
+    vec3 smoke_tip = vec3(0.11, 0.105, 0.115);
 
     float heat = pow(max(0.0, 1.0 - flame_height), 1.7);
     float core_mask = inv_smoothstep(0.12, 0.82, axis_radius);
     color = mix(orange_body, ember_red, smoothstep(0.38, 1.0, flame_height));
     color = mix(color, hot_core, heat * (0.55 + 0.25 * body_noise));
     color = mix(color, white_hot, core_mask * pow(max(0.0, 1.0 - flame_height), 2.6));
+
     color = mix(color,
                 smoke_tip,
-                smoothstep(0.72, 1.0, flame_height) *
-                    ((unit_flame ? 0.10 : 0.45) + 0.35 * soot_noise));
+                smoothstep(0.58, 1.0, flame_height) *
+                    ((unit_flame ? 0.20 : 0.58) + 0.34 * soot_noise));
 
     float ember_band = smoothstep(0.05, 0.24, flame_height) *
                        (1.0 - smoothstep(0.22, 0.65, flame_height));

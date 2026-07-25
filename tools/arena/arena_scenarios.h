@@ -74,6 +74,18 @@ inline constexpr char k_roman_fortification_showcase_id[] =
 inline constexpr char k_carthage_fortification_showcase_id[] =
     "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
+inline constexpr char k_sepulcher_roster_lineup_id[] = "sepulcher_roster_lineup";
+inline constexpr char k_sepulcher_vs_rome_infantry_id[] = "sepulcher_vs_rome_infantry";
+inline constexpr char k_sepulcher_vs_rome_ranged_id[] = "sepulcher_vs_rome_ranged";
+inline constexpr char k_sepulcher_vs_carthage_infantry_id[] =
+    "sepulcher_vs_carthage_infantry";
+inline constexpr char k_sepulcher_vs_carthage_cavalry_id[] =
+    "sepulcher_vs_carthage_cavalry";
+inline constexpr char k_sepulcher_shrine_awakening_id[] = "sepulcher_shrine_awakening";
+inline constexpr char k_sepulcher_ruins_awakening_waves_id[] =
+    "sepulcher_ruins_awakening_waves";
+inline constexpr char k_sepulcher_shrine_siege_id[] = "sepulcher_shrine_siege";
+
 inline constexpr char k_water_showcase_id[] = "water_showcase";
 inline constexpr char k_wall_corner_showcase_id[] = "wall_corner_showcase";
 
