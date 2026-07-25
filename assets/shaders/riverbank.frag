@@ -27,6 +27,7 @@ uniform vec3 u_snow_color;
 uniform float u_moisture_level;
 uniform float u_rock_exposure;
 uniform float u_snow_coverage;
+uniform float u_ambient_boost;
 uniform vec3 u_camera_pos;
 uniform vec3 u_light_dir;
 
@@ -78,6 +79,31 @@ float fbm(vec2 point) {
   }
 
   return result;
+}
+
+float band_limit(float texels_per_pixel, float frequency) {
+  return 1.0 - smoothstep(0.30, 0.85, texels_per_pixel * frequency);
+}
+
+vec2 cellular_distances(vec2 point) {
+  vec2 cell = floor(point);
+  vec2 local = fract(point);
+  float nearest = 8.0;
+  float second = 8.0;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 site = offset + vec2(hash21(cell + offset), hash21(cell + offset + 19.7));
+      float distance_to_site = length(site - local);
+      if (distance_to_site < nearest) {
+        second = nearest;
+        nearest = distance_to_site;
+      } else if (distance_to_site < second) {
+        second = distance_to_site;
+      }
+    }
+  }
+  return vec2(nearest, second);
 }
 
 vec3 safe_normalize(vec3 value, vec3 fallback) {
@@ -194,12 +220,12 @@ void main() {
   float bank_snow = smoothstep(0.54, 0.78, macro + detail * 0.12) * snow_coverage;
   map_ground = mix(map_ground, max(u_snow_color, vec3(0.025)), bank_snow * 0.82);
 
-  vec3 wet_silt = soil * mix(vec3(0.60, 0.62, 0.57), vec3(0.50, 0.55, 0.50), moisture);
+  vec3 wet_silt = soil * mix(vec3(0.86, 0.88, 0.82), vec3(0.74, 0.79, 0.74), moisture);
 
-  vec3 damp_earth =
-      soil * mix(vec3(0.78, 0.80, 0.72), vec3(0.68, 0.73, 0.66), moisture);
+  vec3 damp_earth = mix(soil, grass_dry, 0.26) *
+                    mix(vec3(1.12, 1.12, 1.05), vec3(0.98, 1.02, 0.95), moisture);
 
-  vec3 dry_earth = mix(soil, grass_dry, 0.20) * mix(0.92, 0.84, moisture);
+  vec3 dry_earth = mix(soil, grass_dry, 0.46) * mix(1.24, 1.10, moisture);
 
   vec3 bank_grass = terrain_grass;
 
@@ -228,19 +254,34 @@ void main() {
 
   earth = mix(earth, map_ground * mix(0.90, 0.98, detail), land_merge);
 
-  float pebble_cells = value_noise(world_uv * 4.6 + vec2(41.0, -13.0));
+  float footprint = max(length(fwidth(world_uv)), 1e-5);
 
-  float pebble_breakup = value_noise(world_uv * 12.0 + vec2(-19.0, 8.0));
+  vec2 cobble_cells = cellular_distances(world_uv * 5.2 + vec2(41.0, -13.0));
+  float cobble =
+      (1.0 - smoothstep(0.10, 0.46, cobble_cells.x)) * band_limit(footprint, 5.2);
+  vec2 shingle_cells = cellular_distances(world_uv * 13.5 + vec2(-19.0, 8.0));
+  float shingle =
+      (1.0 - smoothstep(0.14, 0.50, shingle_cells.x)) * band_limit(footprint, 13.5);
 
+  float bar_field = smoothstep(0.38, 0.72, macro * 0.55 + detail * 0.45);
   float pebble_region =
-      smoothstep(0.11, 0.42, shore_t) * (1.0 - smoothstep(0.58, 0.76, shore_t));
+      smoothstep(0.06, 0.34, shore_t) * (1.0 - smoothstep(0.52, 0.80, shore_t));
 
-  float pebbles = smoothstep(0.79, 0.94, pebble_cells) *
-                  smoothstep(0.54, 0.82, pebble_breakup) * pebble_region;
+  float pebbles = clamp(cobble * 0.62 + shingle * 0.38, 0.0, 1.0) * pebble_region *
+                  mix(0.35, 1.0, bar_field);
 
   vec3 stone_color = biome_stone * mix(0.78, 0.94, grain);
 
-  earth = mix(earth, stone_color, pebbles * mix(0.24, 0.52, rock_exposure));
+  stone_color *= mix(0.68, 1.0, smoothstep(0.04, 0.44, shore_t));
+
+  earth = mix(earth, stone_color, pebbles * mix(0.38, 0.66, rock_exposure));
+
+  float waterline = (1.0 - smoothstep(0.0, 0.085, shore_t)) *
+                    (0.55 + 0.45 * smoothstep(0.35, 0.70, detail));
+  earth *= 1.0 - waterline * 0.16;
+  float stain =
+      smoothstep(0.055, 0.10, shore_t) * (1.0 - smoothstep(0.10, 0.20, shore_t));
+  earth = mix(earth, earth * vec3(0.84, 0.87, 0.81), stain * 0.35);
 
   float deposited_silt_noise =
       fbm(vec2(tex_coord.y * 7.0 + macro, world_uv.y * 0.35 - slow_wash.x));
@@ -251,8 +292,10 @@ void main() {
 
   vec3 base_normal = safe_normalize(v_normal, vec3(0.0, 1.0, 0.0));
 
-  vec3 normal =
-      procedural_detail_normal(base_normal, world_uv * 2.8, 0.42 * (0.35 + grain));
+  float relief_fade = band_limit(footprint, 2.8);
+  float relief_strength =
+      (0.42 * (0.35 + grain) + pebbles * 0.55 + cobble * 0.25) * relief_fade;
+  vec3 normal = procedural_detail_normal(base_normal, world_uv * 2.8, relief_strength);
 
   vec3 light_dir = safe_normalize(u_light_dir, vec3(0.0, 1.0, 0.0));
 
@@ -260,11 +303,18 @@ void main() {
 
   float ndl = max(dot(normal, light_dir), 0.0);
 
-  float ambient_occlusion = mix(0.78, 0.94, shore_t);
+  float ambient_occlusion = mix(0.74, 1.0, smoothstep(0.0, 0.55, shore_t));
+  ambient_occlusion *= 1.0 - (1.0 - relief_fade) * pebbles * 0.30;
 
-  float diffuse_light = 0.56 * ambient_occlusion + ndl * 0.38;
+  vec3 sky_light = vec3(0.88, 0.94, 1.06);
+  vec3 bounce_light = vec3(1.14, 0.98, 0.76);
+  vec3 sun_light = vec3(1.10, 1.00, 0.86);
+  float sky_access = 0.5 + 0.5 * normal.y;
+  vec3 ambient_term =
+      0.40 * ambient_occlusion * mix(bounce_light, sky_light, sky_access);
 
-  vec3 color = earth * diffuse_light;
+  float exposure = u_ambient_boost > 0.001 ? u_ambient_boost : 1.0;
+  vec3 color = earth * (ambient_term + sun_light * ndl * 0.70) * exposure;
 
   vec3 half_dir = safe_normalize(light_dir + view_dir, normal);
 
@@ -294,5 +344,9 @@ void main() {
 
   color = mix(color, u_fog_color, fog_amount);
 
-  frag_color = vec4(saturate(color), segment_visibility);
+  float dissolve_noise = (macro - 0.5) * 0.34 + (detail - 0.5) * 0.20;
+  float edge_fade =
+      1.0 - smoothstep(0.62 + dissolve_noise, 1.0 + dissolve_noise, shore_t);
+
+  frag_color = vec4(saturate(color), segment_visibility * edge_fade);
 }
