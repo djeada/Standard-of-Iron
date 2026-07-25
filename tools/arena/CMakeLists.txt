@@ -1,6 +1,7 @@
 add_library(arena_scenario_harness STATIC
     arena_scenario.cpp
     arena_scenario_catalog.cpp
+    terrain_alignment.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
 target_link_libraries(arena_scenario_harness

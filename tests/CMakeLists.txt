@@ -185,6 +185,7 @@ add_executable(standard_of_iron_tests
     tools/arena_frame_continuity_test.cpp
     tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
+    tools/arena_terrain_alignment_test.cpp
     test_main.cpp
 )
 

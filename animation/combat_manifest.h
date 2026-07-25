@@ -331,10 +331,7 @@ lane_profile_for_lane(SoldierCombatLane lane) noexcept -> CombatLaneProfile {
 [[nodiscard]] constexpr auto lane_profile_for_state(
     const SoldierCombatLaneState& state) noexcept -> CombatLaneProfile {
   CombatLaneProfile profile = lane_profile_for_lane(state.lane);
-  // Lane roles establish the broad cadence, while each soldier needs a stable
-  // personal timing offset. Without this second layer, a 48-body formation
-  // collapses into only two or three visibly synchronized pose clusters even
-  // though every soldier technically owns an attack transaction.
+
   constexpr std::uint32_t k_phase_slots = 29U;
   constexpr float k_phase_jitter_span = 0.28F;
   std::uint32_t const phase_slot =
@@ -354,9 +351,7 @@ profile_with_lane(const CombatLaneProfile& base,
   CombatLaneProfile profile = base;
   CombatLaneProfile const lane_profile = lane_profile_for_lane(lane);
   profile.lane = lane;
-  // Preserve the soldier-specific part of the source profile while changing
-  // its role-specific base. This path is used when a defensive lane is
-  // promoted into an attack lane for the formation-wide fight contract.
+
   float const source_lane_bias = lane_profile_for_lane(base.lane).phase_bias;
   profile.phase_bias = lane_profile.phase_bias + (base.phase_bias - source_lane_bias);
   profile.recover_scale = lane_profile.recover_scale;

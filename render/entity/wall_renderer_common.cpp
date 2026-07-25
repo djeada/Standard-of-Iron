@@ -1,6 +1,8 @@
 #include "wall_renderer_common.h"
 
 #include <array>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 
@@ -11,6 +13,44 @@ constexpr std::uint8_t k_connection_north = 1U << 0U;
 constexpr std::uint8_t k_connection_east = 1U << 1U;
 constexpr std::uint8_t k_connection_south = 1U << 2U;
 constexpr std::uint8_t k_connection_west = 1U << 3U;
+
+constexpr std::size_t k_dir_north = 0U;
+constexpr std::size_t k_dir_east = 1U;
+constexpr std::size_t k_dir_south = 2U;
+constexpr std::size_t k_dir_west = 3U;
+constexpr std::size_t k_dir_count = 4U;
+
+constexpr float k_connected_span_length = 1.0F;
+constexpr float k_stake_spacing = 0.2F;
+
+struct PlanarDir {
+  float x{0.0F};
+  float z{0.0F};
+};
+
+constexpr std::array<PlanarDir, k_dir_count> k_directions{PlanarDir{0.0F, -1.0F},
+                                                          PlanarDir{1.0F, 0.0F},
+                                                          PlanarDir{0.0F, 1.0F},
+                                                          PlanarDir{-1.0F, 0.0F}};
+
+constexpr std::array<std::uint8_t, k_dir_count> k_direction_bits{
+    k_connection_north, k_connection_east, k_connection_south, k_connection_west};
+
+enum class SpanKind : std::uint8_t {
+  None,
+  Connected,
+  Open
+};
+
+using WallLayout = std::array<SpanKind, k_dir_count>;
+
+struct SpanAxis {
+  std::size_t positive{0U};
+  std::size_t negative{0U};
+};
+
+constexpr std::array<SpanAxis, 2> k_span_axes{SpanAxis{k_dir_east, k_dir_west},
+                                              SpanAxis{k_dir_south, k_dir_north}};
 
 auto variant_mask(WallVariant variant) -> std::uint8_t {
   switch (variant) {
@@ -35,22 +75,86 @@ auto wall_archetype_index(WallVariant variant) -> std::size_t {
   return static_cast<std::size_t>(variant);
 }
 
+auto layout_for(WallVariant variant) -> WallLayout {
+  WallLayout layout{};
+  layout.fill(SpanKind::None);
+
+  const auto mask = variant_mask(variant);
+  for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
+    if ((mask & k_direction_bits[dir]) != 0U) {
+      layout[dir] = SpanKind::Connected;
+    }
+  }
+
+  if (variant == WallVariant::Isolated) {
+    layout[k_dir_east] = SpanKind::Open;
+    layout[k_dir_west] = SpanKind::Open;
+  } else if (variant == WallVariant::End) {
+    layout[k_dir_west] = SpanKind::Open;
+  }
+  return layout;
+}
+
+auto is_present(const WallLayout& layout, std::size_t dir) -> bool {
+  return layout[dir] != SpanKind::None;
+}
+
+auto span_length(const WallLayout& layout,
+                 std::size_t dir,
+                 const WallGeometry& geometry) -> float {
+  return layout[dir] == SpanKind::Open ? geometry.open_span_length
+                                       : k_connected_span_length;
+}
+
+auto span_slot_count(float length) -> int {
+  const int slot_total = static_cast<int>(std::lround(length / k_stake_spacing)) - 1;
+  return slot_total < 1 ? 1 : slot_total;
+}
+
+auto slot_offset(int slot) -> float {
+  return (static_cast<float>(slot) + 1.5F) * k_stake_spacing;
+}
+
+auto rail_offset(const WallGeometry& geometry) -> float {
+  return geometry.stake_radius + (geometry.rail_radius * 0.85F);
+}
+
+auto terminal_post_radius(const WallGeometry& geometry) -> float {
+  return geometry.post_radius * 0.85F;
+}
+
+auto terminal_post_offset(const WallGeometry& geometry, float length) -> float {
+  return length - terminal_post_radius(geometry);
+}
+
+auto rail_reach(const WallLayout& layout,
+                std::size_t dir,
+                const WallGeometry& geometry) -> float {
+  const float length = span_length(layout, dir, geometry);
+  return layout[dir] == SpanKind::Open ? terminal_post_offset(geometry, length)
+                                       : length;
+}
+
+auto point_at(std::size_t dir, float along, float lateral, float height) -> QVector3D {
+  const PlanarDir forward = k_directions[dir];
+  const PlanarDir side = k_directions[(dir + 1U) % k_dir_count];
+  return {(forward.x * along) + (side.x * lateral),
+          height,
+          (forward.z * along) + (side.z * lateral)};
+}
+
+auto extents_at(std::size_t dir,
+                float along_half,
+                float height_half,
+                float lateral_half) -> QVector3D {
+  return k_directions[dir].x != 0.0F ? QVector3D(along_half, height_half, lateral_half)
+                                     : QVector3D(lateral_half, height_half, along_half);
+}
+
 auto alternating_stake_color(const WallPalette& palette, int index) -> QVector3D {
   const bool even_index = (index % 2) == 0;
   const bool use_light = palette.alternate_starts_light ? even_index : !even_index;
   return use_light ? palette.wood_light : palette.wood_mid;
-}
-
-auto span_stake_position(int index, int stake_count, bool connected_span) -> float {
-  if (!connected_span || stake_count <= 1) {
-    return (static_cast<float>(index) + 0.5F) / static_cast<float>(stake_count);
-  }
-
-  static constexpr float k_connected_start_t = 0.06F;
-  static constexpr float k_connected_end_t = 0.98F;
-  const auto denom = static_cast<float>(stake_count - 1);
-  return k_connected_start_t + ((k_connected_end_t - k_connected_start_t) *
-                                (static_cast<float>(index) / denom));
 }
 
 auto stake_height_variation(const WallGeometry& geometry, int index) -> float {
@@ -61,297 +165,283 @@ auto stake_height_variation(const WallGeometry& geometry, int index) -> float {
   return k_variation[static_cast<std::size_t>(index) % k_variation.size()];
 }
 
-void add_x_braces(BuildingArchetypeDesc& desc,
-                  const WallPalette& palette,
-                  const WallGeometry& geometry,
-                  float direction,
-                  float length,
-                  float depth) {
-  const QVector3D low(direction * length * 0.08F, 0.34F, -depth);
-  const QVector3D high(direction * length * 0.92F, geometry.upper_lashing_y, -depth);
-  desc.add_cylinder(low,
-                    high,
-                    0.055F,
-                    palette.wood_dark,
-                    BuildingStateMask::All,
-                    BuildingLODMask::Full);
-  if (geometry.cross_braced) {
-    desc.add_cylinder(QVector3D(high.x(), low.y(), -depth),
-                      QVector3D(low.x(), high.y(), -depth),
-                      0.052F,
-                      palette.shadow,
-                      BuildingStateMask::All,
-                      BuildingLODMask::Full);
-  }
+auto stake_lean(const WallGeometry& geometry, int index) -> float {
+  constexpr std::array<float, 5> k_lean{0.008F, -0.013F, 0.004F, -0.007F, 0.012F};
+  const float lean = k_lean[static_cast<std::size_t>(index) % k_lean.size()];
+  return geometry.irregular_stakes ? lean * 1.6F : lean;
 }
 
-void add_z_braces(BuildingArchetypeDesc& desc,
-                  const WallPalette& palette,
-                  const WallGeometry& geometry,
-                  float direction,
-                  float length,
-                  float depth) {
-  const QVector3D low(-depth, 0.34F, direction * length * 0.08F);
-  const QVector3D high(-depth, geometry.upper_lashing_y, direction * length * 0.92F);
-  desc.add_cylinder(low,
-                    high,
-                    0.055F,
-                    palette.wood_dark,
-                    BuildingStateMask::All,
-                    BuildingLODMask::Full);
-  if (geometry.cross_braced) {
-    desc.add_cylinder(QVector3D(-depth, low.y(), high.z()),
-                      QVector3D(-depth, high.y(), low.z()),
-                      0.052F,
-                      palette.shadow,
-                      BuildingStateMask::All,
-                      BuildingLODMask::Full);
-  }
+auto binding_color(const WallPalette& palette,
+                   const WallGeometry& geometry) -> QVector3D {
+  return geometry.metal_bands ? palette.masonry_accent : palette.rope;
 }
 
-void add_x_span(BuildingArchetypeDesc& desc,
-                const WallPalette& palette,
-                const WallGeometry& geometry,
-                float direction,
-                float length,
-                bool capped_outer_end) {
-  constexpr int k_stakes = 5;
-  const bool connected_span = !capped_outer_end;
-  const float center_x = direction * (length * 0.5F);
-  const float stake_radius =
-      (geometry.x_stake_half_x + geometry.x_stake_half_z) * 0.29F;
-
-  desc.add_cylinder(
-      QVector3D(0.0F, geometry.lower_lashing_y, -stake_radius * 0.55F),
-      QVector3D(direction * length, geometry.lower_lashing_y, -stake_radius * 0.55F),
-      0.070F,
-      palette.wood_dark);
-  desc.add_cylinder(
-      QVector3D(0.0F, geometry.upper_lashing_y, -stake_radius * 0.55F),
-      QVector3D(direction * length, geometry.upper_lashing_y, -stake_radius * 0.55F),
-      0.064F,
-      palette.wood_dark);
-  desc.add_box(QVector3D(center_x, geometry.x_shadow_y, 0.0F),
-               QVector3D(length + 0.08F, 0.06F, geometry.x_shadow_half_z),
-               palette.shadow);
-  add_x_braces(desc, palette, geometry, direction, length, stake_radius * 0.72F);
-
-  for (int i = 0; i < k_stakes; ++i) {
-    const float t = span_stake_position(i, k_stakes, connected_span);
-    const float x = direction * (t * length);
-    const float variation = stake_height_variation(geometry, i);
-    const float top_y = geometry.stake_half_height * 2.0F + variation;
-    const float radius = stake_radius * (0.94F + 0.035F * static_cast<float>(i % 3));
-    desc.add_cylinder(QVector3D(x, 0.04F, 0.0F),
-                      QVector3D(x, top_y, 0.0F),
-                      radius,
-                      alternating_stake_color(palette, i));
-    desc.add_cone(QVector3D(x, top_y - 0.01F, 0.0F),
-                  QVector3D(x, top_y + geometry.tip_half_height * 2.0F, 0.0F),
-                  radius * 1.04F,
-                  palette.wood_dark);
-    const QVector3D binding_color =
-        geometry.metal_bands ? palette.masonry_accent : palette.rope;
-    for (float y : {geometry.lower_lashing_y, geometry.upper_lashing_y}) {
-      desc.add_box(QVector3D(x, y, 0.0F),
-                   QVector3D(radius * 2.25F, 0.055F, radius * 2.25F),
-                   binding_color,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
-    }
-  }
-
-  if (capped_outer_end) {
-    const float x = direction * (length - 0.02F);
-    const float radius = (geometry.x_cap_half_x + geometry.x_cap_half_z) * 0.29F;
-    const float top_y = geometry.stake_half_height * 2.0F + 0.10F;
-    desc.add_cylinder(
-        QVector3D(x, 0.03F, 0.0F), QVector3D(x, top_y, 0.0F), radius, palette.shadow);
-    desc.add_cone(QVector3D(x, top_y, 0.0F),
-                  QVector3D(x, top_y + geometry.tip_half_height * 2.0F, 0.0F),
-                  radius,
-                  palette.wood_dark);
-  }
-}
-
-void add_z_span(BuildingArchetypeDesc& desc,
-                const WallPalette& palette,
-                const WallGeometry& geometry,
-                float direction,
-                float length,
-                bool capped_outer_end) {
-  constexpr int k_stakes = 5;
-  const bool connected_span = !capped_outer_end;
-  const float center_z = direction * (length * 0.5F);
-  const float stake_radius =
-      (geometry.z_stake_half_x + geometry.z_stake_half_z) * 0.29F;
-
-  desc.add_cylinder(
-      QVector3D(-stake_radius * 0.55F, geometry.lower_lashing_y, 0.0F),
-      QVector3D(-stake_radius * 0.55F, geometry.lower_lashing_y, direction * length),
-      0.070F,
-      palette.wood_dark);
-  desc.add_cylinder(
-      QVector3D(-stake_radius * 0.55F, geometry.upper_lashing_y, 0.0F),
-      QVector3D(-stake_radius * 0.55F, geometry.upper_lashing_y, direction * length),
-      0.064F,
-      palette.wood_dark);
-  desc.add_box(QVector3D(0.0F, geometry.z_shadow_y, center_z),
-               QVector3D(geometry.z_shadow_half_x, 0.06F, length + 0.08F),
-               palette.shadow);
-  add_z_braces(desc, palette, geometry, direction, length, stake_radius * 0.72F);
-
-  for (int i = 0; i < k_stakes; ++i) {
-    const float t = span_stake_position(i, k_stakes, connected_span);
-    const float z = direction * (t * length);
-    const float variation = stake_height_variation(geometry, i);
-    const float top_y = geometry.stake_half_height * 2.0F + variation;
-    const float radius = stake_radius * (0.94F + 0.035F * static_cast<float>(i % 3));
-    desc.add_cylinder(QVector3D(0.0F, 0.04F, z),
-                      QVector3D(0.0F, top_y, z),
-                      radius,
-                      alternating_stake_color(palette, i));
-    desc.add_cone(QVector3D(0.0F, top_y - 0.01F, z),
-                  QVector3D(0.0F, top_y + geometry.tip_half_height * 2.0F, z),
-                  radius * 1.04F,
-                  palette.wood_dark);
-    const QVector3D binding_color =
-        geometry.metal_bands ? palette.masonry_accent : palette.rope;
-    for (float y : {geometry.lower_lashing_y, geometry.upper_lashing_y}) {
-      desc.add_box(QVector3D(0.0F, y, z),
-                   QVector3D(radius * 2.25F, 0.055F, radius * 2.25F),
-                   binding_color,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
-    }
-  }
-
-  if (capped_outer_end) {
-    const float z = direction * (length - 0.02F);
-    const float radius = (geometry.z_cap_half_x + geometry.z_cap_half_z) * 0.29F;
-    const float top_y = geometry.stake_half_height * 2.0F + 0.10F;
-    desc.add_cylinder(
-        QVector3D(0.0F, 0.03F, z), QVector3D(0.0F, top_y, z), radius, palette.shadow);
-    desc.add_cone(QVector3D(0.0F, top_y, z),
-                  QVector3D(0.0F, top_y + geometry.tip_half_height * 2.0F, z),
-                  radius,
-                  palette.wood_dark);
-  }
-}
-
-void add_center_post(BuildingArchetypeDesc& desc,
-                     const WallPalette& palette,
-                     const WallGeometry& geometry) {
-  desc.add_box(
-      QVector3D(0.0F, geometry.center_base_y, 0.0F),
-      QVector3D(geometry.center_base_half_x, 0.06F, geometry.center_base_half_z),
-      palette.wood_dark,
-      BuildingStateMask::All,
-      BuildingLODMask::Full);
-  const float radius =
-      (geometry.center_post_half_x + geometry.center_post_half_z) * 0.29F;
-  const float top_y = geometry.stake_half_height * 2.0F + 0.12F;
-  desc.add_cylinder(QVector3D(0.0F, 0.03F, 0.0F),
-                    QVector3D(0.0F, top_y, 0.0F),
-                    radius,
-                    palette.shadow);
-  desc.add_cone(
-      QVector3D(0.0F, top_y, 0.0F),
-      QVector3D(0.0F,
-                top_y + geometry.tip_half_height * 2.0F + geometry.center_tip_y_offset,
-                0.0F),
-      radius,
-      palette.wood_dark);
-}
-
-void add_masonry_span(BuildingArchetypeDesc& desc,
-                      const WallPalette& palette,
-                      float direction_x,
-                      float direction_z,
-                      float length) {
-  const bool along_x = direction_x != 0.0F;
-  const QVector3D center(
-      direction_x * length * 0.5F, 0.78F, direction_z * length * 0.5F);
-  const QVector3D size = along_x ? QVector3D(length + 0.08F, 1.34F, 0.38F)
-                                 : QVector3D(0.38F, 1.34F, length + 0.08F);
-  desc.add_box(center, size, palette.wood_mid);
-  desc.add_box(QVector3D(center.x(), 0.18F, center.z()),
-               along_x ? QVector3D(length + 0.14F, 0.16F, 0.48F)
-                       : QVector3D(0.48F, 0.16F, length + 0.14F),
-               palette.shadow);
-  desc.add_box(QVector3D(center.x(), 1.48F, center.z()),
-               along_x ? QVector3D(length + 0.12F, 0.12F, 0.46F)
-                       : QVector3D(0.46F, 0.12F, length + 0.12F),
-               palette.masonry_accent);
-
-  constexpr int k_merlons = 4;
-  for (int i = 0; i < k_merlons; ++i) {
-    const float t = (static_cast<float>(i) + 0.5F) / k_merlons;
-    const float offset =
-        direction_x != 0.0F ? direction_x * t * length : direction_z * t * length;
-    const QVector3D merlon_center =
-        along_x ? QVector3D(offset, 1.68F, 0.0F) : QVector3D(0.0F, 1.68F, offset);
-    desc.add_box(merlon_center,
-                 along_x ? QVector3D(0.18F, 0.26F, 0.44F)
-                         : QVector3D(0.44F, 0.26F, 0.18F),
-                 (i % 2 == 0) ? palette.masonry_accent : palette.wood_light,
+void add_stake_bindings(BuildingArchetypeDesc& desc,
+                        const WallPalette& palette,
+                        const WallGeometry& geometry,
+                        std::size_t dir,
+                        float along,
+                        float radius) {
+  const float lateral_half = rail_offset(geometry) + (geometry.rail_radius * 0.9F);
+  for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
+    desc.add_box(point_at(dir, along, 0.0F, height),
+                 extents_at(dir, radius * 0.95F, 0.042F, lateral_half),
+                 binding_color(palette, geometry),
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    if (palette.horned_masonry && i % 2 == 0) {
-      desc.add_box(merlon_center + QVector3D(0.0F, 0.40F, 0.0F),
-                   along_x ? QVector3D(0.09F, 0.20F, 0.24F)
-                           : QVector3D(0.24F, 0.20F, 0.09F),
-                   palette.wood_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
-      desc.add_box(merlon_center + QVector3D(0.0F, 0.61F, 0.0F),
-                   along_x ? QVector3D(0.055F, 0.09F, 0.16F)
-                           : QVector3D(0.16F, 0.09F, 0.055F),
-                   palette.masonry_accent,
+  }
+}
+
+void add_span_stakes(BuildingArchetypeDesc& desc,
+                     const WallPalette& palette,
+                     const WallGeometry& geometry,
+                     std::size_t dir,
+                     float length,
+                     bool capped) {
+  const int slot_total = span_slot_count(length);
+  const int stakes = capped ? slot_total - 1 : slot_total;
+
+  for (int i = 0; i < stakes; ++i) {
+    const float along = slot_offset(i);
+    const float radius =
+        geometry.stake_radius * (0.97F + (0.035F * static_cast<float>(i % 3)));
+    const float top = geometry.stake_height + stake_height_variation(geometry, i);
+    const float lean = stake_lean(geometry, i);
+
+    desc.add_cylinder(point_at(dir, along, 0.0F, 0.02F),
+                      point_at(dir, along, lean, top),
+                      radius,
+                      alternating_stake_color(palette, i));
+    desc.add_cone(point_at(dir, along, lean, top - 0.01F),
+                  point_at(dir, along, lean, top + geometry.tip_height),
+                  radius * 1.05F,
+                  palette.wood_dark);
+    add_stake_bindings(desc, palette, geometry, dir, along, radius);
+  }
+
+  if (!capped) {
+    return;
+  }
+
+  const float along = terminal_post_offset(geometry, length);
+  const float radius = terminal_post_radius(geometry);
+  const float top = geometry.stake_height + (geometry.post_extra_height * 0.5F);
+  desc.add_cylinder(point_at(dir, along, 0.0F, 0.02F),
+                    point_at(dir, along, 0.0F, top),
+                    radius,
+                    palette.wood_mid);
+  desc.add_cone(point_at(dir, along, 0.0F, top - 0.01F),
+                point_at(dir, along, 0.0F, top + geometry.tip_height),
+                radius * 1.02F,
+                palette.wood_dark);
+}
+
+void add_rails(BuildingArchetypeDesc& desc,
+               const WallPalette& palette,
+               const WallGeometry& geometry,
+               const WallLayout& layout) {
+  const float offset = rail_offset(geometry);
+
+  for (const SpanAxis axis : k_span_axes) {
+    const bool positive_present = is_present(layout, axis.positive);
+    const bool negative_present = is_present(layout, axis.negative);
+    if (!positive_present && !negative_present) {
+      continue;
+    }
+
+    for (int side = -1; side <= 1; side += 2) {
+      const std::size_t perpendicular =
+          (axis.positive + (side > 0 ? 1U : 3U)) % k_dir_count;
+      const float mitre = is_present(layout, perpendicular) ? offset : 0.0F;
+      const float high =
+          positive_present ? rail_reach(layout, axis.positive, geometry) : mitre;
+      const float low =
+          negative_present ? -rail_reach(layout, axis.negative, geometry) : -mitre;
+      if (high - low < 1.0e-3F) {
+        continue;
+      }
+
+      const float lateral = static_cast<float>(side) * offset;
+      for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
+        desc.add_cylinder(point_at(axis.positive, low, lateral, height),
+                          point_at(axis.positive, high, lateral, height),
+                          geometry.rail_radius,
+                          palette.wood_dark);
+      }
+    }
+  }
+}
+
+void add_span_braces(BuildingArchetypeDesc& desc,
+                     const WallPalette& palette,
+                     const WallGeometry& geometry,
+                     std::size_t dir,
+                     float length) {
+  const float lateral = rail_offset(geometry) * 1.24F;
+  const float radius = geometry.rail_radius * 0.82F;
+  const float near_end = length * 0.16F;
+  const float far_end = length * 0.86F;
+
+  for (int side = -1; side <= 1; side += 2) {
+    const float offset = static_cast<float>(side) * lateral;
+    desc.add_cylinder(point_at(dir, near_end, offset, 0.32F),
+                      point_at(dir, far_end, offset, geometry.upper_rail_y),
+                      radius,
+                      palette.wood_dark,
+                      BuildingStateMask::All,
+                      BuildingLODMask::Full);
+    if (geometry.cross_braced) {
+      desc.add_cylinder(point_at(dir, far_end, offset, 0.32F),
+                        point_at(dir, near_end, offset, geometry.upper_rail_y),
+                        radius,
+                        palette.wood_mid,
+                        BuildingStateMask::All,
+                        BuildingLODMask::Full);
+    }
+  }
+}
+
+void add_junction_post(BuildingArchetypeDesc& desc,
+                       const WallPalette& palette,
+                       const WallGeometry& geometry) {
+  const float top = geometry.stake_height + geometry.post_extra_height;
+  desc.add_cylinder(QVector3D(0.0F, 0.02F, 0.0F),
+                    QVector3D(0.0F, top, 0.0F),
+                    geometry.post_radius,
+                    palette.wood_mid);
+  desc.add_cone(QVector3D(0.0F, top - 0.01F, 0.0F),
+                QVector3D(0.0F, top + (geometry.tip_height * 1.1F), 0.0F),
+                geometry.post_radius * 1.02F,
+                palette.wood_dark);
+
+  for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
+    desc.add_cylinder(QVector3D(0.0F, height - 0.05F, 0.0F),
+                      QVector3D(0.0F, height + 0.05F, 0.0F),
+                      geometry.post_radius * 1.08F,
+                      binding_color(palette, geometry),
+                      BuildingStateMask::All,
+                      BuildingLODMask::Full);
+  }
+}
+
+void add_earth_berm(BuildingArchetypeDesc& desc,
+                    const WallPalette& palette,
+                    const WallGeometry& geometry,
+                    const WallLayout& layout) {
+  constexpr float k_sink = 0.03F;
+  const float half_height = (geometry.berm_height + k_sink) * 0.5F;
+  const float center_y = (geometry.berm_height - k_sink) * 0.5F;
+  const float half_width = geometry.berm_half_width;
+
+  desc.add_box(QVector3D(0.0F, center_y, 0.0F),
+               QVector3D(half_width, half_height, half_width),
+               palette.earth_light);
+
+  constexpr std::array<float, 2> k_rubble_t{0.34F, 0.72F};
+  for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
+    if (!is_present(layout, dir)) {
+      continue;
+    }
+
+    const float length = span_length(layout, dir, geometry);
+    if (length - half_width < 0.05F) {
+      continue;
+    }
+
+    const float along_half = (length - half_width) * 0.5F;
+    const float along_center = half_width + along_half;
+    desc.add_box(point_at(dir, along_center, 0.0F, center_y),
+                 extents_at(dir, along_half, half_height, half_width),
+                 palette.earth_light);
+
+    for (std::size_t i = 0; i < k_rubble_t.size(); ++i) {
+      const float along = half_width + ((length - half_width) * k_rubble_t[i]);
+      const float lateral = (i % 2 == 0) ? half_width : -half_width;
+      const float size = 0.055F + (0.015F * static_cast<float>((dir + i) % 3U));
+      desc.add_box(point_at(dir, along, lateral, size * 0.7F),
+                   QVector3D(size, size * 0.7F, size),
+                   (i % 2 == 0) ? palette.rubble : palette.earth_dark,
                    BuildingStateMask::All,
                    BuildingLODMask::Full);
     }
   }
 }
 
-void add_masonry_center(BuildingArchetypeDesc& desc, const WallPalette& palette) {
-  desc.add_box(
-      QVector3D(0.0F, 0.78F, 0.0F), QVector3D(0.52F, 1.40F, 0.52F), palette.wood_dark);
-  desc.add_box(QVector3D(0.0F, 1.52F, 0.0F),
-               QVector3D(0.58F, 0.14F, 0.58F),
+void add_masonry(BuildingArchetypeDesc& desc,
+                 const WallPalette& palette,
+                 const WallGeometry& geometry,
+                 const WallLayout& layout) {
+  const float half_width = geometry.masonry_half_width;
+  const float half_height = geometry.masonry_height * 0.5F;
+  const float center_y = half_height + 0.06F;
+  const float coping_y = center_y + half_height + 0.07F;
+
+  desc.add_box(QVector3D(0.0F, center_y + 0.06F, 0.0F),
+               QVector3D(half_width, half_height + 0.06F, half_width),
+               palette.wood_dark);
+  desc.add_box(QVector3D(0.0F, coping_y + 0.12F, 0.0F),
+               QVector3D(half_width + 0.05F, 0.07F, half_width + 0.05F),
                palette.masonry_accent);
   if (palette.horned_masonry) {
-    desc.add_box(QVector3D(0.0F, 1.83F, 0.0F),
-                 QVector3D(0.24F, 0.20F, 0.24F),
+    desc.add_box(QVector3D(0.0F, coping_y + 0.36F, 0.0F),
+                 QVector3D(0.11F, 0.17F, 0.11F),
                  palette.wood_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.0F, 2.08F, 0.0F),
-                 QVector3D(0.10F, 0.12F, 0.10F),
-                 palette.masonry_accent,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+  }
+
+  constexpr int k_merlons = 3;
+  for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
+    if (!is_present(layout, dir)) {
+      continue;
+    }
+
+    const float length = span_length(layout, dir, geometry);
+    if (length - half_width < 0.05F) {
+      continue;
+    }
+
+    const float along_half = (length - half_width) * 0.5F;
+    const float along_center = half_width + along_half;
+    desc.add_box(point_at(dir, along_center, 0.0F, center_y),
+                 extents_at(dir, along_half, half_height, half_width * 0.82F),
+                 palette.wood_mid);
+    desc.add_box(point_at(dir, along_center, 0.0F, coping_y),
+                 extents_at(dir, along_half, 0.07F, half_width * 0.94F),
+                 palette.masonry_accent);
+
+    for (int i = 0; i < k_merlons; ++i) {
+      const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_merlons);
+      const float along = half_width + ((length - half_width) * t);
+      desc.add_box(point_at(dir, along, 0.0F, coping_y + 0.19F),
+                   extents_at(dir, 0.09F, 0.13F, half_width * 0.86F),
+                   (i % 2 == 0) ? palette.masonry_accent : palette.wood_light,
+                   BuildingStateMask::All,
+                   BuildingLODMask::Full);
+    }
   }
 }
 
-void add_earthwork_span(BuildingArchetypeDesc& desc,
-                        const WallPalette& palette,
-                        float direction_x,
-                        float direction_z,
-                        float length) {
-  const bool along_x = direction_x != 0.0F;
-  const QVector3D center(
-      direction_x * length * 0.5F, 0.12F, direction_z * length * 0.5F);
-  desc.add_box(center,
-               along_x ? QVector3D(length + 0.12F, 0.20F, 0.68F)
-                       : QVector3D(0.68F, 0.20F, length + 0.12F),
-               palette.shadow);
-  desc.add_box(QVector3D(center.x(), 0.24F, center.z()),
-               along_x ? QVector3D(length + 0.08F, 0.10F, 0.52F)
-                       : QVector3D(0.52F, 0.10F, length + 0.08F),
-               palette.wood_dark,
-               BuildingStateMask::All,
-               BuildingLODMask::Full);
+void add_palisade(BuildingArchetypeDesc& desc,
+                  const WallPalette& palette,
+                  const WallGeometry& geometry,
+                  const WallLayout& layout) {
+  if (geometry.earthwork_base) {
+    add_earth_berm(desc, palette, geometry, layout);
+  }
+
+  add_junction_post(desc, palette, geometry);
+  add_rails(desc, palette, geometry, layout);
+
+  for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
+    if (!is_present(layout, dir)) {
+      continue;
+    }
+    const float length = span_length(layout, dir, geometry);
+    add_span_stakes(
+        desc, palette, geometry, dir, length, layout[dir] == SpanKind::Open);
+    add_span_braces(desc, palette, geometry, dir, rail_reach(layout, dir, geometry));
+  }
 }
 
 } // namespace
@@ -364,72 +454,13 @@ auto build_wall_archetype_set(std::string_view name_prefix,
 
   for (int i = 0; i < static_cast<int>(out.size()); ++i) {
     const auto variant = static_cast<WallVariant>(i);
-    const auto mask = variant_mask(variant);
+    const auto layout = layout_for(variant);
     BuildingArchetypeDesc desc(std::string(name_prefix) + "_" + std::to_string(i));
 
     if (geometry.solid_masonry) {
-      add_masonry_center(desc, palette);
-      if (variant == WallVariant::Isolated || variant == WallVariant::End ||
-          (mask & k_connection_east) != 0U) {
-        add_masonry_span(desc, palette, 1.0F, 0.0F, geometry.connected_span_length);
-      }
-      if (variant == WallVariant::Isolated || variant == WallVariant::End ||
-          (mask & k_connection_west) != 0U) {
-        add_masonry_span(desc, palette, -1.0F, 0.0F, geometry.connected_span_length);
-      }
-      if ((mask & k_connection_north) != 0U) {
-        add_masonry_span(desc, palette, 0.0F, -1.0F, geometry.connected_span_length);
-      }
-      if ((mask & k_connection_south) != 0U) {
-        add_masonry_span(desc, palette, 0.0F, 1.0F, geometry.connected_span_length);
-      }
-      out[static_cast<std::size_t>(i)] =
-          build_building_archetype(desc, BuildingState::Normal);
-      continue;
-    }
-
-    add_center_post(desc, palette, geometry);
-
-    if (geometry.earthwork_base) {
-      if (variant == WallVariant::Isolated || variant == WallVariant::End ||
-          (mask & k_connection_east) != 0U) {
-        add_earthwork_span(desc, palette, 1.0F, 0.0F, geometry.connected_span_length);
-      }
-      if (variant == WallVariant::Isolated || variant == WallVariant::End ||
-          (mask & k_connection_west) != 0U) {
-        add_earthwork_span(desc, palette, -1.0F, 0.0F, geometry.connected_span_length);
-      }
-      if ((mask & k_connection_north) != 0U) {
-        add_earthwork_span(desc, palette, 0.0F, -1.0F, geometry.connected_span_length);
-      }
-      if ((mask & k_connection_south) != 0U) {
-        add_earthwork_span(desc, palette, 0.0F, 1.0F, geometry.connected_span_length);
-      }
-    }
-
-    if (variant == WallVariant::Isolated) {
-      add_x_span(desc, palette, geometry, -1.0F, geometry.open_span_length, true);
-      add_x_span(desc, palette, geometry, 1.0F, geometry.open_span_length, true);
-    } else if (variant == WallVariant::End) {
-      add_x_span(desc, palette, geometry, 1.0F, geometry.connected_span_length, false);
-      add_x_span(desc, palette, geometry, -1.0F, geometry.open_span_length, true);
+      add_masonry(desc, palette, geometry, layout);
     } else {
-      if ((mask & k_connection_east) != 0U) {
-        add_x_span(
-            desc, palette, geometry, 1.0F, geometry.connected_span_length, false);
-      }
-      if ((mask & k_connection_west) != 0U) {
-        add_x_span(
-            desc, palette, geometry, -1.0F, geometry.connected_span_length, false);
-      }
-      if ((mask & k_connection_north) != 0U) {
-        add_z_span(
-            desc, palette, geometry, -1.0F, geometry.connected_span_length, false);
-      }
-      if ((mask & k_connection_south) != 0U) {
-        add_z_span(
-            desc, palette, geometry, 1.0F, geometry.connected_span_length, false);
-      }
+      add_palisade(desc, palette, geometry, layout);
     }
 
     out[static_cast<std::size_t>(i)] =

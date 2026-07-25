@@ -70,11 +70,11 @@ void CursorManager::update_cursor_shape(QQuickWindow* window) {
 
   if (m_current_cursor != desired_cursor) {
     m_current_cursor = desired_cursor;
-    QPointer<QQuickWindow> safe_window(window);
+    QPointer<QQuickWindow> const safe_window(window);
     QMetaObject::invokeMethod(
         window,
         [safe_window, desired_cursor]() {
-          if (safe_window) {
+          if (safe_window != nullptr) {
             safe_window->setCursor(desired_cursor);
           }
         },
