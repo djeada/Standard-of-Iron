@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
 import StandardOfIron 1.0
+import "design/layouts" as DesignLayouts
 
 ApplicationWindow {
     id: mainWindow
@@ -32,6 +33,11 @@ ApplicationWindow {
     title: qsTr("Standard of Iron - RTS Game")
     color: Theme.bg
     Component.onCompleted: sync_audio_context()
+
+    DesignLayouts.GameShell {
+        anchors.fill: parent
+        z: -10
+    }
 
     GameView {
         id: gameViewItem

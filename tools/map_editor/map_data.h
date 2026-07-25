@@ -139,6 +139,9 @@ public:
   [[nodiscard]] const QJsonObject& biome() const { return m_biome; }
   void set_biome(const QJsonObject& biome);
 
+  [[nodiscard]] const QJsonObject& rain() const { return m_rain; }
+  void set_rain(const QJsonObject& rain);
+
   [[nodiscard]] const QVector<TerrainElement>& terrain_elements() const {
     return m_terrain;
   }
@@ -189,6 +192,7 @@ public:
 
   [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const { return m_fog_zones; }
   void add_fog_zone(const FogZoneElement& element);
+  void update_fog_zone(int index, const FogZoneElement& element);
   void remove_fog_zone(int index);
 
   void execute_command(std::unique_ptr<Command> cmd);

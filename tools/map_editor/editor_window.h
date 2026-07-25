@@ -7,7 +7,12 @@
 
 #include "map_canvas.h"
 #include "map_data.h"
+#include "mission_data.h"
+#include "mission_panel.h"
 #include "tool_panel.h"
+
+class QScrollArea;
+class QTabWidget;
 
 namespace MapEditor {
 
@@ -22,6 +27,7 @@ public:
 
 private slots:
   void new_map();
+  void new_mission();
   void open_map();
   void save_map();
   void save_map_as();
@@ -39,6 +45,10 @@ private slots:
   void on_selection_changed(int element_type, int index);
   void update_selection_info();
   void refresh_json_preview();
+  void on_mission_map_path_changed(const QString& map_path);
+  void validate_mission();
+  void launch_mission_game();
+  void launch_mission_arena();
 
 private:
   void setup_ui();
@@ -50,13 +60,25 @@ private:
   void show_save_failure(const QString& file_path, const QString& error_message);
   [[nodiscard]] QString default_map_dialog_path(const QString& fallback_name) const;
   bool save_map_to_path(const QString& file_path, bool update_current_path);
+  bool save_mission_to_path(const QString& file_path, bool update_current_path);
+  bool save_current_document();
+  bool load_linked_map(const QString& authored_path, QString* out_error = nullptr);
+  [[nodiscard]] QString resolve_authored_path(const QString& authored_path) const;
+  [[nodiscard]] QString repository_root() const;
+  [[nodiscard]] QString tool_executable(const QString& name) const;
+  bool validate_current_mission(bool show_success);
+  void set_mission_mode(bool enabled);
   bool maybe_save();
   void closeEvent(QCloseEvent* event) override;
   void refresh_status_label();
 
   MapData* m_map_data = nullptr;
+  MissionData* m_mission_data = nullptr;
   MapCanvas* m_canvas = nullptr;
   ToolPanel* m_tool_panel = nullptr;
+  MissionPanel* m_mission_panel = nullptr;
+  QTabWidget* m_sidebar_tabs = nullptr;
+  QScrollArea* m_mission_scroll = nullptr;
   QLabel* m_feedback_label = nullptr;
   QLabel* m_tool_label = nullptr;
   QLabel* m_dimensions_label = nullptr;
@@ -65,9 +87,11 @@ private:
   QLabel* m_file_label = nullptr;
   QPlainTextEdit* m_json_preview = nullptr;
   QString m_current_file_path;
+  QString m_linked_map_file_path;
   QString m_tool_status_text = "Tool: Select";
   QString m_selection_status_text;
   bool m_hint_active = false;
+  bool m_mission_mode = false;
 
   QAction* m_undo_action = nullptr;
   QAction* m_redo_action = nullptr;
