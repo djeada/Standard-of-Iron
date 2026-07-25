@@ -62,6 +62,7 @@ public:
     GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
