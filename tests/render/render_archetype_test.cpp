@@ -659,10 +659,6 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
 TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   using namespace Render::GL;
 
-  // Take the registration hook as a concrete function pointer rather than
-  // `auto`: through a generic lambda the call is dependent, so const-correctness
-  // analysis cannot see that it mutates `registry` and keeps proposing a `const`
-  // that will not compile.
   using RegisterRendererFn = void (*)(EntityRendererRegistry&);
   auto render_bounds = [](RegisterRendererFn register_renderer_fn,
                           const char* key,

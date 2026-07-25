@@ -259,7 +259,7 @@ auto build_player_state_map(int owner_id, int population_cap) -> QVariantMap {
   return state;
 }
 
-} 
+} // namespace
 
 GameEngine::GameEngine(QObject* parent)
     : QObject(parent)

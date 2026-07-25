@@ -71,7 +71,7 @@ QString GraphicsSettingsProxy::get_quality_description() const {
   case Render::GraphicsQuality::Ultra:
     return tr("Maximum quality. Full detail always. Best hardware recommended.");
   }
-  return QString();
+  return {};
 }
 
-} 
+} // namespace App::Models

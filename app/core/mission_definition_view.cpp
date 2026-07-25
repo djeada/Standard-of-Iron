@@ -260,7 +260,7 @@ auto build_campaign_player_config(const QString& nation,
   return player;
 }
 
-} 
+} // namespace
 
 auto build_mission_definition_map(const Game::Mission::MissionDefinition& mission)
     -> QVariantMap {

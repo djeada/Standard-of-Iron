@@ -15,12 +15,12 @@ class FogRenderer;
 class MapBoundaryFogRenderer;
 class AmbientFogRenderer;
 class RainRenderer;
-} 
+} // namespace Render::GL
 
 namespace Game::Systems {
 class VictoryService;
 class RainManager;
-} 
+} // namespace Game::Systems
 
 class MinimapManager;
 class VisibilityCoordinator;

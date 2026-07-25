@@ -177,4 +177,4 @@ inline void save_ambience_volume(float volume) {
   save_audio_volume(kAmbienceVolumeKey, volume, "ambience");
 }
 
-} 
+} // namespace App::Core::UserSettings

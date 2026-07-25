@@ -11,7 +11,7 @@ class Camera;
 namespace Game::Systems {
 class CameraService;
 struct LevelSnapshot;
-} 
+} // namespace Game::Systems
 
 class CameraController {
 public:

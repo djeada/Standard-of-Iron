@@ -16,12 +16,12 @@ namespace Engine::Core {
 class Entity;
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems {
 class PickingService;
 class SelectionController;
-} 
+} // namespace Game::Systems
 
 namespace Render::GL {
 class Camera;
@@ -175,4 +175,4 @@ private:
                                                         int local_owner_id) -> bool;
 };
 
-} 
+} // namespace App::Core

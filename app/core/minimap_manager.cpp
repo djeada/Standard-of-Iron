@@ -31,14 +31,14 @@ namespace {
 [[nodiscard]] auto hash_float(float value) noexcept -> std::uint64_t {
   return static_cast<std::uint64_t>(std::bit_cast<std::uint32_t>(value));
 }
-} 
+} // namespace
 
 MinimapManager::MinimapManager() = default;
 
 MinimapManager::~MinimapManager() = default;
 
 bool MinimapManager::consume_dirty_flag() {
-  bool was_dirty = m_dirty;
+  bool const was_dirty = m_dirty;
   m_dirty = false;
   return was_dirty;
 }
@@ -137,7 +137,7 @@ void MinimapManager::clear_fog() {
 void MinimapManager::update_units(Engine::Core::World* world,
                                   Game::Systems::SelectionSystem* selection_system,
                                   int local_owner_id) {
-  if (m_minimap_fog_image.isNull() || !m_unit_layer || !world) {
+  if (m_minimap_fog_image.isNull() || !m_unit_layer || (world == nullptr)) {
     return;
   }
 
@@ -147,7 +147,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
   markers.reserve(EXPECTED_MAX_UNITS);
 
   std::unordered_set<Engine::Core::EntityID> selected_ids;
-  if (selection_system) {
+  if (selection_system != nullptr) {
     const auto& sel = selection_system->get_selected_units();
     selected_ids.insert(sel.begin(), sel.end());
   }
@@ -160,7 +160,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
 
     for (const auto& [entity_id, entity] : entities) {
       const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (!unit) {
+      if (unit == nullptr) {
         continue;
       }
 
@@ -169,7 +169,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
       }
 
       const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (!transform) {
+      if (transform == nullptr) {
         continue;
       }
 
@@ -177,7 +177,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
       marker.world_x = transform->position.x;
       marker.world_z = transform->position.z;
       marker.owner_id = unit->owner_id;
-      marker.is_selected = selected_ids.count(entity_id) > 0;
+      marker.is_selected = selected_ids.contains(entity_id);
       marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
 
       markers.push_back(marker);
@@ -230,7 +230,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
 void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
                                             float screen_width,
                                             float screen_height) {
-  if (m_minimap_image.isNull() || !m_camera_viewport_layer || !camera) {
+  if (m_minimap_image.isNull() || !m_camera_viewport_layer || (camera == nullptr)) {
     return;
   }
 

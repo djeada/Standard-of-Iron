@@ -1141,4 +1141,4 @@ void CommandController::disable_run_mode_for_selected() {
   emit run_mode_changed(false);
 }
 
-} 
+} // namespace App::Controllers
