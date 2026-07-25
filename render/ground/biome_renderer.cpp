@@ -10,7 +10,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <numbers>
 #include <optional>
+#include <random>
 #include <vector>
 
 #include "../gl/buffer.h"
@@ -31,7 +33,12 @@ using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
 constexpr float k_grass_height_scale = 1.12F;
-constexpr float k_grass_width_scale = 1.18F;
+constexpr float k_grass_width_scale = 1.55F;
+
+constexpr float k_grass_full_screen_fraction = 0.0016F;
+constexpr float k_grass_min_screen_fraction = 0.0007F;
+constexpr float k_grass_cull_screen_fraction = 0.0004F;
+constexpr float k_grass_min_density = 0.10F;
 
 inline auto section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
@@ -74,6 +81,7 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   grass_params.wind_speed = wind_profile.sway_speed;
   grass_params.light_direction = m_light_direction;
   grass_params.time = 0.0F;
+  grass_params.ambient_boost = profiles.surface.terrain_ambient_boost * 0.95F;
 
   generate_grass_instances();
 }
@@ -102,7 +110,39 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Grass;
   cmd.grass = params;
-  Scatter::submit_visible_chunks(renderer, m_grass_state, cmd);
+
+  const auto* camera = renderer.camera();
+  if (camera == nullptr || m_typical_blade_height <= 0.0F) {
+    Scatter::submit_visible_chunks(renderer, m_grass_state, cmd);
+    return;
+  }
+
+  const QVector3D camera_position = camera->get_position();
+  const float tan_half_fov = std::tan(std::clamp(camera->get_fov(), 1.0F, 179.0F) *
+                                      0.5F * std::numbers::pi_v<float> / 180.0F);
+  const float blade_height = m_typical_blade_height;
+
+  Scatter::submit_visible_chunks_lod(
+      renderer,
+      m_grass_state,
+      cmd,
+      [&](const QVector3D& chunk_center, std::size_t chunk_size) -> std::size_t {
+        const float distance =
+            std::max((chunk_center - camera_position).length(), 0.001F);
+        const float screen_fraction =
+            blade_height / std::max(2.0F * distance * tan_half_fov, 1e-6F);
+        if (screen_fraction < k_grass_cull_screen_fraction) {
+          return 0;
+        }
+        const float detail = smoothstep(
+            k_grass_min_screen_fraction, k_grass_full_screen_fraction, screen_fraction);
+        const float keep = k_grass_min_density + (1.0F - k_grass_min_density) * detail;
+        if (keep >= 0.999F) {
+          return chunk_size;
+        }
+        return std::max<std::size_t>(
+            1U, static_cast<std::size_t>(float(chunk_size) * keep));
+      });
 }
 
 void BiomeRenderer::clear() {
@@ -446,6 +486,13 @@ void BiomeRenderer::generate_grass_instances() {
       }
     }
   }
+
+  std::mt19937 shuffle_rng(m_noise_seed ^ 0x5f3aC71dU);
+  std::shuffle(grass_instances.begin(), grass_instances.end(), shuffle_rng);
+
+  m_typical_blade_height =
+      0.5F * (scatter_profile.blade_height_min + scatter_profile.blade_height_max) *
+      tile_safe * 0.5F * k_grass_height_scale;
 
   grass_instance_count = grass_instances.size();
   grass_instances_dirty = grass_instance_count > 0;

@@ -51,6 +51,7 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
+  float m_typical_blade_height = 0.0F;
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 
   Render::Ground::Scatter::FilteredRendererState<GrassInstanceGpu, GrassBatchParams>
