@@ -118,4 +118,4 @@ public:
       -> FinalizeSkirmishLoadEffects;
 };
 
-} // namespace App::Core
+} 

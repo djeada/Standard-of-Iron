@@ -103,7 +103,7 @@ inline void draw_rally_flag_if_any(const DrawContext& p,
                1.0F);
       if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
           cloth->banner_shader != nullptr) {
-        BannerShaderScope shader_scope(out, cloth->banner_shader);
+        BannerShaderScope const shader_scope(out, cloth->banner_shader);
         out.banner(cloth->cloth_mesh,
                    flag.pennant,
                    flag.pennant_color,
@@ -139,7 +139,7 @@ inline void draw_banner_with_tassels(const DrawContext& p,
 
   if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
       cloth->banner_shader != nullptr) {
-    BannerShaderScope shader_scope(out, cloth->banner_shader);
+    BannerShaderScope const shader_scope(out, cloth->banner_shader);
     out.banner(cloth->cloth_mesh,
                p.model * banner_transform,
                banner_color,
@@ -149,8 +149,9 @@ inline void draw_banner_with_tassels(const DrawContext& p,
                material_id);
   } else {
 
-    QMatrix4x4 box_transform = Render::Geom::BannerCloth::generate_banner_transform(
-        banner_center, half_width, half_height, 0.02F);
+    QMatrix4x4 const box_transform =
+        Render::Geom::BannerCloth::generate_banner_transform(
+            banner_center, half_width, half_height, 0.02F);
     out.mesh(unit, p.model * box_transform, banner_color, white, 1.0F, material_id);
   }
 }

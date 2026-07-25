@@ -26,4 +26,4 @@ public:
   Q_INVOKABLE [[nodiscard]] float get_ambience_volume();
 };
 
-} // namespace App::Models
+} 

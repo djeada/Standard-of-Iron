@@ -59,7 +59,7 @@ auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
   return std::nullopt;
 }
 
-} // namespace
+} 
 
 auto CommanderModeCoordinator::store_rts_selection(
     const CommanderSelectionContext& context) const -> CommanderSelectionEffects {
@@ -523,4 +523,4 @@ auto CommanderModeCoordinator::has_selected_local_barracks(Engine::Core::World* 
   return false;
 }
 
-} // namespace App::Core
+} 

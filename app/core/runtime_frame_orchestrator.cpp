@@ -21,7 +21,7 @@ constexpr float k_minimap_unit_update_interval = 0.05F;
 constexpr float k_simulation_step = 1.0F / 60.0F;
 constexpr float k_max_accumulated_simulation_time = 0.25F;
 constexpr int k_max_simulation_steps_per_frame = 8;
-} // namespace
+} 
 
 void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
                                       RuntimeFrameState& state,

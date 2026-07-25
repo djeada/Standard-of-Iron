@@ -100,7 +100,7 @@ auto existing_positions(const std::vector<ExistingOwnerSpawnAnchor>& anchors,
   return positions;
 }
 
-} // namespace
+} 
 
 auto resolve_commander_troop(const QString& nation,
                              const std::optional<QString>& configured_commander)
@@ -164,4 +164,4 @@ auto resolve_commander_position(
   return {.position = fallback, .space = CommanderPositionSpace::Mission};
 }
 
-} // namespace App::Core
+} 

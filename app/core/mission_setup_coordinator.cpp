@@ -67,7 +67,7 @@ auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bo
          behavior == Game::Mission::UnitBehavior::Patrol;
 }
 
-} // namespace
+} 
 
 auto MissionSetupCoordinator::apply_mission_setup(
     const MissionSetupApplyContext& ctx) const -> MissionSetupEffects {
@@ -922,4 +922,4 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
   return effects;
 }
 
-} // namespace App::Core
+} 

@@ -51,7 +51,7 @@ void restore_mission_context(const QJsonObject& metadata,
   campaign_manager->set_mission_context(mission_context);
 }
 
-} // namespace
+} 
 
 auto SaveLoadCoordinator::to_runtime_snapshot(const SaveRuntimeContext& context) const
     -> Game::Systems::RuntimeSnapshot {
@@ -188,4 +188,4 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
           .emit_owner_info_changed = true};
 }
 
-} // namespace App::Core
+} 

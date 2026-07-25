@@ -124,7 +124,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
          (major == k_required_gl_major && minor >= k_required_gl_minor);
 }
 
-} // namespace
+} 
 #endif
 
 #include "app/core/game_engine.h"

@@ -34,4 +34,4 @@ resolve_commander_troop(const QString& nation,
     const std::vector<ExistingOwnerSpawnAnchor>& existing_owner_spawns,
     const Game::Mission::Position& fallback) -> ResolvedCommanderPosition;
 
-} // namespace App::Core
+} 

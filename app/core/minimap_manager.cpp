@@ -31,7 +31,7 @@ namespace {
 [[nodiscard]] auto hash_float(float value) noexcept -> std::uint64_t {
   return static_cast<std::uint64_t>(std::bit_cast<std::uint32_t>(value));
 }
-} // namespace
+} 
 
 MinimapManager::MinimapManager() = default;
 

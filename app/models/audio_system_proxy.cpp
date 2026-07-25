@@ -19,7 +19,7 @@ void play_ui_sound(const QString& sound_id, float volume, int priority) {
       sound_id.toStdString(), volume, false, priority, AudioCategory::SFX);
 }
 
-} // namespace
+} 
 
 AudioSystemProxy::AudioSystemProxy(QObject* parent)
     : QObject(parent) {
@@ -75,4 +75,4 @@ auto AudioSystemProxy::get_ambience_volume() -> float {
   return AudioSystem::get_instance().get_ambience_volume();
 }
 
-} // namespace App::Models
+} 

@@ -10,12 +10,12 @@ namespace Engine::Core {
 class World;
 class Entity;
 using EntityID = unsigned int;
-} // namespace Engine::Core
+} 
 
 namespace Game::Systems {
 class SelectionSystem;
 class PickingService;
-} // namespace Game::Systems
+} 
 
 namespace App::Controllers {
 
@@ -125,4 +125,4 @@ private:
   static void reset_movement(Engine::Core::Entity* entity);
 };
 
-} // namespace App::Controllers
+} 

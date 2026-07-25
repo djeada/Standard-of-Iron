@@ -26,12 +26,12 @@ class TerrainScatterManager;
 class FogRenderer;
 class MapBoundaryFogRenderer;
 class RainRenderer;
-} // namespace Render::GL
+} 
 
 namespace Game::Systems {
 struct LevelSnapshot;
 class VictoryService;
-} // namespace Game::Systems
+} 
 
 class MinimapManager;
 struct LevelLoadResult {

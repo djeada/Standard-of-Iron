@@ -35,7 +35,7 @@ auto window_local_cursor_pos(QQuickWindow* window) -> QPoint {
   }
   return local_pos;
 }
-} // namespace
+} 
 
 CursorManager::CursorManager(QObject* parent)
     : QObject(parent) {

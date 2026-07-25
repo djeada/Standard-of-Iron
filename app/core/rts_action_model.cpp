@@ -320,7 +320,7 @@ auto classify_toggle_state(const ActionStatus& status) -> QString {
   return QStringLiteral("mixed");
 }
 
-} // namespace
+} 
 
 namespace App::Core {
 
@@ -451,4 +451,4 @@ auto action_id_for_cursor_mode(CursorMode mode) -> QString {
   return {};
 }
 
-} // namespace App::Core
+} 

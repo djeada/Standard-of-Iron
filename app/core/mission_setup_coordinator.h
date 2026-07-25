@@ -85,4 +85,4 @@ public:
              const PendingMissionWave& wave) const -> MissionWaveEffects;
 };
 
-} // namespace App::Core
+} 

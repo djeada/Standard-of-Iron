@@ -13,7 +13,7 @@ class FogRenderer;
 class MapBoundaryFogRenderer;
 class AmbientFogRenderer;
 class RainRenderer;
-} // namespace Render::GL
+} 
 
 namespace Engine::Core {
 class World;

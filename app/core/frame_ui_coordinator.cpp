@@ -59,7 +59,7 @@ auto has_selected_local_barracks(Engine::Core::World* world,
   return false;
 }
 
-} // namespace
+} 
 
 namespace App::Core::FrameUiCoordinator {
 
@@ -250,4 +250,4 @@ auto civilian_delivery_available(const CivilianDeliveryContext& context) -> bool
   return false;
 }
 
-} // namespace App::Core::FrameUiCoordinator
+} 
