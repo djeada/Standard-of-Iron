@@ -1770,7 +1770,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                  2,
                  3,
                  {-10.0F, 0.0F, 0.0F},
-                 {3.0F, 0.0F, 0.0F}),
+                 {2.0F, 0.0F, 0.0F}),
         breach,
         building(QStringLiteral("right_wall"),
                  Game::Units::SpawnType::WallSegment,
@@ -1778,7 +1778,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                  2,
                  3,
                  {4.0F, 0.0F, 0.0F},
-                 {3.0F, 0.0F, 0.0F}),
+                 {2.0F, 0.0F, 0.0F}),
     };
     auto attack = at(0.4F,
                      Command::Attack,
@@ -2470,15 +2470,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                  Nation::RomanRepublic,
                  1,
                  9,
-                 {-10.0F, 0.0F, -8.5F},
-                 {2.5F, 0.0F, 0.0F}),
+                 {-10.0F, 0.0F, -8.0F},
+                 {2.0F, 0.0F, 0.0F}),
         building(QStringLiteral("showcase_punic_wall"),
                  Game::Units::SpawnType::WallSegment,
                  Nation::Carthage,
                  2,
                  9,
-                 {-10.0F, 0.0F, 6.5F},
-                 {2.5F, 0.0F, 0.0F}),
+                 {-10.0F, 0.0F, 6.0F},
+                 {2.0F, 0.0F, 0.0F}),
     };
     s.resource_patches = {
         {QStringLiteral("magic_shrine"), 1, {-8.0F, 0.0F, 10.5F}, {}, 0.78F},
@@ -2921,6 +2921,123 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations = {
         expectation(Expect::GroupIsRendered, QStringLiteral("water_observer")),
         expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_wall_corner_showcase_id),
+        QStringLiteral("Wall Corner Showcase"),
+        QStringLiteral(
+            "Closed Roman and Carthaginian palisade rings that exercise every "
+            "join shape: four outer corners, a tee spur reaching an inner "
+            "corner, a four way crossing, free ends and an isolated stub. The "
+            "fixed camera frames both rings so joins and wall bases can be "
+            "reviewed for clean merges without overlaps, duplicate posts, or "
+            "floor gaps."),
+        8.0F,
+        {34.0F, 44.0F, 22.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 1.0F);
+
+    // A closed square ring (segment spacing 2) yields four genuine wall corners:
+    // the north/south runs own the corner cells, the west/east runs fill the
+    // gaps between them so no two segments share a cell.
+    auto ring = [](const QString& prefix,
+                   Nation nation,
+                   int owner,
+                   float cx) -> std::vector<ArenaScenarioGroup> {
+      return {
+          building(prefix + QStringLiteral("_north"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   7,
+                   {cx, 0.0F, -6.0F},
+                   {2.0F, 0.0F, 0.0F}),
+          building(prefix + QStringLiteral("_south"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   7,
+                   {cx, 0.0F, 6.0F},
+                   {2.0F, 0.0F, 0.0F}),
+          building(prefix + QStringLiteral("_west"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   5,
+                   {cx - 6.0F, 0.0F, 0.0F},
+                   {0.0F, 0.0F, 2.0F},
+                   90.0F),
+          building(prefix + QStringLiteral("_east"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   5,
+                   {cx + 6.0F, 0.0F, 0.0F},
+                   {0.0F, 0.0F, 2.0F},
+                   90.0F),
+          // Interior spur off the north run: creates a tee at (cx, -6) and a
+          // free end at (cx, -2) for inner-corner review.
+          building(prefix + QStringLiteral("_spur"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   2,
+                   {cx, 0.0F, -3.0F},
+                   {0.0F, 0.0F, 2.0F},
+                   90.0F),
+          // Stubs either side of the west run's middle cell turn it into a four
+          // way crossing and leave a free end on each side of it.
+          building(prefix + QStringLiteral("_cross_inner"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   1,
+                   {cx - 4.0F, 0.0F, 0.0F}),
+          building(prefix + QStringLiteral("_cross_outer"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   1,
+                   {cx - 8.0F, 0.0F, 0.0F}),
+          // Detached stub: the isolated variant, with no neighbour to merge to.
+          building(prefix + QStringLiteral("_stub"),
+                   Game::Units::SpawnType::WallSegment,
+                   nation,
+                   owner,
+                   1,
+                   {cx + 2.0F, 0.0F, 2.0F}),
+      };
+    };
+
+    const auto roman =
+        ring(QStringLiteral("roman_ring"), Nation::RomanRepublic, 1, -8.0F);
+    const auto punic = ring(QStringLiteral("punic_ring"), Nation::Carthage, 2, 8.0F);
+    s.groups.insert(s.groups.end(), roman.begin(), roman.end());
+    s.groups.insert(s.groups.end(), punic.begin(), punic.end());
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("roman_ring_north"),
+                               QStringLiteral("roman_ring_south"),
+                               QStringLiteral("roman_ring_west"),
+                               QStringLiteral("roman_ring_east"),
+                               QStringLiteral("roman_ring_spur"),
+                               QStringLiteral("roman_ring_cross_inner"),
+                               QStringLiteral("roman_ring_cross_outer"),
+                               QStringLiteral("roman_ring_stub"),
+                               QStringLiteral("punic_ring_north"),
+                               QStringLiteral("punic_ring_south"),
+                               QStringLiteral("punic_ring_west"),
+                               QStringLiteral("punic_ring_east"),
+                               QStringLiteral("punic_ring_spur"),
+                               QStringLiteral("punic_ring_cross_inner"),
+                               QStringLiteral("punic_ring_cross_outer"),
+                               QStringLiteral("punic_ring_stub")});
     result.push_back(std::move(s));
   }
 

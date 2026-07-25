@@ -77,6 +77,7 @@
 #include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
+#include "terrain_alignment.h"
 #include "unit_spawn_options.h"
 #include "utils/resource_utils.h"
 
@@ -451,6 +452,13 @@ void ArenaViewport::paintGL() {
   sanitize_selection();
   apply_keyboard_camera_controls(real_dt);
   m_camera->update(real_dt);
+  if (m_capture_orbit_ready && m_capture_orbit_speed != 0.0F) {
+    m_capture_orbit_yaw += m_capture_orbit_speed * real_dt;
+    m_camera->set_rts_view(m_capture_orbit_center,
+                           m_capture_orbit_view.distance,
+                           m_capture_orbit_view.angle,
+                           m_capture_orbit_view.yaw + m_capture_orbit_yaw);
+  }
 
   if (!m_paused) {
     m_world->update(simulation_dt);
@@ -525,8 +533,9 @@ void ArenaViewport::paintGL() {
   timings.draw_calls = render_profile.draw_calls;
 
   bool const suppress_ui_overlays =
-      m_terrain_review_mode || (m_scenario_runner != nullptr &&
-                                m_scenario_runner->definition().suppress_ui_overlays);
+      m_clean_capture || m_terrain_review_mode ||
+      (m_scenario_runner != nullptr &&
+       m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
     {
       QPainter painter(this);
@@ -1886,6 +1895,40 @@ void ArenaViewport::spawn_world_prop() {
   reconfigure_terrain_from_state();
 }
 
+void ArenaViewport::place_scenario_resource_patches(
+    const Arena::ArenaScenarioDefinition& definition) {
+  if (definition.resource_patches.empty()) {
+    return;
+  }
+
+  // Wide enough to keep a trunk or ore heap clear of a wall run or a roof
+  // overhang once the prop is grown to full size.
+  constexpr float k_prop_building_clearance = 1.6F;
+
+  auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
+  const auto& terrain_field = Game::Map::TerrainService::instance().terrain_field();
+
+  for (const auto& patch : definition.resource_patches) {
+    for (int index = 0; index < patch.count; ++index) {
+      const QVector3D world_position = patch.origin + patch.spacing * index;
+      if (collision.is_circle_overlapping_building(
+              world_position.x(), world_position.z(), k_prop_building_clearance)) {
+        continue;
+      }
+
+      const QVector2D grid_position =
+          grid_position_from_world(terrain_field, world_position);
+      Game::Map::WorldProp prop;
+      prop.type = world_prop_type_from_string(patch.prop_type);
+      prop.x = grid_position.x();
+      prop.z = grid_position.y();
+      prop.scale = patch.scale;
+      prop.persistent = true;
+      m_world_props.push_back(prop);
+    }
+  }
+}
+
 void ArenaViewport::clear_world_props() {
   if (m_world_props.empty()) {
     return;
@@ -2190,25 +2233,6 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       !m_arena_elevation_patches.empty()) {
     reconfigure_terrain_from_state();
   }
-  if (!definition->resource_patches.empty()) {
-    const auto& terrain_field = Game::Map::TerrainService::instance().terrain_field();
-    for (const auto& patch : definition->resource_patches) {
-      for (int index = 0; index < patch.count; ++index) {
-        const QVector3D world_position = patch.origin + patch.spacing * index;
-        const QVector2D grid_position =
-            grid_position_from_world(terrain_field, world_position);
-        Game::Map::WorldProp prop;
-        prop.type = world_prop_type_from_string(patch.prop_type);
-        prop.x = grid_position.x();
-        prop.z = grid_position.y();
-        prop.scale = patch.scale;
-        prop.persistent = true;
-        m_world_props.push_back(prop);
-      }
-    }
-    reconfigure_terrain_from_state();
-  }
-
   auto& owners = Game::Systems::OwnerRegistry::instance();
   auto& nations = Game::Systems::NationRegistry::instance();
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
@@ -2288,6 +2312,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
                                    ? scenario_origin + *definition->camera_focus
                                    : scenario_center(m_world.get(), entities);
       m_camera->set_rts_view(center, view.distance, view.angle, view.yaw);
+      m_capture_orbit_center = center;
+      m_capture_orbit_view = view;
+      m_capture_orbit_yaw = 0.0F;
+      m_capture_orbit_ready = true;
     }
   };
   host.set_force_full_creature_lod = [this](bool enabled) {
@@ -2322,6 +2350,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_scenario_runner.reset();
     return;
   }
+
+  // Groves, ore and stone are seeded only once the scenario's structures are
+  // standing and registered as obstacles: the authored patches can then skip
+  // occupied ground, and the procedural biome scatter honours the same building
+  // clearance instead of dropping trees through roofs.
+  place_scenario_resource_patches(*definition);
+  reconfigure_terrain_from_state();
+
   if (has_scenario_ai) {
     if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
       ai_system->reinitialize();
@@ -2781,24 +2817,15 @@ void ArenaViewport::align_units_to_terrain() {
     if (unit == nullptr) {
       continue;
     }
-    auto* entity = m_world->get_entity(unit->id());
-    auto* transform = entity != nullptr
-                          ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-    if (transform == nullptr) {
-      continue;
+    if (auto* entity = m_world->get_entity(unit->id()); entity != nullptr) {
+      Arena::align_entity_to_ground(*entity);
     }
-    QVector3D const snapped = App::Utils::snap_to_walkable_ground(
-        {transform->position.x, transform->position.y, transform->position.z});
-    transform->position.x = snapped.x();
-    transform->position.y = snapped.y();
-    transform->position.z = snapped.z();
   }
 }
 
 void ArenaViewport::draw_debug_overlay(QPainter& painter) {
-  if (m_scenario_runner == nullptr ||
-      !m_scenario_runner->definition().suppress_spawn_anchor) {
+  if (!m_clean_capture && (m_scenario_runner == nullptr ||
+                           !m_scenario_runner->definition().suppress_spawn_anchor)) {
     draw_spawn_anchor_marker(painter);
   }
   draw_selection_marquee(painter);

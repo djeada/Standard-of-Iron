@@ -33,27 +33,31 @@ struct ClothBannerResources {
   Shader* banner_shader = nullptr;
 };
 
+// Cloth banners only reach the banner pipeline if the sink that finally records
+// the draw is told to use the banner shader. Renderer functions are handed
+// whatever submitter the scene walk wrapped around the real one - batching,
+// damage state, render probes - so resolve the sink through unwrap_submitter()
+// rather than casting the outermost wrapper. Casting the wrapper silently drops
+// the shader and the banner degrades to a flat untextured quad.
 struct BannerShaderScope {
   explicit BannerShaderScope(ISubmitter& submitter, Shader* shader) {
     if (shader == nullptr) {
       return;
     }
 
-    if (auto* queue = dynamic_cast<QueueSubmitter*>(&submitter)) {
+    ISubmitter* sink = submitter.unwrap_submitter();
+    if (sink == nullptr) {
+      sink = &submitter;
+    }
+
+    if (auto* queue = dynamic_cast<QueueSubmitter*>(sink)) {
       m_queue = queue;
       m_previous_queue_shader = queue->shader();
       queue->set_shader(shader);
       return;
     }
 
-    ISubmitter* fallback = &submitter;
-    if (auto* batch = dynamic_cast<BatchingSubmitter*>(&submitter)) {
-      if (batch->fallback_submitter() != nullptr) {
-        fallback = batch->fallback_submitter();
-      }
-    }
-
-    m_renderer = dynamic_cast<Renderer*>(fallback);
+    m_renderer = dynamic_cast<Renderer*>(sink);
     if (m_renderer != nullptr) {
       m_previous_renderer_shader = m_renderer->get_current_shader();
       m_renderer->set_current_shader(shader);

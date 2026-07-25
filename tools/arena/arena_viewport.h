@@ -118,6 +118,14 @@ public slots:
   void reset_arena();
   void load_scenario(const QString& scenario_id);
   void set_terrain_review_content_enabled(bool enabled);
+  // Hides the stats, controls and spawn-anchor overlays so batch captures
+  // record the scene alone, for footage rather than diagnostics.
+  void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
+  // Slowly orbits the scenario camera during capture so footage shows the scene
+  // in the round instead of a locked-off still.
+  void set_capture_orbit_speed(float degrees_per_second) {
+    m_capture_orbit_speed = degrees_per_second;
+  }
   [[nodiscard]] auto load_terrain_review_map(const QString& map_path,
                                              QString* error = nullptr) -> bool;
   void set_terrain_review_overview_camera();
@@ -185,6 +193,8 @@ private:
   void configure_rendering_from_terrain();
   void setup_default_players();
   void align_units_to_terrain();
+  void
+  place_scenario_resource_patches(const Arena::ArenaScenarioDefinition& definition);
   void sanitize_selection();
   void update_selected_entities();
   void sync_selection_summary();
@@ -308,6 +318,12 @@ private:
   bool m_force_full_creature_lod = true;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
+  bool m_clean_capture = false;
+  float m_capture_orbit_speed = 0.0F;
+  float m_capture_orbit_yaw = 0.0F;
+  bool m_capture_orbit_ready = false;
+  QVector3D m_capture_orbit_center;
+  Arena::ArenaCameraView m_capture_orbit_view;
   bool m_batch_frame_in_progress = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;

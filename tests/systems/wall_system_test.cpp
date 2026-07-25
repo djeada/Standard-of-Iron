@@ -1,6 +1,12 @@
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "core/component.h"
 #include "core/entity.h"
@@ -236,6 +242,113 @@ TEST_F(WallMechanicsTest, AdjacentWallsRefreshConnectionVisuals) {
   EXPECT_EQ(right_wall->connection_mask, WallNetworkService::k_connection_west);
   EXPECT_NE(left_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
   EXPECT_NE(right_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
+}
+
+TEST_F(WallMechanicsTest, PerpendicularWallsFormSingleCornerAndUpdateOnConnectivity) {
+  Engine::Core::World world;
+
+  // Outer corner: a center cell with two perpendicular neighbours (east + north)
+  // must resolve to exactly one corner variant, never overlapping straight runs.
+  auto* center = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  auto* east = make_wall(world, 2.0F, 0.0F, 0.0F, 1);
+  auto* north = make_wall(world, 0.0F, 0.0F, -2.0F, 1);
+
+  WallNetworkService::refresh_world(world);
+
+  auto* center_wall = center->get_component<WallSegmentComponent>();
+  const auto* center_renderable = center->get_component<RenderableComponent>();
+  ASSERT_NE(center_wall, nullptr);
+  ASSERT_NE(center_renderable, nullptr);
+
+  EXPECT_EQ(center_wall->connection_mask,
+            static_cast<std::uint8_t>(WallNetworkService::k_connection_east |
+                                      WallNetworkService::k_connection_north));
+  EXPECT_NE(center_renderable->renderer_id.find("wall_segment_corner"),
+            std::string::npos);
+
+  // Inner corner / junction: adding a third arm turns the same cell into a tee.
+  auto* south = make_wall(world, 0.0F, 0.0F, 2.0F, 1);
+  WallNetworkService::refresh_world(world);
+
+  EXPECT_EQ(center_wall->connection_mask,
+            static_cast<std::uint8_t>(WallNetworkService::k_connection_east |
+                                      WallNetworkService::k_connection_north |
+                                      WallNetworkService::k_connection_south));
+  EXPECT_NE(center_renderable->renderer_id.find("wall_segment_tee"), std::string::npos);
+
+  // Disconnecting one arm must re-resolve the join back to a clean corner rather
+  // than leaving stale corner/tee geometry behind.
+  auto* north_unit = north->get_component<UnitComponent>();
+  ASSERT_NE(north_unit, nullptr);
+  north_unit->health = 0;
+  WallNetworkService::refresh_world(world);
+
+  EXPECT_EQ(center_wall->connection_mask,
+            static_cast<std::uint8_t>(WallNetworkService::k_connection_east |
+                                      WallNetworkService::k_connection_south));
+  EXPECT_NE(center_renderable->renderer_id.find("wall_segment_corner"),
+            std::string::npos);
+  EXPECT_EQ(center_renderable->renderer_id.find("wall_segment_tee"), std::string::npos);
+
+  (void)east;
+  (void)south;
+}
+
+TEST_F(WallMechanicsTest, EveryConnectionMaskOrientsItsArmsAtItsNeighbours) {
+  // Renderers author one archetype per join shape and the network rotates it.
+  // Yaw is a right-handed turn about +Y, so +90 degrees carries the archetype's
+  // local east arm to world north; anything else points the join into empty
+  // ground and leaves the real neighbour unattached.
+  constexpr std::array<std::uint8_t, 4> k_direction_bits{
+      WallNetworkService::k_connection_north,
+      WallNetworkService::k_connection_east,
+      WallNetworkService::k_connection_south,
+      WallNetworkService::k_connection_west};
+
+  auto rotate_mask = [&](std::uint8_t mask, float degrees) {
+    const int quarter_turns =
+        ((static_cast<int>(std::lround(degrees / 90.0F)) % 4) + 4) % 4;
+    std::uint8_t rotated = 0;
+    for (int i = 0; i < 4; ++i) {
+      if ((mask & k_direction_bits[static_cast<std::size_t>(i)]) != 0U) {
+        const auto turned = static_cast<std::size_t>(((i - quarter_turns) % 4 + 4) % 4);
+        rotated = static_cast<std::uint8_t>(rotated | k_direction_bits[turned]);
+      }
+    }
+    return rotated;
+  };
+
+  const std::vector<std::pair<std::string, std::uint8_t>> k_canonical_arms{
+      {"wall_segment_isolated", 0U},
+      {"wall_segment_end", WallNetworkService::k_connection_east},
+      {"wall_segment_straight",
+       WallNetworkService::k_connection_east | WallNetworkService::k_connection_west},
+      {"wall_segment_corner",
+       WallNetworkService::k_connection_east | WallNetworkService::k_connection_north},
+      {"wall_segment_tee",
+       WallNetworkService::k_connection_east | WallNetworkService::k_connection_north |
+           WallNetworkService::k_connection_south},
+      {"wall_segment_cross",
+       WallNetworkService::k_connection_north | WallNetworkService::k_connection_east |
+           WallNetworkService::k_connection_south |
+           WallNetworkService::k_connection_west},
+  };
+
+  for (std::uint8_t mask = 0; mask < 16U; ++mask) {
+    const auto appearance =
+        WallNetworkService::resolve_appearance(NationID::RomanRepublic, mask);
+
+    const auto match = std::find_if(
+        k_canonical_arms.begin(), k_canonical_arms.end(), [&](const auto& entry) {
+          return appearance.renderer_id.find(entry.first) != std::string::npos;
+        });
+    ASSERT_NE(match, k_canonical_arms.end())
+        << "unmapped renderer " << appearance.renderer_id;
+
+    EXPECT_EQ(rotate_mask(match->second, appearance.rotation_y), mask)
+        << "mask " << static_cast<int>(mask) << " resolved to "
+        << appearance.renderer_id << " at " << appearance.rotation_y << " degrees";
+  }
 }
 
 TEST_F(WallMechanicsTest, IsolatedWallsPreserveChosenOrientationAcrossRefresh) {

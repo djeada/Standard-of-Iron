@@ -1,7 +1,15 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
+#include "game/systems/wall_network_service.h"
+#include "game/units/spawn_type.h"
+#include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
 
 TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
@@ -107,6 +115,10 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_water_showcase_id)),
             ids.end());
+  EXPECT_NE(std::find(ids.begin(),
+                      ids.end(),
+                      QString::fromLatin1(Arena::Scenarios::k_wall_corner_showcase_id)),
+            ids.end());
 }
 
 TEST(ArenaScenariosTest, ResolvesDescriptionsForKnownScenarios) {
@@ -143,6 +155,104 @@ TEST(ArenaScenariosTest,
                                   item.threshold <= 10.0F;
                          }),
             scenario->expectations.end());
+}
+
+TEST(ArenaScenariosTest, WallGroupsSitOnTheWallNetworkLattice) {
+  // Wall connectivity is resolved on a lattice of even grid cells, while the
+  // mesh is drawn at the spawn position. Authoring a run off that lattice makes
+  // the two disagree: segments snap onto a neighbour's cell or stop counting as
+  // adjacent, so the joins render as gaps and stray posts.
+  constexpr int k_spacing = Game::Systems::WallNetworkService::k_segment_spacing;
+
+  for (const auto& scenario : Arena::Scenarios::definitions()) {
+    for (const auto& group : scenario.groups) {
+      if (!group.spawn_type.has_value() ||
+          *group.spawn_type != Game::Units::SpawnType::WallSegment) {
+        continue;
+      }
+
+      const auto context = [&](int index) {
+        return (scenario.id + QStringLiteral("/") + group.name +
+                QStringLiteral("[%1]").arg(index))
+            .toStdString();
+      };
+      const float center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
+
+      for (int index = 0; index < group.count; ++index) {
+        const QVector3D position =
+            group.origin + (group.spacing * (static_cast<float>(index) - center));
+        const int grid_x = static_cast<int>(std::lround(position.x()));
+        const int grid_z = static_cast<int>(std::lround(position.z()));
+
+        EXPECT_NEAR(position.x(), static_cast<float>(grid_x), 0.01F) << context(index);
+        EXPECT_NEAR(position.z(), static_cast<float>(grid_z), 0.01F) << context(index);
+        EXPECT_EQ(grid_x % k_spacing, 0) << context(index);
+        EXPECT_EQ(grid_z % k_spacing, 0) << context(index);
+      }
+
+      if (group.count > 1) {
+        const float step = group.spacing.length();
+        EXPECT_NEAR(step, static_cast<float>(k_spacing), 0.01F)
+            << context(0) << " members must land on neighbouring cells";
+      }
+    }
+  }
+}
+
+TEST(ArenaScenariosTest, WallCornerShowcaseCoversEveryJoinShape) {
+  using Game::Systems::WallNetworkService;
+
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_wall_corner_showcase_id));
+  ASSERT_NE(scenario, nullptr);
+
+  std::map<int, WallNetworkService::OccupancySet> occupancy;
+  std::map<int, std::vector<std::pair<int, int>>> cells;
+  for (const auto& group : scenario->groups) {
+    if (!group.spawn_type.has_value() ||
+        *group.spawn_type != Game::Units::SpawnType::WallSegment) {
+      continue;
+    }
+    const float center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
+    for (int index = 0; index < group.count; ++index) {
+      const QVector3D position =
+          group.origin + (group.spacing * (static_cast<float>(index) - center));
+      const int grid_x = static_cast<int>(std::lround(position.x()));
+      const int grid_z = static_cast<int>(std::lround(position.z()));
+      EXPECT_TRUE(occupancy[group.owner_id]
+                      .insert(WallNetworkService::encode_key(grid_x, grid_z))
+                      .second)
+          << "two segments share cell " << grid_x << "," << grid_z;
+      cells[group.owner_id].emplace_back(grid_x, grid_z);
+    }
+  }
+  ASSERT_FALSE(cells.empty());
+
+  for (const auto& [owner_id, owner_cells] : cells) {
+    std::set<std::string> shapes;
+    for (const auto& [grid_x, grid_z] : owner_cells) {
+      const auto mask = WallNetworkService::compute_connection_mask(
+          occupancy[owner_id], grid_x, grid_z);
+      shapes.insert(WallNetworkService::resolve_appearance(
+                        Game::Systems::NationID::RomanRepublic, mask)
+                        .renderer_id);
+    }
+
+    for (const auto* shape : {"wall_segment_isolated",
+                              "wall_segment_end",
+                              "wall_segment_straight",
+                              "wall_segment_corner",
+                              "wall_segment_tee",
+                              "wall_segment_cross"}) {
+      EXPECT_NE(std::find_if(shapes.begin(),
+                             shapes.end(),
+                             [shape](const std::string& id) {
+                               return id.find(shape) != std::string::npos;
+                             }),
+                shapes.end())
+          << "owner " << owner_id << " never produces " << shape;
+    }
+  }
 }
 
 TEST(ArenaScenariosTest, RejectsUnknownScenarioIds) {

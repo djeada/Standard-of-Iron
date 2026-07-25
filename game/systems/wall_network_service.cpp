@@ -258,6 +258,11 @@ auto is_wall_key_occupied(Engine::Core::World& world,
   return false;
 }
 
+// Yaw is applied as a right-handed rotation about +Y, so a rotation of `angle`
+// maps the archetype's local +X (east) to world (cos, -sin): +90 turns east into
+// north, -90 turns east into south. The canonical archetypes are authored with
+// their arms pointing east (End), east/west (Straight), east+north (Corner) and
+// east+north+south (Tee).
 auto canonical_variant_for_mask(std::uint8_t mask)
     -> std::pair<std::string_view, float> {
   using Service = WallNetworkService;
@@ -282,7 +287,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
     if (has(Service::k_connection_east)) {
       return {k_wall_variant_end, 0.0F};
     }
-    if (has(Service::k_connection_south)) {
+    if (has(Service::k_connection_north)) {
       return {k_wall_variant_end, 90.0F};
     }
     if (has(Service::k_connection_west)) {
@@ -301,7 +306,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
     if (has(Service::k_connection_north) && has(Service::k_connection_east)) {
       return {k_wall_variant_corner, 0.0F};
     }
-    if (has(Service::k_connection_east) && has(Service::k_connection_south)) {
+    if (has(Service::k_connection_west) && has(Service::k_connection_north)) {
       return {k_wall_variant_corner, 90.0F};
     }
     if (has(Service::k_connection_south) && has(Service::k_connection_west)) {
@@ -313,7 +318,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
   if (!has(Service::k_connection_west)) {
     return {k_wall_variant_tee, 0.0F};
   }
-  if (!has(Service::k_connection_north)) {
+  if (!has(Service::k_connection_south)) {
     return {k_wall_variant_tee, 90.0F};
   }
   if (!has(Service::k_connection_east)) {
