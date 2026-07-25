@@ -78,3 +78,162 @@ QVariantMap Theme::nationEmblems() {
   emblems["carthage"] = QString::fromLatin1(k_resource_prefix) + "cartaghe.png";
   return emblems;
 }
+
+QString Theme::widgetStyleSheet() {
+  const auto hex = [](const QColor& color) {
+    return color.name(QColor::HexRgb);
+  };
+  return QStringLiteral(R"(
+QWidget {
+  background-color: %1;
+  color: %2;
+  font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+  font-size: 12px;
+}
+QMainWindow, QDialog { background-color: %1; }
+QMenuBar, QMenu, QToolBar, QStatusBar {
+  background-color: %3;
+  color: %2;
+  border-color: %4;
+}
+QMenuBar { border-bottom: 1px solid %4; }
+QMenuBar::item, QMenu::item { padding: 6px 10px; }
+QMenuBar::item:selected, QMenu::item:selected { background-color: %5; }
+QToolBar {
+  border: none;
+  border-bottom: 1px solid %4;
+  spacing: 6px;
+  padding: 3px 6px;
+}
+QToolBar::separator { background: %4; width: 1px; margin: 4px 3px; }
+QToolButton, QPushButton {
+  background-color: %6;
+  color: %2;
+  border: 1px solid %4;
+  border-radius: 4px;
+  padding: 5px 10px;
+  min-height: 26px;
+}
+QToolButton:hover, QPushButton:hover {
+  background-color: %5;
+  border-color: %7;
+}
+QToolButton:focus, QPushButton:focus,
+QComboBox:focus, QLineEdit:focus, QPlainTextEdit:focus,
+QSpinBox:focus, QDoubleSpinBox:focus {
+  border: 2px solid %8;
+}
+QToolButton:pressed, QPushButton:pressed {
+  background-color: %9;
+}
+QToolButton:checked {
+  background-color: %9;
+  border-color: %8;
+}
+QToolButton:disabled, QPushButton:disabled {
+  background-color: %10;
+  color: %11;
+  border-color: %4;
+}
+QPushButton[primary="true"] {
+  background-color: %9;
+  border: 1px solid %8;
+  font-weight: 700;
+}
+QPushButton[destructive="true"] {
+  color: %12;
+  background: transparent;
+  border-color: %12;
+}
+QPushButton[destructive="true"]:hover {
+  color: %2;
+  background: %12;
+}
+QGroupBox {
+  background-color: %3;
+  border: 1px solid %4;
+  border-radius: 5px;
+  margin-top: 10px;
+  padding-top: 10px;
+  font-weight: 600;
+}
+QGroupBox::title { color: %7; subcontrol-origin: margin; left: 8px; padding: 0 6px; }
+QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QPlainTextEdit, QTableWidget {
+  background-color: %6;
+  color: %2;
+  border: 1px solid %4;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover,
+QLineEdit:hover, QPlainTextEdit:hover { border-color: %7; }
+QComboBox QAbstractItemView {
+  background-color: %6;
+  color: %2;
+  border: 1px solid %4;
+  selection-background-color: %9;
+}
+QHeaderView::section {
+  background: %3;
+  color: %13;
+  border: 0;
+  border-right: 1px solid %4;
+  border-bottom: 1px solid %4;
+  padding: 5px;
+}
+QTabWidget::pane { border: 1px solid %4; background: %1; }
+QTabBar::tab {
+  background: %3;
+  color: %11;
+  border: 1px solid %4;
+  padding: 6px 13px;
+  min-width: 62px;
+}
+QTabBar::tab:selected {
+  background: %1;
+  color: %2;
+  border-bottom: 2px solid %8;
+}
+QTabBar::tab:hover:!selected { background: %5; color: %2; }
+QSplitter::handle { background: %4; }
+QSplitter::handle:hover { background: %7; }
+QScrollArea { border: none; background: transparent; }
+QScrollBar:vertical, QScrollBar:horizontal { background: %1; }
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+  background: %4;
+  border-radius: 4px;
+  min-height: 20px;
+  min-width: 20px;
+}
+QScrollBar::handle:hover { background: %7; }
+QStatusBar { border-top: 1px solid %4; color: %11; }
+QLabel { background: transparent; }
+QLabel#panelTitle { color: %13; font-size: 16px; font-weight: 700; }
+QLabel#panelIntro, QLabel#panelHint { color: %11; }
+QLabel[status="success"] { color: %14; }
+QLabel[status="warning"] { color: %15; }
+QLabel[status="error"] { color: %12; }
+QLabel[status="muted"] { color: %11; }
+QToolTip {
+  color: %2;
+  background: %3;
+  border: 1px solid %7;
+  padding: 5px 7px;
+}
+)")
+      .arg(hex(backgroundDeep()),
+           hex(textPrimary()),
+           hex(panelLeather()),
+           hex(borderSubtle()),
+           hex(hoverBg()),
+           hex(panelIron()),
+           hex(accent()),
+           hex(selection()),
+           hex(selectedBg()),
+           hex(disabledBg()),
+           hex(textDisabled()),
+           hex(danger()),
+           hex(accentBright()),
+           hex(success()),
+           hex(warning()));
+}
