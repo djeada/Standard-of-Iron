@@ -26,6 +26,7 @@
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
 #include "render/graphics_settings.h"
+#include "ui/theme.h"
 #include "utils/resource_utils.h"
 
 namespace {
@@ -452,7 +453,7 @@ auto main(int argc, char** argv) -> int {
   QApplication app(argc, argv);
   QApplication::setApplicationName("Standard of Iron Arena");
   QApplication::setApplicationVersion("1.0");
-  app.setStyleSheet(QString::fromLatin1(k_dark_stylesheet));
+  app.setStyleSheet(Theme::widgetStyleSheet());
 
   QCommandLineParser parser;
   parser.setApplicationDescription(

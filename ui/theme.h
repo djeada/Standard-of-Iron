@@ -60,6 +60,21 @@ class Theme : public QObject {
 
   Q_PROPERTY(QColor warningText READ warningText CONSTANT)
 
+  Q_PROPERTY(QColor backgroundDeep READ backgroundDeep CONSTANT)
+  Q_PROPERTY(QColor backgroundRaised READ backgroundRaised CONSTANT)
+  Q_PROPERTY(QColor panelIron READ panelIron CONSTANT)
+  Q_PROPERTY(QColor panelLeather READ panelLeather CONSTANT)
+  Q_PROPERTY(QColor parchment READ parchment CONSTANT)
+  Q_PROPERTY(QColor textPrimary READ textPrimary CONSTANT)
+  Q_PROPERTY(QColor textSecondary READ textSecondary CONSTANT)
+  Q_PROPERTY(QColor textDisabled READ textDisabled CONSTANT)
+  Q_PROPERTY(QColor borderSubtle READ borderSubtle CONSTANT)
+  Q_PROPERTY(QColor borderStrong READ borderStrong CONSTANT)
+  Q_PROPERTY(QColor warning READ warning CONSTANT)
+  Q_PROPERTY(QColor danger READ danger CONSTANT)
+  Q_PROPERTY(QColor success READ success CONSTANT)
+  Q_PROPERTY(QColor selection READ selection CONSTANT)
+
   Q_PROPERTY(int spacingTiny READ spacingTiny CONSTANT)
   Q_PROPERTY(int spacingSmall READ spacingSmall CONSTANT)
   Q_PROPERTY(int spacingMedium READ spacingMedium CONSTANT)
@@ -142,6 +157,21 @@ public:
 
   [[nodiscard]] static auto warningText() -> QColor { return {"#f5a623"}; }
 
+  [[nodiscard]] static auto backgroundDeep() -> QColor { return bgShade(); }
+  [[nodiscard]] static auto backgroundRaised() -> QColor { return bg(); }
+  [[nodiscard]] static auto panelIron() -> QColor { return cardBaseB(); }
+  [[nodiscard]] static auto panelLeather() -> QColor { return panelBase(); }
+  [[nodiscard]] static auto parchment() -> QColor { return {"#D8C8A3"}; }
+  [[nodiscard]] static auto textPrimary() -> QColor { return textMain(); }
+  [[nodiscard]] static auto textSecondary() -> QColor { return textSubLite(); }
+  [[nodiscard]] static auto textDisabled() -> QColor { return textDim(); }
+  [[nodiscard]] static auto borderSubtle() -> QColor { return border(); }
+  [[nodiscard]] static auto borderStrong() -> QColor { return cardBorder(); }
+  [[nodiscard]] static auto warning() -> QColor { return warningText(); }
+  [[nodiscard]] static auto danger() -> QColor { return removeColor(); }
+  [[nodiscard]] static auto success() -> QColor { return successText(); }
+  [[nodiscard]] static auto selection() -> QColor { return selectedBr(); }
+
   [[nodiscard]] static auto spacingTiny() -> int { return 4; }
   [[nodiscard]] static auto spacingSmall() -> int { return 8; }
   [[nodiscard]] static auto spacingMedium() -> int { return 12; }
@@ -169,6 +199,7 @@ public:
   [[nodiscard]] static auto factions() -> QVariantList;
   [[nodiscard]] static auto unitIcons() -> QVariantMap;
   [[nodiscard]] static auto nationEmblems() -> QVariantMap;
+  [[nodiscard]] static auto widgetStyleSheet() -> QString;
 
 private:
   explicit Theme(QObject* parent = nullptr);

@@ -83,6 +83,31 @@ void CampaignManager::start_campaign_mission(const QString& mission_path, int&) 
   emit current_mission_changed();
 }
 
+bool CampaignManager::start_mission_file(const QString& file_path,
+                                         int& selected_player_id,
+                                         QString* out_error) {
+  Game::Mission::MissionDefinition mission;
+  QString error;
+  if (!Game::Mission::MissionLoader::load_from_json_file(file_path, mission, &error)) {
+    if (out_error != nullptr) {
+      *out_error = error;
+    }
+    return false;
+  }
+
+  selected_player_id = 1;
+  m_current_campaign_id.clear();
+  m_current_mission_id = mission.id;
+  m_current_mission_definition = mission;
+  m_current_mission_context.mode = QStringLiteral("campaign");
+  m_current_mission_context.campaign_id.clear();
+  m_current_mission_context.mission_id = mission.id;
+  m_current_mission_context.difficulty = QStringLiteral("normal");
+  emit current_campaign_changed();
+  emit current_mission_changed();
+  return true;
+}
+
 void CampaignManager::mark_current_mission_completed() {
   if (m_current_campaign_id.isEmpty() || m_current_mission_id.isEmpty()) {
     qWarning() << "No active campaign mission to mark as completed";

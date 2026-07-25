@@ -286,6 +286,15 @@ void MapData::set_biome(const QJsonObject& biome) {
   }
 }
 
+void MapData::set_rain(const QJsonObject& rain) {
+  const QJsonObject normalized = normalize_json_object(rain);
+  if (m_rain != normalized) {
+    m_rain = normalized;
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
 void MapData::set_modified(bool modified) {
   if (m_modified != modified) {
     m_modified = modified;
@@ -1370,6 +1379,14 @@ void MapData::add_fog_zone(const FogZoneElement& element) {
   m_fog_zones.append(element);
   set_modified(true);
   emit data_changed();
+}
+
+void MapData::update_fog_zone(int index, const FogZoneElement& element) {
+  if (index >= 0 && index < m_fog_zones.size()) {
+    m_fog_zones[index] = element;
+    set_modified(true);
+    emit data_changed();
+  }
 }
 
 void MapData::remove_fog_zone(int index) {

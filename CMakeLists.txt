@@ -314,8 +314,44 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
+            ui/qml/design/Theme.qml
+            ui/qml/design/Metrics.qml
+            ui/qml/design/Typography.qml
+            ui/qml/design/Motion.qml
+            ui/qml/design/Icons.qml
+            ui/qml/design/UiSound.qml
+            ui/qml/design/ComponentGallery.qml
+            ui/qml/design/surfaces/IronPanel.qml
+            ui/qml/design/controls/IronButton.qml
+            ui/qml/design/controls/IronIconButton.qml
+            ui/qml/design/controls/IronTabBar.qml
+            ui/qml/design/controls/IronTooltip.qml
+            ui/qml/design/controls/IronDialog.qml
+            ui/qml/design/controls/IronDropdown.qml
+            ui/qml/design/controls/IronSlider.qml
+            ui/qml/design/controls/IronProgressBar.qml
+            ui/qml/design/controls/IronListRow.qml
+            ui/qml/design/controls/IronTreeRow.qml
+            ui/qml/design/controls/IronContextMenu.qml
+            ui/qml/design/controls/IronBadge.qml
+            ui/qml/design/controls/IronDivider.qml
+            ui/qml/design/controls/IronSearchField.qml
+            ui/qml/design/controls/IronHotkeyLabel.qml
+            ui/qml/design/controls/IronUnitCard.qml
+            ui/qml/design/controls/IronCommandButton.qml
+            ui/qml/design/controls/IronObjectiveRow.qml
+            ui/qml/design/controls/IronResourceCounter.qml
+            ui/qml/design/controls/IronInspectorSection.qml
+            ui/qml/design/overlays/IronNotification.qml
+            ui/qml/design/layouts/GameShell.qml
+            ui/qml/design/layouts/ToolShell.qml
         RESOURCES
             ui/qml/ui_audio.js
+            ui/qml/design/qmldir
+            ui/qml/design/surfaces/qmldir
+            ui/qml/design/controls/qmldir
+            ui/qml/design/overlays/qmldir
+            ui/qml/design/layouts/qmldir
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag

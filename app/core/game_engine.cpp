@@ -2751,6 +2751,25 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
       mission.map_path, build_campaign_player_configs(mission), false);
 }
 
+void GameEngine::start_mission_file(const QString& file_path) {
+  clear_error();
+  if (!m_campaign_manager) {
+    set_error("Campaign manager not initialized");
+    return;
+  }
+
+  QString error;
+  if (!m_campaign_manager->start_mission_file(
+          file_path, m_selected_player_id, &error)) {
+    set_error(QStringLiteral("Failed to load mission preview: %1").arg(error));
+    return;
+  }
+
+  const auto& mission = *m_campaign_manager->current_mission_definition();
+  start_skirmish_internal(
+      mission.map_path, build_campaign_player_configs(mission), false);
+}
+
 void GameEngine::mark_current_mission_completed() {
   if (!m_campaign_manager) {
     return;

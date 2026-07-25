@@ -3,6 +3,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         main.cpp
         editor_window.cpp
         map_data.cpp
+        mission_data.cpp
+        mission_panel.cpp
         map_canvas.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
@@ -12,12 +14,15 @@ if(QT_VERSION_MAJOR EQUAL 6)
         mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
+        ../../ui/theme.cpp
     )
 else()
     add_executable(map_editor
         main.cpp
         editor_window.cpp
         map_data.cpp
+        mission_data.cpp
+        mission_panel.cpp
         map_canvas.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
@@ -27,6 +32,7 @@ else()
         mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
+        ../../ui/theme.cpp
     )
 endif()
 
@@ -34,6 +40,7 @@ target_link_libraries(map_editor
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Qml
 )
 
 # Keep tool binaries alongside the main game binary for consistent dev runs
