@@ -7,7 +7,9 @@
 #include <qvectornd.h>
 
 #include <GL/gl.h>
+#include <cmath>
 #include <cstddef>
+#include <numbers>
 
 #include "../backend.h"
 #include "../render_constants.h"
@@ -77,6 +79,11 @@ void TerrainPipeline::cache_grass_uniforms() {
   m_grass_uniforms.wind_speed = m_grass_shader->uniform_handle("u_wind_speed");
   m_grass_uniforms.soil_color = m_grass_shader->uniform_handle("u_soil_color");
   m_grass_uniforms.light_dir = m_grass_shader->uniform_handle("u_light_dir");
+  m_grass_uniforms.viewport_size =
+      m_grass_shader->optional_uniform_handle("u_viewport_size");
+  m_grass_uniforms.camera_pos = m_grass_shader->optional_uniform_handle("u_camera_pos");
+  m_grass_uniforms.ambient_boost =
+      m_grass_shader->optional_uniform_handle("u_ambient_boost");
 }
 
 void TerrainPipeline::cache_ground_uniforms() {
@@ -231,14 +238,39 @@ void TerrainPipeline::initialize_grass_geometry() {
     QVector2D uv;
   };
 
-  const GrassVertex blade_vertices[6] = {
-      {{-0.5F, 0.0F, 0.0F}, {0.0F, 0.0F}},
-      {{0.5F, 0.0F, 0.0F}, {1.0F, 0.0F}},
-      {{-0.35F, 1.0F, 0.0F}, {0.1F, 1.0F}},
-      {{-0.35F, 1.0F, 0.0F}, {0.1F, 1.0F}},
-      {{0.5F, 0.0F, 0.0F}, {1.0F, 0.0F}},
-      {{0.35F, 1.0F, 0.0F}, {0.9F, 1.0F}},
-  };
+  constexpr int k_blades_per_tuft = grass_blade_vertex_count / 6;
+  GrassVertex blade_vertices[grass_blade_vertex_count];
+
+  constexpr float k_splay_width_units = 2.6F;
+  constexpr float k_blade_height_scale[3] = {1.0F, 0.86F, 0.94F};
+
+  for (int blade = 0; blade < k_blades_per_tuft; ++blade) {
+    const float angle = (2.0F * std::numbers::pi_v<float> * static_cast<float>(blade)) /
+                        static_cast<float>(k_blades_per_tuft);
+    const QVector2D right(std::cos(angle), std::sin(angle));
+    const QVector2D splay(-std::sin(angle), std::cos(angle));
+    const float height = k_blade_height_scale[blade % 3];
+
+    const QVector2D base_left = right * -0.5F;
+    const QVector2D base_right = right * 0.5F;
+    const QVector2D tip_left = right * -0.30F + splay * k_splay_width_units;
+    const QVector2D tip_right = right * 0.30F + splay * k_splay_width_units;
+
+    auto vertex = [&](const QVector2D& plane, float y, float u, float v) {
+      GrassVertex out;
+      out.position = QVector3D(plane.x(), y * height, plane.y());
+      out.uv = QVector2D(u, v);
+      return out;
+    };
+
+    const int base_index = blade * 6;
+    blade_vertices[base_index + 0] = vertex(base_left, 0.0F, 0.0F, 0.0F);
+    blade_vertices[base_index + 1] = vertex(base_right, 0.0F, 1.0F, 0.0F);
+    blade_vertices[base_index + 2] = vertex(tip_left, 1.0F, 0.15F, 1.0F);
+    blade_vertices[base_index + 3] = vertex(tip_left, 1.0F, 0.15F, 1.0F);
+    blade_vertices[base_index + 4] = vertex(base_right, 0.0F, 1.0F, 0.0F);
+    blade_vertices[base_index + 5] = vertex(tip_right, 1.0F, 0.85F, 1.0F);
+  }
 
   gl->glGenVertexArrays(1, &m_grass_vao);
   gl->glBindVertexArray(m_grass_vao);
