@@ -131,6 +131,8 @@ void WaterPipeline::cache_riverbank_uniforms() {
       m_riverbank_shader->optional_uniform_handle("u_rock_exposure");
   m_riverbank_uniforms.snow_coverage =
       m_riverbank_shader->optional_uniform_handle("u_snow_coverage");
+  m_riverbank_uniforms.ambient_boost =
+      m_riverbank_shader->optional_uniform_handle("u_ambient_boost");
   m_riverbank_uniforms.camera_position =
       m_riverbank_shader->optional_uniform_handle("u_camera_pos");
   m_riverbank_uniforms.light_direction =

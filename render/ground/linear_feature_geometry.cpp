@@ -158,7 +158,7 @@ auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   settings.edge_noise_weights = {0.52F, 0.32F, 0.16F};
 
   settings.width_scale = 1.08F;
-  settings.width_variation_scale = 0.035F;
+  settings.width_variation_scale = 0.105F;
   settings.meander_frequency = 2.8F;
 
   settings.meander_amplitude = 0.11F;
@@ -753,7 +753,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
   const LinearFeatureRibbonSegment ribbon_segment{
       segment.start, segment.end, segment.width};
 
-  constexpr int k_rings_per_side = 5;
+  constexpr int k_rings_per_side = 7;
   constexpr int k_total_rings = k_rings_per_side * 2;
 
   int length_steps = static_cast<int>(std::ceil(length / (tile_size * 0.22F))) + 1;
@@ -819,6 +819,25 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
   std::vector<unsigned int> indices;
   const float rendered_water_width_scale = make_river_ribbon_settings().width_scale;
 
+  auto is_same_watercourse_continuation = [&](const Game::Map::RiverSegment& other) {
+    const float join_distance = std::max(tile_size * 0.60F, 0.10F);
+    const float join_distance_sq = join_distance * join_distance;
+    const bool shares_endpoint =
+        (other.start - segment.start).lengthSquared() <= join_distance_sq ||
+        (other.start - segment.end).lengthSquared() <= join_distance_sq ||
+        (other.end - segment.start).lengthSquared() <= join_distance_sq ||
+        (other.end - segment.end).lengthSquared() <= join_distance_sq;
+    if (!shares_endpoint) {
+      return false;
+    }
+    QVector3D neighbor_direction = other.end - other.start;
+    if (neighbor_direction.lengthSquared() < 0.000001F) {
+      return false;
+    }
+    neighbor_direction.normalize();
+    return std::abs(QVector3D::dotProduct(neighbor_direction, dir)) >= 0.50F;
+  };
+
   auto bank_point_inside_other_channel = [&](const QVector3D& center) {
     for (std::size_t other_index = 0; other_index < river_network.size();
          ++other_index) {
@@ -826,6 +845,9 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
         continue;
       }
       const auto& other = river_network[other_index];
+      if (is_same_watercourse_continuation(other)) {
+        continue;
+      }
       const float river_dx = other.end.x() - other.start.x();
       const float river_dz = other.end.z() - other.start.z();
       const float length_squared = river_dx * river_dx + river_dz * river_dz;
@@ -854,41 +876,58 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
     const auto cross_section =
         sample_linear_feature_cross_section(ribbon_segment, t, ribbon_settings);
     QVector3D const center_pos = cross_section.center;
-    const float bank_half_width = cross_section.half_width;
+
+    const float bank_half_width =
+        cross_section.half_width - std::min(0.22F, cross_section.half_width * 0.075F);
     const QVector3D bank_direction = local_bank_direction(t);
     const QVector3D bank_perpendicular(-bank_direction.z(), 0.0F, bank_direction.x());
     float const center_height =
         sample_height_clamped(height_map, center_pos.x(), center_pos.z());
 
     struct RingProfile {
+
       float distance_from_water;
+
       float height_offset;
+
+      float terrain_follow;
     };
 
     constexpr RingProfile k_bank_rings[k_rings_per_side] = {
-        {0.0F, 0.02F},
-        {0.125F, 0.175F},
-        {0.25F, 0.30F},
-        {0.375F, 0.125F},
-        {0.50F, -0.15F},
+        {0.00F, -0.055F, 0.00F},
+        {0.09F, -0.010F, 0.06F},
+        {0.24F, 0.060F, 0.24F},
+        {0.44F, 0.130F, 0.52F},
+        {0.66F, 0.160F, 0.80F},
+        {0.85F, 0.070F, 0.94F},
+        {1.00F, 0.025F, 1.00F},
     };
 
     float const ring_noise =
-        value_noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.075F;
-    float const base_bank_width = 0.50F + ring_noise;
+        value_noise(center_pos.x() * 0.055F, center_pos.z() * 0.055F) * 0.34F - 0.17F;
+    float const base_bank_width =
+        std::clamp(segment.width * 0.17F, 0.45F, 1.80F) * (1.0F + ring_noise);
+
+    float const side_bias =
+        value_noise(center_pos.x() * 0.028F + 21.7F, center_pos.z() * 0.028F - 8.3F) -
+        0.5F;
+    float const left_bank_width = base_bank_width * (1.0F + side_bias * 0.70F);
+    float const right_bank_width = base_bank_width * (1.0F - side_bias * 0.70F);
 
     auto bank_surface_height = [&](const QVector3D& position, int ring) {
       float const terrain_height =
           sample_height_clamped(height_map, position.x(), position.z());
 
-      const float clamped_height = std::min(terrain_height, center_height + 0.05F);
-      return clamped_height + k_bank_rings[ring].height_offset;
+      const float channel_height = std::min(terrain_height, center_height + 0.05F);
+      const float follow = k_bank_rings[ring].terrain_follow;
+      return channel_height + (terrain_height - channel_height) * follow +
+             k_bank_rings[ring].height_offset;
     };
 
     auto const ring_start_idx = static_cast<unsigned int>(vertices.size());
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
-      float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
+      float const ring_dist = k_bank_rings[ring].distance_from_water * left_bank_width;
 
       QVector3D const ring_pos =
           center_pos - bank_perpendicular * (bank_half_width + ring_dist);
@@ -908,7 +947,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
         QVector3D const next_ring_pos =
             center_pos - bank_perpendicular *
                              (bank_half_width +
-                              k_bank_rings[1].distance_from_water * base_bank_width);
+                              k_bank_rings[1].distance_from_water * left_bank_width);
         float const next_height = bank_surface_height(next_ring_pos, ring + 1);
         QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
                                   next_height - ring_height_y,
@@ -932,7 +971,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
             center_pos -
             bank_perpendicular *
                 (bank_half_width +
-                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
+                 k_bank_rings[ring + 1].distance_from_water * left_bank_width);
         float const next_height = bank_surface_height(next_ring_pos, ring + 1);
 
         QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
@@ -952,13 +991,13 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
       vtx.normal[0] = normal.x();
       vtx.normal[1] = normal.y();
       vtx.normal[2] = normal.z();
-      vtx.tex_coord[0] = static_cast<float>(ring) / (k_rings_per_side - 1);
+      vtx.tex_coord[0] = k_bank_rings[ring].distance_from_water;
       vtx.tex_coord[1] = t;
       vertices.push_back(vtx);
     }
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
-      float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
+      float const ring_dist = k_bank_rings[ring].distance_from_water * right_bank_width;
 
       QVector3D const ring_pos =
           center_pos + bank_perpendicular * (bank_half_width + ring_dist);
@@ -978,7 +1017,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
         QVector3D const next_ring_pos =
             center_pos + bank_perpendicular *
                              (bank_half_width +
-                              k_bank_rings[1].distance_from_water * base_bank_width);
+                              k_bank_rings[1].distance_from_water * right_bank_width);
         float const next_height = bank_surface_height(next_ring_pos, ring + 1);
         QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
                                   next_height - ring_height_y,
@@ -1002,7 +1041,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
             center_pos +
             bank_perpendicular *
                 (bank_half_width +
-                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
+                 k_bank_rings[ring + 1].distance_from_water * right_bank_width);
         float const next_height = bank_surface_height(next_ring_pos, ring + 1);
 
         QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
@@ -1022,7 +1061,7 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
       vtx.normal[0] = normal.x();
       vtx.normal[1] = normal.y();
       vtx.normal[2] = normal.z();
-      vtx.tex_coord[0] = static_cast<float>(ring) / (k_rings_per_side - 1);
+      vtx.tex_coord[0] = k_bank_rings[ring].distance_from_water;
       vtx.tex_coord[1] = t;
       vertices.push_back(vtx);
     }
@@ -1318,12 +1357,25 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
       const float angle =
           two_pi * static_cast<float>(segment) / static_cast<float>(angular_segments);
       const float boundary = Game::Map::lake_boundary_scale(lake, angle);
+
+      const float edge_local_x =
+          std::cos(angle) * (half_width * boundary + water_render_margin);
+      const float edge_local_z =
+          std::sin(angle) * (half_depth * boundary + water_render_margin);
+      const float edge_world_x =
+          lake.center.x() + edge_local_x * cos_rotation - edge_local_z * sin_rotation;
+      const float edge_world_z =
+          lake.center.z() + edge_local_x * sin_rotation + edge_local_z * cos_rotation;
+      const float local_shore_width =
+          shore_width *
+          (0.55F + 0.95F * value_noise(edge_world_x * 0.18F, edge_world_z * 0.18F));
+
       const float local_x =
           std::cos(angle) *
-          (half_width * boundary + water_render_margin + shore_width * shore_t);
+          (half_width * boundary + water_render_margin + local_shore_width * shore_t);
       const float local_z =
           std::sin(angle) *
-          (half_depth * boundary + water_render_margin + shore_width * shore_t);
+          (half_depth * boundary + water_render_margin + local_shore_width * shore_t);
       const float rotated_x = local_x * cos_rotation - local_z * sin_rotation;
       const float rotated_z = local_x * sin_rotation + local_z * cos_rotation;
       const float world_x = lake.center.x() + rotated_x;
@@ -1339,10 +1391,10 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
       vertex.position = {world_x, shore_height, world_z};
       QVector3D outward(rotated_x, 0.0F, rotated_z);
       outward.normalize();
-      const float radial_slope =
-          std::clamp((terrain_y + 0.060F - water_edge_y) / std::max(shore_width, 0.01F),
-                     -0.65F,
-                     0.65F);
+      const float radial_slope = std::clamp((terrain_y + 0.060F - water_edge_y) /
+                                                std::max(local_shore_width, 0.01F),
+                                            -0.65F,
+                                            0.65F);
       const QVector3D bank_normal =
           QVector3D(-outward.x() * radial_slope, 1.0F, -outward.z() * radial_slope)
               .normalized();

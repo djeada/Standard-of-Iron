@@ -169,5 +169,21 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
   EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
-  EXPECT_NE(flat.find("0.055 * soil_mix"), std::string::npos);
+  EXPECT_NE(flat.find("0.090 * soil_mix"), std::string::npos);
+}
+
+TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("vec3 smooth_normal = normalize(v_normal);"), std::string::npos);
+  EXPECT_NE(flat.find("mix(smooth_normal, facet_normal, facet_weight)"),
+            std::string::npos);
+
+  EXPECT_NE(flat.find("curvature_from_normal_field(smooth_normal)"), std::string::npos);
+
+  EXPECT_NE(flat.find("float band_limit("), std::string::npos);
+  EXPECT_NE(flat.find("relief_octave("), std::string::npos);
 }

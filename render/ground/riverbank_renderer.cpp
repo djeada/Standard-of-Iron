@@ -229,6 +229,7 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.biome_moisture = climate.moisture_level;
     cmd.biome_rock_exposure = climate.rock_exposure;
     cmd.biome_snow_coverage = climate.snow_coverage;
+    cmd.ambient_boost = surface.terrain_ambient_boost * 0.95F;
     cmd.alpha = segment_visibility;
     cmd.visibility = visibility_resources;
     renderer.terrain_feature(cmd);
