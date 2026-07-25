@@ -35,7 +35,7 @@ inline constexpr int shader_info_log_size = 512;
 namespace Render::GL::Geometry {
 inline constexpr int quad_vertex_count = 4;
 inline constexpr int quad_index_count = 6;
-inline constexpr int grass_blade_vertex_count = 6;
+inline constexpr int grass_blade_vertex_count = 18;
 inline constexpr int cube_vertex_count = 24;
 inline constexpr int cube_index_count = 36;
 inline constexpr int plant_cross_quad_vertex_count = 24;

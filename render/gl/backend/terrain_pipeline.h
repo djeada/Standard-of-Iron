@@ -33,6 +33,9 @@ public:
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle viewport_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
   };
 
   struct GroundUniforms {

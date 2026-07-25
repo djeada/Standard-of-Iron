@@ -134,21 +134,51 @@ TEST(ScatterRuntimeTest, DryGrassColorKeepsContrastOnMediterraneanSoil) {
   QVector3D const adjusted = Render::Ground::contrast_grass_blade_color(
       yellow_blade, soil, Game::Map::GroundType::GrassDry, 0.85F);
 
+  // Blades still have to sit clearly below pale dry soil, but the margin no
+  // longer has to be large: blades now cover the pixels they occupy, so the
+  // separation is for readability rather than for making them visible at all.
   EXPECT_LT(Render::Ground::color_luminance(adjusted),
-            Render::Ground::color_luminance(soil) - 0.10F);
+            Render::Ground::color_luminance(soil) - 0.055F);
   EXPECT_LT(adjusted.y(), yellow_blade.y());
 }
 
-TEST(ScatterRuntimeTest, NonDryGrassColorIsUnchangedByContrastAdjustment) {
+TEST(ScatterRuntimeTest, GreenGrassBladesSitDeeperThanTheGroundTheyGrowFrom) {
   QVector3D const soil{0.28F, 0.24F, 0.18F};
   QVector3D const blade{0.30F, 0.60F, 0.28F};
 
   QVector3D const adjusted = Render::Ground::contrast_grass_blade_color(
       blade, soil, Game::Map::GroundType::SoilFertile, 0.85F);
 
-  EXPECT_FLOAT_EQ(adjusted.x(), blade.x());
-  EXPECT_FLOAT_EQ(adjusted.y(), blade.y());
-  EXPECT_FLOAT_EQ(adjusted.z(), blade.z());
+  // Blades tinted at or above the ground's own value read as pale confetti
+  // scattered over it, so every biome seats them deeper and more saturated.
+  EXPECT_LT(Render::Ground::color_luminance(adjusted),
+            Render::Ground::color_luminance(blade));
+
+  auto green_excess = [](const QVector3D& color) {
+    return color.y() - std::max(color.x(), color.z());
+  };
+  EXPECT_GT(green_excess(adjusted) /
+                std::max(Render::Ground::color_luminance(adjusted), 1e-4F),
+            green_excess(blade) /
+                std::max(Render::Ground::color_luminance(blade), 1e-4F));
+}
+
+TEST(ScatterRuntimeTest, GrassBladeToningDiffersBetweenBiomes) {
+  QVector3D const soil{0.28F, 0.24F, 0.18F};
+  QVector3D const blade{0.30F, 0.60F, 0.28F};
+
+  QVector3D const fertile = Render::Ground::contrast_grass_blade_color(
+      blade, soil, Game::Map::GroundType::SoilFertile, 0.5F);
+  QVector3D const alpine = Render::Ground::contrast_grass_blade_color(
+      blade, soil, Game::Map::GroundType::AlpineMix, 0.5F);
+  QVector3D const dry = Render::Ground::contrast_grass_blade_color(
+      blade, soil, Game::Map::GroundType::GrassDry, 0.5F);
+
+  // The same source grass has to land somewhere different per biome, or the
+  // scatter layer looks identical on a pasture, a scree slope, and a dry plain.
+  EXPECT_GT((fertile - alpine).length(), 0.02F);
+  EXPECT_GT((fertile - dry).length(), 0.02F);
+  EXPECT_GT((alpine - dry).length(), 0.02F);
 }
 
 TEST(ScatterRuntimeTest, DirectGpuReadyAllowsEmptyScatterBuffers) {

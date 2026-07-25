@@ -35,7 +35,9 @@ struct GrassBatchParams {
   QVector3D light_direction = default_light_direction();
   float wind_speed{k_default_wind_speed};
   float time{0.0F};
-  float pad0{0.0F};
+  // Must track the terrain's ambient boost, or blades stay at full exposure
+  // over ground that has been scaled down and the field glows.
+  float ambient_boost{1.0F};
   float pad1{0.0F};
   float pad2{0.0F};
 };

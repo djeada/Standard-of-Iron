@@ -16,7 +16,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
   const float banner_wind_strength = context.banner_wind_strength;
   bool const& polygon_offset_enabled = context.polygon_offset_enabled;
   const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
-  (void)cam;
+
   (void)view;
   (void)projection;
   (void)view_proj;
@@ -89,6 +89,25 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         }
         m_terrain_pipeline->m_grass_shader->set_uniform(
             m_terrain_pipeline->m_grass_uniforms.light_dir, light_dir);
+      }
+      // The blade shader sizes itself against the framebuffer so sub-pixel
+      // grass still covers the pixel it lands on.
+      if (m_terrain_pipeline->m_grass_uniforms.viewport_size !=
+          Shader::InvalidUniform) {
+        m_terrain_pipeline->m_grass_shader->set_uniform(
+            m_terrain_pipeline->m_grass_uniforms.viewport_size,
+            QVector2D(static_cast<float>(std::max(m_viewport_width, 1)),
+                      static_cast<float>(std::max(m_viewport_height, 1))));
+      }
+      if (m_terrain_pipeline->m_grass_uniforms.camera_pos != Shader::InvalidUniform) {
+        m_terrain_pipeline->m_grass_shader->set_uniform(
+            m_terrain_pipeline->m_grass_uniforms.camera_pos, cam.get_position());
+      }
+      if (m_terrain_pipeline->m_grass_uniforms.ambient_boost !=
+          Shader::InvalidUniform) {
+        m_terrain_pipeline->m_grass_shader->set_uniform(
+            m_terrain_pipeline->m_grass_uniforms.ambient_boost,
+            grass.params.ambient_boost);
       }
 
       glBindVertexArray(m_terrain_pipeline->m_grass_vao);

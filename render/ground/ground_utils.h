@@ -112,38 +112,71 @@ inline auto clamp_color(QVector3D const& color) -> QVector3D {
           std::clamp(color.z(), 0.0F, 1.0F)};
 }
 
+// How a biome's blades sit against its own ground. A real sward self-shadows
+// between the blades, so a clump reads deeper and more saturated than the
+// smooth ground albedo it grows out of. Blades tinted at or above the ground's
+// own value read as pale confetti scattered over it, which is the one thing
+// grass never looks like.
+struct GrassBladeToning {
+  QVector3D anchor;
+  float anchor_weight;
+  float depth;
+  float saturation;
+};
+
+inline auto grass_blade_toning(Game::Map::GroundType ground_type) -> GrassBladeToning {
+  switch (ground_type) {
+  case Game::Map::GroundType::SoilFertile:
+    // Deep pasture green.
+    return {{0.15F, 0.29F, 0.11F}, 0.34F, 0.20F, 1.30F};
+  case Game::Map::GroundType::ForestMud:
+    // Shaded undergrowth, darker and bluer than open pasture.
+    return {{0.13F, 0.25F, 0.13F}, 0.38F, 0.22F, 1.26F};
+  case Game::Map::GroundType::AlpineMix:
+    // Short, cold-stunted, and desaturated by altitude.
+    return {{0.21F, 0.29F, 0.17F}, 0.28F, 0.15F, 1.12F};
+  case Game::Map::GroundType::SoilRocky:
+    // Sparse olive-brown tussock.
+    return {{0.25F, 0.29F, 0.15F}, 0.28F, 0.16F, 1.10F};
+  case Game::Map::GroundType::GrassDry:
+  default:
+    // Straw over pale ground: the least room to darken, the most need to.
+    return {{0.34F, 0.35F, 0.16F}, 0.26F, 0.15F, 1.08F};
+  }
+}
+
 inline auto contrast_grass_blade_color(QVector3D const& blade_color,
                                        QVector3D const& soil_color,
                                        Game::Map::GroundType ground_type,
                                        float dryness) -> QVector3D {
-  QVector3D const blade = clamp_color(blade_color);
+  QVector3D blade = clamp_color(blade_color);
+  const auto toning = grass_blade_toning(ground_type);
+  float const dry_factor = std::clamp(dryness, 0.0F, 1.0F);
+
+  blade = blade * (1.0F - toning.anchor_weight) + toning.anchor * toning.anchor_weight;
+  blade = blade * (1.0F - toning.depth * (0.85F + 0.30F * dry_factor));
+
+  float const luma = color_luminance(blade);
+  blade = QVector3D(luma + (blade.x() - luma) * toning.saturation,
+                    luma + (blade.y() - luma) * toning.saturation,
+                    luma + (blade.z() - luma) * toning.saturation);
+  QVector3D adjusted = clamp_color(blade);
+
   if (ground_type != Game::Map::GroundType::GrassDry) {
-    return blade;
+    return adjusted;
   }
 
+  // Dry ground is pale enough that the toning above is not always sufficient on
+  // its own, so keep an explicit floor on the separation.
   float const soil_luma = color_luminance(soil_color);
-  float const blade_luma = color_luminance(blade);
-  float const luma_gap = std::abs(soil_luma - blade_luma);
-  float const close_to_soil = 1.0F - std::clamp(luma_gap / 0.20F, 0.0F, 1.0F);
-  float const dry_factor = std::clamp(dryness, 0.0F, 1.0F);
   float const bright_soil = smoothstep(0.38F, 0.58F, soil_luma);
-  float const adjustment = std::clamp(0.12F + dry_factor * 0.36F +
-                                          close_to_soil * 0.38F + bright_soil * 0.14F,
-                                      0.0F,
-                                      0.78F);
-
-  QVector3D const olive_shadow{0.18F, 0.26F, 0.09F};
-  QVector3D const dry_olive{0.30F, 0.34F, 0.13F};
-  QVector3D const target = olive_shadow * (0.55F + dry_factor * 0.25F) +
-                           dry_olive * (0.45F - dry_factor * 0.25F);
-
-  QVector3D adjusted = blade * (1.0F - adjustment) + target * adjustment;
   float const adjusted_luma = color_luminance(adjusted);
-  float const min_gap = 0.12F + bright_soil * 0.04F;
+  float const min_gap = 0.055F + bright_soil * 0.025F;
   if (soil_luma > 0.38F && soil_luma - adjusted_luma < min_gap) {
-    float const extra =
-        std::clamp((min_gap - (soil_luma - adjusted_luma)) / min_gap, 0.0F, 1.0F);
-    adjusted = adjusted * (1.0F - extra * 0.80F) + olive_shadow * (extra * 0.80F);
+    QVector3D const contrast_anchor{0.20F, 0.27F, 0.11F};
+    float const deficit = min_gap - (soil_luma - adjusted_luma);
+    float const extra = std::clamp(deficit / std::max(min_gap, 1e-4F), 0.0F, 1.0F);
+    adjusted = adjusted * (1.0F - extra * 0.85F) + contrast_anchor * (extra * 0.85F);
   }
 
   return clamp_color(adjusted);
