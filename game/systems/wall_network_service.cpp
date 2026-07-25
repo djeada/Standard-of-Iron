@@ -258,11 +258,6 @@ auto is_wall_key_occupied(Engine::Core::World& world,
   return false;
 }
 
-// Yaw is applied as a right-handed rotation about +Y, so a rotation of `angle`
-// maps the archetype's local +X (east) to world (cos, -sin): +90 turns east into
-// north, -90 turns east into south. The canonical archetypes are authored with
-// their arms pointing east (End), east/west (Straight), east+north (Corner) and
-// east+north+south (Tee).
 auto canonical_variant_for_mask(std::uint8_t mask)
     -> std::pair<std::string_view, float> {
   using Service = WallNetworkService;

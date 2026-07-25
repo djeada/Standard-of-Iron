@@ -158,10 +158,7 @@ TEST(ArenaScenariosTest,
 }
 
 TEST(ArenaScenariosTest, WallGroupsSitOnTheWallNetworkLattice) {
-  // Wall connectivity is resolved on a lattice of even grid cells, while the
-  // mesh is drawn at the spawn position. Authoring a run off that lattice makes
-  // the two disagree: segments snap onto a neighbour's cell or stop counting as
-  // adjacent, so the joins render as gaps and stray posts.
+
   constexpr int k_spacing = Game::Systems::WallNetworkService::k_segment_spacing;
 
   for (const auto& scenario : Arena::Scenarios::definitions()) {

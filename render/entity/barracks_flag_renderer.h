@@ -33,12 +33,6 @@ struct ClothBannerResources {
   Shader* banner_shader = nullptr;
 };
 
-// Cloth banners only reach the banner pipeline if the sink that finally records
-// the draw is told to use the banner shader. Renderer functions are handed
-// whatever submitter the scene walk wrapped around the real one - batching,
-// damage state, render probes - so resolve the sink through unwrap_submitter()
-// rather than casting the outermost wrapper. Casting the wrapper silently drops
-// the shader and the banner degrades to a flat untextured quad.
 struct BannerShaderScope {
   explicit BannerShaderScope(ISubmitter& submitter, Shader* shader) {
     if (shader == nullptr) {

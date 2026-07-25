@@ -35,12 +35,6 @@ struct WallPalette {
   bool horned_masonry{false};
 };
 
-// Spans always reach exactly half a wall cell, so neighbouring segments butt
-// instead of overlapping. Stakes sit on a lattice shared by every variant: the
-// junction post owns the centre slot and stakes fill the remaining slots, which
-// keeps the palisade evenly spaced across segment seams and around corners.
-// Keep `post_radius + stake_radius` no larger than one and a half lattice steps
-// (0.3) and `stake_radius` no larger than half a step so nothing is swallowed.
 struct WallGeometry {
   bool solid_masonry{false};
   bool earthwork_base{false};

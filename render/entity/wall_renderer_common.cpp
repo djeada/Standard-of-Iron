@@ -20,7 +20,6 @@ constexpr std::size_t k_dir_south = 2U;
 constexpr std::size_t k_dir_west = 3U;
 constexpr std::size_t k_dir_count = 4U;
 
-// Half of Game::Systems::WallNetworkService::k_segment_spacing.
 constexpr float k_connected_span_length = 1.0F;
 constexpr float k_stake_spacing = 0.2F;
 
@@ -107,8 +106,6 @@ auto span_length(const WallLayout& layout,
                                        : k_connected_span_length;
 }
 
-// Number of lattice slots a span of `length` owns, with the centre slot left to
-// the junction post.
 auto span_slot_count(float length) -> int {
   const int slot_total = static_cast<int>(std::lround(length / k_stake_spacing)) - 1;
   return slot_total < 1 ? 1 : slot_total;
@@ -126,8 +123,6 @@ auto terminal_post_radius(const WallGeometry& geometry) -> float {
   return geometry.post_radius * 0.85F;
 }
 
-// Open spans finish on a stouter terminal post, seated so its outer face lands
-// on the cell edge and rails and stakes die inside it instead of in mid air.
 auto terminal_post_offset(const WallGeometry& geometry, float length) -> float {
   return length - terminal_post_radius(geometry);
 }
@@ -241,10 +236,6 @@ void add_span_stakes(BuildingArchetypeDesc& desc,
                 palette.wood_dark);
 }
 
-// Rails run down both faces of the palisade so the mesh stays symmetric under
-// the quarter-turns the wall network applies. Where a perpendicular arm exists
-// the rail is carried past the centre to the mitre point, so the two arms of a
-// corner meet inside each other instead of leaving a notch.
 void add_rails(BuildingArchetypeDesc& desc,
                const WallPalette& palette,
                const WallGeometry& geometry,
@@ -333,9 +324,6 @@ void add_junction_post(BuildingArchetypeDesc& desc,
   }
 }
 
-// The rampart is emitted as a centre block plus one arm per span, all butted
-// edge to edge. Overlapping slabs would leave co-planar lids fighting for depth
-// exactly where two runs cross, which is what turned corners into dark patches.
 void add_earth_berm(BuildingArchetypeDesc& desc,
                     const WallPalette& palette,
                     const WallGeometry& geometry,

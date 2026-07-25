@@ -2943,9 +2943,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_terrain_scatter = true;
     s.camera_focus = QVector3D(0.0F, 0.0F, 1.0F);
 
-    // A closed square ring (segment spacing 2) yields four genuine wall corners:
-    // the north/south runs own the corner cells, the west/east runs fill the
-    // gaps between them so no two segments share a cell.
     auto ring = [](const QString& prefix,
                    Nation nation,
                    int owner,
@@ -2981,8 +2978,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    {cx + 6.0F, 0.0F, 0.0F},
                    {0.0F, 0.0F, 2.0F},
                    90.0F),
-          // Interior spur off the north run: creates a tee at (cx, -6) and a
-          // free end at (cx, -2) for inner-corner review.
+
           building(prefix + QStringLiteral("_spur"),
                    Game::Units::SpawnType::WallSegment,
                    nation,
@@ -2991,8 +2987,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    {cx, 0.0F, -3.0F},
                    {0.0F, 0.0F, 2.0F},
                    90.0F),
-          // Stubs either side of the west run's middle cell turn it into a four
-          // way crossing and leave a free end on each side of it.
+
           building(prefix + QStringLiteral("_cross_inner"),
                    Game::Units::SpawnType::WallSegment,
                    nation,
@@ -3005,7 +3000,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    owner,
                    1,
                    {cx - 8.0F, 0.0F, 0.0F}),
-          // Detached stub: the isolated variant, with no neighbour to merge to.
+
           building(prefix + QStringLiteral("_stub"),
                    Game::Units::SpawnType::WallSegment,
                    nation,

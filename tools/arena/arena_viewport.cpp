@@ -1901,8 +1901,6 @@ void ArenaViewport::place_scenario_resource_patches(
     return;
   }
 
-  // Wide enough to keep a trunk or ore heap clear of a wall run or a roof
-  // overhang once the prop is grown to full size.
   constexpr float k_prop_building_clearance = 1.6F;
 
   auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
@@ -2351,10 +2349,6 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     return;
   }
 
-  // Groves, ore and stone are seeded only once the scenario's structures are
-  // standing and registered as obstacles: the authored patches can then skip
-  // occupied ground, and the procedural biome scatter honours the same building
-  // clearance instead of dropping trees through roofs.
   place_scenario_resource_patches(*definition);
   reconfigure_terrain_from_state();
 

@@ -118,11 +118,9 @@ public slots:
   void reset_arena();
   void load_scenario(const QString& scenario_id);
   void set_terrain_review_content_enabled(bool enabled);
-  // Hides the stats, controls and spawn-anchor overlays so batch captures
-  // record the scene alone, for footage rather than diagnostics.
+
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
-  // Slowly orbits the scenario camera during capture so footage shows the scene
-  // in the round instead of a locked-off still.
+
   void set_capture_orbit_speed(float degrees_per_second) {
     m_capture_orbit_speed = degrees_per_second;
   }

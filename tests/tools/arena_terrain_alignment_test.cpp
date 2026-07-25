@@ -48,10 +48,7 @@ protected:
 };
 
 TEST_F(ArenaTerrainAlignmentTest, BuildingsKeepTheirPlotWhenTerrainIsRebuilt) {
-  // Regenerating terrain re-seats everything on the new surface. A building
-  // stands on its own registered footprint, which is unwalkable by definition,
-  // so snapping it to the nearest walkable cell would evict it from its plot and
-  // scramble a settlement on every regenerate.
+
   Engine::Core::World world;
   auto* barracks =
       make_building(world, Game::Units::SpawnType::Barracks, "barracks", 6.0F, -4.0F);

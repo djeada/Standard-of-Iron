@@ -62,10 +62,6 @@ auto resolve_soldier_layout_policy(const SoldierLayoutPolicyInputs& inputs) noex
         inputs.row, inputs.col, inputs.rows, inputs.cols, policy.inst_seed);
   }
 
-  // Formation roots are authoritative spatial slots.  Combat variation belongs
-  // to the skeletal pose, never to root placement; otherwise gameplay contact
-  // and the visible soldier positions describe different battlefields.
-
   return policy;
 }
 

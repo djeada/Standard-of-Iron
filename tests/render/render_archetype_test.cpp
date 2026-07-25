@@ -662,7 +662,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   auto render_bounds = [](auto register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
-    EntityRendererRegistry registry;
+    EntityRendererRegistry const registry;
     register_renderer_fn(registry);
     const auto renderer = registry.get(key);
     EXPECT_TRUE(static_cast<bool>(renderer));
@@ -1244,11 +1244,6 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
   EXPECT_TRUE(has_mesh_spanning_axis(meshes, 1.0F, true, 1.4F));
 }
 
-// Walls own a two by two cell, so every variant has to fit inside a one unit
-// radius around its origin: anything past that overlaps the neighbouring
-// segment instead of butting against it. The tolerance covers the sliver by
-// which the outermost stake's tip collar leans over the seam onto its
-// neighbour's, which is what makes a run read as continuous.
 constexpr float k_wall_cell_half = 1.0F;
 constexpr float k_wall_seam_epsilon = 0.02F;
 

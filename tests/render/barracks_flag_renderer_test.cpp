@@ -87,7 +87,7 @@ TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
        .ring_radius_scale = 2.2F,
        .ring_color = QVector3D(0.9F, 0.8F, 0.2F)});
 
-  ASSERT_EQ(submitter.meshes.size(), 8u);
+  ASSERT_EQ(submitter.meshes.size(), 8U);
   EXPECT_EQ(submitter.meshes[3].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[4].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[0].mesh, get_unit_cylinder());
@@ -104,7 +104,7 @@ TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
   ctx.entity = &entity;
 
   RecordingSubmitter submitter;
-  BarracksFlagRenderer::ClothBannerResources cloth{
+  BarracksFlagRenderer::ClothBannerResources const cloth{
       .cloth_mesh = fake_mesh(99),
       .banner_shader = reinterpret_cast<Shader*>(static_cast<intptr_t>(123))};
   BarracksFlagRenderer::draw_hanging_banner(
@@ -125,11 +125,10 @@ TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
        .ring_color = QVector3D(0.9F, 0.8F, 0.2F)},
       &cloth);
 
-  ASSERT_GE(submitter.meshes.size(), 5u);
+  ASSERT_GE(submitter.meshes.size(), 5U);
   EXPECT_EQ(submitter.meshes[3].mesh, fake_mesh(99));
 }
 
-// Mirrors the render-probe wrapper the scene walk puts around the real sink.
 class WrappingSubmitter final : public Render::GL::ISubmitter {
 public:
   explicit WrappingSubmitter(ISubmitter& inner)
@@ -185,9 +184,6 @@ private:
 TEST(BarracksFlagRenderer, ClothBannerKeepsItsShaderThroughSubmitterWrappers) {
   using namespace Render::GL;
 
-  // The scene walk hands renderers a wrapped submitter. If the banner shader is
-  // applied to the wrapper instead of the sink that records the draw, the cloth
-  // pipeline never runs and the banner degrades to a flat untextured quad.
   Engine::Core::Entity entity(3);
   DrawContext ctx;
   ctx.entity = &entity;
@@ -211,7 +207,7 @@ TEST(BarracksFlagRenderer, ClothBannerKeepsItsShaderThroughSubmitterWrappers) {
                                                  QVector3D(0.9F, 0.8F, 0.3F),
                                                  &cloth);
 
-  ASSERT_EQ(queue.size(), 1u);
+  ASSERT_EQ(queue.size(), 1U);
   queue.sort_for_batching();
   const auto& cmd = queue.get_sorted(0);
   ASSERT_EQ(cmd.index(), static_cast<std::size_t>(MeshCmdIndex));

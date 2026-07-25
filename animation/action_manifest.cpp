@@ -33,11 +33,6 @@ auto resolve_humanoid_action_sample(const HumanoidActionSampleInputs& inputs) no
     return sample;
   }
 
-  // A melee lock is an orthogonal, persistent gameplay transaction. It must
-  // survive authored WindUp/Strike/Recover states; those states only decide
-  // where the attack phase comes from. Previously this flag was set only when
-  // the lock supplied a fallback attack, causing rooted pose layers and fight
-  // indicators to switch off for the duration of every authored strike.
   sample.is_in_melee_lock = inputs.melee_lock.in_lock && inputs.melee_lock.participates;
 
   if (inputs.construction.active) {

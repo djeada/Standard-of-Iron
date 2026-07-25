@@ -247,8 +247,6 @@ TEST_F(WallMechanicsTest, AdjacentWallsRefreshConnectionVisuals) {
 TEST_F(WallMechanicsTest, PerpendicularWallsFormSingleCornerAndUpdateOnConnectivity) {
   Engine::Core::World world;
 
-  // Outer corner: a center cell with two perpendicular neighbours (east + north)
-  // must resolve to exactly one corner variant, never overlapping straight runs.
   auto* center = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
   auto* east = make_wall(world, 2.0F, 0.0F, 0.0F, 1);
   auto* north = make_wall(world, 0.0F, 0.0F, -2.0F, 1);
@@ -266,7 +264,6 @@ TEST_F(WallMechanicsTest, PerpendicularWallsFormSingleCornerAndUpdateOnConnectiv
   EXPECT_NE(center_renderable->renderer_id.find("wall_segment_corner"),
             std::string::npos);
 
-  // Inner corner / junction: adding a third arm turns the same cell into a tee.
   auto* south = make_wall(world, 0.0F, 0.0F, 2.0F, 1);
   WallNetworkService::refresh_world(world);
 
@@ -276,8 +273,6 @@ TEST_F(WallMechanicsTest, PerpendicularWallsFormSingleCornerAndUpdateOnConnectiv
                                       WallNetworkService::k_connection_south));
   EXPECT_NE(center_renderable->renderer_id.find("wall_segment_tee"), std::string::npos);
 
-  // Disconnecting one arm must re-resolve the join back to a clean corner rather
-  // than leaving stale corner/tee geometry behind.
   auto* north_unit = north->get_component<UnitComponent>();
   ASSERT_NE(north_unit, nullptr);
   north_unit->health = 0;
@@ -295,10 +290,7 @@ TEST_F(WallMechanicsTest, PerpendicularWallsFormSingleCornerAndUpdateOnConnectiv
 }
 
 TEST_F(WallMechanicsTest, EveryConnectionMaskOrientsItsArmsAtItsNeighbours) {
-  // Renderers author one archetype per join shape and the network rotates it.
-  // Yaw is a right-handed turn about +Y, so +90 degrees carries the archetype's
-  // local east arm to world north; anything else points the join into empty
-  // ground and leaves the real neighbour unattached.
+
   constexpr std::array<std::uint8_t, 4> k_direction_bits{
       WallNetworkService::k_connection_north,
       WallNetworkService::k_connection_east,

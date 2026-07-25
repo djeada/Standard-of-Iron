@@ -124,11 +124,7 @@ auto raw_attack_phase_hint(const CombatRawInputs& raw,
     float const progress =
         eased_combat_phase_progress(raw.combat_phase, raw.combat_phase_progress);
     float const authored_phase = window.start + (window.end - window.start) * progress;
-    // The gameplay phase owns the broad action window, but it must not force
-    // every rendered body onto effectively the same frame. Apply cadence in
-    // normalized clip time so its visual separation survives narrow Strike
-    // and Impact windows; applying it to window progress reduced a meaningful
-    // 0.24 soldier offset to less than one rendered frame.
+
     constexpr float k_visual_cadence_scale = 0.65F;
     return std::clamp(
         authored_phase + lane.phase_bias * k_visual_cadence_scale, 0.0F, 0.995F);
@@ -139,10 +135,7 @@ auto raw_attack_phase_hint(const CombatRawInputs& raw,
 }
 
 auto attack_cycle_entry_phase(const CombatLaneProfile& lane) noexcept -> float {
-  // Follow-up presentation transactions always re-enter through anticipation,
-  // even when the gameplay attack state remains in Recover during cooldown.
-  // Keep a small amount of the personal cadence so the restart itself does
-  // not synchronize the formation.
+
   return std::clamp(0.045F + lane.phase_bias * 0.30F, 0.0F, 0.13F);
 }
 
@@ -396,10 +389,7 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
       raw.attack_requested && !raw.is_healing && !raw.is_constructing;
   bool const request_attack_viable =
       request_attack && (raw.attack_target_id == 0U || raw.attack_target_alive);
-  // Keep the soldier's stable personal cadence while the transaction locks
-  // its semantic lane. Reconstructing only from the lane enum erased the
-  // per-soldier timing and synchronized whole formations after the first
-  // frame of combat.
+
   CombatLaneProfile const active_lane =
       next.active ? profile_with_lane(lane, next.locked_lane) : lane;
   auto const startup_attack_lane =
