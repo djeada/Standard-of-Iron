@@ -238,10 +238,6 @@ void TerrainPipeline::initialize_grass_geometry() {
     QVector2D uv;
   };
 
-  // A tuft, not a blade. One quad per instance renders as an isolated straw no
-  // matter how it is shaded; three splayed quads sharing a root read as a clump
-  // of grass and triple the coverage without another instance. x and z are in
-  // blade-width units, y is the fraction of blade height.
   constexpr int k_blades_per_tuft = grass_blade_vertex_count / 6;
   GrassVertex blade_vertices[grass_blade_vertex_count];
 

@@ -35,9 +35,6 @@ using namespace Render::GL::Geometry;
 constexpr float k_grass_height_scale = 1.12F;
 constexpr float k_grass_width_scale = 1.55F;
 
-// Grass detail thresholds, as the fraction of viewport height one blade
-// covers. A blade is full detail at roughly two pixels on a 1080-tall view and
-// stops being worth transforming well before it stops being drawn.
 constexpr float k_grass_full_screen_fraction = 0.0016F;
 constexpr float k_grass_min_screen_fraction = 0.0007F;
 constexpr float k_grass_cull_screen_fraction = 0.0004F;
@@ -120,9 +117,6 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  // Thin the field by how much of the screen a blade actually covers, rather
-  // than by raw distance, so the same thresholds hold at any resolution, field
-  // of view, or zoom. The fraction is of viewport height.
   const QVector3D camera_position = camera->get_position();
   const float tan_half_fov = std::tan(std::clamp(camera->get_fov(), 1.0F, 179.0F) *
                                       0.5F * std::numbers::pi_v<float> / 180.0F);
@@ -493,10 +487,6 @@ void BiomeRenderer::generate_grass_instances() {
     }
   }
 
-  // Distance thinning draws a prefix of each chunk, and blades are generated
-  // in row-major order, so an unshuffled prefix would keep one band of the map
-  // and drop the rest. Shuffling once here makes any prefix a uniform sample.
-  // It is deterministic, so the surviving blades stay the same frame to frame.
   std::mt19937 shuffle_rng(m_noise_seed ^ 0x5f3aC71dU);
   std::shuffle(grass_instances.begin(), grass_instances.end(), shuffle_rng);
 

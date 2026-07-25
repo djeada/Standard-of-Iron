@@ -112,11 +112,6 @@ inline auto clamp_color(QVector3D const& color) -> QVector3D {
           std::clamp(color.z(), 0.0F, 1.0F)};
 }
 
-// How a biome's blades sit against its own ground. A real sward self-shadows
-// between the blades, so a clump reads deeper and more saturated than the
-// smooth ground albedo it grows out of. Blades tinted at or above the ground's
-// own value read as pale confetti scattered over it, which is the one thing
-// grass never looks like.
 struct GrassBladeToning {
   QVector3D anchor;
   float anchor_weight;
@@ -127,20 +122,20 @@ struct GrassBladeToning {
 inline auto grass_blade_toning(Game::Map::GroundType ground_type) -> GrassBladeToning {
   switch (ground_type) {
   case Game::Map::GroundType::SoilFertile:
-    // Deep pasture green.
+
     return {{0.15F, 0.29F, 0.11F}, 0.34F, 0.20F, 1.30F};
   case Game::Map::GroundType::ForestMud:
-    // Shaded undergrowth, darker and bluer than open pasture.
+
     return {{0.13F, 0.25F, 0.13F}, 0.38F, 0.22F, 1.26F};
   case Game::Map::GroundType::AlpineMix:
-    // Short, cold-stunted, and desaturated by altitude.
+
     return {{0.21F, 0.29F, 0.17F}, 0.28F, 0.15F, 1.12F};
   case Game::Map::GroundType::SoilRocky:
-    // Sparse olive-brown tussock.
+
     return {{0.25F, 0.29F, 0.15F}, 0.28F, 0.16F, 1.10F};
   case Game::Map::GroundType::GrassDry:
   default:
-    // Straw over pale ground: the least room to darken, the most need to.
+
     return {{0.34F, 0.35F, 0.16F}, 0.26F, 0.15F, 1.08F};
   }
 }
@@ -166,8 +161,6 @@ inline auto contrast_grass_blade_color(QVector3D const& blade_color,
     return adjusted;
   }
 
-  // Dry ground is pale enough that the toning above is not always sufficient on
-  // its own, so keep an explicit floor on the separation.
   float const soil_luma = color_luminance(soil_color);
   float const bright_soil = smoothstep(0.38F, 0.58F, soil_luma);
   float const adjusted_luma = color_luminance(adjusted);

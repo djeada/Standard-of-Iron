@@ -90,8 +90,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_terrain_pipeline->m_grass_shader->set_uniform(
             m_terrain_pipeline->m_grass_uniforms.light_dir, light_dir);
       }
-      // The blade shader sizes itself against the framebuffer so sub-pixel
-      // grass still covers the pixel it lands on.
+
       if (m_terrain_pipeline->m_grass_uniforms.viewport_size !=
           Shader::InvalidUniform) {
         m_terrain_pipeline->m_grass_shader->set_uniform(

@@ -23,10 +23,6 @@ void submit_visible_chunks(Render::GL::Renderer& renderer,
   }
 }
 
-// As above, but each surviving chunk is asked how many of its instances are
-// still worth drawing. Frustum culling alone bounds nothing when the camera
-// pulls back: the whole map stays in view and every instance is still
-// transformed, however little of it reaches a pixel.
 template <typename Instance, typename Params, typename ChunkBudget>
 void submit_visible_chunks_lod(Render::GL::Renderer& renderer,
                                const FilteredRendererState<Instance, Params>& state,
