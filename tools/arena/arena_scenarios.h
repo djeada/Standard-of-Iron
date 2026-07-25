@@ -75,6 +75,7 @@ inline constexpr char k_carthage_fortification_showcase_id[] =
     "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
 inline constexpr char k_water_showcase_id[] = "water_showcase";
+inline constexpr char k_wall_corner_showcase_id[] = "wall_corner_showcase";
 
 struct ScenarioOption {
   QString id;

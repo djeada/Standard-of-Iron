@@ -509,6 +509,16 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Seconds between batch frame captures; zero disables them."),
       QStringLiteral("seconds"),
       QStringLiteral("1"));
+  QCommandLineOption const capture_orbit_option(
+      QStringList{QStringLiteral("capture-orbit")},
+      QStringLiteral("Degrees per second to orbit the scenario camera while "
+                     "capturing; zero keeps the authored view."),
+      QStringLiteral("degrees"),
+      QStringLiteral("0"));
+  QCommandLineOption const clean_capture_option(
+      QStringList{QStringLiteral("clean-capture")},
+      QStringLiteral("Hide stats, controls and spawn markers so captured frames "
+                     "record only the scene."));
   QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
                                        QStringLiteral("List scenario ids and exit."));
   parser.addOptions({batch_option,
@@ -523,6 +533,8 @@ auto main(int argc, char** argv) -> int {
                      time_of_day_option,
                      artifact_option,
                      capture_interval_option,
+                     clean_capture_option,
+                     capture_orbit_option,
                      list_option});
   parser.process(app);
 
@@ -556,6 +568,9 @@ auto main(int argc, char** argv) -> int {
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
   window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
+  window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
+  window.viewport()->set_capture_orbit_speed(
+      parser.value(capture_orbit_option).toFloat());
 
   if (!parser.isSet(batch_option)) {
     if (parser.isSet(campaign_terrain_option)) {

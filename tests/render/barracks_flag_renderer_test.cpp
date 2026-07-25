@@ -87,7 +87,7 @@ TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
        .ring_radius_scale = 2.2F,
        .ring_color = QVector3D(0.9F, 0.8F, 0.2F)});
 
-  ASSERT_EQ(submitter.meshes.size(), 8u);
+  ASSERT_EQ(submitter.meshes.size(), 8U);
   EXPECT_EQ(submitter.meshes[3].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[4].mesh, fake_mesh(1));
   EXPECT_EQ(submitter.meshes[0].mesh, get_unit_cylinder());
@@ -104,7 +104,7 @@ TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
   ctx.entity = &entity;
 
   RecordingSubmitter submitter;
-  BarracksFlagRenderer::ClothBannerResources cloth{
+  BarracksFlagRenderer::ClothBannerResources const cloth{
       .cloth_mesh = fake_mesh(99),
       .banner_shader = reinterpret_cast<Shader*>(static_cast<intptr_t>(123))};
   BarracksFlagRenderer::draw_hanging_banner(
@@ -125,8 +125,97 @@ TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
        .ring_color = QVector3D(0.9F, 0.8F, 0.2F)},
       &cloth);
 
-  ASSERT_GE(submitter.meshes.size(), 5u);
+  ASSERT_GE(submitter.meshes.size(), 5U);
   EXPECT_EQ(submitter.meshes[3].mesh, fake_mesh(99));
+}
+
+class WrappingSubmitter final : public Render::GL::ISubmitter {
+public:
+  explicit WrappingSubmitter(ISubmitter& inner)
+      : m_inner(inner) {}
+
+  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
+    return m_inner.unwrap_submitter();
+  }
+
+  void mesh(Render::GL::Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Render::GL::Texture* tex,
+            float alpha,
+            int material_id) override {
+    m_inner.mesh(mesh, model, color, tex, alpha, material_id);
+  }
+  void banner(Render::GL::Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Render::GL::Texture* tex,
+              float alpha,
+              int material_id) override {
+    m_inner.banner(mesh, model, color, trim_color, tex, alpha, material_id);
+  }
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha) override {
+    m_inner.cylinder(start, end, radius, color, alpha);
+  }
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
+                    float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
+
+private:
+  ISubmitter& m_inner;
+};
+
+TEST(BarracksFlagRenderer, ClothBannerKeepsItsShaderThroughSubmitterWrappers) {
+  using namespace Render::GL;
+
+  Engine::Core::Entity entity(3);
+  DrawContext ctx;
+  ctx.entity = &entity;
+
+  auto* banner_shader = reinterpret_cast<Shader*>(static_cast<intptr_t>(4242));
+  DrawQueue queue;
+  QueueSubmitter sink(&queue);
+  WrappingSubmitter probe(sink);
+
+  BarracksFlagRenderer::ClothBannerResources const cloth{
+      .cloth_mesh = fake_mesh(99), .banner_shader = banner_shader};
+  BarracksFlagRenderer::draw_banner_with_tassels(ctx,
+                                                 probe,
+                                                 fake_mesh(1),
+                                                 fake_texture(2),
+                                                 QVector3D(0.0F, 2.5F, 0.0F),
+                                                 0.45F,
+                                                 0.3F,
+                                                 0.02F,
+                                                 QVector3D(0.2F, 0.4F, 0.9F),
+                                                 QVector3D(0.9F, 0.8F, 0.3F),
+                                                 &cloth);
+
+  ASSERT_EQ(queue.size(), 1U);
+  queue.sort_for_batching();
+  const auto& cmd = queue.get_sorted(0);
+  ASSERT_EQ(cmd.index(), static_cast<std::size_t>(MeshCmdIndex));
+  const auto& mesh_cmd = std::get<MeshCmdIndex>(cmd);
+  EXPECT_EQ(mesh_cmd.mesh, fake_mesh(99));
+  EXPECT_EQ(mesh_cmd.shader, banner_shader);
+  EXPECT_TRUE(mesh_cmd.has_trim_color);
+  EXPECT_EQ(sink.shader(), nullptr) << "the scope must restore the previous shader";
 }
 
 } // namespace

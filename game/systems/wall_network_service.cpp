@@ -282,7 +282,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
     if (has(Service::k_connection_east)) {
       return {k_wall_variant_end, 0.0F};
     }
-    if (has(Service::k_connection_south)) {
+    if (has(Service::k_connection_north)) {
       return {k_wall_variant_end, 90.0F};
     }
     if (has(Service::k_connection_west)) {
@@ -301,7 +301,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
     if (has(Service::k_connection_north) && has(Service::k_connection_east)) {
       return {k_wall_variant_corner, 0.0F};
     }
-    if (has(Service::k_connection_east) && has(Service::k_connection_south)) {
+    if (has(Service::k_connection_west) && has(Service::k_connection_north)) {
       return {k_wall_variant_corner, 90.0F};
     }
     if (has(Service::k_connection_south) && has(Service::k_connection_west)) {
@@ -313,7 +313,7 @@ auto canonical_variant_for_mask(std::uint8_t mask)
   if (!has(Service::k_connection_west)) {
     return {k_wall_variant_tee, 0.0F};
   }
-  if (!has(Service::k_connection_north)) {
+  if (!has(Service::k_connection_south)) {
     return {k_wall_variant_tee, 90.0F};
   }
   if (!has(Service::k_connection_east)) {

@@ -53,9 +53,7 @@ namespace {
 }
 
 [[nodiscard]] auto spear_direction_for_thrust(float attack_phase) noexcept -> PoseVec3 {
-  // Infantry drive the point forward and slightly upward under the opponent's
-  // guard. The shaft stays on this rail through chamber, contact and recovery;
-  // it never crosses the body like a bat or polearm swing.
+
   (void)attack_phase;
   return normalize({0.02F, 0.18F, 1.0F});
 }
@@ -109,18 +107,12 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
   return std::clamp(reach_scale, 0.70F, 1.35F);
 }
 
-// A spear thrust is a straight, two-handed push, not a swung strike. Keep both
-// hands on one longitudinal rail and let the planted rear leg, hips, and torso
-// provide the power. This common pose is used by every standing spearman so a
-// renderer/archetype cannot accidentally fall back to an axe-like attack.
 [[nodiscard]] auto resolve_infantry_spear_thrust_pose(
     const HumanoidWeaponAttackPoseInputs& inputs) noexcept
     -> HumanoidWeaponAttackPoseSample {
   float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
-  // Both hands travel on one shallow up-and-forward line. Matching lateral
-  // coordinates and proportional height/depth changes prevent interpolation
-  // from producing a circular wind-up or an overhead cutting arc.
+
   PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F, 0.12F};
   PoseVec3 const contact_rear{0.28F, shoulder_y + 0.095F, 0.42F};
   PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F, 0.42F};
@@ -146,8 +138,6 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
     sample.left_hand = lerp(contact_front, retracted_front, recover);
   }
 
-  // Shoulders, hips and lead foot commit together. Opposing shoulder deltas
-  // rotate the weapon hand around the torso and read as a slash.
   float const forward_commit = 0.075F * drive;
   sample.shoulder_r_z_delta += forward_commit;
   sample.shoulder_l_z_delta += forward_commit;
@@ -163,7 +153,7 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
       .is_melee = true,
       .attack_phase = phase,
   });
-  // Right hand powers from the rear; left hand guides farther down the shaft.
+
   sample.offhand_along_offset = 0.30F;
   sample.offhand_y_drop = 0.0F;
   sample.offhand_lateral_offset = 0.0F;
@@ -489,9 +479,6 @@ resolve_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
   constexpr float k_thrust_middle = 0.0F;
   constexpr float k_thrust_low = -1.0F;
 
-  // The hand remains close to the body while the weapon supplies the reach.
-  // These points deliberately fit inside a human arm span; pushing the grip
-  // toward the target produces an impossible, folded pose once IK resolves it.
   PoseVec3 const guard_pos{0.30F, shoulder_y + 0.02F, 0.30F};
   PoseVec3 chamber_pos{0.32F, shoulder_y + 0.05F, 0.02F};
   PoseVec3 thrust_pos{0.27F, shoulder_y + 0.01F, 0.64F};
@@ -909,10 +896,6 @@ resolve_basic_melee_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
   return sample;
 }
 
-// Archers keep hold of the bow when an enemy reaches their line. The bow is
-// gripped as a short staff, pulled across the chest, then driven forward with
-// both hands. This is deliberately compact and linear so it cannot read as a
-// sword slash or as a ranged draw/release cycle.
 [[nodiscard]] auto
 resolve_bow_melee_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
     -> HumanoidWeaponAttackPoseSample {
@@ -1221,9 +1204,7 @@ auto resolve_mounted_sword_strike_pose(
   constexpr MountedSeatOffset rest_pos{0.08F, 0.24F, 0.12F};
   constexpr MountedSeatOffset chamber_pos{-0.09F, 0.34F, 0.44F};
   constexpr MountedSeatOffset apex_pos{-0.04F, 0.44F, 0.52F};
-  // Keep the weapon hand above the saddle and inside a credible mounted arm
-  // envelope. The old negative height drove the rider down toward the horse's
-  // shoulder and made the follow-through look like a fall.
+
   constexpr MountedSeatOffset strike_pos{0.58F, 0.52F, 0.18F};
   constexpr MountedSeatOffset followthrough_pos{0.66F, 0.62F, 0.08F};
 
@@ -1297,10 +1278,7 @@ auto resolve_mounted_spear_thrust_pose(
 
   constexpr MountedSeatOffset guard_pos{0.12F, 0.15F, 0.15F};
   constexpr MountedSeatOffset couch_pos{0.05F, 0.12F, 0.08F};
-  // The spear supplies reach; the rider's hands must not chase the spear point
-  // beyond arm length. A compact grip also keeps the torso seated at impact.
-  // Unlike the infantry's rising thrust, the rider drives both hands down from
-  // the couch so the spear point pierces toward a target below the saddle.
+
   constexpr MountedSeatOffset thrust_pos{0.46F, 0.08F, 0.02F};
   constexpr MountedSeatOffset extended_pos{0.52F, 0.05F, -0.04F};
 
@@ -1399,8 +1377,6 @@ auto resolve_mounted_bow_draw_pose(const MountedBowDrawPoseInputs& inputs) noexc
     -> MountedBowDrawPoseSample {
   float const draw_phase = std::clamp(inputs.draw_phase, 0.0F, 1.0F);
 
-  // Aim at shoulder/eye height. The previous chest-level targets made the
-  // archer appear to pull the string into the sternum.
   constexpr MountedSeatOffset bow_hold_pos{0.38F, -0.10F, 0.42F};
   constexpr MountedSeatOffset draw_start_pos{0.34F, 0.02F, 0.40F};
   constexpr MountedSeatOffset draw_end_pos{0.04F, 0.16F, 0.46F};
