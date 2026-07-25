@@ -29,6 +29,7 @@
 #include "render/equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "render/equipment/horse/saddles/light_cavalry_saddle_renderer.h"
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
+#include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/horse/attachment_frames.h"
 #include "render/horse/dimensions.h"
@@ -658,7 +659,8 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
 TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   using namespace Render::GL;
 
-  auto render_bounds = [](auto register_renderer_fn,
+  using RegisterRendererFn = void (*)(EntityRendererRegistry&);
+  auto render_bounds = [](RegisterRendererFn register_renderer_fn,
                           const char* key,
                           std::uint32_t entity_id) -> BoundingBox {
     EntityRendererRegistry registry;
@@ -997,7 +999,8 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
 
   EXPECT_GT(left_bounds.max.y(), 2.5F);
-  EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
+  EXPECT_NEAR(left_bounds.max.x() - left_bounds.min.x(), 2.0F, 0.02F);
+  EXPECT_LE(left_bounds.max.x(), 1.0F + 0.001F);
   EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
 }
 
@@ -1033,7 +1036,8 @@ TEST(RenderArchetypeBuildings, CarthageStraightWallFormsContinuousCrenellatedMas
   const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
 
   EXPECT_GT(left_bounds.max.y(), 1.75F);
-  EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
+  EXPECT_NEAR(left_bounds.max.x() - left_bounds.min.x(), 2.0F, 0.02F);
+  EXPECT_LE(left_bounds.max.x(), 1.0F + 0.001F);
   EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
 }
 
@@ -1194,7 +1198,12 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   meshes.insert(
       meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
 
-  EXPECT_TRUE(has_mesh_center_near_axis(meshes, 1.0F, true, 0.08F, 1.0F));
+  const auto left_bounds = bounds_for_recorded_meshes(left_submitter.meshes);
+  const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
+
+  EXPECT_NEAR(left_bounds.max.x(), 1.0F, 0.01F);
+  EXPECT_NEAR(right_bounds.min.x(), 1.0F, 0.01F);
+  EXPECT_TRUE(has_mesh_spanning_axis(meshes, 0.995F, true, 1.4F));
 }
 
 TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
@@ -1234,6 +1243,133 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
       meshes.end(), right_submitter.meshes.begin(), right_submitter.meshes.end());
 
   EXPECT_TRUE(has_mesh_spanning_axis(meshes, 1.0F, true, 1.4F));
+}
+
+constexpr float k_wall_cell_half = 1.0F;
+constexpr float k_wall_seam_epsilon = 0.02F;
+
+auto wall_mesh_bounds(const std::vector<RecordedMesh>& meshes)
+    -> Render::GL::BoundingBox {
+  auto bounds = Render::GL::empty_bounding_box();
+  for (const RecordedMesh& mesh : meshes) {
+    const float half_y = mesh.mesh == Render::GL::get_unit_cube() ? 1.0F : 0.5F;
+    for (int i = 0; i < 8; ++i) {
+      const QVector3D corner(((i & 1) != 0) ? 1.0F : -1.0F,
+                             ((i & 2) != 0) ? half_y : -half_y,
+                             ((i & 4) != 0) ? 1.0F : -1.0F);
+      bounds.expand(mesh.model.map(corner));
+    }
+  }
+  return bounds;
+}
+
+auto record_wall_meshes(const Render::GL::EntityRendererRegistry& registry,
+                        const char* renderer_key,
+                        std::uint32_t entity_id,
+                        const QMatrix4x4& model) -> std::vector<RecordedMesh> {
+  const auto renderer = registry.get(renderer_key);
+  EXPECT_TRUE(static_cast<bool>(renderer)) << renderer_key;
+  if (!renderer) {
+    return {};
+  }
+
+  Engine::Core::Entity entity(entity_id);
+  entity.add_component<Engine::Core::RenderableComponent>("", "");
+  entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+
+  Render::GL::DrawContext ctx;
+  Render::GL::ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = model;
+
+  RecordingSubmitter submitter;
+  renderer(ctx, submitter);
+  return submitter.meshes;
+}
+
+TEST(RenderArchetypeBuildings, WallVariantsStayInsideTheirOwnCell) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+  Carthage::register_wall_renderer(registry);
+
+  constexpr std::array<const char*, 6> k_variants{"wall_segment_isolated",
+                                                  "wall_segment_end",
+                                                  "wall_segment_straight",
+                                                  "wall_segment_corner",
+                                                  "wall_segment_tee",
+                                                  "wall_segment_cross"};
+  constexpr std::array<const char*, 2> k_nations{"roman", "carthage"};
+
+  std::uint32_t entity_id = 200;
+  for (const char* nation : k_nations) {
+    for (const char* variant : k_variants) {
+      const std::string key = std::string("troops/") + nation + "/" + variant;
+      const auto meshes =
+          record_wall_meshes(registry, key.c_str(), entity_id++, QMatrix4x4{});
+      ASSERT_FALSE(meshes.empty()) << key;
+
+      const auto bounds = wall_mesh_bounds(meshes);
+      EXPECT_LE(bounds.max.x(), k_wall_cell_half + k_wall_seam_epsilon) << key;
+      EXPECT_GE(bounds.min.x(), -k_wall_cell_half - k_wall_seam_epsilon) << key;
+      EXPECT_LE(bounds.max.z(), k_wall_cell_half + k_wall_seam_epsilon) << key;
+      EXPECT_GE(bounds.min.z(), -k_wall_cell_half - k_wall_seam_epsilon) << key;
+
+      for (std::size_t i = 0; i < meshes.size(); ++i) {
+        for (std::size_t j = i + 1; j < meshes.size(); ++j) {
+          EXPECT_FALSE(meshes[i].mesh == meshes[j].mesh &&
+                       meshes[i].model == meshes[j].model)
+              << key << " duplicates part " << i;
+        }
+      }
+    }
+  }
+}
+
+TEST(RenderArchetypeBuildings, RomanWallCornerBuildsArmsOnlyTowardsNeighbours) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+
+  const auto meshes = record_wall_meshes(
+      registry, "troops/roman/wall_segment_corner", 240, QMatrix4x4{});
+  ASSERT_FALSE(meshes.empty());
+  const auto bounds = wall_mesh_bounds(meshes);
+
+  EXPECT_NEAR(bounds.max.x(), k_wall_cell_half, k_wall_seam_epsilon);
+  EXPECT_NEAR(bounds.min.z(), -k_wall_cell_half, k_wall_seam_epsilon);
+  EXPECT_GT(bounds.min.x(), -0.4F);
+  EXPECT_LT(bounds.max.z(), 0.4F);
+}
+
+TEST(RenderArchetypeBuildings, RomanWallCornerMeetsStraightNeighboursAtCellSeams) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+
+  const auto corner = wall_mesh_bounds(record_wall_meshes(
+      registry, "troops/roman/wall_segment_corner", 250, QMatrix4x4{}));
+
+  QMatrix4x4 east_model;
+  east_model.translate(2.0F, 0.0F, 0.0F);
+  const auto east = wall_mesh_bounds(record_wall_meshes(
+      registry, "troops/roman/wall_segment_straight", 251, east_model));
+
+  QMatrix4x4 north_model;
+  north_model.translate(0.0F, 0.0F, -2.0F);
+  north_model.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+  const auto north = wall_mesh_bounds(record_wall_meshes(
+      registry, "troops/roman/wall_segment_straight", 252, north_model));
+
+  EXPECT_NEAR(corner.max.x(), east.min.x(), k_wall_seam_epsilon);
+  EXPECT_NEAR(corner.min.z(), north.max.z(), k_wall_seam_epsilon);
+  EXPECT_NEAR(east.min.x(), 1.0F, k_wall_seam_epsilon);
+  EXPECT_NEAR(north.max.z(), -1.0F, k_wall_seam_epsilon);
 }
 
 } // namespace

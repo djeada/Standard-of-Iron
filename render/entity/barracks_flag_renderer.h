@@ -39,21 +39,19 @@ struct BannerShaderScope {
       return;
     }
 
-    if (auto* queue = dynamic_cast<QueueSubmitter*>(&submitter)) {
+    ISubmitter* sink = submitter.unwrap_submitter();
+    if (sink == nullptr) {
+      sink = &submitter;
+    }
+
+    if (auto* queue = dynamic_cast<QueueSubmitter*>(sink)) {
       m_queue = queue;
       m_previous_queue_shader = queue->shader();
       queue->set_shader(shader);
       return;
     }
 
-    ISubmitter* fallback = &submitter;
-    if (auto* batch = dynamic_cast<BatchingSubmitter*>(&submitter)) {
-      if (batch->fallback_submitter() != nullptr) {
-        fallback = batch->fallback_submitter();
-      }
-    }
-
-    m_renderer = dynamic_cast<Renderer*>(fallback);
+    m_renderer = dynamic_cast<Renderer*>(sink);
     if (m_renderer != nullptr) {
       m_previous_renderer_shader = m_renderer->get_current_shader();
       m_renderer->set_current_shader(shader);
@@ -105,7 +103,7 @@ inline void draw_rally_flag_if_any(const DrawContext& p,
                1.0F);
       if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
           cloth->banner_shader != nullptr) {
-        BannerShaderScope shader_scope(out, cloth->banner_shader);
+        BannerShaderScope const shader_scope(out, cloth->banner_shader);
         out.banner(cloth->cloth_mesh,
                    flag.pennant,
                    flag.pennant_color,
@@ -141,7 +139,7 @@ inline void draw_banner_with_tassels(const DrawContext& p,
 
   if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
       cloth->banner_shader != nullptr) {
-    BannerShaderScope shader_scope(out, cloth->banner_shader);
+    BannerShaderScope const shader_scope(out, cloth->banner_shader);
     out.banner(cloth->cloth_mesh,
                p.model * banner_transform,
                banner_color,
@@ -151,8 +149,9 @@ inline void draw_banner_with_tassels(const DrawContext& p,
                material_id);
   } else {
 
-    QMatrix4x4 box_transform = Render::Geom::BannerCloth::generate_banner_transform(
-        banner_center, half_width, half_height, 0.02F);
+    QMatrix4x4 const box_transform =
+        Render::Geom::BannerCloth::generate_banner_transform(
+            banner_center, half_width, half_height, 0.02F);
     out.mesh(unit, p.model * box_transform, banner_color, white, 1.0F, material_id);
   }
 }

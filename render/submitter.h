@@ -531,6 +531,10 @@ public:
       : m_inner(inner)
       , m_damage_id(damage_material_id) {}
 
+  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
+    return m_inner.unwrap_submitter();
+  }
+
   void mesh(Mesh* mesh,
             const QMatrix4x4& model,
             const QVector3D& color,
