@@ -323,8 +323,8 @@ ApplicationWindow {
         }
         onSave_requested: function (slot_name) {
             console.log("Main: Save requested for slot:", slot_name);
-            if (typeof game !== 'undefined' && game.save_gameToSlot)
-                game.save_gameToSlot(slot_name);
+            if (typeof game !== 'undefined' && game.save_game_to_slot)
+                game.save_game_to_slot(slot_name);
             save_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -406,6 +406,13 @@ ApplicationWindow {
                 mainWindow.menu_visible = true;
             }
         }
+    }
+
+    SaveProgressOverlay {
+        id: save_progress_overlay
+
+        anchors.fill: parent
+        z: 30
     }
 
     Item {

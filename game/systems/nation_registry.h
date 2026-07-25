@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "../units/building_type.h"
@@ -90,6 +91,10 @@ public:
   auto get_nation_for_player(int player_id) const -> const Nation*;
 
   void set_player_nation(int player_id, NationID nation_id);
+
+  [[nodiscard]] auto
+  player_nation_assignments() const -> std::vector<std::pair<int, NationID>>;
+  void restore_player_nations(const std::vector<std::pair<int, NationID>>& assignments);
 
   auto get_all_nations() const -> const std::vector<Nation>& { return m_nations; }
 

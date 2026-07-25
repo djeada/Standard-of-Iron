@@ -4,6 +4,7 @@ StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
+SaveProgressOverlay 1.0 SaveProgressOverlay.qml
 MapPreview 1.0 MapPreview.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml

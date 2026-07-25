@@ -22,6 +22,14 @@ inline constexpr char kSoundVolumeKey[] = "audio/sound_volume";
 inline constexpr char kMusicVolumeKey[] = "audio/music_volume";
 inline constexpr char kVoiceVolumeKey[] = "audio/voice_volume";
 inline constexpr char kAmbienceVolumeKey[] = "audio/ambience_volume";
+inline constexpr char kAutosaveSlotCountKey[] = "saves/autosave_slot_count";
+inline constexpr char kAutosaveIntervalKey[] = "saves/autosave_interval_minutes";
+
+inline constexpr int kDefaultAutosaveSlotCount = 3;
+inline constexpr int kMinAutosaveSlotCount = 1;
+inline constexpr int kMaxAutosaveSlotCount = 10;
+inline constexpr int kDefaultAutosaveIntervalMinutes = 5;
+inline constexpr int kMaxAutosaveIntervalMinutes = 60;
 
 struct AudioVolumes {
   float master{AudioConstants::DEFAULT_VOLUME};
@@ -175,6 +183,38 @@ inline void save_voice_volume(float volume) {
 
 inline void save_ambience_volume(float volume) {
   save_audio_volume(kAmbienceVolumeKey, volume, "ambience");
+}
+
+inline auto load_autosave_slot_count() -> int {
+  auto settings = open();
+  const int stored =
+      settings
+          .value(QString::fromLatin1(kAutosaveSlotCountKey), kDefaultAutosaveSlotCount)
+          .toInt();
+  return std::clamp(stored, kMinAutosaveSlotCount, kMaxAutosaveSlotCount);
+}
+
+inline void save_autosave_slot_count(int count) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kAutosaveSlotCountKey),
+                    std::clamp(count, kMinAutosaveSlotCount, kMaxAutosaveSlotCount));
+  settings.sync();
+}
+
+inline auto load_autosave_interval_minutes() -> int {
+  auto settings = open();
+  const int stored = settings
+                         .value(QString::fromLatin1(kAutosaveIntervalKey),
+                                kDefaultAutosaveIntervalMinutes)
+                         .toInt();
+  return std::clamp(stored, 0, kMaxAutosaveIntervalMinutes);
+}
+
+inline void save_autosave_interval_minutes(int minutes) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kAutosaveIntervalKey),
+                    std::clamp(minutes, 0, kMaxAutosaveIntervalMinutes));
+  settings.sync();
 }
 
 } // namespace App::Core::UserSettings

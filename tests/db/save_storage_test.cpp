@@ -1,22 +1,46 @@
 #include <QByteArray>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include <QJsonObject>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 #include <QString>
+#include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <numbers>
 
+#include "systems/save_format.h"
 #include "systems/save_storage.h"
 
 using namespace Game::Systems;
+
+namespace {
+
+auto make_record(const QString& slot_name,
+                 const QString& title,
+                 const QByteArray& world = QByteArray("{\"entities\":[]}"))
+    -> Save::Record {
+  Save::Record record;
+  record.slot_name = slot_name;
+  record.title = title;
+  record.map_name = QStringLiteral("Test Map");
+  record.map_path = QStringLiteral("assets/maps/test.json");
+  record.mode = QStringLiteral("skirmish");
+  record.difficulty = QStringLiteral("normal");
+  record.world = Save::pack(world);
+  return record;
+}
+
+} // namespace
 
 class SaveStorageTest : public ::testing::Test {
 protected:
   void SetUp() override {
     storage = std::make_unique<SaveStorage>(":memory:");
     QString error;
-    bool initialized = storage->initialize(&error);
-    ASSERT_TRUE(initialized) << "Failed to initialize: " << error.toStdString();
+    ASSERT_TRUE(storage->initialize(&error))
+        << "Failed to initialize: " << error.toStdString();
   }
 
   void TearDown() override { storage.reset(); }
@@ -24,407 +48,348 @@ protected:
   std::unique_ptr<SaveStorage> storage;
 };
 
-TEST_F(SaveStorageTest, InitializationSuccess) {
-  EXPECT_NE(storage, nullptr);
-}
-
-TEST_F(SaveStorageTest, SaveSlotBasic) {
-  QString slot_name = "test_slot";
-  QString title = "Test Save Game";
-
+TEST_F(SaveStorageTest, SaveAndLoadSlotRoundTrips) {
   QJsonObject metadata;
-  metadata["level"] = 5;
-  metadata["score"] = 1000;
+  metadata["player_name"] = "TestPlayer";
+  metadata["game_time"] = 3600;
 
-  QByteArray world_state("world_state_data");
-  QByteArray screenshot("screenshot_data");
+  Save::Record record = make_record("save_load_test", "Original Title");
+  record.metadata = metadata;
+  record.screenshot = QByteArray("screenshot-bytes");
+  record.play_time_seconds = 42.5;
 
   QString error;
-  bool saved =
-      storage->save_slot(slot_name, title, metadata, world_state, screenshot, &error);
+  ASSERT_TRUE(storage->write_slot(record, &error))
+      << "Save failed: " << error.toStdString();
 
-  EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
+  Save::Record loaded;
+  ASSERT_TRUE(storage->read_slot("save_load_test", loaded, &error))
+      << "Load failed: " << error.toStdString();
+
+  EXPECT_EQ(loaded.title, QString("Original Title"));
+  EXPECT_EQ(loaded.screenshot, record.screenshot);
+  EXPECT_DOUBLE_EQ(loaded.play_time_seconds, 42.5);
+  EXPECT_EQ(loaded.metadata["player_name"].toString(), QString("TestPlayer"));
+  EXPECT_EQ(loaded.metadata["game_time"].toInt(), 3600);
+
+  QByteArray world;
+  ASSERT_TRUE(Save::unpack(loaded.world, world, &error))
+      << "Unpack failed: " << error.toStdString();
+  EXPECT_EQ(world, QByteArray("{\"entities\":[]}"));
 }
 
-TEST_F(SaveStorageTest, SaveAndLoadSlot) {
-  QString slot_name = "save_load_test";
-  QString original_title = "Original Title";
-
-  QJsonObject original_metadata;
-  original_metadata["player_name"] = "TestPlayer";
-  original_metadata["game_time"] = 3600;
-  original_metadata["difficulty"] = "hard";
-
-  QByteArray original_world_state("test_world_state_content");
-  QByteArray original_screenshot("test_screenshot_content");
-
+TEST_F(SaveStorageTest, WorldStateIsStoredCompressed) {
+  const QByteArray world(256 * 1024, 'A');
   QString error;
-  bool saved = storage->save_slot(slot_name,
-                                  original_title,
-                                  original_metadata,
-                                  original_world_state,
-                                  original_screenshot,
-                                  &error);
-  ASSERT_TRUE(saved) << "Save failed: " << error.toStdString();
+  ASSERT_TRUE(storage->write_slot(make_record("compressed", "Big", world), &error));
 
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
+  Save::Record loaded;
+  ASSERT_TRUE(storage->read_slot("compressed", loaded, &error));
+  EXPECT_EQ(loaded.world.compression, Save::Compression::Zlib);
+  EXPECT_EQ(loaded.world.raw_size, world.size());
+  EXPECT_LT(loaded.world.blob.size(), world.size());
 
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  ASSERT_TRUE(loaded) << "Load failed: " << error.toStdString();
-
-  EXPECT_EQ(loaded_title, original_title);
-  EXPECT_EQ(loaded_world_state, original_world_state);
-  EXPECT_EQ(loaded_screenshot, original_screenshot);
-
-  EXPECT_EQ(loaded_metadata["player_name"].toString(), QString("TestPlayer"));
-  EXPECT_EQ(loaded_metadata["game_time"].toInt(), 3600);
-  EXPECT_EQ(loaded_metadata["difficulty"].toString(), QString("hard"));
+  QByteArray restored;
+  ASSERT_TRUE(Save::unpack(loaded.world, restored, &error));
+  EXPECT_EQ(restored, world);
 }
 
-TEST_F(SaveStorageTest, OverwriteExistingSlot) {
-  QString slot_name = "overwrite_test";
-  QString title1 = "First Save";
-  QString title2 = "Second Save";
+TEST_F(SaveStorageTest, CampaignAndSkirmishStateAreStoredSeparately) {
+  Save::Record campaign = make_record("campaign_slot", "Campaign Save");
+  campaign.mode = QStringLiteral("campaign");
+  campaign.campaign_id = QStringLiteral("second_punic_war");
+  campaign.mission_id = QStringLiteral("cannae");
+  campaign.difficulty = QStringLiteral("hard");
+  campaign.kind = Save::SlotKind::Manual;
 
-  QJsonObject metadata1;
-  metadata1["version"] = 1;
-
-  QJsonObject metadata2;
-  metadata2["version"] = 2;
-
-  QByteArray world_state1("state1");
-  QByteArray world_state2("state2");
+  Save::Record skirmish = make_record("skirmish_slot", "Skirmish Save");
+  skirmish.mission_id = QStringLiteral("assets/maps/river.json");
+  skirmish.kind = Save::SlotKind::Autosave;
 
   QString error;
+  ASSERT_TRUE(storage->write_slot(campaign, &error)) << error.toStdString();
+  ASSERT_TRUE(storage->write_slot(skirmish, &error)) << error.toStdString();
 
-  bool saved1 = storage->save_slot(
-      slot_name, title1, metadata1, world_state1, QByteArray(), &error);
-  ASSERT_TRUE(saved1) << "First save failed: " << error.toStdString();
+  Save::Record loaded_campaign;
+  ASSERT_TRUE(storage->read_slot("campaign_slot", loaded_campaign, &error));
+  EXPECT_EQ(loaded_campaign.mode, QString("campaign"));
+  EXPECT_EQ(loaded_campaign.campaign_id, QString("second_punic_war"));
+  EXPECT_EQ(loaded_campaign.mission_id, QString("cannae"));
+  EXPECT_EQ(loaded_campaign.difficulty, QString("hard"));
+  EXPECT_EQ(loaded_campaign.kind, Save::SlotKind::Manual);
 
-  bool saved2 = storage->save_slot(
-      slot_name, title2, metadata2, world_state2, QByteArray(), &error);
-  ASSERT_TRUE(saved2) << "Second save failed: " << error.toStdString();
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
-
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  ASSERT_TRUE(loaded) << "Load failed: " << error.toStdString();
-
-  EXPECT_EQ(loaded_title, title2);
-  EXPECT_EQ(loaded_world_state, world_state2);
-  EXPECT_EQ(loaded_metadata["version"].toInt(), 2);
+  Save::Record loaded_skirmish;
+  ASSERT_TRUE(storage->read_slot("skirmish_slot", loaded_skirmish, &error));
+  EXPECT_EQ(loaded_skirmish.mode, QString("skirmish"));
+  EXPECT_TRUE(loaded_skirmish.campaign_id.isEmpty());
+  EXPECT_EQ(loaded_skirmish.kind, Save::SlotKind::Autosave);
 }
 
-TEST_F(SaveStorageTest, LoadNonExistentSlot) {
-  QString slot_name = "nonexistent_slot";
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
+TEST_F(SaveStorageTest, OverwriteKeepsLatestContent) {
   QString error;
+  Save::Record first = make_record("overwrite", "First", QByteArray("state-one"));
+  first.metadata = QJsonObject{{"version", 1}};
+  ASSERT_TRUE(storage->write_slot(first, &error));
 
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
+  Save::Record second = make_record("overwrite", "Second", QByteArray("state-two"));
+  second.metadata = QJsonObject{{"version", 2}};
+  ASSERT_TRUE(storage->write_slot(second, &error));
 
-  EXPECT_FALSE(loaded);
+  Save::Record loaded;
+  ASSERT_TRUE(storage->read_slot("overwrite", loaded, &error));
+  EXPECT_EQ(loaded.title, QString("Second"));
+  EXPECT_EQ(loaded.metadata["version"].toInt(), 2);
+
+  QByteArray world;
+  ASSERT_TRUE(Save::unpack(loaded.world, world, &error));
+  EXPECT_EQ(world, QByteArray("state-two"));
+}
+
+TEST_F(SaveStorageTest, LoadNonExistentSlotFails) {
+  Save::Record loaded;
+  QString error;
+  EXPECT_FALSE(storage->read_slot("nonexistent_slot", loaded, &error));
   EXPECT_FALSE(error.isEmpty());
 }
 
-TEST_F(SaveStorageTest, ListSlots) {
+TEST_F(SaveStorageTest, EmptySlotNameIsRejected) {
   QString error;
+  EXPECT_FALSE(storage->write_slot(make_record("", "No Slot"), &error));
+  EXPECT_FALSE(error.isEmpty());
+}
 
-  QByteArray non_empty_data("test_data");
-  storage->save_slot(
-      "slot1", "Title 1", QJsonObject(), non_empty_data, QByteArray(), &error);
-  storage->save_slot(
-      "slot2", "Title 2", QJsonObject(), non_empty_data, QByteArray(), &error);
-  storage->save_slot(
-      "slot3", "Title 3", QJsonObject(), non_empty_data, QByteArray(), &error);
+TEST_F(SaveStorageTest, ListSlotsExposesModeAndSizes) {
+  QString error;
+  ASSERT_TRUE(storage->write_slot(make_record("slot1", "Title 1"), &error));
+  ASSERT_TRUE(storage->write_slot(make_record("slot2", "Title 2"), &error));
 
-  QVariantList slot_list = storage->list_slots(&error);
+  const QVariantList slot_list = storage->list_slots(&error);
+  ASSERT_TRUE(error.isEmpty()) << error.toStdString();
+  ASSERT_EQ(slot_list.size(), 2);
 
-  EXPECT_TRUE(error.isEmpty()) << "List failed: " << error.toStdString();
-  EXPECT_EQ(slot_list.size(), 3);
-
-  bool found_slot1 = false;
-  bool found_slot2 = false;
-  bool found_slot3 = false;
-
-  for (const QVariant& slot_variant : slot_list) {
-    QVariantMap slot = slot_variant.toMap();
-    QString slot_name = slot["slotName"].toString();
-
-    if (slot_name == "slot1") {
-      found_slot1 = true;
-      EXPECT_EQ(slot["title"].toString(), QString("Title 1"));
-    } else if (slot_name == "slot2") {
-      found_slot2 = true;
-      EXPECT_EQ(slot["title"].toString(), QString("Title 2"));
-    } else if (slot_name == "slot3") {
-      found_slot3 = true;
-      EXPECT_EQ(slot["title"].toString(), QString("Title 3"));
+  bool found = false;
+  for (const QVariant& entry : slot_list) {
+    const QVariantMap slot = entry.toMap();
+    if (slot["slot_name"].toString() != "slot1") {
+      continue;
     }
+    found = true;
+    EXPECT_EQ(slot["title"].toString(), QString("Title 1"));
+    EXPECT_EQ(slot["mode"].toString(), QString("skirmish"));
+    EXPECT_EQ(slot["kind"].toString(), QString("manual"));
+    EXPECT_GT(slot["stored_size"].toLongLong(), 0);
+    EXPECT_GT(slot["uncompressed_size"].toLongLong(), 0);
   }
+  EXPECT_TRUE(found);
+}
 
-  EXPECT_TRUE(found_slot1);
-  EXPECT_TRUE(found_slot2);
-  EXPECT_TRUE(found_slot3);
+TEST_F(SaveStorageTest, SlotNamesByKindAreOrderedOldestFirst) {
+  QString error;
+  for (int i = 1; i <= 3; ++i) {
+    Save::Record record =
+        make_record(QStringLiteral("autosave_%1").arg(i), QStringLiteral("Auto"));
+    record.kind = Save::SlotKind::Autosave;
+    record.updated_at = QStringLiteral("2026-01-0%1T00:00:00.000").arg(i);
+    ASSERT_TRUE(storage->write_slot(record, &error)) << error.toStdString();
+  }
+  Save::Record const manual = make_record("manual_slot", "Manual");
+  ASSERT_TRUE(storage->write_slot(manual, &error));
+
+  const QStringList autosaves = storage->slot_names_by_kind(Save::SlotKind::Autosave);
+  ASSERT_EQ(autosaves.size(), 3);
+  EXPECT_EQ(autosaves.at(0), QString("autosave_1"));
+  EXPECT_EQ(autosaves.at(2), QString("autosave_3"));
+}
+
+TEST_F(SaveStorageTest, VerifySlotDetectsCorruptedPayload) {
+  QString error;
+  Save::Record record = make_record("corrupt", "Corrupt", QByteArray(4096, 'x'));
+
+  record.world.blob = record.world.blob.left(record.world.blob.size() / 2);
+  ASSERT_TRUE(storage->write_slot(record, &error));
+
+  EXPECT_FALSE(storage->verify_slot("corrupt", &error));
+  EXPECT_TRUE(error.contains("corrupted")) << error.toStdString();
 }
 
 TEST_F(SaveStorageTest, DeleteSlot) {
-  QString slot_name = "delete_test";
   QString error;
+  ASSERT_TRUE(storage->write_slot(make_record("delete_test", "Title"), &error));
+  EXPECT_TRUE(storage->slot_exists("delete_test"));
 
-  QByteArray non_empty_data("test_data");
-  storage->save_slot(
-      slot_name, "Title", QJsonObject(), non_empty_data, QByteArray(), &error);
-
-  QVariantList slots_before = storage->list_slots(&error);
-  EXPECT_EQ(slots_before.size(), 1);
-
-  bool deleted = storage->delete_slot(slot_name, &error);
-  EXPECT_TRUE(deleted) << "Delete failed: " << error.toStdString();
-
-  QVariantList slots_after = storage->list_slots(&error);
-  EXPECT_EQ(slots_after.size(), 0);
+  EXPECT_TRUE(storage->delete_slot("delete_test", &error))
+      << "Delete failed: " << error.toStdString();
+  EXPECT_FALSE(storage->slot_exists("delete_test"));
+  EXPECT_EQ(storage->list_slots(&error).size(), 0);
 }
 
-TEST_F(SaveStorageTest, DeleteNonExistentSlot) {
-  QString slot_name = "nonexistent_delete";
+TEST_F(SaveStorageTest, DeleteNonExistentSlotFails) {
   QString error;
-
-  bool deleted = storage->delete_slot(slot_name, &error);
-
-  EXPECT_FALSE(deleted);
+  EXPECT_FALSE(storage->delete_slot("nonexistent_delete", &error));
   EXPECT_FALSE(error.isEmpty());
 }
 
-TEST_F(SaveStorageTest, EmptyMetadataSave) {
-  QString slot_name = "empty_metadata";
-  QJsonObject empty_metadata;
-
-  QString error;
-  bool saved = storage->save_slot(
-      slot_name, "Title", empty_metadata, QByteArray("data"), QByteArray(), &error);
-
-  EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
-
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  EXPECT_TRUE(loaded) << "Failed to load: " << error.toStdString();
-}
-
-TEST_F(SaveStorageTest, EmptyWorldStateSave) {
-  QString slot_name = "empty_world_state";
-  QByteArray minimal_world_state(" ");
-
-  QString error;
-  bool saved = storage->save_slot(
-      slot_name, "Title", QJsonObject(), minimal_world_state, QByteArray(), &error);
-
-  EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
-
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  EXPECT_TRUE(loaded) << "Failed to load: " << error.toStdString();
-  EXPECT_EQ(loaded_world_state, minimal_world_state);
-}
-
-TEST_F(SaveStorageTest, LargeDataSave) {
-  QString slot_name = "large_data";
-
-  QByteArray large_world_state(1024 * 1024, 'A');
-  QByteArray large_screenshot(512 * 1024, 'B');
-
-  QJsonObject metadata;
-  metadata["size"] = "large";
-
-  QString error;
-  bool saved = storage->save_slot(slot_name,
-                                  "Large Data Test",
-                                  metadata,
-                                  large_world_state,
-                                  large_screenshot,
-                                  &error);
-
-  EXPECT_TRUE(saved) << "Failed to save large data: " << error.toStdString();
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
-
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  EXPECT_TRUE(loaded) << "Failed to load large data: " << error.toStdString();
-  EXPECT_EQ(loaded_world_state.size(), 1024 * 1024);
-  EXPECT_EQ(loaded_screenshot.size(), 512 * 1024);
-}
-
-TEST_F(SaveStorageTest, SpecialCharactersInSlotName) {
-  QString slot_name = "slot_with_special_chars_123";
-  QString title = "Title with special chars: !@#$%^&*()";
-
-  QJsonObject metadata;
-  metadata["description"] = "Test with special characters: <>&\"'";
-
-  QString error;
-  bool saved = storage->save_slot(
-      slot_name, title, metadata, QByteArray("data"), QByteArray(), &error);
-
-  EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
-
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
-
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
-
-  EXPECT_TRUE(loaded) << "Failed to load: " << error.toStdString();
-  EXPECT_EQ(loaded_title, title);
-}
-
-TEST_F(SaveStorageTest, ComplexMetadataSave) {
-  QString slot_name = "complex_metadata";
-
-  QJsonObject metadata;
-  metadata["int_value"] = 42;
-  metadata["double_value"] = 3.14159;
-  metadata["string_value"] = "test_string";
-  metadata["bool_value"] = true;
-
-  QJsonObject nested_object;
-  nested_object["nested_field"] = "nested_value";
-  metadata["nested"] = nested_object;
+TEST_F(SaveStorageTest, ComplexMetadataSurvivesRoundTrip) {
+  QJsonObject nested;
+  nested["nested_field"] = "nested_value";
 
   QJsonArray array;
   array.append(1);
   array.append(2);
   array.append(3);
+
+  QJsonObject metadata;
+  metadata["int_value"] = 42;
+  metadata["double_value"] = std::numbers::pi;
+  metadata["string_value"] = "test_string";
+  metadata["bool_value"] = true;
+  metadata["nested"] = nested;
   metadata["array"] = array;
 
+  Save::Record record = make_record("complex_metadata", "Complex");
+  record.metadata = metadata;
+
   QString error;
-  bool saved = storage->save_slot(slot_name,
-                                  "Complex Metadata Test",
-                                  metadata,
-                                  QByteArray("data"),
-                                  QByteArray(),
-                                  &error);
+  ASSERT_TRUE(storage->write_slot(record, &error));
 
-  EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
+  Save::Record loaded;
+  ASSERT_TRUE(storage->read_slot("complex_metadata", loaded, &error));
+  EXPECT_EQ(loaded.metadata["int_value"].toInt(), 42);
+  EXPECT_DOUBLE_EQ(loaded.metadata["double_value"].toDouble(), 3.14159);
+  EXPECT_EQ(loaded.metadata["string_value"].toString(), QString("test_string"));
+  EXPECT_TRUE(loaded.metadata["bool_value"].toBool());
+  EXPECT_EQ(loaded.metadata["nested"].toObject()["nested_field"].toString(),
+            QString("nested_value"));
+  EXPECT_EQ(loaded.metadata["array"].toArray().size(), 3);
+}
 
-  QByteArray loaded_world_state;
-  QJsonObject loaded_metadata;
-  QByteArray loaded_screenshot;
-  QString loaded_title;
+TEST_F(SaveStorageTest, LargeSaveRoundTrips) {
+  const QByteArray world(1024 * 1024, 'A');
+  Save::Record record = make_record("large_data", "Large", world);
+  record.screenshot = QByteArray(512 * 1024, 'B');
 
-  bool loaded = storage->load_slot(slot_name,
-                                   loaded_world_state,
-                                   loaded_metadata,
-                                   loaded_screenshot,
-                                   loaded_title,
-                                   &error);
+  QString error;
+  ASSERT_TRUE(storage->write_slot(record, &error))
+      << "Failed to save large data: " << error.toStdString();
 
-  EXPECT_TRUE(loaded) << "Failed to load: " << error.toStdString();
+  Save::Record loaded;
+  ASSERT_TRUE(storage->read_slot("large_data", loaded, &error));
+  EXPECT_EQ(loaded.screenshot.size(), 512 * 1024);
 
-  EXPECT_EQ(loaded_metadata["int_value"].toInt(), 42);
-  EXPECT_DOUBLE_EQ(loaded_metadata["double_value"].toDouble(), 3.14159);
-  EXPECT_EQ(loaded_metadata["string_value"].toString(), QString("test_string"));
-  EXPECT_TRUE(loaded_metadata["bool_value"].toBool());
-
-  QJsonObject loaded_nested = loaded_metadata["nested"].toObject();
-  EXPECT_EQ(loaded_nested["nested_field"].toString(), QString("nested_value"));
-
-  QJsonArray loaded_array = loaded_metadata["array"].toArray();
-  EXPECT_EQ(loaded_array.size(), 3);
-  EXPECT_EQ(loaded_array[0].toInt(), 1);
-  EXPECT_EQ(loaded_array[1].toInt(), 2);
-  EXPECT_EQ(loaded_array[2].toInt(), 3);
+  QByteArray restored;
+  ASSERT_TRUE(Save::unpack(loaded.world, restored, &error));
+  EXPECT_EQ(restored.size(), 1024 * 1024);
 }
 
 TEST_F(SaveStorageTest, MultipleSavesAndDeletes) {
   QString error;
-
   for (int i = 0; i < 10; i++) {
-    QString slot_name = QString("slot_%1").arg(i);
-    storage->save_slot(slot_name,
-                       QString("Title %1").arg(i),
-                       QJsonObject(),
-                       QByteArray("data"),
-                       QByteArray(),
-                       &error);
+    ASSERT_TRUE(storage->write_slot(
+        make_record(QString("slot_%1").arg(i), QString("Title %1").arg(i)), &error));
   }
 
-  QVariantList slot_list = storage->list_slots(&error);
-  EXPECT_EQ(slot_list.size(), 10);
+  EXPECT_EQ(storage->list_slots(&error).size(), 10);
 
   for (int i = 0; i < 5; i++) {
-    QString slot_name = QString("slot_%1").arg(i);
-    storage->delete_slot(slot_name, &error);
+    EXPECT_TRUE(storage->delete_slot(QString("slot_%1").arg(i), &error));
   }
 
-  slot_list = storage->list_slots(&error);
-  EXPECT_EQ(slot_list.size(), 5);
-
-  for (const QVariant& slot_variant : slot_list) {
-    QVariantMap slot = slot_variant.toMap();
-    QString slot_name = slot["slotName"].toString();
-    int slot_num = slot_name.mid(5).toInt();
+  const QVariantList remaining = storage->list_slots(&error);
+  EXPECT_EQ(remaining.size(), 5);
+  for (const QVariant& entry : remaining) {
+    const int slot_num = entry.toMap()["slot_name"].toString().mid(5).toInt();
     EXPECT_GE(slot_num, 5);
     EXPECT_LT(slot_num, 10);
   }
+}
+
+TEST(SaveStorageSchemaTest, DatabaseWithAForeignSchemaIsRebuiltFromScratch) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString database_path = temp_dir.filePath(QStringLiteral("saves.sqlite"));
+
+  {
+    QSqlDatabase legacy = QSqlDatabase::addDatabase(
+        QStringLiteral("QSQLITE"), QStringLiteral("legacy_schema_fixture"));
+    legacy.setDatabaseName(database_path);
+    ASSERT_TRUE(legacy.open());
+
+    QSqlQuery query(legacy);
+    ASSERT_TRUE(query.exec(
+        QStringLiteral("CREATE TABLE saves (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                       "slot_name TEXT UNIQUE NOT NULL, title TEXT NOT NULL, "
+                       "world_state BLOB NOT NULL)")))
+        << query.lastError().text().toStdString();
+    ASSERT_TRUE(query.exec(
+        QStringLiteral("INSERT INTO saves (slot_name, title, world_state) "
+                       "VALUES ('old_slot', 'Legacy Save', 'legacy-bytes')")));
+    ASSERT_TRUE(query.exec(QStringLiteral("PRAGMA user_version = 3")));
+    legacy.close();
+  }
+  QSqlDatabase::removeDatabase(QStringLiteral("legacy_schema_fixture"));
+
+  SaveStorage storage(database_path);
+  QString error;
+  ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+
+  EXPECT_TRUE(storage.list_slots(&error).isEmpty());
+  EXPECT_FALSE(storage.slot_exists("old_slot"));
+
+  ASSERT_TRUE(storage.write_slot(make_record("fresh", "Fresh Save"), &error))
+      << error.toStdString();
+  EXPECT_TRUE(storage.verify_slot("fresh", &error)) << error.toStdString();
+}
+
+TEST(SaveStorageSchemaTest, ReopeningACurrentDatabaseKeepsExistingSaves) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString database_path = temp_dir.filePath(QStringLiteral("saves.sqlite"));
+
+  QString error;
+  {
+    SaveStorage storage(database_path);
+    ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+    ASSERT_TRUE(storage.write_slot(make_record("kept", "Kept Save"), &error))
+        << error.toStdString();
+  }
+
+  SaveStorage const reopened(database_path);
+  ASSERT_TRUE(reopened.initialize(&error)) << error.toStdString();
+  EXPECT_TRUE(reopened.slot_exists("kept"));
+
+  Save::Record loaded;
+  ASSERT_TRUE(reopened.read_slot("kept", loaded, &error)) << error.toStdString();
+  EXPECT_EQ(loaded.title, QString("Kept Save"));
+}
+
+TEST_F(SaveStorageTest, ScreenshotCanBeAttachedAfterTheSaveIsWritten) {
+  QString error;
+  ASSERT_TRUE(storage->write_slot(make_record("with_preview", "Preview"), &error));
+
+  Save::Record before;
+  ASSERT_TRUE(storage->read_slot("with_preview", before, &error));
+  EXPECT_TRUE(before.screenshot.isEmpty());
+
+  const QByteArray preview("fake-png-bytes");
+  ASSERT_TRUE(storage->update_screenshot("with_preview", preview, &error))
+      << error.toStdString();
+
+  Save::Record after;
+  ASSERT_TRUE(storage->read_slot("with_preview", after, &error));
+  EXPECT_EQ(after.screenshot, preview);
+
+  EXPECT_EQ(after.title, before.title);
+  EXPECT_EQ(after.world.raw_checksum, before.world.raw_checksum);
+  EXPECT_TRUE(storage->verify_slot("with_preview", &error)) << error.toStdString();
+
+  const QVariantList slot_list = storage->list_slots(&error);
+  ASSERT_EQ(slot_list.size(), 1);
+  EXPECT_EQ(slot_list.at(0).toMap()["thumbnail"].toString(),
+            QString::fromLatin1(preview.toBase64()));
+}
+
+TEST_F(SaveStorageTest, AttachingAScreenshotToAMissingSlotFails) {
+  QString error;
+  EXPECT_FALSE(storage->update_screenshot("nope", QByteArray("png"), &error));
+  EXPECT_FALSE(error.isEmpty());
 }

@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -165,6 +166,7 @@
 #include "save_load_coordinator.h"
 #include "selection_query_service.h"
 #include "skirmish_runtime_coordinator.h"
+#include "user_settings.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
 
@@ -263,6 +265,7 @@ auto build_player_state_map(int owner_id, int population_cap) -> QVariantMap {
 
 GameEngine::GameEngine(QObject* parent)
     : QObject(parent)
+    , m_save_load_service(Game::Systems::SaveLoadService::instance())
     , m_commander_input(this, this)
     , m_selected_units_model(new SelectedUnitsModel(this, this)) {
 
@@ -291,7 +294,8 @@ GameEngine::GameEngine(QObject* parent)
 
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
   m_victory_service = std::make_unique<Game::Systems::VictoryService>();
-  m_save_load_service = std::make_unique<Game::Systems::SaveLoadService>();
+
+  connect_save_service_signals();
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_rain_manager = std::make_unique<Game::Systems::RainManager>();
 
@@ -582,6 +586,14 @@ GameEngine::GameEngine(QObject* parent)
 }
 
 GameEngine::~GameEngine() {
+
+  m_autosave_timer.stop();
+  if (m_save_load_service != nullptr) {
+
+    m_save_load_service->wait_for_pending_saves();
+    m_save_load_service->disconnect(this);
+    m_save_load_service->shutdown();
+  }
 
   if (m_audio_event_handler) {
     m_audio_event_handler->shutdown();
@@ -2713,7 +2725,7 @@ auto GameEngine::available_campaigns() const -> QVariantList {
 }
 
 void GameEngine::load_campaigns() {
-  if (!m_save_load_service) {
+  if (m_save_load_service == nullptr) {
     return;
   }
 
@@ -2762,7 +2774,7 @@ void GameEngine::mark_current_mission_completed() {
     return;
   }
 
-  if (!m_save_load_service) {
+  if (m_save_load_service == nullptr) {
     qWarning() << "Save/Load service not initialized";
     return;
   }
@@ -3125,22 +3137,79 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
 }
 
 void GameEngine::open_settings() {
-  if (m_save_load_service) {
-    m_save_load_service->open_settings();
+  if (m_save_load_service != nullptr) {
+    Game::Systems::SaveLoadService::open_settings();
   }
 }
 
-void GameEngine::load_save() {
-  load_game_from_slot("savegame");
+void GameEngine::connect_save_service_signals() {
+  if (m_save_load_service == nullptr) {
+    return;
+  }
+
+  connect(
+      m_save_load_service,
+      &Game::Systems::SaveLoadService::save_progress,
+      this,
+      [this](
+          quint64 job_id, const QString& slot_name, int percent, const QString& stage) {
+        if (job_id != m_active_save_job) {
+          return;
+        }
+        m_save_progress_slot = slot_name;
+        m_save_progress_percent = percent;
+        m_save_progress_stage = stage;
+        emit save_progress_changed();
+      });
+
+  connect(m_save_load_service,
+          &Game::Systems::SaveLoadService::save_finished,
+          this,
+          [this](quint64 job_id,
+                 const QString& slot_name,
+                 bool success,
+                 const QString& error) {
+            if (job_id == m_active_save_job) {
+              m_active_save_job = 0;
+              m_save_progress_percent = success ? 100 : 0;
+              m_save_progress_stage.clear();
+              emit save_progress_changed();
+            }
+            if (!success) {
+              set_error(error);
+            }
+            emit save_completed(slot_name, success, error);
+          });
+
+  connect(m_save_load_service,
+          &Game::Systems::SaveLoadService::save_slots_changed,
+          this,
+          &GameEngine::save_slots_changed);
+
+  connect(&m_autosave_timer, &QTimer::timeout, this, &GameEngine::autosave);
+  restart_autosave_timer();
 }
 
-void GameEngine::save_game(const QString& filename) {
-  save_game_to_slot(filename);
+void GameEngine::restart_autosave_timer() {
+  const int minutes = autosave_interval_minutes();
+  if (minutes <= 0) {
+    m_autosave_timer.stop();
+    return;
+  }
+  m_autosave_timer.setInterval(minutes * 60 * 1000);
+  m_autosave_timer.start();
 }
 
-void GameEngine::save_game_to_slot(const QString& slot_name) {
-  if (!m_save_load_service || !m_world) {
-    set_error("Save: not initialized");
+void GameEngine::begin_save(const QString& slot_name,
+                            Game::Systems::Save::SlotKind kind,
+                            int autosave_retention) {
+  if ((m_save_load_service == nullptr) || !m_world) {
+    set_error(tr("Save: not initialized"));
+    return;
+  }
+
+  if (m_active_save_job != 0) {
+    set_error(tr("A save is already in progress"));
     return;
   }
 
@@ -3148,34 +3217,101 @@ void GameEngine::save_game_to_slot(const QString& slot_name) {
     request_exit_commander_control_mode();
   }
   const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
-  const QByteArray screenshot = capture_screenshot();
   std::optional<Game::Mission::MissionContext> mission_context;
   if (m_campaign_manager) {
     mission_context = m_campaign_manager->current_mission_context();
   }
 
-  const App::Core::SaveToSlotEffects effects = m_save_load_coordinator->save_to_slot(
-      {.world = *m_world,
-       .save_load_service = *m_save_load_service,
-       .camera = m_camera,
-       .level = m_level,
-       .runtime_snapshot = runtime_snapshot,
-       .slot = slot_name,
-       .title = slot_name,
-       .map_name = m_level.map_name,
-       .screenshot = screenshot,
-       .mission_context = std::move(mission_context)});
-  if (!effects.success) {
+  const App::Core::SaveToSlotEffects effects =
+      m_save_load_coordinator->begin_save_to_slot(
+          {.world = *m_world,
+           .save_load_service = *m_save_load_service,
+           .camera = m_camera,
+           .level = m_level,
+           .runtime_snapshot = runtime_snapshot,
+           .slot = slot_name,
+           .title = slot_name,
+           .map_name = m_level.map_name,
+           .mission_context = std::move(mission_context),
+           .kind = kind,
+           .play_time_seconds = m_campaign_mission_elapsed,
+           .autosave_retention = autosave_retention});
+  if (!effects.queued) {
     set_error(effects.error);
     return;
   }
-  if (effects.emit_save_slots_changed) {
-    emit save_slots_changed();
+
+  m_active_save_job = effects.job_id;
+  m_save_progress_slot = slot_name;
+  m_save_progress_percent = 0;
+  m_save_progress_stage = tr("Queued");
+  emit save_progress_changed();
+
+  m_screenshot_target_slot = slot_name;
+  m_screenshot_requested.store(true, std::memory_order_release);
+}
+
+void GameEngine::save_game_to_slot(const QString& slot_name) {
+  begin_save(slot_name, Game::Systems::Save::SlotKind::Manual, 0);
+}
+
+void GameEngine::quicksave() {
+  begin_save(QStringLiteral("quicksave"), Game::Systems::Save::SlotKind::Quicksave, 0);
+}
+
+void GameEngine::autosave() {
+
+  if ((m_save_load_service == nullptr) || !m_world || !m_runtime.initialized ||
+      m_runtime.loading || m_level.map_path.isEmpty() ||
+      !m_runtime.victory_state.isEmpty() || m_active_save_job != 0) {
+    return;
   }
+
+  const int retention = autosave_slot_count();
+  begin_save(m_save_load_service->next_autosave_slot(retention),
+             Game::Systems::Save::SlotKind::Autosave,
+             retention);
+}
+
+void GameEngine::cancel_active_save() {
+  if (m_active_save_job == 0 || (m_save_load_service == nullptr)) {
+    return;
+  }
+  m_save_load_service->cancel_save(m_active_save_job);
+  m_save_progress_stage = tr("Cancelling...");
+  emit save_progress_changed();
+}
+
+auto GameEngine::autosave_slot_count() const -> int {
+  return App::Core::UserSettings::load_autosave_slot_count();
+}
+
+void GameEngine::set_autosave_slot_count(int count) {
+  if (count == autosave_slot_count()) {
+    return;
+  }
+  App::Core::UserSettings::save_autosave_slot_count(count);
+  if (m_save_load_service != nullptr) {
+    m_save_load_service->prune_autosaves(autosave_slot_count());
+  }
+  emit autosave_settings_changed();
+}
+
+auto GameEngine::autosave_interval_minutes() const -> int {
+  return App::Core::UserSettings::load_autosave_interval_minutes();
+}
+
+void GameEngine::set_autosave_interval_minutes(int minutes) {
+  if (minutes == autosave_interval_minutes()) {
+    return;
+  }
+  App::Core::UserSettings::save_autosave_interval_minutes(minutes);
+  restart_autosave_timer();
+  emit autosave_settings_changed();
 }
 
 void GameEngine::load_game_from_slot(const QString& slot_name) {
-  if (!m_save_load_service || !m_world) {
+  if ((m_save_load_service == nullptr) || !m_world) {
     set_error("Load: not initialized");
     return;
   }
@@ -3246,7 +3382,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
 }
 
 auto GameEngine::get_save_slots() const -> QVariantList {
-  if (!m_save_load_service) {
+  if (m_save_load_service == nullptr) {
     qWarning() << "Cannot get save slots: service not initialized";
     return {};
   }
@@ -3259,7 +3395,7 @@ void GameEngine::refresh_save_slots() {
 }
 
 auto GameEngine::delete_save_slot(const QString& slot_name) -> bool {
-  if (!m_save_load_service) {
+  if (m_save_load_service == nullptr) {
     qWarning() << "Cannot delete save slot: service not initialized";
     return false;
   }
@@ -3270,11 +3406,80 @@ auto GameEngine::delete_save_slot(const QString& slot_name) -> bool {
     QString const error = m_save_load_service->get_last_error();
     qWarning() << "Failed to delete save slot:" << error;
     set_error(error);
-  } else {
-    emit save_slots_changed();
   }
 
   return success;
+}
+
+auto GameEngine::has_save_slot(const QString& slot_name) const -> bool {
+  return m_save_load_service != nullptr && m_save_load_service->slot_exists(slot_name);
+}
+
+auto GameEngine::verify_save_slot(const QString& slot_name) -> bool {
+  if (m_save_load_service == nullptr) {
+    return false;
+  }
+
+  QString error;
+  if (!m_save_load_service->verify_save_slot(slot_name, &error)) {
+    set_error(error);
+    return false;
+  }
+  return true;
+}
+
+auto GameEngine::export_save_slot(const QString& slot_name) -> QString {
+  if (m_save_load_service == nullptr) {
+    return {};
+  }
+
+  const QString file_stem = Game::Systems::Save::sanitize_file_stem(slot_name);
+  if (file_stem.isEmpty()) {
+    set_error(tr("Cannot export a save with an empty name"));
+    return {};
+  }
+
+  const QString file_path =
+      QStringLiteral("%1/%2.%3")
+          .arg(Game::Systems::SaveLoadService::exports_directory(),
+               file_stem,
+               Game::Systems::Save::package_file_suffix());
+
+  QString error;
+  if (!m_save_load_service->export_slot(slot_name, file_path, &error)) {
+    set_error(error);
+    return {};
+  }
+  return file_path;
+}
+
+auto GameEngine::list_exported_saves() const -> QVariantList {
+  QVariantList result;
+  if (m_save_load_service == nullptr) {
+    return result;
+  }
+
+  for (const QString& path : m_save_load_service->list_exported_packages()) {
+    QVariantMap entry;
+    entry.insert(QStringLiteral("path"), path);
+    entry.insert(QStringLiteral("name"), QFileInfo(path).completeBaseName());
+    result.append(entry);
+  }
+  return result;
+}
+
+auto GameEngine::import_save_file(const QString& file_path) -> QString {
+  if (m_save_load_service == nullptr) {
+    return {};
+  }
+
+  QString slot_name;
+  QString error;
+  if (!m_save_load_service->import_package(file_path, slot_name, &error)) {
+    set_error(error);
+    return {};
+  }
+  return slot_name;
 }
 
 auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
@@ -3334,13 +3539,38 @@ void GameEngine::sync_scatter_world_props() {
   m_last_world_props_revision = revision;
 }
 
-auto GameEngine::capture_screenshot() const -> QByteArray {
-  return {};
+auto GameEngine::consume_screenshot_request() -> bool {
+  return m_screenshot_requested.exchange(false, std::memory_order_acq_rel);
+}
+
+void GameEngine::submit_frame_image(const QImage& image) {
+  if (image.isNull()) {
+    return;
+  }
+
+  QMetaObject::invokeMethod(
+      this, [this, image]() { on_frame_image_captured(image); }, Qt::QueuedConnection);
+}
+
+void GameEngine::on_frame_image_captured(const QImage& image) {
+  const QString slot_name = m_screenshot_target_slot;
+  m_screenshot_target_slot.clear();
+  if (slot_name.isEmpty() || (m_save_load_service == nullptr) || image.isNull()) {
+    return;
+  }
+
+  const QByteArray png = Game::Systems::Save::encode_preview(image);
+  if (png.isEmpty()) {
+    qWarning() << "GameEngine: failed to encode save preview for" << slot_name;
+    return;
+  }
+
+  m_save_load_service->attach_screenshot(slot_name, png);
 }
 
 void GameEngine::exit_game() {
-  if (m_save_load_service) {
-    m_save_load_service->exit_game();
+  if (m_save_load_service != nullptr) {
+    Game::Systems::SaveLoadService::exit_game();
   }
 }
 

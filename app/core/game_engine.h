@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QPointF>
 #include <QStringList>
+#include <QTimer>
 #include <QVariant>
 #include <QVector3D>
 
@@ -35,6 +36,7 @@
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
 #include "game/systems/game_state_serializer.h"
+#include "game/systems/save_format.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "mission_setup_coordinator.h"
@@ -181,6 +183,17 @@ public:
   Q_PROPERTY(bool commander_control_available READ commander_control_available NOTIFY
                  commander_control_available_changed)
   Q_PROPERTY(QObject* commander_input READ commander_input CONSTANT)
+  Q_PROPERTY(bool save_in_progress READ save_in_progress NOTIFY save_progress_changed)
+  Q_PROPERTY(
+      int save_progress_percent READ save_progress_percent NOTIFY save_progress_changed)
+  Q_PROPERTY(
+      QString save_progress_stage READ save_progress_stage NOTIFY save_progress_changed)
+  Q_PROPERTY(
+      QString save_progress_slot READ save_progress_slot NOTIFY save_progress_changed)
+  Q_PROPERTY(int autosave_slot_count READ autosave_slot_count WRITE
+                 set_autosave_slot_count NOTIFY autosave_settings_changed)
+  Q_PROPERTY(int autosave_interval_minutes READ autosave_interval_minutes WRITE
+                 set_autosave_interval_minutes NOTIFY autosave_settings_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -351,13 +364,28 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_mission_definition(const QString& mission_id) const;
   Q_INVOKABLE void open_settings();
-  Q_INVOKABLE void load_save();
-  Q_INVOKABLE void save_game(const QString& filename = "savegame.json");
   Q_INVOKABLE void save_game_to_slot(const QString& slot_name);
+  Q_INVOKABLE void quicksave();
+  Q_INVOKABLE void autosave();
+  Q_INVOKABLE void cancel_active_save();
   Q_INVOKABLE void load_game_from_slot(const QString& slot_name);
   Q_INVOKABLE [[nodiscard]] QVariantList get_save_slots() const;
   Q_INVOKABLE void refresh_save_slots();
   Q_INVOKABLE bool delete_save_slot(const QString& slot_name);
+  Q_INVOKABLE [[nodiscard]] bool has_save_slot(const QString& slot_name) const;
+  Q_INVOKABLE [[nodiscard]] bool verify_save_slot(const QString& slot_name);
+  Q_INVOKABLE [[nodiscard]] QString export_save_slot(const QString& slot_name);
+  Q_INVOKABLE [[nodiscard]] QVariantList list_exported_saves() const;
+  Q_INVOKABLE [[nodiscard]] QString import_save_file(const QString& file_path);
+
+  [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
+  [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
+  [[nodiscard]] QString save_progress_stage() const { return m_save_progress_stage; }
+  [[nodiscard]] QString save_progress_slot() const { return m_save_progress_slot; }
+  [[nodiscard]] int autosave_slot_count() const;
+  void set_autosave_slot_count(int count);
+  [[nodiscard]] int autosave_interval_minutes() const;
+  void set_autosave_interval_minutes(int minutes);
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
   Q_INVOKABLE [[nodiscard]] QImage
@@ -387,6 +415,9 @@ public:
   QObject* audio_system();
 
   void setWindow(QQuickWindow* w) { m_window = w; }
+
+  [[nodiscard]] bool consume_screenshot_request();
+  void submit_frame_image(const QImage& image);
 
   void ensure_initialized();
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
@@ -504,7 +535,6 @@ private:
   void set_error(const QString& error_message);
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot& snapshot);
-  [[nodiscard]] QByteArray capture_screenshot() const;
   [[nodiscard]] AppSceneContext scene_context() const;
   void start_skirmish_internal(const QString& map_path,
                                const QVariantList& player_configs,
@@ -520,6 +550,12 @@ private:
   void update_loading_overlay();
   void update_cursor_position();
   void restore_controlled_commander_direct_control_if_ready();
+  void on_frame_image_captured(const QImage& image);
+  void begin_save(const QString& slot_name,
+                  Game::Systems::Save::SlotKind kind,
+                  int autosave_retention);
+  void connect_save_service_signals();
+  void restart_autosave_timer();
   void seed_commander_rally_preview_from_view_center();
   void seed_barracks_rally_preview_from_selection();
 
@@ -540,7 +576,7 @@ private:
   std::unique_ptr<Game::Systems::RainManager> m_rain_manager;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::unique_ptr<Game::Systems::VictoryService> m_victory_service;
-  std::unique_ptr<Game::Systems::SaveLoadService> m_save_load_service;
+  Game::Systems::SaveLoadService* m_save_load_service = nullptr;
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
   bool m_civilian_delivery_available = false;
@@ -593,6 +629,13 @@ private:
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;
   bool m_show_objectives_after_loading = false;
+  quint64 m_active_save_job = 0;
+  std::atomic_bool m_screenshot_requested{false};
+  QString m_screenshot_target_slot;
+  int m_save_progress_percent = 0;
+  QString m_save_progress_stage;
+  QString m_save_progress_slot;
+  QTimer m_autosave_timer;
   float m_campaign_mission_elapsed = 0.0F;
   std::vector<PendingMissionWave> m_pending_mission_waves;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
@@ -656,4 +699,7 @@ signals:
   void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
+  void save_progress_changed();
+  void save_completed(QString slot_name, bool success, QString error);
+  void autosave_settings_changed();
 };
