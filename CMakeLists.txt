@@ -234,8 +234,11 @@ add_compile_definitions(DEFAULT_LANG="${DEFAULT_LANG}")
 # missing entry only shows up as a blank image at runtime, which is exactly how
 # marketplace.png went unnoticed. These files are tracked in git, so the glob is
 # reproducible on CI.
-file(GLOB SOI_UNIT_ICON_ABS CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets/visuals/icons/*.png")
+file(
+    GLOB SOI_UNIT_ICON_ABS
+    CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/visuals/icons/*.png"
+)
 if(NOT SOI_UNIT_ICON_ABS)
     message(FATAL_ERROR "No icons found under assets/visuals/icons")
 endif()
@@ -347,9 +350,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # Compile the complete resource collections into the executable. Listing a
     # .qrc file under qt_add_qml_module(RESOURCES) only embeds the XML file; it
     # does not register the files referenced by that collection at runtime.
-    target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc
-        design_resources.qrc
-        ${GENERATED_CAMPAIGN_MAP_QRC})
+    target_sources(
+        standard_of_iron
+        PRIVATE assets.qrc translations.qrc design_resources.qrc ${GENERATED_CAMPAIGN_MAP_QRC}
+    )
 
     qt6_add_qml_module(standard_of_iron
         URI StandardOfIron
@@ -456,7 +460,15 @@ else()
     if(GENERATED_CAMPAIGN_MAP_QRC)
         qt5_add_resources(campaign_map_resources ${GENERATED_CAMPAIGN_MAP_QRC})
     endif()
-    target_sources(standard_of_iron PRIVATE ${qml_resources} ${design_resources} ${assets_resources} ${translations_resources} ${campaign_map_resources})
+    target_sources(
+        standard_of_iron
+        PRIVATE
+            ${qml_resources}
+            ${design_resources}
+            ${assets_resources}
+            ${translations_resources}
+            ${campaign_map_resources}
+    )
 endif()
 
 target_link_libraries(

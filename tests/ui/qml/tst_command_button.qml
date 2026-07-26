@@ -25,7 +25,6 @@ TestCase {
         button.destroy();
     }
 
-    
     function test_an_unavailable_order_explains_itself() {
         var button = makeButton({
                 "actionId": "build",

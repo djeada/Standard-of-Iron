@@ -360,13 +360,15 @@ endif()
 # test module is unavailable so a minimal Qt install still builds the suite.
 find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS QuickTest)
 if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
-    add_executable(design_system_qml_tests
+    add_executable(
+        design_system_qml_tests
         ui/design_system_qml_test.cpp
         ${CMAKE_SOURCE_DIR}/ui/theme.cpp
         ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
         ${CMAKE_SOURCE_DIR}/design_resources.qrc
     )
-    target_link_libraries(design_system_qml_tests
+    target_link_libraries(
+        design_system_qml_tests
         PRIVATE
             Qt${QT_VERSION_MAJOR}::Core
             Qt${QT_VERSION_MAJOR}::Gui
@@ -374,22 +376,17 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::QuickTest
     )
-    target_include_directories(design_system_qml_tests
-        PRIVATE
-            ${CMAKE_SOURCE_DIR}
+    target_include_directories(design_system_qml_tests PRIVATE ${CMAKE_SOURCE_DIR})
+    set_target_properties(
+        design_system_qml_tests
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON AUTORCC ON
     )
-    set_target_properties(design_system_qml_tests PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        AUTOMOC ON
-        AUTORCC ON
-    )
-    add_test(NAME design_system_qml
+    add_test(
+        NAME design_system_qml
         COMMAND design_system_qml_tests -input ${CMAKE_CURRENT_SOURCE_DIR}/ui/qml
     )
     # The design system is presentation-only; a real GPU adds nothing to assert.
-    set_tests_properties(design_system_qml PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-    )
+    set_tests_properties(design_system_qml PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 else()
     message(STATUS "Qt QuickTest not found; skipping design_system_qml_tests")
 endif()

@@ -41,6 +41,12 @@ jobs:
             "ruff==${RUFF_VERSION}" \
             "gersemi==${GERSEMI_VERSION}" \
             "yamllint==${YAMLLINT_VERSION}"
+          # shfmt: download the pinned binary from GitHub releases
+          curl -fsSL "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64" \
+            -o /usr/local/bin/shfmt
+          chmod +x /usr/local/bin/shfmt
+          # prettier: install via npm (Node.js is pre-installed on runners)
+          npm install -g "prettier@${PRETTIER_VERSION}"
           echo "CLANG_FORMAT=clang-format-${CLANG_FORMAT_VERSION%%.*}" >> "$GITHUB_ENV"
 
       - name: Toolchain report
