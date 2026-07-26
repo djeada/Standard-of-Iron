@@ -118,7 +118,7 @@ void StoneRenderer::generate_stone_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
-    float const scale = remap(rand_01(state), 0.35F, 0.90F) * tile_safe *
+    float const scale = remap(rand_01(state), 0.25F, 0.68F) * tile_safe *
                         scatter_scale_bias(ScatterRuleSpecies::Stone, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
@@ -141,7 +141,8 @@ void StoneRenderer::generate_stone_instances() {
     return true;
   };
 
-  const float stone_density = 0.22F;
+  // Small stones should articulate rocky patches, not stipple every open field.
+  const float stone_density = 0.08F;
 
   float const area_scale =
       std::sqrt(static_cast<float>(std::max(m_width, 1) * std::max(m_height, 1)) /

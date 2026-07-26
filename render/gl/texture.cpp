@@ -69,6 +69,9 @@ auto Texture::create_empty(int width, int height, Format format) -> bool {
   if (format == Format::Depth) {
     internal_format = GL_DEPTH_COMPONENT;
     type = GL_FLOAT;
+  } else if (format == Format::R32F) {
+    internal_format = GL_R32F;
+    type = GL_FLOAT;
   }
 
   glTexImage2D(
@@ -116,6 +119,8 @@ auto Texture::get_gl_format(Format format) -> GLenum {
     return GL_RGBA;
   case Format::Depth:
     return GL_DEPTH_COMPONENT;
+  case Format::R32F:
+    return GL_RED;
   }
   return GL_RGBA;
 }

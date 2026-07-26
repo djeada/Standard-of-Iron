@@ -446,10 +446,10 @@ void append_generated_boulders(std::vector<WorldProp>& out,
     return true;
   };
 
-  float const base_density = std::clamp(0.090F + biome_settings.rock_exposure * 0.120F -
-                                            biome_settings.moisture_level * 0.020F,
-                                        0.055F,
-                                        0.200F);
+  float const base_density = std::clamp(0.055F + biome_settings.rock_exposure * 0.080F -
+                                            biome_settings.moisture_level * 0.015F,
+                                        0.035F,
+                                        0.125F);
   for (int z = 0; z < height; z += k_boulder_cell_span) {
     for (int x = 0; x < width; x += k_boulder_cell_span) {
       int const sample_x = std::min(x + k_boulder_cell_span / 2, width - 1);
@@ -468,7 +468,7 @@ void append_generated_boulders(std::vector<WorldProp>& out,
           static_cast<float>(x) + rand_01(state) * float(k_boulder_cell_span);
       float const gz =
           static_cast<float>(z) + rand_01(state) * float(k_boulder_cell_span);
-      add_boulder(gx, gz, 1.15F, 2.45F, state);
+      add_boulder(gx, gz, 0.90F, 1.85F, state);
     }
   }
 }

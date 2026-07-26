@@ -393,10 +393,22 @@ auto build_linear_feature_junction_meshes(
     indices.reserve(static_cast<std::size_t>(ring_segments * 3));
 
     auto append_vertex = [&](const QVector3D& position, float radial_t, float angle_t) {
+      QVector3D surface_position = position;
+      if (settings.height_map != nullptr) {
+        surface_position.setY(
+            settings.follow_terrain_centerline
+                ? sample_water_surface_height_clamped(
+                      *settings.height_map, position.x(), position.z())
+                : sample_height_clamped(
+                      *settings.height_map, position.x(), position.z()));
+      }
       Render::GL::Vertex vertex{};
-      vertex.position = {position.x(), position.y() + settings.y_offset, position.z()};
+      vertex.position = {surface_position.x(),
+                         surface_position.y() + settings.y_offset,
+                         surface_position.z()};
       vertex.normal = {0.0F, 1.0F, 0.0F};
-      vertex.tex_coord = {0.5F * (1.0F - radial_t), angle_t};
+      vertex.tex_coord = {
+          settings.junction_uses_center_uv ? 0.5F : 0.5F * (1.0F - radial_t), angle_t};
       vertices.push_back(vertex);
     };
     append_vertex(junction.center, 0.0F, 0.5F);
@@ -414,8 +426,9 @@ auto build_linear_feature_junction_meshes(
       const auto next = 1U + static_cast<unsigned int>((index + 1) % ring_segments);
       indices.insert(indices.end(), {0U, current, next});
     }
-    result.push_back(
-        {std::make_unique<Render::GL::Mesh>(vertices, indices), junction.center});
+    result.push_back({std::make_unique<Render::GL::Mesh>(vertices, indices),
+                      junction.center,
+                      junction.samples});
   }
   return result;
 }

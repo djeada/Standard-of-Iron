@@ -36,10 +36,10 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   const auto dry_rules = Game::Map::make_scatter_rules(Game::Map::GroundType::GrassDry);
   EXPECT_FALSE(dry_rules.allow_pines);
   EXPECT_TRUE(dry_rules.allow_olives);
-  EXPECT_FLOAT_EQ(dry_rules.olive_base_density, 0.12F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_density_scale, 0.15F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_min, 3.6F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_max, 6.4F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_base_density, 0.08F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_density_scale, 0.10F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_scale_min, 2.8F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_scale_max, 5.0F);
 
   const auto forest_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::ForestMud);
