@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Rectangle {
     id: productionPanel
@@ -40,22 +41,22 @@ Rectangle {
             "item_type": "defense_tower",
             "label": qsTr("Defense Tower"),
             "description": qsTr("Stationary defense structure\nShoots arrows at enemies"),
-            "fallback_emoji": "🏰"
+            "fallback_emoji": Design.Icons.unitGlyph("defense_tower")
         }, {
             "item_type": "home",
             "label": qsTr("Home"),
             "description": qsTr("Residential building\nAdds +50 population to nearest barracks"),
-            "fallback_emoji": "🏠"
+            "fallback_emoji": Design.Icons.unitGlyph("home")
         }, {
             "item_type": "marketplace",
             "label": qsTr("Marketplace"),
             "description": qsTr("Trade building\nBuy or sell resources for gold"),
-            "fallback_emoji": "🏪"
+            "fallback_emoji": Design.Icons.unitGlyph("marketplace")
         }, {
             "item_type": "wall_segment",
             "label": qsTr("Wall Segment"),
             "description": qsTr("Wooden defensive wall\nBlocks enemy movement"),
-            "fallback_emoji": "🪵"
+            "fallback_emoji": Design.Icons.collect
         }]
 
     function default_production_state() {
@@ -87,28 +88,19 @@ Rectangle {
     }
 
     function unit_icon_source(unit_type, nation_key) {
-        if (typeof StyleGuide === "undefined" || !StyleGuide.unit_icon_sources || !unit_type)
-            return "";
-        var sources = StyleGuide.unit_icon_sources[unit_type];
-        if (!sources)
-            sources = StyleGuide.unit_icon_sources["default"];
-        if (typeof sources === "object" && sources !== null) {
-            if (nation_key && sources[nation_key])
-                return sources[nation_key];
-            if (sources["default"])
-                return sources["default"];
-        } else if (typeof sources === "string") {
-            return sources;
-        }
-        return "";
+        return Design.Icons.unit(unit_type, nation_key);
     }
 
     function unit_icon_emoji(unit_type) {
-        if (unit_type && unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_mercenary_broker" || unit_type === "carthage_cavalry_patron" || unit_type === "carthage_elephant_master")
-            return "⚜";
-        if (typeof StyleGuide !== "undefined" && StyleGuide.unit_icons)
-            return StyleGuide.unit_icons[unit_type] || StyleGuide.unit_icons["default"] || "👤";
-        return "👤";
+        if (productionPanel.is_commander_type(unit_type))
+            return Design.Icons.commander;
+        return Design.Icons.unitGlyph(unit_type);
+    }
+
+    function is_commander_type(unit_type) {
+        if (!unit_type)
+            return false;
+        return unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_mercenary_broker" || unit_type === "carthage_cavalry_patron" || unit_type === "carthage_elephant_master";
     }
 
     function get_unit_production_info(unit_type, nation_id) {
@@ -1827,7 +1819,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
                         height: 32
-                        text: rallyContent.placing_barracks_rally ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
+                        text: rallyContent.placing_barracks_rally ? Design.Icons.rally + " " + qsTr("Click Map to Set Rally") : Design.Icons.rally + " " + qsTr("Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         enabled: rallyContent.prod.has_barracks
                         onClicked: productionPanel.rally_mode_toggled()
@@ -1914,7 +1906,7 @@ Rectangle {
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : qsTr("🔨 BUILDER CONSTRUCTION")
+                            text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : Design.Icons.build + " " + qsTr("BUILDER CONSTRUCTION")
                             color: hs.bronze
                             font.pointSize: 9
                             font.bold: true
@@ -2310,7 +2302,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderDefenseTowerIcon.visible
-                                text: "🏰"
+                                text: Design.Icons.unitGlyph("defense_tower")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.is_enabled ? 0.9 : 0.4
@@ -2442,7 +2434,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderHomeIcon.visible
-                                text: "🏠"
+                                text: Design.Icons.unitGlyph("home")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.is_enabled ? 0.9 : 0.4
@@ -2574,7 +2566,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderWallSegmentIcon.visible
-                                text: "🪵"
+                                text: Design.Icons.collect
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 34
                                 opacity: parent.is_enabled ? 0.9 : 0.4
@@ -2706,7 +2698,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: builderMarketplaceIcon.status !== Image.Ready
-                                text: "🏪"
+                                text: Design.Icons.unitGlyph("marketplace")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 34
                                 opacity: parent.is_enabled ? 0.9 : 0.4
@@ -2848,7 +2840,7 @@ Rectangle {
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: marketplaceHeaderIcon.visible ? qsTr("MARKETPLACE") : qsTr("🏪 MARKETPLACE")
+                            text: marketplaceHeaderIcon.visible ? qsTr("MARKETPLACE") : Design.Icons.unitGlyph("marketplace") + " " + qsTr("MARKETPLACE")
                             color: hs.bronze
                             font.pointSize: 9
                             font.bold: true
@@ -2974,7 +2966,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "🏰"
+                        text: Design.Icons.unitGlyph("defense_tower")
                         color: "#3B2F24"
                         font.pointSize: 32
                     }

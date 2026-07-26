@@ -116,7 +116,8 @@ public:
   [[nodiscard]] static auto panelBorder() -> QColor { return {"#8C6A3E"}; }
 
   [[nodiscard]] static auto cardBase() -> QColor { return {"#2F251D"}; }
-  [[nodiscard]] static auto cardBaseA() -> QColor { return {"#2F251DBB"}; }
+
+  [[nodiscard]] static auto cardBaseA() -> QColor { return {"#BB2F251D"}; }
   [[nodiscard]] static auto cardBaseB() -> QColor { return {"#1D1610"}; }
   [[nodiscard]] static auto cardBorder() -> QColor { return {"#A7814A"}; }
 
@@ -199,6 +200,7 @@ public:
   [[nodiscard]] static auto factions() -> QVariantList;
   [[nodiscard]] static auto unitIcons() -> QVariantMap;
   [[nodiscard]] static auto nationEmblems() -> QVariantMap;
+
   [[nodiscard]] static auto widgetStyleSheet() -> QString;
 
 private:

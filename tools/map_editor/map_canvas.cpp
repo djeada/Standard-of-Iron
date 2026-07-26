@@ -17,16 +17,17 @@
 #include "canvas_transform.h"
 #include "spawn_icon_library.h"
 #include "troop_tool_specs.h"
+#include "ui/theme.h"
 
 namespace MapEditor {
 
 namespace {
 
-const QColor k_canvas_background(7, 16, 24);
-const QColor k_canvas_border(15, 43, 52);
-const QColor k_grid_line_color(17, 48, 68);
-const QColor k_grid_outline_color(79, 106, 117);
-const QColor k_grid_text_color(183, 210, 223);
+const QColor k_canvas_background = Theme::backgroundDeep();
+const QColor k_canvas_border = Theme::borderSubtle();
+const QColor k_grid_line_color = Theme::panelIron();
+const QColor k_grid_outline_color = Theme::borderSubtle();
+const QColor k_grid_text_color = Theme::textSecondary();
 const QColor k_empty_state_text(159, 217, 255);
 const QColor k_hover_select_color(100, 200, 255);
 const QColor k_hover_erase_color(255, 80, 80);
@@ -617,7 +618,9 @@ void MapCanvas::draw_undead_zones(QPainter& painter) {
     }
     painter.drawEllipse(center, radius_px, radius_px);
 
-    const QString icon = (elem.anchor_type == QStringLiteral("ruins")) ? "🏚" : "✦";
+    const QString icon = (elem.anchor_type == QStringLiteral("ruins"))
+                             ? QStringLiteral("\u25A9")
+                             : QStringLiteral("\u2726");
     painter.setPen(QColor(230, 180, 255));
     QFont f = painter.font();
     f.setPointSize(9);
@@ -1189,9 +1192,12 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
                                 static_cast<unsigned int>(
                                     static_cast<int>(
                                         static_cast<unsigned int>(
-                                            static_cast<int>(static_cast<unsigned int>(
-                                                                 Qt::ShiftModifier !=
-                                                                 0U) != 0U) != 0U) !=
+                                            static_cast<int>(
+                                                static_cast<unsigned int>(
+                                                    static_cast<int>(
+                                                        static_cast<unsigned int>(
+                                                            Qt::ShiftModifier != 0U) !=
+                                                        0U) != 0U) != 0U) != 0U) !=
                                         0U) != 0U) != 0U) != 0U) != 0U) != 0U) != 0U) !=
             0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
@@ -1446,9 +1452,12 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
                                 static_cast<unsigned int>(
                                     static_cast<int>(
                                         static_cast<unsigned int>(
-                                            static_cast<int>(static_cast<unsigned int>(
-                                                                 Qt::ShiftModifier !=
-                                                                 0U) != 0U) != 0U) !=
+                                            static_cast<int>(
+                                                static_cast<unsigned int>(
+                                                    static_cast<int>(
+                                                        static_cast<unsigned int>(
+                                                            Qt::ShiftModifier != 0U) !=
+                                                        0U) != 0U) != 0U) != 0U) !=
                                         0U) != 0U) != 0U) != 0U) != 0U) != 0U) != 0U) !=
             0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
