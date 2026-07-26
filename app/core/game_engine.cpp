@@ -2025,6 +2025,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   }
   if (m_renderer) {
     m_renderer->set_local_owner_id(m_runtime.local_owner_id);
+    m_renderer->set_order_marker_spectator_mode(m_level.is_spectator_mode);
+    m_renderer->set_debug_reveal_non_local_order_markers(
+        qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ORDER_MARKERS"));
   }
 
   m_renderer->render_world(m_world.get());

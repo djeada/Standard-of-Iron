@@ -101,7 +101,8 @@ void render_patrol_flags(Renderer* renderer,
     }
 
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0 ||
+        !renderer->order_markers_visible_for_owner(unit->owner_id)) {
       continue;
     }
 
@@ -138,7 +139,8 @@ void render_commander_rally_flags(Renderer* renderer,
     return;
   }
 
-  if (preview_pos.has_value()) {
+  if (preview_pos.has_value() &&
+      renderer->order_markers_visible_for_owner(preview_owner_id)) {
     QVector3D const preview_color = Game::Visuals::team_colorForOwner(preview_owner_id);
     auto flag = Geom::Flag::create(preview_pos->x(),
                                    preview_pos->z(),
@@ -155,7 +157,8 @@ void render_commander_rally_flags(Renderer* renderer,
     auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((commander == nullptr) || (unit == nullptr) ||
-        !commander->flag_rally_flag_active) {
+        !commander->flag_rally_flag_active ||
+        !renderer->order_markers_visible_for_owner(unit->owner_id)) {
       continue;
     }
     QVector3D const flag_color = Game::Visuals::team_colorForOwner(unit->owner_id);

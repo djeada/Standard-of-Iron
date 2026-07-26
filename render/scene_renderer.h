@@ -85,6 +85,17 @@ public:
   }
   void set_hovered_entity_id(unsigned int id) { m_hovered_entity_id = id; }
   void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
+  void set_order_marker_spectator_mode(bool enabled) {
+    m_order_marker_spectator_mode = enabled;
+  }
+  void set_debug_reveal_non_local_order_markers(bool enabled) {
+    m_debug_reveal_non_local_order_markers = enabled;
+  }
+  [[nodiscard]] auto
+  order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
+    return m_debug_reveal_non_local_order_markers ||
+           (!m_order_marker_spectator_mode && owner_id == m_local_owner_id);
+  }
   void set_force_full_creature_lod(bool enabled) {
     m_force_full_creature_lod = enabled;
   }
@@ -377,6 +388,8 @@ private:
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;
+  bool m_order_marker_spectator_mode = false;
+  bool m_debug_reveal_non_local_order_markers = false;
   bool m_force_full_creature_lod = false;
 
   QMatrix4x4 m_view_proj;
