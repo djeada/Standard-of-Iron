@@ -7,7 +7,6 @@ no player-selectable slot. Its troops reach the battlefield one way only: an
 Everything below is driven by `undead_zones` in a map file and implemented by
 `Game::Systems::UndeadAwakeningSystem`.
 
-
 ## Zone schema
 
 ```json
@@ -31,16 +30,15 @@ Everything below is driven by `undead_zones` in a map file and implemented by
 ]
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `awaken_on` | `unit_enters_radius` (default) or `mission_start`. |
-| `waves` | Optional. Omit it to get the default garrison (see below). |
+| Field              | Meaning                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `awaken_on`        | `unit_enters_radius` (default) or `mission_start`.                                         |
+| `waves`            | Optional. Omit it to get the default garrison (see below).                                 |
 | `anchor_structure` | Optional override. Defaults to true for `magic_shrine`, false for every other anchor type. |
-| `fog_density` | Optional. `0` disables the zone haze. |
+| `fog_density`      | Optional. `0` disables the zone haze.                                                      |
 
 `owner_id` is a real owner: it is registered as an AI owner of nation
 `iron_sepulcher`, which resolves to the `sepulcher_defense` AI profile.
-
 
 ## The default garrison
 
@@ -51,7 +49,6 @@ overrides that completely — the default is never merged in.
 The whole wave rises on one tick. Guardians are placed on a golden-angle
 sunflower spiral filling the zone radius, so they appear spread around the
 anchor rather than stacked on it, and impassable ground is skipped.
-
 
 ## Shrines are capturable barracks
 
@@ -75,7 +72,6 @@ outcome back into the normal victory system: a mission or map using
 Ruins and other anchor types stay decorative; set `"anchor_structure": true` to
 force a structural anchor, or `false` to suppress one on a shrine.
 
-
 ## Zone haze
 
 Each zone with a positive `fog_density` contributes a light, semi-transparent
@@ -83,7 +79,6 @@ Each zone with a positive `fog_density` contributes a light, semi-transparent
 Fog patches carry a ground height, so whoever owns the terrain (the skirmish
 loader, or the Arena) lifts each zone onto the surface before handing it to the
 renderer — otherwise the patches sink under raised ground.
-
 
 ## Announcements
 
@@ -95,14 +90,12 @@ once per event:
 - when its garrison is put down, either by being fought to the last guardian or
   by losing its shrine.
 
-
 ## Save/load
 
 `serialize_state()` / `restore_state()` carry the awakened flag, the broken-
 garrison flag, the anchor entity id, wave progress, and the live spawn ids. A
 restored save never re-spawns an active wave and never stamps out a second
 shrine.
-
 
 ## Testing
 

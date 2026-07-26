@@ -13,9 +13,9 @@ CHECKS="modernize-*,readability-*,performance-*,misc-*,-misc-unused-parameters,-
 
 # ---- options ----
 DRY_RUN=false
-MEM_CAP_MB=4096          # soft cap per process (Linux only)
-FILE_TIMEOUT="300s"      # per-TU timeout; "" to disable
-SHOW_DISCOVERY=1         # print TU count + a few samples
+MEM_CAP_MB=4096     # soft cap per process (Linux only)
+FILE_TIMEOUT="300s" # per-TU timeout; "" to disable
+SHOW_DISCOVERY=1    # print TU count + a few samples
 
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=true
@@ -103,12 +103,12 @@ else
       $2=="file"{
         f=$4
         if (substr(f,1,1)=="/") print f; else print dir "/" f
-      }' "$BUILD_DIR/compile_commands.json" \
-    | while IFS= read -r p; do
+      }' "$BUILD_DIR/compile_commands.json" |
+      while IFS= read -r p; do
         python3 -c 'import os,sys; print(os.path.abspath(sys.stdin.read().strip()))' <<<"$p"
-      done \
-    | awk 'BEGIN{IGNORECASE=1} $0 ~ /\.(c|cc|cpp|cxx|c\+\+|C|ixx|ix|mm|m)$/ {print}' \
-    | sort -u
+      done |
+      awk 'BEGIN{IGNORECASE=1} $0 ~ /\.(c|cc|cpp|cxx|c\+\+|C|ixx|ix|mm|m)$/ {print}' |
+      sort -u
   )
 
   # Fallback-from-command if still empty
@@ -128,11 +128,11 @@ else
             if (substr(src,1,1)=="/") print src;
             else print dir "/" src;
           }
-        }' "$BUILD_DIR/compile_commands.json" \
-      | while IFS= read -r p; do
+        }' "$BUILD_DIR/compile_commands.json" |
+        while IFS= read -r p; do
           python3 -c 'import os,sys; print(os.path.abspath(sys.stdin.read().strip()))' <<<"$p"
-        done \
-      | sort -u
+        done |
+        sort -u
     )
   fi
 fi
@@ -153,10 +153,10 @@ FILES=("${UNIQ[@]}")
 FILTERED=()
 for f in "${FILES[@]}"; do
   case "$f" in
-    "$REPO_ABS/$BUILD_DIR/"* | *"/_autogen/"* | *"/autogen/"* | */mocs_compilation.cpp | */qrc_*.cpp )
+    "$REPO_ABS/$BUILD_DIR/"* | *"/_autogen/"* | *"/autogen/"* | */mocs_compilation.cpp | */qrc_*.cpp)
       continue
       ;;
-    * )
+    *)
       FILTERED+=("$f")
       ;;
   esac
@@ -186,7 +186,7 @@ fi
 
 # ---- gentle scheduling ----
 NI_CMD=()
-command -v nice   >/dev/null 2>&1 && NI_CMD+=(nice -n 10)
+command -v nice >/dev/null 2>&1 && NI_CMD+=(nice -n 10)
 command -v ionice >/dev/null 2>&1 && NI_CMD+=(ionice -c2 -n7)
 
 # Soft mem cap
@@ -225,13 +225,12 @@ for ABS in "${FILES[@]}"; do
   echo "🔧 Processing: $REL"
 
   if ! "${NI_CMD[@]}" "${TIMEOUT_CMD[@]}" \
-      clang-tidy -p "$BUILD_DIR" "${FIX_FLAG[@]}" \
-        -checks="$CHECKS" \
-        -header-filter="$HEADER_FILTER" \
-        -extra-arg=-fno-color-diagnostics \
-        -extra-arg=-Wno-unknown-warning-option \
-        "$ABS"
-  then
+    clang-tidy -p "$BUILD_DIR" "${FIX_FLAG[@]}" \
+    -checks="$CHECKS" \
+    -header-filter="$HEADER_FILTER" \
+    -extra-arg=-fno-color-diagnostics \
+    -extra-arg=-Wno-unknown-warning-option \
+    "$ABS"; then
     FAILED+=("$REL")
   fi
 done

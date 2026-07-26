@@ -80,7 +80,8 @@ TEST_F(BalanceSimTest, SameSeedProducesTheSameBattle) {
   EXPECT_FLOAT_EQ(first.elapsed_seconds, second.elapsed_seconds);
   EXPECT_EQ(first.side_a.surviving_units, second.side_a.surviving_units);
   EXPECT_EQ(first.side_b.surviving_units, second.side_b.surviving_units);
-  EXPECT_DOUBLE_EQ(first.side_a.damage_dealt.total(), second.side_a.damage_dealt.total());
+  EXPECT_DOUBLE_EQ(first.side_a.damage_dealt.total(),
+                   second.side_a.damage_dealt.total());
 }
 
 TEST_F(BalanceSimTest, DifferentSeedsProduceDifferentBattles) {

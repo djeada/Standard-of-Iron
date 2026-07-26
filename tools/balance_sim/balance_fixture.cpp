@@ -66,7 +66,8 @@ auto parse_side(const QJsonObject& obj,
   const QString nation_text =
       obj.value("nation").toString(QStringLiteral("roman_republic"));
   if (!Game::Systems::try_parse_nation_id(nation_text, out.nation)) {
-    errors.push_back({field + ".nation", QStringLiteral("unknown nation '%1'").arg(nation_text)});
+    errors.push_back(
+        {field + ".nation", QStringLiteral("unknown nation '%1'").arg(nation_text)});
     return false;
   }
 
@@ -79,7 +80,8 @@ auto parse_side(const QJsonObject& obj,
 
   const QJsonArray groups = obj.value("groups").toArray();
   if (groups.isEmpty()) {
-    errors.push_back({field + ".groups", QStringLiteral("at least one group required")});
+    errors.push_back(
+        {field + ".groups", QStringLiteral("at least one group required")});
     return false;
   }
 
@@ -114,8 +116,8 @@ auto stance_name(Stance stance) -> QString {
   return QStringLiteral("attack");
 }
 
-auto load_fixture_file(const QString& path,
-                       std::vector<FixtureLoadError>& errors) -> std::optional<Fixture> {
+auto load_fixture_file(const QString& path, std::vector<FixtureLoadError>& errors)
+    -> std::optional<Fixture> {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
     errors.push_back({path, QStringLiteral("cannot open: %1").arg(file.errorString())});
@@ -125,7 +127,8 @@ auto load_fixture_file(const QString& path,
   QJsonParseError parse_error{};
   const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &parse_error);
   if (parse_error.error != QJsonParseError::NoError) {
-    errors.push_back({path, QStringLiteral("parse error: %1").arg(parse_error.errorString())});
+    errors.push_back(
+        {path, QStringLiteral("parse error: %1").arg(parse_error.errorString())});
     return std::nullopt;
   }
 
@@ -135,7 +138,8 @@ auto load_fixture_file(const QString& path,
   fixture.label = root.value("label").toString(fixture.id);
   fixture.description = root.value("description").toString();
 
-  fixture.duration_seconds = read_float(root, "duration_seconds", fixture.duration_seconds);
+  fixture.duration_seconds =
+      read_float(root, "duration_seconds", fixture.duration_seconds);
   fixture.timestep = read_float(root, "timestep", fixture.timestep);
   fixture.seeds = std::max(1, read_int(root, "seeds", fixture.seeds));
   fixture.mirror_sides = read_bool(root, "mirror_sides", fixture.mirror_sides);
@@ -145,11 +149,15 @@ auto load_fixture_file(const QString& path,
   fixture.spawn_jitter = read_float(root, "spawn_jitter", fixture.spawn_jitter);
 
   const std::size_t error_count = errors.size();
-  if (!parse_side(root.value("side_a").toObject(), QStringLiteral("side_a"), errors,
+  if (!parse_side(root.value("side_a").toObject(),
+                  QStringLiteral("side_a"),
+                  errors,
                   fixture.side_a)) {
     return std::nullopt;
   }
-  if (!parse_side(root.value("side_b").toObject(), QStringLiteral("side_b"), errors,
+  if (!parse_side(root.value("side_b").toObject(),
+                  QStringLiteral("side_b"),
+                  errors,
                   fixture.side_b)) {
     return std::nullopt;
   }
@@ -161,7 +169,8 @@ auto load_fixture_file(const QString& path,
   fixture.expect.a_win_rate_min = read_optional_float(expect, "a_win_rate_min");
   fixture.expect.a_win_rate_max = read_optional_float(expect, "a_win_rate_max");
   fixture.expect.max_timeout_rate = read_optional_float(expect, "max_timeout_rate");
-  fixture.expect.max_spawn_side_bias = read_optional_float(expect, "max_spawn_side_bias");
+  fixture.expect.max_spawn_side_bias =
+      read_optional_float(expect, "max_spawn_side_bias");
 
   return fixture;
 }

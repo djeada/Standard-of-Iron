@@ -45,8 +45,7 @@ void AutoEngagement::process(Engine::Core::World*,
     // arrow rather than stand there, without the line wandering off after it.
     bool const shoots_without_closing =
         attack_comp->can_ranged &&
-        attack_comp->preferred_mode !=
-            Engine::Core::AttackComponent::CombatMode::Melee;
+        attack_comp->preferred_mode != Engine::Core::AttackComponent::CombatMode::Melee;
 
     if (!shoots_without_closing) {
       if (!attack_comp->can_melee || !should_auto_engage_melee(unit)) {
