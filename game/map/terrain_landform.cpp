@@ -242,14 +242,11 @@ auto sample_mountain(float local_x,
                                  4));
   const float gully =
       std::pow(std::clamp(drainage_ridge, 0.0F, 1.0F), 8.0F) * main_fold * edge_fade;
-  const float peak_warp = signed_fbm(nx * 2.4F + config.phase,
-                                     config.phase * 0.47F,
-                                     config.seed ^ 0xA4093822U,
-                                     4);
+  const float peak_warp = signed_fbm(
+      nx * 2.4F + config.phase, config.phase * 0.47F, config.seed ^ 0xA4093822U, 4);
   const float peak_wave =
       0.5F + 0.5F * std::sin(nx * 10.6F + config.phase * 1.7F + peak_warp * 1.25F);
-  const float peak_chain =
-      0.67F + 0.33F * smoothstep01((peak_wave - 0.12F) / 0.76F);
+  const float peak_chain = 0.67F + 0.33F * smoothstep01((peak_wave - 0.12F) / 0.76F);
   const float foothill = std::pow(envelope_position, 0.78F) * 0.11F;
   const float ridge = main_fold * longitudinal_taper * peak_chain * 0.79F;
   const float crest =

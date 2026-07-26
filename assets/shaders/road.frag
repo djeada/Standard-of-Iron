@@ -119,10 +119,8 @@ void main() {
   float medium = fbm_2d(uv * 0.34 + vec2(-11.0, 3.0));
   float grain = noise_2d(uv * 3.7 + vec2(29.0, -17.0));
   float rut_wander = (noise_2d(uv * 0.075 + vec2(41.0, -9.0)) - 0.5) * 0.035;
-  float rut_left =
-      1.0 - smoothstep(0.030, 0.090, abs(across - (0.31 + rut_wander)));
-  float rut_right =
-      1.0 - smoothstep(0.030, 0.090, abs(across - (0.69 + rut_wander)));
+  float rut_left = 1.0 - smoothstep(0.030, 0.090, abs(across - (0.31 + rut_wander)));
+  float rut_right = 1.0 - smoothstep(0.030, 0.090, abs(across - (0.69 + rut_wander)));
   float ruts = max(rut_left, rut_right);
   float traveled = smoothstep(0.24, 0.68, broad * 0.70 + medium * 0.30);
   ruts *= mix(0.35, 1.0, traveled);
@@ -164,14 +162,12 @@ void main() {
     vec2 aggregate_cells = worley_f(uv * 1.85 + vec2(3.0, -8.0));
     float aggregate_edge = aggregate_cells.y - aggregate_cells.x;
     float aggregate = smoothstep(0.020, 0.110, aggregate_edge);
-    float aggregate_tone =
-        (noise_2d(uv * 1.85 + vec2(-5.0, 17.0)) - 0.5) * 0.16;
+    float aggregate_tone = (noise_2d(uv * 1.85 + vec2(-5.0, 17.0)) - 0.5) * 0.16;
     float wear = center_wear * smoothstep(0.30, 0.68, broad);
     float shoulder = 1.0 - smoothstep(0.055, 0.20, edge_distance);
     vec3 joint_earth = u_color * (0.76 + broad * 0.10);
-    vec3 packed_stone =
-        mix(u_color * 1.06, vec3(0.43, 0.39, 0.31), 0.14) *
-        (0.94 + aggregate_tone + (medium - 0.5) * 0.07);
+    vec3 packed_stone = mix(u_color * 1.06, vec3(0.43, 0.39, 0.31), 0.14) *
+                        (0.94 + aggregate_tone + (medium - 0.5) * 0.07);
     base_color = mix(joint_earth, packed_stone, aggregate);
     base_color *= 1.0 - wear * 0.045 - shoulder * 0.10;
     h = (medium - 0.5) * 0.030 + aggregate * 0.032 - wear * 0.010;

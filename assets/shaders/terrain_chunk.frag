@@ -299,36 +299,32 @@ void main() {
   float speck_fade = band_limit(coord_footprint, speck_frequency);
   float surface_grain =
       gradient_noise(world_coord * grain_frequency + vec2(-17.0, 8.0)) * grain_fade;
-  float granular =
-      gradient_noise(world_coord * granular_frequency + vec2(42.0, 19.0)) *
-      granular_fade;
+  float granular = gradient_noise(world_coord * granular_frequency + vec2(42.0, 19.0)) *
+                   granular_fade;
   float speckle =
       gradient_fbm(world_coord * speck_frequency + vec2(-63.0, 24.0)) * speck_fade;
 
   float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
   float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
-  float drainage_field =
-      clamp(moisture_field * 0.60 + (1.0 - meadow_field) * 0.12 +
-                gully_mask * 0.22 + low_ground * 0.10 - slope * 0.24,
-            0.0,
-            1.0);
-  float exposure_field =
-      clamp(soil_field * 0.44 + (1.0 - moisture_field) * 0.20 +
-                meadow_field * 0.10 + high_ground * 0.10 + slope * 0.30 +
-                ridge_mask * 0.12 - gully_mask * 0.18,
-            0.0,
-            1.0);
+  float drainage_field = clamp(moisture_field * 0.60 + (1.0 - meadow_field) * 0.12 +
+                                   gully_mask * 0.22 + low_ground * 0.10 - slope * 0.24,
+                               0.0,
+                               1.0);
+  float exposure_field = clamp(soil_field * 0.44 + (1.0 - moisture_field) * 0.20 +
+                                   meadow_field * 0.10 + high_ground * 0.10 +
+                                   slope * 0.30 + ridge_mask * 0.12 - gully_mask * 0.18,
+                               0.0,
+                               1.0);
   float material_patch =
-      clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.8 +
-                               domain_warp * 0.58 + vec2(37.0, -61.0)) *
+      clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.8 + domain_warp * 0.58 +
+                               vec2(37.0, -61.0)) *
                       0.78,
             0.0,
             1.0);
-  float grazed_patch =
-      smoothstep(0.36,
-                 0.66,
-                 exposure_field * 0.54 + material_patch * 0.30 +
-                     (1.0 - drainage_field) * 0.16);
+  float grazed_patch = smoothstep(0.36,
+                                  0.66,
+                                  exposure_field * 0.54 + material_patch * 0.30 +
+                                      (1.0 - drainage_field) * 0.16);
   float sparse_cover =
       smoothstep(0.32, 0.62, exposure_field * 0.55 + material_patch * 0.45);
 
@@ -345,10 +341,8 @@ void main() {
   dry_patch = clamp(dry_patch + exposed_ground * 0.20, 0.0, 1.0);
   dry_patch *= (1.0 - gully_mask * 0.40);
   grass_color = mix(grass_color, u_grass_dry, dry_patch * 0.54);
-  grass_color =
-      mix(grass_color, u_grass_dry, sparse_cover * (0.10 + biome_dry * 0.10));
-  float lush_patch =
-      smoothstep(0.58, 0.82, drainage_field + u_moisture_level * 0.08);
+  grass_color = mix(grass_color, u_grass_dry, sparse_cover * (0.10 + biome_dry * 0.10));
+  float lush_patch = smoothstep(0.58, 0.82, drainage_field + u_moisture_level * 0.08);
   lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
   grass_color = mix(grass_color, u_grass_secondary * 0.94, lush_patch * 0.18);
   float grass_weave = gradient_fbm(world_coord * 0.16 + domain_warp * 0.12 + 18.0);
@@ -363,10 +357,9 @@ void main() {
       band_limit(coord_footprint, 0.90);
 
   grass_color *= 0.95 + regional_field * 0.045 + material_patch * 0.045 +
-                 grass_clumps * 0.020 +
-                 surface_detail * 0.050 +
-                 grass_weave * 0.012 + surface_grain * 0.070 + tussock * 0.040 +
-                 granular * 0.026 + speckle * 0.012;
+                 grass_clumps * 0.020 + surface_detail * 0.050 + grass_weave * 0.012 +
+                 surface_grain * 0.070 + tussock * 0.040 + granular * 0.026 +
+                 speckle * 0.012;
 
   vec3 cropped_sward = mix(u_grass_dry, u_grass_primary, 0.45);
   vec3 deep_sward = mix(u_grass_secondary, u_grass_primary, 0.30) * 0.88;
@@ -381,26 +374,22 @@ void main() {
   vec3 blade_shade = mix(u_grass_secondary, u_grass_dry, 0.35);
   grass_color = mix(grass_color, blade_shade, clamp(tussock, 0.0, 1.0) * 0.07);
 
-  float damp_patch =
-      smoothstep(0.68, 0.86, drainage_field + u_moisture_level * 0.10);
+  float damp_patch = smoothstep(0.68, 0.86, drainage_field + u_moisture_level * 0.10);
   damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
   float bare_patch = smoothstep(0.39,
                                 0.64,
                                 exposure_field * 0.66 + material_patch * 0.28 +
-                                    surface_detail * 0.06 -
-                                    u_moisture_level * 0.05);
+                                    surface_detail * 0.06 - u_moisture_level * 0.05);
   bare_patch *= 1.0 - smoothstep(0.26, 0.60, slope);
-  float worn_patch =
-      smoothstep(0.46,
-                 0.70,
-                 exposure_field * 0.40 + grazed_patch * 0.30 +
-                     soil_field * 0.18 + (1.0 - moisture_field) * 0.12);
+  float worn_patch = smoothstep(0.46,
+                                0.70,
+                                exposure_field * 0.40 + grazed_patch * 0.30 +
+                                    soil_field * 0.18 + (1.0 - moisture_field) * 0.12);
   worn_patch *= 1.0 - smoothstep(0.10, 0.30, slope);
   float soil_width = max(0.04, 1.0 / max(u_soil_blend_sharpness, 0.25));
-  float lowland_soil =
-      1.0 - smoothstep(u_soil_blend_height - soil_width,
-                       u_soil_blend_height + soil_width,
-                       v_world_pos.y);
+  float lowland_soil = 1.0 - smoothstep(u_soil_blend_height - soil_width,
+                                        u_soil_blend_height + soil_width,
+                                        v_world_pos.y);
 
   float soil_mix = bare_patch * 0.70;
   soil_mix = max(soil_mix, sparse_cover * (0.24 + biome_dry * 0.18));
@@ -410,8 +399,8 @@ void main() {
                                biome_forest * 0.06 + biome_fertile * 0.04));
   soil_mix = max(soil_mix, damp_patch * (0.22 + 0.14 * u_moisture_level));
   soil_mix = max(soil_mix, lowland_soil * (0.08 + 0.15 * u_moisture_level));
-  float deposited_soil =
-      gully_mask * (1.0 - smoothstep(0.08, 0.32, slope)) * (0.14 + 0.14 * gully_response);
+  float deposited_soil = gully_mask * (1.0 - smoothstep(0.08, 0.32, slope)) *
+                         (0.14 + 0.14 * gully_response);
   soil_mix = max(soil_mix, deposited_soil);
   soil_mix = max(soil_mix, foot_shelter * (0.15 + u_soil_foot_height));
   float level_ground = 1.0 - smoothstep(0.018, 0.075, slope);
@@ -465,15 +454,13 @@ void main() {
   float mountain_altitude = smoothstep(2.5, 10.0, v_world_pos.y);
   float mountain_face =
       mountain_surface * mountain_altitude * smoothstep(0.025, 0.14, slope);
-  float mountain_shoulders =
-      mountain_surface * smoothstep(7.0, 15.0, v_world_pos.y) *
-      smoothstep(0.012, 0.085, slope);
-  rock_mask = max(
-      rock_mask,
-      clamp(mountain_face * (0.70 + weathered_exposure * 0.25) +
-                mountain_shoulders * 0.28,
-            0.0,
-            0.96));
+  float mountain_shoulders = mountain_surface * smoothstep(7.0, 15.0, v_world_pos.y) *
+                             smoothstep(0.012, 0.085, slope);
+  rock_mask = max(rock_mask,
+                  clamp(mountain_face * (0.70 + weathered_exposure * 0.25) +
+                            mountain_shoulders * 0.28,
+                        0.0,
+                        0.96));
   rock_mask *= mix(weathered_exposure, 1.0, smoothstep(0.10, 0.34, slope));
   rock_mask *= (1.0 - 0.55 * entry_shelter) * (1.0 - 0.30 * foot_shelter);
   rock_mask *= smoothstep(0.010, 0.050, slope);
@@ -532,13 +519,11 @@ void main() {
   }
 
   if (u_snow_coverage > 0.01) {
-    float snowline =
-        18.0 + (regional_field - 0.5) * 2.4 + surface_detail * 0.65;
+    float snowline = 18.0 + (regional_field - 0.5) * 2.4 + surface_detail * 0.65;
     float snow_edge_noise =
         gradient_fbm(world_coord * macro_scale * 5.4 + vec2(-34.0, 57.0));
     float altitude_snow =
-        smoothstep(snowline, snowline + 3.6, v_world_pos.y) +
-        snow_edge_noise * 0.10;
+        smoothstep(snowline, snowline + 3.6, v_world_pos.y) + snow_edge_noise * 0.10;
     altitude_snow = clamp(altitude_snow, 0.0, 1.0);
     float snow_shelf = 1.0 - smoothstep(0.08, 0.30, slope);
     float crest_snow = smoothstep(0.42, 0.82, ridge_mask);
@@ -547,11 +532,10 @@ void main() {
         max(0.025 + 0.62 * snow_shelf, crest_snow * (0.58 + 0.16 * snow_shelf));
     snow_retention = max(snow_retention, high_summit * 0.18);
     float wind_deposit =
-        0.78 + 0.22 * smoothstep(0.34, 0.72, moisture_field * 0.55 +
-                                                     material_patch * 0.45);
-    float snow_mask = clamp(mountain_surface * altitude_snow *
-                                snow_retention * wind_deposit *
-                                u_snow_coverage * 1.85,
+        0.78 +
+        0.22 * smoothstep(0.34, 0.72, moisture_field * 0.55 + material_patch * 0.45);
+    float snow_mask = clamp(mountain_surface * altitude_snow * snow_retention *
+                                wind_deposit * u_snow_coverage * 1.85,
                             0.0,
                             0.95);
 
@@ -590,13 +574,11 @@ void main() {
   float relief_lost = clamp(1.0 - relief_resolved / 0.61, 0.0, 1.0);
 
   float material_roughness =
-      clamp(0.30 + u_soil_roughness * 0.48 + rock_mask * 0.18 -
-                wet_surface * 0.30,
+      clamp(0.30 + u_soil_roughness * 0.48 + rock_mask * 0.18 - wet_surface * 0.30,
             0.18,
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
-                     0.07 * rock_mask + 0.025 * exposed_ground +
-                     0.040 * bare_patch;
+                     0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
   vec3 relief_offset =
       mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),
           vec3(relief_gradient.x, relief_gradient.y, 0.0) * wall_axis +
