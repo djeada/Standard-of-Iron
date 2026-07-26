@@ -140,7 +140,9 @@ TEST_F(EquipmentLoadoutCatalogTest, IronSepulcherLoadoutsExposeBonesAndPriestClo
   const auto priest = Render::GL::Nation::resolve_equipment_loadout(
       "troops/iron_sepulcher/grave_priest");
   ASSERT_TRUE(priest.found);
+  EXPECT_EQ(priest.ids.helmet, "headwrap");
   EXPECT_EQ(priest.ids.cloak, "cloak_sepulcher");
+  EXPECT_NE(priest.helmet_handle, k_invalid_equipment_handle);
   EXPECT_NE(priest.cloak_handle, k_invalid_equipment_handle);
   EXPECT_EQ(priest.armor_handle, k_invalid_equipment_handle);
 }

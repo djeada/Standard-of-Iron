@@ -4,8 +4,8 @@
 
 namespace Render::GL::Sepulcher {
 
-inline constexpr QVector3D k_bone{0.755F, 0.715F, 0.605F};
-inline constexpr QVector3D k_bone_shadow{0.46F, 0.43F, 0.36F};
+inline constexpr QVector3D k_bone{0.69F, 0.665F, 0.585F};
+inline constexpr QVector3D k_bone_shadow{0.36F, 0.345F, 0.305F};
 
 inline constexpr QVector3D k_grave_cloth{0.115F, 0.115F, 0.135F};
 inline constexpr QVector3D k_grave_leather{0.185F, 0.155F, 0.130F};

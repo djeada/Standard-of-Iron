@@ -243,6 +243,12 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                 m_water_pipeline->m_riverbank_uniforms.surface_kind,
                 static_cast<int>(single.water_kind));
           }
+          if (m_water_pipeline->m_riverbank_uniforms.ground_type !=
+              Shader::InvalidUniform) {
+            riverbank_shader->set_uniform(
+                m_water_pipeline->m_riverbank_uniforms.ground_type,
+                single.biome_ground_type);
+          }
           if (m_water_pipeline->m_riverbank_uniforms.ground_color !=
               Shader::InvalidUniform) {
             riverbank_shader->set_uniform(

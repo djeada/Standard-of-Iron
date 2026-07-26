@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "../creature/pipeline/creature_asset.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../humanoid/humanoid_proportion_profiles.h"
 #include "registry.h"
 
@@ -69,6 +70,7 @@ struct SwordsmanRendererRegistration {
   std::string_view renderer_key;
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_sword_asset};
+  Render::Creature::Pipeline::PoseLayerFn pose_layer{nullptr};
 };
 
 void register_swordsman_renderer_profile(

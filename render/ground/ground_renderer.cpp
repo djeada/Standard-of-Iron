@@ -83,6 +83,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   const QVector3D soil = surface_profile.soil_color * 0.82F;
 
   params.grass_primary = saturate(primary);
+  params.ground_type = static_cast<int>(m_biome_settings.ground_type);
   params.grass_secondary = saturate(secondary);
   params.grass_dry = saturate(dry);
   params.soil_color = saturate(soil);
