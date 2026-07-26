@@ -1,960 +1,365 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: topRoot
 
     property bool game_is_paused: false
     property real current_speed: 1
-    readonly property int bar_min_height: 72
-    readonly property bool compact: width < 800
-    readonly property bool ultra_compact: width < 560
-    readonly property var hs: StyleGuide.historical
+
+    readonly property bool compact: width < 900
+    readonly property bool ultraCompact: width < 620
+    readonly property var speedOptions: [0.5, 1, 2]
 
     signal pause_toggled
     signal speed_changed(real speed)
 
-    Rectangle {
-        id: topPanel
+    function game_ready() {
+        return typeof game !== 'undefined' && game !== null;
+    }
+
+    property string primaryObjective: ""
+
+    function refresh_primary_objective() {
+        if (!game_ready() || !game.get_current_mission_objectives) {
+            primaryObjective = "";
+            return;
+        }
+        var objectives = game.get_current_mission_objectives();
+        var conditions = objectives && objectives.victory_conditions ? objectives.victory_conditions : [];
+        primaryObjective = conditions.length > 0 ? (conditions[0].description || "") : "";
+    }
+
+    Component.onCompleted: refresh_primary_objective()
+
+    Connections {
+        function onCampaign_mission_changed() {
+            topRoot.refresh_primary_objective();
+        }
+
+        target: topRoot.game_ready() ? game : null
+    }
+
+    function resource_amount(kind) {
+        if (!game_ready() || !game.selected_player_state || !game.selected_player_state.resources)
+            return 0;
+        return game.selected_player_state.resources[kind] || 0;
+    }
+
+    function population() {
+        return game_ready() && game.selected_player_state ? (game.selected_player_state.population || 0) : 0;
+    }
+
+    function population_cap() {
+        return game_ready() && game.selected_player_state ? (game.selected_player_state.population_cap || 0) : 0;
+    }
+
+    function population_status() {
+        var cap = population_cap();
+        if (cap <= 0)
+            return "disabled";
+        var count = population();
+        if (count >= cap)
+            return "danger";
+        if (count >= cap * 0.8)
+            return "warning";
+        return "default";
+    }
+
+    function owner_count(type) {
+        var owners = game_ready() ? (game.owner_info || []) : [];
+        var count = 0;
+        for (var i = 0; i < owners.length; ++i) {
+            if (owners[i].type === type)
+                count++;
+        }
+        return count;
+    }
+
+    function owners_tooltip() {
+        var owners = game_ready() ? (game.owner_info || []) : [];
+        var lines = [];
+        for (var i = 0; i < owners.length; ++i) {
+            var line = owners[i].id + ": " + owners[i].name + " (" + owners[i].type + ")";
+            if (owners[i].isLocal)
+                line += qsTr(" [You]");
+            lines.push(line);
+        }
+        return lines.join("\n");
+    }
+
+    Design.IronPanel {
+        id: bar
 
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: bar_min_height
-        color: hs.parchmentDark
-        opacity: 0.98
-        clip: true
+        height: Math.max(Design.Metrics.controlHeight + Design.Metrics.space24, Design.Metrics.space24 * 3)
+        raised: true
 
-        Rectangle {
-            anchors.fill: parent
-            opacity: 0.9
-
-            gradient: Gradient {
-                GradientStop {
-                    position: 0
-                    color: hs.parchmentLight
-                }
-
-                GradientStop {
-                    position: 1
-                    color: hs.parchmentDark
-                }
-            }
-        }
-
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: 2
-
-            gradient: Gradient {
-                GradientStop {
-                    position: 0
-                    color: "transparent"
-                }
-
-                GradientStop {
-                    position: 0.5
-                    color: hs.bronze
-                }
-
-                GradientStop {
-                    position: 1
-                    color: "transparent"
-                }
-            }
-        }
+        border.color: Design.FactionTheme.activeFaction === "" ? Design.Theme.borderStrong : Design.FactionTheme.accentDeep
 
         RowLayout {
-            id: barRow
-
             anchors.fill: parent
-            anchors.margins: 8
-            spacing: 12
+            spacing: Design.Metrics.space12
 
             RowLayout {
-                id: leftGroup
-
-                spacing: 10
+                spacing: Design.Metrics.space8
                 Layout.alignment: Qt.AlignVCenter
 
-                Button {
-                    id: pauseBtn
-
-                    Layout.preferredWidth: topRoot.compact ? 48 : 56
-                    Layout.preferredHeight: Math.min(40, topPanel.height - 12)
-                    text: topRoot.game_is_paused ? "\u25B6" : "\u23F8"
-                    font.pixelSize: 26
-                    font.bold: true
-                    focusPolicy: Qt.NoFocus
+                Design.IronIconButton {
+                    iconText: topRoot.game_is_paused ? Design.Icons.play : Design.Icons.pause
+                    tooltip: topRoot.game_is_paused ? qsTr("Resume") : qsTr("Pause")
                     onClicked: topRoot.pause_toggled()
-
-                    background: Item {
-                        Rectangle {
-                            x: 1
-                            y: 2
-                            width: parent.width
-                            height: parent.height
-                            radius: 7
-                            color: "#000000"
-                            opacity: pauseBtn.pressed ? 0.0 : 0.22
-                        }
-
-                        Rectangle {
-                            id: pauseBg
-                            anchors.fill: parent
-                            color: pauseBtn.pressed ? hs.waxDark : pauseBtn.hovered ? hs.waxHover : hs.wax
-                            radius: 6
-                            border.color: hs.bronzeDeep
-                            border.width: 1
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 1
-                                radius: Math.max(1, parent.radius - 1)
-                                opacity: pauseBtn.pressed ? 0.0 : 0.12
-                                gradient: Gradient {
-                                    GradientStop {
-                                        position: 0.0
-                                        color: "#FFFFFF"
-                                    }
-                                    GradientStop {
-                                        position: 0.45
-                                        color: "#FFFFFF"
-                                    }
-                                    GradientStop {
-                                        position: 1.0
-                                        color: "#000000"
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                anchors.top: parent.top
-                                anchors.topMargin: 1
-                                anchors.left: parent.left
-                                anchors.leftMargin: 6
-                                anchors.right: parent.right
-                                anchors.rightMargin: 6
-                                height: 1
-                                color: StyleGuide.palette.accentBright
-                                opacity: pauseBtn.pressed ? 0.0 : 0.50
-                            }
-                        }
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        color: Theme.textMain
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        topPadding: pauseBtn.pressed ? 1 : 0
-                    }
                 }
 
-                Rectangle {
-                    width: 2
+                Design.IronDivider {
+                    vertical: true
                     Layout.fillHeight: true
-                    radius: 1
-                    visible: !topRoot.compact
-
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0
-                            color: "transparent"
-                        }
-
-                        GradientStop {
-                            position: 0.5
-                            color: hs.bronzeDeep
-                        }
-
-                        GradientStop {
-                            position: 1
-                            color: "transparent"
-                        }
-                    }
+                    visible: !topRoot.ultraCompact
                 }
 
-                RowLayout {
-                    spacing: 8
-                    Layout.alignment: Qt.AlignVCenter
+                Repeater {
+                    model: topRoot.speedOptions
 
-                    Label {
-                        text: qsTr("Speed:")
+                    delegate: Design.IronButton {
+                        required property var modelData
+
                         visible: !topRoot.compact
-                        color: Theme.textMain
-                        font.pixelSize: 14
-                        font.bold: true
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Row {
-                        id: speedRow
-
-                        property var options: [0.5, 1, 2]
-
-                        spacing: 8
-                        visible: !topRoot.compact
-
-                        ButtonGroup {
-                            id: speedGroup
-                        }
-
-                        Repeater {
-                            model: speedRow.options
-
-                            delegate: Button {
-                                Layout.minimumWidth: 48
-                                width: 56
-                                height: Math.min(34, topPanel.height - 16)
-                                checkable: true
-                                enabled: !topRoot.game_is_paused
-                                checked: (topRoot.current_speed === modelData) && !topRoot.game_is_paused
-                                focusPolicy: Qt.NoFocus
-                                text: modelData + "x"
-                                ButtonGroup.group: speedGroup
-                                onClicked: topRoot.speed_changed(modelData)
-
-                                background: Item {
-                                    Rectangle {
-                                        x: 1
-                                        y: 2
-                                        width: parent.width
-                                        height: parent.height
-                                        radius: 7
-                                        color: "#000000"
-                                        opacity: parent.parent.pressed ? 0.0 : 0.20
-                                    }
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        color: parent.parent.checked ? hs.wax : parent.parent.hovered ? hs.parchmentLight : hs.parchmentDark
-                                        radius: 6
-                                        border.color: parent.parent.checked ? hs.bronze : hs.bronzeDeep
-                                        border.width: 1
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 1
-                                            radius: Math.max(1, parent.radius - 1)
-                                            opacity: parent.parent.parent.pressed ? 0.0 : 0.11
-                                            gradient: Gradient {
-                                                GradientStop {
-                                                    position: 0.0
-                                                    color: "#FFFFFF"
-                                                }
-                                                GradientStop {
-                                                    position: 0.45
-                                                    color: "#FFFFFF"
-                                                }
-                                                GradientStop {
-                                                    position: 1.0
-                                                    color: "#000000"
-                                                }
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            anchors.top: parent.top
-                                            anchors.topMargin: 1
-                                            anchors.left: parent.left
-                                            anchors.leftMargin: 5
-                                            anchors.right: parent.right
-                                            anchors.rightMargin: 5
-                                            height: 1
-                                            color: StyleGuide.palette.accentBright
-                                            opacity: parent.parent.parent.pressed ? 0.0 : 0.45
-                                        }
-                                    }
-                                }
-
-                                contentItem: Text {
-                                    text: parent.text
-                                    font.pixelSize: 13
-                                    font.bold: true
-                                    color: parent.enabled ? Theme.textMain : Theme.textDim
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    topPadding: parent.pressed ? 1 : 0
-                                }
-                            }
-                        }
-                    }
-
-                    StyledComboBox {
-                        id: speedCombo
-
-                        visible: topRoot.compact
-                        Layout.preferredWidth: 120
-                        model: ["0.5x", "1x", "2x"]
-                        currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
+                        Layout.preferredWidth: Design.Metrics.space24 * 2
+                        implicitWidth: Design.Metrics.space24 * 2
+                        text: modelData + "×"
+                        tone: (!topRoot.game_is_paused && topRoot.current_speed === modelData) ? "primary" : "secondary"
                         enabled: !topRoot.game_is_paused
-                        text_pixel_size: 13
-                        onActivated: function (i) {
-                            var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
-                            topRoot.speed_changed(v);
-                        }
+                        disabledReason: qsTr("Resume the battle to change speed")
+                        onClicked: topRoot.speed_changed(modelData)
                     }
                 }
 
-                Rectangle {
-                    width: 2
+                Design.IronDropdown {
+                    visible: topRoot.compact
+                    Layout.preferredWidth: Design.Metrics.space24 * 4
+                    model: ["0.5×", "1×", "2×"]
+                    currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
+                    enabled: !topRoot.game_is_paused
+                    onActivated: function (index) {
+                        topRoot.speed_changed(topRoot.speedOptions[index]);
+                    }
+                }
+
+                Design.IronDivider {
+                    vertical: true
                     Layout.fillHeight: true
-                    radius: 1
-                    visible: !topRoot.compact
+                    visible: !topRoot.ultraCompact
+                }
 
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0
-                            color: "transparent"
-                        }
-
-                        GradientStop {
-                            position: 0.5
-                            color: hs.bronzeDeep
-                        }
-
-                        GradientStop {
-                            position: 1
-                            color: "transparent"
-                        }
+                Design.IronIconButton {
+                    iconText: Design.Icons.follow
+                    tooltip: qsTr("Follow the selection with the camera")
+                    checkable: true
+                    tone: checked ? "primary" : "secondary"
+                    onToggled: {
+                        if (topRoot.game_ready() && game.camera_follow_selection)
+                            game.camera_follow_selection(checked);
                     }
                 }
 
-                RowLayout {
-                    spacing: 8
-                    Layout.alignment: Qt.AlignVCenter
-
-                    Label {
-                        text: qsTr("Camera:")
-                        visible: !topRoot.compact
-                        color: Theme.textMain
-                        font.pixelSize: 14
-                        font.bold: true
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Button {
-                        id: followBtn
-
-                        Layout.preferredWidth: topRoot.compact ? 44 : 80
-                        Layout.preferredHeight: Math.min(34, topPanel.height - 16)
-                        checkable: true
-                        text: topRoot.compact ? "\u2609" : qsTr("Follow")
-                        font.pixelSize: 13
-                        focusPolicy: Qt.NoFocus
-                        onToggled: {
-                            if (typeof game !== 'undefined' && game.camera_follow_selection)
-                                game.camera_follow_selection(checked);
-                        }
-
-                        background: Item {
-                            Rectangle {
-                                x: 1
-                                y: 2
-                                width: parent.width
-                                height: parent.height
-                                radius: 7
-                                color: "#000000"
-                                opacity: followBtn.pressed ? 0.0 : 0.20
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: followBtn.checked ? hs.wax : followBtn.hovered ? hs.parchmentLight : hs.parchmentDark
-                                radius: 6
-                                border.color: followBtn.checked ? hs.bronze : hs.bronzeDeep
-                                border.width: 1
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    radius: Math.max(1, parent.radius - 1)
-                                    opacity: followBtn.pressed ? 0.0 : 0.11
-                                    gradient: Gradient {
-                                        GradientStop {
-                                            position: 0.0
-                                            color: "#FFFFFF"
-                                        }
-                                        GradientStop {
-                                            position: 0.45
-                                            color: "#FFFFFF"
-                                        }
-                                        GradientStop {
-                                            position: 1.0
-                                            color: "#000000"
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    anchors.top: parent.top
-                                    anchors.topMargin: 1
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 5
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 5
-                                    height: 1
-                                    color: StyleGuide.palette.accentBright
-                                    opacity: followBtn.pressed ? 0.0 : 0.45
-                                }
-                            }
-                        }
-
-                        contentItem: Text {
-                            text: parent.text
-                            font: parent.font
-                            color: Theme.textMain
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            topPadding: followBtn.pressed ? 1 : 0
-                        }
-                    }
-
-                    Button {
-                        id: resetBtn
-
-                        Layout.preferredWidth: topRoot.compact ? 44 : 80
-                        Layout.preferredHeight: Math.min(34, topPanel.height - 16)
-                        text: topRoot.compact ? "\u21BA" : qsTr("Reset")
-                        font.pixelSize: 13
-                        focusPolicy: Qt.NoFocus
-                        onClicked: {
-                            if (typeof game !== 'undefined' && game.reset_camera)
-                                game.reset_camera();
-                        }
-
-                        background: Item {
-                            Rectangle {
-                                x: 1
-                                y: 2
-                                width: parent.width
-                                height: parent.height
-                                radius: 7
-                                color: "#000000"
-                                opacity: resetBtn.pressed ? 0.0 : 0.20
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: resetBtn.hovered ? hs.parchmentLight : hs.parchmentDark
-                                radius: 6
-                                border.color: hs.bronzeDeep
-                                border.width: 1
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    radius: Math.max(1, parent.radius - 1)
-                                    opacity: resetBtn.pressed ? 0.0 : 0.11
-                                    gradient: Gradient {
-                                        GradientStop {
-                                            position: 0.0
-                                            color: "#FFFFFF"
-                                        }
-                                        GradientStop {
-                                            position: 0.45
-                                            color: "#FFFFFF"
-                                        }
-                                        GradientStop {
-                                            position: 1.0
-                                            color: "#000000"
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    anchors.top: parent.top
-                                    anchors.topMargin: 1
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 5
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 5
-                                    height: 1
-                                    color: StyleGuide.palette.accentBright
-                                    opacity: resetBtn.pressed ? 0.0 : 0.45
-                                }
-                            }
-                        }
-
-                        contentItem: Text {
-                            text: parent.text
-                            font: parent.font
-                            color: Theme.textMain
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            topPadding: resetBtn.pressed ? 1 : 0
-                        }
+                Design.IronIconButton {
+                    iconText: Design.Icons.reset
+                    tooltip: qsTr("Reset the camera")
+                    onClicked: {
+                        if (topRoot.game_ready() && game.reset_camera)
+                            game.reset_camera();
                     }
                 }
             }
 
             Item {
                 Layout.fillWidth: true
-            }
+                Layout.fillHeight: true
 
-            Rectangle {
-                id: spectatorIndicator
-
-                visible: typeof game !== 'undefined' && game.is_spectator_mode
-                Layout.preferredWidth: spectatorLabel.width + 24
-                Layout.preferredHeight: Math.min(36, topPanel.height - 16)
-                color: hs.wax
-                radius: 6
-                border.color: hs.bronze
-                border.width: 1
-                Layout.alignment: Qt.AlignVCenter
-
-                Label {
-                    id: spectatorLabel
-
+                Row {
                     anchors.centerIn: parent
-                    text: "👁 " + qsTr("SPECTATOR MODE")
-                    color: Theme.textMain
-                    font.pixelSize: 13
-                    font.bold: true
+                    spacing: Design.Metrics.space8
+                    visible: topRoot.primaryObjective !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Design.Icons.objective
+                        color: Design.Theme.accent
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.body
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: topRoot.primaryObjective
+                        color: Design.Theme.textSecondary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.label
+                        elide: Text.ElideRight
+                    }
                 }
 
-                ToolTip {
-                    visible: spectatorMA.containsMouse
-                    text: qsTr("Watching CPU-only match. All players are AI-controlled. You cannot issue commands.")
-                    delay: 300
-                }
+                Design.IronBadge {
+                    anchors.centerIn: parent
+                    visible: topRoot.game_ready() && game.is_spectator_mode
+                    tone: Design.Theme.warning
+                    text: Design.Icons.spectator + " " + qsTr("SPECTATOR")
 
-                MouseArea {
-                    id: spectatorMA
+                    ToolTip.visible: spectatorHover.hovered
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: qsTr("Watching a CPU-only match. You cannot issue commands.")
 
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton
+                    HoverHandler {
+                        id: spectatorHover
+                    }
                 }
             }
 
             RowLayout {
-                id: rightGroup
-
-                spacing: 12
+                spacing: Design.Metrics.space12
                 Layout.alignment: Qt.AlignVCenter
-                Layout.rightMargin: 260
+                Layout.rightMargin: Design.Metrics.space8
 
-                Row {
-                    id: statsRow
+                Repeater {
+                    model: ["gold", "wood", "stone", "iron"]
 
-                    spacing: 10
-                    Layout.alignment: Qt.AlignVCenter
+                    delegate: Design.IronResourceCounter {
+                        required property var modelData
 
-                    Row {
-                        id: goldRow
-
-                        spacing: 6
-
-                        Image {
-                            width: topRoot.compact ? 22 : 26
-                            height: width
-                            source: StyleGuide.icon_path("gold.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            text: {
-                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
-                                    return 0;
-                                return game.selected_player_state.resources.gold || 0;
-                            }
-                            color: Theme.accent
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        height: 24
-                        color: hs.bronzeDeep
-                        opacity: 0.5
-                        visible: !topRoot.compact
-                    }
-
-                    Row {
-                        id: stoneRow
-
-                        spacing: 6
-
-                        Image {
-                            width: topRoot.compact ? 22 : 26
-                            height: width
-                            source: StyleGuide.icon_path("stone.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            text: {
-                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
-                                    return 0;
-                                return game.selected_player_state.resources.stone || 0;
-                            }
-                            color: Theme.accent
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        height: 24
-                        color: hs.bronzeDeep
-                        opacity: 0.5
-                        visible: !topRoot.compact
-                    }
-
-                    Row {
-                        id: ironRow
-
-                        spacing: 6
-
-                        Image {
-                            width: topRoot.compact ? 22 : 26
-                            height: width
-                            source: StyleGuide.icon_path("iron.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            text: {
-                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
-                                    return 0;
-                                return game.selected_player_state.resources.iron || 0;
-                            }
-                            color: Theme.accent
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        height: 24
-                        color: hs.bronzeDeep
-                        opacity: 0.5
-                        visible: !topRoot.compact
-                    }
-
-                    Row {
-                        id: woodRow
-
-                        spacing: 6
-
-                        Image {
-                            width: topRoot.compact ? 22 : 26
-                            height: width
-                            source: StyleGuide.icon_path("wood.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            text: {
-                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
-                                    return 0;
-                                return game.selected_player_state.resources.wood || 0;
-                            }
-                            color: Theme.accent
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        height: 24
-                        color: hs.bronzeDeep
-                        opacity: 0.5
-                        visible: !topRoot.compact
-                    }
-
-                    Row {
-                        id: playerRow
-
-                        spacing: 6
-
-                        Image {
-                            width: 33
-                            height: 33
-                            source: StyleGuide.icon_path("troop_count.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            id: playerLbl
-
-                            text: {
-                                if (typeof game === 'undefined' || !game.selected_player_state)
-                                    return "0 / 0";
-                                var population = game.selected_player_state.population || 0;
-                                var populationCap = game.selected_player_state.population_cap || 0;
-                                return population + " / " + populationCap;
-                            }
-                            color: {
-                                if (typeof game === 'undefined' || !game.selected_player_state)
-                                    return Theme.textDim;
-                                var count = game.selected_player_state.population || 0;
-                                var max = game.selected_player_state.population_cap || 0;
-                                if (max <= 0)
-                                    return Theme.textDim;
-                                if (count >= max)
-                                    return hs.waxHover;
-                                if (count >= max * 0.8)
-                                    return hs.bronze;
-                                return Theme.accent;
-                            }
-                            font.pixelSize: 14
-                            font.bold: true
-                            elide: Text.ElideRight
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2
-                        height: 24
-                        color: hs.bronzeDeep
-                        opacity: 0.5
-                        visible: !topRoot.compact
-                    }
-
-                    Item {
-                        id: ownersContainer
-
-                        property var owners: (typeof game !== 'undefined') ? game.owner_info : []
-
-                        function player_count() {
-                            var ownersList = ownersContainer.owners || [];
-                            var count = 0;
-                            for (var i = 0; i < ownersList.length; i++) {
-                                if (ownersList[i].type === "Player")
-                                    count++;
-                            }
-                            return count;
-                        }
-
-                        function ai_count() {
-                            var ownersList = ownersContainer.owners || [];
-                            var count = 0;
-                            for (var i = 0; i < ownersList.length; i++) {
-                                if (ownersList[i].type === "AI")
-                                    count++;
-                            }
-                            return count;
-                        }
-
-                        function owners_tooltip() {
-                            if (typeof game === 'undefined')
-                                return "";
-                            var ownersList = ownersContainer.owners || [];
-                            var tip = "Owner IDs:\n";
-                            for (var i = 0; i < ownersList.length; i++) {
-                                tip += ownersList[i].id + ": " + ownersList[i].name + " (" + ownersList[i].type + ")";
-                                if (ownersList[i].isLocal)
-                                    tip += " [You]";
-                                tip += "\n";
-                            }
-                            return tip;
-                        }
-
-                        visible: !topRoot.compact
-                        width: ownersRow.implicitWidth
-                        height: ownersRow.implicitHeight
-                        implicitWidth: ownersRow.implicitWidth
-                        implicitHeight: ownersRow.implicitHeight
-
-                        Row {
-                            id: ownersRow
-
-                            spacing: 6
-
-                            Image {
-                                width: 30
-                                height: 30
-                                source: StyleGuide.icon_path("human_player.png")
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                mipmap: true
-                            }
-
-                            Label {
-                                id: humanCountLbl
-
-                                text: ownersContainer.player_count()
-                                color: Theme.textMain
-                                font.pixelSize: 13
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            Image {
-                                width: 30
-                                height: 30
-                                source: StyleGuide.icon_path("ai_player.png")
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                mipmap: true
-                            }
-
-                            Label {
-                                id: aiCountLbl
-
-                                text: ownersContainer.ai_count()
-                                color: Theme.textMain
-                                font.pixelSize: 13
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-
-                        ToolTip {
-                            visible: ownersMA.containsMouse
-                            delay: 500
-                            text: ownersContainer.owners_tooltip()
-                        }
-
-                        MouseArea {
-                            id: ownersMA
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
-                        }
-                    }
-
-                    Row {
-                        id: enemyRow
-
-                        spacing: 6
-
-                        Image {
-                            width: 30
-                            height: 30
-                            source: StyleGuide.icon_path("defeated.png")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Label {
-                            id: enemyLbl
-
-                            text: (typeof game !== 'undefined' ? game.enemy_troops_defeated : 0)
-                            color: Theme.textMain
-                            font.pixelSize: 14
-                            elide: Text.ElideRight
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        iconSource: Design.Icons.resource(modelData)
+                        label: modelData
+                        amount: topRoot.resource_amount(modelData)
+                        compact: topRoot.compact
                     }
                 }
 
-                Item {
-                    id: miniWrap
+                Design.IronDivider {
+                    vertical: true
+                    Layout.fillHeight: true
+                    visible: !topRoot.compact
+                }
 
-                    visible: !topRoot.ultra_compact
-                    Layout.preferredWidth: Math.round(topPanel.height * 2.2)
-                    Layout.minimumWidth: Math.round(topPanel.height * 1.6)
-                    Layout.preferredHeight: topPanel.height - 8
+                Design.IronResourceCounter {
+                    iconSource: Design.Icons.status("population")
+                    label: qsTr("Population")
+                    amountText: topRoot.population() + " / " + topRoot.population_cap()
+                    status: topRoot.population_status()
+                    compact: topRoot.compact
+                }
+
+                Design.IronDivider {
+                    vertical: true
+                    Layout.fillHeight: true
+                    visible: !topRoot.compact
+                }
+
+                RowLayout {
+                    visible: !topRoot.compact
+                    spacing: Design.Metrics.space8
+
+                    Design.IronResourceCounter {
+                        iconSource: Design.Icons.status("human")
+                        label: qsTr("Human players")
+                        amount: topRoot.owner_count("Player")
+                        compact: true
+                    }
+
+                    Design.IronResourceCounter {
+                        iconSource: Design.Icons.status("ai")
+                        label: qsTr("AI players")
+                        amount: topRoot.owner_count("AI")
+                        compact: true
+                    }
+
+                    ToolTip.visible: ownersHover.hovered
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: topRoot.owners_tooltip()
+
+                    HoverHandler {
+                        id: ownersHover
+                    }
+                }
+
+                Design.IronResourceCounter {
+                    iconSource: Design.Icons.status("defeated")
+                    label: qsTr("Enemies defeated")
+                    amount: topRoot.game_ready() ? game.enemy_troops_defeated : 0
+                    compact: topRoot.compact
                 }
             }
         }
     }
 
-    Rectangle {
-        id: minimapContainer
+    Design.IronPanel {
+        id: minimap
 
-        visible: !topRoot.ultra_compact
-        width: 240
-        height: 240
+        visible: !topRoot.ultraCompact
+        width: Design.Metrics.space24 * 8
+        height: width
         anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.rightMargin: 8
-        anchors.topMargin: 8
+
+        anchors.top: bar.bottom
+        anchors.rightMargin: Design.Metrics.hudZoneMargin
+        anchors.topMargin: Design.Metrics.space8
         z: 100
-        color: hs.parchmentDark
-        radius: 8
-        border.width: 2
-        border.color: hs.bronze
+        raised: true
+        accessibleName: qsTr("Minimap")
 
-        Rectangle {
+        Image {
+            id: minimapImage
+
+            property int image_version: 0
+
             anchors.fill: parent
-            anchors.margins: 3
-            radius: 6
-            color: Theme.bgShade
+            source: image_version > 0 ? "image://minimap/v" + image_version : ""
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            cache: false
+            asynchronous: false
 
-            Image {
-                id: minimapImage
+            Connections {
+                function onMinimap_image_changed() {
+                    Qt.callLater(function () {
+                            minimapImage.image_version++;
+                        });
+                }
 
-                property int image_version: 0
+                target: topRoot.game_ready() ? game : null
+            }
 
+            Text {
+                anchors.centerIn: parent
+                visible: parent.status !== Image.Ready
+                text: qsTr("MINIMAP")
+                color: Design.Theme.textDisabled
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.caption
+                font.weight: Design.Typography.medium
+            }
+
+            MouseArea {
                 anchors.fill: parent
-                anchors.margins: 2
-                source: image_version > 0 ? "image://minimap/v" + image_version : ""
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                cache: false
-                asynchronous: false
-
-                Connections {
-                    function onMinimap_image_changed() {
-                        Qt.callLater(function () {
-                                minimapImage.image_version++;
-                            });
-                    }
-
-                    target: game
-                }
-
-                Label {
-                    anchors.centerIn: parent
-                    text: qsTr("MINIMAP")
-                    color: Theme.textDim
-                    font.pixelSize: 12
-                    font.bold: true
-                    visible: parent.status !== Image.Ready
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onClicked: function (mouse) {
-                        if (typeof game === 'undefined')
-                            return;
-                        var paintedW = parent.paintedWidth;
-                        var paintedH = parent.paintedHeight;
-                        if (paintedW === 0 || paintedH === 0)
-                            return;
-                        var offsetX = (parent.width - paintedW) / 2;
-                        var offsetY = (parent.height - paintedH) / 2;
-                        var imgX = mouse.x - offsetX;
-                        var imgY = mouse.y - offsetY;
-                        if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
-                            return;
-                        if (mouse.button === Qt.LeftButton)
-                            game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
-                        else if (mouse.button === Qt.RightButton)
-                            game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
-                    }
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: function (mouse) {
+                    if (!topRoot.game_ready())
+                        return;
+                    var paintedW = parent.paintedWidth;
+                    var paintedH = parent.paintedHeight;
+                    if (paintedW === 0 || paintedH === 0)
+                        return;
+                    var imgX = mouse.x - (parent.width - paintedW) / 2;
+                    var imgY = mouse.y - (parent.height - paintedH) / 2;
+                    if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
+                        return;
+                    if (mouse.button === Qt.LeftButton)
+                        game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
+                    else
+                        game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
                 }
             }
         }

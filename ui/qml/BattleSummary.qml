@@ -1,14 +1,18 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
-Rectangle {
+Item {
     id: summaryOverlay
 
     property bool is_victory: (typeof game !== 'undefined' && game.victory_state === "victory")
     property var on_close: null
     property var on_return_to_main_menu: null
-    readonly property var hs: StyleGuide.historical
+
+    function game_ready() {
+        return typeof game !== 'undefined' && game !== null;
+    }
 
     function show() {
         visible = true;
@@ -26,80 +30,55 @@ Rectangle {
             on_return_to_main_menu();
     }
 
+    function winning_team_id(owners, localTeamId) {
+        if (is_victory)
+            return localTeamId;
+        for (var i = 0; i < owners.length; ++i) {
+            if (owners[i].team_id !== localTeamId && (owners[i].type === "Player" || owners[i].type === "AI"))
+                return owners[i].team_id;
+        }
+        return -1;
+    }
+
     function build_player_list() {
         playerBannersModel.clear();
-        if (typeof game === 'undefined')
+        if (!game_ready())
             return;
         var owners = game.owner_info;
         var localOwnerId = -1;
         var localTeamId = -1;
-        var winningTeamId = -1;
-        for (var i = 0; i < owners.length; i++) {
+        for (var i = 0; i < owners.length; ++i) {
             if (owners[i].isLocal) {
                 localOwnerId = owners[i].id;
                 localTeamId = owners[i].team_id;
                 break;
             }
         }
-        if (is_victory) {
-            winningTeamId = localTeamId;
-        } else {
-            for (var t = 0; t < owners.length; t++) {
-                if (owners[t].team_id !== localTeamId && (owners[t].type === "Player" || owners[t].type === "AI")) {
-                    winningTeamId = owners[t].team_id;
-                    break;
-                }
-            }
-        }
-        var playerBanners = [];
-        var aiColorIndex = 1;
-        for (var j = 0; j < owners.length; j++) {
+        var winningTeam = winning_team_id(owners, localTeamId);
+        var banners = [];
+        for (var j = 0; j < owners.length; ++j) {
             var owner = owners[j];
-            if (owner.type === "Player" || owner.type === "AI") {
-                var stats = game.get_player_stats(owner.id);
-                var isLocalPlayer = (owner.id === localOwnerId);
-                var isWinner = (owner.team_id === winningTeamId);
-                var bannerColor = get_banner_color(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
-                if (owner.type === "AI")
-                    aiColorIndex++;
-                var score = calculate_score(stats);
-                var playTimeFormatted = format_play_time(stats.playTimeSec);
-                playerBanners.push({
-                        "owner_id": owner.id,
-                        "name": owner.name,
-                        "isLocalPlayer": isLocalPlayer,
-                        "isAI": owner.type === "AI",
-                        "isWinner": isWinner,
-                        "bannerColor": bannerColor,
-                        "kills": stats.enemiesKilled,
-                        "losses": stats.losses,
-                        "unitsTrained": stats.troopsRecruited,
-                        "villages": stats.barracksOwned,
-                        "playTime": playTimeFormatted,
-                        "score": score
-                    });
-            }
+            if (owner.type !== "Player" && owner.type !== "AI")
+                continue;
+            var stats = game.get_player_stats(owner.id);
+            banners.push({
+                    "owner_id": owner.id,
+                    "name": owner.name,
+                    "isLocalPlayer": owner.id === localOwnerId,
+                    "isWinner": owner.team_id === winningTeam,
+                    "kills": stats.enemiesKilled,
+                    "losses": stats.losses,
+                    "unitsTrained": stats.troopsRecruited,
+                    "villages": stats.barracksOwned,
+                    "playTime": format_play_time(stats.playTimeSec),
+                    "score": calculate_score(stats)
+                });
         }
-        playerBanners.sort(function (a, b) {
-                if (a.isLocalPlayer)
-                    return -1;
-                if (b.isLocalPlayer)
-                    return 1;
-                return 0;
+        banners.sort(function (a, b) {
+                return (b.isLocalPlayer ? 1 : 0) - (a.isLocalPlayer ? 1 : 0);
             });
-        for (var k = 0; k < playerBanners.length; k++)
-            playerBannersModel.append(playerBanners[k]);
-    }
-
-    function get_banner_color(owner_id, isLocal, isAI, aiIndex) {
-        var colors = ["#8F2F2A", "#496C4A", "#9A7A38", "#536D7A", "#6A5C7D", "#6F7F4B"];
-        if (isLocal)
-            return colors[0];
-        if (isAI) {
-            var idx = aiIndex % (colors.length - 1);
-            return colors[idx + 1];
-        }
-        return colors[1];
+        for (var k = 0; k < banners.length; ++k)
+            playerBannersModel.append(banners[k]);
     }
 
     function calculate_score(stats) {
@@ -114,377 +93,170 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.92)
     visible: false
     z: 101
 
+    Rectangle {
+        anchors.fill: parent
+        color: Design.Theme.backgroundDeep
+        opacity: 0.94
+    }
+
     Column {
         anchors.centerIn: parent
-        spacing: 30
-        width: Math.min(parent.width * 0.95, 1400)
+        spacing: Design.Metrics.space24
+        width: Math.min(parent.width * 0.95, Design.Metrics.space24 * 58)
 
         Text {
-            id: mainTitle
-
             anchors.horizontalCenter: parent.horizontalCenter
-            text: is_victory ? qsTr("Victory Secured") : qsTr("Army Broken")
-            color: is_victory ? Theme.accentBright : hs.waxHover
-            font.family: "serif"
-            font.pointSize: 52
-            font.bold: true
-            style: Text.Outline
-            styleColor: hs.parchmentDark
+            text: summaryOverlay.is_victory ? qsTr("Victory Secured") : qsTr("Army Broken")
+            color: summaryOverlay.is_victory ? Design.Theme.success : Design.Theme.danger
+            font.family: Design.Typography.displayFamily
+            font.pixelSize: Design.Typography.hero
+            font.weight: Design.Typography.bold
         }
 
         Row {
-            id: bannersRow
-
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 20
+            spacing: Design.Metrics.space16
 
             Repeater {
                 model: playerBannersModel
 
-                delegate: Rectangle {
-                    id: bannerCard
+                delegate: Design.IronPanel {
+                    id: banner
 
-                    width: 220
-                    height: 420
-                    color: Qt.rgba(0, 0, 0, 0)
+                    required property var model
 
-                    Rectangle {
-                        id: dropShadow
+                    width: Design.Metrics.space24 * 10
+                    height: bannerColumn.implicitHeight + Design.Metrics.space24
+                    raised: banner.model.isLocalPlayer
 
-                        anchors.fill: parent
-                        anchors.topMargin: 8
-                        anchors.leftMargin: 6
-                        color: Qt.rgba(0, 0, 0, 0.5)
-                        radius: 4
-                        z: -1
-                    }
+                    border.color: banner.model.isWinner ? Design.Theme.success : Design.Theme.danger
+                    border.width: banner.model.isLocalPlayer ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+                    accessibleName: banner.model.name
 
-                    Item {
-                        anchors.fill: parent
+                    Column {
+                        id: bannerColumn
 
-                        Rectangle {
-                            id: bannerTop
-
-                            anchors.top: parent.top
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width * 0.4
-                            height: 20
-                            color: hs.bronzeDeep
-                            radius: 4
-
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 8
-                                height: 8
-                                radius: 4
-                                color: Theme.accentBright
-                            }
-                        }
-
-                        Rectangle {
-                            id: banner
-
-                            anchors.top: bannerTop.bottom
-                            anchors.topMargin: 5
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width - 10
-                            height: parent.height - 30
-                            color: model.bannerColor
-                            radius: 4
-                            border.color: hs.bronzeDeep
-                            border.width: 4
-                            opacity: model.isLocalPlayer ? 0.8 : 0.95
-
-                            Rectangle {
-                                visible: model.isLocalPlayer
-                                anchors.fill: parent
-                                color: Qt.rgba(0, 0, 0, 0.2)
-                                radius: 4
-                            }
-
-                            Canvas {
-                                id: fabricTexture
-
-                                anchors.fill: parent
-                                opacity: 0.15
-                                onPaint: {
-                                    var ctx = getContext("2d");
-                                    ctx.clearRect(0, 0, width, height);
-                                    ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.3);
-                                    ctx.lineWidth = 1;
-                                    for (var y = 0; y < height; y += 4) {
-                                        ctx.beginPath();
-                                        ctx.moveTo(0, y);
-                                        ctx.lineTo(width, y);
-                                        ctx.stroke();
-                                    }
-                                    for (var x = 0; x < width; x += 4) {
-                                        ctx.beginPath();
-                                        ctx.moveTo(x, 0);
-                                        ctx.lineTo(x, height);
-                                        ctx.stroke();
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 4
-                                color: "transparent"
-                                border.color: Theme.accentBright
-                                border.width: 2
-                                radius: 3
-                            }
-
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 10
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: model.name
-                                    color: Theme.accentBright
-                                    font.family: "serif"
-                                    font.pointSize: 18
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WordWrap
-                                    width: parent.width
-                                    style: Text.Outline
-                                    styleColor: hs.parchmentDark
-                                }
-
-                                Rectangle {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width * 0.8
-                                    height: 24
-                                    color: model.isWinner ? "#496C4A" : hs.waxDark
-                                    radius: 4
-                                    border.color: model.isWinner ? "#8FA46B" : hs.waxHover
-                                    border.width: 2
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: model.isWinner ? qsTr("Held the Field") : qsTr("Routed")
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 11
-                                        font.bold: true
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-                                }
-
-                                Rectangle {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width * 0.9
-                                    height: 2
-                                    color: hs.bronzeDeep
-                                }
-
-                                Column {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 8
-                                    width: parent.width
-
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: qsTr("Kills: %1").arg(model.kills)
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: qsTr("Losses: %1").arg(model.losses)
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: qsTr("Units Trained: %1").arg(model.unitsTrained)
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: qsTr("Villages: %1").arg(model.villages)
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: qsTr("Play Time: %1").arg(model.playTime)
-                                        color: Theme.textMain
-                                        font.family: "serif"
-                                        font.pointSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Outline
-                                        styleColor: hs.parchmentDark
-                                    }
-                                }
-
-                                Item {
-                                    height: 8
-                                }
-
-                                Rectangle {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width * 0.9
-                                    height: 2
-                                    color: hs.bronzeDeep
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("SCORE")
-                                    color: Theme.accentBright
-                                    font.family: "serif"
-                                    font.pointSize: 15
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    style: Text.Outline
-                                    styleColor: hs.parchmentDark
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: model.score
-                                    color: Theme.accentBright
-                                    font.family: "serif"
-                                    font.pointSize: 22
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    style: Text.Outline
-                                    styleColor: hs.parchmentDark
-                                }
-                            }
-
-                            Canvas {
-                                id: tornEdge
-
-                                visible: model.isLocalPlayer
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 25
-                                onPaint: {
-                                    var ctx = getContext("2d");
-                                    ctx.clearRect(0, 0, width, height);
-                                    ctx.fillStyle = model.bannerColor;
-                                    ctx.beginPath();
-                                    ctx.moveTo(0, 0);
-                                    for (var i = 0; i <= width; i += 8) {
-                                        var y = Math.random() * height;
-                                        ctx.lineTo(i, y);
-                                    }
-                                    ctx.lineTo(width, height);
-                                    ctx.lineTo(0, height);
-                                    ctx.closePath();
-                                    ctx.fill();
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            id: tassel1
-
-                            anchors.bottom: banner.bottom
-                            anchors.bottomMargin: -15
-                            anchors.left: banner.left
-                            anchors.leftMargin: banner.width * 0.3
-                            width: 3
-                            height: 20
-                            color: hs.bronzeDeep
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: 8
-                                height: 8
-                                radius: 4
-                                color: Theme.accentBright
-                            }
-                        }
-
-                        Rectangle {
-                            id: tassel2
-
-                            anchors.bottom: banner.bottom
-                            anchors.bottomMargin: -15
-                            anchors.right: banner.right
-                            anchors.rightMargin: banner.width * 0.3
-                            width: 3
-                            height: 20
-                            color: hs.bronzeDeep
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: 8
-                                height: 8
-                                radius: 4
-                                color: Theme.accentBright
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        visible: model.isLocalPlayer
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.topMargin: 25
-                        anchors.leftMargin: -5
-                        width: 80
-                        height: 30
-                        color: hs.bannerNeutral
-                        radius: 4
-                        border.color: Theme.accentBright
-                        border.width: 2
+                        spacing: Design.Metrics.space8
+
+                        Design.IronBadge {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            visible: banner.model.isLocalPlayer
+                            text: qsTr("YOU")
+                        }
 
                         Text {
-                            anchors.centerIn: parent
-                            text: qsTr("YOU")
-                            color: Theme.accentBright
-                            font.family: "serif"
-                            font.pointSize: 12
-                            font.bold: true
+                            width: parent.width
+                            text: banner.model.name
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.displayFamily
+                            font.pixelSize: Design.Typography.heading
+                            font.weight: Design.Typography.bold
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Design.IronBadge {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            tone: banner.model.isWinner ? Design.Theme.success : Design.Theme.danger
+                            text: banner.model.isWinner ? qsTr("Held the Field") : qsTr("Routed")
+                        }
+
+                        Design.IronDivider {
+                            width: parent.width
+                        }
+
+                        Repeater {
+                            model: [{
+                                    "label": qsTr("Kills"),
+                                    "value": banner.model.kills
+                                }, {
+                                    "label": qsTr("Losses"),
+                                    "value": banner.model.losses
+                                }, {
+                                    "label": qsTr("Units trained"),
+                                    "value": banner.model.unitsTrained
+                                }, {
+                                    "label": qsTr("Villages"),
+                                    "value": banner.model.villages
+                                }, {
+                                    "label": qsTr("Play time"),
+                                    "value": banner.model.playTime
+                                }]
+
+                            delegate: Item {
+                                required property var modelData
+
+                                width: bannerColumn.width
+                                height: statLabel.implicitHeight
+
+                                Text {
+                                    id: statLabel
+
+                                    anchors.left: parent.left
+                                    text: modelData.label
+                                    color: Design.Theme.textSecondary
+                                    font.family: Design.Typography.family
+                                    font.pixelSize: Design.Typography.caption
+                                }
+
+                                Text {
+                                    anchors.right: parent.right
+                                    text: modelData.value
+                                    color: Design.Theme.textPrimary
+                                    font.family: Design.Typography.family
+                                    font.pixelSize: Design.Typography.caption
+                                    font.weight: Design.Typography.medium
+                                }
+                            }
+                        }
+
+                        Design.IronDivider {
+                            width: parent.width
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: qsTr("SCORE")
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: banner.model.score
+                            color: Design.Theme.accent
+                            font.family: Design.Typography.displayFamily
+                            font.pixelSize: Design.Typography.title
+                            font.weight: Design.Typography.bold
+                            horizontalAlignment: Text.AlignHCenter
                         }
                     }
                 }
             }
         }
 
-        StyledButton {
+        Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Return to Menu")
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                summaryOverlay.return_to_main_menu();
+            spacing: Design.Metrics.space8
+
+            Design.IronButton {
+                text: qsTr("Return to Menu")
+                tone: "primary"
+                onClicked: summaryOverlay.return_to_main_menu()
+            }
+
+            Design.IronButton {
+                text: qsTr("Back")
+                onClicked: summaryOverlay.hide()
             }
         }
     }

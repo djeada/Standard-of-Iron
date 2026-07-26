@@ -144,6 +144,9 @@ public:
   Q_PROPERTY(int enemy_troops_defeated READ enemy_troops_defeated NOTIFY
                  enemy_troops_defeated_changed)
   Q_PROPERTY(QVariantList owner_info READ get_owner_info NOTIFY owner_info_changed)
+
+  Q_PROPERTY(
+      QString local_player_nation READ local_player_nation NOTIFY owner_info_changed)
   Q_PROPERTY(int selected_player_id READ selected_player_id WRITE set_selected_player_id
                  NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
@@ -176,6 +179,9 @@ public:
                  NOTIFY construction_preview_summary_changed)
   Q_PROPERTY(
       bool is_campaign_mission READ is_campaign_mission NOTIFY campaign_mission_changed)
+
+  Q_PROPERTY(bool campaign_completed READ campaign_completed NOTIFY
+                 available_campaigns_changed)
   Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available NOTIFY
                  civilian_delivery_available_changed)
   Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
@@ -389,6 +395,7 @@ public:
   void set_autosave_interval_minutes(int minutes);
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
+  [[nodiscard]] QString local_player_nation() const;
   Q_INVOKABLE [[nodiscard]] QImage
   generate_map_preview(const QString& map_path,
                        const QVariantList& player_configs) const;
@@ -405,6 +412,7 @@ public:
   [[nodiscard]] QString loading_stage_text() const;
 
   [[nodiscard]] bool is_campaign_mission() const;
+  [[nodiscard]] bool campaign_completed() const;
   [[nodiscard]] bool civilian_delivery_available() const {
     return m_civilian_delivery_available;
   }

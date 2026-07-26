@@ -24,12 +24,21 @@ inline constexpr char kVoiceVolumeKey[] = "audio/voice_volume";
 inline constexpr char kAmbienceVolumeKey[] = "audio/ambience_volume";
 inline constexpr char kAutosaveSlotCountKey[] = "saves/autosave_slot_count";
 inline constexpr char kAutosaveIntervalKey[] = "saves/autosave_interval_minutes";
+inline constexpr char kUiScaleKey[] = "ui/scale";
+inline constexpr char kUiReducedMotionKey[] = "ui/reduced_motion";
+inline constexpr char kUiHighContrastKey[] = "ui/high_contrast";
+inline constexpr char kUiColorVisionKey[] = "ui/color_vision_mode";
+inline constexpr char kUiKeyboardFocusKey[] = "ui/always_show_focus";
 
 inline constexpr int kDefaultAutosaveSlotCount = 3;
 inline constexpr int kMinAutosaveSlotCount = 1;
 inline constexpr int kMaxAutosaveSlotCount = 10;
 inline constexpr int kDefaultAutosaveIntervalMinutes = 5;
 inline constexpr int kMaxAutosaveIntervalMinutes = 60;
+
+inline constexpr double kDefaultUiScale = 1.0;
+inline constexpr double kMinUiScale = 0.75;
+inline constexpr double kMaxUiScale = 2.0;
 
 struct AudioVolumes {
   float master{AudioConstants::DEFAULT_VOLUME};
@@ -214,6 +223,102 @@ inline void save_autosave_interval_minutes(int minutes) {
   auto settings = open();
   settings.setValue(QString::fromLatin1(kAutosaveIntervalKey),
                     std::clamp(minutes, 0, kMaxAutosaveIntervalMinutes));
+  settings.sync();
+}
+
+inline auto is_supported_color_vision_mode(const QString& mode) -> bool {
+  return mode == QLatin1String("none") || mode == QLatin1String("protanopia") ||
+         mode == QLatin1String("deuteranopia") || mode == QLatin1String("tritanopia");
+}
+
+inline auto load_ui_scale() -> double {
+  auto settings = open();
+  const QVariant value = settings.value(QString::fromLatin1(kUiScaleKey));
+  if (!value.isValid()) {
+    return kDefaultUiScale;
+  }
+
+  bool ok = false;
+  const double stored = value.toDouble(&ok);
+
+  if (!ok || !(stored >= kMinUiScale * 0.5) || !(stored <= kMaxUiScale * 2.0)) {
+    qWarning() << "Ignoring invalid saved UI scale:" << value;
+    return kDefaultUiScale;
+  }
+
+  return std::clamp(stored, kMinUiScale, kMaxUiScale);
+}
+
+inline void save_ui_scale(double scale) {
+  if (!(scale >= kMinUiScale * 0.5) || !(scale <= kMaxUiScale * 2.0)) {
+    qWarning() << "Refusing to save out-of-range UI scale:" << scale;
+    return;
+  }
+
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kUiScaleKey),
+                    std::clamp(scale, kMinUiScale, kMaxUiScale));
+  settings.sync();
+}
+
+inline auto load_ui_reduced_motion() -> bool {
+  auto settings = open();
+  return settings.value(QString::fromLatin1(kUiReducedMotionKey), false).toBool();
+}
+
+inline void save_ui_reduced_motion(bool enabled) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kUiReducedMotionKey), enabled);
+  settings.sync();
+}
+
+inline auto load_ui_high_contrast() -> bool {
+  auto settings = open();
+  return settings.value(QString::fromLatin1(kUiHighContrastKey), false).toBool();
+}
+
+inline void save_ui_high_contrast(bool enabled) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kUiHighContrastKey), enabled);
+  settings.sync();
+}
+
+inline auto load_ui_color_vision_mode() -> QString {
+  auto settings = open();
+  const QString stored = settings.value(QString::fromLatin1(kUiColorVisionKey))
+                             .toString()
+                             .trimmed()
+                             .toLower();
+  if (stored.isEmpty()) {
+    return QStringLiteral("none");
+  }
+  if (!is_supported_color_vision_mode(stored)) {
+    qWarning() << "Ignoring unknown saved color vision mode:" << stored;
+    return QStringLiteral("none");
+  }
+  return stored;
+}
+
+inline void save_ui_color_vision_mode(const QString& mode) {
+  const QString normalized = mode.trimmed().toLower();
+  if (!is_supported_color_vision_mode(normalized)) {
+    qWarning() << "Refusing to save unknown color vision mode:" << mode;
+    return;
+  }
+
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kUiColorVisionKey), normalized);
+  settings.sync();
+}
+
+inline auto load_ui_always_show_focus() -> bool {
+  auto settings = open();
+  return settings.value(QString::fromLatin1(kUiKeyboardFocusKey), false).toBool();
+}
+
+inline void save_ui_always_show_focus(bool enabled) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kUiKeyboardFocusKey), enabled);
   settings.sync();
 }
 

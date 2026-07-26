@@ -25,6 +25,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
         ../../ui/theme.cpp
+        ../../ui/preferences.cpp
+        ../../ui/widget_shell.cpp
     )
 else()
     add_executable(arena_app
@@ -38,6 +40,8 @@ else()
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
         ../../ui/theme.cpp
+        ../../ui/preferences.cpp
+        ../../ui/widget_shell.cpp
     )
 endif()
 

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -179,7 +180,7 @@ Item {
 
                                         Label {
                                             anchors.centerIn: parent
-                                            text: qsTr("🔒 Locked")
+                                            text: Design.Icons.locked + " " + qsTr("Locked")
                                             color: Theme.textDim
                                             font.pointSize: Theme.fontSizeSmall
                                         }
