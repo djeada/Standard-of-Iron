@@ -518,7 +518,7 @@ void main() {
     terrain_color *= crack_darkening;
   }
 
-  if (u_ground_type == 3 && u_terrain_type == 0 && u_snow_coverage > 0.01) {
+  if (u_ground_type == 3 && u_snow_coverage > 0.01) {
     float alpine_snow_large =
         clamp(0.5 + gradient_fbm(world_coord * 0.10 + domain_warp * 0.35 +
                                  vec2(123.0, 456.0)) *
