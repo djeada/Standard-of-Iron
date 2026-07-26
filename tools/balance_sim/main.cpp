@@ -21,9 +21,12 @@ namespace {
 auto resolve_default_fixture_dir() -> QString {
   const QStringList candidates{
       QDir::current().filePath(QStringLiteral("assets/balance")),
-      QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("assets/balance")),
-      QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("../assets/balance")),
-      QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("../../assets/balance")),
+      QDir(QCoreApplication::applicationDirPath())
+          .filePath(QStringLiteral("assets/balance")),
+      QDir(QCoreApplication::applicationDirPath())
+          .filePath(QStringLiteral("../assets/balance")),
+      QDir(QCoreApplication::applicationDirPath())
+          .filePath(QStringLiteral("../../assets/balance")),
   };
   for (const QString& candidate : candidates) {
     if (QDir(candidate).exists()) {
@@ -36,7 +39,8 @@ auto resolve_default_fixture_dir() -> QString {
 auto write_file(const QString& path, const QByteArray& contents) -> bool {
   QFile file(path);
   if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-    QTextStream(stderr) << "cannot write " << path << ": " << file.errorString() << "\n";
+    QTextStream(stderr) << "cannot write " << path << ": " << file.errorString()
+                        << "\n";
     return false;
   }
   file.write(contents);
@@ -67,12 +71,12 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("seeds"),
       QStringLiteral("Override the seed count declared by each fixture."),
       QStringLiteral("count"));
-  const QCommandLineOption json_option(
-      QStringLiteral("json"), QStringLiteral("Write the full report as JSON."),
-      QStringLiteral("path"));
-  const QCommandLineOption csv_option(
-      QStringLiteral("csv"), QStringLiteral("Write per-battle rows as CSV."),
-      QStringLiteral("path"));
+  const QCommandLineOption json_option(QStringLiteral("json"),
+                                       QStringLiteral("Write the full report as JSON."),
+                                       QStringLiteral("path"));
+  const QCommandLineOption csv_option(QStringLiteral("csv"),
+                                      QStringLiteral("Write per-battle rows as CSV."),
+                                      QStringLiteral("path"));
   const QCommandLineOption quiet_option(
       QStringLiteral("quiet"), QStringLiteral("Suppress the human-readable report."));
   const QCommandLineOption trace_option(
@@ -134,8 +138,9 @@ auto main(int argc, char** argv) -> int {
       std::vector<Balance::TraceSample> trace;
       const auto result = Balance::run_battle(fixture, 1U, false, &trace);
       QTextStream out(stdout);
-      out << "== trace " << fixture.id << " -> " << Balance::outcome_name(result.outcome)
-          << " @" << QString::number(result.elapsed_seconds, 'f', 1) << "s\n";
+      out << "== trace " << fixture.id << " -> "
+          << Balance::outcome_name(result.outcome) << " @"
+          << QString::number(result.elapsed_seconds, 'f', 1) << "s\n";
       out << "    t   aliveA aliveB   hpA   hpB    gap  targeted  locked  moving\n";
       for (const auto& sample : trace) {
         out << QStringLiteral("%1 %2 %3 %4 %5 %6 %7 %8 %9\n")

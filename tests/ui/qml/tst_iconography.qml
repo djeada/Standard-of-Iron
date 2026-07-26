@@ -8,8 +8,7 @@ TestCase {
     name: "Iconography"
 
     readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher"]
-    
-    
+
     readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "formation", "build", "heal", "collect", "rally", "deliver", "aura"]
 
     function test_every_hud_command_has_art_and_a_glyph() {
@@ -44,8 +43,6 @@ TestCase {
     }
 
     function test_a_nation_agnostic_type_uses_neutral_art_without_a_faction() {
-        
-        
         verify(Icons.unit("wall", "").toString() !== "");
         verify(Icons.unit("wall", "").toString() !== Icons.unit("wall", "carthage").toString());
         verify(Icons.unit("wall", "roman_republic").toString() !== Icons.unit("wall", "carthage").toString());
@@ -60,8 +57,6 @@ TestCase {
     }
 
     function test_a_nation_without_its_own_art_borrows_the_default_family() {
-        
-        
         compare(Icons.unit("swordsman", "iron_sepulcher").toString(), Icons.unit("swordsman", "roman_republic").toString());
     }
 
@@ -97,9 +92,6 @@ TestCase {
         verify(names.indexOf("marketplace.png") >= 0);
         verify(names.indexOf("archer_rome.png") >= 0);
         verify(names.indexOf("archer_cartaghe.png") >= 0);
-
-        
-        
         for (var i = 0; i < names.length; ++i)
             compare(names.indexOf(names[i]), i, "duplicate entry: " + names[i]);
     }

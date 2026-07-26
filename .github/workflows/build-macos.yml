@@ -39,14 +39,14 @@ jobs:
       DMG_NAME: standard_of_iron-macos.dmg
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
       - name: Install build tools
         run: brew install ninja
 
-      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
         with:
           version: "6.8.2"
           host: mac
@@ -55,13 +55,13 @@ jobs:
           modules: qt5compat qtmultimedia
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639  # v1
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1
         with:
           key: macos-${{ inputs.build-type }}
           max-size: 500M
 
       - name: Cache CMake FetchContent dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/_deps
           key: deps-macos-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
@@ -132,7 +132,7 @@ jobs:
           test "$size" -gt 20000000
           shasum -a 256 "${DMG_NAME}" | tee "${DMG_NAME}.sha256"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: inputs.upload-artifacts
         with:
           name: ${{ inputs.artifact-name }}

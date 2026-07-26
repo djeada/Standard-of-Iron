@@ -33,7 +33,6 @@ TestCase {
             });
     }
 
-    
     function test_no_selection_reports_empty() {
         var summary = makeSummary(0, []);
         verify(summary.empty);
@@ -65,8 +64,6 @@ TestCase {
         summary.destroy();
     }
 
-    
-    
     function test_an_army_switches_to_the_grouped_roster() {
         var summary = makeSummary(60, makeGroups([{
                         "typeKey": "spearman",

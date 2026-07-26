@@ -6,8 +6,8 @@ with no QML, no window and no rendering. It runs at a fixed timestep from a
 seeded start, so a given fixture and seed always produce the same battle, and it
 is safe to run in CI on a machine with no display.
 
-Unlike the Arena harness, which exists to inspect how a fight *looks*, this tool
-only measures how a fight *resolves*.
+Unlike the Arena harness, which exists to inspect how a fight _looks_, this tool
+only measures how a fight _resolves_.
 
 ## Running
 
@@ -35,24 +35,24 @@ list of troop groups:
 
 ```json
 {
-  "id": "spear_vs_cavalry_frontal",
-  "label": "Braced spears vs frontal cavalry charge",
-  "duration_seconds": 120,
-  "seeds": 8,
-  "separation": 26.0,
-  "side_a": {
-    "label": "Spear line",
-    "nation": "roman_republic",
-    "stance": "hold",
-    "groups": [{ "troop": "spearman", "count": 4 }]
-  },
-  "side_b": {
-    "label": "Cavalry",
-    "nation": "roman_republic",
-    "stance": "charge",
-    "groups": [{ "troop": "horse_swordsman", "count": 2 }]
-  },
-  "expect": { "a_win_rate_min": 0.6, "max_timeout_rate": 0.25 }
+    "id": "spear_vs_cavalry_frontal",
+    "label": "Braced spears vs frontal cavalry charge",
+    "duration_seconds": 120,
+    "seeds": 8,
+    "separation": 26.0,
+    "side_a": {
+        "label": "Spear line",
+        "nation": "roman_republic",
+        "stance": "hold",
+        "groups": [{ "troop": "spearman", "count": 4 }]
+    },
+    "side_b": {
+        "label": "Cavalry",
+        "nation": "roman_republic",
+        "stance": "charge",
+        "groups": [{ "troop": "horse_swordsman", "count": 2 }]
+    },
+    "expect": { "a_win_rate_min": 0.6, "max_timeout_rate": 0.25 }
 }
 ```
 
@@ -92,7 +92,7 @@ aggregate summary and any expectation failures.
 normalised so `0.0` is fair and `1.0` means the left side always won. It is
 meaningful for asymmetric fixtures.
 
-For an *exactly* symmetric mirror it always reads `1.0`, and that is not a
+For an _exactly_ symmetric mirror it always reads `1.0`, and that is not a
 balance defect: two identical armies produce a tie that the deterministic
 simulation has to break somehow, and it breaks on entity processing order. The
 mirror fixture therefore asserts a fair 50/50 win rate after the side swap and

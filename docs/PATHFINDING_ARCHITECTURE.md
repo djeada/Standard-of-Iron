@@ -28,13 +28,13 @@ The actual memory is one vector:
 
 The current values are:
 
-| Value | Name | Meaning |
-| --- | --- | --- |
-| `0` | `Walkable` | Free movement cell |
-| `1` | `Blocked` | Mountain, river, bridge edge, building, or generic blocker |
-| `2` | `Tree` | Harvestable tree blocker |
-| `3` | `Boulder` | Harvestable boulder blocker |
-| `4` | `IronOre` | Harvestable iron ore blocker |
+| Value | Name       | Meaning                                                    |
+| ----- | ---------- | ---------------------------------------------------------- |
+| `0`   | `Walkable` | Free movement cell                                         |
+| `1`   | `Blocked`  | Mountain, river, bridge edge, building, or generic blocker |
+| `2`   | `Tree`     | Harvestable tree blocker                                   |
+| `3`   | `Boulder`  | Harvestable boulder blocker                                |
+| `4`   | `IronOre`  | Harvestable iron ore blocker                               |
 
 Only `Walkable` is traversable. Resource cells are intentionally blocked but named, because the collect cursor must know whether the blocked thing is a tree, boulder, or iron ore.
 
@@ -54,12 +54,12 @@ grid cell:       ( 112, 91 )
 
 `CommandService` owns this conversion. Gameplay code should not independently round world coordinates and query terrain/pathfinding by hand. Use the shared query functions instead:
 
-| Function | Use |
-| --- | --- |
-| `is_grid_walkable(point)` | Test one grid cell against the current navigation grid. |
-| `is_world_position_walkable(position)` | Convert world to grid, then test. |
-| `find_nearest_walkable_grid(origin, max_search_radius)` | Find a nearby valid cell without changing the grid. |
-| `snap_to_walkable_ground(position, max_search_radius)` | Snap orders, exits, formation slots, and delivery positions. |
+| Function                                                | Use                                                          |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| `is_grid_walkable(point)`                               | Test one grid cell against the current navigation grid.      |
+| `is_world_position_walkable(position)`                  | Convert world to grid, then test.                            |
+| `find_nearest_walkable_grid(origin, max_search_radius)` | Find a nearby valid cell without changing the grid.          |
+| `snap_to_walkable_ground(position, max_search_radius)`  | Snap orders, exits, formation slots, and delivery positions. |
 
 This boundary matters. `Pathfinding` owns cell values and A*. `CommandService` owns coordinate conversion and high-level navigation queries. Movement, formations, production, resource gathering, and UI helpers call `CommandService`.
 
@@ -157,14 +157,14 @@ Result:
 
 The game distinguishes enemy troops from empty ground through the entity layer:
 
-| Question | System |
-| --- | --- |
-| Can I path through this terrain cell? | `Pathfinding::NavigationGrid` |
-| Is an enemy standing here? | `World` entity queries and `UnitComponent::owner_id` |
-| Is that enemy visible to me? | `VisibilityService` |
-| Did I right-click an enemy? | `PickingService::pick_unit_first()` |
-| Should AI react to this enemy? | `AISnapshotBuilder::visible_enemies` |
-| Should the renderer draw this enemy? | `SceneRenderer` + fog visibility |
+| Question                              | System                                               |
+| ------------------------------------- | ---------------------------------------------------- |
+| Can I path through this terrain cell? | `Pathfinding::NavigationGrid`                        |
+| Is an enemy standing here?            | `World` entity queries and `UnitComponent::owner_id` |
+| Is that enemy visible to me?          | `VisibilityService`                                  |
+| Did I right-click an enemy?           | `PickingService::pick_unit_first()`                  |
+| Should AI react to this enemy?        | `AISnapshotBuilder::visible_enemies`                 |
+| Should the renderer draw this enemy?  | `SceneRenderer` + fog visibility                     |
 
 This gives us the missing distinction without polluting pathfinding:
 
@@ -459,13 +459,13 @@ Recovery does not use stop reasons, cooldowns, pending path requests, or a separ
 
 The current system is leaner, but a unit can still appear to be "moving forever" if animation state and physical progress disagree. That is possible because these are separate facts:
 
-| Fact | Owner |
-| --- | --- |
-| Unit has active movement target/path | `MovementComponent` |
-| Unit has non-zero velocity | `MovementSystem` |
+| Fact                                            | Owner                                |
+| ----------------------------------------------- | ------------------------------------ |
+| Unit has active movement target/path            | `MovementComponent`                  |
+| Unit has non-zero velocity                      | `MovementSystem`                     |
 | Unit actually changed world position this frame | `World` motion presentation snapshot |
-| Unit is on a walkable cell | `CommandService` / `Pathfinding` |
-| Unit is visually playing walk animation | render motion presentation |
+| Unit is on a walkable cell                      | `CommandService` / `Pathfinding`     |
+| Unit is visually playing walk animation         | render motion presentation           |
 
 The dangerous state is:
 
@@ -491,49 +491,49 @@ Recommended options:
 
 1. **Authoritative Progress Watchdog**
 
-   Track per-unit progress inside `MovementSystem`: current grid cell, distance-to-goal, and actual displacement. If a unit has an active target but makes no meaningful progress for a fixed number of frames, force one deterministic resolution:
+    Track per-unit progress inside `MovementSystem`: current grid cell, distance-to-goal, and actual displacement. If a unit has an active target but makes no meaningful progress for a fixed number of frames, force one deterministic resolution:
 
-   - if current cell is invalid, snap or move to nearest walkable cell
-   - if current cell is valid, recompute path once from current cell
-   - if the recomputed first step is still impossible, clear movement and mark animation idle
+    - if current cell is invalid, snap or move to nearest walkable cell
+    - if current cell is valid, recompute path once from current cell
+    - if the recomputed first step is still impossible, clear movement and mark animation idle
 
-   This is the most direct mitigation for "moving animation but no progress".
+    This is the most direct mitigation for "moving animation but no progress".
 
 2. **Hard Invalid-Cell Ejection**
 
-   If a unit remains in an invalid cell after recovery assignment, do not keep trying ordinary steering forever. Move it smoothly but authoritatively toward the nearest walkable cell center, ignoring unit radius and formation offsets. If it cannot reduce invalid distance after a small frame budget, snap to that cell center.
+    If a unit remains in an invalid cell after recovery assignment, do not keep trying ordinary steering forever. Move it smoothly but authoritatively toward the nearest walkable cell center, ignoring unit radius and formation offsets. If it cannot reduce invalid distance after a small frame budget, snap to that cell center.
 
-   This makes invalid placement a temporary visual correction, not a navigation state.
+    This makes invalid placement a temporary visual correction, not a navigation state.
 
 3. **Blocked-Step Retry Budget**
 
-   When movement integration reverts a step because the new grid cell is blocked, count consecutive reverts for that unit and target. After a small limit, invalidate the current path and choose one of:
+    When movement integration reverts a step because the new grid cell is blocked, count consecutive reverts for that unit and target. After a small limit, invalidate the current path and choose one of:
 
-   - recompute path from current grid
-   - advance to a later waypoint if the later segment is walkable
-   - collapse to nearest walkable cell and clear movement
+    - recompute path from current grid
+    - advance to a later waypoint if the later segment is walkable
+    - collapse to nearest walkable cell and clear movement
 
-   This prevents a unit from requesting or following the same impossible first step forever.
+    This prevents a unit from requesting or following the same impossible first step forever.
 
 4. **Animation Gated By Displacement**
 
-   Make walk animation require recent actual displacement, not just `has_target` or non-zero desired velocity. A unit may keep an active target, but if it has not moved for several frames it should visually idle or play a blocked/recovering state.
+    Make walk animation require recent actual displacement, not just `has_target` or non-zero desired velocity. A unit may keep an active target, but if it has not moved for several frames it should visually idle or play a blocked/recovering state.
 
-   This does not solve navigation by itself, but it prevents false feedback where the unit looks like it is walking while physically stuck.
+    This does not solve navigation by itself, but it prevents false feedback where the unit looks like it is walking while physically stuck.
 
 5. **Scenario Regression Tests**
 
-   Add frame-budget tests for the exact failure modes:
+    Add frame-budget tests for the exact failure modes:
 
-   - single unit crosses bridge
-   - ten selected units cross bridge
-   - unit starts inside blocked building footprint and exits
-   - group crosses one-cell building gap
-   - hill entrance crossing
-   - dynamic blocker appears under moving unit
-   - blocked first step cannot repeat forever
+    - single unit crosses bridge
+    - ten selected units cross bridge
+    - unit starts inside blocked building footprint and exits
+    - group crosses one-cell building gap
+    - hill entrance crossing
+    - dynamic blocker appears under moving unit
+    - blocked first step cannot repeat forever
 
-   Each test should assert either "arrived/reached valid cell within N frames" or "movement cleared and animation idle within N frames". No test should accept an active moving state with zero displacement after the budget.
+    Each test should assert either "arrived/reached valid cell within N frames" or "movement cleared and animation idle within N frames". No test should accept an active moving state with zero displacement after the budget.
 
 ## Melee Lock
 

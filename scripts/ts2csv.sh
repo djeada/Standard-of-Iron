@@ -40,19 +40,46 @@ EXPLODE_PLURALS=0
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -o|--outdir) OUTDIR="$2"; shift 2;;
-    -m|--mode) MODE="$2"; shift 2;;
-    --include-unfinished) INCLUDE_UNFINISHED=1; shift;;
-    --exclude-unfinished) INCLUDE_UNFINISHED=0; shift;;
-    --keep-obsolete) KEEP_OBSOLETE=1; shift;;
-    --bom) WRITE_BOM=1; shift;;
-    --no-header) WRITE_HEADER=0; shift;;
-    --explode-plurals) EXPLODE_PLURALS=1; shift;;
-    -h|--help)
+    -o | --outdir)
+      OUTDIR="$2"
+      shift 2
+      ;;
+    -m | --mode)
+      MODE="$2"
+      shift 2
+      ;;
+    --include-unfinished)
+      INCLUDE_UNFINISHED=1
+      shift
+      ;;
+    --exclude-unfinished)
+      INCLUDE_UNFINISHED=0
+      shift
+      ;;
+    --keep-obsolete)
+      KEEP_OBSOLETE=1
+      shift
+      ;;
+    --bom)
+      WRITE_BOM=1
+      shift
+      ;;
+    --no-header)
+      WRITE_HEADER=0
+      shift
+      ;;
+    --explode-plurals)
+      EXPLODE_PLURALS=1
+      shift
+      ;;
+    -h | --help)
       grep '^# ' "$0" | sed 's/^# //'
       exit 0
       ;;
-    *) ARGS+=("$1"); shift;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
   esac
 done
 set -- "${ARGS[@]}"
@@ -71,7 +98,7 @@ if [[ ${#FILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
-python3 - <<'PY' "$OUTDIR" "$MODE" "$INCLUDE_UNFINISHED" "$KEEP_OBSOLETE" "$WRITE_BOM" "$WRITE_HEADER" "$EXPLODE_PLURALS" "${FILES[@]}"
+python3 - "$OUTDIR" "$MODE" "$INCLUDE_UNFINISHED" "$KEEP_OBSOLETE" "$WRITE_BOM" "$WRITE_HEADER" "$EXPLODE_PLURALS" "${FILES[@]}" <<'PY'
 import sys, re, csv, xml.etree.ElementTree as ET
 from pathlib import Path
 

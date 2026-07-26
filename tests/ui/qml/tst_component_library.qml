@@ -20,8 +20,6 @@ TestCase {
         Core.UiPreferences.reset_to_defaults();
     }
 
-    
-    
     function test_every_published_control_instantiates_data() {
         return [{
                 "tag": "IronPanel",

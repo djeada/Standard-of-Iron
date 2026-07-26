@@ -11,7 +11,6 @@ TestCase {
     height: 600
     visible: true
 
-    
     function test_objective_state_is_carried_by_marker_not_only_colour_data() {
         return [{
                 "tag": "active",
@@ -65,7 +64,6 @@ TestCase {
         row.destroy();
     }
 
-    
     function test_briefing_reports_when_there_is_nothing_to_brief() {
         var briefing = briefingComponent.createObject(testCase, {});
         verify(!briefing.hasObjectives);
@@ -119,7 +117,6 @@ TestCase {
         briefing.destroy();
     }
 
-    
     function test_outcome_kinds_are_visually_distinct_data() {
         return [{
                 "tag": "victory",
@@ -160,7 +157,6 @@ TestCase {
         defeat.destroy();
     }
 
-    
     function test_campaign_completion_uses_the_faction_crest() {
         var screen = outcomeComponent.createObject(testCase, {
                 "outcome": "campaign",

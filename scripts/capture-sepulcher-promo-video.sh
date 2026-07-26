@@ -5,15 +5,16 @@
 #   scripts/capture-sepulcher-promo-video.sh [output-dir] [--recapture]
 set -euo pipefail
 
-readonly ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly ROOT
 readonly ARENA="${ROOT}/build/bin/arena_app"
 
 OUT_DIR="${ROOT}/artifacts/sepulcher-promo"
 RECAPTURE=0
 for arg in "$@"; do
   case "${arg}" in
-  --recapture) RECAPTURE=1 ;;
-  *) OUT_DIR="${arg}" ;;
+    --recapture) RECAPTURE=1 ;;
+    *) OUT_DIR="${arg}" ;;
   esac
 done
 

@@ -22,7 +22,7 @@ HEADER_FILTER="${CLANG_TIDY_HEADER_FILTER:-^(?!.*third_party).*$}"
 CLANG_TIDY_NICE="${CLANG_TIDY_NICE:-0}"
 
 if command -v nproc >/dev/null 2>&1; then
-  DEFAULT_JOBS=$(( ( $(nproc) + 1 ) / 2 ))
+  DEFAULT_JOBS=$((($(nproc) + 1) / 2))
 else
   DEFAULT_JOBS=2
 fi
@@ -30,8 +30,8 @@ JOBS="${CLANG_TIDY_JOBS:-$DEFAULT_JOBS}"
 
 QUIET=1
 FIX_ERRORS=0
-INCLUDE_HEADERS=0            # <- do NOT feed headers directly
-ALLOW_UNCOVERED=0            # <- only run files present in compile DB by default
+INCLUDE_HEADERS=0 # <- do NOT feed headers directly
+ALLOW_UNCOVERED=0 # <- only run files present in compile DB by default
 PASSES=1
 RAW_PATHS=""
 USER_EXPORT_FIXES_DIR=""
@@ -72,32 +72,115 @@ EOF
 # ---------- Parse CLI ----------
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --all) GIT_ONLY=0; QUIET=0; shift ;;
-    --base=*) GIT_BASE="${1#*=}"; shift ;;
-    --base) GIT_BASE="${2:-$GIT_BASE}"; shift 2 ;;
-    --paths=*) RAW_PATHS="${1#*=}"; shift ;;
-    --paths) RAW_PATHS="${2:-}"; shift 2 ;;
-    --jobs=*) JOBS="${1#*=}"; shift ;;
-    --jobs) JOBS="${2:-$JOBS}"; shift 2 ;;
-    --checks=*) CHECKS_OVERRIDE="${1#*=}"; shift ;;
-    --checks) CHECKS_OVERRIDE="${2:-$CHECKS_OVERRIDE}"; shift 2 ;;
-    --nice) CLANG_TIDY_NICE=1; shift ;;
-    --no-nice) CLANG_TIDY_NICE=0; shift ;;
-    --build-dir=*) BUILD_DIR_RELATIVE="${1#*=}"; shift ;;
-    --build-dir) BUILD_DIR_RELATIVE="${2:-$BUILD_DIR_RELATIVE}"; shift 2 ;;
-    --default-lang=*) DEFAULT_LANG_VALUE="${1#*=}"; shift ;;
-    --default-lang) DEFAULT_LANG_VALUE="${2:-$DEFAULT_LANG_VALUE}"; shift 2 ;;
-    --verbose|--no-quiet) QUIET=0; VERBOSE_CMD=1; shift ;;
-    --quiet) QUIET=1; shift ;;
-    --fix-errors) FIX_ERRORS=1; shift ;;
-    --passes=*) PASSES="${1#*=}"; shift ;;
-    --passes) PASSES="${2:-$PASSES}"; shift 2 ;;
-    --aggressive) AGGRESSIVE=1; FIX_ERRORS=1; PASSES=$(( PASSES < 3 ? 3 : PASSES )); shift ;;
-    --no-headers) INCLUDE_HEADERS=0; shift ;;
-    --allow-uncovered) ALLOW_UNCOVERED=1; shift ;;
-    --export-fixes=*) USER_EXPORT_FIXES_DIR="${1#*=}"; shift ;;
-    -h|--help) print_help; exit 0 ;;
-    *) echo "Unknown option: $1"; print_help; exit 2 ;;
+    --all)
+      GIT_ONLY=0
+      QUIET=0
+      shift
+      ;;
+    --base=*)
+      GIT_BASE="${1#*=}"
+      shift
+      ;;
+    --base)
+      GIT_BASE="${2:-$GIT_BASE}"
+      shift 2
+      ;;
+    --paths=*)
+      RAW_PATHS="${1#*=}"
+      shift
+      ;;
+    --paths)
+      RAW_PATHS="${2:-}"
+      shift 2
+      ;;
+    --jobs=*)
+      JOBS="${1#*=}"
+      shift
+      ;;
+    --jobs)
+      JOBS="${2:-$JOBS}"
+      shift 2
+      ;;
+    --checks=*)
+      CHECKS_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --checks)
+      CHECKS_OVERRIDE="${2:-$CHECKS_OVERRIDE}"
+      shift 2
+      ;;
+    --nice)
+      CLANG_TIDY_NICE=1
+      shift
+      ;;
+    --no-nice)
+      CLANG_TIDY_NICE=0
+      shift
+      ;;
+    --build-dir=*)
+      BUILD_DIR_RELATIVE="${1#*=}"
+      shift
+      ;;
+    --build-dir)
+      BUILD_DIR_RELATIVE="${2:-$BUILD_DIR_RELATIVE}"
+      shift 2
+      ;;
+    --default-lang=*)
+      DEFAULT_LANG_VALUE="${1#*=}"
+      shift
+      ;;
+    --default-lang)
+      DEFAULT_LANG_VALUE="${2:-$DEFAULT_LANG_VALUE}"
+      shift 2
+      ;;
+    --verbose | --no-quiet)
+      QUIET=0
+      VERBOSE_CMD=1
+      shift
+      ;;
+    --quiet)
+      QUIET=1
+      shift
+      ;;
+    --fix-errors)
+      FIX_ERRORS=1
+      shift
+      ;;
+    --passes=*)
+      PASSES="${1#*=}"
+      shift
+      ;;
+    --passes)
+      PASSES="${2:-$PASSES}"
+      shift 2
+      ;;
+    --aggressive)
+      AGGRESSIVE=1
+      FIX_ERRORS=1
+      PASSES=$((PASSES < 3 ? 3 : PASSES))
+      shift
+      ;;
+    --no-headers)
+      INCLUDE_HEADERS=0
+      shift
+      ;;
+    --allow-uncovered)
+      ALLOW_UNCOVERED=1
+      shift
+      ;;
+    --export-fixes=*)
+      USER_EXPORT_FIXES_DIR="${1#*=}"
+      shift
+      ;;
+    -h | --help)
+      print_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      print_help
+      exit 2
+      ;;
   esac
 done
 
@@ -107,9 +190,9 @@ cd "$REPO_ROOT"
 # Paths to search
 if [[ -n "${RAW_PATHS:-}" ]]; then
   RAW_PATHS="${RAW_PATHS//,/ }"
-  IFS=' ' read -r -a SEARCH_PATHS <<< "$RAW_PATHS"
+  IFS=' ' read -r -a SEARCH_PATHS <<<"$RAW_PATHS"
 else
-  IFS=' ' read -r -a SEARCH_PATHS <<< "${CLANG_TIDY_FIX_PATHS:-$SEARCH_PATHS_DEFAULT}"
+  IFS=' ' read -r -a SEARCH_PATHS <<<"${CLANG_TIDY_FIX_PATHS:-$SEARCH_PATHS_DEFAULT}"
 fi
 
 # ---------- Tools / Setup ----------
@@ -135,21 +218,21 @@ fi
 
 # ---------- Collect sources (filesystem) ----------
 declare -a FS_SOURCES=()
-SRC_GLOBS=( '*.c' '*.cc' '*.cpp' '*.cxx' )
+SRC_GLOBS=('*.c' '*.cc' '*.cpp' '*.cxx')
 # headers intentionally NOT included as standalone inputs
 
 add_sources_from_find() {
   local root="$1"
-  local -a find_expr=( \( -name "${SRC_GLOBS[0]}" )
-  for g in "${SRC_GLOBS[@]:1}"; do find_expr+=( -o -name "$g" ); done
-  find_expr+=( \) )
+  local -a find_expr=(\( -name "${SRC_GLOBS[0]}")
+  for g in "${SRC_GLOBS[@]:1}"; do find_expr+=(-o -name "$g"); done
+  find_expr+=(\))
   while IFS= read -r -d '' FILE; do
     REL_PATH="${FILE#$REPO_ROOT/}"
     FS_SOURCES+=("$REL_PATH")
   done < <(find "$root" \
-            -path "$root/third_party" -prune -o \
-            -type f "${find_expr[@]}" \
-            -print0)
+    -path "$root/third_party" -prune -o \
+    -type f "${find_expr[@]}" \
+    -print0)
 }
 
 if [[ "$GIT_ONLY" -eq 1 ]]; then
@@ -175,15 +258,15 @@ fi
 # ---------- Build set of files from compile_commands.json ----------
 DB_FILES_TXT="$(mktemp)"
 if command -v jq >/dev/null 2>&1; then
-  jq -r '.[].file' "$BUILD_DIR/compile_commands.json" | sed 's#^\./##' > "$DB_FILES_TXT"
+  jq -r '.[].file' "$BUILD_DIR/compile_commands.json" | sed 's#^\./##' >"$DB_FILES_TXT"
 else
   # best-effort without jq
-  grep -oE '"file":\s*"[^"]+"' "$BUILD_DIR/compile_commands.json" | sed 's/^"file":\s*"\(.*\)"/\1/' > "$DB_FILES_TXT"
+  grep -oE '"file":\s*"[^"]+"' "$BUILD_DIR/compile_commands.json" | sed 's/^"file":\s*"\(.*\)"/\1/' >"$DB_FILES_TXT"
 fi
 
 # Normalize DB paths to repo-relative
 DB_REL_TXT="$(mktemp)"
-awk -v root="$REPO_ROOT/" '{ f=$0; sub("^"root, "", f); print f }' "$DB_FILES_TXT" > "$DB_REL_TXT"
+awk -v root="$REPO_ROOT/" '{ f=$0; sub("^"root, "", f); print f }' "$DB_FILES_TXT" >"$DB_REL_TXT"
 
 # ---------- Intersect (default) or union (if --allow-uncovered) ----------
 declare -a SOURCES=()
@@ -234,7 +317,7 @@ for a in "${EXTRA_ARGS[@]:-}"; do
   EXTRA_ARGS_STRING+=" $(printf '%q' "$a")"
 done
 
-COMMON_ARGS_BASE=( -p "$BUILD_DIR" "-header-filter=$HEADER_FILTER" )
+COMMON_ARGS_BASE=(-p "$BUILD_DIR" "-header-filter=$HEADER_FILTER")
 [[ -n "$CHECKS_OVERRIDE" ]] && COMMON_ARGS_BASE+=("-checks=$CHECKS_OVERRIDE")
 [[ "$FIX_ERRORS" -eq 1 ]] && COMMON_ARGS_BASE+=(-fix-errors)
 
@@ -257,7 +340,7 @@ echo "  parallel jobs: ${JOBS}"
 
 # ---------- Helper script (bash) ----------
 TMP_HELPER="$(mktemp "${BUILD_DIR}/clang-tidy-one-XXXX.sh")"
-cat > "$TMP_HELPER" <<'HLP'
+cat >"$TMP_HELPER" <<'HLP'
 #!/usr/bin/env bash
 set -euo pipefail
 export_dir="$1"
@@ -367,7 +450,7 @@ if command -v git >/dev/null 2>&1; then
   if [[ ${#changed[@]} -gt 0 ]]; then
     echo "Changed files (${#changed[@]}):"
     printf '  %s\n' "${changed[@]:0:20}"
-    [[ ${#changed[@]} -gt 20 ]] && echo "  ... and $(( ${#changed[@]} - 20 )) more"
+    [[ ${#changed[@]} -gt 20 ]] && echo "  ... and $((${#changed[@]} - 20)) more"
   else
     echo "No tracked files changed (git diff is clean for the selected sources)."
   fi

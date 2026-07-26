@@ -79,14 +79,11 @@ TestCase {
 
     function test_reduced_motion_keeps_notification_dwell_times() {
         Core.UiPreferences.reducedMotion = true;
-        
         verify(Motion.dwellFor("critical") > 0);
         verify(Motion.dwellFor("critical") > Motion.dwellFor("info"));
     }
 
     function test_high_contrast_changes_the_surface_palette() {
-        
-        
         var base = Theme.backgroundDeep.toString();
         Core.UiPreferences.highContrast = true;
         verify(Theme.highContrast, "Theme did not follow the high contrast preference");
@@ -113,7 +110,6 @@ TestCase {
         compare(Theme.statusColor("danger").toString(), Theme.danger.toString());
         compare(Theme.statusColor("warning").toString(), Theme.warning.toString());
         compare(Theme.statusColor("selected").toString(), Theme.selection.toString());
-        
         compare(Theme.statusColor("something-new").toString(), Theme.accent.toString());
     }
 }
