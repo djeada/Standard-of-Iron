@@ -188,11 +188,29 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float meadow_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
+  EXPECT_NE(flat.find("float drainage_field ="), std::string::npos);
+  EXPECT_NE(flat.find("float exposure_field ="), std::string::npos);
+  EXPECT_NE(flat.find("float material_patch ="), std::string::npos);
+  EXPECT_NE(flat.find("float deposited_soil ="), std::string::npos);
   EXPECT_NE(flat.find("uniform int u_ground_type;"), std::string::npos);
-  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.62;"), std::string::npos);
+  EXPECT_NE(flat.find("uniform int u_terrain_type;"), std::string::npos);
+  EXPECT_NE(flat.find("float mountain_surface = float(u_terrain_type == 2);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("float mountain_face ="), std::string::npos);
+  EXPECT_NE(flat.find("float snowline ="), std::string::npos);
+  EXPECT_NE(flat.find("mountain_surface * altitude_snow"), std::string::npos);
+  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.70;"), std::string::npos);
   EXPECT_NE(flat.find("float litter_patch = smoothstep("), std::string::npos);
   EXPECT_NE(flat.find("fertile_sward * biome_fertile"), std::string::npos);
-  EXPECT_NE(flat.find("0.090 * soil_mix"), std::string::npos);
+  EXPECT_NE(
+      flat.find(
+          "uniform float u_tile_size, u_macro_noise_scale, u_detail_noise_scale;"),
+      std::string::npos);
+  EXPECT_NE(flat.find("float detail_scale = max(u_detail_noise_scale, 0.045);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("u_soil_blend_height - soil_width"), std::string::npos);
+  EXPECT_NE(flat.find("u_soil_roughness * 0.48"), std::string::npos);
+  EXPECT_NE(flat.find("if (u_has_height_tex == 1)"), std::string::npos);
 }
 
 TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
@@ -209,4 +227,17 @@ TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
 
   EXPECT_NE(flat.find("float band_limit("), std::string::npos);
   EXPECT_NE(flat.find("relief_octave("), std::string::npos);
+}
+
+TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "road.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("if (u_surface_kind == 2)"), std::string::npos);
+  EXPECT_NE(flat.find("else if (u_surface_kind == 1)"), std::string::npos);
+  EXPECT_NE(flat.find("vec2 aggregate_cells = worley_f("), std::string::npos);
+  EXPECT_NE(flat.find("float rut_left ="), std::string::npos);
+  EXPECT_NE(flat.find("u_alpha * edge_alpha"), std::string::npos);
 }

@@ -183,6 +183,8 @@ void TerrainHeightMap::build_from_features(
 
       const bool has_authored_extents = feature.width > 0.0F && feature.depth > 0.0F;
       const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
+      // Campaign maps author broad strategic features in a compressed vertical
+      // scale. Preserve their intended mass at the established campaign scale.
       const float mountain_height =
           feature.height * (campaign_landform_scale ? 1.90F : 1.0F);
       const float major_radius =
@@ -284,7 +286,6 @@ void TerrainHeightMap::build_from_features(
       }
       const float authored_hill_height =
           feature.height * (campaign_landform_scale ? 2.80F : 1.0F);
-
       const float footprint_height =
           std::min(grid_width, grid_depth) * m_tile_size * 0.18F;
       const float hill_height = campaign_landform_scale
@@ -1009,8 +1010,8 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
   const auto surface_profile = make_surface_profile(settings);
 
   if (surface_profile.ground_irregularity_enabled) {
-    const float amplitude = std::clamp(
-        std::max(0.0F, surface_profile.irregularity_amplitude) * 18.0F, 0.75F, 2.20F);
+    const float amplitude =
+        std::clamp(std::max(0.0F, surface_profile.irregularity_amplitude), 0.0F, 1.50F);
     if (amplitude > 0.0001F) {
       const float authored_frequency =
           std::clamp(surface_profile.irregularity_scale * 0.28F, 0.022F, 0.070F);
@@ -1068,7 +1069,12 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings& settings) {
           const float relief = regional_signed * 0.46F + rolling_signed * 0.29F +
                                detail_signed * 0.13F + fine_signed * 0.035F -
                                drainage * 0.055F;
-          const float perturb = std::max(amplitude * (0.78F + relief), 0.10F);
+          // Keep the playable surface just above the non-playable ground plane while
+          // allowing the authored amplitude to describe signed relief around that
+          // baseline. The previous x18 amplification made a 4 cm request produce
+          // nearly a metre of broad displacement.
+          const float base_clearance = 0.12F + amplitude;
+          const float perturb = base_clearance + amplitude * relief;
 
           m_heights[idx] += perturb;
         }

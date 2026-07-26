@@ -294,6 +294,12 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
           active_shader->set_uniform(m_terrain_pipeline->m_terrain_uniforms.ground_type,
                                      single.params.ground_type);
         }
+        if (m_terrain_pipeline->m_terrain_uniforms.terrain_type !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_terrain_pipeline->m_terrain_uniforms.terrain_type,
+              single.params.terrain_type);
+        }
         if (m_terrain_pipeline->m_terrain_uniforms.grass_primary !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(
@@ -485,6 +491,48 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
           active_shader->set_uniform(
               m_terrain_pipeline->m_terrain_uniforms.screen_toe_clamp,
               single.params.screen_toe_clamp);
+        }
+        const auto& height = single.height;
+        if (m_terrain_pipeline->m_terrain_uniforms.has_height_texture !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_terrain_pipeline->m_terrain_uniforms.has_height_texture,
+              height.enabled && height.texture != nullptr ? 1 : 0);
+        }
+        if (height.enabled && height.texture != nullptr) {
+          constexpr int k_height_texture_unit = 6;
+          height.texture->bind(k_height_texture_unit);
+          m_last_bound_texture = height.texture;
+          if (m_terrain_pipeline->m_terrain_uniforms.height_texture !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.height_texture,
+                k_height_texture_unit);
+          }
+          if (m_terrain_pipeline->m_terrain_uniforms.height_texel_size !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.height_texel_size,
+                height.texel_size);
+          }
+          if (m_terrain_pipeline->m_terrain_uniforms.height_uv_scale !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.height_uv_scale,
+                height.uv_scale);
+          }
+          if (m_terrain_pipeline->m_terrain_uniforms.height_uv_offset !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.height_uv_offset,
+                height.uv_offset);
+          }
+          if (m_terrain_pipeline->m_terrain_uniforms.height_to_world !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.height_to_world,
+                height.to_world);
+          }
         }
         set_fog_uniforms(m_terrain_pipeline->m_terrain_uniforms);
       }
