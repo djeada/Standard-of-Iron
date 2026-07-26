@@ -58,6 +58,7 @@
       "quiver": "quiver_carthage"
     },
     "troops/iron_sepulcher/grave_priest": {
+      "helmet": "headwrap",
       "cloak": "cloak_sepulcher"
     },
     "troops/roman/builder": {

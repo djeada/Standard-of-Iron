@@ -193,6 +193,7 @@ add_executable(standard_of_iron_tests
     tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
+    tools/balance_sim_test.cpp
     test_main.cpp
 )
 
@@ -210,6 +211,7 @@ target_link_libraries(standard_of_iron_tests
         render_gl
         game_systems
         arena_scenario_harness
+        balance_sim_harness
         audio_system
 )
 
@@ -333,6 +335,7 @@ target_link_libraries(standard_of_iron_tests_subset
         render_gl
         game_systems
         arena_scenario_harness
+        balance_sim_harness
         audio_system
 )
 target_include_directories(standard_of_iron_tests_subset

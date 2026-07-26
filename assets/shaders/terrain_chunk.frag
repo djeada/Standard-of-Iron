@@ -11,6 +11,7 @@ layout(location = 0) out vec4 frag_color;
 
 uniform vec3 u_grass_primary, u_grass_secondary, u_grass_dry, u_soil_color;
 uniform vec3 u_rock_low, u_rock_high, u_tint, u_light_dir;
+uniform int u_ground_type;
 uniform vec2 u_noise_offset;
 uniform float u_tile_size, u_macro_noise_scale;
 uniform float u_slope_rock_threshold, u_slope_rock_sharpness;
@@ -233,6 +234,12 @@ float min_cliff_distance_radial(vec2 uv, int r, float rise_delta) {
 }
 
 void main() {
+  float biome_forest = float(u_ground_type == 0);
+  float biome_dry = float(u_ground_type == 1);
+  float biome_rocky = float(u_ground_type == 2);
+  float biome_alpine = float(u_ground_type == 3);
+  float biome_fertile = float(u_ground_type == 4);
+
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
 
@@ -381,14 +388,23 @@ void main() {
                                     gully_mask * 0.12 + low_ground * 0.05);
   damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
   float bare_patch =
-      smoothstep(0.57,
-                 0.78,
+      smoothstep(0.50,
+                 0.73,
                  soil_field * 0.74 + meadow_field * 0.20 + surface_detail * 0.08 +
                      exposed_ground * 0.12 - u_moisture_level * 0.04);
   bare_patch *= smoothstep(0.24, 0.64, 0.5 + surface_detail * 0.5);
   bare_patch *= 1.0 - smoothstep(0.26, 0.60, slope);
+  float worn_patch = smoothstep(0.48,
+                                0.72,
+                                soil_field * 0.62 + (1.0 - meadow_field) * 0.30 +
+                                    (1.0 - moisture_field) * 0.12);
+  worn_patch *= 1.0 - smoothstep(0.10, 0.30, slope);
 
-  float soil_mix = bare_patch * 0.52;
+  float soil_mix = bare_patch * 0.62;
+  soil_mix = max(soil_mix, worn_patch * 0.34);
+  soil_mix = max(soil_mix,
+                 worn_patch * (biome_dry * 0.18 + biome_rocky * 0.10 +
+                               biome_forest * 0.08 + biome_fertile * 0.06));
   soil_mix = max(soil_mix, damp_patch * (0.30 + 0.18 * u_moisture_level));
   soil_mix = max(soil_mix, gully_mask * (0.10 + 0.18 * gully_response));
   soil_mix = max(soil_mix, foot_shelter * 0.12);
@@ -397,7 +413,7 @@ void main() {
   soil_mix = max(soil_mix,
                  entry_signal * 0.30 + entry_face * 0.08 + entry_shelter * 0.035 +
                      entry_toe * 0.015);
-  soil_mix = clamp(soil_mix, 0.0, 0.72);
+  soil_mix = clamp(soil_mix, 0.0, 0.78);
   vec3 ground_soil = mix(u_soil_color, u_grass_dry, level_ground * 0.24);
   vec3 varied_soil =
       ground_soil * (1.0 + surface_detail * 0.075 + surface_grain * 0.045 +
@@ -407,6 +423,17 @@ void main() {
       mix(varied_soil, compacted_entry_earth, entry_signal * 0.38 + entry_face * 0.10);
   varied_soil *= 1.0 - damp_patch * u_moisture_level * 0.16;
   vec3 soil_blend = mix(grass_color, varied_soil, soil_mix);
+  float litter_patch = smoothstep(
+      0.50, 0.74, thatch_field * 0.52 + soil_field * 0.30 + moisture_field * 0.18);
+  vec3 litter_color = mix(u_soil_color * 0.70, u_grass_dry * 0.62, meadow_field);
+  soil_blend = mix(soil_blend, litter_color, litter_patch * biome_forest * 0.25);
+  float fertile_sward = smoothstep(0.42,
+                                   0.72,
+                                   moisture_field * 0.64 + meadow_field * 0.20 +
+                                       (1.0 - soil_field) * 0.16);
+  soil_blend = mix(soil_blend,
+                   mix(u_grass_primary, u_grass_secondary, 0.68),
+                   fertile_sward * biome_fertile * 0.16 * (1.0 - soil_mix));
 
   float rock_threshold = clamp(u_slope_rock_threshold, 0.08, 0.88);
   float rock_width = mix(0.19, 0.07, clamp(u_slope_rock_sharpness / 8.0, 0.0, 1.0));
@@ -419,6 +446,10 @@ void main() {
                     0.0,
                     1.0);
   float weathered_exposure = smoothstep(0.34, 0.70, rock_breakup + ridge_mask * 0.10);
+  rock_mask = clamp(rock_mask + biome_rocky * weathered_exposure * 0.12 +
+                        biome_alpine * weathered_exposure * 0.09,
+                    0.0,
+                    1.0);
   rock_mask *= mix(weathered_exposure, 1.0, smoothstep(0.10, 0.34, slope));
   rock_mask *= (1.0 - 0.55 * entry_shelter) * (1.0 - 0.30 * foot_shelter);
   rock_mask *= smoothstep(0.010, 0.050, slope);
@@ -484,7 +515,9 @@ void main() {
   }
 
   vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
-  terrain_color = mix(gray_level, terrain_color, u_grass_saturation);
+  float grounded_saturation = clamp(u_grass_saturation * 0.80, 0.0, 1.08);
+  terrain_color = mix(gray_level, terrain_color, grounded_saturation);
+  terrain_color *= vec3(1.025, 0.965, 0.985);
 
   float wet_surface = damp_patch * soil_mix * u_moisture_level;
   terrain_color *= 1.0 - u_moisture_level * 0.06 * (1.0 - rock_mask);

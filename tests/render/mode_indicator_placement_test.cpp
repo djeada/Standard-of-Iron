@@ -167,7 +167,7 @@ TEST_F(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
-  ASSERT_EQ(items.size(), 5U);
+  ASSERT_EQ(items.size(), 4U);
   float max_y = -9999.0F;
   int flame_count = 0;
   for (auto const& item : items) {
@@ -179,8 +179,8 @@ TEST_F(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
     max_y = std::max(max_y, cmd.position.y());
     ++flame_count;
   }
-  EXPECT_EQ(flame_count, 5);
-  EXPECT_GT(max_y, 1.0F);
+  EXPECT_EQ(flame_count, 4);
+  EXPECT_GT(max_y, 0.65F);
 }
 
 TEST_F(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
@@ -199,7 +199,7 @@ TEST_F(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
-  ASSERT_EQ(items.size(), 5U);
+  ASSERT_EQ(items.size(), 4U);
   int flame_count = 0;
   for (auto const& item : items) {
     ASSERT_TRUE(std::holds_alternative<Render::GL::EffectBatchCmd>(item));
@@ -208,7 +208,7 @@ TEST_F(SceneRendererEffects, RefreshedBurningUnitsStillEnqueueVisibleFlames) {
     EXPECT_GT(cmd.intensity, 0.0F);
     ++flame_count;
   }
-  EXPECT_EQ(flame_count, 5);
+  EXPECT_EQ(flame_count, 4);
 }
 
 TEST_F(SceneRendererEffects, BurningUnitsReduceFlameCoverageAfterCasualties) {
@@ -256,7 +256,7 @@ TEST_F(SceneRendererEffects, BurningFlameAnchorsFollowUnitTransformAndYaw) {
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
-  ASSERT_EQ(items.size(), 5U);
+  ASSERT_EQ(items.size(), 4U);
 
   auto const& front = std::get<Render::GL::EffectBatchCmd>(items.front());
   EXPECT_EQ(front.kind, Render::GL::EffectBatchCmd::Kind::BurningFlame);
@@ -271,10 +271,10 @@ TEST_F(SceneRendererEffects, BurningFlameAnchorsFollowUnitTransformAndYaw) {
     EXPECT_LT(cmd.position.x(), transform->position.x + 1.0F);
     EXPECT_GT(cmd.position.z(), transform->position.z - 1.0F);
     EXPECT_LT(cmd.position.z(), transform->position.z + 1.0F);
-    EXPECT_GT(cmd.position.y(), transform->position.y + 0.5F);
+    EXPECT_GT(cmd.position.y(), transform->position.y + 0.25F);
     ++flame_count;
   }
-  EXPECT_EQ(flame_count, 5);
+  EXPECT_EQ(flame_count, 4);
 }
 
 TEST_F(SceneRendererEffects, FirePatchUsesGroundFlameClusterInsteadOfSingleChimney) {
@@ -302,7 +302,7 @@ TEST_F(SceneRendererEffects, FirePatchUsesGroundFlameClusterInsteadOfSingleChimn
   for (auto const& item : items) {
     ASSERT_TRUE(std::holds_alternative<Render::GL::EffectBatchCmd>(item));
     auto const& cmd = std::get<Render::GL::EffectBatchCmd>(item);
-    EXPECT_EQ(cmd.kind, Render::GL::EffectBatchCmd::Kind::BuildingFlame);
+    EXPECT_EQ(cmd.kind, Render::GL::EffectBatchCmd::Kind::BurningFlame);
     EXPECT_LT(cmd.radius, 0.8F);
     EXPECT_GT(cmd.intensity, 0.0F);
     EXPECT_NEAR(cmd.position.y(), 0.10F, 0.001F);

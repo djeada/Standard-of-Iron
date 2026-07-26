@@ -1,0 +1,35 @@
+{
+  "id": "spear_vs_sword",
+  "label": "Spearmen vs swordsmen at equal cost",
+  "description": "Cost-matched infantry brawl. Swords should win the straight fight; the spear line earns its keep against cavalry instead.",
+  "duration_seconds": 150,
+  "seeds": 8,
+  "separation": 24.0,
+  "side_a": {
+    "label": "Swordsmen",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 4
+      }
+    ]
+  },
+  "side_b": {
+    "label": "Spearmen",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "spearman",
+        "count": 5
+      }
+    ]
+  },
+  "expect": {
+    "a_win_rate_min": 0.6,
+    "a_win_rate_max": 0.9,
+    "max_timeout_rate": 0.1
+  }
+}

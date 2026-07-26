@@ -39,15 +39,15 @@ constexpr float k_fire_patch_flame_y_offset = 0.10F;
 constexpr float k_fire_patch_flame_radius_scale = 0.28F;
 constexpr float k_fire_patch_flame_min_radius = 0.26F;
 constexpr float k_fire_patch_flame_offset_scale = 0.36F;
-constexpr float k_burning_flame_intensity = 1.32F;
+constexpr float k_burning_flame_intensity = 0.88F;
 constexpr float k_burning_min_scale = 1.0F;
-constexpr float k_burning_body_height = 0.88F;
-constexpr float k_burning_head_height = 1.40F;
-constexpr float k_burning_side_offset = 0.40F;
-constexpr float k_burning_front_offset = 0.34F;
-constexpr float k_burning_head_radius = 0.54F;
-constexpr float k_burning_body_radius = 0.46F;
-constexpr float k_burning_shoulder_radius = 0.36F;
+constexpr float k_burning_body_height = 0.74F;
+constexpr float k_burning_lower_height = 0.38F;
+constexpr float k_burning_side_offset = 0.28F;
+constexpr float k_burning_front_offset = 0.22F;
+constexpr float k_burning_body_radius = 0.27F;
+constexpr float k_burning_lower_radius = 0.22F;
+constexpr float k_burning_shoulder_radius = 0.20F;
 
 constexpr float k_blood_y_offset = 0.02F;
 
@@ -388,38 +388,31 @@ void render_combat_dust(Renderer* renderer,
          k_burning_body_radius,
          1.0F,
          0.0F,
-         QVector3D(1.0F, 0.42F, 0.10F)},
-        {0.0F,
-         k_burning_body_height * 0.96F,
-         -k_burning_front_offset,
-         k_burning_body_radius * 0.92F,
-         0.9F,
-         0.09F,
-         QVector3D(1.0F, 0.42F, 0.10F)},
+         QVector3D(1.0F, 0.34F, 0.055F)},
+        {0.08F,
+         k_burning_lower_height,
+         -k_burning_front_offset * 0.70F,
+         k_burning_lower_radius,
+         0.72F,
+         0.11F,
+         QVector3D(0.92F, 0.24F, 0.035F)},
         {-k_burning_side_offset,
-         k_burning_body_height * 0.98F,
+         k_burning_body_height * 1.05F,
          0.03F,
          k_burning_shoulder_radius,
-         0.82F,
-         0.17F,
-         QVector3D(1.0F, 0.42F, 0.10F)},
+         0.66F,
+         0.23F,
+         QVector3D(1.0F, 0.38F, 0.07F)},
         {k_burning_side_offset,
-         k_burning_body_height * 0.94F,
+         k_burning_body_height * 0.91F,
          -0.03F,
-         k_burning_shoulder_radius,
-         0.78F,
-         0.29F,
-         QVector3D(1.0F, 0.42F, 0.10F)},
-        {0.0F,
-         k_burning_head_height,
-         0.0F,
-         k_burning_head_radius,
-         0.88F,
-         0.41F,
-         QVector3D(1.0F, 0.48F, 0.16F)},
+         k_burning_shoulder_radius * 0.88F,
+         0.58F,
+         0.37F,
+         QVector3D(0.94F, 0.29F, 0.045F)},
     };
 
-    constexpr std::size_t k_anchor_order[] = {0U, 4U, 2U, 3U, 1U};
+    constexpr std::size_t k_anchor_order[] = {0U, 1U, 2U, 3U};
     int const active_anchor_count =
         std::clamp(static_cast<int>(std::ceil(
                        coverage_ratio * static_cast<float>(std::size(k_anchor_order)))),
@@ -499,11 +492,12 @@ void render_combat_dust(Renderer* renderer,
       float const radius =
           base_radius * lobe.radius_scale *
           (0.96F + 0.05F * std::sin(animation_time * 6.0F + lobe.time_offset * 9.0F));
-      renderer->building_flame(position,
-                               color,
-                               radius,
-                               intensity * lobe.intensity_scale,
-                               animation_time + lobe.time_offset);
+
+      renderer->burning_flame(position,
+                              color,
+                              radius,
+                              intensity * lobe.intensity_scale,
+                              animation_time + lobe.time_offset);
     }
   }
 

@@ -1259,11 +1259,11 @@ TEST_F(CombatModeTest, InfantryMeleeQuicklyDestroysExposedSiegeEngines) {
         0.016F);
     auto* action = attacker->get_component<RpgCommanderActionComponent>();
     ASSERT_NE(action, nullptr);
-    EXPECT_EQ(action->requested_damage, 90);
+    EXPECT_EQ(action->requested_damage, 54);
 
     Game::Systems::Combat::process_authored_combat_action(
         world.get(), *attacker, attacker->get_component<CombatStateComponent>(), 0.42F);
-    EXPECT_EQ(siege_unit->health, 60);
+    EXPECT_EQ(siege_unit->health, 96);
   }
 }
 

@@ -1,0 +1,24 @@
+{
+  "id": "spear_vs_cavalry_frontal",
+  "label": "Braced spears vs frontal cavalry charge",
+  "description": "Spearmen holding the line should beat an equal-cost cavalry charge into their front.",
+  "duration_seconds": 120,
+  "seeds": 8,
+  "separation": 26.0,
+  "side_a": {
+    "label": "Spear line",
+    "nation": "roman_republic",
+    "stance": "hold",
+    "groups": [{ "troop": "spearman", "count": 4 }]
+  },
+  "side_b": {
+    "label": "Cavalry",
+    "nation": "roman_republic",
+    "stance": "charge",
+    "groups": [{ "troop": "horse_swordsman", "count": 2 }]
+  },
+  "expect": {
+    "a_win_rate_min": 0.6,
+    "max_timeout_rate": 0.25
+  }
+}

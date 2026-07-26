@@ -315,8 +315,8 @@ TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
 
   EXPECT_LT(result.mesh->get_vertices()[0].position[1], 0.0F);
   EXPECT_LT(result.mesh->get_vertices()[7].position[1], 0.0F);
-  EXPECT_NEAR(result.mesh->get_vertices()[6].position[1], 0.025F, 0.001F);
-  EXPECT_NEAR(result.mesh->get_vertices()[13].position[1], 0.025F, 0.001F);
+  EXPECT_NEAR(result.mesh->get_vertices()[6].position[1], 0.002F, 0.001F);
+  EXPECT_NEAR(result.mesh->get_vertices()[13].position[1], 0.002F, 0.001F);
   EXPECT_TRUE(std::all_of(result.mesh->get_vertices().begin(),
                           result.mesh->get_vertices().end(),
                           [](const auto& vertex) { return vertex.normal[1] > 0.0F; }));

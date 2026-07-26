@@ -1,0 +1,23 @@
+{
+  "id": "commander_vs_line",
+  "label": "Elite commander vs equal-cost line infantry",
+  "description": "Elite units should be strong but never cost-efficient enough to replace the line.",
+  "duration_seconds": 150,
+  "seeds": 6,
+  "separation": 24.0,
+  "side_a": {
+    "label": "Commander",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [{ "troop": "roman_legion_organizer", "count": 1 }]
+  },
+  "side_b": {
+    "label": "Legionaries",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [{ "troop": "swordsman", "count": 3 }]
+  },
+  "expect": {
+    "max_timeout_rate": 0.35
+  }
+}

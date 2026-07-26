@@ -90,15 +90,15 @@ void main() {
     float detail_noise =
         fbm(vec2(angle_t * 14.5 + curl_noise * 0.6, height * 12.0 - u_time * 3.2));
 
-    float lobe = 0.84 + 0.24 * sin(angle * 3.0 + u_time * 2.1 + flow_noise * 2.4) +
-                 0.12 * sin(angle * 6.0 - u_time * 3.2 + detail_noise * 3.14159);
+    float lobe = 0.78 + 0.27 * sin(angle * 3.0 + u_time * 2.1 + flow_noise * 2.4) +
+                 0.13 * sin(angle * 6.0 - u_time * 3.2 + detail_noise * 3.14159);
     float taper =
-        mix(unit_flame ? 0.78 : 1.05, unit_flame ? 0.16 : 0.22, pow(height, 0.72));
+        mix(unit_flame ? 0.56 : 1.05, unit_flame ? 0.055 : 0.22, pow(height, 0.64));
     float smoke_expand =
         smoothstep(0.58, 1.0, height) *
         (unit_flame ? 0.02 : 0.16 + (unit_flame ? 0.04 : 0.10) * curl_noise);
-    float radial_scale =
-        max(0.18, taper * (0.86 + 0.24 * flow_noise) * lobe + smoke_expand);
+    float radial_scale = max(unit_flame ? 0.06 : 0.18,
+                             taper * (0.82 + 0.28 * flow_noise) * lobe + smoke_expand);
     pos.xz *= radial_scale;
 
     vec2 drift_dir = vec2(cos(angle + (curl_noise - 0.5) * 1.1),
@@ -106,15 +106,15 @@ void main() {
     float sway =
         (sin(u_time * 3.1 + height * 4.8 + flow_noise * 2.5) * 0.11 +
          (curl_noise - 0.5) * 0.28) *
-        (unit_flame ? (0.10 + height * height * 0.36)
+        (unit_flame ? (0.06 + height * height * 0.52)
                     : (0.18 + height * height * 0.9)) *
         (unit_flame ? (0.42 + 0.10 * radius_factor) : (0.8 + 0.25 * radius_factor));
     pos.x += drift_dir.x * sway;
     pos.z += drift_dir.y * sway;
 
     float lift =
-        mix(unit_flame ? 0.58 : 1.2, unit_flame ? 0.92 : 2.05, radius_factor) +
-        height * ((unit_flame ? 0.06 : 0.28) + (unit_flame ? 0.08 : 0.18) * flow_noise);
+        mix(unit_flame ? 0.74 : 1.2, unit_flame ? 1.12 : 2.05, radius_factor) +
+        height * ((unit_flame ? 0.12 : 0.28) + (unit_flame ? 0.14 : 0.18) * flow_noise);
     pos.y *= lift;
     pos.y +=
         (detail_noise - 0.5) * (unit_flame ? 0.04 : 0.08) * (0.2 + height * height) +
@@ -122,12 +122,12 @@ void main() {
             ((unit_flame ? 0.03 : 0.06) + (unit_flame ? 0.03 : 0.08) * curl_noise);
 
     float base_mask = smoothstep(0.0, 0.06, height);
-    float tip_fade = 1.0 - smoothstep(unit_flame ? 0.56 : 0.7,
-                                      unit_flame ? 0.86 : 1.04,
+    float tip_fade = 1.0 - smoothstep(unit_flame ? 0.70 : 0.7,
+                                      unit_flame ? 0.98 : 1.04,
                                       height + (detail_noise - 0.5) * 0.12);
     float radius_from_axis = length(pos.xz);
-    float side_fade = 1.0 - smoothstep(unit_flame ? 0.34 : 0.62,
-                                       unit_flame ? 0.72 : 1.05,
+    float side_fade = 1.0 - smoothstep(unit_flame ? 0.18 : 0.62,
+                                       unit_flame ? 0.48 : 1.05,
                                        radius_from_axis);
     float flicker = 0.90 + 0.10 * sin(u_time * 10.5 + angle * 4.0 + detail_noise * 4.5);
     v_alpha = clamp(base_mask * tip_fade * side_fade * flicker * u_intensity *

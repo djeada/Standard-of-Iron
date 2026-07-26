@@ -1,0 +1,24 @@
+{
+  "id": "cavalry_vs_exposed_archers",
+  "label": "Cavalry vs unescorted archers",
+  "description": "Once cavalry closes, archers with no melee screen should lose decisively.",
+  "duration_seconds": 120,
+  "seeds": 8,
+  "separation": 28.0,
+  "side_a": {
+    "label": "Cavalry",
+    "nation": "roman_republic",
+    "stance": "charge",
+    "groups": [{ "troop": "horse_swordsman", "count": 2 }]
+  },
+  "side_b": {
+    "label": "Archers",
+    "nation": "roman_republic",
+    "stance": "stand",
+    "groups": [{ "troop": "archer", "count": 6 }]
+  },
+  "expect": {
+    "a_win_rate_min": 0.6,
+    "max_timeout_rate": 0.25
+  }
+}

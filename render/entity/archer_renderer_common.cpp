@@ -100,11 +100,13 @@ public:
   ArcherRenderer(const ArcherRendererProfile& profile,
                  std::string_view renderer_key,
                  std::string_view style_key,
-                 Render::Creature::Pipeline::CreatureAssetId creature_asset_id)
+                 Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
+                 Render::Creature::Pipeline::PoseLayerFn pose_layer)
       : m_profile(profile)
       , m_renderer_key(renderer_key)
       , m_style_key(style_key)
-      , m_creature_asset_id(creature_asset_id) {}
+      , m_creature_asset_id(creature_asset_id)
+      , m_pose_layer(pose_layer) {}
 
   auto get_proportion_scaling() const -> QVector3D override {
     return m_profile.proportion_profile.as_vector();
@@ -153,6 +155,7 @@ public:
     spec.creature_asset_id = m_creature_asset_id;
     spec.animation_manifest.melee_clip_override =
         Render::Creature::k_humanoid_archer_melee_clip;
+    spec.animation_manifest.pose_layer = m_pose_layer;
     m_visual_spec_cache = spec;
     m_visual_spec_baked = true;
     return m_visual_spec_cache;
@@ -193,6 +196,7 @@ private:
   std::string_view m_renderer_key;
   std::string_view m_style_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
+  Render::Creature::Pipeline::PoseLayerFn m_pose_layer{nullptr};
   mutable Render::Creature::ArchetypeId m_base_archetype{
       Render::Creature::k_invalid_archetype};
 
@@ -239,8 +243,12 @@ void register_archer_renderer_profile(
   }
 
   for (const auto& renderer : renderers) {
-    auto renderer_instance = std::make_shared<ArcherRenderer>(
-        profile, renderer.renderer_key, renderer.style_key, renderer.creature_asset_id);
+    auto renderer_instance =
+        std::make_shared<ArcherRenderer>(profile,
+                                         renderer.renderer_key,
+                                         renderer.style_key,
+                                         renderer.creature_asset_id,
+                                         renderer.pose_layer);
     registry.register_renderer(
         std::string(renderer.renderer_key),
         [renderer_instance](const DrawContext& ctx, ISubmitter& out) {

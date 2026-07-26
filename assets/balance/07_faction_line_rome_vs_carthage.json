@@ -1,0 +1,51 @@
+{
+  "id": "faction_line_rome_vs_carthage",
+  "label": "Faction line battle at equal cost",
+  "description": "Combined-arms armies matched on gold, not headcount: Carthage buys more bodies for the same purse. Neither faction should dominate.",
+  "duration_seconds": 180,
+  "seeds": 8,
+  "separation": 30.0,
+  "side_a": {
+    "label": "Rome",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 3
+      },
+      {
+        "troop": "spearman",
+        "count": 2
+      },
+      {
+        "troop": "archer",
+        "count": 3
+      }
+    ]
+  },
+  "side_b": {
+    "label": "Carthage",
+    "nation": "carthage",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 3
+      },
+      {
+        "troop": "spearman",
+        "count": 2
+      },
+      {
+        "troop": "archer",
+        "count": 4
+      }
+    ]
+  },
+  "expect": {
+    "a_win_rate_min": 0.3,
+    "a_win_rate_max": 0.7,
+    "max_timeout_rate": 0.25
+  }
+}

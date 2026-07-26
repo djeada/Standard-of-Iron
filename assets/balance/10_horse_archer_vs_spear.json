@@ -1,0 +1,23 @@
+{
+  "id": "horse_archer_vs_spear",
+  "label": "Horse archers vs spearmen",
+  "description": "Spears counter cavalry in melee, but horse archers should not be free damage either.",
+  "duration_seconds": 180,
+  "seeds": 8,
+  "separation": 28.0,
+  "side_a": {
+    "label": "Spearmen",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [{ "troop": "spearman", "count": 3 }]
+  },
+  "side_b": {
+    "label": "Horse archers",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [{ "troop": "horse_archer", "count": 2 }]
+  },
+  "expect": {
+    "max_timeout_rate": 0.35
+  }
+}
