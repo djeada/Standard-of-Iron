@@ -11,7 +11,6 @@ This script runs automatically before `make run` and deletes any saves that
 would load an outdated map.
 """
 
-import json
 import os
 import pathlib
 import sqlite3
@@ -53,19 +52,13 @@ def main() -> int:
     conn = sqlite3.connect(db_path)
     try:
         cur = conn.cursor()
-        cur.execute("SELECT slot_name, timestamp, metadata FROM saves")
+        cur.execute("SELECT slot_name, updated_at, map_path FROM saves")
         rows = cur.fetchall()
     finally:
         conn.close()
 
-    stale_slots: list[str] = []
-    for slot_name, ts_str, metadata_raw in rows:
-        try:
-            meta = json.loads(metadata_raw or "{}")
-        except json.JSONDecodeError:
-            continue
-
-        raw_map_path = meta.get("map_path", "")
+    stale_slots: list[tuple[str, str, datetime, datetime]] = []
+    for slot_name, ts_str, raw_map_path in rows:
         if not raw_map_path:
             continue
 
