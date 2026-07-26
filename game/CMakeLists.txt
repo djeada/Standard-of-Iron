@@ -1,5 +1,7 @@
 # Core ECS library (moved from engine/core to game/core)
-add_library(engine_core STATIC
+add_library(
+    engine_core
+    STATIC
     core/entity.cpp
     core/component.cpp
     core/system.cpp
@@ -9,9 +11,14 @@ add_library(engine_core STATIC
 )
 
 target_include_directories(engine_core PUBLIC .)
-target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui animation_core)
+target_link_libraries(
+    engine_core
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui animation_core
+)
 
-add_library(game_systems STATIC
+add_library(
+    game_systems
+    STATIC
     systems/runtime_system_registry.cpp
     systems/battlefield_capture.cpp
     systems/order_service.cpp
@@ -165,6 +172,15 @@ add_library(game_systems STATIC
 )
 
 target_include_directories(game_systems PUBLIC .)
-target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Sql engine_core animation_core render_gl)
+target_link_libraries(
+    game_systems
+    PUBLIC
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Sql
+        engine_core
+        animation_core
+        render_gl
+)
 
 add_subdirectory(audio)

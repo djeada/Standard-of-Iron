@@ -26,12 +26,12 @@ Usage:
 Behavior:
     By default, the script will automatically install missing dependencies using winget.
     Use --no-auto-install to disable this and see manual installation instructions instead.
-    
+
 Performance Tips for VMs:
     set CMAKE_BUILD_PARALLEL_LEVEL=2    # Limit parallel jobs to avoid thrashing
     set PYTHONUNBUFFERED=1              # Show output immediately (no buffering)
     set NINJA_STATUS=[%%f/%%t] %%e sec  # Show Ninja build progress
-    
+
     Use --no-package during development to skip slow ZIP creation
 
 Requirements:
@@ -40,7 +40,7 @@ Requirements:
     - Ninja build system (auto-installed if missing)
     - Visual Studio 2019/2022 with C++ tools (auto-installed if missing)
     - Qt 6.6.3 or compatible (must be installed manually from qt.io)
-    
+
 Note:
     - Auto-install requires Windows 10/11 with winget
     - Qt cannot be auto-installed (winget Qt packages lack required components)
@@ -653,7 +653,6 @@ def auto_install_dependencies() -> bool:
     success_count = 0
     needs_restart = False
     vs_failed = False
-    vs_needed = False
 
     for item in installs_needed:
         name = item[0]
@@ -661,7 +660,7 @@ def auto_install_dependencies() -> bool:
         extra_args = item[2] if len(item) > 2 else None
 
         info(f"Installing {name}...")
-        print(f"  This may take several minutes, please wait...")
+        print("  This may take several minutes, please wait...")
         print()
 
         cmd = [
@@ -690,7 +689,6 @@ def auto_install_dependencies() -> bool:
 
                 if "Visual Studio" in name:
                     vs_failed = True
-                    vs_needed = True
                 else:
                     warning("You may need to run this script as Administrator")
         except Exception as e:
@@ -1002,7 +1000,7 @@ pause
     run_debug_angle_path.write_text(run_debug_angle_content, encoding="ascii")
 
     success(
-        f"Diagnostic scripts written: run.cmd (smart), run_debug.cmd, run_debug_softwaregl.cmd, run_debug_angle.cmd"
+        "Diagnostic scripts written: run.cmd (smart), run_debug.cmd, run_debug_softwaregl.cmd, run_debug_angle.cmd"
     )
 
 

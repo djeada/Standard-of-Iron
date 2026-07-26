@@ -3,13 +3,12 @@
 
 set(_soi_optional_test_sources)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render/creature/combat_visual_state_test.cpp")
-    list(APPEND _soi_optional_test_sources
-        render/creature/combat_visual_state_test.cpp
-    )
+    list(APPEND _soi_optional_test_sources render/creature/combat_visual_state_test.cpp)
 endif()
 
 # Test executable
-add_executable(standard_of_iron_tests
+add_executable(
+    standard_of_iron_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     ${CMAKE_SOURCE_DIR}/translations.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
@@ -204,7 +203,8 @@ add_executable(standard_of_iron_tests
 )
 
 # Link against GTest, project libraries
-target_link_libraries(standard_of_iron_tests
+target_link_libraries(
+    standard_of_iron_tests
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -221,16 +221,15 @@ target_link_libraries(standard_of_iron_tests
 )
 
 # Include directories
-target_include_directories(standard_of_iron_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    standard_of_iron_tests
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
 
 # Set output directory
-set_target_properties(standard_of_iron_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTORCC ON
+set_target_properties(
+    standard_of_iron_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTORCC ON
 )
 
 if(TARGET bake_creature_assets)
@@ -239,18 +238,17 @@ endif()
 
 # Add tests to CTest after target properties are finalized.
 include(GoogleTest)
-gtest_discover_tests(standard_of_iron_tests
+gtest_discover_tests(
+    standard_of_iron_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 # Focused horse contract binary. It remains runnable when an unrelated test
 # translation unit in the monolithic suite has interface drift.
-add_executable(horse_model_tests
-    render/horse/horse_anatomy_test.cpp
-    test_main.cpp
-)
-target_link_libraries(horse_model_tests
+add_executable(horse_model_tests render/horse/horse_anatomy_test.cpp test_main.cpp)
+target_link_libraries(
+    horse_model_tests
     PRIVATE
         GTest::gtest
         Qt${QT_VERSION_MAJOR}::Core
@@ -260,28 +258,23 @@ target_link_libraries(horse_model_tests
         render_gl
         game_systems
 )
-target_include_directories(horse_model_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
-)
-set_target_properties(horse_model_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
+target_include_directories(horse_model_tests PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game)
+set_target_properties(
+    horse_model_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
 )
 if(TARGET bake_creature_assets)
     add_dependencies(horse_model_tests bake_creature_assets)
 endif()
-gtest_discover_tests(horse_model_tests
+gtest_discover_tests(
+    horse_model_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-add_executable(elephant_model_tests
-    render/elephant/elephant_source_asset_test.cpp
-    test_main.cpp
-)
-target_link_libraries(elephant_model_tests
+add_executable(elephant_model_tests render/elephant/elephant_source_asset_test.cpp test_main.cpp)
+target_link_libraries(
+    elephant_model_tests
     PRIVATE
         GTest::gtest
         Qt${QT_VERSION_MAJOR}::Core
@@ -291,19 +284,19 @@ target_link_libraries(elephant_model_tests
         render_gl
         game_systems
 )
-target_include_directories(elephant_model_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    elephant_model_tests
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
-set_target_properties(elephant_model_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
+set_target_properties(
+    elephant_model_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
 )
 if(TARGET bake_creature_assets)
     add_dependencies(elephant_model_tests bake_creature_assets)
 endif()
-gtest_discover_tests(elephant_model_tests
+gtest_discover_tests(
+    elephant_model_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
@@ -319,15 +312,18 @@ get_target_property(_soi_tests_sources standard_of_iron_tests SOURCES)
 set(_soi_tests_subset_sources)
 foreach(src IN LISTS _soi_tests_sources)
     get_filename_component(_name "${src}" NAME)
-    if(NOT _name STREQUAL "equipment_registry_test.cpp"
+    if(
+        NOT _name STREQUAL "equipment_registry_test.cpp"
         AND NOT _name STREQUAL "helmet_renderers_test.cpp"
-        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp")
+        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp"
+    )
         list(APPEND _soi_tests_subset_sources "${src}")
     endif()
 endforeach()
 
 add_executable(standard_of_iron_tests_subset ${_soi_tests_subset_sources})
-target_link_libraries(standard_of_iron_tests_subset
+target_link_libraries(
+    standard_of_iron_tests_subset
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -342,16 +338,13 @@ target_link_libraries(standard_of_iron_tests_subset
         arena_scenario_harness
         audio_system
 )
-target_include_directories(standard_of_iron_tests_subset
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    standard_of_iron_tests_subset
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
-set_target_properties(standard_of_iron_tests_subset PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
-    AUTOUIC ON
-    AUTORCC ON
+set_target_properties(
+    standard_of_iron_tests_subset
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON AUTOUIC ON AUTORCC ON
 )
 
 if(TARGET bake_creature_assets)

@@ -1,0 +1,40 @@
+# Tool configuration only - Standard of Iron is not a Python package.
+# Formatter/linter versions are pinned in tools/versions.env and driven by
+# scripts/format.py.
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | build.*
+  | third_party
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = [
+    ".venv",
+    "build",
+    "build-debug",
+    "build-tidy",
+    "build-release",
+    "build-ci-skip",
+    "third_party",
+    "dist",
+]
+
+[tool.ruff.lint]
+# E/W  pycodestyle, F pyflakes, I import order, B bugbear.
+# E501 is delegated to black; long literal strings must not fail the lint gate.
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Generator scripts intentionally keep large tabular literals inline.
+"scripts/generate-map-*.py" = ["E741"]

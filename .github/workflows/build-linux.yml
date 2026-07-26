@@ -1,0 +1,135 @@
+---
+name: Build (Linux)
+
+# Reusable: called by nightly.yml (packaging dry run) and by release.yml
+# (gated release build). It never publishes anything itself - publication is
+# the release pipeline's single, gated responsibility.
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        description: CMake build type
+        type: string
+        default: Release
+      upload-artifacts:
+        description: Upload the packaged AppImage as a workflow artifact
+        type: boolean
+        default: true
+      artifact-name:
+        description: Name of the uploaded artifact
+        type: string
+        default: linux-appimage
+    outputs:
+      package:
+        description: File name of the produced AppImage
+        value: ${{ jobs.build.outputs.package }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    outputs:
+      package: ${{ steps.package.outputs.name }}
+    env:
+      BUILD_TYPE: ${{ inputs.build-type }}
+      APP_NAME: standard_of_iron
+      APP_DIR: build/bin
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
+        with:
+          version: "6.8.2"
+          host: linux
+          arch: gcc_64
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build patchelf file rsync xvfb
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639  # v1
+        with:
+          key: linux-${{ inputs.build-type }}
+          max-size: 500M
+
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: build/_deps
+          key: deps-ubuntu-22.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: deps-ubuntu-22.04-
+
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DDEFAULT_LANG=en
+          cmake --build build --config ${BUILD_TYPE}
+
+      - name: Unit tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ./build/bin/standard_of_iron_tests
+
+      - name: Validate OpenGL requirements
+        run: python3 scripts/validate_opengl_requirements.py
+
+      - name: Package AppImage
+        id: package
+        run: |
+          set -euo pipefail
+          ./scripts/package-appimage.sh "${APP_NAME}" "${APP_DIR}" ui/qml
+          name="$(ls ./*.AppImage | head -1)"
+          echo "name=$(basename "$name")" >> "$GITHUB_OUTPUT"
+
+      - name: Verify packaged gameplay renderer (Mesa software OpenGL)
+        run: |
+          set -o pipefail
+          APPIMAGE=$(ls ./*.AppImage | head -1)
+          chmod +x "$APPIMAGE"
+
+          # LIBGL_ALWAYS_SOFTWARE=1 forces Mesa's llvmpipe, which supports
+          # OpenGL 4.5 Core Profile -- a superset of the 3.3 Core the game
+          # requires. This validates the full GL init path without a GPU.
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export QT_OPENGL=desktop
+          export QT_LOGGING_RULES="qt.rhi.*=false"
+
+          xvfb-run --auto-servernum -- "$APPIMAGE" --renderer-self-test \
+            2>&1 | tee renderer_self_test.log
+          grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+
+      - name: Verify package integrity
+        run: |
+          set -euo pipefail
+          APPIMAGE=$(basename "$(ls ./*.AppImage | head -1)")
+          test -s "$APPIMAGE"
+          # A truncated or asset-less AppImage is a few MB; a real one is far
+          # larger. Catch broken packaging before it reaches a release.
+          size=$(stat -c%s "$APPIMAGE")
+          echo "AppImage size: $size bytes"
+          test "$size" -gt 20000000
+          # Bare file name so the release `verify` job can check it from the
+          # flattened artifact directory.
+          sha256sum "$APPIMAGE" | tee "${APPIMAGE}.sha256"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        if: inputs.upload-artifacts
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: |
+            ./*.AppImage
+            ./*.AppImage.sha256
+          retention-days: 14
+          if-no-files-found: error

@@ -14,16 +14,15 @@ The command is dry-run by default. Pass --write to replace only the top-level
 from __future__ import annotations
 
 import argparse
-from collections import deque
 import heapq
 import json
 import math
 import re
 import sys
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator, Sequence
-
+from typing import Iterable, Sequence
 
 Point = tuple[float, float]
 
@@ -166,7 +165,7 @@ def segment_intersection_point(a: Point, b: Point, c: Point, d: Point) -> Point 
 
 
 def polyline_length(points: Sequence[Point]) -> float:
-    return sum(distance(a, b) for a, b in zip(points, points[1:]))
+    return sum(distance(a, b) for a, b in zip(points, points[1:], strict=False))
 
 
 def road_points(road: dict) -> list[Point]:
@@ -190,7 +189,7 @@ def polyline_location(point: Point, polyline: Sequence[Point]) -> float:
     best_distance = math.inf
     best_location = 0.0
     traversed = 0.0
-    for start, end in zip(polyline, polyline[1:]):
+    for start, end in zip(polyline, polyline[1:], strict=False):
         t, projected = project_point_to_segment(point, start, end)
         candidate_distance = distance(point, projected)
         if candidate_distance < best_distance:
@@ -219,8 +218,12 @@ def network_anchors(
         for second in range(first + 1, len(polylines)):
             first_points = polylines[first]
             second_points = polylines[second]
-            for first_start, first_end in zip(first_points, first_points[1:]):
-                for second_start, second_end in zip(second_points, second_points[1:]):
+            for first_start, first_end in zip(
+                first_points, first_points[1:], strict=False
+            ):
+                for second_start, second_end in zip(
+                    second_points, second_points[1:], strict=False
+                ):
                     crossing = segment_intersection_point(
                         first_start, first_end, second_start, second_end
                     )
@@ -230,7 +233,9 @@ def network_anchors(
             for endpoint in (first_points[0], first_points[-1]):
                 candidates = [
                     project_point_to_segment(endpoint, start, end)[1]
-                    for start, end in zip(second_points, second_points[1:])
+                    for start, end in zip(
+                        second_points, second_points[1:], strict=False
+                    )
                 ]
                 projected = min(candidates, key=lambda point: distance(endpoint, point))
                 if distance(endpoint, projected) <= tolerance:
@@ -238,14 +243,14 @@ def network_anchors(
             for endpoint in (second_points[0], second_points[-1]):
                 candidates = [
                     project_point_to_segment(endpoint, start, end)[1]
-                    for start, end in zip(first_points, first_points[1:])
+                    for start, end in zip(first_points, first_points[1:], strict=False)
                 ]
                 projected = min(candidates, key=lambda point: distance(endpoint, point))
                 if distance(endpoint, projected) <= tolerance:
                     add_common(first, second, projected)
 
     result: list[list[Point]] = []
-    for points, road_anchors in zip(polylines, anchors):
+    for points, road_anchors in zip(polylines, anchors, strict=False):
         ordered = sorted(
             road_anchors, key=lambda point: polyline_location(point, points)
         )
@@ -437,7 +442,7 @@ class RoutingField:
             raw_points = road.get("waypoints") or [road.get("start"), road.get("end")]
             points = [self.coords.to_grid(point) for point in raw_points if point]
             road_width = self.coords.distance_to_grid(float(road.get("width", 3.0)))
-            for road_start, road_end in zip(points, points[1:]):
+            for road_start, road_end in zip(points, points[1:], strict=False):
                 road_direction = normalized(sub(road_end, road_start))
                 for river_start, river_end, river_width in self.river_segments:
                     crossing_center = segment_intersection_point(
@@ -495,7 +500,10 @@ class RoutingField:
             ]
             points = [self.coords.to_grid(point) for point in raw_points if point]
             width = self.coords.distance_to_grid(float(river.get("width", 3.0)))
-            result.extend((start, end, width) for start, end in zip(points, points[1:]))
+            result.extend(
+                (start, end, width)
+                for start, end in zip(points, points[1:], strict=False)
+            )
         return result
 
     def _move_bridges_off_protected_terrain(
@@ -591,7 +599,7 @@ class RoutingField:
         )
         output: list[dict] = []
         for index, (authored, repaired) in enumerate(
-            zip(self.bridge_sources, self.bridges)
+            zip(self.bridge_sources, self.bridges, strict=False)
         ):
             if index not in included:
                 continue
@@ -694,7 +702,7 @@ class RoutingField:
             points = [self.coords.to_grid(point) for point in raw_points if point]
             radius = self.coords.distance_to_grid(float(river.get("width", 3.0))) * 0.5
             radius += self.clearance
-            for start, end in zip(points, points[1:]):
+            for start, end in zip(points, points[1:], strict=False):
                 self._raster_capsule(self.water, start, end, radius)
 
         lakes = list(self.definition.get("lakes") or [])
@@ -875,7 +883,10 @@ class RoutingField:
 
 
 def guide_distance(point: Point, guide: Sequence[Point]) -> float:
-    return min(point_segment_distance(point, a, b) for a, b in zip(guide, guide[1:]))
+    return min(
+        point_segment_distance(point, a, b)
+        for a, b in zip(guide, guide[1:], strict=False)
+    )
 
 
 def nearest_passable(
@@ -1068,7 +1079,9 @@ def simplify_polyline(
     mandatory = sorted(fixed | {0, len(points) - 1})
     result: list[Point] = []
     result_fixed: set[int] = set()
-    for span_index, (span_start, span_end) in enumerate(zip(mandatory, mandatory[1:])):
+    for span_index, (span_start, span_end) in enumerate(
+        zip(mandatory, mandatory[1:], strict=False)
+    ):
         cursor = span_start
         chunk = [points[cursor]]
         while cursor < span_end:
@@ -1131,7 +1144,7 @@ def resample_polyline(
     points: Sequence[Point], max_segment_length: float
 ) -> list[Point]:
     result = [points[0]]
-    for start, end in zip(points, points[1:]):
+    for start, end in zip(points, points[1:], strict=False):
         span = distance(start, end)
         steps = max(1, int(math.ceil(span / max_segment_length)))
         for index in range(1, steps + 1):
@@ -1163,11 +1176,11 @@ def generate_road(
             legal_anchors[index] = float(x), float(z)
     legal_anchors = deduplicate(legal_anchors, epsilon=0.25)
     road_width = field.coords.distance_to_grid(float(road.get("width", 3.0)))
-    for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:]):
+    for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:], strict=False):
         field.ensure_bridge_connection(leg_start, leg_end, road_width)
     guide = [legal_anchors[0], *authored_points[1:-1], legal_anchors[-1]]
     routed: list[Point] = [legal_anchors[0]]
-    for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:]):
+    for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:], strict=False):
         leg = route_astar(
             field,
             leg_start,
@@ -1186,7 +1199,9 @@ def generate_road(
         simplified_fixed,
         road_width,
     )
-    if not all(field.line_passable(a, b) for a, b in zip(rounded, rounded[1:])):
+    if not all(
+        field.line_passable(a, b) for a, b in zip(rounded, rounded[1:], strict=False)
+    ):
         rounded = simplified
     sampled = resample_polyline(rounded, max_segment_length / field.coords.tile_size)
     authored_output = [field.coords.from_grid(point) for point in sampled]
@@ -1268,7 +1283,7 @@ def dangling_road_endpoints(
                 point_segment_distance(endpoint, start, end) <= tolerance
                 for other, polyline in enumerate(polylines)
                 if other != index
-                for start, end in zip(polyline, polyline[1:])
+                for start, end in zip(polyline, polyline[1:], strict=False)
             )
             joins_bridge = any(
                 distance(endpoint, bridge_end) <= tolerance
@@ -1297,7 +1312,7 @@ def missing_bridge_approaches(
         ):
             supported = False
             for points in polylines:
-                for start, end in zip(points, points[1:]):
+                for start, end in zip(points, points[1:], strict=False):
                     _, contact = project_point_to_segment(endpoint, start, end)
                     if distance(endpoint, contact) > tolerance:
                         continue
@@ -1363,7 +1378,7 @@ def validate_roads(field: RoutingField, roads: Sequence[dict]) -> ValidationResu
     invalid_bridge_crossings = 0
 
     for points in polylines:
-        for start, end in zip(points, points[1:]):
+        for start, end in zip(points, points[1:], strict=False):
             span = distance(start, end)
             samples = max(1, int(math.ceil(span / 0.25)))
             water_bridge_samples: dict[int, int] = {}
@@ -1408,7 +1423,7 @@ def validate_roads(field: RoutingField, roads: Sequence[dict]) -> ValidationResu
         not any(
             point_segment_distance(endpoint, start, end) <= 0.35
             for points in polylines
-            for start, end in zip(points, points[1:])
+            for start, end in zip(points, points[1:], strict=False)
         )
         for bridge in field.bridges
         for endpoint in (bridge.start, bridge.end)
@@ -1436,8 +1451,8 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
         for second in range(first + 1, len(polylines)):
             if any(
                 segments_intersect(a, b, c, d)
-                for a, b in zip(polylines[first], polylines[first][1:])
-                for c, d in zip(polylines[second], polylines[second][1:])
+                for a, b in zip(polylines[first], polylines[first][1:], strict=False)
+                for c, d in zip(polylines[second], polylines[second][1:], strict=False)
             ):
                 sets.join(first, second)
 
@@ -1447,7 +1462,7 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
             for index, points in enumerate(polylines)
             if any(
                 point_segment_distance(bridge.start, start, end) <= 0.35
-                for start, end in zip(points, points[1:])
+                for start, end in zip(points, points[1:], strict=False)
             )
         ]
         end_roads = [
@@ -1455,7 +1470,7 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
             for index, points in enumerate(polylines)
             if any(
                 point_segment_distance(bridge.end, start, end) <= 0.35
-                for start, end in zip(points, points[1:])
+                for start, end in zip(points, points[1:], strict=False)
             )
         ]
         for start_road in start_roads:
@@ -1559,7 +1574,7 @@ def connect_incomplete_terminals(
         for road_index, points in enumerate(polylines):
             if road_index == excluded_road:
                 continue
-            for start, end in zip(points, points[1:]):
+            for start, end in zip(points, points[1:], strict=False):
                 _, projected = project_point_to_segment(terminal, start, end)
                 target_distance = distance(terminal, projected)
                 if target_distance <= 0.35:

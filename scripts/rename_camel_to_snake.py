@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Convert camelCase identifiers to snake_case in render/ directory."""
 import re
-import sys
 from pathlib import Path
-
 
 RENAMES = [
     ("nextRand", "next_rand"),
@@ -217,7 +215,7 @@ def rename_in_file(path: Path, renames: list, dry_run: bool = False) -> int:
             path.write_text(content, encoding="utf-8")
 
         changes = 0
-        for old, new in renames:
+        for old, _new in renames:
             pattern = r"\b" + re.escape(old) + r"\b"
             changes += len(re.findall(pattern, original))
         return changes

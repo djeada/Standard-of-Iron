@@ -151,12 +151,12 @@ rm -f "$CERT_PATH"
 # Notarization
 if [ "$SKIP_NOTARIZATION" != "true" ]; then
     echo "📤 Starting notarization process..."
-    
+
     # Create a zip of the app for notarization (Apple recommends zip for apps)
     ZIP_PATH="$RUNNER_TEMP/app-for-notarization.zip"
     echo "📦 Creating zip for notarization..."
     ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
-    
+
     # Submit for notarization using notarytool (modern approach)
     echo "📤 Submitting to Apple for notarization..."
     NOTARIZATION_OUTPUT=$(xcrun notarytool submit "$ZIP_PATH" \
@@ -165,13 +165,13 @@ if [ "$SKIP_NOTARIZATION" != "true" ]; then
         --team-id "$APPLE_TEAM_ID" \
         --wait \
         --timeout 30m 2>&1)
-    
+
     echo "$NOTARIZATION_OUTPUT"
-    
+
     # Check if notarization succeeded
     if echo "$NOTARIZATION_OUTPUT" | grep -q "status: Accepted"; then
         echo "✅ Notarization successful!"
-        
+
         # Extract submission ID for potential log retrieval
         SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
         if [ -n "$SUBMISSION_ID" ]; then
@@ -180,7 +180,7 @@ if [ "$SKIP_NOTARIZATION" != "true" ]; then
     else
         echo "❌ Notarization failed!"
         echo "   Attempting to retrieve logs..."
-        
+
         # Try to extract submission ID from output
         SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
         if [ -n "$SUBMISSION_ID" ]; then
@@ -190,24 +190,24 @@ if [ "$SKIP_NOTARIZATION" != "true" ]; then
                 --password "$APPLE_ID_PASSWORD" \
                 --team-id "$APPLE_TEAM_ID" || true
         fi
-        
+
         # Clean up
         security delete-keychain "$KEYCHAIN_PATH" || true
         rm -f "$ZIP_PATH"
         exit 1
     fi
-    
+
     # Clean up zip file
     rm -f "$ZIP_PATH"
-    
+
     # Staple the notarization ticket to the DMG
     echo "📎 Stapling notarization ticket to DMG..."
     xcrun stapler staple "$DMG_PATH"
-    
+
     # Verify stapling
     echo "✅ Verifying stapled ticket..."
     xcrun stapler validate "$DMG_PATH"
-    
+
     echo "✅ Notarization and stapling complete!"
 else
     echo "ℹ️  Skipping notarization (credentials not provided)"
