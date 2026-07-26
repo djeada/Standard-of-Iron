@@ -41,6 +41,7 @@ public:
   struct GroundUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_primary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
@@ -85,6 +86,7 @@ public:
   struct TerrainUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_primary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};

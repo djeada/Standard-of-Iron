@@ -10,6 +10,7 @@ uniform vec3 u_grass_dry;
 uniform vec3 u_soil_color;
 uniform vec3 u_rock_low;
 uniform vec3 u_rock_high;
+uniform int u_ground_type;
 uniform vec3 u_tint;
 uniform vec2 u_noise_offset;
 uniform float u_noise_angle;
@@ -63,6 +64,12 @@ mat2 rot2(float a) {
 }
 
 void main() {
+  float biome_forest = float(u_ground_type == 0);
+  float biome_dry = float(u_ground_type == 1);
+  float biome_rocky = float(u_ground_type == 2);
+  float biome_alpine = float(u_ground_type == 3);
+  float biome_fertile = float(u_ground_type == 4);
+
   vec3 n = normalize(v_normal);
   float ts = max(u_tile_size, 1e-4);
   float slope = 1.0 - clamp(n.y, 0.0, 1.0);
@@ -113,8 +120,16 @@ void main() {
                          0.70,
                          mud_patch * 0.72 + mud_patch_fine * 0.28 + basin * 0.20 +
                              lowland * 0.16 + u_moisture_level * 0.10);
-  soil_mix = max(soil_mix, mud_patch * (0.76 + 0.22 * u_moisture_level));
+  soil_mix = max(soil_mix, mud_patch * (0.82 + 0.16 * u_moisture_level));
   soil_mix = max(soil_mix, lowland * (0.25 + 0.20 * u_moisture_level));
+  float biome_soil_bias = biome_forest * 0.18 + biome_dry * 0.15 + biome_rocky * 0.10 +
+                          biome_alpine * 0.06 + biome_fertile * 0.13;
+  float exposed_mosaic =
+      smoothstep(0.44,
+                 0.72,
+                 field_patch * 0.48 + patch_noise * 0.34 + detail * 0.18 +
+                     dryness * (0.22 + biome_dry * 0.18));
+  soil_mix = max(soil_mix, exposed_mosaic * biome_soil_bias);
 
   vec3 soil_col = mix(u_soil_color * 0.96, u_soil_color * 1.05, moisture_var * 0.55);
   vec3 base_col = mix(grass_col, soil_col, soil_mix);
@@ -126,6 +141,8 @@ void main() {
   gravel_mask *= (0.12 + 0.88 * clamp(u_rock_exposure, 0.0, 1.0));
   gravel_mask *= 1.0 - lowland * 0.55;
   gravel_mask *= 1.0 - soil_mix * 0.35;
+  gravel_mask *= 1.0 + biome_rocky * 0.72 + biome_alpine * 0.55 - biome_forest * 0.18 -
+                 biome_fertile * 0.24;
   vec3 rock_col = mix(
       u_rock_low, u_rock_high, clamp(detail * 0.65 + pebble_noise * 0.35, 0.0, 1.0));
   rock_col *= mix(0.94, 1.08, gravel_noise);
@@ -152,7 +169,9 @@ void main() {
   }
 
   vec3 gray_level = vec3(dot(base_col, vec3(0.299, 0.587, 0.114)));
-  base_col = mix(gray_level, base_col, u_grass_saturation);
+  float grounded_saturation = clamp(u_grass_saturation * 0.80, 0.0, 1.08);
+  base_col = mix(gray_level, base_col, grounded_saturation);
+  base_col *= vec3(1.025, 0.965, 0.985);
 
   float puddle_mask =
       lowland * (0.15 + 0.85 * u_moisture_level) * (1.0 - gravel_mask * 0.55);
@@ -178,6 +197,15 @@ void main() {
       damp_stain * (0.12 + 0.28 * u_moisture_level) * (1.0 - gravel_mask * 0.45);
   base_col = mix(base_col, damp_soil, stain_weight);
   base_col = mix(base_col, dusty_grass, dry_scuff * 0.18 * (1.0 - soil_mix * 0.35));
+  float leaf_litter =
+      smoothstep(0.58, 0.78, broad_breakup * 0.52 + field_patch * 0.30 + detail * 0.18);
+  vec3 litter_color = mix(u_soil_color * 0.72, u_grass_dry * 0.66, moisture_var);
+  base_col = mix(base_col, litter_color, leaf_litter * biome_forest * 0.24);
+  float fertile_sward =
+      smoothstep(0.42, 0.72, moisture_var * 0.58 + (1.0 - dry_scuff) * 0.42);
+  base_col = mix(base_col,
+                 mix(u_grass_primary, u_grass_secondary, 0.65),
+                 fertile_sward * biome_fertile * 0.16);
 
   vec3 dx = dFdx(v_world_pos);
   float m_scale = max(u_detail_noise_scale * (6.0 + u_micro_bump_freq * 2.5), 0.2);

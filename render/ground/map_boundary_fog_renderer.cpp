@@ -252,6 +252,7 @@ auto build_boundary_mountain_params(float tile_size,
   const auto profiles = Game::Map::make_biome_profiles(biome);
   const auto& surface_profile = profiles.surface;
   const auto& climate_profile = profiles.climate;
+  params.ground_type = static_cast<int>(biome.ground_type);
 
   params.grass_primary = clamp01(surface_profile.grass_primary * 0.97F);
   params.grass_secondary = clamp01(surface_profile.grass_secondary * 0.93F);

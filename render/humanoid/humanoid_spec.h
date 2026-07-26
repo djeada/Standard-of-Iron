@@ -23,6 +23,10 @@ namespace Render::Creature {
 struct CreatureSpec;
 }
 
+namespace Render::Creature::Pipeline {
+struct HumanoidPoseLayerContext;
+}
+
 namespace Render::Humanoid {
 
 inline constexpr std::size_t k_humanoid_role_count = 7;
@@ -32,6 +36,10 @@ humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 
 [[nodiscard]] auto
 skeleton_humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
+
+void apply_skeleton_proportion_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    Render::GL::HumanoidPose& io_pose) noexcept;
 
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4>;
 

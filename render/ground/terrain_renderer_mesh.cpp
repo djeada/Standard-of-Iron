@@ -783,6 +783,7 @@ void TerrainRenderer::build_meshes() {
         chunk.color = clamp01(color);
 
         TerrainChunkParams params;
+        params.ground_type = static_cast<int>(m_biome_settings.ground_type);
         auto tint_color = [&](const QVector3D& base) {
           return clamp01(apply_tint(base, chunk.tint));
         };
