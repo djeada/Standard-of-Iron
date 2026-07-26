@@ -152,6 +152,25 @@ void NationRegistry::set_player_nation(int player_id, NationID nation_id) {
   m_player_nations[player_id] = nation_id;
 }
 
+auto NationRegistry::player_nation_assignments() const
+    -> std::vector<std::pair<int, NationID>> {
+  std::vector<std::pair<int, NationID>> assignments;
+  assignments.reserve(m_player_nations.size());
+  for (const auto& [player_id, nation_id] : m_player_nations) {
+    assignments.emplace_back(player_id, nation_id);
+  }
+  std::sort(assignments.begin(), assignments.end());
+  return assignments;
+}
+
+void NationRegistry::restore_player_nations(
+    const std::vector<std::pair<int, NationID>>& assignments) {
+  m_player_nations.clear();
+  for (const auto& [player_id, nation_id] : assignments) {
+    m_player_nations[player_id] = nation_id;
+  }
+}
+
 void NationRegistry::initialize_defaults() {
   if (m_initialized) {
     return;

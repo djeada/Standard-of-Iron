@@ -8,6 +8,7 @@
 #include "audio_coordinator.h"
 #include "audio_resource_loader.h"
 #include "campaign_manager.h"
+#include "game/core/serialization.h"
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
@@ -24,30 +25,17 @@ namespace App::Core {
 
 namespace {
 
-void append_mission_metadata(
-    QJsonObject& metadata,
-    const std::optional<Game::Mission::MissionContext>& mission_context) {
-  if (!mission_context.has_value()) {
-    return;
-  }
-
-  metadata["mission_mode"] = mission_context->mode;
-  metadata["mission_campaign_id"] = mission_context->campaign_id;
-  metadata["mission_id"] = mission_context->mission_id;
-  metadata["mission_difficulty"] = mission_context->difficulty;
-}
-
-void restore_mission_context(const QJsonObject& metadata,
+void restore_mission_context(const Game::Systems::Save::Record& record,
                              CampaignManager* campaign_manager) {
-  if (campaign_manager == nullptr || !metadata.contains("mission_mode")) {
+  if (campaign_manager == nullptr || record.mode.isEmpty()) {
     return;
   }
 
   Game::Mission::MissionContext mission_context;
-  mission_context.mode = metadata["mission_mode"].toString();
-  mission_context.campaign_id = metadata["mission_campaign_id"].toString();
-  mission_context.mission_id = metadata["mission_id"].toString();
-  mission_context.difficulty = metadata["mission_difficulty"].toString();
+  mission_context.mode = record.mode;
+  mission_context.campaign_id = record.campaign_id;
+  mission_context.mission_id = record.mission_id;
+  mission_context.difficulty = record.difficulty;
   campaign_manager->set_mission_context(mission_context);
 }
 
@@ -81,7 +69,7 @@ void SaveLoadCoordinator::apply_runtime_snapshot(
   context.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
 }
 
-auto SaveLoadCoordinator::save_to_slot(const SaveToSlotContext& context) const
+auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) const
     -> SaveToSlotEffects {
   QJsonObject metadata = Game::Systems::GameStateSerializer::build_metadata(
       context.world, context.camera, context.level, context.runtime_snapshot);
@@ -91,18 +79,34 @@ auto SaveLoadCoordinator::save_to_slot(const SaveToSlotContext& context) const
     metadata["undead_zones"] = undead_system->serialize_state();
   }
 
-  append_mission_metadata(metadata, context.mission_context);
+  Game::Systems::SaveRequest request;
+  request.slot_name = context.slot;
+  request.title = context.title;
+  request.map_name =
+      context.map_name.isEmpty() ? QStringLiteral("Unknown Map") : context.map_name;
+  request.map_path = context.level.map_path;
+  if (context.mission_context.has_value()) {
+    request.mode = context.mission_context->mode;
+    request.campaign_id = context.mission_context->campaign_id;
+    request.mission_id = context.mission_context->mission_id;
+    request.difficulty = context.mission_context->difficulty;
+  }
+  if (request.mode.isEmpty()) {
+    request.mode = QStringLiteral("skirmish");
+  }
+  request.kind = context.kind;
+  request.play_time_seconds = context.play_time_seconds;
+  request.metadata = metadata;
+  request.autosave_retention = context.autosave_retention;
 
-  if (!context.save_load_service.save_game_to_slot(context.world,
-                                                   context.slot,
-                                                   context.title,
-                                                   context.map_name,
-                                                   metadata,
-                                                   context.screenshot)) {
+  request.world = Engine::Core::Serialization::serialize_world(&context.world);
+
+  const quint64 job_id = context.save_load_service.begin_save(request);
+  if (job_id == 0) {
     return {.error = context.save_load_service.get_last_error()};
   }
 
-  return {.success = true, .emit_save_slots_changed = true};
+  return {.queued = true, .job_id = job_id};
 }
 
 auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) const
@@ -111,9 +115,12 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     return {.error = context.save_load_service.get_last_error()};
   }
 
-  const QJsonObject metadata = context.save_load_service.get_last_metadata();
-  restore_mission_context(metadata, context.campaign_manager);
+  const Game::Systems::Save::Record& record =
+      context.save_load_service.get_last_record();
+  const QJsonObject metadata = record.metadata;
+  restore_mission_context(record, context.campaign_manager);
 
+  Game::Systems::GameStateSerializer::restore_player_nations_from_metadata(metadata);
   Game::Systems::GameStateSerializer::restore_level_from_metadata(metadata,
                                                                   context.level);
   Game::Systems::GameStateSerializer::restore_camera_from_metadata(

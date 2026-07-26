@@ -10,6 +10,26 @@ Item {
     signal cancelled
     signal load_requested(string slot_name)
 
+    property string status_message: ""
+
+    function format_play_time(seconds) {
+        if (!seconds || seconds <= 0)
+            return "";
+        var total = Math.floor(seconds);
+        var hours = Math.floor(total / 3600);
+        var minutes = Math.floor((total % 3600) / 60);
+        return hours > 0 ? qsTr("%1h %2m").arg(hours).arg(minutes) : qsTr("%1m").arg(minutes);
+    }
+
+    function describe_mode(mode, kind) {
+        var mode_text = mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish");
+        if (kind === "autosave")
+            return qsTr("%1 - autosave").arg(mode_text);
+        if (kind === "quicksave")
+            return qsTr("%1 - quicksave").arg(mode_text);
+        return mode_text;
+    }
+
     anchors.fill: parent
     z: 25
     onVisibleChanged: {
@@ -155,21 +175,25 @@ Item {
                                             "title": "",
                                             "timestamp": 0,
                                             "map_name": "",
+                                            "mode": "",
+                                            "kind": "",
                                             "playTime": "",
                                             "thumbnail": "",
                                             "isEmpty": true
                                         });
                                     return;
                                 }
-                                var slots = game.get_save_slots();
-                                for (var i = 0; i < slots.length; i++) {
+                                var entries = game.get_save_slots();
+                                for (var i = 0; i < entries.length; i++) {
                                     append({
-                                            "slot_name": slots[i].slot_name || slots[i].name,
-                                            "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
-                                            "timestamp": slots[i].timestamp,
-                                            "map_name": slots[i].map_name || "Unknown Map",
-                                            "playTime": slots[i].playTime || "",
-                                            "thumbnail": slots[i].thumbnail || "",
+                                            "slot_name": entries[i].slot_name,
+                                            "title": entries[i].title || entries[i].slot_name || "Untitled Save",
+                                            "timestamp": entries[i].timestamp,
+                                            "map_name": entries[i].map_name || "Unknown Map",
+                                            "mode": entries[i].mode || "",
+                                            "kind": entries[i].kind || "manual",
+                                            "playTime": root.format_play_time(entries[i].play_time_seconds),
+                                            "thumbnail": entries[i].thumbnail || "",
                                             "isEmpty": false
                                         });
                                 }
@@ -179,6 +203,8 @@ Item {
                                             "title": "",
                                             "timestamp": 0,
                                             "map_name": "",
+                                            "mode": "",
+                                            "kind": "",
                                             "playTime": "",
                                             "thumbnail": "",
                                             "isEmpty": true
@@ -258,7 +284,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: model.map_name
+                                        text: model.isEmpty ? "" : qsTr("%1 - %2").arg(model.map_name).arg(root.describe_mode(model.mode, model.kind))
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeMedium
                                         Layout.fillWidth: true
@@ -305,6 +331,29 @@ Item {
                                 }
 
                                 StyledButton {
+                                    text: qsTr("Export")
+                                    button_style: "small"
+                                    visible: !model.isEmpty
+                                    onClicked: {
+                                        if (typeof game === 'undefined' || !game.export_save_slot)
+                                            return;
+                                        var path = game.export_save_slot(model.slot_name);
+                                        root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
+                                    }
+                                }
+
+                                StyledButton {
+                                    text: qsTr("Verify")
+                                    button_style: "small"
+                                    visible: !model.isEmpty
+                                    onClicked: {
+                                        if (typeof game === 'undefined' || !game.verify_save_slot)
+                                            return;
+                                        root.status_message = game.verify_save_slot(model.slot_name) ? qsTr("\"%1\" is intact").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded").arg(model.slot_name);
+                                    }
+                                }
+
+                                StyledButton {
                                     text: qsTr("Delete")
                                     button_style: "danger"
                                     implicitWidth: 80
@@ -340,8 +389,18 @@ Item {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
 
-                Item {
+                StyledButton {
+                    text: qsTr("Import...")
+                    button_style: "secondary"
+                    onClicked: importDialog.open()
+                }
+
+                Label {
+                    text: root.status_message
+                    color: Theme.textHint
+                    font.pointSize: Theme.fontSizeSmall
                     Layout.fillWidth: true
+                    elide: Label.ElideRight
                 }
 
                 Label {
@@ -410,6 +469,92 @@ Item {
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: importDialog
+
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.6, 520)
+        title: qsTr("Import Save")
+        modal: true
+        standardButtons: Dialog.Close
+        onOpened: importModel.reload()
+
+        contentItem: Rectangle {
+            color: Theme.cardBase
+            implicitHeight: 260
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Theme.spacingMedium
+                spacing: Theme.spacingSmall
+
+                Label {
+                    text: qsTr("Save files found in the exports folder:")
+                    color: Theme.textSub
+                    font.pointSize: Theme.fontSizeSmall
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    spacing: Theme.spacingTiny
+
+                    model: ListModel {
+                        id: importModel
+
+                        function reload() {
+                            clear();
+                            if (typeof game === 'undefined' || !game.list_exported_saves)
+                                return;
+                            var files = game.list_exported_saves();
+                            for (var i = 0; i < files.length; i++)
+                                append({
+                                        "path": files[i].path,
+                                        "name": files[i].name
+                                    });
+                        }
+                    }
+
+                    delegate: RowLayout {
+                        width: ListView.view ? ListView.view.width : 0
+                        spacing: Theme.spacingSmall
+
+                        Label {
+                            text: model.name
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeSmall
+                            Layout.fillWidth: true
+                            elide: Label.ElideMiddle
+                        }
+
+                        StyledButton {
+                            text: qsTr("Import")
+                            button_style: "small"
+                            onClicked: {
+                                var slot = game.import_save_file(model.path);
+                                root.status_message = slot !== "" ? qsTr("Imported as \"%1\"").arg(slot) : qsTr("Import failed");
+                                if (slot !== "")
+                                    importDialog.close();
+                            }
+                        }
+                    }
+                }
+
+                Label {
+                    text: importModel.count === 0 ? qsTr("No importable save files were found.") : ""
+                    color: Theme.textHint
+                    font.pointSize: Theme.fontSizeSmall
+                    visible: importModel.count === 0
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
                 }
             }
         }

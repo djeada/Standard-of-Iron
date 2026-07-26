@@ -369,6 +369,116 @@ Item {
                         spacing: Theme.spacingMedium
 
                         Label {
+                            text: qsTr("Autosave")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Autosaves to keep:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Slider {
+                                    id: autosave_slot_slider
+
+                                    Layout.fillWidth: true
+                                    from: 1
+                                    to: 10
+                                    stepSize: 1
+                                    snapMode: Slider.SnapAlways
+                                    value: typeof game !== 'undefined' ? game.autosave_slot_count : 3
+                                    onMoved: {
+                                        if (typeof game !== 'undefined')
+                                            game.autosave_slot_count = Math.round(value);
+                                    }
+                                }
+
+                                Label {
+                                    text: Math.round(autosave_slot_slider.value)
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 32
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Autosave every:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Slider {
+                                    id: autosave_interval_slider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 60
+                                    stepSize: 5
+                                    snapMode: Slider.SnapAlways
+                                    value: typeof game !== 'undefined' ? game.autosave_interval_minutes : 5
+                                    onMoved: {
+                                        if (typeof game !== 'undefined')
+                                            game.autosave_interval_minutes = Math.round(value);
+                                    }
+                                }
+
+                                Label {
+                                    text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Math.round(autosave_interval_slider.value))
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 64
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Older autosaves beyond this count are deleted automatically.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                opacity: 0.7
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
                             text: qsTr("Language")
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeLarge

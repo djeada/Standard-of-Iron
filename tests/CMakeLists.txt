@@ -49,6 +49,9 @@ add_executable(standard_of_iron_tests
     controllers/command_controller_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     db/save_storage_test.cpp
+    db/save_format_test.cpp
+    db/save_load_service_test.cpp
+    db/save_preview_test.cpp
     db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp
     map/terrain_service_test.cpp
