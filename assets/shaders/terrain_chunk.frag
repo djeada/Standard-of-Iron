@@ -518,6 +518,35 @@ void main() {
     terrain_color *= crack_darkening;
   }
 
+  if (u_ground_type == 3 && u_terrain_type == 0 && u_snow_coverage > 0.01) {
+    float alpine_snow_large =
+        clamp(0.5 + gradient_fbm(world_coord * 0.10 + domain_warp * 0.35 +
+                                 vec2(123.0, 456.0)) *
+                        0.78,
+              0.0,
+              1.0);
+    float alpine_snow_small =
+        clamp(0.5 + gradient_fbm(world_coord * 0.32 - domain_warp * 0.18 +
+                                 vec2(-89.0, 201.0)) *
+                        0.58,
+              0.0,
+              1.0);
+    float alpine_snow_field = alpine_snow_large * 0.74 + alpine_snow_small * 0.26;
+    float alpine_snow_accumulation = smoothstep(0.43, 0.60, alpine_snow_field);
+    float alpine_snow_edge = smoothstep(0.36, 0.48, alpine_snow_field) *
+                             (1.0 - smoothstep(0.60, 0.72, alpine_snow_field));
+    alpine_snow_accumulation = max(alpine_snow_accumulation, alpine_snow_edge * 0.35);
+
+    float alpine_snow_slope_retention = 1.0 - smoothstep(0.12, 0.42, slope);
+    float alpine_snow_mask = clamp(alpine_snow_accumulation * u_snow_coverage * 1.55 *
+                                       alpine_snow_slope_retention,
+                                   0.0,
+                                   0.92);
+    vec3 alpine_snow_color =
+        u_snow_color * (0.98 + surface_detail * 0.035 + surface_grain * 0.020);
+    terrain_color = mix(terrain_color, alpine_snow_color, alpine_snow_mask);
+  }
+
   if (u_snow_coverage > 0.01) {
     float snowline = 18.0 + (regional_field - 0.5) * 2.4 + surface_detail * 0.65;
     float snow_edge_noise =
