@@ -225,23 +225,6 @@ RowLayout {
             }
         }]
 
-    property bool ordersCompact: true
-
-    function measure_widest_label() {
-        orderLabelMetrics.font.pixelSize = Design.Typography.label;
-        var widest = 0;
-        for (var i = 0; i < commands.length; ++i) {
-            orderLabelMetrics.text = commands[i].label;
-            widest = Math.max(widest, orderLabelMetrics.advanceWidth);
-        }
-        return widest;
-    }
-
-    function refresh_order_density(buttonWidth) {
-        var needed = Design.Metrics.iconMedium + measure_widest_label() + Design.Metrics.space24 * 2;
-        ordersCompact = buttonWidth < needed;
-    }
-
     function invoke_command(entry) {
         if (entry.invoke) {
             entry.invoke();
@@ -325,13 +308,6 @@ RowLayout {
             }
         }
 
-        TextMetrics {
-            id: orderLabelMetrics
-
-            font.family: Design.Typography.family
-            font.weight: Design.Typography.medium
-        }
-
         GridLayout {
             id: orderGrid
 
@@ -340,8 +316,6 @@ RowLayout {
             columns: 6
             rowSpacing: Design.Metrics.space4
             columnSpacing: Design.Metrics.space4
-            onWidthChanged: bottomRoot.refresh_order_density((width - columnSpacing * (columns - 1)) / columns)
-            Component.onCompleted: bottomRoot.refresh_order_density((width - columnSpacing * (columns - 1)) / columns)
 
             Repeater {
                 model: bottomRoot.commands
@@ -355,7 +329,6 @@ RowLayout {
 
                     Layout.fillWidth: true
                     Layout.preferredHeight: Design.Metrics.commandButtonSize
-                    compact: bottomRoot.ordersCompact
 
                     actionId: modelData.id
                     label: modelData.label

@@ -54,12 +54,33 @@ TestCase {
         summary.destroy();
     }
 
-    function test_a_squad_stays_in_per_unit_chips() {
+    function test_a_single_type_squad_stays_in_per_unit_chips() {
         var summary = makeSummary(6, makeGroups([{
                         "typeKey": "archer",
                         "count": 6
                     }]));
         verify(summary.squad);
+        verify(!summary.groupedSquad);
+        verify(!summary.army);
+        summary.destroy();
+    }
+
+    function test_a_mixed_squad_switches_to_group_cards() {
+        var summary = makeSummary(9, makeGroups([{
+                        "typeKey": "spearman",
+                        "count": 2
+                    }, {
+                        "typeKey": "archer",
+                        "count": 3
+                    }, {
+                        "typeKey": "healer",
+                        "count": 1
+                    }, {
+                        "typeKey": "swordsman",
+                        "count": 3
+                    }]));
+        verify(summary.squad);
+        verify(summary.groupedSquad);
         verify(!summary.army);
         summary.destroy();
     }
