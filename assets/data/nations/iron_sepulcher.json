@@ -18,15 +18,15 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1020,
-        "max_health": 1020,
+        "health": 950,
+        "max_health": 950,
         "speed": 2.2,
         "vision_range": 14.5,
         "ranged_range": 1.5,
         "ranged_damage": 1,
         "ranged_cooldown": 1.8,
         "melee_range": 1.6,
-        "melee_damage": 18,
+        "melee_damage": 24,
         "melee_cooldown": 0.75,
         "can_ranged": false,
         "can_melee": true
@@ -51,12 +51,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 620,
-        "max_health": 620,
+        "health": 420,
+        "max_health": 420,
         "speed": 2.3,
         "vision_range": 17.2,
         "ranged_range": 7.8,
-        "ranged_damage": 28,
+        "ranged_damage": 26,
         "ranged_cooldown": 0.95,
         "melee_range": 1.35,
         "melee_damage": 4,
@@ -73,7 +73,9 @@
         "individuals_per_unit": 18,
         "max_units_per_row": 6
       },
-      "abilities": ["cursed_arrow_volley"]
+      "abilities": [
+        "cursed_arrow_volley"
+      ]
     },
     {
       "id": "grave_priest",
@@ -85,8 +87,8 @@
         "is_melee": false
       },
       "combat": {
-        "health": 760,
-        "max_health": 760,
+        "health": 900,
+        "max_health": 900,
         "speed": 2.0,
         "vision_range": 16.0,
         "ranged_range": 8.6,
@@ -107,7 +109,9 @@
         "individuals_per_unit": 1,
         "max_units_per_row": 1
       },
-      "abilities": ["fireball"]
+      "abilities": [
+        "fireball"
+      ]
     }
   ]
 }
