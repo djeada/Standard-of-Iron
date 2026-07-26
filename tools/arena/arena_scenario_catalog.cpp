@@ -136,6 +136,60 @@ void add_visual_stability(ArenaScenarioDefinition& scenario,
       expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
 }
 
+auto nation_group(QString name,
+                  Troop troop,
+                  Nation nation,
+                  int owner,
+                  int count,
+                  QVector3D origin,
+                  int individuals = 0,
+                  QVector3D spacing = {2.6F, 0.0F, 0.0F}) -> ArenaScenarioGroup {
+  auto result =
+      group(std::move(name), troop, owner, count, origin, individuals, spacing);
+  result.nation_id = nation;
+  return result;
+}
+
+auto undead_wave(QString trigger, std::vector<Game::Map::UndeadWaveUnitSpawn> units)
+    -> Game::Map::UndeadWave {
+  Game::Map::UndeadWave wave;
+  wave.trigger = std::move(trigger);
+  wave.units = std::move(units);
+  return wave;
+}
+
+auto undead_zone(QString id,
+                 Game::Map::WorldProp::Type anchor_type,
+                 QVector3D center,
+                 float radius,
+                 int owner_id,
+                 std::vector<Game::Map::UndeadWave> waves) -> Game::Map::UndeadZone {
+  Game::Map::UndeadZone zone;
+  zone.id = std::move(id);
+  zone.anchor_type = anchor_type;
+  zone.x = center.x();
+  zone.z = center.z();
+  zone.radius = radius;
+  zone.leash_radius = radius * 1.8F;
+  zone.owner_id = owner_id;
+  zone.team_id = owner_id;
+  zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+  zone.waves = std::move(waves);
+  return zone;
+}
+
+auto zone_expectation(Expect kind,
+                      QString zone_id,
+                      float threshold = 0.0F,
+                      float end = 0.0F) -> ArenaExpectation {
+  ArenaExpectation result;
+  result.kind = kind;
+  result.zone_id = std::move(zone_id);
+  result.threshold = threshold;
+  result.end_seconds = end;
+  return result;
+}
+
 auto definition(QString id,
                 QString label,
                 QString description,
@@ -3033,6 +3087,430 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                QStringLiteral("punic_ring_cross_inner"),
                                QStringLiteral("punic_ring_cross_outer"),
                                QStringLiteral("punic_ring_stub")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_roster_lineup_id),
+        QStringLiteral("Iron Sepulcher Roster"),
+        QStringLiteral("Presents the complete Iron Sepulcher roster - skeleton "
+                       "swordsman, skeleton archer, and grave priest - beside a Roman "
+                       "and a Carthaginian line for silhouette, scale, and material "
+                       "review."),
+        10.0F,
+        {13.5F, 40.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.groups = {nation_group(QStringLiteral("skeleton_swordsmen"),
+                             Troop::SkeletonSwordsman,
+                             Nation::IronSepulcher,
+                             2,
+                             1,
+                             {-4.5F, 0.0F, 2.0F},
+                             18),
+                nation_group(QStringLiteral("skeleton_archers"),
+                             Troop::SkeletonArcher,
+                             Nation::IronSepulcher,
+                             2,
+                             1,
+                             {0.0F, 0.0F, 2.0F},
+                             18),
+                nation_group(QStringLiteral("grave_priest"),
+                             Troop::GravePriest,
+                             Nation::IronSepulcher,
+                             2,
+                             1,
+                             {4.5F, 0.0F, 2.0F},
+                             1),
+                nation_group(QStringLiteral("roman_line"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             1,
+                             {-3.0F, 0.0F, -3.0F},
+                             15),
+                nation_group(QStringLiteral("carthage_line"),
+                             Troop::Spearman,
+                             Nation::Carthage,
+                             3,
+                             1,
+                             {3.0F, 0.0F, -3.0F},
+                             24)};
+    for (auto const& name : {QStringLiteral("skeleton_swordsmen"),
+                             QStringLiteral("skeleton_archers"),
+                             QStringLiteral("grave_priest"),
+                             QStringLiteral("roman_line"),
+                             QStringLiteral("carthage_line")}) {
+      s.expectations.push_back(expectation(Expect::GroupExists, name));
+      s.expectations.push_back(expectation(Expect::GroupIsRendered, name));
+    }
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_vs_rome_infantry_id),
+        QStringLiteral("Sepulcher vs Rome: Infantry"),
+        QStringLiteral("Equivalent-value melee test: three Roman swordsmen against a "
+                       "skeleton warband of equal recruitment value. No eligible "
+                       "soldier on either side may idle once the lines meet."),
+        16.0F,
+        {23.0F, 48.0F, 28.0F});
+    s.groups = {nation_group(QStringLiteral("roman_swords"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {0.0F, 0.0F, -9.0F}),
+                nation_group(QStringLiteral("skeleton_swords"),
+                             Troop::SkeletonSwordsman,
+                             Nation::IronSepulcher,
+                             2,
+                             3,
+                             {-1.5F, 0.0F, 9.0F}),
+                nation_group(QStringLiteral("skeleton_bows"),
+                             Troop::SkeletonArcher,
+                             Nation::IronSepulcher,
+                             2,
+                             1,
+                             {6.5F, 0.0F, 12.0F})};
+    s.steps = {at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("roman_swords"),
+                  QStringLiteral("skeleton_swords")),
+               at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("skeleton_swords"),
+                  QStringLiteral("roman_swords")),
+               at(0.5F,
+                  Command::Attack,
+                  QStringLiteral("skeleton_bows"),
+                  QStringLiteral("roman_swords"))};
+    add_visual_stability(s,
+                         {QStringLiteral("roman_swords"),
+                          QStringLiteral("skeleton_swords"),
+                          QStringLiteral("skeleton_bows")});
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("roman_swords"), {}, 0.45F));
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("skeleton_swords"), {}, 0.45F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("roman_swords")));
+    s.expectations.push_back(expectation(Expect::AttackAnimationObserved,
+                                         QStringLiteral("skeleton_swords")));
+    s.expectations.push_back(expectation(Expect::NoEligibleTroopIdleDuringCombat,
+                                         QStringLiteral("skeleton_swords"),
+                                         QStringLiteral("roman_swords"),
+                                         1.25F,
+                                         1.0F,
+                                         8.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_vs_rome_ranged_id),
+        QStringLiteral("Sepulcher vs Rome: Ranged"),
+        QStringLiteral("Missile exchange between a Roman archer line with a swordsman "
+                       "screen and cursed skeleton archers led by a grave priest."),
+        16.0F,
+        {24.0F, 50.0F, 26.0F});
+    s.groups = {nation_group(QStringLiteral("roman_bows"),
+                             Troop::Archer,
+                             Nation::RomanRepublic,
+                             1,
+                             4,
+                             {0.0F, 0.0F, -10.0F}),
+                nation_group(QStringLiteral("roman_screen"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             1,
+                             {0.0F, 0.0F, -6.0F}),
+                nation_group(QStringLiteral("skeleton_bows"),
+                             Troop::SkeletonArcher,
+                             Nation::IronSepulcher,
+                             2,
+                             3,
+                             {0.0F, 0.0F, 10.0F}),
+                nation_group(QStringLiteral("grave_priest"),
+                             Troop::GravePriest,
+                             Nation::IronSepulcher,
+                             2,
+                             1,
+                             {6.5F, 0.0F, 13.0F},
+                             1)};
+    s.steps = {at(0.5F,
+                  Command::Attack,
+                  QStringLiteral("roman_bows"),
+                  QStringLiteral("skeleton_bows")),
+               at(0.5F,
+                  Command::Attack,
+                  QStringLiteral("skeleton_bows"),
+                  QStringLiteral("roman_bows")),
+               at(0.5F,
+                  Command::Attack,
+                  QStringLiteral("grave_priest"),
+                  QStringLiteral("roman_screen")),
+               at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("roman_screen"),
+                  QStringLiteral("skeleton_bows"))};
+    add_visual_stability(s,
+                         {QStringLiteral("roman_bows"),
+                          QStringLiteral("roman_screen"),
+                          QStringLiteral("skeleton_bows"),
+                          QStringLiteral("grave_priest")});
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("skeleton_bows"), {}, 0.45F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("roman_bows")));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("skeleton_bows")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_vs_carthage_infantry_id),
+        QStringLiteral("Sepulcher vs Carthage: Infantry"),
+        QStringLiteral("Equivalent-value melee test: a mixed Carthaginian sword and "
+                       "spear line against four skeleton swordsmen."),
+        16.0F,
+        {23.0F, 48.0F, 28.0F});
+    s.groups = {nation_group(QStringLiteral("punic_swords"),
+                             Troop::Swordsman,
+                             Nation::Carthage,
+                             1,
+                             2,
+                             {-3.0F, 0.0F, -9.0F}),
+                nation_group(QStringLiteral("punic_spears"),
+                             Troop::Spearman,
+                             Nation::Carthage,
+                             1,
+                             2,
+                             {4.0F, 0.0F, -9.0F}),
+                nation_group(QStringLiteral("skeleton_swords"),
+                             Troop::SkeletonSwordsman,
+                             Nation::IronSepulcher,
+                             2,
+                             4,
+                             {0.0F, 0.0F, 9.0F})};
+    s.steps = {at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("punic_swords"),
+                  QStringLiteral("skeleton_swords")),
+               at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("punic_spears"),
+                  QStringLiteral("skeleton_swords")),
+               at(0.5F,
+                  Command::AttackMove,
+                  QStringLiteral("skeleton_swords"),
+                  QStringLiteral("punic_swords"))};
+    add_visual_stability(s,
+                         {QStringLiteral("punic_swords"),
+                          QStringLiteral("punic_spears"),
+                          QStringLiteral("skeleton_swords")});
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("punic_spears"), {}, 0.45F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_swords")));
+    s.expectations.push_back(expectation(Expect::AttackAnimationObserved,
+                                         QStringLiteral("skeleton_swords")));
+    s.expectations.push_back(expectation(Expect::NoEligibleTroopIdleDuringCombat,
+                                         QStringLiteral("skeleton_swords"),
+                                         QStringLiteral("punic_swords"),
+                                         1.25F,
+                                         1.0F,
+                                         8.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_vs_carthage_cavalry_id),
+        QStringLiteral("Sepulcher vs Carthage: Cavalry"),
+        QStringLiteral("Carthaginian cavalry charges a standing skeleton block to "
+                       "prove impact displacement, contact damage, and melee lock "
+                       "against undead formations."),
+        14.0F,
+        {23.0F, 48.0F, 20.0F});
+    s.groups = {nation_group(QStringLiteral("punic_cavalry"),
+                             Troop::MountedKnight,
+                             Nation::Carthage,
+                             1,
+                             2,
+                             {0.0F, 0.0F, -11.0F},
+                             4),
+                nation_group(QStringLiteral("skeleton_block"),
+                             Troop::SkeletonSwordsman,
+                             Nation::IronSepulcher,
+                             2,
+                             3,
+                             {0.0F, 0.0F, 9.0F})};
+    s.steps = {at(0.0F,
+                  Command::Charge,
+                  QStringLiteral("punic_cavalry"),
+                  QStringLiteral("skeleton_block")),
+               when_near(QStringLiteral("punic_cavalry"),
+                         QStringLiteral("skeleton_block"),
+                         4.5F,
+                         Command::SetCamera)};
+    s.steps.back().camera_distance = 15.0F;
+    s.steps.back().camera_angle = 48.0F;
+    s.steps.back().camera_yaw = 20.0F;
+    add_visual_stability(
+        s, {QStringLiteral("punic_cavalry"), QStringLiteral("skeleton_block")});
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("punic_cavalry"), {}, 0.45F));
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("punic_cavalry"),
+                                         QStringLiteral("skeleton_block")));
+    s.expectations.push_back(expectation(Expect::ChargeImpactPrecedesMeleeLock,
+                                         QStringLiteral("punic_cavalry")));
+    s.expectations.push_back(
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("skeleton_block")));
+    s.expectations.push_back(expectation(Expect::LaunchedCasualtyObserved,
+                                         QStringLiteral("skeleton_block")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_shrine_awakening_id),
+        QStringLiteral("Sepulcher Shrine Awakening"),
+        QStringLiteral("A cursed shrine stands alone on empty ground. Roman swordsmen "
+                       "advance into its radius, the sepulcher wakes, and the summoned "
+                       "guardians fight the intruders."),
+        26.0F,
+        {28.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.resource_patches = {{QStringLiteral("magic_shrine"),
+                           1,
+                           QVector3D(0.0F, 0.0F, 6.0F),
+                           QVector3D(0.0F, 0.0F, 0.0F),
+                           1.0F}};
+
+    s.undead_zones = {undead_zone(QStringLiteral("shrine_sentinels"),
+                                  Game::Map::WorldProp::Type::MagicShrine,
+                                  QVector3D(0.0F, 0.0F, 6.0F),
+                                  6.0F,
+                                  99,
+                                  {})};
+    s.groups = {nation_group(QStringLiteral("intruders"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("intruders"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+    add_visual_stability(s, {QStringLiteral("intruders")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("intruders")));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("intruders")));
+    s.expectations.push_back(zone_expectation(Expect::UndeadZoneDormantBefore,
+                                              QStringLiteral("shrine_sentinels"),
+                                              0.0F,
+                                              2.0F));
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("shrine_sentinels"), 4.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_ruins_awakening_waves_id),
+        QStringLiteral("Sepulcher Ruins Awakening Waves"),
+        QStringLiteral("A Carthaginian column enters sepulcher ruins, clears the "
+                       "opening guardians, and is met by the follow-up wave that the "
+                       "zone releases only after the first is destroyed."),
+        45.0F,
+        {30.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.resource_patches = {{QStringLiteral("ruins"),
+                           1,
+                           QVector3D(0.0F, 0.0F, 6.0F),
+                           QVector3D(0.0F, 0.0F, 0.0F),
+                           1.1F}};
+    s.undead_zones = {
+        undead_zone(QStringLiteral("ruins_guard"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 1}}),
+                     undead_wave(QStringLiteral("after_clear"),
+                                 {{Game::Units::SpawnType::SkeletonArcher, 1}})})};
+    s.groups = {nation_group(QStringLiteral("punic_column"),
+                             Troop::Swordsman,
+                             Nation::Carthage,
+                             1,
+                             4,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("punic_column"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+    add_visual_stability(s, {QStringLiteral("punic_column")});
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_column")));
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneDormantBefore, QStringLiteral("ruins_guard"), 0.0F, 2.0F));
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("ruins_guard"), 2.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_shrine_siege_id),
+        QStringLiteral("Sepulcher Shrine Siege"),
+        QStringLiteral("A Roman assault wakes the shrine and fights for its flag. "
+                       "The shrine is the sepulcher's barracks, but it cannot be "
+                       "taken while a single guardian still stands, so the column "
+                       "has to break the garrison before the banner comes down."),
+        90.0F,
+        {30.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.resource_patches = {{QStringLiteral("magic_shrine"),
+                           1,
+                           QVector3D(0.0F, 0.0F, 6.0F),
+                           QVector3D(0.0F, 0.0F, 0.0F),
+                           1.0F}};
+
+    s.undead_zones = {
+        undead_zone(QStringLiteral("shrine_sentinels"),
+                    Game::Map::WorldProp::Type::MagicShrine,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2}})})};
+    s.groups = {nation_group(QStringLiteral("assault"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             6,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("assault"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+    add_visual_stability(s, {QStringLiteral("assault")});
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("assault")));
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("shrine_sentinels"), 2.0F));
+    s.expectations.push_back(zone_expectation(Expect::UndeadZoneCleared,
+                                              QStringLiteral("shrine_sentinels")));
     result.push_back(std::move(s));
   }
 

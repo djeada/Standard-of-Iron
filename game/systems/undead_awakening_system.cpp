@@ -29,6 +29,11 @@ constexpr float k_between_wave_delay_seconds = 1.5F;
 constexpr float k_spawn_y_offset = 0.05F;
 constexpr float k_anchor_match_distance = 3.5F;
 
+constexpr float k_golden_angle_radians = 2.3999632F;
+constexpr float k_min_spawn_ring_radius = 2.0F;
+constexpr float k_spawn_ring_fraction = 0.8F;
+constexpr int k_spawn_placement_attempts = 12;
+
 auto authored_to_world(float coord, int grid_size, float tile_size) -> float {
   float const safe_tile = std::max(tile_size, k_grid_to_world_epsilon);
   return (coord - (static_cast<float>(grid_size) * 0.5F - 0.5F)) * safe_tile;
@@ -95,6 +100,9 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
   for (const auto& zone_definition : map_definition.undead_zones) {
     RuntimeZone zone;
     zone.definition = zone_definition;
+    if (zone.definition.waves.empty()) {
+      zone.definition.waves = Game::Map::default_undead_waves();
+    }
     zone.center_world = authored_to_world_position(
         map_definition, zone_definition.x, zone_definition.z);
     zone.center_world.setY(terrain_service.resolve_surface_world_y(
@@ -119,6 +127,8 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
       best_distance_sq = distance_sq;
     }
 
+    zone.anchor_pending = Game::Map::zone_has_structural_anchor(zone.definition);
+
     ensure_zone_owner_registered(zone);
     m_zone_index.insert(zone.definition.id, static_cast<int>(m_zones.size()));
     m_zones.push_back(std::move(zone));
@@ -136,6 +146,14 @@ void UndeadAwakeningSystem::restore_state(const QJsonArray& state) {
     }
 
     zone->awakened = obj.value(QStringLiteral("awakened")).toBool(zone->awakened);
+    zone->announced_awakening = zone->awakened;
+    zone->garrison_broken =
+        obj.value(QStringLiteral("garrison_broken")).toBool(zone->garrison_broken);
+    zone->announced_defeat = zone->garrison_broken;
+    zone->anchor_entity_id = static_cast<Engine::Core::EntityID>(
+        obj.value(QStringLiteral("anchor_entity_id")).toInt(0));
+
+    zone->anchor_pending = false;
     zone->next_wave_index =
         obj.value(QStringLiteral("next_wave_index")).toInt(zone->next_wave_index);
     zone->completed_waves =
@@ -143,6 +161,9 @@ void UndeadAwakeningSystem::restore_state(const QJsonArray& state) {
     zone->respawn_delay_remaining =
         static_cast<float>(obj.value(QStringLiteral("respawn_delay_remaining"))
                                .toDouble(zone->respawn_delay_remaining));
+    zone->current_wave_elapsed =
+        static_cast<float>(obj.value(QStringLiteral("current_wave_elapsed"))
+                               .toDouble(zone->current_wave_elapsed));
     zone->active_spawn_ids.clear();
     const auto ids = obj.value(QStringLiteral("active_spawn_ids")).toArray();
     zone->active_spawn_ids.reserve(ids.size());
@@ -161,9 +182,12 @@ auto UndeadAwakeningSystem::serialize_state() const -> QJsonArray {
     QJsonObject obj;
     obj[QStringLiteral("id")] = zone.definition.id;
     obj[QStringLiteral("awakened")] = zone.awakened;
+    obj[QStringLiteral("garrison_broken")] = zone.garrison_broken;
+    obj[QStringLiteral("anchor_entity_id")] = static_cast<int>(zone.anchor_entity_id);
     obj[QStringLiteral("next_wave_index")] = zone.next_wave_index;
     obj[QStringLiteral("completed_waves")] = zone.completed_waves;
     obj[QStringLiteral("respawn_delay_remaining")] = zone.respawn_delay_remaining;
+    obj[QStringLiteral("current_wave_elapsed")] = zone.current_wave_elapsed;
     QJsonArray active_ids;
     for (Engine::Core::EntityID const id : zone.active_spawn_ids) {
       active_ids.append(static_cast<int>(id));
@@ -267,8 +291,20 @@ auto UndeadAwakeningSystem::can_spawn_wave(const RuntimeZone& zone) const -> boo
   if (zone.next_wave_index >= static_cast<int>(zone.definition.waves.size())) {
     return false;
   }
-  if (!zone.awakened || !zone.active_spawn_ids.empty() ||
-      zone.respawn_delay_remaining > 0.0F) {
+  if (!zone.awakened || zone.garrison_broken) {
+    return false;
+  }
+
+  bool const wave_cleared = zone.active_spawn_ids.empty();
+
+  bool const wave_timed_out =
+      zone.definition.wave_timeout_seconds > 0.0F &&
+      zone.current_wave_elapsed >= zone.definition.wave_timeout_seconds;
+
+  if (!wave_cleared && !wave_timed_out) {
+    return false;
+  }
+  if (wave_cleared && zone.respawn_delay_remaining > 0.0F) {
     return false;
   }
 
@@ -281,17 +317,26 @@ auto UndeadAwakeningSystem::can_spawn_wave(const RuntimeZone& zone) const -> boo
 }
 
 auto UndeadAwakeningSystem::spawn_position_for_index(
-    const RuntimeZone& zone, int spawn_index) const -> QVector3D {
+    const RuntimeZone& zone, int spawn_index, int spawn_count) const -> QVector3D {
   auto const& terrain_service = Game::Map::TerrainService::instance();
   QVector3D const origin =
       (zone.anchor_world_prop_id != 0) ? zone.anchor_world : zone.center_world;
-  float const zone_radius = std::max(1.5F, zone.definition.radius * 0.55F);
 
-  for (int attempt = 0; attempt < 16; ++attempt) {
-    float const angle = static_cast<float>(spawn_index * 3 + attempt) * 2.3999632F;
-    float const ring = 1.0F + static_cast<float>((spawn_index + attempt) % 4);
-    float const sample_radius = std::min(
-        zone_radius, 1.25F + ring * std::max(0.8F, zone.definition.radius * 0.15F));
+  float const outer_radius =
+      std::max(k_min_spawn_ring_radius, zone.definition.radius * k_spawn_ring_fraction);
+  int const total = std::max(1, spawn_count);
+
+  float const normalized =
+      std::sqrt((static_cast<float>(spawn_index) + 0.5F) / static_cast<float>(total));
+  float const base_radius =
+      std::max(k_min_spawn_ring_radius * 0.5F, normalized * outer_radius);
+  float const base_angle = static_cast<float>(spawn_index) * k_golden_angle_radians;
+
+  for (int attempt = 0; attempt < k_spawn_placement_attempts; ++attempt) {
+    float const angle =
+        base_angle + static_cast<float>(attempt) * (k_golden_angle_radians * 0.25F);
+    float const sample_radius =
+        std::min(outer_radius, base_radius + static_cast<float>(attempt) * 0.6F);
     float const world_x = origin.x() + std::cos(angle) * sample_radius;
     float const world_z = origin.z() + std::sin(angle) * sample_radius;
     if (terrain_service.is_initialized() &&
@@ -306,12 +351,114 @@ auto UndeadAwakeningSystem::spawn_position_for_index(
       origin.x(), origin.z(), k_spawn_y_offset, origin.y());
 }
 
+void UndeadAwakeningSystem::ensure_anchor_structure(Engine::Core::World& world,
+                                                    RuntimeZone& zone) {
+  if (!zone.anchor_pending || m_factory_registry == nullptr) {
+    return;
+  }
+  zone.anchor_pending = false;
+
+  ensure_zone_owner_registered(zone);
+
+  Game::Units::SpawnParams params;
+  params.position = zone.anchor_world;
+  params.player_id = zone.definition.owner_id;
+  params.spawn_type = Game::Units::SpawnType::Barracks;
+  params.ai_controlled = true;
+  params.nation_id = Game::Systems::NationID::IronSepulcher;
+  params.is_initial_spawn = true;
+
+  params.enables_production = false;
+  params.max_population = 0;
+
+  auto anchor =
+      m_factory_registry->create(Game::Units::SpawnType::Barracks, world, params);
+  if (!anchor) {
+    return;
+  }
+  zone.anchor_entity_id = anchor->id();
+}
+
+void UndeadAwakeningSystem::refresh_anchor_structure(Engine::Core::World& world,
+                                                     RuntimeZone& zone) {
+  if (zone.anchor_entity_id == 0 || zone.garrison_broken) {
+    return;
+  }
+
+  auto* entity = world.get_entity(zone.anchor_entity_id);
+  auto* unit = entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                                 : nullptr;
+
+  if (unit == nullptr || unit->health <= 0) {
+    break_garrison(world, zone, false);
+    return;
+  }
+  if (unit->owner_id != zone.definition.owner_id) {
+    break_garrison(world, zone, true);
+  }
+}
+
+void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
+                                           RuntimeZone& zone,
+                                           bool captured) {
+  zone.garrison_broken = true;
+  zone.respawn_delay_remaining = 0.0F;
+  zone.next_wave_index = static_cast<int>(zone.definition.waves.size());
+  zone.completed_waves = zone.next_wave_index;
+
+  for (Engine::Core::EntityID const spawn_id : zone.active_spawn_ids) {
+    auto* entity = world.get_entity(spawn_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit == nullptr || unit->health <= 0) {
+      continue;
+    }
+    unit->health = 0;
+    Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(*entity);
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::UnitDiedEvent(spawn_id, unit->owner_id, unit->spawn_type));
+  }
+  zone.active_spawn_ids.clear();
+
+  if (!zone.announced_defeat) {
+    zone.announced_defeat = true;
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::MissionAnnouncementEvent(
+            captured
+                ? QStringLiteral("The shrine answers to you now. Its dead fall still.")
+                : QStringLiteral(
+                      "The shrine is broken. Every risen guardian crumbles.")));
+  }
+}
+
+void UndeadAwakeningSystem::refresh_capture_lock(Engine::Core::World& world,
+                                                 const RuntimeZone& zone) const {
+  if (zone.anchor_entity_id == 0) {
+    return;
+  }
+  auto* anchor = world.get_entity(zone.anchor_entity_id);
+  if (anchor == nullptr) {
+    return;
+  }
+  auto* capture =
+      Engine::Core::get_or_add_component<Engine::Core::CaptureComponent>(*anchor);
+  if (capture == nullptr) {
+    return;
+  }
+
+  capture->capture_blocked = !zone.garrison_broken && !zone.active_spawn_ids.empty();
+}
+
 void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world, RuntimeZone& zone) {
   zone.awakened = true;
   zone.respawn_delay_remaining = 0.0F;
   ensure_zone_owner_registered(zone);
+  zone.announced_awakening = true;
+  zone.current_wave_elapsed = 0.0F;
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioTriggerEvent("combat_hit_generic", 0.8F, false, 4));
+
   try_spawn_next_wave(world, zone);
 }
 
@@ -322,11 +469,16 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
   }
 
   auto const& wave = zone.definition.waves[zone.next_wave_index];
+  int wave_size = 0;
+  for (const auto& unit_spawn : wave.units) {
+    wave_size += std::max(0, unit_spawn.count);
+  }
+
   int spawn_index = 0;
   for (const auto& unit_spawn : wave.units) {
     for (int i = 0; i < unit_spawn.count; ++i) {
       Game::Units::SpawnParams params;
-      params.position = spawn_position_for_index(zone, spawn_index++);
+      params.position = spawn_position_for_index(zone, spawn_index++, wave_size);
       params.player_id = zone.definition.owner_id;
       params.spawn_type = unit_spawn.type;
       params.ai_controlled = true;
@@ -341,6 +493,24 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
   }
 
   zone.next_wave_index += 1;
+  zone.current_wave_elapsed = 0.0F;
+  zone.respawn_delay_remaining = 0.0F;
+  announce_wave(zone);
+}
+
+void UndeadAwakeningSystem::announce_wave(const RuntimeZone& zone) const {
+  int const wave_number = zone.next_wave_index;
+  int const wave_total = static_cast<int>(zone.definition.waves.size());
+  QString const progress =
+      QStringLiteral("Wave %1/%2").arg(wave_number).arg(wave_total);
+
+  QString const text =
+      wave_number <= 1
+          ? QStringLiteral("The Iron Sepulcher wakes. %1 rises to meet you.")
+                .arg(progress)
+          : QStringLiteral("%1 claws out of the ground.").arg(progress);
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionAnnouncementEvent(text));
 }
 
 void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time) {
@@ -349,9 +519,11 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
   }
 
   for (auto& zone : m_zones) {
+    ensure_anchor_structure(*world, zone);
+    refresh_anchor_structure(*world, zone);
     refresh_active_spawns(*world, zone);
 
-    if (!zone.awakened && should_awaken_zone(*world, zone)) {
+    if (!zone.garrison_broken && !zone.awakened && should_awaken_zone(*world, zone)) {
       awaken_zone(*world, zone);
     }
 
@@ -360,8 +532,19 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
           std::max(0.0F, zone.respawn_delay_remaining - delta_time);
     }
 
-    if (zone.awakened) {
+    if (zone.awakened && !zone.garrison_broken) {
+      zone.current_wave_elapsed += delta_time;
       try_spawn_next_wave(*world, zone);
+    }
+
+    refresh_capture_lock(*world, zone);
+
+    if (!zone.announced_defeat && zone.awakened && zone.active_spawn_ids.empty() &&
+        zone.next_wave_index >= static_cast<int>(zone.definition.waves.size())) {
+      zone.announced_defeat = true;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::MissionAnnouncementEvent(QStringLiteral(
+              "The risen guardians are put down. The ground is quiet.")));
     }
   }
 
@@ -391,7 +574,14 @@ auto UndeadAwakeningSystem::has_zone(const QString& zone_id) const -> bool {
 
 auto UndeadAwakeningSystem::is_zone_cleared(const QString& zone_id) const -> bool {
   auto const* zone = find_zone(zone_id);
-  return zone != nullptr && zone->awakened &&
+  if (zone == nullptr) {
+    return false;
+  }
+
+  if (zone->garrison_broken) {
+    return true;
+  }
+  return zone->awakened &&
          zone->next_wave_index >= static_cast<int>(zone->definition.waves.size()) &&
          zone->active_spawn_ids.empty();
 }
@@ -401,6 +591,12 @@ auto UndeadAwakeningSystem::is_shrine_purified(const QString& zone_id) const -> 
   return zone != nullptr &&
          zone->definition.anchor_type == Game::Map::WorldProp::Type::MagicShrine &&
          is_zone_cleared(zone_id);
+}
+
+auto UndeadAwakeningSystem::anchor_entity(const QString& zone_id) const
+    -> Engine::Core::EntityID {
+  auto const* zone = find_zone(zone_id);
+  return zone != nullptr ? zone->anchor_entity_id : 0U;
 }
 
 auto UndeadAwakeningSystem::completed_wave_count(const QString& zone_id) const -> int {

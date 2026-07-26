@@ -56,12 +56,43 @@ auto normalize_structure_types(std::vector<QString> structure_types,
   return normalized;
 }
 
+void append_undead_objectives(const Game::Map::VictoryConfig& config,
+                              VictoryRuleSet& rules) {
+  for (const auto& objective : config.undead_objectives) {
+    if (objective.zone_id.isEmpty()) {
+      continue;
+    }
+    if (objective.type == "clear_undead_zone") {
+      rules.victory_rules.emplace_back(ClearUndeadZoneVictoryRule{objective.zone_id});
+      continue;
+    }
+    if (objective.type == "purify_shrine") {
+      rules.victory_rules.emplace_back(PurifyShrineVictoryRule{objective.zone_id});
+      continue;
+    }
+    if (objective.type == "survive_undead_wave") {
+      rules.victory_rules.emplace_back(SurviveUndeadWaveVictoryRule{
+          objective.zone_id, std::max(1, objective.wave_count)});
+      continue;
+    }
+    qWarning() << "Unknown undead victory objective" << objective.type << "- ignoring";
+  }
+}
+
 auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
     -> VictoryRuleSet {
   VictoryRuleSet rules;
 
   QString const victory_type = config.victory_type.trimmed().toLower();
-  if (victory_type == "elimination") {
+  if (victory_type == "undead_zones") {
+    append_undead_objectives(config, rules);
+    if (rules.victory_rules.empty()) {
+      qWarning() << "Victory type undead_zones declares no undead_objectives - "
+                    "defaulting to elimination";
+      rules.victory_rules.emplace_back(
+          EliminationVictoryRule{{QStringLiteral("barracks")}});
+    }
+  } else if (victory_type == "elimination") {
     rules.victory_rules.emplace_back(
         EliminationVictoryRule{normalize_structure_types(config.key_structures)});
   } else if (victory_type == "control_structures") {
@@ -80,6 +111,10 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
                << "- defaulting to elimination";
     rules.victory_rules.emplace_back(
         EliminationVictoryRule{{QStringLiteral("barracks")}});
+  }
+
+  if (victory_type != "undead_zones") {
+    append_undead_objectives(config, rules);
   }
 
   std::vector<QString> const default_defeat_structures =
@@ -150,6 +185,7 @@ void VictoryService::reset() {
   m_elapsed_time = 0.0F;
   m_startup_delay = 0.0F;
   m_has_time_based_victory = false;
+  m_has_undead_zone_rules = false;
   m_has_world_based_rules = false;
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
@@ -209,6 +245,13 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
     }
   }
 
+  if (m_has_undead_zone_rules) {
+    evaluate_undead_zone_victory();
+    if (!m_victory_state.isEmpty()) {
+      return;
+    }
+  }
+
   if (!m_has_world_based_rules || !m_world_state_dirty) {
     return;
   }
@@ -251,6 +294,7 @@ void VictoryService::refresh_rule_metadata() {
   m_tracked_enemy_structure_types.clear();
   m_tracked_local_structure_types.clear();
   m_has_time_based_victory = false;
+  m_has_undead_zone_rules = false;
   m_has_world_based_rules = false;
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
@@ -279,11 +323,11 @@ void VictoryService::refresh_rule_metadata() {
               }
             },
             [this](const ClearUndeadZoneVictoryRule&) {
-              m_has_world_based_rules = true;
+              m_has_undead_zone_rules = true;
             },
-            [this](const PurifyShrineVictoryRule&) { m_has_world_based_rules = true; },
+            [this](const PurifyShrineVictoryRule&) { m_has_undead_zone_rules = true; },
             [this](const SurviveUndeadWaveVictoryRule&) {
-              m_has_world_based_rules = true;
+              m_has_undead_zone_rules = true;
             },
             [this](const SurviveTimeVictoryRule&) {
               m_has_time_based_victory = true;
@@ -338,6 +382,35 @@ void VictoryService::evaluate_time_based_victory() {
       continue;
     }
     if (m_elapsed_time >= survive_rule->duration) {
+      finalize_game(QStringLiteral("victory"));
+      return;
+    }
+  }
+}
+
+void VictoryService::evaluate_undead_zone_victory() {
+  if (m_undead_zone_query == nullptr) {
+    return;
+  }
+
+  for (const auto& rule : m_rule_set.victory_rules) {
+    const bool satisfied = std::visit(
+        Overloaded{[this](const ClearUndeadZoneVictoryRule& zone_rule) {
+                     return m_undead_zone_query->is_zone_cleared(zone_rule.zone_id);
+                   },
+                   [this](const PurifyShrineVictoryRule& zone_rule) {
+                     return m_undead_zone_query->is_shrine_purified(zone_rule.zone_id);
+                   },
+                   [this](const SurviveUndeadWaveVictoryRule& zone_rule) {
+                     return m_undead_zone_query->completed_wave_count(
+                                zone_rule.zone_id) >=
+                            std::max(1, zone_rule.required_wave_count);
+                   },
+                   [](const auto&) {
+                     return false;
+                   }},
+        rule);
+    if (satisfied) {
       finalize_game(QStringLiteral("victory"));
       return;
     }

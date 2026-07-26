@@ -745,8 +745,9 @@ constexpr auto make_skeleton_foot(bool left) noexcept -> Creature::PrimitiveInst
 constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_cranium();
   p.debug_name = "skeleton_skull";
+  p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS * 0.10F, 0.0F);
   p.params.half_extents = QVector3D(
-      HP::HEAD_RADIUS * 0.74F, HP::HEAD_RADIUS * 0.90F, HP::HEAD_RADIUS * 0.80F);
+      HP::HEAD_RADIUS * 0.63F, HP::HEAD_RADIUS * 0.80F, HP::HEAD_RADIUS * 0.72F);
   p.color_role = Skin;
   return p;
 }
@@ -754,8 +755,10 @@ constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
 constexpr auto make_skeleton_jaw() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_jaw();
   p.debug_name = "skeleton_jaw";
+  p.params.head_offset =
+      QVector3D(0.0F, -HP::HEAD_RADIUS * 0.46F, HP::HEAD_RADIUS * 0.20F);
   p.params.half_extents = QVector3D(
-      HP::HEAD_RADIUS * 0.40F, HP::HEAD_RADIUS * 0.18F, HP::HEAD_RADIUS * 0.26F);
+      HP::HEAD_RADIUS * 0.36F, HP::HEAD_RADIUS * 0.15F, HP::HEAD_RADIUS * 0.28F);
   p.color_role = Skin;
   return p;
 }

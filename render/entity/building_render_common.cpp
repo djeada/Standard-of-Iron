@@ -176,6 +176,8 @@ auto building_renderer_key(Game::Systems::NationID nation_id,
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
     return building_renderer_key("carthage", building_type);
+  case Game::Systems::NationID::IronSepulcher:
+    return building_renderer_key("iron_sepulcher", building_type);
   case Game::Systems::NationID::RomanRepublic:
   default:
     return building_renderer_key("roman", building_type);
@@ -478,11 +480,14 @@ void draw_building_selection_overlay(ISubmitter& out,
 
 auto select_nation_variant_renderer_key(std::string_view roman_key,
                                         std::string_view carthage_key,
-                                        Game::Systems::NationID nation_id)
+                                        Game::Systems::NationID nation_id,
+                                        std::string_view sepulcher_key)
     -> std::string_view {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
     return carthage_key;
+  case Game::Systems::NationID::IronSepulcher:
+    return sepulcher_key.empty() ? roman_key : sepulcher_key;
   case Game::Systems::NationID::RomanRepublic:
   default:
     return roman_key;
@@ -492,20 +497,22 @@ auto select_nation_variant_renderer_key(std::string_view roman_key,
 void register_nation_variant_renderer(EntityRendererRegistry& registry,
                                       const std::string& public_key,
                                       std::string roman_key,
-                                      std::string carthage_key) {
+                                      std::string carthage_key,
+                                      std::string sepulcher_key) {
   registry.register_renderer(
       public_key,
       [&registry,
        roman_key = std::move(roman_key),
-       carthage_key = std::move(carthage_key)](const DrawContext& ctx,
-                                               ISubmitter& out) {
+       carthage_key = std::move(carthage_key),
+       sepulcher_key = std::move(sepulcher_key)](const DrawContext& ctx,
+                                                 ISubmitter& out) {
         auto* unit = building_unit(ctx);
         if (unit == nullptr) {
           return;
         }
 
         std::string const renderer_key(select_nation_variant_renderer_key(
-            roman_key, carthage_key, unit->nation_id));
+            roman_key, carthage_key, unit->nation_id, sepulcher_key));
         auto renderer = registry.get(renderer_key);
         if (renderer) {
           renderer(ctx, out);

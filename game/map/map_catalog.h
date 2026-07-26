@@ -13,6 +13,7 @@ public:
   explicit MapCatalog(QObject* parent = nullptr);
 
   static auto available_maps() -> QVariantList;
+  static auto load_single_map(const QString& file_path) -> QVariantMap;
 
   Q_INVOKABLE void load_maps_async();
 
@@ -26,7 +27,6 @@ signals:
 
 private:
   void load_next_map();
-  static auto load_single_map(const QString& file_path) -> QVariantMap;
   void ensure_campaign_map_paths_loaded();
 
   QStringList m_pending_files;

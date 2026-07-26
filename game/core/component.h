@@ -979,6 +979,8 @@ public:
   float capture_progress{0.0F};
   float required_time;
   bool is_being_captured{false};
+
+  bool capture_blocked{false};
 };
 
 class BuilderProductionComponent : public Component {

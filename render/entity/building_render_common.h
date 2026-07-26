@@ -74,12 +74,14 @@ void draw_building_selection_overlay(ISubmitter& out,
 
 auto select_nation_variant_renderer_key(std::string_view roman_key,
                                         std::string_view carthage_key,
-                                        Game::Systems::NationID nation_id)
+                                        Game::Systems::NationID nation_id,
+                                        std::string_view sepulcher_key = {})
     -> std::string_view;
 void register_nation_variant_renderer(EntityRendererRegistry& registry,
                                       const std::string& public_key,
                                       std::string roman_key,
-                                      std::string carthage_key);
+                                      std::string carthage_key,
+                                      std::string sepulcher_key = {});
 void register_building_renderer(EntityRendererRegistry& registry,
                                 std::string_view nation_slug,
                                 std::string_view building_type,

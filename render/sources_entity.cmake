@@ -47,6 +47,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/barracks_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/sepulcher/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/defense_tower_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/defense_tower_renderer.cpp

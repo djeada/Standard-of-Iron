@@ -175,6 +175,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     }
 
     bool const can_capture =
+        !capture->capture_blocked &&
         max_enemy_troops >= (defender_troops * troop_advantage_multiplier);
 
     if (can_capture && capturing_player_id != -1) {
