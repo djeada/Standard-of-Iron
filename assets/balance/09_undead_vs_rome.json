@@ -1,0 +1,29 @@
+{
+  "id": "undead_vs_rome",
+  "label": "Iron Sepulcher garrison vs Roman line",
+  "description": "Undead defenders are free but should not outfight an equal-headcount Roman line.",
+  "duration_seconds": 180,
+  "seeds": 6,
+  "separation": 28.0,
+  "side_a": {
+    "label": "Rome",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      { "troop": "swordsman", "count": 3 },
+      { "troop": "archer", "count": 2 }
+    ]
+  },
+  "side_b": {
+    "label": "Iron Sepulcher",
+    "nation": "iron_sepulcher",
+    "stance": "attack",
+    "groups": [
+      { "troop": "skeleton_swordsman", "count": 3 },
+      { "troop": "skeleton_archer", "count": 2 }
+    ]
+  },
+  "expect": {
+    "max_timeout_rate": 0.35
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "infantry_vs_siege",
+  "label": "Infantry closing on unescorted siege",
+  "description": "Siege engines are glass cannons. Infantry reaching them must win quickly; a siege engine tanking melee is a bug.",
+  "duration_seconds": 90,
+  "seeds": 6,
+  "separation": 26.0,
+  "side_a": {
+    "label": "Swordsmen",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [{ "troop": "swordsman", "count": 2 }]
+  },
+  "side_b": {
+    "label": "Siege line",
+    "nation": "roman_republic",
+    "stance": "stand",
+    "groups": [
+      { "troop": "catapult", "count": 1 },
+      { "troop": "ballista", "count": 1 }
+    ]
+  },
+  "expect": {
+    "a_win_rate_min": 0.85,
+    "max_timeout_rate": 0.0
+  }
+}

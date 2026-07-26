@@ -1,10 +1,40 @@
 #include <gtest/gtest.h>
 
+#include <array>
+#include <string>
+#include <unordered_map>
+
+#include "game/systems/resource_types.h"
 #include "game/units/troop_catalog.h"
 #include "game/units/troop_catalog_loader.h"
 #include "game/units/troop_config.h"
 
 namespace {
+
+// Every troop the catalog is expected to describe.
+constexpr std::array<Game::Units::TroopType, 21> k_all_troop_types{
+    Game::Units::TroopType::Archer,
+    Game::Units::TroopType::Swordsman,
+    Game::Units::TroopType::Spearman,
+    Game::Units::TroopType::MountedKnight,
+    Game::Units::TroopType::HorseArcher,
+    Game::Units::TroopType::HorseSpearman,
+    Game::Units::TroopType::Healer,
+    Game::Units::TroopType::SkeletonSwordsman,
+    Game::Units::TroopType::SkeletonArcher,
+    Game::Units::TroopType::GravePriest,
+    Game::Units::TroopType::Catapult,
+    Game::Units::TroopType::Ballista,
+    Game::Units::TroopType::Elephant,
+    Game::Units::TroopType::RomanLegionOrganizer,
+    Game::Units::TroopType::RomanVeteranConsul,
+    Game::Units::TroopType::RomanFieldCommander,
+    Game::Units::TroopType::CarthageMercenaryBroker,
+    Game::Units::TroopType::CarthageCavalryPatron,
+    Game::Units::TroopType::CarthageElephantMaster,
+    Game::Units::TroopType::Builder,
+    Game::Units::TroopType::Civilian,
+};
 
 TEST(TroopCatalogLoader, ElephantKeepsGroundOffsetWithoutRingYOffset) {
   ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
@@ -130,6 +160,74 @@ TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {
   EXPECT_EQ(hasdrubal->visuals.renderer_id,
             "troops/carthage/commanders/hasdrubal_barca");
   EXPECT_EQ(hannibal->visuals.renderer_id, "troops/carthage/commanders/hannibal_barca");
+}
+
+// The compiled defaults only take effect when assets/data/troops/base.json is
+// missing, which is exactly when nobody is watching. Assert they still describe
+// the same roster so a broken install degrades to the balanced numbers rather
+// than to placeholders.
+TEST(TroopCatalogLoader, CompiledDefaultsMatchTheShippedTroopData) {
+  auto& catalog = Game::Units::TroopCatalog::instance();
+
+  catalog.reset_to_defaults();
+  std::unordered_map<Game::Units::TroopType, Game::Units::TroopClass> compiled;
+  for (auto const type : k_all_troop_types) {
+    auto const* troop_class = catalog.get_class(type);
+    ASSERT_NE(troop_class, nullptr)
+        << "compiled defaults are missing " << Game::Units::troop_typeToString(type);
+    compiled.emplace(type, *troop_class);
+  }
+
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  for (auto const type : k_all_troop_types) {
+    auto const* loaded = catalog.get_class(type);
+    ASSERT_NE(loaded, nullptr);
+    auto const& fallback = compiled.at(type);
+    const std::string name = Game::Units::troop_typeToString(type);
+
+    EXPECT_EQ(fallback.display_name, loaded->display_name) << name;
+    EXPECT_EQ(fallback.production.cost, loaded->production.cost) << name;
+    EXPECT_EQ(fallback.production.is_melee, loaded->production.is_melee) << name;
+    EXPECT_FLOAT_EQ(fallback.production.build_time, loaded->production.build_time)
+        << name;
+    EXPECT_EQ(fallback.production.priority, loaded->production.priority) << name;
+    for (auto const resource : Game::Systems::k_all_resource_types) {
+      EXPECT_EQ(fallback.production.resource_costs.get(resource),
+                loaded->production.resource_costs.get(resource))
+          << name << " " << Game::Systems::resource_type_key(resource);
+    }
+
+    EXPECT_EQ(fallback.combat.health, loaded->combat.health) << name;
+    EXPECT_EQ(fallback.combat.max_health, loaded->combat.max_health) << name;
+    EXPECT_FLOAT_EQ(fallback.combat.speed, loaded->combat.speed) << name;
+    EXPECT_FLOAT_EQ(fallback.combat.vision_range, loaded->combat.vision_range) << name;
+    EXPECT_FLOAT_EQ(fallback.combat.ranged_range, loaded->combat.ranged_range) << name;
+    EXPECT_EQ(fallback.combat.ranged_damage, loaded->combat.ranged_damage) << name;
+    EXPECT_FLOAT_EQ(fallback.combat.ranged_cooldown, loaded->combat.ranged_cooldown)
+        << name;
+    EXPECT_FLOAT_EQ(fallback.combat.melee_range, loaded->combat.melee_range) << name;
+    EXPECT_EQ(fallback.combat.melee_damage, loaded->combat.melee_damage) << name;
+    EXPECT_FLOAT_EQ(fallback.combat.melee_cooldown, loaded->combat.melee_cooldown)
+        << name;
+    EXPECT_EQ(fallback.combat.can_ranged, loaded->combat.can_ranged) << name;
+    EXPECT_EQ(fallback.combat.can_melee, loaded->combat.can_melee) << name;
+
+    EXPECT_FLOAT_EQ(fallback.visuals.render_scale, loaded->visuals.render_scale) << name;
+    EXPECT_FLOAT_EQ(fallback.visuals.selection_ring_size,
+                    loaded->visuals.selection_ring_size)
+        << name;
+    EXPECT_FLOAT_EQ(fallback.visuals.selection_ring_ground_offset,
+                    loaded->visuals.selection_ring_ground_offset)
+        << name;
+    EXPECT_FLOAT_EQ(fallback.visuals.formation_spacing,
+                    loaded->visuals.formation_spacing)
+        << name;
+    EXPECT_EQ(fallback.visuals.renderer_id, loaded->visuals.renderer_id) << name;
+
+    EXPECT_EQ(fallback.individuals_per_unit, loaded->individuals_per_unit) << name;
+    EXPECT_EQ(fallback.max_units_per_row, loaded->max_units_per_row) << name;
+  }
 }
 
 } // namespace

@@ -1,0 +1,35 @@
+{
+  "id": "mirror_swordsman",
+  "label": "Mirror: Roman legionaries",
+  "description": "Sanity baseline: identical armies must fight to a decisive result in reasonable time and be scored 50/50 once the sides are swapped. Spawn-side bias is deliberately not asserted here - an exactly symmetric engagement has to be broken by entity processing order, so this fixture always reports a bias of 1.0. Use the asymmetric fixtures to judge positional bias.",
+  "duration_seconds": 120,
+  "seeds": 8,
+  "separation": 24.0,
+  "side_a": {
+    "label": "Rome",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 4
+      }
+    ]
+  },
+  "side_b": {
+    "label": "Rome",
+    "nation": "roman_republic",
+    "stance": "attack",
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 4
+      }
+    ]
+  },
+  "expect": {
+    "a_win_rate_min": 0.4,
+    "a_win_rate_max": 0.6,
+    "max_timeout_rate": 0.0
+  }
+}
