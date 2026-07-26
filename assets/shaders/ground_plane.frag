@@ -158,7 +158,7 @@ void main() {
     base_col *= crack_darkening;
   }
 
-  if (u_snow_coverage > 0.01) {
+  if (u_ground_type == 3 && u_snow_coverage > 0.01) {
     float snow_large = fbm(wuv * 0.28 + vec2(123.0, 456.0));
     float snow_small = fbm(wuv * 0.72 + vec2(-89.0, 201.0));
     float snow_raw = snow_large * 0.65 + snow_small * 0.35;
