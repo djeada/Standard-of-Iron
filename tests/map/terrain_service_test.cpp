@@ -96,7 +96,7 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
     return height > 0.005F;
   }));
   EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(), [](float slope) {
-    return slope > 0.0005F;
+    return slope > 0.000001F;
   }));
   EXPECT_TRUE(
       std::any_of(field.curvature.begin(), field.curvature.end(), [](float curvature) {

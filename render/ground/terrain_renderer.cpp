@@ -18,6 +18,7 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   m_hill_entrances = height_map.getHillEntrances();
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
+  m_height_texture_dirty = true;
   build_meshes();
 }
 

@@ -35,10 +35,12 @@ using namespace Render::GL::Geometry;
 constexpr float k_grass_height_scale = 1.12F;
 constexpr float k_grass_width_scale = 1.55F;
 
-constexpr float k_grass_full_screen_fraction = 0.0016F;
-constexpr float k_grass_min_screen_fraction = 0.0007F;
-constexpr float k_grass_cull_screen_fraction = 0.0004F;
-constexpr float k_grass_min_density = 0.10F;
+// Below roughly one pixel a blade reads as dark temporal noise, not vegetation.
+// Keep dense grass for the tactical camera and fade it decisively for map views.
+constexpr float k_grass_full_screen_fraction = 0.0040F;
+constexpr float k_grass_min_screen_fraction = 0.0018F;
+constexpr float k_grass_cull_screen_fraction = 0.0010F;
+constexpr float k_grass_min_density = 0.04F;
 
 inline auto section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
