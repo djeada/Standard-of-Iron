@@ -506,14 +506,15 @@ void main() {
     float snow_small = gradient_fbm(world_coord * 0.72 + vec2(-89.0, 201.0));
     float snow_raw = snow_large * 0.65 + snow_small * 0.35;
     float snow_accumulation = smoothstep(0.22, 0.58, snow_raw);
-    float snow_edge = smoothstep(0.18, 0.42, snow_raw) * (1.0 - smoothstep(0.58, 0.78, snow_raw));
+    float snow_edge =
+        smoothstep(0.18, 0.42, snow_raw) * (1.0 - smoothstep(0.58, 0.78, snow_raw));
     snow_accumulation = max(snow_accumulation, snow_edge * 0.4);
     float slope_snow_reduction = 1.0 - smoothstep(0.18, 0.52, slope);
-    float snow_mask = clamp(snow_accumulation * u_snow_coverage * 1.7 * slope_snow_reduction,
-                            0.0,
-                            0.95);
+    float snow_mask = clamp(
+        snow_accumulation * u_snow_coverage * 1.7 * slope_snow_reduction, 0.0, 0.95);
 
-    vec3 snow_tinted = u_snow_color * (1.0 + surface_detail * 0.10 + moisture_field * 0.05);
+    vec3 snow_tinted =
+        u_snow_color * (1.0 + surface_detail * 0.10 + moisture_field * 0.05);
     terrain_color = mix(terrain_color, snow_tinted, snow_mask);
   }
 
