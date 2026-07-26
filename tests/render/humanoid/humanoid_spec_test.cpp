@@ -9,6 +9,7 @@
 #include <span>
 #include <string_view>
 
+#include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
@@ -374,6 +375,14 @@ TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
   EXPECT_EQ(skeleton.topology.bones.size(), base.topology.bones.size());
   EXPECT_TRUE(Render::Creature::validate_creature_spec(skeleton));
   EXPECT_GT(skeleton.lod_full.primitives.size(), base.lod_full.primitives.size());
+  EXPECT_GT(skeleton.lod_minimal.primitives.size(), 8U);
+
+  auto const* minimal_spine =
+      find_primitive(skeleton.lod_minimal.primitives, "skeleton_minimal_spine");
+  auto const* minimal_rib =
+      find_primitive(skeleton.lod_minimal.primitives, "skeleton_minimal_rib_l_high");
+  auto const* minimal_skull =
+      find_primitive(skeleton.lod_minimal.primitives, "skeleton_minimal_skull");
 
   auto const* spine = find_primitive(skeleton.lod_full.primitives, "skeleton_spine");
   auto const* upper_spine =
@@ -395,8 +404,14 @@ TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
   auto const* skull = find_primitive(skeleton.lod_full.primitives, "skeleton_skull");
   auto const* eye =
       find_primitive(skeleton.lod_full.primitives, "skeleton_eye_socket_l");
+  auto const* nasal_cavity =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_nasal_cavity");
+  auto const* cheek = find_primitive(skeleton.lod_full.primitives, "skeleton_cheek_l");
   auto const* thigh = find_primitive(skeleton.lod_full.primitives, "skeleton_thigh_l");
 
+  ASSERT_NE(minimal_spine, nullptr);
+  ASSERT_NE(minimal_rib, nullptr);
+  ASSERT_NE(minimal_skull, nullptr);
   ASSERT_NE(spine, nullptr);
   ASSERT_NE(upper_spine, nullptr);
   ASSERT_NE(high_rib, nullptr);
@@ -407,6 +422,8 @@ TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
   ASSERT_NE(sternum, nullptr);
   ASSERT_NE(skull, nullptr);
   ASSERT_NE(eye, nullptr);
+  ASSERT_NE(nasal_cavity, nullptr);
+  ASSERT_NE(cheek, nullptr);
   ASSERT_NE(thigh, nullptr);
 
   EXPECT_EQ(spine->params.anchor_bone,
@@ -423,18 +440,36 @@ TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
                 3.0F);
   EXPECT_GT(
       std::abs(high_rib->params.head_offset.y() - low_rib->params.head_offset.y()),
-      0.20F);
+      0.28F);
+  EXPECT_GT(std::abs(high_rib->params.tail_offset.x()), 0.19F);
+  EXPECT_GT(std::abs(minimal_rib->params.tail_offset.x()), 0.19F);
   EXPECT_LT(sternum->params.tail_offset.y(), 0.0F);
   EXPECT_GT(std::abs(rib->params.tail_offset.x() - rib->params.head_offset.x()),
             std::abs(rib->params.tail_offset.y() - rib->params.head_offset.y()));
   EXPECT_EQ(ribcage_blob, nullptr);
   EXPECT_EQ(sternum_blob, nullptr);
   EXPECT_EQ(rib->shape, Render::Creature::PrimitiveShape::OrientedCylinder);
+  EXPECT_EQ(minimal_rib->shape, Render::Creature::PrimitiveShape::OrientedCylinder);
+  EXPECT_EQ(minimal_skull->shape, Render::Creature::PrimitiveShape::OrientedSphere);
   EXPECT_EQ(skull->shape, Render::Creature::PrimitiveShape::OrientedSphere);
   EXPECT_EQ(eye->color_role, 0U);
+  EXPECT_EQ(nasal_cavity->color_role, 0U);
+  EXPECT_EQ(cheek->color_role, 2U);
   EXPECT_LT(thigh->params.radius,
             find_primitive(base.lod_full.primitives, "humanoid_full_thigh_l_bot")
                 ->params.radius);
+}
+
+TEST(HumanoidSpecTest, SkeletonProportionLayerSeatsSkullCloserToRibCage) {
+  HumanoidPose pose = make_upright_pose();
+  float const before = (pose.head_pos - pose.neck_base).length();
+  Render::Creature::Pipeline::HumanoidPoseLayerContext context{};
+
+  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, pose);
+
+  float const after = (pose.head_pos - pose.neck_base).length();
+  EXPECT_NEAR(after, before * 0.70F, 0.0001F);
+  EXPECT_LT(after, before - 0.08F);
 }
 
 TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {

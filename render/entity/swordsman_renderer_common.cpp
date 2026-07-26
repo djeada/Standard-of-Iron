@@ -78,10 +78,12 @@ class SwordsmanRenderer final : public HumanoidRendererBase {
 public:
   SwordsmanRenderer(const SwordsmanRendererProfile& profile,
                     std::string_view renderer_key,
-                    Render::Creature::Pipeline::CreatureAssetId creature_asset_id)
+                    Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
+                    Render::Creature::Pipeline::PoseLayerFn pose_layer)
       : m_profile(profile)
       , m_renderer_key(renderer_key)
-      , m_creature_asset_id(creature_asset_id) {}
+      , m_creature_asset_id(creature_asset_id)
+      , m_pose_layer(pose_layer) {}
 
   auto get_proportion_scaling() const -> QVector3D override {
     return m_profile.proportion_profile.as_vector();
@@ -126,6 +128,7 @@ public:
         Render::Creature::ArchetypeRegistry::k_humanoid_base,
         std::span<const EquipmentHandle>(handles.data(), m_profile.loadout_slot_count));
     spec.creature_asset_id = m_creature_asset_id;
+    spec.animation_manifest.pose_layer = m_pose_layer;
     m_visual_spec_cache = spec;
     m_visual_spec_baked = true;
     return m_visual_spec_cache;
@@ -143,6 +146,7 @@ private:
   const SwordsmanRendererProfile& m_profile;
   std::string_view m_renderer_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
+  Render::Creature::Pipeline::PoseLayerFn m_pose_layer{nullptr};
 
   void apply_palette_overrides(const SwordsmanStyleConfig& style,
                                const QVector3D& team_tint,
@@ -187,8 +191,11 @@ void register_swordsman_renderer_profile(
   }
 
   for (const auto& renderer : renderers) {
-    auto renderer_instance = std::make_shared<SwordsmanRenderer>(
-        profile, renderer.renderer_key, renderer.creature_asset_id);
+    auto renderer_instance =
+        std::make_shared<SwordsmanRenderer>(profile,
+                                            renderer.renderer_key,
+                                            renderer.creature_asset_id,
+                                            renderer.pose_layer);
     registry.register_renderer(
         std::string(renderer.renderer_key),
         [renderer_instance](const DrawContext& ctx, ISubmitter& out) {

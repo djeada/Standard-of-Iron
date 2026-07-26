@@ -76,6 +76,11 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
           active_shader->set_uniform(m_terrain_pipeline->m_ground_uniforms.model,
                                      single.model);
         }
+        if (m_terrain_pipeline->m_ground_uniforms.ground_type !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(m_terrain_pipeline->m_ground_uniforms.ground_type,
+                                     single.params.ground_type);
+        }
         if (m_terrain_pipeline->m_ground_uniforms.grass_primary !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(
@@ -283,6 +288,11 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
         if (m_terrain_pipeline->m_terrain_uniforms.model != Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrain_pipeline->m_terrain_uniforms.model,
                                      single.model);
+        }
+        if (m_terrain_pipeline->m_terrain_uniforms.ground_type !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(m_terrain_pipeline->m_terrain_uniforms.ground_type,
+                                     single.params.ground_type);
         }
         if (m_terrain_pipeline->m_terrain_uniforms.grass_primary !=
             Shader::InvalidUniform) {
