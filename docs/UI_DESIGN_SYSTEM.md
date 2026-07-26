@@ -19,7 +19,6 @@ and how to build a screen on top of it.
 10. How the system is tested
 11. How the Qt Widgets tools stay in the same product
 
-
 ## The aesthetic: "Iron and Ember"
 
 Dark, serious, ancient and military — heroic rather than evil. The material vocabulary is
@@ -32,7 +31,6 @@ gothic typography that is hard to read at a glance during a battle.
 
 Motion follows the same restraint. A transition exists to explain a state change; it never
 decorates.
-
 
 ## Packaging: a file-based QML module at `:/StandardOfIron/Design`
 
@@ -59,27 +57,25 @@ keeps one authoritative `qmldir` and behaves identically on Qt 5 and Qt 6.
 `overlays/` and `layouts/` for readability, but every type is published flat, so one import
 gives a screen the whole library.
 
-
 ## Tokens
 
-| Singleton | Owns |
-| --- | --- |
-| `A11y` | User accessibility preferences; the root every other token derives from |
-| `Theme` | Colour, including the high-contrast and colour-vision variants |
-| `Metrics` | Spacing, radius, border width, control and touch-target sizing |
-| `Typography` | Font families, the type scale, weights and tracking |
-| `Motion` | Durations, easing curves and notification dwell times |
-| `Icons` | Every icon in the product: glyph marks and the painted art families |
-| `FactionTheme` | Per-faction accent, emblem, heraldic glyph and motto |
-| `Notifications` | The product-wide priority queue |
-| `UiSound` | Hover / activate / warning cues |
+| Singleton       | Owns                                                                    |
+| --------------- | ----------------------------------------------------------------------- |
+| `A11y`          | User accessibility preferences; the root every other token derives from |
+| `Theme`         | Colour, including the high-contrast and colour-vision variants          |
+| `Metrics`       | Spacing, radius, border width, control and touch-target sizing          |
+| `Typography`    | Font families, the type scale, weights and tracking                     |
+| `Motion`        | Durations, easing curves and notification dwell times                   |
+| `Icons`         | Every icon in the product: glyph marks and the painted art families     |
+| `FactionTheme`  | Per-faction accent, emblem, heraldic glyph and motto                    |
+| `Notifications` | The product-wide priority queue                                         |
+| `UiSound`       | Hover / activate / warning cues                                         |
 
 The base palette lives in `ui/theme.h` so the Qt Widgets tools (arena, map editor) and the
 QML product cannot drift apart: `Theme.qml` reads `StandardOfIron.Theme` and layers the
 accessibility variants on top of it.
 
 Screens should reference tokens, never literals. `Metrics.space12`, not `12`.
-
 
 ## Accessibility
 
@@ -106,9 +102,8 @@ Two rules the components follow:
   the smallest scale.
 
 Reduced motion collapses durations to zero rather than removing bindings, so state still
-lands in the right place. Notification dwell times are deliberately *not* affected — that
+lands in the right place. Notification dwell times are deliberately _not_ affected — that
 is reading time, not motion.
-
 
 ## Faction identity
 
@@ -116,13 +111,12 @@ is reading time, not motion.
 accent, a deep accent, a heraldic glyph, an emblem source and a motto. Unknown ids fall
 back to a neutral skin rather than failing.
 
-Identity is a *skin*: the same panels, the same zones, the same control sizes. Only the
+Identity is a _skin_: the same panels, the same zones, the same control sizes. Only the
 accent and heraldry change, so a player who has learned one faction's HUD already knows
 the others.
 
 `GameShell.faction` is the single place the active faction is published. `Main.qml` binds it
 to `game.local_player_nation`, which resolves through `NationRegistry` for the local owner.
-
 
 ## Notifications
 
@@ -138,13 +132,12 @@ Priorities, highest first: `critical`, `urgent`, `info`, `ambient`. Within a ban
 is first-in-first-out.
 
 `channel` groups repeats. Pushing the same channel again bumps a counter on the pending
-entry instead of adding a second row, and a repeat may *escalate* the priority but never
+entry instead of adding a second row, and a repeat may _escalate_ the priority but never
 downgrade it. Entries marked `sticky` wait for an explicit dismissal; everything else times
 out on `Motion.dwellFor(priority)`.
 
 Screens push. They do not render toasts. A single `NotificationHost` per product shell
 renders whatever is current — `Main.qml` mounts one in the top-right of the battle view.
-
 
 ## Iconography
 
@@ -171,7 +164,6 @@ Two rules are enforced by tests rather than by review:
   the directory agree in both directions: no name that cannot resolve, no file
   that nothing can request.
 
-
 ## Reviewing a screen
 
 ```
@@ -189,7 +181,6 @@ boxes, an order bar clipped by its zone, a slider collapsing to zero height, a
 skirmish panel rendered indigo by an `#RRGGBBAA` literal that Qt reads as
 `#AARRGGBB`, and Qt's platform-styled dialog chrome showing as a white bar.
 
-
 ## The component gallery
 
 ```
@@ -200,7 +191,6 @@ opens `GalleryWindow.qml`: every published control, the faction skins and the no
 priorities, with live scale, reduced-motion, high-contrast and colour-vision controls in the
 toolbar. It is living documentation — if a screen needs something that is not on this page,
 the component belongs in the library first.
-
 
 ## Testing
 
@@ -230,7 +220,6 @@ roster, `icon_resources_test.cpp` keeps the icon registry and the shipped files
 in step, and `widget_theme_test.cpp` pins the widget vocabulary the tools use and
 proves the shared accessibility settings reach them.
 
-
 ## The Qt Widgets tools
 
 The arena and the map editor are Widgets applications, not QML, so they cannot
@@ -247,7 +236,6 @@ use the component library directly. They are unified through `ui/theme.h` and
 
 Anything a tool paints itself — the editor canvas, for instance — takes its
 chrome colours from `Theme` too. Only content colours are authored locally.
-
 
 ## Adding a component
 

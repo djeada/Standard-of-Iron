@@ -21,7 +21,6 @@ Rally and patrol markers are restricted to the local human player. Set
 `SOI_RENDER_DEBUG_ORDER_MARKERS=1` to reveal non-local markers explicitly,
 including while spectating.
 
-
 ## The two-phase dance
 
 The renderer works like a recording studio. In the first phase, we record: game logic tells us "there are 5000 soldiers here, some trees over there, a river running through." The SceneRenderer listens to all of this and writes down lightweight commands into something called a DrawQueue. No actual OpenGL happens yet—we're just taking notes.
@@ -101,7 +100,6 @@ Here's how a single frame flows through the system:
 
 The key files in this flow are [scene_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/scene_renderer.cpp) for the recording phase and [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp) for playback.
 
-
 ## How Qt gets OpenGL running
 
 Our 3D view lives inside a QML interface. Qt Quick provides something called QQuickFramebufferObject that handles all the threading complexity of running OpenGL alongside a declarative UI. We subclass it in [gl_view.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/ui/gl_view.cpp) to hook in our renderer.
@@ -152,7 +150,6 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
 We picked OpenGL 3.3 Core as a balance between running on older hardware and having modern features like instancing. The Core profile means we don't have any of the legacy fixed-function baggage—everything goes through shaders.
 
 If you're ever debugging why nothing renders, the first place to check is whether the OpenGL context is actually valid. The code logs a warning if there's no context available, which usually means you're running in software mode where 3D won't work. Look for "No valid OpenGL context" in your logs.
-
 
 ## Recording what to draw
 
@@ -214,7 +211,6 @@ void Renderer::end_frame() {
 
 We swap pointers—the GPU gets the fresh queue, and we start recording into the now-empty old one. No locks needed because CPU and GPU never touch the same queue at the same time.
 
-
 ## Sorting for speed
 
 Before we hand the queue to the backend, we sort it. The sorting has a few priorities:
@@ -251,7 +247,6 @@ Before sorting:                          After sorting:
 ```
 
 This sorting pass is what transforms a random pile of draw requests into something the GPU can chew through efficiently. The difference between sorted and unsorted can easily be 2-3x in frame time.
-
 
 ## The backend and its pipelines
 
@@ -293,7 +288,7 @@ Each pipeline understands the specific needs of its command type and can optimiz
 ```cpp
 void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   const QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
-  
+
   const std::size_t count = queue.size();
   std::size_t i = 0;
   while (i < count) {
@@ -307,7 +302,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         // ... pack into instance buffer ...
         ++i;
       } while (i < count && queue.get_sorted(i).index() == CylinderCmdIndex);
-      
+
       // Draw all cylinders in one instanced call
       m_cylinderPipeline->draw_cylinders(instance_count);
       continue;
@@ -335,7 +330,6 @@ struct DepthMaskScope {
 
 Same pattern for blending, depth testing, polygon offset. This prevents the classic bug where you disable depth writes for some transparent effect and forget to turn them back on, breaking everything that draws afterward.
 
-
 ## Where OpenGL actually lives
 
 All the low-level OpenGL code is concentrated in the [render/gl](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl) folder:
@@ -344,7 +338,7 @@ All the low-level OpenGL code is concentrated in the [render/gl](https://github.
 render/gl/
 ├── backend.cpp/.h          # Main command executor, pipeline coordinator
 ├── mesh.cpp/.h             # VAO/VBO/EBO wrapper
-├── shader.cpp/.h           # GLSL program wrapper with uniform caching  
+├── shader.cpp/.h           # GLSL program wrapper with uniform caching
 ├── texture.cpp/.h          # Texture loading and binding
 ├── buffer.cpp/.h           # Generic buffer abstraction
 ├── camera.cpp/.h           # View/projection matrices
@@ -399,10 +393,10 @@ The Shader class in [shader.h](https://github.com/djeada/Standard-of-Iron/blob/m
 class Shader : protected QOpenGLFunctions_3_3_Core {
   GLuint m_program = 0;
   std::unordered_map<std::string, UniformHandle> m_uniform_cache;
-  
+
   // Cached lookup - fast path after first access
   auto uniform_handle(const char *name) -> UniformHandle;
-  
+
   // Set uniforms by cached handle (fast) or by name (convenience)
   void set_uniform(UniformHandle handle, const QMatrix4x4 &value);
   void set_uniform(const char *name, const QMatrix4x4 &value);
@@ -413,17 +407,16 @@ The rest of the rendering code doesn't call OpenGL directly. It talks through th
 
 We use a fairly conservative subset of OpenGL 3.3:
 
-| What we use | Why |
-|-------------|-----|
+| What we use         | Why                          |
+| ------------------- | ---------------------------- |
 | Vertex arrays (VAO) | Group vertex attribute state |
-| Instanced rendering | Draw 1000 trees in 1 call |
-| Depth testing | Hidden surface removal |
-| Alpha blending | Transparent effects |
-| Polygon offset | Fix z-fighting on terrain |
-| GLSL 330 shaders | All visual computation |
+| Instanced rendering | Draw 1000 trees in 1 call    |
+| Depth testing       | Hidden surface removal       |
+| Alpha blending      | Transparent effects          |
+| Polygon offset      | Fix z-fighting on terrain    |
+| GLSL 330 shaders    | All visual computation       |
 
 What we don't use: geometry shaders (compatibility issues on some drivers), compute shaders (require OpenGL 4.3), tessellation (not needed for our art style), multi-draw indirect (instancing is enough).
-
 
 ## How nations get their look
 
@@ -486,7 +479,7 @@ AnimationInputs  ──►  resolve_pose_intent()  ──►  PoseIntent
                          render graph]
 ```
 
-`PoseIntent` is a small enum (17 values) that names the *canonical* animation intent—`Idle`, `Walk`, `Run`, `AttackMelee`, `Dying`, etc.—in strict priority order. The resolver applies that priority once: dying beats dead, dead beats hit-reaction, hit-reaction beats attacking, and so on. All downstream systems convert from this single value instead of re-implementing the priority logic.
+`PoseIntent` is a small enum (17 values) that names the _canonical_ animation intent—`Idle`, `Walk`, `Run`, `AttackMelee`, `Dying`, etc.—in strict priority order. The resolver applies that priority once: dying beats dead, dead beats hit-reaction, hit-reaction beats attacking, and so on. All downstream systems convert from this single value instead of re-implementing the priority logic.
 
 **ArchetypeVariantTable** is the data-driven replacement for the old runtime hook function pointers. Each `UnitVisualSpec` can carry an optional pointer to a `constexpr`-constructible table that maps:
 
@@ -501,7 +494,6 @@ Nation renderers that need per-variant animation (builders with different tools,
 > the procedural locomotion shaper, the combat visual state machine with marker-driven
 > melee damage sync, and the shared quadruped gait — see
 > [ANIMATION_ARCHITECTURE.md](ANIMATION_ARCHITECTURE.md).
-
 
 ## Procedural shaders
 
@@ -557,7 +549,7 @@ if (u_materialId == 4) {  // Shield
   float curveRadius = 0.52;
   float curveAmount = 0.46;
   float angle = position.x * curveAmount;
-  
+
   float curved_x = sin(angle) * curveRadius;
   float curved_z = position.z + (1.0 - cos(angle)) * curveRadius;
   position = vec3(curved_x, position.y, curved_z);
@@ -565,7 +557,6 @@ if (u_materialId == 4) {  // Shield
 ```
 
 The shader directory is intentionally small and pipeline-owned. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) preloads shared backend programs and keeps them around so we don't recompile every frame.
-
 
 ## Common problems and how to fix them
 
@@ -593,7 +584,6 @@ When specific units don't render but debug shapes do, the renderer probably isn'
 
 Transparent objects rendering as opaque usually means blending got disabled somewhere, or the draw order is wrong so transparent stuff draws before what's behind it. Make sure the queue sorts transparent objects to the back and that the BlendScope RAII wrapper is being used.
 
-
 ## Battle render optimizations
 
 When more than 15 units are visible on screen, the `BattleRenderOptimizer` kicks in to keep rendering fresh without sacrificing visual quality. This system provides several tricks that work independently of LOD:
@@ -618,13 +608,13 @@ When the visible unit count exceeds 30 and units are far from the camera (>40 un
 The batching ratio is boosted proportionally when more units are visible. This pushes more units into the primitive batching path, reducing draw call overhead during intense battles.
 
 The optimizer can be configured via `BattleRenderConfig`:
+
 - `temporal_culling_threshold`: Unit count that triggers temporal culling (default: 15)
 - `animation_throttle_threshold`: Unit count that triggers animation throttling (default: 30)
 - `animation_throttle_distance`: Distance beyond which animations are throttled (default: 40.0)
 - `animation_skip_frames`: How many frames to skip for distant animations (default: 2)
 
 See [battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for the implementation.
-
 
 ## The full journey
 
@@ -642,21 +632,20 @@ OpenGL rasterizes everything. Qt presents the framebuffer to the screen. And the
 
 The whole architecture optimizes for minimal state changes, parallel CPU/GPU work, and memory efficiency through procedural generation. There's still room for improvement—we don't do frustum culling yet, and occlusion culling would help in complex scenes—but the foundation is solid.
 
-
 ## Finding your way around
 
 Here's a quick reference for common tasks:
 
-| What you want to do | Where to look |
-|---------------------|---------------|
-| Add a new unit type | [render/entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations) |
-| Change a nation's look | [render/entity/nations/carthage](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage) or [roman](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/roman) folders |
-| Modify shaders | [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder |
-| Debug GL errors | [render/gl/mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) has error checking after draws |
-| Change draw order | [render/draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp |
-| Add a new effect | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend |
-| Debug the frame | Use RenderDoc to capture and step through |
-| Tune battle performance | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling |
+| What you want to do     | Where to look                                                                                                                                                                                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add a new unit type     | [render/entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations) |
+| Change a nation's look  | [render/entity/nations/carthage](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage) or [roman](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/roman) folders                                 |
+| Modify shaders          | [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder                                                                                                                                                               |
+| Debug GL errors         | [render/gl/mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) has error checking after draws                                                                                                                               |
+| Change draw order       | [render/draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp                                                                                                      |
+| Add a new effect        | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend                                                                                                                                                                                   |
+| Debug the frame         | Use RenderDoc to capture and step through                                                                                                                                                                                                                  |
+| Tune battle performance | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling                                                                                    |
 
 The most common mistakes are calling OpenGL from the wrong thread (Qt's render thread is the only safe place), forgetting to bind the VAO before drawing (nothing appears), uploading instance data but calling the non-instanced draw function (only one object appears), or getting matrix conventions mixed up (everything is inside-out or flipped).
 

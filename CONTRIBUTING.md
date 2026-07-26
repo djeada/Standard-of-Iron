@@ -1,4 +1,3 @@
-
 # Contributing to Standard of Iron
 
 Thank you for your interest in contributing to Standard of Iron! This document provides guidelines and information to help you contribute effectively.
@@ -12,7 +11,7 @@ To build and develop Standard of Iron, you'll need:
 - **CMake** >= 3.21.0
 - **GCC/G++** >= 10.0.0 or equivalent C++20 compiler
 - **Qt5** or **Qt6** (Qt6 is preferred)
-  - Qt Core, Widgets, OpenGL, Quick, Qml, QuickControls2
+    - Qt Core, Widgets, OpenGL, Quick, Qml, QuickControls2
 - **OpenGL** 3.3+ support
 
 ### Installation
@@ -21,7 +20,7 @@ Run the automated setup:
 
 ```bash
 make install
-````
+```
 
 This will install all required dependencies on Ubuntu/Debian-based systems.
 
@@ -43,23 +42,23 @@ make format-doctor      # report installed vs pinned versions
 make hooks-install      # install the pre-commit git hooks
 ```
 
-`format-doctor` fails when a required tool is missing or its *major* version
+`format-doctor` fails when a required tool is missing or its _major_ version
 differs from the pin; a minor/patch difference is reported as drift.
 
 ### Everyday commands
 
-| Command | What it does |
-| --- | --- |
-| `make format` | Format every tracked file in place |
-| `make format-check` | Verify formatting, change nothing (the CI gate) |
-| `make format-changed` | Format only files changed against `FORMAT_BASE` |
-| `make format-check-changed` | Fast changed-files check |
-| `make lint` | clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON syntax |
-| `make lint-fix` | Apply the linters' automated fixes - explicit and separate |
-| `make lint-changed` | Lint only what changed (includes changed-file clang-tidy) |
-| `make quality` | `format-check` + `lint` + quality-marker scan |
-| `make validate` | `quality` + build + tests + content validation |
-| `make strip-comments` | **Destructive**: delete comments. Needs `STRIP_COMMENTS_CONFIRM=1` |
+| Command                     | What it does                                                       |
+| --------------------------- | ------------------------------------------------------------------ |
+| `make format`               | Format every tracked file in place                                 |
+| `make format-check`         | Verify formatting, change nothing (the CI gate)                    |
+| `make format-changed`       | Format only files changed against `FORMAT_BASE`                    |
+| `make format-check-changed` | Fast changed-files check                                           |
+| `make lint`                 | clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON syntax       |
+| `make lint-fix`             | Apply the linters' automated fixes - explicit and separate         |
+| `make lint-changed`         | Lint only what changed (includes changed-file clang-tidy)          |
+| `make quality`              | `format-check` + `lint` + quality-marker scan                      |
+| `make validate`             | `quality` + build + tests + content validation                     |
+| `make strip-comments`       | **Destructive**: delete comments. Needs `STRIP_COMMENTS_CONFIRM=1` |
 
 `FORMAT_BASE` defaults to `origin/main`:
 
@@ -80,17 +79,17 @@ python scripts/format.py --all --lint --deep      # includes whole-tree clang-ti
 
 ### Coverage
 
-| Language | Formatter | Linter |
-| --- | --- | --- |
-| C/C++ | clang-format | clang-tidy (changed files on PRs, full tree nightly) |
-| GLSL (`.frag`, `.vert`, `.glsl`) | clang-format | - |
-| QML | qmlformat | qmllint (advisory) |
-| Python | black | Ruff |
-| Shell | shfmt (optional) | ShellCheck |
-| CMake | gersemi | - |
-| YAML | prettier (optional) | yamllint |
-| Markdown | prettier (optional) | markdownlint (advisory, optional) |
-| JSON | prettier (optional, excludes `assets/`) | built-in syntax check |
+| Language                         | Formatter                               | Linter                                               |
+| -------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| C/C++                            | clang-format                            | clang-tidy (changed files on PRs, full tree nightly) |
+| GLSL (`.frag`, `.vert`, `.glsl`) | clang-format                            | -                                                    |
+| QML                              | qmlformat                               | qmllint (advisory)                                   |
+| Python                           | black                                   | Ruff                                                 |
+| Shell                            | shfmt (optional)                        | ShellCheck                                           |
+| CMake                            | gersemi                                 | -                                                    |
+| YAML                             | prettier (optional)                     | yamllint                                             |
+| Markdown                         | prettier (optional)                     | markdownlint (advisory, optional)                    |
+| JSON                             | prettier (optional, excludes `assets/`) | built-in syntax check                                |
 
 Advisory linters report findings without failing the build; the nightly
 workflow runs them with `--fail-on-advisory`. Generated game data under
@@ -215,45 +214,45 @@ make test
 
 ### C++ Style
 
-* Follow the `.clang-format` configuration
-* Use C++20 features appropriately
-* 4-space indentation (no tabs)
-* 88 character line limit
-* Place braces on the same line (`Attach` style)
+- Follow the `.clang-format` configuration
+- Use C++20 features appropriately
+- 4-space indentation (no tabs)
+- 88 character line limit
+- Place braces on the same line (`Attach` style)
 
 ### QML Style
 
-* Use qmlformat's default style
-* Keep property ordering consistent
-* Use proper indentation for nested elements
+- Use qmlformat's default style
+- Keep property ordering consistent
+- Use proper indentation for nested elements
 
 ### Shader Style
 
-* Use clang-format for consistent indentation
-* Follow GLSL naming conventions
-* Comment complex shader operations when necessary
+- Use clang-format for consistent indentation
+- Follow GLSL naming conventions
+- Comment complex shader operations when necessary
 
 ## Commit Guidelines
 
 1. **Format and lint your code**
    Always run:
 
-   ```bash
-   make format
-   make quality
-   ```
+    ```bash
+    make format
+    make quality
+    ```
 
-   Installing the hooks once (`make hooks-install`) does this automatically for
-   staged files.
+    Installing the hooks once (`make hooks-install`) does this automatically for
+    staged files.
 
 2. **Ensure the project builds successfully**
    Run:
 
-   ```bash
-   make build
-   ```
+    ```bash
+    make build
+    ```
 
-   This also regenerates ignored creature assets in `assets/creatures/`.
+    This also regenerates ignored creature assets in `assets/creatures/`.
 
 3. **Test your changes**
    Run relevant tests and verify the game launches correctly.
@@ -267,32 +266,32 @@ make test
 
 2. Create a feature branch:
 
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
+    ```bash
+    git checkout -b feature/amazing-feature
+    ```
 
 3. Make your changes
 
 4. Format and check your code:
 
-   ```bash
-   make format
-   make quality
-   ```
+    ```bash
+    make format
+    make quality
+    ```
 
 5. Ensure the project builds and passes its tests:
 
-   ```bash
-   make validate
-   ```
+    ```bash
+    make validate
+    ```
 
 6. Commit your changes with a clear commit message
 
 7. Push your branch:
 
-   ```bash
-   git push origin feature/amazing-feature
-   ```
+    ```bash
+    git push origin feature/amazing-feature
+    ```
 
 8. Open a Pull Request
 
@@ -300,9 +299,9 @@ make test
 
 By submitting a contribution (including code, assets, documentation, shaders, maps, audio, or other content) to Standard of Iron, you agree that:
 
-* Your contribution is your original work, or you have the legal right to submit it
-* You grant the project and its maintainers the right to use, modify, distribute, sublicense, and commercially distribute your contribution under the project's license
-* Your contribution will be licensed under the same license as the project unless explicitly stated otherwise
+- Your contribution is your original work, or you have the legal right to submit it
+- You grant the project and its maintainers the right to use, modify, distribute, sublicense, and commercially distribute your contribution under the project's license
+- Your contribution will be licensed under the same license as the project unless explicitly stated otherwise
 
 This includes distribution through commercial platforms such as Steam or other marketplaces.
 
@@ -310,8 +309,8 @@ This includes distribution through commercial platforms such as Steam or other m
 
 Do not submit assets, code, music, fonts, textures, models, or other content unless:
 
-* You created them yourself, or
-* They are compatible with the project's license and permit commercial redistribution
+- You created them yourself, or
+- They are compatible with the project's license and permit commercial redistribution
 
 If you use third-party resources, clearly document their source and license in your Pull Request.
 
@@ -325,9 +324,9 @@ Harassment, abusive behavior, or intentionally disruptive conduct will not be to
 
 If you have questions or encounter issues:
 
-* Open an issue on GitHub
-* Check existing issues and discussions
-* Review the README.md for additional information
+- Open an issue on GitHub
+- Check existing issues and discussions
+- Review the README.md for additional information
 
 ## License
 

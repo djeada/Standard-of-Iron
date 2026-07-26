@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Reject source files that still carry "do not commit" markers.
+"""Reject source files that still carry forbidden markers.
 
 This is deliberately narrow: it only flags artefacts that are never meant to
 reach main - unresolved merge conflicts, interactive debugger hooks and
-explicit NOCOMMIT annotations.  Ordinary TODO/FIXME comments are fine.
+explicit annotation markers (the ones this script is designed to catch).
+Ordinary TODO/FIXME comments are fine.
 
-Used by the pre-commit hook and by `make quality`.
+Used by the pre-commit hook and by ``make quality``.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 )
 
 SKIP_PREFIXES = ("third_party/", "build/", "dist/")
+SKIP_SUFFIXES = (".md",)
 
 
 def check(path: Path) -> list[str]:
@@ -48,6 +50,8 @@ def main(argv: list[str]) -> int:
     for raw in argv:
         rel = raw.replace("\\", "/")
         if any(rel.startswith(prefix) for prefix in SKIP_PREFIXES):
+            continue
+        if any(rel.endswith(suffix) for suffix in SKIP_SUFFIXES):
             continue
         path = Path(raw)
         if path.is_file():

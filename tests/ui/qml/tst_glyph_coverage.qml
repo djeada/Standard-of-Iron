@@ -3,15 +3,11 @@ import QtTest 1.15
 import StandardOfIron.Design 1.0
 import StandardOfIron.TestSupport 1.0
 
-
-
-
 TestCase {
     id: testCase
 
     name: "GlyphCoverage"
 
-    
     readonly property var glyphNames: ["move", "attack", "patrol", "stop", "hold", "defense", "formation", "rally", "build", "capture", "objective", "warning", "commander", "search", "close", "disclosureClosed", "disclosureOpen", "heal", "collect", "deliver", "aura", "population", "defeated", "pause", "play", "reset", "follow", "spectator", "ambient", "map", "briefing", "locked", "terrainPlains", "terrainForest", "terrainRiver", "terrainDesert", "terrainHills"]
 
     function missingCharacters(text) {

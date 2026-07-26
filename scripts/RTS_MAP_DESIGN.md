@@ -1,7 +1,7 @@
 # Campaign RTS terrain contract
 
 Campaign terrain is a tactical graph first and scenery second. The target is
-the terrain-led combat of *Praetorians*: formations move through readable
+the terrain-led combat of _Praetorians_: formations move through readable
 battle basins, crossings and elevated positions change the plan, and towns or
 camps are meaningful route anchors.
 

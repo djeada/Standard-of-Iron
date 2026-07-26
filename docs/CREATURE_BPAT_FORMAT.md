@@ -34,20 +34,20 @@ So BPAT is a promise:
 - **Less stutter**: the engine avoids heavy live skeletal work in the shipping build.
 - **Cleaner design**: gameplay decides intent, while BPAT provides the body language.
 
-In code, that "intent" is basically: *play this clip at this phase*.
+In code, that "intent" is basically: _play this clip at this phase_.
 
 ## What lives inside a BPAT file
 
 Think of the file as a chest with a few labeled compartments.
 
-| Part | Plain-English meaning |
-|---|---|
-| Header | Who this file is for and where the other parts begin |
-| Clip list | The named moves, such as walk or attack |
-| Socket list | Attachment points for gear, riders, or props |
+| Part         | Plain-English meaning                                   |
+| ------------ | ------------------------------------------------------- |
+| Header       | Who this file is for and where the other parts begin    |
+| Clip list    | The named moves, such as walk or attack                 |
+| Socket list  | Attachment points for gear, riders, or props            |
 | String table | The actual text names used by the clip and socket lists |
-| Palette data | The real pose data for every frame of every move |
-| Socket data | Optional pre-baked attachment transforms |
+| Palette data | The real pose data for every frame of every move        |
+| Socket data  | Optional pre-baked attachment transforms                |
 
 ### Header
 
@@ -78,15 +78,15 @@ In simple terms, the clip list is the table of contents for the motion book.
 Starting with **version 2**, every clip entry also carries five **timing markers**,
 each a normalized phase in `[0, 1]` (or `-1` when unset):
 
-| Marker | Meaning |
-|---|---|
-| `anticipation_start` | the wind-up begins |
-| `weapon_release` | the weapon starts travelling toward the target |
-| `contact` | the blade/impact connects — **this is when a melee hit lands** |
-| `recover_unlocked` | the attacker may start recovering / chaining |
-| `exit_safe` | the move can be safely interrupted/blended out |
+| Marker               | Meaning                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `anticipation_start` | the wind-up begins                                             |
+| `weapon_release`     | the weapon starts travelling toward the target                 |
+| `contact`            | the blade/impact connects — **this is when a melee hit lands** |
+| `recover_unlocked`   | the attacker may start recovering / chaining                   |
+| `exit_safe`          | the move can be safely interrupted/blended out                 |
 
-These replace the old, fragile habit of guessing key moments from the clip *name*. The
+These replace the old, fragile habit of guessing key moments from the clip _name_. The
 baker authors the values; the runtime reads them directly. The `contact` marker is what
 lets a melee hit apply damage **mid-swing** (when the weapon visually connects) instead of
 on the trigger frame — see the deferred-melee-strike flow in
@@ -160,16 +160,16 @@ The tool takes one optional argument: the output directory.
 
 At the moment, the prebaker writes all built-in species in one pass:
 
-| Output | Notes |
-|---|---|
-| `humanoid.bpat` | default humanoid animation set |
-| `humanoid_sword.bpat` | sword-ready humanoid animation set |
-| `humanoid_spear.bpat` | spear-ready humanoid animation set |
-| `humanoid_skeleton.bpat` | skeleton humanoid animation set |
-| `horse.bpat` | horse creature BPAT |
-| `horse_minimal.bpsm` | horse minimal snapshot mesh |
-| `elephant.bpat` | elephant creature BPAT |
-| `elephant_minimal.bpsm` | elephant minimal snapshot mesh |
+| Output                   | Notes                              |
+| ------------------------ | ---------------------------------- |
+| `humanoid.bpat`          | default humanoid animation set     |
+| `humanoid_sword.bpat`    | sword-ready humanoid animation set |
+| `humanoid_spear.bpat`    | spear-ready humanoid animation set |
+| `humanoid_skeleton.bpat` | skeleton humanoid animation set    |
+| `horse.bpat`             | horse creature BPAT                |
+| `horse_minimal.bpsm`     | horse minimal snapshot mesh        |
+| `elephant.bpat`          | elephant creature BPAT             |
+| `elephant_minimal.bpsm`  | elephant minimal snapshot mesh     |
 
 So this is not a pick-one-species command yet. The current CLI bakes the whole built-in set.
 
@@ -201,14 +201,14 @@ In player terms: the creature animation is packed like an image so the graphics 
 
 ## A friendly glossary
 
-| Term | Easy meaning |
-|---|---|
-| Bone palette | The full creature pose for one frame |
-| Clip | One named move, like idle or attack |
-| Frame | One step inside that move |
-| Socket | A named attach point for equipment or props |
-| Phase | How far through the move the creature currently is |
-| Species | Which body plan this file belongs to |
+| Term         | Easy meaning                                       |
+| ------------ | -------------------------------------------------- |
+| Bone palette | The full creature pose for one frame               |
+| Clip         | One named move, like idle or attack                |
+| Frame        | One step inside that move                          |
+| Socket       | A named attach point for equipment or props        |
+| Phase        | How far through the move the creature currently is |
+| Species      | Which body plan this file belongs to               |
 
 ## The firm rules of the format
 

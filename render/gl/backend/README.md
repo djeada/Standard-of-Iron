@@ -8,6 +8,7 @@ The Backend class serves as the main rendering interface, but its implementation
 is split across multiple files for better maintainability:
 
 ### Core Files
+
 - `../backend.h` - Public Backend interface (in parent directory)
 - `../backend.cpp` - Main implementation and command execution (in parent directory)
 
@@ -23,6 +24,7 @@ The following pipeline modules reduce backend.cpp complexity (2055 → 973 lines
 - ✅ `effects_pipeline.h/.cpp` - Grid, selection rings, selection smoke (75 lines)
 
 ### Utilities
+
 - `pipeline_interface.h` - Abstract base class for all pipeline implementations
 - `backend_impl.h` - Helper function declarations (forward compatibility)
 
@@ -39,6 +41,7 @@ The following pipeline modules reduce backend.cpp complexity (2055 → 973 lines
 The backend code MUST use identical names when calling `uniformHandle()`.
 
 Run the validation script to check for mismatches:
+
 ```bash
 python3 scripts/validate_shader_uniforms.py
 ```
@@ -46,7 +49,7 @@ python3 scripts/validate_shader_uniforms.py
 ## Migration Status
 
 - [x] Directory structure created
-- [x] Pipeline interface defined  
+- [x] Pipeline interface defined
 - [x] Validation tooling added
 - [x] Cylinder pipeline extracted (350 lines)
 - [x] Vegetation pipeline extracted (533 lines)

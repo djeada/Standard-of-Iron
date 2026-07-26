@@ -16,17 +16,20 @@ tests/
 ## Running Tests
 
 ### Build and Run All Tests
+
 ```bash
 make test
 ```
 
 ### Run Tests Directly
+
 ```bash
 cd build
 ./bin/standard_of_iron_tests
 ```
 
 ### Run Specific Tests
+
 ```bash
 # Run only serialization tests
 ./bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
@@ -39,6 +42,7 @@ cd build
 ```
 
 ### Verbose Output
+
 ```bash
 ./bin/standard_of_iron_tests --gtest_color=yes
 ```
@@ -46,27 +50,31 @@ cd build
 ## Test Categories
 
 ### Core Serialization Tests (`core/serialization_test.cpp`)
+
 Tests for JSON serialization and deserialization of game objects:
+
 - **Entity serialization**: Basic entity save/load
 - **Component serialization**: All component types fully tested
-  - TransformComponent (position, rotation, scale)
-  - RenderableComponent (mesh, texture, visibility, color)
-  - UnitComponent (health, speed, vision, nation)
-  - MovementComponent (targets, paths, velocity)
-  - AttackComponent (range, damage, combat modes)
-  - AttackTargetComponent (target tracking, chase behavior)
-  - PatrolComponent (waypoints, patrol state)
-  - ProductionComponent (build queues, rally points)
-  - BuildingComponent (building marker)
-  - AIControlledComponent (AI flag)
-  - CaptureComponent (capture progress, player state)
+    - TransformComponent (position, rotation, scale)
+    - RenderableComponent (mesh, texture, visibility, color)
+    - UnitComponent (health, speed, vision, nation)
+    - MovementComponent (targets, paths, velocity)
+    - AttackComponent (range, damage, combat modes)
+    - AttackTargetComponent (target tracking, chase behavior)
+    - PatrolComponent (waypoints, patrol state)
+    - ProductionComponent (build queues, rally points)
+    - BuildingComponent (building marker)
+    - AIControlledComponent (AI flag)
+    - CaptureComponent (capture progress, player state)
 - **Round-trip testing**: Serialize→Deserialize→Verify data integrity for all components
 - **Complete entity**: Test entity with all components attached
 - **Edge cases**: Missing fields, malformed JSON, default values
 - **File I/O**: Save to file and load from file
 
 ### Database Integration Tests (`db/save_storage_test.cpp`)
+
 Tests for SQLite-based save game storage:
+
 - **Initialization**: In-memory database setup
 - **Save/Load**: Store and retrieve save slots
 - **Schema management**: Database schema creation and validation
@@ -77,6 +85,7 @@ Tests for SQLite-based save game storage:
 ## Adding New Tests
 
 ### 1. Create a New Test File
+
 ```cpp
 #include <gtest/gtest.h>
 // Include necessary headers
@@ -99,6 +108,7 @@ TEST_F(MyFeatureTest, TestCase) {
 ```
 
 ### 2. Add to CMakeLists.txt
+
 ```cmake
 add_executable(standard_of_iron_tests
     core/serialization_test.cpp
@@ -108,6 +118,7 @@ add_executable(standard_of_iron_tests
 ```
 
 ### 3. Rebuild and Run
+
 ```bash
 make test
 ```
@@ -115,20 +126,23 @@ make test
 ## Test Conventions
 
 ### Naming
+
 - Test suite names should match the class/feature being tested
 - Test case names should describe what is being tested
 - Use descriptive names: `TEST_F(SerializationTest, EntityDeserializationRoundTrip)`
 
 ### Assertions
+
 - Use `EXPECT_*` for non-fatal assertions (test continues)
 - Use `ASSERT_*` for fatal assertions (test stops)
 - Common assertions:
-  - `EXPECT_EQ(a, b)` - equality
-  - `EXPECT_TRUE(condition)` - boolean true
-  - `EXPECT_FLOAT_EQ(a, b)` - floating-point equality
-  - `EXPECT_NE(a, b)` - not equal
+    - `EXPECT_EQ(a, b)` - equality
+    - `EXPECT_TRUE(condition)` - boolean true
+    - `EXPECT_FLOAT_EQ(a, b)` - floating-point equality
+    - `EXPECT_NE(a, b)` - not equal
 
 ### Test Organization
+
 - Group related tests in the same test fixture
 - Use descriptive test names
 - Test one thing per test case
@@ -137,6 +151,7 @@ make test
 ## Dependencies
 
 The test suite uses:
+
 - **Google Test** (v1.14.0) - Testing framework
 - **Qt6/Qt5** - Core, Gui, SQL modules
 - **engine_core** - Core game engine library
@@ -145,6 +160,7 @@ The test suite uses:
 ## Continuous Integration
 
 Tests are automatically run in CI when:
+
 - Pull requests are created
 - Code is pushed to main branch
 - Release builds are created
@@ -152,11 +168,12 @@ Tests are automatically run in CI when:
 ## Coverage
 
 Current test coverage focuses on:
+
 - ✅ **Complete entity and component serialization** (all 11 serializable components)
-  - TransformComponent, RenderableComponent, UnitComponent
-  - MovementComponent, AttackComponent, AttackTargetComponent
-  - PatrolComponent, ProductionComponent, BuildingComponent
-  - AIControlledComponent, CaptureComponent
+    - TransformComponent, RenderableComponent, UnitComponent
+    - MovementComponent, AttackComponent, AttackTargetComponent
+    - PatrolComponent, ProductionComponent, BuildingComponent
+    - AIControlledComponent, CaptureComponent
 - ✅ World serialization (multi-entity persistence)
 - ✅ SQLite save/load operations (in-memory testing)
 - ✅ Database CRUD operations (create, read, update, delete)
@@ -164,6 +181,7 @@ Current test coverage focuses on:
 - ✅ Round-trip testing for data integrity (all components)
 
 Future coverage should include:
+
 - [ ] Terrain serialization
 - [ ] AI system testing
 - [ ] Combat system testing
@@ -173,7 +191,9 @@ Future coverage should include:
 ## Troubleshooting
 
 ### Tests Not Found
+
 If tests aren't being discovered:
+
 ```bash
 rm -rf build
 make configure
@@ -181,12 +201,16 @@ make build
 ```
 
 ### Database Lock Errors
+
 Tests use in-memory databases (`:memory:`), so file locks shouldn't occur. If they do:
+
 - Check for orphaned test processes
 - Restart your terminal
 
 ### Qt-related Errors
+
 Ensure Qt development packages are installed:
+
 ```bash
 make install  # Installs dependencies
 ```

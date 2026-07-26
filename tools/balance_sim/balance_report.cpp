@@ -174,7 +174,8 @@ auto summarize(const Fixture& fixture,
         QStringLiteral("timeout rate %1 above maximum %2")
             .arg(percent(summary.timeout_rate), percent(*expect.max_timeout_rate)));
   }
-  if (expect.max_spawn_side_bias && summary.spawn_side_bias > *expect.max_spawn_side_bias) {
+  if (expect.max_spawn_side_bias &&
+      summary.spawn_side_bias > *expect.max_spawn_side_bias) {
     summary.expectation_failures.push_back(
         QStringLiteral("spawn-side bias %1 above maximum %2")
             .arg(QString::number(summary.spawn_side_bias, 'f', 3),
@@ -194,19 +195,22 @@ auto render_text_report(const std::vector<FixtureSummary>& summaries) -> QString
                .arg(summary.side_a.label)
                .arg(summary.side_a.starting_units)
                .arg(summary.side_a.starting_cost)
-               .arg(percent(summary.a_win_rate), QString::number(summary.side_a.median_survivors, 'f', 1));
+               .arg(percent(summary.a_win_rate),
+                    QString::number(summary.side_a.median_survivors, 'f', 1));
     out += QStringLiteral("  B %1 [%2 units, %3g]  win %4  median survivors %5\n")
                .arg(summary.side_b.label)
                .arg(summary.side_b.starting_units)
                .arg(summary.side_b.starting_cost)
-               .arg(percent(summary.b_win_rate), QString::number(summary.side_b.median_survivors, 'f', 1));
+               .arg(percent(summary.b_win_rate),
+                    QString::number(summary.side_b.median_survivors, 'f', 1));
     out += QStringLiteral("  draw %1  timeout %2\n")
                .arg(percent(summary.draw_rate), percent(summary.timeout_rate));
     out += QStringLiteral("  median victory    : %1s\n")
                .arg(QString::number(summary.median_victory_seconds, 'f', 1));
-    out += QStringLiteral("  first contact     : %1 units (%2 battles never contacted)\n")
-               .arg(QString::number(summary.mean_first_contact_distance, 'f', 1))
-               .arg(summary.battles_without_contact);
+    out +=
+        QStringLiteral("  first contact     : %1 units (%2 battles never contacted)\n")
+            .arg(QString::number(summary.mean_first_contact_distance, 'f', 1))
+            .arg(summary.battles_without_contact);
     out += QStringLiteral("  damage A r/m      : %1 / %2\n")
                .arg(QString::number(summary.side_a.mean_damage_ranged, 'f', 0),
                     QString::number(summary.side_a.mean_damage_melee, 'f', 0));
@@ -222,10 +226,12 @@ auto render_text_report(const std::vector<FixtureSummary>& summaries) -> QString
     if (summary.invalid.friendly_fire_hits > 0 ||
         summary.invalid.ranged_shots_while_melee_locked > 0 ||
         summary.invalid.idle_unit_seconds_in_contact > 0.0) {
-      out += QStringLiteral("  INVALID: friendly-fire %1, ranged-in-melee %2, idle %3 unit-s\n")
+      out += QStringLiteral(
+                 "  INVALID: friendly-fire %1, ranged-in-melee %2, idle %3 unit-s\n")
                  .arg(summary.invalid.friendly_fire_hits)
                  .arg(summary.invalid.ranged_shots_while_melee_locked)
-                 .arg(QString::number(summary.invalid.idle_unit_seconds_in_contact, 'f', 1));
+                 .arg(QString::number(
+                     summary.invalid.idle_unit_seconds_in_contact, 'f', 1));
     }
 
     for (const auto& failure : summary.expectation_failures) {
@@ -309,7 +315,8 @@ auto render_json_report(const std::vector<FixtureSummary>& summaries) -> QByteAr
     });
   }
 
-  return QJsonDocument(QJsonObject{{"fixtures", fixtures}}).toJson(QJsonDocument::Indented);
+  return QJsonDocument(QJsonObject{{"fixtures", fixtures}})
+      .toJson(QJsonDocument::Indented);
 }
 
 auto render_csv_report(const std::vector<FixtureSummary>& summaries) -> QByteArray {
@@ -321,7 +328,8 @@ auto render_csv_report(const std::vector<FixtureSummary>& summaries) -> QByteArr
 
   for (const auto& summary : summaries) {
     for (const auto& battle : summary.battle_results) {
-      csv += QStringLiteral("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%17,%18,%19,%20,%21\n")
+      csv += QStringLiteral("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%"
+                            "17,%18,%19,%20,%21\n")
                  .arg(summary.id)
                  .arg(battle.seed)
                  .arg(battle.sides_swapped ? 1 : 0)
@@ -342,7 +350,8 @@ auto render_csv_report(const std::vector<FixtureSummary>& summaries) -> QByteArr
                  .arg(QString::number(battle.side_b.mean_cohesion_radius, 'f', 3))
                  .arg(battle.invalid.friendly_fire_hits)
                  .arg(battle.invalid.ranged_shots_while_melee_locked)
-                 .arg(QString::number(battle.invalid.idle_unit_seconds_in_contact, 'f', 1));
+                 .arg(QString::number(
+                     battle.invalid.idle_unit_seconds_in_contact, 'f', 1));
     }
   }
   return csv.toUtf8();

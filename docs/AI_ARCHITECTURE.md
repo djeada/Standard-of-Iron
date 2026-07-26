@@ -63,19 +63,19 @@ The expensive part is the thinking, so it is throttled and handed to a worker th
 
 Most AI code lives in `game/systems/ai_system/`.
 
-| File | Responsibility |
-| --- | --- |
-| `ai_types.h` | Snapshot, context, strategy config, commands |
-| `ai_snapshot_builder.cpp` | Reads visible world state into `AISnapshot` |
-| `ai_reasoner.cpp` | Updates persistent AI context and state |
-| `ai_executor.cpp` | Runs behaviors and collects commands |
-| `ai_worker.cpp` | Background worker wrapper |
-| `ai_command_filter.cpp` | Prevents duplicate/spammy commands |
-| `ai_command_applier.cpp` | Applies AI commands back to the game |
-| `ai_strategy.cpp` | Strategy presets, personality shaping, difficulty tuning |
-| `ai_utils.h` | Assignment cleanup and force-role helper functions |
-| `behaviors/*.cpp` | Tactical and macro behavior implementations |
-| `game/systems/ai_system.cpp` | Owns AI instances and update cadence |
+| File                         | Responsibility                                           |
+| ---------------------------- | -------------------------------------------------------- |
+| `ai_types.h`                 | Snapshot, context, strategy config, commands             |
+| `ai_snapshot_builder.cpp`    | Reads visible world state into `AISnapshot`              |
+| `ai_reasoner.cpp`            | Updates persistent AI context and state                  |
+| `ai_executor.cpp`            | Runs behaviors and collects commands                     |
+| `ai_worker.cpp`              | Background worker wrapper                                |
+| `ai_command_filter.cpp`      | Prevents duplicate/spammy commands                       |
+| `ai_command_applier.cpp`     | Applies AI commands back to the game                     |
+| `ai_strategy.cpp`            | Strategy presets, personality shaping, difficulty tuning |
+| `ai_utils.h`                 | Assignment cleanup and force-role helper functions       |
+| `behaviors/*.cpp`            | Tactical and macro behavior implementations              |
+| `game/systems/ai_system.cpp` | Owns AI instances and update cadence                     |
 
 ## What the AI knows
 
@@ -107,12 +107,12 @@ The important change is `strategic_objectives`: the AI keeps enemy structures an
 - **assembled unit count**
 - shared **macro targets**
 - outpost planning data:
-  - `has_expansion_site`
-  - `expansion_site_x/z`
-  - `outpost_barracks_count`
-  - `outpost_home_count`
-  - `expansion_construction_pending`
-  - `last_expansion_order_time`
+    - `has_expansion_site`
+    - `expansion_site_x/z`
+    - `outpost_barracks_count`
+    - `outpost_home_count`
+    - `expansion_construction_pending`
+    - `last_expansion_order_time`
 
 This is still heuristic AI, not a heavyweight planner, but the persistent context makes it feel much more intentional.
 
@@ -141,17 +141,17 @@ The important modern behavior is that **Defending is no longer sticky forever**.
 
 Behaviors are modular and ordered by priority.
 
-| Behavior | Priority | Concurrent? | Current job |
-| --- | --- | --- | --- |
-| `RetreatBehavior` | Critical | No | Pull damaged armies back to safety |
-| `DefendBehavior` | Critical | No | React to local threats, prefer reserve first |
-| `ProductionBehavior` | High | Yes | Keep barracks producing from style-aware targets |
-| `BuilderBehavior` | High | Yes | Build homes, barracks, towers, catapults, and outposts |
-| `CommanderBehavior` | High | Yes | Move commanders and trigger rally ability |
-| `ExpandBehavior` | High | No | Capture neutral barracks or escort the main force to an outpost site |
-| `AttackBehavior` | Normal | No | Main-army pushes, target chasing, blind marches to strategic objectives |
-| `HarassBehavior` | Low | Yes | Raider detachment against isolated or strategic targets |
-| `GatherBehavior` | Low | No | Assemble the main army around the rally area |
+| Behavior             | Priority | Concurrent? | Current job                                                             |
+| -------------------- | -------- | ----------- | ----------------------------------------------------------------------- |
+| `RetreatBehavior`    | Critical | No          | Pull damaged armies back to safety                                      |
+| `DefendBehavior`     | Critical | No          | React to local threats, prefer reserve first                            |
+| `ProductionBehavior` | High     | Yes         | Keep barracks producing from style-aware targets                        |
+| `BuilderBehavior`    | High     | Yes         | Build homes, barracks, towers, catapults, and outposts                  |
+| `CommanderBehavior`  | High     | Yes         | Move commanders and trigger rally ability                               |
+| `ExpandBehavior`     | High     | No          | Capture neutral barracks or escort the main force to an outpost site    |
+| `AttackBehavior`     | Normal   | No          | Main-army pushes, target chasing, blind marches to strategic objectives |
+| `HarassBehavior`     | Low      | Yes         | Raider detachment against isolated or strategic targets                 |
+| `GatherBehavior`     | Low      | No          | Assemble the main army around the rally area                            |
 
 Three concurrency rules matter:
 
@@ -318,38 +318,38 @@ Mission files are the current authoring surface for AI setup. The loader reads `
 
 ```json
 {
-  "id": "roman_legion_alpha",
-  "nation": "roman_republic",
-  "faction": "roman",
-  "color": "red",
-  "team_id": 1,
-  "difficulty": "hard",
-  "strategy": "balanced",
-  "personality": {
-    "aggression": 0.62,
-    "defense": 0.55,
-    "harassment": 0.30
-  },
-  "starting_buildings": [
-    {
-      "type": "barracks",
-      "position": { "x": 132, "z": 84 },
-      "max_population": 180
-    }
-  ],
-  "starting_units": [
-    {
-      "type": "spearman",
-      "count": 8,
-      "position": { "x": 128, "z": 86 }
+    "id": "roman_legion_alpha",
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "team_id": 1,
+    "difficulty": "hard",
+    "strategy": "balanced",
+    "personality": {
+        "aggression": 0.62,
+        "defense": 0.55,
+        "harassment": 0.3
     },
-    {
-      "type": "builder",
-      "count": 2,
-      "position": { "x": 134, "z": 82 }
-    }
-  ],
-  "commander_troop": "roman_field_commander"
+    "starting_buildings": [
+        {
+            "type": "barracks",
+            "position": { "x": 132, "z": 84 },
+            "max_population": 180
+        }
+    ],
+    "starting_units": [
+        {
+            "type": "spearman",
+            "count": 8,
+            "position": { "x": 128, "z": 86 }
+        },
+        {
+            "type": "builder",
+            "count": 2,
+            "position": { "x": 134, "z": 82 }
+        }
+    ],
+    "commander_troop": "roman_field_commander"
 }
 ```
 
@@ -364,36 +364,36 @@ Resulting feel:
 
 ```json
 {
-  "id": "numidian_raiders",
-  "nation": "carthage",
-  "faction": "carthaginian",
-  "color": "yellow",
-  "difficulty": "medium",
-  "strategy": "harasser",
-  "personality": {
-    "aggression": 0.74,
-    "defense": 0.28,
-    "harassment": 0.84
-  },
-  "starting_units": [
-    {
-      "type": "horse_swordsman",
-      "count": 5,
-      "position": { "x": 18, "z": 80 }
+    "id": "numidian_raiders",
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "yellow",
+    "difficulty": "medium",
+    "strategy": "harasser",
+    "personality": {
+        "aggression": 0.74,
+        "defense": 0.28,
+        "harassment": 0.84
     },
-    {
-      "type": "builder",
-      "count": 1,
-      "position": { "x": 16, "z": 82 }
-    }
-  ],
-  "starting_buildings": [
-    {
-      "type": "barracks",
-      "position": { "x": 14, "z": 80 },
-      "max_population": 120
-    }
-  ]
+    "starting_units": [
+        {
+            "type": "horse_swordsman",
+            "count": 5,
+            "position": { "x": 18, "z": 80 }
+        },
+        {
+            "type": "builder",
+            "count": 1,
+            "position": { "x": 16, "z": 82 }
+        }
+    ],
+    "starting_buildings": [
+        {
+            "type": "barracks",
+            "position": { "x": 14, "z": 80 },
+            "max_population": 120
+        }
+    ]
 }
 ```
 
@@ -449,30 +449,30 @@ Relative to the original passive AI, the current system is much better at:
 The AI is improved, but it is not yet "finished RTS AI." The most important remaining gaps are:
 
 1. **True multi-base planning**
-   - multiple active bases
-   - per-base rally points
-   - per-base production roles
-   - better outpost abandonment / retarget logic
+    - multiple active bases
+    - per-base rally points
+    - per-base production roles
+    - better outpost abandonment / retarget logic
 
 2. **Richer force planner**
-   - siege groups
-   - flankers
-   - synchronized attack waves
-   - regroup / reform logic after failed pushes
+    - siege groups
+    - flankers
+    - synchronized attack waves
+    - regroup / reform logic after failed pushes
 
 3. **Data-driven profiles**
-   - move strategy presets out of code into assets/data
-   - let designers tune AI personalities without recompiling
+    - move strategy presets out of code into assets/data
+    - let designers tune AI personalities without recompiling
 
 4. **Stronger strategic economy awareness**
-   - more explicit resource pressure
-   - better builder safety / routing
-   - broader structure placement logic
+    - more explicit resource pressure
+    - better builder safety / routing
+    - broader structure placement logic
 
 5. **Team and campaign coordination**
-   - allied AI timing
-   - shared fronts
-   - mission-aware operational goals
+    - allied AI timing
+    - shared fronts
+    - mission-aware operational goals
 
 ## Recommended next expansion order
 

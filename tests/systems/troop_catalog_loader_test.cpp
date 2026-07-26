@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include <array>
+#include <gtest/gtest.h>
 #include <string>
 #include <unordered_map>
 
@@ -213,7 +212,8 @@ TEST(TroopCatalogLoader, CompiledDefaultsMatchTheShippedTroopData) {
     EXPECT_EQ(fallback.combat.can_ranged, loaded->combat.can_ranged) << name;
     EXPECT_EQ(fallback.combat.can_melee, loaded->combat.can_melee) << name;
 
-    EXPECT_FLOAT_EQ(fallback.visuals.render_scale, loaded->visuals.render_scale) << name;
+    EXPECT_FLOAT_EQ(fallback.visuals.render_scale, loaded->visuals.render_scale)
+        << name;
     EXPECT_FLOAT_EQ(fallback.visuals.selection_ring_size,
                     loaded->visuals.selection_ring_size)
         << name;

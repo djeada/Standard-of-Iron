@@ -44,8 +44,6 @@ TestCase {
     }
 
     function test_factions_with_emblem_art_expose_it() {
-        
-        
         verify(FactionTheme.describe("roman_republic").emblem.length > 0);
         verify(FactionTheme.describe("carthage").emblem.length > 0);
     }
