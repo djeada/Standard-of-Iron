@@ -142,6 +142,53 @@ Exports Qt `.ts` translation files to CSV format for easier editing.
 
 ## Development Scripts
 
+### `format.py` - Formatting and Linting Driver
+
+The single entry point behind every `make format*` / `make lint*` target, the
+pre-commit hooks and CI, so those three can never disagree about what
+"formatted" means. Tool versions are pinned in `tools/versions.env`.
+
+Formatting is whitespace-only: it never removes comments and never applies
+semantic refactors. Linting and the destructive comment strip are separate
+operations behind separate flags.
+
+**Usage:**
+```bash
+# Selectors: --all (default), --changed BASE, --staged, --files PATH...
+python scripts/format.py --all --fix
+python scripts/format.py --all --check
+python scripts/format.py --changed origin/main --check
+python scripts/format.py --staged --fix
+python scripts/format.py --files game/foo.cpp ui/qml/Hud.qml
+
+# Linting
+python scripts/format.py --all --lint             # report
+python scripts/format.py --all --lint --fix       # apply safe autofixes
+python scripts/format.py --all --lint --deep      # + whole-tree clang-tidy
+
+# Toolchain
+python scripts/format.py --doctor
+python scripts/format.py --bootstrap
+
+# Destructive, opt-in only
+python scripts/format.py --all --strip-comments
+```
+
+**Useful flags:** `--languages` restricts to a subset (`cxx`, `qml`, `python`,
+`shell`, `cmake`, `yaml`, `markdown`, `json`, `glsl`), `--strict` fails when a
+required tool is missing, `--fail-on-advisory` promotes advisory findings to
+failures, `--jobs` controls parallelism, `--dry-run` prints without running.
+
+Executables can be overridden through `CLANG_FORMAT`, `CLANG_TIDY`,
+`QMLFORMAT`, `QMLLINT`, `BLACK`, `RUFF`, `SHELLCHECK`, `SHFMT`, `GERSEMI`,
+`YAMLLINT`, `PRETTIER` and `MARKDOWNLINT`.
+
+### `check-quality-markers.py` - Do-Not-Commit Scan
+
+Rejects unresolved merge conflict markers, `NOCOMMIT` annotations and
+interactive debugger hooks (`pdb`, `breakpoint()`). Ordinary TODO/FIXME
+comments are fine. Run by the pre-commit hook and by `make quality`.
+
 ### `validate_shader_uniforms.py` - Shader Uniform Validation
 
 **⚠️ IMPORTANT**: Always run this after modifying shader code or backend uniform handling!
@@ -203,6 +250,10 @@ Helper script for debugging audio issues.
 ### `remove-comments.sh` - Code Cleanup
 
 Removes comments from supported source files in the paths you pass it, or from the current directory by default (use with caution).
+
+Prefer `make strip-comments STRIP_COMMENTS_CONFIRM=1`, which routes through
+`format.py` so the same file-selection and exclusion rules apply. This is never
+run by `make format`.
 
 **Features:**
 - ✓ Supports C/C++ files (`.c`, `.cpp`, `.h`, `.hpp`, etc.)

@@ -15,9 +15,9 @@ Options:
 
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
-from collections import defaultdict
 
 
 class Colors:
@@ -170,7 +170,7 @@ def main():
             f"  Shader has:    {Colors.GREEN}\"{mismatch['shader_name']}\"{Colors.NC}"
         )
         print(f"  Affected shaders: {', '.join(mismatch['shaders'])}")
-        print(f"  Locations in backend.cpp:")
+        print("  Locations in backend.cpp:")
         for line_num, line in mismatch["locations"][:3]:
             print(f"    Line {line_num}: {line}")
         if len(mismatch["locations"]) > 3:
@@ -185,9 +185,7 @@ def main():
     )
     print(f"resulting in rendering errors.{Colors.NC}")
     print()
-    print(
-        f"To fix: Update backend.cpp to use the exact uniform names from the shaders."
-    )
+    print("To fix: Update backend.cpp to use the exact uniform names from the shaders.")
 
     return 1 if mismatches else 0
 

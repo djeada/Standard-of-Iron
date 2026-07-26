@@ -53,32 +53,32 @@ semver_ge() {
   if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
     return 1
   fi
-  
+
   # Ensure inputs are valid version strings (only numbers and dots)
   if ! echo "$1" | grep -qE '^[0-9]+(\.[0-9]+)*$' || ! echo "$2" | grep -qE '^[0-9]+(\.[0-9]+)*$'; then
     return 1
   fi
-  
+
   local IFS=.
   local a1 a2 a3 b1 b2 b3
   read -r a1 a2 a3 <<< "$1"
   read -r b1 b2 b3 <<< "$2"
-  
+
   # Ensure all variables are numeric
   a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
   b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
-  
+
   # Convert to integers, defaulting to 0 if not numeric
   a1=$((a1 + 0)); a2=$((a2 + 0)); a3=$((a3 + 0))
   b1=$((b1 + 0)); b2=$((b2 + 0)); b3=$((b3 + 0))
-  
+
   (( a1 > b1 )) && return 0
   (( a1 < b1 )) && return 1
   (( a2 > b2 )) && return 0
   (( a2 < b2 )) && return 1
   (( a3 >= b3 )) && return 0
   return 1
-} 
+}
 
 is_macos() { [ "$(uname -s)" = "Darwin" ]; }
 
@@ -133,7 +133,7 @@ detect_distro() {
     printf 'darwin||macOS\n'   # id|like|pretty
     return
   fi
-  local id=unknown like= pretty=
+  local id=unknown like='' pretty=''
   while IFS='=' read -r k v; do
     case "$k" in
       ID) id=${v} ;;

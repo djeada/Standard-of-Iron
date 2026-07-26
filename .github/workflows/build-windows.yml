@@ -1,51 +1,71 @@
-name: Windows Build (tags only)
+---
+name: Build (Windows)
 
+# Reusable: called by nightly.yml and release.yml. Never publishes.
 on:
-  push:
-    tags:
-      - 'v*'   # run only on tags like v1.2.3
+  workflow_call:
+    inputs:
+      build-type:
+        description: CMake build type
+        type: string
+        default: Release
+      upload-artifacts:
+        description: Upload the packaged ZIP as a workflow artifact
+        type: boolean
+        default: true
+      artifact-name:
+        description: Name of the uploaded artifact
+        type: string
+        default: windows-zip
+    outputs:
+      package:
+        description: File name of the produced ZIP
+        value: ${{ jobs.build.outputs.package }}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
-
+    timeout-minutes: 120
+    outputs:
+      package: ${{ steps.package.outputs.name }}
     env:
-      BUILD_TYPE: Release
+      BUILD_TYPE: ${{ inputs.build-type }}
       APP_NAME: standard_of_iron
       APP_DIR: build\bin
       QML_DIR: ui\qml
-
       QT_VERSION: 6.8.2
       QT_ARCH: win64_msvc2022_64
       QT_ROOT: D:\a\Standard-of-Iron\Qt
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
-          python-version: '3.12'
+          persist-credentials: false
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756  # v1
 
       # Fast path: official installer (allowed to fail)
       - name: Install Qt (fast path)
         id: fastqt
         continue-on-error: true
-        uses: jurplel/install-qt-action@v4
+        uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
         with:
           version: ${{ env.QT_VERSION }}
           host: windows
           arch: ${{ env.QT_ARCH }}
           cache: true
-          aqtversion: '==3.3.0'
-          modules: 'qt5compat qtmultimedia'
+          aqtversion: "==3.3.0"
+          modules: qt5compat qtmultimedia
           tools-only: false
 
-      # Fallback: install with aqt directly if fast path fails
+      # Fallback: install with aqt directly if the fast path fails
       - name: Install Qt (fallback via aqt)
         if: ${{ steps.fastqt.outcome != 'success' }}
         shell: pwsh
@@ -71,16 +91,15 @@ jobs:
             exit 1
           }
 
-          # Export env and PATH
           echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$qtDir\bin"     | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$qtDir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # Normalize env for both paths
       - name: Normalize Qt env
         shell: pwsh
         run: |
           $candidates = @()
-          if ($env:Qt6_DIR)     { $candidates += $env:Qt6_DIR }
+          if ($env:Qt6_DIR) { $candidates += $env:Qt6_DIR }
           if ($env:QT_ROOT_DIR) { $candidates += $env:QT_ROOT_DIR }
           $candidates += (Join-Path $env:QT_ROOT "$env:QT_VERSION\$env:QT_ARCH")
 
@@ -98,7 +117,7 @@ jobs:
           }
 
           echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$qtDir\bin"     | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$qtDir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           Write-Host "Qt6_DIR=$qtDir"
 
       - name: Verify Qt installation
@@ -114,16 +133,29 @@ jobs:
             exit 1
           }
 
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: build/_deps
+          key: deps-windows-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: deps-windows-
+
       - name: Configure (CMake + Ninja)
         shell: pwsh
         run: |
           cmake -S . -B build -G "Ninja" `
-            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+            -DCMAKE_BUILD_TYPE=${{ inputs.build-type }} `
             -DDEFAULT_LANG=en `
             -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
 
       - name: Build
         run: cmake --build build
+
+      - name: Unit tests
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: .\build\bin\standard_of_iron_tests.exe
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
@@ -132,31 +164,27 @@ jobs:
           CERT_DATA: ${{ secrets.WINDOWS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
-          # Skip if certificates are not configured
           if ([string]::IsNullOrEmpty($env:CERT_DATA) -or [string]::IsNullOrEmpty($env:CERT_PASSWORD)) {
             Write-Host "Code signing certificates not configured, skipping signing step"
             exit 0
           }
-          
-          # Validate that the executable exists
-          $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+
+          $exePath = "$env:APP_DIR\$env:APP_NAME.exe"
           if (!(Test-Path $exePath)) {
             Write-Error "Executable not found at: $exePath"
             exit 1
           }
-          
-          # Decode certificate from base64 secret and save to temp file
+
           $certPath = "$env:TEMP\cert.pfx"
           $certBytes = [System.Convert]::FromBase64String($env:CERT_DATA)
           [System.IO.File]::WriteAllBytes($certPath, $certBytes)
-          
+
           try {
-            # Find signtool.exe - check multiple potential locations
             $searchPaths = @(
               "$env:ProgramFiles(x86)\Windows Kits",
               "$env:ProgramFiles\Windows Kits"
             )
-            
+
             $signtool = $null
             foreach ($searchPath in $searchPaths) {
               if (Test-Path $searchPath) {
@@ -166,15 +194,14 @@ jobs:
                 if ($signtool) { break }
               }
             }
-            
+
             if (-not $signtool) {
               Write-Error "signtool.exe not found in Windows Kits directories"
               exit 1
             }
-            
+
             Write-Host "Using signtool: $($signtool.FullName)"
-            
-            # Prepare signing arguments - use environment variable for password
+
             $signArgs = @(
               "sign",
               "/f", $certPath,
@@ -185,30 +212,25 @@ jobs:
               "/v",
               $exePath
             )
-            
+
             Write-Host "Signing $exePath..."
             & $signtool.FullName $signArgs
-            
+
             if ($LASTEXITCODE -ne 0) {
               Write-Error "Code signing failed with exit code $LASTEXITCODE"
               exit 1
             }
-            
-            Write-Host "Successfully signed $exePath"
-            
-            # Verify the signature
+
             Write-Host "Verifying signature..."
             & $signtool.FullName verify /pa /v $exePath
-            
+
             if ($LASTEXITCODE -ne 0) {
               Write-Error "Signature verification failed with exit code $LASTEXITCODE"
               exit 1
             }
-            
+
             Write-Host "Signature verification successful"
-            
           } finally {
-            # Clean up certificate file
             if (Test-Path $certPath) {
               Remove-Item $certPath -Force
             }
@@ -218,10 +240,9 @@ jobs:
       - name: Deploy Qt
         shell: pwsh
         run: |
-          $mode = if ("${{ env.BUILD_TYPE }}" -eq "Debug") { "--debug" } else { "--release" }
-          windeployqt $mode --compiler-runtime --qmldir "$env:QML_DIR" "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+          $mode = if ("${{ inputs.build-type }}" -eq "Debug") { "--debug" } else { "--release" }
+          windeployqt $mode --compiler-runtime --qmldir "$env:QML_DIR" "$env:APP_DIR\$env:APP_NAME.exe"
 
-      # SAFE: write qt.conf
       - name: Write qt.conf
         shell: pwsh
         run: |
@@ -233,7 +254,6 @@ jobs:
             'Translations = translations'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\qt.conf"
 
-      # Copy Windows launcher and debug scripts from dist/windows/
       - name: Copy launcher and debug scripts
         shell: pwsh
         run: |
@@ -243,20 +263,20 @@ jobs:
             "run_debug.cmd",
             "run_debug_softwaregl.cmd"
           )
-          
+
           foreach ($script in $scripts) {
             $src = "dist\windows\$script"
             $dst = "$env:APP_DIR\$script"
-            
+
             if (!(Test-Path $src)) {
               Write-Error "Source script not found: $src"
               exit 1
             }
-            
+
             Copy-Item $src $dst -Force
-            Write-Host "✓ Copied $script"
+            Write-Host "Copied $script"
           }
-          
+
           Write-Host "All launcher scripts deployed successfully."
 
       - name: Add README.txt for distribution
@@ -284,6 +304,7 @@ jobs:
             ''
             'Report issues at: https://github.com/djeada/Standard-of-Iron/issues'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\README.txt"
+
       - name: Add software OpenGL fallback (mandatory)
         shell: pwsh
         run: |
@@ -291,27 +312,26 @@ jobs:
           # The renderer uses desktop GLSL 3.3 Core. ANGLE's OpenGL ES DLLs
           # cannot run those shaders; Qt's opengl32sw.dll is the compatible
           # fallback for machines whose native OpenGL driver is insufficient.
-          $required = @("d3dcompiler_47.dll","opengl32sw.dll")
+          $required = @("d3dcompiler_47.dll", "opengl32sw.dll")
           $missing = @()
-          
+
           foreach ($f in $required) {
             $src = Join-Path $qtbin $f
             if (Test-Path $src) {
               Copy-Item $src "$env:APP_DIR" -Force
-              Write-Host "✓ Copied $f"
+              Write-Host "Copied $f"
             } else {
-              Write-Error "✗ Missing required fallback DLL: $f"
+              Write-Error "Missing required fallback DLL: $f"
               $missing += $f
             }
           }
-          
+
           if ($missing.Count -gt 0) {
             Write-Error "CRITICAL: Missing graphics fallback DLLs: $($missing -join ', ')"
-            Write-Error "These DLLs are required for compatibility on systems without proper GPU drivers."
             Write-Error "Without them, the app will fail silently on many user machines."
             exit 1
           }
-          
+
           Write-Host "All graphics fallback DLLs successfully deployed."
 
       - name: Copy assets
@@ -327,76 +347,70 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "=== Verifying Runtime Completeness ==="
-          
-          # Critical Qt runtime files
+
           $req = @(
             "$env:APP_DIR\platforms\qwindows.dll",
             "$env:APP_DIR\Qt6Core.dll",
             "$env:APP_DIR\Qt6Gui.dll",
             "$env:APP_DIR\Qt6Qml.dll"
           )
-          
-          # Graphics fallback DLLs (now mandatory)
+
           $graphics_fallbacks = @(
             "$env:APP_DIR\d3dcompiler_47.dll",
             "$env:APP_DIR\opengl32sw.dll"
           )
-          
+
           $missing = @()
-          
-          Write-Host "`nChecking Qt runtime DLLs..."
+
+          Write-Host "Checking Qt runtime DLLs..."
           foreach ($f in $req) {
-            if (!(Test-Path $f)) { 
-              $missing += $f 
-              Write-Error "✗ Missing: $f"
+            if (!(Test-Path $f)) {
+              $missing += $f
+              Write-Error "Missing: $f"
             } else {
-              Write-Host "✓ Found: $(Split-Path -Leaf $f)"
+              Write-Host "Found: $(Split-Path -Leaf $f)"
             }
           }
-          
-          Write-Host "`nChecking graphics fallback DLLs..."
+
+          Write-Host "Checking graphics fallback DLLs..."
           foreach ($f in $graphics_fallbacks) {
-            if (!(Test-Path $f)) { 
-              $missing += $f 
-              Write-Error "✗ Missing: $f"
+            if (!(Test-Path $f)) {
+              $missing += $f
+              Write-Error "Missing: $f"
             } else {
-              Write-Host "✓ Found: $(Split-Path -Leaf $f)"
+              Write-Host "Found: $(Split-Path -Leaf $f)"
             }
           }
-          
+
           if ($missing.Count -gt 0) {
-            Write-Error "`nDEPLOYMENT FAILED - Missing files:`n$($missing -join "`n")"
+            Write-Error "DEPLOYMENT FAILED - Missing files: $($missing -join ', ')"
             exit 1
           }
-          
-          Write-Host "`n✓ All required runtime files are present."
-          Write-Host "Deployment is complete and ready for distribution."
+
+          Write-Host "All required runtime files are present."
 
       - name: Dependency check (dumpbin)
         shell: pwsh
         run: |
           Write-Host "Checking EXE dependencies with dumpbin..."
-          
-          # Find dumpbin.exe in Visual Studio installation
+
           $dumpbin = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse -Filter "dumpbin.exe" -ErrorAction SilentlyContinue |
             Where-Object { $_.FullName -match "Hostx64\\x64" } |
             Select-Object -First 1
-          
+
           if (-not $dumpbin) {
             Write-Warning "dumpbin.exe not found, skipping dependency check"
             exit 0
           }
-          
+
           Write-Host "Using dumpbin: $($dumpbin.FullName)"
-          
-          # Get dependencies
-          $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+
+          $exePath = "$env:APP_DIR\$env:APP_NAME.exe"
           $output = & $dumpbin.FullName /DEPENDENTS $exePath 2>&1 | Out-String
-          
+
           Write-Host "Dependencies:"
           Write-Host $output
-          
-          # Parse DLL names from dumpbin output
+
           $dllPattern = '^\s+([a-zA-Z0-9_\-\.]+\.dll)\s*$'
           $dependencies = @()
           foreach ($line in $output -split "`n") {
@@ -404,9 +418,8 @@ jobs:
               $dependencies += $matches[1]
             }
           }
-          
-          # Known system DLLs that don't need to be bundled
-          # These include Windows API sets (api-ms-win-*) and core system DLLs
+
+          # Known system DLLs that do not need to be bundled.
           $knownSystemDlls = @(
             'KERNEL32.dll',
             'USER32.dll',
@@ -419,27 +432,24 @@ jobs:
             'WS2_32.dll',
             'NETAPI32.dll'
           )
-          
-          # Check if each dependency exists in APP_DIR or is a known system DLL
+
           $systemDirs = @(
             "$env:SystemRoot\System32",
             "$env:SystemRoot\SysWOW64"
           )
-          
+
           $missingDeps = @()
           foreach ($dll in $dependencies) {
-            # Skip Windows API set DLLs (api-ms-win-*, ext-ms-*)
             if ($dll -match '^(api-ms-win-|ext-ms-)') {
               Write-Host "Skipping Windows API set: $dll"
               continue
             }
-            
-            # Skip known system DLLs
+
             if ($knownSystemDlls -contains $dll) {
               Write-Host "Skipping known system DLL: $dll"
               continue
             }
-            
+
             $foundInApp = Test-Path (Join-Path $env:APP_DIR $dll)
             $foundInSystem = $false
             foreach ($sysDir in $systemDirs) {
@@ -448,7 +458,7 @@ jobs:
                 break
               }
             }
-            
+
             if (-not $foundInApp -and -not $foundInSystem) {
               $missingDeps += $dll
               Write-Warning "Missing dependency: $dll"
@@ -457,12 +467,12 @@ jobs:
               Write-Host "Found $dll in $location"
             }
           }
-          
+
           if ($missingDeps.Count -gt 0) {
             Write-Error "Missing DLL dependencies: $($missingDeps -join ', ')"
             exit 1
           }
-          
+
           Write-Host "All required dependencies are present"
 
       - name: Verify packaged gameplay renderer (software OpenGL)
@@ -475,7 +485,7 @@ jobs:
 
           Push-Location "$env:APP_DIR"
           try {
-            $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" `
+            $process = Start-Process -FilePath ".\$env:APP_NAME.exe" `
               -ArgumentList "--renderer-self-test" `
               -RedirectStandardOutput "renderer_self_test_out.log" `
               -RedirectStandardError "renderer_self_test_err.log" `
@@ -507,17 +517,16 @@ jobs:
           } finally {
             Pop-Location
           }
+
       # Keep a static guard alongside the packaged runtime self-test.
       - name: Validate OpenGL requirements
-        run: python3 scripts/validate_opengl_requirements.py
+        run: python scripts/validate_opengl_requirements.py
 
-      # Final readiness check
       - name: Final runtime readiness verification
         shell: pwsh
         run: |
           Write-Host "=== Final Runtime Readiness Check ==="
-          Write-Host ""
-          
+
           $criticalFiles = @(
             "$env:APP_DIR\standard_of_iron.exe",
             "$env:APP_DIR\LAUNCH.bat",
@@ -527,56 +536,59 @@ jobs:
             "$env:APP_DIR\opengl32sw.dll",
             "$env:APP_DIR\d3dcompiler_47.dll"
           )
-          
+
           $allPresent = $true
           foreach ($file in $criticalFiles) {
             if (Test-Path $file) {
-              Write-Host "✓ $(Split-Path -Leaf $file)"
+              Write-Host "OK: $(Split-Path -Leaf $file)"
             } else {
-              Write-Error "✗ MISSING: $(Split-Path -Leaf $file)"
+              Write-Error "MISSING: $(Split-Path -Leaf $file)"
               $allPresent = $false
             }
           }
-          
+
           if (-not $allPresent) {
             Write-Error "Deployment is incomplete!"
             exit 1
           }
-          
-          Write-Host ""
-          Write-Host "═══════════════════════════════════════════════════════"
-          Write-Host "  ✓ BUILD IS SELF-CONTAINED AND RUNTIME READY"
-          Write-Host "═══════════════════════════════════════════════════════"
-          Write-Host ""
-          Write-Host "Included components:"
-          Write-Host "  • Main executable with fallback rendering"
-          Write-Host "  • User-friendly launcher (LAUNCH.bat)"
-          Write-Host "  • Comprehensive documentation (README.txt)"
-          Write-Host "  • Debug/troubleshooting scripts"
-          Write-Host "  • Software OpenGL fallback (desktop OpenGL 3.3)"
-          Write-Host "  • All required Qt and system libraries"
-          Write-Host ""
-          Write-Host "Users can:"
-          Write-Host "  1. Double-click LAUNCH.bat for guided startup"
-          Write-Host "  2. Use debug scripts if issues occur"
-          Write-Host "  3. Fallback to software rendering if GPU fails"
-          Write-Host "  4. Read README.txt for detailed troubleshooting"
-          Write-Host ""
+
+          Write-Host "Build is self-contained and runtime ready."
 
       - name: Zip
+        id: package
         shell: pwsh
         run: |
-          $zip = "standard_of_iron-win-x64-${{ env.BUILD_TYPE }}.zip"
+          $zip = "standard_of_iron-win-x64-${{ inputs.build-type }}.zip"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path "$env:APP_DIR\*" -DestinationPath $zip -Force
+          "name=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-${{ env.BUILD_TYPE }}
-          path: standard_of_iron-win-x64-${{ env.BUILD_TYPE }}.zip
+      - name: Verify package integrity
+        shell: pwsh
+        run: |
+          $zip = "${{ steps.package.outputs.name }}"
+          $size = (Get-Item $zip).Length
+          Write-Host "ZIP size: $size bytes"
+          if ($size -lt 20000000) {
+            Write-Error "Packaged ZIP is implausibly small ($size bytes); packaging likely failed."
+            exit 1
+          }
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          # Written byte-for-byte as LF with no BOM: the release `verify` job
+          # checks this file with GNU sha256sum on Linux, which would treat a
+          # trailing CR as part of the file name and a BOM as a malformed line.
+          $line = "$hash  $zip`n"
+          $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+          [System.IO.File]::WriteAllText(
+            (Join-Path (Get-Location).Path "$zip.sha256"), $line, $utf8NoBom)
+          Write-Host "SHA256: $hash"
 
-      - name: Attach to GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        if: inputs.upload-artifacts
         with:
-          files: standard_of_iron-win-x64-${{ env.BUILD_TYPE }}.zip
+          name: ${{ inputs.artifact-name }}
+          path: |
+            standard_of_iron-win-x64-*.zip
+            standard_of_iron-win-x64-*.zip.sha256
+          retention-days: 14
+          if-no-files-found: error

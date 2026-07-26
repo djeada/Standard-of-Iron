@@ -391,9 +391,12 @@ See [CONTRIBUTING.md](https://github.com/djeada/Standard-of-Iron/blob/main/CONTR
 
 ```bash
 git clone https://github.com/<your-fork>/Standard-of-Iron.git
-make install   # Install system dependencies
-make format    # Apply code formatting before committing
-make test      # Verify all tests pass
+make install          # Install system dependencies
+make format-bootstrap # Install the pinned formatting/linting toolchain
+make hooks-install    # Install the pre-commit git hooks
+make format           # Apply code formatting before committing
+make quality          # Formatting + linting gates, no compiler needed
+make test             # Verify all tests pass
 ```
 
 ### Extending the Engine

@@ -3,7 +3,6 @@ import sys
 
 import bpy
 
-
 IMPORTERS = {
     ".glb": bpy.ops.import_scene.gltf,
     ".gltf": bpy.ops.import_scene.gltf,

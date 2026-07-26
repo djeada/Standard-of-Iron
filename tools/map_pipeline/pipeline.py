@@ -24,10 +24,10 @@ from pathlib import Path
 from typing import Iterable, List, Tuple
 from urllib.request import Request, urlopen
 
-import numpy as np
-import mapbox_earcut as earcut
-from PIL import Image, ImageDraw, ImageFilter
 import fiona
+import mapbox_earcut as earcut
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
 from shapely.geometry import box, mapping, shape
 from shapely.ops import transform
 
@@ -380,9 +380,9 @@ def render_textures(
 def render_heightmap(geotiff_path: Path, bounds: MapBounds, size: int = 1024):
     try:
         import rasterio
-        from rasterio.windows import from_bounds
         from rasterio.transform import from_bounds as transform_from_bounds
-        from rasterio.warp import reproject, Resampling
+        from rasterio.warp import Resampling, reproject
+        from rasterio.windows import from_bounds
     except ImportError as exc:
         raise RuntimeError(
             "rasterio is required to generate terrain heightmaps. "
@@ -446,7 +446,7 @@ def render_heightmap(geotiff_path: Path, bounds: MapBounds, size: int = 1024):
 def write_obj_mesh(tris: List[float], out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lines = ["# land mesh exported from land_mesh.bin"]
-    verts = list(zip(tris[0::2], tris[1::2]))
+    verts = list(zip(tris[0::2], tris[1::2], strict=False))
     for u, v in verts:
         lines.append(f"v {u:.6f} {v:.6f} 0.0")
     tri_count = len(verts) // 3

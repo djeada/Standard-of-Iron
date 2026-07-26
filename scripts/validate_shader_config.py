@@ -8,7 +8,6 @@ import os
 import re
 import sys
 
-
 SHADER_DIR = "assets/shaders"
 STYLE_DIR = "render/entity/nations"
 
@@ -22,7 +21,7 @@ def check_shader_files():
     missing = []
 
     for troop in TROOPS:
-        for nation_short, nation_full in NATIONS.items():
+        for nation_full in NATIONS.values():
             shader_name = f"{troop}_{nation_full}"
             vert_file = os.path.join(SHADER_DIR, f"{shader_name}.vert")
             frag_file = os.path.join(SHADER_DIR, f"{shader_name}.frag")
