@@ -429,6 +429,8 @@ Item {
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 400)
+
+        height: 260
         title: qsTr("Confirm Delete")
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
@@ -454,22 +456,17 @@ Item {
 
         contentItem: Rectangle {
             color: Theme.cardBase
-            implicitHeight: warningText.implicitHeight + 40
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Theme.spacingMedium
-                spacing: Theme.spacingMedium
+            Label {
+                id: warningText
 
-                Label {
-                    id: warningText
-
-                    text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slot_name)
-                    color: Theme.textMain
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    font.pointSize: Theme.fontSizeMedium
-                }
+                x: Theme.spacingMedium
+                y: Theme.spacingMedium
+                width: confirmDeleteDialog.availableWidth - Theme.spacingMedium * 2
+                text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slot_name)
+                color: Theme.textMain
+                wrapMode: Text.WordWrap
+                font.pointSize: Theme.fontSizeMedium
             }
         }
     }

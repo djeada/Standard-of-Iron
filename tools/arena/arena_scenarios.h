@@ -75,6 +75,8 @@ inline constexpr char k_carthage_fortification_showcase_id[] =
     "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
 inline constexpr char k_sepulcher_roster_lineup_id[] = "sepulcher_roster_lineup";
+inline constexpr char k_sepulcher_spell_fx_showcase_id[] =
+    "sepulcher_spell_fx_showcase";
 inline constexpr char k_sepulcher_vs_rome_infantry_id[] = "sepulcher_vs_rome_infantry";
 inline constexpr char k_sepulcher_vs_rome_ranged_id[] = "sepulcher_vs_rome_ranged";
 inline constexpr char k_sepulcher_vs_carthage_infantry_id[] =

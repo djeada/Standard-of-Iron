@@ -60,6 +60,8 @@ constexpr auto k_profile =
 void apply_grave_priest_cast_pose_layer(
     const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
     HumanoidPose& io_pose) {
+  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, io_pose);
+
   if (context.animation == nullptr) {
     return;
   }
@@ -76,20 +78,21 @@ void apply_grave_priest_cast_pose_layer(
   }
 
   HumanoidPoseController controller(io_pose, anim);
-  controller.tilt_torso(-0.08F * intensity, -0.12F * intensity);
+  controller.tilt_torso(-0.13F * intensity, -0.18F * intensity);
 
   QVector3D const forward = anim.heading_forward();
   QVector3D const right = anim.heading_right();
   QVector3D const up = anim.heading_up();
 
-  io_pose.hand_r += forward * (0.18F + 0.12F * intensity) +
-                    up * (0.08F + 0.06F * intensity) - right * 0.03F;
-  io_pose.elbow_r += forward * (0.04F + 0.05F * intensity) +
-                     up * (0.05F + 0.04F * intensity) - right * 0.04F;
-  io_pose.hand_l += -right * 0.05F + up * (0.03F + 0.03F * intensity) - forward * 0.03F;
-  io_pose.elbow_l +=
-      -right * 0.02F + up * (0.02F + 0.03F * intensity) - forward * 0.02F;
-  io_pose.head_pos += up * (0.01F * intensity) + forward * (0.01F * intensity);
+  io_pose.hand_r += forward * (0.23F + 0.16F * intensity) +
+                    up * (0.10F + 0.11F * intensity) - right * 0.09F;
+  io_pose.elbow_r += forward * (0.05F + 0.07F * intensity) +
+                     up * (0.06F + 0.06F * intensity) + right * 0.05F;
+  io_pose.hand_l += forward * (0.12F + 0.10F * intensity) +
+                    up * (0.09F + 0.09F * intensity) + right * 0.10F;
+  io_pose.elbow_l += forward * (0.01F + 0.04F * intensity) +
+                     up * (0.04F + 0.05F * intensity) - right * 0.07F;
+  io_pose.head_pos += up * (0.015F * intensity) + forward * (0.025F * intensity);
 }
 
 auto make_healer_spec(std::string_view renderer_key,
@@ -99,8 +102,8 @@ auto make_healer_spec(std::string_view renderer_key,
   using namespace Render::Creature::Pipeline;
 
   const auto loadout = Render::GL::Nation::resolve_equipment_loadout(renderer_key);
-  const std::array<EquipmentHandle, 2> handles{loadout.armor_handle,
-                                               loadout.cloak_handle};
+  const std::array<EquipmentHandle, 3> handles{
+      loadout.helmet_handle, loadout.armor_handle, loadout.cloak_handle};
 
   UnitVisualSpec out{};
   out.kind = CreatureKind::Humanoid;

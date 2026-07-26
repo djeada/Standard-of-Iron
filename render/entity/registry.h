@@ -73,6 +73,7 @@ struct DrawContext {
   std::uint8_t variant_override = 0;
   bool has_attack_variant_override = false;
   std::uint8_t attack_variant_override = 0;
+  bool order_markers_visible = false;
 };
 
 [[nodiscard]] inline auto

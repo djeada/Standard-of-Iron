@@ -908,6 +908,25 @@ bool GameEngine::is_campaign_mission() const {
   return m_campaign_manager->current_mission_context().is_campaign();
 }
 
+bool GameEngine::campaign_completed() const {
+  if (!m_campaign_manager) {
+    return false;
+  }
+  const QString campaign_id = m_campaign_manager->current_campaign_id();
+  if (campaign_id.isEmpty()) {
+    return false;
+  }
+
+  for (const QVariant& entry : m_campaign_manager->available_campaigns()) {
+    const QVariantMap campaign = entry.toMap();
+    if (campaign.value(QStringLiteral("campaign_id")).toString() == campaign_id ||
+        campaign.value(QStringLiteral("id")).toString() == campaign_id) {
+      return campaign.value(QStringLiteral("completed")).toBool();
+    }
+  }
+  return false;
+}
+
 void GameEngine::on_formation_mouse_move(qreal sx, qreal sy) {
   if (!m_input_handler) {
     return;
@@ -2006,6 +2025,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   }
   if (m_renderer) {
     m_renderer->set_local_owner_id(m_runtime.local_owner_id);
+    m_renderer->set_order_marker_spectator_mode(m_level.is_spectator_mode);
+    m_renderer->set_debug_reveal_non_local_order_markers(
+        qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ORDER_MARKERS"));
   }
 
   m_renderer->render_world(m_world.get());
@@ -3633,6 +3655,15 @@ auto GameEngine::get_owner_info() const -> QVariantList {
   }
 
   return result;
+}
+
+auto GameEngine::local_player_nation() const -> QString {
+  const auto* nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
+      m_runtime.local_owner_id);
+  if (nation == nullptr) {
+    return {};
+  }
+  return QString::fromStdString(Game::Systems::nation_id_to_string(nation->id));
 }
 
 void GameEngine::get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const {

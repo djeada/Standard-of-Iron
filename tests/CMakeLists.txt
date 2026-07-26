@@ -36,6 +36,13 @@ add_executable(
     core/building_spawn_setup_test.cpp
     core/audio_system_test.cpp
     core/settings_persistence_test.cpp
+    ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
+    ui/preferences_test.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/selected_units_model.cpp
+    ui/selection_grouping_test.cpp
+    ui/icon_resources_test.cpp
+    ${CMAKE_SOURCE_DIR}/ui/theme.cpp
+    ui/widget_theme_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
@@ -342,4 +349,44 @@ set_target_properties(
 
 if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron_tests_subset bake_creature_assets)
+endif()
+
+# ---- QML design system regression tests ----
+# QtQuickTest drives the real StandardOfIron.Design module, so token drift or a
+# renamed control fails here rather than in a screen. Skipped when the Qt Quick
+# test module is unavailable so a minimal Qt install still builds the suite.
+find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS QuickTest)
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
+    add_executable(design_system_qml_tests
+        ui/design_system_qml_test.cpp
+        ${CMAKE_SOURCE_DIR}/ui/theme.cpp
+        ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
+        ${CMAKE_SOURCE_DIR}/design_resources.qrc
+    )
+    target_link_libraries(design_system_qml_tests
+        PRIVATE
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Gui
+            Qt${QT_VERSION_MAJOR}::Qml
+            Qt${QT_VERSION_MAJOR}::Quick
+            Qt${QT_VERSION_MAJOR}::QuickTest
+    )
+    target_include_directories(design_system_qml_tests
+        PRIVATE
+            ${CMAKE_SOURCE_DIR}
+    )
+    set_target_properties(design_system_qml_tests PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        AUTOMOC ON
+        AUTORCC ON
+    )
+    add_test(NAME design_system_qml
+        COMMAND design_system_qml_tests -input ${CMAKE_CURRENT_SOURCE_DIR}/ui/qml
+    )
+    # The design system is presentation-only; a real GPU adds nothing to assert.
+    set_tests_properties(design_system_qml PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    )
+else()
+    message(STATUS "Qt QuickTest not found; skipping design_system_qml_tests")
 endif()

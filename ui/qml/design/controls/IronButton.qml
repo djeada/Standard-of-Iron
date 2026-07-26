@@ -11,6 +11,8 @@ Button {
     readonly property bool destructive: tone === "destructive"
     readonly property bool primary: tone === "primary"
 
+    readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
+
     implicitHeight: Design.Metrics.controlHeight
     implicitWidth: Math.max(112, contentItem.implicitWidth + Design.Metrics.space24 * 2)
     hoverEnabled: true
@@ -34,8 +36,8 @@ Button {
     background: Rectangle {
         color: !control.enabled ? Design.Theme.panelIron : control.down ? Qt.darker(Design.Theme.accent, 1.35) : control.hovered ? Design.Theme.panelLeather : control.primary ? Qt.darker(Design.Theme.accent, 1.65) : Design.Theme.panelIron
         radius: Design.Metrics.radiusSmall
-        border.width: control.activeFocus ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: !control.enabled ? Design.Theme.borderSubtle : control.destructive ? Design.Theme.danger : control.activeFocus ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderStrong
+        border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+        border.color: !control.enabled ? Design.Theme.borderSubtle : control.destructive ? Design.Theme.danger : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderStrong
 
         Behavior on color  {
             ColorAnimation {

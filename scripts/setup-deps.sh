@@ -188,6 +188,8 @@ QT6_QML_RUN_PKGS=(
   qml6-module-qtquick-controls
   qml6-module-qtqml-workerscript
   qml6-module-qtquick-templates
+  # Required by the design-system QML regression tests (import QtTest).
+  qml6-module-qttest
 )
 
 # APT Qt5 fallback (if Qt6 pieces not available)

@@ -114,6 +114,21 @@ TEST(ShaderSource, InstancedRiggedShaderGuardsRoleColorFetches) {
             std::string::npos);
 }
 
+TEST(ShaderSource, HealerAuraKeepsTheUnitReadable) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "healing_aura.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("float perimeter_mask = smoothstep(0.56, 0.94"),
+            std::string::npos);
+  EXPECT_NE(flat.find("clamp(aura_alpha, 0.0, 0.12)"), std::string::npos);
+  EXPECT_NE(flat.find("veil * (0.018 + filament * 0.082) * u_intensity"),
+            std::string::npos);
+  EXPECT_EQ(flat.find("shell_fade * u_intensity * 0.7"), std::string::npos);
+  EXPECT_EQ(flat.find("clamp(alpha, 0.0, 0.85)"), std::string::npos);
+}
+
 TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
   const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
@@ -147,13 +162,18 @@ TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
                               "uniform vec3 u_rock_low;",
                               "uniform vec3 u_rock_high;",
                               "uniform vec3 u_snow_color;",
+                              "uniform int u_ground_type;",
                               "uniform float u_moisture_level;",
                               "uniform float u_rock_exposure;",
                               "uniform float u_snow_coverage;"}) {
     EXPECT_NE(frag.find(uniform), std::string::npos);
   }
 
-  EXPECT_NE(flat.find("vec3 wet_silt = soil *"), std::string::npos);
+  EXPECT_NE(flat.find("float mud_weight = biome_forest * 0.70"), std::string::npos);
+  EXPECT_NE(flat.find("float sand_weight = biome_forest * 0.12"), std::string::npos);
+  EXPECT_NE(flat.find("float stone_weight = biome_forest * 0.18"), std::string::npos);
+  EXPECT_NE(flat.find("float broken_transition ="), std::string::npos);
+  EXPECT_NE(flat.find("max(core_alpha, max(broken_transition"), std::string::npos);
   EXPECT_NE(flat.find("mix(earth, map_ground"), std::string::npos);
   EXPECT_EQ(flat.find("if (shore_t > edge_limit)"), std::string::npos);
   EXPECT_EQ(flat.find("float ground_blend"), std::string::npos);
@@ -168,7 +188,10 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float meadow_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
-  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
+  EXPECT_NE(flat.find("uniform int u_ground_type;"), std::string::npos);
+  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.62;"), std::string::npos);
+  EXPECT_NE(flat.find("float litter_patch = smoothstep("), std::string::npos);
+  EXPECT_NE(flat.find("fertile_sward * biome_fertile"), std::string::npos);
   EXPECT_NE(flat.find("0.090 * soil_mix"), std::string::npos);
 }
 

@@ -17,6 +17,10 @@ We'll start with the big picture of how data flows through the system, then dig 
 
 When a capture needs stage markers, set `SOI_RENDER_STAGE_LOG=1`. The extra logs are first-use only and remain disabled during normal gameplay. They identify the simulation update, render submit, renderer setup/cache attachment, creature asset registry load, and first backend playback so one-time setup can be separated from steady-frame costs.
 
+Rally and patrol markers are restricted to the local human player. Set
+`SOI_RENDER_DEBUG_ORDER_MARKERS=1` to reveal non-local markers explicitly,
+including while spectating.
+
 
 ## The two-phase dance
 

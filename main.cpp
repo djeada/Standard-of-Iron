@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QGuiApplication>
+#include <QImage>
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -140,7 +141,45 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
+#include "ui/preferences.h"
 #include "ui/theme.h"
+
+namespace {
+
+void capture_screenshot_and_exit(QQuickWindow* window,
+                                 const QString& path,
+                                 const QString& view,
+                                 int delay_ms) {
+
+  window->setWindowState(Qt::WindowNoState);
+  window->setWidth(1600);
+  window->setHeight(900);
+
+  if (!view.isEmpty()) {
+    QTimer::singleShot(delay_ms * 3 / 4, window, [window, view]() {
+      QMetaObject::invokeMethod(window, "show_view", Q_ARG(QVariant, QVariant(view)));
+    });
+  }
+
+  QTimer::singleShot(delay_ms, window, [window, path]() {
+    const QImage frame = window->grabWindow();
+    if (frame.isNull()) {
+      qCritical() << "SOI_SCREENSHOT: FAIL - the window produced no frame";
+      QGuiApplication::exit(11);
+      return;
+    }
+    if (!frame.save(path)) {
+      qCritical() << "SOI_SCREENSHOT: FAIL - could not write" << path;
+      QGuiApplication::exit(12);
+      return;
+    }
+    qInfo() << "SOI_SCREENSHOT: PASS -" << path << frame.width() << "x"
+            << frame.height();
+    QGuiApplication::exit(0);
+  });
+}
+
+} // namespace
 
 constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
@@ -467,6 +506,10 @@ auto main(int argc, char* argv[]) -> int {
 
   QString direct_campaign_mission;
   QString direct_mission_file;
+  bool component_gallery_requested = false;
+  QString screenshot_path;
+  QString screenshot_view;
+  int screenshot_delay_ms = 0;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
@@ -498,6 +541,22 @@ auto main(int argc, char* argv[]) -> int {
         "mission-file",
         "Start a mission definition file directly for editor testing.",
         "path");
+    QCommandLineOption const component_gallery_opt(
+        "component-gallery",
+        "Open the Iron and Ember component gallery instead of the game.");
+    QCommandLineOption const screenshot_opt(
+        "screenshot", "Render one frame, write a PNG to this path, then exit.", "path");
+    QCommandLineOption const screenshot_view_opt(
+        "screenshot-view",
+        "Surface to capture: menu | skirmish | campaign | settings | load | save "
+        "| briefing | hud.",
+        "view",
+        "menu");
+    QCommandLineOption const screenshot_delay_opt(
+        "screenshot-delay",
+        "Milliseconds to let the surface settle before capturing.",
+        "ms",
+        "1200");
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     QCommandLineOption const benchmark_seconds_opt(
         "benchmark-seconds",
@@ -514,11 +573,24 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
     parser.addOption(mission_file_opt);
+    parser.addOption(component_gallery_opt);
+    parser.addOption(screenshot_opt);
+    parser.addOption(screenshot_view_opt);
+    parser.addOption(screenshot_delay_opt);
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
 #endif
     parser.process(app);
+
+    component_gallery_requested = parser.isSet(component_gallery_opt);
+    if (parser.isSet(screenshot_opt)) {
+      screenshot_path = parser.value(screenshot_opt).trimmed();
+      screenshot_view = parser.value(screenshot_view_opt).trimmed().toLower();
+      bool delay_ok = false;
+      const int parsed_delay = parser.value(screenshot_delay_opt).toInt(&delay_ok);
+      screenshot_delay_ms = (delay_ok && parsed_delay >= 0) ? parsed_delay : 1200;
+    }
 
     if (parser.isSet(graphics_preset_opt)) {
       const QString preset = parser.value(graphics_preset_opt).trimmed().toLower();
@@ -636,7 +708,6 @@ auto main(int argc, char* argv[]) -> int {
                                             map_preview_provider);
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
-  engine->rootContext()->setContextProperty("CoreTheme", Theme::instance());
 
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
@@ -665,6 +736,12 @@ auto main(int argc, char* argv[]) -> int {
   qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);
+  qmlRegisterSingletonType<UiPreferences>(
+      "StandardOfIron", 1, 0, "UiPreferences", &UiPreferences::create);
+
+  qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
+  qmlRegisterSingletonType<UiPreferences>(
+      "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
 
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
                            "StandardOfIron",
@@ -672,9 +749,12 @@ auto main(int argc, char* argv[]) -> int {
                            0,
                            "StyleGuide");
 
-  qInfo() << "Loading Main.qml...";
-  qInfo() << "Loading Main.qml...";
-  engine->load(QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml")));
+  const QUrl root_qml =
+      component_gallery_requested
+          ? QUrl(QStringLiteral("qrc:/StandardOfIron/Design/GalleryWindow.qml"))
+          : QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml"));
+  qInfo() << "Loading" << root_qml;
+  engine->load(root_qml);
 
   qInfo() << "Checking if QML loaded...";
   if (engine->rootObjects().isEmpty()) {
@@ -703,6 +783,20 @@ auto main(int argc, char* argv[]) -> int {
     return -2;
   }
   qInfo() << "QQuickWindow found";
+
+  if (component_gallery_requested) {
+
+    if (!screenshot_path.isEmpty()) {
+      capture_screenshot_and_exit(
+          window, screenshot_path, QString(), screenshot_delay_ms);
+    }
+    qInfo() << "Starting event loop (component gallery)...";
+    const int gallery_result = QGuiApplication::exec();
+    engine.reset();
+    game_engine.reset();
+    language_manager.reset();
+    return gallery_result;
+  }
 
   qInfo() << "Setting window in GameEngine...";
   game_engine->setWindow(window);
@@ -826,6 +920,11 @@ auto main(int argc, char* argv[]) -> int {
                      "presented within 30 seconds";
       QGuiApplication::exit(10);
     });
+  }
+
+  if (!screenshot_path.isEmpty()) {
+    capture_screenshot_and_exit(
+        window, screenshot_path, screenshot_view, screenshot_delay_ms);
   }
 
   qInfo() << "Starting event loop...";

@@ -319,6 +319,15 @@ test: build
 		echo "$(RED)Test executable not found. Build may have failed.$(RESET)"; \
 		exit 1; \
 	fi
+	@# The QML design-system suite is skipped when Qt QuickTest is unavailable,
+	@# so a missing binary is not a build failure here.
+	@if [ -f "$(BUILD_DIR)/bin/design_system_qml_tests" ]; then \
+		echo "$(BOLD)$(BLUE)Running design system QML tests...$(RESET)"; \
+		QT_QPA_PLATFORM=offscreen ./$(BUILD_DIR)/bin/design_system_qml_tests \
+			-input tests/ui/qml; \
+	else \
+		echo "$(YELLOW)⚠ design_system_qml_tests not built (Qt QuickTest missing). Skipping.$(RESET)"; \
+	fi
 
 # Validate mission and campaign content
 .PHONY: validate-content

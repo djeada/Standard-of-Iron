@@ -3,11 +3,13 @@ import QtQuick.Controls 2.15
 import ".." as Design
 
 ToolTip {
+    id: control
+
     delay: Design.Metrics.tooltipDelay
     timeout: 8000
     padding: Design.Metrics.space8
     contentItem: Text {
-        text: parent.text
+        text: control.text
         color: Design.Theme.textPrimary
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.caption
