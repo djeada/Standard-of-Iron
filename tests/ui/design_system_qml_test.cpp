@@ -56,7 +56,8 @@ class DesignSystemTestSetup : public QObject {
 public:
   DesignSystemTestSetup() = default;
 
-  static void applicationAvailable() {
+public slots:
+  void applicationAvailable() {
 
     QStandardPaths::setTestModeEnabled(true);
     g_settings_dir = new QTemporaryDir();
@@ -75,12 +76,12 @@ public:
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);
   }
 
-  static void qmlEngineAvailable(QQmlEngine* engine) {
+  void qmlEngineAvailable(QQmlEngine* engine) {
 
     engine->addImportPath(QStringLiteral("qrc:/"));
   }
 
-  static void cleanupTestCase() {
+  void cleanupTestCase() {
     App::Core::UserSettings::clear();
     delete g_settings_dir;
     g_settings_dir = nullptr;
