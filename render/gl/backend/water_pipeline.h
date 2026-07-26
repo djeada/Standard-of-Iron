@@ -52,6 +52,7 @@ public:
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ground_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};

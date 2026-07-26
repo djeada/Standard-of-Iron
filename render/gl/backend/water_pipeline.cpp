@@ -111,6 +111,8 @@ void WaterPipeline::cache_riverbank_uniforms() {
       m_riverbank_shader->uniform_handle("u_segment_visibility");
   m_riverbank_uniforms.surface_kind =
       m_riverbank_shader->optional_uniform_handle("u_water_surface_kind");
+  m_riverbank_uniforms.ground_type =
+      m_riverbank_shader->optional_uniform_handle("u_ground_type");
   m_riverbank_uniforms.ground_color =
       m_riverbank_shader->optional_uniform_handle("u_ground_color");
   m_riverbank_uniforms.grass_secondary =

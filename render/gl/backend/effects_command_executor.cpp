@@ -316,7 +316,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
                                     eff.intensity,
                                     eff.time,
                                     etype,
-                                    eff.kind == EffectBatchCmd::Kind::BurningFlame});
+                                    false});
         }
         m_combat_dust_pipeline->render_dust_batch(
             dust_instances.data(), dust_instances.size(), view_proj);
@@ -457,7 +457,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
           .intensity = flame.intensity,
           .time = flame.time,
           .effect_type = BackendPipelines::EffectType::BurningFlame,
-          .overlay = true};
+          .overlay = false};
       m_combat_dust_pipeline->render_dust_batch(&instance, 1U, view_proj);
       m_last_bound_shader = nullptr;
       break;

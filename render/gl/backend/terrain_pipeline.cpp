@@ -93,6 +93,8 @@ void TerrainPipeline::cache_ground_uniforms() {
 
   m_ground_uniforms.mvp = m_ground_shader->uniform_handle("u_mvp");
   m_ground_uniforms.model = m_ground_shader->uniform_handle("u_model");
+  m_ground_uniforms.ground_type =
+      m_ground_shader->optional_uniform_handle("u_ground_type");
   m_ground_uniforms.grass_primary = m_ground_shader->uniform_handle("u_grass_primary");
   m_ground_uniforms.grass_secondary =
       m_ground_shader->uniform_handle("u_grass_secondary");
@@ -150,6 +152,8 @@ void TerrainPipeline::cache_terrain_uniforms() {
 
   m_terrain_uniforms.mvp = m_terrain_shader->uniform_handle("u_mvp");
   m_terrain_uniforms.model = m_terrain_shader->uniform_handle("u_model");
+  m_terrain_uniforms.ground_type =
+      m_terrain_shader->optional_uniform_handle("u_ground_type");
   m_terrain_uniforms.grass_primary =
       m_terrain_shader->uniform_handle("u_grass_primary");
   m_terrain_uniforms.grass_secondary =
