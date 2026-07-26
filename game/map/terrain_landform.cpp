@@ -214,15 +214,22 @@ auto sample_mountain(float local_x,
                                                               config.seed ^ 0xD1B54A35U,
                                                               3) *
                                                        0.075F;
-  const float cross_distance = std::abs(nz - centerline);
+  const float signed_cross_distance = nz - centerline;
+  const float cross_distance = std::abs(signed_cross_distance);
   const float longitudinal_taper = std::pow(std::max(1.0F - std::abs(nx), 0.0F), 0.30F);
+  // Mountain ridges need a visibly different cross-section from hills. One
+  // face is deliberately tighter than the other, producing a steep scarp and
+  // a broader weathered flank instead of a symmetrical rounded mound.
+  const float face_width = signed_cross_distance < 0.0F ? 0.59F : 0.74F;
   const float main_fold =
-      std::pow(std::max(1.0F - cross_distance / 0.82F, 0.0F), 1.18F);
+      std::pow(std::max(1.0F - cross_distance / face_width, 0.0F), 1.62F);
+  const float crest_fold =
+      std::pow(std::max(1.0F - cross_distance / 0.25F, 0.0F), 1.18F);
   const float branch_centerline =
       -0.34F * nx + std::sin(nx * 4.6F - config.phase) * 0.10F;
   const float branch_window = smoothstep01((0.72F - std::abs(nx + 0.10F)) / 0.38F);
   const float branch_fold =
-      std::pow(std::max(1.0F - std::abs(nz - branch_centerline) / 0.48F, 0.0F), 1.15F) *
+      std::pow(std::max(1.0F - std::abs(nz - branch_centerline) / 0.46F, 0.0F), 1.30F) *
       branch_window;
   const float broad_noise = signed_fbm(
       nx * 2.6F + config.phase, nz * 2.6F - config.phase, config.seed ^ 0xB7E15162U, 5);
@@ -235,20 +242,22 @@ auto sample_mountain(float local_x,
                                  4));
   const float gully =
       std::pow(std::clamp(drainage_ridge, 0.0F, 1.0F), 8.0F) * main_fold * edge_fade;
-  const float peak_chain = std::clamp(0.74F + signed_fbm(nx * 3.0F + config.phase,
-                                                         config.phase * 0.47F,
-                                                         config.seed ^ 0xA4093822U,
-                                                         4) *
-                                                  0.28F,
-                                      0.46F,
-                                      1.0F);
-  const float foothill = std::pow(envelope_position, 0.72F) * 0.19F;
-  const float ridge = main_fold * longitudinal_taper * peak_chain * 0.78F;
-  const float folded_relief = branch_fold * longitudinal_taper * 0.18F;
-  const float weathering = broad_noise * 0.075F + fine_noise * 0.026F - gully * 0.075F;
+  const float peak_warp = signed_fbm(
+      nx * 2.4F + config.phase, config.phase * 0.47F, config.seed ^ 0xA4093822U, 4);
+  const float peak_wave =
+      0.5F + 0.5F * std::sin(nx * 10.6F + config.phase * 1.7F + peak_warp * 1.25F);
+  const float peak_chain = 0.67F + 0.33F * smoothstep01((peak_wave - 0.12F) / 0.76F);
+  const float foothill = std::pow(envelope_position, 0.78F) * 0.11F;
+  const float ridge = main_fold * longitudinal_taper * peak_chain * 0.79F;
+  const float crest =
+      crest_fold * longitudinal_taper * std::pow(peak_chain, 1.35F) * 0.17F;
+  const float folded_relief = branch_fold * longitudinal_taper * 0.13F;
+  // Preserve large drainage structure without letting cell-scale noise turn
+  // the rendered face into a field of rounded lumps.
+  const float weathering = broad_noise * 0.040F + fine_noise * 0.010F - gully * 0.040F;
   const float height =
       edge_fade *
-      std::clamp(foothill + ridge + folded_relief + weathering, 0.0F, 1.08F);
+      std::clamp(foothill + ridge + crest + folded_relief + weathering, 0.0F, 1.08F);
   return {.footprint = smoothstep01(envelope_position / 0.12F),
           .elevation_fraction = std::clamp(height, 0.0F, 1.06F)};
 }

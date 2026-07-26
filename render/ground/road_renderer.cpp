@@ -34,7 +34,7 @@ auto road_color_for_style(const QString& authored_style) -> QVector3D {
   if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
     return {0.48F, 0.47F, 0.44F};
   }
-  return {0.45F, 0.42F, 0.38F};
+  return {0.42F, 0.34F, 0.22F};
 }
 
 auto road_surface_for_style(const QString& authored_style) -> RoadSurfaceKind {
@@ -156,7 +156,9 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.model = model;
     cmd.color = road_color_for_style(segment.style);
     cmd.road_surface_kind = road_surface_for_style(segment.style);
-    cmd.alpha = 1.0F;
+    // The road shader feathers its own edges. A slightly translucent command
+    // enables the backend blend path while leaving the road interior opaque.
+    cmd.alpha = 0.995F;
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);
   }

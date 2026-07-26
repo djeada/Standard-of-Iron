@@ -108,50 +108,80 @@ float ggx_specular(vec3 n_vec, vec3 v_vec, vec3 l_vec, float rough, float f0) {
 }
 
 void main() {
+  vec2 uv = v_world_pos.xz;
+  float across = clamp(v_tex_coord.x, 0.0, 1.0);
+  float edge_distance = min(across, 1.0 - across);
+  float edge_noise = fbm_2d(uv * 0.42 + vec2(19.0, -7.0)) - 0.5;
+  float edge_width = 0.045 + edge_noise * 0.018;
+  float edge_alpha = smoothstep(0.0, edge_width, edge_distance);
 
-  vec2 uv = v_world_pos.xz * 0.8;
+  float broad = fbm_2d(uv * 0.055 + vec2(7.0, 13.0));
+  float medium = fbm_2d(uv * 0.34 + vec2(-11.0, 3.0));
+  float grain = noise_2d(uv * 3.7 + vec2(29.0, -17.0));
+  float rut_wander = (noise_2d(uv * 0.075 + vec2(41.0, -9.0)) - 0.5) * 0.035;
+  float rut_left = 1.0 - smoothstep(0.030, 0.090, abs(across - (0.31 + rut_wander)));
+  float rut_right = 1.0 - smoothstep(0.030, 0.090, abs(across - (0.69 + rut_wander)));
+  float ruts = max(rut_left, rut_right);
+  float traveled = smoothstep(0.24, 0.68, broad * 0.70 + medium * 0.30);
+  ruts *= mix(0.35, 1.0, traveled);
+  float center_wear = 1.0 - smoothstep(0.08, 0.48, abs(across - 0.5));
 
-  vec2 worley_result = worley_f(uv * 1.5);
-  float edge_metric = worley_result.y - worley_result.x;
-  float stone_mask = smoothstep(0.04, 0.25, edge_metric);
-  float mortar_mask = 1.0 - stone_mask;
+  vec3 base_color;
+  float h;
+  float ao;
+  float material_roughness;
 
-  vec2 cell = floor(uv * 1.5);
-  float cell_rnd = hash_2d(cell);
-  vec2 local = fract(uv);
-  vec2 uv_var = (rotate_2d(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
-
-  float var_low = (fbm_2d(uv * 0.4) - 0.5) * 0.18;
-  float var_mid = (fbm_2d(uv_var * 2.5) - 0.5) * 0.12;
-  float grain = (noise_2d(uv_var * 15.0) - 0.5) * 0.06;
-
-  vec3 stone_base = u_color;
-  vec3 stone_color = stone_base * (1.0 + var_low + var_mid + grain);
-
-  vec3 mortar_color = stone_base * 0.60;
-
-  float center_wear = 1.0 - abs(v_tex_coord.x - 0.5) * 1.8;
-  center_wear = smoothstep(0.0, 0.5, center_wear) * 0.08;
-  stone_color *= (1.0 + center_wear);
-
-  float crack = smoothstep(0.02, 0.0, abs(noise_2d(uv * 12.0) - 0.5)) * 0.20;
-  stone_color *= (1.0 - crack * stone_mask);
-
-  float cavity = smoothstep(0.0, 0.20, edge_metric);
-  float ao = mix(0.50, 1.0, cavity) * (0.90 + 0.10 * fbm_2d(uv * 2.0));
-
-  float micro_bump = (fbm_2d(uv_var * 3.5) - 0.5) * 0.05 * stone_mask;
-  float macro_warp = (fbm_2d(uv * 1.0) - 0.5) * 0.025 * stone_mask;
-  float mortar_dip = -0.05 * mortar_mask;
-  float h = micro_bump + macro_warp + mortar_dip;
+  if (u_surface_kind == 2) {
+    vec2 stone_uv = uv * 1.05;
+    vec2 worley_result = worley_f(stone_uv * 1.35);
+    float edge_metric = worley_result.y - worley_result.x;
+    float stone_mask = smoothstep(0.045, 0.20, edge_metric);
+    float mortar_mask = 1.0 - stone_mask;
+    float stone_variation =
+        (broad - 0.5) * 0.14 + (medium - 0.5) * 0.11 + (grain - 0.5) * 0.055;
+    vec3 stone_color = u_color * (1.0 + stone_variation);
+    vec3 mortar_color = u_color * 0.58;
+    base_color = mix(mortar_color, stone_color, stone_mask);
+    float cavity = smoothstep(0.0, 0.18, edge_metric);
+    ao = mix(0.58, 1.0, cavity);
+    h = (medium - 0.5) * 0.035 * stone_mask - mortar_mask * 0.045;
+    material_roughness = 0.82;
+  } else if (u_surface_kind == 1) {
+    vec3 dry_earth = u_color * 0.95;
+    vec3 compressed_earth = u_color * 0.76;
+    float compacted = clamp(ruts * 0.48 + center_wear * 0.10, 0.0, 1.0);
+    base_color = mix(dry_earth, compressed_earth, compacted);
+    base_color *= 0.88 + broad * 0.14 + medium * 0.08;
+    h = (medium - 0.5) * 0.050 - ruts * 0.042;
+    ao = 0.90 - ruts * 0.11 - (1.0 - medium) * 0.07;
+    material_roughness = 0.97;
+  } else {
+    // Default campaign roads are packed gravel: the stone bed reads at the
+    // strategic camera distance, while earth-filled joints keep it from
+    // looking like a pristine cobbled pavement.
+    vec2 aggregate_cells = worley_f(uv * 1.85 + vec2(3.0, -8.0));
+    float aggregate_edge = aggregate_cells.y - aggregate_cells.x;
+    float aggregate = smoothstep(0.020, 0.110, aggregate_edge);
+    float aggregate_tone = (noise_2d(uv * 1.85 + vec2(-5.0, 17.0)) - 0.5) * 0.16;
+    float wear = center_wear * smoothstep(0.30, 0.68, broad);
+    float shoulder = 1.0 - smoothstep(0.055, 0.20, edge_distance);
+    vec3 joint_earth = u_color * (0.76 + broad * 0.10);
+    vec3 packed_stone = mix(u_color * 1.06, vec3(0.43, 0.39, 0.31), 0.14) *
+                        (0.94 + aggregate_tone + (medium - 0.5) * 0.07);
+    base_color = mix(joint_earth, packed_stone, aggregate);
+    base_color *= 1.0 - wear * 0.045 - shoulder * 0.10;
+    h = (medium - 0.5) * 0.030 + aggregate * 0.032 - wear * 0.010;
+    ao = 0.88 + aggregate * 0.10 - wear * 0.018 - shoulder * 0.035;
+    material_roughness = 0.94;
+  }
 
   float sx = dFdx(h);
   float sy = dFdy(h);
-  float bump_strength = 12.0;
+  float bump_strength = 9.0;
   vec3 n_bump = normalize(vec3(-sx * bump_strength, 1.0, -sy * bump_strength));
 
   vec3 n_geom = normalize(v_normal);
-  vec3 n_final = normalize(mix(n_geom, n_bump, 0.60));
+  vec3 n_final = normalize(mix(n_geom, n_bump, 0.48));
 
   vec3 light_dir = normalize(u_light_direction);
   vec3 view_dir = normalize(vec3(0.0, 0.9, 0.4));
@@ -160,24 +190,10 @@ void main() {
   float diffuse = n_dot_l;
 
   float steep = saturate_val(length(vec2(sx, sy)) * bump_strength);
-  float roughness = clamp(mix(0.70, 0.95, steep), 0.02, 1.0);
+  float roughness = clamp(material_roughness + steep * 0.08, 0.18, 1.0);
   float f0 = 0.03;
 
   float spec = ggx_specular(n_final, view_dir, light_dir, roughness, f0);
-
-  vec3 base_color = mix(mortar_color, stone_color, stone_mask);
-  if (u_surface_kind == 1) {
-
-    float across = clamp(v_tex_coord.x, 0.0, 1.0);
-    float ruts = max(1.0 - smoothstep(0.045, 0.085, abs(across - 0.30)),
-                     1.0 - smoothstep(0.045, 0.085, abs(across - 0.70)));
-    vec3 earth = stone_base * (0.90 + var_low * 0.8 + var_mid * 0.45);
-    earth *= 1.0 - ruts * 0.20;
-    base_color = mix(base_color, earth, 0.84);
-  } else if (u_surface_kind == 2) {
-
-    base_color = mix(mortar_color * 0.92, stone_color * 1.06, stone_mask);
-  }
 
   vec3 hemi_sky = vec3(0.20, 0.25, 0.30);
   vec3 hemi_ground = vec3(0.10, 0.09, 0.08);
@@ -187,13 +203,9 @@ void main() {
   lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.12;
   lit_color += vec3(1.0) * spec * 0.20;
 
-  float grime = (1.0 - cavity) * 0.20 * (0.8 + 0.2 * noise_2d(uv * 6.0));
+  float grime = (1.0 - ao) * 0.14 * (0.8 + 0.2 * noise_2d(uv * 6.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.85), grime);
-
-  float edge_fade =
-      smoothstep(0.0, 0.08, v_tex_coord.x) * smoothstep(0.0, 0.08, 1.0 - v_tex_coord.x);
-  lit_color *= mix(0.75, 1.0, edge_fade);
 
   float visibility_factor = 1.0;
   if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
@@ -210,5 +222,5 @@ void main() {
   }
   lit_color *= visibility_factor;
 
-  frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha);
+  frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha * edge_alpha);
 }
