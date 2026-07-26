@@ -12,9 +12,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "render/creature/bpat/bpat_registry.h"
-#include "render/creature/snapshot_mesh_registry.h"
-
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/event_manager.h"
@@ -40,6 +37,8 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/unit.h"
+#include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/snapshot_mesh_registry.h"
 
 namespace Balance {
 
@@ -74,7 +73,8 @@ void load_creature_pose_assets() {
       continue;
     }
     Render::Creature::Bpat::BpatRegistry::instance().load_all(root.string());
-    Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(root.string());
+    Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
+        root.string());
     return;
   }
   qWarning("balance_sim: creature pose assets not found; melee traces will miss");
@@ -171,11 +171,11 @@ auto plan_side(const FixtureSide& side,
 
 auto spawn_planned(Engine::Core::World& world,
                    const Game::Units::SpawnParams& params) -> SpawnedUnit {
-  auto unit = factory_registry().create(
-      Game::Units::spawn_typeToTroopType(params.spawn_type)
-          .value_or(Game::Units::TroopType::Swordsman),
-      world,
-      params);
+  auto unit =
+      factory_registry().create(Game::Units::spawn_typeToTroopType(params.spawn_type)
+                                    .value_or(Game::Units::TroopType::Swordsman),
+                                world,
+                                params);
   if (!unit) {
     return {};
   }
@@ -362,8 +362,9 @@ void reissue_attack_orders(Engine::Core::World& world,
     const auto* current = entity->get_component<Engine::Core::AttackTargetComponent>();
     if (current != nullptr && current->target_id != 0) {
       auto* held = world.get_entity(current->target_id);
-      const auto* held_unit =
-          held != nullptr ? held->get_component<Engine::Core::UnitComponent>() : nullptr;
+      const auto* held_unit = held != nullptr
+                                  ? held->get_component<Engine::Core::UnitComponent>()
+                                  : nullptr;
       if (held_unit != nullptr && held_unit->health > 0) {
         continue;
       }
@@ -452,14 +453,24 @@ auto run_battle(const Fixture& fixture,
   const QVector3D centre_a(-fixture.separation * 0.5F, 0.0F, 0.0F);
   const QVector3D centre_b(fixture.separation * 0.5F, 0.0F, 0.0F);
 
-  const auto plan_a =
-      plan_side(side_a_def, k_side_a_owner, centre_a, 1.0F, seed, 0x1000U,
-                fixture.spawn_jitter, result.side_a.starting_cost,
-                result.side_a.starting_health);
-  const auto plan_b =
-      plan_side(side_b_def, k_side_b_owner, centre_b, -1.0F, seed, 0x2000U,
-                fixture.spawn_jitter, result.side_b.starting_cost,
-                result.side_b.starting_health);
+  const auto plan_a = plan_side(side_a_def,
+                                k_side_a_owner,
+                                centre_a,
+                                1.0F,
+                                seed,
+                                0x1000U,
+                                fixture.spawn_jitter,
+                                result.side_a.starting_cost,
+                                result.side_a.starting_health);
+  const auto plan_b = plan_side(side_b_def,
+                                k_side_b_owner,
+                                centre_b,
+                                -1.0F,
+                                seed,
+                                0x2000U,
+                                fixture.spawn_jitter,
+                                result.side_b.starting_cost,
+                                result.side_b.starting_health);
 
   // Systems iterate entities in id order, so spawning one side first hands it a
   // half-tick head start in every exchange. Interleave the two sides so the
@@ -553,8 +564,7 @@ auto run_battle(const Fixture& fixture,
 
     if (!was_contact && contact_seen) {
       result.first_contact_time = elapsed;
-      result.first_contact_distance =
-          (centroid(alive_a) - centroid(alive_b)).length();
+      result.first_contact_distance = (centroid(alive_a) - centroid(alive_b)).length();
     }
 
     if (elapsed >= next_order_refresh) {
@@ -567,8 +577,8 @@ auto run_battle(const Fixture& fixture,
       }
     }
 
-    if (trace != nullptr && (trace->empty() ||
-                             elapsed - trace->back().time_seconds >= 1.0F)) {
+    if (trace != nullptr &&
+        (trace->empty() || elapsed - trace->back().time_seconds >= 1.0F)) {
       TraceSample sample;
       sample.time_seconds = elapsed;
       sample.alive_a = static_cast<int>(alive_a.size());

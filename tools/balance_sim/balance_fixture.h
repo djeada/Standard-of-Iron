@@ -15,10 +15,10 @@ namespace Balance {
 // they map onto the orders a player can actually issue, so a fixture result is
 // reproducible by hand in the real game.
 enum class Stance : std::uint8_t {
-  Attack,  // walk into the enemy and engage
-  Hold,    // hold-mode in place, let the enemy come
-  Stand,   // no orders at all, rely on auto-engagement
-  Charge,  // mounted charge intent + attack (cavalry only)
+  Attack, // walk into the enemy and engage
+  Hold,   // hold-mode in place, let the enemy come
+  Stand,  // no orders at all, rely on auto-engagement
+  Charge, // mounted charge intent + attack (cavalry only)
 };
 
 struct FixtureGroup {
