@@ -1,0 +1,5 @@
+# CMake formatting - see tools/versions.env for the pinned gersemi version.
+line_length: 100
+indent: 4
+list_expansion: favour-inlining
+warn_about_unknown_commands: false

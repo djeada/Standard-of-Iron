@@ -38,22 +38,22 @@ SHADER_FILES=$(find "$PROJECT_ROOT/assets/shaders" -type f \( -name "*.frag" -o 
 
 for shader_file in $SHADER_FILES; do
     shader_name=$(basename "$shader_file")
-    
+
     # Extract uniform declarations from shader
     uniforms=$(grep -oP 'uniform\s+\w+\s+\K\w+' "$shader_file" 2>/dev/null || true)
-    
+
     if [ -z "$uniforms" ]; then
         continue
     fi
-    
+
     echo "Checking: $shader_name"
-    
+
     # Check each uniform against common patterns
     while IFS= read -r uniform; do
         # Check if this uniform follows a known pattern
         for pattern in "${UNIFORM_PATTERNS[@]}"; do
             IFS='|' read -r camel snake shader_expected <<< "$pattern"
-            
+
             # If uniform contains the pattern
             if [[ "$uniform" == *"$camel"* ]] || [[ "$uniform" == *"$snake"* ]]; then
                 # Check if it matches the expected shader pattern
@@ -61,7 +61,7 @@ for shader_file in $SHADER_FILES; do
                     echo -e "  ${YELLOW}WARNING${NC}: Uniform '$uniform' might not match expected pattern '$shader_expected'"
                     ((WARNINGS++))
                 fi
-                
+
                 # Now check if backend.cpp is using the correct name
                 if grep -q "uniformHandle(\"$uniform\")" "$PROJECT_ROOT/render/gl/backend.cpp" 2>/dev/null; then
                     echo -e "  ${GREEN}✓${NC} Found correct usage: uniformHandle(\"$uniform\")"

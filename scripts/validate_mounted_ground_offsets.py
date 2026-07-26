@@ -9,7 +9,6 @@ import json
 import sys
 from pathlib import Path
 
-
 MOUNTED_IDS = {"horse_swordsman", "horse_archer", "horse_spearman"}
 DATA_ROOT = Path(__file__).resolve().parent.parent / "assets" / "data"
 

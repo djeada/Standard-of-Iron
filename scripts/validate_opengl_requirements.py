@@ -76,8 +76,10 @@ def check_release_renderer_self_tests(root: Path) -> list[str]:
         if marker not in main_content:
             errors.append(f"main.cpp: missing renderer self-test marker {marker!r}")
 
+    # The per-platform packaging workflows are reusable and are called by both
+    # release.yml (on a version tag) and nightly.yml.
     for platform in ("windows", "macos", "linux"):
-        workflow = root / ".github" / "workflows" / f"{platform}.yml"
+        workflow = root / ".github" / "workflows" / f"build-{platform}.yml"
         if not workflow.exists():
             errors.append(f"{workflow.relative_to(root)} not found")
             continue

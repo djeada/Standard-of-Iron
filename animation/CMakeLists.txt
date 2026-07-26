@@ -1,4 +1,6 @@
-add_library(animation_core STATIC
+add_library(
+    animation_core
+    STATIC
     ambient_pose_manifest.cpp
     clip_manifest.cpp
     combat_manifest.cpp

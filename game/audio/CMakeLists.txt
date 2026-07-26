@@ -1,4 +1,6 @@
-add_library(audio_system STATIC
+add_library(
+    audio_system
+    STATIC
     audio_system.cpp
     sound.cpp
     music_player.cpp

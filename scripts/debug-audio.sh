@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.." || exit 1
 # Build first
 echo "Building in debug mode..."
 make clean
-make debug -j$(nproc)
+make debug -j"$(nproc)"
 
 if [ $? -ne 0 ]; then
     echo "Build failed!"

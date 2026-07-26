@@ -1,0 +1,31 @@
+---
+# YAML lint rules - kept close to the defaults, with the adjustments needed
+# for GitHub Actions workflows.
+extends: default
+
+ignore: |
+  build/
+  build-*/
+  third_party/
+  .venv/
+  dist/
+
+rules:
+  # GitHub Actions workflows are wide by nature (long run: one-liners, long
+  # `uses:` lines with pinned SHAs).
+  line-length:
+    max: 140
+    allow-non-breakable-words: true
+    level: warning
+  # `on:` in a workflow is a key, not the boolean `yes`.
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  document-start:
+    present: true
+  braces:
+    max-spaces-inside: 1
+  brackets:
+    max-spaces-inside: 1

@@ -9,7 +9,6 @@ import pathlib
 import struct
 import zlib
 
-
 MAGIC = b"SOICM001"
 
 
