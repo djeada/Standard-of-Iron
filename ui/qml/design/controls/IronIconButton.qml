@@ -1,16 +1,17 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 import ".." as Design
 
-IronButton {
+Design.IronButton {
     id: control
 
     property string iconText: ""
     property string tooltip: ""
 
     text: iconText
-    implicitWidth: Design.Metrics.controlHeight
+    implicitWidth: Math.max(Design.Metrics.controlHeight, Design.Metrics.minTouchTarget)
     accessibleName: tooltip
-    ToolTip.text: tooltip
-    ToolTip.visible: hovered && tooltip.length > 0
+    ToolTip.text: enabled ? tooltip : (disabledReason !== "" ? disabledReason : tooltip)
+    ToolTip.visible: hovered && ToolTip.text.length > 0
     ToolTip.delay: Design.Metrics.tooltipDelay
 }

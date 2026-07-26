@@ -1,15 +1,55 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
-Rectangle {
+Item {
     id: victoryOverlay
 
     property bool showing_summary: false
     property bool manually_hidden: false
-    readonly property var hs: StyleGuide.historical
 
     signal return_to_main_menu_requested
+
+    function game_ready() {
+        return typeof game !== 'undefined' && game !== null;
+    }
+
+    function victory_state() {
+        return game_ready() ? game.victory_state : "";
+    }
+
+    function campaign_completed() {
+        return game_ready() && game.is_campaign_mission && victory_state() === "victory" && (game.campaign_completed === true);
+    }
+
+    function outcome_kind() {
+        if (victory_state() === "victory")
+            return campaign_completed() ? "campaign" : "victory";
+        return "defeat";
+    }
+
+    function headline_text() {
+        switch (outcome_kind()) {
+        case "campaign":
+            return qsTr("The Campaign is Won");
+        case "victory":
+            return qsTr("Victory Secured");
+        default:
+            return qsTr("Army Broken");
+        }
+    }
+
+    function subtitle_text() {
+        switch (outcome_kind()) {
+        case "campaign":
+            return qsTr("Every mission has fallen to your standard.");
+        case "victory":
+            return qsTr("Enemy command has fallen.");
+        default:
+            return qsTr("Your command has collapsed.");
+        }
+    }
 
     function reset_state() {
         showing_summary = false;
@@ -22,8 +62,7 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.78)
-    visible: !manually_hidden && (typeof game !== 'undefined' && game.victory_state !== "")
+    visible: !manually_hidden && victory_state() !== ""
     z: 100
     onVisibleChanged: {
         if (!visible)
@@ -32,92 +71,29 @@ Rectangle {
 
     Connections {
         function onVictory_state_changed() {
-            if (typeof game !== 'undefined' && game.victory_state === "")
-                reset_state();
-            else if (typeof game !== 'undefined' && game.victory_state !== "")
-                manually_hidden = false;
+            if (victoryOverlay.victory_state() === "")
+                victoryOverlay.reset_state();
+            else
+                victoryOverlay.manually_hidden = false;
         }
 
-        target: (typeof game !== 'undefined') ? game : null
+        target: victoryOverlay.game_ready() ? game : null
     }
 
-    Rectangle {
-        id: initialOverlay
-
+    Loader {
         anchors.fill: parent
-        color: "transparent"
-        visible: !showing_summary
+        active: !victoryOverlay.showing_summary
+        visible: active
 
-        Rectangle {
-            anchors.centerIn: parent
-            width: Math.min(parent.width * 0.7, 680)
-            height: 260
-            radius: 8
-            color: hs.parchmentDark
-            border.color: hs.bronze
-            border.width: 2
-            opacity: 0.96
-
-            Image {
-                anchors.fill: parent
-                anchors.margins: 2
-                source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
-                fillMode: Image.PreserveAspectCrop
-                opacity: 0.14
-                smooth: true
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 6
-                radius: 6
-                color: hs.parchmentLight
-                border.color: hs.bronzeDeep
-                border.width: 1
-                opacity: 0.72
-            }
-
-            Column {
-                anchors.centerIn: parent
-                spacing: 20
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("BATTLE REPORT")
-                    color: Theme.accentBright
-                    font.pointSize: 16
-                    font.bold: true
-                }
-
-                Text {
-                    id: victoryText
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Victory Secured") : qsTr("Army Broken")
-                    color: (typeof game !== 'undefined' && game.victory_state === "victory") ? Theme.accentBright : hs.waxHover
-                    font.family: "serif"
-                    font.pointSize: 42
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: hs.parchmentDark
-                }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy command has fallen") : qsTr("Your command has collapsed")
-                    color: Theme.textMain
-                    font.pointSize: 18
-                }
-
-                StyledButton {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("Continue")
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        showing_summary = true;
-                        battleSummary.show();
-                    }
-                }
+        sourceComponent: Design.OutcomeLayout {
+            outcome: victoryOverlay.outcome_kind()
+            factionId: victoryOverlay.game_ready() ? game.local_player_nation : ""
+            headline: victoryOverlay.headline_text()
+            subtitle: victoryOverlay.subtitle_text()
+            primaryAction: qsTr("Battle Report")
+            onPrimaryActivated: {
+                victoryOverlay.showing_summary = true;
+                battleSummary.show();
             }
         }
     }
@@ -126,12 +102,12 @@ Rectangle {
         id: battleSummary
 
         anchors.fill: parent
-        visible: showing_summary
+        visible: victoryOverlay.showing_summary
         on_close: function () {
-            showing_summary = false;
+            victoryOverlay.showing_summary = false;
         }
         on_return_to_main_menu: function () {
-            reset_state();
+            victoryOverlay.reset_state();
             victoryOverlay.return_to_main_menu_requested();
         }
     }

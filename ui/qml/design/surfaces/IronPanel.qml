@@ -6,13 +6,28 @@ Rectangle {
 
     property bool raised: false
     property string accessibleName: ""
+
+    property bool translucent: false
     default property alias content: contentHost.data
 
-    color: raised ? Design.Theme.backgroundRaised : Design.Theme.panelIron
+    color: raised ? Design.Theme.panelLeather : Design.Theme.panelIron
+    opacity: translucent ? 0.93 : 1
     radius: Design.Metrics.radiusMedium
     border.width: Design.Metrics.borderThin
     border.color: raised ? Design.Theme.borderStrong : Design.Theme.borderSubtle
     Accessible.name: accessibleName
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.leftMargin: parent.radius
+        anchors.rightMargin: parent.radius
+        anchors.topMargin: Design.Metrics.borderThin
+        height: Design.Metrics.borderThin
+        color: root.border.color
+        opacity: 0.45
+    }
 
     Item {
         id: contentHost

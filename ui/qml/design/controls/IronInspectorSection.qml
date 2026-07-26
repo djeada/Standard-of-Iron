@@ -1,8 +1,7 @@
 import QtQuick 2.15
 import ".." as Design
-import "../surfaces" as Surfaces
 
-Surfaces.IronPanel {
+Design.IronPanel {
     id: root
 
     property string title: ""

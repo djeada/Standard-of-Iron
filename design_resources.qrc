@@ -1,0 +1,51 @@
+<!--
+  The "Iron and Ember" design system ships as a plain file-based QML module at
+  :/StandardOfIron/Design so that `import StandardOfIron.Design 1.0` resolves
+  identically under Qt 5 and Qt 6 (the engine already has qrc:/ on its import
+  path). Keep this list in sync with ui/qml/design/qmldir.
+-->
+<RCC>
+    <qresource prefix="/StandardOfIron/Design">
+        <file alias="qmldir">ui/qml/design/qmldir</file>
+        <file alias="A11y.qml">ui/qml/design/A11y.qml</file>
+        <file alias="Theme.qml">ui/qml/design/Theme.qml</file>
+        <file alias="Metrics.qml">ui/qml/design/Metrics.qml</file>
+        <file alias="Typography.qml">ui/qml/design/Typography.qml</file>
+        <file alias="Motion.qml">ui/qml/design/Motion.qml</file>
+        <file alias="Icons.qml">ui/qml/design/Icons.qml</file>
+        <file alias="UiSound.qml">ui/qml/design/UiSound.qml</file>
+        <file alias="FactionTheme.qml">ui/qml/design/FactionTheme.qml</file>
+        <file alias="Notifications.qml">ui/qml/design/Notifications.qml</file>
+        <file alias="ComponentGallery.qml">ui/qml/design/ComponentGallery.qml</file>
+        <file alias="GalleryWindow.qml">ui/qml/design/GalleryWindow.qml</file>
+        <file alias="surfaces/IronPanel.qml">ui/qml/design/surfaces/IronPanel.qml</file>
+        <file alias="controls/IronButton.qml">ui/qml/design/controls/IronButton.qml</file>
+        <file alias="controls/IronIconButton.qml">ui/qml/design/controls/IronIconButton.qml</file>
+        <file alias="controls/IronTabBar.qml">ui/qml/design/controls/IronTabBar.qml</file>
+        <file alias="controls/IronTooltip.qml">ui/qml/design/controls/IronTooltip.qml</file>
+        <file alias="controls/IronDialog.qml">ui/qml/design/controls/IronDialog.qml</file>
+        <file alias="controls/IronDropdown.qml">ui/qml/design/controls/IronDropdown.qml</file>
+        <file alias="controls/IronSlider.qml">ui/qml/design/controls/IronSlider.qml</file>
+        <file alias="controls/IronProgressBar.qml">ui/qml/design/controls/IronProgressBar.qml</file>
+        <file alias="controls/IronListRow.qml">ui/qml/design/controls/IronListRow.qml</file>
+        <file alias="controls/IronTreeRow.qml">ui/qml/design/controls/IronTreeRow.qml</file>
+        <file alias="controls/IronContextMenu.qml">ui/qml/design/controls/IronContextMenu.qml</file>
+        <file alias="controls/IronBadge.qml">ui/qml/design/controls/IronBadge.qml</file>
+        <file alias="controls/IronDivider.qml">ui/qml/design/controls/IronDivider.qml</file>
+        <file alias="controls/IronSearchField.qml">ui/qml/design/controls/IronSearchField.qml</file>
+        <file alias="controls/IronHotkeyLabel.qml">ui/qml/design/controls/IronHotkeyLabel.qml</file>
+        <file alias="controls/IronUnitCard.qml">ui/qml/design/controls/IronUnitCard.qml</file>
+        <file alias="controls/IronCommandButton.qml">ui/qml/design/controls/IronCommandButton.qml</file>
+        <file alias="controls/IronObjectiveRow.qml">ui/qml/design/controls/IronObjectiveRow.qml</file>
+        <file alias="controls/IronResourceCounter.qml">ui/qml/design/controls/IronResourceCounter.qml</file>
+        <file alias="controls/IronInspectorSection.qml">ui/qml/design/controls/IronInspectorSection.qml</file>
+        <file alias="controls/IronCheckBox.qml">ui/qml/design/controls/IronCheckBox.qml</file>
+        <file alias="controls/IronSelectionSummary.qml">ui/qml/design/controls/IronSelectionSummary.qml</file>
+        <file alias="overlays/IronNotification.qml">ui/qml/design/overlays/IronNotification.qml</file>
+        <file alias="overlays/NotificationHost.qml">ui/qml/design/overlays/NotificationHost.qml</file>
+        <file alias="layouts/GameShell.qml">ui/qml/design/layouts/GameShell.qml</file>
+        <file alias="layouts/BriefingLayout.qml">ui/qml/design/layouts/BriefingLayout.qml</file>
+        <file alias="layouts/OutcomeLayout.qml">ui/qml/design/layouts/OutcomeLayout.qml</file>
+        <file alias="layouts/ToolShell.qml">ui/qml/design/layouts/ToolShell.qml</file>
+    </qresource>
+</RCC>
