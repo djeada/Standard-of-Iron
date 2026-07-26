@@ -11,6 +11,8 @@
 #include <vector>
 
 #include "game/core/event_manager.h"
+#include "game/systems/mission_wave_query.h"
+#include "game/systems/resource_types.h"
 #include "game/systems/undead_zone_query.h"
 
 namespace Engine::Core {
@@ -60,13 +62,23 @@ struct SurviveUndeadWaveVictoryRule {
   int required_wave_count = 1;
 };
 
+struct SurviveWavesVictoryRule {
+  int required_wave_count = 1;
+};
+
+struct AccumulateResourcesVictoryRule {
+  ResourceAmounts required;
+};
+
 using VictoryRule = std::variant<EliminationVictoryRule,
                                  SurviveTimeVictoryRule,
                                  ControlStructuresVictoryRule,
                                  CaptureStructuresVictoryRule,
                                  ClearUndeadZoneVictoryRule,
                                  PurifyShrineVictoryRule,
-                                 SurviveUndeadWaveVictoryRule>;
+                                 SurviveUndeadWaveVictoryRule,
+                                 SurviveWavesVictoryRule,
+                                 AccumulateResourcesVictoryRule>;
 
 struct NoUnitsDefeatRule {};
 
@@ -80,15 +92,21 @@ struct OnlyCommanderRemainingDefeatRule {
   std::vector<QString> structure_types;
 };
 
+struct TimeLimitDefeatRule {
+  float duration = 0.0F;
+};
+
 using DefeatRule = std::variant<NoUnitsDefeatRule,
                                 NoKeyStructuresDefeatRule,
                                 NoCommanderDefeatRule,
-                                OnlyCommanderRemainingDefeatRule>;
+                                OnlyCommanderRemainingDefeatRule,
+                                TimeLimitDefeatRule>;
 
 struct VictoryRuleSet {
   std::vector<VictoryRule> victory_rules;
   std::vector<DefeatRule> defeat_rules;
   bool include_ambient_undead = false;
+  bool require_all_victory_rules = false;
 };
 
 class VictoryService {
@@ -100,6 +118,11 @@ public:
   void configure(const VictoryRuleSet& rules, int local_owner_id);
   void set_undead_zone_query(const UndeadZoneQuery* query) {
     m_undead_zone_query = query;
+    mark_world_dirty();
+  }
+
+  void set_mission_wave_query(const MissionWaveQuery* query) {
+    m_mission_wave_query = query;
     mark_world_dirty();
   }
 
@@ -133,10 +156,9 @@ private:
   void reevaluate_world_state();
   void refresh_rule_metadata();
   void update_only_commander_defeat_arming(const WorldSummary& summary);
-  void evaluate_time_based_victory();
-  void evaluate_undead_zone_victory();
+  void evaluate_polled_rules();
   void evaluate_world_state(Engine::Core::World& world);
-  void evaluate_world_summary(const WorldSummary& summary);
+  void evaluate_rules(const WorldSummary& summary);
   void finalize_game(const QString& state);
 
   [[nodiscard]] auto can_evaluate() const -> bool;
@@ -154,6 +176,9 @@ private:
   bool m_has_time_based_victory = false;
   bool m_has_undead_zone_rules = false;
   bool m_has_world_based_rules = false;
+  bool m_has_resource_victory = false;
+  bool m_has_wave_victory = false;
+  bool m_has_time_limit_defeat = false;
   bool m_requires_captured_structure_tracking = false;
   bool m_has_only_commander_defeat_rule = false;
   bool m_only_commander_defeat_armed = false;
@@ -172,8 +197,12 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_subscription;
 
+  WorldSummary m_last_world_summary;
+  bool m_has_world_summary = false;
+
   Engine::Core::World* m_world_ptr = nullptr;
   const UndeadZoneQuery* m_undead_zone_query = nullptr;
+  const MissionWaveQuery* m_mission_wave_query = nullptr;
 
   Game::Systems::GlobalStatsRegistry& m_stats_registry;
   Game::Systems::OwnerRegistry& m_owner_registry;

@@ -212,6 +212,80 @@ TEST_F(MissionLoaderTest, ParsesDefeatConditions) {
   EXPECT_EQ(*mission.defeat_conditions[0].structure_type, "barracks");
 }
 
+TEST_F(MissionLoaderTest, ParsesAccumulateResourcesAndVictoryMode) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  temp_file.write(R"({
+      "id": "gather_mission",
+      "title": "Gather Mission",
+      "map_path": ":/assets/maps/map_forest.json",
+      "victory_mode": "all",
+      "victory_conditions": [
+        {
+          "type": "accumulate_resources",
+          "resources": {"wood": 600, "stone": 350, "iron": 300},
+          "description": "Provision the column"
+        },
+        {
+          "type": "survive_waves",
+          "wave_count": 3,
+          "description": "Break all three assaults"
+        }
+      ],
+      "defeat_conditions": [
+        {"type": "time_limit", "duration": 420.0, "description": "Beat the clock"}
+      ]
+    })");
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+      << error.toStdString();
+
+  EXPECT_EQ(mission.victory_mode, "all");
+
+  ASSERT_EQ(mission.victory_conditions.size(), 2);
+  ASSERT_TRUE(mission.victory_conditions[0].resources.has_value());
+  EXPECT_EQ(
+      mission.victory_conditions[0].resources->get(Game::Systems::ResourceType::Wood),
+      600);
+  EXPECT_EQ(
+      mission.victory_conditions[0].resources->get(Game::Systems::ResourceType::Stone),
+      350);
+  EXPECT_EQ(
+      mission.victory_conditions[0].resources->get(Game::Systems::ResourceType::Iron),
+      300);
+  EXPECT_EQ(
+      mission.victory_conditions[0].resources->get(Game::Systems::ResourceType::Gold),
+      0);
+
+  EXPECT_EQ(mission.victory_conditions[1].type, "survive_waves");
+  ASSERT_TRUE(mission.victory_conditions[1].wave_count.has_value());
+  EXPECT_EQ(*mission.victory_conditions[1].wave_count, 3);
+
+  ASSERT_EQ(mission.defeat_conditions.size(), 1);
+  EXPECT_EQ(mission.defeat_conditions[0].type, "time_limit");
+  ASSERT_TRUE(mission.defeat_conditions[0].duration.has_value());
+  EXPECT_FLOAT_EQ(*mission.defeat_conditions[0].duration, 420.0F);
+}
+
+TEST_F(MissionLoaderTest, VictoryModeDefaultsToAnyWhenOmitted) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  temp_file.write(createTestMission().toUtf8());
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
+
+  EXPECT_EQ(mission.victory_mode, "any");
+}
+
 TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

@@ -90,6 +90,7 @@ Item {
                 victoryConditions: root.objective_list("victory_conditions")
                 defeatConditions: root.objective_list("defeat_conditions")
                 optionalObjectives: root.objective_list("optional_objectives")
+                victoryMode: root.mission_objectives && root.mission_objectives.victory_mode ? root.mission_objectives.victory_mode : "any"
             }
 
             RowLayout {

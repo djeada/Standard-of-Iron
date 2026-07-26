@@ -1,7 +1,7 @@
 {
   "id": "battle_of_trebia",
   "title": "Battle of Trebia",
-  "summary": "Hold the river line, spring the ambush, and seize the Roman winter camp before their reserves recover.",
+  "summary": "Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.",
   "teaching_goal": "Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.",
   "narrative_intent": "The Romans are baited into the winter river and punished by Mago's concealed force, then the defense becomes an assault on a complete winter camp.",
   "historical_context": "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear.",
@@ -77,6 +77,27 @@
             "x": 162.83,
             "z": 37.26
           }
+        },
+        {
+          "timing": 480.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 9
+            },
+            {
+              "type": "swordsman",
+              "count": 7
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 139.57,
+            "z": 24.84
+          }
         }
       ],
       "commander_troop": "roman_field_commander"
@@ -98,7 +119,24 @@
       "starting_buildings": [],
       "waves": [
         {
-          "timing": 210.0,
+          "timing": 120.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
+          ],
+          "entry_point": {
+            "x": 581.54,
+            "z": 86.95
+          }
+        },
+        {
+          "timing": 300.0,
           "composition": [
             {
               "type": "swordsman",
@@ -119,15 +157,15 @@
           }
         },
         {
-          "timing": 420.0,
+          "timing": 480.0,
           "composition": [
             {
               "type": "horse_swordsman",
-              "count": 3
+              "count": 4
             },
             {
               "type": "swordsman",
-              "count": 5
+              "count": 6
             }
           ],
           "entry_point": {
@@ -141,12 +179,9 @@
   ],
   "victory_conditions": [
     {
-      "type": "capture_structures",
-      "structure_types": [
-        "barracks"
-      ],
-      "min_count": 2,
-      "description": "Take the principal winter camp and the eastern supply castrum before the frozen river gives them an excuse to run."
+      "type": "survive_waves",
+      "wave_count": 3,
+      "description": "Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing."
     }
   ],
   "defeat_conditions": [

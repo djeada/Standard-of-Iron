@@ -53,6 +53,8 @@ auto SaveLoadCoordinator::to_runtime_snapshot(const SaveRuntimeContext& context)
   snapshot.follow_selection = context.follow_selection;
   snapshot.resources_by_owner =
       Game::Systems::PlayerResourceRegistry::instance().snapshot();
+  snapshot.harvested_by_owner =
+      Game::Systems::PlayerResourceRegistry::instance().harvested_snapshot();
   return snapshot;
 }
 
@@ -66,6 +68,8 @@ void SaveLoadCoordinator::apply_runtime_snapshot(
   context.follow_selection = snapshot.follow_selection;
   Game::Systems::PlayerResourceRegistry::instance().restore(
       snapshot.resources_by_owner);
+  Game::Systems::PlayerResourceRegistry::instance().restore_harvested(
+      snapshot.harvested_by_owner);
   context.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
 }
 

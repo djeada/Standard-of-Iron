@@ -40,6 +40,7 @@
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "mission_setup_coordinator.h"
+#include "mission_wave_tracker.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
 #include "runtime_frame_orchestrator.h"
@@ -470,6 +471,7 @@ private:
     float simulation_accumulator = 0.0F;
   };
   using PendingMissionWave = App::Core::PendingMissionWave;
+  using MissionWaveTracker = App::Core::MissionWaveTracker;
   enum class PlayerControlMode {
     Rts,
     Commander
@@ -647,6 +649,7 @@ private:
   QTimer m_autosave_timer;
   float m_campaign_mission_elapsed = 0.0F;
   std::vector<PendingMissionWave> m_pending_mission_waves;
+  MissionWaveTracker m_mission_wave_tracker;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>

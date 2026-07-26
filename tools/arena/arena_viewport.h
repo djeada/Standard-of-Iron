@@ -128,6 +128,9 @@ public slots:
                                              QString* error = nullptr) -> bool;
   void set_terrain_review_overview_camera();
   void set_terrain_review_gameplay_camera();
+  // Arms the capture orbit around the loaded review map so a campaign map can be
+  // filmed with a moving camera instead of grabbed as a single still.
+  void arm_terrain_review_orbit(float distance_scale = 1.0F, float tilt_deg = 0.0F);
   [[nodiscard]] auto
   terrain_review_definition() const -> const Game::Map::MapDefinition*;
   void apply_visual_overrides_to_selection();

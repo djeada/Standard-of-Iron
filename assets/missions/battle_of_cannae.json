@@ -1,7 +1,7 @@
 {
   "id": "battle_of_cannae",
   "title": "Battle of Cannae",
-  "summary": "Execute the encirclement, then seize both Roman camps before their reserves can restore the line.",
+  "summary": "Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.",
   "teaching_goal": "Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.",
   "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision.",
   "historical_context": "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.",
@@ -137,6 +137,59 @@
         }
       ],
       "commander_troop": "roman_legion_organizer"
+    },
+    {
+      "id": "roman_allied_wing",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "yellow",
+      "team_id": 1,
+      "difficulty": "hard",
+      "strategy": "balanced",
+      "personality": {
+        "aggression": 0.65,
+        "defense": 0.55,
+        "harassment": 0.4
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": [
+        {
+          "timing": 210.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 5
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 486.21,
+            "z": 417.45
+          }
+        },
+        {
+          "timing": 420.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 486.21,
+            "z": 417.45
+          }
+        }
+      ],
+      "commander_troop": "roman_field_commander"
     }
   ],
   "victory_conditions": [
@@ -145,8 +198,8 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 2,
-      "description": "Crush both Roman camps and seal the iron tomb shut. No escape."
+      "min_count": 3,
+      "description": "Crush all three Roman camps and seal the iron tomb shut. No escape."
     }
   ],
   "defeat_conditions": [

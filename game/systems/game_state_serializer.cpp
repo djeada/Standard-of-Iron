@@ -18,6 +18,46 @@
 
 namespace Game::Systems {
 
+namespace {
+
+auto owner_resources_to_json(const std::vector<OwnerResourceState>& rows)
+    -> QJsonArray {
+  QJsonArray rows_array;
+  for (const auto& row : rows) {
+    QJsonObject row_obj;
+    row_obj["owner_id"] = row.owner_id;
+    QJsonObject resources_obj;
+    for (ResourceType const type : k_all_resource_types) {
+      resources_obj[QLatin1String(resource_type_key(type))] = row.amounts.get(type);
+    }
+    row_obj["resources"] = resources_obj;
+    rows_array.append(row_obj);
+  }
+  return rows_array;
+}
+
+void owner_resources_from_json(const QJsonArray& rows_array,
+                               std::vector<OwnerResourceState>& out_rows) {
+  out_rows.clear();
+  out_rows.reserve(rows_array.size());
+  for (const auto& value : rows_array) {
+    const auto row_obj = value.toObject();
+    OwnerResourceState row;
+    row.owner_id = row_obj.value("owner_id").toInt(0);
+    const auto resources_obj = row_obj.value("resources").toObject();
+    for (auto it = resources_obj.begin(); it != resources_obj.end(); ++it) {
+      ResourceType type;
+      if (!resource_type_from_key(QStringView(it.key()), type)) {
+        continue;
+      }
+      row.amounts.set(type, it.value().toInt(0));
+    }
+    out_rows.push_back(row);
+  }
+}
+
+} // namespace
+
 auto GameStateSerializer::build_metadata(const Engine::Core::World&,
                                          const Render::GL::Camera* camera,
                                          const LevelSnapshot& level,
@@ -60,18 +100,10 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   runtime_obj["cursor_mode"] = runtime.cursor_mode;
   runtime_obj["selected_player_id"] = runtime.selected_player_id;
   runtime_obj["follow_selection"] = runtime.follow_selection;
-  QJsonArray resources_array;
-  for (const auto& row : runtime.resources_by_owner) {
-    QJsonObject row_obj;
-    row_obj["owner_id"] = row.owner_id;
-    QJsonObject resources_obj;
-    for (ResourceType const type : k_all_resource_types) {
-      resources_obj[QLatin1String(resource_type_key(type))] = row.amounts.get(type);
-    }
-    row_obj["resources"] = resources_obj;
-    resources_array.append(row_obj);
-  }
-  runtime_obj["resources_by_owner"] = resources_array;
+  runtime_obj["resources_by_owner"] =
+      owner_resources_to_json(runtime.resources_by_owner);
+  runtime_obj["harvested_by_owner"] =
+      owner_resources_to_json(runtime.harvested_by_owner);
   metadata["runtime"] = runtime_obj;
 
   QJsonArray nations_array;
@@ -158,23 +190,13 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
   }
 
   if (runtime_obj.contains("resources_by_owner")) {
-    runtime.resources_by_owner.clear();
-    const auto resources_array = runtime_obj.value("resources_by_owner").toArray();
-    runtime.resources_by_owner.reserve(resources_array.size());
-    for (const auto& value : resources_array) {
-      const auto row_obj = value.toObject();
-      OwnerResourceState row;
-      row.owner_id = row_obj.value("owner_id").toInt(0);
-      const auto resources_obj = row_obj.value("resources").toObject();
-      for (auto it = resources_obj.begin(); it != resources_obj.end(); ++it) {
-        ResourceType type;
-        if (!resource_type_from_key(QStringView(it.key()), type)) {
-          continue;
-        }
-        row.amounts.set(type, it.value().toInt(0));
-      }
-      runtime.resources_by_owner.push_back(row);
-    }
+    owner_resources_from_json(runtime_obj.value("resources_by_owner").toArray(),
+                              runtime.resources_by_owner);
+  }
+
+  if (runtime_obj.contains("harvested_by_owner")) {
+    owner_resources_from_json(runtime_obj.value("harvested_by_owner").toArray(),
+                              runtime.harvested_by_owner);
   }
 }
 

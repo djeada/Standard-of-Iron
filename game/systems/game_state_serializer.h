@@ -49,6 +49,7 @@ struct RuntimeSnapshot {
   int selected_player_id = 1;
   bool follow_selection = false;
   std::vector<OwnerResourceState> resources_by_owner;
+  std::vector<OwnerResourceState> harvested_by_owner;
 };
 
 class GameStateSerializer {

@@ -209,6 +209,16 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("terrain-map")},
       QStringLiteral("Load a map as isolated terrain for visual review."),
       QStringLiteral("path"));
+  QCommandLineOption const promo_distance_option(
+      QStringList{QStringLiteral("promo-distance")},
+      QStringLiteral("Camera distance multiplier for campaign promo capture."),
+      QStringLiteral("scale"),
+      QStringLiteral("1.0"));
+  QCommandLineOption const promo_tilt_option(
+      QStringList{QStringLiteral("promo-tilt")},
+      QStringLiteral("Camera tilt in degrees for campaign promo capture."),
+      QStringLiteral("degrees"),
+      QStringLiteral("0"));
   QCommandLineOption const campaign_terrain_option(
       QStringList{QStringLiteral("campaign-terrain")},
       QStringLiteral("Review every campaign mission map in campaign order."));
@@ -272,6 +282,8 @@ auto main(int argc, char** argv) -> int {
                      capture_interval_option,
                      clean_capture_option,
                      capture_orbit_option,
+                     promo_distance_option,
+                     promo_tilt_option,
                      list_option});
   parser.process(app);
 
@@ -354,6 +366,8 @@ auto main(int argc, char** argv) -> int {
   float const duration = parser.value(duration_option).toFloat(&duration_ok);
   bool seed_ok = false;
   int const seed = parser.value(seed_option).toInt(&seed_ok);
+  float const promo_distance_scale = parser.value(promo_distance_option).toFloat();
+  float const promo_tilt_deg = parser.value(promo_tilt_option).toFloat();
   bool capture_interval_ok = false;
   float const capture_interval =
       parser.value(capture_interval_option).toFloat(&capture_interval_ok);
@@ -403,7 +417,14 @@ auto main(int argc, char** argv) -> int {
     auto* viewport = window.viewport();
     viewport->set_batch_fixed_step(1.0F / static_cast<float>(fps));
     auto start_next = std::make_shared<std::function<void()>>();
-    *start_next = [state, viewport, &app, start_next]() {
+    *start_next = [state,
+                   viewport,
+                   &app,
+                   start_next,
+                   capture_interval,
+                   duration,
+                   promo_distance_scale,
+                   promo_tilt_deg]() {
       if (state->next_index >= state->entries.size()) {
         qInfo().noquote() << QStringLiteral("Campaign terrain review complete: %1 "
                                             "map(s), %2 failed; artifacts: %3")
@@ -437,6 +458,45 @@ auto main(int argc, char** argv) -> int {
       }
       qInfo().noquote()
           << QStringLiteral("Reviewing campaign terrain: %1").arg(entry.id);
+
+      // With a capture interval the map is filmed instead of photographed: the
+      // camera orbits the battlefield and every frame lands in the map's
+      // directory, ready for scripts/capture-campaign-promo.sh to cut together.
+      if (capture_interval > 0.0F) {
+        viewport->set_terrain_review_gameplay_camera();
+        viewport->arm_terrain_review_orbit(promo_distance_scale, promo_tilt_deg);
+
+        const int interval_ms =
+            std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
+        const float shot_seconds = duration > 0.0F ? duration : 5.0F;
+        const int frame_target =
+            std::max(1, static_cast<int>(std::lround(shot_seconds / capture_interval)));
+        auto captured = std::make_shared<int>(0);
+        auto capture_next = std::make_shared<std::function<void()>>();
+        *capture_next = [state,
+                         viewport,
+                         start_next,
+                         directory,
+                         interval_ms,
+                         frame_target,
+                         captured,
+                         capture_next]() {
+          const QImage frame = viewport->grabFramebuffer();
+          if (!frame.isNull()) {
+            frame.save(QDir(directory).filePath(
+                QStringLiteral("frame_%1.png")
+                    .arg(++(*captured), 4, 10, QLatin1Char('0'))));
+          }
+          if (*captured >= frame_target) {
+            QTimer::singleShot(40, [start_next]() { (*start_next)(); });
+            return;
+          }
+          QTimer::singleShot(interval_ms, [capture_next]() { (*capture_next)(); });
+        };
+        QTimer::singleShot(500, [capture_next]() { (*capture_next)(); });
+        return;
+      }
+
       viewport->set_terrain_review_overview_camera();
 
       QTimer::singleShot(450, [state, viewport, start_next, entry, directory]() {
