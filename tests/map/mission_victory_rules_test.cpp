@@ -143,3 +143,130 @@ TEST(MissionVictoryRulesTest, BuildsUndeadObjectiveRulesAndAmbientFlag) {
   EXPECT_EQ(wave_rule->zone_id, QStringLiteral("sepulcher_ruin"));
   EXPECT_EQ(wave_rule->required_wave_count, 2);
 }
+
+TEST(MissionVictoryRulesTest, BuildsAccumulateResourcesRuleFromDeclaredAmounts) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition gather_condition;
+  gather_condition.type = QStringLiteral("accumulate_resources");
+  Game::Mission::Resources required;
+  required.set(Game::Systems::ResourceType::Wood, 600);
+  required.set(Game::Systems::ResourceType::Iron, 300);
+  gather_condition.resources = required;
+
+  mission.victory_conditions = {gather_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  ASSERT_EQ(rules.victory_rules.size(), 1);
+  auto const* resource_rule =
+      std::get_if<Game::Systems::AccumulateResourcesVictoryRule>(
+          rules.victory_rules.data());
+  ASSERT_NE(resource_rule, nullptr);
+  EXPECT_EQ(resource_rule->required.get(Game::Systems::ResourceType::Wood), 600);
+  EXPECT_EQ(resource_rule->required.get(Game::Systems::ResourceType::Iron), 300);
+  EXPECT_EQ(resource_rule->required.get(Game::Systems::ResourceType::Gold), 0);
+}
+
+TEST(MissionVictoryRulesTest, DropsAccumulateResourcesRuleWithNoPositiveAmounts) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition gather_condition;
+  gather_condition.type = QStringLiteral("accumulate_resources");
+  gather_condition.resources = Game::Mission::Resources{};
+
+  mission.victory_conditions = {gather_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  // Nothing usable was declared, so the loader falls back to elimination rather
+  // than shipping a rule that can never be satisfied.
+  ASSERT_EQ(rules.victory_rules.size(), 1);
+  EXPECT_TRUE(std::holds_alternative<Game::Systems::EliminationVictoryRule>(
+      rules.victory_rules[0]));
+}
+
+TEST(MissionVictoryRulesTest, BuildsSurviveWavesAndTimeLimitRules) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition survive_waves_condition;
+  survive_waves_condition.type = QStringLiteral("survive_waves");
+  survive_waves_condition.wave_count = 3;
+
+  Game::Mission::Condition time_limit_condition;
+  time_limit_condition.type = QStringLiteral("time_limit");
+  time_limit_condition.duration = 420.0F;
+
+  mission.victory_conditions = {survive_waves_condition};
+  mission.defeat_conditions = {time_limit_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  ASSERT_EQ(rules.victory_rules.size(), 1);
+  auto const* wave_rule =
+      std::get_if<Game::Systems::SurviveWavesVictoryRule>(rules.victory_rules.data());
+  ASSERT_NE(wave_rule, nullptr);
+  EXPECT_EQ(wave_rule->required_wave_count, 3);
+
+  ASSERT_EQ(rules.defeat_rules.size(), 1);
+  auto const* time_limit_rule =
+      std::get_if<Game::Systems::TimeLimitDefeatRule>(rules.defeat_rules.data());
+  ASSERT_NE(time_limit_rule, nullptr);
+  EXPECT_FLOAT_EQ(time_limit_rule->duration, 420.0F);
+}
+
+TEST(MissionVictoryRulesTest, DropsTimeLimitDefeatRuleWithoutDuration) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition survive_condition;
+  survive_condition.type = QStringLiteral("survive_duration");
+  survive_condition.duration = 60.0F;
+
+  Game::Mission::Condition time_limit_condition;
+  time_limit_condition.type = QStringLiteral("time_limit");
+
+  mission.victory_conditions = {survive_condition};
+  mission.defeat_conditions = {time_limit_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  // No duration means no deadline; commander defaults fill in instead of an
+  // immediately-satisfied 0s time limit.
+  ASSERT_EQ(rules.defeat_rules.size(), 2);
+  EXPECT_TRUE(std::holds_alternative<Game::Systems::NoCommanderDefeatRule>(
+      rules.defeat_rules[0]));
+}
+
+TEST(MissionVictoryRulesTest, VictoryModeAllRequiresEveryCondition) {
+  Game::Mission::MissionDefinition mission;
+  mission.victory_mode = QStringLiteral("all");
+
+  Game::Mission::Condition capture_condition;
+  capture_condition.type = QStringLiteral("capture_structures");
+  capture_condition.min_count = 4;
+
+  Game::Mission::Condition survive_wave_condition;
+  survive_wave_condition.type = QStringLiteral("survive_undead_wave");
+  survive_wave_condition.zone_id = QStringLiteral("sepulcher_vanguard");
+  survive_wave_condition.wave_count = 2;
+
+  mission.victory_conditions = {capture_condition, survive_wave_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  EXPECT_TRUE(rules.require_all_victory_rules);
+  EXPECT_EQ(rules.victory_rules.size(), 2);
+}
+
+TEST(MissionVictoryRulesTest, VictoryModeDefaultsToAnyForUnsetAndUnknownValues) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::Condition capture_condition;
+  capture_condition.type = QStringLiteral("capture_structures");
+  mission.victory_conditions = {capture_condition};
+
+  EXPECT_FALSE(Game::Mission::build_victory_rules(mission).require_all_victory_rules);
+
+  mission.victory_mode = QStringLiteral("both");
+  EXPECT_FALSE(Game::Mission::build_victory_rules(mission).require_all_victory_rules);
+}

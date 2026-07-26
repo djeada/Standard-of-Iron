@@ -2291,6 +2291,88 @@ void ArenaViewport::set_terrain_review_gameplay_camera() {
   update();
 }
 
+void ArenaViewport::arm_terrain_review_orbit(float distance_scale, float tilt_deg) {
+  if (m_camera == nullptr || !m_terrain_review_definition.has_value()) {
+    return;
+  }
+
+  const auto& definition = *m_terrain_review_definition;
+  QVector3D center = definition.camera.center;
+  if (definition.coordSystem == Game::Map::CoordSystem::Grid) {
+    center.setX(
+        (center.x() - (static_cast<float>(definition.grid.width) * 0.5F - 0.5F)) *
+        definition.grid.tile_size);
+    center.setZ(
+        (center.z() - (static_cast<float>(definition.grid.height) * 0.5F - 0.5F)) *
+        definition.grid.tile_size);
+  }
+
+  // The authored camera looks at the middle of the battlefield, which on most
+  // maps is empty ground. For a promo shot, aim at the densest built-up area
+  // instead so every map opens on a town rather than a field.
+  std::vector<QVector3D> building_positions;
+  building_positions.reserve(definition.structures.size());
+  for (const auto& structure : definition.structures) {
+    if (structure.type == Game::Units::SpawnType::WallSegment) {
+      continue;
+    }
+    const auto* point =
+        std::get_if<Game::Map::PointStructureGeometry>(&structure.geometry);
+    if (point != nullptr) {
+      building_positions.push_back(point->position);
+    }
+  }
+
+  if (!building_positions.empty()) {
+    constexpr float k_cluster_radius = 70.0F;
+    const float radius_sq = k_cluster_radius * k_cluster_radius;
+    std::size_t best_index = 0;
+    int best_count = -1;
+    for (std::size_t i = 0; i < building_positions.size(); ++i) {
+      int count = 0;
+      for (const auto& other : building_positions) {
+        const float dx = other.x() - building_positions[i].x();
+        const float dz = other.z() - building_positions[i].z();
+        if (dx * dx + dz * dz <= radius_sq) {
+          ++count;
+        }
+      }
+      if (count > best_count) {
+        best_count = count;
+        best_index = i;
+      }
+    }
+
+    QVector3D cluster_center;
+    int members = 0;
+    for (const auto& other : building_positions) {
+      const float dx = other.x() - building_positions[best_index].x();
+      const float dz = other.z() - building_positions[best_index].z();
+      if (dx * dx + dz * dz <= radius_sq) {
+        cluster_center += other;
+        ++members;
+      }
+    }
+    if (members > 0) {
+      center = cluster_center / static_cast<float>(members);
+    }
+  }
+
+  m_capture_orbit_center = center;
+  m_capture_orbit_view = Arena::ArenaCameraView{
+      .distance = definition.camera.distance * std::max(0.05F, distance_scale),
+      .angle = tilt_deg > 0.0F ? tilt_deg : definition.camera.tilt_deg,
+      .yaw = definition.camera.yaw_deg};
+  m_capture_orbit_yaw = 0.0F;
+  m_capture_orbit_ready = true;
+
+  m_camera->set_rts_view(m_capture_orbit_center,
+                         m_capture_orbit_view.distance,
+                         m_capture_orbit_view.angle,
+                         m_capture_orbit_view.yaw);
+  update();
+}
+
 auto ArenaViewport::terrain_review_definition() const
     -> const Game::Map::MapDefinition* {
   return m_terrain_review_definition.has_value() ? &*m_terrain_review_definition

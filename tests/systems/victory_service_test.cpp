@@ -10,6 +10,7 @@
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/victory_service.h"
 
 namespace {
@@ -51,6 +52,15 @@ public:
   completed_wave_count(const QString& zone_id) const -> int override {
     return completed_waves.value(zone_id, 0);
   }
+};
+
+class StubMissionWaveQuery : public Game::Systems::MissionWaveQuery {
+public:
+  int total = 0;
+  int cleared = 0;
+
+  [[nodiscard]] auto total_wave_count() const -> int override { return total; }
+  [[nodiscard]] auto cleared_wave_count() const -> int override { return cleared; }
 };
 
 class VictoryServiceTest : public ::testing::Test {
@@ -523,6 +533,125 @@ TEST_F(VictoryServiceTest, SurviveUndeadWaveObjectiveCountsCompletedWaves) {
   zones.completed_waves.insert(QStringLiteral("ruins_guard"), 2);
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
       guardian->get_id(), 2, Game::Units::SpawnType::SkeletonArcher));
+
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(VictoryServiceTest, VictoryModeAllRequiresEverySatisfiedRule) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  StubUndeadZoneQuery zones;
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.require_all_victory_rules = true;
+  rules.victory_rules.push_back(survive_for(0.2F));
+  rules.victory_rules.emplace_back(
+      Game::Systems::SurviveUndeadWaveVictoryRule{QStringLiteral("vanguard"), 2});
+
+  m_service->configure(rules, 1);
+  m_service->set_undead_zone_query(&zones);
+
+  // The timer alone satisfies one rule; under "all" that must not end the mission.
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  zones.completed_waves.insert(QStringLiteral("vanguard"), 2);
+  m_service->update(world, 0.1F);
+
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(VictoryServiceTest, TimeLimitDefeatRuleEndsMissionAtDeadline) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 4));
+  rules.defeat_rules.emplace_back(Game::Systems::TimeLimitDefeatRule{1.0F});
+
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  m_service->update(world, 0.5F);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  m_service->update(world, 0.6F);
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
+}
+
+TEST_F(VictoryServiceTest, AccumulateResourcesReadsLifetimeHarvestNotCurrentBalance) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.clear();
+
+  Game::Systems::ResourceAmounts required;
+  required.set(Game::Systems::ResourceType::Wood, 80);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(
+      Game::Systems::AccumulateResourcesVictoryRule{required});
+
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  // A plain grant is not a harvest and must not count towards the objective.
+  resources.add(1, Game::Systems::ResourceType::Wood, 500);
+  m_service->update(world, 0.1F);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  resources.add_harvested(1, Game::Systems::ResourceType::Wood, 40);
+  m_service->update(world, 0.1F);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  resources.add_harvested(1, Game::Systems::ResourceType::Wood, 40);
+  // Spending afterwards must not undo the progress already banked.
+  resources.spend(1, required);
+  m_service->update(world, 0.1F);
+
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+  resources.clear();
+}
+
+TEST_F(VictoryServiceTest, SurviveWavesVictoryWaitsForEveryRequiredPhase) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  StubMissionWaveQuery waves;
+  waves.total = 3;
+  waves.cleared = 2;
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(Game::Systems::SurviveWavesVictoryRule{3});
+
+  m_service->configure(rules, 1);
+  m_service->set_mission_wave_query(&waves);
+
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  waves.cleared = 3;
+  m_service->update(world, 0.1F);
 
   EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
 }

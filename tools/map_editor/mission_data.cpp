@@ -413,6 +413,8 @@ QStringList MissionData::supported_structures() {
 QStringList MissionData::supported_victory_conditions() {
   return {"destroy_all_enemies",
           "survive_duration",
+          "survive_waves",
+          "accumulate_resources",
           "control_structures",
           "capture_structures",
           "clear_undead_zone",
@@ -421,12 +423,15 @@ QStringList MissionData::supported_victory_conditions() {
 }
 
 QStringList MissionData::supported_defeat_conditions() {
-  return {
-      "lose_all_units", "lose_structure", "lose_commander", "only_commander_remaining"};
+  return {"lose_all_units",
+          "lose_structure",
+          "lose_commander",
+          "only_commander_remaining",
+          "time_limit"};
 }
 
 QStringList MissionData::supported_optional_objectives() {
-  return {"wave_count", "time_pressure"};
+  return supported_victory_conditions();
 }
 
 } // namespace MapEditor

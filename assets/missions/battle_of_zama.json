@@ -1,7 +1,7 @@
 {
   "id": "battle_of_zama",
   "title": "Battle of Zama",
-  "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize the Roman camps before the rear guard stabilizes the field.",
+  "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.",
   "teaching_goal": "Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.",
   "narrative_intent": "The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield's neglected flank.",
   "historical_context": "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history.",
@@ -177,8 +177,62 @@
         }
       ],
       "commander_troop": "roman_legion_organizer"
+    },
+    {
+      "id": "roman_northern_camp",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "white",
+      "team_id": 1,
+      "difficulty": "hard",
+      "strategy": "balanced",
+      "personality": {
+        "aggression": 0.68,
+        "defense": 0.6,
+        "harassment": 0.45
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": [
+        {
+          "timing": 220.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 596.12,
+            "z": 153.23
+          }
+        },
+        {
+          "timing": 460.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 7
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            }
+          ],
+          "entry_point": {
+            "x": 596.12,
+            "z": 153.23
+          }
+        }
+      ],
+      "commander_troop": "roman_field_commander"
     }
   ],
+  "victory_mode": "all",
   "victory_conditions": [
     {
       "type": "capture_structures",
@@ -186,7 +240,7 @@
         "barracks"
       ],
       "min_count": 4,
-      "description": "Seize the two consular camps, Masinissa's northern camp, and the Roman rear-guard camp before the cavalry closes your rear."
+      "description": "Seize all four Roman camps — the consular line, Masinissa's Numidians, the rear guard, and the northern camp — before the cavalry closes your rear."
     },
     {
       "type": "survive_undead_wave",

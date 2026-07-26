@@ -11,8 +11,11 @@ Item {
     property var victoryConditions: []
     property var defeatConditions: []
     property var optionalObjectives: []
+    property string victoryMode: "any"
 
     readonly property bool hasObjectives: victoryConditions.length > 0 || defeatConditions.length > 0 || optionalObjectives.length > 0
+    readonly property bool requiresAllVictoryConditions: victoryMode === "all"
+    readonly property string victoryHeading: victoryConditions.length > 1 ? (requiresAllVictoryConditions ? qsTr("Victory Conditions — complete all") : qsTr("Victory Conditions — complete any")) : qsTr("Victory Conditions")
 
     implicitWidth: Design.Metrics.space24 * 20
     implicitHeight: Design.Metrics.space24 * 16
@@ -75,7 +78,7 @@ Item {
 
             Repeater {
                 model: [{
-                        "heading": qsTr("Victory Conditions"),
+                        "heading": root.victoryHeading,
                         "state": "active",
                         "entries": root.victoryConditions,
                         "fallback": qsTr("Complete the objective")

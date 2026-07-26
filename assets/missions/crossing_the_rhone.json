@@ -61,8 +61,8 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 3,
-      "description": "Seize the two river forts and the eastern Roman supply town. Leave no road for Scipio's army to inherit."
+      "min_count": 2,
+      "description": "Seize the two river forts. Leave no crossing for Scipio's army to inherit."
     }
   ],
   "defeat_conditions": [

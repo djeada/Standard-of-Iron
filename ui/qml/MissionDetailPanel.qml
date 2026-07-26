@@ -311,7 +311,12 @@ Rectangle {
                         spacing: Theme.spacingTiny
 
                         Label {
-                            text: qsTr("Campaign Objectives:")
+                            text: {
+                                var count = mission_definition && mission_definition.victory_conditions ? mission_definition.victory_conditions.length : 0;
+                                if (count > 1)
+                                    return mission_definition.victory_mode === "all" ? qsTr("Campaign Objectives (complete all):") : qsTr("Campaign Objectives (complete any):");
+                                return qsTr("Campaign Objectives:");
+                            }
                             color: Theme.textDim
                             font.pointSize: Theme.fontSizeSmall
                             font.bold: true

@@ -90,6 +90,7 @@ struct Condition {
   std::vector<QString> structure_types;
   std::optional<int> min_count;
   std::optional<int> wave_count;
+  std::optional<Resources> resources;
 };
 
 struct EventTrigger {
@@ -118,6 +119,7 @@ struct MissionDefinition {
   std::optional<QString> terrain_type;
   PlayerSetup player_setup;
   std::vector<AISetup> ai_setups;
+  QString victory_mode = QStringLiteral("any");
   std::vector<Condition> victory_conditions;
   std::vector<Condition> defeat_conditions;
   std::vector<Condition> optional_objectives;

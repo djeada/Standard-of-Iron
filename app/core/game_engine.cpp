@@ -3032,6 +3032,10 @@ void GameEngine::apply_mission_setup() {
                                                        m_runtime.local_owner_id,
                                                        m_pending_mission_waves,
                                                        m_entity_cache});
+  m_mission_wave_tracker.bind(&m_pending_mission_waves, m_world.get());
+  if (m_victory_service) {
+    m_victory_service->set_mission_wave_query(&m_mission_wave_tracker);
+  }
   if (effects.selected_player_changed) {
     emit selected_player_id_changed();
   }
@@ -3132,6 +3136,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_runtime.minimap_unit_update_accumulator = 0.0F;
   m_runtime.simulation_accumulator = 0.0F;
   m_pending_mission_waves.clear();
+  m_mission_wave_tracker.bind(nullptr, nullptr);
   Game::Systems::PlayerResourceRegistry::instance().clear();
   Game::Systems::MarketplaceSystem::instance().clear();
   sync_selected_player_state();
@@ -3163,6 +3168,7 @@ void GameEngine::update_mission_waves(float dt) {
     for (const auto& announcement : effects.mission_announcements) {
       emit mission_announcement(announcement);
     }
+    wave.spawned_entity_ids = effects.spawned_entity_ids;
     wave.spawned = true;
     spawned_any = true;
   }
