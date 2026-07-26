@@ -6,29 +6,17 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 #include "app/utils/json_vec_utils.h"
 #include "game/game_config.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/nation_id.h"
+#include "game/systems/nation_registry.h"
 #include "render/gl/camera.h"
 
 namespace Game::Systems {
-
-namespace {
-
-auto value_for_key(const QJsonObject& object,
-                   const char* key,
-                   const char* legacy_key = nullptr) -> QJsonValue {
-  if (object.contains(key)) {
-    return object.value(key);
-  }
-  if ((legacy_key != nullptr) && object.contains(legacy_key)) {
-    return object.value(legacy_key);
-  }
-  return {};
-}
-
-} // namespace
 
 auto GameStateSerializer::build_metadata(const Engine::Core::World&,
                                          const Render::GL::Camera* camera,
@@ -86,6 +74,16 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   runtime_obj["resources_by_owner"] = resources_array;
   metadata["runtime"] = runtime_obj;
 
+  QJsonArray nations_array;
+  for (const auto& [player_id, nation_id] :
+       NationRegistry::instance().player_nation_assignments()) {
+    QJsonObject nation_obj;
+    nation_obj["owner_id"] = player_id;
+    nation_obj["nation"] = nation_id_to_qstring(nation_id);
+    nations_array.append(nation_obj);
+  }
+  metadata["player_nations"] = nations_array;
+
   return metadata;
 }
 
@@ -135,17 +133,13 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
         runtime_obj.value("time_scale").toDouble(runtime.time_scale));
   }
 
-  if (const auto victory_state =
-          value_for_key(runtime_obj, "victory_state", "victoryState");
-      !victory_state.isUndefined()) {
-    runtime.victory_state = victory_state.toString(runtime.victory_state);
+  if (runtime_obj.contains("victory_state")) {
+    runtime.victory_state =
+        runtime_obj.value("victory_state").toString(runtime.victory_state);
   }
 
-  if (const auto cursor_value = value_for_key(runtime_obj, "cursor_mode", "cursorMode");
-      !cursor_value.isUndefined()) {
-    if (cursor_value.isDouble()) {
-      runtime.cursor_mode = cursor_value.toInt(0);
-    }
+  if (runtime_obj.contains("cursor_mode")) {
+    runtime.cursor_mode = runtime_obj.value("cursor_mode").toInt(runtime.cursor_mode);
   }
 
   if (metadata.contains("local_owner_id")) {
@@ -153,16 +147,14 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
         metadata.value("local_owner_id").toInt(runtime.local_owner_id);
   }
 
-  if (const auto selected_player_id =
-          value_for_key(runtime_obj, "selected_player_id", "selectedPlayerId");
-      !selected_player_id.isUndefined()) {
-    runtime.selected_player_id = selected_player_id.toInt(runtime.selected_player_id);
+  if (runtime_obj.contains("selected_player_id")) {
+    runtime.selected_player_id =
+        runtime_obj.value("selected_player_id").toInt(runtime.selected_player_id);
   }
 
-  if (const auto follow_selection =
-          value_for_key(runtime_obj, "follow_selection", "followSelection");
-      !follow_selection.isUndefined()) {
-    runtime.follow_selection = follow_selection.toBool(runtime.follow_selection);
+  if (runtime_obj.contains("follow_selection")) {
+    runtime.follow_selection =
+        runtime_obj.value("follow_selection").toBool(runtime.follow_selection);
   }
 
   if (runtime_obj.contains("resources_by_owner")) {
@@ -183,18 +175,30 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
       }
       runtime.resources_by_owner.push_back(row);
     }
-  } else if (runtime_obj.contains("wood_by_owner")) {
-    runtime.resources_by_owner.clear();
-    const auto wood_array = runtime_obj.value("wood_by_owner").toArray();
-    runtime.resources_by_owner.reserve(wood_array.size());
-    for (const auto& value : wood_array) {
-      const auto wood_obj = value.toObject();
-      OwnerResourceState row;
-      row.owner_id = wood_obj.value("owner_id").toInt(0);
-      row.amounts.set(ResourceType::Wood, wood_obj.value("wood").toInt(0));
-      runtime.resources_by_owner.push_back(row);
-    }
   }
+}
+
+void GameStateSerializer::restore_player_nations_from_metadata(
+    const QJsonObject& metadata) {
+  if (!metadata.contains("player_nations")) {
+    return;
+  }
+
+  std::vector<std::pair<int, NationID>> assignments;
+  const auto nations_array = metadata.value("player_nations").toArray();
+  assignments.reserve(nations_array.size());
+  for (const auto& value : nations_array) {
+    const auto nation_obj = value.toObject();
+    NationID nation_id{};
+    if (!try_parse_nation_id(nation_obj.value("nation").toString(), nation_id)) {
+      qWarning() << "Ignoring unknown nation in save:"
+                 << nation_obj.value("nation").toString();
+      continue;
+    }
+    assignments.emplace_back(nation_obj.value("owner_id").toInt(0), nation_id);
+  }
+
+  NationRegistry::instance().restore_player_nations(assignments);
 }
 
 void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadata,
@@ -213,14 +217,9 @@ void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadat
         metadata.value("player_unit_id").toVariant().toULongLong());
   }
 
-  auto max_troops_value = value_for_key(metadata, "max_troops_per_player");
-  if (max_troops_value.isUndefined()) {
-    max_troops_value =
-        value_for_key(metadata, "game_max_troops_per_player", "gameMaxTroopsPerPlayer");
-  }
-  int max_troops = max_troops_value.isUndefined()
-                       ? level.max_troops_per_player
-                       : max_troops_value.toInt(level.max_troops_per_player);
+  int max_troops = metadata.value("max_troops_per_player")
+                       .toInt(metadata.value("game_max_troops_per_player")
+                                  .toInt(level.max_troops_per_player));
   if (max_troops <= 0) {
     max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   }

@@ -5,12 +5,12 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QStringList>
 #endif
+#include <QImage>
 #include <QMetaObject>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
@@ -223,6 +223,12 @@ void GLView::GLRenderer::render() {
     m_engine->update(dt);
     m_engine->render(m_size.width(), m_size.height());
 #endif
+
+    if (m_engine->consume_screenshot_request()) {
+      if (auto* fbo = framebufferObject()) {
+        m_engine->submit_frame_image(fbo->toImage());
+      }
+    }
 
     if (!m_ready_reported && m_view != nullptr) {
       m_ready_reported = true;
