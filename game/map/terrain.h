@@ -178,7 +178,7 @@ struct BiomeSettings {
   float background_sway_variance = 0.2F;
   float background_scatter_radius = 0.35F;
   float plant_density = 0.5F;
-  float spawn_edge_padding = 0.08F;
+  float spawn_edge_padding = 0.02F;
   std::uint32_t seed = 1337U;
   bool ground_irregularity_enabled = true;
   float irregularity_scale = 0.15F;
@@ -233,7 +233,7 @@ struct TerrainScatterProfile {
   float blade_width_min = 0.025F;
   float blade_width_max = 0.055F;
   float plant_density = 0.5F;
-  float spawn_edge_padding = 0.08F;
+  float spawn_edge_padding = 0.02F;
   float background_scatter_radius = 0.35F;
   std::uint32_t seed = 1337U;
 };

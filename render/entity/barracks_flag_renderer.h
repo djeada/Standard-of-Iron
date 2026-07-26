@@ -79,6 +79,10 @@ inline void draw_rally_flag_if_any(const DrawContext& p,
                                    Texture* white,
                                    const FlagColors& colors,
                                    const ClothBannerResources* cloth = nullptr) {
+  if (!p.order_markers_visible) {
+    return;
+  }
+
   if (auto* prod = p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
 
