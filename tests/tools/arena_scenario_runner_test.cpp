@@ -74,7 +74,184 @@ auto minimal_definition() -> Arena::ArenaScenarioDefinition {
   return scenario;
 }
 
+constexpr int k_guardian_owner_id = 99;
+
+auto undead_zone_definition() -> Arena::ArenaScenarioDefinition {
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.duration_seconds = 10.0F;
+
+  Game::Map::UndeadZone zone;
+  zone.id = QStringLiteral("crypt");
+  zone.anchor_type = Game::Map::WorldProp::Type::MagicShrine;
+  zone.radius = 6.0F;
+  zone.owner_id = k_guardian_owner_id;
+  zone.team_id = k_guardian_owner_id;
+  zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+  Game::Map::UndeadWave wave;
+  wave.trigger = QStringLiteral("initial");
+  wave.units.push_back({Game::Units::SpawnType::SkeletonSwordsman, 2});
+  zone.waves.push_back(wave);
+  scenario.undead_zones = {zone};
+  return scenario;
+}
+
+auto spawn_guardian(Engine::Core::World& world) -> Engine::Core::UnitComponent* {
+  auto* entity = world.create_entity();
+  entity->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+  unit->owner_id = k_guardian_owner_id;
+  unit->spawn_type = Game::Units::SpawnType::SkeletonSwordsman;
+  unit->health = 100;
+  unit->max_health = 100;
+  return unit;
+}
+
+auto issue_codes(const Arena::ArenaScenarioReport& report) -> std::vector<QString> {
+  std::vector<QString> codes;
+  codes.reserve(report.issues.size());
+  for (auto const& issue : report.issues) {
+    codes.push_back(issue.code);
+  }
+  return codes;
+}
+
+auto contains_code(const Arena::ArenaScenarioReport& report,
+                   const QString& code) -> bool {
+  auto const codes = issue_codes(report);
+  return std::find(codes.begin(), codes.end(), code) != codes.end();
+}
+
 } // namespace
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneExpectationsRequireAZoneReference) {
+  auto scenario = undead_zone_definition();
+  scenario.expectations = {{Arena::ArenaExpectationKind::UndeadZoneAwakened}};
+  EXPECT_FALSE(Arena::validate_scenario(scenario).empty());
+
+  scenario.expectations.front().zone_id = QStringLiteral("not_a_zone");
+  EXPECT_FALSE(Arena::validate_scenario(scenario).empty());
+
+  scenario.expectations.front().zone_id = QStringLiteral("crypt");
+  EXPECT_TRUE(Arena::validate_scenario(scenario).empty());
+}
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneAwakensOnlyAfterTheDormantWindow) {
+  Engine::Core::World world;
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation dormant;
+  dormant.kind = Arena::ArenaExpectationKind::UndeadZoneDormantBefore;
+  dormant.zone_id = QStringLiteral("crypt");
+  dormant.end_seconds = 3.0F;
+  Arena::ArenaExpectation awakened;
+  awakened.kind = Arena::ArenaExpectationKind::UndeadZoneAwakened;
+  awakened.zone_id = QStringLiteral("crypt");
+  awakened.threshold = 2.0F;
+  scenario.expectations = {dormant, awakened};
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  for (int step = 0; step < 40; ++step) {
+    runner.update(0.1F);
+  }
+  spawn_guardian(world);
+  spawn_guardian(world);
+  while (!runner.finished()) {
+    runner.update(0.1F);
+  }
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneThatSpawnsInsideTheDormantWindowFails) {
+  Engine::Core::World world;
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation dormant;
+  dormant.kind = Arena::ArenaExpectationKind::UndeadZoneDormantBefore;
+  dormant.zone_id = QStringLiteral("crypt");
+  dormant.end_seconds = 3.0F;
+  scenario.expectations = {dormant};
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  spawn_guardian(world);
+  while (!runner.finished()) {
+    runner.update(0.1F);
+  }
+
+  EXPECT_FALSE(runner.report().passed());
+  EXPECT_TRUE(
+      contains_code(runner.report(), QStringLiteral("undead_zone_woke_too_early")));
+}
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneThatNeverSpawnsFailsTheAwakeningContract) {
+  Engine::Core::World world;
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation awakened;
+  awakened.kind = Arena::ArenaExpectationKind::UndeadZoneAwakened;
+  awakened.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {awakened};
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  while (!runner.finished()) {
+    runner.update(0.1F);
+  }
+
+  EXPECT_FALSE(runner.report().passed());
+  EXPECT_TRUE(
+      contains_code(runner.report(), QStringLiteral("undead_zone_never_awakened")));
+}
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneIsClearedOnlyWhenEveryGuardianIsDead) {
+  Engine::Core::World world;
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation cleared;
+  cleared.kind = Arena::ArenaExpectationKind::UndeadZoneCleared;
+  cleared.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {cleared};
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  auto* first = spawn_guardian(world);
+  auto* second = spawn_guardian(world);
+  runner.update(0.1F);
+
+  first->health = 0;
+  for (int step = 0; step < 40; ++step) {
+    runner.update(0.1F);
+  }
+  ASSERT_FALSE(runner.finished());
+
+  second->health = 0;
+  while (!runner.finished()) {
+    runner.update(0.1F);
+  }
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, UndeadZoneWithSurvivingGuardiansIsNotCleared) {
+  Engine::Core::World world;
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation cleared;
+  cleared.kind = Arena::ArenaExpectationKind::UndeadZoneCleared;
+  cleared.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {cleared};
+
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  spawn_guardian(world);
+  while (!runner.finished()) {
+    runner.update(0.1F);
+  }
+
+  EXPECT_FALSE(runner.report().passed());
+  EXPECT_TRUE(
+      contains_code(runner.report(), QStringLiteral("undead_zone_not_cleared")));
+}
 
 TEST(ArenaScenarioDefinitionTest, EntireLocalCatalogIsValidAndUniquelyAddressable) {
   QSet<QString> ids;

@@ -3,19 +3,22 @@
 #include <QVector3D>
 
 #include "../../healer_renderer_common.h"
+#include "../sepulcher/palette.h"
 
 namespace {
 
 constexpr QVector3D k_carthage_tunic{0.45F, 0.45F, 0.47F};
 
 constexpr QVector3D k_carthage_skin{0.08F, 0.07F, 0.065F};
-constexpr QVector3D k_sepulcher_skin{0.82F, 0.84F, 0.79F};
-constexpr QVector3D k_sepulcher_tunic{0.16F, 0.16F, 0.18F};
-constexpr QVector3D k_sepulcher_leather{0.24F, 0.20F, 0.18F};
-constexpr QVector3D k_sepulcher_leather_dark{0.12F, 0.12F, 0.13F};
-constexpr QVector3D k_sepulcher_metal{0.60F, 0.64F, 0.68F};
-constexpr QVector3D k_sepulcher_wood{0.33F, 0.31F, 0.28F};
-constexpr QVector3D k_sepulcher_cape{0.12F, 0.12F, 0.14F};
+constexpr QVector3D k_sepulcher_skin = Render::GL::Sepulcher::k_bone;
+
+constexpr QVector3D k_sepulcher_tunic{0.085F, 0.080F, 0.105F};
+constexpr QVector3D k_sepulcher_leather = Render::GL::Sepulcher::k_grave_leather;
+constexpr QVector3D k_sepulcher_leather_dark =
+    Render::GL::Sepulcher::k_grave_leather_dark;
+constexpr QVector3D k_sepulcher_metal = Render::GL::Sepulcher::k_grave_iron;
+constexpr QVector3D k_sepulcher_wood = Render::GL::Sepulcher::k_grave_wood;
+constexpr QVector3D k_sepulcher_cape{0.060F, 0.055F, 0.075F};
 
 constexpr QVector3D k_carthage_leather{0.48F, 0.35F, 0.22F};
 constexpr QVector3D k_carthage_leather_dark{0.32F, 0.24F, 0.16F};

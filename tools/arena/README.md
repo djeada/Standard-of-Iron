@@ -163,6 +163,55 @@ Batch runs produce the normal report, trace, and framebuffer artifacts.
 `OwnerHarvestsResource` and `OwnerCompletesConstruction` prove the full economic
 loop, while the shared frame-budget contract catches overly expensive detail.
 
+## Iron Sepulcher contracts
+
+Seven scenarios cover the undead faction end to end. The four battle scenes use
+equivalent-recruitment-value armies so the roster can be balanced against both
+playable nations:
+
+- `sepulcher_roster_lineup` shows the whole roster (skeleton swordsman, skeleton
+  archer, grave priest) beside a Roman and a Carthaginian line for silhouette,
+  scale, and material review.
+- `sepulcher_vs_rome_infantry` and `sepulcher_vs_carthage_infantry` are melee
+  clashes; both require that no eligible soldier idles once the lines meet.
+- `sepulcher_vs_rome_ranged` is a missile exchange with a grave priest casting
+  against the Roman screen.
+- `sepulcher_vs_carthage_cavalry` charges a standing skeleton block and requires
+  visible contact, a charge impact preceding melee lock, deaths, and a launched
+  casualty.
+
+The three awakening scenes drive the production `UndeadAwakeningSystem` rather
+than authored enemy groups. The scenario declares real `undead_zones`, the arena
+configures the system from them, raises the zone haze, and the guardians are
+spawned by the system:
+
+- `sepulcher_shrine_awakening` places a cursed shrine on otherwise empty ground.
+  Roman swordsmen walk into its radius, the whole garrison rises together spread
+  around the shrine, and it fights the intruders. The zone declares no waves, so
+  this scene is also the contract for the default garrison.
+- `sepulcher_ruins_awakening_waves` sends a Carthaginian column into sepulcher
+  ruins, clears the opening wave, and proves the `after_clear` follow-up wave is
+  released only once the first is destroyed. Ruins stay decorative anchors.
+- `sepulcher_shrine_siege` razes the shrine instead of grinding the garrison
+  down. Because a shrine is the sepulcher's barracks, breaking it puts every
+  risen guardian down at once and clears the zone.
+
+```bash
+build-debug/bin/arena_app --scenario sepulcher_shrine_awakening
+build-debug/bin/arena_app --batch --scenario sepulcher_shrine_siege \
+  --fps 30 --artifact-dir artifacts/sepulcher
+```
+
+Two acceptance kinds back these scenes and are reported in `report.json` under
+`undead_zones` (spawn totals, peak living guardians, and the first spawn time):
+
+- `UndeadZoneDormantBefore` fails when a zone spawns anything before its declared
+  dormancy window, which is what proves the "empty space" opening.
+- `UndeadZoneAwakened` fails when a zone never releases the required number of
+  guardians.
+- `UndeadZoneCleared` fails when guardians never appeared or any remain alive at
+  the end of the run.
+
 ## Water rendering contract
 
 `water_showcase` places a river ribbon and an irregular elliptical lake in the

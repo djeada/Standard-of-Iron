@@ -53,6 +53,7 @@
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -67,6 +68,7 @@
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/gl/camera.h"
+#include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
@@ -1896,7 +1898,8 @@ void ArenaViewport::spawn_world_prop() {
 }
 
 void ArenaViewport::place_scenario_resource_patches(
-    const Arena::ArenaScenarioDefinition& definition) {
+    const Arena::ArenaScenarioDefinition& definition,
+    const QVector3D& scenario_origin) {
   if (definition.resource_patches.empty()) {
     return;
   }
@@ -1908,7 +1911,8 @@ void ArenaViewport::place_scenario_resource_patches(
 
   for (const auto& patch : definition.resource_patches) {
     for (int index = 0; index < patch.count; ++index) {
-      const QVector3D world_position = patch.origin + patch.spacing * index;
+      const QVector3D world_position =
+          scenario_origin + patch.origin + patch.spacing * index;
       if (collision.is_circle_overlapping_building(
               world_position.x(), world_position.z(), k_prop_building_clearance)) {
         continue;
@@ -1924,6 +1928,89 @@ void ArenaViewport::place_scenario_resource_patches(
       prop.persistent = true;
       m_world_props.push_back(prop);
     }
+  }
+}
+
+void ArenaViewport::configure_scenario_undead_zones(
+    const Arena::ArenaScenarioDefinition& definition,
+    const QVector3D& scenario_origin) {
+  if (m_world == nullptr) {
+    return;
+  }
+  auto* undead_system = m_world->get_system<Game::Systems::UndeadAwakeningSystem>();
+  if (undead_system == nullptr) {
+    return;
+  }
+
+  m_arena_undead_zones.clear();
+  m_arena_undead_zones.reserve(definition.undead_zones.size());
+  for (auto zone : definition.undead_zones) {
+    zone.x += scenario_origin.x();
+    zone.z += scenario_origin.z();
+    m_arena_undead_zones.push_back(std::move(zone));
+  }
+
+  Game::Map::MapDefinition map_definition;
+  map_definition.coordSystem = Game::Map::CoordSystem::World;
+  map_definition.grid.width = k_terrain_width;
+  map_definition.grid.height = k_terrain_height;
+  map_definition.grid.tile_size = k_terrain_tile_size;
+  map_definition.undead_zones = m_arena_undead_zones;
+  undead_system->configure(map_definition);
+
+  if (m_ambient_fog != nullptr) {
+    auto const& terrain_service = Game::Map::TerrainService::instance();
+    std::vector<Game::Map::FogZone> fog;
+    fog.reserve(m_arena_undead_zones.size());
+    for (const auto& zone : m_arena_undead_zones) {
+      if (zone.fog_density <= 0.0F) {
+        continue;
+      }
+      auto patch =
+          Game::Map::undead_zone_fog(zone.x, zone.z, zone.radius, zone.fog_density);
+      patch.y = terrain_service.resolve_surface_world_y(patch.x, patch.z, 0.0F);
+      fog.push_back(patch);
+    }
+    m_ambient_fog->configure(fog);
+  }
+
+  if (!m_arena_undead_zones.empty()) {
+    if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
+      ai_system->reinitialize();
+    }
+  }
+}
+
+void ArenaViewport::clear_undead_zones() {
+  if (m_world == nullptr || m_arena_undead_zones.empty()) {
+    return;
+  }
+
+  QSet<int> zone_owner_ids;
+  for (const auto& zone : m_arena_undead_zones) {
+    zone_owner_ids.insert(zone.owner_id);
+  }
+
+  std::vector<Engine::Core::EntityID> doomed;
+  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit != nullptr && zone_owner_ids.contains(unit->owner_id)) {
+      doomed.push_back(entity->get_id());
+    }
+  }
+  for (Engine::Core::EntityID const entity_id : doomed) {
+    m_world->destroy_entity(entity_id);
+  }
+
+  m_arena_undead_zones.clear();
+  if (auto* undead_system =
+          m_world->get_system<Game::Systems::UndeadAwakeningSystem>()) {
+    undead_system->configure(Game::Map::MapDefinition{});
+  }
+  if (m_ambient_fog != nullptr) {
+    m_ambient_fog->configure({});
   }
 }
 
@@ -1950,6 +2037,7 @@ void ArenaViewport::reset_arena() {
   m_frame_continuity_analyzer.reset();
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
+  clear_undead_zones();
   clear_units();
   const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
                                   !m_arena_bridges.empty() ||
@@ -2236,6 +2324,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
   bool has_scenario_ai = false;
   for (auto const& group : definition->groups) {
+    nations.set_player_nation(group.owner_id, group.nation_id);
     if (!group.ai_controlled) {
       continue;
     }
@@ -2349,8 +2438,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     return;
   }
 
-  place_scenario_resource_patches(*definition);
+  place_scenario_resource_patches(*definition, scenario_origin);
   reconfigure_terrain_from_state();
+  configure_scenario_undead_zones(*definition, scenario_origin);
 
   if (has_scenario_ai) {
     if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
@@ -3125,11 +3215,7 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
   int player_count = 0;
   int enemy_count = 0;
   if (m_world != nullptr) {
-    for (const auto& unit : m_units) {
-      if (unit == nullptr) {
-        continue;
-      }
-      auto* entity = m_world->get_entity(unit->id());
+    for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
       auto* uc = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
@@ -3138,7 +3224,7 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
       }
       if (uc->owner_id == k_local_owner_id) {
         ++player_count;
-      } else if (uc->owner_id == k_enemy_owner_id) {
+      } else {
         ++enemy_count;
       }
     }

@@ -1,0 +1,409 @@
+#include <QVariantList>
+#include <QVariantMap>
+
+#include <gtest/gtest.h>
+#include <vector>
+
+#include "core/component.h"
+#include "core/world.h"
+#include "game/map/map_definition.h"
+#include "game/map/map_loader.h"
+#include "game/map/skirmish_loader.h"
+#include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/capture_system.h"
+#include "game/systems/global_stats_registry.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/runtime_system_registry.h"
+#include "game/systems/undead_awakening_system.h"
+#include "game/systems/victory_service.h"
+#include "render/gl/camera.h"
+#include "render/scene_renderer.h"
+
+namespace {
+
+constexpr char k_map_path[] = "assets/maps/map_iron_sepulcher_watch.json";
+constexpr int k_local_player_id = 1;
+
+auto solo_player_configs() -> QVariantList {
+  QVariantMap player;
+  player["player_id"] = k_local_player_id;
+  player["team_id"] = 1;
+  player["colorHex"] = QStringLiteral("#C8322D");
+  player["isHuman"] = true;
+  player["nationId"] = QStringLiteral("roman_republic");
+  return QVariantList{player};
+}
+
+auto zone_world_position(const Game::Map::MapDefinition& map_definition,
+                         const Game::Map::UndeadZone& zone) -> QVector3D {
+  const float half_width = static_cast<float>(map_definition.grid.width) * 0.5F - 0.5F;
+  const float half_height =
+      static_cast<float>(map_definition.grid.height) * 0.5F - 0.5F;
+  return {(zone.x - half_width) * map_definition.grid.tile_size,
+          0.0F,
+          (zone.z - half_height) * map_definition.grid.tile_size};
+}
+
+auto find_zone(const Game::Map::MapDefinition& map_definition,
+               const QString& zone_id) -> const Game::Map::UndeadZone* {
+  for (const auto& zone : map_definition.undead_zones) {
+    if (zone.id == zone_id) {
+      return &zone;
+    }
+  }
+  return nullptr;
+}
+
+auto living_guardians_of_owner(Engine::Core::World& world, int owner_id)
+    -> std::vector<Engine::Core::UnitComponent*> {
+  std::vector<Engine::Core::UnitComponent*> units;
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
+      units.push_back(unit);
+    }
+  }
+  return units;
+}
+
+auto find_local_commander(Engine::Core::World& world) -> Engine::Core::Entity* {
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr ||
+        entity->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+      continue;
+    }
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == k_local_player_id && unit->health > 0) {
+      return entity;
+    }
+  }
+  return nullptr;
+}
+
+class IronSepulcherSkirmishTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    auto& nations = Game::Systems::NationRegistry::instance();
+    nations.clear();
+    nations.initialize_defaults();
+    Game::Systems::OwnerRegistry::instance().clear();
+    Game::Systems::GlobalStatsRegistry::instance().clear();
+  }
+
+  void TearDown() override {
+    Game::Map::TerrainService::instance().clear();
+    Game::Map::VisibilityService::instance().reset();
+    Game::Systems::GlobalStatsRegistry::instance().clear();
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Systems::OwnerRegistry::instance().clear();
+  }
+};
+
+} // namespace
+
+TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrine) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+  EXPECT_FALSE(load_result.is_spectator_mode);
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  Game::Systems::VictoryService victory;
+  victory.configure(load_result.victory_config, selected_player_id);
+  victory.set_undead_zone_query(undead);
+
+  const auto* shrine = find_zone(map_definition, QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(shrine, nullptr);
+
+  EXPECT_TRUE(Game::Systems::OwnerRegistry::instance().are_enemies(k_local_player_id,
+                                                                   shrine->owner_id));
+
+  undead->update(&world, 0.1F);
+  victory.update(world, 0.4F);
+  EXPECT_TRUE(living_guardians_of_owner(world, shrine->owner_id).empty())
+      << "the sepulcher must stay dormant until a living unit walks in";
+  EXPECT_FALSE(victory.is_game_over());
+
+  auto* commander = find_local_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const QVector3D shrine_world = zone_world_position(map_definition, *shrine);
+  transform->position.x = shrine_world.x();
+  transform->position.z = shrine_world.z();
+
+  undead->update(&world, 0.1F);
+  auto guardians = living_guardians_of_owner(world, shrine->owner_id);
+  ASSERT_FALSE(guardians.empty()) << "entering the shrine radius must wake the zone";
+  for (auto* guardian : guardians) {
+    EXPECT_EQ(guardian->nation_id, Game::Systems::NationID::IronSepulcher);
+  }
+
+  victory.update(world, 0.1F);
+  EXPECT_FALSE(victory.is_game_over())
+      << "the shrine is not purified while its guardians live";
+
+  for (auto* guardian : guardians) {
+    guardian->health = 0;
+  }
+  undead->update(&world, 0.1F);
+  EXPECT_TRUE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")));
+
+  victory.update(world, 0.1F);
+  EXPECT_EQ(victory.get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(IronSepulcherSkirmishTest, DormantSepulcherDoesNotHandTheSkirmishAnEarlyWin) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  Game::Systems::VictoryService victory;
+  victory.configure(load_result.victory_config, selected_player_id);
+  victory.set_undead_zone_query(undead);
+
+  for (int tick = 0; tick < 20; ++tick) {
+    undead->update(&world, 0.1F);
+    victory.update(world, 0.1F);
+  }
+
+  EXPECT_FALSE(victory.is_game_over())
+      << "an untouched sepulcher must neither win nor lose the match outright";
+}
+
+TEST_F(IronSepulcherSkirmishTest, RazingTheShrineBarracksDestroysItsGarrison) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  Game::Systems::VictoryService victory;
+  victory.configure(load_result.victory_config, selected_player_id);
+  victory.set_undead_zone_query(undead);
+
+  const auto* shrine = find_zone(map_definition, QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(shrine, nullptr);
+
+  auto* commander = find_local_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const QVector3D shrine_world = zone_world_position(map_definition, *shrine);
+  transform->position.x = shrine_world.x();
+  transform->position.z = shrine_world.z();
+
+  undead->update(&world, 0.1F);
+  ASSERT_FALSE(living_guardians_of_owner(world, shrine->owner_id).empty());
+
+  const Engine::Core::EntityID anchor_id =
+      undead->anchor_entity(QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(anchor_id, 0U);
+  auto* anchor = world.get_entity(anchor_id);
+  ASSERT_NE(anchor, nullptr);
+  auto* anchor_unit = anchor->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(anchor_unit, nullptr);
+  EXPECT_EQ(anchor_unit->spawn_type, Game::Units::SpawnType::Barracks);
+  EXPECT_EQ(anchor_unit->owner_id, shrine->owner_id);
+  EXPECT_EQ(anchor_unit->nation_id, Game::Systems::NationID::IronSepulcher);
+  EXPECT_EQ(anchor->get_component<Engine::Core::ProductionComponent>(), nullptr)
+      << "the shrine is a barracks only so it can be taken or razed";
+
+  anchor_unit->health = 0;
+  undead->update(&world, 0.1F);
+
+  EXPECT_TRUE(living_guardians_of_owner(world, shrine->owner_id).empty())
+      << "razing the shrine must put its risen garrison down";
+  EXPECT_TRUE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")));
+
+  victory.update(world, 0.4F);
+  EXPECT_EQ(victory.get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(IronSepulcherSkirmishTest, ShrineFlagOnlyFallsBetweenWaves) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  const auto* shrine = find_zone(map_definition, QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(shrine, nullptr);
+
+  auto* commander = find_local_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const QVector3D shrine_world = zone_world_position(map_definition, *shrine);
+  transform->position.x = shrine_world.x();
+  transform->position.z = shrine_world.z();
+
+  undead->update(&world, 0.1F);
+  ASSERT_FALSE(living_guardians_of_owner(world, shrine->owner_id).empty());
+
+  auto* anchor =
+      world.get_entity(undead->anchor_entity(QStringLiteral("shrine_sentinels")));
+  ASSERT_NE(anchor, nullptr);
+  auto* anchor_unit = anchor->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(anchor_unit, nullptr);
+
+  Game::Systems::CaptureSystem capture_system;
+  for (int tick = 0; tick < 40; ++tick) {
+    undead->update(&world, 0.25F);
+    capture_system.update(&world, 0.25F);
+  }
+
+  auto* capture = anchor->get_component<Engine::Core::CaptureComponent>();
+  ASSERT_NE(capture, nullptr);
+  EXPECT_FALSE(capture->is_being_captured)
+      << "the flag must hold while the sepulcher's guardians still stand";
+  EXPECT_FLOAT_EQ(capture->capture_progress, 0.0F);
+  EXPECT_EQ(anchor_unit->owner_id, shrine->owner_id);
+
+  for (auto* guardian : living_guardians_of_owner(world, shrine->owner_id)) {
+    guardian->health = 0;
+  }
+  undead->update(&world, 0.25F);
+  EXPECT_FALSE(capture->capture_blocked);
+
+  capture_system.update(&world, 0.25F);
+  EXPECT_TRUE(capture->is_being_captured)
+      << "with the guardians down the flag starts coming off the pole";
+  EXPECT_GT(capture->capture_progress, 0.0F);
+}
+
+TEST_F(IronSepulcherSkirmishTest, CapturingTheShrineBarracksDestroysItsGarrison) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  const auto* shrine = find_zone(map_definition, QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(shrine, nullptr);
+
+  auto* commander = find_local_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const QVector3D shrine_world = zone_world_position(map_definition, *shrine);
+  transform->position.x = shrine_world.x();
+  transform->position.z = shrine_world.z();
+
+  undead->update(&world, 0.1F);
+  ASSERT_FALSE(living_guardians_of_owner(world, shrine->owner_id).empty());
+
+  auto* anchor =
+      world.get_entity(undead->anchor_entity(QStringLiteral("shrine_sentinels")));
+  ASSERT_NE(anchor, nullptr);
+  anchor->get_component<Engine::Core::UnitComponent>()->owner_id = k_local_player_id;
+
+  undead->update(&world, 0.1F);
+
+  EXPECT_TRUE(living_guardians_of_owner(world, shrine->owner_id).empty())
+      << "capturing the shrine must put its risen garrison down";
+  EXPECT_TRUE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")));
+}

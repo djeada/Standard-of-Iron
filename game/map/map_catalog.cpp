@@ -69,7 +69,7 @@ auto collect_campaign_files() -> QStringList {
   QSet<QString> seen;
   for (const auto& path : search_paths) {
     const QString resolved = Utils::Resources::resolve_resource_path(path);
-    QDir campaigns_dir(resolved);
+    QDir const campaigns_dir(resolved);
     if (!campaigns_dir.exists()) {
       continue;
     }
@@ -126,6 +126,12 @@ auto load_campaign_map_paths() -> QSet<QString> {
   return map_paths;
 }
 
+auto has_scripted_opposition(const QJsonObject& map_object) -> bool {
+  return map_object.contains(UNDEAD_ZONES) &&
+         map_object.value(UNDEAD_ZONES).isArray() &&
+         !map_object.value(UNDEAD_ZONES).toArray().isEmpty();
+}
+
 } // namespace
 
 MapCatalog::MapCatalog(QObject* parent)
@@ -153,6 +159,7 @@ auto MapCatalog::available_maps() -> QVariantList {
     QString name = f;
     QString desc;
     QSet<int> player_ids;
+    bool solo_playable = false;
     if (file.open(QIODevice::ReadOnly)) {
       QByteArray const data = file.readAll();
       file.close();
@@ -166,6 +173,7 @@ auto MapCatalog::available_maps() -> QVariantList {
         if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
           desc = obj[DESCRIPTION].toString();
         }
+        solo_playable = has_scripted_opposition(obj);
 
         for (const char* collection : {SPAWNS, STRUCTURES}) {
           if (obj.contains(collection) && obj[collection].isArray()) {
@@ -190,6 +198,7 @@ auto MapCatalog::available_maps() -> QVariantList {
     entry[DESCRIPTION] = desc;
     entry["path"] = path;
     entry["playerCount"] = player_ids.size();
+    entry["soloPlayable"] = solo_playable;
     QVariantList player_id_list;
     QList<int> sorted_ids = player_ids.values();
     std::sort(sorted_ids.begin(), sorted_ids.end());
@@ -302,6 +311,7 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   QString name = QFileInfo(resolved_path).fileName();
   QString desc;
   QSet<int> player_ids;
+  bool solo_playable = false;
 
   if (file.open(QIODevice::ReadOnly)) {
     QByteArray const data = file.readAll();
@@ -316,6 +326,7 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
       if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
         desc = obj[DESCRIPTION].toString();
       }
+      solo_playable = has_scripted_opposition(obj);
 
       for (const char* collection : {SPAWNS, STRUCTURES}) {
         if (obj.contains(collection) && obj[collection].isArray()) {
@@ -341,6 +352,7 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   entry[DESCRIPTION] = desc;
   entry["path"] = resolved_path;
   entry["playerCount"] = player_ids.size();
+  entry["soloPlayable"] = solo_playable;
 
   QVariantList player_id_list;
   QList<int> sorted_ids = player_ids.values();

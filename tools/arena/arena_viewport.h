@@ -191,8 +191,11 @@ private:
   void configure_rendering_from_terrain();
   void setup_default_players();
   void align_units_to_terrain();
-  void
-  place_scenario_resource_patches(const Arena::ArenaScenarioDefinition& definition);
+  void place_scenario_resource_patches(const Arena::ArenaScenarioDefinition& definition,
+                                       const QVector3D& scenario_origin);
+  void configure_scenario_undead_zones(const Arena::ArenaScenarioDefinition& definition,
+                                       const QVector3D& scenario_origin);
+  void clear_undead_zones();
   void sanitize_selection();
   void update_selected_entities();
   void sync_selection_summary();
@@ -290,6 +293,7 @@ private:
   std::vector<Game::Map::Lake> m_arena_lakes;
   std::vector<Game::Map::Bridge> m_arena_bridges;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
+  std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
   float m_spawn_world_prop_scale = 1.0F;

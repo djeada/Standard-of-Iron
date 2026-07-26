@@ -75,15 +75,37 @@ Item {
         return teams.size >= 2;
     }
 
-    function update_validation_error() {
+    function map_is_solo_playable(mapData) {
+        let solo = value_for(mapData, "soloPlayable");
+        return solo === true || String(solo) === "true";
+    }
+
+    function enabled_player_count() {
         let enabledCount = 0;
         for (let i = 0; i < players_model.count; i++) {
             if (players_model.get(i).isEnabled)
                 enabledCount++;
         }
+        return enabledCount;
+    }
+
+    function can_start() {
+        let enabledCount = enabled_player_count();
+        if (enabledCount < 1)
+            return false;
         if (enabledCount < 2)
+            return map_is_solo_playable(selected_map_data);
+        return has_minimum_distinct_teams();
+    }
+
+    function update_validation_error() {
+        let enabledCount = enabled_player_count();
+        let soloPlayable = map_is_solo_playable(selected_map_data);
+        if (enabledCount < 1)
+            validation_error = "Need at least 1 enabled player to start";
+        else if (enabledCount < 2 && !soloPlayable)
             validation_error = "Need at least 2 enabled players to start";
-        else if (!has_minimum_distinct_teams())
+        else if (enabledCount >= 2 && !has_minimum_distinct_teams())
             validation_error = "At least two teams must be selected to start a match";
         else
             validation_error = "";
@@ -378,18 +400,8 @@ Item {
     function accept_selection() {
         if (selected_map_index < 0 || !selected_map_path)
             return;
-        let enabledCount = 0;
-        for (let i = 0; i < players_model.count; i++) {
-            if (players_model.get(i).isEnabled)
-                enabledCount++;
-        }
-        if (enabledCount < 2) {
-            console.log("MapSelect: Need at least 2 enabled players to start");
-            update_validation_error();
-            return;
-        }
-        if (!has_minimum_distinct_teams()) {
-            console.log("MapSelect: Need at least 2 different teams to start");
+        if (!can_start()) {
+            console.log("MapSelect: Player setup is not valid for this map");
             update_validation_error();
             return;
         }
@@ -1747,7 +1759,7 @@ Item {
 
             Button {
                 text: qsTr("Play")
-                enabled: list.currentIndex >= 0 && list.count > 0 && players_model.count >= 2 && has_minimum_distinct_teams()
+                enabled: list.currentIndex >= 0 && list.count > 0 && players_model.count > 0 && validation_error === ""
                 onClicked: accept_selection()
                 hoverEnabled: true
                 implicitHeight: 42

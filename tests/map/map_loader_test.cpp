@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QTemporaryFile>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -92,6 +93,69 @@ TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   ASSERT_EQ(zone.waves[1].units.size(), 1);
   EXPECT_EQ(zone.waves[1].units[0].type, Game::Units::SpawnType::SkeletonArcher);
   EXPECT_EQ(zone.waves[1].units[0].count, 3);
+}
+
+TEST(MapLoaderTest, ParsesUndeadVictoryObjectives) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Undead Victory Test"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"victory",
+       QJsonObject{
+           {"type", "undead_zones"},
+           {"undead_objectives",
+            QJsonArray{
+                QJsonObject{{"type", "clear_undead_zone"}, {"zone_id", "ruins_guard"}},
+                QJsonObject{{"type", "purify_shrine"}, {"zone_id", "shrine"}},
+                QJsonObject{{"type", "survive_undead_wave"},
+                            {"zone_id", "ruins_guard"},
+                            {"wave_count", 3}},
+                QJsonObject{{"type", "clear_undead_zone"}}}},
+           {"defeat_conditions", QJsonArray{"no_commander"}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map_definition, &error))
+      << error.toStdString();
+
+  EXPECT_EQ(map_definition.victory.victory_type, QStringLiteral("undead_zones"));
+  ASSERT_EQ(map_definition.victory.undead_objectives.size(), 3U);
+  EXPECT_EQ(map_definition.victory.undead_objectives[0].type,
+            QStringLiteral("clear_undead_zone"));
+  EXPECT_EQ(map_definition.victory.undead_objectives[0].zone_id,
+            QStringLiteral("ruins_guard"));
+  EXPECT_EQ(map_definition.victory.undead_objectives[1].type,
+            QStringLiteral("purify_shrine"));
+  EXPECT_EQ(map_definition.victory.undead_objectives[2].wave_count, 3);
+}
+
+TEST(MapLoaderTest, IronSepulcherWatchMapDrivesVictoryFromItsUndeadZones) {
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_iron_sepulcher_watch.json"),
+      map_definition,
+      &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_definition.undead_zones.size(), 2U);
+  EXPECT_EQ(map_definition.victory.victory_type, QStringLiteral("undead_zones"));
+  ASSERT_EQ(map_definition.victory.undead_objectives.size(), 2U);
+
+  for (const auto& objective : map_definition.victory.undead_objectives) {
+    EXPECT_NE(std::find_if(map_definition.undead_zones.begin(),
+                           map_definition.undead_zones.end(),
+                           [&objective](const Game::Map::UndeadZone& zone) {
+                             return zone.id == objective.zone_id;
+                           }),
+              map_definition.undead_zones.end())
+        << objective.zone_id.toStdString();
+  }
 }
 
 TEST(MapLoaderTest, ParsesStartingResources) {

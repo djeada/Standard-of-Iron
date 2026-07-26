@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -292,6 +294,16 @@ public:
   float volume;
   bool loop;
   int priority;
+};
+
+class MissionAnnouncementEvent : public Event {
+public:
+  explicit MissionAnnouncementEvent(QString text)
+      : text(std::move(text)) {}
+  QString text;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "MISSION_ANNOUNCEMENT";
+  }
 };
 
 class MusicTriggerEvent : public Event {

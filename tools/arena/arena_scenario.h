@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
@@ -158,12 +159,16 @@ enum class ArenaExpectationKind : std::uint8_t {
   CommanderAuraBuffObserved,
   CommanderAuraExpired,
   NoCommanderAuraBuffObserved,
+  UndeadZoneDormantBefore,
+  UndeadZoneAwakened,
+  UndeadZoneCleared,
 };
 
 struct ArenaExpectation {
   ArenaExpectationKind kind{ArenaExpectationKind::MovementIsContinuous};
   QString group;
   QString target_group;
+  QString zone_id;
   float start_seconds{0.0F};
   float end_seconds{0.0F};
   float threshold{0.0F};
@@ -195,6 +200,7 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;
   std::vector<ArenaScenarioElevationPatch> elevation_patches;
+  std::vector<Game::Map::UndeadZone> undead_zones;
   std::vector<ArenaScenarioGroup> groups;
   std::vector<ArenaScenarioResourcePatch> resource_patches;
   std::vector<ArenaScenarioStep> steps;

@@ -198,6 +198,29 @@ Current supported map victory types:
 - `survive_time`
 - `control_structures`
 - `capture_structures`
+- `undead_zones`
+
+`undead_zones` exists so a map with authored `undead_zones` wins on its awakening
+content instead of on barracks or a timer, which is what makes those maps
+playable in skirmish as well as in a campaign mission. It reads a sibling
+`undead_objectives` array:
+
+```json
+"victory": {
+  "type": "undead_zones",
+  "undead_objectives": [
+    { "type": "clear_undead_zone", "zone_id": "ruins_guard" },
+    { "type": "purify_shrine", "zone_id": "shrine_sentinels" },
+    { "type": "survive_undead_wave", "zone_id": "ruins_guard", "wave_count": 2 }
+  ]
+}
+```
+
+Each entry becomes the same runtime rule the mission path produces, so the two
+authoring formats stay in sync. `undead_objectives` is also honoured alongside
+any other victory type, in which case the objectives are appended to that type's
+rules. A `undead_zones` map that declares no objectives falls back to
+`elimination` with a warning.
 
 Current supported map defeat condition strings:
 
