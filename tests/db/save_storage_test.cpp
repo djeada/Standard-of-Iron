@@ -255,7 +255,7 @@ TEST_F(SaveStorageTest, ComplexMetadataSurvivesRoundTrip) {
   Save::Record loaded;
   ASSERT_TRUE(storage->read_slot("complex_metadata", loaded, &error));
   EXPECT_EQ(loaded.metadata["int_value"].toInt(), 42);
-  EXPECT_DOUBLE_EQ(loaded.metadata["double_value"].toDouble(), 3.14159);
+  EXPECT_DOUBLE_EQ(loaded.metadata["double_value"].toDouble(), std::numbers::pi);
   EXPECT_EQ(loaded.metadata["string_value"].toString(), QString("test_string"));
   EXPECT_TRUE(loaded.metadata["bool_value"].toBool());
   EXPECT_EQ(loaded.metadata["nested"].toObject()["nested_field"].toString(),
