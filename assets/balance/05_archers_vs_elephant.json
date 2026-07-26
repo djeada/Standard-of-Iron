@@ -1,0 +1,24 @@
+{
+  "id": "archers_vs_elephant",
+  "label": "Massed archers vs a war elephant",
+  "description": "Archers are the designated elephant answer. Equal cost of archers should beat one elephant, but not trivially.",
+  "duration_seconds": 180,
+  "seeds": 6,
+  "separation": 30.0,
+  "side_a": {
+    "label": "Archers",
+    "nation": "carthage",
+    "stance": "attack",
+    "groups": [{ "troop": "archer", "count": 7 }]
+  },
+  "side_b": {
+    "label": "Elephant",
+    "nation": "carthage",
+    "stance": "attack",
+    "groups": [{ "troop": "elephant", "count": 1 }]
+  },
+  "expect": {
+    "a_win_rate_min": 0.5,
+    "max_timeout_rate": 0.35
+  }
+}

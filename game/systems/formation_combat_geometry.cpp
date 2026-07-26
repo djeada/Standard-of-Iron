@@ -19,6 +19,15 @@ constexpr float k_elephant_visual_body_radius = 1.15F;
 constexpr float k_elephant_chase_penetration = 1.50F;
 constexpr float k_elephant_contact_penetration = 1.10F;
 
+// Fraction of the attacker's melee reach it closes past when the target is a
+// single body rather than a facing formation.
+constexpr float k_single_body_approach_margin = 0.5F;
+
+// Mirrors Combat::Constants::k_new_command_threshold: the smallest move the
+// chase logic will bother re-issuing, and therefore the accuracy with which a
+// squad can park itself on an engagement distance.
+constexpr float k_engagement_close_slack = 0.25F;
+
 auto is_mounted(Game::Units::SpawnType spawn_type) noexcept -> bool {
   using Game::Units::SpawnType;
   return spawn_type == SpawnType::MountedKnight ||
@@ -41,6 +50,13 @@ auto world_slot(const Engine::Core::TransformComponent& transform,
   float const world_x = transform.position.x + cos_yaw * local_x + sin_yaw * local_z;
   float const world_z = transform.position.z - sin_yaw * local_x + cos_yaw * local_z;
   return {world_x, world_z};
+}
+
+// Weapon reach of a squad's front rank, used when the target is a single body
+// rather than a facing formation.
+auto melee_reach(const Engine::Core::Entity& entity) noexcept -> float {
+  auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
+  return attack != nullptr ? std::max(0.0F, attack->melee_range) : 1.5F;
 }
 
 auto slot_distance(const SoldierSlot& lhs, const SoldierSlot& rhs) noexcept -> float {
@@ -312,7 +328,15 @@ auto contact_geometry(const Engine::Core::Entity& attacker,
         0.0F,
         result.center_distance - (result.surface_gap + k_elephant_chase_penetration));
   } else {
-    result.engagement_center_distance = result.contact_center_distance;
+    // One-sided formation against a single body. Stopping at body contact would
+    // strand the squad a weapon's length away, and the slot-derived contact
+    // distance collapses to zero when no slot lines up with the approach axis.
+    // Aim half a weapon's length inside the reach threshold instead, so the
+    // squad settles into contact rather than hovering exactly on it.
+    result.engagement_center_distance =
+        std::max(0.0F,
+                 result.center_distance - result.surface_gap +
+                     melee_reach(attacker) * k_single_body_approach_margin);
   }
   return result;
 }
@@ -331,12 +355,16 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
     return true;
   }
   if (geometry.formation_overlap_required) {
+    // The engagement distance can land closer than the mover is able to resolve
+    // (chase commands are only re-issued once the destination shifts by
+    // k_new_command_threshold), which left tightly spaced formations such as
+    // cavalry stalled a few centimetres short of a fight they had already walked
+    // into. Judge the merge with that same slack.
     bool const deep_front_rank_overlap =
         geometry.center_distance <=
-        geometry.engagement_center_distance + k_contact_numeric_epsilon;
+        geometry.engagement_center_distance + k_engagement_close_slack;
     auto const* attacker_attack =
         attacker.get_component<Engine::Core::AttackComponent>();
-
     bool const locked_visible_overlap =
         attacker_attack != nullptr && attacker_attack->in_melee_lock &&
         attacker_attack->melee_lock_target_id == target.get_id() &&
@@ -349,15 +377,27 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
     bool const reinforcement_has_visible_overlap =
         occupied_battle_edge && geometry.surface_gap <= -(geometry.contact_tolerance +
                                                           k_contact_numeric_epsilon);
+    // Casualties retire from the front, so a squad worn down to its last
+    // soldiers has them standing behind the rank that fell. Once both sides are
+    // in that state no slot pair lines up with the approach axis, the contact
+    // distance collapses to zero, and the two squads end up overlapping yet
+    // permanently unable to engage. Fall back to the unit centres there.
+    bool const degenerate_slot_contact =
+        geometry.contact_center_distance <= k_contact_numeric_epsilon &&
+        geometry.center_distance <= melee_reach(attacker) + k_contact_numeric_epsilon;
     return deep_front_rank_overlap || locked_visible_overlap ||
-           reinforcement_has_visible_overlap;
+           reinforcement_has_visible_overlap || degenerate_slot_contact;
   }
   if (attacker.has_component<Engine::Core::ElephantComponent>() &&
       has_formation_slots(target)) {
     return geometry.surface_gap <=
            -k_elephant_contact_penetration + k_contact_numeric_epsilon;
   }
-  return geometry.surface_gap <= k_contact_numeric_epsilon;
+  // Only one side fields a soldier formation: the target is a single body such
+  // as a siege engine, a healer or a mount. Demanding literal body overlap here
+  // would make those units immune to melee, because a squad's front rank stops
+  // a weapon's length short of them. Fall back to the attacker's melee reach.
+  return geometry.surface_gap <= melee_reach(attacker) + k_contact_numeric_epsilon;
 }
 
 auto engaged_soldiers(const Engine::Core::Entity& attacker,

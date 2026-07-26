@@ -13,15 +13,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 620,
-        "max_health": 620,
+        "health": 410,
+        "max_health": 410,
         "speed": 3.0,
         "vision_range": 16.0,
         "ranged_range": 7.5,
-        "ranged_damage": 24,
+        "ranged_damage": 25,
         "ranged_cooldown": 1.0,
         "melee_range": 1.5,
-        "melee_damage": 1,
+        "melee_damage": 6,
         "melee_cooldown": 0.8,
         "can_ranged": true,
         "can_melee": true
@@ -51,16 +51,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1260,
-        "max_health": 1260,
+        "health": 1000,
+        "max_health": 1000,
         "speed": 2.1,
         "vision_range": 14.0,
         "ranged_range": 1.6,
         "ranged_damage": 6,
         "ranged_cooldown": 1.9,
         "melee_range": 1.6,
-        "melee_damage": 18,
-        "melee_cooldown": 0.6,
+        "melee_damage": 26,
+        "melee_cooldown": 0.62,
         "can_ranged": false,
         "can_melee": true
       },
@@ -90,16 +90,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1080,
-        "max_health": 1080,
+        "health": 900,
+        "max_health": 900,
         "speed": 2.5,
         "vision_range": 15.0,
         "ranged_range": 2.5,
         "ranged_damage": 8,
         "ranged_cooldown": 1.5,
         "melee_range": 2.5,
-        "melee_damage": 18,
-        "melee_cooldown": 0.8,
+        "melee_damage": 19,
+        "melee_cooldown": 0.75,
         "can_ranged": false,
         "can_melee": true
       },
@@ -119,7 +119,7 @@
       "id": "horse_swordsman",
       "display_name": "Mounted Knight",
       "production": {
-        "cost": 150,
+        "cost": 145,
         "resource_costs": {
           "wood": 16,
           "iron": 10
@@ -137,8 +137,8 @@
         "ranged_damage": 5,
         "ranged_cooldown": 2.0,
         "melee_range": 2.0,
-        "melee_damage": 16,
-        "melee_cooldown": 0.8,
+        "melee_damage": 37,
+        "melee_cooldown": 0.72,
         "can_ranged": false,
         "can_melee": true
       },
@@ -166,15 +166,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 2000,
-        "max_health": 2000,
+        "health": 1500,
+        "max_health": 1500,
         "speed": 3.0,
         "vision_range": 18.0,
         "ranged_range": 8.5,
-        "ranged_damage": 27,
-        "ranged_cooldown": 1.2,
+        "ranged_damage": 42,
+        "ranged_cooldown": 1.1,
         "melee_range": 1.8,
-        "melee_damage": 1,
+        "melee_damage": 9,
         "melee_cooldown": 0.9,
         "can_ranged": true,
         "can_melee": true
@@ -193,7 +193,7 @@
       "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
-        "cost": 140,
+        "cost": 135,
         "resource_costs": {
           "wood": 18,
           "iron": 9
@@ -203,16 +203,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1650,
-        "max_health": 1650,
+        "health": 1700,
+        "max_health": 1700,
         "speed": 3.0,
         "vision_range": 16.0,
         "ranged_range": 1.5,
         "ranged_damage": 5,
         "ranged_cooldown": 2.0,
         "melee_range": 3.0,
-        "melee_damage": 18,
-        "melee_cooldown": 0.9,
+        "melee_damage": 36,
+        "melee_cooldown": 0.8,
         "can_ranged": false,
         "can_melee": true
       },
@@ -274,15 +274,15 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1020,
-        "max_health": 1020,
+        "health": 950,
+        "max_health": 950,
         "speed": 2.2,
         "vision_range": 14.5,
         "ranged_range": 1.5,
         "ranged_damage": 1,
         "ranged_cooldown": 1.8,
         "melee_range": 1.6,
-        "melee_damage": 18,
+        "melee_damage": 24,
         "melee_cooldown": 0.75,
         "can_ranged": false,
         "can_melee": true
@@ -307,12 +307,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 620,
-        "max_health": 620,
+        "health": 420,
+        "max_health": 420,
         "speed": 2.3,
         "vision_range": 17.2,
         "ranged_range": 7.8,
-        "ranged_damage": 28,
+        "ranged_damage": 26,
         "ranged_cooldown": 0.95,
         "melee_range": 1.35,
         "melee_damage": 4,
@@ -329,7 +329,9 @@
         "individuals_per_unit": 18,
         "max_units_per_row": 6
       },
-      "abilities": ["cursed_arrow_volley"]
+      "abilities": [
+        "cursed_arrow_volley"
+      ]
     },
     {
       "id": "grave_priest",
@@ -341,8 +343,8 @@
         "is_melee": false
       },
       "combat": {
-        "health": 760,
-        "max_health": 760,
+        "health": 900,
+        "max_health": 900,
         "speed": 2.0,
         "vision_range": 16.0,
         "ranged_range": 8.6,
@@ -363,7 +365,9 @@
         "individuals_per_unit": 1,
         "max_units_per_row": 1
       },
-      "abilities": ["fireball"]
+      "abilities": [
+        "fireball"
+      ]
     },
     {
       "id": "catapult",
@@ -379,12 +383,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 150,
-        "max_health": 150,
+        "health": 420,
+        "max_health": 420,
         "speed": 1.0,
         "vision_range": 20.0,
         "ranged_range": 18.0,
-        "ranged_damage": 210,
+        "ranged_damage": 150,
         "ranged_cooldown": 4.5,
         "melee_range": 1.5,
         "melee_damage": 1,
@@ -417,12 +421,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 130,
-        "max_health": 130,
+        "health": 360,
+        "max_health": 360,
         "speed": 1.5,
         "vision_range": 22.0,
         "ranged_range": 21.0,
-        "ranged_damage": 55,
+        "ranged_damage": 60,
         "ranged_cooldown": 2.6,
         "melee_range": 1.5,
         "melee_damage": 1,
@@ -455,16 +459,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 8000,
-        "max_health": 8000,
+        "health": 6500,
+        "max_health": 6500,
         "speed": 2.2,
         "vision_range": 16.0,
         "ranged_range": 1.5,
         "ranged_damage": 0,
         "ranged_cooldown": 2.0,
         "melee_range": 3.5,
-        "melee_damage": 80,
-        "melee_cooldown": 1.8,
+        "melee_damage": 105,
+        "melee_cooldown": 1.55,
         "can_ranged": false,
         "can_melee": true
       },
@@ -489,16 +493,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1180,
-        "max_health": 1180,
+        "health": 3500,
+        "max_health": 3500,
         "speed": 2.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 2.4,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 58,
+        "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true
       },
@@ -523,16 +527,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1120,
-        "max_health": 1120,
+        "health": 3300,
+        "max_health": 3300,
         "speed": 2.15,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 1.8,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 66,
+        "melee_cooldown": 0.85,
         "can_ranged": false,
         "can_melee": true
       },
@@ -557,15 +561,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 1040,
-        "max_health": 1040,
+        "health": 2800,
+        "max_health": 2800,
         "speed": 2.35,
         "vision_range": 18.0,
         "ranged_range": 12.0,
-        "ranged_damage": 14,
+        "ranged_damage": 80,
         "ranged_cooldown": 1.35,
         "melee_range": 1.8,
-        "melee_damage": 7,
+        "melee_damage": 30,
         "melee_cooldown": 1.0,
         "can_ranged": true,
         "can_melee": true
@@ -591,16 +595,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1160,
-        "max_health": 1160,
+        "health": 3800,
+        "max_health": 3800,
         "speed": 2.1,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 2.4,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 62,
+        "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true
       },
@@ -625,15 +629,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 1080,
-        "max_health": 1080,
+        "health": 3200,
+        "max_health": 3200,
         "speed": 2.45,
         "vision_range": 18.0,
         "ranged_range": 12.0,
-        "ranged_damage": 14,
+        "ranged_damage": 78,
         "ranged_cooldown": 1.35,
         "melee_range": 1.8,
-        "melee_damage": 7,
+        "melee_damage": 30,
         "melee_cooldown": 1.0,
         "can_ranged": true,
         "can_melee": true
@@ -659,16 +663,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1260,
-        "max_health": 1260,
+        "health": 4200,
+        "max_health": 4200,
         "speed": 2.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 1.8,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 66,
+        "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true
       },
@@ -707,7 +711,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.50,
+        "render_scale": 0.5,
         "selection_ring_size": 1.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/builder"

@@ -40,7 +40,9 @@ TEST_F(ArcherBonusTest, HorseArcherHasIncreasedBaseDamage) {
 
 TEST_F(ArcherBonusTest, ArcherVsElephantMultiplierIsCorrect) {
 
-  float const expected_multiplier = 2.0F;
+  // Pinned deliberately: changing the elephant counter is a balance decision,
+  // not an implementation detail.
+  float const expected_multiplier = 1.68F;
 
   EXPECT_FLOAT_EQ(Combat::Constants::k_archer_vs_elephant_multiplier,
                   expected_multiplier);
@@ -79,7 +81,7 @@ TEST_F(ArcherBonusTest, ExpectedDamageCalculation) {
       static_cast<int>(horse_archer_base_damage * elephant_multiplier);
   int const archer_vs_other = archer_base_damage;
 
-  EXPECT_EQ(archer_vs_elephant, 48);
-  EXPECT_EQ(horse_archer_vs_elephant, 54);
+  EXPECT_EQ(archer_vs_elephant, 40);
+  EXPECT_EQ(horse_archer_vs_elephant, 45);
   EXPECT_EQ(archer_vs_other, 24);
 }

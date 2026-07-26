@@ -14,15 +14,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 650,
-        "max_health": 650,
+        "health": 440,
+        "max_health": 440,
         "speed": 3.3,
         "vision_range": 17.2,
         "ranged_range": 7.2,
-        "ranged_damage": 30,
+        "ranged_damage": 24,
         "ranged_cooldown": 1.0,
         "melee_range": 1.5,
-        "melee_damage": 1,
+        "melee_damage": 6,
         "melee_cooldown": 0.9,
         "can_ranged": true,
         "can_melee": true
@@ -48,15 +48,15 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1480,
-        "max_health": 1480,
+        "health": 1120,
+        "max_health": 1120,
         "speed": 2.4,
         "vision_range": 14.5,
         "ranged_range": 1.5,
         "ranged_damage": 6,
         "ranged_cooldown": 1.9,
         "melee_range": 1.6,
-        "melee_damage": 23,
+        "melee_damage": 24,
         "melee_cooldown": 0.55,
         "can_ranged": false,
         "can_melee": true
@@ -76,14 +76,14 @@
       "id": "spearman",
       "display_name": "Liby-Phoenician Spear",
       "production": {
-        "cost": 85,
+        "cost": 82,
         "build_time": 6.0,
         "priority": 11,
         "is_melee": true
       },
       "combat": {
-        "health": 1240,
-        "max_health": 1240,
+        "health": 1050,
+        "max_health": 1050,
         "speed": 2.7,
         "vision_range": 15.0,
         "ranged_range": 2.9,
@@ -91,7 +91,7 @@
         "ranged_cooldown": 1.3,
         "melee_range": 2.8,
         "melee_damage": 20,
-        "melee_cooldown": 0.7,
+        "melee_cooldown": 0.67,
         "can_ranged": false,
         "can_melee": true
       },
@@ -116,16 +116,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 2400,
-        "max_health": 2400,
+        "health": 1850,
+        "max_health": 1850,
         "speed": 3.6,
         "vision_range": 18.5,
         "ranged_range": 1.5,
         "ranged_damage": 5,
         "ranged_cooldown": 1.6,
         "melee_range": 2.0,
-        "melee_damage": 25,
-        "melee_cooldown": 0.65,
+        "melee_damage": 34,
+        "melee_cooldown": 0.63,
         "can_ranged": false,
         "can_melee": true
       },
@@ -183,15 +183,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 2000,
-        "max_health": 2000,
+        "health": 1450,
+        "max_health": 1450,
         "speed": 3.2,
         "vision_range": 18.0,
         "ranged_range": 8.0,
-        "ranged_damage": 38,
-        "ranged_cooldown": 1.2,
+        "ranged_damage": 42,
+        "ranged_cooldown": 1.05,
         "melee_range": 1.8,
-        "melee_damage": 1,
+        "melee_damage": 9,
         "melee_cooldown": 0.9,
         "can_ranged": true,
         "can_melee": true
@@ -216,16 +216,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 2000,
-        "max_health": 2000,
+        "health": 1850,
+        "max_health": 1850,
         "speed": 3.2,
         "vision_range": 16.0,
         "ranged_range": 1.5,
         "ranged_damage": 5,
         "ranged_cooldown": 2.0,
         "melee_range": 3.0,
-        "melee_damage": 20,
-        "melee_cooldown": 0.85,
+        "melee_damage": 35,
+        "melee_cooldown": 0.79,
         "can_ranged": false,
         "can_melee": true
       },
@@ -249,16 +249,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 8500,
-        "max_health": 8500,
+        "health": 6800,
+        "max_health": 6800,
         "speed": 2.4,
         "vision_range": 16.5,
         "ranged_range": 1.5,
         "ranged_damage": 0,
         "ranged_cooldown": 2.0,
         "melee_range": 3.8,
-        "melee_damage": 85,
-        "melee_cooldown": 1.7,
+        "melee_damage": 110,
+        "melee_cooldown": 1.6,
         "can_ranged": false,
         "can_melee": true
       },
@@ -283,12 +283,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 150,
-        "max_health": 150,
+        "health": 420,
+        "max_health": 420,
         "speed": 1.0,
         "vision_range": 20.0,
         "ranged_range": 18.0,
-        "ranged_damage": 210,
+        "ranged_damage": 150,
         "ranged_cooldown": 4.5,
         "melee_range": 1.5,
         "melee_damage": 1,
@@ -317,12 +317,12 @@
         "is_melee": false
       },
       "combat": {
-        "health": 130,
-        "max_health": 130,
+        "health": 360,
+        "max_health": 360,
         "speed": 1.5,
         "vision_range": 22.0,
         "ranged_range": 21.0,
-        "ranged_damage": 55,
+        "ranged_damage": 60,
         "ranged_cooldown": 2.6,
         "melee_range": 1.5,
         "melee_damage": 1,
@@ -391,16 +391,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 980,
-        "max_health": 980,
+        "health": 3800,
+        "max_health": 3800,
         "speed": 2.05,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 2.4,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 62,
+        "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true
       },
@@ -425,15 +425,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 1030,
-        "max_health": 1030,
+        "health": 3200,
+        "max_health": 3200,
         "speed": 2.45,
         "vision_range": 18.0,
         "ranged_range": 12.0,
-        "ranged_damage": 14,
+        "ranged_damage": 78,
         "ranged_cooldown": 1.35,
         "melee_range": 1.8,
-        "melee_damage": 7,
+        "melee_damage": 30,
         "melee_cooldown": 1.0,
         "can_ranged": true,
         "can_melee": true
@@ -459,16 +459,16 @@
         "is_melee": true
       },
       "combat": {
-        "health": 1260,
-        "max_health": 1260,
+        "health": 4200,
+        "max_health": 4200,
         "speed": 2.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 1.8,
-        "melee_damage": 14,
-        "melee_cooldown": 1.0,
+        "melee_damage": 66,
+        "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true
       },
