@@ -2,6 +2,9 @@
 # clang-tidy fixer: git-only by default; --all to scan whole project
 # Runs only on files covered by compile_commands.json (safer).
 # Parallelized via xargs -P using a temp helper script (bash).
+#
+# INCLUDE_HEADERS backs the accepted-but-inert --no-headers flag.
+# shellcheck disable=SC2034
 
 set -euo pipefail
 

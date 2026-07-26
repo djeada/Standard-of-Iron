@@ -1,0 +1,9 @@
+# Game content and generated data are not source to be reflowed.
+assets/
+build/
+build-*/
+third_party/
+dist/
+.venv/
+translations/
+*.qrc

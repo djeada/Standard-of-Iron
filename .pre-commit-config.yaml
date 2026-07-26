@@ -1,0 +1,57 @@
+---
+# Lightweight staged-file gate. Install with `make hooks-install`.
+#
+# Everything heavier than a few seconds (clang-tidy, builds, tests) stays in
+# CI - these hooks only cover formatting, syntax and obvious quality markers
+# on the files that are actually being committed.
+minimum_pre_commit_version: "3.5.0"
+default_install_hook_types: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # translations/ round-trips through csv2ts.sh/ts2csv.sh and dist/windows/
+      # ships CRLF batch files; neither may be rewritten by a whitespace hook.
+      - id: trailing-whitespace
+        exclude: ^(third_party/|assets/|translations/|dist/|.*\.md$)
+      - id: end-of-file-fixer
+        exclude: ^(third_party/|assets/|translations/|dist/)
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: ^(third_party/|translations/|dist/)
+      - id: check-json
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+        exclude: ^assets/
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # Formatting and linting go through the single driver so that hooks, the
+  # Makefile and CI can never drift apart.
+  - repo: local
+    hooks:
+      - id: soi-format
+        name: format (staged files)
+        entry: python3 scripts/format.py --staged --check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: soi-lint
+        name: lint (staged files)
+        entry: python3 scripts/format.py --staged --lint
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: soi-no-conflict-markers
+        name: no leftover debug markers
+        entry: python3 scripts/check-quality-markers.py
+        language: system
+        types_or: [c, c++, python, shell]
+        exclude: ^(third_party/|scripts/check-quality-markers\.py$)

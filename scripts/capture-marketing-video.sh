@@ -9,7 +9,8 @@
 # without re-rendering; pass --recapture to render them again.
 set -euo pipefail
 
-readonly ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly ROOT
 readonly ARENA="${ROOT}/build/bin/arena_app"
 
 OUT_DIR="${ROOT}/artifacts/marketing"

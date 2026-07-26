@@ -20,10 +20,10 @@ FIXES
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple
-import math
 
 try:
     import mapbox_earcut as earcut
@@ -31,7 +31,7 @@ except ImportError:
     earcut = None
 
 try:
-    from shapely.geometry import shape, Polygon, Point
+    from shapely.geometry import Point, Polygon, shape
     from shapely.ops import unary_union
 except ImportError:
     shape = None
@@ -108,7 +108,7 @@ def densify_ring(
     if len(ring) < 2:
         return ring
     output: List[Tuple[float, float]] = []
-    for a, b in zip(ring, ring[1:]):
+    for a, b in zip(ring, ring[1:], strict=False):
         output.append(a)
         dx = b[0] - a[0]
         dy = b[1] - a[1]

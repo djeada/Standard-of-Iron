@@ -123,7 +123,7 @@ def intersection(a: Point, b: Point, c: Point, d: Point) -> Point | None:
 
 
 def polyline_length(points: Sequence[Point]) -> float:
-    return sum(distance(a, b) for a, b in zip(points, points[1:]))
+    return sum(distance(a, b) for a, b in zip(points, points[1:], strict=False))
 
 
 def deduplicate(points: Sequence[Point], epsilon: float = 0.01) -> list[Point]:
@@ -237,7 +237,7 @@ class WaterField:
         for road in self.definition.get("roads") or []:
             points = [self.coords.to_grid(point) for point in feature_points(road)]
             radius = float(road.get("width", 3.0)) * 0.5 / self.coords.tile_size + 3.0
-            for start, end in zip(points, points[1:]):
+            for start, end in zip(points, points[1:], strict=False):
                 self._raster_capsule(self.road_influence, start, end, radius, 1)
         for bridge in self.definition.get("bridges") or []:
             if not bridge.get("start") or not bridge.get("end"):
@@ -320,7 +320,10 @@ class WaterField:
 
 
 def guide_distance(point: Point, guide: Sequence[Point]) -> float:
-    return min(point_segment_distance(point, a, b) for a, b in zip(guide, guide[1:]))
+    return min(
+        point_segment_distance(point, a, b)
+        for a, b in zip(guide, guide[1:], strict=False)
+    )
 
 
 def route(
@@ -398,7 +401,7 @@ def simplify(
         }
     )
     result: list[Point] = []
-    for span_index, (first, last) in enumerate(zip(fixed, fixed[1:])):
+    for span_index, (first, last) in enumerate(zip(fixed, fixed[1:], strict=False)):
         cursor = first
         chunk = [points[cursor]]
         while cursor < last:
@@ -418,7 +421,7 @@ def meander(
 ) -> list[Point]:
     result = [points[0]]
     spacing = max(6.0, width * 1.35)
-    for segment_index, (start, end) in enumerate(zip(points, points[1:])):
+    for segment_index, (start, end) in enumerate(zip(points, points[1:], strict=False)):
         span = distance(start, end)
         steps = max(1, int(math.ceil(span / spacing)))
         direction = normalized(sub(end, start))
@@ -449,7 +452,7 @@ def meander(
 def polyline_location(point: Point, points: Sequence[Point]) -> float:
     best = (math.inf, 0.0)
     travelled = 0.0
-    for start, end in zip(points, points[1:]):
+    for start, end in zip(points, points[1:], strict=False):
         t, projected = project_point(point, start, end)
         best = min(
             best, (distance(point, projected), travelled + distance(start, end) * t)
@@ -465,8 +468,8 @@ def network_anchors(
     for first in range(len(polylines)):
         for second in range(first + 1, len(polylines)):
             common: list[Point] = []
-            for a, b in zip(polylines[first], polylines[first][1:]):
-                for c, d in zip(polylines[second], polylines[second][1:]):
+            for a, b in zip(polylines[first], polylines[first][1:], strict=False):
+                for c, d in zip(polylines[second], polylines[second][1:], strict=False):
                     crossing = intersection(a, b, c, d)
                     if crossing is not None:
                         common.append(crossing)
@@ -474,7 +477,9 @@ def network_anchors(
                 projected = min(
                     (
                         project_point(endpoint, c, d)[1]
-                        for c, d in zip(polylines[second], polylines[second][1:])
+                        for c, d in zip(
+                            polylines[second], polylines[second][1:], strict=False
+                        )
                     ),
                     key=lambda point: distance(endpoint, point),
                 )
@@ -484,7 +489,9 @@ def network_anchors(
                 projected = min(
                     (
                         project_point(endpoint, a, b)[1]
-                        for a, b in zip(polylines[first], polylines[first][1:])
+                        for a, b in zip(
+                            polylines[first], polylines[first][1:], strict=False
+                        )
                     ),
                     key=lambda point: distance(endpoint, point),
                 )
@@ -497,7 +504,7 @@ def network_anchors(
         deduplicate(
             sorted(items, key=lambda point: polyline_location(point, polyline)), 0.25
         )
-        for items, polyline in zip(anchors, polylines)
+        for items, polyline in zip(anchors, polylines, strict=False)
     ]
 
 
@@ -583,7 +590,7 @@ def terminal_joined(
         <= tolerance
         for other, polyline in enumerate(polylines)
         if other != index
-        for start, end in zip(polyline, polyline[1:])
+        for start, end in zip(polyline, polyline[1:], strict=False)
     )
 
 
@@ -601,7 +608,7 @@ def trim_terminal_to_riverbank(
             continue
         nearest = min(
             point_segment_distance(endpoint, start, end)
-            for start, end in zip(polyline, polyline[1:])
+            for start, end in zip(polyline, polyline[1:], strict=False)
         )
         half_width = widths[other] * 0.5
         if nearest < half_width - 0.25:
@@ -610,7 +617,9 @@ def trim_terminal_to_riverbank(
         return endpoint
 
     _, receiving = max(candidates)
-    receiving_segments = list(zip(polylines[receiving], polylines[receiving][1:]))
+    receiving_segments = list(
+        zip(polylines[receiving], polylines[receiving][1:], strict=False)
+    )
     target_distance = widths[receiving] * 0.5
     direction = normalized(sub(adjacent, endpoint))
     if direction == (0.0, 0.0):
@@ -659,18 +668,23 @@ def truncate_at_receiving_river(
     for other, receiving in enumerate(polylines):
         if other == index or widths[other] <= widths[index] * 1.20:
             continue
-        receiving_segments = list(zip(receiving, receiving[1:]))
+        receiving_segments = list(zip(receiving, receiving[1:], strict=False))
         bank_distance = widths[other] * 0.5
 
-        def distance_to_receiving(point: Point) -> float:
+        # Bind the current iteration's segments as a default argument so the
+        # closure cannot observe a later loop iteration's value.
+        def distance_to_receiving(
+            point: Point, segments: list[tuple[Point, Point]] = receiving_segments
+        ) -> float:
             return min(
-                point_segment_distance(point, start, end)
-                for start, end in receiving_segments
+                point_segment_distance(point, start, end) for start, end in segments
             )
 
         if distance_to_receiving(points[0]) <= bank_distance + 0.25:
             continue
-        for segment_index, (start, end) in enumerate(zip(points, points[1:])):
+        for segment_index, (start, end) in enumerate(
+            zip(points, points[1:], strict=False)
+        ):
             start_distance = distance_to_receiving(start)
             end_distance = distance_to_receiving(end)
             if start_distance > bank_distance and end_distance <= bank_distance:
@@ -706,7 +720,7 @@ def snap_terminal_to_nearby_riverbank(
     for other, receiving in enumerate(polylines):
         if other == index or widths[other] <= widths[index] * 1.20:
             continue
-        for start, end in zip(receiving, receiving[1:]):
+        for start, end in zip(receiving, receiving[1:], strict=False):
             _, projected = project_point(endpoint, start, end)
             candidate_distance = distance(endpoint, projected)
             if candidate_distance <= widths[other] * 0.5 + 6.0:
@@ -715,7 +729,9 @@ def snap_terminal_to_nearby_riverbank(
         return endpoint
     _, projected, receiving = min(candidates, key=lambda item: item[0])
     bank_distance = widths[receiving] * 0.5
-    receiving_segments = list(zip(polylines[receiving], polylines[receiving][1:]))
+    receiving_segments = list(
+        zip(polylines[receiving], polylines[receiving][1:], strict=False)
+    )
 
     def distance_to_receiving(point: Point) -> float:
         return min(
@@ -778,7 +794,9 @@ def generate_rivers(
         )
     anchors = network_anchors(authored)
     output: list[dict] = []
-    for index, (river, guide, required) in enumerate(zip(rivers, authored, anchors)):
+    for index, (river, guide, required) in enumerate(
+        zip(rivers, authored, anchors, strict=False)
+    ):
         required = list(required)
         if not terminal_joined(field, index, required[0], authored, widths, lakes):
             required[0] = snap_boundary(field, required[0])
@@ -786,7 +804,7 @@ def generate_rivers(
             required[-1] = snap_boundary(field, required[-1])
         required = [field.nearest_passable(point) for point in required]
         routed = [required[0]]
-        for start, end in zip(required, required[1:]):
+        for start, end in zip(required, required[1:], strict=False):
             routed.extend(route(field, start, end, guide)[1:])
         routed = simplify(field, routed, required)
         base_route = routed
@@ -794,16 +812,22 @@ def generate_rivers(
         meandered = meander(
             field, routed, width_grid, seed=(index + 1) * 17.0 + field.width
         )
-        if all(field.line_passable(a, b) for a, b in zip(meandered, meandered[1:])):
+        if all(
+            field.line_passable(a, b)
+            for a, b in zip(meandered, meandered[1:], strict=False)
+        ):
             routed = meandered
-        if not all(field.line_passable(a, b) for a, b in zip(routed, routed[1:])):
+        if not all(
+            field.line_passable(a, b) for a, b in zip(routed, routed[1:], strict=False)
+        ):
             raise WaterGenerationError(
                 f"river {index + 1} smoothing left protected terrain"
             )
         coordinates = [encode_point(field.coords.from_grid(point)) for point in routed]
         encoded_grid = [field.coords.to_grid(point) for point in coordinates]
         if not all(
-            field.line_passable(a, b) for a, b in zip(encoded_grid, encoded_grid[1:])
+            field.line_passable(a, b)
+            for a, b in zip(encoded_grid, encoded_grid[1:], strict=False)
         ):
             routed = base_route
             coordinates = [
@@ -824,7 +848,7 @@ def generate_rivers(
         [field.coords.to_grid(point) for point in feature_points(river)]
         for river in output
     ]
-    for index, (item, points) in enumerate(zip(output, final_polylines)):
+    for index, (item, points) in enumerate(zip(output, final_polylines, strict=False)):
         if not on_boundary(field, points[0]):
             points[0] = snap_terminal_to_nearby_riverbank(
                 index, points[0], points[1], final_polylines, widths
@@ -846,7 +870,7 @@ def nearest_road_distance(definition: dict, point: Point) -> float:
     return min(
         point_segment_distance(point, a, b)
         for road in definition.get("roads") or []
-        for a, b in zip(feature_points(road), feature_points(road)[1:])
+        for a, b in zip(feature_points(road), feature_points(road)[1:], strict=False)
     )
 
 
@@ -883,7 +907,7 @@ def add_strategic_lake(
     ]
     for river in rivers:
         points = [field.coords.to_grid(point) for point in feature_points(river)]
-        for start, end in zip(points, points[1:]):
+        for start, end in zip(points, points[1:], strict=False):
             span = distance(start, end)
             for sample in range(1, max(2, int(span // 8))):
                 point = add(
@@ -941,7 +965,7 @@ def validate(
     obstacle_crossings = sum(
         not field.line_passable(start, end)
         for points in polylines
-        for start, end in zip(points, points[1:])
+        for start, end in zip(points, points[1:], strict=False)
     )
     invalid_endpoints = 0
     invalid_confluences = 0
@@ -952,7 +976,7 @@ def validate(
                 < widths[other] * 0.5 - 0.25
                 for other, polyline in enumerate(polylines)
                 if other != index
-                for start, end in zip(polyline, polyline[1:])
+                for start, end in zip(polyline, polyline[1:], strict=False)
             )
             if embedded:
                 invalid_confluences += 1
@@ -962,7 +986,7 @@ def validate(
                 invalid_endpoints += 1
     self_crossings = 0
     for points in polylines:
-        segments = list(zip(points, points[1:]))
+        segments = list(zip(points, points[1:], strict=False))
         for first in range(len(segments)):
             for second in range(first + 2, len(segments)):
                 if second == first + 1:
@@ -996,7 +1020,7 @@ def validate(
         river_link = any(
             point_segment_distance(center, start, end) <= min(width, depth) * 0.45
             for points in polylines
-            for start, end in zip(points, points[1:])
+            for start, end in zip(points, points[1:], strict=False)
         )
         road_link = any(
             point_segment_distance(
@@ -1004,7 +1028,9 @@ def validate(
             )
             <= max(width, depth) * 0.5 + 4.0
             for road in roads
-            for a, b in zip(feature_points(road), feature_points(road)[1:])
+            for a, b in zip(
+                feature_points(road), feature_points(road)[1:], strict=False
+            )
         )
         if (
             not river_link
