@@ -14,7 +14,6 @@ This document walks through the current victory architecture: how map and missio
 6. How event-driven reevaluation works
 7. How to extend the system with new rule kinds safely
 
-
 ## The core idea: translate content once, evaluate typed rules cheaply
 
 The runtime no longer interprets JSON-like strings on every update. Instead, content is translated into typed rule payloads once, then the service evaluates those payloads against a compact summary of the world.
@@ -61,7 +60,6 @@ The runtime no longer interprets JSON-like strings on every update. Instead, con
 
 The important design choice is that translation and evaluation are separate concerns. Content-facing strings stay at the edge. The service itself works with typed rule payloads.
 
-
 ## The two default defeat rules
 
 If content does **not** declare explicit defeat conditions, the engine now applies exactly these two defaults:
@@ -86,7 +84,6 @@ To enforce that, the rule only becomes armed after the local player has previous
 
 That prevents false defeats on commander-only openings, scripted reinforcement starts, and similar setups.
 
-
 ## The runtime rule model
 
 The runtime stores rules in a `VictoryRuleSet`:
@@ -102,24 +99,23 @@ struct VictoryRuleSet {
 
 ### Supported victory payloads
 
-| Rule | Meaning | Payload |
-| --- | --- | --- |
-| `EliminationVictoryRule` | Remove all tracked enemy structures | `structure_types[]` |
-| `SurviveTimeVictoryRule` | Stay alive until timer expires | `duration` |
-| `ControlStructuresVictoryRule` | Own enough tracked structures | `StructureRequirement` |
-| `CaptureStructuresVictoryRule` | Capture enough foreign structures | `StructureRequirement` |
+| Rule                           | Meaning                             | Payload                |
+| ------------------------------ | ----------------------------------- | ---------------------- |
+| `EliminationVictoryRule`       | Remove all tracked enemy structures | `structure_types[]`    |
+| `SurviveTimeVictoryRule`       | Stay alive until timer expires      | `duration`             |
+| `ControlStructuresVictoryRule` | Own enough tracked structures       | `StructureRequirement` |
+| `CaptureStructuresVictoryRule` | Capture enough foreign structures   | `StructureRequirement` |
 
 ### Supported defeat payloads
 
-| Rule | Meaning | Payload |
-| --- | --- | --- |
-| `NoUnitsDefeatRule` | Lose all local units | none |
-| `NoKeyStructuresDefeatRule` | Lose all tracked structures | `structure_types[]` |
-| `NoCommanderDefeatRule` | Commander is dead | none |
+| Rule                               | Meaning                                 | Payload             |
+| ---------------------------------- | --------------------------------------- | ------------------- |
+| `NoUnitsDefeatRule`                | Lose all local units                    | none                |
+| `NoKeyStructuresDefeatRule`        | Lose all tracked structures             | `structure_types[]` |
+| `NoCommanderDefeatRule`            | Commander is dead                       | none                |
 | `OnlyCommanderRemainingDefeatRule` | Commander is isolated and rule is armed | `structure_types[]` |
 
 `OnlyCommanderRemainingDefeatRule` is parameterised over structure types even though current content uses barracks. That keeps the rule explicit instead of hiding a `"barracks"` literal deep in evaluation logic.
-
 
 ## One summary per reevaluation
 
@@ -145,7 +141,6 @@ That summary is built only when the world is dirty for world-based rules. The se
 - Capture tracking is only enabled if a capture-based victory rule is present.
 - Timer victories do not need a world scan at all once configured.
 
-
 ## Evaluation order and semantics
 
 ### Within each list
@@ -156,7 +151,6 @@ That summary is built only when the world is dirty for world-based rules. The se
 ### Between victory and defeat
 
 The service evaluates non-timer victory rules first, then defeat rules. Time-based victory is checked earlier in the update loop using elapsed time. In other words, if both a world-based victory and defeat become true in the same reevaluation, victory currently wins because it is checked first.
-
 
 ## Event-driven reevaluation
 
@@ -184,7 +178,6 @@ For example:
 - a **fail if timer expires** rule may need a defeat-side time path instead of a world summary path
 
 That is why the current design is described as **extension-friendly**, not magically plug-in.
-
 
 ## Current translation rules
 
@@ -255,7 +248,6 @@ Current supported mission defeat condition types:
 
 If a mission omits defeat conditions entirely, the same commander-default pair is added automatically.
 
-
 ## Normalisation and legacy compatibility
 
 The translators still normalize some legacy structure names. Most notably:
@@ -263,7 +255,6 @@ The translators still normalize some legacy structure names. Most notably:
 - `village` → `barracks`
 
 That keeps older content and partially migrated missions/maps working while the asset vocabulary remains in transition.
-
 
 ## How to add a new rule kind
 
@@ -280,7 +271,6 @@ When adding a new rule, treat it as a small vertical slice:
 
 If the new rule needs per-entity state, region progress, or subsystem-owned data, prefer adding that explicitly rather than smuggling more meaning into generic string fields.
 
-
 ## File map
 
 The current implementation is centered in these files:
@@ -294,7 +284,6 @@ The current implementation is centered in these files:
 - `tests/systems/victory_service_test.cpp`
 - `tests/map/mission_victory_rules_test.cpp`
 - `tests/map/mission_asset_rules_test.cpp`
-
 
 ## Practical takeaway
 

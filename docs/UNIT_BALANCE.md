@@ -31,13 +31,13 @@ its feel.
 
 ## Tiers
 
-| Tier | Target efficiency | Units |
-| --- | --- | --- |
-| Line | 2.0 – 2.35 | swordsman, spearman, archer |
-| Mounted | ~2.0 – 2.1 | horse swordsman, horse spearman, horse archer |
-| Elite | 1.2 – 1.4 | commanders, elephant (1.95, see below) |
-| Siege | not comparable | catapult, ballista |
-| Support | not comparable | healer, builder, civilian |
+| Tier    | Target efficiency | Units                                         |
+| ------- | ----------------- | --------------------------------------------- |
+| Line    | 2.0 – 2.35        | swordsman, spearman, archer                   |
+| Mounted | ~2.0 – 2.1        | horse swordsman, horse spearman, horse archer |
+| Elite   | 1.2 – 1.4         | commanders, elephant (1.95, see below)        |
+| Siege   | not comparable    | catapult, ballista                            |
+| Support | not comparable    | healer, builder, civilian                     |
 
 **Line troops set the baseline.** Everything else is judged against what the same
 gold buys in line infantry.
@@ -59,12 +59,12 @@ free-standing artillery — see the siege note below.
 
 These are multipliers, not stat differences, so they survive future retuning:
 
-| Rule | Multiplier |
-| --- | --- |
-| Spearmen vs cavalry | 2.5x |
-| Infantry melee vs siege | 3.0x |
-| Archers vs elephant | 1.68x |
-| Archers / spearmen from high ground | 1.8x |
+| Rule                                | Multiplier |
+| ----------------------------------- | ---------- |
+| Spearmen vs cavalry                 | 2.5x       |
+| Infantry melee vs siege             | 3.0x       |
+| Archers vs elephant                 | 1.68x      |
+| Archers / spearmen from high ground | 1.8x       |
 
 Hold mode adds its own damage and health bonuses on top, which is why a braced
 spear line beats a frontal charge outright while spearmen that get caught in the
@@ -84,7 +84,7 @@ The intended shape:
 
 Siege engines used to sit at 130–150 health with a 5x infantry melee counter on
 top. That combination made them one-shot targets, and combined with a contact bug
-it made them *unreachable* instead — a ballista could not be meleed at all. Both
+it made them _unreachable_ instead — a ballista could not be meleed at all. Both
 were fixed together: health moved to 360–420 so a stray volley does not delete
 them, and the melee counter dropped to 3x so infantry still overruns them in a
 few seconds without the result being an instant kill.

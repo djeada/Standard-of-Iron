@@ -13,6 +13,7 @@ The Windows build pipeline automatically signs the `.exe` file with Authenticode
 The code signing step is integrated into the Windows build workflow (`.github/workflows/windows.yml`) and runs automatically when tags are pushed (e.g., `v1.2.3`).
 
 The signing process:
+
 1. Runs after the build step completes
 2. Only executes if the `WINDOWS_CERTIFICATE` secret is configured
 3. Signs the main executable (`standard_of_iron.exe`)
@@ -23,6 +24,7 @@ The signing process:
 ### Signed Files
 
 Currently, the pipeline signs:
+
 - `standard_of_iron.exe` - The main game executable
 
 **Note**: Qt DLLs and other third-party libraries are not signed by this pipeline as they should already be signed by their respective publishers (e.g., Qt Company).
@@ -32,10 +34,10 @@ Currently, the pipeline signs:
 ### Prerequisites
 
 1. **EV Code Signing Certificate**: Obtain an Extended Validation code signing certificate from a trusted Certificate Authority (CA) such as:
-   - DigiCert
-   - Sectigo
-   - GlobalSign
-   - Entrust
+    - DigiCert
+    - Sectigo
+    - GlobalSign
+    - Entrust
 
 2. **Certificate Format**: Export the certificate as a `.pfx` (PKCS#12) file with a strong password
 
@@ -44,29 +46,31 @@ Currently, the pipeline signs:
 To enable code signing in GitHub Actions, configure the following repository secrets:
 
 1. **WINDOWS_CERTIFICATE** (Required)
-   - Navigate to: Repository Settings → Secrets and variables → Actions → New repository secret
-   - Name: `WINDOWS_CERTIFICATE`
-   - Value: Base64-encoded content of your `.pfx` certificate file
-   
-   To encode your certificate on Linux/macOS:
-   ```bash
-   base64 -i certificate.pfx | tr -d '\n' > certificate.txt
-   cat certificate.txt
-   ```
-   
-   On Windows PowerShell:
-   ```powershell
-   $certBytes = [System.IO.File]::ReadAllBytes("certificate.pfx")
-   $certBase64 = [System.Convert]::ToBase64String($certBytes)
-   $certBase64 | Out-File -FilePath certificate.txt -NoNewline
-   Get-Content certificate.txt
-   ```
-   
-   Copy the entire base64 string and paste it as the secret value.
+    - Navigate to: Repository Settings → Secrets and variables → Actions → New repository secret
+    - Name: `WINDOWS_CERTIFICATE`
+    - Value: Base64-encoded content of your `.pfx` certificate file
+
+    To encode your certificate on Linux/macOS:
+
+    ```bash
+    base64 -i certificate.pfx | tr -d '\n' > certificate.txt
+    cat certificate.txt
+    ```
+
+    On Windows PowerShell:
+
+    ```powershell
+    $certBytes = [System.IO.File]::ReadAllBytes("certificate.pfx")
+    $certBase64 = [System.Convert]::ToBase64String($certBytes)
+    $certBase64 | Out-File -FilePath certificate.txt -NoNewline
+    Get-Content certificate.txt
+    ```
+
+    Copy the entire base64 string and paste it as the secret value.
 
 2. **WINDOWS_CERTIFICATE_PASSWORD** (Required)
-   - Name: `WINDOWS_CERTIFICATE_PASSWORD`
-   - Value: The password used to protect the `.pfx` certificate file
+    - Name: `WINDOWS_CERTIFICATE_PASSWORD`
+    - Value: The password used to protect the `.pfx` certificate file
 
 ### Verification
 
@@ -76,39 +80,41 @@ After pushing a tag and completing the build:
 2. Extract the `.exe` file
 3. Right-click the `.exe` → Properties → Digital Signatures tab
 4. Verify that:
-   - The signature shows your organization name
-   - The signature is valid
-   - The timestamp is present and valid
+    - The signature shows your organization name
+    - The signature is valid
+    - The timestamp is present and valid
 
 Alternatively, use `signtool` to verify from the command line:
+
 ```cmd
 signtool verify /pa /v standard_of_iron.exe
 ```
 
 ## Security Considerations
 
-1. **Certificate Protection**: 
-   - Store the certificate securely
-   - Use a strong password
-   - Limit access to the certificate and password
-   - Use GitHub's encrypted secrets feature (never commit certificates to the repository)
+1. **Certificate Protection**:
+    - Store the certificate securely
+    - Use a strong password
+    - Limit access to the certificate and password
+    - Use GitHub's encrypted secrets feature (never commit certificates to the repository)
 
 2. **Certificate Expiration**:
-   - Monitor certificate expiration dates
-   - Plan for renewal well in advance
-   - Update the GitHub secret when renewing
+    - Monitor certificate expiration dates
+    - Plan for renewal well in advance
+    - Update the GitHub secret when renewing
 
 3. **Timestamping**:
-   - The signature includes a trusted timestamp via RFC 3161 protocol
-   - Timestamp URL uses HTTP (not HTTPS) as per RFC 3161 standard - the timestamp response is cryptographically signed
-   - Signatures remain valid even after the certificate expires (as long as signed before expiration)
-   - If the timestamp server is unavailable, signing will fail (this is expected behavior)
+    - The signature includes a trusted timestamp via RFC 3161 protocol
+    - Timestamp URL uses HTTP (not HTTPS) as per RFC 3161 standard - the timestamp response is cryptographically signed
+    - Signatures remain valid even after the certificate expires (as long as signed before expiration)
+    - If the timestamp server is unavailable, signing will fail (this is expected behavior)
 
 ## Troubleshooting
 
 ### Signing Step Skipped
 
 If the signing step is skipped, verify:
+
 - The `WINDOWS_CERTIFICATE` secret is configured
 - The secret name matches exactly (case-sensitive)
 - The workflow has permission to access secrets
@@ -116,6 +122,7 @@ If the signing step is skipped, verify:
 ### Signing Fails
 
 If signing fails, check:
+
 1. Certificate is valid and not expired
 2. Password is correct
 3. Certificate is in `.pfx` format
@@ -125,6 +132,7 @@ If signing fails, check:
 ### SmartScreen Still Shows Warnings
 
 Even with a valid signature, SmartScreen may show warnings if:
+
 - The certificate is new and hasn't built reputation yet
 - The executable hasn't been downloaded by many users yet
 - The signature is from a standard (non-EV) certificate

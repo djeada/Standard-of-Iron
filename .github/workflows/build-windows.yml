@@ -41,21 +41,21 @@ jobs:
       QT_ROOT: D:\a\Standard-of-Iron\Qt
 
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
-      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756  # v1
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
 
       # Fast path: official installer (allowed to fail)
       - name: Install Qt (fast path)
         id: fastqt
         continue-on-error: true
-        uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
+        uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
         with:
           version: ${{ env.QT_VERSION }}
           host: windows
@@ -134,7 +134,7 @@ jobs:
           }
 
       - name: Cache CMake FetchContent dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/_deps
           key: deps-windows-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
@@ -583,7 +583,7 @@ jobs:
             (Join-Path (Get-Location).Path "$zip.sha256"), $line, $utf8NoBom)
           Write-Host "SHA256: $hash"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: inputs.upload-artifacts
         with:
           name: ${{ inputs.artifact-name }}

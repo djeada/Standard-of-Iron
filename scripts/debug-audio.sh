@@ -9,8 +9,8 @@ make clean
 make debug -j"$(nproc)"
 
 if [ $? -ne 0 ]; then
-    echo "Build failed!"
-    exit 1
+  echo "Build failed!"
+  exit 1
 fi
 
 echo ""
@@ -25,6 +25,6 @@ echo ""
 # Run with GLib debugging (but don't make warnings fatal - they're from GStreamer internals)
 # Use GST_DEBUG for more GStreamer info if needed
 G_SLICE=always-malloc \
-QT_LOGGING_RULES="qt.multimedia.*=true" \
-GST_DEBUG=2 \
-./build/standard_of_iron
+  QT_LOGGING_RULES="qt.multimedia.*=true" \
+  GST_DEBUG=2 \
+  ./build/standard_of_iron

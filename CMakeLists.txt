@@ -14,8 +14,7 @@ if(ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
     set(CLANG_TIDY_FILTER "${CMAKE_SOURCE_DIR}/tools/clang_tidy_filter.sh")
     if(NOT EXISTS "${CMAKE_SOURCE_DIR}/.clang-tidy")
         list(
-            APPEND
-            CLANG_TIDY_ARGS
+            APPEND CLANG_TIDY_ARGS
             "-checks=bugprone-*,performance-*,readability-*,modernize-*,cppcoreguidelines-*,clang-analyzer-*"
         )
     endif()
@@ -185,14 +184,12 @@ if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
     set(_campaign_map_qrc_entries "")
     foreach(_campaign_map_resource IN LISTS GENERATED_CAMPAIGN_MAP_RESOURCES)
         string(
-            APPEND
-            _campaign_map_qrc_entries
+            APPEND _campaign_map_qrc_entries
             "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n"
         )
     endforeach()
     file(
-        WRITE
-        "${GENERATED_CAMPAIGN_MAP_QRC}"
+        WRITE "${GENERATED_CAMPAIGN_MAP_QRC}"
         "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n"
     )
 else()

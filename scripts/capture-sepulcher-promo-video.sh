@@ -13,8 +13,8 @@ OUT_DIR="${ROOT}/artifacts/sepulcher-promo"
 RECAPTURE=0
 for arg in "$@"; do
   case "${arg}" in
-  --recapture) RECAPTURE=1 ;;
-  *) OUT_DIR="${arg}" ;;
+    --recapture) RECAPTURE=1 ;;
+    *) OUT_DIR="${arg}" ;;
   esac
 done
 

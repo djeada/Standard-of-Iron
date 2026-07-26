@@ -56,14 +56,14 @@ Add the following secrets to your GitHub repository:
 1. Go to repository **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret** and add each of these:
 
-| Secret Name | Description | How to Get Value |
-|------------|-------------|------------------|
-| `MACOS_CERTIFICATE` | Base64-encoded .p12 certificate | Run: `base64 -i certificate.p12 | pbcopy` (copies to clipboard) |
-| `MACOS_CERTIFICATE_PASSWORD` | Password for the .p12 file | The password you set when exporting the certificate |
-| `MACOS_KEYCHAIN_PASSWORD` | Password for temporary keychain | Any strong random password (e.g., `openssl rand -base64 32`) |
-| `APPLE_ID` | Your Apple ID email | Your Apple Developer account email |
-| `APPLE_ID_PASSWORD` | App-specific password | The password from Step 3 (with dashes) |
-| `APPLE_TEAM_ID` | Your Apple Developer Team ID | The 10-character code from Step 4 |
+| Secret Name                  | Description                     | How to Get Value                                             |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `MACOS_CERTIFICATE`          | Base64-encoded .p12 certificate | Run: `base64 -i certificate.p12                              | pbcopy` (copies to clipboard) |
+| `MACOS_CERTIFICATE_PASSWORD` | Password for the .p12 file      | The password you set when exporting the certificate          |
+| `MACOS_KEYCHAIN_PASSWORD`    | Password for temporary keychain | Any strong random password (e.g., `openssl rand -base64 32`) |
+| `APPLE_ID`                   | Your Apple ID email             | Your Apple Developer account email                           |
+| `APPLE_ID_PASSWORD`          | App-specific password           | The password from Step 3 (with dashes)                       |
+| `APPLE_TEAM_ID`              | Your Apple Developer Team ID    | The 10-character code from Step 4                            |
 
 ### Example: Encoding Certificate
 
@@ -90,12 +90,13 @@ When all required secrets are present:
 
 If secrets are not configured:
 
-1. ℹ️  The workflow prints an informational message
-2. ℹ️  Signing and notarization are skipped
+1. ℹ️ The workflow prints an informational message
+2. ℹ️ Signing and notarization are skipped
 3. ✅ The build completes successfully
-4. ⚠️  Users will see "unidentified developer" warning
+4. ⚠️ Users will see "unidentified developer" warning
 
 This graceful fallback allows:
+
 - Testing builds without certificates
 - Community contributors to build without Apple Developer accounts
 - Quick iterations during development
@@ -105,19 +106,21 @@ This graceful fallback allows:
 If only signing credentials are present (no notarization credentials):
 
 1. ✅ The app is signed
-2. ⚠️  Notarization is skipped with a warning
-3. ⚠️  Users may still see Gatekeeper warnings
+2. ⚠️ Notarization is skipped with a warning
+3. ⚠️ Users may still see Gatekeeper warnings
 
 ## Troubleshooting
 
 ### Notarization Failed
 
 If notarization fails, the script will:
+
 1. Show the error message from Apple
 2. Attempt to retrieve detailed logs
 3. Exit with an error code
 
 Common issues:
+
 - **Invalid code signature**: Ensure frameworks are signed before the main app
 - **Hardened runtime violations**: Add appropriate entitlements if needed
 - **Invalid credentials**: Verify Apple ID, password, and Team ID
@@ -127,6 +130,7 @@ Common issues:
 Error: "Developer ID Application certificate not found in keychain"
 
 Solutions:
+
 - Verify the certificate is a **Developer ID Application** certificate
 - Ensure the certificate is not expired
 - Check that the .p12 file contains the certificate and private key
@@ -136,6 +140,7 @@ Solutions:
 Error: "User interaction is not allowed"
 
 Solutions:
+
 - Ensure `MACOS_KEYCHAIN_PASSWORD` secret is set
 - Check that the keychain is properly unlocked in the script
 
@@ -144,12 +149,14 @@ Solutions:
 ### Secret Protection
 
 GitHub Secrets are:
+
 - ✅ Encrypted at rest
 - ✅ Only exposed to GitHub Actions runners
 - ✅ Never logged or exposed in outputs
 - ✅ Redacted in build logs
 
 The signing script:
+
 - Creates a temporary keychain for signing
 - Immediately deletes certificates after use
 - Cleans up keychains on completion or failure
@@ -157,11 +164,13 @@ The signing script:
 ### Certificate Expiration
 
 Developer ID Application certificates:
+
 - Valid for 5 years
 - Must be renewed before expiration
 - Apple will email reminders before expiration
 
 Remember to:
+
 - Update the certificate in GitHub Secrets before expiration
 - Test the new certificate before the old one expires
 

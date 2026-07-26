@@ -8,7 +8,7 @@ trap 'echo "error: line $LINENO: $BASH_COMMAND" >&2' ERR
 EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py"
 ROOTS=(".")
 DRY_RUN=0
-BACKUP=0          # OFF by default
+BACKUP=0 # OFF by default
 QUIET=0
 EXTS="$EXTS_DEFAULT"
 EXCLUDE_DIRS=(.git .svn build build-tidy build-debug third_party venv .venv)
@@ -35,28 +35,55 @@ Examples:
 USAGE
 }
 
-log()  { if (( QUIET == 0 )); then printf '%s\n' "$*"; fi; }
-die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
+log() { if ((QUIET == 0)); then printf '%s\n' "$*"; fi; }
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
 
 # --- arg parsing ---
 args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -x|--ext) EXTS="${2:?missing extensions}"; shift 2 ;;
-    -n|--dry-run) DRY_RUN=1; shift ;;
-    --exclude-dir) EXCLUDE_DIRS+=("${2:?missing directory name}"); shift 2 ;;
-    --backup) BACKUP=1; shift ;;
-    -q|--quiet) QUIET=1; shift ;;
-    -h|--help) usage; exit 0 ;;
-    --) shift; break ;;
+    -x | --ext)
+      EXTS="${2:?missing extensions}"
+      shift 2
+      ;;
+    -n | --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    --exclude-dir)
+      EXCLUDE_DIRS+=("${2:?missing directory name}")
+      shift 2
+      ;;
+    --backup)
+      BACKUP=1
+      shift
+      ;;
+    -q | --quiet)
+      QUIET=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
     -*) die "Unknown option: $1" ;;
-    *)  args+=("$1"); shift ;;
+    *)
+      args+=("$1")
+      shift
+      ;;
   esac
 done
 ((${#args[@]})) && ROOTS=("${args[@]}")
 
 # Build extension list (portable; no mapfile)
-IFS=',' read -r -a EXT_ARR <<< "$EXTS"
+IFS=',' read -r -a EXT_ARR <<<"$EXTS"
 ((${#EXT_ARR[@]})) || die "No extensions provided"
 
 # Build find predicates
@@ -65,14 +92,14 @@ for e in "${EXT_ARR[@]}"; do
   e="${e#.}"
   FIND_NAME+=(-o -iname "*.${e}")
 done
-FIND_NAME=("${FIND_NAME[@]:1}")    # drop leading -o
+FIND_NAME=("${FIND_NAME[@]:1}") # drop leading -o
 
 FIND_PRUNE=()
 for d in "${EXCLUDE_DIRS[@]}"; do
   [[ -n "$d" ]] || continue
   FIND_PRUNE+=(-o -name "$d")
 done
-FIND_PRUNE=("${FIND_PRUNE[@]:1}")  # drop leading -o
+FIND_PRUNE=("${FIND_PRUNE[@]:1}") # drop leading -o
 
 # Pick Python
 if command -v python3 >/dev/null 2>&1; then
@@ -84,7 +111,8 @@ else
 fi
 
 # Python filter as a literal (processes BYTES; preserves UTF-8/Unicode)
-PY_FILTER=$(cat <<'PYCODE'
+PY_FILTER=$(
+  cat <<'PYCODE'
 import sys, re, os
 
 # Read raw bytes and operate purely on bytes so UTF-8 (and any other) is preserved.
@@ -282,31 +310,31 @@ process_file() {
   fi
 
   if ! cmp -s "$f" "$tmp"; then
-    if (( DRY_RUN == 1 )); then
+    if ((DRY_RUN == 1)); then
       echo "would modify: $f"
       rm -f "$tmp"
-      ((changed+=1))
-      ((processed+=1))
+      ((changed += 1))
+      ((processed += 1))
       return
     fi
-    if (( BACKUP == 1 )); then
+    if ((BACKUP == 1)); then
       cp -p -- "$f" "$f.bak" 2>/dev/null || cp -p "$f" "$f.bak" || true
     fi
     # Replace file
     mv -- "$tmp" "$f" 2>/dev/null || mv "$tmp" "$f"
     # Restore original mode if we captured it
     [[ -n "$mode" ]] && chmod "$mode" "$f" 2>/dev/null || true
-    ((changed+=1))
+    ((changed += 1))
   else
     rm -f "$tmp"
   fi
-  ((processed+=1))
+  ((processed += 1))
 }
 
 log "Scanning: ${ROOTS[*]}"
 log "Extensions: $EXTS"
 log "Excluded dirs: ${EXCLUDE_DIRS[*]}"
-(( DRY_RUN )) && log "(dry run)"
+((DRY_RUN)) && log "(dry run)"
 
 # Find files and process
 while IFS= read -r -d '' f; do
@@ -316,7 +344,7 @@ done < <(
     \( -type f \( "${FIND_NAME[@]}" \) -print0 \)
 )
 
-if (( DRY_RUN == 1 )); then
+if ((DRY_RUN == 1)); then
   echo "dry run complete. processed: $processed file(s); would modify: $changed"
 else
   echo "done. processed: $processed file(s); modified: $changed"

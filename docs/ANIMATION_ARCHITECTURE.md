@@ -1,7 +1,7 @@
 # Animation & Pose Architecture
 
-How a creature in Standard of Iron goes from *"this unit is attacking"* to *moving
-geometry on screen* — and why it is fast enough to do for thousands of units at once.
+How a creature in Standard of Iron goes from _"this unit is attacking"_ to _moving
+geometry on screen_ — and why it is fast enough to do for thousands of units at once.
 
 This document is the conceptual map. For the binary file format see
 [`CREATURE_BPAT_FORMAT.md`](CREATURE_BPAT_FORMAT.md); for the wider render thread see
@@ -16,7 +16,7 @@ Animation is split into two worlds that meet at a thin, cheap seam:
 - **Offline (bake time):** the expensive skeletal work — posing every joint of every
   frame of every move — is done once by a tool and packed into a **BPAT** file per
   species (a "motion book").
-- **Online (per frame):** the game only answers *which move* and *how far through it*,
+- **Online (per frame):** the game only answers _which move_ and _how far through it_,
   then either samples the baked book or runs a light procedural shaper. The GPU does the
   final skinning.
 
@@ -33,7 +33,7 @@ Animation is split into two worlds that meet at a thin, cheap seam:
                                                        └────────────────────────────────────┘
 ```
 
-The seam is deliberately tiny: at runtime, *intent* is essentially `(clip_id, phase)`.
+The seam is deliberately tiny: at runtime, _intent_ is essentially `(clip_id, phase)`.
 That is what keeps large battles cheap.
 
 ---
@@ -66,19 +66,22 @@ flows; the labels under them are the files that own each step.
 ```
 
 ### Stage 1 — Input bridge (`render/gl/humanoid/animation/animation_inputs.cpp`)
+
 `sample_anim_state()` reads the ECS and produces one `AnimationInputs` snapshot per
 entity per frame (is it attacking? dying? guarding? kneeling? how fast is it moving?).
-Per-entity *persistent* animation memory (filtered speed/turn, locomotion phase
+Per-entity _persistent_ animation memory (filtered speed/turn, locomotion phase
 accumulator, guard/hold progress, combat visual state) lives in
 `HumanoidAnimationStateComponent` (`render/creature/animation_state_components.h`).
 
 ### Stage 2 — Intent / selection (`render/creature/pose_intent.*`, `combat_visual_state.*`)
+
 `resolve_pose()` collapses all the booleans into a single `PoseIntent` in strict priority
 order (dying > dead > hit-react > attacking > … > walk > idle). This replaced the old
 scattered if/else chains: **one** resolution per entity per frame. Combat additionally
 runs through a small transactional state machine (below).
 
 ### Stage 3 — Clip resolution (`render/creature/pipeline/`)
+
 The intent becomes an `AnimationStateId`, which indexes a **precomputed** per-archetype
 table to get a `clip_id` — this is O(1), no string lookups on the hot path:
 
@@ -89,19 +92,21 @@ PoseIntent ─► AnimationStateId ─► ArchetypeRegistry::bpat_clip[state]  (
                               resolve_bpat_clip()  ─►  uint16 clip_id
 ```
 
-`BpatRegistry::find_clip(name)` (the by-*name* utility) is backed by an O(1) per-blob hash
+`BpatRegistry::find_clip(name)` (the by-_name_ utility) is backed by an O(1) per-blob hash
 map (`BpatBlob::clip_index`), but it is only used off the hot path; runtime selection uses
 the precomputed index above.
 
 ### Stage 4 — Pose production (two routes)
+
 - **Baked route (default for shipping creatures):** `resolve_bpat_playback(clip, phase)`
   turns a normalized phase into a frame index + interpolation weight; the bone palette is
   read straight from the BPAT blob. No skeleton is solved at runtime.
 - **Procedural route (humanoid locomotion / combat shaping):** `poser.cpp`
   (`compute_locomotion_pose`) and `pose_controller.cpp` shape a `HumanoidPose`
-  analytically. This is where the *felt* realism lives — see §4.
+  analytically. This is where the _felt_ realism lives — see §4.
 
 ### Stage 5 — Skinning (GPU)
+
 The bone palette (one matrix per bone) is uploaded as a texture and the vertex shader
 transforms each vertex by its bone matrices. Thousands of units skin in parallel on the
 GPU. See `RENDERING_ARCHITECTURE.md`.
@@ -160,7 +165,7 @@ Key properties that keep it smooth (Phase 6):
   hold/kneel transitions both ease with the same smoothstep so there is no pop at the ends.
 - **Velocity-driven blend (6.3):** stride length, step height, cadence and arm swing scale
   with filtered ground speed; walk↔run is a continuous blend, not a hard switch.
-- **Phase continuity:** the locomotion phase is *integrated* (`phase += dt / cycle_time`),
+- **Phase continuity:** the locomotion phase is _integrated_ (`phase += dt / cycle_time`),
   never reset on a state change, so feet never teleport between cycles.
 - **Anti-slide (6.1):** stride length is coupled to real ground speed via
   `stride_distance_scale()`, so planted feet track displacement. (A full world-space IK
@@ -198,7 +203,7 @@ lands when the blade visually connects** — not on the trigger frame.
   `anticipation_start`, `weapon_release`, `contact`, `recover_unlocked`, `exit_safe` —
   baked by the tool and read directly (no runtime name-substring guessing).
 - **DPS-neutral:** cooldown is still reset at swing start, so steady-state damage output is
-  unchanged; only the *moment* of application moves to mid-swing.
+  unchanged; only the _moment_ of application moves to mid-swing.
 - **Deterministic:** the pending-strike fields are serialized, so saves/replays reproduce
   the same hit timing.
 - Ranged, special projectiles and the first-person/RPG-commander hook are unchanged.
@@ -254,17 +259,17 @@ feel. Mount/howdah attachment frames remain per-species (their anchor geometry d
 
 ## 8. Where to look
 
-| Concern | File(s) |
-|---|---|
-| ECS → animation inputs | `render/gl/humanoid/animation/animation_inputs.cpp` |
-| Intent resolution | `render/creature/pose_intent.{h,cpp}` |
-| Combat visual state | `render/creature/combat_visual_state.{h,cpp}` |
-| Clip selection | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp` |
-| BPAT playback | `render/creature/pipeline/bpat_playback.cpp` |
-| BPAT blob/registry | `render/creature/bpat/bpat_reader.cpp`, `bpat_registry.cpp` |
-| Humanoid locomotion | `render/humanoid/poser.cpp`, `prepare_animation.cpp` |
-| Humanoid combat poses | `render/humanoid/pose_controller.cpp` |
-| Quadruped shared gait | `render/creature/quadruped/gait.{h,cpp}` |
-| Horse / elephant motion | `render/horse/horse_motion.cpp`, `render/elephant/elephant_motion.cpp` |
-| Melee damage sync | `game/systems/combat_system/attack_processor.cpp` |
-| Bake tool | `tools/bpat_baker/`, `render/<species>/<species>_manifest.cpp` |
+| Concern                 | File(s)                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| ECS → animation inputs  | `render/gl/humanoid/animation/animation_inputs.cpp`                                   |
+| Intent resolution       | `render/creature/pose_intent.{h,cpp}`                                                 |
+| Combat visual state     | `render/creature/combat_visual_state.{h,cpp}`                                         |
+| Clip selection          | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp` |
+| BPAT playback           | `render/creature/pipeline/bpat_playback.cpp`                                          |
+| BPAT blob/registry      | `render/creature/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                           |
+| Humanoid locomotion     | `render/humanoid/poser.cpp`, `prepare_animation.cpp`                                  |
+| Humanoid combat poses   | `render/humanoid/pose_controller.cpp`                                                 |
+| Quadruped shared gait   | `render/creature/quadruped/gait.{h,cpp}`                                              |
+| Horse / elephant motion | `render/horse/horse_motion.cpp`, `render/elephant/elephant_motion.cpp`                |
+| Melee damage sync       | `game/systems/combat_system/attack_processor.cpp`                                     |
+| Bake tool               | `tools/bpat_baker/`, `render/<species>/<species>_manifest.cpp`                        |
