@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
 
 Rectangle {
@@ -143,7 +144,7 @@ Rectangle {
                         id: sealed_label
 
                         anchors.centerIn: parent
-                        text: qsTr("🔒 Sealed")
+                        text: Design.Icons.locked + " " + qsTr("Sealed")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
                     }

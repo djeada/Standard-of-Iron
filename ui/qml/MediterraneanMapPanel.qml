@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Rectangle {
     id: root
@@ -754,10 +755,10 @@ Rectangle {
             y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
             width: tooltip_layout.implicitWidth + 16
             height: tooltip_layout.implicitHeight + 16
-            radius: 4
-            color: "#f5f0e6"
-            border.color: "#8b7355"
-            border.width: 2
+            radius: Design.Metrics.radiusSmall
+            color: Design.Theme.panelIron
+            border.color: Design.Theme.borderStrong
+            border.width: Design.Metrics.borderThin
             opacity: 0.95
             z: 10
 
@@ -802,7 +803,7 @@ Rectangle {
 
                 Label {
                     text: qsTr("Legend")
-                    color: "#2d241c"
+                    color: Design.Theme.textSecondary
                     font.pointSize: Theme.fontSizeSmall
                     font.bold: true
                 }
@@ -845,7 +846,7 @@ Rectangle {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.margins: Theme.spacingMedium
-            text: qsTr("🖱️ Drag to rotate • Shift/Right-drag to pan • Scroll to zoom")
+            text: qsTr("Drag to rotate  ·  Shift or right-drag to pan  ·  Scroll to zoom")
             color: "#4a3f32"
             font.pointSize: Theme.fontSizeTiny
             style: Text.Outline
@@ -870,7 +871,7 @@ Rectangle {
                 id: active_region_label
 
                 anchors.centerIn: parent
-                text: qsTr("📍 Mission Region")
+                text: Design.Icons.capture + " " + qsTr("Mission Region")
                 color: "#2d241c"
                 font.pointSize: Theme.fontSizeSmall
                 font.bold: true

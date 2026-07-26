@@ -1,8 +1,47 @@
 module StandardOfIron.Design
+
+singleton A11y 1.0 A11y.qml
 singleton Theme 1.0 Theme.qml
 singleton Metrics 1.0 Metrics.qml
 singleton Typography 1.0 Typography.qml
 singleton Motion 1.0 Motion.qml
 singleton Icons 1.0 Icons.qml
 singleton UiSound 1.0 UiSound.qml
+singleton FactionTheme 1.0 FactionTheme.qml
+singleton Notifications 1.0 Notifications.qml
+
 ComponentGallery 1.0 ComponentGallery.qml
+GalleryWindow 1.0 GalleryWindow.qml
+
+IronPanel 1.0 surfaces/IronPanel.qml
+
+IronButton 1.0 controls/IronButton.qml
+IronIconButton 1.0 controls/IronIconButton.qml
+IronTabBar 1.0 controls/IronTabBar.qml
+IronTooltip 1.0 controls/IronTooltip.qml
+IronDialog 1.0 controls/IronDialog.qml
+IronDropdown 1.0 controls/IronDropdown.qml
+IronSlider 1.0 controls/IronSlider.qml
+IronProgressBar 1.0 controls/IronProgressBar.qml
+IronListRow 1.0 controls/IronListRow.qml
+IronTreeRow 1.0 controls/IronTreeRow.qml
+IronContextMenu 1.0 controls/IronContextMenu.qml
+IronBadge 1.0 controls/IronBadge.qml
+IronDivider 1.0 controls/IronDivider.qml
+IronSearchField 1.0 controls/IronSearchField.qml
+IronHotkeyLabel 1.0 controls/IronHotkeyLabel.qml
+IronUnitCard 1.0 controls/IronUnitCard.qml
+IronCommandButton 1.0 controls/IronCommandButton.qml
+IronObjectiveRow 1.0 controls/IronObjectiveRow.qml
+IronResourceCounter 1.0 controls/IronResourceCounter.qml
+IronInspectorSection 1.0 controls/IronInspectorSection.qml
+IronCheckBox 1.0 controls/IronCheckBox.qml
+IronSelectionSummary 1.0 controls/IronSelectionSummary.qml
+
+IronNotification 1.0 overlays/IronNotification.qml
+NotificationHost 1.0 overlays/NotificationHost.qml
+
+GameShell 1.0 layouts/GameShell.qml
+BriefingLayout 1.0 layouts/BriefingLayout.qml
+OutcomeLayout 1.0 layouts/OutcomeLayout.qml
+ToolShell 1.0 layouts/ToolShell.qml

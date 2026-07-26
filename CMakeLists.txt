@@ -175,6 +175,23 @@ if(NOT DEFINED DEFAULT_LANG)
 endif()
 add_compile_definitions(DEFAULT_LANG="${DEFAULT_LANG}")
 
+# ---- Icon resources ----
+# The whole tracked icon directory is embedded rather than a hand-kept list: a
+# missing entry only shows up as a blank image at runtime, which is exactly how
+# marketplace.png went unnoticed. These files are tracked in git, so the glob is
+# reproducible on CI.
+file(GLOB SOI_UNIT_ICON_ABS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/visuals/icons/*.png")
+if(NOT SOI_UNIT_ICON_ABS)
+    message(FATAL_ERROR "No icons found under assets/visuals/icons")
+endif()
+set(SOI_UNIT_ICON_RESOURCES)
+foreach(_icon IN LISTS SOI_UNIT_ICON_ABS)
+    file(RELATIVE_PATH _icon_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_icon}")
+    list(APPEND SOI_UNIT_ICON_RESOURCES "${_icon_rel}")
+endforeach()
+list(SORT SOI_UNIT_ICON_RESOURCES)
+
 # ---- Executable ----
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
@@ -220,6 +237,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
+        ui/preferences.cpp
     )
 else()
     add_executable(standard_of_iron
@@ -265,6 +283,7 @@ else()
         ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
+        ui/preferences.cpp
     )
 endif()
 
@@ -273,7 +292,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # Compile the complete resource collections into the executable. Listing a
     # .qrc file under qt_add_qml_module(RESOURCES) only embeds the XML file; it
     # does not register the files referenced by that collection at runtime.
+    # design_resources.qrc ships the Iron and Ember design system as a file-based
+    # QML module. It deliberately stays out of qt6_add_qml_module: that generator
+    # would republish every token singleton as a plain type of the StandardOfIron
+    # module, colliding with the C++ Theme singleton of the same name.
     target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc
+        design_resources.qrc
         ${GENERATED_CAMPAIGN_MAP_QRC})
 
     qt6_add_qml_module(standard_of_iron
@@ -315,44 +339,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
-            ui/qml/design/Theme.qml
-            ui/qml/design/Metrics.qml
-            ui/qml/design/Typography.qml
-            ui/qml/design/Motion.qml
-            ui/qml/design/Icons.qml
-            ui/qml/design/UiSound.qml
-            ui/qml/design/ComponentGallery.qml
-            ui/qml/design/surfaces/IronPanel.qml
-            ui/qml/design/controls/IronButton.qml
-            ui/qml/design/controls/IronIconButton.qml
-            ui/qml/design/controls/IronTabBar.qml
-            ui/qml/design/controls/IronTooltip.qml
-            ui/qml/design/controls/IronDialog.qml
-            ui/qml/design/controls/IronDropdown.qml
-            ui/qml/design/controls/IronSlider.qml
-            ui/qml/design/controls/IronProgressBar.qml
-            ui/qml/design/controls/IronListRow.qml
-            ui/qml/design/controls/IronTreeRow.qml
-            ui/qml/design/controls/IronContextMenu.qml
-            ui/qml/design/controls/IronBadge.qml
-            ui/qml/design/controls/IronDivider.qml
-            ui/qml/design/controls/IronSearchField.qml
-            ui/qml/design/controls/IronHotkeyLabel.qml
-            ui/qml/design/controls/IronUnitCard.qml
-            ui/qml/design/controls/IronCommandButton.qml
-            ui/qml/design/controls/IronObjectiveRow.qml
-            ui/qml/design/controls/IronResourceCounter.qml
-            ui/qml/design/controls/IronInspectorSection.qml
-            ui/qml/design/overlays/IronNotification.qml
-            ui/qml/design/layouts/GameShell.qml
-            ui/qml/design/layouts/ToolShell.qml
         RESOURCES
             ui/qml/ui_audio.js
-            ui/qml/design/qmldir
-            ui/qml/design/surfaces/qmldir
-            ui/qml/design/controls/qmldir
-            ui/qml/design/overlays/qmldir
-            ui/qml/design/layouts/qmldir
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag
@@ -401,53 +389,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/emblems/cartaghe.png
             assets/visuals/load_screen.png
             assets/visuals/hannibal.png
-            assets/visuals/icons/archer_rome.png
-            assets/visuals/icons/archer_cartaghe.png
-            assets/visuals/icons/swordsman_rome.png
-            assets/visuals/icons/swordsman_cartaghe.png
-            assets/visuals/icons/spearman_rome.png
-            assets/visuals/icons/spearman_cartaghe.png
-            assets/visuals/icons/horse_swordsman_rome.png
-            assets/visuals/icons/horse_swordsman_cartaghe.png
-            assets/visuals/icons/horse_archer_rome.png
-            assets/visuals/icons/horse_archer_cartaghe.png
-            assets/visuals/icons/horse_spearman_rome.png
-            assets/visuals/icons/horse_spearman_cartaghe.png
-            assets/visuals/icons/healer_rome.png
-            assets/visuals/icons/healer_cartaghe.png
-            assets/visuals/icons/catapult_rome.png
-            assets/visuals/icons/catapult_cartaghe.png
-            assets/visuals/icons/ballista_rome.png
-            assets/visuals/icons/ballista_cartaghe.png
-            assets/visuals/icons/elephant_cartaghe.png
-            assets/visuals/icons/builder_rome.png
-            assets/visuals/icons/builder_cartaghe.png
-            assets/visuals/icons/defense_tower_rome.png
-            assets/visuals/icons/defense_tower_cartaghe.png
-            assets/visuals/icons/wall.png
-            assets/visuals/icons/wall_rome.png
-            assets/visuals/icons/wall_cartaghe.png
-            assets/visuals/icons/house_rome.png
-            assets/visuals/icons/house_cartaghe.png
-            assets/visuals/icons/gold.png
-            assets/visuals/icons/wood.png
-            assets/visuals/icons/stone.png
-            assets/visuals/icons/iron.png
-            assets/visuals/icons/attack_mode.png
-            assets/visuals/icons/defend_mode.png
-            assets/visuals/icons/hold_mode.png
-            assets/visuals/icons/patrol_mode.png
-            assets/visuals/icons/formation_mode.png
-            assets/visuals/icons/build_mode.png
-            assets/visuals/icons/heal_mode.png
-            assets/visuals/icons/collect_mode.png
-            assets/visuals/icons/rally_mode.png
-            assets/visuals/icons/deliver_mode.png
-            assets/visuals/icons/aura_mode.png
-            assets/visuals/icons/ai_player.png
-            assets/visuals/icons/human_player.png
-            assets/visuals/icons/troop_count.png
-            assets/visuals/icons/defeated.png
+            ${SOI_UNIT_ICON_RESOURCES}
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm
@@ -456,13 +398,14 @@ if(QT_VERSION_MAJOR EQUAL 6)
     )
 else()
     qt5_add_resources(qml_resources qml_resources.qrc)
+    qt5_add_resources(design_resources design_resources.qrc)
     qt5_add_resources(assets_resources assets.qrc)
     qt5_add_resources(translations_resources translations.qrc)
     set(campaign_map_resources)
     if(GENERATED_CAMPAIGN_MAP_QRC)
         qt5_add_resources(campaign_map_resources ${GENERATED_CAMPAIGN_MAP_QRC})
     endif()
-    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources} ${translations_resources} ${campaign_map_resources})
+    target_sources(standard_of_iron PRIVATE ${qml_resources} ${design_resources} ${assets_resources} ${translations_resources} ${campaign_map_resources})
 endif()
 
 target_link_libraries(standard_of_iron

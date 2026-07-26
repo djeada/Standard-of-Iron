@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Rectangle {
     id: root
@@ -9,14 +10,6 @@ Rectangle {
     property var mission_data: null
     property string campaign_id: ""
     property var mission_definition: null
-    property var terrain_icons: ({
-            "mountain": "⛰️",
-            "plains": "🌾",
-            "forest": "🌲",
-            "river": "🌊",
-            "desert": "🏜️",
-            "hills": "⛰️"
-        })
     property var terrain_colors: ({
             "mountain": "#8b7355",
             "plains": "#9db68f",
@@ -248,7 +241,7 @@ Rectangle {
                                     text: {
                                         if (!mission_definition || !mission_definition.terrain_type)
                                             return "";
-                                        return terrain_icons[mission_definition.terrain_type] || "🗺️";
+                                        return Design.Icons.terrain(mission_definition.terrain_type);
                                     }
                                     font.pointSize: Theme.fontSizeSmall
                                 }
@@ -257,8 +250,7 @@ Rectangle {
                                     text: {
                                         if (!mission_definition || !mission_definition.terrain_type)
                                             return "";
-                                        var terrain = mission_definition.terrain_type;
-                                        return terrain.charAt(0).toUpperCase() + terrain.slice(1);
+                                        return Design.Icons.humanise(mission_definition.terrain_type);
                                     }
                                     color: "#ffffff"
                                     font.pointSize: Theme.fontSizeTiny
@@ -295,7 +287,7 @@ Rectangle {
                             spacing: Theme.spacingSmall
 
                             Label {
-                                text: "📜"
+                                text: Design.Icons.briefing
                                 font.pointSize: Theme.fontSizeMedium
                                 Layout.alignment: Qt.AlignTop
                             }
@@ -713,7 +705,7 @@ Rectangle {
 
             Label {
                 visible: !!(mission_data && !mission_data.unlocked)
-                text: qsTr("🔒 Locked")
+                text: Design.Icons.locked + " " + qsTr("Locked")
                 color: Theme.textDim
                 font.pointSize: Theme.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter

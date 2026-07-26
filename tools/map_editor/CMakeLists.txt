@@ -15,6 +15,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         json_edit_dialog.cpp
         resize_dialog.cpp
         ../../ui/theme.cpp
+        ../../ui/preferences.cpp
+        ../../ui/widget_shell.cpp
     )
 else()
     add_executable(map_editor
@@ -33,6 +35,8 @@ else()
         json_edit_dialog.cpp
         resize_dialog.cpp
         ../../ui/theme.cpp
+        ../../ui/preferences.cpp
+        ../../ui/widget_shell.cpp
     )
 endif()
 

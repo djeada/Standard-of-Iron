@@ -7,6 +7,11 @@
 #include <qobject.h>
 #include <qqmlengine.h>
 
+#include <algorithm>
+#include <cmath>
+
+#include "preferences.h"
+
 Theme* Theme::m_instance = nullptr;
 
 Theme::Theme(QObject* parent)
@@ -23,7 +28,10 @@ auto Theme::instance() -> Theme* {
 auto Theme::create(QQmlEngine* engine, QJSEngine* scriptEngine) -> Theme* {
   Q_UNUSED(engine)
   Q_UNUSED(scriptEngine)
-  return instance();
+  auto* theme = instance();
+
+  QQmlEngine::setObjectOwnership(theme, QQmlEngine::CppOwnership);
+  return theme;
 }
 
 QVariantList Theme::playerColors() {
@@ -56,14 +64,8 @@ QVariantList Theme::factions() {
 }
 
 QVariantMap Theme::unitIcons() {
-  QVariantMap icons;
-  icons["archer"] = "🏹";
-  icons["swordsman"] = "⚔️";
-  icons["warrior"] = "⚔️";
-  icons["spearman"] = "🛡️";
-  icons["cavalry"] = "🐎";
-  icons["default"] = "👤";
-  return icons;
+
+  return {};
 }
 
 QVariantMap Theme::nationEmblems() {
@@ -80,15 +82,33 @@ QVariantMap Theme::nationEmblems() {
 }
 
 QString Theme::widgetStyleSheet() {
+  const auto* prefs = UiPreferences::instance();
+  const bool high_contrast = prefs->high_contrast();
+  const double scale = prefs->ui_scale();
+
+  const QColor surface = high_contrast ? QColor("#050505") : backgroundDeep();
+  const QColor raised = high_contrast ? QColor("#181818") : panelIron();
+  const QColor panel = high_contrast ? QColor("#111111") : panelLeather();
+  const QColor text = high_contrast ? QColor("#ffffff") : textPrimary();
+  const QColor muted = high_contrast ? QColor("#c8c8c8") : textDisabled();
+  const QColor line = high_contrast ? QColor("#8c8c8c") : borderSubtle();
+  const QColor emphasis = high_contrast ? QColor("#f0c674") : accent();
+
   const auto hex = [](const QColor& color) {
     return color.name(QColor::HexRgb);
   };
+
+  const auto px = [scale](int base) {
+    return QString::number(std::max(1, static_cast<int>(std::lround(base * scale)))) +
+           QStringLiteral("px");
+  };
+
   return QStringLiteral(R"(
 QWidget {
   background-color: %1;
   color: %2;
   font-family: "Noto Sans", "DejaVu Sans", sans-serif;
-  font-size: 12px;
+  font-size: %16;
 }
 QMainWindow, QDialog { background-color: %1; }
 QMenuBar, QMenu, QToolBar, QStatusBar {
@@ -97,22 +117,23 @@ QMenuBar, QMenu, QToolBar, QStatusBar {
   border-color: %4;
 }
 QMenuBar { border-bottom: 1px solid %4; }
-QMenuBar::item, QMenu::item { padding: 6px 10px; }
+QMenuBar::item, QMenu::item { padding: %17 %18; }
 QMenuBar::item:selected, QMenu::item:selected { background-color: %5; }
+QMenu::separator { height: 1px; background: %4; margin: %17 0; }
 QToolBar {
   border: none;
   border-bottom: 1px solid %4;
-  spacing: 6px;
-  padding: 3px 6px;
+  spacing: %17;
+  padding: %17 %18;
 }
-QToolBar::separator { background: %4; width: 1px; margin: 4px 3px; }
+QToolBar::separator { background: %4; width: 1px; margin: %17 4px; }
 QToolButton, QPushButton {
   background-color: %6;
   color: %2;
   border: 1px solid %4;
   border-radius: 4px;
-  padding: 5px 10px;
-  min-height: 26px;
+  padding: %17 %18;
+  min-height: %19;
 }
 QToolButton:hover, QPushButton:hover {
   background-color: %5;
@@ -120,7 +141,9 @@ QToolButton:hover, QPushButton:hover {
 }
 QToolButton:focus, QPushButton:focus,
 QComboBox:focus, QLineEdit:focus, QPlainTextEdit:focus,
-QSpinBox:focus, QDoubleSpinBox:focus {
+QSpinBox:focus, QDoubleSpinBox:focus, QCheckBox:focus, QRadioButton:focus,
+QListWidget:focus, QListView:focus, QTreeWidget:focus, QTreeView:focus,
+QTableWidget:focus, QTableView:focus, QSlider:focus {
   border: 2px solid %8;
 }
 QToolButton:pressed, QPushButton:pressed {
@@ -153,25 +176,60 @@ QGroupBox {
   background-color: %3;
   border: 1px solid %4;
   border-radius: 5px;
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: %18;
+  padding-top: %18;
   font-weight: 600;
 }
-QGroupBox::title { color: %7; subcontrol-origin: margin; left: 8px; padding: 0 6px; }
-QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QPlainTextEdit, QTableWidget {
+QGroupBox::title { color: %7; subcontrol-origin: margin; left: %17; padding: 0 %17; }
+QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QPlainTextEdit, QTextEdit {
   background-color: %6;
   color: %2;
   border: 1px solid %4;
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 4px %17;
+  min-height: %19;
 }
 QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover,
-QLineEdit:hover, QPlainTextEdit:hover { border-color: %7; }
+QLineEdit:hover, QPlainTextEdit:hover, QTextEdit:hover { border-color: %7; }
 QComboBox QAbstractItemView {
   background-color: %6;
   color: %2;
   border: 1px solid %4;
   selection-background-color: %9;
+}
+QCheckBox, QRadioButton { spacing: %17; padding: 2px; }
+QCheckBox::indicator, QRadioButton::indicator {
+  width: %19;
+  height: %19;
+  border: 1px solid %4;
+  background: %6;
+}
+QCheckBox::indicator { border-radius: 3px; }
+QRadioButton::indicator { border-radius: 50%; }
+QCheckBox::indicator:hover, QRadioButton::indicator:hover { border-color: %7; }
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+  background: %7;
+  border-color: %8;
+}
+QCheckBox:disabled, QRadioButton:disabled { color: %11; }
+QListWidget, QListView, QTreeWidget, QTreeView, QTableWidget, QTableView {
+  background-color: %6;
+  alternate-background-color: %3;
+  color: %2;
+  border: 1px solid %4;
+  border-radius: 4px;
+}
+QListWidget::item, QListView::item, QTreeWidget::item, QTreeView::item {
+  padding: 4px %17;
+  border: none;
+}
+QListWidget::item:hover, QListView::item:hover,
+QTreeWidget::item:hover, QTreeView::item:hover { background: %5; }
+QListWidget::item:selected, QListView::item:selected,
+QTreeWidget::item:selected, QTreeView::item:selected,
+QTableWidget::item:selected, QTableView::item:selected {
+  background: %9;
+  color: %2;
 }
 QHeaderView::section {
   background: %3;
@@ -186,7 +244,7 @@ QTabBar::tab {
   background: %3;
   color: %11;
   border: 1px solid %4;
-  padding: 6px 13px;
+  padding: %17 %18;
   min-width: 62px;
 }
 QTabBar::tab:selected {
@@ -195,6 +253,38 @@ QTabBar::tab:selected {
   border-bottom: 2px solid %8;
 }
 QTabBar::tab:hover:!selected { background: %5; color: %2; }
+QSlider::groove:horizontal {
+  height: 6px;
+  background: %6;
+  border: 1px solid %4;
+  border-radius: 3px;
+}
+QSlider::sub-page:horizontal { background: %7; border-radius: 3px; }
+QSlider::handle:horizontal {
+  width: %19;
+  margin: -6px 0;
+  background: %13;
+  border: 1px solid %8;
+  border-radius: 4px;
+}
+QProgressBar {
+  background: %6;
+  border: 1px solid %4;
+  border-radius: 4px;
+  text-align: center;
+  color: %2;
+}
+QProgressBar::chunk { background: %7; border-radius: 3px; }
+QDockWidget {
+  color: %2;
+  titlebar-close-icon: none;
+  titlebar-normal-icon: none;
+}
+QDockWidget::title {
+  background: %3;
+  padding: %17;
+  border-bottom: 1px solid %4;
+}
 QSplitter::handle { background: %4; }
 QSplitter::handle:hover { background: %7; }
 QScrollArea { border: none; background: transparent; }
@@ -207,9 +297,17 @@ QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
 }
 QScrollBar::handle:hover { background: %7; }
 QStatusBar { border-top: 1px solid %4; color: %11; }
+QStatusBar::item { border: none; }
 QLabel { background: transparent; }
-QLabel#panelTitle { color: %13; font-size: 16px; font-weight: 700; }
+QLabel#panelTitle { color: %13; font-size: %20; font-weight: 700; }
 QLabel#panelIntro, QLabel#panelHint { color: %11; }
+QLabel#toolSummary {
+  background: %3;
+  border: 1px solid %4;
+  border-radius: 6px;
+  color: %13;
+  padding: %17 %18;
+}
 QLabel[status="success"] { color: %14; }
 QLabel[status="warning"] { color: %15; }
 QLabel[status="error"] { color: %12; }
@@ -221,19 +319,20 @@ QToolTip {
   padding: 5px 7px;
 }
 )")
-      .arg(hex(backgroundDeep()),
-           hex(textPrimary()),
-           hex(panelLeather()),
-           hex(borderSubtle()),
+      .arg(hex(surface),
+           hex(text),
+           hex(panel),
+           hex(line),
            hex(hoverBg()),
-           hex(panelIron()),
-           hex(accent()),
+           hex(raised),
+           hex(emphasis),
            hex(selection()),
            hex(selectedBg()),
            hex(disabledBg()),
-           hex(textDisabled()),
+           hex(muted),
            hex(danger()),
            hex(accentBright()),
            hex(success()),
-           hex(warning()));
+           hex(warning()))
+      .arg(px(12), px(6), px(10), px(26), px(16));
 }
