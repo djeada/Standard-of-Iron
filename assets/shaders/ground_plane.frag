@@ -158,14 +158,19 @@ void main() {
     base_col *= crack_darkening;
   }
 
-  if (u_snow_coverage > 0.01) {
-    float snow_noise = fbm(wuv * 0.5 + vec2(123.0, 456.0));
-    float snow_accumulation = smoothstep(0.3, 0.7, snow_noise);
-    float height_snow_bonus = smoothstep(-0.5, 1.5, v_world_pos.y) * 0.3;
+  if (u_ground_type == 3 && u_snow_coverage > 0.01) {
+    float snow_large = fbm(wuv * 0.28 + vec2(123.0, 456.0));
+    float snow_small = fbm(wuv * 0.72 + vec2(-89.0, 201.0));
+    float snow_raw = snow_large * 0.65 + snow_small * 0.35;
+    float snow_accumulation = smoothstep(0.22, 0.58, snow_raw);
+    float snow_edge =
+        smoothstep(0.18, 0.42, snow_raw) * (1.0 - smoothstep(0.58, 0.78, snow_raw));
+    snow_accumulation = max(snow_accumulation, snow_edge * 0.4);
+    float slope_reject = 1.0 - smoothstep(0.12, 0.40, slope);
     float snow_mask =
-        clamp(snow_accumulation * (u_snow_coverage + height_snow_bonus), 0.0, 1.0);
-    vec3 snow_tinted = u_snow_color * (1.0 + detail * 0.1);
-    base_col = mix(base_col, snow_tinted, snow_mask * 0.85);
+        clamp(snow_accumulation * u_snow_coverage * 1.7 * slope_reject, 0.0, 0.95);
+    vec3 snow_tinted = u_snow_color * (1.0 + detail * 0.12 + moisture_var * 0.06);
+    base_col = mix(base_col, snow_tinted, snow_mask);
   }
 
   vec3 gray_level = vec3(dot(base_col, vec3(0.299, 0.587, 0.114)));

@@ -213,6 +213,28 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("if (u_has_height_tex == 1)"), std::string::npos);
 }
 
+TEST(ShaderSource, AlpineSnowPatchesRenderOnFlatTerrain) {
+  const auto root = find_repo_root();
+  const auto plane = read_text(root / "assets" / "shaders" / "ground_plane.frag");
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(plane.empty());
+  ASSERT_FALSE(terrain.empty());
+
+  const auto flat_plane = collapse_whitespace(plane);
+  const auto flat_terrain = collapse_whitespace(terrain);
+
+  EXPECT_NE(flat_plane.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
+            std::string::npos);
+  EXPECT_NE(flat_plane.find("snow_accumulation * u_snow_coverage"), std::string::npos);
+
+  EXPECT_NE(flat_terrain.find("if (u_ground_type == 3 && u_terrain_type == 0 && "
+                              "u_snow_coverage > 0.01)"),
+            std::string::npos);
+  EXPECT_NE(flat_terrain.find("alpine_snow_accumulation * u_snow_coverage"),
+            std::string::npos);
+  EXPECT_NE(flat_terrain.find("mountain_surface * altitude_snow"), std::string::npos);
+}
+
 TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
