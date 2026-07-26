@@ -44,20 +44,52 @@ KEEP_TEXT_WHEN_EMPTY=0
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -i|--input) INPUT_CSV="$2"; shift 2;;
-    -t|--template) TEMPLATE_TS="$2"; shift 2;;
-    -o|--outdir) OUTDIR="$2"; shift 2;;
-    -l|--lang) LANG_OVERRIDE="$2"; shift 2;;
-    --plural-sep) PLURAL_SEP="$2"; shift 2;;
-    --inplace) INPLACE=1; shift;;
-    --backup) BACKUP=1; shift;;
-    --clear-when-empty) CLEAR_WHEN_EMPTY=1; KEEP_TEXT_WHEN_EMPTY=0; shift;;
-    --keep-text-when-empty) KEEP_TEXT_WHEN_EMPTY=1; CLEAR_WHEN_EMPTY=0; shift;;
-    -h|--help)
+    -i | --input)
+      INPUT_CSV="$2"
+      shift 2
+      ;;
+    -t | --template)
+      TEMPLATE_TS="$2"
+      shift 2
+      ;;
+    -o | --outdir)
+      OUTDIR="$2"
+      shift 2
+      ;;
+    -l | --lang)
+      LANG_OVERRIDE="$2"
+      shift 2
+      ;;
+    --plural-sep)
+      PLURAL_SEP="$2"
+      shift 2
+      ;;
+    --inplace)
+      INPLACE=1
+      shift
+      ;;
+    --backup)
+      BACKUP=1
+      shift
+      ;;
+    --clear-when-empty)
+      CLEAR_WHEN_EMPTY=1
+      KEEP_TEXT_WHEN_EMPTY=0
+      shift
+      ;;
+    --keep-text-when-empty)
+      KEEP_TEXT_WHEN_EMPTY=1
+      CLEAR_WHEN_EMPTY=0
+      shift
+      ;;
+    -h | --help)
       grep '^# ' "$0" | sed 's/^# //'
       exit 0
       ;;
-    *) ARGS+=("$1"); shift;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
   esac
 done
 set -- "${ARGS[@]}"
@@ -79,7 +111,7 @@ if [[ $INPLACE -eq 1 && $BACKUP -eq 1 ]]; then
   cp -f "$TEMPLATE_TS" "$TEMPLATE_TS.bak"
 fi
 
-python3 - <<'PY' "$INPUT_CSV" "$TEMPLATE_TS" "$OUTDIR" "$LANG_OVERRIDE" "$PLURAL_SEP" "$INPLACE" "$CLEAR_WHEN_EMPTY" "$KEEP_TEXT_WHEN_EMPTY"
+python3 - "$INPUT_CSV" "$TEMPLATE_TS" "$OUTDIR" "$LANG_OVERRIDE" "$PLURAL_SEP" "$INPLACE" "$CLEAR_WHEN_EMPTY" "$KEEP_TEXT_WHEN_EMPTY" <<'PY'
 import sys, re, csv, xml.etree.ElementTree as ET
 from pathlib import Path
 

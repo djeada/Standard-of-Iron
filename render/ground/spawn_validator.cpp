@@ -357,7 +357,7 @@ auto make_firecamp_spawn_config() -> SpawnValidationConfig {
 
 auto make_grass_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
-  config.edge_padding = 0.08F;
+  config.edge_padding = 0.02F;
   config.max_slope = 0.92F;
   config.building_clearance = 0.8F;
   config.road_clearance = 0.15F;

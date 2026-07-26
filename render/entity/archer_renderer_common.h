@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "../creature/pipeline/creature_asset.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../humanoid/humanoid_proportion_profiles.h"
 #include "../humanoid/humanoid_specs.h"
 #include "registry.h"
@@ -83,6 +84,7 @@ struct ArcherRendererRegistration {
   std::string_view style_key;
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_asset};
+  Render::Creature::Pipeline::PoseLayerFn pose_layer{nullptr};
 };
 
 void register_archer_renderer_profile(

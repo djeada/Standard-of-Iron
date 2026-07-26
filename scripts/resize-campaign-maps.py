@@ -14,7 +14,6 @@ import math
 from pathlib import Path
 from typing import Any, Sequence
 
-
 MAPS = (
     (
         "assets/maps/map_crossing_rhone.json",

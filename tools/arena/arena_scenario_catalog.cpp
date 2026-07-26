@@ -3154,31 +3154,85 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_sepulcher_spell_fx_showcase_id),
+        QStringLiteral("Iron Sepulcher Spell FX"),
+        QStringLiteral("Close visual review of a grave priest casting fireballs "
+                       "beside a skeleton guard, including projectile trail, impact "
+                       "ignition, and the target's persistent burning treatment."),
+        9.0F,
+        {6.8F, 27.0F, 90.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(-1.3F, 0.0F, -0.1F);
+
+    auto priest = nation_group(QStringLiteral("grave_priest"),
+                               Troop::GravePriest,
+                               Nation::IronSepulcher,
+                               2,
+                               1,
+                               {-1.2F, 0.0F, -2.2F},
+                               1);
+    auto guard = nation_group(QStringLiteral("skeleton_guard"),
+                              Troop::SkeletonSwordsman,
+                              Nation::IronSepulcher,
+                              2,
+                              1,
+                              {-3.0F, 0.0F, -1.5F},
+                              1);
+    guard.health_override = 420;
+    guard.max_health_override = 1400;
+    auto target = nation_group(QStringLiteral("roman_target"),
+                               Troop::Swordsman,
+                               Nation::RomanRepublic,
+                               1,
+                               1,
+                               {-1.2F, 0.0F, 2.0F},
+                               1);
+    target.health_override = target.max_health_override = 1400;
+    s.groups = {std::move(priest), std::move(guard), std::move(target)};
+    s.steps = {at(0.45F,
+                  Command::Attack,
+                  QStringLiteral("grave_priest"),
+                  QStringLiteral("roman_target"))};
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("grave_priest")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("skeleton_guard")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("roman_target")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_sepulcher_vs_rome_infantry_id),
         QStringLiteral("Sepulcher vs Rome: Infantry"),
         QStringLiteral("Equivalent-value melee test: three Roman swordsmen against a "
                        "skeleton warband of equal recruitment value. No eligible "
                        "soldier on either side may idle once the lines meet."),
         16.0F,
-        {23.0F, 48.0F, 28.0F});
+        {18.0F, 44.0F, 28.0F});
     s.groups = {nation_group(QStringLiteral("roman_swords"),
                              Troop::Swordsman,
                              Nation::RomanRepublic,
                              1,
                              3,
-                             {0.0F, 0.0F, -9.0F}),
+                             {0.0F, 0.0F, -6.0F}),
                 nation_group(QStringLiteral("skeleton_swords"),
                              Troop::SkeletonSwordsman,
                              Nation::IronSepulcher,
                              2,
                              3,
-                             {-1.5F, 0.0F, 9.0F}),
+                             {-1.5F, 0.0F, 6.0F}),
                 nation_group(QStringLiteral("skeleton_bows"),
                              Troop::SkeletonArcher,
                              Nation::IronSepulcher,
                              2,
                              1,
-                             {6.5F, 0.0F, 12.0F})};
+                             {5.5F, 0.0F, 8.5F})};
     s.steps = {at(0.5F,
                   Command::AttackMove,
                   QStringLiteral("roman_swords"),
@@ -3340,20 +3394,20 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                        "prove impact displacement, contact damage, and melee lock "
                        "against undead formations."),
         14.0F,
-        {23.0F, 48.0F, 20.0F});
+        {18.0F, 44.0F, 20.0F});
     s.groups = {nation_group(QStringLiteral("punic_cavalry"),
                              Troop::MountedKnight,
                              Nation::Carthage,
                              1,
                              2,
-                             {0.0F, 0.0F, -11.0F},
+                             {0.0F, 0.0F, -7.0F},
                              4),
                 nation_group(QStringLiteral("skeleton_block"),
                              Troop::SkeletonSwordsman,
                              Nation::IronSepulcher,
                              2,
                              3,
-                             {0.0F, 0.0F, 9.0F})};
+                             {0.0F, 0.0F, 5.0F})};
     s.steps = {at(0.0F,
                   Command::Charge,
                   QStringLiteral("punic_cavalry"),

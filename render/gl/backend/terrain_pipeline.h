@@ -41,6 +41,7 @@ public:
   struct GroundUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_primary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
@@ -85,6 +86,8 @@ public:
   struct TerrainUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle terrain_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_primary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
@@ -119,6 +122,12 @@ public:
     GL::Shader::UniformHandle soil_foot_height{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle screen_toe_mul{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle screen_toe_clamp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_height_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_texel_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_uv_scale{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_uv_offset{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_to_world{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};

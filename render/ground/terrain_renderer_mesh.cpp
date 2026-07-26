@@ -783,6 +783,8 @@ void TerrainRenderer::build_meshes() {
         chunk.color = clamp01(color);
 
         TerrainChunkParams params;
+        params.ground_type = static_cast<int>(m_biome_settings.ground_type);
+        params.terrain_type = static_cast<int>(chunk.type);
         auto tint_color = [&](const QVector3D& base) {
           return clamp01(apply_tint(base, chunk.tint));
         };
@@ -794,44 +796,20 @@ void TerrainRenderer::build_meshes() {
         params.rock_high = tint_color(surface_profile.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        params.macro_noise_scale =
-            surface_profile.terrain_macro_noise_scale *
-            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.72F : 1.0F);
-        params.detail_noise_scale =
-            surface_profile.terrain_detail_noise_scale *
-            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.62F : 1.0F);
-
-        float slope_threshold = surface_profile.terrain_rock_threshold;
-        float sharpness_mul = 1.0F;
-        if (chunk.type == Game::Map::TerrainType::Hill) {
-          slope_threshold = std::min(slope_threshold, 0.032F);
-          sharpness_mul = 1.15F;
-        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
-          slope_threshold = std::min(slope_threshold - 0.16F, 0.045F);
-          sharpness_mul = 1.60F;
-        }
-
-        slope_threshold = std::clamp(slope_threshold, 0.018F, 0.9F);
-
-        params.slope_rock_threshold = slope_threshold;
+        // Material parameters must remain continuous when the mesh is split
+        // into flat, hill, and mountain draw sections. The fragment shader
+        // already has slope, height, curvature, and feature-foot signals for
+        // physical transitions; per-section material scales produced visible
+        // rectangular borders around otherwise organic landforms.
+        params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
+        params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
+        params.slope_rock_threshold =
+            std::clamp(surface_profile.terrain_rock_threshold, 0.018F, 0.9F);
         params.slope_rock_sharpness =
-            std::max(1.0F, surface_profile.terrain_rock_sharpness * sharpness_mul);
-
-        float soil_height = surface_profile.terrain_soil_height;
-        if (chunk.type == Game::Map::TerrainType::Hill) {
-          soil_height -= 0.04F;
-        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
-          soil_height -= 0.12F;
-        }
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          soil_height = std::min(soil_height - 0.95F, chunk.average_height - 0.20F);
-        }
-        params.soil_blend_height = soil_height;
-
-        params.soil_blend_sharpness = std::max(
-            0.75F,
-            surface_profile.terrain_soil_sharpness *
-                (chunk.type == Game::Map::TerrainType::Mountain ? 0.80F : 0.95F));
+            std::max(1.0F, surface_profile.terrain_rock_sharpness);
+        params.soil_blend_height = surface_profile.terrain_soil_height;
+        params.soil_blend_sharpness =
+            std::max(0.75F, surface_profile.terrain_soil_sharpness);
 
         constexpr float k_noise_offset_scale = 256.0F;
         const uint32_t noise_key_a = hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
@@ -842,87 +820,26 @@ void TerrainRenderer::build_meshes() {
         params.height_noise_strength = 0.0F;
         params.height_noise_frequency = surface_profile.height_noise_frequency;
 
-        params.ambient_boost =
-            surface_profile.terrain_ambient_boost *
-            ((chunk.type == Game::Map::TerrainType::Hill)       ? 0.97F
-             : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F
-                                                                : 0.95F);
-        params.rock_detail_strength =
-            surface_profile.terrain_rock_detail_strength *
-            ((chunk.type == Game::Map::TerrainType::Mountain) ? 1.05F
-             : (chunk.type == Game::Map::TerrainType::Hill)   ? 0.52F
-                                                              : 0.78F);
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          params.rock_detail_strength =
-              std::clamp(params.rock_detail_strength * 0.08F, 0.0F, 0.03F);
-        }
+        params.ambient_boost = surface_profile.terrain_ambient_boost;
+        params.rock_detail_strength = surface_profile.terrain_rock_detail_strength;
 
         params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
         params.light_direction = QVector3D(0.65F, 0.50F, 0.40F);
-        params.curvature_response =
-            (chunk.type == Game::Map::TerrainType::Mountain) ? 0.72F
-            : (chunk.type == Game::Map::TerrainType::Hill)   ? 0.48F
-                                                             : 0.22F;
-        params.ridge_response = (chunk.type == Game::Map::TerrainType::Mountain) ? 0.68F
-                                : (chunk.type == Game::Map::TerrainType::Hill)   ? 0.42F
-                                                                               : 0.16F;
-        params.gully_response = (chunk.type == Game::Map::TerrainType::Mountain) ? 0.62F
-                                : (chunk.type == Game::Map::TerrainType::Hill)   ? 0.38F
-                                                                               : 0.18F;
-        params.snow_coverage =
-            (chunk.type == Game::Map::TerrainType::Mountain)
-                ? std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F)
-                : 0.0F;
+        params.curvature_response = 0.52F;
+        params.ridge_response = 0.46F;
+        params.gully_response = 0.44F;
+        params.snow_coverage = std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
         params.moisture_level = std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          params.moisture_level = std::clamp(params.moisture_level + 0.10F, 0.0F, 1.0F);
-        }
         params.crack_intensity =
             std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          params.crack_intensity =
-              std::clamp(params.crack_intensity * 0.35F, 0.0F, 1.0F);
-        }
-        float rock_exposure = climate_profile.rock_exposure;
-        if (chunk.type == Game::Map::TerrainType::Hill) {
-          rock_exposure *= 0.90F;
-        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
-          rock_exposure *= 1.15F;
-        }
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          rock_exposure = climate_profile.rock_exposure * 0.12F;
-        }
-        params.rock_exposure = std::clamp(rock_exposure, 0.0F, 1.0F);
-        float grass_saturation = climate_profile.grass_saturation;
-        if (chunk.type == Game::Map::TerrainType::Mountain) {
-          grass_saturation *= 0.92F;
-        }
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          grass_saturation += 0.08F;
-        }
-        params.grass_saturation = std::clamp(grass_saturation, 0.0F, 1.5F);
-        float soil_roughness = climate_profile.soil_roughness;
-        if (chunk.type == Game::Map::TerrainType::Hill) {
-          soil_roughness += 0.04F;
-        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
-          soil_roughness += 0.10F;
-        }
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          soil_roughness *= 0.72F;
-        }
-        params.soil_roughness = std::clamp(soil_roughness, 0.0F, 1.0F);
+        params.rock_exposure = std::clamp(climate_profile.rock_exposure, 0.0F, 1.0F);
+        params.grass_saturation =
+            std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
+        params.soil_roughness = std::clamp(climate_profile.soil_roughness, 0.0F, 1.0F);
         params.snow_color = clamp01(climate_profile.snow_color);
-        if (chunk.type == Game::Map::TerrainType::Hill ||
-            chunk.type == Game::Map::TerrainType::Mountain) {
-          float const soil_foot_height =
-              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.16F : 0.22F;
-          params.soil_foot_height = std::clamp(soil_foot_height, 0.08F, 0.36F);
-          float const screen_toe_mul =
-              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.75F : 0.95F;
-          params.screen_toe_mul = screen_toe_mul;
-          params.screen_toe_clamp =
-              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.18F : 0.24F;
-        }
+        params.soil_foot_height = 0.18F;
+        params.screen_toe_mul = 0.82F;
+        params.screen_toe_clamp = 0.20F;
 
         chunk.params = params;
 

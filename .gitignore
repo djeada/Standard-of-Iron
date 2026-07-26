@@ -34,6 +34,9 @@ ui_*.h
 *.jsc
 Makefile*
 *build-*
+# The Qt Creator patterns above are name-based, so they would otherwise swallow
+# CI files such as .github/workflows/build-linux.yml.
+!.github/workflows/*
 *.qm
 # Exception: keep translation files
 !translations/*.qm

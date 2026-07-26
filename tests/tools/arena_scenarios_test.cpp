@@ -255,6 +255,7 @@ TEST(ArenaScenariosTest, WallCornerShowcaseCoversEveryJoinShape) {
 
 TEST(ArenaScenariosTest, ListsEveryIronSepulcherScenario) {
   for (auto const* id : {Arena::Scenarios::k_sepulcher_roster_lineup_id,
+                         Arena::Scenarios::k_sepulcher_spell_fx_showcase_id,
                          Arena::Scenarios::k_sepulcher_vs_rome_infantry_id,
                          Arena::Scenarios::k_sepulcher_vs_rome_ranged_id,
                          Arena::Scenarios::k_sepulcher_vs_carthage_infantry_id,

@@ -2,11 +2,11 @@
 
 This document describes the RTS combat system in **Standard of Iron**, including:
 
-* the per-frame update pipeline;
-* shared target lookup and validation;
-* normal, siege, tower, and elephant attacks;
-* combat animation and visual feedback;
-* the recommended approach for adding new combat behavior.
+- the per-frame update pipeline;
+- shared target lookup and validation;
+- normal, siege, tower, and elephant attacks;
+- combat animation and visual feedback;
+- the recommended approach for adding new combat behavior.
 
 ## Overview
 
@@ -58,10 +58,10 @@ It is rebuilt once at the beginning of each combat update and provides shared lo
 
 The context contains:
 
-* `units`: alive unit entities that are not pending removal;
-* `entities_by_id`: fast lookup of entities by target ID;
-* `unit_grid`: spatial lookup for nearby non-building units;
-* `nearby_unit_ids`: reusable scratch storage for range queries.
+- `units`: alive unit entities that are not pending removal;
+- `entities_by_id`: fast lookup of entities by target ID;
+- `unit_grid`: spatial lookup for nearby non-building units;
+- `nearby_unit_ids`: reusable scratch storage for range queries.
 
 ### Why It Matters
 
@@ -73,9 +73,9 @@ World::get_entities_with<UnitComponent>()
 
 Using the shared context:
 
-* keeps target selection consistent across combat behaviors;
-* avoids rebuilding the same view of the world in multiple processors;
-* reduces unnecessary entity queries during each frame.
+- keeps target selection consistent across combat behaviors;
+- avoids rebuilding the same view of the world in multiple processors;
+- reduces unnecessary entity queries during each frame.
 
 ## Target Validation
 
@@ -87,12 +87,12 @@ Combat::is_valid_enemy_unit(attacker_unit, target, allow_buildings)
 
 This helper rejects targets that are:
 
-* null;
-* pending removal;
-* dead or missing a `UnitComponent`;
-* owned by the attacker;
-* owned by an allied player according to `OwnerRegistry`;
-* buildings when `allow_buildings == false`.
+- null;
+- pending removal;
+- dead or missing a `UnitComponent`;
+- owned by the attacker;
+- owned by an allied player according to `OwnerRegistry`;
+- buildings when `allow_buildings == false`.
 
 Avoid implementing direct owner checks in individual combat processors. Team and alliance rules are easy to handle incorrectly when duplicated.
 
@@ -106,14 +106,14 @@ combat_system/attack_processor.cpp
 
 The `process_attacks()` processor handles:
 
-* target resolution;
-* melee and ranged attack behavior;
-* attack cooldowns;
-* melee lock behavior;
-* tactical damage multipliers;
-* ranged arrow visuals;
-* projectile-based attacks configured through `SpecialAttackComponent`;
-* combat animation triggers.
+- target resolution;
+- melee and ranged attack behavior;
+- attack cooldowns;
+- melee lock behavior;
+- tactical damage multipliers;
+- ranged arrow visuals;
+- projectile-based attacks configured through `SpecialAttackComponent`;
+- combat animation triggers.
 
 ### Applying Damage
 
@@ -125,11 +125,11 @@ Combat::deal_damage(world, target, damage, attacker_id)
 
 This is the preferred damage entry point because it centralizes:
 
-* health reduction and death handling;
-* retaliation behavior;
-* hit feedback;
-* blood and fire status side effects;
-* combat event publication.
+- health reduction and death handling;
+- retaliation behavior;
+- hit feedback;
+- blood and fire status side effects;
+- combat event publication.
 
 New attack behaviors should avoid modifying health directly unless there is a strong architectural reason to bypass the standard combat flow.
 
@@ -143,9 +143,9 @@ combat_system/siege_special_processor.cpp
 
 This processor owns:
 
-* catapult loading, firing, and stone projectile spawning;
-* ballista loading, firing, bolt visuals, and delayed hit checks;
-* defense tower target selection, arrow volleys, and damage application.
+- catapult loading, firing, and stone projectile spawning;
+- ballista loading, firing, bolt visuals, and delayed hit checks;
+- defense tower target selection, arrow volleys, and damage application.
 
 ### Siege Loading State
 
@@ -165,8 +165,8 @@ Defense towers select the nearest valid enemy within range.
 
 They may attack:
 
-* enemy units;
-* enemy defense towers.
+- enemy units;
+- enemy defense towers.
 
 They ignore ordinary buildings.
 
@@ -182,10 +182,10 @@ combat_system/elephant_special_processor.cpp
 
 This processor owns:
 
-* low-health panic checks;
-* charge state transitions;
-* trample damage;
-* stomp-impact records used by visual effects.
+- low-health panic checks;
+- charge state transitions;
+- trample damage;
+- stomp-impact records used by visual effects.
 
 ### Panic State
 
@@ -219,15 +219,15 @@ Its purpose is to allow eligible idle units to acquire nearby enemies without re
 
 Auto-engagement uses:
 
-* the shared `CombatQueryContext`;
-* the common enemy-validation helpers.
+- the shared `CombatQueryContext`;
+- the common enemy-validation helpers.
 
 A unit is not considered freely idle when it has:
 
-* suppressing player intent;
-* hold or guard constraints;
-* an active patrol;
-* an active attack target.
+- suppressing player intent;
+- hold or guard constraints;
+- an active patrol;
+- an active attack target.
 
 ## Combat State and Visual Feedback
 
@@ -263,9 +263,9 @@ Combat visuals may appear random, but their variation should remain deterministi
 
 The current combat code uses hash-based values derived from entity IDs and target IDs for effects such as:
 
-* attack animation offsets;
-* arrow counts;
-* arrow spread.
+- attack animation offsets;
+- arrow counts;
+- arrow spread.
 
 Avoid introducing:
 
@@ -288,15 +288,15 @@ Use the following approach when introducing new combat functionality:
 I. Add a dedicated component when the behavior requires persistent state.
 
 II. Add a processor under:
-  
+
 ```text
 game/systems/combat_system/
 ```
 
 III. Call the processor from `CombatSystem::update()`:
 
-* after normal attacks when it applies special damage;
-* before normal attacks when it changes attack eligibility.
+- after normal attacks when it applies special damage;
+- before normal attacks when it changes attack eligibility.
 
 IV. Use `CombatQueryContext` for entity lookup and range scanning.
 

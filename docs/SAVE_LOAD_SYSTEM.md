@@ -8,7 +8,6 @@ This is the story of how Standard of Iron captures your entire game state, store
 
 We'll start with the high-level architecture: how the three layers work together to persist game state. Then we'll dig into each component: the serialization layer that converts game objects to JSON, the storage layer that manages the SQLite database, and the service layer that coordinates everything. We'll look at the database schema with concrete examples, understand how campaigns track progress, and cover debugging and common issues.
 
-
 ## The three-layer architecture
 
 The save/load system is built in three layers, each with a specific responsibility:
@@ -72,7 +71,6 @@ The save/load system is built in three layers, each with a specific responsibili
 
 The key insight is separation of concerns. The serialization layer knows how to convert game objects but doesn't care where they're stored. The storage layer knows how to persist data but doesn't understand game objects. The service layer coordinates between them and handles the plumbing.
 
-
 ## The save flow
 
 When you click "Save Game," here's what happens:
@@ -124,18 +122,17 @@ auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
   combined_metadata["title"] = title;
   combined_metadata["timestamp"] =
       QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
-  
+
   // Persist to database
-  if (!m_storage->save_slot(slot_name, title, combined_metadata, 
+  if (!m_storage->save_slot(slot_name, title, combined_metadata,
                             world_bytes, screenshot, &storage_error)) {
     m_last_error = storage_error;
     return false;
   }
-  
+
   return true;
 }
 ```
-
 
 ## The load flow
 
@@ -169,71 +166,70 @@ Loading reverses the process:
 
 The crucial step is clearing the world before deserializing. This ensures no stale entities remain. The deserialization then recreates every entity with its components exactly as they were when saved.
 
-
 ## Entity serialization
 
 Each entity is serialized as a JSON object containing all its components. Here's what a serialized soldier looks like:
 
 ```json
 {
-  "id": 42,
-  "transform": {
-    "pos_x": 150.5,
-    "pos_y": 0.0,
-    "pos_z": 200.3,
-    "rot_x": 0.0,
-    "rot_y": 1.57,
-    "rot_z": 0.0,
-    "scale_x": 1.0,
-    "scale_y": 1.0,
-    "scale_z": 1.0,
-    "has_desired_yaw": false,
-    "desired_yaw": 0.0
-  },
-  "unit": {
-    "health": 85,
-    "max_health": 100,
-    "speed": 3.5,
-    "vision_range": 12.0,
-    "unit_type": "spearman",
-    "owner_id": 1,
-    "nation_id": "roman_republic"
-  },
-  "movement": {
-    "has_target": true,
-    "target_x": 180.0,
-    "target_y": 210.0,
-    "goal_x": 180.0,
-    "goal_y": 210.0,
-    "vx": 2.5,
-    "vz": 1.8,
-    "path_pending": false,
-    "path": [
-      {"x": 160.0, "y": 205.0},
-      {"x": 170.0, "y": 208.0},
-      {"x": 180.0, "y": 210.0}
-    ]
-  },
-  "attack": {
-    "range": 2.0,
-    "damage": 15,
-    "cooldown": 1.2,
-    "time_since_last": 0.8,
-    "melee_range": 1.5,
-    "melee_damage": 15,
-    "preferred_mode": "auto",
-    "current_mode": "melee",
-    "can_melee": true,
-    "can_ranged": false
-  },
-  "stamina": {
-    "stamina": 75.0,
-    "max_stamina": 100.0,
-    "regen_rate": 10.0,
-    "depletion_rate": 20.0,
-    "is_running": false,
-    "run_requested": false
-  }
+    "id": 42,
+    "transform": {
+        "pos_x": 150.5,
+        "pos_y": 0.0,
+        "pos_z": 200.3,
+        "rot_x": 0.0,
+        "rot_y": 1.57,
+        "rot_z": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "scale_z": 1.0,
+        "has_desired_yaw": false,
+        "desired_yaw": 0.0
+    },
+    "unit": {
+        "health": 85,
+        "max_health": 100,
+        "speed": 3.5,
+        "vision_range": 12.0,
+        "unit_type": "spearman",
+        "owner_id": 1,
+        "nation_id": "roman_republic"
+    },
+    "movement": {
+        "has_target": true,
+        "target_x": 180.0,
+        "target_y": 210.0,
+        "goal_x": 180.0,
+        "goal_y": 210.0,
+        "vx": 2.5,
+        "vz": 1.8,
+        "path_pending": false,
+        "path": [
+            { "x": 160.0, "y": 205.0 },
+            { "x": 170.0, "y": 208.0 },
+            { "x": 180.0, "y": 210.0 }
+        ]
+    },
+    "attack": {
+        "range": 2.0,
+        "damage": 15,
+        "cooldown": 1.2,
+        "time_since_last": 0.8,
+        "melee_range": 1.5,
+        "melee_damage": 15,
+        "preferred_mode": "auto",
+        "current_mode": "melee",
+        "can_melee": true,
+        "can_ranged": false
+    },
+    "stamina": {
+        "stamina": 75.0,
+        "max_stamina": 100.0,
+        "regen_rate": 10.0,
+        "depletion_rate": 20.0,
+        "is_running": false,
+        "run_requested": false
+    }
 }
 ```
 
@@ -261,9 +257,9 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     // ... other fields
     entity_obj["unit"] = unit_obj;
   }
-  
+
   // ... 20+ more component types
-  
+
   return entity_obj;
 }
 ```
@@ -272,25 +268,24 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
 
 The serialization system supports all game components:
 
-| Component | Key Fields | Purpose |
-|-----------|------------|---------|
-| TransformComponent | position, rotation, scale | Entity location and orientation |
-| RenderableComponent | mesh_path, texture_path, visible | Visual representation |
-| UnitComponent | health, speed, nation_id | Unit stats and ownership |
-| MovementComponent | target, path, velocity | Movement state |
-| AttackComponent | damage, range, cooldown | Combat capabilities |
-| PatrolComponent | waypoints, current_waypoint | Patrol behavior |
-| ProductionComponent | queue, build_time, rally_point | Building production |
-| CaptureComponent | progress, capturing_player | Capture state |
-| StaminaComponent | stamina, regen_rate, is_running | Stamina system |
-| HealerComponent | healing_range, healing_amount | Healer units |
-| ElephantComponent | charge_state, trample_damage | War elephants |
-| CombatStateComponent | animation_state, hit_pause | Combat animation states and hit pause |
-| FormationModeComponent | active, formation_center | Unit formations |
-| BuilderProductionComponent | construction_site, progress | Builder units |
-| HomeComponent | population_contribution | Population buildings |
-| TerrainContextComponent | is_on_bridge, is_at_hill | Terrain awareness |
-
+| Component                  | Key Fields                       | Purpose                               |
+| -------------------------- | -------------------------------- | ------------------------------------- |
+| TransformComponent         | position, rotation, scale        | Entity location and orientation       |
+| RenderableComponent        | mesh_path, texture_path, visible | Visual representation                 |
+| UnitComponent              | health, speed, nation_id         | Unit stats and ownership              |
+| MovementComponent          | target, path, velocity           | Movement state                        |
+| AttackComponent            | damage, range, cooldown          | Combat capabilities                   |
+| PatrolComponent            | waypoints, current_waypoint      | Patrol behavior                       |
+| ProductionComponent        | queue, build_time, rally_point   | Building production                   |
+| CaptureComponent           | progress, capturing_player       | Capture state                         |
+| StaminaComponent           | stamina, regen_rate, is_running  | Stamina system                        |
+| HealerComponent            | healing_range, healing_amount    | Healer units                          |
+| ElephantComponent          | charge_state, trample_damage     | War elephants                         |
+| CombatStateComponent       | animation_state, hit_pause       | Combat animation states and hit pause |
+| FormationModeComponent     | active, formation_center         | Unit formations                       |
+| BuilderProductionComponent | construction_site, progress      | Builder units                         |
+| HomeComponent              | population_contribution          | Population buildings                  |
+| TerrainContextComponent    | is_on_bridge, is_at_hill         | Terrain awareness                     |
 
 ## The SQLite database
 
@@ -316,7 +311,7 @@ CREATE TABLE saves (
 );
 CREATE INDEX idx_saves_updated_at ON saves (updated_at DESC);
 
--- Campaign definitions  
+-- Campaign definitions
 CREATE TABLE campaigns (
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT NOT NULL,
@@ -370,6 +365,7 @@ CREATE INDEX idx_mission_progress_mission_id ON mission_progress (mission_id);
 Here's what real data looks like in each table:
 
 **saves table:**
+
 ```
 ┌────┬─────────────┬──────────────────────┬─────────────┬──────────────────────────┐
 │ id │ slot_name   │ title                │ map_name    │ timestamp                │
@@ -382,7 +378,7 @@ Here's what real data looks like in each table:
 metadata (JSON blob for slot_1):
 {
   "slotName": "slot_1",
-  "title": "Before Final Battle", 
+  "title": "Before Final Battle",
   "timestamp": "2024-01-15T13:45:22.500Z",
   "map_name": "Rivers Map",
   "version": "1.0",
@@ -395,6 +391,7 @@ metadata (JSON blob for slot_1):
 ```
 
 **campaigns table:**
+
 ```
 ┌────────────────────┬────────────────────┬─────────────────────────────────┬─────────────────────────────┐
 │ id                 │ title              │ description                     │ map_path                    │
@@ -405,6 +402,7 @@ metadata (JSON blob for slot_1):
 ```
 
 **campaign_missions table:**
+
 ```
 ┌────┬────────────────────┬─────────────────┬─────────────┬──────────┬───────────┐
 │ id │ campaign_id        │ mission_id      │ order_index │ unlocked │ completed │
@@ -416,7 +414,6 @@ metadata (JSON blob for slot_1):
 └────┴────────────────────┴─────────────────┴─────────────┴──────────┴───────────┘
 ```
 
-
 ## Schema versioning and migrations
 
 The database uses SQLite's `PRAGMA user_version` to track schema version. When SaveStorage initializes, it checks the version and runs migrations if needed:
@@ -427,7 +424,7 @@ auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
   if (version < 0) {
     return false;
   }
-  
+
   if (version < k_current_schema_version) {
     if (!migrate_schema(version, out_error)) {
       return false;
@@ -436,21 +433,20 @@ auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
       return false;
     }
   }
-  
+
   return true;
 }
 ```
 
 ### Migration history
 
-| Version | Changes |
-|---------|---------|
-| 0 → 1 | Initial schema: saves table |
-| 1 → 2 | Added campaigns, campaign_progress tables |
-| 2 → 3 | Added mission_progress, campaign_missions tables |
+| Version | Changes                                          |
+| ------- | ------------------------------------------------ |
+| 0 → 1   | Initial schema: saves table                      |
+| 1 → 2   | Added campaigns, campaign_progress tables        |
+| 2 → 3   | Added mission_progress, campaign_missions tables |
 
 Migrations run in order. If a player has a version 1 database, they'll run migrate_to_2, then migrate_to_3.
-
 
 ## Transaction handling
 
@@ -480,14 +476,13 @@ public:
     return true;
   }
 
-  ~TransactionGuard() { 
+  ~TransactionGuard() {
     if (m_active) rollback();  // Auto-rollback if not committed
   }
 };
 ```
 
 This ensures that if anything goes wrong during a save, the database rolls back to a consistent state.
-
 
 ## The service layer API
 
@@ -501,26 +496,26 @@ public:
                          const QString &title, const QString &map_name,
                          const QJsonObject &metadata = {},
                          const QByteArray &screenshot = {}) -> bool;
-                         
+
   auto load_game_from_slot(World &world, const QString &slot_name) -> bool;
-  
+
   auto get_save_slots() const -> QVariantList;
   auto delete_save_slot(const QString &slot_name) -> bool;
-  
+
   // Error handling
   auto get_last_error() const -> QString;
   void clear_error();
-  
+
   // Metadata from last operation
   auto get_last_metadata() const -> QJsonObject;
   auto get_last_title() const -> QString;
   auto get_last_screenshot() const -> QByteArray;
-  
+
   // Campaign management
   auto list_campaigns(QString *out_error = nullptr) -> QVariantList;
   auto get_campaign_progress(const QString &campaign_id) const -> QVariantMap;
   auto mark_campaign_completed(const QString &campaign_id) -> bool;
-  
+
   // Mission tracking
   auto save_mission_result(const QString &mission_id, const QString &mode,
                            const QString &campaign_id, bool completed,
@@ -528,7 +523,7 @@ public:
                            float completion_time) -> bool;
   auto unlock_next_campaign_mission(const QString &campaign_id,
                                     const QString &completed_mission_id) -> bool;
-  
+
   // Singleton access
   static SaveLoadService *instance();
 };
@@ -539,7 +534,7 @@ public:
 ```cpp
 // Save current game
 auto *service = SaveLoadService::instance();
-if (!service->save_game_to_slot(world, "quicksave", "Quick Save", 
+if (!service->save_game_to_slot(world, "quicksave", "Quick Save",
                                  current_map_name)) {
   qWarning() << "Save failed:" << service->get_last_error();
 }
@@ -553,44 +548,46 @@ if (!service->load_game_from_slot(world, "quicksave")) {
 QVariantList saves = service->get_save_slots();
 for (const QVariant &save : saves) {
   QVariantMap slot = save.toMap();
-  qInfo() << slot["title"].toString() 
+  qInfo() << slot["title"].toString()
           << "saved at" << slot["timestamp"].toString();
 }
 ```
-
 
 ## File locations
 
 The save system stores data in platform-appropriate locations:
 
-| Platform | Location |
-|----------|----------|
-| Linux | `~/.local/share/StandardOfIron/saves/saves.sqlite` |
-| macOS | `~/Library/Application Support/StandardOfIron/saves/saves.sqlite` |
-| Windows | `%APPDATA%/StandardOfIron/saves/saves.sqlite` |
+| Platform | Location                                                          |
+| -------- | ----------------------------------------------------------------- |
+| Linux    | `~/.local/share/StandardOfIron/saves/saves.sqlite`                |
+| macOS    | `~/Library/Application Support/StandardOfIron/saves/saves.sqlite` |
+| Windows  | `%APPDATA%/StandardOfIron/saves/saves.sqlite`                     |
 
 The directory is created automatically on first save.
-
 
 ## Debugging
 
 ### Common issues
 
 **"Save storage unavailable"**
+
 - Database file might be locked by another process
 - Check file permissions on saves directory
 - Delete corrupted database file to reset
 
 **"Corrupted save data"**
+
 - JSON parsing failed—save file may be truncated
 - Check disk space during save
 - Look for `QJsonParseError` in logs
 
 **"Save slot not found"**
+
 - Slot name doesn't exist in database
 - Case-sensitive matching—check exact name
 
 **"Failed to begin transaction"**
+
 - SQLite is locked
 - Check for other processes accessing the database
 
@@ -628,35 +625,33 @@ PRAGMA user_version;
 SELECT * FROM campaign_missions WHERE campaign_id = 'second_punic_war';
 ```
 
-
 ## Performance characteristics
 
-| Operation | Typical Time | Notes |
-|-----------|--------------|-------|
-| Save (small map) | 50-100ms | ~1000 entities |
-| Save (large map) | 200-500ms | ~5000 entities |
-| Load (small map) | 100-200ms | Includes entity creation |
-| Load (large map) | 500-1000ms | Entity creation is the bottleneck |
-| List slots | <10ms | Metadata only, no world_state |
+| Operation        | Typical Time | Notes                             |
+| ---------------- | ------------ | --------------------------------- |
+| Save (small map) | 50-100ms     | ~1000 entities                    |
+| Save (large map) | 200-500ms    | ~5000 entities                    |
+| Load (small map) | 100-200ms    | Includes entity creation          |
+| Load (large map) | 500-1000ms   | Entity creation is the bottleneck |
+| List slots       | <10ms        | Metadata only, no world_state     |
 
 The main bottleneck is JSON parsing/generation. For very large maps, consider:
+
 - Reducing entity count through LOD systems
 - Compressing world_state with zlib before storage
 - Async save/load with progress UI
 
-
 ## Finding your way around
 
-| What you want to do | Where to look |
-|---------------------|---------------|
-| Modify save/load flow | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp) |
-| Add new component serialization | [serialization.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/core/serialization.cpp) |
-| Change database schema | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - add migration |
-| Modify metadata fields | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp) - combined_metadata |
-| Add new campaign table | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - migrate_to_N |
-| Test save/load | [tests/db/save_storage_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/db/save_storage_test.cpp) |
-| Test serialization | [tests/core/serialization_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/core/serialization_test.cpp) |
-
+| What you want to do             | Where to look                                                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Modify save/load flow           | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp)                     |
+| Add new component serialization | [serialization.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/core/serialization.cpp)                                |
+| Change database schema          | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - add migration               |
+| Modify metadata fields          | [save_load_service.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_load_service.cpp) - combined_metadata |
+| Add new campaign table          | [save_storage.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/save_storage.cpp) - migrate_to_N                |
+| Test save/load                  | [tests/db/save_storage_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/db/save_storage_test.cpp)                |
+| Test serialization              | [tests/core/serialization_test.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/tests/core/serialization_test.cpp)          |
 
 ## Future improvements
 
@@ -670,10 +665,10 @@ Planned enhancements to the save system:
 - [ ] Replay system integration
 - [ ] Differential saves for faster autosave
 
-
 ## API Reference
 
 See also:
+
 - `game/systems/save_storage.h` - Database layer API
 - `game/systems/save_load_service.h` - Service layer API
 - `game/core/serialization.h` - Serialization API

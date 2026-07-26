@@ -543,7 +543,32 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     lock_combatant_facing(lock_target, tgt_t, att_t);
   }
 
-  (void)delta_time;
+  // A lock freezes movement, and a worn-down formation's survivors sit behind
+  // the rank that died, so the two squads can end up locked yet unable to
+  // reach each other. Let the lock lapse after a sustained separation so both
+  // sides are free to close again instead of stalemating.
+  if (is_in_range(attacker,
+                  lock_target,
+                  attack_comp->melee_range +
+                      Engine::Core::AttackComponent::k_melee_contact_range_grace)) {
+    attack_comp->melee_lock_separation_time = 0.0F;
+    return;
+  }
+
+  attack_comp->melee_lock_separation_time += delta_time;
+  if (attack_comp->melee_lock_separation_time <
+      Engine::Core::AttackComponent::k_melee_lock_separation_release) {
+    return;
+  }
+
+  attack_comp->in_melee_lock = false;
+  attack_comp->melee_lock_target_id = 0;
+  attack_comp->melee_lock_separation_time = 0.0F;
+  if (reciprocal_lock && lock_target_atk != nullptr) {
+    lock_target_atk->in_melee_lock = false;
+    lock_target_atk->melee_lock_target_id = 0;
+    lock_target_atk->melee_lock_separation_time = 0.0F;
+  }
 }
 
 auto locked_target_for_attack(Engine::Core::Entity* attacker,

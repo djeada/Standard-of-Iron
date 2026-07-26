@@ -59,17 +59,17 @@ void render_arrow_projectile(Renderer* renderer,
     float const spell_phase = animation_time + arrow.get_progress() * 3.7F;
 
     renderer->fireball(
-        pos, QVector3D(1.0F, 0.34F, 0.06F), 0.15F * pulse, 1.15F, spell_phase);
+        pos, QVector3D(0.92F, 0.20F, 0.025F), 0.135F * pulse, 0.82F, spell_phase);
     renderer->fireball(pos,
-                       QVector3D(1.0F, 0.62F, 0.16F),
-                       0.0925F * pulse,
-                       1.75F,
+                       QVector3D(1.0F, 0.68F, 0.18F),
+                       0.076F * pulse,
+                       1.32F,
                        spell_phase * 1.37F + 1.9F);
 
-    constexpr int k_trail_segments = 6;
+    constexpr int k_trail_segments = 5;
     for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
       float const trail_t =
-          arrow.get_progress() - static_cast<float>(trail_idx) * 0.045F;
+          arrow.get_progress() - static_cast<float>(trail_idx) * 0.040F;
       if (trail_t < 0.0F) {
         continue;
       }
@@ -81,19 +81,19 @@ void render_arrow_projectile(Renderer* renderer,
       float const trail_falloff =
           1.0F - static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
       QVector3D const trail_color =
-          QVector3D(0.92F, 0.24F, 0.05F) * (0.45F + 0.55F * trail_falloff) +
-          QVector3D(0.06F, 0.05F, 0.05F) * (1.0F - trail_falloff);
+          QVector3D(0.88F, 0.18F, 0.025F) * (0.36F + 0.64F * trail_falloff) +
+          QVector3D(0.045F, 0.025F, 0.018F) * (1.0F - trail_falloff);
       renderer->fireball(trail_pos,
                          trail_color,
-                         std::max(0.028F, 0.10F * trail_falloff),
-                         std::max(0.12F, 0.85F * trail_falloff * trail_falloff),
+                         std::max(0.018F, 0.073F * trail_falloff),
+                         std::max(0.08F, 0.52F * trail_falloff * trail_falloff),
                          spell_phase - static_cast<float>(trail_idx) * 0.13F);
     }
 
     QMatrix4x4 core_model = model;
-    core_model.scale(0.024F * pulse, 0.024F * pulse, 0.024F * pulse);
+    core_model.scale(0.040F * pulse, 0.040F * pulse, 0.040F * pulse);
     renderer->mesh(
-        fireball_mesh, core_model, QVector3D(1.0F, 0.90F, 0.52F), nullptr, 1.0F);
+        fireball_mesh, core_model, QVector3D(1.0F, 0.94F, 0.64F), nullptr, 1.0F);
 
     QVector3D const orbit_offset(std::sin(spell_phase * 7.3F) * 0.031F,
                                  std::cos(spell_phase * 5.2F) * 0.017F,

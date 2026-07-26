@@ -123,6 +123,15 @@ struct RainBatchCmd {
 };
 
 struct TerrainSurfaceCmd {
+  struct HeightResources {
+    Texture* texture = nullptr;
+    QVector2D texel_size{0.0F, 0.0F};
+    QVector2D uv_scale{0.0F, 0.0F};
+    QVector2D uv_offset{0.5F, 0.5F};
+    float to_world = 1.0F;
+    bool enabled = false;
+  };
+
   struct VisibilityResources {
     Texture* texture = nullptr;
     QVector2D size{0.0F, 0.0F};
@@ -136,6 +145,7 @@ struct TerrainSurfaceCmd {
   QMatrix4x4 model;
   BoundingBox aabb;
   TerrainChunkParams params;
+  HeightResources height{};
   VisibilityResources visibility{};
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
@@ -158,6 +168,7 @@ struct TerrainFeatureCmd {
   float biome_moisture = 0.5F;
   float biome_rock_exposure = 0.3F;
   float biome_snow_coverage = 0.0F;
+  int biome_ground_type = 0;
 
   float ambient_boost = TerrainChunkParams::k_default_ambient_boost;
   float alpha = 1.0F;

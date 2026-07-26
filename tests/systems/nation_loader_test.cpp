@@ -138,8 +138,21 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
   auto const horse_archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
                                                  Game::Units::TroopType::HorseArcher);
 
-  EXPECT_FLOAT_EQ(archer.combat.ranged_range, 9.0F);
-  EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range, 10.5F);
+  // Assert the rule, not the numbers: bow ranges are a balance value that moves,
+  // but both archer types must always come out of the profile service with the
+  // multiplier applied on top of whatever the catalog says.
+  constexpr float k_expected_multiplier = 1.5F;
+  auto const& catalog = Game::Units::TroopCatalog::instance();
+  auto const& archer_class =
+      catalog.get_class_or_fallback(Game::Units::TroopType::Archer);
+  auto const& horse_archer_class =
+      catalog.get_class_or_fallback(Game::Units::TroopType::HorseArcher);
+
+  EXPECT_FLOAT_EQ(archer.combat.ranged_range,
+                  archer_class.combat.ranged_range * k_expected_multiplier);
+  EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range,
+                  horse_archer_class.combat.ranged_range * k_expected_multiplier);
+  EXPECT_GT(archer.combat.ranged_range, archer_class.combat.ranged_range);
 }
 
 TEST(NationLoader, CommanderProfilesKeepFallbackRenderersWithoutNationData) {

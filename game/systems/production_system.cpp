@@ -467,7 +467,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               resource_type = ResourceType::Iron;
               reward_amount = k_collect_iron_ore_reward;
             }
-            PlayerResourceRegistry::instance().add(
+            PlayerResourceRegistry::instance().add_harvested(
                 u->owner_id, resource_type, reward_amount);
             if (auto* pathfinder = CommandService::get_pathfinder()) {
               Point const tree_grid = CommandService::world_to_grid(

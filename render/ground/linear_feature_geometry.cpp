@@ -154,14 +154,14 @@ auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   settings.min_length_steps = 8;
   settings.cross_section_segments = 4;
 
-  settings.edge_noise_frequencies = {0.008F, 0.025F, 0.065F};
-  settings.edge_noise_weights = {0.52F, 0.32F, 0.16F};
+  settings.edge_noise_frequencies = {0.015F, 0.055F, 0.14F};
+  settings.edge_noise_weights = {0.45F, 0.36F, 0.19F};
 
   settings.width_scale = 1.08F;
-  settings.width_variation_scale = 0.105F;
-  settings.meander_frequency = 2.8F;
+  settings.width_variation_scale = 0.15F;
+  settings.meander_frequency = 3.6F;
 
-  settings.meander_amplitude = 0.11F;
+  settings.meander_amplitude = 0.145F;
   settings.y_offset = 0.12F;
   return settings;
 }
@@ -393,10 +393,22 @@ auto build_linear_feature_junction_meshes(
     indices.reserve(static_cast<std::size_t>(ring_segments * 3));
 
     auto append_vertex = [&](const QVector3D& position, float radial_t, float angle_t) {
+      QVector3D surface_position = position;
+      if (settings.height_map != nullptr) {
+        surface_position.setY(
+            settings.follow_terrain_centerline
+                ? sample_water_surface_height_clamped(
+                      *settings.height_map, position.x(), position.z())
+                : sample_height_clamped(
+                      *settings.height_map, position.x(), position.z()));
+      }
       Render::GL::Vertex vertex{};
-      vertex.position = {position.x(), position.y() + settings.y_offset, position.z()};
+      vertex.position = {surface_position.x(),
+                         surface_position.y() + settings.y_offset,
+                         surface_position.z()};
       vertex.normal = {0.0F, 1.0F, 0.0F};
-      vertex.tex_coord = {0.5F * (1.0F - radial_t), angle_t};
+      vertex.tex_coord = {
+          settings.junction_uses_center_uv ? 0.5F : 0.5F * (1.0F - radial_t), angle_t};
       vertices.push_back(vertex);
     };
     append_vertex(junction.center, 0.0F, 0.5F);
@@ -414,8 +426,9 @@ auto build_linear_feature_junction_meshes(
       const auto next = 1U + static_cast<unsigned int>((index + 1) % ring_segments);
       indices.insert(indices.end(), {0U, current, next});
     }
-    result.push_back(
-        {std::make_unique<Render::GL::Mesh>(vertices, indices), junction.center});
+    result.push_back({std::make_unique<Render::GL::Mesh>(vertices, indices),
+                      junction.center,
+                      junction.samples});
   }
   return result;
 }
@@ -894,19 +907,19 @@ auto build_riverbank_mesh(const std::vector<Game::Map::RiverSegment>& river_netw
     };
 
     constexpr RingProfile k_bank_rings[k_rings_per_side] = {
-        {0.00F, -0.055F, 0.00F},
-        {0.09F, -0.010F, 0.06F},
-        {0.24F, 0.060F, 0.24F},
-        {0.44F, 0.130F, 0.52F},
-        {0.66F, 0.160F, 0.80F},
-        {0.85F, 0.070F, 0.94F},
-        {1.00F, 0.025F, 1.00F},
+        {0.00F, -0.035F, 0.00F},
+        {0.08F, -0.012F, 0.10F},
+        {0.20F, 0.010F, 0.34F},
+        {0.38F, 0.012F, 0.64F},
+        {0.60F, 0.008F, 0.86F},
+        {0.82F, 0.004F, 0.96F},
+        {1.00F, 0.002F, 1.00F},
     };
 
     float const ring_noise =
         value_noise(center_pos.x() * 0.055F, center_pos.z() * 0.055F) * 0.34F - 0.17F;
     float const base_bank_width =
-        std::clamp(segment.width * 0.17F, 0.45F, 1.80F) * (1.0F + ring_noise);
+        std::clamp(segment.width * 0.24F, 0.65F, 2.40F) * (1.0F + ring_noise);
 
     float const side_bias =
         value_noise(center_pos.x() * 0.028F + 21.7F, center_pos.z() * 0.028F - 8.3F) -
@@ -1381,17 +1394,18 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
       const float world_x = lake.center.x() + rotated_x;
       const float world_z = lake.center.z() + rotated_z;
       const float terrain_y = sample_height_clamped(height_map, world_x, world_z);
-      const float water_edge_y = lake.center.y() + 0.078F;
+
+      const float water_edge_y = lake.center.y() + 0.018F;
 
       Render::GL::Vertex vertex{};
-      const float blended_height = mixf(water_edge_y, terrain_y + 0.060F, blend);
-      const float overlay_lift = ring == ring_count ? 0.0F : 0.020F * (1.0F - shore_t);
+      const float blended_height = mixf(water_edge_y, terrain_y + 0.004F, blend);
+      const float overlay_lift = ring == ring_count ? 0.0F : 0.007F * (1.0F - shore_t);
       const float shore_height =
           ring == 0 ? water_edge_y : std::max(blended_height, terrain_y + overlay_lift);
       vertex.position = {world_x, shore_height, world_z};
       QVector3D outward(rotated_x, 0.0F, rotated_z);
       outward.normalize();
-      const float radial_slope = std::clamp((terrain_y + 0.060F - water_edge_y) /
+      const float radial_slope = std::clamp((terrain_y + 0.004F - water_edge_y) /
                                                 std::max(local_shore_width, 0.01F),
                                             -0.65F,
                                             0.65F);

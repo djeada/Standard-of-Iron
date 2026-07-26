@@ -9,6 +9,7 @@ This directory contains utility scripts for building and maintaining the Standar
 A user-friendly Python script that automates the Windows build process. It verifies dependencies, sets up the MSVC environment, builds the project, and creates a distributable package.
 
 **Features:**
+
 - ✓ Checks for required dependencies (CMake, Ninja, MSVC, Qt)
 - ✓ Provides installation guidance for missing tools
 - ✓ Automatically sets up MSVC environment
@@ -18,6 +19,7 @@ A user-friendly Python script that automates the Windows build process. It verif
 - ✓ Creates distributable ZIP package
 
 **Requirements:**
+
 - Python 3.7+
 - CMake 3.21+
 - Ninja build system
@@ -25,6 +27,7 @@ A user-friendly Python script that automates the Windows build process. It verif
 - Qt 6.6.3 or compatible (with msvc2019_64 or msvc2022_64)
 
 **Usage:**
+
 ```bash
 # Full build with dependency checks
 python scripts/build-windows.py
@@ -49,12 +52,14 @@ python scripts/build-windows.py --help
 ```
 
 **Output:**
+
 - Built executable: `build/bin/standard_of_iron.exe`
 - Distributable package: `standard_of_iron-win-x64-Release.zip`
 
 **Troubleshooting:**
 
 If the script can't find Qt, set the `QT_ROOT` environment variable:
+
 ```powershell
 $env:QT_ROOT = "C:\Qt\6.6.3\msvc2019_64"
 python scripts/build-windows.py
@@ -71,6 +76,7 @@ If you encounter MSVC issues, ensure "Desktop development with C++" is installed
 Automatically generates and maintains a `CONTRIBUTORS.md` file based on Git commit history. This script uses Git as the single source of truth for contributor information.
 
 **Features:**
+
 - ✓ Extracts contributor names, emails, and commit dates from Git history
 - ✓ Counts total commits per contributor
 - ✓ Tracks first and last contribution dates
@@ -79,27 +85,31 @@ Automatically generates and maintains a `CONTRIBUTORS.md` file based on Git comm
 - ✓ No external dependencies beyond Git and Python 3
 
 **Requirements:**
+
 - Python 3.7+
 - Git
 
 **Usage:**
+
 ```bash
 # Update contributor list
 python scripts/update_contributors.py
 ```
 
 **Output:**
+
 - File: `CONTRIBUTORS.md` (repository root)
 - Contains a Markdown table with contributor information
 
 **Example Output:**
+
 ```markdown
 # 🌍 Project Contributors
 
-| Name | Email | Contributions | First Commit | Last Commit | Reference |
-|------|--------|----------------|---------------|--------------|-----------|
-| Alice Dev | alice@example.com | 42 commits | 2024-03-11 | 2025-10-28 |  |
-| Bob Writer | bob@studio.com | 9 commits | 2025-03-15 | 2025-10-20 |  |
+| Name       | Email             | Contributions | First Commit | Last Commit | Reference |
+| ---------- | ----------------- | ------------- | ------------ | ----------- | --------- |
+| Alice Dev  | alice@example.com | 42 commits    | 2024-03-11   | 2025-10-28  |           |
+| Bob Writer | bob@studio.com    | 9 commits     | 2025-03-15   | 2025-10-20  |           |
 ```
 
 **Note:** The Reference column is left empty by default and can be manually edited to add links to GitHub profiles, websites, or other references. The script automatically preserves any manually-added Reference values when it regenerates the file, so your edits will not be lost on subsequent runs.
@@ -113,6 +123,7 @@ python scripts/update_contributors.py
 Verifies and installs required toolchain and Qt/QML runtime modules for Linux (Debian/Ubuntu, Arch/Manjaro) and macOS.
 
 **Usage:**
+
 ```bash
 ./scripts/setup-deps.sh                  # Interactive install
 ./scripts/setup-deps.sh --yes            # Non-interactive (assume yes)
@@ -133,6 +144,7 @@ Converts CSV translation files to Qt `.ts` format.
 Exports Qt `.ts` translation files to CSV format for easier editing.
 
 **Usage:**
+
 ```bash
 ./scripts/csv2ts.sh    # Convert CSV to .ts files
 ./scripts/ts2csv.sh    # Convert .ts files to CSV
@@ -142,14 +154,63 @@ Exports Qt `.ts` translation files to CSV format for easier editing.
 
 ## Development Scripts
 
+### `format.py` - Formatting and Linting Driver
+
+The single entry point behind every `make format*` / `make lint*` target, the
+pre-commit hooks and CI, so those three can never disagree about what
+"formatted" means. Tool versions are pinned in `tools/versions.env`.
+
+Formatting is whitespace-only: it never removes comments and never applies
+semantic refactors. Linting and the destructive comment strip are separate
+operations behind separate flags.
+
+**Usage:**
+
+```bash
+# Selectors: --all (default), --changed BASE, --staged, --files PATH...
+python scripts/format.py --all --fix
+python scripts/format.py --all --check
+python scripts/format.py --changed origin/main --check
+python scripts/format.py --staged --fix
+python scripts/format.py --files game/foo.cpp ui/qml/Hud.qml
+
+# Linting
+python scripts/format.py --all --lint             # report
+python scripts/format.py --all --lint --fix       # apply safe autofixes
+python scripts/format.py --all --lint --deep      # + whole-tree clang-tidy
+
+# Toolchain
+python scripts/format.py --doctor
+python scripts/format.py --bootstrap
+
+# Destructive, opt-in only
+python scripts/format.py --all --strip-comments
+```
+
+**Useful flags:** `--languages` restricts to a subset (`cxx`, `qml`, `python`,
+`shell`, `cmake`, `yaml`, `markdown`, `json`, `glsl`), `--strict` fails when a
+required tool is missing, `--fail-on-advisory` promotes advisory findings to
+failures, `--jobs` controls parallelism, `--dry-run` prints without running.
+
+Executables can be overridden through `CLANG_FORMAT`, `CLANG_TIDY`,
+`QMLFORMAT`, `QMLLINT`, `BLACK`, `RUFF`, `SHELLCHECK`, `SHFMT`, `GERSEMI`,
+`YAMLLINT`, `PRETTIER` and `MARKDOWNLINT`.
+
+### `check-quality-markers.py` - Do-Not-Commit Scan
+
+Rejects unresolved merge conflict markers, `NOCOMMIT` annotations and
+interactive debugger hooks (`pdb`, `breakpoint()`). Ordinary TODO/FIXME
+comments are fine. Run by the pre-commit hook and by `make quality`.
+
 ### `validate_shader_uniforms.py` - Shader Uniform Validation
 
 **⚠️ IMPORTANT**: Always run this after modifying shader code or backend uniform handling!
 
-Validates that uniform names in GLSL shaders match the names used in C++ backend code. 
+Validates that uniform names in GLSL shaders match the names used in C++ backend code.
 Prevents rendering bugs caused by naming convention mismatches (camelCase vs snake_case).
 
 **Features:**
+
 - ✓ Scans all `.frag` and `.vert` shader files in `assets/shaders/`
 - ✓ Extracts uniform declarations from shaders
 - ✓ Compares with `uniformHandle()` calls in `render/gl/backend.cpp`
@@ -158,6 +219,7 @@ Prevents rendering bugs caused by naming convention mismatches (camelCase vs sna
 - ✓ Exit code 0 if valid, 1 if errors found (CI-friendly)
 
 **Usage:**
+
 ```bash
 # Validate all shaders and backend code
 python3 scripts/validate_shader_uniforms.py
@@ -167,6 +229,7 @@ python3 scripts/validate_shader_uniforms.py
 ```
 
 **Example Output:**
+
 ```
 === Shader Uniform Validation ===
 Found 35 shader files
@@ -177,6 +240,7 @@ Found 50 unique uniformHandle() calls in backend.cpp
 ```
 
 **When to Run:**
+
 - After renaming variables in backend.cpp
 - After modifying shader files
 - Before committing rendering changes
@@ -184,6 +248,7 @@ Found 50 unique uniformHandle() calls in backend.cpp
 - When debugging rendering issues
 
 **Common Issues Found:**
+
 - `u_view_proj` (backend) vs `u_viewProj` (shader) ❌
 - `u_light_dir` (backend) vs `u_lightDir` (shader) ❌
 - `u_tile_size` (backend) vs `u_tileSize` (shader) ❌
@@ -204,7 +269,12 @@ Helper script for debugging audio issues.
 
 Removes comments from supported source files in the paths you pass it, or from the current directory by default (use with caution).
 
+Prefer `make strip-comments STRIP_COMMENTS_CONFIRM=1`, which routes through
+`format.py` so the same file-selection and exclusion rules apply. This is never
+run by `make format`.
+
 **Features:**
+
 - ✓ Supports C/C++ files (`.c`, `.cpp`, `.h`, `.hpp`, etc.)
 - ✓ Supports shader files (`.vert`, `.frag`, `.glsl`)
 - ✓ Supports QML files (`.qml`)
@@ -215,6 +285,7 @@ Removes comments from supported source files in the paths you pass it, or from t
 - ✓ Optional backup creation
 
 **Usage:**
+
 ```bash
 # Remove comments from all supported files in current directory
 ./scripts/remove-comments.sh
@@ -237,18 +308,20 @@ Removes comments from supported source files in the paths you pass it, or from t
 ## Platform-Specific Build Instructions
 
 ### Windows
+
 1. Run `python scripts/build-windows.py`
 2. Follow any installation prompts for missing dependencies
 3. Find the executable at `build/bin/standard_of_iron.exe`
 4. Distributable package: `standard_of_iron-win-x64-Release.zip`
 
 ### Linux/macOS
+
 1. Run `./scripts/setup-deps.sh` to install dependencies
 2. Build with CMake:
-   ```bash
-   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-   cmake --build build
-   ```
+    ```bash
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build
+    ```
 3. Find the executable at `build/bin/standard_of_iron`
 
 ---
@@ -256,6 +329,7 @@ Removes comments from supported source files in the paths you pass it, or from t
 ## Contributing
 
 When adding new scripts:
+
 1. Add appropriate shebang line (`#!/usr/bin/env bash` or `#!/usr/bin/env python3`)
 2. Make scripts executable: `chmod +x scripts/your-script.sh`
 3. Include usage documentation in the script header

@@ -176,7 +176,7 @@ void ToolPanel::setup_ui() {
                   0,
                   1,
                   "Eraser",
-                  "🗑",
+                  "\u2716",
                   "Remove elements, roads, rivers, and bridges.",
                   ToolType::Eraser);
   layout->addWidget(selection_group);
@@ -186,12 +186,12 @@ void ToolPanel::setup_ui() {
   terrain_layout->setHorizontalSpacing(6);
   terrain_layout->setVerticalSpacing(6);
   add_tool_button(
-      terrain_layout, 0, 0, "Hill", "⛰", "Place terrain hills.", ToolType::Hill);
+      terrain_layout, 0, 0, "Hill", "\u25B2", "Place terrain hills.", ToolType::Hill);
   add_tool_button(terrain_layout,
                   0,
                   1,
                   "Mountain",
-                  "🏔",
+                  "\u25B3",
                   "Place mountain peaks.",
                   ToolType::Mountain);
   layout->addWidget(terrain_group);
@@ -204,16 +204,21 @@ void ToolPanel::setup_ui() {
                   0,
                   0,
                   "Fire Camp",
-                  "🔥",
+                  "\u25C9",
                   "Place authored fire camps.",
                   ToolType::PropFirecamp);
-  add_tool_button(
-      props_layout, 0, 1, "Tent", "⛺", "Place authored tents.", ToolType::PropTent);
+  add_tool_button(props_layout,
+                  0,
+                  1,
+                  "Tent",
+                  "\u25B4",
+                  "Place authored tents.",
+                  ToolType::PropTent);
   add_tool_button(props_layout,
                   1,
                   0,
                   "Supply Cart",
-                  "🛒",
+                  "\u25AD",
                   "Place authored supply carts.",
                   ToolType::PropSupplyCart);
   add_tool_button(props_layout,
@@ -223,8 +228,13 @@ void ToolPanel::setup_ui() {
                   "⚔",
                   "Place authored weapon racks.",
                   ToolType::PropWeaponRack);
-  add_tool_button(
-      props_layout, 2, 0, "Ruins", "🏚", "Place authored ruins.", ToolType::PropRuins);
+  add_tool_button(props_layout,
+                  2,
+                  0,
+                  "Ruins",
+                  "\u25A9",
+                  "Place authored ruins.",
+                  ToolType::PropRuins);
   add_tool_button(props_layout,
                   2,
                   1,
@@ -236,14 +246,14 @@ void ToolPanel::setup_ui() {
                   3,
                   0,
                   "Dead Tree",
-                  "🌲",
+                  "\u2663",
                   "Place authored dead trees.",
                   ToolType::PropDeadTree);
   add_tool_button(props_layout,
                   3,
                   1,
                   "Boulder",
-                  "🪨",
+                  "\u25CF",
                   "Place authored boulders.",
                   ToolType::PropBoulder);
   add_tool_button(props_layout,
@@ -264,7 +274,7 @@ void ToolPanel::setup_ui() {
                   5,
                   0,
                   "Plant",
-                  "❧",
+                  "\u2740",
                   "Place authored ground plants.",
                   ToolType::PropPlant);
   add_tool_button(props_layout,
@@ -378,14 +388,14 @@ void ToolPanel::setup_ui() {
                   1,
                   0,
                   "Bridge",
-                  "🌉",
+                  "\u2550",
                   "Draw a bridge between two points.",
                   ToolType::Bridge);
   add_tool_button(paths_layout,
                   1,
                   1,
                   "Wall",
-                  "🧱",
+                  "\u25AC",
                   "Draw a wall segment between two points and assign a player.",
                   ToolType::Wall);
   layout->addWidget(paths_group);
@@ -398,35 +408,35 @@ void ToolPanel::setup_ui() {
                   0,
                   0,
                   "Barracks",
-                  "🏛",
+                  "\u2302",
                   "Place a barracks and assign a player.",
                   ToolType::Barracks);
   add_tool_button(structures_layout,
                   0,
                   1,
                   "Village",
-                  "🏘",
+                  "\u2302",
                   "Place a village and assign a player.",
                   ToolType::Village);
   add_tool_button(structures_layout,
                   1,
                   0,
                   "Tower",
-                  "🗼",
+                  "\u265C",
                   "Place a defense tower and assign a player.",
                   ToolType::DefenseTower);
   add_tool_button(structures_layout,
                   1,
                   1,
                   "Home",
-                  "🏠",
+                  "\u2302",
                   "Place a home building and assign a player.",
                   ToolType::Home);
   add_tool_button(structures_layout,
                   2,
                   0,
                   "Marketplace",
-                  "⚖",
+                  "\u25C7",
                   "Place a marketplace and assign a player.",
                   ToolType::Marketplace);
 

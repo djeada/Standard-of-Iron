@@ -1,0 +1,114 @@
+---
+name: Pull Request
+
+# Pull requests are deliberately cheap: quality gates plus a Linux
+# test build. Packaging, the renderer self-test and the Windows/macOS
+# platform builds run nightly and are gated again on every release tag,
+# which is where a break must be caught before shipping.
+on:
+  pull_request:
+    branches: [main, develop]
+  merge_group:
+
+# Least privilege by default; no job here needs more.
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: "6.8.2"
+  BUILD_TYPE: Release
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Lane 1: everything that needs no compiler. Fails in about a minute.
+  # Shared with the release preflight so both run the identical gate.
+  # ---------------------------------------------------------------------
+  quality:
+    name: Quality
+    uses: ./.github/workflows/quality.yml
+
+  # ---------------------------------------------------------------------
+  # Lane 2: compile and run the tests. Only the targets the tests and the
+  # content validator need are built - the game binary, map editor, arena
+  # and preview tools are not, which is the bulk of the link time. The
+  # full application build happens nightly and on every release tag.
+  # ---------------------------------------------------------------------
+  test:
+    name: Build and test (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1 clang-tidy-18
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1
+        with:
+          key: pr-ubuntu-24.04-${{ env.BUILD_TYPE }}
+          max-size: 500M
+
+      - name: Cache CMake FetchContent dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: build/_deps
+          key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: deps-ubuntu-24.04-
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DDEFAULT_LANG=en
+
+      - name: Build test targets
+        run: |
+          cmake --build build --parallel \
+            --target standard_of_iron_tests content_validator
+
+      - name: Unit tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ./build/bin/standard_of_iron_tests
+
+      - name: Content validation
+        run: ./build/bin/content_validator assets
+
+      - name: Validator integration tests
+        run: bash tests/validator_integration_test.sh
+
+      # Changed files only: a whole-project pass takes hours and runs nightly.
+      # Advisory - it reports findings without blocking the pull request.
+      - name: clang-tidy (changed files)
+        continue-on-error: true
+        env:
+          CLANG_TIDY: clang-tidy-18
+        run: |
+          python scripts/format.py \
+            --changed "origin/${{ github.base_ref || 'main' }}" \
+            --lint --languages cxx --build-dir build

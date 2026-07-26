@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -26,6 +27,114 @@ struct ValidationResult {
 
   void addWarning(const QString& warning) { warnings.push_back(warning); }
 };
+
+// AI setups take owner ids 2, 3, 4... in order, so a map structure tagged with a
+// player_id past the last AI is never owned by anyone.
+auto lastAiOwnerId(const Game::Mission::MissionDefinition& mission) -> int {
+  return 1 + static_cast<int>(mission.ai_setups.size());
+}
+
+auto countMissionAuthoredEnemyBarracks(const Game::Mission::MissionDefinition& mission)
+    -> int {
+  int count = 0;
+  for (const auto& ai_setup : mission.ai_setups) {
+    for (const auto& building : ai_setup.starting_buildings) {
+      if (building.type.trimmed().toLower() == QLatin1String("barracks")) {
+        count += 1;
+      }
+    }
+  }
+  return count;
+}
+
+// Mirrors MissionSetupCoordinator: waves sharing a trigger time across all AI
+// setups form one assault phase, which is what `survive_waves` counts.
+auto countWavePhases(const Game::Mission::MissionDefinition& mission) -> int {
+  std::set<float> trigger_times;
+  for (const auto& ai_setup : mission.ai_setups) {
+    for (const auto& wave : ai_setup.waves) {
+      trigger_times.insert(wave.timing);
+    }
+  }
+  return static_cast<int>(trigger_times.size());
+}
+
+// A capture objective can only ever be met by barracks an enemy actually owns, so
+// cross-check the mission's target against what the map and mission hand out.
+void validateAgainstMap(const QString& file_path,
+                        const Game::Mission::MissionDefinition& mission,
+                        const QString& map_path,
+                        ValidationResult& result) {
+  // Only `structures[].type` and `structures[].player_id` are needed here, so read
+  // them straight from JSON rather than pulling the terrain stack into this tool.
+  QFile map_file(map_path);
+  if (!map_file.open(QIODevice::ReadOnly)) {
+    result.addWarning(QString("Mission %1: could not open map '%2' for objective "
+                              "cross-check")
+                          .arg(file_path)
+                          .arg(map_path));
+    return;
+  }
+
+  QJsonParseError parse_error;
+  const QJsonDocument map_document =
+      QJsonDocument::fromJson(map_file.readAll(), &parse_error);
+  if (parse_error.error != QJsonParseError::NoError || !map_document.isObject()) {
+    result.addWarning(QString("Mission %1: could not parse map '%2' for objective "
+                              "cross-check: %3")
+                          .arg(file_path)
+                          .arg(map_path)
+                          .arg(parse_error.errorString()));
+    return;
+  }
+
+  const int last_ai_owner = lastAiOwnerId(mission);
+  int enemy_barracks = countMissionAuthoredEnemyBarracks(mission);
+  std::set<int> orphaned_owners;
+
+  const QJsonArray structures = map_document.object().value("structures").toArray();
+  for (const auto& value : structures) {
+    const QJsonObject structure = value.toObject();
+    if (structure.value("type").toString().trimmed().toLower() !=
+        QLatin1String("barracks")) {
+      continue;
+    }
+    const int player_id = structure.value("player_id").toInt(0);
+    if (player_id < 2) {
+      continue;
+    }
+    if (player_id > last_ai_owner) {
+      orphaned_owners.insert(player_id);
+      continue;
+    }
+    enemy_barracks += 1;
+  }
+
+  for (int const owner_id : orphaned_owners) {
+    result.addWarning(
+        QString("Mission %1: map has barracks for player_id %2 but the mission only "
+                "declares %3 AI setup(s) (owner ids 2-%4) - that camp is unowned")
+            .arg(file_path)
+            .arg(owner_id)
+            .arg(mission.ai_setups.size())
+            .arg(last_ai_owner));
+  }
+
+  for (const auto& condition : mission.victory_conditions) {
+    if (condition.type.trimmed().toLower() != QLatin1String("capture_structures")) {
+      continue;
+    }
+    const int required = condition.min_count.value_or(1);
+    if (required > enemy_barracks) {
+      result.addError(
+          QString("Mission %1: capture_structures needs %2 barracks but only %3 are "
+                  "enemy-owned - the mission can never be won")
+              .arg(file_path)
+              .arg(required)
+              .arg(enemy_barracks));
+    }
+  }
+}
 
 auto validateMissionFile(const QString& file_path) -> ValidationResult {
   ValidationResult result;
@@ -67,7 +176,7 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
     QString const abs_map_path =
         QDir::currentPath() + "/" + map_path.replace("assets/", "");
 
-    bool map_found = false;
+    QString resolved_map_path;
     QStringList const search_paths = {abs_map_path,
                                       QDir::currentPath() + "/assets/maps/" +
                                           QFileInfo(map_path).fileName(),
@@ -75,16 +184,18 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
 
     for (const auto& search_path : search_paths) {
       if (QFile::exists(search_path)) {
-        map_found = true;
+        resolved_map_path = search_path;
         break;
       }
     }
 
-    if (!map_found) {
+    if (resolved_map_path.isEmpty()) {
       result.addWarning(QString("Mission %1: referenced map '%2' not found "
                                 "(this may be OK if it's a Qt resource)")
                             .arg(file_path)
                             .arg(mission.map_path));
+    } else {
+      validateAgainstMap(file_path, mission, resolved_map_path, result);
     }
   }
 
@@ -101,6 +212,69 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
   if (mission.defeat_conditions.empty()) {
     result.addWarning(
         QString("Mission %1: no defeat conditions defined").arg(file_path));
+  }
+
+  QString const victory_mode = mission.victory_mode.trimmed().toLower();
+  if (victory_mode != "any" && victory_mode != "all") {
+    result.addError(QString("Mission %1: victory_mode '%2' is not 'any' or 'all'")
+                        .arg(file_path)
+                        .arg(mission.victory_mode));
+  }
+
+  // Under "any" the first satisfied condition ends the mission, which silently
+  // turns extra objectives into shortcuts past the intended one.
+  if (victory_mode == "any" && mission.victory_conditions.size() > 1) {
+    result.addWarning(
+        QString("Mission %1: %2 victory conditions under victory_mode 'any' - any one "
+                "of them wins on its own. Use 'all' if they are meant to be required "
+                "together.")
+            .arg(file_path)
+            .arg(mission.victory_conditions.size()));
+  }
+
+  int const authored_wave_phases = countWavePhases(mission);
+  for (const auto& condition : mission.victory_conditions) {
+    QString const type = condition.type.trimmed().toLower();
+
+    if (type == "accumulate_resources") {
+      if (!condition.resources.has_value() || condition.resources->empty()) {
+        result.addError(
+            QString("Mission %1: accumulate_resources declares no positive resource "
+                    "amounts")
+                .arg(file_path));
+      }
+      continue;
+    }
+
+    if (type == "survive_waves") {
+      int const required = condition.wave_count.value_or(0);
+      if (required <= 0) {
+        result.addError(QString("Mission %1: survive_waves requires a positive "
+                                "'wave_count'")
+                            .arg(file_path));
+      } else if (required > authored_wave_phases) {
+        result.addError(
+            QString("Mission %1: survive_waves needs %2 assault phases but the AI "
+                    "setups only define %3 - the mission can never be won")
+                .arg(file_path)
+                .arg(required)
+                .arg(authored_wave_phases));
+      }
+      continue;
+    }
+
+    if (type == "survive_duration" && !condition.duration.has_value()) {
+      result.addError(
+          QString("Mission %1: survive_duration is missing 'duration'").arg(file_path));
+    }
+  }
+
+  for (const auto& condition : mission.defeat_conditions) {
+    if (condition.type.trimmed().toLower() == "time_limit" &&
+        !condition.duration.has_value()) {
+      result.addError(
+          QString("Mission %1: time_limit is missing 'duration'").arg(file_path));
+    }
   }
 
   return result;

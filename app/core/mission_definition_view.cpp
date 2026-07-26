@@ -66,6 +66,17 @@ auto build_condition_list(const std::vector<Game::Mission::Condition>& condition
     if (condition.wave_count.has_value()) {
       cond["wave_count"] = condition.wave_count.value();
     }
+    if (condition.resources.has_value()) {
+      QVariantMap resources;
+      for (Game::Systems::ResourceType const type :
+           Game::Systems::k_all_resource_types) {
+        int const amount = condition.resources->get(type);
+        if (amount > 0) {
+          resources[QLatin1String(Game::Systems::resource_type_key(type))] = amount;
+        }
+      }
+      cond["resources"] = resources;
+    }
     list.append(cond);
   }
   return list;
@@ -290,6 +301,7 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
   }
   result["ai_setups"] = ai_setups;
 
+  result["victory_mode"] = mission.victory_mode;
   result["victory_conditions"] = build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
   result["optional_objectives"] = build_condition_list(mission.optional_objectives);
@@ -302,6 +314,7 @@ auto build_mission_objectives_map(const Game::Mission::MissionDefinition& missio
   QVariantMap result;
   result["title"] = mission.title;
   result["summary"] = mission.summary;
+  result["victory_mode"] = mission.victory_mode;
   result["victory_conditions"] = build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
   result["optional_objectives"] = build_condition_list(mission.optional_objectives);

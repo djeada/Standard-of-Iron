@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
 import StandardOfIron 1.0
-import "design/layouts" as DesignLayouts
+import StandardOfIron.Design 1.0 as Design
 
 ApplicationWindow {
     id: mainWindow
@@ -12,7 +12,27 @@ ApplicationWindow {
     property bool game_started: false
     property bool game_paused: false
     property bool edge_scroll_disabled: false
-    property string mission_announcement_text: ""
+
+    property bool suppress_modals: false
+
+    function show_view(name) {
+        mainWindow.suppress_modals = true;
+        if (typeof game !== 'undefined' && game.clear_error)
+            game.clear_error();
+        error_dialog.close();
+        mainWindow.menu_visible = (name === "menu");
+        mapSelect.visible = (name === "skirmish");
+        campaign_screen.visible = (name === "campaign");
+        settingsPanel.visible = (name === "settings");
+        load_game_panel.visible = (name === "load");
+        save_game_panel.visible = (name === "save");
+        objectivesPanel.visible = (name === "briefing");
+        if (name === "hud") {
+            mainWindow.game_started = true;
+            mainWindow.menu_visible = false;
+        }
+        mainWindow.sync_audio_context();
+    }
 
     function sync_audio_context() {
         if (typeof game === 'undefined' || !game.set_audio_frontend_context)
@@ -34,9 +54,16 @@ ApplicationWindow {
     color: Theme.bg
     Component.onCompleted: sync_audio_context()
 
-    DesignLayouts.GameShell {
+    onMenu_visibleChanged: {
+        if (menu_visible)
+            Design.Notifications.clear();
+    }
+
+    Design.GameShell {
         anchors.fill: parent
         z: -10
+
+        faction: mainWindow.game_started && typeof game !== 'undefined' ? game.local_player_nation : ""
     }
 
     GameView {
@@ -101,48 +128,15 @@ ApplicationWindow {
         cursorShape: Qt.BlankCursor
     }
 
-    Rectangle {
-        id: mission_announcement_toast
+    Design.NotificationHost {
+        id: notification_host
 
-        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: 26
+        anchors.right: parent.right
+        anchors.topMargin: Design.Metrics.space24 * 3
+        anchors.rightMargin: Design.Metrics.space16
         z: 12
-        visible: game_started && opacity > 0.01
-        opacity: 0
-        radius: 8
-        color: "#cc2a1d12"
-        border.color: Theme.thumbBr
-        border.width: 1
-        width: Math.min(parent.width * 0.7, 700)
-        height: mission_announcement_label.implicitHeight + 22
-
-        Text {
-            id: mission_announcement_label
-
-            anchors.centerIn: parent
-            width: parent.width - 28
-            text: mainWindow.mission_announcement_text
-            color: Theme.textMain
-            font.pixelSize: 18
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-        }
-
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 220
-            }
-        }
-    }
-
-    Timer {
-        id: mission_announcement_timer
-
-        interval: 3600
-        repeat: false
-        onTriggered: mission_announcement_toast.opacity = 0
+        visible: mainWindow.game_started && !mainWindow.menu_visible
     }
 
     Rectangle {
@@ -558,39 +552,23 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    Design.IronDialog {
         id: error_dialog
 
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.6, 500)
-        title: "Error"
-        modal: true
-        standardButtons: Dialog.Ok
-        onAccepted: {
+        width: Math.min(parent.width * 0.6, 520)
+        title: qsTr("Error")
+        tone: "danger"
+        message: game ? game.last_error : ""
+        onPrimaryActivated: {
             if (game)
                 game.clear_error();
-        }
-
-        contentItem: Rectangle {
-            color: Theme.panelBase
-            implicitHeight: error_text.implicitHeight + 40
-
-            Text {
-                id: error_text
-
-                anchors.centerIn: parent
-                width: parent.width - 40
-                text: game ? game.last_error : ""
-                color: Theme.accentBright
-                wrapMode: Text.WordWrap
-                font.pixelSize: 14
-            }
         }
     }
 
     Connections {
         function onLast_error_changed() {
-            if (game.last_error !== "")
+            if (game.last_error !== "" && !mainWindow.suppress_modals)
                 error_dialog.open();
         }
 
@@ -613,9 +591,10 @@ ApplicationWindow {
         function onMission_announcement(text) {
             if (!text || !mainWindow.game_started)
                 return;
-            mainWindow.mission_announcement_text = text;
-            mission_announcement_toast.opacity = 1;
-            mission_announcement_timer.restart();
+            Design.Notifications.info(text, {
+                    "channel": "mission-announcement",
+                    "icon": Design.Icons.objective
+                });
         }
 
         target: game

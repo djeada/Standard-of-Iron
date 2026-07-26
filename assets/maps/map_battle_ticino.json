@@ -3671,111 +3671,755 @@
   "structures": [
     {
       "type": "barracks",
-      "x": 65.12,
-      "z": 267.84,
+      "x": 28.37,
+      "z": 258.35,
       "player_id": 1,
+      "max_population": 160,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 28.37,
+      "z": 252.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 28.37,
+      "z": 276.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 22.37,
+      "z": 252.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 22.37,
+      "z": 276.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 34.37,
+      "z": 252.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 34.37,
+      "z": 276.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 16.37,
+      "z": 252.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "home",
+      "x": 16.37,
+      "z": 276.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "defense_tower",
+      "x": 5.37,
+      "z": 245.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "defense_tower",
+      "x": 45.37,
+      "z": 245.35,
+      "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "barracks",
+      "x": 523.7,
+      "z": 256.98,
+      "player_id": 2,
+      "max_population": 200,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "marketplace",
+      "x": 523.7,
+      "z": 268.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 534.2,
+      "z": 249.77,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 520.7,
+      "z": 241.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 493.7,
+      "z": 274.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 487.7,
+      "z": 274.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 493.7,
+      "z": 280.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 565.7,
+      "z": 250.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 481.7,
+      "z": 274.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 487.7,
+      "z": 280.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 565.7,
+      "z": 244.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 481.7,
+      "z": 280.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 493.7,
+      "z": 292.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 553.7,
+      "z": 226.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 559.7,
+      "z": 232.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 487.7,
+      "z": 292.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 553.7,
+      "z": 220.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 559.7,
+      "z": 226.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 565.7,
+      "z": 232.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 481.7,
+      "z": 292.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 487.7,
+      "z": 298.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 559.7,
+      "z": 220.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 565.7,
+      "z": 226.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 481.7,
+      "z": 298.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 565.7,
+      "z": 220.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 578.7,
+      "z": 215.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 466.58,
+      "z": 307.86,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 584.7,
+      "z": 309.98,
+      "player_id": 2,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "barracks",
+      "x": 536.9,
+      "z": 369.95,
+      "player_id": 3,
       "max_population": 150,
-      "nation": "carthage"
-    },
-    {
-      "type": "barracks",
-      "x": 477.53,
-      "z": 226.63,
-      "player_id": 2,
-      "max_population": 190,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "barracks",
-      "x": 490.55,
-      "z": 336.52,
-      "player_id": 2,
-      "max_population": 120,
       "nation": "roman_republic"
     },
     {
       "type": "marketplace",
-      "x": 65.12,
-      "z": 247.24,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 49.92,
-      "z": 274.71,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 75.97,
-      "z": 302.18,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "marketplace",
-      "x": 477.53,
-      "z": 254.11,
-      "player_id": 2,
+      "x": 531.36,
+      "z": 379.65,
+      "player_id": 3,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 460.16,
-      "z": 219.77,
-      "player_id": 2,
+      "x": 543.36,
+      "z": 367.65,
+      "player_id": 3,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 494.89,
-      "z": 247.24,
-      "player_id": 2,
+      "x": 543.36,
+      "z": 379.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 549.36,
+      "z": 367.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 549.36,
+      "z": 379.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 519.36,
+      "z": 385.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 543.36,
+      "z": 385.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 549.36,
+      "z": 385.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 519.36,
+      "z": 391.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 543.36,
+      "z": 391.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 561.36,
+      "z": 367.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 561.36,
+      "z": 379.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 513.36,
+      "z": 391.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 549.36,
+      "z": 391.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 561.36,
+      "z": 361.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 561.36,
+      "z": 385.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 561.36,
+      "z": 391.65,
+      "player_id": 3,
       "nation": "roman_republic"
     },
     {
       "type": "defense_tower",
-      "x": 455.82,
-      "z": 185.43,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "defense_tower",
-      "x": 507.91,
-      "z": 288.44,
-      "player_id": 2,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "marketplace",
-      "x": 564.35,
-      "z": 363.99,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 546.98,
-      "z": 391.46,
-      "player_id": 3,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 581.71,
-      "z": 391.46,
+      "x": 569.36,
+      "z": 344.65,
       "player_id": 3,
       "nation": "roman_republic"
     },
     {
       "type": "defense_tower",
-      "x": 533.96,
-      "z": 339.95,
+      "x": 499.36,
+      "z": 402.65,
       "player_id": 3,
       "nation": "roman_republic"
+    },
+    {
+      "type": "defense_tower",
+      "x": 566.36,
+      "z": 402.65,
+      "player_id": 3,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        54.37,
+        242.35
+      ],
+      "end": [
+        54.37,
+        258.35
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        54.37,
+        270.35
+      ],
+      "end": [
+        54.37,
+        286.35
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        54.37,
+        242.35
+      ],
+      "end": [
+        28.37,
+        242.35
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        54.37,
+        286.35
+      ],
+      "end": [
+        28.37,
+        286.35
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        506.7,
+        247.98
+      ],
+      "end": [
+        518.7,
+        247.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        528.7,
+        247.98
+      ],
+      "end": [
+        540.7,
+        247.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        506.7,
+        277.98
+      ],
+      "end": [
+        540.7,
+        277.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        506.7,
+        247.98
+      ],
+      "end": [
+        506.7,
+        277.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        540.7,
+        247.98
+      ],
+      "end": [
+        540.7,
+        277.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        465.7,
+        212.98
+      ],
+      "end": [
+        581.7,
+        212.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        465.7,
+        312.98
+      ],
+      "end": [
+        581.7,
+        312.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        465.7,
+        212.98
+      ],
+      "end": [
+        465.7,
+        255.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        465.7,
+        269.98
+      ],
+      "end": [
+        465.7,
+        312.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        581.7,
+        212.98
+      ],
+      "end": [
+        581.7,
+        255.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        581.7,
+        269.98
+      ],
+      "end": [
+        581.7,
+        312.98
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        493.36,
+        341.65
+      ],
+      "end": [
+        524.36,
+        341.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        538.36,
+        341.65
+      ],
+      "end": [
+        569.36,
+        341.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        493.36,
+        405.65
+      ],
+      "end": [
+        524.36,
+        405.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        538.36,
+        405.65
+      ],
+      "end": [
+        569.36,
+        405.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        493.36,
+        341.65
+      ],
+      "end": [
+        493.36,
+        405.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        569.36,
+        341.65
+      ],
+      "end": [
+        569.36,
+        405.65
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    }
+  ],
+  "settlements": [
+    {
+      "id": "ticino_punic_camp",
+      "player_id": 1,
+      "tier": "marching_camp",
+      "x": 82,
+      "z": 261,
+      "facing": "east",
+      "nation": "carthage",
+      "on_hill": false,
+      "homes": 8,
+      "max_population": 160
+    },
+    {
+      "id": "ticino_consular_town",
+      "player_id": 2,
+      "tier": "town",
+      "x": 478,
+      "z": 227,
+      "facing": "west",
+      "nation": "roman_republic",
+      "max_population": 200
+    },
+    {
+      "id": "ticino_reserve_camp",
+      "player_id": 3,
+      "tier": "fortified_camp",
+      "x": 491,
+      "z": 337,
+      "facing": "north",
+      "nation": "roman_republic",
+      "max_population": 150,
+      "on_hill": false
     }
   ]
 }

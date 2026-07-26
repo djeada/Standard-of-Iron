@@ -89,12 +89,12 @@ void main() {
     float soot_noise =
         fbm(vec2(v_texcoord.x * 11.0 - u_time * 0.25, flame_height * 13.0 + 6.0));
 
-    vec3 white_hot = vec3(2.10, 1.85, 1.35);
-    vec3 hot_core = vec3(1.70, 0.94, 0.22);
+    vec3 white_hot = vec3(2.25, 1.92, 1.28);
+    vec3 hot_core = vec3(1.82, 0.82, 0.13);
 
     vec3 orange_body = vec3(1.18, 0.38, 0.05);
     vec3 ember_red = vec3(0.62, 0.09, 0.02);
-    vec3 smoke_tip = vec3(0.11, 0.105, 0.115);
+    vec3 smoke_tip = vec3(0.10, 0.085, 0.075);
 
     float heat = pow(max(0.0, 1.0 - flame_height), 1.7);
     float core_mask = inv_smoothstep(0.12, 0.82, axis_radius);
@@ -104,27 +104,24 @@ void main() {
 
     color = mix(color,
                 smoke_tip,
-                smoothstep(0.58, 1.0, flame_height) *
-                    ((unit_flame ? 0.20 : 0.58) + 0.34 * soot_noise));
+                smoothstep(unit_flame ? 0.76 : 0.58, 1.0, flame_height) *
+                    ((unit_flame ? 0.10 : 0.58) + 0.34 * soot_noise));
 
     float ember_band = smoothstep(0.05, 0.24, flame_height) *
                        (1.0 - smoothstep(0.22, 0.65, flame_height));
     float ember_sparks = pow(max(ember_noise - 0.73, 0.0) * 4.2, 2.8) * ember_band;
     color += vec3(2.0, 1.1, 0.28) * ember_sparks;
-    color += vec3(0.10, 0.20, 0.45) * core_mask *
-             pow(max(0.0, 1.0 - flame_height), 3.0) * 0.22;
-
     color *=
         (0.82 + 0.22 * body_noise + 0.14 * curl_noise) * v_intensity *
-        (unit_flame ? (1.18 + 0.08 * radius_factor) : (1.02 + 0.10 * radius_factor));
+        (unit_flame ? (0.96 + 0.06 * radius_factor) : (1.02 + 0.10 * radius_factor));
 
     float edge_soften =
-        inv_smoothstep(unit_flame ? 0.10 : 0.15, unit_flame ? 0.74 : 1.15, axis_radius);
+        inv_smoothstep(unit_flame ? 0.06 : 0.15, unit_flame ? 0.50 : 1.15, axis_radius);
     float height_fade =
         1.0 -
-        smoothstep(unit_flame ? 0.60 : 0.76, unit_flame ? 0.90 : 1.04, flame_height);
+        smoothstep(unit_flame ? 0.76 : 0.76, unit_flame ? 0.99 : 1.04, flame_height);
     float flame_alpha = v_alpha * edge_soften * height_fade * (0.9 + 0.1 * curl_noise) *
-                        (unit_flame ? 0.82 : 1.0);
+                        (unit_flame ? 0.64 : 1.0);
 
     color = clamp(color, 0.0, 2.8);
     frag_color = vec4(color, clamp(flame_alpha, 0.0, 1.0));
@@ -204,20 +201,23 @@ void main() {
     float polar = 1.0 - smoothstep(0.65, 1.0, abs(shell_dir.y));
     float shell_mask = smoothstep(0.15, 0.95, shell_noise);
 
-    vec3 ember_shell = vec3(0.95, 0.16, 0.04);
-    vec3 orange_shell = vec3(1.25, 0.55, 0.10);
-    vec3 hot_shell = vec3(2.10, 1.25, 0.32);
+    vec3 ember_shell = vec3(0.78, 0.075, 0.012);
+    vec3 orange_shell = vec3(1.28, 0.38, 0.045);
+    vec3 hot_shell = vec3(2.35, 1.18, 0.25);
     color = mix(ember_shell, orange_shell, shell_noise);
-    color = mix(color, hot_shell, shell_mask * 0.55 + hot_streak * 0.35);
-    color += vec3(0.10, 0.26, 0.60) * pow(max(0.0, shell_noise - 0.45), 2.0) * 0.25;
-    color += vec3(2.60, 1.35, 0.38) * hot_streak * (0.65 + 0.35 * polar);
+    color = mix(color, hot_shell, shell_mask * 0.48 + hot_streak * 0.32);
+    color += vec3(2.75, 1.42, 0.34) * hot_streak * (0.65 + 0.35 * polar);
+    color *= mix(vec3(0.82, 0.72, 0.66),
+                 clamp(u_dust_color + vec3(0.28, 0.18, 0.08), 0.35, 1.35),
+                 0.38);
 
     float glow = 0.5 + 0.5 * sin(u_time * 12.0 + (v_texcoord.x + v_texcoord.y) * 18.0 +
                                  shell_noise * 4.0);
     color *= (0.85 + 0.20 * glow) * v_intensity;
 
+    float broken_edge = smoothstep(0.28, 0.70, shell_noise + detail_noise * 0.30);
     float fireball_alpha =
-        clamp(v_alpha * (0.55 + 0.45 * shell_mask + hot_streak * 0.40), 0.0, 1.0);
+        clamp(v_alpha * (0.16 + 0.40 * broken_edge + hot_streak * 0.18), 0.0, 0.72);
     color = clamp(color, 0.0, 3.4) * fireball_alpha;
     frag_color = vec4(color, fireball_alpha);
   } else if (u_effect_type == 5) {

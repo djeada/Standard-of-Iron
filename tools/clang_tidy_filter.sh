@@ -43,9 +43,9 @@ if [[ -z "$source_file" ]]; then
   exit 2
 fi
 
-if [[ "$source_file" == *"/build/.rcc/"* ]] \
-  || [[ "$source_file" == *"qmltyperegistrations.cpp" ]] \
-  || [[ "$source_file" == *"/third_party/"* ]]; then
+if [[ "$source_file" == *"/build/.rcc/"* ]] ||
+  [[ "$source_file" == *"qmltyperegistrations.cpp" ]] ||
+  [[ "$source_file" == *"/third_party/"* ]]; then
   exit 0
 fi
 

@@ -885,6 +885,8 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
         continue;
       }
 
+      effects.spawned_entity_ids.push_back(unit->id());
+
       auto* entity = ctx.world.get_entity(unit->id());
       if (entity != nullptr) {
         auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();

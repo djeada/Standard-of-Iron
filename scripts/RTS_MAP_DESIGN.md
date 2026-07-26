@@ -1,7 +1,7 @@
 # Campaign RTS terrain contract
 
 Campaign terrain is a tactical graph first and scenery second. The target is
-the terrain-led combat of *Praetorians*: formations move through readable
+the terrain-led combat of _Praetorians_: formations move through readable
 battle basins, crossings and elevated positions change the plan, and towns or
 camps are meaningful route anchors.
 
@@ -40,6 +40,43 @@ camps are meaningful route anchors.
 - Put towns and camps at junctions or at the end of intentionally defended
   approaches. Economy is part of the route graph, not scenery beside it.
 
+## Settlements
+
+Settlements are authored as intent in a map's `settlements` array and stamped
+into `structures` by `scripts/generate-map-settlements.py`. Never hand-edit the
+generated structures; edit the intent and regenerate.
+
+Three tiers, chosen by the settlement's role in its mission:
+
+- **town** - outer curtain wall with two opposed gates, an inner citadel around
+  the barracks and market whose gate faces a different side, and built-up
+  housing quarters cut by streets. The signature settlement of a map.
+- **fortified_camp** - one wall ring, corner towers, a market and housing rows.
+  The common garrison holding.
+- **marching_camp** - palisade across the threat side only, barracks and a few
+  homes, no market. Temporary and forward positions, and the player's start.
+
+Rules the generator enforces, and the reasons behind them:
+
+- Every settlement of every tier has a barracks. A camp without one is a place
+  the player or AI cannot produce from, and it breaks capture objectives.
+- The local player owns at most ten homes across a map. Homes feed manpower to
+  the nearest barracks through civilians, so a large player-owned quarter turns
+  a supply decision into an automatic refill.
+- No building stands on unwalkable ground. Hill slopes, mountains, lakes and
+  river channels are all blocked, and terrain wins over the street grid: a
+  housing block simply stops where a slope starts.
+- **Towns are never placed on hills.** A hill's flat crown is only about a fifth
+  of its authored width, so a town on one shrinks until it is a camp. Put the
+  town on the flat and leave the height as the position overlooking it.
+- A hill carrying a settlement may be widened to fit its crown, but never past
+  2.4x its authored size, never into a river or lake, and never without keeping
+  at least two approaches. A hill that doubles in size stops being terrain and
+  becomes a wall that severs the road graph.
+
+After moving settlements or resizing hills, re-run the road generator: approach
+roads and bridges are routed around terrain and must be repaired.
+
 ## Water
 
 - A river is a barrier between sectors. It must connect map edge to map edge,
@@ -75,6 +112,7 @@ Before visual review, both commands must pass:
 ```bash
 python3 scripts/generate-map-water.py --validate-only assets/maps/MAP.json
 python3 scripts/generate-map-roads.py --validate-only assets/maps/MAP.json
+python3 scripts/generate-map-settlements.py --validate-only assets/maps/MAP.json
 ```
 
 The mechanical gate requires a connected road graph, at least two map-edge

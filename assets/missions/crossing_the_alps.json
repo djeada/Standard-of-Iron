@@ -1,7 +1,7 @@
 {
   "id": "crossing_the_alps",
   "title": "Crossing the Alps",
-  "summary": "Open three Alpine pass camps and preserve Hannibal's mixed column through a long mountain road of switchbacks, bridges, ravines, and hostile heights.",
+  "summary": "Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.",
   "teaching_goal": "Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.",
   "narrative_intent": "The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy.",
   "historical_context": "218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.",
@@ -11,7 +11,16 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "builder",
+        "count": 4,
+        "position": {
+          "x": 44.0,
+          "z": 58.0
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 450,
@@ -190,12 +199,13 @@
   ],
   "victory_conditions": [
     {
-      "type": "capture_structures",
-      "structure_types": [
-        "barracks"
-      ],
-      "min_count": 3,
-      "description": "Tear down all three tribal camps. The pass belongs to those who bleed for it."
+      "type": "accumulate_resources",
+      "resources": {
+        "wood": 600,
+        "stone": 350,
+        "iron": 300
+      },
+      "description": "Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry."
     }
   ],
   "defeat_conditions": [

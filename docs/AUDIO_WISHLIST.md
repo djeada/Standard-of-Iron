@@ -5,15 +5,15 @@
 - `assets/audio` currently contains **101** audio files.
 - `assets/audio/audio_manifest.json` now exposes **94** of them to the runtime.
 - The remaining **9** packaged-but-unmanifested files are:
-  - `sfx/combat/arrows_fast_flybys_lr.ogg`
-  - `sfx/combat/arrows_many_overhead.ogg`
-  - `sfx/combat/arrows_overhead_ambience.ogg`
-  - `sfx/combat/arrows_overhead_dark.ogg`
-  - `voices/carthage/baal_cultist.ogg`
-  - `voices/carthage/infantry.ogg`
-  - `voices/carthage/numidians.ogg`
-  - `voices/roman/fire_legionary.ogg`
-  - `voices/roman/praetorian_guard.ogg`
+    - `sfx/combat/arrows_fast_flybys_lr.ogg`
+    - `sfx/combat/arrows_many_overhead.ogg`
+    - `sfx/combat/arrows_overhead_ambience.ogg`
+    - `sfx/combat/arrows_overhead_dark.ogg`
+    - `voices/carthage/baal_cultist.ogg`
+    - `voices/carthage/infantry.ogg`
+    - `voices/carthage/numidians.ogg`
+    - `voices/roman/fire_legionary.ogg`
+    - `voices/roman/praetorian_guard.ogg`
 
 ## What is routed now
 

@@ -93,6 +93,8 @@ void TerrainPipeline::cache_ground_uniforms() {
 
   m_ground_uniforms.mvp = m_ground_shader->uniform_handle("u_mvp");
   m_ground_uniforms.model = m_ground_shader->uniform_handle("u_model");
+  m_ground_uniforms.ground_type =
+      m_ground_shader->optional_uniform_handle("u_ground_type");
   m_ground_uniforms.grass_primary = m_ground_shader->uniform_handle("u_grass_primary");
   m_ground_uniforms.grass_secondary =
       m_ground_shader->uniform_handle("u_grass_secondary");
@@ -150,6 +152,10 @@ void TerrainPipeline::cache_terrain_uniforms() {
 
   m_terrain_uniforms.mvp = m_terrain_shader->uniform_handle("u_mvp");
   m_terrain_uniforms.model = m_terrain_shader->uniform_handle("u_model");
+  m_terrain_uniforms.ground_type =
+      m_terrain_shader->optional_uniform_handle("u_ground_type");
+  m_terrain_uniforms.terrain_type =
+      m_terrain_shader->optional_uniform_handle("u_terrain_type");
   m_terrain_uniforms.grass_primary =
       m_terrain_shader->uniform_handle("u_grass_primary");
   m_terrain_uniforms.grass_secondary =
@@ -208,6 +214,18 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->optional_uniform_handle("u_screen_toe_mul");
   m_terrain_uniforms.screen_toe_clamp =
       m_terrain_shader->optional_uniform_handle("u_screen_toe_clamp");
+  m_terrain_uniforms.has_height_texture =
+      m_terrain_shader->optional_uniform_handle("u_has_height_tex");
+  m_terrain_uniforms.height_texture =
+      m_terrain_shader->optional_uniform_handle("u_height_tex");
+  m_terrain_uniforms.height_texel_size =
+      m_terrain_shader->optional_uniform_handle("u_height_texel_size");
+  m_terrain_uniforms.height_uv_scale =
+      m_terrain_shader->optional_uniform_handle("u_height_uv_scale");
+  m_terrain_uniforms.height_uv_offset =
+      m_terrain_shader->optional_uniform_handle("u_height_uv_offset");
+  m_terrain_uniforms.height_to_world =
+      m_terrain_shader->optional_uniform_handle("u_height_tex_to_world");
   m_terrain_uniforms.camera_position = m_terrain_shader->uniform_handle("u_camera_pos");
   m_terrain_uniforms.fog_color = m_terrain_shader->uniform_handle("u_fog_color");
   m_terrain_uniforms.fog_start = m_terrain_shader->uniform_handle("u_fog_start");

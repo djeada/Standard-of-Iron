@@ -3,13 +3,12 @@
 
 set(_soi_optional_test_sources)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render/creature/combat_visual_state_test.cpp")
-    list(APPEND _soi_optional_test_sources
-        render/creature/combat_visual_state_test.cpp
-    )
+    list(APPEND _soi_optional_test_sources render/creature/combat_visual_state_test.cpp)
 endif()
 
 # Test executable
-add_executable(standard_of_iron_tests
+add_executable(
+    standard_of_iron_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     ${CMAKE_SOURCE_DIR}/translations.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
@@ -37,6 +36,13 @@ add_executable(standard_of_iron_tests
     core/building_spawn_setup_test.cpp
     core/audio_system_test.cpp
     core/settings_persistence_test.cpp
+    ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
+    ui/preferences_test.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/selected_units_model.cpp
+    ui/selection_grouping_test.cpp
+    ui/icon_resources_test.cpp
+    ${CMAKE_SOURCE_DIR}/ui/theme.cpp
+    ui/widget_theme_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
@@ -64,6 +70,7 @@ add_executable(standard_of_iron_tests
     map/map_transformer_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
+    map/hill_crown_geometry_test.cpp
     map/mission_victory_rules_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp
@@ -193,11 +200,13 @@ add_executable(standard_of_iron_tests
     tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
+    tools/balance_sim_test.cpp
     test_main.cpp
 )
 
 # Link against GTest, project libraries
-target_link_libraries(standard_of_iron_tests
+target_link_libraries(
+    standard_of_iron_tests
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -210,20 +219,20 @@ target_link_libraries(standard_of_iron_tests
         render_gl
         game_systems
         arena_scenario_harness
+        balance_sim_harness
         audio_system
 )
 
 # Include directories
-target_include_directories(standard_of_iron_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    standard_of_iron_tests
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
 
 # Set output directory
-set_target_properties(standard_of_iron_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTORCC ON
+set_target_properties(
+    standard_of_iron_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTORCC ON
 )
 
 if(TARGET bake_creature_assets)
@@ -232,18 +241,17 @@ endif()
 
 # Add tests to CTest after target properties are finalized.
 include(GoogleTest)
-gtest_discover_tests(standard_of_iron_tests
+gtest_discover_tests(
+    standard_of_iron_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 # Focused horse contract binary. It remains runnable when an unrelated test
 # translation unit in the monolithic suite has interface drift.
-add_executable(horse_model_tests
-    render/horse/horse_anatomy_test.cpp
-    test_main.cpp
-)
-target_link_libraries(horse_model_tests
+add_executable(horse_model_tests render/horse/horse_anatomy_test.cpp test_main.cpp)
+target_link_libraries(
+    horse_model_tests
     PRIVATE
         GTest::gtest
         Qt${QT_VERSION_MAJOR}::Core
@@ -253,28 +261,23 @@ target_link_libraries(horse_model_tests
         render_gl
         game_systems
 )
-target_include_directories(horse_model_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
-)
-set_target_properties(horse_model_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
+target_include_directories(horse_model_tests PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game)
+set_target_properties(
+    horse_model_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
 )
 if(TARGET bake_creature_assets)
     add_dependencies(horse_model_tests bake_creature_assets)
 endif()
-gtest_discover_tests(horse_model_tests
+gtest_discover_tests(
+    horse_model_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-add_executable(elephant_model_tests
-    render/elephant/elephant_source_asset_test.cpp
-    test_main.cpp
-)
-target_link_libraries(elephant_model_tests
+add_executable(elephant_model_tests render/elephant/elephant_source_asset_test.cpp test_main.cpp)
+target_link_libraries(
+    elephant_model_tests
     PRIVATE
         GTest::gtest
         Qt${QT_VERSION_MAJOR}::Core
@@ -284,19 +287,19 @@ target_link_libraries(elephant_model_tests
         render_gl
         game_systems
 )
-target_include_directories(elephant_model_tests
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    elephant_model_tests
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
-set_target_properties(elephant_model_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
+set_target_properties(
+    elephant_model_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
 )
 if(TARGET bake_creature_assets)
     add_dependencies(elephant_model_tests bake_creature_assets)
 endif()
-gtest_discover_tests(elephant_model_tests
+gtest_discover_tests(
+    elephant_model_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
@@ -312,15 +315,18 @@ get_target_property(_soi_tests_sources standard_of_iron_tests SOURCES)
 set(_soi_tests_subset_sources)
 foreach(src IN LISTS _soi_tests_sources)
     get_filename_component(_name "${src}" NAME)
-    if(NOT _name STREQUAL "equipment_registry_test.cpp"
+    if(
+        NOT _name STREQUAL "equipment_registry_test.cpp"
         AND NOT _name STREQUAL "helmet_renderers_test.cpp"
-        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp")
+        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp"
+    )
         list(APPEND _soi_tests_subset_sources "${src}")
     endif()
 endforeach()
 
 add_executable(standard_of_iron_tests_subset ${_soi_tests_subset_sources})
-target_link_libraries(standard_of_iron_tests_subset
+target_link_libraries(
+    standard_of_iron_tests_subset
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -333,20 +339,55 @@ target_link_libraries(standard_of_iron_tests_subset
         render_gl
         game_systems
         arena_scenario_harness
+        balance_sim_harness
         audio_system
 )
-target_include_directories(standard_of_iron_tests_subset
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/game
+target_include_directories(
+    standard_of_iron_tests_subset
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
 )
-set_target_properties(standard_of_iron_tests_subset PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    AUTOMOC ON
-    AUTOUIC ON
-    AUTORCC ON
+set_target_properties(
+    standard_of_iron_tests_subset
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON AUTOUIC ON AUTORCC ON
 )
 
 if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron_tests_subset bake_creature_assets)
+endif()
+
+# ---- QML design system regression tests ----
+# QtQuickTest drives the real StandardOfIron.Design module, so token drift or a
+# renamed control fails here rather than in a screen. Skipped when the Qt Quick
+# test module is unavailable so a minimal Qt install still builds the suite.
+find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS QuickTest)
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
+    add_executable(
+        design_system_qml_tests
+        ui/design_system_qml_test.cpp
+        ${CMAKE_SOURCE_DIR}/ui/theme.cpp
+        ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
+        ${CMAKE_SOURCE_DIR}/design_resources.qrc
+    )
+    target_link_libraries(
+        design_system_qml_tests
+        PRIVATE
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Gui
+            Qt${QT_VERSION_MAJOR}::Qml
+            Qt${QT_VERSION_MAJOR}::Quick
+            Qt${QT_VERSION_MAJOR}::QuickTest
+    )
+    target_include_directories(design_system_qml_tests PRIVATE ${CMAKE_SOURCE_DIR})
+    set_target_properties(
+        design_system_qml_tests
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON AUTORCC ON
+    )
+    add_test(
+        NAME design_system_qml
+        COMMAND design_system_qml_tests -input ${CMAKE_CURRENT_SOURCE_DIR}/ui/qml
+    )
+    # The design system is presentation-only; a real GPU adds nothing to assert.
+    set_tests_properties(design_system_qml PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+else()
+    message(STATUS "Qt QuickTest not found; skipping design_system_qml_tests")
 endif()

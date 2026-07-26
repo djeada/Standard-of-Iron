@@ -114,6 +114,21 @@ TEST(ShaderSource, InstancedRiggedShaderGuardsRoleColorFetches) {
             std::string::npos);
 }
 
+TEST(ShaderSource, HealerAuraKeepsTheUnitReadable) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "healing_aura.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("float perimeter_mask = smoothstep(0.56, 0.94"),
+            std::string::npos);
+  EXPECT_NE(flat.find("clamp(aura_alpha, 0.0, 0.12)"), std::string::npos);
+  EXPECT_NE(flat.find("veil * (0.018 + filament * 0.082) * u_intensity"),
+            std::string::npos);
+  EXPECT_EQ(flat.find("shell_fade * u_intensity * 0.7"), std::string::npos);
+  EXPECT_EQ(flat.find("clamp(alpha, 0.0, 0.85)"), std::string::npos);
+}
+
 TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
   const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
@@ -147,13 +162,18 @@ TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
                               "uniform vec3 u_rock_low;",
                               "uniform vec3 u_rock_high;",
                               "uniform vec3 u_snow_color;",
+                              "uniform int u_ground_type;",
                               "uniform float u_moisture_level;",
                               "uniform float u_rock_exposure;",
                               "uniform float u_snow_coverage;"}) {
     EXPECT_NE(frag.find(uniform), std::string::npos);
   }
 
-  EXPECT_NE(flat.find("vec3 wet_silt = soil *"), std::string::npos);
+  EXPECT_NE(flat.find("float mud_weight = biome_forest * 0.70"), std::string::npos);
+  EXPECT_NE(flat.find("float sand_weight = biome_forest * 0.12"), std::string::npos);
+  EXPECT_NE(flat.find("float stone_weight = biome_forest * 0.18"), std::string::npos);
+  EXPECT_NE(flat.find("float broken_transition ="), std::string::npos);
+  EXPECT_NE(flat.find("max(core_alpha, max(broken_transition"), std::string::npos);
   EXPECT_NE(flat.find("mix(earth, map_ground"), std::string::npos);
   EXPECT_EQ(flat.find("if (shore_t > edge_limit)"), std::string::npos);
   EXPECT_EQ(flat.find("float ground_blend"), std::string::npos);
@@ -168,8 +188,50 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float meadow_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
-  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.52;"), std::string::npos);
-  EXPECT_NE(flat.find("0.090 * soil_mix"), std::string::npos);
+  EXPECT_NE(flat.find("float drainage_field ="), std::string::npos);
+  EXPECT_NE(flat.find("float exposure_field ="), std::string::npos);
+  EXPECT_NE(flat.find("float material_patch ="), std::string::npos);
+  EXPECT_NE(flat.find("float deposited_soil ="), std::string::npos);
+  EXPECT_NE(flat.find("uniform int u_ground_type;"), std::string::npos);
+  EXPECT_NE(flat.find("uniform int u_terrain_type;"), std::string::npos);
+  EXPECT_NE(flat.find("float mountain_surface = float(u_terrain_type == 2);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("float mountain_face ="), std::string::npos);
+  EXPECT_NE(flat.find("float snowline ="), std::string::npos);
+  EXPECT_NE(flat.find("mountain_surface * altitude_snow"), std::string::npos);
+  EXPECT_NE(flat.find("float soil_mix = bare_patch * 0.70;"), std::string::npos);
+  EXPECT_NE(flat.find("float litter_patch = smoothstep("), std::string::npos);
+  EXPECT_NE(flat.find("fertile_sward * biome_fertile"), std::string::npos);
+  EXPECT_NE(
+      flat.find(
+          "uniform float u_tile_size, u_macro_noise_scale, u_detail_noise_scale;"),
+      std::string::npos);
+  EXPECT_NE(flat.find("float detail_scale = max(u_detail_noise_scale, 0.045);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("u_soil_blend_height - soil_width"), std::string::npos);
+  EXPECT_NE(flat.find("u_soil_roughness * 0.48"), std::string::npos);
+  EXPECT_NE(flat.find("if (u_has_height_tex == 1)"), std::string::npos);
+}
+
+TEST(ShaderSource, AlpineSnowPatchesRenderAcrossTerrain) {
+  const auto root = find_repo_root();
+  const auto plane = read_text(root / "assets" / "shaders" / "ground_plane.frag");
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(plane.empty());
+  ASSERT_FALSE(terrain.empty());
+
+  const auto flat_plane = collapse_whitespace(plane);
+  const auto flat_terrain = collapse_whitespace(terrain);
+
+  EXPECT_NE(flat_plane.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
+            std::string::npos);
+  EXPECT_NE(flat_plane.find("snow_accumulation * u_snow_coverage"), std::string::npos);
+
+  EXPECT_NE(flat_terrain.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
+            std::string::npos);
+  EXPECT_NE(flat_terrain.find("alpine_snow_accumulation * u_snow_coverage"),
+            std::string::npos);
+  EXPECT_NE(flat_terrain.find("mountain_surface * altitude_snow"), std::string::npos);
 }
 
 TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
@@ -186,4 +248,17 @@ TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
 
   EXPECT_NE(flat.find("float band_limit("), std::string::npos);
   EXPECT_NE(flat.find("relief_octave("), std::string::npos);
+}
+
+TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "road.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("if (u_surface_kind == 2)"), std::string::npos);
+  EXPECT_NE(flat.find("else if (u_surface_kind == 1)"), std::string::npos);
+  EXPECT_NE(flat.find("vec2 aggregate_cells = worley_f("), std::string::npos);
+  EXPECT_NE(flat.find("float rut_left ="), std::string::npos);
+  EXPECT_NE(flat.find("u_alpha * edge_alpha"), std::string::npos);
 }

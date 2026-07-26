@@ -14,16 +14,16 @@ This document lists the licenses of third-party software used in Standard of Iro
 Standard of Iron complies with the LGPL v3 requirements for using Qt:
 
 1. **Dynamic Linking**: Qt is dynamically linked to the application, not statically linked.
-   - On Windows: Qt DLLs are deployed alongside the executable using `windeployqt`
-   - On Linux: Qt shared libraries (.so) are linked dynamically
-   - On macOS: Qt frameworks are linked dynamically
+    - On Windows: Qt DLLs are deployed alongside the executable using `windeployqt`
+    - On Linux: Qt shared libraries (.so) are linked dynamically
+    - On macOS: Qt frameworks are linked dynamically
 
 2. **No Modifications**: We do not modify Qt source code. If modifications were made, they would be released under LGPL v3.
 
 3. **License Notice**: LGPL v3 attribution is provided in:
-   - This document (THIRD_PARTY_LICENSES.md)
-   - README.md (License section)
-   - In-game Settings panel (About section)
+    - This document (THIRD_PARTY_LICENSES.md)
+    - README.md (License section)
+    - In-game Settings panel (About section)
 
 4. **User Re-linking**: Users can replace the Qt libraries with their own versions because Qt is dynamically linked. This is automatic with dynamic linking - users simply replace the Qt DLLs/shared libraries in the application directory.
 
@@ -44,16 +44,19 @@ Standard of Iron complies with the LGPL v3 requirements for using Qt:
 To verify dynamic linking:
 
 **Windows:**
+
 ```powershell
 dumpbin /DEPENDENTS standard_of_iron.exe | findstr Qt
 ```
 
 **Linux:**
+
 ```bash
 ldd standard_of_iron | grep Qt
 ```
 
 **macOS:**
+
 ```bash
 otool -L standard_of_iron | grep Qt
 ```

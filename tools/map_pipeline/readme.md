@@ -3,6 +3,7 @@
 Single-shot pipeline to prep the West Mediterranean campaign map. It locks coordinates, fetches base coast/land data, and emits UV-space assets the QML/OpenGL widget can consume.
 
 ### What it does
+
 - Loads fixed bounds from `map_bounds.json` (equirectangular projection, normalized UV).
 - Downloads Natural Earth 10m land + rivers (public domain) into `tools/map_pipeline/build`.
 - Clips to bounds, projects/normalizes, writes `assets/campaign_map/land_uv.geojson`.
@@ -13,27 +14,36 @@ Single-shot pipeline to prep the West Mediterranean campaign map. It locks coord
 - Downloads ETOPO2022 (60s bedrock) and generates a terrain heightmap → `assets/campaign_map/terrain_height.png` + `terrain_height.json`.
 
 ### Dependencies
+
 - Python 3
 - `fiona`, `shapely`, `pillow`, `mapbox_earcut`, `numpy`, `rasterio` (install via `pip install -r requirements.txt`)
 
 ### Run (does everything)
+
 ```bash
 ./tools/map_pipeline/pipeline.py
 ```
+
 Outputs land/rivers UV, mesh binaries, OBJs, preview PNG, and base textures to `assets/campaign_map/`.
 
 ### Provinces (rough draft)
+
 Generate a gameplay-focused `provinces.json` with hand-authored boundaries (requires `shapely` + `mapbox_earcut`):
+
 ```bash
 ./tools/map_pipeline/provinces.py
 ```
+
 This writes `assets/campaign_map/provinces.json` (triangulated UVs + colors).
 
 ### Hannibal's Campaign Path
+
 Generate progressive path lines for Hannibal's 8-mission campaign:
+
 ```bash
 ./tools/map_pipeline/hannibal_path.py
 ```
+
 This script uses hardcoded city lon/lat coordinates from `provinces.py` and converts them to UV space using `map_bounds.json`. It generates `assets/campaign_map/hannibal_path.json` containing 8 progressive path lines, one for each campaign mission:
 
 - **Mission 0**: Crossing the Rhône (New Carthage → Massalia)
@@ -45,9 +55,10 @@ This script uses hardcoded city lon/lat coordinates from `provinces.py` and conv
 - **Mission 6**: Crossing the Alps (flashback - path through mountains)
 - **Mission 7**: Battle of Zama (final - + Syracuse → Carthage)
 
-Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. 
+Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints.
 
 **Coastline-Aware Features:**
+
 - Routes follow the North African coast westward before crossing at Gibraltar
 - Coastal segments along Spanish, French, and Italian coasts use smooth curves
 - Each segment is classified as 'coastal', 'land', or 'open_sea'
@@ -59,12 +70,14 @@ Each successive path builds upon the previous one, with the last path being the 
 
 **Validation System:**
 The script includes comprehensive validation that ensures:
+
 - **Path Continuity**: All segments are continuous with no gaps (max 0.25 UV distance between waypoints)
 - **Sea Crossing Validation**: Only authorized sea crossings are allowed (Gibraltar and Sicily-Carthage)
 - **Rendering Simulation**: Simulates C++ GL_LINE_STRIP rendering to verify paths will display correctly
 - **Exit on Error**: Script exits with error code 1 if any validation fails, ensuring only valid paths are generated
 
 The validation output shows for each mission:
+
 - Total waypoints and segments
 - Authorized sea crossings detected
 - Path length and average segment size

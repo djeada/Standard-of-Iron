@@ -17,6 +17,7 @@
     }
   },
   "ai_setups": [],
+  "victory_mode": "all",
   "victory_conditions": [
     {
       "type": "clear_undead_zone",

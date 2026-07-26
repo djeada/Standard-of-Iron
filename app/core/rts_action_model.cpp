@@ -307,6 +307,9 @@ auto to_variant_map(const ActionStatus& status) -> QVariantMap {
   result[QStringLiteral("placing")] = status.placing;
   result[QStringLiteral("passive")] = status.passive;
   result[QStringLiteral("eligibleCount")] = status.eligible_count;
+
+  result[QStringLiteral("activeCount")] = status.active_count;
+  result[QStringLiteral("readyCount")] = status.ready_count;
   return result;
 }
 

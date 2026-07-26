@@ -37,6 +37,7 @@ public:
 
 private:
   void build_meshes();
+  auto update_height_texture() -> TerrainSurfaceCmd::HeightResources;
   [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   [[nodiscard]] auto get_terrain_color(Game::Map::TerrainType type,
@@ -77,6 +78,8 @@ private:
   std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
+  std::unique_ptr<Texture> m_height_texture;
+  bool m_height_texture_dirty = true;
   std::vector<ChunkMesh> m_chunks;
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;
   Game::Map::BiomeSettings m_biome_settings;

@@ -36,18 +36,21 @@ void AutoEngagement::process(Engine::Core::World*,
     }
 
     auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
-    if ((attack_comp == nullptr) || !attack_comp->can_melee) {
+    if (attack_comp == nullptr) {
       continue;
     }
 
-    if (attack_comp->can_ranged &&
-        attack_comp->preferred_mode !=
-            Engine::Core::AttackComponent::CombatMode::Melee) {
-      continue;
-    }
+    // Shooters acquire on their own too, but only what is already inside weapon
+    // range and never by chasing: an idle archer beside an enemy should loose an
+    // arrow rather than stand there, without the line wandering off after it.
+    bool const shoots_without_closing =
+        attack_comp->can_ranged &&
+        attack_comp->preferred_mode != Engine::Core::AttackComponent::CombatMode::Melee;
 
-    if (!should_auto_engage_melee(unit)) {
-      continue;
+    if (!shoots_without_closing) {
+      if (!attack_comp->can_melee || !should_auto_engage_melee(unit)) {
+        continue;
+      }
     }
 
     if (suppresses_opportunistic_combat(unit)) {
@@ -65,7 +68,8 @@ void AutoEngagement::process(Engine::Core::World*,
       continue;
     }
 
-    float detection_range = unit_comp->vision_range;
+    float detection_range =
+        shoots_without_closing ? attack_comp->range : unit_comp->vision_range;
     if (in_guard_mode) {
       detection_range = std::min(detection_range, guard_mode->guard_radius);
     }
@@ -79,7 +83,7 @@ void AutoEngagement::process(Engine::Core::World*,
       }
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy->get_id();
-        attack_target->should_chase = !in_guard_mode;
+        attack_target->should_chase = !in_guard_mode && !shoots_without_closing;
 
         m_engagement_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
       }

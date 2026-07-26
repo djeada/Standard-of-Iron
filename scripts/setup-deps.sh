@@ -24,15 +24,18 @@ ALLOW_SIMILAR=false
 
 for arg in "$@"; do
   case "$arg" in
-    -y|--yes)            ASSUME_YES=true ;;
-    --dry-run)           DRY_RUN=true ;;
-    --no-install)        NO_INSTALL=true ;;
-    --allow-similar)     ALLOW_SIMILAR=true ;;
-    -h|--help)
+    -y | --yes) ASSUME_YES=true ;;
+    --dry-run) DRY_RUN=true ;;
+    --no-install) NO_INSTALL=true ;;
+    --allow-similar) ALLOW_SIMILAR=true ;;
+    -h | --help)
       grep '^#' "$0" | sed -e 's/^# \{0,1\}//'
       exit 0
       ;;
-    *) echo "Unknown option: $arg" >&2; exit 2 ;;
+    *)
+      echo "Unknown option: $arg" >&2
+      exit 2
+      ;;
   esac
 done
 
@@ -40,9 +43,9 @@ done
 # UI helpers
 # -----------------------------------------------------------------------------
 info() { echo -e "\033[1;34m[i]\033[0m $*"; }
-ok()   { echo -e "\033[1;32m[✓]\033[0m $*"; }
+ok() { echo -e "\033[1;32m[✓]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[!]\033[0m $*"; }
-err()  { echo -e "\033[1;31m[x]\033[0m $*"; }
+err() { echo -e "\033[1;31m[x]\033[0m $*"; }
 
 # -----------------------------------------------------------------------------
 # Small utilities
@@ -53,32 +56,40 @@ semver_ge() {
   if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
     return 1
   fi
-  
+
   # Ensure inputs are valid version strings (only numbers and dots)
   if ! echo "$1" | grep -qE '^[0-9]+(\.[0-9]+)*$' || ! echo "$2" | grep -qE '^[0-9]+(\.[0-9]+)*$'; then
     return 1
   fi
-  
+
   local IFS=.
   local a1 a2 a3 b1 b2 b3
-  read -r a1 a2 a3 <<< "$1"
-  read -r b1 b2 b3 <<< "$2"
-  
+  read -r a1 a2 a3 <<<"$1"
+  read -r b1 b2 b3 <<<"$2"
+
   # Ensure all variables are numeric
-  a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
-  b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
-  
+  a1=${a1:-0}
+  a2=${a2:-0}
+  a3=${a3:-0}
+  b1=${b1:-0}
+  b2=${b2:-0}
+  b3=${b3:-0}
+
   # Convert to integers, defaulting to 0 if not numeric
-  a1=$((a1 + 0)); a2=$((a2 + 0)); a3=$((a3 + 0))
-  b1=$((b1 + 0)); b2=$((b2 + 0)); b3=$((b3 + 0))
-  
-  (( a1 > b1 )) && return 0
-  (( a1 < b1 )) && return 1
-  (( a2 > b2 )) && return 0
-  (( a2 < b2 )) && return 1
-  (( a3 >= b3 )) && return 0
+  a1=$((a1 + 0))
+  a2=$((a2 + 0))
+  a3=$((a3 + 0))
+  b1=$((b1 + 0))
+  b2=$((b2 + 0))
+  b3=$((b3 + 0))
+
+  ((a1 > b1)) && return 0
+  ((a1 < b1)) && return 1
+  ((a2 > b2)) && return 0
+  ((a2 < b2)) && return 1
+  ((a3 >= b3)) && return 0
   return 1
-} 
+}
 
 is_macos() { [ "$(uname -s)" = "Darwin" ]; }
 
@@ -99,25 +110,25 @@ read_os_release() {
   fi
 }
 
-has_apt()    { command -v apt-get >/dev/null 2>&1; }
-has_pacman() { command -v pacman  >/dev/null 2>&1; }
-has_brew()   { command -v brew    >/dev/null 2>&1; }
+has_apt() { command -v apt-get >/dev/null 2>&1; }
+has_pacman() { command -v pacman >/dev/null 2>&1; }
+has_brew() { command -v brew >/dev/null 2>&1; }
 
 is_deb_family_exact() {
   case "$1" in
-    ubuntu|debian|linuxmint|pop) return 0 ;;
+    ubuntu | debian | linuxmint | pop) return 0 ;;
     *) return 1 ;;
   esac
 }
 is_deb_family_like() {
   case " $1 " in
-    *"debian"*|*"ubuntu"*) return 0 ;;
+    *"debian"* | *"ubuntu"*) return 0 ;;
     *) return 1 ;;
   esac
 }
 is_arch_family_exact() {
   case "$1" in
-    arch|manjaro|endeavouros|garuda) return 0 ;;
+    arch | manjaro | endeavouros | garuda) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -130,10 +141,10 @@ is_arch_family_like() {
 
 detect_distro() {
   if is_macos; then
-    printf 'darwin||macOS\n'   # id|like|pretty
+    printf 'darwin||macOS\n' # id|like|pretty
     return
   fi
-  local id=unknown like= pretty=
+  local id=unknown like='' pretty=''
   while IFS='=' read -r k v; do
     case "$k" in
       ID) id=${v} ;;
@@ -143,9 +154,12 @@ detect_distro() {
   done < <(read_os_release)
 
   # strip optional quotes
-  id=${id%\"}; id=${id#\"}
-  like=${like%\"}; like=${like#\"}
-  pretty=${pretty%\"}; pretty=${pretty#\"}
+  id=${id%\"}
+  id=${id#\"}
+  like=${like%\"}
+  like=${like#\"}
+  pretty=${pretty%\"}
+  pretty=${pretty#\"}
 
   printf '%s|%s|%s\n' "$id" "$like" "$pretty"
 }
@@ -188,6 +202,8 @@ QT6_QML_RUN_PKGS=(
   qml6-module-qtquick-controls
   qml6-module-qtqml-workerscript
   qml6-module-qtquick-templates
+  # Required by the design-system QML regression tests (import QtTest).
+  qml6-module-qttest
 )
 
 # APT Qt5 fallback (if Qt6 pieces not available)
@@ -277,11 +293,11 @@ BREW_PKGS=(
   cmake
   git
   pkg-config
-  llvm     # provides clang-format
-  ninja    # nice-to-have for faster CMake builds
+  llvm  # provides clang-format
+  ninja # nice-to-have for faster CMake builds
 )
-BREW_QT=( qt )          # keg-only; contains Qt6 base/declarative/tools/Quick Controls 2
-BREW_VK=( molten-vk vulkan-loader vulkan-tools )
+BREW_QT=(qt) # keg-only; contains Qt6 base/declarative/tools/Quick Controls 2
+BREW_VK=(molten-vk vulkan-loader vulkan-tools)
 
 # -----------------------------------------------------------------------------
 # APT helpers
@@ -328,7 +344,11 @@ apt_install() {
     if ! $ASSUME_YES; then
       echo
       read -r -p "Install missing packages: ${to_install[*]} ? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) ;; *) warn "User declined install"; return 0 ;; esac
+      case "${ans:-Y}" in y | Y) ;; *)
+        warn "User declined install"
+        return 0
+        ;;
+      esac
     fi
     apt_update_once
     info "Installing: ${to_install[*]}"
@@ -385,7 +405,11 @@ pacman_install() {
     if ! $ASSUME_YES; then
       echo
       read -r -p "Install missing packages (pacman): ${to_install[*]} ? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) ;; *) warn "User declined install"; return 0 ;; esac
+      case "${ans:-Y}" in y | Y) ;; *)
+        warn "User declined install"
+        return 0
+        ;;
+      esac
     fi
     pacman_update_once
     info "Installing: ${to_install[*]}"
@@ -444,7 +468,11 @@ dnf_install() {
     if ! $ASSUME_YES; then
       echo
       read -r -p "Install missing packages (dnf): ${to_install[*]} ? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) ;; *) warn "User declined install"; return 0 ;; esac
+      case "${ans:-Y}" in y | Y) ;; *)
+        warn "User declined install"
+        return 0
+        ;;
+      esac
     fi
     dnf_update_once
     info "Installing: ${to_install[*]}"
@@ -456,7 +484,6 @@ dnf_install() {
     fi
   fi
 }
-
 
 # -----------------------------------------------------------------------------
 # BREW helpers (macOS)
@@ -493,7 +520,11 @@ brew_install() {
     if ! $ASSUME_YES; then
       echo
       read -r -p "Install missing formulae (brew): ${to_install[*]} ? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) ;; *) warn "User declined install"; return 0 ;; esac
+      case "${ans:-Y}" in y | Y) ;; *)
+        warn "User declined install"
+        return 0
+        ;;
+      esac
     fi
     brew_update_once
     info "Installing (brew): ${to_install[*]}"
@@ -665,18 +696,22 @@ install_runtime_brew() {
 # -----------------------------------------------------------------------------
 main() {
   local id like pretty
-  IFS='|' read -r id like pretty <<< "$(detect_distro)"
+  IFS='|' read -r id like pretty <<<"$(detect_distro)"
   info "Detected system: ${pretty:-$id} (ID=$id; ID_LIKE='${like:-}')."
 
   local pm=""
   if [ "$id" = "darwin" ]; then
-    pm="brew"; info "macOS detected (Homebrew)."
+    pm="brew"
+    info "macOS detected (Homebrew)."
   elif is_deb_family_exact "$id"; then
-    pm="apt"; info "Exact Debian/Ubuntu family detected ($id)."
+    pm="apt"
+    info "Exact Debian/Ubuntu family detected ($id)."
   elif is_arch_family_exact "$id"; then
-    pm="pacman"; info "Exact Arch/Manjaro family detected ($id)."
+    pm="pacman"
+    info "Exact Arch/Manjaro family detected ($id)."
   elif [ "$id" = "fedora" ] || [[ "${like:-}" == *"rhel"* ]] || command -v dnf >/dev/null 2>&1; then
-    pm="dnf"; info "Fedora or RHEL-compatible system detected."
+    pm="dnf"
+    info "Fedora or RHEL-compatible system detected."
   elif is_deb_family_like "${like:-}" && has_apt; then
     pm="apt"
     warn "No exact match, but this system is *similar* to Debian/Ubuntu and has apt-get."
@@ -685,8 +720,12 @@ main() {
     else
       echo
       read -r -p "Proceed using Debian/Ubuntu package set on this similar distro? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) info "Continuing with Debian/Ubuntu-compatible steps." ;;
-        *) err "User declined proceeding on a similar distro."; exit 1 ;; esac
+      case "${ans:-Y}" in y | Y) info "Continuing with Debian/Ubuntu-compatible steps." ;;
+      *)
+        err "User declined proceeding on a similar distro."
+        exit 1
+        ;;
+      esac
     fi
   elif is_arch_family_like "${like:-}" && has_pacman; then
     pm="pacman"
@@ -696,8 +735,12 @@ main() {
     else
       echo
       read -r -p "Proceed using Arch/Manjaro package set on this similar distro? [Y/n] " ans
-      case "${ans:-Y}" in y|Y) info "Continuing with Arch-compatible steps." ;;
-        *) err "User declined proceeding on a similar distro."; exit 1 ;; esac
+      case "${ans:-Y}" in y | Y) info "Continuing with Arch-compatible steps." ;;
+      *)
+        err "User declined proceeding on a similar distro."
+        exit 1
+        ;;
+      esac
     fi
   else
     if has_apt; then
@@ -705,14 +748,22 @@ main() {
       warn "Unknown distro '$id', but apt-get is present."
       $ALLOW_SIMILAR || $ASSUME_YES || {
         read -r -p "Proceed using apt-based steps? (may or may not work) [y/N] " ans
-        case "${ans:-N}" in y|Y) ;; *) err "Exiting. Use --allow-similar to override."; exit 1 ;; esac
+        case "${ans:-N}" in y | Y) ;; *)
+          err "Exiting. Use --allow-similar to override."
+          exit 1
+          ;;
+        esac
       }
     elif has_pacman; then
       pm="pacman"
       warn "Unknown distro '$id', but pacman is present."
       $ALLOW_SIMILAR || $ASSUME_YES || {
         read -r -p "Proceed using pacman-based steps? (may or may not work) [y/N] " ans
-        case "${ans:-N}" in y|Y) ;; *) err "Exiting. Use --allow-similar to override."; exit 1 ;; esac
+        case "${ans:-N}" in y | Y) ;; *)
+          err "Exiting. Use --allow-similar to override."
+          exit 1
+          ;;
+        esac
       }
     else
       err "No supported package manager found (apt-get or pacman). On macOS, install Homebrew."
@@ -726,11 +777,14 @@ main() {
 
   # Install first, then verify versions (so fresh systems don't bail early).
   case "$pm" in
-    apt)    install_runtime_apt ;;
+    apt) install_runtime_apt ;;
     pacman) install_runtime_pacman ;;
-    dnf)    install_runtime_dnf ;;
-    brew)   install_runtime_brew ;;
-    *)      err "Internal error: unknown package manager '$pm'"; exit 1 ;;
+    dnf) install_runtime_dnf ;;
+    brew) install_runtime_brew ;;
+    *)
+      err "Internal error: unknown package manager '$pm'"
+      exit 1
+      ;;
   esac
 
   echo

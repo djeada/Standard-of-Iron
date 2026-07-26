@@ -95,16 +95,7 @@
         "harassment": 0.5
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 564.35,
-            "z": 363.99
-          },
-          "max_population": 150
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 240.0,
@@ -158,8 +149,8 @@
       "structure_types": [
         "barracks"
       ],
-      "min_count": 3,
-      "description": "Take both bridge camps and the eastern reserve quarter before the Roman scouts vanish into the fog."
+      "min_count": 2,
+      "description": "Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog."
     }
   ],
   "defeat_conditions": [

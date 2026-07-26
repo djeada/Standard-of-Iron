@@ -7,20 +7,57 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" OFF)
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
+if(ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
     message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
     # Prefer using .clang-tidy config, but define fallback checks for safety
     set(CLANG_TIDY_ARGS "-header-filter=^(?!.*third_party/).*/Standard-of-Iron/.*")
     set(CLANG_TIDY_FILTER "${CMAKE_SOURCE_DIR}/tools/clang_tidy_filter.sh")
     if(NOT EXISTS "${CMAKE_SOURCE_DIR}/.clang-tidy")
-        list(APPEND CLANG_TIDY_ARGS
-            "-checks=bugprone-*,performance-*,readability-*,modernize-*,cppcoreguidelines-*,clang-analyzer-*")
+        list(
+            APPEND CLANG_TIDY_ARGS
+            "-checks=bugprone-*,performance-*,readability-*,modernize-*,cppcoreguidelines-*,clang-analyzer-*"
+        )
     endif()
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_FILTER} ${CLANG_TIDY_EXE} ${CLANG_TIDY_ARGS})
-elseif (ENABLE_CLANG_TIDY)
+elseif(ENABLE_CLANG_TIDY)
     message(WARNING "clang-tidy requested but not found! Static analysis skipped.")
 else()
     message(STATUS "clang-tidy disabled (ENABLE_CLANG_TIDY=OFF)")
+endif()
+
+# ---- Sanitizer and coverage lanes (used by the nightly CI workflow) ----
+# ENABLE_SANITIZER accepts a comma-separated -fsanitize list, e.g.
+#   cmake -DENABLE_SANITIZER=address,undefined ..
+set(ENABLE_SANITIZER
+    ""
+    CACHE STRING
+    "Comma-separated sanitizer list (address, undefined, thread, ...)"
+)
+option(ENABLE_COVERAGE "Instrument the build for coverage reporting" OFF)
+
+if(ENABLE_SANITIZER)
+    if(MSVC)
+        message(WARNING "ENABLE_SANITIZER is not supported with MSVC; ignoring")
+    else()
+        message(STATUS "Sanitizers enabled: ${ENABLE_SANITIZER}")
+        add_compile_options(
+            -fsanitize=${ENABLE_SANITIZER}
+            -fno-omit-frame-pointer
+            -fno-optimize-sibling-calls
+            -g
+        )
+        add_link_options(-fsanitize=${ENABLE_SANITIZER})
+    endif()
+endif()
+
+if(ENABLE_COVERAGE)
+    if(MSVC)
+        message(WARNING "ENABLE_COVERAGE is not supported with MSVC; ignoring")
+    else()
+        message(STATUS "Coverage instrumentation enabled")
+        add_compile_options(--coverage -g -O0 -fprofile-update=atomic)
+        add_link_options(--coverage)
+    endif()
 endif()
 
 # Prefer Qt6 if both Qt5/Qt6 are installed
@@ -32,7 +69,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Windows-specific definitions ----
 if(WIN32)
-    add_compile_definitions(NOMINMAX)  # Prevent min/max macros from windows.h
+    add_compile_definitions(NOMINMAX) # Prevent min/max macros from windows.h
 endif()
 
 # ---- Compiler Optimization Flags ----
@@ -47,9 +84,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
         set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
         # Additional GDB-friendly flags
-        add_compile_options(-ggdb3)           # Maximum debug info for GDB
-        add_compile_options(-fno-omit-frame-pointer)  # Keep frame pointers for better backtraces
-        add_compile_options(-fno-inline)      # Don't inline functions for easier debugging
+        add_compile_options(-ggdb3) # Maximum debug info for GDB
+        add_compile_options(-fno-omit-frame-pointer) # Keep frame pointers for better backtraces
+        add_compile_options(-fno-inline) # Don't inline functions for easier debugging
         # Disable optimizations that make debugging harder
         add_compile_options(-fno-optimize-sibling-calls)
     endif()
@@ -67,29 +104,38 @@ else()
         # baseline. CI-runner-specific -march flags can make packaged builds
         # crash on otherwise supported user CPUs.
     endif()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # Enable LTO
     message(STATUS "Building in RELEASE mode with optimizations")
 endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
-find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL OpenGLWidgets Quick Qml QuickControls2 Sql OPTIONAL_COMPONENTS Multimedia)
+find_package(
+    Qt6
+    QUIET
+    COMPONENTS Core Widgets OpenGL OpenGLWidgets Quick Qml QuickControls2 Sql
+    OPTIONAL_COMPONENTS Multimedia
+)
 if(Qt6_FOUND)
     message(STATUS "Using Qt6")
     set(QT_VERSION_MAJOR 6)
     find_package(OpenGL REQUIRED)
 else()
     message(STATUS "Qt6 not found, trying Qt5")
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia)
+    find_package(
+        Qt5
+        REQUIRED
+        COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia
+    )
     message(STATUS "Using Qt5")
     set(QT_VERSION_MAJOR 5)
     find_package(OpenGL REQUIRED)
 endif()
 
 if(COMMAND qt_standard_project_setup)
-  qt_standard_project_setup()
+    qt_standard_project_setup()
 elseif(COMMAND qt6_standard_project_setup)
-  qt6_standard_project_setup()
+    qt6_standard_project_setup()
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -107,9 +153,11 @@ else()
     set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT ON)
 endif()
 
-option(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS
+option(
+    ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS
     "Embed generated campaign map assets produced by tools/map_pipeline"
-    ${ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT})
+    ${ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT}
+)
 
 # Pipeline outputs from tools/map_pipeline. These are .gitignored and are not
 # produced on CI (scripts/run-map-pipeline.sh skips itself there), so they must
@@ -130,17 +178,20 @@ set(GENERATED_CAMPAIGN_MAP_RESOURCES
 set(GENERATED_CAMPAIGN_MAP_QRC)
 if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
     message(STATUS "Generated campaign map assets enabled")
-    set(GENERATED_CAMPAIGN_MAP_QRC
-        "${CMAKE_CURRENT_BINARY_DIR}/campaign_map_generated.qrc")
+    set(GENERATED_CAMPAIGN_MAP_QRC "${CMAKE_CURRENT_BINARY_DIR}/campaign_map_generated.qrc")
     # Absolute paths plus an alias keep the runtime lookup at
     # ":/assets/campaign_map/..." even though the .qrc lives in the build tree.
     set(_campaign_map_qrc_entries "")
     foreach(_campaign_map_resource IN LISTS GENERATED_CAMPAIGN_MAP_RESOURCES)
-        string(APPEND _campaign_map_qrc_entries
-            "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n")
+        string(
+            APPEND _campaign_map_qrc_entries
+            "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n"
+        )
     endforeach()
-    file(WRITE "${GENERATED_CAMPAIGN_MAP_QRC}"
-        "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n")
+    file(
+        WRITE "${GENERATED_CAMPAIGN_MAP_QRC}"
+        "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n"
+    )
 else()
     message(STATUS "Generated campaign map assets disabled")
     set(GENERATED_CAMPAIGN_MAP_RESOURCES)
@@ -149,9 +200,9 @@ endif()
 # ---- Google Test Setup ----
 include(FetchContent)
 FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.14.0
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.14.0
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -174,6 +225,26 @@ if(NOT DEFINED DEFAULT_LANG)
     set(DEFAULT_LANG "en")
 endif()
 add_compile_definitions(DEFAULT_LANG="${DEFAULT_LANG}")
+
+# ---- Icon resources ----
+# The whole tracked icon directory is embedded rather than a hand-kept list: a
+# missing entry only shows up as a blank image at runtime, which is exactly how
+# marketplace.png went unnoticed. These files are tracked in git, so the glob is
+# reproducible on CI.
+file(
+    GLOB SOI_UNIT_ICON_ABS
+    CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/visuals/icons/*.png"
+)
+if(NOT SOI_UNIT_ICON_ABS)
+    message(FATAL_ERROR "No icons found under assets/visuals/icons")
+endif()
+set(SOI_UNIT_ICON_RESOURCES)
+foreach(_icon IN LISTS SOI_UNIT_ICON_ABS)
+    file(RELATIVE_PATH _icon_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_icon}")
+    list(APPEND SOI_UNIT_ICON_RESOURCES "${_icon_rel}")
+endforeach()
+list(SORT SOI_UNIT_ICON_RESOURCES)
 
 # ---- Executable ----
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -198,6 +269,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/commander_mode_coordinator.cpp
         app/core/frame_ui_coordinator.cpp
         app/core/mission_setup_coordinator.cpp
+        app/core/mission_wave_tracker.cpp
         app/core/save_load_coordinator.cpp
         app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp
@@ -220,9 +292,11 @@ if(QT_VERSION_MAJOR EQUAL 6)
         ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
+        ui/preferences.cpp
     )
 else()
-    add_executable(standard_of_iron
+    add_executable(
+        standard_of_iron
         main.cpp
         app/core/game_engine.cpp
         app/core/commander_control_controller.cpp
@@ -243,6 +317,7 @@ else()
         app/core/commander_mode_coordinator.cpp
         app/core/frame_ui_coordinator.cpp
         app/core/mission_setup_coordinator.cpp
+        app/core/mission_wave_tracker.cpp
         app/core/save_load_coordinator.cpp
         app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp
@@ -265,6 +340,7 @@ else()
         ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
+        ui/preferences.cpp
     )
 endif()
 
@@ -273,8 +349,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # Compile the complete resource collections into the executable. Listing a
     # .qrc file under qt_add_qml_module(RESOURCES) only embeds the XML file; it
     # does not register the files referenced by that collection at runtime.
-    target_sources(standard_of_iron PRIVATE assets.qrc translations.qrc
-        ${GENERATED_CAMPAIGN_MAP_QRC})
+    target_sources(
+        standard_of_iron
+        PRIVATE assets.qrc translations.qrc design_resources.qrc ${GENERATED_CAMPAIGN_MAP_QRC}
+    )
 
     qt6_add_qml_module(standard_of_iron
         URI StandardOfIron
@@ -315,44 +393,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
-            ui/qml/design/Theme.qml
-            ui/qml/design/Metrics.qml
-            ui/qml/design/Typography.qml
-            ui/qml/design/Motion.qml
-            ui/qml/design/Icons.qml
-            ui/qml/design/UiSound.qml
-            ui/qml/design/ComponentGallery.qml
-            ui/qml/design/surfaces/IronPanel.qml
-            ui/qml/design/controls/IronButton.qml
-            ui/qml/design/controls/IronIconButton.qml
-            ui/qml/design/controls/IronTabBar.qml
-            ui/qml/design/controls/IronTooltip.qml
-            ui/qml/design/controls/IronDialog.qml
-            ui/qml/design/controls/IronDropdown.qml
-            ui/qml/design/controls/IronSlider.qml
-            ui/qml/design/controls/IronProgressBar.qml
-            ui/qml/design/controls/IronListRow.qml
-            ui/qml/design/controls/IronTreeRow.qml
-            ui/qml/design/controls/IronContextMenu.qml
-            ui/qml/design/controls/IronBadge.qml
-            ui/qml/design/controls/IronDivider.qml
-            ui/qml/design/controls/IronSearchField.qml
-            ui/qml/design/controls/IronHotkeyLabel.qml
-            ui/qml/design/controls/IronUnitCard.qml
-            ui/qml/design/controls/IronCommandButton.qml
-            ui/qml/design/controls/IronObjectiveRow.qml
-            ui/qml/design/controls/IronResourceCounter.qml
-            ui/qml/design/controls/IronInspectorSection.qml
-            ui/qml/design/overlays/IronNotification.qml
-            ui/qml/design/layouts/GameShell.qml
-            ui/qml/design/layouts/ToolShell.qml
         RESOURCES
             ui/qml/ui_audio.js
-            ui/qml/design/qmldir
-            ui/qml/design/surfaces/qmldir
-            ui/qml/design/controls/qmldir
-            ui/qml/design/overlays/qmldir
-            ui/qml/design/layouts/qmldir
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag
@@ -401,53 +443,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/emblems/cartaghe.png
             assets/visuals/load_screen.png
             assets/visuals/hannibal.png
-            assets/visuals/icons/archer_rome.png
-            assets/visuals/icons/archer_cartaghe.png
-            assets/visuals/icons/swordsman_rome.png
-            assets/visuals/icons/swordsman_cartaghe.png
-            assets/visuals/icons/spearman_rome.png
-            assets/visuals/icons/spearman_cartaghe.png
-            assets/visuals/icons/horse_swordsman_rome.png
-            assets/visuals/icons/horse_swordsman_cartaghe.png
-            assets/visuals/icons/horse_archer_rome.png
-            assets/visuals/icons/horse_archer_cartaghe.png
-            assets/visuals/icons/horse_spearman_rome.png
-            assets/visuals/icons/horse_spearman_cartaghe.png
-            assets/visuals/icons/healer_rome.png
-            assets/visuals/icons/healer_cartaghe.png
-            assets/visuals/icons/catapult_rome.png
-            assets/visuals/icons/catapult_cartaghe.png
-            assets/visuals/icons/ballista_rome.png
-            assets/visuals/icons/ballista_cartaghe.png
-            assets/visuals/icons/elephant_cartaghe.png
-            assets/visuals/icons/builder_rome.png
-            assets/visuals/icons/builder_cartaghe.png
-            assets/visuals/icons/defense_tower_rome.png
-            assets/visuals/icons/defense_tower_cartaghe.png
-            assets/visuals/icons/wall.png
-            assets/visuals/icons/wall_rome.png
-            assets/visuals/icons/wall_cartaghe.png
-            assets/visuals/icons/house_rome.png
-            assets/visuals/icons/house_cartaghe.png
-            assets/visuals/icons/gold.png
-            assets/visuals/icons/wood.png
-            assets/visuals/icons/stone.png
-            assets/visuals/icons/iron.png
-            assets/visuals/icons/attack_mode.png
-            assets/visuals/icons/defend_mode.png
-            assets/visuals/icons/hold_mode.png
-            assets/visuals/icons/patrol_mode.png
-            assets/visuals/icons/formation_mode.png
-            assets/visuals/icons/build_mode.png
-            assets/visuals/icons/heal_mode.png
-            assets/visuals/icons/collect_mode.png
-            assets/visuals/icons/rally_mode.png
-            assets/visuals/icons/deliver_mode.png
-            assets/visuals/icons/aura_mode.png
-            assets/visuals/icons/ai_player.png
-            assets/visuals/icons/human_player.png
-            assets/visuals/icons/troop_count.png
-            assets/visuals/icons/defeated.png
+            ${SOI_UNIT_ICON_RESOURCES}
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm
@@ -456,23 +452,33 @@ if(QT_VERSION_MAJOR EQUAL 6)
     )
 else()
     qt5_add_resources(qml_resources qml_resources.qrc)
+    qt5_add_resources(design_resources design_resources.qrc)
     qt5_add_resources(assets_resources assets.qrc)
     qt5_add_resources(translations_resources translations.qrc)
     set(campaign_map_resources)
     if(GENERATED_CAMPAIGN_MAP_QRC)
         qt5_add_resources(campaign_map_resources ${GENERATED_CAMPAIGN_MAP_QRC})
     endif()
-    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources} ${translations_resources} ${campaign_map_resources})
+    target_sources(
+        standard_of_iron
+        PRIVATE
+            ${qml_resources}
+            ${design_resources}
+            ${assets_resources}
+            ${translations_resources}
+            ${campaign_map_resources}
+    )
 endif()
 
-target_link_libraries(standard_of_iron
+target_link_libraries(
+    standard_of_iron
     PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::OpenGL
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Qml
-    Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Sql
         $<$<TARGET_EXISTS:Qt${QT_VERSION_MAJOR}::Multimedia>:Qt${QT_VERSION_MAJOR}::Multimedia>
         ${OPENGL_LIBRARIES}
         engine_core
@@ -481,12 +487,7 @@ target_link_libraries(standard_of_iron
         audio_system
 )
 
-add_dependencies(standard_of_iron
-    engine_core
-    render_gl
-    game_systems
-    audio_system
-)
+add_dependencies(standard_of_iron engine_core render_gl game_systems audio_system)
 
 # Windows-specific OpenGL linking
 if(WIN32)
@@ -501,11 +502,12 @@ else()
     target_link_libraries(standard_of_iron PRIVATE Qt5::QuickControls2)
 endif()
 
-set_target_properties(standard_of_iron PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+set_target_properties(
+    standard_of_iron
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
-if (WIN32)
-  set_target_properties(standard_of_iron PROPERTIES WIN32_EXECUTABLE TRUE)
+if(WIN32)
+    set_target_properties(standard_of_iron PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
 install(TARGETS standard_of_iron RUNTIME DESTINATION .)
@@ -518,48 +520,61 @@ endif()
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/bin/assets/)
 
-
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:
 #   - clang-format        : formats all C/C++ sources using .clang-format
 #   - clang-format-check  : CI-style check (no changes), fails on violations
 find_program(CLANG_FORMAT_EXE NAMES clang-format)
-if (CLANG_FORMAT_EXE)
-  message(STATUS "Found clang-format: ${CLANG_FORMAT_EXE}")
+if(CLANG_FORMAT_EXE)
+    message(STATUS "Found clang-format: ${CLANG_FORMAT_EXE}")
 
-  file(GLOB_RECURSE ALL_CXX CONFIGURE_DEPENDS
-       "${CMAKE_SOURCE_DIR}/*.c"   "${CMAKE_SOURCE_DIR}/*.cpp"
-       "${CMAKE_SOURCE_DIR}/*.h"   "${CMAKE_SOURCE_DIR}/*.hpp")
+    file(
+        GLOB_RECURSE ALL_CXX
+        CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/*.c"
+        "${CMAKE_SOURCE_DIR}/*.cpp"
+        "${CMAKE_SOURCE_DIR}/*.h"
+        "${CMAKE_SOURCE_DIR}/*.hpp"
+    )
 
-  # Exclude generated, vendored, and local build-tree sources.
-  list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/(build|build-[^/]*|third_party)/.*")
-  list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
+    # Exclude generated, vendored, and local build-tree sources.
+    list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/(build|build-[^/]*|third_party)/.*")
+    list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
 
-  if (ALL_CXX)
-    add_custom_target(clang-format
-      COMMAND "${CLANG_FORMAT_EXE}" -i --style=file ${ALL_CXX}
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      COMMENT "Running clang-format with .clang-format (strict)")
+    if(ALL_CXX)
+        add_custom_target(
+            clang-format
+            COMMAND "${CLANG_FORMAT_EXE}" -i --style=file ${ALL_CXX}
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "Running clang-format with .clang-format (strict)"
+        )
 
-    add_custom_target(clang-format-check
-      COMMAND "${CLANG_FORMAT_EXE}" --dry-run -Werror --style=file ${ALL_CXX}
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      COMMENT "Checking clang-format compliance")
-  else()
-    add_custom_target(clang-format
-      COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to format.")
-    add_custom_target(clang-format-check
-      COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to check.")
-  endif()
+        add_custom_target(
+            clang-format-check
+            COMMAND "${CLANG_FORMAT_EXE}" --dry-run -Werror --style=file ${ALL_CXX}
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "Checking clang-format compliance"
+        )
+    else()
+        add_custom_target(
+            clang-format
+            COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to format."
+        )
+        add_custom_target(
+            clang-format-check
+            COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to check."
+        )
+    endif()
 endif()
 
 # ---- Content Validation ----
 # Add custom target to validate missions and campaigns
-add_custom_target(validate-content
-  COMMAND content_validator "${CMAKE_SOURCE_DIR}/assets"
-  DEPENDS content_validator
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  COMMENT "Validating mission and campaign content"
+add_custom_target(
+    validate-content
+    COMMAND content_validator "${CMAKE_SOURCE_DIR}/assets"
+    DEPENDS content_validator
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Validating mission and campaign content"
 )
 
 # Optionally make validation run as part of the build

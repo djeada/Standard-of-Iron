@@ -1,7 +1,7 @@
 {
   "id": "battle_of_trasimene",
   "title": "Battle of Lake Trasimene",
-  "summary": "Spring the ambush, seal the escape routes, and capture both Roman field camps along the lakeside corridor.",
+  "summary": "Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.",
   "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.",
   "narrative_intent": "The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.",
   "historical_context": "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.",
@@ -34,16 +34,7 @@
         "harassment": 0.25
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {
-            "x": 55,
-            "z": 170
-          },
-          "max_population": 180
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
           "timing": 150.0,
@@ -134,6 +125,11 @@
     }
   ],
   "defeat_conditions": [
+    {
+      "type": "time_limit",
+      "duration": 1200.0,
+      "description": "Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap."
+    },
     {
       "type": "lose_structure",
       "structure_type": "barracks",

@@ -1,0 +1,72 @@
+---
+name: Quality
+
+# Reusable compiler-free gate: formatting, linting, quality markers and the
+# static content validators. Called by pr.yml on every pull request and by
+# release.yml as the preflight check before any packaging work is spent.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned formatting toolchain
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source tools/versions.env
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            "clang-format-${CLANG_FORMAT_VERSION%%.*}" \
+            shellcheck \
+            qt6-declarative-dev-tools
+          python -m pip install --upgrade pip
+          python -m pip install \
+            "black==${BLACK_VERSION}" \
+            "ruff==${RUFF_VERSION}" \
+            "gersemi==${GERSEMI_VERSION}" \
+            "yamllint==${YAMLLINT_VERSION}"
+          # shfmt: download the pinned binary from GitHub releases
+          curl -fsSL "https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64" \
+            -o /usr/local/bin/shfmt
+          chmod +x /usr/local/bin/shfmt
+          # prettier: install via npm (Node.js is pre-installed on runners)
+          npm install -g "prettier@${PRETTIER_VERSION}"
+          echo "CLANG_FORMAT=clang-format-${CLANG_FORMAT_VERSION%%.*}" >> "$GITHUB_ENV"
+
+      - name: Toolchain report
+        run: make format-doctor
+
+      - name: Formatting
+        run: python scripts/format.py --all --check --strict
+
+      - name: Lint
+        run: python scripts/format.py --all --lint --strict
+
+      - name: Quality markers
+        run: |
+          git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
+            | xargs -0 -r python scripts/check-quality-markers.py
+
+      # scripts/validate_shader_config.py is deliberately absent: it reports 24
+      # pre-existing content issues on main and would make this gate red from
+      # day one. Fix those, then add it here.
+      - name: Static content validation
+        run: |
+          python scripts/validate_shader_uniforms.py
+          python scripts/validate_opengl_requirements.py

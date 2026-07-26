@@ -3,12 +3,26 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
 
     signal cancelled
     property bool syncing_audio_sliders: false
+
+    function color_vision_label(mode) {
+        switch (mode) {
+        case "protanopia":
+            return qsTr("Protanopia (red-blind)");
+        case "deuteranopia":
+            return qsTr("Deuteranopia (green-blind)");
+        case "tritanopia":
+            return qsTr("Tritanopia (blue-blind)");
+        default:
+            return qsTr("Standard");
+        }
+    }
 
     function set_audio_slider_values() {
         master_volume_slider.value = game.audio_system.get_master_volume() * 100;
@@ -151,7 +165,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingSmall
 
-                                Slider {
+                                Design.IronSlider {
                                     id: master_volume_slider
 
                                     Layout.fillWidth: true
@@ -182,7 +196,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingSmall
 
-                                Slider {
+                                Design.IronSlider {
                                     id: music_volume_slider
 
                                     Layout.fillWidth: true
@@ -213,7 +227,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingSmall
 
-                                Slider {
+                                Design.IronSlider {
                                     id: sfx_volume_slider
 
                                     Layout.fillWidth: true
@@ -244,7 +258,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingSmall
 
-                                Slider {
+                                Design.IronSlider {
                                     id: voice_volume_slider
 
                                     Layout.fillWidth: true
@@ -275,7 +289,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingSmall
 
-                                Slider {
+                                Design.IronSlider {
                                     id: ambience_volume_slider
 
                                     Layout.fillWidth: true
@@ -398,7 +412,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingMedium
 
-                                Slider {
+                                Design.IronSlider {
                                     id: autosave_slot_slider
 
                                     Layout.fillWidth: true
@@ -432,7 +446,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingMedium
 
-                                Slider {
+                                Design.IronSlider {
                                     id: autosave_interval_slider
 
                                     Layout.fillWidth: true
@@ -458,6 +472,124 @@ Item {
 
                             Label {
                                 text: qsTr("Older autosaves beyond this count are deleted automatically.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                opacity: 0.7
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
+                            text: qsTr("Accessibility")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Interface Scale:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: ui_scale_slider
+
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minUiScale
+                                    to: UiPreferences.maxUiScale
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.uiScale
+                                    onMoved: UiPreferences.uiScale = value
+                                }
+
+                                Label {
+                                    text: Math.round(ui_scale_slider.value * 100) + "%"
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 56
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Colour Vision:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            StyledComboBox {
+                                id: color_vision_combo_box
+
+                                Layout.fillWidth: true
+                                model: UiPreferences.colorVisionModes
+                                currentIndex: Math.max(0, UiPreferences.colorVisionModes.indexOf(UiPreferences.colorVisionMode))
+                                displayText: root.color_vision_label(currentText)
+                                onActivated: function (index) {
+                                    UiPreferences.colorVisionMode = UiPreferences.colorVisionModes[index];
+                                }
+                                delegate_text: function (data) {
+                                    return root.color_vision_label(data);
+                                }
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Reduce motion")
+                                description: qsTr("Removes transitions and idle animations across every screen")
+                                checked: UiPreferences.reducedMotion
+                                onToggled: UiPreferences.reducedMotion = checked
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("High contrast")
+                                description: qsTr("Raises panel and text contrast for low vision")
+                                checked: UiPreferences.highContrast
+                                onToggled: UiPreferences.highContrast = checked
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Always show keyboard focus")
+                                description: qsTr("Keeps the focus outline visible even after clicking")
+                                checked: UiPreferences.alwaysShowFocus
+                                onToggled: UiPreferences.alwaysShowFocus = checked
+                            }
+
+                            Label {
+                                text: qsTr("These settings apply to the campaign, skirmish and editor tools alike.")
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 opacity: 0.7

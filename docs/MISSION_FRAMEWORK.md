@@ -35,7 +35,7 @@ assets/
   "title": "Defend the Outpost",
   "summary": "Hold your position against waves of enemy attacks",
   "map_path": ":/assets/maps/map_forest.json",
-  
+
   "player_setup": { ... },
   "ai_setups": [ ... ],
   "victory_conditions": [ ... ],
@@ -129,20 +129,20 @@ Defines AI opponents with personality and behavior:
 
 #### AI fields
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | Yes | Mission-local identifier for the AI setup |
-| `nation` | Yes | Nation used for roster resolution |
-| `faction` | Yes | Faction metadata for mission/UI use |
-| `color` | Yes | Player color |
-| `difficulty` | No | Execution tuning; omitted falls back to normal behavior |
-| `strategy` | No | Base strategic preset; omitted falls back to `balanced` |
-| `team_id` | No | Allies AIs with the same team and prevents them fighting each other |
-| `commander_troop` | No | Explicit commander troop override |
-| `personality` | No | Fine-tunes aggression / defense / harassment on top of the strategy |
-| `starting_units` | No | Spawns the AI with units at mission start |
-| `starting_buildings` | No | Spawns the AI with structures at mission start |
-| `waves` | No | Timed reinforcements layered on top of the regular AI |
+| Field                | Required | Meaning                                                             |
+| -------------------- | -------- | ------------------------------------------------------------------- |
+| `id`                 | Yes      | Mission-local identifier for the AI setup                           |
+| `nation`             | Yes      | Nation used for roster resolution                                   |
+| `faction`            | Yes      | Faction metadata for mission/UI use                                 |
+| `color`              | Yes      | Player color                                                        |
+| `difficulty`         | No       | Execution tuning; omitted falls back to normal behavior             |
+| `strategy`           | No       | Base strategic preset; omitted falls back to `balanced`             |
+| `team_id`            | No       | Allies AIs with the same team and prevents them fighting each other |
+| `commander_troop`    | No       | Explicit commander troop override                                   |
+| `personality`        | No       | Fine-tunes aggression / defense / harassment on top of the strategy |
+| `starting_units`     | No       | Spawns the AI with units at mission start                           |
+| `starting_buildings` | No       | Spawns the AI with structures at mission start                      |
+| `waves`              | No       | Timed reinforcements layered on top of the regular AI               |
 
 #### Supported strategy values
 
@@ -185,6 +185,7 @@ These values are applied **after** the base strategy preset, so a `defensive` AI
 AI opponents can be assigned to teams using the `team_id` field. AI players with the same `team_id` will be allied and won't attack each other. If `team_id` is not specified, each AI player will be on their own team (enemies to all other AI players).
 
 Example with allied AI opponents:
+
 ```json
 "ai_setups": [
   {
@@ -212,36 +213,36 @@ Balanced frontline AI:
 
 ```json
 {
-  "id": "roman_line",
-  "nation": "roman_republic",
-  "faction": "roman",
-  "color": "red",
-  "difficulty": "hard",
-  "strategy": "balanced",
-  "personality": {
-    "aggression": 0.6,
-    "defense": 0.55,
-    "harassment": 0.25
-  },
-  "starting_buildings": [
-    {
-      "type": "barracks",
-      "position": {"x": 132, "z": 82},
-      "max_population": 180
-    }
-  ],
-  "starting_units": [
-    {
-      "type": "builder",
-      "count": 2,
-      "position": {"x": 130, "z": 80}
+    "id": "roman_line",
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "difficulty": "hard",
+    "strategy": "balanced",
+    "personality": {
+        "aggression": 0.6,
+        "defense": 0.55,
+        "harassment": 0.25
     },
-    {
-      "type": "spearman",
-      "count": 8,
-      "position": {"x": 134, "z": 84}
-    }
-  ]
+    "starting_buildings": [
+        {
+            "type": "barracks",
+            "position": { "x": 132, "z": 82 },
+            "max_population": 180
+        }
+    ],
+    "starting_units": [
+        {
+            "type": "builder",
+            "count": 2,
+            "position": { "x": 130, "z": 80 }
+        },
+        {
+            "type": "spearman",
+            "count": 8,
+            "position": { "x": 134, "z": 84 }
+        }
+    ]
 }
 ```
 
@@ -249,36 +250,36 @@ Forward pressure harasser:
 
 ```json
 {
-  "id": "numidian_raiders",
-  "nation": "carthage",
-  "faction": "carthaginian",
-  "color": "yellow",
-  "difficulty": "hard",
-  "strategy": "harasser",
-  "personality": {
-    "aggression": 0.76,
-    "defense": 0.3,
-    "harassment": 0.85
-  },
-  "starting_buildings": [
-    {
-      "type": "barracks",
-      "position": {"x": 12, "z": 78},
-      "max_population": 120
-    }
-  ],
-  "starting_units": [
-    {
-      "type": "builder",
-      "count": 1,
-      "position": {"x": 14, "z": 80}
+    "id": "numidian_raiders",
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "yellow",
+    "difficulty": "hard",
+    "strategy": "harasser",
+    "personality": {
+        "aggression": 0.76,
+        "defense": 0.3,
+        "harassment": 0.85
     },
-    {
-      "type": "horse_swordsman",
-      "count": 5,
-      "position": {"x": 10, "z": 80}
-    }
-  ]
+    "starting_buildings": [
+        {
+            "type": "barracks",
+            "position": { "x": 12, "z": 78 },
+            "max_population": 120
+        }
+    ],
+    "starting_units": [
+        {
+            "type": "builder",
+            "count": 1,
+            "position": { "x": 14, "z": 80 }
+        },
+        {
+            "type": "horse_swordsman",
+            "count": 5,
+            "position": { "x": 10, "z": 80 }
+        }
+    ]
 }
 ```
 
@@ -288,16 +289,76 @@ Supported victory condition types:
 
 - **destroy_all_enemies**: Eliminate all enemy forces
 - **survive_duration**: Survive for specified time (in seconds)
+- **survive_waves**: Break the specified number of authored assault phases
+- **accumulate_resources**: Harvest the specified resource totals
 - **control_structures**: Control the specified structure types
 - **capture_structures**: Capture the specified structure types from another nation
 
-Victory conditions are evaluated as **OR** conditions: if any configured victory condition
-is satisfied, the mission ends in victory.
+By default victory conditions are evaluated as **OR** conditions: if any configured victory
+condition is satisfied, the mission ends in victory. Set `"victory_mode": "all"` on the mission
+to require **every** condition instead. `victory_mode` defaults to `"any"`.
+
+Beware of leaving multiple conditions under `"any"` — each one becomes an independent shortcut
+past the others. The content validator warns about this.
+
+```json
+"victory_mode": "all",
+"victory_conditions": [
+  {
+    "type": "capture_structures",
+    "structure_types": ["barracks"],
+    "min_count": 4,
+    "description": "Seize every camp"
+  },
+  {
+    "type": "survive_undead_wave",
+    "zone_id": "sepulcher_vanguard",
+    "wave_count": 2,
+    "description": "Break both risings"
+  }
+]
+```
+
+#### survive_waves
+
+Counts _assault phases_, not individual wave entries. Waves that share a `timing` across
+different `ai_setups` form one phase, and a phase counts as survived once every unit it spawned
+is dead. Authoring `wave_count` higher than the number of distinct wave timings makes the
+mission unwinnable; the validator rejects that.
+
+```json
+{
+    "type": "survive_waves",
+    "wave_count": 3,
+    "description": "Break all three Roman assault phases"
+}
+```
+
+#### accumulate_resources
+
+Reads **lifetime harvested** totals, not the current balance, so spending on units and
+buildings never rolls progress backwards. Only builder harvesting counts — marketplace trades
+and starting resources do not. Yields are 40 wood per tree, 35 stone per boulder, 30 iron per
+ore deposit.
+
+Harvestable props are scattered procedurally by biome, so a map with low `plant_density` needs
+explicit `pine_tree` / `boulder` / `iron_ore` entries in its `world_props` before it can carry
+a gather objective. Author comfortably more than the target: contested or unreachable nodes
+must not be able to soft-lock the mission.
+
+```json
+{
+    "type": "accumulate_resources",
+    "resources": { "wood": 600, "stone": 350, "iron": 300 },
+    "description": "Provision the column for the descent"
+}
+```
 
 For the runtime architecture, default-rule behavior, and extension workflow, see
 [VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md).
 
 Example:
+
 ```json
 "victory_conditions": [
   {
@@ -316,6 +377,18 @@ Supported defeat condition types:
 - **lose_all_units**: All units are eliminated
 - **lose_commander**: Your commander dies
 - **only_commander_remaining**: Your commander is the last surviving force after all troops and barracks are gone
+- **time_limit**: The mission deadline (in seconds) expires before victory
+
+`time_limit` is the only way to make an objective time-bound; deadlines mentioned only in
+`intro_text` or `summary` have no mechanical effect.
+
+```json
+{
+    "type": "time_limit",
+    "duration": 420.0,
+    "description": "Seal the basin before the mist lifts"
+}
+```
 
 Defeat conditions are evaluated as **OR** conditions: if any configured defeat condition
 is satisfied, the mission ends in defeat.
@@ -326,6 +399,7 @@ If a mission omits `defeat_conditions`, the engine adds the default commander ru
 - `only_commander_remaining`
 
 Example:
+
 ```json
 "defeat_conditions": [
   {
@@ -367,18 +441,18 @@ Timed or state-based triggers for dynamic gameplay:
 
 ```json
 {
-  "id": "second_punic_war",
-  "title": "Second Punic War",
-  "description": "Campaign across the Mediterranean",
-  "missions": [
-    {
-      "mission_id": "forest_ambush",
-      "order_index": 0,
-      "intro_text": "Your first task...",
-      "outro_text": "Well done!",
-      "difficulty_modifier": 1.0
-    }
-  ]
+    "id": "second_punic_war",
+    "title": "Second Punic War",
+    "description": "Campaign across the Mediterranean",
+    "missions": [
+        {
+            "mission_id": "forest_ambush",
+            "order_index": 0,
+            "intro_text": "Your first task...",
+            "outro_text": "Well done!",
+            "difficulty_modifier": 1.0
+        }
+    ]
 }
 ```
 
@@ -410,20 +484,20 @@ make validate-content
 The validator performs:
 
 1. **JSON Schema Validation**
-   - Proper structure and required fields
-   - Correct data types
+    - Proper structure and required fields
+    - Correct data types
 
 2. **Asset Reference Validation**
-   - Referenced maps exist
-   - Campaign missions reference valid mission files
+    - Referenced maps exist
+    - Campaign missions reference valid mission files
 
 3. **Campaign Validation**
-   - Mission order indices are contiguous
-   - Starts at 0 or 1
+    - Mission order indices are contiguous
+    - Starts at 0 or 1
 
 4. **Cross-Reference Checks**
-   - Units, buildings, and entity types are valid
-   - No circular dependencies
+    - Units, buildings, and entity types are valid
+    - No circular dependencies
 
 ### Build Integration
 
@@ -447,8 +521,8 @@ Game::Mission::MissionDefinition mission;
 QString error;
 
 if (!Game::Mission::MissionLoader::loadFromJsonFile(
-    ":/assets/missions/defend_outpost.json", 
-    mission, 
+    ":/assets/missions/defend_outpost.json",
+    mission,
     &error)) {
   qWarning() << "Failed to load mission:" << error;
   return;
@@ -487,7 +561,7 @@ for (const auto& mission : campaign.missions) {
 void GameEngine::start_campaign_mission(const QString &mission_path) {
   // mission_path format: "campaign_id/mission_id"
   // Example: "second_punic_war/defend_outpost"
-  
+
   // Mission loader parses JSON and configures:
   // - Player and AI setups
   // - Victory/defeat conditions
@@ -503,9 +577,9 @@ The CampaignMenu displays available campaigns and their missions:
 
 1. User selects a campaign
 2. Mission list appears with:
-   - Order number
-   - Mission name
-   - Intro text preview
+    - Order number
+    - Mission name
+    - Intro text preview
 3. User selects specific mission
 4. Mission loads with proper configuration
 
@@ -553,25 +627,30 @@ assets/missions/
 ### Common Validation Errors
 
 **"Mission not found"**
+
 - Check mission_id matches filename
 - Ensure mission file is in assets/missions/
 
 **"Order index not contiguous"**
+
 - Campaign missions must have sequential indices
 - No gaps allowed (0, 1, 2, ... or 1, 2, 3, ...)
 
 **"Referenced map not found"**
+
 - Verify map_path is correct
 - Check map file exists in assets/maps/
 
 ### Debugging
 
 Enable verbose logging:
+
 ```bash
 QT_LOGGING_RULES="*.debug=true" ./standard_of_iron
 ```
 
 Check mission loading:
+
 ```cpp
 qDebug() << "Loading mission:" << mission.id;
 qDebug() << "Victory conditions:" << mission.victory_conditions.size();
@@ -591,6 +670,7 @@ Planned features:
 ## API Reference
 
 See also:
+
 - `game/map/mission_definition.h` - Mission data structures
 - `game/map/campaign_definition.h` - Campaign data structures
 - `game/map/mission_loader.h` - Mission loading API
