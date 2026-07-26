@@ -134,6 +134,7 @@ private:
   void refresh_rule_metadata();
   void update_only_commander_defeat_arming(const WorldSummary& summary);
   void evaluate_time_based_victory();
+  void evaluate_undead_zone_victory();
   void evaluate_world_state(Engine::Core::World& world);
   void evaluate_world_summary(const WorldSummary& summary);
   void finalize_game(const QString& state);
@@ -151,6 +152,7 @@ private:
   float m_elapsed_time = 0.0F;
   float m_startup_delay = 0.0F;
   bool m_has_time_based_victory = false;
+  bool m_has_undead_zone_rules = false;
   bool m_has_world_based_rules = false;
   bool m_requires_captured_structure_tracking = false;
   bool m_has_only_commander_defeat_rule = false;

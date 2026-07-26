@@ -110,8 +110,17 @@
     }
   ],
   "victory": {
-    "type": "survive_time",
-    "duration": 600.0,
+    "type": "undead_zones",
+    "undead_objectives": [
+      {
+        "type": "clear_undead_zone",
+        "zone_id": "ruins_guard"
+      },
+      {
+        "type": "purify_shrine",
+        "zone_id": "shrine_sentinels"
+      }
+    ],
     "defeat_conditions": [
       "no_commander",
       "only_commander_remaining"

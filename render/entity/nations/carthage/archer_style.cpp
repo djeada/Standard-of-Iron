@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include "../sepulcher/palette.h"
+
 namespace Render::GL::Carthage {
 
 void register_carthage_archer_style() {
@@ -23,15 +25,15 @@ void register_carthage_archer_style() {
   carthage.armor_id = "armor_light_carthage";
 
   ArcherStyleConfig sepulcher = carthage;
-  sepulcher.skin_color = QVector3D(0.81F, 0.83F, 0.78F);
-  sepulcher.cloth_color = QVector3D(0.22F, 0.22F, 0.25F);
-  sepulcher.leather_color = QVector3D(0.25F, 0.21F, 0.18F);
-  sepulcher.leather_dark_color = QVector3D(0.14F, 0.13F, 0.13F);
-  sepulcher.metal_color = QVector3D(0.56F, 0.60F, 0.66F);
-  sepulcher.wood_color = QVector3D(0.34F, 0.30F, 0.26F);
-  sepulcher.fletching_color = QVector3D(0.62F, 0.66F, 0.70F);
-  sepulcher.bow_string_color = QVector3D(0.35F, 0.35F, 0.36F);
-  sepulcher.cape_color = QVector3D(0.10F, 0.10F, 0.12F);
+  sepulcher.skin_color = Sepulcher::k_bone;
+  sepulcher.cloth_color = Sepulcher::k_grave_cloth;
+  sepulcher.leather_color = Sepulcher::k_grave_leather;
+  sepulcher.leather_dark_color = Sepulcher::k_grave_leather_dark;
+  sepulcher.metal_color = Sepulcher::k_grave_iron;
+  sepulcher.wood_color = Sepulcher::k_grave_wood;
+  sepulcher.fletching_color = QVector3D(0.43F, 0.41F, 0.36F);
+  sepulcher.bow_string_color = QVector3D(0.24F, 0.23F, 0.21F);
+  sepulcher.cape_color = QVector3D(0.075F, 0.075F, 0.090F);
   sepulcher.show_cape = false;
   sepulcher.show_shoulder_decor = false;
   sepulcher.force_beard = false;

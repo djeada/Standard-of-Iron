@@ -277,6 +277,26 @@ void read_victory_config(const QJsonObject& obj, VictoryConfig& out) {
   if (obj.contains("min_count")) {
     out.required_key_structures = obj.value("min_count").toInt(0);
   }
+
+  if (obj.contains("undead_objectives") && obj.value("undead_objectives").isArray()) {
+    out.undead_objectives.clear();
+    const auto arr = obj.value("undead_objectives").toArray();
+    for (const auto& val : arr) {
+      if (!val.isObject()) {
+        continue;
+      }
+      const QJsonObject entry = val.toObject();
+      UndeadObjective objective;
+      objective.type = entry.value("type").toString().trimmed().toLower();
+      objective.zone_id = entry.value("zone_id").toString();
+      objective.wave_count = entry.value("wave_count").toInt(1);
+      if (objective.type.isEmpty() || objective.zone_id.isEmpty()) {
+        qWarning() << "Skipping undead victory objective without type or zone_id";
+        continue;
+      }
+      out.undead_objectives.push_back(std::move(objective));
+    }
+  }
 }
 
 void read_rain_config(const QJsonObject& obj, RainSettings& out) {
@@ -441,6 +461,12 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
         obj.value(LEASH_RADIUS).toDouble(std::max(zone.radius, zone.leash_radius)));
     zone.owner_id = obj.value(OWNER_ID).toInt(zone.owner_id);
     zone.team_id = obj.value(TEAM_ID).toInt(zone.team_id);
+    if (obj.contains(ANCHOR_STRUCTURE)) {
+      zone.anchor_is_structure = obj.value(ANCHOR_STRUCTURE).toBool();
+    }
+    zone.fog_density = float(obj.value(FOG_DENSITY).toDouble(zone.fog_density));
+    zone.wave_timeout_seconds =
+        float(obj.value(WAVE_TIMEOUT).toDouble(zone.wave_timeout_seconds));
 
     if (obj.contains(AWAKEN_ON) && obj.value(AWAKEN_ON).isArray()) {
       const auto awaken_on = obj.value(AWAKEN_ON).toArray();
@@ -480,12 +506,38 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
     }
 
     if (zone.waves.empty()) {
-      qWarning() << "MapLoader: undead zone" << zone.id
-                 << "has no valid waves - skipping";
-      continue;
+      zone.waves = default_undead_waves();
     }
 
     out.push_back(std::move(zone));
+  }
+}
+
+void append_undead_zone_fog(MapDefinition& out_map) {
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+
+  for (const auto& zone : out_map.undead_zones) {
+    if (!(zone.fog_density > 0.0F)) {
+      continue;
+    }
+
+    float world_x = zone.x;
+    float world_z = zone.z;
+    float world_radius = zone.radius;
+    if (out_map.coordSystem == CoordSystem::Grid) {
+      const float tile = std::max(min_tile_size, out_map.grid.tile_size);
+      world_x =
+          (zone.x - (out_map.grid.width * grid_center_offset - grid_center_offset)) *
+          tile;
+      world_z =
+          (zone.z - (out_map.grid.height * grid_center_offset - grid_center_offset)) *
+          tile;
+      world_radius = zone.radius * tile;
+    }
+
+    out_map.fog_zones.push_back(
+        undead_zone_fog(world_x, world_z, world_radius, zone.fog_density));
   }
 }
 
@@ -1230,6 +1282,8 @@ auto MapLoader::load_from_json_file(const QString& path,
   } else {
     out_map.fog_zones.clear();
   }
+
+  append_undead_zone_fog(out_map);
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {
     read_biome(root.value(BIOME).toObject(), out_map.biome);

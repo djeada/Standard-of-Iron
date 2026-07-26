@@ -1,3 +1,6 @@
+#include <QHash>
+#include <QSet>
+
 #include <gtest/gtest.h>
 
 #include "core/component.h"
@@ -27,6 +30,28 @@ auto lose_structures(std::initializer_list<QString> structure_types)
   return Game::Systems::NoKeyStructuresDefeatRule{
       std::vector<QString>(structure_types)};
 }
+
+class StubUndeadZoneQuery : public Game::Systems::UndeadZoneQuery {
+public:
+  QSet<QString> cleared_zones;
+  QSet<QString> purified_shrines;
+  QHash<QString, int> completed_waves;
+
+  [[nodiscard]] auto has_zone(const QString& zone_id) const -> bool override {
+    return cleared_zones.contains(zone_id) || purified_shrines.contains(zone_id) ||
+           completed_waves.contains(zone_id);
+  }
+  [[nodiscard]] auto is_zone_cleared(const QString& zone_id) const -> bool override {
+    return cleared_zones.contains(zone_id);
+  }
+  [[nodiscard]] auto is_shrine_purified(const QString& zone_id) const -> bool override {
+    return purified_shrines.contains(zone_id);
+  }
+  [[nodiscard]] auto
+  completed_wave_count(const QString& zone_id) const -> int override {
+    return completed_waves.value(zone_id, 0);
+  }
+};
 
 class VictoryServiceTest : public ::testing::Test {
 protected:
@@ -396,6 +421,110 @@ TEST_F(VictoryServiceTest, AmbientSepulcherStructuresCanBeCountedWhenMissionOpts
   advance_past_startup_delay(world);
 
   EXPECT_FALSE(m_service->is_game_over());
+}
+
+TEST_F(VictoryServiceTest, MapUndeadObjectivesDriveSkirmishVictory) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::RomanFieldCommander,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  StubUndeadZoneQuery zones;
+  zones.cleared_zones.insert(QStringLiteral("ruins_guard"));
+
+  Game::Map::VictoryConfig config;
+  config.victory_type = QStringLiteral("undead_zones");
+  config.undead_objectives = {
+      {QStringLiteral("purify_shrine"), QStringLiteral("shrine_sentinels"), 1}};
+
+  m_service->configure(config, 1);
+  m_service->set_undead_zone_query(&zones);
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  auto* guardian = create_unit(world,
+                               2,
+                               Game::Units::SpawnType::SkeletonSwordsman,
+                               Game::Systems::NationID::IronSepulcher);
+  ASSERT_NE(guardian, nullptr);
+  zones.purified_shrines.insert(QStringLiteral("shrine_sentinels"));
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      guardian->get_id(), 2, Game::Units::SpawnType::SkeletonSwordsman));
+
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(VictoryServiceTest, UndeadZonesVictoryTypeWithoutObjectivesFallsBackSafely) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::RomanFieldCommander,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        2,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::Carthage),
+            nullptr);
+
+  Game::Map::VictoryConfig config;
+  config.victory_type = QStringLiteral("undead_zones");
+
+  m_service->configure(config, 1);
+  advance_past_startup_delay(world);
+
+  EXPECT_FALSE(m_service->is_game_over());
+}
+
+TEST_F(VictoryServiceTest, SurviveUndeadWaveObjectiveCountsCompletedWaves) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::RomanFieldCommander,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  StubUndeadZoneQuery zones;
+  zones.completed_waves.insert(QStringLiteral("ruins_guard"), 1);
+
+  Game::Map::VictoryConfig config;
+  config.victory_type = QStringLiteral("undead_zones");
+  config.undead_objectives = {
+      {QStringLiteral("survive_undead_wave"), QStringLiteral("ruins_guard"), 2}};
+  config.defeat_conditions.clear();
+
+  m_service->configure(config, 1);
+  m_service->set_undead_zone_query(&zones);
+  advance_past_startup_delay(world);
+  EXPECT_FALSE(m_service->is_game_over());
+
+  auto* guardian = create_unit(world,
+                               2,
+                               Game::Units::SpawnType::SkeletonArcher,
+                               Game::Systems::NationID::IronSepulcher);
+  ASSERT_NE(guardian, nullptr);
+  zones.completed_waves.insert(QStringLiteral("ruins_guard"), 2);
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      guardian->get_id(), 2, Game::Units::SpawnType::SkeletonArcher));
+
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
 }
 
 } // namespace

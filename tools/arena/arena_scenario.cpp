@@ -196,12 +196,24 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("CommanderAuraExpired");
   case ArenaExpectationKind::NoCommanderAuraBuffObserved:
     return QStringLiteral("NoCommanderAuraBuffObserved");
+  case ArenaExpectationKind::UndeadZoneDormantBefore:
+    return QStringLiteral("UndeadZoneDormantBefore");
+  case ArenaExpectationKind::UndeadZoneAwakened:
+    return QStringLiteral("UndeadZoneAwakened");
+  case ArenaExpectationKind::UndeadZoneCleared:
+    return QStringLiteral("UndeadZoneCleared");
   }
   return QStringLiteral("Unknown");
 }
 
 auto json_vector(const QVector3D& value) -> QJsonArray {
   return {value.x(), value.y(), value.z()};
+}
+
+auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
+  return kind == ArenaExpectationKind::UndeadZoneDormantBefore ||
+         kind == ArenaExpectationKind::UndeadZoneAwakened ||
+         kind == ArenaExpectationKind::UndeadZoneCleared;
 }
 
 } // namespace
@@ -290,9 +302,36 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  QSet<QString> zone_ids;
+  for (std::size_t i = 0; i < definition.undead_zones.size(); ++i) {
+    auto const& zone = definition.undead_zones[i];
+    QString const field = QStringLiteral("undead_zones[%1]").arg(i);
+    if (zone.id.trimmed().isEmpty()) {
+      errors.push_back({field, QStringLiteral("undead zone id is empty")});
+    } else if (zone_ids.contains(zone.id)) {
+      errors.push_back(
+          {field, QStringLiteral("duplicate undead zone '%1'").arg(zone.id)});
+    } else {
+      zone_ids.insert(zone.id);
+    }
+    if (!(zone.radius > 0.0F)) {
+      errors.push_back({field, QStringLiteral("undead zone radius must be positive")});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.expectations.size(); ++i) {
     auto const& expectation = definition.expectations[i];
     QString const field = QStringLiteral("expectations[%1]").arg(i);
+    if (expectation_requires_zone(expectation.kind)) {
+      if (expectation.zone_id.isEmpty()) {
+        errors.push_back({field + QStringLiteral(".zone_id"),
+                          QStringLiteral("undead zone reference is required")});
+      } else if (!zone_ids.contains(expectation.zone_id)) {
+        errors.push_back({field + QStringLiteral(".zone_id"),
+                          QStringLiteral("unknown undead zone reference '%1'")
+                              .arg(expectation.zone_id)});
+      }
+    }
     check_group(expectation.group, field + QStringLiteral(".group"), false);
     check_group(
         expectation.target_group, field + QStringLiteral(".target_group"), false);
@@ -421,6 +460,13 @@ struct ArenaScenarioRunner::Impl {
     float lateral_offset{std::numeric_limits<float>::infinity()};
   };
 
+  struct UndeadZoneObservation {
+    int spawned_total{0};
+    int peak_alive{0};
+    int alive{0};
+    float first_spawn_at{-1.0F};
+  };
+
   Engine::Core::World& world;
   ArenaScenarioHost host;
   ArenaScenarioDefinition scenario;
@@ -455,6 +501,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
   QHash<QString, bool> useful_bot_action;
+  QHash<QString, UndeadZoneObservation> undead_zone_states;
+  QHash<QString, QSet<Engine::Core::EntityID>> undead_zone_entities;
   QHash<QString, bool> commander_aura_active_seen;
   QHash<QString, bool> commander_aura_expired_seen;
   QHash<QString, bool> commander_aura_buff_seen;
@@ -882,6 +930,44 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     }
+  }
+
+  void observe_undead_zones() {
+    if (scenario.undead_zones.empty()) {
+      return;
+    }
+    auto const entities = world.get_entities_with<Engine::Core::UnitComponent>();
+    for (auto const& zone : scenario.undead_zones) {
+      auto& state = undead_zone_states[zone.id];
+      auto& seen = undead_zone_entities[zone.id];
+      int alive = 0;
+      for (auto* entity : entities) {
+        auto const* unit = entity != nullptr
+                               ? entity->get_component<Engine::Core::UnitComponent>()
+                               : nullptr;
+
+        if (unit == nullptr || unit->owner_id != zone.owner_id || unit->health <= 0 ||
+            !Game::Units::is_troop_spawn(unit->spawn_type)) {
+          continue;
+        }
+        ++alive;
+        if (!seen.contains(entity->get_id())) {
+          seen.insert(entity->get_id());
+          ++state.spawned_total;
+        }
+      }
+      if (alive > 0 && state.first_spawn_at < 0.0F) {
+        state.first_spawn_at = elapsed;
+      }
+      state.alive = alive;
+      state.peak_alive = std::max(state.peak_alive, alive);
+    }
+  }
+
+  [[nodiscard]] auto
+  undead_zone_state(const QString& zone_id) const -> UndeadZoneObservation {
+    auto const found = undead_zone_states.constFind(zone_id);
+    return found == undead_zone_states.cend() ? UndeadZoneObservation{} : found.value();
   }
 
   void observe_commander_aura_state() {
@@ -2177,6 +2263,46 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::UndeadZoneDormantBefore: {
+        auto const state = undead_zone_state(expectation.zone_id);
+        float const window = std::max(expectation.end_seconds, expectation.threshold);
+        if (state.first_spawn_at >= 0.0F && state.first_spawn_at < window) {
+          add_issue(QStringLiteral("undead_zone_woke_too_early"),
+                    QStringLiteral("%1 spawned guardians at %2 s but had to stay "
+                                   "dormant for %3 s")
+                        .arg(expectation.zone_id)
+                        .arg(state.first_spawn_at, 0, 'f', 2)
+                        .arg(window, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::UndeadZoneAwakened: {
+        auto const state = undead_zone_state(expectation.zone_id);
+        int const required = std::max(1, static_cast<int>(expectation.threshold));
+        if (state.spawned_total < required) {
+          add_issue(QStringLiteral("undead_zone_never_awakened"),
+                    QStringLiteral("%1 spawned %2 guardian(s); expected at least %3")
+                        .arg(expectation.zone_id)
+                        .arg(state.spawned_total)
+                        .arg(required));
+        }
+        break;
+      }
+      case ArenaExpectationKind::UndeadZoneCleared: {
+        auto const state = undead_zone_state(expectation.zone_id);
+        if (state.spawned_total == 0) {
+          add_issue(
+              QStringLiteral("undead_zone_never_awakened"),
+              QStringLiteral("%1 never spawned guardians, so it cannot be cleared")
+                  .arg(expectation.zone_id));
+        } else if (state.alive > 0) {
+          add_issue(QStringLiteral("undead_zone_not_cleared"),
+                    QStringLiteral("%1 still holds %2 living guardian(s)")
+                        .arg(expectation.zone_id)
+                        .arg(state.alive));
+        }
+        break;
+      }
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::FullCreatureDetailOnly:
       case ArenaExpectationKind::NoFullscreenFlash:
@@ -2215,6 +2341,7 @@ auto ArenaScenarioRunner::start() -> bool {
       m_impl->initial_building_ids.insert(entity->get_id());
     }
   }
+  m_impl->observe_undead_zones();
   if (m_impl->host.set_camera) {
     m_impl->host.set_camera(m_impl->all_entities(), m_impl->scenario.camera);
   }
@@ -2233,6 +2360,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
   }
   m_impl->elapsed += simulation_dt;
   m_impl->report.elapsed_seconds = m_impl->elapsed;
+  m_impl->observe_undead_zones();
   for (std::size_t i = 0; i < m_impl->scenario.steps.size(); ++i) {
     auto const& step = m_impl->scenario.steps[i];
     if (!m_impl->steps[i].executed && m_impl->trigger_ready(i, step)) {
@@ -2364,6 +2492,21 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                     {QStringLiteral("soldier_index"), issue.soldier_index}});
   }
   report_object.insert(QStringLiteral("issues"), issues);
+
+  if (!m_impl->scenario.undead_zones.empty()) {
+    QJsonArray zones;
+    for (auto const& zone : m_impl->scenario.undead_zones) {
+      auto const state = m_impl->undead_zone_state(zone.id);
+      zones.append(
+          QJsonObject{{QStringLiteral("id"), zone.id},
+                      {QStringLiteral("owner_id"), zone.owner_id},
+                      {QStringLiteral("spawned_total"), state.spawned_total},
+                      {QStringLiteral("peak_alive"), state.peak_alive},
+                      {QStringLiteral("alive"), state.alive},
+                      {QStringLiteral("first_spawn_seconds"), state.first_spawn_at}});
+    }
+    report_object.insert(QStringLiteral("undead_zones"), zones);
+  }
 
   QFile report_file(QDir(directory).filePath(QStringLiteral("report.json")));
   if (!report_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {

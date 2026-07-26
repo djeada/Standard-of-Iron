@@ -40,29 +40,44 @@ public:
   [[nodiscard]] auto is_shrine_purified(const QString& zone_id) const -> bool override;
   [[nodiscard]] auto completed_wave_count(const QString& zone_id) const -> int override;
 
+  [[nodiscard]] auto
+  anchor_entity(const QString& zone_id) const -> Engine::Core::EntityID;
+
 private:
   struct RuntimeZone {
     Game::Map::UndeadZone definition;
     QVector3D center_world;
     QVector3D anchor_world;
     std::uint64_t anchor_world_prop_id = 0;
+    Engine::Core::EntityID anchor_entity_id = 0;
+    bool anchor_pending = false;
     bool awakened = false;
+    bool garrison_broken = false;
+    bool announced_awakening = false;
+    bool announced_defeat = false;
     int next_wave_index = 0;
     int completed_waves = 0;
     float respawn_delay_remaining = 0.0F;
+    float current_wave_elapsed = 0.0F;
     std::vector<Engine::Core::EntityID> active_spawn_ids;
   };
 
   void ensure_factory_registry();
   void ensure_zone_owner_registered(const RuntimeZone& zone) const;
+  void ensure_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
   void refresh_active_spawns(Engine::Core::World& world, RuntimeZone& zone) const;
+  void refresh_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
+  void break_garrison(Engine::Core::World& world, RuntimeZone& zone, bool captured);
+  void refresh_capture_lock(Engine::Core::World& world, const RuntimeZone& zone) const;
   void awaken_zone(Engine::Core::World& world, RuntimeZone& zone);
   void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);
+  void announce_wave(const RuntimeZone& zone) const;
   [[nodiscard]] auto should_awaken_zone(Engine::Core::World& world,
                                         const RuntimeZone& zone) const -> bool;
   [[nodiscard]] auto can_spawn_wave(const RuntimeZone& zone) const -> bool;
   [[nodiscard]] auto spawn_position_for_index(const RuntimeZone& zone,
-                                              int spawn_index) const -> QVector3D;
+                                              int spawn_index,
+                                              int spawn_count) const -> QVector3D;
   [[nodiscard]] auto find_zone(const QString& zone_id) const -> const RuntimeZone*;
   [[nodiscard]] auto find_zone_mutable(const QString& zone_id) -> RuntimeZone*;
 

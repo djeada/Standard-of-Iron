@@ -3,6 +3,7 @@
 #include <QString>
 #include <QVector3D>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <variant>
@@ -158,6 +159,9 @@ struct UndeadWave {
   std::vector<UndeadWaveUnitSpawn> units;
 };
 
+inline constexpr float k_undead_zone_default_fog_density = 0.28F;
+inline constexpr float k_undead_zone_default_wave_timeout = 45.0F;
+
 struct UndeadZone {
   QString id;
   WorldProp::Type anchor_type = WorldProp::Type::Ruins;
@@ -167,9 +171,33 @@ struct UndeadZone {
   float leash_radius = 14.0F;
   int owner_id = 99;
   int team_id = 0;
+
+  std::optional<bool> anchor_is_structure;
+  float fog_density = k_undead_zone_default_fog_density;
+
+  float wave_timeout_seconds = k_undead_zone_default_wave_timeout;
   std::vector<QString> awaken_on;
   std::vector<UndeadWave> waves;
 };
+
+[[nodiscard]] inline auto default_undead_waves() -> std::vector<UndeadWave> {
+  UndeadWave wave;
+  wave.trigger = QStringLiteral("initial");
+  wave.units = {{Game::Units::SpawnType::SkeletonSwordsman, 2},
+                {Game::Units::SpawnType::SkeletonArcher, 1},
+                {Game::Units::SpawnType::GravePriest, 1}};
+  return {wave};
+}
+
+[[nodiscard]] constexpr auto
+is_structural_undead_anchor(WorldProp::Type anchor_type) -> bool {
+  return anchor_type == WorldProp::Type::MagicShrine;
+}
+
+[[nodiscard]] inline auto zone_has_structural_anchor(const UndeadZone& zone) -> bool {
+  return zone.anchor_is_structure.value_or(
+      is_structural_undead_anchor(zone.anchor_type));
+}
 
 [[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
   return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree;
@@ -308,12 +336,19 @@ enum class CoordSystem {
   World
 };
 
+struct UndeadObjective {
+  QString type;
+  QString zone_id;
+  int wave_count = 1;
+};
+
 struct VictoryConfig {
   QString victory_type = "elimination";
   std::vector<QString> key_structures = {"barracks"};
   float survive_time_duration = 0.0F;
   std::vector<QString> defeat_conditions = {"no_commander", "only_commander_remaining"};
   int required_key_structures = 0;
+  std::vector<UndeadObjective> undead_objectives;
 };
 
 enum class WeatherType {
@@ -334,10 +369,23 @@ struct RainSettings {
 struct FogZone {
   float x = 0.0F;
   float z = 0.0F;
+
+  float y = 0.0F;
   float width = 10.0F;
   float height = 10.0F;
   float density = 0.6F;
 };
+
+[[nodiscard]] inline auto
+undead_zone_fog(float world_x, float world_z, float radius, float density) -> FogZone {
+  FogZone fog;
+  fog.x = world_x;
+  fog.z = world_z;
+  fog.width = std::max(1.0F, radius * 2.0F);
+  fog.height = fog.width;
+  fog.density = std::clamp(density, 0.0F, 1.0F);
+  return fog;
+}
 
 struct MapDefinition {
   QString name;
