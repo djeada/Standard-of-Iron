@@ -910,6 +910,9 @@ void Renderer::render_world(Engine::Core::World* world) {
         ctx.renderer_handle = entry.renderer_handle;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
+        ctx.order_markers_visible =
+            entry.unit != nullptr &&
+            order_markers_visible_for_owner(entry.unit->owner_id);
         ctx.submission_visibility = &m_submission_visibility;
         ctx.submission_fog_mode =
             entry.unit != nullptr && entry.unit->owner_id != m_local_owner_id &&
@@ -1077,6 +1080,9 @@ void Renderer::render_world(Engine::Core::World* world) {
         ctx.renderer_handle = entry.renderer_handle;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
+        ctx.order_markers_visible =
+            entry.unit != nullptr &&
+            order_markers_visible_for_owner(entry.unit->owner_id);
         ctx.animation_throttled = false;
         (*fn)(ctx, *this);
         drawn_by_registry = true;
@@ -1229,6 +1235,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     ctx.backend = m_gl_backend;
     ctx.camera = m_camera;
     ctx.alpha_multiplier = alpha_multiplier;
+    ctx.order_markers_visible = order_markers_visible_for_owner(preview_owner);
 
     (*fn)(ctx, *this);
 
