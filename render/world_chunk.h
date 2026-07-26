@@ -152,6 +152,7 @@ struct TerrainChunkParams {
 
   float noise_angle = 0.0F;
   int ground_type = 0;
+  int terrain_type = 0;
 
   float micro_bump_amp = k_default_micro_bump_amp;
   float micro_bump_freq = k_default_micro_bump_freq;

@@ -32,6 +32,7 @@ struct LinearFeatureRibbonSettings {
   float y_offset = 0.0F;
   bool sample_terrain_envelope = false;
   bool follow_terrain_centerline = false;
+  bool junction_uses_center_uv = false;
   const Game::Map::TerrainHeightMap* height_map = nullptr;
 };
 
@@ -43,6 +44,7 @@ struct LinearFeatureCrossSection {
 struct LinearFeatureJunctionMesh {
   std::unique_ptr<Render::GL::Mesh> mesh;
   QVector3D center;
+  int connections = 0;
 };
 
 [[nodiscard]] auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings;

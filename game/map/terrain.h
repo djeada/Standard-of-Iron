@@ -360,10 +360,10 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   case GroundType::GrassDry:
     rules.allow_pines = false;
     rules.allow_olives = true;
-    rules.olive_base_density = 0.12F;
-    rules.olive_density_scale = 0.15F;
-    rules.olive_scale_min = 3.6F;
-    rules.olive_scale_max = 6.4F;
+    rules.olive_base_density = 0.08F;
+    rules.olive_density_scale = 0.10F;
+    rules.olive_scale_min = 2.8F;
+    rules.olive_scale_max = 5.0F;
     break;
   case GroundType::ForestMud:
     rules.pine_base_density = 0.32F;

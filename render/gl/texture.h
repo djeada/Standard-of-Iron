@@ -10,7 +10,8 @@ public:
   enum class Format {
     RGB,
     RGBA,
-    Depth
+    Depth,
+    R32F
   };
 
   enum class Filter {
