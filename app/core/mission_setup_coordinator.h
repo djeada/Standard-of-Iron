@@ -31,6 +31,7 @@ struct PendingMissionWave {
   QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
   std::vector<Game::Mission::WaveComposition> composition;
   bool spawned = false;
+  std::vector<Engine::Core::EntityID> spawned_entity_ids;
 };
 
 struct MissionSetupApplyContext {
@@ -69,6 +70,7 @@ struct MissionWaveContext {
 
 struct MissionWaveEffects {
   QStringList mission_announcements;
+  std::vector<Engine::Core::EntityID> spawned_entity_ids;
 };
 
 class MissionSetupCoordinator {

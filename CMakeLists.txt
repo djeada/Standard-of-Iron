@@ -269,6 +269,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/commander_mode_coordinator.cpp
         app/core/frame_ui_coordinator.cpp
         app/core/mission_setup_coordinator.cpp
+        app/core/mission_wave_tracker.cpp
         app/core/save_load_coordinator.cpp
         app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp
@@ -316,6 +317,7 @@ else()
         app/core/commander_mode_coordinator.cpp
         app/core/frame_ui_coordinator.cpp
         app/core/mission_setup_coordinator.cpp
+        app/core/mission_wave_tracker.cpp
         app/core/save_load_coordinator.cpp
         app/core/skirmish_runtime_coordinator.cpp
         app/core/renderer_bootstrap.cpp

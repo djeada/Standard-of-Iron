@@ -70,6 +70,7 @@ add_executable(
     map/map_transformer_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
+    map/hill_crown_geometry_test.cpp
     map/mission_victory_rules_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp

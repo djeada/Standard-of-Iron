@@ -289,11 +289,70 @@ Supported victory condition types:
 
 - **destroy_all_enemies**: Eliminate all enemy forces
 - **survive_duration**: Survive for specified time (in seconds)
+- **survive_waves**: Break the specified number of authored assault phases
+- **accumulate_resources**: Harvest the specified resource totals
 - **control_structures**: Control the specified structure types
 - **capture_structures**: Capture the specified structure types from another nation
 
-Victory conditions are evaluated as **OR** conditions: if any configured victory condition
-is satisfied, the mission ends in victory.
+By default victory conditions are evaluated as **OR** conditions: if any configured victory
+condition is satisfied, the mission ends in victory. Set `"victory_mode": "all"` on the mission
+to require **every** condition instead. `victory_mode` defaults to `"any"`.
+
+Beware of leaving multiple conditions under `"any"` — each one becomes an independent shortcut
+past the others. The content validator warns about this.
+
+```json
+"victory_mode": "all",
+"victory_conditions": [
+  {
+    "type": "capture_structures",
+    "structure_types": ["barracks"],
+    "min_count": 4,
+    "description": "Seize every camp"
+  },
+  {
+    "type": "survive_undead_wave",
+    "zone_id": "sepulcher_vanguard",
+    "wave_count": 2,
+    "description": "Break both risings"
+  }
+]
+```
+
+#### survive_waves
+
+Counts _assault phases_, not individual wave entries. Waves that share a `timing` across
+different `ai_setups` form one phase, and a phase counts as survived once every unit it spawned
+is dead. Authoring `wave_count` higher than the number of distinct wave timings makes the
+mission unwinnable; the validator rejects that.
+
+```json
+{
+    "type": "survive_waves",
+    "wave_count": 3,
+    "description": "Break all three Roman assault phases"
+}
+```
+
+#### accumulate_resources
+
+Reads **lifetime harvested** totals, not the current balance, so spending on units and
+buildings never rolls progress backwards. Only builder harvesting counts — marketplace trades
+and starting resources do not. Yields are 40 wood per tree, 35 stone per boulder, 30 iron per
+ore deposit.
+
+Harvestable props are scattered procedurally by biome, so a map with low `plant_density` needs
+explicit `pine_tree` / `boulder` / `iron_ore` entries in its `world_props` before it can carry
+a gather objective. Author comfortably more than the target: contested or unreachable nodes
+must not be able to soft-lock the mission.
+
+```json
+{
+    "type": "accumulate_resources",
+    "resources": { "wood": 600, "stone": 350, "iron": 300 },
+    "description": "Provision the column for the descent"
+}
+```
 
 For the runtime architecture, default-rule behavior, and extension workflow, see
 [VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md).
@@ -318,6 +377,18 @@ Supported defeat condition types:
 - **lose_all_units**: All units are eliminated
 - **lose_commander**: Your commander dies
 - **only_commander_remaining**: Your commander is the last surviving force after all troops and barracks are gone
+- **time_limit**: The mission deadline (in seconds) expires before victory
+
+`time_limit` is the only way to make an objective time-bound; deadlines mentioned only in
+`intro_text` or `summary` have no mechanical effect.
+
+```json
+{
+    "type": "time_limit",
+    "duration": 420.0,
+    "description": "Seal the basin before the mist lifts"
+}
+```
 
 Defeat conditions are evaluated as **OR** conditions: if any configured defeat condition
 is satisfied, the mission ends in defeat.

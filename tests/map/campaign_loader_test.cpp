@@ -1,9 +1,16 @@
+#include <QCoreApplication>
+#include <QDir>
+#include <QHash>
+#include <QStringList>
 #include <QTemporaryFile>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "game/map/campaign_definition.h"
 #include "game/map/campaign_loader.h"
+#include "game/map/mission_definition.h"
+#include "game/map/mission_loader.h"
 
 using namespace Game::Campaign;
 
@@ -44,7 +51,7 @@ TEST_F(CampaignLoaderTest, LoadsValidCampaign) {
 
   CampaignDefinition campaign;
   QString error;
-  bool result =
+  bool const result =
       CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error);
 
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
@@ -89,7 +96,7 @@ TEST_F(CampaignLoaderTest, FailsOnInvalidJSON) {
 
   CampaignDefinition campaign;
   QString error;
-  bool result =
+  bool const result =
       CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error);
 
   EXPECT_FALSE(result);
@@ -99,7 +106,7 @@ TEST_F(CampaignLoaderTest, FailsOnInvalidJSON) {
 TEST_F(CampaignLoaderTest, FailsOnNonexistentFile) {
   CampaignDefinition campaign;
   QString error;
-  bool result =
+  bool const result =
       CampaignLoader::load_from_json_file("/nonexistent/file.json", campaign, &error);
 
   EXPECT_FALSE(result);
@@ -107,7 +114,7 @@ TEST_F(CampaignLoaderTest, FailsOnNonexistentFile) {
 }
 
 TEST_F(CampaignLoaderTest, HandlesEmptyMissions) {
-  QString json = R"({
+  QString const json = R"({
     "id": "empty_campaign",
     "title": "Empty Campaign",
     "description": "Campaign with no missions",
@@ -129,7 +136,7 @@ TEST_F(CampaignLoaderTest, HandlesEmptyMissions) {
 }
 
 TEST_F(CampaignLoaderTest, HandlesOptionalFields) {
-  QString json = R"({
+  QString const json = R"({
     "id": "minimal_campaign",
     "title": "Minimal Campaign",
     "description": "Campaign with minimal mission data",
@@ -157,4 +164,102 @@ TEST_F(CampaignLoaderTest, HandlesOptionalFields) {
   EXPECT_FALSE(campaign.missions[0].intro_text.has_value());
   EXPECT_FALSE(campaign.missions[0].outro_text.has_value());
   EXPECT_FALSE(campaign.missions[0].difficulty_modifier.has_value());
+}
+
+TEST(SecondPunicWarCampaignShapeTest, CoversEveryObjectiveCategory) {
+  Game::Campaign::CampaignDefinition campaign;
+  QString error;
+  ASSERT_TRUE(Game::Campaign::CampaignLoader::load_from_json_file(
+      QDir(QCoreApplication::applicationDirPath())
+          .absoluteFilePath(
+              QStringLiteral("../../assets/campaigns/second_punic_war.json")),
+      campaign,
+      &error))
+      << error.toStdString();
+
+  ASSERT_EQ(campaign.missions.size(), 8U);
+
+  QHash<QString, QStringList> victory_types_by_mission;
+  QHash<QString, QStringList> defeat_types_by_mission;
+  QHash<QString, QString> victory_mode_by_mission;
+
+  for (const auto& entry : campaign.missions) {
+    Game::Mission::MissionDefinition mission;
+    QString mission_error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(
+                QStringLiteral("../../assets/missions/%1.json").arg(entry.mission_id)),
+        mission,
+        &mission_error))
+        << mission_error.toStdString();
+
+    QStringList victory_types;
+    for (const auto& condition : mission.victory_conditions) {
+      victory_types.append(condition.type);
+    }
+    QStringList defeat_types;
+    for (const auto& condition : mission.defeat_conditions) {
+      defeat_types.append(condition.type);
+    }
+    victory_types_by_mission.insert(entry.mission_id, victory_types);
+    defeat_types_by_mission.insert(entry.mission_id, defeat_types);
+    victory_mode_by_mission.insert(entry.mission_id, mission.victory_mode);
+  }
+
+  // Economic: harvest thresholds rather than another camp assault.
+  EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("crossing_the_alps"))
+                  .contains(QStringLiteral("accumulate_resources")));
+
+  // Defensive: wave counts, so clearing faster wins sooner.
+  EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("battle_of_trebia"))
+                  .contains(QStringLiteral("survive_waves")));
+  EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("campania_campaign"))
+                  .contains(QStringLiteral("survive_waves")));
+
+  // Time-bound offensive.
+  EXPECT_TRUE(defeat_types_by_mission.value(QStringLiteral("battle_of_trasimene"))
+                  .contains(QStringLiteral("time_limit")));
+
+  // Untimed offensive captures still carry the campaign.
+  for (const auto& mission_id : {QStringLiteral("crossing_the_rhone"),
+                                 QStringLiteral("battle_of_ticino"),
+                                 QStringLiteral("battle_of_cannae")}) {
+    EXPECT_TRUE(victory_types_by_mission.value(mission_id)
+                    .contains(QStringLiteral("capture_structures")))
+        << mission_id.toStdString();
+    EXPECT_FALSE(defeat_types_by_mission.value(mission_id)
+                     .contains(QStringLiteral("time_limit")))
+        << mission_id.toStdString();
+  }
+
+  // The finale is multi-objective, conjunctive, and untimed.
+  EXPECT_EQ(victory_mode_by_mission.value(QStringLiteral("battle_of_zama")),
+            QStringLiteral("all"));
+  EXPECT_GE(victory_types_by_mission.value(QStringLiteral("battle_of_zama")).size(), 2);
+  EXPECT_FALSE(defeat_types_by_mission.value(QStringLiteral("battle_of_zama"))
+                   .contains(QStringLiteral("time_limit")));
+}
+
+TEST(SecondPunicWarCampaignShapeTest, DifficultyModifiersIncreaseMonotonically) {
+  Game::Campaign::CampaignDefinition campaign;
+  QString error;
+  ASSERT_TRUE(Game::Campaign::CampaignLoader::load_from_json_file(
+      QDir(QCoreApplication::applicationDirPath())
+          .absoluteFilePath(
+              QStringLiteral("../../assets/campaigns/second_punic_war.json")),
+      campaign,
+      &error))
+      << error.toStdString();
+
+  auto missions = campaign.missions;
+  std::sort(missions.begin(), missions.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.order_index < rhs.order_index;
+  });
+
+  for (std::size_t i = 1; i < missions.size(); ++i) {
+    EXPECT_GT(missions[i].difficulty_modifier, missions[i - 1].difficulty_modifier)
+        << missions[i].mission_id.toStdString() << " is not harder than "
+        << missions[i - 1].mission_id.toStdString();
+  }
 }

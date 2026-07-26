@@ -1,7 +1,7 @@
 {
   "id": "campania_campaign",
   "title": "The Campanian Vigil",
-  "summary": "Defend Hannibal's fortified Campanian supply town for twenty minutes against three coordinated Roman assaults from separate consular roads.",
+  "summary": "Defend Hannibal's fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
   "teaching_goal": "Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.",
   "narrative_intent": "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.",
@@ -432,9 +432,9 @@
   ],
   "victory_conditions": [
     {
-      "type": "survive_duration",
-      "duration": 1200.0,
-      "description": "Keep the central Punic barracks standing for twenty minutes and break all three Roman assault phases."
+      "type": "survive_waves",
+      "wave_count": 3,
+      "description": "Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets."
     }
   ],
   "defeat_conditions": [

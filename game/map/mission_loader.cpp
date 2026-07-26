@@ -192,6 +192,10 @@ auto MissionLoader::parse_condition(const QJsonObject& obj) -> Condition {
     cond.wave_count = obj["wave_count"].toInt();
   }
 
+  if (obj.contains("resources")) {
+    cond.resources = parse_resources(obj["resources"].toObject());
+  }
+
   return cond;
 }
 
@@ -290,6 +294,10 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
     for (const auto& ai_val : ai_setups) {
       out_mission.ai_setups.push_back(parse_ai_setup(ai_val.toObject()));
     }
+  }
+
+  if (root.contains("victory_mode")) {
+    out_mission.victory_mode = root["victory_mode"].toString().trimmed().toLower();
   }
 
   if (root.contains("victory_conditions")) {

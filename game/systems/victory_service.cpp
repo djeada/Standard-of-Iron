@@ -13,6 +13,7 @@
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -187,10 +188,15 @@ void VictoryService::reset() {
   m_has_time_based_victory = false;
   m_has_undead_zone_rules = false;
   m_has_world_based_rules = false;
+  m_has_resource_victory = false;
+  m_has_wave_victory = false;
+  m_has_time_limit_defeat = false;
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
   m_only_commander_defeat_armed = false;
   m_world_state_dirty = false;
+  m_last_world_summary = {};
+  m_has_world_summary = false;
   m_local_owner_id = 1;
   m_victory_state.clear();
   m_world_ptr = nullptr;
@@ -237,26 +243,19 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
     mark_world_dirty();
   }
 
-  if (m_has_time_based_victory) {
-    m_elapsed_time += delta_time;
-    evaluate_time_based_victory();
-    if (!m_victory_state.isEmpty()) {
-      return;
-    }
-  }
+  m_elapsed_time += delta_time;
 
-  if (m_has_undead_zone_rules) {
-    evaluate_undead_zone_victory();
-    if (!m_victory_state.isEmpty()) {
-      return;
-    }
-  }
-
-  if (!m_has_world_based_rules || !m_world_state_dirty) {
+  if (m_world_state_dirty || !m_has_world_summary) {
+    evaluate_world_state(world);
     return;
   }
 
-  evaluate_world_state(world);
+  // Time, undead-zone, resource and wave rules are not driven by world events, so
+  // they have to be polled even when the world summary is unchanged.
+  if (m_has_time_based_victory || m_has_undead_zone_rules || m_has_resource_victory ||
+      m_has_wave_victory || m_has_time_limit_defeat) {
+    evaluate_polled_rules();
+  }
 }
 
 void VictoryService::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
@@ -296,6 +295,9 @@ void VictoryService::refresh_rule_metadata() {
   m_has_time_based_victory = false;
   m_has_undead_zone_rules = false;
   m_has_world_based_rules = false;
+  m_has_resource_victory = false;
+  m_has_wave_victory = false;
+  m_has_time_limit_defeat = false;
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
   m_only_commander_structure_types.clear();
@@ -329,8 +331,10 @@ void VictoryService::refresh_rule_metadata() {
             [this](const SurviveUndeadWaveVictoryRule&) {
               m_has_undead_zone_rules = true;
             },
-            [this](const SurviveTimeVictoryRule&) {
-              m_has_time_based_victory = true;
+            [this](const SurviveTimeVictoryRule&) { m_has_time_based_victory = true; },
+            [this](const SurviveWavesVictoryRule&) { m_has_wave_victory = true; },
+            [this](const AccumulateResourcesVictoryRule&) {
+              m_has_resource_victory = true;
             }},
         rule);
   }
@@ -358,6 +362,9 @@ void VictoryService::refresh_rule_metadata() {
                 }
                 m_tracked_local_structure_types.insert(structure_type);
               }
+            },
+            [this](const TimeLimitDefeatRule&) {
+              m_has_time_limit_defeat = true;
             }},
         rule);
   }
@@ -375,61 +382,35 @@ void VictoryService::update_only_commander_defeat_arming(const WorldSummary& sum
   }
 }
 
-void VictoryService::evaluate_time_based_victory() {
-  for (const auto& rule : m_rule_set.victory_rules) {
-    const auto* survive_rule = std::get_if<SurviveTimeVictoryRule>(&rule);
-    if (survive_rule == nullptr) {
-      continue;
-    }
-    if (m_elapsed_time >= survive_rule->duration) {
-      finalize_game(QStringLiteral("victory"));
-      return;
-    }
-  }
-}
-
-void VictoryService::evaluate_undead_zone_victory() {
-  if (m_undead_zone_query == nullptr) {
-    return;
-  }
-
-  for (const auto& rule : m_rule_set.victory_rules) {
-    const bool satisfied = std::visit(
-        Overloaded{[this](const ClearUndeadZoneVictoryRule& zone_rule) {
-                     return m_undead_zone_query->is_zone_cleared(zone_rule.zone_id);
-                   },
-                   [this](const PurifyShrineVictoryRule& zone_rule) {
-                     return m_undead_zone_query->is_shrine_purified(zone_rule.zone_id);
-                   },
-                   [this](const SurviveUndeadWaveVictoryRule& zone_rule) {
-                     return m_undead_zone_query->completed_wave_count(
-                                zone_rule.zone_id) >=
-                            std::max(1, zone_rule.required_wave_count);
-                   },
-                   [](const auto&) {
-                     return false;
-                   }},
-        rule);
-    if (satisfied) {
-      finalize_game(QStringLiteral("victory"));
-      return;
-    }
-  }
+void VictoryService::evaluate_polled_rules() {
+  evaluate_rules(m_last_world_summary);
 }
 
 void VictoryService::evaluate_world_state(Engine::Core::World& world) {
-  WorldSummary const summary = summarize_world(world);
-  update_only_commander_defeat_arming(summary);
+  m_last_world_summary = summarize_world(world);
+  m_has_world_summary = true;
+  update_only_commander_defeat_arming(m_last_world_summary);
   m_world_state_dirty = false;
-  evaluate_world_summary(summary);
+  evaluate_rules(m_last_world_summary);
 }
 
-void VictoryService::evaluate_world_summary(const WorldSummary& summary) {
-  for (const auto& rule : m_rule_set.victory_rules) {
-    if (std::holds_alternative<SurviveTimeVictoryRule>(rule)) {
-      continue;
+void VictoryService::evaluate_rules(const WorldSummary& summary) {
+  if (!m_rule_set.victory_rules.empty()) {
+    bool victory_satisfied = m_rule_set.require_all_victory_rules;
+    for (const auto& rule : m_rule_set.victory_rules) {
+      const bool satisfied = check_victory_rule(rule, summary);
+      if (m_rule_set.require_all_victory_rules) {
+        if (!satisfied) {
+          victory_satisfied = false;
+          break;
+        }
+      } else if (satisfied) {
+        victory_satisfied = true;
+        break;
+      }
     }
-    if (check_victory_rule(rule, summary)) {
+
+    if (victory_satisfied) {
       finalize_game(QStringLiteral("victory"));
       return;
     }
@@ -567,6 +548,15 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
             return m_undead_zone_query != nullptr &&
                    m_undead_zone_query->completed_wave_count(zone_rule.zone_id) >=
                        std::max(1, zone_rule.required_wave_count);
+          },
+          [this](const SurviveWavesVictoryRule& wave_rule) {
+            return m_mission_wave_query != nullptr &&
+                   m_mission_wave_query->cleared_wave_count() >=
+                       std::max(1, wave_rule.required_wave_count);
+          },
+          [this](const AccumulateResourcesVictoryRule& resource_rule) {
+            return PlayerResourceRegistry::instance().has_harvested_at_least(
+                m_local_owner_id, resource_rule.required);
           }},
       rule);
 }
@@ -593,6 +583,9 @@ auto VictoryService::check_defeat_rule(const DefeatRule& rule,
                    count_matching_structures(summary.local_owned_structure_counts,
                                              isolated_commander_rule.structure_types) ==
                        0;
+          },
+          [this](const TimeLimitDefeatRule& time_limit_rule) {
+            return m_elapsed_time >= time_limit_rule.duration;
           }},
       rule);
 }

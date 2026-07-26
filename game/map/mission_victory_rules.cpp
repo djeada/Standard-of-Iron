@@ -49,6 +49,14 @@ auto build_victory_rules(const MissionDefinition& mission)
   Game::Systems::VictoryRuleSet rules;
   rules.include_ambient_undead = mission.include_ambient_undead;
 
+  QString const victory_mode = mission.victory_mode.trimmed().toLower();
+  if (victory_mode == "all") {
+    rules.require_all_victory_rules = true;
+  } else if (!victory_mode.isEmpty() && victory_mode != "any") {
+    qWarning() << "Unsupported mission victory_mode" << mission.victory_mode
+               << "- defaulting to any";
+  }
+
   for (const auto& condition : mission.victory_conditions) {
     QString const type = condition.type.trimmed().toLower();
     if (type == "destroy_all_enemies") {
@@ -107,6 +115,23 @@ auto build_victory_rules(const MissionDefinition& mission)
       continue;
     }
 
+    if (type == "survive_waves") {
+      rules.victory_rules.emplace_back(Game::Systems::SurviveWavesVictoryRule{
+          std::max(1, condition.wave_count.value_or(1))});
+      continue;
+    }
+
+    if (type == "accumulate_resources") {
+      if (!condition.resources.has_value() || condition.resources->empty()) {
+        qWarning() << "Mission victory condition accumulate_resources declares no "
+                      "positive resource amounts";
+        continue;
+      }
+      rules.victory_rules.emplace_back(
+          Game::Systems::AccumulateResourcesVictoryRule{*condition.resources});
+      continue;
+    }
+
     qWarning() << "Unsupported mission victory condition type" << condition.type;
   }
 
@@ -132,6 +157,16 @@ auto build_victory_rules(const MissionDefinition& mission)
     if (type == "only_commander_remaining") {
       rules.defeat_rules.emplace_back(Game::Systems::OnlyCommanderRemainingDefeatRule{
           normalize_structure_types(condition)});
+      continue;
+    }
+
+    if (type == "time_limit") {
+      if (!condition.duration.has_value()) {
+        qWarning() << "Mission defeat condition time_limit is missing duration";
+        continue;
+      }
+      rules.defeat_rules.emplace_back(
+          Game::Systems::TimeLimitDefeatRule{std::max(0.0F, *condition.duration)});
       continue;
     }
 
