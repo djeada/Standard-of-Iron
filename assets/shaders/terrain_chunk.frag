@@ -502,16 +502,19 @@ void main() {
   }
 
   if (u_snow_coverage > 0.01) {
-    float snow_accumulation = smoothstep(0.32, 0.72, regional_field);
+    float snow_large = gradient_fbm(world_coord * 0.28 + vec2(123.0, 456.0));
+    float snow_small = gradient_fbm(world_coord * 0.72 + vec2(-89.0, 201.0));
+    float snow_raw = snow_large * 0.65 + snow_small * 0.35;
+    float snow_accumulation = smoothstep(0.22, 0.58, snow_raw);
+    float snow_edge = smoothstep(0.18, 0.42, snow_raw) * (1.0 - smoothstep(0.58, 0.78, snow_raw));
+    snow_accumulation = max(snow_accumulation, snow_edge * 0.4);
     float slope_snow_reduction = 1.0 - smoothstep(0.18, 0.52, slope);
-    float altitude_snow = smoothstep(6.0, 12.0, v_world_pos.y);
-    float snow_mask = clamp(altitude_snow * (0.45 + 0.55 * snow_accumulation) *
-                                slope_snow_reduction * u_snow_coverage * 1.20,
+    float snow_mask = clamp(snow_accumulation * u_snow_coverage * 1.7 * slope_snow_reduction,
                             0.0,
-                            0.84);
+                            0.95);
 
-    vec3 snow_tinted = u_snow_color * (1.0 + surface_detail * 0.08);
-    terrain_color = mix(terrain_color, snow_tinted, snow_mask * 0.85);
+    vec3 snow_tinted = u_snow_color * (1.0 + surface_detail * 0.10 + moisture_field * 0.05);
+    terrain_color = mix(terrain_color, snow_tinted, snow_mask);
   }
 
   vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
