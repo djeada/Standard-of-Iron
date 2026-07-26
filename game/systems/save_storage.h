@@ -1,12 +1,13 @@
 #pragma once
 
 #include <QByteArray>
-#include <QJsonObject>
 #include <QSqlDatabase>
 #include <QString>
+#include <QStringList>
 #include <QVariantList>
+#include <QVariantMap>
 
-#include <memory>
+#include "save_format.h"
 
 namespace Game::Campaign {
 struct CampaignDefinition;
@@ -19,23 +20,31 @@ public:
   explicit SaveStorage(QString database_path);
   ~SaveStorage();
 
+  SaveStorage(const SaveStorage&) = delete;
+  auto operator=(const SaveStorage&) -> SaveStorage& = delete;
+
   auto initialize(QString* out_error = nullptr) const -> bool;
 
-  auto save_slot(const QString& slot_name,
-                 const QString& title,
-                 const QJsonObject& metadata,
-                 const QByteArray& world_state,
-                 const QByteArray& screenshot,
-                 QString* out_error = nullptr) -> bool;
+  auto write_slot(const Save::Record& record, QString* out_error = nullptr) -> bool;
 
-  auto load_slot(const QString& slot_name,
-                 QByteArray& world_state,
-                 QJsonObject& metadata,
-                 QByteArray& screenshot,
-                 QString& title,
-                 QString* out_error = nullptr) -> bool;
+  auto read_slot(const QString& slot_name,
+                 Save::Record& out_record,
+                 QString* out_error = nullptr) const -> bool;
+
+  auto verify_slot(const QString& slot_name,
+                   QString* out_error = nullptr) const -> bool;
 
   auto list_slots(QString* out_error = nullptr) const -> QVariantList;
+
+  auto slot_names_by_kind(Save::SlotKind kind,
+                          QString* out_error = nullptr) const -> QStringList;
+
+  auto slot_exists(const QString& slot_name,
+                   QString* out_error = nullptr) const -> bool;
+
+  auto update_screenshot(const QString& slot_name,
+                         const QByteArray& screenshot,
+                         QString* out_error = nullptr) -> bool;
 
   auto delete_slot(const QString& slot_name, QString* out_error = nullptr) -> bool;
 
@@ -70,16 +79,10 @@ public:
                                  QString* out_error = nullptr) -> bool;
 
 private:
-  auto open(QString* out_error = nullptr) const -> bool;
-  auto ensure_schema(QString* out_error = nullptr) const -> bool;
-  auto create_base_schema(QString* out_error = nullptr) const -> bool;
-  auto migrate_schema(int from_version, QString* out_error = nullptr) const -> bool;
-  auto schema_version(QString* out_error = nullptr) const -> int;
-  auto set_schema_version(int version, QString* out_error = nullptr) const -> bool;
-  auto migrate_to_2(QString* out_error = nullptr) const -> bool;
-  auto migrate_to_3(QString* out_error = nullptr) const -> bool;
-  auto ensure_campaign_in_db(const Game::Campaign::CampaignDefinition& campaign,
-                             QString* out_error = nullptr) -> bool;
+  auto open(QString* out_error) const -> bool;
+  auto ensure_schema(QString* out_error) const -> bool;
+  auto create_schema(QString* out_error) const -> bool;
+  auto drop_schema(QString* out_error) const -> bool;
 
   QString m_database_path;
   QString m_connection_name;

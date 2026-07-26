@@ -68,6 +68,8 @@ public:
 
   static void restore_level_from_metadata(const QJsonObject& metadata,
                                           LevelSnapshot& level);
+
+  static void restore_player_nations_from_metadata(const QJsonObject& metadata);
 };
 
 } // namespace Game::Systems

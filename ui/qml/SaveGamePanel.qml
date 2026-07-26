@@ -166,14 +166,18 @@ Item {
                                 clear();
                                 if (typeof game === 'undefined' || !game.get_save_slots)
                                     return;
-                                var slots = game.get_save_slots();
-                                for (var i = 0; i < slots.length; i++) {
+                                var entries = game.get_save_slots();
+                                for (var i = 0; i < entries.length; i++) {
                                     append({
-                                            "slot_name": slots[i].slot_name || slots[i].name,
-                                            "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
-                                            "timestamp": slots[i].timestamp,
-                                            "map_name": slots[i].map_name || "Unknown Map",
-                                            "thumbnail": slots[i].thumbnail || ""
+                                            "slot_name": entries[i].slot_name,
+                                            "title": entries[i].title || entries[i].slot_name || "Untitled Save",
+                                            "timestamp": entries[i].timestamp,
+                                            "map_name": entries[i].map_name || "Unknown Map",
+                                            "mode": entries[i].mode || "",
+                                            "kind": entries[i].kind || "manual",
+                                            "stored_size": entries[i].stored_size || 0,
+                                            "uncompressed_size": entries[i].uncompressed_size || 0,
+                                            "thumbnail": entries[i].thumbnail || ""
                                         });
                                 }
                             }
@@ -248,7 +252,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: model.map_name
+                                        text: model.uncompressed_size > 0 ? qsTr("%1 - %2 (%3 KB on disk)").arg(model.map_name).arg(model.mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish")).arg(Math.max(1, Math.round(model.stored_size / 1024))) : model.map_name
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true

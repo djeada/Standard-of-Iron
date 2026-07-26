@@ -11,6 +11,7 @@
 #include "entity_cache.h"
 #include "game/map/mission_context.h"
 #include "game/systems/game_state_serializer.h"
+#include "game/systems/save_format.h"
 
 class AudioCoordinator;
 class CampaignManager;
@@ -59,13 +60,15 @@ struct SaveToSlotContext {
   QString slot;
   QString title;
   QString map_name;
-  const QByteArray& screenshot;
   std::optional<Game::Mission::MissionContext> mission_context;
+  Game::Systems::Save::SlotKind kind = Game::Systems::Save::SlotKind::Manual;
+  double play_time_seconds = 0.0;
+  int autosave_retention = 0;
 };
 
 struct SaveToSlotEffects {
-  bool success = false;
-  bool emit_save_slots_changed = false;
+  bool queued = false;
+  quint64 job_id = 0;
   QString error;
 };
 
@@ -103,7 +106,7 @@ public:
                               ApplyRuntimeContext context) const;
 
   [[nodiscard]] auto
-  save_to_slot(const SaveToSlotContext& context) const -> SaveToSlotEffects;
+  begin_save_to_slot(const SaveToSlotContext& context) const -> SaveToSlotEffects;
   [[nodiscard]] auto
   load_from_slot(const LoadFromSlotContext& context) const -> LoadFromSlotEffects;
 };

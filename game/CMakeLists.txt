@@ -101,6 +101,7 @@ add_library(game_systems STATIC
     systems/global_stats_registry.cpp
     systems/victory_service.cpp
     systems/undead_awakening_system.cpp
+    systems/save_format.cpp
     systems/save_load_service.cpp
     systems/save_storage.cpp
     systems/game_state_serializer.cpp
