@@ -21,7 +21,7 @@
 #include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace {
 

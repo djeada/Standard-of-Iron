@@ -4,9 +4,9 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_specs.h"
 
 using namespace Render::GL;
 

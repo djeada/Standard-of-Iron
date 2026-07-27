@@ -1,11 +1,13 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
 in vec3 v_world_pos;
 
 uniform vec3 u_color;
-uniform vec3 u_light_direction;
 uniform sampler2D u_fog_texture;
 
 out vec4 frag_color;
@@ -139,7 +141,7 @@ void main() {
   vec3 Ng = normalize(v_normal);
   vec3 N = normalize(mix(Ng, n_bump, 0.65));
 
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(vec3(0.0, 0.9, 0.4));
 
   float NdotL = max(dot(N, L), 0.0);
@@ -153,13 +155,12 @@ void main() {
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  vec3 hemi_sky = vec3(0.13, 0.15, 0.16);
-  vec3 hemi_ground = vec3(0.09, 0.08, 0.07);
-  float hemi = N.y * 0.5 + 0.5;
-
-  vec3 lit_color = base_color * (0.43 + 0.58 * diffuse) * ao;
-  lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.09;
-  lit_color += vec3(0.85) * spec * 0.14;
+  vec3 lit_color =
+      base_color *
+      (environment_ambient_light(N) +
+       environment_primary_color() * environment_primary_intensity() * diffuse * 0.58) *
+      ao * environment_exposure();
+  lit_color += environment_primary_color() * spec * 0.14;
 
   float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(uv * 7.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
@@ -169,5 +170,7 @@ void main() {
   float fog_amt = 1.0 - fog_mask;
   lit_color *= mix(1.0, 0.85, fog_amt * 0.5);
 
+  lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
+  lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   frag_color = vec4(lit_color, 1.0);
 }

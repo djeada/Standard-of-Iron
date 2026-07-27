@@ -4,11 +4,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "app/core/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
-#include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/capture_system.h"
@@ -18,8 +18,8 @@
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
-#include "render/gl/camera.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace {
 
@@ -112,7 +112,7 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = k_local_player_id;
   const auto load_result = loader.start(QString::fromLatin1(k_map_path),
@@ -184,7 +184,7 @@ TEST_F(IronSepulcherSkirmishTest, DormantSepulcherDoesNotHandTheSkirmishAnEarlyW
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = k_local_player_id;
   const auto load_result = loader.start(QString::fromLatin1(k_map_path),
@@ -223,7 +223,7 @@ TEST_F(IronSepulcherSkirmishTest, RazingTheShrineBarracksDestroysItsGarrison) {
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = k_local_player_id;
   const auto load_result = loader.start(QString::fromLatin1(k_map_path),
@@ -291,7 +291,7 @@ TEST_F(IronSepulcherSkirmishTest, ShrineFlagOnlyFallsBetweenWaves) {
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = k_local_player_id;
   const auto load_result = loader.start(QString::fromLatin1(k_map_path),
@@ -362,7 +362,7 @@ TEST_F(IronSepulcherSkirmishTest, CapturingTheShrineBarracksDestroysItsGarrison)
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = k_local_player_id;
   const auto load_result = loader.start(QString::fromLatin1(k_map_path),

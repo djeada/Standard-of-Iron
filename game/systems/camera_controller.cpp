@@ -1,6 +1,6 @@
 #include "camera_controller.h"
 
-#include "../../render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace Game::Systems {
 

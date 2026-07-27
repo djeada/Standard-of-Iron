@@ -257,7 +257,7 @@ This page now tells the story first.
 
 For the exact C++ layout used by the engine, see:
 
-- `render/creature/bpat/bpat_format.h`
+- `animation/bpat/bpat_format.h`
 
 For the broader rendering flow, see:
 

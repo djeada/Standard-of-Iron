@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_registry.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "tests/render/test_asset_paths.h"
 

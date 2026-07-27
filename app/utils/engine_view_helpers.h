@@ -5,7 +5,7 @@
 #include <QVector3D>
 
 #include "game/systems/picking_service.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace App::Utils {
 

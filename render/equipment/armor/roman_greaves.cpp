@@ -7,11 +7,11 @@
 
 #include "../../entity/registry.h"
 #include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/style_palette.h"
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
+#include "animation/rig/humanoid_proportions.h"
 
 namespace Render::GL {
 

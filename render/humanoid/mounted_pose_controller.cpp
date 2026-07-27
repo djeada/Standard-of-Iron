@@ -11,8 +11,8 @@
 #include "animation/attack_pose_manifest.h"
 #include "animation/mounted_pose_manifest.h"
 #include "animation/posture_pose_manifest.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "humanoid_math.h"
-#include "humanoid_specs.h"
 #include "pose_controller.h"
 #include "pose_primitives.h"
 

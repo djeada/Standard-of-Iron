@@ -14,14 +14,14 @@
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
+#include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
-#include "ground_utils.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "scatter_composition.h"
 #include "scatter_runtime.h"
-#include "spawn_validator.h"
 
 namespace {
 
@@ -141,7 +141,6 @@ void StoneRenderer::generate_stone_instances() {
     return true;
   };
 
-  // Small stones should articulate rocky patches, not stipple every open field.
   const float stone_density = 0.08F;
 
   float const area_scale =

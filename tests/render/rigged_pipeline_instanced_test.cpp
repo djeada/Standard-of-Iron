@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
@@ -140,6 +141,35 @@ TEST(RiggedPipelineInstanced, HeadlessDrawInstancedPointerBatchReturnsFalse) {
   bool ok = pipe.draw_instanced(refs.data(), refs.size(), QMatrix4x4{});
   EXPECT_FALSE(ok);
   EXPECT_TRUE(pipe.batch_sizes_for_test().empty());
+}
+
+TEST(RiggedPipelineInstanced, BatchWithArenaBackedSkinIsNotPackable) {
+
+  std::array<QMatrix4x4, 4> palette{};
+  std::vector<RiggedCreatureCmd> cmds(4, make_cmd(k_mesh_a, k_mat_a));
+  std::vector<const RiggedCreatureCmd*> refs;
+  refs.reserve(cmds.size());
+  for (auto& cmd : cmds) {
+    cmd.bone_palette = palette.data();
+    refs.push_back(&cmd);
+  }
+  ASSERT_TRUE(
+      RiggedCharacterPipeline::batch_palettes_are_packable(refs.data(), refs.size()));
+
+  cmds[2].bone_palette = nullptr;
+  EXPECT_FALSE(
+      RiggedCharacterPipeline::batch_palettes_are_packable(refs.data(), refs.size()))
+      << "a soldier whose skin lives in the arena must not be packed from CPU";
+}
+
+TEST(RiggedPipelineInstanced, NullCommandInBatchIsNotPackable) {
+  std::array<QMatrix4x4, 4> palette{};
+  std::vector<RiggedCreatureCmd> cmds(2, make_cmd(k_mesh_a, k_mat_a));
+  cmds[0].bone_palette = palette.data();
+  std::vector<const RiggedCreatureCmd*> refs{&cmds[0], nullptr};
+  EXPECT_FALSE(
+      RiggedCharacterPipeline::batch_palettes_are_packable(refs.data(), refs.size()));
+  EXPECT_FALSE(RiggedCharacterPipeline::batch_palettes_are_packable(nullptr, 1));
 }
 
 } // namespace

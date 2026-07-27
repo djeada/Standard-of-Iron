@@ -1,6 +1,4 @@
-// Guards the headless balance harness itself and the matchup outcomes the
-// shipped troop stats are tuned for. If a stat edit inverts a designed counter
-// or makes an even fight unresolvable, these fail.
+
 
 #include <QDir>
 #include <QFileInfo>
@@ -96,7 +94,7 @@ TEST_F(BalanceSimTest, EvenInfantryFightResolvesInsteadOfStalling) {
   EXPECT_DOUBLE_EQ(summary.timeout_rate, 0.0);
   EXPECT_GT(summary.median_victory_seconds, 10.0);
   EXPECT_LT(summary.median_victory_seconds, 90.0);
-  // Swapping the sides has to cancel out, whichever way the tie breaks.
+
   EXPECT_NEAR(summary.a_win_rate, 0.5, 0.2);
 }
 
@@ -119,7 +117,7 @@ TEST_F(BalanceSimTest, CavalryOverrunsExposedArchers) {
 TEST_F(BalanceSimTest, EliteCommanderLosesToEqualCostLineInfantry) {
   const auto summary = run(load(QStringLiteral("commander_vs_line")), 2);
   EXPECT_LE(summary.a_win_rate, 0.35);
-  // ... but it must still be a fight, not a free kill.
+
   EXPECT_GT(summary.side_a.mean_damage_melee + summary.side_a.mean_damage_ranged,
             500.0);
 }

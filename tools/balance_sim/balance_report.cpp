@@ -94,7 +94,7 @@ auto summarize(const Fixture& fixture,
     if (result.outcome == Outcome::SideAWins || result.outcome == Outcome::SideBWins) {
       ++decisive;
       victory_times.push_back(result.elapsed_seconds);
-      // `sides_swapped` means fixture side B spawned on the left.
+
       const bool a_on_left = !result.sides_swapped;
       const bool a_won = result.outcome == Outcome::SideAWins;
       if (a_on_left == a_won) {

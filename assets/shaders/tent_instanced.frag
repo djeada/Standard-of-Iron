@@ -1,12 +1,13 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -20,7 +21,7 @@ float band(float value, float center, float half_width, float feather) {
 
 void main() {
   vec3 N = normalize(v_normal);
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(vec3(0.0, 0.86, 0.52));
   vec3 H = normalize(L + V);
 
@@ -69,15 +70,17 @@ void main() {
 
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sky = vec3(0.50, 0.58, 0.68);
-  vec3 sun = vec3(0.98, 0.86, 0.69);
-  vec3 illumination = sky * (0.18 + hemi * 0.14) + sun * ndotl * 0.72;
+  vec3 sky = environment_sky_color();
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
   float ao = mix(0.55, 1.0, hemi) * mix(1.0, 0.78, base_dirt);
   float specular = pow(max(dot(N, H), 0.0), 58.0) * mix(0.025, 0.20, iron_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.045;
 
-  vec3 color = albedo * illumination * ao;
+  vec3 color = albedo * illumination * ao * environment_exposure();
   color += sun * specular;
   color += sky * rim;
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

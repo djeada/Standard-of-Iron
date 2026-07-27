@@ -6,8 +6,8 @@
 #include <span>
 #include <vector>
 
-#include "../../../render/profiling/frame_profile.h"
 #include "../../core/component.h"
+#include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../combat_actions/body_impact.h"
@@ -230,8 +230,8 @@ void reset_action_events_if_present(Engine::Core::Entity& unit) {
 
 void process_combat_state(Engine::Core::World* world, float delta_time) {
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
-  auto& profile = Render::Profiling::global_profile();
-  Render::Profiling::AccumulatorScope const scope(&profile.combat_state_update_us);
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::combat_state_update());
 #endif
   process_spear_brace_state(world, delta_time);
   process_mounted_charge_intents(world, delta_time);

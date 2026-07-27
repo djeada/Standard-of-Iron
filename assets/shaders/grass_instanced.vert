@@ -1,4 +1,5 @@
 #version 330 core
+#include "environment_lighting.glsl"
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -13,7 +14,6 @@ uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;
 uniform vec3 u_soil_color;
-uniform vec3 u_light_dir;
 uniform vec2 u_viewport_size;
 uniform vec3 u_camera_pos;
 uniform float u_ambient_boost;
@@ -90,7 +90,7 @@ void main() {
   float dome = smoothstep(0.0, 2.5 * blade_width, length(plane));
   vec3 normal = normalize(vec3(0.0, 1.0, 0.0) + splay_normal * dome * 0.85);
 
-  vec3 light_dir = normalize(u_light_dir);
+  vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_pos - world_pos);
 
   float diffuse = clamp(dot(normal, light_dir), 0.0, 1.0);
@@ -105,12 +105,16 @@ void main() {
   vec3 root_tint = mix(u_soil_color, varied_color, 0.86);
   vec3 shaft_color = mix(root_tint, varied_color, smoothstep(0.0, 0.60, tip));
 
-  vec3 lit = shaft_color * (0.46 + 0.44 * diffuse) * root_occlusion;
-  lit += varied_color * transmission * 0.20;
+  vec3 lit = shaft_color *
+             (environment_ambient_light(normal) +
+              environment_primary_color() * environment_primary_intensity() * diffuse) *
+             root_occlusion;
+  lit += varied_color * environment_primary_color() * transmission * 0.20;
 
   lit *= mix(0.90, 1.04, tip);
 
-  float exposure = u_ambient_boost > 0.001 ? u_ambient_boost : 1.0;
+  float exposure =
+      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
   v_color = lit * exposure;
   v_alpha = coverage_fade;
   v_edge = a_uv.x * 2.0 - 1.0;

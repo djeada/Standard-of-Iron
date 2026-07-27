@@ -2,33 +2,42 @@
 
 #include <QAction>
 #include <QCloseEvent>
+#include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFont>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLineEdit>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QSignalBlocker>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabWidget>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
+#include <QtMath>
 
 #include <cmath>
 
+#include "game/map/environment_lighting.h"
 #include "json_edit_dialog.h"
+#include "json_schema.h"
 #include "map_json_keys.h"
 #include "resize_dialog.h"
 #include "troop_tool_specs.h"
@@ -84,10 +93,16 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
   layout->addWidget(
       createGuideSection("Mouse Controls",
                          "Left click places or selects.\n"
+                         "Shift + click an element adds or removes it from the "
+                         "selection.\n"
+                         "Shift + drag empty space draws a selection box.\n"
+                         "Drag any selected element to move the whole selection.\n"
+                         "Shift + click or drag places without grid snapping.\n"
                          "Drag empty space in Select mode to pan.\n"
                          "Middle click, Space + drag, or Ctrl + left drag also pans.\n"
                          "Mouse wheel zooms in and out.\n"
-                         "Right click or Escape returns to Select.\n"
+                         "Right click opens the context menu (cancels line drawing).\n"
+                         "Hover an element for a summary tooltip.\n"
                          "Double-click element to edit its JSON.\n"
                          "Double-click empty canvas opens Resize Map.",
                          panel));
@@ -98,11 +113,237 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
                                        "Ctrl+S: Save\n"
                                        "Ctrl+Shift+S: Save As\n"
                                        "Ctrl+Z / Ctrl+Y: Undo / Redo\n"
+                                       "Ctrl+A: Select all on visible layers\n"
+                                       "Ctrl+D: Duplicate selected\n"
+                                       "Ctrl+C / Ctrl+V: Copy / paste at cursor\n"
+                                       "Arrows: Nudge selected one cell\n"
+                                       "Shift+Arrows: Nudge by a quarter cell\n"
+                                       "Ctrl+0: Zoom to fit    F: Frame selection\n"
                                        "Del / Backspace: Delete selected\n"
                                        "Escape: Cancel or return to Select",
                                        panel));
 
+  layout->addWidget(
+      createGuideSection("View",
+                         "View ▸ Layers hides categories you are not editing;\n"
+                         "hidden layers cannot be selected or deleted by accident.\n"
+                         "Markers shrink as you zoom out and labels fade below 60%\n"
+                         "so dense maps stay readable.\n"
+                         "Hills, mountains and lakes always draw behind everything\n"
+                         "else, largest first. Bring to front / send to back change\n"
+                         "the view only — they are never saved to the map.",
+                         panel));
+
   layout->addStretch(1);
+  return panel;
+}
+
+auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QWidget* {
+  auto* panel = new QWidget(parent);
+  auto* layout = new QVBoxLayout(panel);
+  layout->setContentsMargins(10, 10, 10, 10);
+  layout->setSpacing(10);
+
+  auto* title = new QLabel("Environment Lighting", panel);
+  title->setObjectName("panelTitle");
+  layout->addWidget(title);
+
+  auto* description =
+      new QLabel("Author the battle clock, lighting profile, atmosphere, and weather. "
+                 "Named legacy times are imported as exact clock values.",
+                 panel);
+  description->setObjectName("panelIntro");
+  description->setWordWrap(true);
+  layout->addWidget(description);
+
+  auto* form_group = new QGroupBox("Time and profile", panel);
+  auto* form = new QFormLayout(form_group);
+
+  auto* time = new QDoubleSpinBox(form_group);
+  time->setRange(0.0, 23.99);
+  time->setDecimals(2);
+  time->setSingleStep(0.25);
+  time->setSuffix(" h");
+  form->addRow("Start time", time);
+
+  auto* mode = new QComboBox(form_group);
+  mode->addItem("Locked", "locked");
+  mode->addItem("Scripted", "scripted");
+  mode->addItem("Continuous", "continuous");
+  form->addRow("Time mode", mode);
+
+  auto* day_length = new QDoubleSpinBox(form_group);
+  day_length->setRange(1.0, 86400.0);
+  day_length->setDecimals(0);
+  day_length->setSingleStep(60.0);
+  day_length->setSuffix(" s");
+  form->addRow("Day length", day_length);
+
+  auto* profile = new QComboBox(form_group);
+  profile->setEditable(true);
+  profile->addItems({"mediterranean_summer", "iron_sepulcher"});
+  form->addRow("Lighting profile", profile);
+
+  auto* fog = new QDoubleSpinBox(form_group);
+  fog->setRange(-1.0, 0.10);
+  fog->setDecimals(4);
+  fog->setSingleStep(0.001);
+  fog->setSpecialValueText("Profile");
+  form->addRow("Fog density", fog);
+
+  auto* exposure = new QDoubleSpinBox(form_group);
+  exposure->setRange(-1.0, 2.5);
+  exposure->setDecimals(2);
+  exposure->setSingleStep(0.05);
+  exposure->setSpecialValueText("Profile");
+  form->addRow("Exposure", exposure);
+  layout->addWidget(form_group);
+
+  auto* weather_group = new QGroupBox("Weather preview", panel);
+  auto* weather_form = new QFormLayout(weather_group);
+  auto* weather = new QComboBox(weather_group);
+  weather->addItem("Off", "off");
+  weather->addItem("Rain", "rain");
+  weather->addItem("Snow", "snow");
+  weather_form->addRow("Weather", weather);
+  auto* weather_intensity = new QDoubleSpinBox(weather_group);
+  weather_intensity->setRange(0.0, 1.0);
+  weather_intensity->setDecimals(2);
+  weather_intensity->setSingleStep(0.05);
+  weather_form->addRow("Intensity", weather_intensity);
+  auto* shadow_quality = new QComboBox(weather_group);
+  shadow_quality->addItems({"Low", "Medium", "High", "Ultra"});
+  shadow_quality->setCurrentText("High");
+  shadow_quality->setToolTip(
+      "Preview choice for Arena; runtime quality remains a player graphics setting.");
+  weather_form->addRow("Shadow preview", shadow_quality);
+  layout->addWidget(weather_group);
+
+  auto* sun = new QLabel(panel);
+  sun->setObjectName("panelHint");
+  sun->setWordWrap(true);
+  layout->addWidget(sun);
+  layout->addStretch(1);
+
+  const auto refresh = [=]() {
+    const QJsonObject environment = map_data->environment();
+    const QSignalBlocker block_time(time);
+    const QSignalBlocker block_mode(mode);
+    const QSignalBlocker block_day_length(day_length);
+    const QSignalBlocker block_profile(profile);
+    const QSignalBlocker block_fog(fog);
+    const QSignalBlocker block_exposure(exposure);
+    const QSignalBlocker block_weather(weather);
+    const QSignalBlocker block_weather_intensity(weather_intensity);
+
+    const double hour =
+        environment.value(MapEditor::MapJsonKeys::start_time).toDouble(13.0);
+    time->setValue(hour);
+    const QString mode_value =
+        environment.value(MapEditor::MapJsonKeys::time_mode).toString("locked");
+    mode->setCurrentIndex(std::max(0, mode->findData(mode_value)));
+    day_length->setValue(
+        environment.value(MapEditor::MapJsonKeys::day_length_seconds).toDouble(1800.0));
+    profile->setCurrentText(environment.value(MapEditor::MapJsonKeys::lighting_profile)
+                                .toString("mediterranean_summer"));
+    fog->setValue(
+        environment.contains(MapEditor::MapJsonKeys::fog_density)
+            ? environment.value(MapEditor::MapJsonKeys::fog_density).toDouble()
+            : -1.0);
+    exposure->setValue(
+        environment.contains(MapEditor::MapJsonKeys::exposure)
+            ? environment.value(MapEditor::MapJsonKeys::exposure).toDouble()
+            : -1.0);
+
+    const QJsonObject rain = map_data->rain();
+    const bool enabled = rain.value("enabled").toBool(false);
+    const QString weather_value =
+        enabled ? rain.value("type").toString("rain") : QStringLiteral("off");
+    weather->setCurrentIndex(std::max(0, weather->findData(weather_value)));
+    weather_intensity->setValue(rain.value("intensity").toDouble(0.5));
+    weather_intensity->setEnabled(enabled);
+
+    const auto lighting =
+        Game::Map::lighting_for_hour(static_cast<float>(hour), profile->currentText());
+    const QVector3D direction = lighting.primary_direction.normalized();
+    const double elevation_degrees =
+        qRadiansToDegrees(std::asin(std::clamp(direction.y(), -1.0F, 1.0F)));
+    const double azimuth_degrees =
+        qRadiansToDegrees(std::atan2(direction.x(), direction.z()));
+    const QString phase =
+        elevation_degrees <= 0.0
+            ? QStringLiteral("moonlight / below horizon")
+            : (elevation_degrees < 20.0 ? QStringLiteral("low-angle light")
+                                        : QStringLiteral("high sun"));
+    sun->setText(QString("Sun-direction preview: %1 — %2° elevation, %3° azimuth "
+                         "(profile \"%4\"). Team colors and selection markers retain a "
+                         "readability floor in every profile.")
+                     .arg(phase)
+                     .arg(elevation_degrees, 0, 'f', 0)
+                     .arg(azimuth_degrees, 0, 'f', 0)
+                     .arg(profile->currentText()));
+  };
+
+  const auto write_environment = [=]() {
+    QJsonObject environment = map_data->environment();
+    environment[MapEditor::MapJsonKeys::start_time] = time->value();
+    environment[MapEditor::MapJsonKeys::time_mode] = mode->currentData().toString();
+    environment[MapEditor::MapJsonKeys::day_length_seconds] = day_length->value();
+    environment[MapEditor::MapJsonKeys::lighting_profile] = profile->currentText();
+    if (fog->value() < 0.0) {
+      environment.remove(MapEditor::MapJsonKeys::fog_density);
+    } else {
+      environment[MapEditor::MapJsonKeys::fog_density] = fog->value();
+    }
+    if (exposure->value() < 0.0) {
+      environment.remove(MapEditor::MapJsonKeys::exposure);
+    } else {
+      environment[MapEditor::MapJsonKeys::exposure] = exposure->value();
+    }
+    map_data->set_environment(environment);
+  };
+
+  QObject::connect(time,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_environment(); });
+  QObject::connect(mode,
+                   qOverload<int>(&QComboBox::currentIndexChanged),
+                   panel,
+                   [=](int) { write_environment(); });
+  QObject::connect(day_length,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_environment(); });
+  QObject::connect(
+      profile->lineEdit(), &QLineEdit::editingFinished, panel, write_environment);
+  QObject::connect(fog,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_environment(); });
+  QObject::connect(exposure,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_environment(); });
+
+  const auto write_weather = [=]() {
+    QJsonObject rain = map_data->rain();
+    const QString selected = weather->currentData().toString();
+    rain["enabled"] = selected != QStringLiteral("off");
+    rain["type"] = selected == QStringLiteral("snow") ? "snow" : "rain";
+    rain["intensity"] = weather_intensity->value();
+    map_data->set_rain(rain);
+  };
+  QObject::connect(weather,
+                   qOverload<int>(&QComboBox::currentIndexChanged),
+                   panel,
+                   [=](int) { write_weather(); });
+  QObject::connect(weather_intensity,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_weather(); });
+  QObject::connect(map_data, &MapEditor::MapData::data_changed, panel, refresh);
+  refresh();
   return panel;
 }
 
@@ -194,6 +435,9 @@ void EditorWindow::setup_ui() {
   connect(m_canvas, &MapCanvas::zoom_changed, this, [this](float zoom) {
     m_zoom_label->setText(QString("%1%").arg(static_cast<int>(zoom * 100)));
   });
+  connect(m_canvas, &MapCanvas::action_feedback, this, [this](const QString& message) {
+    show_action_feedback(message);
+  });
   connect(m_canvas,
           &MapCanvas::selection_changed,
           this,
@@ -251,6 +495,12 @@ void EditorWindow::setup_ui() {
   m_mission_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   m_sidebar_tabs->addTab(m_mission_scroll, "Mission");
 
+  auto* environment_scroll = new QScrollArea(m_sidebar_tabs);
+  environment_scroll->setWidget(createEnvironmentPanel(m_map_data, environment_scroll));
+  environment_scroll->setWidgetResizable(true);
+  environment_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_sidebar_tabs->addTab(environment_scroll, "Environment");
+
   auto* guide_scroll = new QScrollArea(m_sidebar_tabs);
   guide_scroll->setWidget(createGuidePanel(guide_scroll));
   guide_scroll->setWidgetResizable(true);
@@ -286,6 +536,29 @@ void EditorWindow::setup_ui() {
       "Double-click on empty canvas area to edit dimensions");
   m_zoom_label = new QLabel("100%", this);
   m_zoom_label->setToolTip("Current zoom level (scroll to zoom)");
+  m_zoom_label->setMinimumWidth(48);
+  m_zoom_label->setAlignment(Qt::AlignCenter);
+
+  m_zoom_widget = new QWidget(this);
+  auto* zoom_layout = new QHBoxLayout(m_zoom_widget);
+  zoom_layout->setContentsMargins(0, 0, 0, 0);
+  zoom_layout->setSpacing(2);
+
+  const auto add_zoom_button =
+      [this, zoom_layout](const QString& text, const QString& tip, auto&& slot) {
+        auto* button = new QToolButton(m_zoom_widget);
+        button->setText(text);
+        button->setToolTip(tip);
+        button->setAutoRaise(true);
+        connect(button, &QToolButton::clicked, m_canvas, slot);
+        zoom_layout->addWidget(button);
+      };
+
+  add_zoom_button("−", "Zoom out (Ctrl+-)", &MapCanvas::zoom_out);
+  zoom_layout->addWidget(m_zoom_label);
+  add_zoom_button("+", "Zoom in (Ctrl++)", &MapCanvas::zoom_in);
+  add_zoom_button(
+      "Fit", "Fit the whole map in the canvas (Ctrl+0)", &MapCanvas::zoom_to_fit);
   m_cursor_label = new QLabel("X:0 Z:0", this);
   m_cursor_label->setToolTip("Grid cursor position");
   m_cursor_label->setMinimumWidth(80);
@@ -298,7 +571,7 @@ void EditorWindow::setup_ui() {
   statusBar()->addPermanentWidget(m_tool_label);
   statusBar()->addPermanentWidget(m_cursor_label);
   statusBar()->addPermanentWidget(m_file_label);
-  statusBar()->addPermanentWidget(m_zoom_label);
+  statusBar()->addPermanentWidget(m_zoom_widget);
   statusBar()->addPermanentWidget(m_dimensions_label);
   auto* version_label = new QLabel("Mission Editor v2.0", this);
   version_label->setProperty("status", "muted");
@@ -375,6 +648,93 @@ void EditorWindow::setup_menus() {
   biome_action->setToolTip("Edit ground and biome rendering settings");
   connect(biome_action, &QAction::triggered, this, &EditorWindow::edit_biome);
   edit_menu->addAction(biome_action);
+
+  edit_menu->addSeparator();
+
+  auto* duplicate_action = new QAction("&Duplicate Selection", this);
+  duplicate_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
+  duplicate_action->setToolTip("Duplicate the selected element one cell away (Ctrl+D)");
+  connect(
+      duplicate_action, &QAction::triggered, m_canvas, &MapCanvas::duplicate_selection);
+  edit_menu->addAction(duplicate_action);
+
+  auto* copy_action = new QAction("&Copy Selection", this);
+  copy_action->setShortcut(QKeySequence::Copy);
+  copy_action->setToolTip("Copy the selected element (Ctrl+C)");
+  connect(copy_action, &QAction::triggered, m_canvas, &MapCanvas::copy_selection);
+  edit_menu->addAction(copy_action);
+
+  auto* paste_action = new QAction("&Paste At Cursor", this);
+  paste_action->setShortcut(QKeySequence::Paste);
+  paste_action->setToolTip("Paste the copied element at the cursor (Ctrl+V)");
+  connect(paste_action, &QAction::triggered, m_canvas, &MapCanvas::paste_at_cursor);
+  edit_menu->addAction(paste_action);
+
+  auto* select_all_action = new QAction("Select &All", this);
+  select_all_action->setShortcut(QKeySequence::SelectAll);
+  select_all_action->setToolTip("Select every element on the visible layers (Ctrl+A)");
+  connect(select_all_action, &QAction::triggered, m_canvas, &MapCanvas::select_all);
+  edit_menu->addAction(select_all_action);
+
+  auto* view_menu = menuBar()->addMenu("&View");
+
+  auto* zoom_in_action = new QAction("Zoom &In", this);
+  zoom_in_action->setShortcut(QKeySequence::ZoomIn);
+  connect(zoom_in_action, &QAction::triggered, m_canvas, &MapCanvas::zoom_in);
+  view_menu->addAction(zoom_in_action);
+
+  auto* zoom_out_action = new QAction("Zoom &Out", this);
+  zoom_out_action->setShortcut(QKeySequence::ZoomOut);
+  connect(zoom_out_action, &QAction::triggered, m_canvas, &MapCanvas::zoom_out);
+  view_menu->addAction(zoom_out_action);
+
+  auto* zoom_fit_action = new QAction("Zoom To &Fit", this);
+  zoom_fit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+  zoom_fit_action->setToolTip("Fit the whole map in the canvas (Ctrl+0)");
+  connect(zoom_fit_action, &QAction::triggered, m_canvas, &MapCanvas::zoom_to_fit);
+  view_menu->addAction(zoom_fit_action);
+
+  auto* frame_action = new QAction("F&rame Selection\tF", this);
+  frame_action->setToolTip("Centre the view on the selected element (F)");
+  connect(frame_action, &QAction::triggered, m_canvas, &MapCanvas::frame_selection);
+  view_menu->addAction(frame_action);
+
+  view_menu->addSeparator();
+
+  auto* bring_front_action = new QAction("&Bring Selection To Front", this);
+  bring_front_action->setToolTip(
+      "Draw the selection above everything else (view only)");
+  connect(bring_front_action,
+          &QAction::triggered,
+          m_canvas,
+          &MapCanvas::bring_selection_to_front);
+  view_menu->addAction(bring_front_action);
+
+  auto* send_back_action = new QAction("Se&nd Selection To Back", this);
+  send_back_action->setToolTip("Draw the selection below everything else (view only)");
+  connect(send_back_action,
+          &QAction::triggered,
+          m_canvas,
+          &MapCanvas::send_selection_to_back);
+  view_menu->addAction(send_back_action);
+
+  auto* reset_order_action = new QAction("Reset &Draw Order", this);
+  connect(
+      reset_order_action, &QAction::triggered, m_canvas, &MapCanvas::reset_draw_order);
+  view_menu->addAction(reset_order_action);
+
+  view_menu->addSeparator();
+
+  auto* layers_menu = view_menu->addMenu("&Layers");
+  for (int layer = 0; layer < MapCanvas::LayerCount; ++layer) {
+    auto* action = new QAction(MapCanvas::layer_label(layer), this);
+    action->setCheckable(true);
+    action->setChecked(m_canvas->layer_visible(layer));
+    connect(action, &QAction::toggled, this, [this, layer](bool visible) {
+      m_canvas->set_layer_visible(layer, visible);
+    });
+    layers_menu->addAction(action);
+  }
 
   auto* toolbar = addToolBar("Main");
   toolbar->setMovable(false);
@@ -507,6 +867,8 @@ bool EditorWindow::load_file(const QString& file_path) {
     set_mission_mode(false);
     m_current_file_path = QFileInfo(file_path).absoluteFilePath();
     m_linked_map_file_path.clear();
+    m_canvas->clear_selection();
+    m_canvas->zoom_to_fit();
     update_window_title();
     update_current_file_label();
     show_action_feedback(
@@ -588,7 +950,7 @@ void EditorWindow::resize_map() {
 
 void EditorWindow::edit_biome() {
   const QJsonObject before = m_map_data->biome();
-  JsonEditDialog dialog("Edit Biome", before, false, this);
+  JsonEditDialog dialog("Edit Biome", before, false, schema_for_biome(), this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     m_map_data->execute_command(
         std::make_unique<UpdateBiomeCmd>(m_map_data, before, dialog.get_json()));
@@ -940,7 +1302,14 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool enable_hill_projection =
       (element_type == 0 && (terrain_type == "hill" || terrain_type == "mountain"));
-  JsonEditDialog dialog(title, json, enable_hill_projection, this);
+  const QString sub_type = element_type == 5
+                               ? json.value(QStringLiteral("anchor_type")).toString()
+                               : json.value(MapJsonKeys::type).toString();
+  JsonEditDialog dialog(title,
+                        json,
+                        enable_hill_projection,
+                        schema_for_element(element_type, sub_type),
+                        this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     QJsonObject new_json = dialog.get_json();
 
@@ -1382,6 +1751,7 @@ bool EditorWindow::load_linked_map(const QString& authored_path, QString* out_er
   }
   m_linked_map_file_path = resolved;
   m_canvas->clear_selection();
+  m_canvas->zoom_to_fit();
   m_mission_panel->refresh();
   return true;
 }
@@ -1676,6 +2046,10 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
   if (!type_name.isEmpty()) {
     m_selection_status_text =
         QString("Selected: %1 at %2").arg(prettifyIdentifier(type_name), coords);
+    const int extra = m_canvas->selection_count() - 1;
+    if (extra > 0) {
+      m_selection_status_text += QString(" (+%1 more)").arg(extra);
+    }
   } else {
     m_selection_status_text.clear();
   }

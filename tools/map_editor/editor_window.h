@@ -83,6 +83,7 @@ private:
   QLabel* m_tool_label = nullptr;
   QLabel* m_dimensions_label = nullptr;
   QLabel* m_zoom_label = nullptr;
+  QWidget* m_zoom_widget = nullptr;
   QLabel* m_cursor_label = nullptr;
   QLabel* m_file_label = nullptr;
   QPlainTextEdit* m_json_preview = nullptr;

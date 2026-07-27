@@ -18,7 +18,7 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
 
@@ -156,8 +156,7 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.model = model;
     cmd.color = road_color_for_style(segment.style);
     cmd.road_surface_kind = road_surface_for_style(segment.style);
-    // The road shader feathers its own edges. A slightly translucent command
-    // enables the backend blend path while leaving the road interior opaque.
+
     cmd.alpha = 0.995F;
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);

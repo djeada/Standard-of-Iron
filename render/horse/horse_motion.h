@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "../creature/movement_animation.h"
-#include "attachment_frames.h"
+#include "animation/rig/horse_attachment_frames.h"
 
 namespace Render::Creature {
 struct HorseAnimationStateComponent;

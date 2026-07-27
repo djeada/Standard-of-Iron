@@ -1,4 +1,5 @@
 #version 330 core
+#include "environment_lighting.glsl"
 
 out vec4 frag_color;
 in vec2 tex_coord;
@@ -13,7 +14,6 @@ uniform int u_has_visibility;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
 uniform vec3 u_camera_pos;
-uniform vec3 u_light_dir;
 uniform vec3 u_fog_color;
 uniform float u_fog_start;
 uniform float u_fog_end;
@@ -115,11 +115,12 @@ float ggx_specular(
 
 vec3 procedural_sky(vec3 direction, vec3 sun_dir) {
   float elevation = saturate(direction.y * 0.5 + 0.5);
-  vec3 horizon = vec3(0.56, 0.70, 0.74);
-  vec3 zenith = vec3(0.16, 0.34, 0.48);
+  vec3 horizon = mix(environment_fog_color(), environment_sky_color(), 0.45);
+  vec3 zenith = environment_sky_color() * 0.72;
   vec3 sky = mix(horizon, zenith, elevation);
   float halo = pow(max(dot(direction, sun_dir), 0.0), 12.0);
-  return sky + vec3(0.95, 0.82, 0.62) * halo * 0.12;
+  return sky +
+         environment_primary_color() * environment_primary_intensity() * halo * 0.12;
 }
 
 void main() {
@@ -136,7 +137,7 @@ void main() {
       vec3(-gradient.x * normal_strength, 1.0, -gradient.y * normal_strength));
 
   vec3 view_dir = normalize(u_camera_pos - world_pos);
-  vec3 light_dir = normalize(u_light_dir);
+  vec3 light_dir = environment_primary_direction();
   float ndv = max(dot(normal, view_dir), 0.0);
   float ndl = max(dot(normal, light_dir), 0.0);
 
@@ -162,7 +163,8 @@ void main() {
 
   float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));
   float specular = ggx_specular(normal, view_dir, light_dir, roughness, 0.020);
-  color += vec3(0.92, 0.88, 0.76) * min(specular, 0.42) * 0.15;
+  color += environment_primary_color() * environment_primary_intensity() *
+           min(specular, 0.42) * 0.15;
 
   float river_energy = 1.0 - lake;
   float shore_band = 1.0 - smoothstep(0.006, 0.060, shore_distance);
@@ -194,7 +196,8 @@ void main() {
   float view_distance = length(u_camera_pos - world_pos);
   float fog_amount =
       smoothstep(u_fog_start, max(u_fog_start + 0.001, u_fog_end), view_distance);
-  color = mix(color, u_fog_color, fog_amount);
+  fog_amount = max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  color = mix(color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(saturate(color), 1.0);
 }

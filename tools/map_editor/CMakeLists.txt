@@ -1,11 +1,14 @@
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(map_editor
         main.cpp
+        ${CMAKE_SOURCE_DIR}/game/map/environment_lighting.cpp
         editor_window.cpp
         map_data.cpp
         mission_data.cpp
         mission_panel.cpp
         map_canvas.cpp
+        element_ops.cpp
+        json_schema.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
         hill_projection_model.cpp
@@ -22,11 +25,14 @@ else()
     add_executable(
         map_editor
         main.cpp
+        ${CMAKE_SOURCE_DIR}/game/map/environment_lighting.cpp
         editor_window.cpp
         map_data.cpp
         mission_data.cpp
         mission_panel.cpp
         map_canvas.cpp
+        element_ops.cpp
+        json_schema.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
         hill_projection_model.cpp

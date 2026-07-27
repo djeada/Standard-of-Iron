@@ -2,7 +2,6 @@
 
 #include "game/core/world.h"
 #include "game/systems/runtime_system_registry.h"
-#include "render/gl/camera.h"
 #include "render/graphics_settings.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -13,6 +12,7 @@
 #include "render/ground/terrain_surface_manager.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
+#include "scene/camera.h"
 
 auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   RenderingComponents components;

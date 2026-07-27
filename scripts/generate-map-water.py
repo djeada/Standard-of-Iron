@@ -671,8 +671,6 @@ def truncate_at_receiving_river(
         receiving_segments = list(zip(receiving, receiving[1:], strict=False))
         bank_distance = widths[other] * 0.5
 
-        # Bind the current iteration's segments as a default argument so the
-        # closure cannot observe a later loop iteration's value.
         def distance_to_receiving(
             point: Point, segments: list[tuple[Point, Point]] = receiving_segments
         ) -> float:

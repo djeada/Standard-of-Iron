@@ -265,8 +265,8 @@ feel. Mount/howdah attachment frames remain per-species (their anchor geometry d
 | Intent resolution       | `render/creature/pose_intent.{h,cpp}`                                                 |
 | Combat visual state     | `render/creature/combat_visual_state.{h,cpp}`                                         |
 | Clip selection          | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp` |
-| BPAT playback           | `render/creature/pipeline/bpat_playback.cpp`                                          |
-| BPAT blob/registry      | `render/creature/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                           |
+| BPAT playback           | `animation/bpat/bpat_playback.cpp`                                                    |
+| BPAT blob/registry      | `animation/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                                 |
 | Humanoid locomotion     | `render/humanoid/poser.cpp`, `prepare_animation.cpp`                                  |
 | Humanoid combat poses   | `render/humanoid/pose_controller.cpp`                                                 |
 | Quadruped shared gait   | `render/creature/quadruped/gait.{h,cpp}`                                              |

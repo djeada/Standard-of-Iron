@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "../../render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace Game::Systems {
 

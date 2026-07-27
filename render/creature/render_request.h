@@ -11,8 +11,8 @@
 #include <span>
 
 #include "../creature/spec.h"
+#include "animation/bpat/bpat_playback.h"
 #include "animation/clip_manifest.h"
-#include "pipeline/bpat_playback.h"
 #include "pipeline/render_pass_intent.h"
 
 namespace Render::Creature {

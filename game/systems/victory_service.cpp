@@ -250,8 +250,6 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
     return;
   }
 
-  // Time, undead-zone, resource and wave rules are not driven by world events, so
-  // they have to be polled even when the world summary is unchanged.
   if (m_has_time_based_victory || m_has_undead_zone_rules || m_has_resource_victory ||
       m_has_wave_victory || m_has_time_limit_defeat) {
     evaluate_polled_rules();

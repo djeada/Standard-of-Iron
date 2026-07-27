@@ -12,7 +12,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace {
 

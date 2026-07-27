@@ -22,6 +22,10 @@ class VictoryService;
 class RainManager;
 } // namespace Game::Systems
 
+namespace Game::Map {
+class EnvironmentClock;
+}
+
 class MinimapManager;
 class VisibilityCoordinator;
 
@@ -41,4 +45,5 @@ struct AppSceneContext {
   VisibilityCoordinator* visibility_coordinator = nullptr;
   Game::Systems::VictoryService* victory_service = nullptr;
   Game::Systems::RainManager* rain_manager = nullptr;
+  Game::Map::EnvironmentClock* environment_clock = nullptr;
 };

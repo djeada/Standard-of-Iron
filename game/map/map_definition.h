@@ -12,63 +12,10 @@
 #include "../systems/nation_id.h"
 #include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
+#include "environment_lighting.h"
 #include "terrain.h"
 
 namespace Game::Map {
-
-enum class TimeOfDay {
-  Morning,
-  Day,
-  Afternoon,
-  Night
-};
-
-struct LightingSettings {
-  QVector3D light_direction{0.35F, 0.85F, 0.42F};
-  float ambient_strength = 0.30F;
-};
-
-inline auto lighting_for_time_of_day(TimeOfDay tod) -> LightingSettings {
-  switch (tod) {
-  case TimeOfDay::Morning:
-    return {QVector3D(0.60F, 0.30F, 0.20F).normalized(), 0.22F};
-  case TimeOfDay::Day:
-    return {QVector3D(0.35F, 0.85F, 0.42F).normalized(), 0.30F};
-  case TimeOfDay::Afternoon:
-    return {QVector3D(0.55F, 0.55F, 0.35F).normalized(), 0.27F};
-  case TimeOfDay::Night:
-    return {QVector3D(-0.20F, 0.35F, 0.50F).normalized(), 0.12F};
-  }
-  return {};
-}
-
-inline constexpr auto time_of_day_name(TimeOfDay tod) noexcept -> const char* {
-  switch (tod) {
-  case TimeOfDay::Morning:
-    return "Morning";
-  case TimeOfDay::Day:
-    return "Day";
-  case TimeOfDay::Afternoon:
-    return "Afternoon";
-  case TimeOfDay::Night:
-    return "Night";
-  }
-  return "Day";
-}
-
-inline constexpr auto representative_clock_time(TimeOfDay tod) noexcept -> const char* {
-  switch (tod) {
-  case TimeOfDay::Morning:
-    return "07:00";
-  case TimeOfDay::Day:
-    return "13:00";
-  case TimeOfDay::Afternoon:
-    return "17:00";
-  case TimeOfDay::Night:
-    return "22:00";
-  }
-  return "13:00";
-}
 
 struct GridDefinition {
   int width = 50;
@@ -407,6 +354,7 @@ struct MapDefinition {
   VictoryConfig victory;
   RainSettings rain;
   TimeOfDay time_of_day = TimeOfDay::Day;
+  EnvironmentDefinition environment;
   Game::Systems::ResourceAmounts starting_resources{};
 };
 

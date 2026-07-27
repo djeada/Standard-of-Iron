@@ -39,8 +39,6 @@ auto MissionWaveTracker::cleared_wave_count() const -> int {
     return 0;
   }
 
-  // Several AI setups usually contribute to the same assault phase, so a phase
-  // only counts once every wave belonging to it has spawned and been wiped out.
   std::map<int, bool> phase_cleared;
   for (const auto& wave : *m_waves) {
     const bool any_alive = std::any_of(wave.spawned_entity_ids.begin(),

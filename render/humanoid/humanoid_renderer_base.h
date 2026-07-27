@@ -8,7 +8,7 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
 #include "../gl/humanoid/humanoid_types.h"
-#include "humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 
 namespace Engine::Core {
 class Entity;

@@ -4,10 +4,10 @@
 
 #include <gtest/gtest.h>
 
-#include "render/gl/camera.h"
 #include "render/render_backend_factory.h"
 #include "render/scene_renderer.h"
 #include "render/software_backend.h"
+#include "scene/camera.h"
 
 using Render::RenderBackendFactory;
 using Render::ShaderQuality;

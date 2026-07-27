@@ -14,9 +14,9 @@
 #include "../rigged_mesh_cache.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
-#include "humanoid_specs.h"
 #include "skeleton.h"
 
 namespace Render::Humanoid {

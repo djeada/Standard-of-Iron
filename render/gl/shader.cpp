@@ -23,6 +23,7 @@
 #include <mutex>
 
 #include "render_constants.h"
+#include "ubo_bindings.h"
 #include "utils/resource_utils.h"
 
 namespace Render::GL {
@@ -183,7 +184,26 @@ auto Shader::load_from_source(const QString& vertex_source,
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
+  if (success) {
+
+    (void)optional_bind_uniform_block("EnvironmentLighting",
+                                      k_environment_lighting_binding_point);
+    (void)optional_bind_uniform_block("LocalLighting", k_local_lighting_binding_point);
+    (void)optional_bind_uniform_block("DirectionalShadows",
+                                      k_directional_shadow_binding_point);
+    const UniformHandle shadow_sampler =
+        optional_uniform_handle("u_directional_shadow_map");
+    if (shadow_sampler != InvalidUniform) {
+      use();
+      set_uniform(shadow_sampler, TextureUnit::directional_shadow_map);
+      release();
+    }
+  }
   return success;
+}
+
+auto Shader::preprocess_source(const QString& source) -> QString {
+  return resolve_shader_includes(source, QString());
 }
 
 void Shader::use() {
@@ -400,7 +420,7 @@ auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool 
 
   GLuint const frame_block_idx = glGetUniformBlockIndex(m_program, "FrameData");
   if (frame_block_idx != GL_INVALID_INDEX) {
-    glUniformBlockBinding(m_program, frame_block_idx, 0);
+    glUniformBlockBinding(m_program, frame_block_idx, k_frame_data_binding_point);
   }
 
   return true;
@@ -416,6 +436,20 @@ auto Shader::bind_uniform_block(const char* block_name,
   if (idx == GL_INVALID_INDEX) {
     qWarning() << "Shader uniform block not found:" << block_name
                << "(program:" << m_program << ")";
+    return false;
+  }
+  glUniformBlockBinding(m_program, idx, binding_point);
+  return true;
+}
+
+auto Shader::optional_bind_uniform_block(const char* block_name,
+                                         std::uint32_t binding_point) -> bool {
+  if (m_program == 0 || block_name == nullptr) {
+    return false;
+  }
+  initializeOpenGLFunctions();
+  const GLuint idx = glGetUniformBlockIndex(m_program, block_name);
+  if (idx == GL_INVALID_INDEX) {
     return false;
   }
   glUniformBlockBinding(m_program, idx, binding_point);

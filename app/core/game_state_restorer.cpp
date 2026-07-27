@@ -2,10 +2,10 @@
 
 #include <QDebug>
 
+#include "app/core/environment.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
-#include "game/map/environment.h"
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -19,7 +19,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "minimap_manager.h"
-#include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -33,6 +32,7 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 #include "visibility_coordinator.h"
 
 void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
@@ -189,9 +189,9 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   if ((scene.renderer != nullptr) && (scene.active_camera != nullptr)) {
     if (loaded_definition) {
-      Game::Map::Environment::apply(def, *scene.renderer, *scene.active_camera);
+      App::Core::Environment::apply(def, *scene.renderer, *scene.active_camera);
     } else {
-      Game::Map::Environment::apply_default(*scene.renderer, *scene.active_camera);
+      App::Core::Environment::apply_default(*scene.renderer, *scene.active_camera);
     }
   }
 

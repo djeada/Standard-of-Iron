@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "animation/rig/horse_attachment_frames.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"
@@ -31,7 +32,6 @@
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/horse/attachment_frames.h"
 #include "render/horse/dimensions.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"

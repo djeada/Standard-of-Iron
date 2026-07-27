@@ -23,6 +23,7 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/rig/horse_gait.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/spec.h"
 #include "render/elephant/dimensions.h"
@@ -30,7 +31,6 @@
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_anatomy.h"
-#include "render/horse/horse_gait.h"
 #include "render/horse/horse_profile_data.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/horse/horse_spec.h"

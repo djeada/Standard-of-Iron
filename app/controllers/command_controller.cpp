@@ -22,10 +22,10 @@
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
 #include "../../game/systems/troop_profile_service.h"
-#include "../../render/gl/camera.h"
 #include "../core/rts_action_model.h"
 #include "../utils/movement_utils.h"
 #include "game/game_config.h"
+#include "scene/camera.h"
 #include "units/spawn_type.h"
 
 namespace App::Controllers {

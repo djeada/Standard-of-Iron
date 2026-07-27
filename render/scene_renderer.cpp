@@ -31,9 +31,9 @@
 #include "../game/units/troop_catalog.h"
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
+#include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
-#include "creature/bpat/bpat_registry.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -52,7 +52,6 @@
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
-#include "gl/camera.h"
 #include "gl/humanoid/animation/animation_inputs.h"
 #include "gl/primitives.h"
 #include "gl/resources.h"
@@ -71,6 +70,7 @@
 #include "profiling/combat_animation_diagnostics.h"
 #include "profiling/frame_profile.h"
 #include "render_backend_factory.h"
+#include "scene/camera.h"
 #include "selection_ring_layout.h"
 #include "software_backend.h"
 #include "submitter.h"
@@ -519,6 +519,13 @@ void Renderer::terrain_feature(const TerrainFeatureCmd& cmd) {
   TerrainFeatureCmd submitted = cmd;
   submitted.alpha *= m_alpha_override;
   m_active_queue->submit(std::move(submitted));
+}
+
+void Renderer::local_light(const Render::LocalLight& light) {
+  if (m_active_queue == nullptr || light.intensity <= 0.0F || light.radius <= 0.0F) {
+    return;
+  }
+  m_active_queue->submit_local_light(light);
 }
 
 void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {

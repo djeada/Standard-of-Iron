@@ -9,6 +9,7 @@
 #include <qvectornd.h>
 
 #include <GL/gl.h>
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -129,7 +130,7 @@ void VegetationPipeline::cache_uniforms() {
   if (m_stone_shader != nullptr) {
     m_stone_uniforms.view_proj = m_stone_shader->optional_uniform_handle("u_view_proj");
     m_stone_uniforms.light_direction =
-        m_stone_shader->uniform_handle("u_light_direction");
+        m_stone_shader->optional_uniform_handle("u_light_direction");
   }
 
   if (m_plant_shader != nullptr) {
@@ -138,7 +139,7 @@ void VegetationPipeline::cache_uniforms() {
     m_plant_uniforms.wind_strength = m_plant_shader->uniform_handle("u_wind_strength");
     m_plant_uniforms.wind_speed = m_plant_shader->uniform_handle("u_wind_speed");
     m_plant_uniforms.light_direction =
-        m_plant_shader->uniform_handle("u_light_direction");
+        m_plant_shader->optional_uniform_handle("u_light_direction");
   }
 
   if (m_pine_shader != nullptr) {
@@ -147,7 +148,7 @@ void VegetationPipeline::cache_uniforms() {
     m_pine_uniforms.wind_strength = m_pine_shader->uniform_handle("u_wind_strength");
     m_pine_uniforms.wind_speed = m_pine_shader->uniform_handle("u_wind_speed");
     m_pine_uniforms.light_direction =
-        m_pine_shader->uniform_handle("u_light_direction");
+        m_pine_shader->optional_uniform_handle("u_light_direction");
   }
 
   if (m_olive_shader != nullptr) {
@@ -156,7 +157,7 @@ void VegetationPipeline::cache_uniforms() {
     m_olive_uniforms.wind_strength = m_olive_shader->uniform_handle("u_wind_strength");
     m_olive_uniforms.wind_speed = m_olive_shader->uniform_handle("u_wind_speed");
     m_olive_uniforms.light_direction =
-        m_olive_shader->uniform_handle("u_light_direction");
+        m_olive_shader->optional_uniform_handle("u_light_direction");
   }
 
   if (m_firecamp_shader != nullptr) {
@@ -182,7 +183,7 @@ void VegetationPipeline::cache_uniforms() {
       return;
     }
     u.view_proj = shader->optional_uniform_handle("u_view_proj");
-    u.light_direction = shader->uniform_handle("u_light_direction");
+    u.light_direction = shader->optional_uniform_handle("u_light_direction");
     u.camera_pos = shader->optional_uniform_handle("u_camera_pos");
     u.time = shader->optional_uniform_handle("u_time");
     u.magic_strength = shader->optional_uniform_handle("u_magic_strength");
@@ -1355,15 +1356,30 @@ static void append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>>& ve
                                 const QVector3D& b,
                                 float half_width,
                                 float half_depth) {
-  QVector3D const axis = b - a;
-  QVector3D side(-axis.y(), axis.x(), 0.0F);
+  QVector3D dir = b - a;
+  if (dir.lengthSquared() < 1.0e-8F) {
+    dir = {0.0F, 1.0F, 0.0F};
+  } else {
+    dir.normalize();
+  }
+
+  const QVector3D reference = std::abs(dir.y()) < 0.9F ? QVector3D(0.0F, 1.0F, 0.0F)
+                                                       : QVector3D(1.0F, 0.0F, 0.0F);
+  QVector3D side = QVector3D::crossProduct(reference, dir);
   if (side.lengthSquared() < 1.0e-8F) {
     side = {1.0F, 0.0F, 0.0F};
   } else {
     side.normalize();
   }
+  QVector3D depth = QVector3D::crossProduct(dir, side);
+  if (depth.lengthSquared() < 1.0e-8F) {
+    depth = {0.0F, 0.0F, 1.0F};
+  } else {
+    depth.normalize();
+  }
+
   side *= half_width;
-  const QVector3D depth(0.0F, 0.0F, half_depth);
+  depth *= half_depth;
 
   const QVector3D a0 = a - side - depth;
   const QVector3D a1 = a + side - depth;
@@ -1447,6 +1463,77 @@ static void append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& vert
   }
 }
 
+static void
+append_spoked_wheel_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                          std::vector<uint16_t>& idx,
+                          float cx,
+                          float cy,
+                          float cz,
+                          float r,
+                          float hthk,
+                          int segs,
+                          int spokes) {
+  constexpr float k_tau = 6.28318530F;
+  const float xa = cx - hthk;
+  const float xb = cx + hthk;
+  const float rim_inner = r * 0.70F;
+  const float hub_r = std::min(0.085F, rim_inner * 0.55F);
+
+  auto ring_point = [&](float x, float radius, float angle) {
+    return QVector3D(x, cy + radius * std::sin(angle), cz + radius * std::cos(angle));
+  };
+
+  for (int i = 0; i < segs; ++i) {
+    float const a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    float const a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    float const amid = (a0 + a1) * 0.5F;
+    QVector3D const outward(0.0F, std::sin(amid), std::cos(amid));
+
+    append_quad(verts,
+                idx,
+                ring_point(xa, r, a0),
+                ring_point(xa, r, a1),
+                ring_point(xb, r, a1),
+                ring_point(xb, r, a0),
+                outward);
+    append_quad(verts,
+                idx,
+                ring_point(xb, rim_inner, a0),
+                ring_point(xb, rim_inner, a1),
+                ring_point(xa, rim_inner, a1),
+                ring_point(xa, rim_inner, a0),
+                -outward);
+    append_quad(verts,
+                idx,
+                ring_point(xb, rim_inner, a0),
+                ring_point(xb, r, a0),
+                ring_point(xb, r, a1),
+                ring_point(xb, rim_inner, a1),
+                {1.0F, 0.0F, 0.0F});
+    append_quad(verts,
+                idx,
+                ring_point(xa, rim_inner, a1),
+                ring_point(xa, r, a1),
+                ring_point(xa, r, a0),
+                ring_point(xa, rim_inner, a0),
+                {-1.0F, 0.0F, 0.0F});
+  }
+
+  append_disc_xaxis(verts, idx, cx, cy, cz, hub_r, hthk * 1.45F, 8);
+
+  float const spoke_half_thickness = hthk * 0.42F;
+  float const spoke_half_width = std::max(0.016F, r * 0.070F);
+  for (int i = 0; i < spokes; ++i) {
+    float const angle = k_tau * static_cast<float>(i) / static_cast<float>(spokes);
+    append_oriented_box(verts,
+                        idx,
+                        ring_point(cx, hub_r * 0.85F, angle),
+                        ring_point(cx, rim_inner + 0.008F, angle),
+                        spoke_half_width,
+                        spoke_half_thickness);
+  }
+}
+
 static void append_vert_prism(std::vector<std::pair<QVector3D, QVector3D>>& verts,
                               std::vector<uint16_t>& idx,
                               float cx,
@@ -1482,6 +1569,68 @@ static void append_vert_prism(std::vector<std::pair<QVector3D, QVector3D>>& vert
                   F{{cx + r * std::cos(a0), y1, cz + r * std::sin(a0)}, tn},
                   F{{cx + r * std::cos(a1), y1, cz + r * std::sin(a1)}, tn}});
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
+  }
+}
+
+static void append_barrel_yaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                                std::vector<uint16_t>& idx,
+                                float cx,
+                                float y0,
+                                float cz,
+                                float r,
+                                float height,
+                                int segs) {
+  using F = std::pair<QVector3D, QVector3D>;
+  constexpr float k_tau = 6.28318530F;
+  static constexpr float k_profile_t[] = {0.0F, 0.26F, 0.5F, 0.74F, 1.0F};
+  static constexpr float k_profile_r[] = {0.81F, 0.96F, 1.0F, 0.96F, 0.81F};
+  constexpr int k_stations = static_cast<int>(std::size(k_profile_t));
+
+  auto station_point = [&](int station, int side) {
+    float const angle = k_tau * static_cast<float>(side) / static_cast<float>(segs);
+    float const radius = r * k_profile_r[station];
+    return QVector3D(cx + radius * std::cos(angle),
+                     y0 + height * k_profile_t[station],
+                     cz + radius * std::sin(angle));
+  };
+
+  for (int station = 0; station + 1 < k_stations; ++station) {
+    for (int side = 0; side < segs; ++side) {
+      int const next = (side + 1) % segs;
+      QVector3D const lower_a = station_point(station, side);
+      QVector3D const lower_b = station_point(station, next);
+      QVector3D const upper_b = station_point(station + 1, next);
+      QVector3D const upper_a = station_point(station + 1, side);
+      QVector3D n = QVector3D::crossProduct(upper_a - lower_a, lower_b - lower_a);
+      if (n.lengthSquared() > 1.0e-8F) {
+        n.normalize();
+      } else {
+        n = {0.0F, 1.0F, 0.0F};
+      }
+      append_quad(verts, idx, lower_a, lower_b, upper_b, upper_a, -n);
+    }
+  }
+
+  QVector3D const top_normal(0.0F, 1.0F, 0.0F);
+  QVector3D const top_center(cx, y0 + height, cz);
+  QVector3D const bottom_normal(0.0F, -1.0F, 0.0F);
+  QVector3D const bottom_center(cx, y0, cz);
+  for (int side = 0; side < segs; ++side) {
+    int const next = (side + 1) % segs;
+    auto top_base = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{top_center, top_normal},
+                  F{station_point(k_stations - 1, side), top_normal},
+                  F{station_point(k_stations - 1, next), top_normal}});
+    idx.insert(idx.end(), {top_base, uint16_t(top_base + 1), uint16_t(top_base + 2)});
+
+    auto bottom_base = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{bottom_center, bottom_normal},
+                  F{station_point(0, next), bottom_normal},
+                  F{station_point(0, side), bottom_normal}});
+    idx.insert(idx.end(),
+               {bottom_base, uint16_t(bottom_base + 1), uint16_t(bottom_base + 2)});
   }
 }
 
@@ -1621,7 +1770,7 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  constexpr int k_wheel_sides = 12;
+  constexpr int k_wheel_sides = 18;
   constexpr float k_front_wheel_r = 0.22F;
   constexpr float k_rear_wheel_r = 0.28F;
   constexpr float k_front_wheel_t = 0.06F;
@@ -1632,26 +1781,45 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_box(verts, idx, {-0.54F, 0.30F, -0.56F}, {0.54F, 0.38F, -0.42F});
   append_box(verts, idx, {-0.58F, 0.32F, 0.32F}, {0.58F, 0.40F, 0.50F});
 
-  append_disc_xaxis(verts,
-                    idx,
-                    -0.76F,
-                    0.24F,
-                    -0.48F,
-                    k_front_wheel_r,
-                    k_front_wheel_t,
-                    k_wheel_sides);
-  append_disc_xaxis(verts,
-                    idx,
-                    0.76F,
-                    0.24F,
-                    -0.48F,
-                    k_front_wheel_r,
-                    k_front_wheel_t,
-                    k_wheel_sides);
-  append_disc_xaxis(
-      verts, idx, -0.80F, 0.30F, 0.42F, k_rear_wheel_r, k_rear_wheel_t, k_wheel_sides);
-  append_disc_xaxis(
-      verts, idx, 0.80F, 0.30F, 0.42F, k_rear_wheel_r, k_rear_wheel_t, k_wheel_sides);
+  constexpr int k_front_spokes = 6;
+  constexpr int k_rear_spokes = 8;
+
+  append_spoked_wheel_xaxis(verts,
+                            idx,
+                            -0.76F,
+                            0.24F,
+                            -0.48F,
+                            k_front_wheel_r,
+                            k_front_wheel_t,
+                            k_wheel_sides,
+                            k_front_spokes);
+  append_spoked_wheel_xaxis(verts,
+                            idx,
+                            0.76F,
+                            0.24F,
+                            -0.48F,
+                            k_front_wheel_r,
+                            k_front_wheel_t,
+                            k_wheel_sides,
+                            k_front_spokes);
+  append_spoked_wheel_xaxis(verts,
+                            idx,
+                            -0.80F,
+                            0.30F,
+                            0.42F,
+                            k_rear_wheel_r,
+                            k_rear_wheel_t,
+                            k_wheel_sides,
+                            k_rear_spokes);
+  append_spoked_wheel_xaxis(verts,
+                            idx,
+                            0.80F,
+                            0.30F,
+                            0.42F,
+                            k_rear_wheel_r,
+                            k_rear_wheel_t,
+                            k_wheel_sides,
+                            k_rear_spokes);
   append_box(verts, idx, {-0.82F, 0.21F, -0.53F}, {-0.72F, 0.29F, -0.43F});
   append_box(verts, idx, {0.72F, 0.21F, -0.53F}, {0.82F, 0.29F, -0.43F});
   append_box(verts, idx, {-0.85F, 0.26F, 0.36F}, {-0.75F, 0.34F, 0.48F});
@@ -1671,11 +1839,16 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_box(verts, idx, {-0.18F, 0.30F, -0.70F}, {-0.08F, 0.38F, -1.40F});
   append_box(verts, idx, {0.08F, 0.30F, -0.70F}, {0.18F, 0.38F, -1.40F});
   append_box(verts, idx, {-0.20F, 0.28F, -1.28F}, {0.20F, 0.36F, -1.20F});
+  append_box(verts, idx, {-0.34F, 0.29F, -1.44F}, {0.34F, 0.37F, -1.36F});
+  append_box(verts, idx, {-0.26F, 0.22F, -1.42F}, {-0.16F, 0.30F, -1.38F});
+  append_box(verts, idx, {0.16F, 0.22F, -1.42F}, {0.26F, 0.30F, -1.38F});
 
-  append_vert_prism(verts, idx, -0.18F, 0.50F, -0.02F, 0.15F, 0.44F, 8);
-  append_vert_prism(verts, idx, 0.20F, 0.50F, 0.08F, 0.14F, 0.40F, 8);
-  append_box(verts, idx, {-0.40F, 0.50F, 0.14F}, {-0.04F, 0.84F, 0.42F});
+  append_barrel_yaxis(verts, idx, -0.18F, 0.50F, -0.02F, 0.155F, 0.44F, 12);
+  append_barrel_yaxis(verts, idx, 0.20F, 0.50F, 0.08F, 0.145F, 0.40F, 12);
+  append_box(verts, idx, {-0.40F, 0.50F, 0.14F}, {-0.04F, 0.78F, 0.42F});
+  append_box(verts, idx, {-0.42F, 0.78F, 0.12F}, {-0.02F, 0.82F, 0.44F});
   append_box(verts, idx, {0.00F, 0.50F, -0.30F}, {0.36F, 0.72F, -0.02F});
+  append_box(verts, idx, {-0.02F, 0.72F, -0.32F}, {0.38F, 0.76F, 0.00F});
   append_box(verts, idx, {-0.16F, 0.86F, -0.10F}, {0.22F, 1.00F, 0.18F});
 
   upload_prop_mesh_impl(verts,
@@ -1845,6 +2018,8 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
 
   append_oriented_box(
       verts, idx, {-0.64F, 0.05F, 0.17F}, {-0.50F, 1.72F, 0.09F}, 0.032F, 0.034F);
+  append_oriented_box(
+      verts, idx, {-0.515F, 1.54F, 0.099F}, {-0.503F, 1.68F, 0.092F}, 0.046F, 0.047F);
   append_leaf_blade(-0.485F, 1.62F, 0.09F, 0.115F, 0.42F, 0.035F);
   append_box(verts, idx, {-0.675F, 0.00F, 0.13F}, {-0.595F, 0.12F, 0.21F});
 
@@ -1868,6 +2043,8 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
 
   append_oriented_box(
       verts, idx, {0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F}, 0.030F, 0.032F);
+  append_oriented_box(
+      verts, idx, {0.665F, 1.52F, 0.089F}, {0.677F, 1.66F, 0.082F}, 0.044F, 0.045F);
   append_leaf_blade(0.690F, 1.60F, 0.08F, 0.105F, 0.40F, 0.033F);
   append_box(verts, idx, {0.505F, 0.00F, 0.12F}, {0.585F, 0.12F, 0.20F});
 
@@ -1879,13 +2056,13 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
       float z;
     };
     static constexpr Pt pts[] = {
-        {0.25F, 0.06F, -0.02F},
-        {0.43F, 0.38F, -0.05F},
-        {0.56F, 0.74F, -0.08F},
-        {0.60F, 1.06F, -0.08F},
-        {0.55F, 1.42F, -0.06F},
-        {0.40F, 1.72F, -0.03F},
-        {0.22F, 1.94F, -0.01F},
+        {0.25F, 0.06F, -0.20F},
+        {0.43F, 0.38F, -0.23F},
+        {0.56F, 0.74F, -0.26F},
+        {0.60F, 1.06F, -0.26F},
+        {0.55F, 1.42F, -0.24F},
+        {0.40F, 1.72F, -0.21F},
+        {0.22F, 1.94F, -0.19F},
     };
     for (int i = 0; i < 6; ++i) {
       append_oriented_box(verts,
@@ -1896,8 +2073,8 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
                           k_depth);
     }
     append_oriented_box(
-        verts, idx, {0.225F, 0.10F, -0.02F}, {0.205F, 1.88F, -0.01F}, 0.006F, 0.006F);
-    append_box(verts, idx, {0.520F, 0.86F, -0.12F}, {0.625F, 1.12F, 0.02F});
+        verts, idx, {0.225F, 0.10F, -0.20F}, {0.205F, 1.88F, -0.19F}, 0.006F, 0.006F);
+    append_box(verts, idx, {0.520F, 0.86F, -0.29F}, {0.625F, 1.12F, -0.16F});
   }
 
   upload_prop_mesh_impl(verts,
