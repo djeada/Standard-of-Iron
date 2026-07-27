@@ -556,7 +556,6 @@ TEST_F(VictoryServiceTest, VictoryModeAllRequiresEverySatisfiedRule) {
   m_service->configure(rules, 1);
   m_service->set_undead_zone_query(&zones);
 
-  // The timer alone satisfies one rule; under "all" that must not end the mission.
   advance_past_startup_delay(world);
   EXPECT_FALSE(m_service->is_game_over());
 
@@ -611,7 +610,6 @@ TEST_F(VictoryServiceTest, AccumulateResourcesReadsLifetimeHarvestNotCurrentBala
   advance_past_startup_delay(world);
   EXPECT_FALSE(m_service->is_game_over());
 
-  // A plain grant is not a harvest and must not count towards the objective.
   resources.add(1, Game::Systems::ResourceType::Wood, 500);
   m_service->update(world, 0.1F);
   EXPECT_FALSE(m_service->is_game_over());
@@ -621,7 +619,7 @@ TEST_F(VictoryServiceTest, AccumulateResourcesReadsLifetimeHarvestNotCurrentBala
   EXPECT_FALSE(m_service->is_game_over());
 
   resources.add_harvested(1, Game::Systems::ResourceType::Wood, 40);
-  // Spending afterwards must not undo the progress already banked.
+
   resources.spend(1, required);
   m_service->update(world, 0.1F);
 

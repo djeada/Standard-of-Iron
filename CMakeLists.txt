@@ -72,6 +72,14 @@ if(WIN32)
     add_compile_definitions(NOMINMAX) # Prevent min/max macros from windows.h
 endif()
 
+# Per-soldier submission diagnostics and shader-bind auditing.  Implied by Debug;
+# available in Release so the Arena regression scenarios can verify rendering
+# without paying for an unoptimised build.
+option(SOI_RUNTIME_TRACING "Enable runtime rendering diagnostics" OFF)
+if(SOI_RUNTIME_TRACING AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
+endif()
+
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
@@ -212,9 +220,34 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # engine core moved under game; no separate engine subdir target
+# Layering guard.  render/ reads game state to draw it; the simulation must not
+# depend on the renderer.  game_systems does not link render_gl, so symbol-level
+# violations already fail to link -- this catches header-only ones at build time
+# and names the offending file instead of producing a confusing link error.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_custom_target(
+        check_layering
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-layering.py ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking layer dependencies"
+        VERBATIM
+    )
+else()
+    message(STATUS "Python3 not found; skipping the layering check")
+endif()
+
 add_subdirectory(animation)
+add_subdirectory(scene)
 add_subdirectory(render)
 add_subdirectory(game)
+# render/ reads game state to draw it: terrain, visibility, nations, and the
+# shared world placement rules.  Declared here because render/ is configured
+# before game/.  This is now a one-way edge -- game_systems does not link
+# render_gl -- so the simulation builds and runs without the renderer.
+target_link_libraries(render_gl PUBLIC game_systems)
+
 add_subdirectory(ui)
 add_subdirectory(tools)
 add_subdirectory(tests)
@@ -262,6 +295,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
         app/core/visibility_coordinator.cpp
+        app/core/world_bootstrap.cpp
+        app/core/environment.cpp
+        app/core/level_loader.cpp
+        app/core/skirmish_loader.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
         app/core/audio_coordinator.cpp
@@ -310,6 +347,10 @@ else()
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
         app/core/visibility_coordinator.cpp
+        app/core/world_bootstrap.cpp
+        app/core/environment.cpp
+        app/core/level_loader.cpp
+        app/core/skirmish_loader.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
         app/core/audio_coordinator.cpp
@@ -395,6 +436,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/LoadScreen.qml
         RESOURCES
             ui/qml/ui_audio.js
+        assets/shaders/include/environment_lighting.glsl
+        assets/shaders/include/local_lighting.glsl
+        assets/shaders/include/directional_shadows.glsl
+        assets/shaders/directional_shadow_depth.vert
+        assets/shaders/directional_shadow_rigged.vert
+        assets/shaders/directional_shadow_depth.frag
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag

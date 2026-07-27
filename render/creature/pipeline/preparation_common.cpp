@@ -16,8 +16,8 @@
 #include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
-#include "../bpat/bpat_registry.h"
 #include "../pose_intent.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "animation/playback_manifest.h"
 

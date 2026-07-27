@@ -4,7 +4,7 @@
 
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
-#include "attachment_frames.h"
+#include "animation/rig/horse_attachment_frames.h"
 #include "dimensions.h"
 
 namespace Render::Creature::Pipeline {

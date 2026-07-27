@@ -14,8 +14,13 @@ add_executable(
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/mission_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
+    ${CMAKE_SOURCE_DIR}/tools/map_editor/element_ops.cpp
+    ${CMAKE_SOURCE_DIR}/tools/map_editor/json_schema.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/visibility_coordinator.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/skirmish_loader.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/level_loader.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/environment.cpp
     ${CMAKE_SOURCE_DIR}/app/core/commander_control_controller.cpp
     ${CMAKE_SOURCE_DIR}/app/core/input_command_handler.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
@@ -129,6 +134,9 @@ add_executable(
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
     render/dead_tree_mesh_test.cpp
+    architecture/layering_test.cpp
+    render/local_lighting_test.cpp
+    render/graphics_lighting_settings_test.cpp
     render/scatter_composition_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_scene_proxy_test.cpp
@@ -150,6 +158,7 @@ add_executable(
     render/bpat/bpat_registry_test.cpp
     render/humanoid/skeleton_test.cpp
     render/humanoid/humanoid_spec_test.cpp
+    render/horse/mounted_seat_frame_test.cpp
     render/horse/horse_spec_test.cpp
     render/horse/horse_anatomy_test.cpp
     render/elephant/elephant_spec_test.cpp
@@ -191,6 +200,8 @@ add_executable(
     tools/map_editor_map_data_test.cpp
     tools/map_editor_mission_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
+    tools/map_editor_element_ops_test.cpp
+    tools/map_editor_json_schema_test.cpp
     tools/hill_projection_model_test.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp

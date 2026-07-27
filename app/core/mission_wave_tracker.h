@@ -11,9 +11,6 @@ class World;
 
 namespace App::Core {
 
-// Reports mission wave progress to the VictoryService. A wave phase counts as
-// cleared once it has spawned and every unit it spawned is gone, which is what
-// the `survive_waves` victory condition waits on.
 class MissionWaveTracker : public Game::Systems::MissionWaveQuery {
 public:
   void bind(const std::vector<PendingMissionWave>* waves, Engine::Core::World* world) {

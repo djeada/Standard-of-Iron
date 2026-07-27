@@ -1,4 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -9,8 +12,8 @@ out vec4 frag_color;
 
 void main() {
   vec3 normal = normalize(v_normal);
-  vec3 light_dir = normalize(vec3(1.0, 1.0, 1.0));
-  float diff = max(dot(normal, light_dir), 0.2);
-  vec3 color = v_color * diff;
+  vec3 color = v_color * environment_lighting(normal, 0.12);
+  color += color * local_lighting(v_world_pos, normal);
+  color = apply_directional_shadow(color, v_world_pos, normal);
   frag_color = vec4(color, v_alpha);
 }

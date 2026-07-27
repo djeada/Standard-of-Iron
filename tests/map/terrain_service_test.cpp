@@ -3,16 +3,16 @@
 #include <gtest/gtest.h>
 #include <utility>
 
+#include "app/core/skirmish_loader.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
-#include "game/map/skirmish_loader.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
-#include "render/gl/camera.h"
-#include "render/ground/spawn_validator.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace {
 
@@ -820,7 +820,7 @@ TEST_F(TerrainServiceTest, SkirmishLoaderKeepsRuntimeHarvestScatterAvailable) {
   Engine::Core::World world;
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   Render::GL::Camera camera;
-  Game::Map::SkirmishLoader loader(world, renderer, camera);
+  App::Core::SkirmishLoader loader(world, renderer, camera);
 
   int selected_player_id = 1;
   auto const result = loader.start(

@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "attachment_frames.h"
-#include "horse_gait.h"
+#include "animation/rig/horse_attachment_frames.h"
+#include "animation/rig/horse_gait.h"
 
 namespace Render::GL {
 

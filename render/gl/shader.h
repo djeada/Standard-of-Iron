@@ -66,6 +66,9 @@ public:
   void clear_uniform_cache() { m_uniform_value_cache.clear(); }
 
   auto bind_uniform_block(const char* block_name, std::uint32_t binding_point) -> bool;
+  auto optional_bind_uniform_block(const char* block_name,
+                                   std::uint32_t binding_point) -> bool;
+  [[nodiscard]] static auto preprocess_source(const QString& source) -> QString;
 
 private:
   GLuint m_program = 0;

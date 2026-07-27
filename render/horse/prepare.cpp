@@ -15,11 +15,11 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
-#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "horse_motion.h"
 #include "horse_renderer_base.h"
+#include "scene/camera.h"
 
 namespace Render::Horse {
 

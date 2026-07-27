@@ -1,4 +1,5 @@
 #version 330 core
+#include "environment_lighting.glsl"
 
 in vec2 v_tex_coord;
 in vec3 v_world_pos;
@@ -35,7 +36,7 @@ void main() {
   float wobble = 0.04 * sin(uv.x * 5.3) * sin(uv.y * 4.7);
   r = max(0.0, r + wobble);
 
-  float gaussian = exp(-r * r * 2.2);
+  float gaussian = exp(-r * r * mix(3.0, 1.45, environment_shadow_softness()));
   float feather = clamp(1.0 - r, 0.0, 1.0);
   float shadow_intensity = mix(feather, gaussian, 0.7);
   shadow_intensity = pow(shadow_intensity, 1.35);
@@ -53,9 +54,10 @@ void main() {
 
   shadow_intensity *= tex_alpha;
 
-  vec3 shadow_color = vec3(0.013) * u_color * tex_color;
+  vec3 shadow_color =
+      environment_shadow_tint() * tex_color * (vec3(1.0) + u_color * 0.0001);
 
-  float final_alpha = shadow_intensity * u_alpha * 0.95;
+  float final_alpha = shadow_intensity * u_alpha * environment_shadow_strength();
 
   vec3 final_color = shadow_color * shadow_intensity;
 

@@ -4,7 +4,7 @@
 #include <QVector3D>
 
 #include "../creature/movement_state.h"
-#include "../instance_transform.h"
+#include "animation/rig/instance_transform.h"
 #include "elephant_gait.h"
 
 namespace Render::GL {

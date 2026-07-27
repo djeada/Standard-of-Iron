@@ -179,8 +179,6 @@ TEST(MissionVictoryRulesTest, DropsAccumulateResourcesRuleWithNoPositiveAmounts)
 
   const auto rules = Game::Mission::build_victory_rules(mission);
 
-  // Nothing usable was declared, so the loader falls back to elimination rather
-  // than shipping a rule that can never be satisfied.
   ASSERT_EQ(rules.victory_rules.size(), 1);
   EXPECT_TRUE(std::holds_alternative<Game::Systems::EliminationVictoryRule>(
       rules.victory_rules[0]));
@@ -230,8 +228,6 @@ TEST(MissionVictoryRulesTest, DropsTimeLimitDefeatRuleWithoutDuration) {
 
   const auto rules = Game::Mission::build_victory_rules(mission);
 
-  // No duration means no deadline; commander defaults fill in instead of an
-  // immediately-satisfied 0s time limit.
   ASSERT_EQ(rules.defeat_rules.size(), 2);
   EXPECT_TRUE(std::holds_alternative<Game::Systems::NoCommanderDefeatRule>(
       rules.defeat_rules[0]));

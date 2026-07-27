@@ -76,6 +76,42 @@ auto read_camera(const QJsonObject& obj, CameraDefinition& cam) -> bool {
   return true;
 }
 
+void read_environment(const QJsonObject& obj, EnvironmentDefinition& environment) {
+  if (obj.contains(START_TIME)) {
+    environment.start_time = normalize_hour(
+        static_cast<float>(obj.value(START_TIME).toDouble(environment.start_time)));
+  }
+  if (obj.contains(TIME_MODE)) {
+    const QString value = obj.value(TIME_MODE).toString().trimmed().toLower();
+    if (value != QStringLiteral("locked") && value != QStringLiteral("scripted") &&
+        value != QStringLiteral("continuous")) {
+      qWarning() << "MapLoader: unknown environment time_mode" << value
+                 << "- defaulting to locked";
+    }
+    environment.time_mode = parse_time_mode(value);
+  }
+  if (obj.contains(DAY_LENGTH_SECONDS)) {
+    environment.day_length_seconds = std::max(
+        1.0F,
+        static_cast<float>(
+            obj.value(DAY_LENGTH_SECONDS).toDouble(environment.day_length_seconds)));
+  }
+  if (obj.contains(LIGHTING_PROFILE)) {
+    const QString profile = obj.value(LIGHTING_PROFILE).toString().trimmed();
+    if (!profile.isEmpty()) {
+      environment.lighting_profile = profile;
+    }
+  }
+  if (obj.contains(FOG_DENSITY)) {
+    environment.fog_density_override =
+        std::max(0.0F, static_cast<float>(obj.value(FOG_DENSITY).toDouble(0.0)));
+  }
+  if (obj.contains(EXPOSURE)) {
+    environment.exposure_override =
+        std::max(0.01F, static_cast<float>(obj.value(EXPOSURE).toDouble(1.0)));
+  }
+}
+
 auto read_vector3(const QJsonValue& value, const QVector3D& fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
@@ -1097,6 +1133,8 @@ void read_fog_zones(const QJsonArray& arr,
 auto MapLoader::load_from_json_file(const QString& path,
                                     MapDefinition& out_map,
                                     QString* out_error) -> bool {
+
+  out_map = MapDefinition{};
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {
@@ -1124,7 +1162,6 @@ auto MapLoader::load_from_json_file(const QString& path,
     return false;
   }
   auto root = doc.object();
-
   if (root.contains(QStringLiteral("buildings")) ||
       root.contains(QStringLiteral("walls"))) {
     if (out_error != nullptr) {
@@ -1312,6 +1349,12 @@ auto MapLoader::load_from_json_file(const QString& path,
                  << "- defaulting to day";
       out_map.time_of_day = TimeOfDay::Day;
     }
+    out_map.environment.start_time = hour_for_time_of_day(out_map.time_of_day);
+  }
+
+  if (root.contains(ENVIRONMENT) && root.value(ENVIRONMENT).isObject()) {
+    read_environment(root.value(ENVIRONMENT).toObject(), out_map.environment);
+    out_map.time_of_day = time_of_day_for_hour(out_map.environment.start_time);
   }
 
   if (root.contains(STARTING_RESOURCES) && root.value(STARTING_RESOURCES).isObject()) {

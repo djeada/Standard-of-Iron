@@ -14,9 +14,10 @@
 #include "../frame_budget.h"
 #include "../i_render_backend.h"
 #include "../world_chunk.h"
-#include "camera.h"
 #include "persistent_buffer.h"
 #include "resources.h"
+#include "scene/camera.h"
+#include "scene/environment_lighting.h"
 #include "shader.h"
 #include "shader_cache.h"
 
@@ -61,10 +62,14 @@ public:
   void set_animation_time(float time) noexcept override { m_animation_time = time; }
   void execute(const DrawQueue& queue, const Camera& cam) override;
 
-  void set_lighting(const QVector3D& light_dir, float ambient_strength) noexcept {
-    m_light_dir =
-        light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
-    m_ambient_strength = ambient_strength;
+  void set_environment_lighting(const EnvironmentLightingState& lighting) noexcept {
+    m_environment_lighting = lighting.sanitized();
+    m_light_dir = m_environment_lighting.primary_direction;
+    m_ambient_strength = m_environment_lighting.ambient_intensity;
+  }
+  [[nodiscard]] auto
+  environment_lighting() const noexcept -> const EnvironmentLightingState& {
+    return m_environment_lighting;
   }
   [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& {
     return m_light_dir;
@@ -193,6 +198,9 @@ private:
                                 CommandExecutionContext& context);
   void execute_rigged_commands(const PreparedBatch& prepared,
                                CommandExecutionContext& context);
+  void render_directional_shadows(const DrawQueue& queue, const Camera& cam);
+  void ensure_directional_shadow_resources(int resolution, int cascades);
+  void release_directional_shadow_resources();
 
   int m_viewport_width{0};
   int m_viewport_height{0};
@@ -227,9 +235,31 @@ private:
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;
   GLuint m_frame_ubo{0};
+  GLuint m_environment_lighting_ubo{0};
+  GLuint m_local_lighting_ubo{0};
+  GLuint m_directional_shadow_ubo{0};
+  GLuint m_directional_shadow_fbo{0};
+  GLuint m_directional_shadow_texture{0};
+  int m_directional_shadow_resolution{0};
+  int m_directional_shadow_cascades{0};
+
+  struct ShadowStaticCaster {
+    Mesh* mesh = nullptr;
+    const QMatrix4x4* model = nullptr;
+  };
+  std::vector<ShadowStaticCaster> m_shadow_static_casters;
+  std::vector<const RiggedCreatureCmd*> m_shadow_rigged_casters;
+
+  std::size_t m_rigged_drawn_this_frame = 0;
+
+  std::array<QMatrix4x4, 4> m_directional_shadow_matrices{};
+  std::array<float, 4> m_directional_shadow_splits{};
+  Shader* m_directional_shadow_depth_shader = nullptr;
+  Shader* m_directional_shadow_rigged_shader = nullptr;
 
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};
+  EnvironmentLightingState m_environment_lighting{};
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;

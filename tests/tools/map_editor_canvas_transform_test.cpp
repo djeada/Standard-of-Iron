@@ -42,4 +42,22 @@ TEST(MapEditorCanvasTransformTest, WidgetAndGridTransformsRoundTrip) {
   EXPECT_NEAR(round_trip.y(), 12.25F, 0.1F);
 }
 
+TEST(MapEditorCanvasTransformTest, GridStepKeepsLinesReadableOnLargeMaps) {
+  constexpr float min_spacing = 48.0F;
+
+  EXPECT_EQ(MapEditor::CanvasTransform::grid_step_for_spacing(8.0F, min_spacing, 10),
+            10);
+
+  const int zoomed_out_step =
+      MapEditor::CanvasTransform::grid_step_for_spacing(0.8F, min_spacing, 10);
+  EXPECT_GT(zoomed_out_step, 10);
+  EXPECT_GE(static_cast<float>(zoomed_out_step) * 0.8F, min_spacing);
+}
+
+TEST(MapEditorCanvasTransformTest, GridStepHonoursMinimumStepAndDegenerateZoom) {
+  EXPECT_EQ(MapEditor::CanvasTransform::grid_step_for_spacing(80.0F, 48.0F, 10), 10);
+  EXPECT_EQ(MapEditor::CanvasTransform::grid_step_for_spacing(80.0F, 48.0F, 1), 1);
+  EXPECT_GT(MapEditor::CanvasTransform::grid_step_for_spacing(0.0F, 48.0F, 1), 1);
+}
+
 } // namespace

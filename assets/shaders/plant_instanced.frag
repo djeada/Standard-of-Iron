@@ -1,4 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_normal;
 in vec3 v_color;
@@ -10,8 +13,6 @@ flat in float v_type;
 in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec3 v_world_pos;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -132,7 +133,7 @@ void main() {
 
   float edge_atten = mix(1.0, 0.72, rim);
 
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
 
   float nl = max(dot(N, L), 0.0);
   float half_lambert = nl * 0.5 + 0.5;
@@ -140,7 +141,6 @@ void main() {
 
   float diffuse = mix(half_lambert, wrap, 0.30) * edge_atten;
   float sss = pow(clamp(dot(-N, L), 0.0, 1.0), 2.2) * 0.22 * edge_atten;
-  float ambient = 0.13;
 
   float ao_stem = mix(0.50, 1.0, smoothstep(0.0, 0.55, v_height));
 
@@ -162,11 +162,11 @@ void main() {
   float leaf_spot = smoothstep(0.965, 0.995, blemish) * (1.0 - rim);
   albedo = mix(albedo, albedo * vec3(0.48, 0.42, 0.30), leaf_spot * 0.55);
 
-  vec3 sky = vec3(0.48, 0.57, 0.67);
-  vec3 sun = vec3(0.96, 0.85, 0.69);
-  float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 illumination = sky * (ambient + hemi * 0.11) + sun * diffuse * ao_stem;
-  vec3 color = albedo * illumination + albedo * sss * vec3(0.92, 0.86, 0.73);
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 illumination = environment_ambient_light(N) + sun * diffuse * ao_stem;
+  vec3 color = (albedo * illumination + albedo * sss * sun) * environment_exposure();
 
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, coverage);
 }

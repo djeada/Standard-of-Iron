@@ -28,9 +28,6 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/skeleton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_full_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/bpat/bpat_writer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/bpat/bpat_reader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/bpat/bpat_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_asset.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/skeleton.cpp
@@ -40,7 +37,6 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/species_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/runtime_bake_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/skeleton_factory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/gait.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/mesh_graph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/anatomy_bake.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/archetype_registry.cpp
@@ -53,7 +49,6 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/shadow_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_prepared_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/lod_decision.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/bpat_playback.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/preparation_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/humanoid_animation_selection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_render_graph.cpp

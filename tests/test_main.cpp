@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_registry.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "render/creature/snapshot_mesh_registry.h"
 
 int main(int argc, char** argv) {

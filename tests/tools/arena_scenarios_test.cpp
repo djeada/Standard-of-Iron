@@ -120,6 +120,15 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_wall_corner_showcase_id)),
             ids.end());
+  for (auto const* lighting_id : {Arena::Scenarios::k_lighting_sunrise_sunset_id,
+                                  Arena::Scenarios::k_lighting_sunset_id,
+                                  Arena::Scenarios::k_lighting_moonlit_night_id,
+                                  Arena::Scenarios::k_lighting_heavy_rain_id,
+                                  Arena::Scenarios::k_lighting_dense_battle_id,
+                                  Arena::Scenarios::k_lighting_world_materials_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(lighting_id)),
+              ids.end());
+  }
 }
 
 TEST(ArenaScenariosTest, ResolvesDescriptionsForKnownScenarios) {

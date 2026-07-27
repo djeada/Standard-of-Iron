@@ -13,17 +13,15 @@
 
 #include "../../../animation/attack_pose_manifest.h"
 #include "../../../animation/clip_manifest.h"
-#include "../../../render/creature/bpat/bpat_format.h"
-#include "../../../render/creature/bpat/bpat_reader.h"
-#include "../../../render/creature/bpat/bpat_registry.h"
-#include "../../../render/creature/pipeline/bpat_playback.h"
-#include "../../../render/entity/mounted_knight_pose.h"
-#include "../../../render/equipment/weapons/spear_renderer.h"
-#include "../../../render/horse/horse_motion.h"
-#include "../../../render/humanoid/humanoid_specs.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_playback.h"
+#include "animation/bpat/bpat_reader.h"
+#include "animation/bpat/bpat_registry.h"
+#include "animation/rig/humanoid_proportions.h"
+#include "animation/rig/mounted_seat.h"
 
 namespace Game::Systems::CombatActions {
 
@@ -194,18 +192,10 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
   return {};
 }
 
-[[nodiscard]] auto default_mounted_trace_frame() -> Render::GL::MountedAttachmentFrame {
-  auto horse_profile = Render::GL::make_horse_profile(0U, {}, {});
-  auto mount = Render::GL::compute_mount_frame(horse_profile);
-  Render::GL::tune_mounted_knight_frame(horse_profile.dims, mount);
-  return mount;
-}
-
 [[nodiscard]] auto
-mounted_seat_relative(const Render::GL::MountedAttachmentFrame& mount,
-                      Animation::MountedSeatOffset offset) -> QVector3D {
-  return mount.seat_position + mount.seat_forward * offset.forward +
-         mount.seat_right * offset.right + mount.seat_up * offset.up;
+mounted_seat_relative(Animation::MountedSeatOffset offset) -> QVector3D {
+  using namespace Animation::Rig::MountedSeat;
+  return position + forward * offset.forward + right * offset.right + up * offset.up;
 }
 
 [[nodiscard]] auto attack_pose_kind_for_definition(
@@ -566,20 +556,17 @@ sample_mounted_spear_trace_segment(const AttackerFrame& frame,
     return segment;
   }
 
-  auto const mount = default_mounted_trace_frame();
   auto const previous_pose = Animation::resolve_mounted_spear_thrust_pose({previous});
   auto const current_pose = Animation::resolve_mounted_spear_thrust_pose({current});
 
-  QVector3D const previous_grip =
-      mounted_seat_relative(mount, previous_pose.right_hand);
-  QVector3D const current_grip = mounted_seat_relative(mount, current_pose.right_hand);
+  QVector3D const previous_grip = mounted_seat_relative(previous_pose.right_hand);
+  QVector3D const current_grip = mounted_seat_relative(current_pose.right_hand);
 
-  Render::GL::SpearRenderConfig const spear_config{};
-  QVector3D const spear_dir = normalized_or(mount.seat_forward + mount.seat_up * 0.05F,
+  QVector3D const spear_dir = normalized_or(Animation::Rig::MountedSeat::forward +
+                                                Animation::Rig::MountedSeat::up * 0.05F,
                                             QVector3D(0.0F, 0.0F, 1.0F));
   float constexpr k_shaft_base_offset = -0.28F;
-  float const spear_tip_offset =
-      spear_config.spear_length + spear_config.spearhead_length;
+  float const spear_tip_offset = Animation::Rig::WeaponReach::spear_total;
 
   segment.previous_base =
       to_world(frame, previous_grip + spear_dir * k_shaft_base_offset);

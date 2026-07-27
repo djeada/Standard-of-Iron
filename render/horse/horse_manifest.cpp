@@ -10,10 +10,10 @@
 #include <span>
 #include <vector>
 
-#include "../creature/bpat/bpat_format.h"
 #include "../gl/primitives.h"
 #include "../horse/dimensions.h"
-#include "horse_gait.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/rig/horse_gait.h"
 #include "horse_layout.h"
 #include "horse_source_asset.h"
 #include "horse_spec.h"

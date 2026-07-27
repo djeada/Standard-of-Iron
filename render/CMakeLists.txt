@@ -35,6 +35,7 @@ target_link_libraries(
         ${OPENGL_LIBRARIES}
         engine_core
         animation_core
+        scene_core
 )
 
 # Optimization flags for render hot paths. Distribution builds must not use

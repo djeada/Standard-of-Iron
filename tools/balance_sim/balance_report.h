@@ -34,8 +34,6 @@ struct FixtureSummary {
   double mean_first_contact_distance{0.0};
   int battles_without_contact{0};
 
-  // Win rate for whichever side spawned on the left, across all runs. In a
-  // mirror matchup this should sit at 0.5; anything else is a spawn-side bias.
   double left_spawn_win_rate{0.0};
   double spawn_side_bias{0.0};
 

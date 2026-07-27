@@ -168,6 +168,26 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           &TerrainPanel::rain_intensity_changed,
           m_viewport,
           &ArenaViewport::set_rain_intensity);
+  connect(m_terrain_panel,
+          &TerrainPanel::environment_time_changed,
+          m_viewport,
+          &ArenaViewport::set_environment_time);
+  connect(m_terrain_panel,
+          &TerrainPanel::lighting_profile_changed,
+          m_viewport,
+          &ArenaViewport::set_lighting_profile);
+  connect(m_terrain_panel,
+          &TerrainPanel::time_mode_changed,
+          m_viewport,
+          &ArenaViewport::set_time_mode);
+  connect(m_terrain_panel,
+          &TerrainPanel::day_length_changed,
+          m_viewport,
+          &ArenaViewport::set_day_length);
+  connect(m_terrain_panel,
+          &TerrainPanel::shadow_quality_changed,
+          m_viewport,
+          &ArenaViewport::set_shadow_quality);
 
   connect(m_unit_panel,
           &UnitPanel::spawn_units_requested,

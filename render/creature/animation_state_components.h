@@ -8,9 +8,9 @@
 #include "../elephant/attachment_frames.h"
 #include "../elephant/dimensions.h"
 #include "../gl/humanoid/humanoid_types.h"
-#include "../horse/attachment_frames.h"
 #include "../horse/dimensions.h"
-#include "../horse/horse_gait.h"
+#include "animation/rig/horse_attachment_frames.h"
+#include "animation/rig/horse_gait.h"
 #include "combat_visual_state.h"
 #include "render_request.h"
 

@@ -81,7 +81,13 @@ TEST(MapEditorMapDataTest, LoadSaveKeepsSnakeCaseSchemaAndPreservesExtraRootFiel
   EXPECT_EQ(output.value(MapJsonKeys::max_troops_per_player).toInt(), 1400);
   EXPECT_FALSE(output.contains(legacy_coord_system_key));
   EXPECT_FALSE(output.contains(legacy_max_troops_key));
-  EXPECT_EQ(output.value(MapJsonKeys::time_of_day).toString(), "afternoon");
+  EXPECT_FALSE(output.contains(MapJsonKeys::time_of_day));
+  ASSERT_TRUE(output.value(MapJsonKeys::environment).isObject());
+  EXPECT_DOUBLE_EQ(output.value(MapJsonKeys::environment)
+                       .toObject()
+                       .value(MapJsonKeys::start_time)
+                       .toDouble(),
+                   17.0);
   ASSERT_TRUE(output.value(MapJsonKeys::world_props).isArray());
   EXPECT_EQ(output.value(MapJsonKeys::world_props).toArray().size(), 1);
   ASSERT_TRUE(output.value(MapJsonKeys::terrain).isArray());

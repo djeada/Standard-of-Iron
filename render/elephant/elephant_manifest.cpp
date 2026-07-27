@@ -10,9 +10,9 @@
 #include <span>
 #include <vector>
 
-#include "../creature/bpat/bpat_format.h"
 #include "../creature/quadruped/skeleton_factory.h"
 #include "../gl/primitives.h"
+#include "animation/bpat/bpat_format.h"
 #include "dimensions.h"
 #include "elephant_gait.h"
 #include "elephant_source_asset.h"

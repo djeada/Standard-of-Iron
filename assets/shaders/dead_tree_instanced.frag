@@ -1,12 +1,13 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -30,21 +31,28 @@ float noise21(vec2 p) {
 void main() {
   vec3 normal = normalize(v_normal);
   vec3 local_normal = normalize(v_local_normal);
-  vec3 light_dir = normalize(u_light_direction);
+  vec3 light_dir = environment_primary_direction();
   float ndotl = dot(normal, light_dir);
   float diffuse = max(ndotl, 0.0);
   float wrap = clamp((ndotl + 0.38) / 1.38, 0.0, 1.0);
-  float ambient = 0.24;
-  vec3 sun_color = vec3(0.94, 0.84, 0.70);
-  vec3 sky_color = vec3(0.48, 0.56, 0.67);
+  float ambient = environment_ambient_intensity();
+  vec3 sun_color = environment_primary_color() * environment_primary_intensity();
+  vec3 sky_color = environment_sky_color();
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.58, sun_color, lit_t);
-  float lighting = ambient + wrap * 0.46 + diffuse * 0.14;
+  float lighting = ambient + wrap * environment_primary_intensity() * 0.46 +
+                   diffuse * environment_primary_intensity() * 0.14;
   vec3 view_dir = normalize(vec3(0.0, 0.85, 0.53));
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
 
-  float bark_angle = atan(v_local_pos.z, v_local_pos.y - 0.16);
+  float axis_t = clamp((v_local_pos.x + 1.12) / 2.24, 0.0, 1.0);
+  float axis_radius = mix(0.255, 0.140, axis_t);
+  float axis_y = axis_radius * 0.76;
+  float axis_norm = v_local_pos.x / 1.12;
+  float axis_z = 0.07 * (1.0 - axis_norm * axis_norm) - 0.035;
+
+  float bark_angle = atan(v_local_pos.z - axis_z, v_local_pos.y - axis_y);
   float bark_axis = v_local_pos.x * 2.4;
   float bark_noise =
       noise21(vec2(bark_axis + bark_angle * 0.8, bark_angle * 2.0 + 4.0));
@@ -60,10 +68,11 @@ void main() {
   float end_mask = smoothstep(0.98, 1.08, abs_local_x);
   float cut_face_mask = end_mask * smoothstep(0.82, 0.96, abs(local_normal.x));
 
-  float end_center_y = mix(0.18, 0.17, step(0.0, v_local_pos.x));
-  float end_center_z = mix(-0.02, 0.02, step(0.0, v_local_pos.x));
-  vec2 end_delta = vec2((v_local_pos.y - end_center_y) / 0.19,
-                        (v_local_pos.z - end_center_z) / 0.20);
+  float end_radius_ref = mix(0.255, 0.140, step(0.0, v_local_pos.x));
+  float end_center_y = end_radius_ref * 0.76;
+  float end_center_z = -0.035;
+  vec2 end_delta = vec2((v_local_pos.y - end_center_y) / end_radius_ref,
+                        (v_local_pos.z - end_center_z) / (end_radius_ref * 1.04));
   float end_radius = length(end_delta);
   float end_noise =
       noise21(end_delta * 4.0 + vec2(abs_local_x * 3.0, bark_angle * 0.7 + 2.0));
@@ -99,8 +108,9 @@ void main() {
   vec3 moss_color = vec3(0.20, 0.27, 0.17);
 
   vec3 material_color = mix(bark_color, exposed_wood, cut_face_mask);
-  material_color =
-      mix(material_color, exposed_wood, end_mask * (1.0 - cut_face_mask) * 0.18);
+  float raw_break_bleed = mix(0.18, 0.72, step(0.0, v_local_pos.x));
+  material_color = mix(
+      material_color, exposed_wood, end_mask * (1.0 - cut_face_mask) * raw_break_bleed);
   material_color = mix(material_color, moss_color, moss_t);
   material_color *= mix(0.96, 1.03, noise21(v_world_pos.xz * 1.4 + vec2(7.0, 3.0)));
 
@@ -115,8 +125,10 @@ void main() {
 
   ao *= 1.0 - contact_shadow;
 
-  vec3 color = material_color * lighting * light_tint * ao;
+  vec3 color = material_color * lighting * light_tint * ao * environment_exposure();
   color += vec3(specular) * sun_color * ao;
   color += rim_color;
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

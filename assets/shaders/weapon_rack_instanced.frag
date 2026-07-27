@@ -1,12 +1,13 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -26,7 +27,7 @@ float range_mask(float value, float lo, float hi, float feather) {
 void main() {
   vec3 N = normalize(v_normal);
   vec3 LN = normalize(v_local_normal);
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(vec3(0.0, 0.86, 0.52));
   vec3 H = normalize(L + V);
 
@@ -69,9 +70,13 @@ void main() {
                  range_mask(v_local_pos.z, 0.08, 0.26, 0.025);
   float leather_mask = max(grip_a, grip_b) * (1.0 - brass_mask);
 
-  float bow_mask = range_mask(v_local_pos.x, 0.18, 0.66, 0.035) *
-                   range_mask(v_local_pos.y, 0.04, 1.98, 0.035) *
-                   range_mask(v_local_pos.z, -0.14, 0.04, 0.035);
+  float bow_u = (v_local_pos.y - 1.00) / 0.94;
+  float bow_limb_x = 0.60 - 0.36 * bow_u * bow_u;
+  float bow_span = range_mask(v_local_pos.y, 0.04, 1.98, 0.035) *
+                   range_mask(v_local_pos.z, -0.31, -0.15, 0.025);
+  float bow_mask = band(v_local_pos.x, bow_limb_x, 0.048, 0.030) * bow_span;
+  float bowstring_mask =
+      band(v_local_pos.x, 0.215, 0.020, 0.012) * bow_span * (1.0 - bow_mask);
 
   float wood_grain =
       0.5 + 0.5 * sin(v_local_pos.y * 29.0 + v_local_pos.x * 8.0 + v_local_pos.z * 5.0);
@@ -83,7 +88,8 @@ void main() {
       0.88, 0.97, hash12(floor(v_local_pos.zy * 24.0) + floor(v_local_pos.xy * 7.0)));
   timber *= mix(1.0, 0.64, nick * 0.38);
 
-  vec3 yew = mix(vec3(0.30, 0.12, 0.045), vec3(0.66, 0.31, 0.08), wood_grain);
+  vec3 yew = mix(vec3(0.38, 0.17, 0.065), vec3(0.74, 0.38, 0.11), wood_grain);
+  vec3 linen = mix(vec3(0.62, 0.58, 0.47), vec3(0.83, 0.79, 0.66), wood_mottle);
   vec3 leather = mix(vec3(0.24, 0.055, 0.025), vec3(0.58, 0.17, 0.055), wood_mottle);
   float wrap_lines = band(fract(v_local_pos.y * 22.0), 0.5, 0.12, 0.06);
   leather *= mix(0.70, 1.10, wrap_lines);
@@ -103,23 +109,26 @@ void main() {
   steel = mix(steel, vec3(0.48, 0.16, 0.045), rust * 0.22);
 
   vec3 albedo = mix(timber, yew, bow_mask);
+  albedo = mix(albedo, linen, bowstring_mask);
   albedo = mix(albedo, leather, leather_mask);
   albedo = mix(albedo, brass, brass_mask);
   albedo = mix(albedo, steel, blade_mask);
 
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sky = vec3(0.50, 0.59, 0.70);
-  vec3 sun = vec3(1.00, 0.86, 0.67);
-  vec3 illumination = sky * (0.18 + hemi * 0.14) + sun * ndotl * 0.75;
-  float ao = mix(0.54, 1.0, hemi);
+  vec3 sky = environment_sky_color();
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
+  float ao = mix(0.70, 1.0, hemi);
   float metal_mask = max(blade_mask, brass_mask);
   float spec_power = mix(24.0, 76.0, blade_mask);
   float specular = pow(max(dot(N, H), 0.0), spec_power) * mix(0.035, 0.48, metal_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.05;
 
-  vec3 color = albedo * illumination * ao;
+  vec3 color = albedo * illumination * ao * environment_exposure();
   color += sun * specular;
   color += sky * rim;
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

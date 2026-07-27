@@ -9,12 +9,12 @@
 
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "scatter_composition.h"
 #include "scatter_runtime.h"
-#include "spawn_validator.h"
 
 namespace {
 

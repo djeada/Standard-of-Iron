@@ -1,6 +1,11 @@
 add_library(
     animation_core
     STATIC
+    rig/quadruped_gait.cpp
+    bpat/bpat_reader.cpp
+    bpat/bpat_registry.cpp
+    bpat/bpat_writer.cpp
+    bpat/bpat_playback.cpp
     ambient_pose_manifest.cpp
     clip_manifest.cpp
     combat_manifest.cpp
@@ -23,3 +28,6 @@ add_library(
 )
 
 target_include_directories(animation_core PUBLIC ${CMAKE_SOURCE_DIR})
+
+# The baked-pose (BPAT) readers hand back QMatrix4x4 socket transforms.
+target_link_libraries(animation_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)

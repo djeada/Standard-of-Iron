@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../rigged_mesh.h"
-#include "bpat/bpat_format.h"
+#include "animation/bpat/bpat_format.h"
 #include "render_request.h"
 
 namespace Render::Creature::Snapshot {

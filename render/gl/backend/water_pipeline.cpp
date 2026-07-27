@@ -156,7 +156,7 @@ void WaterPipeline::cache_bridge_uniforms() {
   m_bridge_uniforms.model = m_bridge_shader->uniform_handle("u_model");
   m_bridge_uniforms.color = m_bridge_shader->uniform_handle("u_color");
   m_bridge_uniforms.light_direction =
-      m_bridge_shader->uniform_handle("u_light_direction");
+      m_bridge_shader->optional_uniform_handle("u_light_direction");
 }
 
 void WaterPipeline::cache_road_uniforms() {
@@ -167,7 +167,8 @@ void WaterPipeline::cache_road_uniforms() {
   m_road_uniforms.mvp = m_road_shader->uniform_handle("u_mvp");
   m_road_uniforms.model = m_road_shader->uniform_handle("u_model");
   m_road_uniforms.color = m_road_shader->uniform_handle("u_color");
-  m_road_uniforms.light_direction = m_road_shader->uniform_handle("u_light_direction");
+  m_road_uniforms.light_direction =
+      m_road_shader->optional_uniform_handle("u_light_direction");
   m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
   m_road_uniforms.surface_kind = m_road_shader->uniform_handle("u_surface_kind");
   m_road_uniforms.visibility_texture =

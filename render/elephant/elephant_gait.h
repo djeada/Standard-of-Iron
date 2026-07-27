@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../creature/quadruped/gait.h"
+#include "animation/rig/quadruped_gait.h"
 
 namespace Render::GL {
 

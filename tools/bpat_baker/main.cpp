@@ -18,9 +18,10 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_writer.h"
 #include "animation/clip_manifest.h"
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_writer.h"
+#include "animation/rig/horse_gait.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/movement_state.h"
 #include "render/creature/part_graph.h"
@@ -36,7 +37,6 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
-#include "render/horse/horse_gait.h"
 #include "render/horse/horse_manifest.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/horse_spec.h"

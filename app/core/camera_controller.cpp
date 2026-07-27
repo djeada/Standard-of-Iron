@@ -7,7 +7,7 @@
 #include "game/core/world.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/game_state_serializer.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 CameraController::CameraController(Render::GL::Camera* camera,
                                    Game::Systems::CameraService* camera_service,

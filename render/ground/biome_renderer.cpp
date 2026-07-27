@@ -19,12 +19,12 @@
 #include "../gl/render_constants.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
+#include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "gl/resources.h"
-#include "ground_utils.h"
 #include "map/terrain.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
-#include "spawn_validator.h"
 
 namespace {
 
@@ -35,8 +35,6 @@ using namespace Render::GL::Geometry;
 constexpr float k_grass_height_scale = 1.12F;
 constexpr float k_grass_width_scale = 1.55F;
 
-// Below roughly one pixel a blade reads as dark temporal noise, not vegetation.
-// Keep dense grass for the tactical camera and fade it decisively for map views.
 constexpr float k_grass_full_screen_fraction = 0.0040F;
 constexpr float k_grass_min_screen_fraction = 0.0018F;
 constexpr float k_grass_cull_screen_fraction = 0.0010F;

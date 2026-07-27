@@ -6,10 +6,10 @@
 #include <gtest/gtest.h>
 
 #include "render/draw_queue.h"
-#include "render/gl/camera.h"
 #include "render/gl/mesh.h"
 #include "render/profiling/frame_profile.h"
 #include "render/software_backend.h"
+#include "scene/camera.h"
 
 using Render::GL::Camera;
 using Render::GL::DrawQueue;

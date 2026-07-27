@@ -543,10 +543,6 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     lock_combatant_facing(lock_target, tgt_t, att_t);
   }
 
-  // A lock freezes movement, and a worn-down formation's survivors sit behind
-  // the rank that died, so the two squads can end up locked yet unable to
-  // reach each other. Let the lock lapse after a sustained separation so both
-  // sides are free to close again instead of stalemating.
   if (is_in_range(attacker,
                   lock_target,
                   attack_comp->melee_range +

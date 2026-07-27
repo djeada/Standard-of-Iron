@@ -32,7 +32,7 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/visuals/team_colors.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 ProductionManager::ProductionManager(Engine::Core::World* world,
                                      Game::Systems::PickingService* picking_service,

@@ -43,6 +43,14 @@ public:
 
   void unregister_building(unsigned int entity_id);
 
+  void set_authored_obstacles(std::vector<BuildingFootprint> obstacles);
+  void clear_authored_obstacles();
+
+  [[nodiscard]] auto
+  authored_obstacles() const -> const std::vector<BuildingFootprint>& {
+    return m_authored_obstacles;
+  }
+
   void update_building_position(unsigned int entity_id, float center_x, float center_z);
 
   void update_building_owner(unsigned int entity_id, int owner_id);
@@ -76,6 +84,8 @@ private:
   operator=(const BuildingCollisionRegistry&) -> BuildingCollisionRegistry& = delete;
 
   std::vector<BuildingFootprint> m_buildings;
+
+  std::vector<BuildingFootprint> m_authored_obstacles;
   std::map<unsigned int, size_t> m_entity_to_index;
 
   static const std::map<std::string, BuildingSize> s_building_sizes;

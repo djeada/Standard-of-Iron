@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "animation/quadruped_gait_manifest.h"
-#include "render/creature/quadruped/gait.h"
+#include "animation/rig/quadruped_gait.h"
 
 namespace {
 

@@ -352,9 +352,7 @@ public:
 
   bool in_melee_lock{false};
   EntityID melee_lock_target_id{0};
-  // How long the locked pair has been out of striking distance. A formation
-  // recoils as its front rank falls, so a lock has to be able to lapse or two
-  // spent squads stand frozen in front of each other forever.
+
   float melee_lock_separation_time{0.0F};
 
   static constexpr float k_melee_contact_range_grace = 0.75F;

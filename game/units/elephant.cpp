@@ -8,7 +8,6 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"
-#include "render/elephant/dimensions.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
 
@@ -105,9 +104,11 @@ void Elephant::init(const SpawnParams& params) {
   e->add_component<Engine::Core::ElephantComponent>();
   auto* eleph_comp = e->get_component<Engine::Core::ElephantComponent>();
   if (eleph_comp != nullptr) {
-    auto const dims = Render::GL::make_elephant_dimensions(0U);
-    eleph_comp->foot_lateral = dims.body_width * 0.46F;
-    eleph_comp->foot_forward = dims.body_length * 0.35F;
+
+    constexpr float k_foot_lateral = 0.1536512F;
+    constexpr float k_foot_forward = 0.2879962F;
+    eleph_comp->foot_lateral = k_foot_lateral;
+    eleph_comp->foot_forward = k_foot_forward;
   }
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(

@@ -156,16 +156,11 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
     holding.wall_lines += type == QStringLiteral("wall_segment") ? 1 : 0;
   }
 
-  // The player's camp used to be walls and props with no buildings at all, so
-  // the player began the campaign unable to produce anything.
   const Holding& player = holdings[1];
   EXPECT_EQ(player.barracks, 1) << "the player must start with a working barracks";
   EXPECT_GE(player.homes, 4);
   EXPECT_GE(player.wall_lines, 3) << "the marching camp keeps its palisade";
 
-  // Every settlement of every tier is garrisoned, inhabited and fortified. A
-  // marketplace belongs to the fortified-camp and town tiers, not to a marching
-  // camp, so it is checked on the town below rather than on all of them.
   for (const int bot_id : {2, 3}) {
     const Holding& holding = holdings[bot_id];
     EXPECT_EQ(holding.barracks, 1) << "player " << bot_id;
@@ -175,8 +170,6 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
     EXPECT_GE(holding.wall_lines, 4) << "player " << bot_id;
   }
 
-  // One settlement on the map is a full town: walled, with an inner citadel and
-  // streets of housing rather than a single row.
   int densest = 0;
   int town_marketplaces = 0;
   for (const auto& holding : holdings) {
@@ -238,8 +231,6 @@ TEST(MissionAssetRulesTest, AlpsMapYieldsEnoughHarvestForItsGatherObjective) {
       << "crossing_the_alps is the campaign's economic mission";
   ASSERT_TRUE(gather_condition->resources.has_value());
 
-  // Authored yields only. Procedural scatter adds more on top, so the objective
-  // must be reachable without depending on it.
   Game::Systems::ResourceAmounts authored_yield;
   for (const auto& prop : map.world_props) {
     if (Game::Map::is_tree_world_prop_type(prop.type)) {
@@ -256,7 +247,7 @@ TEST(MissionAssetRulesTest, AlpsMapYieldsEnoughHarvestForItsGatherObjective) {
     if (required <= 0) {
       continue;
     }
-    // Slack so a few unreachable or contested nodes cannot soft-lock the mission.
+
     EXPECT_GE(authored_yield.get(type), required * 5 / 4)
         << "not enough authored " << Game::Systems::resource_type_key(type)
         << " on map_crossing_alps for a target of " << required;
@@ -279,8 +270,6 @@ TEST(MissionAssetRulesTest, CaptureObjectivesMatchEnemyOwnedBarracks) {
     int capture_target;
   };
 
-  // AI setups take owner ids 2, 3, 4..., so a map barracks tagged past the last AI
-  // would belong to nobody and could never satisfy a capture objective.
   const Expectation expectations[] = {
       {"battle_of_ticino", 2, 1, 2, 2},
       {"battle_of_trasimene", 2, 1, 2, 2},
@@ -386,8 +375,6 @@ struct PlacementFailure {
   float world_z;
 };
 
-// A building whose footprint overlaps unwalkable ground is stranded: units cannot
-// reach it, and on a hill it means the structure hangs off the crown onto a slope.
 auto find_stranded_structures(const Game::Map::MapDefinition& map,
                               const QString& map_name)
     -> std::vector<PlacementFailure> {

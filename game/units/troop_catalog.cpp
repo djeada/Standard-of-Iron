@@ -8,10 +8,6 @@ namespace Game::Units {
 
 namespace {
 
-// Compiled mirror of assets/data/troops/base.json. The loader overwrites every
-// entry when that file is present, so this only decides what the game does if
-// the data files are missing or unreadable. Keeping the two in step means a
-// broken install degrades to the balanced roster instead of a placeholder one.
 struct TroopDefaults {
   Game::Units::TroopType unit_type;
   const char* display_name;

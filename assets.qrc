@@ -5,6 +5,12 @@
         <file>assets/creatures/elephant/elephant.cmesh</file>
 
         <!-- Shader files -->
+        <file>assets/shaders/include/environment_lighting.glsl</file>
+        <file>assets/shaders/include/local_lighting.glsl</file>
+        <file>assets/shaders/include/directional_shadows.glsl</file>
+        <file>assets/shaders/directional_shadow_depth.vert</file>
+        <file>assets/shaders/directional_shadow_rigged.vert</file>
+        <file>assets/shaders/directional_shadow_depth.frag</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/basic_instanced.frag</file>
