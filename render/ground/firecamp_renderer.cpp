@@ -8,9 +8,9 @@
 
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
+#include "game/map/scatter/ground_utils.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
-#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
@@ -82,8 +82,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     const QVector4D radius_phase = instance.radius_phase;
 
     const QVector3D camp_pos = pos_intensity.toVector3D();
-    // Revealed, not VisibleOnly: a camp is static world and stays drawn in
-    // explored ground like every other prop.
+
     if (!renderer.submission_visibility().accepts_sphere(
             camp_pos, 2.0F, SubmissionFogMode::Revealed)) {
       continue;
@@ -91,10 +90,6 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     const float intensity = std::clamp(pos_intensity.w(), 0.6F, 1.6F);
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 
-    // Fire camps reach the GPU as an instanced batch, so the backend cannot
-    // recover their positions from the draw command; advertise the firelight
-    // here instead.  The flicker is phase-offset per camp so neighbouring
-    // fires do not pulse in lockstep.
     {
       const float flicker =
           0.92F + 0.08F * std::sin((params.time * 2.3F) + (radius_phase.y() * 6.28F));
@@ -106,8 +101,6 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       renderer.local_light(firelight);
     }
 
-    // radius_phase.w carries the index of this camp's prebuilt decor.  The
-    // shader ignores .z/.w, so it is free to use as a side channel.
     const auto decor_index = static_cast<std::size_t>(radius_phase.w());
     if (decor_index >= m_camp_decor.size()) {
       continue;
@@ -120,8 +113,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
     for (const auto& piece : decor.cylinders) {
       const float weight = piece.ember_weight * ember_pulse;
-      const QVector3D color =
-          piece.base_color * (1.0F - weight) + ember_color * weight;
+      const QVector3D color = piece.base_color * (1.0F - weight) + ember_color * weight;
       renderer.cylinder(piece.start, piece.end, piece.radius, color, 1.0F);
     }
   }
@@ -137,11 +129,10 @@ void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
   decor.phase = phase;
   decor.cylinders.clear();
 
-  uint32_t state =
-      hash_coords(static_cast<int>(std::floor(camp_pos.x())),
-                  static_cast<int>(std::floor(camp_pos.z())),
-                  static_cast<uint32_t>(phase *
-                                        HashConstants::k_temporal_variation_frequency));
+  uint32_t state = hash_coords(
+      static_cast<int>(std::floor(camp_pos.x())),
+      static_cast<int>(std::floor(camp_pos.z())),
+      static_cast<uint32_t>(phase * HashConstants::k_temporal_variation_frequency));
 
   const float char_amount = remap(rand_01(state), 0.58F, 0.84F);
   const QVector3D blended_log_color =
@@ -158,8 +149,6 @@ void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
   const QVector3D base_half_a = axis_a * (log_length * 0.5F);
   const QVector3D base_half_b = axis_b * (log_length * 0.45F);
 
-  // Logs sit mostly at their charred colour and only breathe slightly with the
-  // embers, hence the small fixed weight.
   constexpr float k_log_ember_weight = 0.08F;
   decor.cylinders.push_back({.start = base_center - base_half_a,
                              .end = base_center + base_half_a,
@@ -198,7 +187,7 @@ void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
     float const stone_half_length = remap(rand_01(state), 0.065F, 0.105F);
     float const stone_radius = remap(rand_01(state), 0.075F, 0.115F);
     float const stone_tone = remap(rand_01(state), 0.76F, 1.05F);
-    // Stones do not glow, so their colour is final.
+
     decor.cylinders.push_back(
         {.start = stone_center - tangent * stone_half_length,
          .end = stone_center + tangent * stone_half_length,
@@ -214,8 +203,7 @@ void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
         camp_pos + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) * distance +
         QVector3D(0.0F, 0.025F, 0.0F);
     QVector3D const coal_axis(-std::sin(angle), 0.0F, std::cos(angle));
-    // Coals swing between charred and glowing, so their weight is the full
-    // per-coal heat factor.
+
     float const heat_factor = remap(rand_01(state), 0.22F, 0.68F);
     decor.cylinders.push_back({.start = coal_center - coal_axis * 0.035F,
                                .end = coal_center + coal_axis * 0.035F,
@@ -267,7 +255,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     FireCampInstanceGpu instance;
     instance.pos_intensity =
         QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.intensity);
-    // .w carries the decor index; the shader only reads .x and .y.
+
     instance.radius_phase = QVector4D(base_radius, phase, 1.0F, decor_index);
     firecamp_instances.push_back(instance);
   }

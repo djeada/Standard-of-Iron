@@ -288,11 +288,6 @@ auto TerrainService::world_prop_world_position(const WorldProp& prop,
 
 namespace {
 
-// Map-authored buildings do not exist as entities yet while terrain is being
-// built, so the collision registry is empty and scatter placement has nothing
-// to test against.  Recording their footprints up front lets every existing
-// building_clearance check work during generation, instead of only after the
-// units spawn.
 void register_authored_building_obstacles(const MapDefinition& map_def) {
   using Game::Systems::BuildingCollisionRegistry;
 
@@ -313,8 +308,8 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
                            center_z,
                            std::max(size.width, min_width),
                            std::max(size.depth, min_depth),
-                           /*owner=*/0,
-                           /*entity_id=*/0U);
+                           0,
+                           0U);
   };
 
   for (const auto& structure : map_def.structures) {
@@ -323,8 +318,7 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
       continue;
     }
     if (const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry)) {
-      // Walls are authored as a run; step along it so the whole span blocks
-      // scatter rather than only the midpoint.
+
       const QVector3D delta = line->end - line->start;
       const float length = delta.length();
       const int steps = std::max(1, static_cast<int>(std::ceil(length / 2.0F)));

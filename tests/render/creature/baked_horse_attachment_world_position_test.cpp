@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 
+#include "animation/rig/horse_attachment_frames.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
 #include "render/equipment/horse/armor/crupper_renderer.h"
@@ -18,7 +19,6 @@
 #include "render/equipment/horse/horse_attachment_archetype.h"
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/equipment/horse/tack/blanket_renderer.h"
-#include "animation/rig/horse_attachment_frames.h"
 #include "render/horse/horse_spec.h"
 #include "render/render_archetype.h"
 #include "render/rigged_mesh_bake.h"

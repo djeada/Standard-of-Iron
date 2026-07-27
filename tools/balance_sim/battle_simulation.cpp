@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "animation/bpat/bpat_registry.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/event_manager.h"
@@ -37,7 +38,6 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/unit.h"
-#include "animation/bpat/bpat_registry.h"
 
 namespace Balance {
 
@@ -45,8 +45,7 @@ namespace {
 
 constexpr int k_side_a_owner = 1;
 constexpr int k_side_b_owner = 2;
-// Sampling cadence for cohesion / idle diagnostics. Fine enough to catch a
-// collapsing formation, coarse enough not to dominate the run cost.
+
 constexpr float k_sample_interval = 0.5F;
 
 auto factory_registry() -> Game::Units::UnitFactoryRegistry& {
@@ -71,17 +70,13 @@ void load_creature_pose_assets() {
     if (!fs::exists(root / "humanoid.bpat", error)) {
       continue;
     }
-    // Only the baked pose data is needed: melee traces sample BPAT sockets.
-    // Snapshot meshes are a rendering concern, so this headless simulator does
-    // not load them and does not link the renderer.
+
     Render::Creature::Bpat::BpatRegistry::instance().load_all(root.string());
     return;
   }
   qWarning("balance_sim: creature pose assets not found; melee traces will miss");
 }
 
-// Same integer hash the combat systems use, so jitter shares their statistical
-// profile and stays reproducible across platforms.
 auto hash_unit(std::uint32_t value) -> float {
   value ^= value >> 16U;
   value *= 0x7feb352dU;
@@ -109,8 +104,6 @@ struct SpawnedUnit {
   Engine::Core::EntityID id{0};
 };
 
-// Plans where a side's squads stand without touching the world yet, so both
-// sides can be spawned interleaved (see `spawn_planned`).
 auto plan_side(const FixtureSide& side,
                int owner_id,
                const QVector3D& centre,
@@ -128,8 +121,7 @@ auto plan_side(const FixtureSide& side,
   for (const auto& group : side.groups) {
     const auto profile = profiles.get_profile(side.nation, group.troop);
     const int per_row = std::max(1, profile.max_units_per_row);
-    // Squads are wide formations; keep enough lateral room that neighbours do
-    // not start the fight already overlapping.
+
     const float lateral_spacing =
         std::max(2.5F, profile.visuals.selection_ring_size * 2.4F);
     const float rank_spacing = 3.0F;
@@ -142,7 +134,7 @@ auto plan_side(const FixtureSide& side,
       const float lateral =
           (static_cast<float>(column) - (static_cast<float>(row_width) - 1.0F) * 0.5F) *
           lateral_spacing;
-      // Later ranks stack away from the enemy so the front rank makes contact first.
+
       const float depth =
           -static_cast<float>(row + row_offset) * rank_spacing * enemy_direction;
 
@@ -151,7 +143,7 @@ auto plan_side(const FixtureSide& side,
           QVector3D(centre.x() + depth + jitter(seed, salt++, jitter_magnitude),
                     0.0F,
                     centre.z() + lateral + jitter(seed, salt++, jitter_magnitude));
-      // Yaw convention matches the combat code: atan2(dx, dz) in degrees.
+
       params.rotation_y = enemy_direction > 0.0F ? 90.0F : 270.0F;
       params.player_id = owner_id;
       params.spawn_type = Game::Units::spawn_typeFromTroopType(group.troop);
@@ -180,9 +172,7 @@ auto spawn_planned(Engine::Core::World& world,
     return {};
   }
   const auto id = unit->id();
-  // Troop factories ignore SpawnParams::rotation_y, but formation geometry is
-  // measured from the transform yaw, so a line that has not turned to face the
-  // enemy would start the fight sideways.
+
   if (auto* entity = world.get_entity(id)) {
     if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
       transform->rotation.y = params.rotation_y;
@@ -258,8 +248,6 @@ auto is_idle_in_contact(Engine::Core::World& world,
     return false;
   }
 
-  // Hold mode is a standing order to not move, so a braced line is doing exactly
-  // what it was told rather than idling.
   const auto* hold = entity->get_component<Engine::Core::HoldModeComponent>();
   if (hold != nullptr && hold->active) {
     return false;
@@ -326,15 +314,9 @@ void apply_stance(Engine::Core::World& world,
     break;
   }
 
-  // Attack and Charge both fan out across the enemy line so the whole side
-  // commits, mirroring a player box-selecting and right-clicking.
   reissue_attack_orders(world, side, enemy_ids);
 }
 
-// A single right-click only lasts until its target dies. Re-issuing keeps the
-// side committed the way a player or the AI would, which is what an attack-move
-// order models; without it a fight can end with survivors idling in sight of
-// each other.
 void reissue_attack_orders(Engine::Core::World& world,
                            SideRuntime& side,
                            const std::vector<Engine::Core::EntityID>& enemy_ids) {
@@ -396,9 +378,6 @@ void initialize_simulation_environment() {
   }
   initialized = true;
 
-  // Melee resolution runs a weapon trace against baked creature poses. Without
-  // the BPAT blobs the trace finds no contact and melee silently deals zero
-  // damage, so load them before any battle runs.
   load_creature_pose_assets();
 
   Game::Systems::NationRegistry::instance().initialize_defaults();
@@ -448,8 +427,6 @@ auto run_battle(const Fixture& fixture,
   SideRuntime side_a{k_side_a_owner, side_a_def.stance, {}, {}};
   SideRuntime side_b{k_side_b_owner, side_b_def.stance, {}, {}};
 
-  // Both the navigation grid and the terrain height map are centred on the
-  // world origin, so the battle line is laid out around (0, 0).
   const QVector3D centre_a(-fixture.separation * 0.5F, 0.0F, 0.0F);
   const QVector3D centre_b(fixture.separation * 0.5F, 0.0F, 0.0F);
 
@@ -472,9 +449,6 @@ auto run_battle(const Fixture& fixture,
                                 result.side_b.starting_cost,
                                 result.side_b.starting_health);
 
-  // Systems iterate entities in id order, so spawning one side first hands it a
-  // half-tick head start in every exchange. Interleave the two sides so the
-  // spawn-side bias metric measures position, not creation order.
   for (std::size_t index = 0; index < std::max(plan_a.size(), plan_b.size()); ++index) {
     if (index < plan_a.size()) {
       auto spawned = spawn_planned(world, plan_a[index]);
@@ -525,8 +499,7 @@ auto run_battle(const Fixture& fixture,
                   attacker->get_component<Engine::Core::AttackComponent>()) {
             ranged = attack->current_mode ==
                      Engine::Core::AttackComponent::CombatMode::Ranged;
-            // Only a unit that could have swung instead is misbehaving; a siege
-            // engine has no melee attack to switch to.
+
             if (ranged && attack->in_melee_lock && attack->can_melee) {
               ++invalid.ranged_shots_while_melee_locked;
             }
@@ -668,8 +641,6 @@ auto run_battle(const Fixture& fixture,
         cohesion_sum_b / static_cast<double>(cohesion_samples);
   }
 
-  // Everything above is keyed to spawn position (left/right). Report keys to the
-  // fixture's own side A/B so a swapped run aggregates with an unswapped one.
   if (swap_sides) {
     std::swap(result.side_a, result.side_b);
     if (result.outcome == Outcome::SideAWins) {

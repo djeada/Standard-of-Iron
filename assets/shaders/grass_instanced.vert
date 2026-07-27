@@ -105,17 +105,16 @@ void main() {
   vec3 root_tint = mix(u_soil_color, varied_color, 0.86);
   vec3 shaft_color = mix(root_tint, varied_color, smoothstep(0.0, 0.60, tip));
 
-  vec3 lit =
-      shaft_color *
-      (environment_ambient_light(normal) +
-       environment_primary_color() * environment_primary_intensity() * diffuse) *
-      root_occlusion;
+  vec3 lit = shaft_color *
+             (environment_ambient_light(normal) +
+              environment_primary_color() * environment_primary_intensity() * diffuse) *
+             root_occlusion;
   lit += varied_color * environment_primary_color() * transmission * 0.20;
 
   lit *= mix(0.90, 1.04, tip);
 
-  float exposure = environment_exposure() *
-                   (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
+  float exposure =
+      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
   v_color = lit * exposure;
   v_alpha = coverage_fade;
   v_edge = a_uv.x * 2.0 - 1.0;

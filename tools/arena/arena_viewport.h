@@ -123,9 +123,9 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void load_scenario(const QString& scenario_id);
-  // Adopts a map's authored environment (time, mode, day length, profile) so a
-  // preview is lit exactly as the campaign mission will be.
-  void apply_environment_definition(const Game::Map::EnvironmentDefinition& environment);
+
+  void
+  apply_environment_definition(const Game::Map::EnvironmentDefinition& environment);
 
   [[nodiscard]] auto environment_snapshot() const -> Arena::ArenaEnvironmentSnapshot;
 
@@ -140,8 +140,7 @@ public slots:
                                              QString* error = nullptr) -> bool;
   void set_terrain_review_overview_camera();
   void set_terrain_review_gameplay_camera();
-  // Arms the capture orbit around the loaded review map so a campaign map can be
-  // filmed with a moving camera instead of grabbed as a single still.
+
   void arm_terrain_review_orbit(float distance_scale = 1.0F, float tilt_deg = 0.0F);
   [[nodiscard]] auto
   terrain_review_definition() const -> const Game::Map::MapDefinition*;

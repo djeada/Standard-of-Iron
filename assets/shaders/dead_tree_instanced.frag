@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -36,8 +36,7 @@ void main() {
   float diffuse = max(ndotl, 0.0);
   float wrap = clamp((ndotl + 0.38) / 1.38, 0.0, 1.0);
   float ambient = environment_ambient_intensity();
-  vec3 sun_color =
-      environment_primary_color() * environment_primary_intensity();
+  vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.58, sun_color, lit_t);
@@ -126,8 +125,7 @@ void main() {
 
   ao *= 1.0 - contact_shadow;
 
-  vec3 color =
-      material_color * lighting * light_tint * ao * environment_exposure();
+  vec3 color = material_color * lighting * light_tint * ao * environment_exposure();
   color += vec3(specular) * sun_color * ao;
   color += rim_color;
   color += color * local_lighting(v_world_pos, normalize(v_normal));

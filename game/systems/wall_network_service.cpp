@@ -7,11 +7,11 @@
 #include <string_view>
 #include <vector>
 
-#include "../visuals/building_asset_key.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "../visuals/building_asset_key.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "pathfinding.h"

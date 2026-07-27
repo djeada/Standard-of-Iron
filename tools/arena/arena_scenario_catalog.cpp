@@ -3606,9 +3606,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
-  // Deterministic visual-regression fixtures for the environment renderer.
-  // They deliberately share fixed cameras and locked clocks so screenshots can
-  // be compared across instanced/non-instanced and quality configurations.
   for (const auto& fixture : std::array{
            std::tuple{k_lighting_sunrise_sunset_id, "Lighting: Sunrise", 6.25F, 0.0F},
            std::tuple{k_lighting_midday_id, "Lighting: Midday", 12.0F, 0.0F},
@@ -3658,9 +3655,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
-  // Continuous-clock fixtures.  The day is compressed so a capture interval of a
-  // second or two walks visibly across the transition instead of sitting inside
-  // one lighting state.
   for (const auto& transition : std::array{
            std::tuple{k_lighting_dawn_to_day_id,
                       "Lighting: Dawn To Day",
@@ -3714,8 +3708,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
-    // Odd count keeps every segment on the wall-network lattice: with a spacing
-    // of 2 an even count would centre the run on odd coordinates.
+
     s.groups = {building(QStringLiteral("shadow_wall"),
                          Game::Units::SpawnType::WallSegment,
                          Nation::RomanRepublic,
@@ -3735,8 +3728,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                          1,
                          1,
                          {6.0F, 0.0F, -6.0F}),
-                // Placed east of the wall so the morning sun throws the wall
-                // shadow across them.
+
                 group(QStringLiteral("shaded_line"),
                       Troop::Swordsman,
                       1,
@@ -3794,16 +3786,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
-  // Instancing parity pair: identical content and camera, differing only in
-  // whether creatures are forced to full (non-instanced) LOD.  Comparing the two
-  // captures is the regression check that batching does not change lighting.
-  for (const auto& parity : std::array{
-           std::tuple{k_lighting_parity_instanced_id,
-                      "Lighting: Parity (Instanced)",
-                      false},
-           std::tuple{k_lighting_parity_single_id,
-                      "Lighting: Parity (Non-Instanced)",
-                      true}}) {
+  for (const auto& parity : std::array{std::tuple{k_lighting_parity_instanced_id,
+                                                  "Lighting: Parity (Instanced)",
+                                                  false},
+                                       std::tuple{k_lighting_parity_single_id,
+                                                  "Lighting: Parity (Non-Instanced)",
+                                                  true}}) {
     auto s = definition(
         QString::fromLatin1(std::get<0>(parity)),
         QString::fromLatin1(std::get<1>(parity)),
@@ -3834,18 +3822,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
-  // Same dense formation at each preset so shadow budgets and frame time can be
-  // compared across quality levels.  Ultra is covered by lighting_dense_battle.
-  for (const auto& quality : std::array{
-           std::tuple{k_lighting_shadow_quality_low_id,
-                      "Lighting: Shadow Quality Low",
-                      Render::GraphicsQuality::Low},
-           std::tuple{k_lighting_shadow_quality_medium_id,
-                      "Lighting: Shadow Quality Medium",
-                      Render::GraphicsQuality::Medium},
-           std::tuple{k_lighting_shadow_quality_high_id,
-                      "Lighting: Shadow Quality High",
-                      Render::GraphicsQuality::High}}) {
+  for (const auto& quality : std::array{std::tuple{k_lighting_shadow_quality_low_id,
+                                                   "Lighting: Shadow Quality Low",
+                                                   Render::GraphicsQuality::Low},
+                                        std::tuple{k_lighting_shadow_quality_medium_id,
+                                                   "Lighting: Shadow Quality Medium",
+                                                   Render::GraphicsQuality::Medium},
+                                        std::tuple{k_lighting_shadow_quality_high_id,
+                                                   "Lighting: Shadow Quality High",
+                                                   Render::GraphicsQuality::High}}) {
     auto s = definition(
         QString::fromLatin1(std::get<0>(quality)),
         QString::fromLatin1(std::get<1>(quality)),

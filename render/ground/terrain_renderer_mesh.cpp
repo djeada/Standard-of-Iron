@@ -796,11 +796,7 @@ void TerrainRenderer::build_meshes() {
         params.rock_high = tint_color(surface_profile.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        // Material parameters must remain continuous when the mesh is split
-        // into flat, hill, and mountain draw sections. The fragment shader
-        // already has slope, height, curvature, and feature-foot signals for
-        // physical transitions; per-section material scales produced visible
-        // rectangular borders around otherwise organic landforms.
+
         params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
         params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
         params.slope_rock_threshold =

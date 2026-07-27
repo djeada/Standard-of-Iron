@@ -17,8 +17,7 @@ inline constexpr float k_two_pi = 6.28318530717958647692F;
 }
 
 namespace BitShift {
-// Local copies of the bit-twiddling constants this hashing uses.  Kept here so
-// world placement rules carry no renderer dependency.
+
 inline constexpr int shift_8 = 8;
 inline constexpr unsigned int mask_24_bit = 0xFFFFFF;
 inline constexpr float mask_24_bit_float = 16777215.0F;
@@ -52,8 +51,7 @@ inline auto hash_coords(int x, int z, uint32_t salt = 0U) -> uint32_t {
 inline auto rand_01(uint32_t& state) -> float {
   state = state * HashConstants::k_linear_congruential_multiplier +
           HashConstants::k_linear_congruential_increment;
-  return static_cast<float>((state >> BitShift::shift_8) &
-                            BitShift::mask_24_bit) /
+  return static_cast<float>((state >> BitShift::shift_8) & BitShift::mask_24_bit) /
          BitShift::mask_24_bit_float;
 }
 
@@ -69,8 +67,7 @@ inline auto hash_to_01(uint32_t h) -> float {
   h ^= h >> HashConstants::k_xor_shift_amount_15;
   h *= HashConstants::k_hash_mix_multiplier_3;
   h ^= h >> HashConstants::k_xor_shift_amount_14;
-  return static_cast<float>((h >> BitShift::shift_8) &
-                            BitShift::mask_24_bit) /
+  return static_cast<float>((h >> BitShift::shift_8) & BitShift::mask_24_bit) /
          BitShift::mask_24_bit_float;
 }
 

@@ -1463,15 +1463,16 @@ static void append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& vert
   }
 }
 
-static void append_spoked_wheel_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
-                                     std::vector<uint16_t>& idx,
-                                     float cx,
-                                     float cy,
-                                     float cz,
-                                     float r,
-                                     float hthk,
-                                     int segs,
-                                     int spokes) {
+static void
+append_spoked_wheel_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                          std::vector<uint16_t>& idx,
+                          float cx,
+                          float cy,
+                          float cz,
+                          float r,
+                          float hthk,
+                          int segs,
+                          int spokes) {
   constexpr float k_tau = 6.28318530F;
   const float xa = cx - hthk;
   const float xb = cx + hthk;
@@ -1479,8 +1480,7 @@ static void append_spoked_wheel_xaxis(std::vector<std::pair<QVector3D, QVector3D
   const float hub_r = std::min(0.085F, rim_inner * 0.55F);
 
   auto ring_point = [&](float x, float radius, float angle) {
-    return QVector3D(
-        x, cy + radius * std::sin(angle), cz + radius * std::cos(angle));
+    return QVector3D(x, cy + radius * std::sin(angle), cz + radius * std::cos(angle));
   };
 
   for (int i = 0; i < segs; ++i) {
@@ -1622,8 +1622,7 @@ static void append_barrel_yaxis(std::vector<std::pair<QVector3D, QVector3D>>& ve
                  {F{top_center, top_normal},
                   F{station_point(k_stations - 1, side), top_normal},
                   F{station_point(k_stations - 1, next), top_normal}});
-    idx.insert(idx.end(),
-               {top_base, uint16_t(top_base + 1), uint16_t(top_base + 2)});
+    idx.insert(idx.end(), {top_base, uint16_t(top_base + 1), uint16_t(top_base + 2)});
 
     auto bottom_base = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(),

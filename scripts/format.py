@@ -41,9 +41,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 VERSIONS_FILE = REPO_ROOT / "tools" / "versions.env"
 STRIP_COMMENTS_SCRIPT = REPO_ROOT / "scripts" / "remove-comments.sh"
 
-# ---------------------------------------------------------------------------
-# Terminal output
-# ---------------------------------------------------------------------------
 
 _USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
@@ -88,11 +85,6 @@ def error(msg: str) -> None:
     print(f"{red('error:')} {msg}", file=sys.stderr, flush=True)
 
 
-# ---------------------------------------------------------------------------
-# Pinned versions
-# ---------------------------------------------------------------------------
-
-
 def load_versions() -> dict[str, str]:
     """Parse tools/versions.env into a plain dict."""
     versions: dict[str, str] = {}
@@ -112,10 +104,6 @@ def load_versions() -> dict[str, str]:
 
 VERSIONS = load_versions()
 
-
-# ---------------------------------------------------------------------------
-# File selection
-# ---------------------------------------------------------------------------
 
 EXCLUDED_DIR_NAMES = {
     ".git",
@@ -169,8 +157,7 @@ def is_excluded(rel_path: str) -> bool:
         return True
     if any(part in EXCLUDED_DIR_NAMES for part in parts):
         return True
-    # Every build tree in this repo is a top-level directory starting with
-    # "build" (build, build-debug, build-tidy, build-release, build-ci-skip).
+
     return parts[0].startswith("build")
 
 
@@ -219,8 +206,7 @@ def _resolve_diff_base(base: str) -> str:
 
 
 def select_all() -> list[str]:
-    # --others --exclude-standard picks up new files that are not staged yet;
-    # without it a brand new source file would silently escape every gate.
+
     out = git("ls-files", "-z", "--cached", "--others", "--exclude-standard")
     return [p for p in out.split("\0") if p]
 
@@ -267,32 +253,23 @@ def group_by_language(paths: Sequence[str]) -> dict[str, list[str]]:
     return grouped
 
 
-# ---------------------------------------------------------------------------
-# Tool registry
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class Tool:
     """A formatter or linter plus everything needed to find and run it."""
 
     name: str
-    kind: str  # "format" or "lint"
+    kind: str
     languages: tuple[str, ...]
     candidates: tuple[str, ...] = ()
     env_var: str | None = None
     version_key: str | None = None
     version_args: tuple[str, ...] = ("--version",)
     extra_search_paths: tuple[str, ...] = ()
-    # Advisory tools report findings but do not fail the run unless
-    # --fail-on-advisory is passed.  Used for checks with a large backlog of
-    # pre-existing findings.
+
     advisory: bool = False
-    # Optional tools are silently skipped when absent, even under --strict.
+
     optional: bool = False
-    # Deep-lane tools are too slow for the default gate (whole-project
-    # clang-tidy is measured in hours).  They run for --changed/--staged/--files
-    # selections and whenever --deep is passed.
+
     deep_only: bool = False
     install_hint: str = ""
     pip_package: str | None = None
@@ -421,7 +398,6 @@ def build_tools() -> list[Tool]:
     )
 
     return [
-        # ---- formatters -------------------------------------------------
         Tool(
             name="clang-format",
             kind="format",
@@ -514,7 +490,6 @@ def build_tools() -> list[Tool]:
             ],
             fix_cmd=lambda exe, files: [exe, "--write", "--log-level", "warn", *files],
         ),
-        # ---- linters ----------------------------------------------------
         Tool(
             name="ruff",
             kind="lint",
@@ -549,8 +524,6 @@ def build_tools() -> list[Tool]:
             pip_package="yamllint",
             install_hint="pip install yamllint",
             batch=128,
-            # No --strict: rules configured at `level: warning` in
-            # .yamllint.yaml are advice, not gates.
             check_cmd=lambda exe, files: [exe, *files],
         ),
         Tool(
@@ -604,15 +577,10 @@ def build_tools() -> list[Tool]:
     ]
 
 
-# ---------------------------------------------------------------------------
-# Execution
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class Outcome:
     tool: str
-    status: str  # "ok" | "failed" | "skipped"
+    status: str
     files: int
     detail: str = ""
     advisory: bool = False
@@ -677,7 +645,7 @@ def run_tool(
         return Outcome(tool.name, "ok", len(files), "", tool.advisory)
 
     if fix and tool.fix_cmd is None:
-        # A linter without autofix support is a no-op in --fix mode.
+
         if tool.kind == "lint":
             return Outcome(
                 tool.name, "skipped", len(files), "no autofix support", tool.advisory
@@ -779,11 +747,6 @@ def execute(
         exit_code = 1
 
     return exit_code
-
-
-# ---------------------------------------------------------------------------
-# Actions
-# ---------------------------------------------------------------------------
 
 
 def _version_status(pinned: str | None, found: str | None) -> tuple[str, bool]:
@@ -925,11 +888,6 @@ def action_strip_comments(grouped: dict[str, list[str]], *, dry_run: bool) -> in
     if code != 0:
         error("comment stripping failed")
     return code
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
 
 
 def default_jobs() -> int:
@@ -1098,7 +1056,6 @@ def main(argv: Sequence[str] | None = None) -> int:
                 info(f"  would run {tool.name} on {count} file(s)")
         return 0
 
-    # A narrowed selection is cheap enough to always run the deep linters on.
     narrowed = args.changed is not None or bool(args.staged) or bool(args.files)
     deep = args.deep or args.fail_on_advisory or narrowed
 

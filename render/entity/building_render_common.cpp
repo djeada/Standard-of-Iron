@@ -1,5 +1,4 @@
 #include "building_render_common.h"
-#include "game/visuals/building_asset_key.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -17,6 +16,7 @@
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
+#include "game/visuals/building_asset_key.h"
 #include "math/math_utils.h"
 
 namespace Render::GL {

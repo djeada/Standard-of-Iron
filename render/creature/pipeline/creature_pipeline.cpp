@@ -24,13 +24,13 @@
 #include "../../snapshot_mesh_cache.h"
 #include "../../submitter.h"
 #include "../archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_reader.h"
-#include "animation/bpat/bpat_registry.h"
 #include "../runtime_bake_guard.h"
 #include "../skeleton.h"
 #include "../snapshot_mesh_registry.h"
 #include "../spec.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_reader.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -260,19 +260,13 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
           playback.blob, effective_clip_id, state, effective_clip_variant)) {
     effective_clip_variant = 0U;
     effective_clip_id = playback_desc.clip_id;
-    // Fall back through whichever source can actually supply the blob, mirroring
-    // the resolve above.  Passing playback_desc.blob unconditionally dropped the
-    // soldier whenever that field was null -- which is precisely the case that
-    // gets here, since choosing an idle variant is what routes the first resolve
-    // through the species id.  The result was a soldier vanishing for the frames
-    // its idle variant was unusable: idle only, one unit enough, and only the
-    // soldiers whose seed picked that variant.
-    playback = playback_desc.blob != nullptr
-                   ? resolve_bpat_playback(
-                         playback_desc.blob, playback_desc.clip_id, phase)
-                   : resolve_bpat_playback(resolved.handle->asset->bpat_species_id,
-                                           playback_desc.clip_id,
-                                           phase);
+
+    playback =
+        playback_desc.blob != nullptr
+            ? resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase)
+            : resolve_bpat_playback(resolved.handle->asset->bpat_species_id,
+                                    playback_desc.clip_id,
+                                    phase);
   }
   if (playback.blob == nullptr) {
     return resolved;
@@ -501,19 +495,6 @@ auto interpolated_palette_for_playback(
   return owned_palette ? owned_palette->data() : current;
 }
 
-// A riding clip poses the legs up on a mount, so its "foot" bones sit at saddle
-// height (y=1.954 in the baked humanoid, against a bind foot of y=0.022) instead
-// of on the ground.  Feeding that to palette_contact_y yields a contact of
-// +1.932, and grounding subtracts the contact from the model origin -- planting
-// the creature 1.932 below the terrain, where it still draws and still counts as
-// drawn.  A rider is grounded by its mount, never by its own feet, so these
-// clips must not supply a ground contact.
-//
-// This matters because resolve_bpat_clip picks variants by plain index
-// arithmetic (base_clip + variant) with nothing checking that the result is
-// still a variant of the requested state, so an over-declared variant count
-// walks off the end of a group into unrelated clips -- and attack_bow sits at
-// index 15, immediately before riding_idle at 16.
 auto clip_supplies_ground_contact(const Render::Creature::Bpat::BpatBlob* blob,
                                   std::uint16_t clip_id) noexcept -> bool {
   if (blob == nullptr || clip_id >= blob->clip_count()) {
@@ -654,30 +635,24 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              role_colors,
                              base_color,
                              wear_params);
-  // Only reference the skin UBO for a frame it actually contains.  The upload is
-  // deferred (marked pending during submission, performed in the next
-  // begin_frame), so a freshly baked frame can be addressed before its palette
-  // data exists.  Binding that range yields garbage bones, which collapses the
-  // mesh onto the origin -- the draw still issues, the soldier just is not
-  // visible.  Falling back to the CPU palette keeps it correct for that frame.
-  const bool skin_ubo_covers_frame =
-      entry->skin_palette_ubo != 0U && entry->skinned_frame_total != 0U &&
-      global_frame < entry->skinned_frame_total;
+
+  const bool skin_ubo_covers_frame = entry->skin_palette_ubo != 0U &&
+                                     entry->skinned_frame_total != 0U &&
+                                     global_frame < entry->skinned_frame_total;
   if (skin_ubo_covers_frame) {
     cmd.palette_ubo = entry->skin_palette_ubo;
-    cmd.palette_offset = static_cast<std::uint32_t>(
-        static_cast<std::size_t>(global_frame) *
-        entry->skin_palette_frame_stride_bytes);
+    cmd.palette_offset =
+        static_cast<std::uint32_t>(static_cast<std::size_t>(global_frame) *
+                                   entry->skin_palette_frame_stride_bytes);
   } else if (entry->skin_palette_ubo != 0U &&
              qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
     static std::uint64_t hits = 0;
     if (++hits % 60U == 1U) {
-      qInfo().noquote()
-          << QStringLiteral("SOI skin UBO frame out of range: %1 hit(s) "
-                            "(frame=%2 total=%3)")
-                 .arg(hits)
-                 .arg(global_frame)
-                 .arg(entry->skinned_frame_total);
+      qInfo().noquote() << QStringLiteral("SOI skin UBO frame out of range: %1 hit(s) "
+                                          "(frame=%2 total=%3)")
+                               .arg(hits)
+                               .arg(global_frame)
+                               .arg(entry->skinned_frame_total);
     }
   }
   if (primary_interpolated_palette) {

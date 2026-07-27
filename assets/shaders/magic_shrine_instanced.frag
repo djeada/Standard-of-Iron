@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -135,8 +135,7 @@ void main() {
   float obelisk_mask = (1.0 - smoothstep(0.02, 0.18, obelisk_dist)) *
                        smoothstep(0.26, 1.22, v_local_pos.y);
 
-  vec3 sun_color =
-      environment_primary_color() * environment_primary_intensity();
+  vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
 
   float ndotl = max(dot(N, L), 0.0);
@@ -154,8 +153,7 @@ void main() {
   float rim = pow(1.0 - max(dot(N, V), 0.0), 3.5) * 0.12;
   vec3 rim_color = sky_color * rim;
 
-  vec3 color =
-      stone_color * (ambient + direct) * ao * environment_exposure();
+  vec3 color = stone_color * (ambient + direct) * ao * environment_exposure();
   color += sun_color * specular * ao;
   color += rim_color;
 

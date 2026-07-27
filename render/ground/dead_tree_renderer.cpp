@@ -7,13 +7,13 @@
 
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
-#include "gl/render_constants.h"
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
+#include "gl/render_constants.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "game/map/scatter/scatter_composition.h"
 #include "scatter_runtime.h"
-#include "game/map/scatter/spawn_validator.h"
 
 namespace {
 

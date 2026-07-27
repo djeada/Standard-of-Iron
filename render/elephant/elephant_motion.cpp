@@ -10,9 +10,9 @@
 
 #include "../creature/animation_state_components.h"
 #include "../creature/movement_animation.h"
-#include "animation/rig/quadruped_gait.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "animation/elephant_gait_manifest.h"
+#include "animation/rig/quadruped_gait.h"
 #include "dimensions.h"
 #include "elephant_source_asset.h"
 #include "elephant_spec.h"

@@ -20,7 +20,7 @@ from pathlib import Path
 
 INCLUDE = re.compile(r'^\s*#\s*include\s*"([^"]+)"')
 
-# layer -> prefixes it must not include
+
 RULES = {
     "game": ("render/",),
     "scene": ("render/", "game/"),
@@ -55,7 +55,9 @@ def violations(root: Path) -> list[str]:
                 for prefix in forbidden:
                     if target.startswith(prefix):
                         rel = source.relative_to(root).as_posix()
-                        found.append(f"{rel}:{number}: {layer}/ must not include {target}")
+                        found.append(
+                            f"{rel}:{number}: {layer}/ must not include {target}"
+                        )
     return found
 
 

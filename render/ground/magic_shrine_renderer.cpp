@@ -62,8 +62,6 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
   cmd.magic_shrine = m_state.params;
   Scatter::submit_visible_chunks(renderer, m_state, cmd);
 
-  // Cold votive glow.  Kept pale blue-grey rather than supernatural green so the
-  // Iron Sepulcher reads as ancient and solemn.
   for (const auto& inst : m_state.visible_instances) {
     const QVector3D shrine_pos = inst.pos_scale.toVector3D();
     const float scale = std::max(inst.pos_scale.w(), 0.1F);

@@ -379,8 +379,7 @@ auto snapshots(const MapData& data,
 
 auto make_remove_many(MapData& data,
                       QVector<ElementRef> refs) -> std::unique_ptr<Command> {
-  // Removing shifts every later index down, so delete the highest index of each
-  // category first; undoing then reinserts in ascending order.
+
   std::sort(refs.begin(), refs.end(), [](const ElementRef& lhs, const ElementRef& rhs) {
     return lhs.kind != rhs.kind ? lhs.kind < rhs.kind : lhs.index > rhs.index;
   });

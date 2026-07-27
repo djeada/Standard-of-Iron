@@ -12,9 +12,9 @@
 #include "../../../game/systems/combat_rules.h"
 #include "../../combat_dust_defaults.h"
 #include "../backend.h"
-#include "scene/camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {
 

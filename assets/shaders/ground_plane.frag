@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec2 v_uv;
@@ -181,8 +181,7 @@ void main() {
   base_col = mix(gray_level, base_col, grounded_saturation);
   base_col *= vec3(1.025, 0.965, 0.985);
 
-  float puddle_mask =
-      lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
+  float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);
 
   float wet_darkening = 1.0 - (moisture * 0.12 + puddle_mask * 0.10);
@@ -190,11 +189,10 @@ void main() {
 
   float broad_breakup = fbm(wuv * 0.055 + vec2(31.0, -12.0));
   float broad_breakup2 = fbm(wuv * 0.018 + vec2(-41.0, 6.0));
-  float damp_stain =
-      smoothstep(0.50,
-                 0.78,
-                 broad_breakup * 0.62 + broad_breakup2 * 0.38 + lowland * 0.18 +
-                     basin * 0.18 + moisture * 0.12);
+  float damp_stain = smoothstep(0.50,
+                                0.78,
+                                broad_breakup * 0.62 + broad_breakup2 * 0.38 +
+                                    lowland * 0.18 + basin * 0.18 + moisture * 0.12);
   float dry_scuff = smoothstep(0.60,
                                0.86,
                                detail * 0.54 + patch_noise * 0.18 + field_patch * 0.22 +
@@ -253,12 +251,11 @@ void main() {
   float spec_contrib = fres * 0.10 * (1.0 - surface_roughness);
   spec_contrib += moisture * 0.05 * fres;
   spec_contrib += puddle_mask * 0.10 * (0.4 + 0.6 * ndl);
-  vec3 light = environment_ambient_light(n_micro) +
-               environment_primary_color() * environment_primary_intensity() *
-                   ndl * 0.65 +
-               vec3(spec_contrib);
-  vec3 lit =
-      col * light * (u_ambient_boost + height_tint) * environment_exposure();
+  vec3 light =
+      environment_ambient_light(n_micro) +
+      environment_primary_color() * environment_primary_intensity() * ndl * 0.65 +
+      vec3(spec_contrib);
+  vec3 lit = col * light * (u_ambient_boost + height_tint) * environment_exposure();
   lit += col * local_lighting(v_world_pos, n_micro);
   lit = apply_directional_shadow(lit, v_world_pos, n_micro);
 
@@ -273,8 +270,7 @@ void main() {
       smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.18, 0.85, 1.0 - abs(fog_view_dir.y));
   float fog_amount = clamp(distance_fog * (0.75 + 0.55 * horizon_fog), 0.0, 1.0);
-  float environment_fog =
-      1.0 - exp(-environment_fog_density() * view_distance);
+  float environment_fog = 1.0 - exp(-environment_fog_density() * view_distance);
   fog_amount = max(fog_amount, environment_fog);
   lit = mix(lit, environment_fog_color(), fog_amount);
 

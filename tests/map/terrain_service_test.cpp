@@ -3,16 +3,16 @@
 #include <gtest/gtest.h>
 #include <utility>
 
+#include "app/core/skirmish_loader.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
-#include "app/core/skirmish_loader.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
-#include "scene/camera.h"
-#include "game/map/scatter/spawn_validator.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace {
 

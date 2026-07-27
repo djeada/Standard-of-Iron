@@ -52,7 +52,6 @@ TEST(MapEditorJsonSchemaTest, TerrainSchemaTracksTheSubType) {
   const MapEditor::JsonSchema mountain = MapEditor::schema_for_element(
       static_cast<int>(ElementKind::Terrain), QStringLiteral("mountain"));
 
-  // Mountains are entrance-free, so the key must not be advertised for them.
   EXPECT_NE(hill.find(QStringLiteral("entrances")), nullptr);
   EXPECT_EQ(mountain.find(QStringLiteral("entrances")), nullptr);
   EXPECT_EQ(mountain.find(QStringLiteral("height"))->default_value,

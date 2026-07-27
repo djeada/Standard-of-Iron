@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -158,8 +158,7 @@ void main() {
   vec3 lit_color =
       base_color *
       (environment_ambient_light(N) +
-       environment_primary_color() * environment_primary_intensity() * diffuse *
-           0.58) *
+       environment_primary_color() * environment_primary_intensity() * diffuse * 0.58) *
       ao * environment_exposure();
   lit_color += environment_primary_color() * spec * 0.14;
 

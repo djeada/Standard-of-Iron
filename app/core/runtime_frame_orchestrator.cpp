@@ -11,9 +11,9 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
 #include "minimap_manager.h"
-#include "scene/camera.h"
 #include "render/ground/rain_renderer.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 #include "visibility_coordinator.h"
 
 namespace {

@@ -8,9 +8,6 @@
 
 namespace Render {
 
-// Authoritative, frame-scoped description of the outdoor environment.  Rendering
-// code must consume this state instead of inventing material-specific sun/sky
-// constants.  The packed form mirrors assets/shaders/include/environment_lighting.glsl.
 struct EnvironmentLightingState {
   QVector3D primary_direction{0.35F, 0.85F, 0.42F};
   QVector3D primary_color{1.0F, 0.95F, 0.86F};
@@ -47,8 +44,6 @@ struct EnvironmentLightingState {
     return result;
   }
 
-  // std140 payload: seven vec4 values, intentionally free of QVector padding
-  // assumptions.
   [[nodiscard]] auto packed_std140() const noexcept -> std::array<float, 28> {
     const EnvironmentLightingState value = sanitized();
     return {

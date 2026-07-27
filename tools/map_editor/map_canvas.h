@@ -20,8 +20,6 @@ class MapCanvas : public QWidget {
 public:
   explicit MapCanvas(QWidget* parent = nullptr);
 
-  // Drawing layers that can be toggled from the View menu. The first
-  // k_element_kind_count entries line up with ElementKind.
   enum Layer {
     LayerTerrain = 0,
     LayerWorldProp = 1,
@@ -42,8 +40,6 @@ public:
   void set_current_player_id(int id);
   void set_current_nation(const QString& nation);
 
-  // The "primary" element is the most recently added to the selection; single
-  // selection behaves exactly as before.
   [[nodiscard]] int selected_element_type() const { return primary_selection().kind; }
   [[nodiscard]] int selected_element_index() const { return primary_selection().index; }
   [[nodiscard]] bool has_selection() const { return !m_selection.isEmpty(); }
@@ -69,8 +65,6 @@ public:
   void set_selection_player_id(int player_id);
   void nudge_selection(const QPointF& delta_cells);
 
-  // Draw-order overrides are a view state only: they are never written to the map
-  // and are dropped as soon as elements are added or removed.
   void bring_selection_to_front();
   void send_selection_to_back();
   void reset_draw_order();
@@ -126,8 +120,7 @@ private:
   void draw_current_placement(QPainter& painter);
   void draw_rubber_band(QPainter& painter);
   void finish_rubber_band();
-  // Indices of one category in paint order: terrain goes largest first so big
-  // hills never bury small ones.
+
   [[nodiscard]] QVector<int> category_draw_order(int kind) const;
   void draw_terrain_feature(QPainter& painter,
                             const TerrainElement& elem,
@@ -145,8 +138,6 @@ private:
   [[nodiscard]] int terrain_marker_radius_px(const TerrainElement& elem) const;
   [[nodiscard]] float terrain_hit_radius_px(const TerrainElement& elem) const;
 
-  // Level of detail: markers shrink with the zoom so dense maps stay readable,
-  // and text is dropped once the markers are too small to hold it.
   [[nodiscard]] int marker_radius_px() const;
   [[nodiscard]] bool labels_visible() const;
 
@@ -185,7 +176,6 @@ private:
   void move_selection_to(const QPointF& primary_target);
   void select_appended(const QVector<ElementSnapshot>& added);
 
-  // Returns the replacement for one element, or nullopt to leave it untouched.
   using SelectionTransform =
       std::function<std::optional<ElementSnapshot>(const ElementSnapshot&)>;
   void apply_to_selection(const SelectionTransform& transform,

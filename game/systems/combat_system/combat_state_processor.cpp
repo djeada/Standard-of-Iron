@@ -6,8 +6,8 @@
 #include <span>
 #include <vector>
 
-#include "../../core/simulation_timing.h"
 #include "../../core/component.h"
+#include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../combat_actions/body_impact.h"

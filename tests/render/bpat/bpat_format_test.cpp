@@ -7,9 +7,9 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_playback.h"
 #include "animation/bpat/bpat_reader.h"
 #include "animation/bpat/bpat_writer.h"
-#include "animation/bpat/bpat_playback.h"
 
 using namespace Render::Creature::Bpat;
 

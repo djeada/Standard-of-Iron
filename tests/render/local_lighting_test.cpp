@@ -41,8 +41,6 @@ TEST(LocalLightingTest, DrawQueueCarriesSubmitterLightsAndClearsThemPerFrame) {
   EXPECT_EQ(queue.local_lights().front().position, firelight.position);
   EXPECT_FLOAT_EQ(queue.local_lights().front().intensity, 1.25F);
 
-  // Instanced emitters resubmit every frame, so a stale light must never
-  // survive into the next one.
   queue.clear();
   EXPECT_TRUE(queue.local_lights().empty());
 }
@@ -58,8 +56,7 @@ TEST(LocalLightingTest, SanitizesNegativeRadiusAndIntensity) {
 }
 
 TEST(LocalLightingTest, EqualScoresKeepInputOrderSoLightsDoNotSwap) {
-  // Ranking is recomputed every frame; if equally-scored lights could displace
-  // each other the selection would flicker between frames.
+
   std::vector<Render::LocalLight> lights;
   for (int i = 0; i < 12; ++i) {
     Render::LocalLight light;
@@ -69,7 +66,7 @@ TEST(LocalLightingTest, EqualScoresKeepInputOrderSoLightsDoNotSwap) {
     light.color = QVector3D(static_cast<float>(i), 0.0F, 0.0F);
     lights.push_back(light);
   }
-  // All at the same distance from this camera, so every score is identical.
+
   const QVector3D camera(100.0F, 0.0F, 0.0F);
   for (auto& light : lights) {
     light.position = QVector3D(0.0F, 0.0F, 0.0F);

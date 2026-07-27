@@ -2,9 +2,9 @@
 
 #include <qvectornd.h>
 
-#include "scene/camera.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "scene/camera.h"
 #include "selection_system.h"
 
 namespace Game::Systems {

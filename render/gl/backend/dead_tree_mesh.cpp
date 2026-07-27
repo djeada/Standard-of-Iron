@@ -275,8 +275,12 @@ auto build_dead_tree_mesh() -> PropMeshData {
     connect_rings(verts, idx, rings[station], rings[station + 1]);
   }
 
-  append_flat_cap(
-      verts, idx, rings.front(), trunk_center_y(k_butt_x), trunk_center_z(k_butt_x), true);
+  append_flat_cap(verts,
+                  idx,
+                  rings.front(),
+                  trunk_center_y(k_butt_x),
+                  trunk_center_z(k_butt_x),
+                  true);
   append_splintered_break(verts, idx, rings.back(), k_tip_x);
 
   append_oriented_box(

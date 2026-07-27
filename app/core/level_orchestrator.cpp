@@ -5,10 +5,10 @@
 
 #include <utility>
 
+#include "app/core/skirmish_loader.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/map_loader.h"
-#include "app/core/skirmish_loader.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
@@ -18,8 +18,8 @@
 #include "game/systems/victory_service.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
-#include "scene/camera.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
 

@@ -394,12 +394,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                       formation_presentation->melee_ordered &&
                                       formation_presentation->target_alive;
 
-  // Fog of war is a per-unit fact, not a per-soldier one.  Testing each soldier
-  // separately let a formation straddle the vision boundary and render half its
-  // ranks, with individuals flickering in and out as either side drifted by a
-  // fraction of a tile -- most visible on archers, which fight at range and so
-  // sit on that boundary.  Decide once for the whole unit; the frustum test
-  // below stays per-soldier, where it is both cheap and correct.
   constexpr float k_formation_fog_radius = 6.0F;
   const QVector3D unit_origin = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
   const bool unit_fog_visible =

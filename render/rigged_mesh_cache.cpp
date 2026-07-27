@@ -1,10 +1,9 @@
 #include "rigged_mesh_cache.h"
 
-#include <QtGlobal>
-
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLVersionFunctionsFactory>
+#include <QtGlobal>
 
 #include <GL/gl.h>
 #include <cstring>
@@ -12,9 +11,9 @@
 #include <sstream>
 #include <vector>
 
-#include "bone_palette_arena.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
+#include "bone_palette_arena.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
 
@@ -66,12 +65,7 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
   if (bone_count > entry.inverse_bind.size()) {
     bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
   }
-  // The GPU palette UBO is uploaded once from these matrices and
-  // rigged_entry_ensure_skin_ubo returns early for the rest of the entry's life,
-  // so rebuilding the atlas without dropping the UBO leaves the GPU holding the
-  // previous clip's bones forever.  Commands that resolve to an arena slot then
-  // draw with stale matrices while their CPU-palette neighbours animate
-  // correctly.  Release it here so the next ensure call re-uploads.
+
   if (entry.skin_palette_ubo != 0U) {
     if (auto* fn = rigged_cache_gl_funcs(); fn != nullptr) {
       GLuint stale = entry.skin_palette_ubo;

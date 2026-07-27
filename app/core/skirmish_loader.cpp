@@ -30,7 +30,6 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
-#include "level_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -45,7 +44,10 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/wall_network_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
 #include "game/visuals/team_colors.h"
+#include "level_loader.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -61,14 +63,10 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
-#include "game/units/spawn_type.h"
-#include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
 
 namespace App::Core {
 
-// These loaders were moved out of game/ so the simulation no longer depends
-// on the renderer; they still speak the map vocabulary they always did.
 using namespace Game::Map;
 
 using namespace JsonKeys;

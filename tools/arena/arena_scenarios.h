@@ -99,14 +99,16 @@ inline constexpr char k_lighting_dense_battle_id[] = "lighting_dense_battle";
 inline constexpr char k_lighting_world_materials_id[] = "lighting_world_materials";
 inline constexpr char k_lighting_midday_id[] = "lighting_midday";
 inline constexpr char k_lighting_dawn_to_day_id[] = "lighting_dawn_to_day";
-inline constexpr char k_lighting_afternoon_to_night_id[] = "lighting_afternoon_to_night";
+inline constexpr char k_lighting_afternoon_to_night_id[] =
+    "lighting_afternoon_to_night";
 inline constexpr char k_lighting_structure_shadows_id[] = "lighting_structure_shadows";
 inline constexpr char k_lighting_sepulcher_readability_id[] =
     "lighting_sepulcher_readability";
 inline constexpr char k_lighting_parity_instanced_id[] = "lighting_parity_instanced";
 inline constexpr char k_lighting_parity_single_id[] = "lighting_parity_single";
 inline constexpr char k_lighting_commander_closeup_id[] = "lighting_commander_closeup";
-inline constexpr char k_lighting_shadow_quality_low_id[] = "lighting_shadow_quality_low";
+inline constexpr char k_lighting_shadow_quality_low_id[] =
+    "lighting_shadow_quality_low";
 inline constexpr char k_lighting_shadow_quality_medium_id[] =
     "lighting_shadow_quality_medium";
 inline constexpr char k_lighting_shadow_quality_high_id[] =

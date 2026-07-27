@@ -55,8 +55,6 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   if (m_enable_hill_projection) {
     auto* splitter = new QSplitter(Qt::Horizontal, this);
 
-    // Editor and key reference share the left column so the projection keeps the
-    // space it needs.
     auto* json_panel = new QSplitter(Qt::Vertical, splitter);
     json_panel->setMinimumWidth(320);
     json_panel->setMaximumWidth(560);
@@ -386,7 +384,7 @@ void JsonEditDialog::update_schema_state() {
                  .arg(missing.join(QStringLiteral(", ")));
   }
   if (!unknown.isEmpty()) {
-    // Unrecognised keys are preserved on save, so this is information, not an error.
+
     lines << QStringLiteral(
                  "<span style='color:#9aa0a6;'>Not read by the loader (kept as-is): "
                  "%1</span>")

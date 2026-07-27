@@ -39,10 +39,6 @@ public:
   }
 
 private:
-  // A camp's logs, stone ring and coals are fully determined by its seed and
-  // never move, so the geometry is built once here instead of being re-derived
-  // from hashes and trig on every frame.  Only the ember glow animates, and it
-  // is a single lerp per cylinder against `ember_weight`.
   struct DecorCylinder {
     QVector3D start;
     QVector3D end;

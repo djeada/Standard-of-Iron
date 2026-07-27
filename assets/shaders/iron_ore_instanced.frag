@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -132,8 +132,7 @@ void main() {
 
   float crystal = crystal_mask * crystal_twinkle * mix(0.35, 1.0, vein_wide);
 
-  vec3 sun_color =
-      environment_primary_color() * environment_primary_intensity();
+  vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
 
   float ndotl = max(dot(N, L), 0.0);
@@ -158,8 +157,7 @@ void main() {
               (vein_core * 1.75 + vein_wide * 0.22 + fresnel * vein_wide * 0.45 +
                crystal * 1.35);
 
-  vec3 color =
-      albedo * (ambient + direct) * ao * environment_exposure();
+  vec3 color = albedo * (ambient + direct) * ao * environment_exposure();
   color += sun_color * ore_spec * ao;
   color += magic_color * crystal_spec;
   color += glow;

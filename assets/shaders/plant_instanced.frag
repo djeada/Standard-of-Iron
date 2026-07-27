@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec3 v_color;
@@ -164,8 +164,7 @@ void main() {
 
   vec3 sun = environment_primary_color() * environment_primary_intensity();
   vec3 illumination = environment_ambient_light(N) + sun * diffuse * ao_stem;
-  vec3 color =
-      (albedo * illumination + albedo * sss * sun) * environment_exposure();
+  vec3 color = (albedo * illumination + albedo * sss * sun) * environment_exposure();
 
   color += color * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);

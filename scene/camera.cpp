@@ -11,12 +11,10 @@
 #include <algorithm>
 #include <cmath>
 
-
 namespace Render::GL {
 
 namespace FrustumPlane {
-// Column-major QMatrix4x4 element indices used to extract the six frustum
-// planes.  Kept local so this view type carries no renderer dependency.
+
 inline constexpr int matrix_size = 16;
 inline constexpr int index_0 = 0;
 inline constexpr int index_1 = 1;

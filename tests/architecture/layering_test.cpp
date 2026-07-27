@@ -1,8 +1,7 @@
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <set>
 #include <string>
 #include <vector>
@@ -61,7 +60,7 @@ auto includes_renderer(const fs::path& file) -> bool {
       continue;
     }
     std::string path = line.substr(quote + 1, end - quote - 1);
-    // Normalise any number of leading "../" hops.
+
     while (path.rfind("../", 0) == 0) {
       path.erase(0, 3);
     }
@@ -72,12 +71,6 @@ auto includes_renderer(const fs::path& file) -> bool {
   return false;
 }
 
-// The simulation must not depend on the renderer: render/ reads game state to
-// draw it, never the reverse.  This list is empty and must stay empty --
-// game_systems no longer links render_gl at all, so a new include here breaks
-// the build for headless consumers (tools/balance_sim) as well as this test.
-// Shared types belong in scene/ (view), animation/rig (skeleton and reach), or
-// animation/bpat (baked poses).
 const std::set<std::string>& known_inversions() {
   static const std::set<std::string> entries{};
   return entries;
@@ -116,8 +109,6 @@ TEST(ArchitectureLayering, KnownInversionListStaysHonest) {
   const auto root = find_repo_root();
   ASSERT_TRUE(fs::exists(root / "game"));
 
-  // A stale entry means someone fixed an inversion without shrinking the list,
-  // which would let a regression slip back in unnoticed.
   std::vector<std::string> stale;
   for (const auto& entry : known_inversions()) {
     const fs::path file = root / entry;
@@ -140,14 +131,10 @@ TEST(ArchitectureLayering, KnownInversionListStaysHonest) {
 TEST(ArchitectureLayering, SharedSceneAndAnimationLayersStayLeaves) {
   const auto root = find_repo_root();
 
-  // scene/ and animation/ exist so both the simulation and the renderer can share
-  // view and baked-pose types.  If either starts including render/ or game/, the
-  // inversion is simply relocated rather than fixed.
   for (const char* layer : {"scene", "animation"}) {
     for (const auto& file : sources_under(root / layer)) {
       const auto relative = fs::relative(file, root).generic_string();
-      EXPECT_FALSE(includes_renderer(file))
-          << relative << " must not include render/";
+      EXPECT_FALSE(includes_renderer(file)) << relative << " must not include render/";
 
       std::ifstream stream(file);
       std::string line;

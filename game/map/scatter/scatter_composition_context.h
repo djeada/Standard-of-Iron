@@ -8,10 +8,10 @@
 #include <vector>
 
 #include "game/map/map_definition.h"
-#include "game/map/terrain_service.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_anchor_utils.h"
 #include "game/map/scatter/spawn_validator.h"
+#include "game/map/terrain_service.h"
 
 namespace Render::Ground {
 

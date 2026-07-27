@@ -127,8 +127,7 @@ TEST(DeadTreeMeshTest, BuildsBranchStubsAsSolidPrisms) {
     const auto& p0 = mesh.vertices[mesh.indices[tri]].first;
     const auto& p1 = mesh.vertices[mesh.indices[tri + 1]].first;
     const auto& p2 = mesh.vertices[mesh.indices[tri + 2]].first;
-    const float area =
-        QVector3D::crossProduct(p1 - p0, p2 - p0).length() * 0.5F;
+    const float area = QVector3D::crossProduct(p1 - p0, p2 - p0).length() * 0.5F;
     EXPECT_GT(area, 1.0e-6F) << "degenerate triangle at index " << tri;
   }
 }

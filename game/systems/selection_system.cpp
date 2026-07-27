@@ -10,12 +10,12 @@
 #include <vector>
 
 #include "../../app/utils/selection_utils.h"
-#include "scene/camera.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "command_service.h"
 #include "picking_service.h"
+#include "scene/camera.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {

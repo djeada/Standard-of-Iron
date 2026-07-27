@@ -220,8 +220,6 @@ auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
 
 namespace {
 
-// Every expectation below is judged from per-soldier submission samples, which
-// only exist when SOI_ENABLE_RUNTIME_TRACING is compiled in.
 [[nodiscard]] constexpr auto soldier_diagnostics_available() noexcept -> bool {
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   return true;
@@ -1918,10 +1916,7 @@ struct ArenaScenarioRunner::Impl {
     for (auto const& expectation : scenario.expectations) {
       if (!soldier_diagnostics_available() &&
           expectation_needs_soldier_diagnostics(expectation.kind)) {
-        // Without SOI_ENABLE_RUNTIME_TRACING there are no per-soldier submission
-        // samples to judge, so these expectations would fail for a build-
-        // configuration reason rather than a rendering defect.  Configure with
-        // -DSOI_RUNTIME_TRACING=ON to exercise them.
+
         continue;
       }
       switch (expectation.kind) {
@@ -2554,20 +2549,19 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
     };
     report_object.insert(
         QStringLiteral("environment"),
-        QJsonObject{
-            {QStringLiteral("hour"), env.hour},
-            {QStringLiteral("time_of_day"), env.time_of_day},
-            {QStringLiteral("time_mode"), env.time_mode},
-            {QStringLiteral("lighting_profile"), env.lighting_profile},
-            {QStringLiteral("primary_direction"), vec3(env.primary_direction)},
-            {QStringLiteral("primary_color"), vec3(env.primary_color)},
-            {QStringLiteral("sky_color"), vec3(env.sky_color)},
-            {QStringLiteral("primary_intensity"), env.primary_intensity},
-            {QStringLiteral("ambient_intensity"), env.ambient_intensity},
-            {QStringLiteral("exposure"), env.exposure},
-            {QStringLiteral("fog_density"), env.fog_density},
-            {QStringLiteral("cloud_cover"), env.cloud_cover},
-            {QStringLiteral("wetness"), env.wetness}});
+        QJsonObject{{QStringLiteral("hour"), env.hour},
+                    {QStringLiteral("time_of_day"), env.time_of_day},
+                    {QStringLiteral("time_mode"), env.time_mode},
+                    {QStringLiteral("lighting_profile"), env.lighting_profile},
+                    {QStringLiteral("primary_direction"), vec3(env.primary_direction)},
+                    {QStringLiteral("primary_color"), vec3(env.primary_color)},
+                    {QStringLiteral("sky_color"), vec3(env.sky_color)},
+                    {QStringLiteral("primary_intensity"), env.primary_intensity},
+                    {QStringLiteral("ambient_intensity"), env.ambient_intensity},
+                    {QStringLiteral("exposure"), env.exposure},
+                    {QStringLiteral("fog_density"), env.fog_density},
+                    {QStringLiteral("cloud_cover"), env.cloud_cover},
+                    {QStringLiteral("wetness"), env.wetness}});
     report_object.insert(
         QStringLiteral("shadows"),
         QJsonObject{

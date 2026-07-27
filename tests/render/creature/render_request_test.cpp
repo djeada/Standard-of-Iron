@@ -9,11 +9,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "animation/pose_manifest.h"
 #include "render/creature/archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
@@ -619,12 +619,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
 }
 
 TEST(SubmitRequests, MountPosedClipDoesNotSinkCreatureUnderTheTerrain) {
-  // Regression: riding clips pose the legs up on a mount, so their foot bones
-  // sit at saddle height (y=1.954 in the baked humanoid) rather than on the
-  // ground.  Treating that as a ground contact made grounding subtract ~1.93
-  // from the model origin, planting the soldier under the terrain -- still
-  // drawn, still counted as drawn, and invisible.  A rider is grounded by its
-  // mount, so a mount-posed clip must not supply a ground contact at all.
+
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
@@ -650,8 +645,6 @@ TEST(SubmitRequests, MountPosedClipDoesNotSinkCreatureUnderTheTerrain) {
   ASSERT_EQ(stats.entities_submitted, 1U);
   ASSERT_EQ(sink.rigged_world_y.size(), 1U);
 
-  // The request's world matrix is identity, so any large negative Y is the
-  // saddle-height "contact" being subtracted.
   EXPECT_GT(sink.rigged_world_y[0], -0.5F)
       << "mount-posed clip sank the creature by its saddle height";
   EXPECT_NEAR(sink.rigged_world_y[0], 0.0F, 1.0e-3F);

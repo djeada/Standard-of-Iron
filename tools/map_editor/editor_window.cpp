@@ -1,5 +1,3 @@
-#include "game/map/environment_lighting.h"
-#include <QtMath>
 #include "editor_window.h"
 
 #include <QAction>
@@ -33,9 +31,11 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QtMath>
 
 #include <cmath>
 
+#include "game/map/environment_lighting.h"
 #include "json_edit_dialog.h"
 #include "json_schema.h"
 #include "map_json_keys.h"
@@ -263,12 +263,8 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
     weather_intensity->setValue(rain.value("intensity").toDouble(0.5));
     weather_intensity->setEnabled(enabled);
 
-    // Preview the sun the game will actually render.  This used to approximate
-    // it with sin((hour - 6) * 2pi / 24), which drifted from the authored
-    // lighting curves and made the editor show a different sun to the one the
-    // mission ships with.
-    const auto lighting = Game::Map::lighting_for_hour(
-        static_cast<float>(hour), profile->currentText());
+    const auto lighting =
+        Game::Map::lighting_for_hour(static_cast<float>(hour), profile->currentText());
     const QVector3D direction = lighting.primary_direction.normalized();
     const double elevation_degrees =
         qRadiansToDegrees(std::asin(std::clamp(direction.y(), -1.0F, 1.0F)));
@@ -279,14 +275,13 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
             ? QStringLiteral("moonlight / below horizon")
             : (elevation_degrees < 20.0 ? QStringLiteral("low-angle light")
                                         : QStringLiteral("high sun"));
-    sun->setText(
-        QString("Sun-direction preview: %1 — %2° elevation, %3° azimuth "
-                "(profile \"%4\"). Team colors and selection markers retain a "
-                "readability floor in every profile.")
-            .arg(phase)
-            .arg(elevation_degrees, 0, 'f', 0)
-            .arg(azimuth_degrees, 0, 'f', 0)
-            .arg(profile->currentText()));
+    sun->setText(QString("Sun-direction preview: %1 — %2° elevation, %3° azimuth "
+                         "(profile \"%4\"). Team colors and selection markers retain a "
+                         "readability floor in every profile.")
+                     .arg(phase)
+                     .arg(elevation_degrees, 0, 'f', 0)
+                     .arg(azimuth_degrees, 0, 'f', 0)
+                     .arg(profile->currentText()));
   };
 
   const auto write_environment = [=]() {
@@ -699,8 +694,6 @@ void EditorWindow::setup_menus() {
   connect(zoom_fit_action, &QAction::triggered, m_canvas, &MapCanvas::zoom_to_fit);
   view_menu->addAction(zoom_fit_action);
 
-  // No QAction shortcut for the bare F key: as a window-level shortcut it would
-  // swallow the letter in every text field. The canvas handles it while focused.
   auto* frame_action = new QAction("F&rame Selection\tF", this);
   frame_action->setToolTip("Centre the view on the selected element (F)");
   connect(frame_action, &QAction::triggered, m_canvas, &MapCanvas::frame_selection);
@@ -708,7 +701,6 @@ void EditorWindow::setup_menus() {
 
   view_menu->addSeparator();
 
-  // Draw order is a view aid; it is never written to the map file.
   auto* bring_front_action = new QAction("&Bring Selection To Front", this);
   bring_front_action->setToolTip(
       "Draw the selection above everything else (view only)");

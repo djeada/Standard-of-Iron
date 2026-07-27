@@ -1,12 +1,11 @@
 #include "rigged_mesh.h"
 
-#include <atomic>
-
 #include <QDebug>
 #include <QOpenGLContext>
 #include <qopenglext.h>
 
 #include <GL/gl.h>
+#include <atomic>
 #include <cstddef>
 #include <utility>
 

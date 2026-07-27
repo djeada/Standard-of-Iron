@@ -25,10 +25,6 @@ inline constexpr int vec3 = 3;
 inline constexpr int vec4 = 4;
 } // namespace Render::GL::ComponentCount
 
-// Sampler bindings are per-program, not per-stage: two samplers of different
-// types resolving to the same unit make every draw using that program raise
-// GL_INVALID_OPERATION.  Keep every long-lived unit listed here so a new
-// sampler cannot silently land on one that is already taken.
 namespace Render::GL::TextureUnit {
 inline constexpr int terrain_height = 6;
 inline constexpr int terrain_visibility = 7;

@@ -16,16 +16,16 @@
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
-#include "scene/environment_lighting.h"
 #include "frame_budget.h"
 #include "gl/backend.h"
-#include "scene/camera.h"
 #include "gl/mesh.h"
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "i_render_backend.h"
 #include "persistent_render_registry.h"
 #include "rigged_mesh_cache.h"
+#include "scene/camera.h"
+#include "scene/environment_lighting.h"
 #include "snapshot_mesh_cache.h"
 #include "submission_visibility.h"
 #include "submitter.h"
@@ -190,8 +190,6 @@ public:
     return m_environment_lighting;
   }
 
-  // Compatibility for preview tools while their callers migrate to complete
-  // environment states.
   void set_lighting(const QVector3D& light_dir, float ambient_strength) {
     EnvironmentLightingState lighting = m_environment_lighting;
     lighting.primary_direction = light_dir;
@@ -301,8 +299,6 @@ public:
   void terrain_feature(const TerrainFeatureCmd& cmd);
   void terrain_scatter(const TerrainScatterCmd& cmd);
 
-  // Emissive world geometry (fire camps, shrines) advertises the light it casts
-  // so the backend can budget it alongside effect-driven lights.
   void local_light(const Render::LocalLight& light);
 
   struct TemplatePrewarmProgress {

@@ -119,8 +119,8 @@ vec3 procedural_sky(vec3 direction, vec3 sun_dir) {
   vec3 zenith = environment_sky_color() * 0.72;
   vec3 sky = mix(horizon, zenith, elevation);
   float halo = pow(max(dot(direction, sun_dir), 0.0), 12.0);
-  return sky + environment_primary_color() * environment_primary_intensity() *
-                   halo * 0.12;
+  return sky +
+         environment_primary_color() * environment_primary_intensity() * halo * 0.12;
 }
 
 void main() {
@@ -196,8 +196,7 @@ void main() {
   float view_distance = length(u_camera_pos - world_pos);
   float fog_amount =
       smoothstep(u_fog_start, max(u_fog_start + 0.001, u_fog_end), view_distance);
-  fog_amount =
-      max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  fog_amount = max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
   color = mix(color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(saturate(color), 1.0);

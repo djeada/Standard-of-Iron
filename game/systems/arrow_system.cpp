@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 
-
 namespace Game::Systems {
 namespace {
 

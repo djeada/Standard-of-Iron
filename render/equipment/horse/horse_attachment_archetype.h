@@ -5,9 +5,9 @@
 #include <QVector4D>
 
 #include "../../entity/registry.h"
-#include "animation/rig/horse_attachment_frames.h"
 #include "../../static_attachment_spec.h"
 #include "../equipment_submit.h"
+#include "animation/rig/horse_attachment_frames.h"
 
 namespace Render::GL {
 

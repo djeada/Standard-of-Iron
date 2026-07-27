@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "animation/playback_manifest.h"
 #include "bpat_format.h"
 #include "bpat_registry.h"
-#include "animation/playback_manifest.h"
 
 namespace Render::Creature::Pipeline {
 

@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec3 v_world_pos;
@@ -32,8 +32,7 @@ void main() {
   float sky_fill = smoothstep(-0.2, 0.8, n.y) * mix(0.05, 0.11, v_foliage_mask);
   float lighting = ambient + wrap * mix(0.28, 0.44, v_foliage_mask) + sky_fill;
 
-  vec3 sun_color =
-      environment_primary_color() * environment_primary_intensity();
+  vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.55, sun_color, lit_t);
@@ -73,8 +72,7 @@ void main() {
   trunk_color = mix(trunk_color, vec3(0.18, 0.23, 0.16), trunk_moss * 0.48);
 
   vec3 base_color = mix(trunk_color, needle_color, v_foliage_mask);
-  vec3 color =
-      base_color * lighting * light_tint * environment_exposure();
+  vec3 color = base_color * lighting * light_tint * environment_exposure();
   float translucency =
       backlight * backlight * (0.12 + tip_blend * 0.16) * v_foliage_mask;
   color += needle_color * vec3(0.15, 0.19, 0.10) * translucency;

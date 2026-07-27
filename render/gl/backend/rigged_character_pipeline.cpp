@@ -1,13 +1,12 @@
 #include "rigged_character_pipeline.h"
 
-#include <QtGlobal>
-
 #include <QDebug>
 #include <QFile>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLVersionFunctionsFactory>
 #include <QTextStream>
+#include <QtGlobal>
 
 #include <GL/gl.h>
 #include <algorithm>
@@ -315,20 +314,7 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
 
   auto* fn = gl_funcs();
   if (fn != nullptr) {
-    // Prefer the CPU palette whenever the command carries one.  A command can
-    // hold both a CPU palette and a slot in the GPU bone-palette arena, and the
-    // two paths disagree: the arena upload is deferred (marked pending during
-    // submission, performed in the next begin_frame), so a slot inside
-    // skinned_frame_total can still hold no data yet.  Binding that range gives
-    // garbage bones, which collapses the mesh onto the model origin -- the draw
-    // issues and is counted, the soldier simply is not visible.
-    //
-    // Which soldier took this path rather than the instanced one depended on
-    // batch grouping, which shifts frame to frame, so a soldier alternated
-    // between its correct CPU palette and a not-yet-uploaded arena slot and
-    // blinked at a perfectly stable draw count.  The CPU palette is repacked
-    // every frame and is always current, so use it and keep both paths in
-    // agreement; the arena stays as the source when it is the only one.
+
     if (cmd.palette_ubo != 0 && cmd.bone_palette == nullptr) {
       fn->glBindBufferRange(GL_UNIFORM_BUFFER,
                             k_bone_palette_binding_point,
@@ -520,13 +506,7 @@ auto RiggedCharacterPipeline::batch_palettes_are_packable(
   if (cmds == nullptr) {
     return false;
   }
-  // same_instanced_batch_key groups on mesh and material and says nothing about
-  // where a command's skin lives, so an arena-backed command batches freely with
-  // CPU-palette siblings.  pack_palette_for_gpu turns a null pointer into an
-  // identity palette, which collapses every vertex onto the model origin: the
-  // soldier is submitted, issued and counted as drawn, yet invisible.  That is
-  // the intermittent blink on an idle archer unit, where one soldier resolves to
-  // an arena slot while its neighbours keep CPU palettes.
+
   for (std::size_t k = 0; k < count; ++k) {
     if (cmds[k] == nullptr || cmds[k]->bone_palette == nullptr) {
       return false;
@@ -553,12 +533,7 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
       return false;
     }
   }
-  // A command may carry its skin either as a CPU palette or as a slot in the
-  // GPU bone-palette arena.  This path repacks from the CPU pointer only, and
-  // pack_palette_for_gpu turns a null pointer into an identity palette -- which
-  // collapses every vertex onto the model origin and makes the soldier vanish.
-  // The single-draw path handles both sources, so hand the batch back and let it
-  // take that route rather than rendering some of its soldiers as a point.
+
   for (std::size_t k = 0; k < count; ++k) {
     if (cmds[k].bone_palette == nullptr) {
       return false;

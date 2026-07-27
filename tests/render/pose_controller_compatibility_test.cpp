@@ -3,9 +3,9 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "render/humanoid/humanoid_math.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "render/humanoid/pose_controller.h"
 
 using namespace Render::GL;

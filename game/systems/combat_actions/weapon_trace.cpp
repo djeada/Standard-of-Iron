@@ -13,15 +13,15 @@
 
 #include "../../../animation/attack_pose_manifest.h"
 #include "../../../animation/clip_manifest.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_reader.h"
-#include "animation/bpat/bpat_registry.h"
-#include "animation/bpat/bpat_playback.h"
-#include "animation/rig/humanoid_proportions.h"
-#include "animation/rig/mounted_seat.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_playback.h"
+#include "animation/bpat/bpat_reader.h"
+#include "animation/bpat/bpat_registry.h"
+#include "animation/rig/humanoid_proportions.h"
+#include "animation/rig/mounted_seat.h"
 
 namespace Game::Systems::CombatActions {
 
@@ -195,8 +195,7 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
 [[nodiscard]] auto
 mounted_seat_relative(Animation::MountedSeatOffset offset) -> QVector3D {
   using namespace Animation::Rig::MountedSeat;
-  return position + forward * offset.forward + right * offset.right +
-         up * offset.up;
+  return position + forward * offset.forward + right * offset.right + up * offset.up;
 }
 
 [[nodiscard]] auto attack_pose_kind_for_definition(
@@ -560,16 +559,14 @@ sample_mounted_spear_trace_segment(const AttackerFrame& frame,
   auto const previous_pose = Animation::resolve_mounted_spear_thrust_pose({previous});
   auto const current_pose = Animation::resolve_mounted_spear_thrust_pose({current});
 
-  QVector3D const previous_grip =
-      mounted_seat_relative(previous_pose.right_hand);
+  QVector3D const previous_grip = mounted_seat_relative(previous_pose.right_hand);
   QVector3D const current_grip = mounted_seat_relative(current_pose.right_hand);
 
   QVector3D const spear_dir = normalized_or(Animation::Rig::MountedSeat::forward +
-                        Animation::Rig::MountedSeat::up * 0.05F,
+                                                Animation::Rig::MountedSeat::up * 0.05F,
                                             QVector3D(0.0F, 0.0F, 1.0F));
   float constexpr k_shaft_base_offset = -0.28F;
-  float const spear_tip_offset =
-      Animation::Rig::WeaponReach::spear_total;
+  float const spear_tip_offset = Animation::Rig::WeaponReach::spear_total;
 
   segment.previous_base =
       to_world(frame, previous_grip + spear_dir * k_shaft_base_offset);

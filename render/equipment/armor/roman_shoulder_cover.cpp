@@ -5,8 +5,8 @@
 #include <deque>
 #include <string>
 
-#include "animation/rig/humanoid_proportions.h"
 #include "../attachment_builder.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "shoulder_cover_archetype.h"
 
 namespace Render::GL {

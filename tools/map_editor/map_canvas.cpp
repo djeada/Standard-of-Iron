@@ -86,15 +86,11 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
   }
 }
 
-// Terrain paints back-to-front by footprint, so this only needs to rank features
-// against each other, not match the pixel geometry exactly.
 auto terrain_footprint_cells(const TerrainElement& elem) -> float {
   const float extent = std::max(elem.width, elem.depth);
   return std::max(extent > 0.0F ? extent : 0.0F, elem.radius);
 }
 
-// Category paint order, back to front. Terrain is first by construction: hills,
-// mountains and lakes are the ground everything else stands on.
 constexpr std::array<int, 6> k_category_paint_order = {
     static_cast<int>(ElementKind::Terrain),
     static_cast<int>(ElementKind::Linear),
@@ -161,8 +157,6 @@ void MapCanvas::drop_stale_view_state() {
     return;
   }
 
-  // Adding or removing shifts indices, and both the selection and the draw-order
-  // overrides address elements by index. Drop what can no longer be trusted.
   m_front_order.clear();
   m_back_order.clear();
 
@@ -348,8 +342,6 @@ void MapCanvas::set_layer_visible(int layer, bool visible) {
   }
   m_layer_visible[layer] = visible;
 
-  // Never leave a hidden element selected or hovered: it cannot be seen and it
-  // would still react to Delete and drags.
   if (!visible) {
     const qsizetype before = m_selection.size();
     m_selection.removeIf([layer](const ElementRef& ref) { return ref.kind == layer; });
@@ -499,8 +491,6 @@ void MapCanvas::paste_from_clipboard(const QPointF& grid_pos) {
     return;
   }
 
-  // Keep the copied elements' relative layout: the first one lands on the target
-  // and the rest follow by the same delta.
   const std::optional<QPointF> anchor = ElementOps::group_anchor(m_clipboard);
   if (!anchor.has_value()) {
     return;
@@ -540,7 +530,6 @@ void MapCanvas::duplicate_selection() {
     return;
   }
 
-  // Offset the copies by one cell so they do not hide underneath the originals.
   QVector<ElementSnapshot> copies;
   copies.reserve(snaps.size());
   for (const ElementSnapshot& snap : snaps) {
@@ -566,8 +555,6 @@ void MapCanvas::select_appended(const QVector<ElementSnapshot>& added) {
     return;
   }
 
-  // make_add_many appends in order, so the new elements are the last N of each
-  // category.
   std::array<int, k_element_kind_count> remaining{};
   for (const ElementSnapshot& snap : added) {
     const int kind = ElementOps::kind_of(snap);
@@ -592,8 +579,6 @@ void MapCanvas::apply_to_selection(const SelectionTransform& transform,
     return;
   }
 
-  // Only elements the transform actually changes take part, so a group edit never
-  // records no-op sub-commands.
   const QVector<ElementSnapshot> current = selected_snapshots();
   QVector<ElementRef> refs;
   QVector<ElementSnapshot> before;
@@ -670,8 +655,6 @@ QPointF MapCanvas::clamp_group_delta(const QVector<ElementSnapshot>& snaps,
     return delta;
   }
 
-  // A group keeps its shape: shrink the shared delta until every member stays
-  // inside the map rather than clamping each element on its own.
   const GridSettings& grid = m_map_data->grid();
   double min_dx = std::numeric_limits<double>::lowest();
   double max_dx = std::numeric_limits<double>::max();
@@ -690,7 +673,7 @@ QPointF MapCanvas::clamp_group_delta(const QVector<ElementSnapshot>& snaps,
   }
 
   if (min_dx > max_dx || min_dy > max_dy) {
-    return {}; // nothing can move without leaving the map
+    return {};
   }
   return {std::clamp(delta.x(), min_dx, max_dx), std::clamp(delta.y(), min_dy, max_dy)};
 }
@@ -799,8 +782,6 @@ void MapCanvas::paintEvent(QPaintEvent*) {
   draw_grid(painter);
   draw_fog_zones(painter);
 
-  // Elements pushed to the back are painted before every category, terrain
-  // included; elements brought to the front are painted after all of them.
   for (const ElementRef& ref : m_back_order) {
     draw_one_element(painter, ref);
   }
@@ -927,9 +908,6 @@ void MapCanvas::draw_grid(QPainter& painter) {
   font.setPointSize(8);
   painter.setFont(font);
 
-  // Ruler ticks along the top and left edges of the visible map area. The view is
-  // mirrored (grid x = grid.width - view column), so labels count down as columns
-  // count up.
   painter.setPen(k_grid_text_color);
   const float label_y = std::clamp(start_y, clip_top, clip_bottom - 4.0F) + 11.0F;
   const float label_x = std::clamp(start_x, clip_left, clip_right - 4.0F) + 3.0F;
@@ -959,7 +937,6 @@ void MapCanvas::draw_grid(QPainter& painter) {
     painter.drawText(QPointF(label_x, y - 3.0F), QString::number(grid.height - i));
   }
 
-  // Origin marker, so the mirrored axes stay unambiguous at a glance.
   const QPoint origin = grid_to_widget(0.0F, 0.0F);
   painter.setPen(k_grid_text_color);
   painter.drawText(QPointF(origin.x() - 26, origin.y() - 4), QStringLiteral("0,0"));
@@ -978,8 +955,7 @@ QVector<int> MapCanvas::category_draw_order(int kind) const {
   }
 
   if (kind == static_cast<int>(ElementKind::Terrain)) {
-    // Largest footprint first, so a wide mountain cannot bury the small hills
-    // authored on top of it.
+
     const auto& terrain = m_map_data->terrain_elements();
     std::stable_sort(order.begin(), order.end(), [&terrain](int lhs, int rhs) {
       return terrain_footprint_cells(terrain[lhs]) >
@@ -998,7 +974,7 @@ void MapCanvas::draw_category(QPainter& painter, int kind) {
   for (int index : category_draw_order(kind)) {
     const ElementRef ref{kind, index};
     if (m_front_order.contains(ref) || m_back_order.contains(ref)) {
-      continue; // drawn by the front/back pass instead
+      continue;
     }
     draw_one_element(painter, ref);
   }
@@ -1807,8 +1783,7 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
   m_last_mouse_pos = event->pos();
 
   if (event->button() == Qt::RightButton) {
-    // While drawing a river/road/wall, right-click still means "cancel"; anywhere
-    // else it opens the context menu.
+
     if (m_is_placing_linear) {
       m_is_placing_linear = false;
       emit status_hint_changed("");
@@ -1837,7 +1812,7 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
 
       if (!hit_ref.is_valid()) {
         if (shift_held) {
-          // Shift on empty canvas starts a rubber band; a plain drag still pans.
+
           m_band_active = true;
           m_band_origin = event->pos();
           m_band_current = event->pos();
@@ -1856,11 +1831,10 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
       if (shift_held) {
         toggle_selection(hit_ref);
       } else if (!is_selected_element(hit_ref.kind, hit_ref.index)) {
-        // Clicking an element outside the current selection starts a fresh one;
-        // clicking one inside it keeps the group so it can be dragged together.
+
         set_selection(hit_ref.kind, hit_ref.index);
       } else {
-        // Make the clicked element the primary one without dropping the group.
+
         m_selection.removeAll(hit_ref);
         m_selection.append(hit_ref);
         notify_selection_changed();
@@ -1951,8 +1925,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
 
   if (event->button() == Qt::LeftButton && m_is_dragging && m_did_drag_move &&
       (m_map_data != nullptr) && !m_drag_refs.isEmpty()) {
-    // The elements were updated live during the drag; record the whole gesture as
-    // a single undo entry now that it is finished.
+
     QVector<ElementRef> refs;
     QVector<ElementSnapshot> before;
     QVector<ElementSnapshot> after;
@@ -2028,8 +2001,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
     const auto* dragged_linear = std::get_if<LinearElement>(&primary_pre);
 
     if (dragged_linear != nullptr && m_dragged_endpoint >= 0) {
-      // Endpoint drags are the one case that is not a plain translation: walls stay
-      // axis aligned relative to their opposite end.
+
       LinearElement elem = std::get<LinearElement>(
           ElementOps::snapshot(*m_map_data, m_drag_refs.back()));
       const QVector2D new_pos(static_cast<float>(grid_pos.x()),
@@ -2079,8 +2051,6 @@ void MapCanvas::move_selection_to(const QPointF& primary_target) {
     return;
   }
 
-  // The element under the cursor lands on the target; the rest of the group keeps
-  // its relative layout by moving the same delta.
   const std::optional<QPointF> primary_origin =
       ElementOps::position(m_drag_pre_elements.back());
   if (!primary_origin.has_value()) {
@@ -2112,7 +2082,7 @@ QVector<ElementRef> MapCanvas::elements_in_rect(const QRect& rect) const {
 
       bool inside = false;
       if (const auto* linear = std::get_if<LinearElement>(&snap)) {
-        // A segment counts as picked when either end is inside the band.
+
         inside = rect.contains(grid_to_widget(linear->start.x(), linear->start.y())) ||
                  rect.contains(grid_to_widget(linear->end.x(), linear->end.y()));
       }
@@ -2138,7 +2108,7 @@ void MapCanvas::finish_rubber_band() {
   const QRect band = QRect(m_band_origin, m_band_current).normalized();
   if (band.width() < 3 && band.height() < 3) {
     update();
-    return; // treat a stray click as "no band"
+    return;
   }
 
   QVector<ElementRef> refs = m_selection;
@@ -2173,15 +2143,14 @@ void MapCanvas::show_context_menu(const QPoint& pos) {
   }
 
   const HitResult hit = hit_test(pos);
-  // Match what a left click would do at the same spot.
+
   const QPointF grid_pos = clamp_to_grid(snap_pos(map_to_grid(pos)));
   const QPoint global_pos = mapToGlobal(pos);
 
   QMenu menu(this);
 
   if (hit.element_type >= 0 && hit.index >= 0) {
-    // Right-clicking outside the current selection starts a new one; inside it,
-    // the whole group stays selected so the menu acts on all of it.
+
     if (!is_selected_element(hit.element_type, hit.index)) {
       set_selection(hit.element_type, hit.index);
     }
@@ -2227,7 +2196,6 @@ void MapCanvas::show_context_menu(const QPoint& pos) {
 
     menu.addSeparator();
 
-    // Draw order is a view aid only: it is never written to the map file.
     connect(menu.addAction(QStringLiteral("Bring to front (view only)")),
             &QAction::triggered,
             this,
@@ -2369,8 +2337,7 @@ void MapCanvas::wheelEvent(QWheelEvent* event) {
 }
 
 void MapCanvas::resizeEvent(QResizeEvent*) {
-  // First real layout: frame the whole map instead of parking the view in a
-  // corner, which on large maps used to look like an empty canvas.
+
   if (m_pan_offset.isNull() && (m_map_data != nullptr)) {
     zoom_to_fit();
   }
@@ -2393,8 +2360,6 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
                           float distance,
                           float max_distance,
                           int priority) {
-    // Hidden layers are not pickable, otherwise invisible elements would still
-    // swallow clicks and Delete.
     if (distance > max_distance || !layer_visible(element_type)) {
       return;
     }
@@ -2508,8 +2473,6 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
     return;
   }
 
-  // Elements outside the grid are silently invalid at load time, so keep every
-  // placement inside the map bounds.
   const QPointF grid_pos = clamp_to_grid(raw_grid_pos);
 
   if (m_current_tool == ToolType::Hill || m_current_tool == ToolType::Mountain) {
@@ -2699,8 +2662,7 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
       QWidget::keyPressEvent(event);
       break;
     }
-    // Grid x/z run opposite to screen x/y because the canvas mirrors the map to
-    // match the in-game camera, so the arrow deltas are negated.
+
     const bool fine = (event->modifiers() & Qt::ShiftModifier) != 0U;
     const double step = fine ? 0.25 : 1.0;
     QPointF delta;

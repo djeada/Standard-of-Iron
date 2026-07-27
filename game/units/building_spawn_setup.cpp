@@ -2,8 +2,8 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
-#include "../visuals/team_colors.h"
 #include "../visuals/building_asset_key.h"
+#include "../visuals/team_colors.h"
 
 namespace Game::Units {
 

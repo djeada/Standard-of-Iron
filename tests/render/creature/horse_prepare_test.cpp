@@ -9,6 +9,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/horse_gait_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -16,8 +18,6 @@
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"

@@ -19,18 +19,10 @@ struct LocalLight {
   bool casts_shadow = false;
 };
 
-// Select the most visually relevant lights with stable ordering.  The score is
-// intentionally camera-relative and deterministic; equal scores retain input
-// order, avoiding frame-to-frame light popping.
 [[nodiscard]] inline auto select_local_lights(const std::vector<LocalLight>& lights,
                                               const QVector3D& camera_position)
     -> std::array<LocalLight, k_max_local_lights> {
-  // Only the best k_max_local_lights matter, so this keeps a fixed-size ranked
-  // window instead of scoring everything into a heap vector and sorting it.
-  // Runs every frame, allocates nothing, and is O(n * k) rather than
-  // O(n log n).  Ties keep input order -- a light is only displaced by a
-  // strictly better score -- which is what stops lights swapping places and
-  // popping between frames.
+
   struct Ranked {
     LocalLight light;
     float score = -1.0F;

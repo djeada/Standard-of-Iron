@@ -11,13 +11,13 @@
 
 #include "../decoration_gpu.h"
 #include "../draw_queue.h"
-#include "scene/environment_lighting.h"
 #include "../frame_budget.h"
 #include "../i_render_backend.h"
 #include "../world_chunk.h"
-#include "scene/camera.h"
 #include "persistent_buffer.h"
 #include "resources.h"
+#include "scene/camera.h"
+#include "scene/environment_lighting.h"
 #include "shader.h"
 #include "shader_cache.h"
 
@@ -242,9 +242,7 @@ private:
   GLuint m_directional_shadow_texture{0};
   int m_directional_shadow_resolution{0};
   int m_directional_shadow_cascades{0};
-  // Shadow casters classified once per frame and replayed for every cascade.
-  // Walking the draw queue per cascade meant repeating the same variant
-  // dispatch and filtering three or four times a frame for an identical result.
+
   struct ShadowStaticCaster {
     Mesh* mesh = nullptr;
     const QMatrix4x4* model = nullptr;
@@ -252,9 +250,6 @@ private:
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
   std::vector<const RiggedCreatureCmd*> m_shadow_rigged_casters;
 
-  // Soldiers actually issued to the GPU this frame.  Compared against the
-  // number submitted, this separates "the scene walk dropped them" from "the
-  // draw path lost them" without needing a tracing build.
   std::size_t m_rigged_drawn_this_frame = 0;
 
   std::array<QMatrix4x4, 4> m_directional_shadow_matrices{};

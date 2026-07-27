@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -61,8 +61,7 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination =
-      environment_ambient_light(N) + sun * ndotl * 0.72;
+  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
   float crevice_ao = mix(1.0, 0.62, fissures) * mix(0.58, 1.0, hemi);
 
   float wet_spec = ground_damp * pow(max(dot(N, H), 0.0), 34.0) * 0.16;

@@ -230,8 +230,7 @@ if(Python3_Interpreter_FOUND)
         check_layering
         ALL
         COMMAND
-            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-layering.py
-            ${CMAKE_SOURCE_DIR}
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-layering.py ${CMAKE_SOURCE_DIR}
         COMMENT "Checking layer dependencies"
         VERBATIM
     )

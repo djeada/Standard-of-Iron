@@ -2,15 +2,13 @@
 
 #include <algorithm>
 
-#include "scene/camera.h"
-#include "render/scene_renderer.h"
 #include "game/game_config.h"
 #include "map/map_definition.h"
+#include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace App::Core {
 
-// These loaders were moved out of game/ so the simulation no longer depends
-// on the renderer; they still speak the map vocabulary they always did.
 using namespace Game::Map;
 
 void Environment::apply(const MapDefinition& def,

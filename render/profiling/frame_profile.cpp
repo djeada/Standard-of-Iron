@@ -1,9 +1,9 @@
 #include "frame_profile.h"
 
-#include "game/core/simulation_timing.h"
-
 #include <cstdio>
 #include <cstring>
+
+#include "game/core/simulation_timing.h"
 
 namespace Render::Profiling {
 

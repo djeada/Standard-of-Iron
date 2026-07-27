@@ -7,28 +7,26 @@
 
 #include <memory>
 
-#include "scene/camera.h"
-#include "render/scene_renderer.h"
+#include "environment.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
-#include "game/systems/nation_registry.h"
-#include "game/systems/owner_registry.h"
-#include "game/units/factory.h"
-#include "game/visuals/visual_catalog.h"
-#include "environment.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "game/visuals/visual_catalog.h"
+#include "render/scene_renderer.h"
+#include "scene/camera.h"
 #include "utils/resource_utils.h"
 
 namespace App::Core {
 
-// These loaders were moved out of game/ so the simulation no longer depends
-// on the renderer; they still speak the map vocabulary they always did.
 using namespace Game::Map;
 
 auto LevelLoader::loadFromAssets(const QString& map_path,

@@ -30,7 +30,4 @@ add_library(
 target_include_directories(animation_core PUBLIC ${CMAKE_SOURCE_DIR})
 
 # The baked-pose (BPAT) readers hand back QMatrix4x4 socket transforms.
-target_link_libraries(
-    animation_core
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui
-)
+target_link_libraries(animation_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)

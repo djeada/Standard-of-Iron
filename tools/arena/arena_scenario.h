@@ -236,9 +236,6 @@ struct ArenaScenarioReport {
   [[nodiscard]] auto summary() const -> QString;
 };
 
-// Lighting and shadow settings in force while a scenario ran.  Recorded in the
-// report so a regression capture can be attributed to a known environment
-// rather than guessed at from the image.
 struct ArenaEnvironmentSnapshot {
   bool valid{false};
   float hour{0.0F};

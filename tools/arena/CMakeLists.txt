@@ -98,51 +98,62 @@ foreach(_source IN LISTS _arena_shader_sources)
 endforeach()
 add_custom_target(arena_shaders DEPENDS ${_arena_shader_outputs})
 set(_environment_lighting_include
-    "${CMAKE_SOURCE_DIR}/assets/shaders/include/environment_lighting.glsl")
+    "${CMAKE_SOURCE_DIR}/assets/shaders/include/environment_lighting.glsl"
+)
 set(_environment_lighting_output
-    "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/environment_lighting.glsl")
-set(_local_lighting_include
-    "${CMAKE_SOURCE_DIR}/assets/shaders/include/local_lighting.glsl")
-set(_local_lighting_output
-    "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/local_lighting.glsl")
+    "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/environment_lighting.glsl"
+)
+set(_local_lighting_include "${CMAKE_SOURCE_DIR}/assets/shaders/include/local_lighting.glsl")
+set(_local_lighting_output "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/local_lighting.glsl")
 set(_directional_shadows_include
-    "${CMAKE_SOURCE_DIR}/assets/shaders/include/directional_shadows.glsl")
+    "${CMAKE_SOURCE_DIR}/assets/shaders/include/directional_shadows.glsl"
+)
 set(_directional_shadows_output
-    "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/directional_shadows.glsl")
+    "${CMAKE_BINARY_DIR}/bin/assets/shaders/include/directional_shadows.glsl"
+)
 add_custom_command(
     OUTPUT "${_environment_lighting_output}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_environment_lighting_include}" "${_environment_lighting_output}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different "${_environment_lighting_include}"
+        "${_environment_lighting_output}"
     DEPENDS "${_environment_lighting_include}"
     VERBATIM
 )
 add_custom_command(
     OUTPUT "${_local_lighting_output}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_local_lighting_include}" "${_local_lighting_output}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different "${_local_lighting_include}"
+        "${_local_lighting_output}"
     DEPENDS "${_local_lighting_include}"
     VERBATIM
 )
 add_custom_command(
     OUTPUT "${_directional_shadows_output}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_directional_shadows_include}" "${_directional_shadows_output}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/assets/shaders/include"
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different "${_directional_shadows_include}"
+        "${_directional_shadows_output}"
     DEPENDS "${_directional_shadows_include}"
     VERBATIM
 )
-set_property(TARGET arena_shaders APPEND PROPERTY SOURCES
-             "${_environment_lighting_include}" "${_local_lighting_include}"
-             "${_directional_shadows_include}")
-add_custom_target(arena_shader_includes
-                  DEPENDS "${_environment_lighting_output}"
-                          "${_local_lighting_output}"
-                          "${_directional_shadows_output}")
+set_property(
+    TARGET arena_shaders
+    APPEND
+    PROPERTY
+        SOURCES
+            "${_environment_lighting_include}"
+            "${_local_lighting_include}"
+            "${_directional_shadows_include}"
+)
+add_custom_target(
+    arena_shader_includes
+    DEPENDS
+        "${_environment_lighting_output}"
+        "${_local_lighting_output}"
+        "${_directional_shadows_output}"
+)
 add_dependencies(arena_shaders arena_shader_includes)
 add_dependencies(arena_app arena_shaders)
 

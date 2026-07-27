@@ -12,9 +12,9 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <limits>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -49,14 +49,14 @@
 #include "backend/water_pipeline.h"
 #include "buffer.h"
 #include "decoration_gpu.h"
-#include "scene/camera.h"
 #include "gl/resources.h"
 #include "mesh.h"
 #include "render_constants.h"
+#include "scene/camera.h"
 #include "shader.h"
-#include "ubo_bindings.h"
 #include "state_scopes.h"
 #include "texture.h"
+#include "ubo_bindings.h"
 
 namespace Render::GL {
 
@@ -171,7 +171,9 @@ auto Backend::initialize() -> bool {
   glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
   constexpr GLsizeiptr environment_ubo_size = sizeof(float) * 28;
   glBufferData(GL_UNIFORM_BUFFER, environment_ubo_size, nullptr, GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_environment_lighting_binding_point, m_environment_lighting_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_environment_lighting_binding_point,
+                   m_environment_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Environment lighting UBO created at binding 1";
   glGenBuffers(1, &m_local_lighting_ubo);
@@ -179,13 +181,15 @@ auto Backend::initialize() -> bool {
   constexpr GLsizeiptr local_lighting_ubo_size =
       sizeof(float) * ((Render::k_max_local_lights * 8) + 4);
   glBufferData(GL_UNIFORM_BUFFER, local_lighting_ubo_size, nullptr, GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+  glBindBufferBase(
+      GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Local lighting UBO created at binding 2";
   glGenBuffers(1, &m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
   glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 80, nullptr, GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBufferBase(
+      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Directional shadow UBO created at binding 3";
   qInfo() << "Backend: OpenGL functions initialized";
@@ -379,7 +383,7 @@ auto Backend::initialize() -> bool {
   }
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
-qInfo() << "Backend::initialize() - Complete!";
+  qInfo() << "Backend::initialize() - Complete!";
   return true;
 }
 
@@ -409,11 +413,6 @@ void Backend::begin_frame() {
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // The widget hosting us paints its overlays with QPainter on this same GL
-  // context, and Qt's paint engine leaves its own clipping and binding state
-  // behind.  Depth and blend were already re-asserted here; scissor, stencil,
-  // colour mask and the current bindings must be too, or the next frame renders
-  // through whatever clip rectangle the last text draw happened to set.
   glDisable(GL_SCISSOR_TEST);
   glDisable(GL_STENCIL_TEST);
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -510,7 +509,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
       glBufferSubData(
           GL_UNIFORM_BUFFER, 0, sizeof(float) * packed.size(), packed.data());
-      glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+      glBindBufferBase(GL_UNIFORM_BUFFER,
+                       k_directional_shadow_binding_point,
+                       m_directional_shadow_ubo);
       glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     return;
@@ -521,9 +522,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   if (m_directional_shadow_fbo == 0 || m_directional_shadow_texture == 0) {
     return;
   }
-  // Scatter casters reuse their production alpha-test shaders.  Disable shadow
-  // sampling while the depth array is attached so those shaders cannot read
-  // from the texture currently being written.
+
   if (m_directional_shadow_ubo != 0) {
     const std::array<float, 80> disabled_shadow_sampling{};
     glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
@@ -531,7 +530,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                     0,
                     sizeof(float) * disabled_shadow_sampling.size(),
                     disabled_shadow_sampling.data());
-    glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER,
+                     k_directional_shadow_binding_point,
+                     m_directional_shadow_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 
@@ -619,9 +620,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     mesh->draw();
   };
 
-  // Classify casters once; every cascade replays the same set with a different
-  // light matrix, so repeating the queue walk and variant dispatch per cascade
-  // was pure duplicate work.
   m_shadow_static_casters.clear();
   m_shadow_rigged_casters.clear();
   for (const auto& item : queue.items()) {
@@ -704,9 +702,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       rigged->mesh->draw();
     }
 
-    // Replay alpha-tested and instanced world scatter with the light camera.
-    // Reusing the production vertex/fragment programs preserves wind deformation
-    // and vegetation cut-outs in the depth map instead of casting solid quads.
     bool shadow_polygon_offset_enabled = true;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     std::size_t shadow_debug_batches = 0;
@@ -778,8 +773,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const int weather_softening = m_environment_lighting.shadow_softness > 0.65F ? 1 : 0;
   packed[71] =
       static_cast<float>(std::clamp(settings.pcf_radius + weather_softening, 1, 3));
-  // Camera position occupies an additional vec4 immediately after the 72-float
-  // payload; upload it separately to keep the matrix/split storage obvious.
+
   std::array<float, 80> complete{};
   std::copy(packed.begin(), packed.end(), complete.begin());
   complete[72] = cam.get_position().x();
@@ -794,7 +788,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       GL_UNIFORM_BUFFER, sizeof(float) * complete.size(), nullptr, GL_DYNAMIC_DRAW);
   glBufferSubData(
       GL_UNIFORM_BUFFER, 0, sizeof(float) * complete.size(), complete.data());
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBufferBase(
+      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
   glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
@@ -816,9 +811,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   if (m_frame_ubo != 0) {
     glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
-    // Re-assert the binding every frame rather than relying on the one made at
-    // startup: anything that binds over point 0 would otherwise poison every
-    // FrameData reader for the rest of the session.
+
     glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
@@ -829,7 +822,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
                     packed.data());
-    glBindBufferBase(GL_UNIFORM_BUFFER, k_environment_lighting_binding_point, m_environment_lighting_ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER,
+                     k_environment_lighting_binding_point,
+                     m_environment_lighting_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
   if (m_local_lighting_ubo != 0) {
@@ -853,7 +848,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
       candidates.push_back(light);
     }
     const auto& submitted_lights = queue.local_lights();
-    candidates.insert(candidates.end(), submitted_lights.begin(), submitted_lights.end());
+    candidates.insert(
+        candidates.end(), submitted_lights.begin(), submitted_lights.end());
     const auto selected = Render::select_local_lights(candidates, cam.get_position());
     std::array<float, (Render::k_max_local_lights * 8) + 4> packed{};
     std::size_t active_count = 0;
@@ -879,7 +875,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
                     packed.data());
-    glBindBufferBase(GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+    glBindBufferBase(
+        GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
   render_directional_shadows(queue, cam);
@@ -927,12 +924,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                                   debug_rigged_single_draws
 #endif
   };
-  // Submission census.  When world geometry vanishes at runtime the first thing
-  // to establish is whether the commands stopped being *submitted* (a culling or
-  // visibility problem in the scene walk) or are still submitted but produce
-  // nothing (a GL state or instancing problem at playback).  Enable with
-  // SOI_RENDER_DEBUG_SUBMISSION=1; it prints one line a second, and a count that
-  // drops to zero names the stage that lost the geometry.
+
   if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
     static std::chrono::steady_clock::time_point last_report{};
     const auto now = std::chrono::steady_clock::now();
@@ -963,10 +955,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           scatter_instances += scatter->instance_count;
         }
         if (const auto* rig = std::get_if<RiggedCreatureCmd>(&item)) {
-          // A command with neither palette source draws with an identity
-          // palette, which collapses the mesh onto the origin: issued, counted
-          // as drawn, and invisible.  Zero bones or a zero variation scale do
-          // the same thing by other means.
+
           if (rig->bone_palette == nullptr) {
             ++rig_no_palette;
             if (rig->palette_ubo != 0U) {
@@ -987,16 +976,11 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           if (rig->mesh == nullptr) {
             ++rig_no_mesh;
           } else if (rig->mesh->index_count() == 0U) {
-            // An empty mesh issues a draw that renders nothing: the soldier is
-            // counted as drawn and is invisible.
+
             ++rig_empty_mesh;
           }
           {
-            // Last unexamined field: where the soldier is actually drawn.  Every
-            // other command field is constant while soldiers blink, so a bad
-            // world transform is what is left -- a soldier placed under the
-            // terrain or outside the frustum draws and is counted, and is not
-            // visible.
+
             const QVector3D t = rig->world.column(3).toVector3D();
             rig_pos_min_y = std::min(rig_pos_min_y, t.y());
             rig_pos_max_y = std::max(rig_pos_max_y, t.y());
@@ -1013,10 +997,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           }
         }
       }
-      // The scatter and mesh executors bail silently when their pipeline
-      // resources are gone (a zero VAO or a null shader just `break`s), which
-      // looks identical to "submitted but invisible".  Report their health so a
-      // disappearance can be attributed to lost GL objects rather than culling.
+
       GLuint stone_vao = 0;
       GLuint tent_vao = 0;
       bool stone_shader = false;
@@ -1065,9 +1046,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
       }
       if (per_type[RiggedCreatureCmdIndex] > 0) {
         qInfo().noquote()
-            << QStringLiteral("SOI rigged detail: gpu_palette=%1 cpu_palette=%2 "
-                              "no_cpu_palette=%3 (arena=%8) zero_bones=%4 zero_scale=%5 "
-                              "low_alpha=%6 no_mesh=%7 EMPTY_MESH=%9")
+            << QStringLiteral(
+                   "SOI rigged detail: gpu_palette=%1 cpu_palette=%2 "
+                   "no_cpu_palette=%3 (arena=%8) zero_bones=%4 zero_scale=%5 "
+                   "low_alpha=%6 no_mesh=%7 EMPTY_MESH=%9")
                    .arg(rig_gpu_palette)
                    .arg(rig_cpu_palette)
                    .arg(rig_no_palette)
@@ -1081,8 +1063,6 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     }
   }
 
-  // Counted every frame, not just on the reporting tick: a soldier that drops
-  // out for a single frame is invisible to a once-a-second sample.
   std::size_t frame_rigged_commands = 0;
   m_rigged_drawn_this_frame = 0;
 
@@ -1189,9 +1169,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     static std::chrono::steady_clock::time_point last_rigged_report{};
     static std::size_t rigged_prev = 0;
     static std::size_t rigged_recoveries = 0;
-    // A drop can just be a death.  A count going back *up* without a spawn means
-    // a soldier that stopped being submitted started again -- that is flicker,
-    // and it is what distinguishes this from ordinary attrition.
+
     if (frame_rigged_commands > rigged_prev && rigged_prev != 0) {
       ++rigged_recoveries;
     }
@@ -1201,13 +1179,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     const auto now = std::chrono::steady_clock::now();
     if (now - last_rigged_report >= std::chrono::seconds(1)) {
       last_rigged_report = now;
-      // min != max means the scene walk itself dropped soldiers on some frames,
-      // so the flicker is a submission problem.  Equal values mean every soldier
-      // was submitted every frame and the loss is downstream at playback.
+
       qInfo().noquote()
-          << QStringLiteral(
-                 "SOI rigged/frame: min=%1 max=%2 last=%3 drawn=%5 %4"
-                 "%6")
+          << QStringLiteral("SOI rigged/frame: min=%1 max=%2 last=%3 drawn=%5 %4"
+                            "%6")
                  .arg(rigged_min == std::numeric_limits<std::size_t>::max()
                           ? 0
                           : rigged_min)

@@ -3,12 +3,12 @@
 #include <gtest/gtest.h>
 #include <numbers>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "systems/arrow_system.h"
 #include "systems/cleanup_system.h"
 #include "systems/combat_actions/body_impact.h"

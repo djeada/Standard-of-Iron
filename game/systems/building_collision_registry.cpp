@@ -205,8 +205,6 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
     }
   }
 
-  // Map-authored footprints have no entity yet, so they are never skipped by
-  // ignore_entity_id.
   for (const auto& obstacle : m_authored_obstacles) {
     if (circle_overlaps_footprint(obstacle, x, z, radius)) {
       return true;

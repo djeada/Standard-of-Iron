@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <mutex>
 
-#include "animation/clip_manifest.h"
 #include "animation/bpat/bpat_format.h"
+#include "animation/clip_manifest.h"
 
 namespace Render::Creature {
 

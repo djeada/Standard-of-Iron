@@ -315,8 +315,7 @@ auto main(int argc, char** argv) -> int {
         "afternoon, or night");
     return 2;
   }
-  // Map previews adopt the map's authored environment; an explicit
-  // --time-of-day still overrides it so any map can be inspected at any hour.
+
   const bool time_of_day_forced = parser.isSet(time_of_day_option);
   const auto forced_time_of_day = *parsed_time_of_day;
   float environment_hour = Game::Map::hour_for_time_of_day(*parsed_time_of_day);
@@ -357,24 +356,23 @@ auto main(int argc, char** argv) -> int {
     }
     if (parser.isSet(terrain_map_option)) {
       const QString map_path = parser.value(terrain_map_option).trimmed();
-      QTimer::singleShot(0,
-                         window.viewport(),
-                         [viewport = window.viewport(),
-                          map_path,
-                          time_of_day_forced,
-                          forced_time_of_day]() {
-                           QString error;
-                           if (!viewport->load_terrain_review_map(map_path, &error)) {
-                             qCritical().noquote()
-                                 << QStringLiteral(
-                                        "Could not load terrain review map: %1")
-                                        .arg(error);
-                             return;
-                           }
-                           if (time_of_day_forced) {
-                             viewport->set_time_of_day(forced_time_of_day);
-                           }
-                         });
+      QTimer::singleShot(
+          0,
+          window.viewport(),
+          [viewport = window.viewport(),
+           map_path,
+           time_of_day_forced,
+           forced_time_of_day]() {
+            QString error;
+            if (!viewport->load_terrain_review_map(map_path, &error)) {
+              qCritical().noquote()
+                  << QStringLiteral("Could not load terrain review map: %1").arg(error);
+              return;
+            }
+            if (time_of_day_forced) {
+              viewport->set_time_of_day(forced_time_of_day);
+            }
+          });
     } else if (parser.isSet(scenario_option)) {
       QString const scenario_id = parser.value(scenario_option).trimmed();
       if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
@@ -502,9 +500,6 @@ auto main(int argc, char** argv) -> int {
       qInfo().noquote()
           << QStringLiteral("Reviewing campaign terrain: %1").arg(entry.id);
 
-      // With a capture interval the map is filmed instead of photographed: the
-      // camera orbits the battlefield and every frame lands in the map's
-      // directory, ready for scripts/capture-campaign-promo.sh to cut together.
       if (capture_interval > 0.0F) {
         viewport->set_terrain_review_gameplay_camera();
         viewport->arm_terrain_review_orbit(promo_distance_scale, promo_tilt_deg);

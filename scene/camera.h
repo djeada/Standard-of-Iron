@@ -26,9 +26,6 @@ class Camera {
 public:
   Camera();
 
-  // Extent of the playable map, pushed in by whoever loads it.  The camera used
-  // to pull this from a game-side singleton, which made a pure view type depend
-  // on gameplay services; keeping it as plain data lets the camera stay a leaf.
   struct MapBounds {
     float tile_size = 0.0F;
     int width = 0;

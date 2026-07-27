@@ -3,14 +3,14 @@
 #pragma once
 
 #include <algorithm>
-
-#include "game/core/simulation_timing.h"
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <string>
+
+#include "game/core/simulation_timing.h"
 
 namespace Render::Profiling {
 
@@ -79,8 +79,7 @@ struct FrameProfile {
     for (auto& v : phase_us) {
       v = 0;
     }
-    // The simulation publishes this without depending on the renderer, so the
-    // profile snapshots it here rather than being written into directly.
+
     combat_state_update_us = Engine::Core::Timing::combat_state_update().value();
     Engine::Core::Timing::combat_state_update().reset();
     animation_input_sampling_us = 0;

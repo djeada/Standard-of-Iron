@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -111,8 +111,8 @@ void main() {
 
   float avg_color = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
-  color *= environment_lighting(normal, wrap_amount) +
-           local_lighting(v_world_pos, normal);
+  color *=
+      environment_lighting(normal, wrap_amount) + local_lighting(v_world_pos, normal);
   color = apply_directional_shadow(color, v_world_pos, normal);
   frag_color = vec4(color, u_alpha);
 }

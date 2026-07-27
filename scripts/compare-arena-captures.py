@@ -39,7 +39,7 @@ from pathlib import Path
 
 try:
     from PIL import Image
-except ImportError:  # pragma: no cover - dependency guidance only
+except ImportError:
     print(
         "error: Pillow is required (pip install pillow)",
         file=sys.stderr,
@@ -91,7 +91,9 @@ def discover(captures: Path, frame: str) -> dict[str, Path]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--captures",
         type=Path,
@@ -133,7 +135,9 @@ def main() -> int:
         action="store_true",
         help="write current captures as the new baselines instead of comparing",
     )
-    parser.add_argument("--json", type=Path, help="write a machine-readable report here")
+    parser.add_argument(
+        "--json", type=Path, help="write a machine-readable report here"
+    )
     args = parser.parse_args()
 
     captures = discover(args.captures, args.frame)

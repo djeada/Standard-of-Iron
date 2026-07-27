@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -140,8 +140,7 @@ void main() {
   float thread_sheen = pow(max(dot(N, H), 0.0), 38.0) * embroidery * 0.34;
   float grazing = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
-  vec3 color =
-      albedo * illumination * pinned_ao * fold_ao * environment_exposure();
+  vec3 color = albedo * illumination * pinned_ao * fold_ao * environment_exposure();
   color += cloth * sun * backscatter * 0.16;
   color += sky * cloth_sheen;
   color += trim_light * sun * thread_sheen;

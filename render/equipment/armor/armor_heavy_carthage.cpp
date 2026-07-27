@@ -13,11 +13,11 @@
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_spec.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "../../humanoid/mesh_helpers.h"
 #include "../attachment_builder.h"
 #include "../equipment_archetype_helpers.h"
 #include "../equipment_submit.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {

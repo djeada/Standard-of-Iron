@@ -39,7 +39,6 @@
 #include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -49,6 +48,7 @@
 #include "../../renderer_constants.h"
 #include "../builder_tool_palette.h"
 #include "../equipment_loadout_catalog.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "builder_style.h"
 #include "math/math_utils.h"
 

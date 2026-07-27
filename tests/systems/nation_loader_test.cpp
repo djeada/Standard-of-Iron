@@ -138,9 +138,6 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
   auto const horse_archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
                                                  Game::Units::TroopType::HorseArcher);
 
-  // Assert the rule, not the numbers: bow ranges are a balance value that moves,
-  // but both archer types must always come out of the profile service with the
-  // multiplier applied on top of whatever the catalog says.
   constexpr float k_expected_multiplier = 1.5F;
   auto const& catalog = Game::Units::TroopCatalog::instance();
   auto const& archer_class =

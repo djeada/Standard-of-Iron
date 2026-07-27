@@ -144,11 +144,7 @@ TEST(RiggedPipelineInstanced, HeadlessDrawInstancedPointerBatchReturnsFalse) {
 }
 
 TEST(RiggedPipelineInstanced, BatchWithArenaBackedSkinIsNotPackable) {
-  // Regression: an archer unit where one soldier carried a GPU bone-palette
-  // arena slot instead of a CPU palette.  The batch key only compares mesh and
-  // material, so it batched anyway and packed as an identity palette, drawing
-  // that soldier collapsed onto the model origin -- invisible, while still
-  // counted as drawn.  It must fall back to the single-draw path instead.
+
   std::array<QMatrix4x4, 4> palette{};
   std::vector<RiggedCreatureCmd> cmds(4, make_cmd(k_mesh_a, k_mat_a));
   std::vector<const RiggedCreatureCmd*> refs;

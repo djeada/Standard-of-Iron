@@ -4,7 +4,6 @@
 
 namespace {
 
-// Walkable half-extent of a hill crown, measured along +z from the centre.
 auto measure_crown_half_depth(float width, float depth, float height) -> int {
   constexpr int k_grid = 420;
   Game::Map::TerrainHeightMap height_map(k_grid, k_grid, 1.0F);
@@ -16,7 +15,7 @@ auto measure_crown_half_depth(float width, float depth, float height) -> int {
   hill.width = width;
   hill.depth = depth;
   hill.height = height;
-  // Entrances on the x axis so the z scan crosses crown, never a ramp.
+
   hill.entrances.emplace_back(-width * 0.5F, 0.0F, 0.0F);
   hill.entrances.emplace_back(width * 0.5F, 0.0F, 0.0F);
   height_map.build_from_features({hill});
@@ -31,10 +30,6 @@ auto measure_crown_half_depth(float width, float depth, float height) -> int {
 
 } // namespace
 
-// scripts/generate-map-settlements.py sizes hills from their settlement footprint
-// using crown_half_extent ~= 0.21 * authored_dimension. If the plateau maths in
-// terrain.cpp changes, that generator silently starts stranding buildings on
-// slopes, so pin the ratio here.
 TEST(HillCrownGeometryTest, CrownHalfExtentTracksAuthoredDimension) {
   struct Case {
     float width;

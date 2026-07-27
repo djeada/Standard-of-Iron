@@ -8,11 +8,11 @@
 #include <limits>
 #include <vector>
 
+#include "animation/rig/horse_gait.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/spec.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "animation/rig/horse_gait.h"
 #include "render/horse/horse_layout.h"
 #include "render/horse/horse_manifest.h"
 #include "render/horse/horse_profile_data.h"

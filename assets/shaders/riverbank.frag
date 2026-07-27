@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 out vec4 frag_color;
 
@@ -339,12 +339,11 @@ void main() {
   float ambient_occlusion = mix(0.82, 1.0, smoothstep(0.0, 0.38, shore_t));
   ambient_occlusion *= 1.0 - (1.0 - relief_fade) * pebbles * 0.30;
 
-  vec3 sun_light =
-      environment_primary_color() * environment_primary_intensity();
+  vec3 sun_light = environment_primary_color() * environment_primary_intensity();
   vec3 ambient_term = ambient_occlusion * environment_ambient_light(normal);
 
-  float exposure = environment_exposure() *
-                   (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
+  float exposure =
+      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
   vec3 color = earth * (ambient_term + sun_light * ndl * 0.70) * exposure;
 
   vec3 half_dir = safe_normalize(light_dir + view_dir, normal);
@@ -372,8 +371,7 @@ void main() {
   float safe_fog_end = max(u_fog_start + 0.001, u_fog_end);
 
   float fog_amount = smoothstep(u_fog_start, safe_fog_end, view_distance);
-  fog_amount =
-      max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  fog_amount = max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
   color = mix(color, environment_fog_color(), fog_amount);
 
   float core_alpha =

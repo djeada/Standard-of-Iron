@@ -630,9 +630,6 @@ private:
   QString m_desc;
 };
 
-// Groups several edits into one undo entry, e.g. moving or deleting a whole
-// multi-selection. Sub-commands run in order and undo in reverse, so removals
-// must be supplied newest-index-first.
 class CompositeCmd : public Command {
 public:
   CompositeCmd(std::vector<std::unique_ptr<Command>> commands, QString desc)

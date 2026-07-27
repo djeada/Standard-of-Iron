@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/map/scatter/ground_utils.h"
 
 namespace Render::Ground {
 

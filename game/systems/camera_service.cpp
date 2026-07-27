@@ -6,14 +6,14 @@
 #include <cmath>
 #include <memory>
 
-#include "scene/camera.h"
 #include "../core/component.h"
-#include "../map/visibility_service.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../map/visibility_service.h"
 #include "camera_controller.h"
 #include "camera_follow_system.h"
+#include "scene/camera.h"
 #include "selection_system.h"
 #include "units/spawn_type.h"
 
@@ -28,8 +28,6 @@ CameraService::~CameraService() = default;
 
 namespace {
 
-// The camera is a pure view type and no longer reaches into gameplay services
-// for the map extent, so the service that drives it supplies the bounds.
 void sync_map_bounds(Render::GL::Camera& camera) {
   const auto& visibility = Game::Map::VisibilityService::instance();
   if (!visibility.is_initialized()) {

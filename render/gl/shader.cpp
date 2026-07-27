@@ -185,13 +185,12 @@ auto Shader::load_from_source(const QString& vertex_source,
   glDeleteShader(fragment_shader);
 
   if (success) {
-    // Every environment-aware shader uses the same binding.  Missing blocks are
-    // valid for UI/depth-only programs and bind_uniform_block stays silent.
+
     (void)optional_bind_uniform_block("EnvironmentLighting",
-                                     k_environment_lighting_binding_point);
+                                      k_environment_lighting_binding_point);
     (void)optional_bind_uniform_block("LocalLighting", k_local_lighting_binding_point);
     (void)optional_bind_uniform_block("DirectionalShadows",
-                                     k_directional_shadow_binding_point);
+                                      k_directional_shadow_binding_point);
     const UniformHandle shadow_sampler =
         optional_uniform_handle("u_directional_shadow_map");
     if (shadow_sampler != InvalidUniform) {

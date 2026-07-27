@@ -11,9 +11,7 @@
 namespace MapEditor {
 
 struct CanvasTransform {
-  // Picks the smallest "nice" cell step (1-2-5 progression) that keeps grid
-  // lines at least `min_spacing_px` apart, so large maps zoomed out far enough
-  // to fit on screen still get a readable grid instead of an unreadable mush.
+
   [[nodiscard]] static auto grid_step_for_spacing(float scaled_cell_size,
                                                   float min_spacing_px,
                                                   int min_step) -> int {

@@ -9,10 +9,10 @@
 #include <limits>
 #include <vector>
 
-#include "scene/camera.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "scene/camera.h"
 
 namespace Game::Systems {
 

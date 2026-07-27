@@ -104,10 +104,7 @@ void Elephant::init(const SpawnParams& params) {
   e->add_component<Engine::Core::ElephantComponent>();
   auto* eleph_comp = e->get_component<Engine::Core::ElephantComponent>();
   if (eleph_comp != nullptr) {
-    // Gameplay footprint is authored here rather than read back from the
-    // visual model, so a change to elephant proportions cannot silently move
-    // trample geometry.  These reproduce the previous seed-0 visual values
-    // exactly (body_width 0.3340243 * 0.46, body_length 0.8228462 * 0.35).
+
     constexpr float k_foot_lateral = 0.1536512F;
     constexpr float k_foot_forward = 0.2879962F;
     eleph_comp->foot_lateral = k_foot_lateral;

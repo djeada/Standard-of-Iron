@@ -24,7 +24,7 @@ class RainManager;
 
 namespace Game::Map {
 class EnvironmentClock;
-} // namespace Game::Map
+}
 
 class MinimapManager;
 class VisibilityCoordinator;

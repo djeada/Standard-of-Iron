@@ -15,12 +15,12 @@
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_spec.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "../../humanoid/skeleton.h"
 #include "../../humanoid/style_palette.h"
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "shield_anchor.h"
 
 namespace Render::GL {

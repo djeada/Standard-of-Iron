@@ -12,12 +12,12 @@
 #include "../../../game/units/spawn_type.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
-#include "scene/camera.h"
 #include "../../gl/humanoid/animation/animation_inputs.h"
 #include "../../gl/resources.h"
 #include "../../graphics_settings.h"
 #include "../../profiling/combat_animation_diagnostics.h"
 #include "../../visibility_budget.h"
+#include "scene/camera.h"
 
 namespace Render::Creature::Pipeline {
 

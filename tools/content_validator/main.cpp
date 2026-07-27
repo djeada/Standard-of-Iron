@@ -28,8 +28,6 @@ struct ValidationResult {
   void addWarning(const QString& warning) { warnings.push_back(warning); }
 };
 
-// AI setups take owner ids 2, 3, 4... in order, so a map structure tagged with a
-// player_id past the last AI is never owned by anyone.
 auto lastAiOwnerId(const Game::Mission::MissionDefinition& mission) -> int {
   return 1 + static_cast<int>(mission.ai_setups.size());
 }
@@ -47,8 +45,6 @@ auto countMissionAuthoredEnemyBarracks(const Game::Mission::MissionDefinition& m
   return count;
 }
 
-// Mirrors MissionSetupCoordinator: waves sharing a trigger time across all AI
-// setups form one assault phase, which is what `survive_waves` counts.
 auto countWavePhases(const Game::Mission::MissionDefinition& mission) -> int {
   std::set<float> trigger_times;
   for (const auto& ai_setup : mission.ai_setups) {
@@ -59,14 +55,11 @@ auto countWavePhases(const Game::Mission::MissionDefinition& mission) -> int {
   return static_cast<int>(trigger_times.size());
 }
 
-// A capture objective can only ever be met by barracks an enemy actually owns, so
-// cross-check the mission's target against what the map and mission hand out.
 void validateAgainstMap(const QString& file_path,
                         const Game::Mission::MissionDefinition& mission,
                         const QString& map_path,
                         ValidationResult& result) {
-  // Only `structures[].type` and `structures[].player_id` are needed here, so read
-  // them straight from JSON rather than pulling the terrain stack into this tool.
+
   QFile map_file(map_path);
   if (!map_file.open(QIODevice::ReadOnly)) {
     result.addWarning(QString("Mission %1: could not open map '%2' for objective "
@@ -221,8 +214,6 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
                         .arg(mission.victory_mode));
   }
 
-  // Under "any" the first satisfied condition ends the mission, which silently
-  // turns extra objectives into shortcuts past the intended one.
   if (victory_mode == "any" && mission.victory_conditions.size() > 1) {
     result.addWarning(
         QString("Mission %1: %2 victory conditions under victory_mode 'any' - any one "

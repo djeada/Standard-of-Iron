@@ -9,14 +9,14 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/elephant_gait_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/snapshot_mesh_asset.h"

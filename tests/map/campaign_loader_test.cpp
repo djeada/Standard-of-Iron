@@ -207,21 +207,17 @@ TEST(SecondPunicWarCampaignShapeTest, CoversEveryObjectiveCategory) {
     victory_mode_by_mission.insert(entry.mission_id, mission.victory_mode);
   }
 
-  // Economic: harvest thresholds rather than another camp assault.
   EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("crossing_the_alps"))
                   .contains(QStringLiteral("accumulate_resources")));
 
-  // Defensive: wave counts, so clearing faster wins sooner.
   EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("battle_of_trebia"))
                   .contains(QStringLiteral("survive_waves")));
   EXPECT_TRUE(victory_types_by_mission.value(QStringLiteral("campania_campaign"))
                   .contains(QStringLiteral("survive_waves")));
 
-  // Time-bound offensive.
   EXPECT_TRUE(defeat_types_by_mission.value(QStringLiteral("battle_of_trasimene"))
                   .contains(QStringLiteral("time_limit")));
 
-  // Untimed offensive captures still carry the campaign.
   for (const auto& mission_id : {QStringLiteral("crossing_the_rhone"),
                                  QStringLiteral("battle_of_ticino"),
                                  QStringLiteral("battle_of_cannae")}) {
@@ -233,7 +229,6 @@ TEST(SecondPunicWarCampaignShapeTest, CoversEveryObjectiveCategory) {
         << mission_id.toStdString();
   }
 
-  // The finale is multi-objective, conjunctive, and untimed.
   EXPECT_EQ(victory_mode_by_mission.value(QStringLiteral("battle_of_zama")),
             QStringLiteral("all"));
   EXPECT_GE(victory_types_by_mission.value(QStringLiteral("battle_of_zama")).size(), 2);

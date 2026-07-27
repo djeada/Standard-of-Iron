@@ -18,7 +18,6 @@
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_spec.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "../../humanoid/skeleton.h"
 #include "../../static_attachment_spec.h"
 #include "../attachment_builder.h"
@@ -26,6 +25,7 @@
 #include "../generated_equipment.h"
 #include "../oriented_archetype_utils.h"
 #include "../primitive_archetype_utils.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "arrow_archetype_utils.h"
 #include "math/math_utils.h"
 

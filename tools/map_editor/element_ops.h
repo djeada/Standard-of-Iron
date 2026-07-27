@@ -12,8 +12,6 @@
 
 namespace MapEditor {
 
-// Canvas element categories. The integer values are the element_type ids used by
-// MapCanvas signals and by EditorWindow, so they must stay stable.
 enum class ElementKind {
   Terrain = 0,
   WorldProp = 1,
@@ -25,9 +23,6 @@ enum class ElementKind {
 
 inline constexpr int k_element_kind_count = 6;
 
-// Identifies one element by category and position in that category's vector.
-// Indices shift when elements are added or removed, so refs are only valid until
-// the next structural edit.
 struct ElementRef {
   int kind = -1;
   int index = -1;
@@ -42,8 +37,6 @@ struct ElementRef {
   }
 };
 
-// A copy of one element of any category. std::monostate means "nothing selected",
-// which keeps the variant index equal to the ElementKind value plus one.
 using ElementSnapshot = std::variant<std::monostate,
                                      TerrainElement,
                                      WorldPropElement,
@@ -52,9 +45,6 @@ using ElementSnapshot = std::variant<std::monostate,
                                      TroopSpawnElement,
                                      UndeadZoneElement>;
 
-// Per-category behaviour used by the canvas, the context menu and the editor
-// window. Everything here dispatches on the element kind exactly once so adding a
-// category means touching one switch per operation instead of six ladders.
 namespace ElementOps {
 
 [[nodiscard]] auto is_valid_kind(int kind) -> bool;
@@ -70,7 +60,6 @@ snapshot(const MapData& data, int kind, int index) -> ElementSnapshot;
 [[nodiscard]] auto display_name(const ElementSnapshot& snap) -> QString;
 [[nodiscard]] auto summary(const ElementSnapshot& snap) -> QString;
 
-// Anchor position in grid cells; for linear elements this is the segment centre.
 [[nodiscard]] auto position(const ElementSnapshot& snap) -> std::optional<QPointF>;
 [[nodiscard]] auto translated(const ElementSnapshot& snap,
                               const QPointF& delta) -> ElementSnapshot;
@@ -85,7 +74,6 @@ snapshot(const MapData& data, int kind, int index) -> ElementSnapshot;
 [[nodiscard]] auto with_player_id(const ElementSnapshot& snap,
                                   int player_id) -> ElementSnapshot;
 
-// Writes the element back without pushing an undo entry; used during live drags.
 void apply(MapData& data, int index, const ElementSnapshot& snap);
 
 [[nodiscard]] auto make_add(MapData& data,
@@ -98,8 +86,6 @@ make_remove(MapData& data, int kind, int index) -> std::unique_ptr<Command>;
                                const ElementSnapshot& after,
                                const QString& description) -> std::unique_ptr<Command>;
 
-// Bulk variants used by the multi-selection. Each returns a single command so a
-// group edit is one undo step; a null return means there was nothing to do.
 [[nodiscard]] auto snapshot(const MapData& data,
                             const ElementRef& ref) -> ElementSnapshot;
 [[nodiscard]] auto snapshots(const MapData& data, const QVector<ElementRef>& refs)
@@ -115,7 +101,6 @@ make_update_many(MapData& data,
                  const QVector<ElementSnapshot>& after,
                  const QString& description) -> std::unique_ptr<Command>;
 
-// Group anchor: the position of the first element that has one.
 [[nodiscard]] auto
 group_anchor(const QVector<ElementSnapshot>& snaps) -> std::optional<QPointF>;
 

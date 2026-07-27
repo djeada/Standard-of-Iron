@@ -10,7 +10,4 @@ add_library(scene_core STATIC camera.cpp)
 
 target_include_directories(scene_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-target_link_libraries(
-    scene_core
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui
-)
+target_link_libraries(scene_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)

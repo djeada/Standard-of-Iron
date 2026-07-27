@@ -28,11 +28,6 @@ public:
   RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);
   ~RiggedMesh() override;
 
-  // Caches that remember per-mesh GL objects must key on this, never on the
-  // mesh address.  Meshes are owned by unique_ptr inside the mesh caches, and
-  // clearing a cache frees them; a later mesh can land on the same address and
-  // silently inherit the previous mesh's cached VAO, which still references the
-  // deleted VBO and EBO.  The draw then issues and renders nothing.
   [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
 
   auto bind_vao() -> bool;

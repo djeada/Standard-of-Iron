@@ -4,11 +4,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "app/core/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
-#include "app/core/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/capture_system.h"
@@ -18,8 +18,8 @@
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
-#include "scene/camera.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace {
 

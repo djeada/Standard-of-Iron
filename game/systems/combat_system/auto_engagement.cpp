@@ -40,9 +40,6 @@ void AutoEngagement::process(Engine::Core::World*,
       continue;
     }
 
-    // Shooters acquire on their own too, but only what is already inside weapon
-    // range and never by chasing: an idle archer beside an enemy should loose an
-    // arrow rather than stand there, without the line wandering off after it.
     bool const shoots_without_closing =
         attack_comp->can_ranged &&
         attack_comp->preferred_mode != Engine::Core::AttackComponent::CombatMode::Melee;

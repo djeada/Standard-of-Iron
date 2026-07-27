@@ -10,13 +10,13 @@
 #include <optional>
 #include <unordered_map>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"

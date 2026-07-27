@@ -1133,9 +1133,7 @@ void read_fog_zones(const QJsonArray& arr,
 auto MapLoader::load_from_json_file(const QString& path,
                                     MapDefinition& out_map,
                                     QString* out_error) -> bool {
-  // Callers commonly reuse a definition while browsing maps.  Clear it before
-  // any I/O so even a failed or malformed load cannot leave the previous map's
-  // lighting, weather, or gameplay data active.
+
   out_map = MapDefinition{};
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {

@@ -1,5 +1,5 @@
-// Shared std140 contract. Keep in lockstep with
-// Render::EnvironmentLightingState::packed_std140().
+
+
 layout(std140) uniform EnvironmentLighting {
   vec4 u_env_primary_direction_intensity;
   vec4 u_env_primary_color_ambient_intensity;
@@ -68,22 +68,17 @@ float environment_wetness() {
 
 vec3 environment_ambient_light(vec3 normal) {
   float hemisphere = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
-  return mix(environment_ground_bounce_color(),
-             environment_sky_color(),
-             hemisphere) *
+  return mix(environment_ground_bounce_color(), environment_sky_color(), hemisphere) *
          environment_ambient_intensity();
 }
 
 vec3 environment_direct_light(vec3 normal, float wrap) {
-  float wrapped =
-      clamp((dot(normal, environment_primary_direction()) + wrap) / (1.0 + wrap),
-            0.0,
-            1.0);
+  float wrapped = clamp(
+      (dot(normal, environment_primary_direction()) + wrap) / (1.0 + wrap), 0.0, 1.0);
   return environment_primary_color() * environment_primary_intensity() * wrapped;
 }
 
 vec3 environment_lighting(vec3 normal, float wrap) {
-  return (environment_ambient_light(normal) +
-          environment_direct_light(normal, wrap)) *
+  return (environment_ambient_light(normal) + environment_direct_light(normal, wrap)) *
          environment_exposure();
 }

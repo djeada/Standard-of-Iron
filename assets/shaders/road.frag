@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -158,9 +158,7 @@ void main() {
     ao = 0.90 - ruts * 0.11 - (1.0 - medium) * 0.07;
     material_roughness = 0.97;
   } else {
-    // Default campaign roads are packed gravel: the stone bed reads at the
-    // strategic camera distance, while earth-filled joints keep it from
-    // looking like a pristine cobbled pavement.
+
     vec2 aggregate_cells = worley_f(uv * 1.85 + vec2(3.0, -8.0));
     float aggregate_edge = aggregate_cells.y - aggregate_cells.x;
     float aggregate = smoothstep(0.020, 0.110, aggregate_edge);
@@ -200,8 +198,7 @@ void main() {
   vec3 lit_color =
       base_color *
       (environment_ambient_light(n_final) +
-       environment_primary_color() * environment_primary_intensity() * diffuse *
-           0.65) *
+       environment_primary_color() * environment_primary_intensity() * diffuse * 0.65) *
       ao * environment_exposure();
   lit_color += environment_primary_color() * spec * 0.20;
 

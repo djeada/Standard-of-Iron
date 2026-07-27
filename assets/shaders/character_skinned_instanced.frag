@@ -1,7 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-#include "directional_shadows.glsl"
 
 in vec3 v_normal_ws;
 in vec2 v_tex;
@@ -156,8 +156,7 @@ vec3 shade_readable_character(vec3 base,
   float direct = wrapped_diffuse * environment_primary_intensity();
   vec3 ambient_light =
       mix(environment_ground_bounce_color(), sky_color, hemisphere) * readable_ambient;
-  vec3 color =
-      base * (ambient_light + sun_color * direct) * environment_exposure();
+  vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure();
   color += base * local_lighting(world_position, surface_normal);
 
   float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);

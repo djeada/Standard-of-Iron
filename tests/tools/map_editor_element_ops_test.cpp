@@ -140,7 +140,6 @@ TEST(MapEditorElementOpsTest, RemovingManyElementsUndoesBackToTheOriginalOrder) 
     data.add_structure(elem);
   }
 
-  // Deliberately unsorted: the helper must delete highest-index-first itself.
   data.execute_command(Ops::make_remove_many(
       data, {MapEditor::ElementRef{3, 0}, MapEditor::ElementRef{3, 2}}));
 
@@ -206,7 +205,7 @@ TEST(MapEditorElementOpsTest, BulkHelpersRejectMismatchedOrEmptyInput) {
                                   {},
                                   "mismatch"),
             nullptr);
-  // Out-of-range refs are skipped rather than crashing.
+
   EXPECT_EQ(Ops::make_remove_many(data, {MapEditor::ElementRef{3, 7}}), nullptr);
 }
 

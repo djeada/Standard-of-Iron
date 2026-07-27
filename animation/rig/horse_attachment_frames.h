@@ -3,9 +3,9 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include "animation/rig/horse_gait.h"
 #include "animation/rig/instance_transform.h"
 #include "animation/rig/side.h"
-#include "animation/rig/horse_gait.h"
 
 namespace Render::GL {
 

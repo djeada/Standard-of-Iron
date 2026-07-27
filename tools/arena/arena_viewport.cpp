@@ -24,6 +24,7 @@
 #include <string>
 
 #include "app/core/renderer_bootstrap.h"
+#include "app/core/world_bootstrap.h"
 #include "app/utils/movement_utils.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
@@ -37,7 +38,6 @@
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
-#include "app/core/world_bootstrap.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/camera_service.h"
@@ -67,7 +67,6 @@
 #include "render/entity/healing_waves_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
-#include "scene/camera.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -79,6 +78,7 @@
 #include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
+#include "scene/camera.h"
 #include "terrain_alignment.h"
 #include "unit_spawn_options.h"
 #include "utils/resource_utils.h"
@@ -287,8 +287,6 @@ auto scenario_center(Engine::Core::World* world,
 
 namespace {
 
-// Keeps the pure view camera fenced to the loaded map without it querying
-// gameplay services itself.
 void sync_camera_map_bounds(Render::GL::Camera* camera) {
   if (camera == nullptr) {
     return;
@@ -564,11 +562,7 @@ void ArenaViewport::paintGL() {
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
-    // QPainter shares this GL context.  Its paint engine assumes a default-ish
-    // state, so anything the scene renderer left bound -- a program, a VAO with
-    // instanced attribute divisors, a non-zero active texture unit -- can be
-    // picked up by the text and panel draws and show up as scene geometry
-    // smeared across the overlay.  Hand Qt a clean slate.
+
     if (QOpenGLContext::currentContext() != nullptr) {
       auto* gl = QOpenGLContext::currentContext()->functions();
       gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1462,9 +1456,7 @@ void ArenaViewport::configure_rendering_from_terrain() {
 void ArenaViewport::set_time_of_day(Game::Map::TimeOfDay time_of_day) {
   m_time_of_day = time_of_day;
   m_environment_hour = Game::Map::hour_for_time_of_day(time_of_day);
-  // The clock is re-seeded, not just the hour: the per-frame update pulls the
-  // hour back out of the clock, so skipping this would silently revert the
-  // requested time on the very next frame.
+
   m_environment_definition.start_time = m_environment_hour;
   m_environment_definition.lighting_profile = m_lighting_profile;
   m_environment_clock.reset(m_environment_definition);
@@ -2273,8 +2265,8 @@ auto ArenaViewport::environment_snapshot() const -> Arena::ArenaEnvironmentSnaps
   snapshot.hour = m_environment_hour;
   snapshot.time_of_day =
       QString::fromLatin1(Game::Map::time_of_day_name(m_time_of_day));
-  snapshot.time_mode =
-      QString::fromLatin1(Game::Map::time_mode_name(m_environment_definition.time_mode));
+  snapshot.time_mode = QString::fromLatin1(
+      Game::Map::time_mode_name(m_environment_definition.time_mode));
   snapshot.lighting_profile = m_lighting_profile;
   snapshot.shadow_quality = [](Render::GraphicsQuality quality) -> QString {
     switch (quality) {
@@ -2515,9 +2507,6 @@ void ArenaViewport::arm_terrain_review_orbit(float distance_scale, float tilt_de
         definition.grid.tile_size);
   }
 
-  // The authored camera looks at the middle of the battlefield, which on most
-  // maps is empty ground. For a promo shot, aim at the densest built-up area
-  // instead so every map opens on a town rather than a field.
   std::vector<QVector3D> building_positions;
   building_positions.reserve(definition.structures.size());
   for (const auto& structure : definition.structures) {

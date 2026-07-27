@@ -10,14 +10,11 @@
 #include "../creature/anatomy_bake.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/archetype_registry.h"
-#include "animation/bpat/bpat_format.h"
-#include "animation/bpat/bpat_registry.h"
 #include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/humanoid_animation_selection.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
-#include "scene/camera.h"
 #include "../graphics_settings.h"
 #include "../horse/horse_motion.h"
 #include "../horse/prepare.h"
@@ -26,7 +23,10 @@
 #include "../humanoid/skeleton.h"
 #include "../palette.h"
 #include "../visibility_budget.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "mounted_knight_pose.h"
+#include "scene/camera.h"
 
 namespace Render::GL {
 

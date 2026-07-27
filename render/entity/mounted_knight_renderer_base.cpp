@@ -13,8 +13,8 @@
 #include "../equipment/humanoid_equipment_archetype.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_proportion_profiles.h"
-#include "animation/rig/humanoid_proportions.h"
 #include "../palette.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "mounted_knight_pose.h"
 #include "renderer_constants.h"
 

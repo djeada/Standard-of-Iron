@@ -16,10 +16,8 @@ inline constexpr float k_damage_multiplier_default_hold = 1.75F;
 inline constexpr float k_health_multiplier_hold = 1.2F;
 inline constexpr float k_spearman_vs_cavalry_multiplier = 2.5F;
 
-// Siege engines now carry enough health to survive a stray volley, so the melee
-// counter no longer needs to be an instant kill to keep them vulnerable.
 inline constexpr float k_infantry_melee_vs_siege_multiplier = 3.0F;
-// Archers still counter elephants, but massed bows should not delete one for free.
+
 inline constexpr float k_archer_vs_elephant_multiplier = 1.68F;
 inline constexpr float k_archer_high_ground_multiplier = 1.8F;
 inline constexpr float k_spearman_high_ground_multiplier = 1.8F;
