@@ -5,7 +5,6 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/camera.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp

@@ -1,4 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec2 v_uv;
@@ -20,7 +23,6 @@ uniform float u_detail_noise_scale;
 uniform float u_soil_blend_height;
 uniform float u_soil_blend_sharpness;
 uniform float u_ambient_boost;
-uniform vec3 u_light_dir;
 
 uniform float u_snow_coverage;
 uniform float u_moisture_level;
@@ -64,6 +66,7 @@ mat2 rot2(float a) {
 }
 
 void main() {
+  float moisture = max(u_moisture_level, environment_wetness());
   float biome_forest = float(u_ground_type == 0);
   float biome_dry = float(u_ground_type == 1);
   float biome_rocky = float(u_ground_type == 2);
@@ -103,8 +106,8 @@ void main() {
   vec3 lush_grass = mix(u_grass_primary, u_grass_secondary, lush);
   float dryness = 0.16 + detail * 0.15 + wind_scour * 0.38;
   dryness += raised_shelf * 0.16;
-  dryness += (1.0 - u_moisture_level) * 0.18;
-  dryness -= lowland * (0.16 + 0.26 * u_moisture_level);
+  dryness += (1.0 - moisture) * 0.18;
+  dryness -= lowland * (0.16 + 0.26 * moisture);
   dryness = clamp(dryness, 0.0, 1.0);
   vec3 grass_col = mix(lush_grass, u_grass_dry, dryness);
   grass_col = mix(grass_col, u_grass_secondary, lowland * 0.16);
@@ -119,9 +122,9 @@ void main() {
   mud_patch = smoothstep(0.50,
                          0.70,
                          mud_patch * 0.72 + mud_patch_fine * 0.28 + basin * 0.20 +
-                             lowland * 0.16 + u_moisture_level * 0.10);
-  soil_mix = max(soil_mix, mud_patch * (0.82 + 0.16 * u_moisture_level));
-  soil_mix = max(soil_mix, lowland * (0.25 + 0.20 * u_moisture_level));
+                             lowland * 0.16 + moisture * 0.10);
+  soil_mix = max(soil_mix, mud_patch * (0.82 + 0.16 * moisture));
+  soil_mix = max(soil_mix, lowland * (0.25 + 0.20 * moisture));
   float biome_soil_bias = biome_forest * 0.18 + biome_dry * 0.15 + biome_rocky * 0.10 +
                           biome_alpine * 0.06 + biome_fertile * 0.13;
   float exposed_mosaic =
@@ -178,20 +181,18 @@ void main() {
   base_col = mix(gray_level, base_col, grounded_saturation);
   base_col *= vec3(1.025, 0.965, 0.985);
 
-  float puddle_mask =
-      lowland * (0.15 + 0.85 * u_moisture_level) * (1.0 - gravel_mask * 0.55);
+  float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);
 
-  float wet_darkening = 1.0 - (u_moisture_level * 0.12 + puddle_mask * 0.10);
+  float wet_darkening = 1.0 - (moisture * 0.12 + puddle_mask * 0.10);
   base_col *= wet_darkening;
 
   float broad_breakup = fbm(wuv * 0.055 + vec2(31.0, -12.0));
   float broad_breakup2 = fbm(wuv * 0.018 + vec2(-41.0, 6.0));
-  float damp_stain =
-      smoothstep(0.50,
-                 0.78,
-                 broad_breakup * 0.62 + broad_breakup2 * 0.38 + lowland * 0.18 +
-                     basin * 0.18 + u_moisture_level * 0.12);
+  float damp_stain = smoothstep(0.50,
+                                0.78,
+                                broad_breakup * 0.62 + broad_breakup2 * 0.38 +
+                                    lowland * 0.18 + basin * 0.18 + moisture * 0.12);
   float dry_scuff = smoothstep(0.60,
                                0.86,
                                detail * 0.54 + patch_noise * 0.18 + field_patch * 0.22 +
@@ -199,7 +200,7 @@ void main() {
   vec3 damp_soil = mix(u_soil_color * 0.58, u_soil_color * 0.90, moisture_var * 0.65);
   vec3 dusty_grass = mix(u_grass_dry, u_soil_color, 0.34);
   float stain_weight =
-      damp_stain * (0.12 + 0.28 * u_moisture_level) * (1.0 - gravel_mask * 0.45);
+      damp_stain * (0.12 + 0.28 * moisture) * (1.0 - gravel_mask * 0.45);
   base_col = mix(base_col, damp_soil, stain_weight);
   base_col = mix(base_col, dusty_grass, dry_scuff * 0.18 * (1.0 - soil_mix * 0.35));
   float leaf_litter =
@@ -239,20 +240,24 @@ void main() {
   vec3 col = base_col * (1.0 + jitter + brightness_var);
   col *= 1.0 + (speckle - 0.35) * 0.035 * (1.0 - puddle_mask);
   col *= u_tint;
-  vec3 L = normalize(u_light_dir);
+  vec3 L = environment_primary_direction();
   float ndl = max(dot(n_micro, L), 0.0);
-  float ambient = 0.38 + lowland * 0.04;
   float fres = pow(1.0 - max(dot(n_micro, vec3(0, 1, 0)), 0.0), 2.0);
 
   float surface_roughness =
       mix(0.58, 0.96, clamp(u_soil_roughness + gravel_mask * 0.25, 0.0, 1.0));
-  surface_roughness = mix(surface_roughness, 0.34, u_moisture_level * 0.45);
+  surface_roughness = mix(surface_roughness, 0.34, moisture * 0.45);
   surface_roughness = mix(surface_roughness, 0.18, puddle_mask * 0.75);
   float spec_contrib = fres * 0.10 * (1.0 - surface_roughness);
-  spec_contrib += u_moisture_level * 0.05 * fres;
+  spec_contrib += moisture * 0.05 * fres;
   spec_contrib += puddle_mask * 0.10 * (0.4 + 0.6 * ndl);
-  float shade = ambient + ndl * 0.65 + spec_contrib;
-  vec3 lit = col * shade * (u_ambient_boost + height_tint);
+  vec3 light =
+      environment_ambient_light(n_micro) +
+      environment_primary_color() * environment_primary_intensity() * ndl * 0.65 +
+      vec3(spec_contrib);
+  vec3 lit = col * light * (u_ambient_boost + height_tint) * environment_exposure();
+  lit += col * local_lighting(v_world_pos, n_micro);
+  lit = apply_directional_shadow(lit, v_world_pos, n_micro);
 
   vec3 disp_tint = mix(
       vec3(0.72, 0.88, 1.02), vec3(1.06, 0.94, 0.82), smoothstep(-0.12, 0.12, v_disp));
@@ -265,7 +270,9 @@ void main() {
       smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.18, 0.85, 1.0 - abs(fog_view_dir.y));
   float fog_amount = clamp(distance_fog * (0.75 + 0.55 * horizon_fog), 0.0, 1.0);
-  lit = mix(lit, u_fog_color, fog_amount);
+  float environment_fog = 1.0 - exp(-environment_fog_density() * view_distance);
+  fog_amount = max(fog_amount, environment_fog);
+  lit = mix(lit, environment_fog_color(), fog_amount);
 
   frag_color = vec4(clamp(lit, 0.0, 1.0), 1.0);
 }

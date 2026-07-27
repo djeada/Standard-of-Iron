@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../gl/render_constants.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 
 namespace {
 

@@ -6,13 +6,14 @@
 #include <cmath>
 #include <memory>
 
-#include "../../render/gl/camera.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../map/visibility_service.h"
 #include "camera_controller.h"
 #include "camera_follow_system.h"
+#include "scene/camera.h"
 #include "selection_system.h"
 #include "units/spawn_type.h"
 
@@ -25,19 +26,37 @@ CameraService::CameraService()
 
 CameraService::~CameraService() = default;
 
+namespace {
+
+void sync_map_bounds(Render::GL::Camera& camera) {
+  const auto& visibility = Game::Map::VisibilityService::instance();
+  if (!visibility.is_initialized()) {
+    camera.clear_map_bounds();
+    return;
+  }
+  camera.set_map_bounds({.tile_size = visibility.get_tile_size(),
+                         .width = visibility.get_width(),
+                         .height = visibility.get_height()});
+}
+
+} // namespace
+
 void CameraService::move(Render::GL::Camera& camera, float dx, float dz) {
+  sync_map_bounds(camera);
   float const dist = camera.get_distance();
   float const scale = std::max(0.12F, dist * 0.05F);
   m_controller->move(camera, dx * scale, dz * scale);
 }
 
 void CameraService::elevate(Render::GL::Camera& camera, float dy) {
+  sync_map_bounds(camera);
   float const distance = camera.get_distance();
   float const scale = std::clamp(distance * 0.05F, 0.1F, 5.0F);
   m_controller->move_up(camera, dy * scale);
 }
 
 void CameraService::zoom(Render::GL::Camera& camera, float delta) {
+  sync_map_bounds(camera);
   m_controller->zoom_distance(camera, delta);
 }
 
@@ -46,10 +65,12 @@ auto CameraService::get_distance(const Render::GL::Camera& camera) -> float {
 }
 
 void CameraService::yaw(Render::GL::Camera& camera, float degrees) {
+  sync_map_bounds(camera);
   m_controller->yaw(camera, degrees);
 }
 
 void CameraService::orbit(Render::GL::Camera& camera, float yaw_deg, float pitch_deg) {
+  sync_map_bounds(camera);
   if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
     return;
   }
@@ -59,6 +80,7 @@ void CameraService::orbit(Render::GL::Camera& camera, float yaw_deg, float pitch
 void CameraService::orbit_direction(Render::GL::Camera& camera,
                                     int direction,
                                     bool shift) {
+  sync_map_bounds(camera);
   const auto& cam_config = Game::GameConfig::instance().camera();
   float const step = shift ? cam_config.orbit_step_shift : cam_config.orbit_step_normal;
   float const pitch = step * float(direction);
@@ -68,6 +90,7 @@ void CameraService::orbit_direction(Render::GL::Camera& camera,
 void CameraService::follow_selection(Render::GL::Camera& camera,
                                      Engine::Core::World& world,
                                      bool enable) {
+  sync_map_bounds(camera);
   m_controller->set_follow_enabled(camera, enable);
 
   if (enable) {
@@ -90,6 +113,7 @@ void CameraService::reset_camera(Render::GL::Camera& camera,
                                  Engine::Core::World& world,
                                  int local_owner_id,
                                  unsigned int player_unit_id) {
+  sync_map_bounds(camera);
   Engine::Core::Entity* focus_entity = nullptr;
   for (auto* e : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
@@ -116,6 +140,7 @@ void CameraService::reset_camera(Render::GL::Camera& camera,
 
 void CameraService::snap_to_entity(Render::GL::Camera& camera,
                                    Engine::Core::Entity& entity) {
+  sync_map_bounds(camera);
   if (auto* t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto& cam_config = Game::GameConfig::instance().camera();
@@ -129,6 +154,7 @@ void CameraService::snap_to_entity(Render::GL::Camera& camera,
 void CameraService::update_follow(Render::GL::Camera& camera,
                                   Engine::Core::World& world,
                                   bool follow_enabled) {
+  sync_map_bounds(camera);
   if (follow_enabled) {
     if (auto* selection_system = world.get_system<SelectionSystem>()) {
       m_follow_system->update(world, *selection_system, camera);

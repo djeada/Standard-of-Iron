@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../../horse/horse_gait.h"
+#include "animation/rig/horse_gait.h"
 
 namespace Render::Creature::Quadruped {
 

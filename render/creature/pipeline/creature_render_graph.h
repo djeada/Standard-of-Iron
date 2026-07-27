@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../render_request.h"
-#include "bpat_playback.h"
+#include "animation/bpat/bpat_playback.h"
 #include "creature_render_state.h"
 #include "humanoid_animation_selection.h"
 #include "lod_decision.h"

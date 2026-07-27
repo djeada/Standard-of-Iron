@@ -9,11 +9,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "animation/pose_manifest.h"
 #include "render/creature/archetype_registry.h"
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
@@ -616,6 +616,38 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   EXPECT_TRUE(std::any_of(sink.rigged_world_z.begin(),
                           sink.rigged_world_z.end(),
                           [](float z) { return std::fabs(z - 0.25F) < 1.0e-4F; }));
+}
+
+TEST(SubmitRequests, MountPosedClipDoesNotSinkCreatureUnderTheTerrain) {
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid);
+  ASSERT_NE(blob, nullptr);
+  ASSERT_LT(Render::Creature::k_humanoid_riding_idle_clip, blob->clip_count());
+  ASSERT_EQ(blob->clip(Render::Creature::k_humanoid_riding_idle_clip).name,
+            "riding_idle");
+
+  CreaturePipeline const pipeline;
+  CountingSubmitter sink;
+
+  std::array<CreatureRenderRequest, 1> reqs{};
+  reqs[0].archetype = ArchetypeRegistry::k_humanoid_base;
+  reqs[0].state = AnimationStateId::Idle;
+  reqs[0].lod = Render::Creature::CreatureLOD::Full;
+  reqs[0].clip_id = Render::Creature::k_humanoid_riding_idle_clip;
+
+  const auto stats = pipeline.submit_requests(reqs, sink);
+  ASSERT_EQ(stats.entities_submitted, 1U);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
+
+  EXPECT_GT(sink.rigged_world_y[0], -0.5F)
+      << "mount-posed clip sank the creature by its saddle height";
+  EXPECT_NEAR(sink.rigged_world_y[0], 0.0F, 1.0e-3F);
 }
 
 TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {

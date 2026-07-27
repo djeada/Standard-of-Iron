@@ -41,7 +41,7 @@ CAMPAIGN_MAPS = (
     "assets/maps/map_battle_zama.json",
 )
 
-# Mirrors BuildingCollisionRegistry::s_building_sizes.
+
 BUILDING_SIZES = {
     "barracks": (4.0, 4.0),
     "home": (3.0, 3.0),
@@ -50,15 +50,13 @@ BUILDING_SIZES = {
     "wall_segment": (2.0, 2.0),
 }
 
-# WallNetworkService::k_segment_spacing - one wall entity per two grid units.
+
 WALL_SEGMENT_SPACING = 2
 
-# Clear space kept between building footprints, so formations can move between
-# them and the collision registry never reports an overlap.
+
 BUILDING_CLEARANCE = 2.0
 
-# terrain.cpp samples hills out to 1.18x their authored extent; keep a little
-# more than that so erosion at the skirt cannot strand a building.
+
 TERRAIN_INFLUENCE_MARGIN = 1.22
 
 TIERS = ("town", "fortified_camp", "marching_camp")
@@ -169,11 +167,6 @@ class Settlement:
         )
 
 
-# --------------------------------------------------------------------------
-# Terrain obstacles
-# --------------------------------------------------------------------------
-
-
 def _load_road_generator():
     """Import the road generator so its terrain rasteriser can be reused.
 
@@ -216,10 +209,7 @@ class TerrainMask:
                     < 0.01
                 )
             ]
-        # terrain.cpp raises ground out to max(slope_width, slope_depth) * 1.18
-        # beyond a hill's authored ellipse, and erosion softens a little further
-        # still. The road generator rasterises the bare ellipse, so inflate the
-        # features here or buildings land on ground the mask thinks is flat.
+
         for feature in working.get("terrain") or []:
             kind = str(feature.get("type", "")).lower()
             if kind not in {"hill", "mountain"}:
@@ -231,8 +221,6 @@ class TerrainMask:
             feature["width"] = half_width * 2.0 * TERRAIN_INFLUENCE_MARGIN
             feature["depth"] = half_depth * 2.0 * TERRAIN_INFLUENCE_MARGIN
 
-        # Roads are irrelevant to building placement; drop them so the routing
-        # field never rejects the map for an unrelated road problem.
         working["roads"] = []
         self._field = roads.RoutingField(working, clearance)
 
@@ -244,11 +232,6 @@ class TerrainMask:
                 if not self._field.passable(int(round(x)) + dx, int(round(z)) + dz):
                     return False
         return True
-
-
-# --------------------------------------------------------------------------
-# Hill crown geometry
-# --------------------------------------------------------------------------
 
 
 def hill_height(width: float, depth: float, authored_height: float) -> float:
@@ -307,9 +290,7 @@ def crown_fits(
 ) -> bool:
     """Whether a rectangular footprint sits inside the hill's elliptical crown."""
     crown_x, crown_z = usable_crown_extent(width, depth, authored_height, safety)
-    # The crown is an ellipse, so a rectangular settlement has to satisfy the
-    # ellipse equation at its corners - fitting the bounding box alone leaves the
-    # corner towers hanging over the slope.
+
     return math.hypot(half_x / max(crown_x, 0.001), half_z / max(crown_z, 0.001)) <= 1.0
 
 
@@ -337,9 +318,6 @@ def fit_hill_to_footprint(
         if width >= max_width and depth >= max_depth:
             return changed
 
-        # Grow the axis that is actually short. Hills are often long and narrow,
-        # and scaling both axes together leaves the narrow one binding while the
-        # long one runs into its cap for nothing.
         crown_x, crown_z = usable_crown_extent(width, depth, authored_height, safety)
         want_x = half_x / max(crown_x, 0.001)
         want_z = half_z / max(crown_z, 0.001)
@@ -577,11 +555,6 @@ def find_hill_at(
     return best
 
 
-# --------------------------------------------------------------------------
-# Settlement layout
-# --------------------------------------------------------------------------
-
-
 @dataclass
 class TierSpec:
     outer_half_x: float
@@ -599,8 +572,6 @@ class TierSpec:
 
 
 TIER_SPECS = {
-    # A walled town: outer curtain wall, inner citadel around the barracks and
-    # market, and four built-up housing quarters cut by two streets each way.
     "town": TierSpec(
         outer_half_x=58.0,
         outer_half_z=50.0,
@@ -615,7 +586,6 @@ TIER_SPECS = {
         marketplace=True,
         full_ring=True,
     ),
-    # A garrison holding: one wall ring, housing rows around the core.
     "fortified_camp": TierSpec(
         outer_half_x=38.0,
         outer_half_z=32.0,
@@ -630,7 +600,6 @@ TIER_SPECS = {
         marketplace=True,
         full_ring=True,
     ),
-    # A temporary field camp: palisade across the threat side only.
     "marching_camp": TierSpec(
         outer_half_x=26.0,
         outer_half_z=22.0,
@@ -739,9 +708,7 @@ def layout_settlement(
 
     def ground_is_clear(x: float, z: float, building_type: str) -> bool:
         if crown is not None:
-            # On a hill the surrounding slope is unwalkable, and the mask has the
-            # settlement's own hill removed so it cannot see that edge. Hold every
-            # building inside the crown ellipse explicitly.
+
             size = BUILDING_SIZES.get(building_type, (3.0, 3.0))
             reach_x = (abs(x - cx) + size[0] * 0.5) / max(crown[0], 0.001)
             reach_z = (abs(z - cz) + size[1] * 0.5) / max(crown[1], 0.001)
@@ -778,7 +745,6 @@ def layout_settlement(
                     return candidate_x, candidate_z
         return None
 
-    # --- core: barracks and marketplace at the centre -----------------------
     barracks_site = nearest_clear(cx, cz - 6.0, "barracks")
     if barracks_site is None:
         raise SettlementError(
@@ -802,12 +768,10 @@ def layout_settlement(
                 Building("marketplace", market_site[0], market_site[1], owner, nation)
             )
 
-    # --- inner citadel ------------------------------------------------------
     if spec.inner_half_x is not None:
         inner_half_x = spec.inner_half_x * scale
         inner_half_z = (spec.inner_half_x - 2.0) * scale
-        # The citadel gate faces a different side than the outer gates, so an
-        # attacker cannot run both in one straight line.
+
         inner_gate = perpendicular(settlement.facing)
         walls.extend(
             wall_ring(
@@ -837,12 +801,6 @@ def layout_settlement(
                 Building("defense_tower", tower_site[0], tower_site[1], owner, nation)
             )
 
-    # --- housing: dense blocks separated by streets --------------------------
-    # A grid of house plots fills the band between the citadel and the wall.
-    # Every `street_period`-th row and column is left empty, which is what reads
-    # as a street once the blocks either side of it are built up.
-    # Clearances scale with the settlement. A hilltop holding is shrunk to fit
-    # its crown, and fixed insets would swallow the whole housing band.
     spacing = spec.home_spacing
     ring_inset = spec.wall_inset * scale
     citadel_clear = (
@@ -857,9 +815,6 @@ def layout_settlement(
     columns = int(usable_x // spacing)
     rows = int(usable_z // spacing)
 
-    # Keep the gate approaches clear so troops can actually enter the town. This
-    # scales too: on a shrunken hilltop holding a fixed corridor would leave no
-    # room for housing at all.
     gate_corridor = 9.0 * scale
 
     plots: list[tuple[float, float]] = []
@@ -881,7 +836,7 @@ def layout_settlement(
                 continue
             if not citadel_clear and max(abs(offset_x), abs(offset_z)) < core_clear:
                 continue
-            # Gates open on the facing axis; leave that lane free.
+
             if (
                 settlement.facing in ("north", "south")
                 and abs(offset_x) < gate_corridor
@@ -891,33 +846,29 @@ def layout_settlement(
                 continue
             plot_x = cx + offset_x
             plot_z = cz + offset_z
-            # Terrain wins over the street grid: a block simply stops where a
-            # slope or watercourse starts, which is how real towns grow.
+
             if not ground_is_clear(plot_x, plot_z, "home"):
                 continue
             plots.append((plot_x, plot_z))
 
-    # Fill from the centre outwards so a capped settlement stays compact.
     plots.sort(key=lambda plot: abs(plot[0] - cx) + abs(plot[1] - cz))
     home_budget = settlement.homes if settlement.homes is not None else len(plots)
     placed_homes = 0
     for x, z in plots:
         if placed_homes >= home_budget:
             break
-        # The core may have been nudged into the housing band by terrain, so
-        # every plot is re-checked against what is already standing.
+
         if not site_is_free(x, z, "home"):
             continue
         buildings.append(Building("home", x, z, owner, nation))
         placed_homes += 1
 
-    # --- outer wall and towers ---------------------------------------------
     gates = [settlement.facing]
     if spec.full_ring:
         gates.append(opposite(settlement.facing))
         walls.extend(wall_ring(cx, cz, half_x, half_z, owner, nation, gates))
     else:
-        # Marching camp: palisade across the threat side and its two shoulders.
+
         threat = settlement.facing
         dx, dz = FACINGS[threat]
         if dz != 0.0:
@@ -995,11 +946,6 @@ def settlement_footprint(settlement: Settlement) -> tuple[float, float]:
     return half_x, half_z
 
 
-# --------------------------------------------------------------------------
-# Validation
-# --------------------------------------------------------------------------
-
-
 @dataclass
 class ValidationResult:
     errors: list[str] = field(default_factory=list)
@@ -1075,11 +1021,6 @@ def validate(
     return result
 
 
-# --------------------------------------------------------------------------
-# Map processing
-# --------------------------------------------------------------------------
-
-
 def build_structures(settlements: Sequence[Settlement]) -> list[dict]:
     """Serialise every settlement, buildings before walls.
 
@@ -1117,13 +1058,8 @@ def process_map(
     settlements = [Settlement.from_json(entry) for entry in raw_settlements]
     terrain = definition.get("terrain") or []
 
-    # Hills are resized before any mask is built, so the masks below see the
-    # final terrain rather than the authored starting shape.
     for settlement in settlements:
-        # Towns never sit on a hill: a crown is only about a fifth of the hill's
-        # width, so a town on one shrinks until it is a camp. `"on_hill": false`
-        # says the same thing explicitly for a camp, and is used where growing
-        # the hill would sever the map's road network.
+
         if settlement.tier == "town" or settlement.on_hill is False:
             standing_on = hill_containing(terrain, settlement.x, settlement.z)
             if standing_on is not None:
@@ -1131,8 +1067,6 @@ def process_map(
             settlement.on_hill = False
             continue
 
-        # Otherwise a settlement whose anchor already stands on a hill is a hill
-        # settlement whether or not the author said so - the map put it there.
         if settlement.on_hill is None:
             standing_on = hill_containing(terrain, settlement.x, settlement.z)
             if standing_on is None:
@@ -1146,13 +1080,10 @@ def process_map(
                 f"{settlement.id} is marked on_hill but no hill is near it"
             )
         normalise_hill_dimensions(hill)
-        # Never grow a hill far past what the author drew. The route graph was
-        # designed around its original footprint, and a hill that doubles in size
-        # can sever the road network entirely.
+
         growth_width = min(max_hill_width, float(hill["width"]) * max_hill_growth)
         growth_depth = min(max_hill_depth, float(hill["depth"]) * max_hill_growth)
-        # A hill that swells into a river makes the watercourse invalid, so stop
-        # its skirt short of the nearest channel or shore.
+
         water_gap = distance_to_water(definition, float(hill["x"]), float(hill["z"]))
         if math.isfinite(water_gap):
             water_limit = max(float(hill["width"]), 2.0 * max(water_gap - 6.0, 8.0))
@@ -1161,9 +1092,6 @@ def process_map(
         settlement.x = float(hill["x"])
         settlement.z = float(hill["z"])
 
-        # Grow the hill toward the settlement, then shrink the settlement the
-        # rest of the way. A hilltop holding is compact by nature; the crown is
-        # only about a fifth of the hill's width.
         authored_height = float(hill.get("height", 2.0))
         for _ in range(24):
             layout_settlement(settlement, spec)
@@ -1205,9 +1133,7 @@ def process_map(
                 crown_safety,
             )
         elif not mask.clear_for(settlement.x, settlement.z, BUILDING_SIZES["barracks"]):
-            # The authored anchor is on blocking terrain. Slide the whole
-            # settlement to the nearest ground that can hold it rather than
-            # scattering its buildings around an unusable centre.
+
             moved = nearest_clear_anchor(
                 mask, settlement.x, settlement.z, BUILDING_SIZES["barracks"]
             )

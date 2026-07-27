@@ -17,7 +17,7 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"

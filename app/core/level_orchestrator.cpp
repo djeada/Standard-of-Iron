@@ -5,10 +5,10 @@
 
 #include <utility>
 
+#include "app/core/skirmish_loader.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/map_loader.h"
-#include "game/map/skirmish_loader.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
@@ -18,8 +18,8 @@
 #include "game/systems/victory_service.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
-#include "render/gl/camera.h"
 #include "render/scene_renderer.h"
+#include "scene/camera.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
 
@@ -48,7 +48,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
 
   entity_cache.reset();
 
-  Game::Map::SkirmishLoader loader(world, *scene.renderer, *scene.active_camera);
+  App::Core::SkirmishLoader loader(world, *scene.renderer, *scene.active_camera);
 
   if (progress_tracker != nullptr) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_TERRAIN);
@@ -147,7 +147,8 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   level.is_spectator_mode = load_result.is_spectator_mode;
   level.rain = load_result.rain_settings;
   level.biome_seed = load_result.biome_seed;
-  level.lighting = load_result.lighting_settings;
+  level.lighting = load_result.lighting_state;
+  level.environment = load_result.environment;
 
   Game::GameConfig::instance().set_max_troops_per_player(
       load_result.max_troops_per_player);

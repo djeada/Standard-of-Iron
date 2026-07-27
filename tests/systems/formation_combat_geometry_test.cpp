@@ -569,8 +569,7 @@ TEST(FormationCombatGeometry, ChargeLockAtVisibleOverlapTransitionsToMeleeContac
   auto initial = Game::Systems::FormationCombat::contact_geometry(*cavalry, *infantry);
   auto* infantry_transform =
       infantry->get_component<Engine::Core::TransformComponent>();
-  // Just grazing: the front bodies touch but the ranks have not merged, so the
-  // charge lock is what turns this into melee.
+
   infantry_transform->position.z =
       initial.contact_center_distance - initial.contact_tolerance * 0.5F;
   auto const overlap =

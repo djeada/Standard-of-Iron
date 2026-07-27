@@ -19,7 +19,7 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
 #include "game/units/troop_type.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace {
 [[nodiscard]] auto hash_combine(std::uint64_t seed,

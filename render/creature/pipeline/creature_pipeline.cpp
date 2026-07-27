@@ -24,13 +24,13 @@
 #include "../../snapshot_mesh_cache.h"
 #include "../../submitter.h"
 #include "../archetype_registry.h"
-#include "../bpat/bpat_format.h"
-#include "../bpat/bpat_reader.h"
-#include "../bpat/bpat_registry.h"
 #include "../runtime_bake_guard.h"
 #include "../skeleton.h"
 #include "../snapshot_mesh_registry.h"
 #include "../spec.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_reader.h"
+#include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -260,7 +260,13 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
           playback.blob, effective_clip_id, state, effective_clip_variant)) {
     effective_clip_variant = 0U;
     effective_clip_id = playback_desc.clip_id;
-    playback = resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase);
+
+    playback =
+        playback_desc.blob != nullptr
+            ? resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase)
+            : resolve_bpat_playback(resolved.handle->asset->bpat_species_id,
+                                    playback_desc.clip_id,
+                                    phase);
   }
   if (playback.blob == nullptr) {
     return resolved;
@@ -489,9 +495,33 @@ auto interpolated_palette_for_playback(
   return owned_palette ? owned_palette->data() : current;
 }
 
+auto clip_supplies_ground_contact(const Render::Creature::Bpat::BpatBlob* blob,
+                                  std::uint16_t clip_id) noexcept -> bool {
+  if (blob == nullptr || clip_id >= blob->clip_count()) {
+    return false;
+  }
+  return !blob->clip(clip_id).name.starts_with("riding_");
+}
+
 auto contact_y_for_playback(CreatureKind species_kind,
                             const ResolvedRequestPlayback& playback) noexcept -> float {
   if (playback.blob == nullptr) {
+    return 0.0F;
+  }
+  if (!clip_supplies_ground_contact(playback.blob, playback.clip_id)) {
+    if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
+      static std::uint64_t hits = 0;
+      if (++hits % 50U == 1U) {
+        qInfo().noquote()
+            << QStringLiteral("SOI rejected mount-posed clip as ground contact "
+                              "#%1: clip_id=%2 name=%3")
+                   .arg(hits)
+                   .arg(playback.clip_id)
+                   .arg(QString::fromUtf8(
+                       std::string(playback.blob->clip(playback.clip_id).name)
+                           .c_str()));
+      }
+    }
     return 0.0F;
   }
   float const current = palette_contact_y(
@@ -605,9 +635,26 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              role_colors,
                              base_color,
                              wear_params);
-  cmd.palette_ubo = entry->skin_palette_ubo;
-  cmd.palette_offset = static_cast<std::uint32_t>(
-      static_cast<std::size_t>(global_frame) * entry->skin_palette_frame_stride_bytes);
+
+  const bool skin_ubo_covers_frame = entry->skin_palette_ubo != 0U &&
+                                     entry->skinned_frame_total != 0U &&
+                                     global_frame < entry->skinned_frame_total;
+  if (skin_ubo_covers_frame) {
+    cmd.palette_ubo = entry->skin_palette_ubo;
+    cmd.palette_offset =
+        static_cast<std::uint32_t>(static_cast<std::size_t>(global_frame) *
+                                   entry->skin_palette_frame_stride_bytes);
+  } else if (entry->skin_palette_ubo != 0U &&
+             qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
+    static std::uint64_t hits = 0;
+    if (++hits % 60U == 1U) {
+      qInfo().noquote() << QStringLiteral("SOI skin UBO frame out of range: %1 hit(s) "
+                                          "(frame=%2 total=%3)")
+                               .arg(hits)
+                               .arg(global_frame)
+                               .arg(entry->skinned_frame_total);
+    }
+  }
   if (primary_interpolated_palette) {
     attach_owned_palette(
         cmd, std::move(primary_interpolated_palette), entry->skinned_bone_count);

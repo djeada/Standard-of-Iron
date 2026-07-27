@@ -1,4 +1,7 @@
 #version 330 core
+#include "directional_shadows.glsl"
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -106,17 +109,9 @@ void main() {
 
   color = clamp(color, 0.0, 1.0);
 
-  vec3 light_dir = normalize(vec3(0.65, 0.50, 0.40));
-  float n_dot_l = dot(normal, light_dir);
   float wrap = 0.28;
-  float diff_raw = n_dot_l * (1.0 - wrap) + wrap;
-  float diff = max(diff_raw, 0.18);
-
-  vec3 sun_color = vec3(1.08, 0.92, 0.74);
-  vec3 sky_color = vec3(0.72, 0.80, 1.00);
-  float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
-
-  color *= diff * light_tint;
+  color *= environment_lighting(normal, wrap);
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, v_instance_alpha);
 }

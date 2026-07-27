@@ -6,6 +6,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -138,16 +139,115 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   ASSERT_FALSE(instanced.empty());
 
   for (const auto* source : {&single, &instanced}) {
-    EXPECT_NE(source->find("uniform vec3 u_light_dir;"), std::string::npos);
-    EXPECT_NE(source->find("uniform float u_ambient_strength;"), std::string::npos);
+    EXPECT_NE(source->find("#include \"environment_lighting.glsl\""),
+              std::string::npos);
     EXPECT_NE(source->find("uniform vec3 u_camera_position;"), std::string::npos);
     EXPECT_NE(source->find("shade_readable_character"), std::string::npos);
+    EXPECT_NE(source->find("environment_primary_direction()"), std::string::npos);
+    EXPECT_NE(source->find("environment_ambient_intensity()"), std::string::npos);
     EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.18);"),
               std::string::npos);
     EXPECT_NE(source->find("float rim = pow("), std::string::npos);
     EXPECT_NE(source->find("if (material_id == 2)"), std::string::npos);
     EXPECT_EQ(source->find("normalize(vec3(0.65, 0.50, 0.40))"), std::string::npos);
   }
+}
+
+TEST(ShaderSource, EveryWorldLightingVariantUsesSharedEnvironmentBlock) {
+  const auto root = find_repo_root();
+  const std::vector<std::string> shaders{
+      "basic.frag",
+      "basic_instanced.frag",
+      "character_skinned.frag",
+      "character_skinned_instanced.frag",
+      "catapult.frag",
+      "catapult_instanced.frag",
+      "terrain_chunk.frag",
+      "ground_plane.frag",
+      "grass_instanced.vert",
+      "stone_instanced.frag",
+      "plant_instanced.frag",
+      "pine_instanced.frag",
+      "olive_instanced.frag",
+      "tent_instanced.frag",
+      "supply_cart_instanced.frag",
+      "weapon_rack_instanced.frag",
+      "ruins_instanced.frag",
+      "dead_tree_instanced.frag",
+      "iron_ore_instanced.frag",
+      "magic_shrine_instanced.frag",
+      "primitive_instanced.frag",
+      "cylinder_instanced.frag",
+      "banner.frag",
+      "bridge.frag",
+      "road.frag",
+      "river.frag",
+      "riverbank.frag",
+  };
+
+  for (const auto& name : shaders) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("#include \"environment_lighting.glsl\""), std::string::npos)
+        << name;
+  }
+
+  const auto common =
+      read_text(root / "assets" / "shaders" / "include" / "environment_lighting.glsl");
+  ASSERT_FALSE(common.empty());
+  EXPECT_NE(common.find("layout(std140) uniform EnvironmentLighting"),
+            std::string::npos);
+  for (const auto* field : {"u_env_primary_direction_intensity",
+                            "u_env_primary_color_ambient_intensity",
+                            "u_env_sky_color_exposure",
+                            "u_env_ground_bounce_color_fog_density",
+                            "u_env_fog_color_cloud_cover",
+                            "u_env_shadow_tint_strength",
+                            "u_env_shadow_softness_wetness"}) {
+    EXPECT_NE(common.find(field), std::string::npos) << field;
+  }
+}
+
+TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {
+  const auto root = find_repo_root();
+  for (const auto* name : {"basic.frag",
+                           "basic_instanced.frag",
+                           "character_skinned.frag",
+                           "character_skinned_instanced.frag",
+                           "terrain_chunk.frag",
+                           "ground_plane.frag"}) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_EQ(source.find("vec3 sun_color = vec3("), std::string::npos) << name;
+    EXPECT_EQ(source.find("vec3 sky_color = vec3("), std::string::npos) << name;
+    EXPECT_EQ(source.find("vec3 sun_light = vec3("), std::string::npos) << name;
+    EXPECT_EQ(source.find("vec3 sky_light = vec3("), std::string::npos) << name;
+  }
+}
+
+TEST(ShaderSource, MainWorldReceiversUseDirectionalAndLocalLighting) {
+  const auto root = find_repo_root();
+  for (const auto* name : {"basic.frag",
+                           "basic_instanced.frag",
+                           "character_skinned.frag",
+                           "character_skinned_instanced.frag",
+                           "terrain_chunk.frag",
+                           "ground_plane.frag"}) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("#include \"local_lighting.glsl\""), std::string::npos)
+        << name;
+    EXPECT_NE(source.find("#include \"directional_shadows.glsl\""), std::string::npos)
+        << name;
+    EXPECT_NE(source.find("apply_directional_shadow("), std::string::npos) << name;
+  }
+
+  const auto shadow =
+      read_text(root / "assets" / "shaders" / "include" / "directional_shadows.glsl");
+  EXPECT_NE(shadow.find("u_shadow_light_vp[SOI_MAX_SHADOW_CASCADES]"),
+            std::string::npos);
+  EXPECT_NE(shadow.find("texture(u_directional_shadow_map"), std::string::npos);
+  EXPECT_NE(shadow.find("for (int y = -3; y <= 3; ++y)"), std::string::npos);
 }
 
 TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {

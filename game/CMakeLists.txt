@@ -7,6 +7,7 @@ add_library(
     core/system.cpp
     core/world.cpp
     core/event_manager.cpp
+    core/simulation_timing.cpp
     core/serialization.cpp
 )
 
@@ -120,27 +121,25 @@ add_library(
     systems/rain_manager.cpp
     systems/stamina_system.cpp
     map/map_loader.cpp
-    map/level_loader.cpp
     map/mission_loader.cpp
     map/mission_victory_rules.cpp
     map/campaign_loader.cpp
     map/procedural_tree_generation.cpp
     map/map_transformer.cpp
-    map/environment.cpp
+    map/environment_lighting.cpp
+    map/scatter/spawn_validator.cpp
     map/terrain.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp
     map/terrain_topology_audit.cpp
     map/visibility_service.cpp
-    map/world_bootstrap.cpp
     map/map_catalog.cpp
-    map/skirmish_loader.cpp
     map/minimap/minimap_generator.cpp
     map/minimap/map_preview_generator.cpp
-    map/minimap/minimap_texture_manager.cpp
     map/minimap/minimap_fog_compositor.cpp
     map/minimap/unit_layer.cpp
     map/minimap/camera_viewport_layer.cpp
+    visuals/building_asset_key.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp
@@ -180,7 +179,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
         animation_core
-        render_gl
+        scene_core
 )
 
 add_subdirectory(audio)

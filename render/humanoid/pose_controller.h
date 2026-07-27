@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "humanoid_renderer_base.h"
-#include "humanoid_specs.h"
 
 namespace Render::GL {
 

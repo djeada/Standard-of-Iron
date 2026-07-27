@@ -22,7 +22,7 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace {
 

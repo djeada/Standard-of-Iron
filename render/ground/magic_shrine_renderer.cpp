@@ -61,6 +61,19 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
   cmd.species = TerrainScatterCmd::Species::MagicShrine;
   cmd.magic_shrine = m_state.params;
   Scatter::submit_visible_chunks(renderer, m_state, cmd);
+
+  for (const auto& inst : m_state.visible_instances) {
+    const QVector3D shrine_pos = inst.pos_scale.toVector3D();
+    const float scale = std::max(inst.pos_scale.w(), 0.1F);
+    const float pulse =
+        0.88F + 0.12F * std::sin((m_state.params.time * 1.4F) + inst.color_rot.w());
+    Render::LocalLight votive;
+    votive.position = shrine_pos + QVector3D(0.0F, scale * 0.9F, 0.0F);
+    votive.color = QVector3D(0.52F, 0.62F, 0.86F);
+    votive.radius = std::clamp(scale * 3.4F, 3.5F, 11.0F);
+    votive.intensity = 0.75F * pulse;
+    renderer.local_light(votive);
+  }
 }
 
 void MagicShrineRenderer::clear() {

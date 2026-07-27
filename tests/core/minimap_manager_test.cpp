@@ -14,7 +14,7 @@
 #include "map/minimap/minimap_utils.h"
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 using namespace Game::Map;
 

@@ -16,6 +16,7 @@
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
+#include "game/visuals/building_asset_key.h"
 #include "math/math_utils.h"
 
 namespace Render::GL {
@@ -168,40 +169,24 @@ auto resolve_building_state(const DrawContext& ctx) -> BuildingState {
 
 auto building_renderer_key(std::string_view nation_slug,
                            std::string_view building_type) -> std::string {
-  return "troops/" + std::string(nation_slug) + "/" + std::string(building_type);
+  return Game::Visuals::building_asset_key(nation_slug, building_type);
 }
 
 auto building_renderer_key(Game::Systems::NationID nation_id,
                            std::string_view building_type) -> std::string {
-  switch (nation_id) {
-  case Game::Systems::NationID::Carthage:
-    return building_renderer_key("carthage", building_type);
-  case Game::Systems::NationID::IronSepulcher:
-    return building_renderer_key("iron_sepulcher", building_type);
-  case Game::Systems::NationID::RomanRepublic:
-  default:
-    return building_renderer_key("roman", building_type);
-  }
+  return Game::Visuals::building_asset_key(nation_id, building_type);
 }
 
 auto canonicalize_building_renderer_key(std::string_view renderer_key)
     -> std::string_view {
-  if (renderer_key == "barracks_roman") {
-    return "troops/roman/barracks";
-  }
-  if (renderer_key == "barracks_carthage") {
-    return "troops/carthage/barracks";
-  }
-  return renderer_key;
+  return Game::Visuals::canonicalize_building_asset_key(renderer_key);
 }
 
 auto resolve_building_renderer_key(std::string_view renderer_key,
                                    std::string_view building_type,
                                    Game::Systems::NationID nation_id) -> std::string {
-  if (renderer_key.empty() || renderer_key == building_type) {
-    return building_renderer_key(nation_id, building_type);
-  }
-  return std::string(canonicalize_building_renderer_key(renderer_key));
+  return Game::Visuals::resolve_building_asset_key(
+      renderer_key, building_type, nation_id);
 }
 
 void submit_building_instance(ISubmitter& out,

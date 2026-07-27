@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../render/ground/scatter_composition.h"
-#include "../../render/ground/spawn_validator.h"
+#include "../../game/map/scatter/scatter_composition.h"
+#include "../../game/map/scatter/spawn_validator.h"
 #include "terrain.h"
 
 namespace Game::Map {

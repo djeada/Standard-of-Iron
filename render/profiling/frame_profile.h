@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <string>
 
+#include "game/core/simulation_timing.h"
+
 namespace Render::Profiling {
 
 enum class Phase : std::uint8_t {
@@ -77,7 +79,9 @@ struct FrameProfile {
     for (auto& v : phase_us) {
       v = 0;
     }
-    combat_state_update_us = 0;
+
+    combat_state_update_us = Engine::Core::Timing::combat_state_update().value();
+    Engine::Core::Timing::combat_state_update().reset();
     animation_input_sampling_us = 0;
     humanoid_preparation_us = 0;
     bpat_playback_us = 0;

@@ -6,7 +6,54 @@ This is the story of how Standard of Iron takes game state and turns it into pix
 
 ## What we'll cover
 
-We'll start with the big picture of how data flows through the system, then dig into each layer: how Qt bootstraps OpenGL, how we record what needs to be drawn, how the backend executes those commands efficiently, where OpenGL actually lives in the code, how different nations get their unique visual styles, and finally how our shaders generate infinite detail without eating all your VRAM.
+We'll start with where code is allowed to live and why the simulation must never depend on the renderer, then how the environment lighting and shadow system works. After that: how Qt bootstraps OpenGL, how we record what needs to be drawn, how the backend executes those commands efficiently, where OpenGL actually lives in the code, how different nations get their unique visual styles, and finally how our shaders generate infinite detail without eating all your VRAM.
+
+## Which layer owns what
+
+Before any of the frame mechanics, it's worth knowing where code is allowed to live, because this is the rule that keeps the simulation runnable without a GPU.
+
+**The renderer reads game state. The simulation never reads the renderer.** `render/` includes `game/` freely -- terrain, visibility, nations, team colours -- because drawing means looking at the world. The reverse is forbidden: `game/` must not include `render/`.
+
+That isn't stylistic. `tools/balance_sim` is a headless battle simulator with no window and no OpenGL, and it links `game_systems` without `render_gl`. Any gameplay code that reaches into the renderer breaks it.
+
+So where do shared things go? Three leaf layers sit _below_ both:
+
+| Layer             | Holds                                                                   | May depend on |
+| ----------------- | ----------------------------------------------------------------------- | ------------- |
+| `scene/`          | `Camera`, `EnvironmentLightingState` -- plain view and environment data | Qt only       |
+| `animation/rig/`  | Skeleton proportions, attachment frames, gait, reach constants          | Qt only       |
+| `animation/bpat/` | Baked pose data (BPAT format, reader, registry, playback)               | Qt only       |
+
+The important idea: **animation is not part of rendering**. Pose evaluation is a peer subsystem. The renderer consumes bone transforms to skin a mesh; gameplay consumes the same transforms for weapon traces and attachment points. Neither owns them. That's why `HumanProportions` lives in `animation/rig/` and not in `render/humanoid/`, and why the combat weapon trace can sample baked sockets without touching the renderer.
+
+`Camera` is worth calling out because it looks like a renderer type and isn't. It's `QMatrix4x4` maths with no GL. It used to pull map bounds from a gameplay singleton; it now takes a `Camera::MapBounds` pushed in by whoever loads the map, which is what let it move down to `scene/`.
+
+Scene composition -- constructing renderers, wiring loaders -- belongs in `app/core/`, not `game/`. `world_bootstrap`, `level_loader`, `skirmish_loader` and `environment` live there for that reason.
+
+### The guard
+
+This is enforced at build time, not by convention. `scripts/check-layering.py` runs as part of every build via the `check_layering` target and fails with the offending file and line:
+
+```
+game/systems/camera_service.cpp:168: game/ must not include render/scene_renderer.h
+```
+
+`tests/architecture/layering_test.cpp` covers the same rules in the test suite. If you find yourself wanting to include `render/` from `game/`, the answer is almost always to move the shared type into one of the three leaf layers, or to invert the call so the renderer reads from the simulation.
+
+## Environment lighting and shadows
+
+Lighting is not per-shader constants any more. A single `EnvironmentLightingState` (`scene/environment_lighting.h`) describes the whole outdoor environment -- sun direction/colour/intensity, sky and ground bounce, fog, shadow tint and strength, exposure, cloud cover, wetness -- and is uploaded once per frame to a uniform block at binding 1.
+
+Shaders pull from it through `assets/shaders/include/environment_lighting.glsl` rather than defining their own sun and sky colours. `#include` in GLSL is resolved by `Shader::load_from_files` (`resolve_shader_includes`), so a shader loaded any other way will not get its includes expanded.
+
+Time of day is a continuous decimal hour with `locked`, `scripted` and `continuous` modes, not four fixed presets; the legacy `morning`/`day`/`afternoon`/`night` strings still load and alias onto hours. Weather feeds the same state, so rain and snow shift cloud cover, wetness, fog and sky tint coherently.
+
+Directional shadows are cascaded (up to four, quality-dependent) with texel snapping and cascade blending. Contact shadows remain as a cheap grounding effect and a low-quality fallback.
+
+Two practical notes:
+
+- **Texture units are a shared, program-wide namespace.** Two samplers of different types resolving to the same unit make every draw using that program raise `GL_INVALID_OPERATION`. The units in play are listed in `Render::GL::TextureUnit` (`render/gl/render_constants.h`) -- add new long-lived samplers there rather than picking a number.
+- **Instanced emitters can't be recovered from draw commands.** Fire camps and shrines reach the GPU as instance buffers, so the backend cannot read their positions back to build local lights. They advertise themselves through `Renderer::local_light()` instead, and the backend budgets those alongside effect-driven lights.
 
 ## QSG render-thread stages
 
@@ -636,16 +683,21 @@ The whole architecture optimizes for minimal state changes, parallel CPU/GPU wor
 
 Here's a quick reference for common tasks:
 
-| What you want to do     | Where to look                                                                                                                                                                                                                                              |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Add a new unit type     | [render/entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations) |
-| Change a nation's look  | [render/entity/nations/carthage](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage) or [roman](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/roman) folders                                 |
-| Modify shaders          | [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder                                                                                                                                                               |
-| Debug GL errors         | [render/gl/mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) has error checking after draws                                                                                                                               |
-| Change draw order       | [render/draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp                                                                                                      |
-| Add a new effect        | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend                                                                                                                                                                                   |
-| Debug the frame         | Use RenderDoc to capture and step through                                                                                                                                                                                                                  |
-| Tune battle performance | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling                                                                                    |
+| What you want to do                      | Where to look                                                                                                                                                                                                                                              |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add a new unit type                      | [render/entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations) |
+| Change a nation's look                   | [render/entity/nations/carthage](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage) or [roman](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/roman) folders                                 |
+| Modify shaders                           | [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder                                                                                                                                                               |
+| Debug GL errors                          | [render/gl/mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) has error checking after draws                                                                                                                               |
+| Change draw order                        | [render/draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp                                                                                                      |
+| Add a new effect                         | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend                                                                                                                                                                                   |
+| Debug the frame                          | Use RenderDoc to capture and step through                                                                                                                                                                                                                  |
+| Tune battle performance                  | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling                                                                                    |
+| Share a type between gameplay and render | Put it in `scene/` (view data), `animation/rig/` (skeleton, reach) or `animation/bpat/` (baked poses) -- never include `render/` from `game/`                                                                                                              |
+| Change lighting or time of day           | `scene/environment_lighting.h` for the state, `game/map/environment_lighting.cpp` for the curves, `assets/shaders/include/environment_lighting.glsl` for shader access                                                                                     |
+| Add a shader sampler                     | Register the unit in `Render::GL::TextureUnit` ([render/gl/render_constants.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/render_constants.h)) so it cannot collide                                                                    |
+| Make a prop cast light                   | Call `Renderer::local_light()` from its renderer; instanced props cannot be recovered from draw commands                                                                                                                                                   |
+| Review props or lighting visually        | `arena_app --batch --scenario world_prop_lineup` (or any `lighting_*` scenario) `--clean-capture --artifact-dir <dir>`; compare with `scripts/compare-arena-captures.py`                                                                                   |
 
 The most common mistakes are calling OpenGL from the wrong thread (Qt's render thread is the only safe place), forgetting to bind the VAO before drawing (nothing appears), uploading instance data but calling the non-instanced draw function (only one object appears), or getting matrix conventions mixed up (everything is inside-out or flipped).
 

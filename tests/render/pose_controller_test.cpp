@@ -6,12 +6,12 @@
 #include <unordered_set>
 
 #include "animation/ambient_pose_manifest.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/spear_pose_utils.h"
 #include "tests/support/movement_test_access.h"

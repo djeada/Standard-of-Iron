@@ -1,6 +1,4 @@
-// Headless battle-balance simulator. No QML, no OpenGL, no window: it drives
-// the shipping combat and movement systems at a fixed timestep so matchup
-// results can be regenerated in CI.
+
 
 #include <QCommandLineParser>
 #include <QCoreApplication>

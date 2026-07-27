@@ -28,6 +28,8 @@ public:
   RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);
   ~RiggedMesh() override;
 
+  [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
+
   auto bind_vao() -> bool;
   void unbind_vao();
 
@@ -52,6 +54,9 @@ public:
   [[nodiscard]] auto index_buffer() noexcept -> Buffer* { return m_ebo.get(); }
 
 private:
+  std::uint64_t m_id = next_id();
+  static auto next_id() noexcept -> std::uint64_t;
+
   std::vector<RiggedVertex> m_vertices;
   std::vector<std::uint32_t> m_indices;
 

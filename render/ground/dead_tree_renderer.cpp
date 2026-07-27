@@ -7,12 +7,13 @@
 
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
+#include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "gl/render_constants.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "scatter_composition.h"
 #include "scatter_runtime.h"
-#include "spawn_validator.h"
 
 namespace {
 
@@ -154,14 +155,21 @@ void DeadTreeRenderer::generate_instances(
     const QVector3D resolved =
         terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 
+    uint32_t state = hash_coords(static_cast<int>(prop.x),
+                                 static_cast<int>(prop.z),
+                                 m_biome_settings.seed ^ 0x51A3C7D9U);
+    QVector3D const base_color(k_base_color_r, k_base_color_g, k_base_color_b);
+    QVector3D const dry_color(0.43F, 0.36F, 0.27F);
+    float const color_var = remap(rand_01(state), 0.35F, 0.85F);
+    QVector3D const color = base_color * (1.0F - color_var) + dry_color * color_var;
+
     DeadTreeInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),
                                resolved.y(),
                                resolved.z(),
                                prop.scale * Game::Map::world_prop_render_scale(
                                                 Game::Map::WorldProp::Type::DeadTree));
-    inst.color_rot =
-        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
+    inst.color_rot = QVector4D(color.x(), color.y(), color.z(), prop.rotation);
     m_state.instances.push_back(inst);
   }
 

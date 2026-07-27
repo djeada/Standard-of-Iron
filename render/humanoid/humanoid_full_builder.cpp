@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "../gl/humanoid/humanoid_constants.h"
-#include "humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "skeleton.h"
 
 namespace Render::Humanoid {

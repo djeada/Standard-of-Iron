@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "game/map/map_definition.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain_service.h"
-#include "render/ground/scatter_composition.h"
-#include "render/ground/spawn_validator.h"
 
 namespace {
 

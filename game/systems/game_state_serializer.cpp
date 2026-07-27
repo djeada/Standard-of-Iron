@@ -14,7 +14,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace Game::Systems {
 
@@ -70,6 +70,28 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   metadata["max_troops_per_player"] = level.max_troops_per_player;
   metadata["local_owner_id"] = runtime.local_owner_id;
   metadata["player_unit_id"] = static_cast<qint64>(level.player_unit_id);
+
+  QJsonObject environment_obj;
+  environment_obj["start_time"] = level.environment.start_time;
+  environment_obj["time_mode"] =
+      QString::fromLatin1(Game::Map::time_mode_name(level.environment.time_mode));
+  environment_obj["day_length_seconds"] = level.environment.day_length_seconds;
+  environment_obj["lighting_profile"] = level.environment.lighting_profile;
+  if (level.environment.fog_density_override >= 0.0F) {
+    environment_obj["fog_density"] = level.environment.fog_density_override;
+  }
+  if (level.environment.exposure_override >= 0.0F) {
+    environment_obj["exposure"] = level.environment.exposure_override;
+  }
+  environment_obj["current_time"] = level.environment_clock.hour;
+  environment_obj["transition_active"] = level.environment_clock.transition_active;
+  environment_obj["transition_start_time"] =
+      level.environment_clock.transition_start_hour;
+  environment_obj["transition_target_time"] =
+      level.environment_clock.transition_target_hour;
+  environment_obj["transition_duration"] = level.environment_clock.transition_duration;
+  environment_obj["transition_elapsed"] = level.environment_clock.transition_elapsed;
+  metadata["environment"] = environment_obj;
 
   metadata["game_max_troops_per_player"] =
       Game::GameConfig::instance().get_max_troops_per_player();
@@ -237,6 +259,51 @@ void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadat
   if (metadata.contains("player_unit_id")) {
     level.player_unit_id = static_cast<Engine::Core::EntityID>(
         metadata.value("player_unit_id").toVariant().toULongLong());
+  }
+
+  if (metadata.value("environment").isObject()) {
+    const QJsonObject environment = metadata.value("environment").toObject();
+    level.environment.start_time = Game::Map::normalize_hour(static_cast<float>(
+        environment.value("start_time").toDouble(level.environment.start_time)));
+    level.environment.time_mode = Game::Map::parse_time_mode(
+        environment.value("time_mode")
+            .toString(QString::fromLatin1(
+                Game::Map::time_mode_name(level.environment.time_mode))));
+    level.environment.day_length_seconds = std::max(
+        1.0F,
+        static_cast<float>(environment.value("day_length_seconds")
+                               .toDouble(level.environment.day_length_seconds)));
+    level.environment.lighting_profile =
+        environment.value("lighting_profile")
+            .toString(level.environment.lighting_profile);
+    level.environment.fog_density_override =
+        environment.contains("fog_density")
+            ? std::max(
+                  0.0F,
+                  static_cast<float>(environment.value("fog_density").toDouble(0.0)))
+            : -1.0F;
+    level.environment.exposure_override =
+        environment.contains("exposure")
+            ? std::max(0.01F,
+                       static_cast<float>(environment.value("exposure").toDouble(1.0)))
+            : -1.0F;
+    level.environment_clock.hour = Game::Map::normalize_hour(static_cast<float>(
+        environment.value("current_time").toDouble(level.environment.start_time)));
+    level.environment_clock.transition_active =
+        environment.value("transition_active").toBool(false);
+    level.environment_clock.transition_start_hour = Game::Map::normalize_hour(
+        static_cast<float>(environment.value("transition_start_time")
+                               .toDouble(level.environment_clock.hour)));
+    level.environment_clock.transition_target_hour = Game::Map::normalize_hour(
+        static_cast<float>(environment.value("transition_target_time")
+                               .toDouble(level.environment_clock.hour)));
+    level.environment_clock.transition_duration = std::max(
+        0.0F,
+        static_cast<float>(environment.value("transition_duration").toDouble(0.0)));
+    level.environment_clock.transition_elapsed = std::clamp(
+        static_cast<float>(environment.value("transition_elapsed").toDouble(0.0)),
+        0.0F,
+        level.environment_clock.transition_duration);
   }
 
   int max_troops = metadata.value("max_troops_per_player")

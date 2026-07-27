@@ -10,7 +10,6 @@
 
 namespace {
 
-// Every troop the catalog is expected to describe.
 constexpr std::array<Game::Units::TroopType, 21> k_all_troop_types{
     Game::Units::TroopType::Archer,
     Game::Units::TroopType::Swordsman,
@@ -161,10 +160,6 @@ TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {
   EXPECT_EQ(hannibal->visuals.renderer_id, "troops/carthage/commanders/hannibal_barca");
 }
 
-// The compiled defaults only take effect when assets/data/troops/base.json is
-// missing, which is exactly when nobody is watching. Assert they still describe
-// the same roster so a broken install degrades to the balanced numbers rather
-// than to placeholders.
 TEST(TroopCatalogLoader, CompiledDefaultsMatchTheShippedTroopData) {
   auto& catalog = Game::Units::TroopCatalog::instance();
 

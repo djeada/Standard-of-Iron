@@ -5,9 +5,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../render/geom/arrow.h"
-#include "../../render/scene_renderer.h"
-
 namespace Game::Systems {
 namespace {
 

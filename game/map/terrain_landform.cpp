@@ -217,9 +217,7 @@ auto sample_mountain(float local_x,
   const float signed_cross_distance = nz - centerline;
   const float cross_distance = std::abs(signed_cross_distance);
   const float longitudinal_taper = std::pow(std::max(1.0F - std::abs(nx), 0.0F), 0.30F);
-  // Mountain ridges need a visibly different cross-section from hills. One
-  // face is deliberately tighter than the other, producing a steep scarp and
-  // a broader weathered flank instead of a symmetrical rounded mound.
+
   const float face_width = signed_cross_distance < 0.0F ? 0.59F : 0.74F;
   const float main_fold =
       std::pow(std::max(1.0F - cross_distance / face_width, 0.0F), 1.62F);
@@ -252,8 +250,7 @@ auto sample_mountain(float local_x,
   const float crest =
       crest_fold * longitudinal_taper * std::pow(peak_chain, 1.35F) * 0.17F;
   const float folded_relief = branch_fold * longitudinal_taper * 0.13F;
-  // Preserve large drainage structure without letting cell-scale noise turn
-  // the rendered face into a field of rounded lumps.
+
   const float weathering = broad_noise * 0.040F + fine_noise * 0.010F - gully * 0.040F;
   const float height =
       edge_fade *

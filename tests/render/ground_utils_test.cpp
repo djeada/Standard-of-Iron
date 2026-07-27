@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/ground/ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 
 namespace {
 

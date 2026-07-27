@@ -12,10 +12,10 @@
 #include "../../../game/systems/healing_colors.h"
 #include "../../../game/systems/nation_id.h"
 #include "../backend.h"
-#include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
 #include "../state_scopes.h"
+#include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {
 

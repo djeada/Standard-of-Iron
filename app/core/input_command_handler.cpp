@@ -14,7 +14,7 @@
 #include "game/core/world.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 InputCommandHandler::InputCommandHandler(
     Engine::Core::World* world,

@@ -9,7 +9,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/units/spawn_type.h"
 #include "level_orchestrator.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace App::Core {
 

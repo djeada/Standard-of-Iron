@@ -5,8 +5,8 @@
 #include <qglobal.h>
 
 #include "../scene_renderer.h"
-#include "camera.h"
 #include "gl_capabilities.h"
+#include "scene/camera.h"
 
 namespace Render::GL {
 

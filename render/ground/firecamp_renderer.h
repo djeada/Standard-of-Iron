@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -37,7 +39,26 @@ public:
   }
 
 private:
+  struct DecorCylinder {
+    QVector3D start;
+    QVector3D end;
+    QVector3D base_color;
+    float radius = 0.0F;
+    float ember_weight = 0.0F;
+  };
+
+  struct CampDecor {
+    float phase = 0.0F;
+    std::vector<DecorCylinder> cylinders;
+  };
+
   void generate_firecamp_instances();
+  void build_camp_decor(const QVector3D& camp_pos,
+                        float base_radius,
+                        float phase,
+                        CampDecor& decor) const;
+
+  std::vector<CampDecor> m_camp_decor;
 
   int m_width = 0;
   int m_height = 0;
