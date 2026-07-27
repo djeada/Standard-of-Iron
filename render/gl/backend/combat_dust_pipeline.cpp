@@ -12,7 +12,7 @@
 #include "../../../game/systems/combat_rules.h"
 #include "../../combat_dust_defaults.h"
 #include "../backend.h"
-#include "../camera.h"
+#include "scene/camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
 

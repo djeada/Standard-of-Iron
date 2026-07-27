@@ -6,7 +6,7 @@
 #include "render/horse/horse_renderer_base.h"
 #include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "render/humanoid/mounted_pose_controller.h"
 #include "render/humanoid/skeleton.h"
 

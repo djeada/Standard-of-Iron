@@ -69,6 +69,7 @@ inline constexpr char k_roman_marching_camp_id[] = "roman_marching_camp";
 inline constexpr char k_carthage_trade_town_id[] = "carthage_trade_town";
 inline constexpr char k_architecture_and_props_showcase_id[] =
     "architecture_and_props_showcase";
+inline constexpr char k_world_prop_lineup_id[] = "world_prop_lineup";
 inline constexpr char k_roman_fortification_showcase_id[] =
     "roman_fortification_showcase";
 inline constexpr char k_carthage_fortification_showcase_id[] =
@@ -90,6 +91,26 @@ inline constexpr char k_sepulcher_shrine_siege_id[] = "sepulcher_shrine_siege";
 
 inline constexpr char k_water_showcase_id[] = "water_showcase";
 inline constexpr char k_wall_corner_showcase_id[] = "wall_corner_showcase";
+inline constexpr char k_lighting_sunrise_sunset_id[] = "lighting_sunrise_sunset";
+inline constexpr char k_lighting_sunset_id[] = "lighting_sunset";
+inline constexpr char k_lighting_moonlit_night_id[] = "lighting_moonlit_night";
+inline constexpr char k_lighting_heavy_rain_id[] = "lighting_heavy_rain";
+inline constexpr char k_lighting_dense_battle_id[] = "lighting_dense_battle";
+inline constexpr char k_lighting_world_materials_id[] = "lighting_world_materials";
+inline constexpr char k_lighting_midday_id[] = "lighting_midday";
+inline constexpr char k_lighting_dawn_to_day_id[] = "lighting_dawn_to_day";
+inline constexpr char k_lighting_afternoon_to_night_id[] = "lighting_afternoon_to_night";
+inline constexpr char k_lighting_structure_shadows_id[] = "lighting_structure_shadows";
+inline constexpr char k_lighting_sepulcher_readability_id[] =
+    "lighting_sepulcher_readability";
+inline constexpr char k_lighting_parity_instanced_id[] = "lighting_parity_instanced";
+inline constexpr char k_lighting_parity_single_id[] = "lighting_parity_single";
+inline constexpr char k_lighting_commander_closeup_id[] = "lighting_commander_closeup";
+inline constexpr char k_lighting_shadow_quality_low_id[] = "lighting_shadow_quality_low";
+inline constexpr char k_lighting_shadow_quality_medium_id[] =
+    "lighting_shadow_quality_medium";
+inline constexpr char k_lighting_shadow_quality_high_id[] =
+    "lighting_shadow_quality_high";
 
 struct ScenarioOption {
   QString id;

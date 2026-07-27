@@ -31,7 +31,7 @@
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/horse/attachment_frames.h"
+#include "animation/rig/horse_attachment_frames.h"
 #include "render/horse/dimensions.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"

@@ -4,12 +4,33 @@
 #include <QPointF>
 
 #include <algorithm>
+#include <array>
 
 #include "map_data.h"
 
 namespace MapEditor {
 
 struct CanvasTransform {
+  // Picks the smallest "nice" cell step (1-2-5 progression) that keeps grid
+  // lines at least `min_spacing_px` apart, so large maps zoomed out far enough
+  // to fit on screen still get a readable grid instead of an unreadable mush.
+  [[nodiscard]] static auto grid_step_for_spacing(float scaled_cell_size,
+                                                  float min_spacing_px,
+                                                  int min_step) -> int {
+    static constexpr std::array<int, 13> k_steps = {
+        1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000};
+    if (scaled_cell_size <= 0.0F) {
+      return k_steps.back();
+    }
+    for (int step : k_steps) {
+      if (step >= min_step &&
+          static_cast<float>(step) * scaled_cell_size >= min_spacing_px) {
+        return step;
+      }
+    }
+    return k_steps.back();
+  }
+
   [[nodiscard]] static auto widget_to_grid(const QPoint& widget_pos,
                                            const GridSettings& grid,
                                            float zoom,

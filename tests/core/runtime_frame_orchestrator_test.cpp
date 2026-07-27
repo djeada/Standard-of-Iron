@@ -9,7 +9,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/selection_system.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace {
 

@@ -25,6 +25,14 @@ inline constexpr const char* rain = Game::Map::JsonKeys::RAIN;
 inline constexpr const char* thumbnail = Game::Map::JsonKeys::THUMBNAIL;
 inline constexpr const char* world_props = Game::Map::JsonKeys::WORLD_PROPS;
 inline constexpr const char* time_of_day = Game::Map::JsonKeys::TIME_OF_DAY;
+inline constexpr const char* environment = Game::Map::JsonKeys::ENVIRONMENT;
+inline constexpr const char* start_time = Game::Map::JsonKeys::START_TIME;
+inline constexpr const char* time_mode = Game::Map::JsonKeys::TIME_MODE;
+inline constexpr const char* day_length_seconds =
+    Game::Map::JsonKeys::DAY_LENGTH_SECONDS;
+inline constexpr const char* lighting_profile = Game::Map::JsonKeys::LIGHTING_PROFILE;
+inline constexpr const char* fog_density = Game::Map::JsonKeys::FOG_DENSITY;
+inline constexpr const char* exposure = Game::Map::JsonKeys::EXPOSURE;
 inline constexpr const char* undead_zones = Game::Map::JsonKeys::UNDEAD_ZONES;
 inline constexpr const char* fog_zones = Game::Map::JsonKeys::FOG_ZONES;
 

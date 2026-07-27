@@ -16,7 +16,7 @@
 #include "../submitter.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
-#include "humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "skeleton.h"
 
 namespace Render::Humanoid {

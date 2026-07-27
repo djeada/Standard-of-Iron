@@ -1,4 +1,7 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -6,7 +9,6 @@ in vec3 v_color;
 in vec3 v_local_pos;
 flat in float v_seed;
 
-uniform vec3 u_light_direction;
 uniform vec3 u_camera_pos;
 uniform float u_time;
 uniform float u_magic_strength;
@@ -69,7 +71,7 @@ float vein_line(float x, float width) {
 
 void main() {
   vec3 N = normalize(v_normal);
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
 
@@ -130,15 +132,16 @@ void main() {
 
   float crystal = crystal_mask * crystal_twinkle * mix(0.35, 1.0, vein_wide);
 
-  vec3 sun_color = vec3(1.05, 0.88, 0.70);
-  vec3 sky_color = vec3(0.58, 0.68, 0.95);
+  vec3 sun_color =
+      environment_primary_color() * environment_primary_intensity();
+  vec3 sky_color = environment_sky_color();
 
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
 
   float ao = clamp(N.y * 0.45 + 0.68, 0.28, 1.0);
 
-  vec3 ambient = sky_color * (0.16 + hemi * 0.18);
+  vec3 ambient = environment_ambient_light(N);
   vec3 direct = sun_color * ndotl * 0.82;
 
   float spec_base = max(dot(N, H), 0.0);
@@ -155,10 +158,13 @@ void main() {
               (vein_core * 1.75 + vein_wide * 0.22 + fresnel * vein_wide * 0.45 +
                crystal * 1.35);
 
-  vec3 color = albedo * (ambient + direct) * ao;
+  vec3 color =
+      albedo * (ambient + direct) * ao * environment_exposure();
   color += sun_color * ore_spec * ao;
   color += magic_color * crystal_spec;
   color += glow;
 
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

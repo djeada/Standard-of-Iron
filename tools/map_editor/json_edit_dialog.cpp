@@ -22,8 +22,10 @@ namespace MapEditor {
 JsonEditDialog::JsonEditDialog(const QString& title,
                                const QJsonObject& json,
                                bool enable_hill_projection,
+                               JsonSchema schema,
                                QWidget* parent)
     : QDialog(parent)
+    , m_schema(std::move(schema))
     , m_enable_hill_projection(enable_hill_projection) {
   setup_ui(title, json);
 }
@@ -53,12 +55,15 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   if (m_enable_hill_projection) {
     auto* splitter = new QSplitter(Qt::Horizontal, this);
 
-    auto* json_panel = new QWidget(splitter);
-    json_panel->setMinimumWidth(220);
-    json_panel->setMaximumWidth(420);
-    auto* json_layout = new QVBoxLayout(json_panel);
-    json_layout->setContentsMargins(0, 0, 0, 0);
-    json_layout->addWidget(m_editor);
+    // Editor and key reference share the left column so the projection keeps the
+    // space it needs.
+    auto* json_panel = new QSplitter(Qt::Vertical, splitter);
+    json_panel->setMinimumWidth(320);
+    json_panel->setMaximumWidth(560);
+    json_panel->addWidget(m_editor);
+    json_panel->addWidget(build_schema_panel(json_panel));
+    json_panel->setStretchFactor(0, 3);
+    json_panel->setStretchFactor(1, 4);
 
     auto* projection_panel = new QFrame(splitter);
     auto* projection_layout = new QVBoxLayout(projection_panel);
@@ -123,10 +128,16 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     splitter->addWidget(projection_panel);
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 6);
-    splitter->setSizes({280, 1400});
+    splitter->setSizes({420, 1400});
     layout->addWidget(splitter, 1);
   } else {
-    layout->addWidget(m_editor, 1);
+    auto* splitter = new QSplitter(Qt::Horizontal, this);
+    splitter->addWidget(m_editor);
+    splitter->addWidget(build_schema_panel(splitter));
+    splitter->setStretchFactor(0, 3);
+    splitter->setStretchFactor(1, 2);
+    splitter->setSizes({720, 520});
+    layout->addWidget(splitter, 1);
   }
 
   connect(m_editor, &QPlainTextEdit::textChanged, this, &JsonEditDialog::validate_json);
@@ -152,7 +163,245 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   connect(m_ok_button, &QPushButton::clicked, this, &JsonEditDialog::on_accepted);
 
   validate_json();
+  show_field_details(QString());
   setWindowState(windowState() | Qt::WindowFullScreen);
+}
+
+QWidget* JsonEditDialog::build_schema_panel(QWidget* parent) {
+  auto* panel = new QFrame(parent);
+  auto* panel_layout = new QVBoxLayout(panel);
+  panel_layout->setContentsMargins(8, 8, 8, 8);
+  panel_layout->setSpacing(6);
+
+  auto* title = new QLabel(m_schema.title.isEmpty()
+                               ? QStringLiteral("Valid keys")
+                               : QStringLiteral("Valid keys — %1").arg(m_schema.title),
+                           panel);
+  title->setObjectName("panelTitle");
+  panel_layout->addWidget(title);
+
+  if (!m_schema.summary.isEmpty()) {
+    auto* summary = new QLabel(m_schema.summary, panel);
+    summary->setWordWrap(true);
+    summary->setProperty("status", "muted");
+    panel_layout->addWidget(summary);
+  }
+
+  m_schema_status_label = new QLabel(panel);
+  m_schema_status_label->setWordWrap(true);
+  panel_layout->addWidget(m_schema_status_label);
+
+  m_schema_tree = new QTreeWidget(panel);
+  m_schema_tree->setColumnCount(3);
+  m_schema_tree->setHeaderLabels({"Key", "Type", "Default"});
+  m_schema_tree->setRootIsDecorated(false);
+  m_schema_tree->setUniformRowHeights(true);
+  m_schema_tree->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_schema_tree->setAlternatingRowColors(true);
+
+  if (m_schema.is_empty()) {
+    auto* empty = new QTreeWidgetItem(m_schema_tree);
+    empty->setText(0, QStringLiteral("No schema available"));
+    empty->setFirstColumnSpanned(true);
+    empty->setFlags(Qt::NoItemFlags);
+  }
+
+  for (const JsonFieldSpec& field : m_schema.fields) {
+    auto* item = new QTreeWidgetItem(m_schema_tree);
+    item->setText(0, field.key);
+    item->setText(1, field.type);
+    item->setText(2, field.required ? QStringLiteral("required") : field.default_value);
+    item->setData(0, Qt::UserRole, field.key);
+
+    QString tip = field.description;
+    if (!field.allowed.isEmpty()) {
+      tip += QStringLiteral("\nOne of: %1").arg(field.allowed.join(", "));
+    }
+    for (int column = 0; column < 3; ++column) {
+      item->setToolTip(column, tip);
+    }
+
+    if (field.required) {
+      QFont bold = item->font(0);
+      bold.setBold(true);
+      item->setFont(0, bold);
+    }
+  }
+
+  m_schema_tree->resizeColumnToContents(0);
+  m_schema_tree->resizeColumnToContents(1);
+  panel_layout->addWidget(m_schema_tree, 1);
+
+  connect(m_schema_tree,
+          &QTreeWidget::currentItemChanged,
+          this,
+          [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
+            show_field_details(current != nullptr
+                                   ? current->data(0, Qt::UserRole).toString()
+                                   : QString());
+          });
+  connect(m_schema_tree,
+          &QTreeWidget::itemDoubleClicked,
+          this,
+          [this](QTreeWidgetItem* item, int) {
+            if (item != nullptr) {
+              insert_key(item->data(0, Qt::UserRole).toString());
+            }
+          });
+
+  m_schema_detail_label = new QLabel(panel);
+  m_schema_detail_label->setWordWrap(true);
+  m_schema_detail_label->setMinimumHeight(56);
+  m_schema_detail_label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+  m_schema_detail_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  panel_layout->addWidget(m_schema_detail_label);
+
+  auto* button_row = new QHBoxLayout();
+  m_insert_key_button = new QPushButton("Insert Key", panel);
+  m_insert_key_button->setToolTip(
+      "Add the selected key with its default value (double-click a row does the same)");
+  connect(m_insert_key_button, &QPushButton::clicked, this, [this]() {
+    QTreeWidgetItem* item = m_schema_tree->currentItem();
+    if (item != nullptr) {
+      insert_key(item->data(0, Qt::UserRole).toString());
+    }
+  });
+  button_row->addWidget(m_insert_key_button);
+
+  m_insert_missing_button = new QPushButton("Add Missing Required", panel);
+  m_insert_missing_button->setToolTip("Add every required key that is not present yet");
+  connect(m_insert_missing_button,
+          &QPushButton::clicked,
+          this,
+          &JsonEditDialog::insert_missing_required_keys);
+  button_row->addWidget(m_insert_missing_button);
+  button_row->addStretch(1);
+  panel_layout->addLayout(button_row);
+
+  return panel;
+}
+
+void JsonEditDialog::show_field_details(const QString& key) {
+  if (m_schema_detail_label == nullptr) {
+    return;
+  }
+
+  const JsonFieldSpec* field = m_schema.find(key);
+  if (field == nullptr) {
+    m_schema_detail_label->setText(
+        m_schema.is_empty()
+            ? QStringLiteral("This object has no documented schema; any key is kept "
+                             "as-is.")
+            : QStringLiteral("Select a key to see what it does."));
+    return;
+  }
+
+  QString text = QStringLiteral("<b>%1</b> — %2").arg(field->key, field->description);
+  if (!field->allowed.isEmpty()) {
+    text += QStringLiteral("<br/>One of: <code>%1</code>")
+                .arg(field->allowed.join(QStringLiteral(", ")));
+  }
+  if (!field->required && !field->default_value.isEmpty()) {
+    text += QStringLiteral("<br/>Omitted → <code>%1</code>").arg(field->default_value);
+  }
+  m_schema_detail_label->setText(text);
+}
+
+void JsonEditDialog::insert_key(const QString& key) {
+  const JsonFieldSpec* field = m_schema.find(key);
+  if (field == nullptr || !m_is_valid) {
+    return;
+  }
+  if (m_model_json.contains(key)) {
+    show_field_details(key);
+    return;
+  }
+
+  m_model_json[key] = field->placeholder;
+  sync_editor_from_model();
+}
+
+void JsonEditDialog::insert_missing_required_keys() {
+  if (!m_is_valid) {
+    return;
+  }
+
+  bool changed = false;
+  for (const JsonFieldSpec& field : m_schema.fields) {
+    if (field.required && !m_model_json.contains(field.key)) {
+      m_model_json[field.key] = field.placeholder;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    sync_editor_from_model();
+  }
+}
+
+void JsonEditDialog::update_schema_state() {
+  if (m_schema_status_label == nullptr) {
+    return;
+  }
+
+  const bool has_schema = !m_schema.is_empty();
+  if (m_insert_key_button != nullptr) {
+    m_insert_key_button->setEnabled(m_is_valid && has_schema);
+  }
+  if (m_insert_missing_button != nullptr) {
+    m_insert_missing_button->setEnabled(m_is_valid && has_schema);
+  }
+
+  if (!m_is_valid) {
+    m_schema_status_label->setText(
+        QStringLiteral("<span style='color:#e06060;'>Invalid JSON — fix the syntax "
+                       "before the keys can be checked.</span>"));
+    return;
+  }
+
+  if (!has_schema) {
+    m_schema_status_label->clear();
+    return;
+  }
+
+  QStringList missing;
+  bool has_required = false;
+  for (const JsonFieldSpec& field : m_schema.fields) {
+    has_required = has_required || field.required;
+    if (field.required && !m_model_json.contains(field.key)) {
+      missing << field.key;
+    }
+  }
+
+  QStringList unknown;
+  for (const QString& key : m_model_json.keys()) {
+    if (m_schema.find(key) == nullptr) {
+      unknown << key;
+    }
+  }
+
+  QStringList lines;
+  if (!missing.isEmpty()) {
+    lines << QStringLiteral("<span style='color:#e0a860;'>Missing required: %1</span>")
+                 .arg(missing.join(QStringLiteral(", ")));
+  }
+  if (!unknown.isEmpty()) {
+    // Unrecognised keys are preserved on save, so this is information, not an error.
+    lines << QStringLiteral(
+                 "<span style='color:#9aa0a6;'>Not read by the loader (kept as-is): "
+                 "%1</span>")
+                 .arg(unknown.join(QStringLiteral(", ")));
+  }
+  if (lines.isEmpty()) {
+    lines
+        << (has_required
+                ? QStringLiteral(
+                      "<span style='color:#7ec27e;'>All required keys present.</span>")
+                : QStringLiteral("<span style='color:#7ec27e;'>Every key here is "
+                                 "optional; each one overrides a default.</span>"));
+  }
+
+  m_schema_status_label->setText(lines.join(QStringLiteral("<br/>")));
 }
 
 void JsonEditDialog::validate_json() {
@@ -175,6 +424,7 @@ void JsonEditDialog::validate_json() {
     m_result = m_model_json;
   }
 
+  update_schema_state();
   update_projection_state();
 }
 

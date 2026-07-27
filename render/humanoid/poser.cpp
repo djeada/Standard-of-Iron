@@ -11,7 +11,7 @@
 #include "animation/locomotion_manifest.h"
 #include "humanoid_math.h"
 #include "humanoid_renderer_base.h"
-#include "humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "pose_controller.h"
 #include "pose_primitives.h"
 

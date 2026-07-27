@@ -1,5 +1,7 @@
 #include "frame_profile.h"
 
+#include "game/core/simulation_timing.h"
+
 #include <cstdio>
 #include <cstring>
 

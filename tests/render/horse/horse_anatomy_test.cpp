@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "render/horse/horse_anatomy.h"
-#include "render/horse/horse_gait.h"
+#include "animation/rig/horse_gait.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/horse_profile_data.h"
 #include "render/horse/horse_source_asset.h"

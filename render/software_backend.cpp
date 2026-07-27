@@ -4,7 +4,7 @@
 
 #include "draw_part.h"
 #include "draw_queue.h"
-#include "gl/camera.h"
+#include "scene/camera.h"
 
 namespace Render::GL {
 

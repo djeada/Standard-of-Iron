@@ -6,10 +6,10 @@
 #include <sstream>
 #include <vector>
 
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_reader.h"
-#include "render/creature/bpat/bpat_writer.h"
-#include "render/creature/pipeline/bpat_playback.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_reader.h"
+#include "animation/bpat/bpat_writer.h"
+#include "animation/bpat/bpat_playback.h"
 
 using namespace Render::Creature::Bpat;
 

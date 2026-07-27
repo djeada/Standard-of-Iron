@@ -1,4 +1,7 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -9,8 +12,6 @@ uniform vec3 u_color;
 uniform bool u_use_texture;
 uniform float u_alpha;
 uniform int u_material_id;
-uniform vec3 u_light_dir;
-uniform float u_ambient_strength;
 
 out vec4 frag_color;
 
@@ -108,21 +109,10 @@ void main() {
     color = mix(color, char_color, clamp(soot_mask, 0.0, 0.85));
   }
 
-  vec3 light_dir =
-      length(u_light_dir) > 0.001 ? u_light_dir : normalize(vec3(0.65, 0.50, 0.40));
   float avg_color = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
-
-  float n_dot_l = dot(normal, light_dir);
-  float diff_raw = n_dot_l * (1.0 - wrap_amount) + wrap_amount;
-  float ambient = u_ambient_strength > 0.001 ? u_ambient_strength : 0.18;
-  float diff = max(diff_raw, ambient);
-
-  vec3 sun_color = vec3(1.08, 0.92, 0.74);
-  vec3 sky_color = vec3(0.72, 0.80, 1.00);
-  float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * (ambient * 1.1), sun_color, lit_t);
-
-  color *= diff * light_tint;
+  color *= environment_lighting(normal, wrap_amount) +
+           local_lighting(v_world_pos, normal);
+  color = apply_directional_shadow(color, v_world_pos, normal);
   frag_color = vec4(color, u_alpha);
 }

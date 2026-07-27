@@ -59,6 +59,14 @@ public:
   [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
     return m_instanced_shader;
   }
+  // The instanced path repacks skins from the CPU palette pointer only, so a
+  // batch is packable only if every command carries one.  Commands that hold a
+  // GPU bone-palette arena slot instead must take the single-draw path, which
+  // reads both sources.  See the call site for why packing them here makes the
+  // soldier invisible rather than wrong.
+  [[nodiscard]] static auto batch_palettes_are_packable(
+      const RiggedCreatureCmd* const* cmds, std::size_t count) noexcept -> bool;
+
   [[nodiscard]] auto max_instances_per_batch() const noexcept -> std::size_t {
     return m_max_instances_per_batch;
   }
@@ -135,7 +143,7 @@ private:
   struct InstancedVaoEntry {
     unsigned int vao = 0;
   };
-  std::unordered_map<void*, InstancedVaoEntry> m_instanced_vaos;
+  std::unordered_map<std::uint64_t, InstancedVaoEntry> m_instanced_vaos;
 
   std::vector<std::size_t> m_batch_sizes;
   std::size_t m_last_instance_count = 0;

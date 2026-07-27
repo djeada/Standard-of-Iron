@@ -12,7 +12,7 @@
 #include "render/creature/spec.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/horse/horse_gait.h"
+#include "animation/rig/horse_gait.h"
 #include "render/horse/horse_layout.h"
 #include "render/horse/horse_manifest.h"
 #include "render/horse/horse_profile_data.h"

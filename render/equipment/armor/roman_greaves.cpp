@@ -7,7 +7,7 @@
 
 #include "../../entity/registry.h"
 #include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "../../humanoid/style_palette.h"
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"

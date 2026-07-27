@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-#include "../../render/entity/building_render_common.h"
+#include "../visuals/building_asset_key.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
@@ -604,7 +604,7 @@ auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
                                             std::uint8_t mask) -> WallAppearance {
   const auto [variant_name, rotation_y] = canonical_variant_for_mask(mask);
   return {
-      .renderer_id = Render::GL::building_renderer_key(nation_id, variant_name),
+      .renderer_id = Game::Visuals::building_asset_key(nation_id, variant_name),
       .rotation_y = rotation_y,
       .connection_mask = mask,
   };

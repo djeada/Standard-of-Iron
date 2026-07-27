@@ -141,6 +141,8 @@ public:
 
   [[nodiscard]] const QJsonObject& rain() const { return m_rain; }
   void set_rain(const QJsonObject& rain);
+  [[nodiscard]] const QJsonObject& environment() const { return m_environment; }
+  void set_environment(const QJsonObject& environment);
 
   [[nodiscard]] const QVector<TerrainElement>& terrain_elements() const {
     return m_terrain;
@@ -229,6 +231,7 @@ private:
   QJsonObject m_camera;
   QJsonObject m_victory;
   QJsonObject m_rain;
+  QJsonObject m_environment;
   QJsonObject m_extra_root_fields;
   QString m_description;
   QString m_coord_system;
@@ -624,6 +627,36 @@ private:
   int m_index;
   UndeadZoneElement m_before;
   UndeadZoneElement m_after;
+  QString m_desc;
+};
+
+// Groups several edits into one undo entry, e.g. moving or deleting a whole
+// multi-selection. Sub-commands run in order and undo in reverse, so removals
+// must be supplied newest-index-first.
+class CompositeCmd : public Command {
+public:
+  CompositeCmd(std::vector<std::unique_ptr<Command>> commands, QString desc)
+      : m_commands(std::move(commands))
+      , m_desc(std::move(desc)) {}
+
+  void execute() override {
+    for (auto& command : m_commands) {
+      command->execute();
+    }
+  }
+
+  void undo() override {
+    for (auto it = m_commands.rbegin(); it != m_commands.rend(); ++it) {
+      (*it)->undo();
+    }
+  }
+
+  [[nodiscard]] QString description() const override { return m_desc; }
+
+  [[nodiscard]] std::size_t size() const { return m_commands.size(); }
+
+private:
+  std::vector<std::unique_ptr<Command>> m_commands;
   QString m_desc;
 };
 

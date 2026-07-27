@@ -4,7 +4,7 @@
 #include <QVector3D>
 
 #include "../gl/humanoid/humanoid_types.h"
-#include "../instance_transform.h"
+#include "animation/rig/instance_transform.h"
 #include "../static_attachment_spec.h"
 #include "equipment_submit.h"
 

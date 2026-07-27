@@ -23,7 +23,7 @@
 #include "../gl/render_constants.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "terrain_renderer.h"
 #include "world_chunk.h"

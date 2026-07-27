@@ -1072,7 +1072,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if args.strip_comments:
-        return action_strip_comments(grouped, dry_run=args.dry_run)
+        code = action_strip_comments(grouped, dry_run=args.dry_run)
+        if code != 0:
+            return code
+        if not args.fix and not args.lint:
+            return code
 
     fix = bool(args.fix)
     kind = "lint" if args.lint else "format"

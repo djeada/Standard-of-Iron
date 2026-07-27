@@ -6,8 +6,8 @@
 #include <string>
 
 #include "animation/clip_manifest.h"
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_registry.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/entity/mounted_knight_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"

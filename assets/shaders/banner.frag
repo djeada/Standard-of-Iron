@@ -1,4 +1,7 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -13,9 +16,7 @@ uniform vec3 u_trim_color;
 uniform bool u_use_texture;
 uniform float u_alpha;
 uniform float u_time;
-uniform vec3 u_light_direction;
 uniform vec3 u_camera_pos;
-uniform float u_ambient_strength;
 
 out vec4 frag_color;
 
@@ -79,7 +80,7 @@ void main() {
   vec3 N = normalize(v_normal);
   if (!gl_FrontFacing)
     N = -N;
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(u_camera_pos - v_world_pos);
   vec3 H = normalize(L + V);
 
@@ -128,10 +129,9 @@ void main() {
   float ndotl = dot(N, L);
   float wrap = clamp((ndotl + 0.34) / 1.34, 0.0, 1.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sky = vec3(0.50, 0.59, 0.70);
-  vec3 sun = vec3(1.00, 0.88, 0.70);
-  float ambient = clamp(u_ambient_strength, 0.12, 0.55);
-  vec3 illumination = sky * (ambient * 0.72 + hemi * 0.12) + sun * wrap * 0.72;
+  vec3 sky = environment_sky_color();
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 illumination = environment_ambient_light(N) + sun * wrap * 0.72;
 
   float pinned_ao = mix(0.76, 1.0, smoothstep(0.0, 0.20, uv.x));
   float fold_ao = mix(0.72, 1.0, smoothstep(0.015, 0.15, abs(v_billow)));
@@ -140,11 +140,14 @@ void main() {
   float thread_sheen = pow(max(dot(N, H), 0.0), 38.0) * embroidery * 0.34;
   float grazing = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
-  vec3 color = albedo * illumination * pinned_ao * fold_ao;
+  vec3 color =
+      albedo * illumination * pinned_ao * fold_ao * environment_exposure();
   color += cloth * sun * backscatter * 0.16;
   color += sky * cloth_sheen;
   color += trim_light * sun * thread_sheen;
   color += sky * grazing;
 
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(clamp(color * textile.rgb, 0.0, 1.0), textile.a * u_alpha);
 }

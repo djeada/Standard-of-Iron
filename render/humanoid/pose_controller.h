@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "humanoid_renderer_base.h"
-#include "humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 
 namespace Render::GL {
 

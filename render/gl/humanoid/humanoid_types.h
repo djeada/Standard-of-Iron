@@ -9,7 +9,7 @@
 #include "../../creature/combat_visual_state.h"
 #include "../../creature/movement_state.h"
 #include "../../palette.h"
-#include "../../side.h"
+#include "animation/rig/side.h"
 #include "animation/action_manifest.h"
 #include "animation/clip_manifest.h"
 #include "animation/guard_manifest.h"

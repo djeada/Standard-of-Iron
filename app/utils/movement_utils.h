@@ -19,7 +19,7 @@
 #include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 
 namespace App::Utils {
 

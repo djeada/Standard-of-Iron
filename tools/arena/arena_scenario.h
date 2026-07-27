@@ -196,6 +196,8 @@ struct ArenaScenarioDefinition {
   bool force_full_creature_lod{true};
   bool collect_animation_diagnostics{true};
   Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
+  Game::Map::EnvironmentDefinition environment{};
+  Game::Map::WeatherLightingInput weather{};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;
@@ -232,6 +234,32 @@ struct ArenaScenarioReport {
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
   [[nodiscard]] auto summary() const -> QString;
+};
+
+// Lighting and shadow settings in force while a scenario ran.  Recorded in the
+// report so a regression capture can be attributed to a known environment
+// rather than guessed at from the image.
+struct ArenaEnvironmentSnapshot {
+  bool valid{false};
+  float hour{0.0F};
+  QString time_of_day;
+  QString time_mode;
+  QString lighting_profile;
+  QString shadow_quality;
+  bool directional_shadows_enabled{false};
+  int shadow_resolution{0};
+  int shadow_cascades{0};
+  float shadow_distance{0.0F};
+  int contact_shadow_casters{0};
+  QVector3D primary_direction;
+  QVector3D primary_color;
+  QVector3D sky_color;
+  float primary_intensity{0.0F};
+  float ambient_intensity{0.0F};
+  float exposure{1.0F};
+  float fog_density{0.0F};
+  float cloud_cover{0.0F};
+  float wetness{0.0F};
 };
 
 struct ArenaScenarioHost {
@@ -277,6 +305,8 @@ public:
   void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);
   void report_external_issue(QString code, QString message);
   void set_duration_limit(float duration_seconds);
+
+  void set_environment_snapshot(const ArenaEnvironmentSnapshot& snapshot);
 
   [[nodiscard]] auto definition() const noexcept -> const ArenaScenarioDefinition&;
   [[nodiscard]] auto elapsed_seconds() const noexcept -> float;

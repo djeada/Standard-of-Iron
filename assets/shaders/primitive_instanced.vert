@@ -12,8 +12,6 @@ layout(location = 6) in vec4 i_color_alpha;
 layout(std140) uniform FrameData {
   mat4 u_view_proj;
 };
-uniform vec3 u_light_dir;
-
 out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;

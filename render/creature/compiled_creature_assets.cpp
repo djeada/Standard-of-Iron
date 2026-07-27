@@ -21,7 +21,7 @@
 
 #include "../elephant/attachment_frames.h"
 #include "../elephant/elephant_source_asset.h"
-#include "../horse/attachment_frames.h"
+#include "animation/rig/horse_attachment_frames.h"
 #include "../horse/horse_source_asset.h"
 #include "../horse/horse_spec.h"
 

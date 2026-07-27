@@ -22,7 +22,7 @@
 #include "render/creature/runtime_bake_guard.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
@@ -479,14 +479,24 @@ TEST(TemplatePrewarmRegression, ContactShadowBudgetAdmitsOnlyIdleNearbyOrder) {
   budget.reset_frame();
 
   EXPECT_FALSE(budget.request_contact_shadow(1U, false));
-  EXPECT_TRUE(budget.request_contact_shadow(1U, true));
-  EXPECT_TRUE(budget.request_contact_shadow(1U, true));
-  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
-  for (std::uint32_t formation = 2U; formation <= 7U; ++formation) {
-    EXPECT_TRUE(budget.request_contact_shadow(formation, true));
+  for (int soldier = 0; soldier < 12; ++soldier) {
+    EXPECT_TRUE(budget.request_contact_shadow(1U, true));
   }
-  EXPECT_EQ(budget.contact_shadow_count(), 8);
-  EXPECT_FALSE(budget.request_contact_shadow(8U, true));
+  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
+  for (std::uint32_t formation = 2U; formation <= 9U; ++formation) {
+    for (int soldier = 0; soldier < 11; ++soldier) {
+      EXPECT_TRUE(budget.request_contact_shadow(formation, true));
+    }
+  }
+  EXPECT_EQ(budget.contact_shadow_count(), 100);
+  EXPECT_FALSE(budget.request_contact_shadow(10U, true));
+
+  graphics.set_quality(Render::GraphicsQuality::High);
+  budget.reset_frame();
+  for (int soldier = 0; soldier < 8; ++soldier) {
+    EXPECT_TRUE(budget.request_contact_shadow(1U, true));
+  }
+  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
 
   graphics.set_quality(previous_quality);
   budget.reset_frame();

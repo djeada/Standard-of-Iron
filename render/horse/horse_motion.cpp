@@ -8,7 +8,7 @@
 #include <numbers>
 
 #include "../creature/animation_state_components.h"
-#include "../creature/quadruped/gait.h"
+#include "animation/rig/quadruped_gait.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "animation/horse_gait_manifest.h"
 #include "dimensions.h"

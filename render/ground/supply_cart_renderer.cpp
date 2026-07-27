@@ -5,7 +5,7 @@
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"

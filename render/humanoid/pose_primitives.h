@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "../side.h"
+#include "animation/rig/side.h"
 
 namespace Render::GL {
 struct HumanoidPose;

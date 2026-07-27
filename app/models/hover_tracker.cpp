@@ -1,7 +1,7 @@
 #include "hover_tracker.h"
 
 #include "game/core/world.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "systems/picking_service.h"
 
 HoverTracker::HoverTracker(Game::Systems::PickingService* picking_service)

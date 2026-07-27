@@ -1,5 +1,7 @@
 #include "rigged_mesh.h"
 
+#include <atomic>
+
 #include <QDebug>
 #include <QOpenGLContext>
 #include <qopenglext.h>
@@ -9,6 +11,11 @@
 #include <utility>
 
 namespace Render::GL {
+
+auto RiggedMesh::next_id() noexcept -> std::uint64_t {
+  static std::atomic<std::uint64_t> counter{1};
+  return counter.fetch_add(1, std::memory_order_relaxed);
+}
 
 RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
                        std::vector<std::uint32_t> indices)

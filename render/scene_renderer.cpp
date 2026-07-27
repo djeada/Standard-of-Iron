@@ -33,7 +33,7 @@
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
-#include "creature/bpat/bpat_registry.h"
+#include "animation/bpat/bpat_registry.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -52,7 +52,7 @@
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
-#include "gl/camera.h"
+#include "scene/camera.h"
 #include "gl/humanoid/animation/animation_inputs.h"
 #include "gl/primitives.h"
 #include "gl/resources.h"
@@ -519,6 +519,13 @@ void Renderer::terrain_feature(const TerrainFeatureCmd& cmd) {
   TerrainFeatureCmd submitted = cmd;
   submitted.alpha *= m_alpha_override;
   m_active_queue->submit(std::move(submitted));
+}
+
+void Renderer::local_light(const Render::LocalLight& light) {
+  if (m_active_queue == nullptr || light.intensity <= 0.0F || light.radius <= 0.0F) {
+    return;
+  }
+  m_active_queue->submit_local_light(light);
 }
 
 void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {

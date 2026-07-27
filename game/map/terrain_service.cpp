@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "../systems/building_collision_registry.h"
+#include "../units/spawn_type.h"
 #include "map_definition.h"
 #include "procedural_tree_generation.h"
 #include "terrain.h"
@@ -285,6 +286,66 @@ auto TerrainService::world_prop_world_position(const WorldProp& prop,
   return resolve_surface_world_position(world_x, world_z, world_y_offset, fallback_y);
 }
 
+namespace {
+
+// Map-authored buildings do not exist as entities yet while terrain is being
+// built, so the collision registry is empty and scatter placement has nothing
+// to test against.  Recording their footprints up front lets every existing
+// building_clearance check work during generation, instead of only after the
+// units spawn.
+void register_authored_building_obstacles(const MapDefinition& map_def) {
+  using Game::Systems::BuildingCollisionRegistry;
+
+  std::vector<Game::Systems::BuildingFootprint> obstacles;
+  obstacles.reserve(map_def.structures.size() + map_def.spawns.size());
+
+  const auto add = [&obstacles](Game::Units::SpawnType type,
+                                float center_x,
+                                float center_z,
+                                float min_width,
+                                float min_depth) {
+    if (!Game::Units::is_building_spawn(type)) {
+      return;
+    }
+    const auto size = BuildingCollisionRegistry::get_building_size(
+        Game::Units::spawn_typeToString(type));
+    obstacles.emplace_back(center_x,
+                           center_z,
+                           std::max(size.width, min_width),
+                           std::max(size.depth, min_depth),
+                           /*owner=*/0,
+                           /*entity_id=*/0U);
+  };
+
+  for (const auto& structure : map_def.structures) {
+    if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
+      add(structure.type, point->position.x(), point->position.z(), 0.0F, 0.0F);
+      continue;
+    }
+    if (const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry)) {
+      // Walls are authored as a run; step along it so the whole span blocks
+      // scatter rather than only the midpoint.
+      const QVector3D delta = line->end - line->start;
+      const float length = delta.length();
+      const int steps = std::max(1, static_cast<int>(std::ceil(length / 2.0F)));
+      for (int step = 0; step <= steps; ++step) {
+        const float t = static_cast<float>(step) / static_cast<float>(steps);
+        const QVector3D point = line->start + (delta * t);
+        add(structure.type, point.x(), point.z(), line->width, line->width);
+      }
+      continue;
+    }
+  }
+
+  for (const auto& spawn : map_def.spawns) {
+    add(spawn.type, spawn.x, spawn.z, 0.0F, 0.0F);
+  }
+
+  BuildingCollisionRegistry::instance().set_authored_obstacles(std::move(obstacles));
+}
+
+} // namespace
+
 void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map = std::make_unique<TerrainHeightMap>(
       map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
@@ -301,6 +362,7 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   rebuild_road_spatial_index();
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
+  register_authored_building_obstacles(map_def);
   m_world_props = build_runtime_world_props(
       *m_height_map, m_biome_settings, m_coord_system, m_authored_world_props);
   normalize_world_props(m_world_props);

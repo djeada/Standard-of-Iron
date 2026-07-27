@@ -37,7 +37,7 @@
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
-#include "game/map/world_bootstrap.h"
+#include "app/core/world_bootstrap.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/camera_service.h"
@@ -67,7 +67,7 @@
 #include "render/entity/healing_waves_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -285,6 +285,26 @@ auto scenario_center(Engine::Core::World* world,
 
 } // namespace
 
+namespace {
+
+// Keeps the pure view camera fenced to the loaded map without it querying
+// gameplay services itself.
+void sync_camera_map_bounds(Render::GL::Camera* camera) {
+  if (camera == nullptr) {
+    return;
+  }
+  const auto& visibility = Game::Map::VisibilityService::instance();
+  if (!visibility.is_initialized()) {
+    camera->clear_map_bounds();
+    return;
+  }
+  camera->set_map_bounds({.tile_size = visibility.get_tile_size(),
+                          .width = visibility.get_width(),
+                          .height = visibility.get_height()});
+}
+
+} // namespace
+
 ArenaViewport::ArenaViewport(QWidget* parent)
     : QOpenGLWidget(parent)
     , m_spawn_nation_id(Game::Systems::NationID::RomanRepublic)
@@ -313,6 +333,7 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   Game::Map::VisibilityService::instance().initialize(
       k_terrain_width, k_terrain_height, k_terrain_tile_size);
   Game::Map::VisibilityService::instance().reveal_all();
+  sync_camera_map_bounds(m_camera.get());
   configure_runtime();
   regenerate_terrain();
   reset_camera();
@@ -403,7 +424,7 @@ void ArenaViewport::initializeGL() {
   }
 
   QString error;
-  m_gl_initialized = Game::Map::WorldBootstrap::initialize(
+  m_gl_initialized = App::Core::WorldBootstrap::initialize(
       *m_renderer,
       *m_camera,
       m_terrain_scene != nullptr ? m_terrain_scene->ground() : nullptr,
@@ -450,6 +471,10 @@ void ArenaViewport::paintGL() {
   m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   bool const sampled_frame = m_batch_fixed_step <= 0.0F || m_batch_frame_in_progress;
   float const simulation_dt = (m_paused || !sampled_frame) ? 0.0F : real_dt;
+  m_environment_clock.update(simulation_dt, m_paused);
+  m_environment_hour = m_environment_clock.hour();
+  m_time_of_day = Game::Map::time_of_day_for_hour(m_environment_hour);
+  m_renderer->set_environment_lighting(active_lighting());
 
   sanitize_selection();
   apply_keyboard_camera_controls(real_dt);
@@ -539,6 +564,25 @@ void ArenaViewport::paintGL() {
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
+    // QPainter shares this GL context.  Its paint engine assumes a default-ish
+    // state, so anything the scene renderer left bound -- a program, a VAO with
+    // instanced attribute divisors, a non-zero active texture unit -- can be
+    // picked up by the text and panel draws and show up as scene geometry
+    // smeared across the overlay.  Hand Qt a clean slate.
+    if (QOpenGLContext::currentContext() != nullptr) {
+      auto* gl = QOpenGLContext::currentContext()->functions();
+      gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
+      gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      gl->glUseProgram(0);
+      gl->glActiveTexture(GL_TEXTURE0);
+      gl->glBindTexture(GL_TEXTURE_2D, 0);
+      gl->glDisable(GL_DEPTH_TEST);
+      gl->glDisable(GL_CULL_FACE);
+      gl->glDisable(GL_SCISSOR_TEST);
+      gl->glDepthMask(GL_TRUE);
+      gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+
     {
       QPainter painter(this);
       painter.setRenderHint(QPainter::Antialiasing, true);
@@ -1411,25 +1455,123 @@ void ArenaViewport::configure_rendering_from_terrain() {
     m_boundary_fog->configure(
         height_map->get_width(), height_map->get_height(), height_map->get_tile_size());
   }
-  const auto lighting = Game::Map::lighting_for_time_of_day(m_time_of_day);
-  m_renderer->set_lighting(lighting.light_direction, lighting.ambient_strength);
+  m_renderer->set_environment_lighting(active_lighting());
   set_wireframe_enabled(m_wireframe_enabled);
 }
 
 void ArenaViewport::set_time_of_day(Game::Map::TimeOfDay time_of_day) {
   m_time_of_day = time_of_day;
+  m_environment_hour = Game::Map::hour_for_time_of_day(time_of_day);
+  // The clock is re-seeded, not just the hour: the per-frame update pulls the
+  // hour back out of the clock, so skipping this would silently revert the
+  // requested time on the very next frame.
+  m_environment_definition.start_time = m_environment_hour;
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
   if (m_renderer != nullptr) {
-    const auto lighting = Game::Map::lighting_for_time_of_day(m_time_of_day);
-    m_renderer->set_lighting(lighting.light_direction, lighting.ambient_strength);
+    m_renderer->set_environment_lighting(active_lighting());
   }
   emit lighting_changed(lighting_summary());
   update();
 }
 
+void ArenaViewport::set_environment_time(float hour) {
+  m_environment_hour = Game::Map::normalize_hour(hour);
+  m_environment_definition.start_time = m_environment_hour;
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
+  m_time_of_day = Game::Map::time_of_day_for_hour(m_environment_hour);
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+  emit lighting_changed(lighting_summary());
+  update();
+}
+
+void ArenaViewport::set_lighting_profile(const QString& profile) {
+  m_lighting_profile = profile.trimmed().isEmpty()
+                           ? QStringLiteral("mediterranean_summer")
+                           : profile.trimmed();
+  m_environment_definition.start_time = m_environment_hour;
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+  emit lighting_changed(lighting_summary());
+  update();
+}
+
+void ArenaViewport::apply_environment_definition(
+    const Game::Map::EnvironmentDefinition& environment) {
+  m_environment_definition = environment;
+  m_lighting_profile = environment.lighting_profile.trimmed().isEmpty()
+                           ? QStringLiteral("mediterranean_summer")
+                           : environment.lighting_profile;
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
+  m_environment_hour = m_environment_clock.hour();
+  m_time_of_day = Game::Map::time_of_day_for_hour(m_environment_hour);
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+  emit lighting_changed(lighting_summary());
+}
+
+void ArenaViewport::set_time_mode(const QString& mode) {
+  m_environment_definition.start_time = m_environment_hour;
+  m_environment_definition.time_mode = Game::Map::parse_time_mode(mode);
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
+  emit lighting_changed(lighting_summary());
+}
+
+void ArenaViewport::set_day_length(float seconds) {
+  m_environment_definition.start_time = m_environment_hour;
+  m_environment_definition.day_length_seconds = std::max(1.0F, seconds);
+  m_environment_definition.lighting_profile = m_lighting_profile;
+  m_environment_clock.reset(m_environment_definition);
+  emit lighting_changed(lighting_summary());
+}
+
+void ArenaViewport::set_shadow_quality(const QString& quality) {
+  const QString normalized = quality.trimmed().toLower();
+  Render::GraphicsQuality selected = Render::GraphicsQuality::High;
+  if (normalized == QStringLiteral("low")) {
+    selected = Render::GraphicsQuality::Low;
+  } else if (normalized == QStringLiteral("medium")) {
+    selected = Render::GraphicsQuality::Medium;
+  } else if (normalized == QStringLiteral("ultra")) {
+    selected = Render::GraphicsQuality::Ultra;
+  }
+  Render::GraphicsSettings::instance().set_quality(selected);
+  update();
+}
+
+auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingState {
+  auto weather = m_weather_lighting;
+  weather.rain = m_rain_enabled ? m_rain_intensity : 0.0F;
+  return Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
+}
+
 auto ArenaViewport::lighting_summary() const -> QString {
-  return QStringLiteral("%1 · %2").arg(
-      QString::fromLatin1(Game::Map::time_of_day_name(m_time_of_day)),
-      QString::fromLatin1(Game::Map::representative_clock_time(m_time_of_day)));
+  const auto lighting = active_lighting();
+  return QStringLiteral("%1 %2h · %3 · sun (%4,%5,%6) ×%7 · ambient %8 · fog %9 · "
+                        "shadow %10/%11 · exposure %12 · cloud %13 · wet %14")
+      .arg(QString::fromLatin1(Game::Map::time_of_day_name(m_time_of_day)))
+      .arg(QString::number(m_environment_hour, 'f', 2))
+      .arg(m_lighting_profile)
+      .arg(QString::number(lighting.primary_direction.x(), 'f', 2))
+      .arg(QString::number(lighting.primary_direction.y(), 'f', 2))
+      .arg(QString::number(lighting.primary_direction.z(), 'f', 2))
+      .arg(QString::number(lighting.primary_intensity, 'f', 2))
+      .arg(QString::number(lighting.ambient_intensity, 'f', 2))
+      .arg(QString::number(lighting.fog_density, 'f', 3))
+      .arg(QString::number(lighting.shadow_strength, 'f', 2))
+      .arg(QString::number(lighting.shadow_softness, 'f', 2))
+      .arg(QString::number(lighting.exposure, 'f', 2))
+      .arg(QString::number(lighting.cloud_cover, 'f', 2))
+      .arg(QString::number(lighting.wetness, 'f', 2));
 }
 
 void ArenaViewport::set_terrain_seed(int seed) {
@@ -1475,16 +1617,31 @@ void ArenaViewport::set_ground_type(const QString& ground_type) {
 }
 
 void ArenaViewport::set_rain_enabled(bool enabled) {
+  m_rain_enabled = enabled;
+  if (!enabled) {
+    m_weather_lighting.rain = 0.0F;
+    m_weather_lighting.storm = 0.0F;
+  }
   if (m_rain != nullptr) {
     m_rain->set_enabled(enabled);
   }
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+  emit lighting_changed(lighting_summary());
   update();
 }
 
 void ArenaViewport::set_rain_intensity(float intensity) {
+  m_rain_intensity = std::clamp(intensity, 0.0F, 1.0F);
+  m_weather_lighting.rain = m_rain_intensity;
   if (m_rain != nullptr) {
-    m_rain->set_intensity(intensity);
+    m_rain->set_intensity(m_rain_intensity);
   }
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+  emit lighting_changed(lighting_summary());
   update();
 }
 
@@ -2055,6 +2212,11 @@ void ArenaViewport::reset_arena() {
   m_attack_scrub_phase = 0.5F;
   set_force_full_creature_lod(true);
   Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::High);
+  m_weather_lighting = {};
+  m_rain_enabled = false;
+  if (m_rain != nullptr) {
+    m_rain->set_enabled(false);
+  }
   pause_simulation(false);
   reset_camera();
   if (!m_combat_debug_overlay_enabled) {
@@ -2097,7 +2259,51 @@ auto ArenaViewport::write_scenario_artifacts(const QString& directory,
     }
     return false;
   }
+  m_scenario_runner->set_environment_snapshot(environment_snapshot());
   return m_scenario_runner->write_artifacts(directory, error);
+}
+
+auto ArenaViewport::environment_snapshot() const -> Arena::ArenaEnvironmentSnapshot {
+  const auto lighting = active_lighting();
+  const auto& settings = Render::GraphicsSettings::instance();
+  const auto& shadows = settings.directional_shadows();
+
+  Arena::ArenaEnvironmentSnapshot snapshot;
+  snapshot.valid = true;
+  snapshot.hour = m_environment_hour;
+  snapshot.time_of_day =
+      QString::fromLatin1(Game::Map::time_of_day_name(m_time_of_day));
+  snapshot.time_mode =
+      QString::fromLatin1(Game::Map::time_mode_name(m_environment_definition.time_mode));
+  snapshot.lighting_profile = m_lighting_profile;
+  snapshot.shadow_quality = [](Render::GraphicsQuality quality) -> QString {
+    switch (quality) {
+    case Render::GraphicsQuality::Low:
+      return QStringLiteral("Low");
+    case Render::GraphicsQuality::Medium:
+      return QStringLiteral("Medium");
+    case Render::GraphicsQuality::High:
+      return QStringLiteral("High");
+    case Render::GraphicsQuality::Ultra:
+      return QStringLiteral("Ultra");
+    }
+    return QStringLiteral("Unknown");
+  }(settings.quality());
+  snapshot.directional_shadows_enabled = shadows.enabled;
+  snapshot.shadow_resolution = shadows.resolution;
+  snapshot.shadow_cascades = shadows.cascade_count;
+  snapshot.shadow_distance = shadows.distance;
+  snapshot.contact_shadow_casters = settings.contact_shadow_budget().max_casters;
+  snapshot.primary_direction = lighting.primary_direction;
+  snapshot.primary_color = lighting.primary_color;
+  snapshot.sky_color = lighting.sky_color;
+  snapshot.primary_intensity = lighting.primary_intensity;
+  snapshot.ambient_intensity = lighting.ambient_intensity;
+  snapshot.exposure = lighting.exposure;
+  snapshot.fog_density = lighting.fog_density;
+  snapshot.cloud_cover = lighting.cloud_cover;
+  snapshot.wetness = lighting.wetness;
+  return snapshot;
 }
 
 auto ArenaViewport::load_terrain_review_map(const QString& map_path,
@@ -2112,6 +2318,7 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
   clear_camera_key_state();
   m_terrain_review_mode = true;
   m_terrain_review_definition = std::move(definition);
+  apply_environment_definition(m_terrain_review_definition->environment);
   if (m_renderer != nullptr) {
     m_renderer->set_clear_color(0.055F, 0.065F, 0.05F, 1.0F);
   }
@@ -2123,6 +2330,7 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
       m_terrain_review_definition->grid.height,
       m_terrain_review_definition->grid.tile_size);
   Game::Map::VisibilityService::instance().reveal_all();
+  sync_camera_map_bounds(m_camera.get());
   Game::Systems::CommandService::initialize(m_terrain_review_definition->grid.width,
                                             m_terrain_review_definition->grid.height);
 
@@ -2392,6 +2600,17 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   }
   reset_arena();
   Render::GraphicsSettings::instance().set_quality(definition->graphics_quality);
+  m_environment_definition = definition->environment;
+  m_environment_hour = definition->environment.start_time;
+  m_lighting_profile = definition->environment.lighting_profile;
+  m_environment_clock.reset(definition->environment);
+  m_rain_enabled = definition->weather.rain > 0.0F || definition->weather.storm > 0.0F;
+  m_rain_intensity = std::max(definition->weather.rain, definition->weather.storm);
+  m_weather_lighting = definition->weather;
+  if (m_rain != nullptr) {
+    m_rain->set_enabled(m_rain_enabled);
+    m_rain->set_intensity(m_rain_intensity);
+  }
   clear_camera_key_state();
   m_arena_rivers = definition->rivers;
   m_arena_lakes = definition->lakes;

@@ -148,8 +148,51 @@ auto BuildingCollisionRegistry::is_point_in_building(
       return true;
     }
   }
+  for (const auto& obstacle : m_authored_obstacles) {
+    float const half_width = obstacle.width / 2.0F;
+    float const half_depth = obstacle.depth / 2.0F;
+    if (x >= obstacle.center_x - half_width && x <= obstacle.center_x + half_width &&
+        z >= obstacle.center_z - half_depth && z <= obstacle.center_z + half_depth) {
+      return true;
+    }
+  }
+
   return false;
 }
+
+void BuildingCollisionRegistry::set_authored_obstacles(
+    std::vector<BuildingFootprint> obstacles) {
+  m_authored_obstacles = std::move(obstacles);
+}
+
+void BuildingCollisionRegistry::clear_authored_obstacles() {
+  m_authored_obstacles.clear();
+}
+
+namespace {
+
+[[nodiscard]] auto circle_overlaps_footprint(const BuildingFootprint& building,
+                                             float x,
+                                             float z,
+                                             float radius) -> bool {
+  float const half_width = building.width / 2.0F;
+  float const half_depth = building.depth / 2.0F;
+
+  float const min_x = building.center_x - half_width;
+  float const max_x = building.center_x + half_width;
+  float const min_z = building.center_z - half_depth;
+  float const max_z = building.center_z + half_depth;
+
+  float const closest_x = std::clamp(x, min_x, max_x);
+  float const closest_z = std::clamp(z, min_z, max_z);
+
+  float const dx = x - closest_x;
+  float const dz = z - closest_z;
+
+  return (dx * dx) + (dz * dz) <= radius * radius;
+}
+
+} // namespace
 
 auto BuildingCollisionRegistry::is_circle_overlapping_building(
     float x, float z, float radius, unsigned int ignore_entity_id) const -> bool {
@@ -157,26 +200,19 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;
     }
-
-    float const half_width = building.width / 2.0F;
-    float const half_depth = building.depth / 2.0F;
-
-    float const min_x = building.center_x - half_width;
-    float const max_x = building.center_x + half_width;
-    float const min_z = building.center_z - half_depth;
-    float const max_z = building.center_z + half_depth;
-
-    float const closest_x = std::clamp(x, min_x, max_x);
-    float const closest_z = std::clamp(z, min_z, max_z);
-
-    float const dx = x - closest_x;
-    float const dz = z - closest_z;
-    float const distance_sq = dx * dx + dz * dz;
-
-    if (distance_sq <= radius * radius) {
+    if (circle_overlaps_footprint(building, x, z, radius)) {
       return true;
     }
   }
+
+  // Map-authored footprints have no entity yet, so they are never skipped by
+  // ignore_entity_id.
+  for (const auto& obstacle : m_authored_obstacles) {
+    if (circle_overlaps_footprint(obstacle, x, z, radius)) {
+      return true;
+    }
+  }
+
   return false;
 }
 

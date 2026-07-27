@@ -9,7 +9,7 @@
 
 #include "../../rain_gpu.h"
 #include "../backend.h"
-#include "../camera.h"
+#include "scene/camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
 

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/archetype_registry.h"
-#include "render/creature/bpat/bpat_format.h"
-#include "render/creature/bpat/bpat_registry.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"

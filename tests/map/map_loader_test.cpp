@@ -501,6 +501,80 @@ TEST(MapLoaderTest, EmptyStructuresWhenArrayAbsent) {
   EXPECT_TRUE(map_def.structures.empty());
 }
 
+TEST(MapLoaderTest, ParsesContinuousEnvironmentAndOverridesLegacyAlias) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+  const QJsonObject root{
+      {"name", "Continuous Sunset"},
+      {"grid", QJsonObject{{"width", 16}, {"height", 16}, {"tile_size", 1.0}}},
+      {"time_of_day", "morning"},
+      {"environment",
+       QJsonObject{{"start_time", 17.5},
+                   {"time_mode", "continuous"},
+                   {"day_length_seconds", 900.0},
+                   {"lighting_profile", "iron_sepulcher"},
+                   {"fog_density", 0.012},
+                   {"exposure", 0.86}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+  EXPECT_FLOAT_EQ(map.environment.start_time, 17.5F);
+  EXPECT_EQ(map.environment.time_mode, Game::Map::TimeMode::Continuous);
+  EXPECT_FLOAT_EQ(map.environment.day_length_seconds, 900.0F);
+  EXPECT_EQ(map.environment.lighting_profile, QStringLiteral("iron_sepulcher"));
+  EXPECT_FLOAT_EQ(map.environment.fog_density_override, 0.012F);
+  EXPECT_FLOAT_EQ(map.environment.exposure_override, 0.86F);
+  EXPECT_EQ(map.time_of_day, Game::Map::TimeOfDay::Afternoon);
+}
+
+TEST(MapLoaderTest, ReusingDefinitionCannotRetainPreviousEnvironment) {
+  QTemporaryFile first;
+  QTemporaryFile second;
+  ASSERT_TRUE(first.open());
+  ASSERT_TRUE(second.open());
+  const QJsonObject grid{{"width", 8}, {"height", 8}, {"tile_size", 1.0}};
+  first.write(
+      QJsonDocument(QJsonObject{{"grid", grid},
+                                {"environment",
+                                 QJsonObject{{"start_time", 22.0},
+                                             {"lighting_profile", "iron_sepulcher"}}}})
+          .toJson(QJsonDocument::Compact));
+  second.write(
+      QJsonDocument(QJsonObject{{"grid", grid}}).toJson(QJsonDocument::Compact));
+  first.flush();
+  second.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(first.fileName(), map, &error));
+  ASSERT_EQ(map.environment.lighting_profile, QStringLiteral("iron_sepulcher"));
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(second.fileName(), map, &error));
+  EXPECT_FLOAT_EQ(map.environment.start_time, 13.0F);
+  EXPECT_EQ(map.environment.lighting_profile, QStringLiteral("mediterranean_summer"));
+  EXPECT_EQ(map.environment.time_mode, Game::Map::TimeMode::Locked);
+}
+
+TEST(MapLoaderTest, FailedLoadClearsPreviouslyLoadedDefinition) {
+  Game::Map::MapDefinition map;
+  map.name = QStringLiteral("Previous map");
+  map.environment.start_time = 2.0F;
+  map.rain.enabled = true;
+
+  QString error;
+  EXPECT_FALSE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("/definitely/not/a/map.json"), map, &error));
+  EXPECT_TRUE(map.name.isEmpty());
+  EXPECT_FLOAT_EQ(map.environment.start_time, 13.0F);
+  EXPECT_FALSE(map.rain.enabled);
+  EXPECT_FALSE(error.isEmpty());
+}
+
 TEST(MapLoaderTest, RejectsRetiredStructureCollectionsAndBuildingSpawns) {
   const auto expect_rejected = [](const QJsonObject& root) {
     QTemporaryFile temp_file;

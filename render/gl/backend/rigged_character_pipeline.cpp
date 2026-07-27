@@ -1,5 +1,7 @@
 #include "rigged_character_pipeline.h"
 
+#include <QtGlobal>
+
 #include <QDebug>
 #include <QFile>
 #include <QOpenGLContext>
@@ -168,7 +170,7 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
 
   QString vert_src = load_shader_source(
       QStringLiteral(":/assets/shaders/character_skinned_instanced.vert"));
-  QString const frag_src = load_shader_source(
+  QString frag_src = load_shader_source(
       QStringLiteral(":/assets/shaders/character_skinned_instanced.frag"));
   if (vert_src.isEmpty() || frag_src.isEmpty()) {
     return false;
@@ -184,6 +186,8 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
     newline += 1;
   }
   vert_src.insert(newline, define_line);
+  vert_src = Shader::preprocess_source(vert_src);
+  frag_src = Shader::preprocess_source(frag_src);
 
   m_instanced_shader_storage = std::make_unique<Shader>();
   m_instanced_shader_storage->set_debug_name(
@@ -198,9 +202,9 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   m_instanced_view_proj = m_instanced_shader->uniform_handle("u_view_proj");
   m_instanced_role_color_tbo =
       m_instanced_shader->optional_uniform_handle("u_role_color_tbo");
-  m_instanced_light_dir = m_instanced_shader->uniform_handle("u_light_dir");
+  m_instanced_light_dir = m_instanced_shader->optional_uniform_handle("u_light_dir");
   m_instanced_ambient_strength =
-      m_instanced_shader->uniform_handle("u_ambient_strength");
+      m_instanced_shader->optional_uniform_handle("u_ambient_strength");
   m_instanced_camera_position = m_instanced_shader->uniform_handle("u_camera_position");
   return true;
 }
@@ -262,8 +266,8 @@ void RiggedCharacterPipeline::cache_uniforms() {
   m_uniforms.material_id = m_shader->optional_uniform_handle("u_material_id");
   m_uniforms.role_colors = m_shader->optional_uniform_handle("u_role_colors[0]");
   m_uniforms.role_color_count = m_shader->optional_uniform_handle("u_role_color_count");
-  m_uniforms.light_dir = m_shader->uniform_handle("u_light_dir");
-  m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambient_strength");
+  m_uniforms.light_dir = m_shader->optional_uniform_handle("u_light_dir");
+  m_uniforms.ambient_strength = m_shader->optional_uniform_handle("u_ambient_strength");
   m_uniforms.camera_position = m_shader->uniform_handle("u_camera_position");
 }
 
@@ -311,7 +315,21 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
 
   auto* fn = gl_funcs();
   if (fn != nullptr) {
-    if (cmd.palette_ubo != 0) {
+    // Prefer the CPU palette whenever the command carries one.  A command can
+    // hold both a CPU palette and a slot in the GPU bone-palette arena, and the
+    // two paths disagree: the arena upload is deferred (marked pending during
+    // submission, performed in the next begin_frame), so a slot inside
+    // skinned_frame_total can still hold no data yet.  Binding that range gives
+    // garbage bones, which collapses the mesh onto the model origin -- the draw
+    // issues and is counted, the soldier simply is not visible.
+    //
+    // Which soldier took this path rather than the instanced one depended on
+    // batch grouping, which shifts frame to frame, so a soldier alternated
+    // between its correct CPU palette and a not-yet-uploaded arena slot and
+    // blinked at a perfectly stable draw count.  The CPU palette is repacked
+    // every frame and is always current, so use it and keep both paths in
+    // agreement; the arena stays as the source when it is the only one.
+    if (cmd.palette_ubo != 0 && cmd.bone_palette == nullptr) {
       fn->glBindBufferRange(GL_UNIFORM_BUFFER,
                             k_bone_palette_binding_point,
                             static_cast<GLuint>(cmd.palette_ubo),
@@ -403,7 +421,7 @@ auto RiggedCharacterPipeline::ensure_instance_vbo(std::size_t bytes_needed) -> b
 }
 
 auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned int {
-  auto it = m_instanced_vaos.find(static_cast<void*>(&mesh));
+  auto it = m_instanced_vaos.find(mesh.id());
   if (it != m_instanced_vaos.end() && it->second.vao != 0) {
     return it->second.vao;
   }
@@ -493,8 +511,28 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned
   fn->glBindVertexArray(0);
   fn->glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  m_instanced_vaos[static_cast<void*>(&mesh)] = InstancedVaoEntry{vao};
+  m_instanced_vaos[mesh.id()] = InstancedVaoEntry{vao};
   return vao;
+}
+
+auto RiggedCharacterPipeline::batch_palettes_are_packable(
+    const RiggedCreatureCmd* const* cmds, std::size_t count) noexcept -> bool {
+  if (cmds == nullptr) {
+    return false;
+  }
+  // same_instanced_batch_key groups on mesh and material and says nothing about
+  // where a command's skin lives, so an arena-backed command batches freely with
+  // CPU-palette siblings.  pack_palette_for_gpu turns a null pointer into an
+  // identity palette, which collapses every vertex onto the model origin: the
+  // soldier is submitted, issued and counted as drawn, yet invisible.  That is
+  // the intermittent blink on an idle archer unit, where one soldier resolves to
+  // an arena slot while its neighbours keep CPU palettes.
+  for (std::size_t k = 0; k < count; ++k) {
+    if (cmds[k] == nullptr || cmds[k]->bone_palette == nullptr) {
+      return false;
+    }
+  }
+  return true;
 }
 
 auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
@@ -512,6 +550,17 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
   }
   for (std::size_t k = 1; k < count; ++k) {
     if (!same_instanced_batch_key(cmds[0], cmds[k])) {
+      return false;
+    }
+  }
+  // A command may carry its skin either as a CPU palette or as a slot in the
+  // GPU bone-palette arena.  This path repacks from the CPU pointer only, and
+  // pack_palette_for_gpu turns a null pointer into an identity palette -- which
+  // collapses every vertex onto the model origin and makes the soldier vanish.
+  // The single-draw path handles both sources, so hand the batch back and let it
+  // take that route rather than rendering some of its soldiers as a point.
+  for (std::size_t k = 0; k < count; ++k) {
+    if (cmds[k].bone_palette == nullptr) {
       return false;
     }
   }
@@ -679,6 +728,9 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
     if (cmds[k] == nullptr || !same_instanced_batch_key(*cmds[0], *cmds[k])) {
       return false;
     }
+  }
+  if (!batch_palettes_are_packable(cmds, count)) {
+    return false;
   }
 
   auto* fn = gl_funcs();

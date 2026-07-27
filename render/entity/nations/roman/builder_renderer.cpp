@@ -39,7 +39,7 @@
 #include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
-#include "../../../humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"

@@ -16,9 +16,10 @@
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
+#include "scene/environment_lighting.h"
 #include "frame_budget.h"
 #include "gl/backend.h"
-#include "gl/camera.h"
+#include "scene/camera.h"
 #include "gl/mesh.h"
 #include "gl/resources.h"
 #include "gl/texture.h"
@@ -168,13 +169,34 @@ public:
   void set_grid_params(const GridParams& gp) { m_grid_params = gp; }
   auto grid_params() const -> const GridParams& { return m_grid_params; }
 
-  void set_lighting(const QVector3D& light_dir, float ambient_strength) {
-    m_light_dir =
-        light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
-    m_ambient_strength = ambient_strength;
+  void set_environment_lighting(const EnvironmentLightingState& lighting) {
+    m_environment_lighting = lighting.sanitized();
+    m_light_dir = m_environment_lighting.primary_direction;
+    m_ambient_strength = m_environment_lighting.ambient_intensity;
     if (m_gl_backend) {
-      m_gl_backend->set_lighting(m_light_dir, m_ambient_strength);
+      m_gl_backend->set_environment_lighting(m_environment_lighting);
+      const float haze =
+          std::clamp(m_environment_lighting.fog_density * 28.0F, 0.0F, 0.72F);
+      const QVector3D sky =
+          (m_environment_lighting.sky_color +
+           (m_environment_lighting.fog_color - m_environment_lighting.sky_color) *
+               haze) *
+          m_environment_lighting.exposure;
+      m_gl_backend->set_clear_color(sky.x(), sky.y(), sky.z(), 1.0F);
     }
+  }
+  [[nodiscard]] auto
+  environment_lighting() const noexcept -> const EnvironmentLightingState& {
+    return m_environment_lighting;
+  }
+
+  // Compatibility for preview tools while their callers migrate to complete
+  // environment states.
+  void set_lighting(const QVector3D& light_dir, float ambient_strength) {
+    EnvironmentLightingState lighting = m_environment_lighting;
+    lighting.primary_direction = light_dir;
+    lighting.ambient_intensity = ambient_strength;
+    set_environment_lighting(lighting);
   }
 
   void pause() { m_paused = true; }
@@ -278,6 +300,10 @@ public:
   void terrain_surface(const TerrainSurfaceCmd& cmd);
   void terrain_feature(const TerrainFeatureCmd& cmd);
   void terrain_scatter(const TerrainScatterCmd& cmd);
+
+  // Emissive world geometry (fire camps, shrines) advertises the light it casts
+  // so the backend can budget it alongside effect-driven lights.
+  void local_light(const Render::LocalLight& light);
 
   struct TemplatePrewarmProgress {
     enum class Phase {
@@ -398,6 +424,7 @@ private:
   Shader* m_current_shader = nullptr;
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};
+  EnvironmentLightingState m_environment_lighting{};
 
   std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
   UnitRenderCache m_unit_render_cache;

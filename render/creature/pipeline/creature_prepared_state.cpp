@@ -12,7 +12,7 @@
 #include "../../../game/units/spawn_type.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
-#include "../../gl/camera.h"
+#include "scene/camera.h"
 #include "../../gl/humanoid/animation/animation_inputs.h"
 #include "../../gl/resources.h"
 #include "../../graphics_settings.h"

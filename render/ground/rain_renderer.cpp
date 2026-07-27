@@ -8,7 +8,7 @@
 
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 
 namespace {
 

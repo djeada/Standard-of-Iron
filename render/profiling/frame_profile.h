@@ -3,6 +3,8 @@
 #pragma once
 
 #include <algorithm>
+
+#include "game/core/simulation_timing.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -77,7 +79,10 @@ struct FrameProfile {
     for (auto& v : phase_us) {
       v = 0;
     }
-    combat_state_update_us = 0;
+    // The simulation publishes this without depending on the renderer, so the
+    // profile snapshots it here rather than being written into directly.
+    combat_state_update_us = Engine::Core::Timing::combat_state_update().value();
+    Engine::Core::Timing::combat_state_update().reset();
     animation_input_sampling_us = 0;
     humanoid_preparation_us = 0;
     bpat_playback_us = 0;

@@ -10,7 +10,7 @@
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
@@ -77,117 +77,157 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   cmd.firecamp = params;
   Scatter::submit_visible_chunks(renderer, m_firecamp_state, cmd);
 
-  const QVector3D log_color(0.31F, 0.17F, 0.075F);
-  const QVector3D char_color(0.055F, 0.034F, 0.022F);
-  const QVector3D ember_color(0.58F, 0.105F, 0.025F);
-
   for (const auto& instance : m_firecamp_state.visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
     const QVector3D camp_pos = pos_intensity.toVector3D();
+    // Revealed, not VisibleOnly: a camp is static world and stays drawn in
+    // explored ground like every other prop.
     if (!renderer.submission_visibility().accepts_sphere(
-            camp_pos, 2.0F, SubmissionFogMode::VisibleOnly)) {
+            camp_pos, 2.0F, SubmissionFogMode::Revealed)) {
       continue;
     }
     const float intensity = std::clamp(pos_intensity.w(), 0.6F, 1.6F);
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 
-    uint32_t state = hash_coords(
-        static_cast<int>(std::floor(camp_pos.x())),
-        static_cast<int>(std::floor(camp_pos.z())),
-        static_cast<uint32_t>(radius_phase.y() *
-                              HashConstants::k_temporal_variation_frequency));
+    // Fire camps reach the GPU as an instanced batch, so the backend cannot
+    // recover their positions from the draw command; advertise the firelight
+    // here instead.  The flicker is phase-offset per camp so neighbouring
+    // fires do not pulse in lockstep.
+    {
+      const float flicker =
+          0.92F + 0.08F * std::sin((params.time * 2.3F) + (radius_phase.y() * 6.28F));
+      Render::LocalLight firelight;
+      firelight.position = camp_pos + QVector3D(0.0F, base_radius * 0.55F, 0.0F);
+      firelight.color = QVector3D(1.0F, 0.52F, 0.19F);
+      firelight.radius = std::clamp(base_radius * 4.2F, 4.0F, 14.0F);
+      firelight.intensity = intensity * flicker;
+      renderer.local_light(firelight);
+    }
 
-    const float time = params.time;
-    const float char_amount = remap(rand_01(state), 0.58F, 0.84F);
+    // radius_phase.w carries the index of this camp's prebuilt decor.  The
+    // shader ignores .z/.w, so it is free to use as a side channel.
+    const auto decor_index = static_cast<std::size_t>(radius_phase.w());
+    if (decor_index >= m_camp_decor.size()) {
+      continue;
+    }
+    const CampDecor& decor = m_camp_decor[decor_index];
+
+    const QVector3D ember_color(0.58F, 0.105F, 0.025F);
     const float ember_pulse =
-        0.5F + 0.5F * std::sin(time * 3.8F + radius_phase.y() * 2.1F);
+        0.5F + 0.5F * std::sin(params.time * 3.8F + decor.phase * 2.1F);
 
-    QVector3D blended_log_color =
-        log_color * (1.0F - char_amount) + char_color * char_amount;
-    blended_log_color = blended_log_color * (1.0F - ember_pulse * 0.08F) +
-                        ember_color * (ember_pulse * 0.08F);
-
-    const float log_length = std::clamp(base_radius * 0.85F, 0.45F, 1.1F);
-    const float log_radius = std::clamp(base_radius * 0.08F, 0.03F, 0.08F);
-
-    const float base_yaw = (rand_01(state) - 0.5F) * 0.35F;
-    const float cos_base = std::cos(base_yaw);
-    const float sin_base = std::sin(base_yaw);
-    const QVector3D axis_a(cos_base, 0.0F, sin_base);
-    const QVector3D axis_b(-axis_a.z(), 0.0F, axis_a.x());
-
-    const QVector3D base_center = camp_pos + QVector3D(0.0F, -0.02F, 0.0F);
-    const QVector3D base_half_a = axis_a * (log_length * 0.5F);
-    const QVector3D base_half_b = axis_b * (log_length * 0.45F);
-
-    renderer.cylinder(base_center - base_half_a,
-                      base_center + base_half_a,
-                      log_radius,
-                      blended_log_color,
-                      1.0F);
-    renderer.cylinder(base_center - base_half_b,
-                      base_center + base_half_b,
-                      log_radius,
-                      blended_log_color,
-                      1.0F);
-
-    if (rand_01(state) > 0.25F) {
-      float const top_yaw = base_yaw + 0.6F + (rand_01(state) - 0.5F) * 0.35F;
-      QVector3D const top_axis(std::cos(top_yaw), 0.0F, std::sin(top_yaw));
-      QVector3D const top_half = top_axis * (log_length * 0.35F);
-      QVector3D const top_center = camp_pos + QVector3D(0.0F, log_radius * 1.6F, 0.0F);
-      float const top_radius = log_radius * 0.85F;
-      renderer.cylinder(top_center - top_half,
-                        top_center + top_half,
-                        top_radius,
-                        blended_log_color,
-                        1.0F);
+    for (const auto& piece : decor.cylinders) {
+      const float weight = piece.ember_weight * ember_pulse;
+      const QVector3D color =
+          piece.base_color * (1.0F - weight) + ember_color * weight;
+      renderer.cylinder(piece.start, piece.end, piece.radius, color, 1.0F);
     }
+  }
+}
 
-    const float ring_radius = std::clamp(base_radius * 0.23F, 0.52F, 0.82F);
-    const int stone_count = 9;
-    for (int stone = 0; stone < stone_count; ++stone) {
-      float const angle = MathConstants::k_two_pi * static_cast<float>(stone) /
-                              static_cast<float>(stone_count) +
-                          base_yaw * 0.35F;
-      float const jitter = remap(rand_01(state), -0.035F, 0.035F);
-      QVector3D const radial(std::cos(angle), 0.0F, std::sin(angle));
-      QVector3D const tangent(-radial.z(), 0.0F, radial.x());
-      QVector3D const stone_center =
-          camp_pos + radial * (ring_radius + jitter) + QVector3D(0.0F, 0.015F, 0.0F);
-      float const stone_half_length = remap(rand_01(state), 0.065F, 0.105F);
-      float const stone_radius = remap(rand_01(state), 0.075F, 0.115F);
-      float const stone_tone = remap(rand_01(state), 0.76F, 1.05F);
-      QVector3D const stone_color = QVector3D(0.25F, 0.235F, 0.21F) * stone_tone;
-      renderer.cylinder(stone_center - tangent * stone_half_length,
-                        stone_center + tangent * stone_half_length,
-                        stone_radius,
-                        stone_color,
-                        1.0F);
-    }
+void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
+                                        float base_radius,
+                                        float phase,
+                                        CampDecor& decor) const {
+  const QVector3D log_color(0.31F, 0.17F, 0.075F);
+  const QVector3D char_color(0.055F, 0.034F, 0.022F);
 
-    for (int coal = 0; coal < 5; ++coal) {
-      float const angle = rand_01(state) * MathConstants::k_two_pi;
-      float const distance = remap(rand_01(state), 0.08F, ring_radius * 0.48F);
-      QVector3D const coal_center =
-          camp_pos + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) * distance +
-          QVector3D(0.0F, 0.025F, 0.0F);
-      QVector3D const coal_axis(-std::sin(angle), 0.0F, std::cos(angle));
-      float const heat = remap(rand_01(state), 0.22F, 0.68F) * ember_pulse;
-      QVector3D const coal_color = char_color * (1.0F - heat) + ember_color * heat;
-      renderer.cylinder(coal_center - coal_axis * 0.035F,
-                        coal_center + coal_axis * 0.035F,
-                        0.032F,
-                        coal_color,
-                        1.0F);
-    }
+  decor.phase = phase;
+  decor.cylinders.clear();
+
+  uint32_t state =
+      hash_coords(static_cast<int>(std::floor(camp_pos.x())),
+                  static_cast<int>(std::floor(camp_pos.z())),
+                  static_cast<uint32_t>(phase *
+                                        HashConstants::k_temporal_variation_frequency));
+
+  const float char_amount = remap(rand_01(state), 0.58F, 0.84F);
+  const QVector3D blended_log_color =
+      log_color * (1.0F - char_amount) + char_color * char_amount;
+
+  const float log_length = std::clamp(base_radius * 0.85F, 0.45F, 1.1F);
+  const float log_radius = std::clamp(base_radius * 0.08F, 0.03F, 0.08F);
+
+  const float base_yaw = (rand_01(state) - 0.5F) * 0.35F;
+  const QVector3D axis_a(std::cos(base_yaw), 0.0F, std::sin(base_yaw));
+  const QVector3D axis_b(-axis_a.z(), 0.0F, axis_a.x());
+
+  const QVector3D base_center = camp_pos + QVector3D(0.0F, -0.02F, 0.0F);
+  const QVector3D base_half_a = axis_a * (log_length * 0.5F);
+  const QVector3D base_half_b = axis_b * (log_length * 0.45F);
+
+  // Logs sit mostly at their charred colour and only breathe slightly with the
+  // embers, hence the small fixed weight.
+  constexpr float k_log_ember_weight = 0.08F;
+  decor.cylinders.push_back({.start = base_center - base_half_a,
+                             .end = base_center + base_half_a,
+                             .base_color = blended_log_color,
+                             .radius = log_radius,
+                             .ember_weight = k_log_ember_weight});
+  decor.cylinders.push_back({.start = base_center - base_half_b,
+                             .end = base_center + base_half_b,
+                             .base_color = blended_log_color,
+                             .radius = log_radius,
+                             .ember_weight = k_log_ember_weight});
+
+  if (rand_01(state) > 0.25F) {
+    float const top_yaw = base_yaw + 0.6F + (rand_01(state) - 0.5F) * 0.35F;
+    QVector3D const top_axis(std::cos(top_yaw), 0.0F, std::sin(top_yaw));
+    QVector3D const top_half = top_axis * (log_length * 0.35F);
+    QVector3D const top_center = camp_pos + QVector3D(0.0F, log_radius * 1.6F, 0.0F);
+    decor.cylinders.push_back({.start = top_center - top_half,
+                               .end = top_center + top_half,
+                               .base_color = blended_log_color,
+                               .radius = log_radius * 0.85F,
+                               .ember_weight = k_log_ember_weight});
+  }
+
+  const float ring_radius = std::clamp(base_radius * 0.23F, 0.52F, 0.82F);
+  const int stone_count = 9;
+  for (int stone = 0; stone < stone_count; ++stone) {
+    float const angle = MathConstants::k_two_pi * static_cast<float>(stone) /
+                            static_cast<float>(stone_count) +
+                        base_yaw * 0.35F;
+    float const jitter = remap(rand_01(state), -0.035F, 0.035F);
+    QVector3D const radial(std::cos(angle), 0.0F, std::sin(angle));
+    QVector3D const tangent(-radial.z(), 0.0F, radial.x());
+    QVector3D const stone_center =
+        camp_pos + radial * (ring_radius + jitter) + QVector3D(0.0F, 0.015F, 0.0F);
+    float const stone_half_length = remap(rand_01(state), 0.065F, 0.105F);
+    float const stone_radius = remap(rand_01(state), 0.075F, 0.115F);
+    float const stone_tone = remap(rand_01(state), 0.76F, 1.05F);
+    // Stones do not glow, so their colour is final.
+    decor.cylinders.push_back(
+        {.start = stone_center - tangent * stone_half_length,
+         .end = stone_center + tangent * stone_half_length,
+         .base_color = QVector3D(0.25F, 0.235F, 0.21F) * stone_tone,
+         .radius = stone_radius,
+         .ember_weight = 0.0F});
+  }
+
+  for (int coal = 0; coal < 5; ++coal) {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const distance = remap(rand_01(state), 0.08F, ring_radius * 0.48F);
+    QVector3D const coal_center =
+        camp_pos + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) * distance +
+        QVector3D(0.0F, 0.025F, 0.0F);
+    QVector3D const coal_axis(-std::sin(angle), 0.0F, std::cos(angle));
+    // Coals swing between charred and glowing, so their weight is the full
+    // per-coal heat factor.
+    float const heat_factor = remap(rand_01(state), 0.22F, 0.68F);
+    decor.cylinders.push_back({.start = coal_center - coal_axis * 0.035F,
+                               .end = coal_center + coal_axis * 0.035F,
+                               .base_color = char_color,
+                               .radius = 0.032F,
+                               .ember_weight = heat_factor});
   }
 }
 
 void FireCampRenderer::clear() {
   m_firecamp_state.reset_instances();
+  m_camp_decor.clear();
 }
 
 void FireCampRenderer::generate_firecamp_instances() {
@@ -196,6 +236,7 @@ void FireCampRenderer::generate_firecamp_instances() {
   auto& firecamp_instances_dirty = m_firecamp_state.instances_dirty;
 
   firecamp_instances.clear();
+  m_camp_decor.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
@@ -215,11 +256,19 @@ void FireCampRenderer::generate_firecamp_instances() {
     const QVector3D resolved =
         terrain_service.resolve_surface_world_position(world_x, world_z, 0.0F, 0.0F);
 
+    const float base_radius = std::max(prop.radius, 1.0F);
+    const float phase = static_cast<float>(i) * 1.234567F;
+
+    CampDecor decor;
+    build_camp_decor(resolved, base_radius, phase, decor);
+    const auto decor_index = static_cast<float>(m_camp_decor.size());
+    m_camp_decor.push_back(std::move(decor));
+
     FireCampInstanceGpu instance;
     instance.pos_intensity =
         QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.intensity);
-    instance.radius_phase = QVector4D(
-        std::max(prop.radius, 1.0F), static_cast<float>(i) * 1.234567F, 1.0F, 0.0F);
+    // .w carries the decor index; the shader only reads .x and .y.
+    instance.radius_phase = QVector4D(base_radius, phase, 1.0F, decor_index);
     firecamp_instances.push_back(instance);
   }
 

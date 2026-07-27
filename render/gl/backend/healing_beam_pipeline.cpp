@@ -9,7 +9,7 @@
 #include "../../../game/systems/healing_beam.h"
 #include "../../../game/systems/healing_beam_system.h"
 #include "../backend.h"
-#include "../camera.h"
+#include "scene/camera.h"
 #include "../mesh.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"

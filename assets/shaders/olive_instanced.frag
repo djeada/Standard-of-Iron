@@ -1,6 +1,10 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_normal;
+in vec3 v_world_pos;
 in vec3 v_color;
 in vec2 v_tex_coord;
 in float v_foliage_mask;
@@ -9,8 +13,6 @@ in float v_bark_seed;
 in float v_branch_id;
 in vec2 v_local_pos_xz;
 in vec3 v_local_pos;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -63,16 +65,17 @@ float olive_leaf_mask(vec2 p, float seed) {
 void main() {
 
   vec3 n = normalize(v_normal);
-  vec3 l = normalize(u_light_direction);
+  vec3 l = environment_primary_direction();
   float diffuse = max(dot(n, l), 0.0);
   float wrap = clamp((dot(n, l) + 0.28) / 1.28, 0.0, 1.0);
   float backlight = max(dot(-n, l), 0.0);
-  float ambient = mix(0.20, 0.27, v_foliage_mask);
+  float ambient = environment_ambient_intensity();
   float sky_fill = smoothstep(-0.15, 0.85, n.y) * mix(0.04, 0.10, v_foliage_mask);
   float lighting = ambient + wrap * mix(0.27, 0.42, v_foliage_mask) + sky_fill;
 
-  vec3 sun_color = vec3(0.94, 0.84, 0.70);
-  vec3 sky_color = vec3(0.48, 0.57, 0.68);
+  vec3 sun_color =
+      environment_primary_color() * environment_primary_intensity();
+  vec3 sky_color = environment_sky_color();
   float lit_t = clamp(wrap * 1.2, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.55, sun_color, lit_t);
 
@@ -137,12 +140,15 @@ void main() {
   bark_color = mix(bark_color, bark_lichen, basal_lichen * 0.42);
 
   vec3 base_color = mix(bark_color, leaf_color, v_foliage_mask);
-  vec3 color = base_color * lighting * light_tint;
+  vec3 color =
+      base_color * lighting * light_tint * environment_exposure();
   color += leaf_color * vec3(0.16, 0.20, 0.09) *
            (backlight * backlight * 0.12 * v_foliage_mask);
 
   if (v_tex_coord.y < 0.035)
     discard;
 
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

@@ -394,6 +394,22 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                       formation_presentation->melee_ordered &&
                                       formation_presentation->target_alive;
 
+  // Fog of war is a per-unit fact, not a per-soldier one.  Testing each soldier
+  // separately let a formation straddle the vision boundary and render half its
+  // ranks, with individuals flickering in and out as either side drifted by a
+  // fraction of a tile -- most visible on archers, which fight at range and so
+  // sit on that boundary.  Decide once for the whole unit; the frustum test
+  // below stays per-soldier, where it is both cheap and correct.
+  constexpr float k_formation_fog_radius = 6.0F;
+  const QVector3D unit_origin = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+  const bool unit_fog_visible =
+      ctx.submission_visibility == nullptr ||
+      ctx.submission_visibility
+          ->evaluate_sphere(unit_origin + QVector3D(0.0F, 0.9F, 0.0F),
+                            k_formation_fog_radius,
+                            ctx.submission_fog_mode)
+          .fog_visible;
+
   auto append_prepared_soldier = [&](int idx,
                                      const AnimationInputs& soldier_anim,
                                      float casualty_offset_x = 0.0F,
@@ -480,13 +496,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     const auto visibility_result =
         ctx.submission_visibility != nullptr
             ? ctx.submission_visibility->evaluate_sphere(
-                  cull_center, k_soldier_cull_radius, ctx.submission_fog_mode)
+                  cull_center, k_soldier_cull_radius, SubmissionFogMode::Ignore)
             : SubmissionVisibilityResult{
                   ctx.camera == nullptr ||
                       ctx.camera->is_in_frustum(cull_center, k_soldier_cull_radius),
                   true};
     const bool outside_frustum = !visibility_result.in_frustum;
-    const bool hidden_by_fog = !visibility_result.fog_visible;
+    const bool hidden_by_fog = !unit_fog_visible;
     if (outside_frustum || hidden_by_fog) {
       if (outside_frustum) {
         ++s_render_stats.soldiers_skipped_frustum;

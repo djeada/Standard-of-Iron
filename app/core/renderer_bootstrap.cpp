@@ -2,7 +2,7 @@
 
 #include "game/core/world.h"
 #include "game/systems/runtime_system_registry.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/graphics_settings.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"

@@ -74,7 +74,7 @@ help:
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
 	@echo ""
-	@echo "$(BOLD)Formatting (whitespace only - never touches comments or semantics):$(RESET)"
+	@echo "$(BOLD)Formatting (also strips comments via remove-comments.sh):$(RESET)"
 	@echo "  $(GREEN)format$(RESET)        - Format all code in place"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting, change nothing (CI gate)"
 	@echo "  $(GREEN)format-changed$(RESET) - Format only files changed vs FORMAT_BASE"
@@ -82,7 +82,7 @@ help:
 	@echo "  $(GREEN)format-doctor$(RESET) - Report installed vs pinned tool versions"
 	@echo "  $(GREEN)format-bootstrap$(RESET) - Install the pinned formatting toolchain"
 	@echo ""
-	@echo "$(BOLD)Linting and quality:$(RESET)"
+	@echo "$(BOLD)Linting and quality (also strips comments via remove-comments.sh):$(RESET)"
 	@echo "  $(GREEN)lint$(RESET)          - clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON"
 	@echo "  $(GREEN)lint-fix$(RESET)      - Apply the linters' automated fixes (explicit)"
 	@echo "  $(GREEN)lint-changed$(RESET)  - Lint only files changed vs FORMAT_BASE"
@@ -357,13 +357,13 @@ test-validator: build
 		exit 1; \
 	fi
 
-# ---- Formatting (whitespace only - never rewrites semantics) ----
+# ---- Formatting (also strips comments via remove-comments.sh) ----
 .PHONY: format format-check format-changed format-check-changed \
 	format-staged format-doctor format-bootstrap clean-format-trash
 
 ## Format every tracked file in place.
 format: clean-format-trash
-	@$(FORMAT_DRIVER) --all --fix --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all --strip-comments --fix --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
 
 ## Verify formatting without writing anything (CI gate).
 format-check:
@@ -395,12 +395,12 @@ clean-format-trash:
 		\( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(DEBUG_BUILD_DIR)" -o -path "./$(DEBUG_BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o \
 		-type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -print -exec rm -f {} +
 
-# ---- Linting (diagnostics; --fix applies only safe automated fixes) ----
+# ---- Linting (also strips comments via remove-comments.sh) ----
 .PHONY: lint lint-fix lint-changed lint-deep
 
 ## Run every linter: clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON.
 lint:
-	@$(FORMAT_DRIVER) --all --lint --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all --strip-comments --lint --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
 
 ## Apply the linters' automated fixes. Explicit and separate from `format`.
 lint-fix:

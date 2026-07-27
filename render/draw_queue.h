@@ -19,6 +19,7 @@
 #include "decoration_gpu.h"
 #include "draw_part.h"
 #include "frame_budget.h"
+#include "local_lighting.h"
 #include "primitive_batch.h"
 #include "rain_gpu.h"
 #include "terrain_scene_types.h"
@@ -378,12 +379,29 @@ public:
     m_prepared_high_water = std::max(m_prepared_high_water, m_prepared_batches.size());
     m_submission_bucket_high_water =
         std::max(m_submission_bucket_high_water, m_submission_bucket_spans.size());
+    m_local_light_high_water = std::max(m_local_light_high_water, m_local_lights.size());
     m_items.clear();
     m_sort_indices.clear();
     m_sort_keys.clear();
     m_prepared_batches.clear();
     m_submission_bucket_spans.clear();
     m_submission_bucket_ordered = true;
+    m_local_lights.clear();
+  }
+
+  // Emissive world geometry that reaches the GPU as instanced batches cannot be
+  // recovered from the draw commands, so submitters that own CPU-side positions
+  // advertise their light here.  The backend scores and budgets these together
+  // with the lights it harvests from effect commands.
+  void submit_local_light(const LocalLight& light) {
+    if (m_local_lights.capacity() < m_local_light_high_water) {
+      m_local_lights.reserve(m_local_light_high_water);
+    }
+    m_local_lights.push_back(light);
+  }
+
+  [[nodiscard]] auto local_lights() const noexcept -> const std::vector<LocalLight>& {
+    return m_local_lights;
   }
 
   void reserve_for_frame(std::size_t items_hint = 0) {
@@ -1048,6 +1066,8 @@ private:
   std::size_t m_items_high_water = 0;
   std::size_t m_prepared_high_water = 0;
   std::size_t m_submission_bucket_high_water = 0;
+  std::size_t m_local_light_high_water = 0;
+  std::vector<LocalLight> m_local_lights;
 };
 
 } // namespace Render::GL

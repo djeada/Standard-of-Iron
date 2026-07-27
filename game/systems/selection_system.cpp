@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../../app/utils/selection_utils.h"
-#include "../../render/gl/camera.h"
+#include "scene/camera.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"

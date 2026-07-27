@@ -252,6 +252,10 @@ void MapData::clear() {
   m_camera = QJsonObject();
   m_victory = QJsonObject();
   m_rain = QJsonObject();
+  m_environment = QJsonObject{{MapJsonKeys::start_time, 13.0},
+                              {MapJsonKeys::time_mode, "locked"},
+                              {MapJsonKeys::day_length_seconds, 1800.0},
+                              {MapJsonKeys::lighting_profile, "mediterranean_summer"}};
   m_extra_root_fields = QJsonObject();
   m_next_spawn_order = 0;
   m_raw_spawns.clear();
@@ -290,6 +294,15 @@ void MapData::set_rain(const QJsonObject& rain) {
   const QJsonObject normalized = normalize_json_object(rain);
   if (m_rain != normalized) {
     m_rain = normalized;
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::set_environment(const QJsonObject& environment) {
+  const QJsonObject normalized = normalize_json_object(environment);
+  if (m_environment != normalized) {
+    m_environment = normalized;
     set_modified(true);
     emit data_changed();
   }
@@ -388,15 +401,30 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
       return false;
     }
   }
-  const QStringList known_root_keys = {
-      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
-      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
-      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
-      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
-      MapJsonKeys::rain,       MapJsonKeys::terrain,     MapJsonKeys::world_props,
-      MapJsonKeys::firecamps,  MapJsonKeys::rivers,      MapJsonKeys::lakes,
-      MapJsonKeys::roads,      MapJsonKeys::bridges,     MapJsonKeys::undead_zones,
-      MapJsonKeys::fog_zones};
+  const QStringList known_root_keys = {MapJsonKeys::name,
+                                       MapJsonKeys::description,
+                                       coord_system_key,
+                                       legacy_coord_system_key,
+                                       max_troops_key,
+                                       legacy_max_troops_key,
+                                       MapJsonKeys::grid,
+                                       MapJsonKeys::biome,
+                                       MapJsonKeys::camera,
+                                       MapJsonKeys::spawns,
+                                       MapJsonKeys::structures,
+                                       MapJsonKeys::victory,
+                                       MapJsonKeys::rain,
+                                       MapJsonKeys::environment,
+                                       MapJsonKeys::time_of_day,
+                                       MapJsonKeys::terrain,
+                                       MapJsonKeys::world_props,
+                                       MapJsonKeys::firecamps,
+                                       MapJsonKeys::rivers,
+                                       MapJsonKeys::lakes,
+                                       MapJsonKeys::roads,
+                                       MapJsonKeys::bridges,
+                                       MapJsonKeys::undead_zones,
+                                       MapJsonKeys::fog_zones};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -420,6 +448,23 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   m_camera = root[MapJsonKeys::camera].toObject();
   m_victory = root[MapJsonKeys::victory].toObject();
   m_rain = root[MapJsonKeys::rain].toObject();
+  m_environment = root[MapJsonKeys::environment].toObject();
+  if (m_environment.isEmpty()) {
+    double start_time = 13.0;
+    const QString alias = root[MapJsonKeys::time_of_day].toString().trimmed().toLower();
+    if (alias == QStringLiteral("morning")) {
+      start_time = 7.0;
+    } else if (alias == QStringLiteral("afternoon")) {
+      start_time = 17.0;
+    } else if (alias == QStringLiteral("night")) {
+      start_time = 22.0;
+    }
+    m_environment =
+        QJsonObject{{MapJsonKeys::start_time, start_time},
+                    {MapJsonKeys::time_mode, "locked"},
+                    {MapJsonKeys::day_length_seconds, 1800.0},
+                    {MapJsonKeys::lighting_profile, "mediterranean_summer"}};
+  }
 
   m_terrain.clear();
   m_world_props.clear();
@@ -500,6 +545,9 @@ QJsonObject MapData::build_root_json() const {
   }
   if (!m_rain.isEmpty()) {
     root[MapJsonKeys::rain] = m_rain;
+  }
+  if (!m_environment.isEmpty()) {
+    root[MapJsonKeys::environment] = m_environment;
   }
 
   QJsonArray const terrain_arr = terrain_to_json();

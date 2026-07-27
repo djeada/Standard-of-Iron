@@ -78,8 +78,8 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/campaign_loader.h"
-#include "game/map/environment.h"
-#include "game/map/level_loader.h"
+#include "app/core/environment.h"
+#include "level_loader.h"
 #include "game/map/map_catalog.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
@@ -89,10 +89,10 @@
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/mission_context.h"
 #include "game/map/mission_loader.h"
-#include "game/map/skirmish_loader.h"
+#include "app/core/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
-#include "game/map/world_bootstrap.h"
+#include "app/core/world_bootstrap.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/building_collision_registry.h"
@@ -144,7 +144,7 @@
 #include "production_manager.h"
 #include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -298,6 +298,7 @@ GameEngine::GameEngine(QObject* parent)
   connect_save_service_signals();
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_rain_manager = std::make_unique<Game::Systems::RainManager>();
+  m_environment_clock = std::make_unique<Game::Map::EnvironmentClock>();
 
   m_loading_progress_tracker = std::make_unique<LoadingProgressTracker>(this);
   connect(m_loading_progress_tracker.get(),
@@ -1759,7 +1760,7 @@ void GameEngine::select_unit_by_id(int unit_id) {
 
 void GameEngine::ensure_initialized() {
   QString error;
-  Game::Map::WorldBootstrap::ensure_initialized(m_runtime.initialized,
+  App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,
                                                 *m_renderer,
                                                 *m_camera,
                                                 m_surface ? m_surface->ground()
@@ -1802,7 +1803,8 @@ auto GameEngine::scene_context() const -> AppSceneContext {
                          .minimap_manager = m_minimap_manager.get(),
                          .visibility_coordinator = m_visibility_coordinator.get(),
                          .victory_service = m_victory_service.get(),
-                         .rain_manager = m_rain_manager.get()};
+                         .rain_manager = m_rain_manager.get(),
+                         .environment_clock = m_environment_clock.get()};
 }
 
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
@@ -2975,6 +2977,9 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
         {m_level, m_runtime.local_owner_id, campaign_mission_def});
     configure_mission_victory_conditions();
     configure_rain_system();
+    if (m_environment_clock) {
+      m_environment_clock->reset(m_level.environment);
+    }
 
     const auto finalize_effects =
         m_skirmish_runtime->finalize_load({m_runtime.loading,
@@ -3272,6 +3277,11 @@ void GameEngine::begin_save(const QString& slot_name,
     request_exit_commander_control_mode();
   }
   const Game::Systems::RuntimeSnapshot runtime_snapshot = to_runtime_snapshot();
+  Game::Systems::LevelSnapshot level_snapshot = m_level;
+  if (m_environment_clock) {
+    level_snapshot.environment = m_environment_clock->definition();
+    level_snapshot.environment_clock = m_environment_clock->snapshot();
+  }
   std::optional<Game::Mission::MissionContext> mission_context;
   if (m_campaign_manager) {
     mission_context = m_campaign_manager->current_mission_context();
@@ -3282,7 +3292,7 @@ void GameEngine::begin_save(const QString& slot_name,
           {.world = *m_world,
            .save_load_service = *m_save_load_service,
            .camera = m_camera,
-           .level = m_level,
+           .level = level_snapshot,
            .runtime_snapshot = runtime_snapshot,
            .slot = slot_name,
            .title = slot_name,
@@ -3417,6 +3427,12 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
     return;
+  }
+  if (m_environment_clock) {
+    m_environment_clock->restore(m_level.environment, m_level.environment_clock);
+    if (m_renderer) {
+      m_renderer->set_environment_lighting(m_environment_clock->lighting());
+    }
   }
 
   m_runtime.loading = false;

@@ -12,7 +12,7 @@
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "render/entity/registry.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "tests/support/movement_test_access.h"
 

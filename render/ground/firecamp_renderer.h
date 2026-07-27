@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -37,7 +39,30 @@ public:
   }
 
 private:
+  // A camp's logs, stone ring and coals are fully determined by its seed and
+  // never move, so the geometry is built once here instead of being re-derived
+  // from hashes and trig on every frame.  Only the ember glow animates, and it
+  // is a single lerp per cylinder against `ember_weight`.
+  struct DecorCylinder {
+    QVector3D start;
+    QVector3D end;
+    QVector3D base_color;
+    float radius = 0.0F;
+    float ember_weight = 0.0F;
+  };
+
+  struct CampDecor {
+    float phase = 0.0F;
+    std::vector<DecorCylinder> cylinders;
+  };
+
   void generate_firecamp_instances();
+  void build_camp_decor(const QVector3D& camp_pos,
+                        float base_radius,
+                        float phase,
+                        CampDecor& decor) const;
+
+  std::vector<CampDecor> m_camp_decor;
 
   int m_width = 0;
   int m_height = 0;

@@ -33,7 +33,7 @@
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
-#include "render/creature/bpat/bpat_format.h"
+#include "animation/bpat/bpat_format.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_state.h"

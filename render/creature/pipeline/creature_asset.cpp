@@ -8,8 +8,8 @@
 #include "../../humanoid/humanoid_spec.h"
 #include "../../static_attachment_spec.h"
 #include "../archetype_registry.h"
-#include "../bpat/bpat_format.h"
-#include "../bpat/bpat_registry.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_registry.h"
 #include "creature_visual_definition.h"
 
 namespace Render::Creature::Pipeline {

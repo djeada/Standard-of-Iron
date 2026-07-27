@@ -1,4 +1,7 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -10,7 +13,7 @@ in float v_feature_foot;
 layout(location = 0) out vec4 frag_color;
 
 uniform vec3 u_grass_primary, u_grass_secondary, u_grass_dry, u_soil_color;
-uniform vec3 u_rock_low, u_rock_high, u_tint, u_light_dir;
+uniform vec3 u_rock_low, u_rock_high, u_tint;
 uniform int u_ground_type;
 uniform int u_terrain_type;
 uniform vec2 u_noise_offset;
@@ -578,12 +581,13 @@ void main() {
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
   terrain_color *= vec3(1.01, 0.99, 0.99);
 
-  float wet_surface = damp_patch * soil_mix * u_moisture_level;
+  float wet_surface =
+      damp_patch * soil_mix * max(u_moisture_level, environment_wetness());
   terrain_color *= 1.0 - u_moisture_level * 0.06 * (1.0 - rock_mask);
   terrain_color *= 1.0 - wet_surface * 0.15;
   terrain_color *= u_tint;
 
-  vec3 L = normalize(u_light_dir);
+  vec3 L = environment_primary_direction();
 
   vec2 relief_coord = mix(world_coord, wall_coord, wall_blend);
   float relief_footprint = max(length(fwidth(relief_coord)), 1e-5);
@@ -623,12 +627,10 @@ void main() {
   ambient_occlusion *= 1.0 - relief_lost * relief_amp * 0.30;
   ambient_occlusion *= 1.0 - 0.10 * smoothstep(0.20, 0.75, slope);
 
-  vec3 sky_light = vec3(0.88, 0.94, 1.06);
-  vec3 bounce_light = vec3(1.14, 0.98, 0.76);
-  vec3 sun_light = vec3(1.10, 1.00, 0.86);
-  float sky_access = 0.5 + 0.5 * detail_normal.y;
+  vec3 sun_light =
+      environment_primary_color() * environment_primary_intensity();
   vec3 ambient_term =
-      0.38 * ambient_occlusion * mix(bounce_light, sky_light, sky_access);
+      ambient_occlusion * environment_ambient_light(detail_normal);
 
   float wet_glint = wet_surface * pow(max(dot(detail_normal, L), 0.0), 10.0) * 0.07;
 
@@ -642,7 +644,9 @@ void main() {
 
   vec3 lit_color = terrain_color *
                    (ambient_term + sun_light * (ndl * 0.76 + wet_glint) + sheen) *
-                   u_ambient_boost;
+                   u_ambient_boost * environment_exposure();
+  lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
+  lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
   float visibility_factor = 1.0;
   if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
     float tile_size = max(u_visibility_tile_size, 0.0001);
@@ -661,7 +665,9 @@ void main() {
       smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.20, 0.88, 1.0 - abs(view_dir.y));
   float fog_amount = clamp(distance_fog * (0.72 + 0.60 * horizon_fog), 0.0, 1.0);
-  lit_color = mix(lit_color, u_fog_color, fog_amount);
+  fog_amount =
+      max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  lit_color = mix(lit_color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(clamp(lit_color, 0.0, 1.0), 1.0);
 }

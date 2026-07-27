@@ -27,7 +27,7 @@
 #include "../creature/animation_core_bridge.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/archetype_registry.h"
-#include "../creature/bpat/bpat_format.h"
+#include "animation/bpat/bpat_format.h"
 #include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/creature_render_graph.h"

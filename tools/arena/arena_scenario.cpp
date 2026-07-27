@@ -218,6 +218,47 @@ auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
 
 } // namespace
 
+namespace {
+
+// Every expectation below is judged from per-soldier submission samples, which
+// only exist when SOI_ENABLE_RUNTIME_TRACING is compiled in.
+[[nodiscard]] constexpr auto soldier_diagnostics_available() noexcept -> bool {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+  return true;
+#else
+  return false;
+#endif
+}
+
+[[nodiscard]] constexpr auto
+expectation_needs_soldier_diagnostics(ArenaExpectationKind kind) noexcept -> bool {
+  switch (kind) {
+  case ArenaExpectationKind::NoPoseOscillation:
+  case ArenaExpectationKind::NoRootTeleport:
+  case ArenaExpectationKind::NoUnexpectedFallPose:
+  case ArenaExpectationKind::NoLimbOverextension:
+  case ArenaExpectationKind::NoRenderVisibilityChurn:
+  case ArenaExpectationKind::FullCreatureDetailOnly:
+  case ArenaExpectationKind::MovementIsContinuous:
+  case ArenaExpectationKind::FormationBodyOverlapObserved:
+  case ArenaExpectationKind::AllLivingSoldiersFight:
+  case ArenaExpectationKind::MovementAnimationObserved:
+  case ArenaExpectationKind::AttackAnimationObserved:
+  case ArenaExpectationKind::HoldPoseMaintained:
+  case ArenaExpectationKind::RepeatedAttackAnimationObserved:
+  case ArenaExpectationKind::AttackHasVisibleContact:
+  case ArenaExpectationKind::AttackRecoveryObserved:
+  case ArenaExpectationKind::HitReactionObserved:
+  case ArenaExpectationKind::DeathAnimationObserved:
+  case ArenaExpectationKind::GroupIsRendered:
+    return true;
+  default:
+    return false;
+  }
+}
+
+} // namespace
+
 auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError> {
   std::vector<ArenaScenarioValidationError> errors;
@@ -516,6 +557,7 @@ struct ArenaScenarioRunner::Impl {
   QSet<QString> issue_keys;
   std::vector<TraceFrame> trace;
   ArenaScenarioReport report;
+  ArenaEnvironmentSnapshot environment_snapshot;
   float elapsed{0.0F};
   float duration_limit{0.0F};
   bool started{false};
@@ -1874,6 +1916,14 @@ struct ArenaScenarioRunner::Impl {
     }
     end_expectations_checked = true;
     for (auto const& expectation : scenario.expectations) {
+      if (!soldier_diagnostics_available() &&
+          expectation_needs_soldier_diagnostics(expectation.kind)) {
+        // Without SOI_ENABLE_RUNTIME_TRACING there are no per-soldier submission
+        // samples to judge, so these expectations would fail for a build-
+        // configuration reason rather than a rendering defect.  Configure with
+        // -DSOI_RUNTIME_TRACING=ON to exercise them.
+        continue;
+      }
       switch (expectation.kind) {
       case ArenaExpectationKind::AttackAnimationObserved:
         if (!visible_attacks.value(expectation.group, false)) {
@@ -2431,6 +2481,11 @@ void ArenaScenarioRunner::set_duration_limit(float duration_seconds) {
   }
 }
 
+void ArenaScenarioRunner::set_environment_snapshot(
+    const ArenaEnvironmentSnapshot& snapshot) {
+  m_impl->environment_snapshot = snapshot;
+}
+
 auto ArenaScenarioRunner::definition() const noexcept
     -> const ArenaScenarioDefinition& {
   return m_impl->scenario;
@@ -2492,6 +2547,37 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                     {QStringLiteral("soldier_index"), issue.soldier_index}});
   }
   report_object.insert(QStringLiteral("issues"), issues);
+
+  if (const auto& env = m_impl->environment_snapshot; env.valid) {
+    const auto vec3 = [](const QVector3D& value) {
+      return QJsonArray{value.x(), value.y(), value.z()};
+    };
+    report_object.insert(
+        QStringLiteral("environment"),
+        QJsonObject{
+            {QStringLiteral("hour"), env.hour},
+            {QStringLiteral("time_of_day"), env.time_of_day},
+            {QStringLiteral("time_mode"), env.time_mode},
+            {QStringLiteral("lighting_profile"), env.lighting_profile},
+            {QStringLiteral("primary_direction"), vec3(env.primary_direction)},
+            {QStringLiteral("primary_color"), vec3(env.primary_color)},
+            {QStringLiteral("sky_color"), vec3(env.sky_color)},
+            {QStringLiteral("primary_intensity"), env.primary_intensity},
+            {QStringLiteral("ambient_intensity"), env.ambient_intensity},
+            {QStringLiteral("exposure"), env.exposure},
+            {QStringLiteral("fog_density"), env.fog_density},
+            {QStringLiteral("cloud_cover"), env.cloud_cover},
+            {QStringLiteral("wetness"), env.wetness}});
+    report_object.insert(
+        QStringLiteral("shadows"),
+        QJsonObject{
+            {QStringLiteral("quality"), env.shadow_quality},
+            {QStringLiteral("directional_enabled"), env.directional_shadows_enabled},
+            {QStringLiteral("resolution"), env.shadow_resolution},
+            {QStringLiteral("cascades"), env.shadow_cascades},
+            {QStringLiteral("distance"), env.shadow_distance},
+            {QStringLiteral("contact_shadow_casters"), env.contact_shadow_casters}});
+  }
 
   if (!m_impl->scenario.undead_zones.empty()) {
     QJsonArray zones;

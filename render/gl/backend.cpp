@@ -10,6 +10,9 @@
 
 #include <GL/gl.h>
 #include <algorithm>
+#include <array>
+#include <chrono>
+#include <limits>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -24,9 +27,11 @@
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
 #include "../graphics_settings.h"
+#include "../local_lighting.h"
 #include "../material.h"
 #include "../primitive_batch.h"
 #include "../rain_gpu.h"
+#include "../rigged_mesh.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
 #include "backend/combat_dust_pipeline.h"
@@ -44,11 +49,12 @@
 #include "backend/water_pipeline.h"
 #include "buffer.h"
 #include "decoration_gpu.h"
-#include "gl/camera.h"
+#include "scene/camera.h"
 #include "gl/resources.h"
 #include "mesh.h"
 #include "render_constants.h"
 #include "shader.h"
+#include "ubo_bindings.h"
 #include "state_scopes.h"
 #include "texture.h"
 
@@ -120,6 +126,19 @@ Backend::~Backend() {
       glDeleteBuffers(1, &m_frame_ubo);
       m_frame_ubo = 0;
     }
+    if (m_environment_lighting_ubo != 0) {
+      glDeleteBuffers(1, &m_environment_lighting_ubo);
+      m_environment_lighting_ubo = 0;
+    }
+    if (m_local_lighting_ubo != 0) {
+      glDeleteBuffers(1, &m_local_lighting_ubo);
+      m_local_lighting_ubo = 0;
+    }
+    release_directional_shadow_resources();
+    if (m_directional_shadow_ubo != 0) {
+      glDeleteBuffers(1, &m_directional_shadow_ubo);
+      m_directional_shadow_ubo = 0;
+    }
     m_cylinder_pipeline.reset();
     m_vegetation_pipeline.reset();
     m_terrain_pipeline.reset();
@@ -145,9 +164,30 @@ auto Backend::initialize() -> bool {
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_frame_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   qInfo() << "Backend: Frame UBO created at binding 0";
+  glGenBuffers(1, &m_environment_lighting_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
+  constexpr GLsizeiptr environment_ubo_size = sizeof(float) * 28;
+  glBufferData(GL_UNIFORM_BUFFER, environment_ubo_size, nullptr, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_environment_lighting_binding_point, m_environment_lighting_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  qInfo() << "Backend: Environment lighting UBO created at binding 1";
+  glGenBuffers(1, &m_local_lighting_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
+  constexpr GLsizeiptr local_lighting_ubo_size =
+      sizeof(float) * ((Render::k_max_local_lights * 8) + 4);
+  glBufferData(GL_UNIFORM_BUFFER, local_lighting_ubo_size, nullptr, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  qInfo() << "Backend: Local lighting UBO created at binding 2";
+  glGenBuffers(1, &m_directional_shadow_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 80, nullptr, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  qInfo() << "Backend: Directional shadow UBO created at binding 3";
   qInfo() << "Backend: OpenGL functions initialized";
 
   qInfo() << "Backend: Setting up depth test...";
@@ -315,6 +355,16 @@ auto Backend::initialize() -> bool {
   m_basic_shader = m_shader_cache->get(QStringLiteral("basic"));
   m_grid_shader = m_shader_cache->get(QStringLiteral("grid"));
   m_shadow_shader = m_shader_cache->get(QStringLiteral("troop_shadow"));
+  m_directional_shadow_depth_shader = m_shader_cache->get_or_load(
+      QStringLiteral(":/assets/shaders/directional_shadow_depth.vert"),
+      QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  m_directional_shadow_rigged_shader = m_shader_cache->get_or_load(
+      QStringLiteral(":/assets/shaders/directional_shadow_rigged.vert"),
+      QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  if (m_directional_shadow_rigged_shader != nullptr) {
+    (void)m_directional_shadow_rigged_shader->bind_uniform_block(
+        "BonePalette", k_bone_palette_binding_point);
+  }
   if (m_basic_shader == nullptr) {
     qCritical() << "Backend::initialize() FAILED: required basic shader missing";
     return false;
@@ -329,7 +379,7 @@ auto Backend::initialize() -> bool {
   }
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
-  qInfo() << "Backend::initialize() - Complete!";
+qInfo() << "Backend::initialize() - Complete!";
   return true;
 }
 
@@ -359,6 +409,18 @@ void Backend::begin_frame() {
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  // The widget hosting us paints its overlays with QPainter on this same GL
+  // context, and Qt's paint engine leaves its own clipping and binding state
+  // behind.  Depth and blend were already re-asserted here; scissor, stencil,
+  // colour mask and the current bindings must be too, or the next frame renders
+  // through whatever clip rectangle the last text draw happened to set.
+  glDisable(GL_SCISSOR_TEST);
+  glDisable(GL_STENCIL_TEST);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glBindVertexArray(0);
+  glUseProgram(0);
+  glActiveTexture(GL_TEXTURE0);
+
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glDepthMask(GL_TRUE);
@@ -386,6 +448,359 @@ void Backend::set_clear_color(float r, float g, float b, float a) {
   m_clear_color[alpha] = a;
 }
 
+void Backend::release_directional_shadow_resources() {
+  if (m_directional_shadow_texture != 0) {
+    glDeleteTextures(1, &m_directional_shadow_texture);
+    m_directional_shadow_texture = 0;
+  }
+  if (m_directional_shadow_fbo != 0) {
+    glDeleteFramebuffers(1, &m_directional_shadow_fbo);
+    m_directional_shadow_fbo = 0;
+  }
+  m_directional_shadow_resolution = 0;
+  m_directional_shadow_cascades = 0;
+}
+
+void Backend::ensure_directional_shadow_resources(int resolution, int cascades) {
+  resolution = std::clamp(resolution, 512, 4096);
+  cascades = std::clamp(cascades, 1, 4);
+  if (m_directional_shadow_texture != 0 &&
+      m_directional_shadow_resolution == resolution &&
+      m_directional_shadow_cascades == cascades) {
+    return;
+  }
+
+  release_directional_shadow_resources();
+  glGenTextures(1, &m_directional_shadow_texture);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
+  glTexImage3D(GL_TEXTURE_2D_ARRAY,
+               0,
+               GL_DEPTH_COMPONENT24,
+               resolution,
+               resolution,
+               cascades,
+               0,
+               GL_DEPTH_COMPONENT,
+               GL_FLOAT,
+               nullptr);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};
+  glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+  glGenFramebuffers(1, &m_directional_shadow_fbo);
+  m_directional_shadow_resolution = resolution;
+  m_directional_shadow_cascades = cascades;
+}
+
+void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& cam) {
+  const auto& settings = Render::GraphicsSettings::instance().directional_shadows();
+  const bool enabled = settings.enabled &&
+                       m_environment_lighting.shadow_strength > 0.0F &&
+                       m_directional_shadow_depth_shader != nullptr &&
+                       m_directional_shadow_rigged_shader != nullptr;
+
+  std::array<float, 80> packed{};
+  if (!enabled) {
+    packed[68] = 0.0F;
+    if (m_directional_shadow_ubo != 0) {
+      glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+      glBufferSubData(
+          GL_UNIFORM_BUFFER, 0, sizeof(float) * packed.size(), packed.data());
+      glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    return;
+  }
+
+  const int cascade_count = std::clamp(settings.cascade_count, 1, 4);
+  ensure_directional_shadow_resources(settings.resolution, cascade_count);
+  if (m_directional_shadow_fbo == 0 || m_directional_shadow_texture == 0) {
+    return;
+  }
+  // Scatter casters reuse their production alpha-test shaders.  Disable shadow
+  // sampling while the depth array is attached so those shaders cannot read
+  // from the texture currently being written.
+  if (m_directional_shadow_ubo != 0) {
+    const std::array<float, 80> disabled_shadow_sampling{};
+    glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    0,
+                    sizeof(float) * disabled_shadow_sampling.size(),
+                    disabled_shadow_sampling.data());
+    glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  }
+
+  const float near_distance = std::max(cam.get_near(), 0.05F);
+  const float far_distance =
+      std::max(near_distance + 1.0F, std::min(settings.distance, cam.get_far()));
+  constexpr float split_lambda = 0.68F;
+  for (int cascade = 0; cascade < cascade_count; ++cascade) {
+    const float p = static_cast<float>(cascade + 1) / static_cast<float>(cascade_count);
+    const float logarithmic = near_distance * std::pow(far_distance / near_distance, p);
+    const float uniform = near_distance + (far_distance - near_distance) * p;
+    m_directional_shadow_splits[cascade] =
+        logarithmic * split_lambda + uniform * (1.0F - split_lambda);
+  }
+  for (int cascade = cascade_count; cascade < 4; ++cascade) {
+    m_directional_shadow_splits[cascade] = far_distance;
+  }
+
+  bool invertible = false;
+  const QMatrix4x4 inverse_view_projection =
+      cam.get_view_projection_matrix().inverted(&invertible);
+  if (!invertible) {
+    return;
+  }
+  std::array<QVector3D, 4> full_near{};
+  std::array<QVector3D, 4> full_far{};
+  int corner = 0;
+  for (int y : {-1, 1}) {
+    for (int x : {-1, 1}) {
+      const QVector4D near_h = inverse_view_projection * QVector4D(x, y, -1.0F, 1.0F);
+      const QVector4D far_h = inverse_view_projection * QVector4D(x, y, 1.0F, 1.0F);
+      full_near[corner] = near_h.toVector3DAffine();
+      full_far[corner] = far_h.toVector3DAffine();
+      ++corner;
+    }
+  }
+
+  QVector3D light_direction = m_environment_lighting.primary_direction.normalized();
+  const QVector3D light_up =
+      std::abs(QVector3D::dotProduct(light_direction, QVector3D(0, 1, 0))) > 0.96F
+          ? QVector3D(0, 0, 1)
+          : QVector3D(0, 1, 0);
+  const QVector3D light_right =
+      QVector3D::crossProduct(light_up, light_direction).normalized();
+  const QVector3D stable_up =
+      QVector3D::crossProduct(light_direction, light_right).normalized();
+
+  GLint previous_fbo = 0;
+  GLint previous_viewport[4]{};
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
+  glGetIntegerv(GL_VIEWPORT, previous_viewport);
+  const GLboolean previous_blend = glIsEnabled(GL_BLEND);
+  const GLboolean previous_cull = glIsEnabled(GL_CULL_FACE);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_directional_shadow_fbo);
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  glViewport(0, 0, m_directional_shadow_resolution, m_directional_shadow_resolution);
+  glDisable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_FRONT);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(2.0F, 4.0F);
+
+  const auto render_static_mesh = [&](Mesh* mesh,
+                                      const QMatrix4x4& model,
+                                      const QMatrix4x4& light_vp,
+                                      float cascade_distance) {
+    if (mesh == nullptr) {
+      return;
+    }
+    const QVector3D world_center = model.map(mesh->bounds_center());
+    const float scale = std::max({model.column(0).toVector3D().length(),
+                                  model.column(1).toVector3D().length(),
+                                  model.column(2).toVector3D().length()});
+    const float world_radius = mesh->bounds_radius() * scale;
+    if ((world_center - cam.get_position()).length() >
+        cascade_distance + world_radius) {
+      return;
+    }
+    m_directional_shadow_depth_shader->use();
+    m_directional_shadow_depth_shader->set_uniform("u_light_vp", light_vp);
+    m_directional_shadow_depth_shader->set_uniform("u_model", model);
+    mesh->draw();
+  };
+
+  // Classify casters once; every cascade replays the same set with a different
+  // light matrix, so repeating the queue walk and variant dispatch per cascade
+  // was pure duplicate work.
+  m_shadow_static_casters.clear();
+  m_shadow_rigged_casters.clear();
+  for (const auto& item : queue.items()) {
+    if (const auto* mesh = std::get_if<MeshCmd>(&item)) {
+      if (mesh->alpha >= k_opaque_threshold && mesh->shader != m_shadow_shader) {
+        m_shadow_static_casters.push_back({mesh->mesh, &mesh->model});
+      }
+    } else if (const auto* part = std::get_if<DrawPartCmd>(&item)) {
+      if (part->alpha >= k_opaque_threshold) {
+        m_shadow_static_casters.push_back({part->mesh, &part->world});
+      }
+    } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
+      m_shadow_static_casters.push_back({terrain->mesh, &terrain->model});
+    } else if (const auto* rigged = std::get_if<RiggedCreatureCmd>(&item)) {
+      if (rigged->mesh != nullptr && rigged->alpha >= k_opaque_threshold &&
+          rigged->palette_ubo != 0) {
+        m_shadow_rigged_casters.push_back(rigged);
+      }
+    }
+  }
+
+  float cascade_near = near_distance;
+  for (int cascade = 0; cascade < cascade_count; ++cascade) {
+    const float cascade_far = m_directional_shadow_splits[cascade];
+    const float near_ratio =
+        (cascade_near - near_distance) / (far_distance - near_distance);
+    const float far_ratio =
+        (cascade_far - near_distance) / (far_distance - near_distance);
+    std::array<QVector3D, 8> corners{};
+    QVector3D center;
+    for (int i = 0; i < 4; ++i) {
+      const QVector3D ray = full_far[i] - full_near[i];
+      corners[i] = full_near[i] + ray * near_ratio;
+      corners[i + 4] = full_near[i] + ray * far_ratio;
+      center += corners[i] + corners[i + 4];
+    }
+    center /= 8.0F;
+    float radius = 1.0F;
+    for (const QVector3D& value : corners) {
+      radius = std::max(radius, (value - center).length());
+    }
+    radius = std::ceil(radius * 16.0F) / 16.0F;
+    const float world_texel =
+        (radius * 2.0F) / static_cast<float>(m_directional_shadow_resolution);
+    center -= light_right *
+              std::fmod(QVector3D::dotProduct(center, light_right), world_texel);
+    center -=
+        stable_up * std::fmod(QVector3D::dotProduct(center, stable_up), world_texel);
+
+    QMatrix4x4 light_view;
+    light_view.lookAt(center + light_direction * (radius * 2.5F), center, stable_up);
+    QMatrix4x4 light_projection;
+    light_projection.ortho(-radius, radius, -radius, radius, 0.1F, radius * 6.0F);
+    const QMatrix4x4 light_vp = light_projection * light_view;
+    m_directional_shadow_matrices[cascade] = light_vp;
+
+    glFramebufferTextureLayer(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_directional_shadow_texture, 0, cascade);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    for (const auto& caster : m_shadow_static_casters) {
+      render_static_mesh(caster.mesh, *caster.model, light_vp, cascade_far);
+    }
+
+    for (const auto* rigged : m_shadow_rigged_casters) {
+      if ((rigged->world.column(3).toVector3D() - cam.get_position()).length() >
+          cascade_far + 8.0F) {
+        continue;
+      }
+      glBindBufferRange(GL_UNIFORM_BUFFER,
+                        k_bone_palette_binding_point,
+                        rigged->palette_ubo,
+                        static_cast<GLintptr>(rigged->palette_offset),
+                        static_cast<GLsizeiptr>(64U * sizeof(QMatrix4x4)));
+      m_directional_shadow_rigged_shader->use();
+      m_directional_shadow_rigged_shader->set_uniform("u_light_vp", light_vp);
+      m_directional_shadow_rigged_shader->set_uniform("u_model", rigged->world);
+      m_directional_shadow_rigged_shader->set_uniform("u_variation_scale",
+                                                      rigged->variation_scale);
+      rigged->mesh->draw();
+    }
+
+    // Replay alpha-tested and instanced world scatter with the light camera.
+    // Reusing the production vertex/fragment programs preserves wind deformation
+    // and vegetation cut-outs in the depth map instead of casting solid quads.
+    bool shadow_polygon_offset_enabled = true;
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    std::size_t shadow_debug_batches = 0;
+    std::size_t shadow_debug_cmds = 0;
+    std::size_t shadow_debug_attempts = 0;
+    std::size_t shadow_debug_successes = 0;
+    std::size_t shadow_debug_failures = 0;
+    std::size_t shadow_debug_single_draws = 0;
+#endif
+    CommandExecutionContext shadow_context{queue,
+                                           cam,
+                                           light_view,
+                                           light_projection,
+                                           light_vp,
+                                           0.0F,
+                                           shadow_polygon_offset_enabled,
+                                           false
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+                                           ,
+                                           shadow_debug_batches,
+                                           shadow_debug_cmds,
+                                           shadow_debug_attempts,
+                                           shadow_debug_successes,
+                                           shadow_debug_failures,
+                                           shadow_debug_single_draws
+#endif
+    };
+    m_last_bound_shader = nullptr;
+    m_last_bound_texture = nullptr;
+    for (const PreparedBatch& prepared : queue.prepared_batches()) {
+      if (prepared.count == 0) {
+        continue;
+      }
+      const auto* scatter =
+          std::get_if<TerrainScatterCmd>(&queue.get_sorted(prepared.start));
+      if (scatter == nullptr ||
+          scatter->species == TerrainScatterCmd::Species::FireCamp ||
+          scatter->species == TerrainScatterCmd::Species::Stone) {
+        continue;
+      }
+      execute_scatter_commands(prepared, shadow_context);
+    }
+    cascade_near = cascade_far;
+  }
+
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  glCullFace(GL_BACK);
+  if (previous_cull == 0U) {
+    glDisable(GL_CULL_FACE);
+  }
+  if (previous_blend != 0U) {
+    glEnable(GL_BLEND);
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(previous_fbo));
+  glViewport(previous_viewport[0],
+             previous_viewport[1],
+             previous_viewport[2],
+             previous_viewport[3]);
+
+  for (int cascade = 0; cascade < 4; ++cascade) {
+    std::copy_n(m_directional_shadow_matrices[cascade].constData(),
+                16,
+                packed.data() + cascade * 16);
+    packed[64 + cascade] = m_directional_shadow_splits[cascade];
+  }
+  packed[68] = 1.0F;
+  packed[69] = static_cast<float>(cascade_count);
+  packed[70] = 1.0F / static_cast<float>(m_directional_shadow_resolution);
+  const int weather_softening = m_environment_lighting.shadow_softness > 0.65F ? 1 : 0;
+  packed[71] =
+      static_cast<float>(std::clamp(settings.pcf_radius + weather_softening, 1, 3));
+  // Camera position occupies an additional vec4 immediately after the 72-float
+  // payload; upload it separately to keep the matrix/split storage obvious.
+  std::array<float, 80> complete{};
+  std::copy(packed.begin(), packed.end(), complete.begin());
+  complete[72] = cam.get_position().x();
+  complete[73] = cam.get_position().y();
+  complete[74] = cam.get_position().z();
+  complete[75] = 1.0F;
+  complete[76] = settings.depth_bias;
+  complete[77] = settings.normal_bias;
+  complete[78] = settings.cascade_blend;
+  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+  glBufferData(
+      GL_UNIFORM_BUFFER, sizeof(float) * complete.size(), nullptr, GL_DYNAMIC_DRAW);
+  glBufferSubData(
+      GL_UNIFORM_BUFFER, 0, sizeof(float) * complete.size(), complete.data());
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
+  glActiveTexture(GL_TEXTURE0);
+}
+
 void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   m_frame_tracker.begin_frame();
 
@@ -401,8 +816,73 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   if (m_frame_ubo != 0) {
     glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
+    // Re-assert the binding every frame rather than relying on the one made at
+    // startup: anything that binds over point 0 would otherwise poison every
+    // FrameData reader for the rest of the session.
+    glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
+  if (m_environment_lighting_ubo != 0) {
+    const auto packed = m_environment_lighting.packed_std140();
+    glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    0,
+                    static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
+                    packed.data());
+    glBindBufferBase(GL_UNIFORM_BUFFER, k_environment_lighting_binding_point, m_environment_lighting_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  }
+  if (m_local_lighting_ubo != 0) {
+    std::vector<Render::LocalLight> candidates;
+    for (const auto& item : queue.items()) {
+      const auto* effect = std::get_if<EffectBatchCmd>(&item);
+      if (effect == nullptr) {
+        continue;
+      }
+      if (effect->kind != EffectBatchCmd::Kind::BuildingFlame &&
+          effect->kind != EffectBatchCmd::Kind::BurningFlame &&
+          effect->kind != EffectBatchCmd::Kind::Fireball) {
+        continue;
+      }
+      Render::LocalLight light;
+      light.position = effect->position + QVector3D(0.0F, 0.8F, 0.0F);
+      light.color =
+          effect->color.isNull() ? QVector3D(1.0F, 0.48F, 0.16F) : effect->color;
+      light.radius = std::clamp(effect->radius * 5.0F, 3.0F, 12.0F);
+      light.intensity = std::clamp(effect->intensity, 0.0F, 2.5F);
+      candidates.push_back(light);
+    }
+    const auto& submitted_lights = queue.local_lights();
+    candidates.insert(candidates.end(), submitted_lights.begin(), submitted_lights.end());
+    const auto selected = Render::select_local_lights(candidates, cam.get_position());
+    std::array<float, (Render::k_max_local_lights * 8) + 4> packed{};
+    std::size_t active_count = 0;
+    for (std::size_t i = 0; i < selected.size(); ++i) {
+      const auto& light = selected[i];
+      if (light.intensity <= 0.0F || light.radius <= 0.0F) {
+        continue;
+      }
+      packed[(i * 4) + 0] = light.position.x();
+      packed[(i * 4) + 1] = light.position.y();
+      packed[(i * 4) + 2] = light.position.z();
+      packed[(i * 4) + 3] = light.radius;
+      const std::size_t color_offset = (Render::k_max_local_lights * 4) + (i * 4);
+      packed[color_offset + 0] = light.color.x();
+      packed[color_offset + 1] = light.color.y();
+      packed[color_offset + 2] = light.color.z();
+      packed[color_offset + 3] = light.intensity;
+      ++active_count;
+    }
+    packed[Render::k_max_local_lights * 8] = static_cast<float>(active_count);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    0,
+                    static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
+                    packed.data());
+    glBindBufferBase(GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  }
+  render_directional_shadows(queue, cam);
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 
   m_last_bound_shader = nullptr;
@@ -447,12 +927,174 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                                   debug_rigged_single_draws
 #endif
   };
+  // Submission census.  When world geometry vanishes at runtime the first thing
+  // to establish is whether the commands stopped being *submitted* (a culling or
+  // visibility problem in the scene walk) or are still submitted but produce
+  // nothing (a GL state or instancing problem at playback).  Enable with
+  // SOI_RENDER_DEBUG_SUBMISSION=1; it prints one line a second, and a count that
+  // drops to zero names the stage that lost the geometry.
+  if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
+    static std::chrono::steady_clock::time_point last_report{};
+    const auto now = std::chrono::steady_clock::now();
+    if (now - last_report >= std::chrono::seconds(1)) {
+      last_report = now;
+      std::array<std::size_t, 16> per_type{};
+      std::size_t scatter_instances = 0;
+      std::size_t rig_gpu_palette = 0;
+      std::size_t rig_cpu_palette = 0;
+      std::size_t rig_no_palette = 0;
+      std::size_t rig_zero_bones = 0;
+      std::size_t rig_zero_scale = 0;
+      std::size_t rig_low_alpha = 0;
+      std::size_t rig_no_mesh = 0;
+      std::size_t rig_empty_mesh = 0;
+      float rig_pos_min_y = std::numeric_limits<float>::max();
+      float rig_pos_max_y = std::numeric_limits<float>::lowest();
+      QVector3D rig_centroid;
+      std::size_t rig_pos_count = 0;
+      std::size_t rig_nonfinite_pos = 0;
+      std::size_t rig_degenerate_world = 0;
+      for (const auto& item : queue.items()) {
+        const std::size_t type = item.index();
+        if (type < per_type.size()) {
+          ++per_type[type];
+        }
+        if (const auto* scatter = std::get_if<TerrainScatterCmd>(&item)) {
+          scatter_instances += scatter->instance_count;
+        }
+        if (const auto* rig = std::get_if<RiggedCreatureCmd>(&item)) {
+          // A command with neither palette source draws with an identity
+          // palette, which collapses the mesh onto the origin: issued, counted
+          // as drawn, and invisible.  Zero bones or a zero variation scale do
+          // the same thing by other means.
+          if (rig->bone_palette == nullptr) {
+            ++rig_no_palette;
+            if (rig->palette_ubo != 0U) {
+              ++rig_gpu_palette;
+            }
+          } else {
+            ++rig_cpu_palette;
+          }
+          if (rig->bone_count == 0U) {
+            ++rig_zero_bones;
+          }
+          if (rig->variation_scale.lengthSquared() < 1.0e-6F) {
+            ++rig_zero_scale;
+          }
+          if (rig->alpha < 0.01F) {
+            ++rig_low_alpha;
+          }
+          if (rig->mesh == nullptr) {
+            ++rig_no_mesh;
+          } else if (rig->mesh->index_count() == 0U) {
+            // An empty mesh issues a draw that renders nothing: the soldier is
+            // counted as drawn and is invisible.
+            ++rig_empty_mesh;
+          }
+          {
+            // Last unexamined field: where the soldier is actually drawn.  Every
+            // other command field is constant while soldiers blink, so a bad
+            // world transform is what is left -- a soldier placed under the
+            // terrain or outside the frustum draws and is counted, and is not
+            // visible.
+            const QVector3D t = rig->world.column(3).toVector3D();
+            rig_pos_min_y = std::min(rig_pos_min_y, t.y());
+            rig_pos_max_y = std::max(rig_pos_max_y, t.y());
+            rig_centroid += t;
+            ++rig_pos_count;
+            if (!std::isfinite(t.x()) || !std::isfinite(t.y()) ||
+                !std::isfinite(t.z())) {
+              ++rig_nonfinite_pos;
+            }
+            const float scale_x = rig->world.column(0).toVector3D().length();
+            if (scale_x < 1.0e-4F) {
+              ++rig_degenerate_world;
+            }
+          }
+        }
+      }
+      // The scatter and mesh executors bail silently when their pipeline
+      // resources are gone (a zero VAO or a null shader just `break`s), which
+      // looks identical to "submitted but invisible".  Report their health so a
+      // disappearance can be attributed to lost GL objects rather than culling.
+      GLuint stone_vao = 0;
+      GLuint tent_vao = 0;
+      bool stone_shader = false;
+      bool tent_shader = false;
+      if (m_vegetation_pipeline) {
+        stone_vao = m_vegetation_pipeline->m_stone_vao;
+        tent_vao = m_vegetation_pipeline->m_tent_vao;
+        stone_shader = m_vegetation_pipeline->stone_shader() != nullptr;
+        tent_shader = m_vegetation_pipeline->tent_shader() != nullptr;
+      }
+      const bool context_current = QOpenGLContext::currentContext() != nullptr;
+
+      qInfo().noquote()
+          << QStringLiteral(
+                 "SOI submission: batches=%1 scatter_cmds=%2 scatter_instances=%3 "
+                 "mesh=%4 draw_part=%5 terrain_surface=%6 rigged=%7 | "
+                 "stone_vao=%8 tent_vao=%9 stone_sh=%10 tent_sh=%11 "
+                 "mesh_pipe=%12 ctx=%13 gl_err=%14")
+                 .arg(prepared_batches.size())
+                 .arg(per_type[TerrainScatterCmdIndex])
+                 .arg(scatter_instances)
+                 .arg(per_type[MeshCmdIndex])
+                 .arg(per_type[DrawPartCmdIndex])
+                 .arg(per_type[TerrainSurfaceCmdIndex])
+                 .arg(per_type[RiggedCreatureCmdIndex])
+                 .arg(stone_vao)
+                 .arg(tent_vao)
+                 .arg(stone_shader ? 1 : 0)
+                 .arg(tent_shader ? 1 : 0)
+                 .arg(m_mesh_instancing_pipeline ? 1 : 0)
+                 .arg(context_current ? 1 : 0)
+                 .arg(glGetError());
+      if (rig_pos_count > 0) {
+        const QVector3D c = rig_centroid / static_cast<float>(rig_pos_count);
+        qInfo().noquote()
+            << QStringLiteral("SOI rigged world: n=%1 y=[%2 .. %3] centroid=(%4 %5 %6)"
+                              " nonfinite=%7 degenerate=%8")
+                   .arg(rig_pos_count)
+                   .arg(static_cast<double>(rig_pos_min_y), 0, 'f', 3)
+                   .arg(static_cast<double>(rig_pos_max_y), 0, 'f', 3)
+                   .arg(static_cast<double>(c.x()), 0, 'f', 2)
+                   .arg(static_cast<double>(c.y()), 0, 'f', 2)
+                   .arg(static_cast<double>(c.z()), 0, 'f', 2)
+                   .arg(rig_nonfinite_pos)
+                   .arg(rig_degenerate_world);
+      }
+      if (per_type[RiggedCreatureCmdIndex] > 0) {
+        qInfo().noquote()
+            << QStringLiteral("SOI rigged detail: gpu_palette=%1 cpu_palette=%2 "
+                              "no_cpu_palette=%3 (arena=%8) zero_bones=%4 zero_scale=%5 "
+                              "low_alpha=%6 no_mesh=%7 EMPTY_MESH=%9")
+                   .arg(rig_gpu_palette)
+                   .arg(rig_cpu_palette)
+                   .arg(rig_no_palette)
+                   .arg(rig_zero_bones)
+                   .arg(rig_zero_scale)
+                   .arg(rig_low_alpha)
+                   .arg(rig_no_mesh)
+                   .arg(rig_gpu_palette)
+                   .arg(rig_empty_mesh);
+      }
+    }
+  }
+
+  // Counted every frame, not just on the reporting tick: a soldier that drops
+  // out for a single frame is invisible to a once-a-second sample.
+  std::size_t frame_rigged_commands = 0;
+  m_rigged_drawn_this_frame = 0;
+
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const std::size_t batch_end = prepared.end();
     const auto& cmd = queue.get_sorted(i);
+    if (cmd.index() == RiggedCreatureCmdIndex) {
+      frame_rigged_commands += prepared.count;
+    }
     switch (cmd.index()) {
     case CylinderCmdIndex:
     case FogBatchCmdIndex:
@@ -539,6 +1181,51 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   if (m_last_bound_shader != nullptr) {
     m_last_bound_shader->release();
     m_last_bound_shader = nullptr;
+  }
+
+  if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
+    static std::size_t rigged_min = std::numeric_limits<std::size_t>::max();
+    static std::size_t rigged_max = 0;
+    static std::chrono::steady_clock::time_point last_rigged_report{};
+    static std::size_t rigged_prev = 0;
+    static std::size_t rigged_recoveries = 0;
+    // A drop can just be a death.  A count going back *up* without a spawn means
+    // a soldier that stopped being submitted started again -- that is flicker,
+    // and it is what distinguishes this from ordinary attrition.
+    if (frame_rigged_commands > rigged_prev && rigged_prev != 0) {
+      ++rigged_recoveries;
+    }
+    rigged_prev = frame_rigged_commands;
+    rigged_min = std::min(rigged_min, frame_rigged_commands);
+    rigged_max = std::max(rigged_max, frame_rigged_commands);
+    const auto now = std::chrono::steady_clock::now();
+    if (now - last_rigged_report >= std::chrono::seconds(1)) {
+      last_rigged_report = now;
+      // min != max means the scene walk itself dropped soldiers on some frames,
+      // so the flicker is a submission problem.  Equal values mean every soldier
+      // was submitted every frame and the loss is downstream at playback.
+      qInfo().noquote()
+          << QStringLiteral(
+                 "SOI rigged/frame: min=%1 max=%2 last=%3 drawn=%5 %4"
+                 "%6")
+                 .arg(rigged_min == std::numeric_limits<std::size_t>::max()
+                          ? 0
+                          : rigged_min)
+                 .arg(rigged_max)
+                 .arg(frame_rigged_commands)
+                 .arg(rigged_recoveries > 0
+                          ? QStringLiteral("<-- FLICKER: %1 soldier(s) came back")
+                                .arg(rigged_recoveries)
+                          : (rigged_min != rigged_max ? QStringLiteral("(attrition)")
+                                                      : QStringLiteral("(stable)")))
+                 .arg(m_rigged_drawn_this_frame)
+                 .arg(m_rigged_drawn_this_frame < frame_rigged_commands
+                          ? QStringLiteral(" <-- LOST AT PLAYBACK")
+                          : QString());
+      rigged_recoveries = 0;
+      rigged_min = std::numeric_limits<std::size_t>::max();
+      rigged_max = 0;
+    }
   }
 
   m_frame_tracker.mark_complete();

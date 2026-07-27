@@ -10,7 +10,7 @@
 #include <string_view>
 
 #include "../static_attachment_spec.h"
-#include "pipeline/bpat_playback.h"
+#include "animation/bpat/bpat_playback.h"
 #include "pipeline/unit_visual_spec.h"
 #include "render_request.h"
 

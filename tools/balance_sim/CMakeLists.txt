@@ -5,7 +5,7 @@ add_library(balance_sim_harness STATIC balance_fixture.cpp battle_simulation.cpp
 target_include_directories(balance_sim_harness PUBLIC "${CMAKE_SOURCE_DIR}")
 target_link_libraries(
     balance_sim_harness
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core engine_core render_gl game_systems
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core engine_core game_systems
 )
 
 add_executable(balance_sim main.cpp)

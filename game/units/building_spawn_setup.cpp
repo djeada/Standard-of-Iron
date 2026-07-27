@@ -3,7 +3,7 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../visuals/team_colors.h"
-#include "render/entity/building_render_common.h"
+#include "../visuals/building_asset_key.h"
 
 namespace Game::Units {
 
@@ -19,7 +19,7 @@ auto add_building_renderable(Engine::Core::Entity& entity,
 
   renderable->visible = true;
   renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-  renderable->renderer_id = Render::GL::building_renderer_key(nation_id, building_type);
+  renderable->renderer_id = Game::Visuals::building_asset_key(nation_id, building_type);
 
   QVector3D const team_color = Game::Visuals::team_colorForOwner(owner_id);
   renderable->color[0] = team_color.x();

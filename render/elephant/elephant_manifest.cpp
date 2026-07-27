@@ -10,7 +10,7 @@
 #include <span>
 #include <vector>
 
-#include "../creature/bpat/bpat_format.h"
+#include "animation/bpat/bpat_format.h"
 #include "../creature/quadruped/skeleton_factory.h"
 #include "../gl/primitives.h"
 #include "dimensions.h"

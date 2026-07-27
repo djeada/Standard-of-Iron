@@ -1,4 +1,7 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 out vec4 frag_color;
 
@@ -30,7 +33,6 @@ uniform float u_rock_exposure;
 uniform float u_snow_coverage;
 uniform float u_ambient_boost;
 uniform vec3 u_camera_pos;
-uniform vec3 u_light_dir;
 
 uniform vec3 u_fog_color;
 uniform float u_fog_start;
@@ -328,7 +330,7 @@ void main() {
       (0.42 * (0.35 + grain) + pebbles * 0.55 + cobble * 0.25) * relief_fade;
   vec3 normal = procedural_detail_normal(base_normal, world_uv * 2.8, relief_strength);
 
-  vec3 light_dir = safe_normalize(u_light_dir, vec3(0.0, 1.0, 0.0));
+  vec3 light_dir = environment_primary_direction();
 
   vec3 view_dir = safe_normalize(u_camera_pos - world_pos, normal);
 
@@ -337,14 +339,12 @@ void main() {
   float ambient_occlusion = mix(0.82, 1.0, smoothstep(0.0, 0.38, shore_t));
   ambient_occlusion *= 1.0 - (1.0 - relief_fade) * pebbles * 0.30;
 
-  vec3 sky_light = vec3(0.88, 0.94, 1.06);
-  vec3 bounce_light = vec3(1.14, 0.98, 0.76);
-  vec3 sun_light = vec3(1.10, 1.00, 0.86);
-  float sky_access = 0.5 + 0.5 * normal.y;
-  vec3 ambient_term =
-      0.40 * ambient_occlusion * mix(bounce_light, sky_light, sky_access);
+  vec3 sun_light =
+      environment_primary_color() * environment_primary_intensity();
+  vec3 ambient_term = ambient_occlusion * environment_ambient_light(normal);
 
-  float exposure = u_ambient_boost > 0.001 ? u_ambient_boost : 1.0;
+  float exposure = environment_exposure() *
+                   (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
   vec3 color = earth * (ambient_term + sun_light * ndl * 0.70) * exposure;
 
   vec3 half_dir = safe_normalize(light_dir + view_dir, normal);
@@ -372,8 +372,9 @@ void main() {
   float safe_fog_end = max(u_fog_start + 0.001, u_fog_end);
 
   float fog_amount = smoothstep(u_fog_start, safe_fog_end, view_distance);
-
-  color = mix(color, u_fog_color, fog_amount);
+  fog_amount =
+      max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  color = mix(color, environment_fog_color(), fog_amount);
 
   float core_alpha =
       (1.0 -
@@ -389,5 +390,7 @@ void main() {
   float edge_fade = saturate(
       max(core_alpha, max(broken_transition, max(pebble_islands, grass_islands))));
 
+  color += color * local_lighting(world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, world_pos, v_normal);
   frag_color = vec4(saturate(color), segment_visibility * edge_fade);
 }

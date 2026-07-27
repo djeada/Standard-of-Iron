@@ -37,8 +37,7 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/unit.h"
-#include "render/creature/bpat/bpat_registry.h"
-#include "render/creature/snapshot_mesh_registry.h"
+#include "animation/bpat/bpat_registry.h"
 
 namespace Balance {
 
@@ -72,9 +71,10 @@ void load_creature_pose_assets() {
     if (!fs::exists(root / "humanoid.bpat", error)) {
       continue;
     }
+    // Only the baked pose data is needed: melee traces sample BPAT sockets.
+    // Snapshot meshes are a rendering concern, so this headless simulator does
+    // not load them and does not link the renderer.
     Render::Creature::Bpat::BpatRegistry::instance().load_all(root.string());
-    Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
-        root.string());
     return;
   }
   qWarning("balance_sim: creature pose assets not found; melee traces will miss");

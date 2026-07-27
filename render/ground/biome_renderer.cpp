@@ -20,11 +20,11 @@
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/resources.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
-#include "spawn_validator.h"
+#include "game/map/scatter/spawn_validator.h"
 
 namespace {
 

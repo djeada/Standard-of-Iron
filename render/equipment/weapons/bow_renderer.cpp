@@ -18,7 +18,7 @@
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "../../humanoid/skeleton.h"
 #include "../../static_attachment_spec.h"
 #include "../attachment_builder.h"

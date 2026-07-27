@@ -1,14 +1,16 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_normal;
+in vec3 v_world_pos;
 in vec3 v_color;
 in vec2 v_tex_coord;
 in float v_foliage_mask;
 in float v_needle_seed;
 in float v_bark_seed;
 in vec3 v_local_pos;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -22,16 +24,17 @@ float hash(vec2 p) {
 void main() {
 
   vec3 n = normalize(v_normal);
-  vec3 l = normalize(u_light_direction);
+  vec3 l = environment_primary_direction();
   float diffuse = max(dot(n, l), 0.0);
   float wrap = clamp((dot(n, l) + 0.35) / 1.35, 0.0, 1.0);
   float backlight = max(dot(-n, l), 0.0);
-  float ambient = mix(0.20, 0.27, v_foliage_mask);
+  float ambient = environment_ambient_intensity();
   float sky_fill = smoothstep(-0.2, 0.8, n.y) * mix(0.05, 0.11, v_foliage_mask);
   float lighting = ambient + wrap * mix(0.28, 0.44, v_foliage_mask) + sky_fill;
 
-  vec3 sun_color = vec3(0.94, 0.84, 0.70);
-  vec3 sky_color = vec3(0.48, 0.57, 0.68);
+  vec3 sun_color =
+      environment_primary_color() * environment_primary_intensity();
+  vec3 sky_color = environment_sky_color();
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.55, sun_color, lit_t);
 
@@ -70,7 +73,8 @@ void main() {
   trunk_color = mix(trunk_color, vec3(0.18, 0.23, 0.16), trunk_moss * 0.48);
 
   vec3 base_color = mix(trunk_color, needle_color, v_foliage_mask);
-  vec3 color = base_color * lighting * light_tint;
+  vec3 color =
+      base_color * lighting * light_tint * environment_exposure();
   float translucency =
       backlight * backlight * (0.12 + tip_blend * 0.16) * v_foliage_mask;
   color += needle_color * vec3(0.15, 0.19, 0.10) * translucency;
@@ -82,5 +86,7 @@ void main() {
   if (v_tex_coord.y < 0.028)
     discard;
 
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

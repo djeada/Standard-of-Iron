@@ -85,11 +85,17 @@ public slots:
   void set_rain_enabled(bool enabled);
   void set_rain_intensity(float intensity);
   void set_time_of_day(Game::Map::TimeOfDay time_of_day);
+  void set_environment_time(float hour);
+  void set_lighting_profile(const QString& profile);
+  void set_time_mode(const QString& mode);
+  void set_day_length(float seconds);
+  void set_shadow_quality(const QString& quality);
 
   [[nodiscard]] auto time_of_day() const noexcept -> Game::Map::TimeOfDay {
     return m_time_of_day;
   }
   [[nodiscard]] auto lighting_summary() const -> QString;
+  [[nodiscard]] auto active_lighting() const -> Game::Map::EnvironmentLightingState;
 
   void set_spawn_owner(int owner_id);
   void set_spawn_nation(const QString& nation_id);
@@ -117,6 +123,12 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void load_scenario(const QString& scenario_id);
+  // Adopts a map's authored environment (time, mode, day length, profile) so a
+  // preview is lit exactly as the campaign mission will be.
+  void apply_environment_definition(const Game::Map::EnvironmentDefinition& environment);
+
+  [[nodiscard]] auto environment_snapshot() const -> Arena::ArenaEnvironmentSnapshot;
+
   void set_terrain_review_content_enabled(bool enabled);
 
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
@@ -265,6 +277,13 @@ private:
   TerrainSettings m_terrain_settings;
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
+  float m_environment_hour = 13.0F;
+  QString m_lighting_profile = QStringLiteral("mediterranean_summer");
+  Game::Map::EnvironmentDefinition m_environment_definition;
+  Game::Map::EnvironmentClock m_environment_clock;
+  bool m_rain_enabled = false;
+  float m_rain_intensity = 0.5F;
+  Game::Map::WeatherLightingInput m_weather_lighting{};
   QString m_animation_name = QStringLiteral("Idle");
 
   std::unique_ptr<Engine::Core::World> m_world;

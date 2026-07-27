@@ -246,6 +246,16 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Lighting preset: morning, day, afternoon, or night."),
       QStringLiteral("preset"),
       QStringLiteral("day"));
+  QCommandLineOption const environment_time_option(
+      QStringList{QStringLiteral("time")},
+      QStringLiteral("Exact decimal environment hour (0-24); overrides "
+                     "--time-of-day."),
+      QStringLiteral("hour"));
+  QCommandLineOption const lighting_profile_option(
+      QStringList{QStringLiteral("lighting-profile")},
+      QStringLiteral("Environment lighting profile."),
+      QStringLiteral("profile"),
+      QStringLiteral("mediterranean_summer"));
   QCommandLineOption const artifact_option(
       QStringList{QStringLiteral("artifact-dir")},
       QStringLiteral("Directory for reports, JSONL traces, and frame captures."),
@@ -278,6 +288,8 @@ auto main(int argc, char** argv) -> int {
                      fps_option,
                      seed_option,
                      time_of_day_option,
+                     environment_time_option,
+                     lighting_profile_option,
                      artifact_option,
                      capture_interval_option,
                      clean_capture_option,
@@ -303,6 +315,20 @@ auto main(int argc, char** argv) -> int {
         "afternoon, or night");
     return 2;
   }
+  // Map previews adopt the map's authored environment; an explicit
+  // --time-of-day still overrides it so any map can be inspected at any hour.
+  const bool time_of_day_forced = parser.isSet(time_of_day_option);
+  const auto forced_time_of_day = *parsed_time_of_day;
+  float environment_hour = Game::Map::hour_for_time_of_day(*parsed_time_of_day);
+  if (parser.isSet(environment_time_option)) {
+    bool valid_time = false;
+    environment_hour = parser.value(environment_time_option).toFloat(&valid_time);
+    if (!valid_time || environment_hour < 0.0F || environment_hour >= 24.0F) {
+      qCritical() << "Invalid --time value; expected a decimal hour in [0, 24)";
+      return 2;
+    }
+  }
+  const QString lighting_profile = parser.value(lighting_profile_option).trimmed();
 
   const bool include_map_preview_content = parser.isSet(map_preview_content_option);
   if (include_map_preview_content && !parser.isSet(terrain_map_option) &&
@@ -317,6 +343,8 @@ auto main(int argc, char** argv) -> int {
   window.resize(1600, 900);
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
+  window.viewport()->set_lighting_profile(lighting_profile);
+  window.viewport()->set_environment_time(environment_hour);
   window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
   window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
   window.viewport()->set_capture_orbit_speed(
@@ -329,14 +357,24 @@ auto main(int argc, char** argv) -> int {
     }
     if (parser.isSet(terrain_map_option)) {
       const QString map_path = parser.value(terrain_map_option).trimmed();
-      QTimer::singleShot(
-          0, window.viewport(), [viewport = window.viewport(), map_path]() {
-            QString error;
-            if (!viewport->load_terrain_review_map(map_path, &error)) {
-              qCritical().noquote()
-                  << QStringLiteral("Could not load terrain review map: %1").arg(error);
-            }
-          });
+      QTimer::singleShot(0,
+                         window.viewport(),
+                         [viewport = window.viewport(),
+                          map_path,
+                          time_of_day_forced,
+                          forced_time_of_day]() {
+                           QString error;
+                           if (!viewport->load_terrain_review_map(map_path, &error)) {
+                             qCritical().noquote()
+                                 << QStringLiteral(
+                                        "Could not load terrain review map: %1")
+                                        .arg(error);
+                             return;
+                           }
+                           if (time_of_day_forced) {
+                             viewport->set_time_of_day(forced_time_of_day);
+                           }
+                         });
     } else if (parser.isSet(scenario_option)) {
       QString const scenario_id = parser.value(scenario_option).trimmed();
       if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
@@ -424,7 +462,9 @@ auto main(int argc, char** argv) -> int {
                    capture_interval,
                    duration,
                    promo_distance_scale,
-                   promo_tilt_deg]() {
+                   promo_tilt_deg,
+                   time_of_day_forced,
+                   forced_time_of_day]() {
       if (state->next_index >= state->entries.size()) {
         qInfo().noquote() << QStringLiteral("Campaign terrain review complete: %1 "
                                             "map(s), %2 failed; artifacts: %3")
@@ -455,6 +495,9 @@ auto main(int argc, char** argv) -> int {
         ++state->failed;
         QTimer::singleShot(25, [start_next]() { (*start_next)(); });
         return;
+      }
+      if (time_of_day_forced) {
+        viewport->set_time_of_day(forced_time_of_day);
       }
       qInfo().noquote()
           << QStringLiteral("Reviewing campaign terrain: %1").arg(entry.id);
@@ -605,7 +648,8 @@ auto main(int argc, char** argv) -> int {
                  seed,
                  duration,
                  capture_interval,
-                 parsed_time_of_day]() {
+                 environment_hour,
+                 lighting_profile]() {
     if (state->next_index >= state->scenarios.size()) {
       qInfo().noquote()
           << QStringLiteral(
@@ -643,8 +687,16 @@ auto main(int argc, char** argv) -> int {
     QFile config_file(
         QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
     if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-      auto const lighting = Game::Map::lighting_for_time_of_day(*parsed_time_of_day);
       auto const* scenario = Arena::Scenarios::find_definition(id);
+      const float effective_hour =
+          scenario != nullptr ? scenario->environment.start_time : environment_hour;
+      const QString effective_profile = scenario != nullptr
+                                            ? scenario->environment.lighting_profile
+                                            : lighting_profile;
+      const auto effective_weather =
+          scenario != nullptr ? scenario->weather : Game::Map::WeatherLightingInput{};
+      const auto lighting = Game::Map::lighting_for_hour(
+          effective_hour, effective_profile, effective_weather);
       QJsonObject const config{
           {QStringLiteral("scenario"), id},
           {QStringLiteral("graphics_quality"),
@@ -652,15 +704,30 @@ auto main(int argc, char** argv) -> int {
                                : QStringLiteral("Unknown")},
           {QStringLiteral("seed"), seed},
           {QStringLiteral("time_of_day"),
-           QString::fromLatin1(Game::Map::time_of_day_name(*parsed_time_of_day))},
+           QString::fromLatin1(Game::Map::time_of_day_name(
+               Game::Map::time_of_day_for_hour(effective_hour)))},
           {QStringLiteral("representative_clock_time"),
-           QString::fromLatin1(
-               Game::Map::representative_clock_time(*parsed_time_of_day))},
-          {QStringLiteral("light_direction"),
-           QJsonArray{lighting.light_direction.x(),
-                      lighting.light_direction.y(),
-                      lighting.light_direction.z()}},
-          {QStringLiteral("ambient_strength"), lighting.ambient_strength},
+           QString::number(effective_hour, 'f', 2)},
+          {QStringLiteral("lighting_profile"), effective_profile},
+          {QStringLiteral("primary_direction"),
+           QJsonArray{lighting.primary_direction.x(),
+                      lighting.primary_direction.y(),
+                      lighting.primary_direction.z()}},
+          {QStringLiteral("primary_color"),
+           QJsonArray{lighting.primary_color.x(),
+                      lighting.primary_color.y(),
+                      lighting.primary_color.z()}},
+          {QStringLiteral("primary_intensity"), lighting.primary_intensity},
+          {QStringLiteral("sky_color"),
+           QJsonArray{
+               lighting.sky_color.x(), lighting.sky_color.y(), lighting.sky_color.z()}},
+          {QStringLiteral("ambient_intensity"), lighting.ambient_intensity},
+          {QStringLiteral("fog_density"), lighting.fog_density},
+          {QStringLiteral("shadow_strength"), lighting.shadow_strength},
+          {QStringLiteral("shadow_softness"), lighting.shadow_softness},
+          {QStringLiteral("exposure"), lighting.exposure},
+          {QStringLiteral("cloud_cover"), lighting.cloud_cover},
+          {QStringLiteral("wetness"), lighting.wetness},
           {QStringLiteral("fixed_fps"), fps},
           {QStringLiteral("duration_override"), duration},
           {QStringLiteral("capture_interval_seconds"), capture_interval},

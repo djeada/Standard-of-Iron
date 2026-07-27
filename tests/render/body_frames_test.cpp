@@ -6,7 +6,7 @@
 
 #include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 
 using namespace Render::GL;
 

@@ -58,6 +58,17 @@ struct ContactShadowBudget {
   int max_casters_per_formation;
 };
 
+struct DirectionalShadowSettings {
+  bool enabled = true;
+  int cascade_count = 3;
+  int resolution = 2048;
+  float distance = 80.0F;
+  int pcf_radius = 2;
+  float depth_bias = 0.0012F;
+  float normal_bias = 0.018F;
+  float cascade_blend = 0.12F;
+};
+
 class GraphicsSettings {
 public:
   static auto instance() noexcept -> GraphicsSettings& {
@@ -91,6 +102,10 @@ public:
   [[nodiscard]] auto
   contact_shadow_budget() const noexcept -> const ContactShadowBudget& {
     return m_contact_shadow_budget;
+  }
+  [[nodiscard]] auto
+  directional_shadows() const noexcept -> const DirectionalShadowSettings& {
+    return m_directional_shadows;
   }
 
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
@@ -200,6 +215,14 @@ private:
                            .batching_zoom_full = 0.0F};
       m_visibility_budget = {.max_full_detail_units = 150, .enabled = true};
       m_contact_shadow_budget = {.max_casters = 4, .max_casters_per_formation = 1};
+      m_directional_shadows = {.enabled = false,
+                               .cascade_count = 1,
+                               .resolution = 1024,
+                               .distance = 25.0F,
+                               .pcf_radius = 1,
+                               .depth_bias = 0.0018F,
+                               .normal_bias = 0.025F,
+                               .cascade_blend = 0.0F};
       break;
 
     case GraphicsQuality::Medium:
@@ -230,6 +253,14 @@ private:
                            .batching_zoom_full = 90.0F};
       m_visibility_budget = {.max_full_detail_units = 300, .enabled = true};
       m_contact_shadow_budget = {.max_casters = 6, .max_casters_per_formation = 2};
+      m_directional_shadows = {.enabled = true,
+                               .cascade_count = 2,
+                               .resolution = 1024,
+                               .distance = 40.0F,
+                               .pcf_radius = 1,
+                               .depth_bias = 0.0016F,
+                               .normal_bias = 0.022F,
+                               .cascade_blend = 0.08F};
       break;
 
     case GraphicsQuality::High:
@@ -259,7 +290,15 @@ private:
                            .batching_zoom_start = 80.0F,
                            .batching_zoom_full = 120.0F};
       m_visibility_budget = {.max_full_detail_units = 900, .enabled = true};
-      m_contact_shadow_budget = {.max_casters = 8, .max_casters_per_formation = 2};
+      m_contact_shadow_budget = {.max_casters = 48, .max_casters_per_formation = 8};
+      m_directional_shadows = {.enabled = true,
+                               .cascade_count = 3,
+                               .resolution = 2048,
+                               .distance = 80.0F,
+                               .pcf_radius = 2,
+                               .depth_bias = 0.0012F,
+                               .normal_bias = 0.018F,
+                               .cascade_blend = 0.12F};
       break;
 
     case GraphicsQuality::Ultra:
@@ -289,7 +328,15 @@ private:
                            .batching_zoom_start = 999999.0F,
                            .batching_zoom_full = 999999.0F};
       m_visibility_budget = {.max_full_detail_units = 5000, .enabled = false};
-      m_contact_shadow_budget = {.max_casters = 8, .max_casters_per_formation = 2};
+      m_contact_shadow_budget = {.max_casters = 100, .max_casters_per_formation = 12};
+      m_directional_shadows = {.enabled = true,
+                               .cascade_count = 4,
+                               .resolution = 4096,
+                               .distance = 200.0F,
+                               .pcf_radius = 3,
+                               .depth_bias = 0.0009F,
+                               .normal_bias = 0.014F,
+                               .cascade_blend = 0.15F};
       break;
     }
   }
@@ -312,6 +359,7 @@ private:
   BatchingConfig m_batching_config{};
   VisibilityBudget m_visibility_budget{};
   ContactShadowBudget m_contact_shadow_budget{};
+  DirectionalShadowSettings m_directional_shadows{};
 };
 
 } // namespace Render

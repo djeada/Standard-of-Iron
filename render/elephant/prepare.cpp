@@ -14,7 +14,7 @@
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/render_stats.h"
-#include "../gl/camera.h"
+#include "scene/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "elephant_motion.h"

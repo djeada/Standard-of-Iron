@@ -10,7 +10,7 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
-#include "render/ground/ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "render/ground/iron_ore_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
@@ -69,7 +69,12 @@ auto make_tree_map_definition(Game::Map::GroundType ground_type,
   return map_def;
 }
 
-TEST(ScatterRuntimeTest, CollectVisibleInstancesFiltersBySnapshot) {
+// Static scatter persists in explored ground, matching buildings, roads and
+// rivers (all of which submit with SubmissionFogMode::Revealed).  This
+// previously kept only currently-visible cells, which made every tree, stone
+// and prop outside live vision vanish as soon as fog of war began updating
+// while the terrain under them stayed drawn.
+TEST(ScatterRuntimeTest, CollectVisibleInstancesKeepsVisibleAndExploredCells) {
   std::vector<Render::GL::PlantInstanceGpu> instances(3);
   instances[0].pos_scale = QVector4D(0.0F, 0.0F, 0.0F, 1.0F);
   instances[1].pos_scale = QVector4D(-1.0F, 0.0F, -1.0F, 1.0F);
@@ -82,9 +87,13 @@ TEST(ScatterRuntimeTest, CollectVisibleInstancesFiltersBySnapshot) {
         return instance.pos_scale;
       });
 
-  ASSERT_EQ(visible.size(), 1U);
-  EXPECT_FLOAT_EQ(visible.front().pos_scale.x(), 0.0F);
-  EXPECT_FLOAT_EQ(visible.front().pos_scale.z(), 0.0F);
+  // instances[0] lands on a Visible cell, instances[1] on an Explored cell and
+  // instances[2] outside the grid entirely.
+  ASSERT_EQ(visible.size(), 2U);
+  EXPECT_FLOAT_EQ(visible[0].pos_scale.x(), 0.0F);
+  EXPECT_FLOAT_EQ(visible[0].pos_scale.z(), 0.0F);
+  EXPECT_FLOAT_EQ(visible[1].pos_scale.x(), -1.0F);
+  EXPECT_FLOAT_EQ(visible[1].pos_scale.z(), -1.0F);
 }
 
 TEST(ScatterRuntimeTest, FilteredGpuReadyReflectsVisibilityState) {

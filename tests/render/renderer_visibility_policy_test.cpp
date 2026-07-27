@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "game/map/visibility_service.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/scene_renderer.h"
 
 TEST(RendererVisibilityPolicyTest, ModeConfigUsesTotalVisibilityRules) {

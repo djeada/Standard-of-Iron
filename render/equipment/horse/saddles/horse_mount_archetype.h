@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "../../../creature/archetype_registry.h"
-#include "../../../horse/attachment_frames.h"
+#include "animation/rig/horse_attachment_frames.h"
 #include "../../../static_attachment_spec.h"
 
 namespace Render::GL {

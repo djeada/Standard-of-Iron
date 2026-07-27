@@ -15,7 +15,7 @@
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/resources.h"
-#include "ground_utils.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "riverbank_asset_gpu.h"
 #include "scatter_runtime.h"

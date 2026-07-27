@@ -5,7 +5,7 @@
 #include <deque>
 #include <string>
 
-#include "../../humanoid/humanoid_specs.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "../attachment_builder.h"
 #include "shoulder_cover_archetype.h"
 

@@ -1,12 +1,6 @@
 # Ground/terrain renderer sources.
 set(RENDER_GROUND_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_anchor_utils.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_camp_layout.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_composition_context.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_composition_types.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_renderer_base.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter_rules.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/spawn_validator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/linear_feature_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_surface_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/ground_renderer.cpp

@@ -1,11 +1,13 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
 in vec3 v_world_pos;
 
 uniform vec3 u_color;
-uniform vec3 u_light_direction;
 uniform float u_alpha;
 uniform int u_surface_kind;
 uniform sampler2D u_visibility_tex;
@@ -183,7 +185,7 @@ void main() {
   vec3 n_geom = normalize(v_normal);
   vec3 n_final = normalize(mix(n_geom, n_bump, 0.48));
 
-  vec3 light_dir = normalize(u_light_direction);
+  vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(vec3(0.0, 0.9, 0.4));
 
   float n_dot_l = max(dot(n_final, light_dir), 0.0);
@@ -195,13 +197,13 @@ void main() {
 
   float spec = ggx_specular(n_final, view_dir, light_dir, roughness, f0);
 
-  vec3 hemi_sky = vec3(0.20, 0.25, 0.30);
-  vec3 hemi_ground = vec3(0.10, 0.09, 0.08);
-  float hemi = n_final.y * 0.5 + 0.5;
-
-  vec3 lit_color = base_color * (0.40 + 0.65 * diffuse) * ao;
-  lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.12;
-  lit_color += vec3(1.0) * spec * 0.20;
+  vec3 lit_color =
+      base_color *
+      (environment_ambient_light(n_final) +
+       environment_primary_color() * environment_primary_intensity() * diffuse *
+           0.65) *
+      ao * environment_exposure();
+  lit_color += environment_primary_color() * spec * 0.20;
 
   float grime = (1.0 - ao) * 0.14 * (0.8 + 0.2 * noise_2d(uv * 6.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
@@ -222,5 +224,7 @@ void main() {
   }
   lit_color *= visibility_factor;
 
+  lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
+  lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha * edge_alpha);
 }

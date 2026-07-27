@@ -73,8 +73,13 @@ auto collect_visible_instances(const std::vector<Instance>& instances,
   visible_instances.reserve(instances.size());
   for (const auto& instance : instances) {
     const auto position = position_accessor(instance);
-    if (Game::Map::classify_world_visibility(snapshot, position.x(), position.z()) ==
-        Game::Map::RenderVisibilityState::Visible) {
+    // Static world persists in explored ground, exactly like buildings, roads
+    // and rivers (which all submit with SubmissionFogMode::Revealed).  Keeping
+    // only currently-visible cells made every tree, stone and prop outside the
+    // player's live vision vanish the moment fog of war started updating, while
+    // the terrain beneath them stayed.
+    if (Game::Map::classify_world_visibility(snapshot, position.x(), position.z()) !=
+        Game::Map::RenderVisibilityState::Hidden) {
       visible_instances.push_back(instance);
     }
   }

@@ -147,6 +147,36 @@ TerrainPanel::TerrainPanel(QWidget* parent)
   rain_vlayout->addLayout(rain_form);
   layout->addWidget(rain_section);
 
+  auto* lighting_section = new QGroupBox("Environment Lighting", this);
+  auto* lighting_form = new QFormLayout(lighting_section);
+  auto* time_spin = new QDoubleSpinBox(lighting_section);
+  time_spin->setRange(0.0, 23.99);
+  time_spin->setDecimals(2);
+  time_spin->setSingleStep(0.25);
+  time_spin->setValue(13.0);
+  time_spin->setSuffix(" h");
+  lighting_form->addRow("Time", time_spin);
+  auto* mode_box = new QComboBox(lighting_section);
+  mode_box->addItem("Locked", "locked");
+  mode_box->addItem("Scripted", "scripted");
+  mode_box->addItem("Continuous", "continuous");
+  lighting_form->addRow("Mode", mode_box);
+  auto* day_length_spin = new QDoubleSpinBox(lighting_section);
+  day_length_spin->setRange(1.0, 86400.0);
+  day_length_spin->setDecimals(0);
+  day_length_spin->setValue(1800.0);
+  day_length_spin->setSuffix(" s");
+  lighting_form->addRow("Day length", day_length_spin);
+  auto* profile_box = new QComboBox(lighting_section);
+  profile_box->addItem("Mediterranean Summer", "mediterranean_summer");
+  profile_box->addItem("Iron Sepulcher", "iron_sepulcher");
+  lighting_form->addRow("Profile", profile_box);
+  auto* shadow_quality_box = new QComboBox(lighting_section);
+  shadow_quality_box->addItems({"Low", "Medium", "High", "Ultra"});
+  shadow_quality_box->setCurrentText("High");
+  lighting_form->addRow("Shadow quality", shadow_quality_box);
+  layout->addWidget(lighting_section);
+
   layout->addStretch(1);
 
   connect(seed_box,
@@ -170,6 +200,26 @@ TerrainPanel::TerrainPanel(QWidget* parent)
             emit ground_type_changed(ground_type_box->currentData().toString());
           });
   connect(rain_box, &QCheckBox::toggled, this, &TerrainPanel::rain_toggled);
+  connect(time_spin,
+          qOverload<double>(&QDoubleSpinBox::valueChanged),
+          this,
+          [this](double value) {
+            emit environment_time_changed(static_cast<float>(value));
+          });
+  connect(profile_box, &QComboBox::currentIndexChanged, this, [this, profile_box](int) {
+    emit lighting_profile_changed(profile_box->currentData().toString());
+  });
+  connect(mode_box, &QComboBox::currentIndexChanged, this, [this, mode_box](int) {
+    emit time_mode_changed(mode_box->currentData().toString());
+  });
+  connect(day_length_spin,
+          qOverload<double>(&QDoubleSpinBox::valueChanged),
+          this,
+          [this](double value) { emit day_length_changed(static_cast<float>(value)); });
+  connect(shadow_quality_box,
+          &QComboBox::currentTextChanged,
+          this,
+          &TerrainPanel::shadow_quality_changed);
 
   bind_slider_to_double(height_slider, height_spin, 20.0, [this](double value) {
     emit height_scale_changed(static_cast<float>(value));

@@ -1,12 +1,13 @@
 #version 330 core
+#include "environment_lighting.glsl"
+#include "local_lighting.glsl"
+#include "directional_shadows.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
-
-uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
@@ -20,7 +21,7 @@ float band(float value, float center, float half_width, float feather) {
 
 void main() {
   vec3 N = normalize(v_normal);
-  vec3 L = normalize(u_light_direction);
+  vec3 L = environment_primary_direction();
   vec3 V = normalize(vec3(0.0, 0.86, 0.52));
   vec3 H = normalize(L + V);
 
@@ -33,7 +34,7 @@ void main() {
   float wheel_mask =
       wheel_x * (1.0 - smoothstep(wheel_radius + 0.01, wheel_radius + 0.045, radial));
   float tyre_mask =
-      wheel_mask * smoothstep(wheel_radius - 0.055, wheel_radius - 0.018, radial);
+      wheel_mask * smoothstep(wheel_radius * 0.86, wheel_radius * 0.94, radial);
   float hub_mask = wheel_mask * (1.0 - smoothstep(0.055, 0.105, radial));
 
   float cargo_core = (1.0 - smoothstep(0.43, 0.50, abs(v_local_pos.x))) *
@@ -57,8 +58,9 @@ void main() {
 
   vec3 wheel_wood =
       mix(vec3(0.23, 0.115, 0.045), vec3(0.52, 0.29, 0.10), longitudinal_grain);
-  vec3 iron =
-      mix(vec3(0.12, 0.14, 0.16), vec3(0.38, 0.36, 0.32), hash12(v_world_pos.xz * 8.0));
+  vec3 iron = mix(vec3(0.19, 0.20, 0.22),
+                  vec3(0.34, 0.33, 0.31),
+                  hash12(floor(v_world_pos.xz * 3.0)));
   vec3 barrel = mix(vec3(0.35, 0.18, 0.07), vec3(0.67, 0.39, 0.13), longitudinal_grain);
   float barrel_band = band(fract((v_local_pos.y - 0.50) * 5.2), 0.5, 0.055, 0.025);
   barrel = mix(barrel, vec3(0.16, 0.17, 0.18), barrel_band * 0.72);
@@ -81,9 +83,9 @@ void main() {
 
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sky = vec3(0.49, 0.57, 0.67);
-  vec3 sun = vec3(0.99, 0.86, 0.67);
-  vec3 illumination = sky * (0.17 + hemi * 0.14) + sun * ndotl * 0.74;
+  vec3 sky = environment_sky_color();
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.74;
   float cavity = mix(0.56, 1.0, hemi) * mix(1.0, 0.78, cargo_core);
   float metal_mask = max(tyre_mask, hub_mask);
   float specular = mix(pow(max(dot(N, H), 0.0), 24.0) * 0.035,
@@ -91,8 +93,10 @@ void main() {
                        metal_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.045;
 
-  vec3 color = albedo * illumination * cavity;
+  vec3 color = albedo * illumination * cavity * environment_exposure();
   color += sun * specular;
   color += sky * rim;
+  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, 1.0);
 }

@@ -130,6 +130,13 @@ inline constexpr const char* WORLD_PROPS = "world_props";
 inline constexpr const char* FOG_ZONES = "fog_zones";
 inline constexpr const char* PERSISTENT = "persistent";
 inline constexpr const char* TIME_OF_DAY = "time_of_day";
+inline constexpr const char* ENVIRONMENT = "environment";
+inline constexpr const char* START_TIME = "start_time";
+inline constexpr const char* TIME_MODE = "time_mode";
+inline constexpr const char* DAY_LENGTH_SECONDS = "day_length_seconds";
+inline constexpr const char* LIGHTING_PROFILE = "lighting_profile";
+inline constexpr const char* EXPOSURE = "exposure";
+inline constexpr const char* SHADOW_QUALITY = "shadow_quality";
 inline constexpr const char* STARTING_RESOURCES = "starting_resources";
 inline constexpr const char* DENSITY = "density";
 

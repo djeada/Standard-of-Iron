@@ -6,11 +6,12 @@
 #include "ambient_state_manager.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/environment_lighting.h"
 #include "game/systems/rain_manager.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
 #include "minimap_manager.h"
-#include "render/gl/camera.h"
+#include "scene/camera.h"
 #include "render/ground/rain_renderer.h"
 #include "render/scene_renderer.h"
 #include "visibility_coordinator.h"
@@ -52,6 +53,9 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     while (state.simulation_accumulator >= k_simulation_step &&
            simulation_steps < k_max_simulation_steps_per_frame) {
       simulation_step(k_simulation_step);
+      if (scene.environment_clock != nullptr) {
+        scene.environment_clock->update(k_simulation_step, false);
+      }
       state.simulation_accumulator -= k_simulation_step;
       ++simulation_steps;
     }
@@ -107,6 +111,21 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
         scene.rain->set_camera_position(scene.active_camera->get_position());
       }
     }
+  }
+
+  if (scene.environment_clock != nullptr && scene.renderer != nullptr) {
+    Game::Map::WeatherLightingInput weather;
+    if (scene.rain_manager != nullptr && scene.rain_manager->is_enabled()) {
+      const float intensity = scene.rain_manager->get_intensity();
+      if (scene.rain_manager->get_weather_type() == Game::Map::WeatherType::Snow) {
+        weather.snow = intensity;
+      } else {
+        weather.rain = intensity;
+        weather.storm = std::clamp((intensity - 0.65F) / 0.35F, 0.0F, 1.0F);
+      }
+    }
+    scene.renderer->set_environment_lighting(
+        scene.environment_clock->lighting(weather));
   }
 
   if (scene.victory_service != nullptr && scene.world != nullptr) {

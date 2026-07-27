@@ -3,7 +3,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "render/ground/spawn_validator.h"
+#include "game/map/scatter/spawn_validator.h"
 
 using namespace Render::Ground;
 using namespace Game::Map;
