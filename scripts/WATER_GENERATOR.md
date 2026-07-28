@@ -21,6 +21,7 @@ python3 scripts/generate-map-water.py --campaign --strategic-lakes
 # Write water, then rebuild roads and perpendicular bridge crossings
 python3 scripts/generate-map-water.py --campaign --strategic-lakes --write
 python3 scripts/generate-map-roads.py --campaign --write
+python3 scripts/generate-map-settlements.py --campaign --write
 ```
 
 Validation rejects river centerlines that touch protected hills or mountains,
@@ -33,3 +34,8 @@ A tributary similarly terminates at the receiving river's visible bank rather
 than continuing to its centerline. Validation rejects embedded confluences,
 and generation truncates accidental through-river loops at the first wider
 channel they encounter.
+
+Road generation fits every bridge deck exactly from one riverbank to the
+other and repairs road approaches on both ends. Settlement generation treats
+water as strictly blocked even at bridges, moves buildings clear, and splits
+wall runs before they enter a river or lake.

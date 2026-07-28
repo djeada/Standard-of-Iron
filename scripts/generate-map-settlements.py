@@ -133,6 +133,10 @@ class Settlement:
     on_hill: bool | None = None
     homes: int | None = None
     max_population: int | None = None
+    walls_only: bool = False
+    palisade: bool = True
+    outer_towers: int | None = None
+    minimum_homes: int = 0
     scale: float = 1.0
 
     buildings: list[Building] = field(default_factory=list)
@@ -163,6 +167,12 @@ class Settlement:
             on_hill=(None if "on_hill" not in entry else bool(entry["on_hill"])),
             homes=entry.get("homes"),
             max_population=entry.get("max_population"),
+            walls_only=bool(entry.get("walls_only", False)),
+            palisade=bool(entry.get("palisade", True)),
+            outer_towers=(
+                None if "outer_towers" not in entry else int(entry["outer_towers"])
+            ),
+            minimum_homes=max(0, int(entry.get("minimum_homes", 0))),
             scale=float(entry.get("scale", 1.0)),
         )
 
@@ -229,9 +239,56 @@ class TerrainMask:
         half_z = max(1, int(size[1] * 0.5))
         for dz in range(-half_z, half_z + 1):
             for dx in range(-half_x, half_x + 1):
-                if not self._field.passable(int(round(x)) + dx, int(round(z)) + dz):
+                grid_x = int(round(x)) + dx
+                grid_z = int(round(z)) + dz
+                if not self._field.passable(grid_x, grid_z):
+                    return False
+                if self._field.water[self._field.index(grid_x, grid_z)]:
                     return False
         return True
+
+
+def clip_walls_to_clear_ground(
+    mask: TerrainMask, walls: Sequence[WallRun]
+) -> list[WallRun]:
+    """Split wall runs at river/lake clearance instead of crossing water."""
+    result: list[WallRun] = []
+    for wall in walls:
+        delta_x = wall.end[0] - wall.start[0]
+        delta_z = wall.end[1] - wall.start[1]
+        span = math.hypot(delta_x, delta_z)
+        sample_count = max(1, int(math.ceil(span / WALL_SEGMENT_SPACING)))
+        samples = [
+            (
+                wall.start[0] + delta_x * index / sample_count,
+                wall.start[1] + delta_z * index / sample_count,
+            )
+            for index in range(sample_count + 1)
+        ]
+        clear = [
+            mask.clear_for(point[0], point[1], BUILDING_SIZES["wall_segment"])
+            for point in samples
+        ]
+
+        run_start: int | None = None
+        for index, is_clear in enumerate([*clear, False]):
+            if is_clear and run_start is None:
+                run_start = index
+                continue
+            if is_clear or run_start is None:
+                continue
+            run_end = index - 1
+            result.append(
+                WallRun(
+                    samples[run_start],
+                    samples[run_end],
+                    wall.player_id,
+                    wall.nation,
+                    wall.width,
+                )
+            )
+            run_start = None
+    return result
 
 
 def hill_height(width: float, depth: float, authored_height: float) -> float:
@@ -456,7 +513,7 @@ def distance_to_water(definition: dict, x: float, z: float) -> float:
         points = river.get("waypoints") or [river.get("start"), river.get("end")]
         points = [point for point in points if point]
         half_width = float(river.get("width", 3.0)) * 0.5
-        for start, end in zip(points, points[1:]):
+        for start, end in zip(points, points[1:], strict=False):
             delta_x = float(end[0]) - float(start[0])
             delta_z = float(end[1]) - float(start[1])
             length_sq = delta_x * delta_x + delta_z * delta_z
@@ -689,6 +746,58 @@ def perpendicular(facing: str) -> str:
     return {"north": "east", "south": "west", "east": "south", "west": "north"}[facing]
 
 
+def outer_wall_runs(
+    cx: float,
+    cz: float,
+    half_x: float,
+    half_z: float,
+    facing: str,
+    owner: int,
+    nation: str | None,
+    full_ring: bool,
+) -> list[WallRun]:
+    if full_ring:
+        return wall_ring(
+            cx, cz, half_x, half_z, owner, nation, [facing, opposite(facing)]
+        )
+
+    walls: list[WallRun] = []
+    dx, dz = FACINGS[facing]
+    if dz != 0.0:
+        fixed = cz + dz * half_z
+        walls.extend(
+            gated_run(
+                fixed,
+                cx - half_x,
+                cx + half_x,
+                cx,
+                12.0,
+                True,
+                owner,
+                nation,
+            )
+        )
+        walls.append(WallRun((cx - half_x, fixed), (cx - half_x, cz), owner, nation))
+        walls.append(WallRun((cx + half_x, fixed), (cx + half_x, cz), owner, nation))
+    else:
+        fixed = cx + dx * half_x
+        walls.extend(
+            gated_run(
+                fixed,
+                cz - half_z,
+                cz + half_z,
+                cz,
+                12.0,
+                False,
+                owner,
+                nation,
+            )
+        )
+        walls.append(WallRun((fixed, cz - half_z), (cx, cz - half_z), owner, nation))
+        walls.append(WallRun((fixed, cz + half_z), (cx, cz + half_z), owner, nation))
+    return walls
+
+
 def layout_settlement(
     settlement: Settlement,
     spec: TierSpec,
@@ -744,6 +853,18 @@ def layout_settlement(
                 if site_is_free(candidate_x, candidate_z, building_type):
                     return candidate_x, candidate_z
         return None
+
+    if settlement.walls_only:
+        settlement.buildings = []
+        authored_walls = outer_wall_runs(
+            cx, cz, half_x, half_z, settlement.facing, owner, nation, spec.full_ring
+        )
+        settlement.walls = (
+            clip_walls_to_clear_ground(mask, authored_walls)
+            if mask is not None
+            else authored_walls
+        )
+        return
 
     barracks_site = nearest_clear(cx, cz - 6.0, "barracks")
     if barracks_site is None:
@@ -863,54 +984,39 @@ def layout_settlement(
         buildings.append(Building("home", x, z, owner, nation))
         placed_homes += 1
 
-    gates = [settlement.facing]
-    if spec.full_ring:
-        gates.append(opposite(settlement.facing))
-        walls.extend(wall_ring(cx, cz, half_x, half_z, owner, nation, gates))
-    else:
+    fallback_home_offsets = (
+        (0.0, -12.0),
+        (0.0, 12.0),
+        (-12.0, 0.0),
+        (12.0, 0.0),
+    )
+    for offset_x, offset_z in fallback_home_offsets:
+        if placed_homes >= settlement.minimum_homes:
+            break
+        home_site = nearest_clear(cx + offset_x, cz + offset_z, "home", reach=9.0)
+        if home_site is None:
+            continue
+        buildings.append(Building("home", home_site[0], home_site[1], owner, nation))
+        placed_homes += 1
+    if placed_homes < settlement.minimum_homes:
+        raise SettlementError(
+            f"{settlement.id}: placed {placed_homes} homes, "
+            f"below required minimum {settlement.minimum_homes}"
+        )
 
-        threat = settlement.facing
-        dx, dz = FACINGS[threat]
-        if dz != 0.0:
-            fixed = cz + dz * half_z
-            walls.extend(
-                gated_run(
-                    fixed,
-                    cx - half_x,
-                    cx + half_x,
-                    cx,
-                    12.0,
-                    True,
-                    owner,
-                    nation,
-                )
+    if settlement.palisade:
+        walls.extend(
+            outer_wall_runs(
+                cx,
+                cz,
+                half_x,
+                half_z,
+                settlement.facing,
+                owner,
+                nation,
+                spec.full_ring,
             )
-            walls.append(
-                WallRun((cx - half_x, fixed), (cx - half_x, cz), owner, nation)
-            )
-            walls.append(
-                WallRun((cx + half_x, fixed), (cx + half_x, cz), owner, nation)
-            )
-        else:
-            fixed = cx + dx * half_x
-            walls.extend(
-                gated_run(
-                    fixed,
-                    cz - half_z,
-                    cz + half_z,
-                    cz,
-                    12.0,
-                    False,
-                    owner,
-                    nation,
-                )
-            )
-            walls.append(
-                WallRun((fixed, cz - half_z), (cx, cz - half_z), owner, nation)
-            )
-            walls.append(
-                WallRun((fixed, cz + half_z), (cx, cz + half_z), owner, nation)
-            )
+        )
 
     corner_inset = 3.0
     corners = [
@@ -919,7 +1025,12 @@ def layout_settlement(
         (cx - half_x + corner_inset, cz + half_z - corner_inset),
         (cx + half_x - corner_inset, cz + half_z - corner_inset),
     ]
-    for corner in corners[: spec.outer_towers]:
+    outer_tower_count = (
+        spec.outer_towers
+        if settlement.outer_towers is None
+        else max(0, settlement.outer_towers)
+    )
+    for corner in corners[:outer_tower_count]:
         corner_site = nearest_clear(corner[0], corner[1], "defense_tower", reach=12.0)
         if corner_site is None:
             continue
@@ -928,7 +1039,9 @@ def layout_settlement(
         )
 
     settlement.buildings = buildings
-    settlement.walls = walls
+    settlement.walls = (
+        clip_walls_to_clear_ground(mask, walls) if mask is not None else walls
+    )
 
 
 def settlement_footprint(settlement: Settlement) -> tuple[float, float]:
@@ -987,7 +1100,11 @@ def validate(
     owners = {settlement.player_id for settlement in settlements}
     for owner in sorted(owners):
         owned = [b for b in all_buildings if b.player_id == owner]
-        if not any(b.type == "barracks" for b in owned):
+        requires_barracks = any(
+            settlement.player_id == owner and not settlement.walls_only
+            for settlement in settlements
+        )
+        if requires_barracks and not any(b.type == "barracks" for b in owned):
             result.errors.append(f"player {owner} has no barracks")
 
     player_homes = sum(
@@ -1132,7 +1249,9 @@ def process_map(
                 float(settlement.hill.get("height", 2.0)),
                 crown_safety,
             )
-        elif not mask.clear_for(settlement.x, settlement.z, BUILDING_SIZES["barracks"]):
+        elif not settlement.walls_only and not mask.clear_for(
+            settlement.x, settlement.z, BUILDING_SIZES["barracks"]
+        ):
 
             moved = nearest_clear_anchor(
                 mask, settlement.x, settlement.z, BUILDING_SIZES["barracks"]

@@ -105,6 +105,40 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesCursorModeCancellation) {
   EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
+TEST_F(InputCommandHandlerTest, HudGroupClickKeepsOnlySelectedUnitsOfThatType) {
+  auto* first_archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second_archer = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* spearman = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  auto* enemy_archer = create_unit(1.0F, 0.0F, 2, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first_archer, nullptr);
+  ASSERT_NE(second_archer, nullptr);
+  ASSERT_NE(spearman, nullptr);
+  ASSERT_NE(enemy_archer, nullptr);
+
+  selection_system->select_unit(first_archer->get_id());
+  selection_system->select_unit(second_archer->get_id());
+  selection_system->select_unit(spearman->get_id());
+  selection_system->select_unit(enemy_archer->get_id());
+
+  input_handler->select_selected_units_by_type(QStringLiteral("archer"), 1);
+
+  const auto& selected = selection_system->get_selected_units();
+  ASSERT_EQ(selected.size(), 2U);
+  EXPECT_EQ(selected[0], first_archer->get_id());
+  EXPECT_EQ(selected[1], second_archer->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, StaleHudGroupDoesNotClearSelection) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  input_handler->select_selected_units_by_type(QStringLiteral("spearman"), 1);
+
+  ASSERT_EQ(selection_system->get_selected_units().size(), 1U);
+  EXPECT_EQ(selection_system->get_selected_units().front(), archer->get_id());
+}
+
 TEST_F(InputCommandHandlerTest, RightPressConsumesCollectCursorModeCancellation) {
   auto* unit = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
   ASSERT_NE(unit, nullptr);

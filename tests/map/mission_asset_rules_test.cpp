@@ -130,7 +130,7 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesAuthoredLocalAiRoles) {
   EXPECT_GE(local_role_count, 20);
 }
 
-TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
+TEST(MissionAssetRulesTest, CrossingRhoneStartsWithWallsOnly) {
   const QJsonObject root =
       load_json_object(asset_dir_path(QStringLiteral("maps/map_crossing_rhone.json")));
   const QJsonArray structures = root.value("structures").toArray();
@@ -157,9 +157,11 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
   }
 
   const Holding& player = holdings[1];
-  EXPECT_EQ(player.barracks, 1) << "the player must start with a working barracks";
-  EXPECT_GE(player.homes, 4);
-  EXPECT_GE(player.wall_lines, 3) << "the marching camp keeps its palisade";
+  EXPECT_EQ(player.barracks, 0);
+  EXPECT_EQ(player.towers, 0);
+  EXPECT_EQ(player.homes, 0);
+  EXPECT_EQ(player.marketplaces, 0);
+  EXPECT_EQ(player.wall_lines, 4) << "the player starts behind a bare palisade";
 
   for (const int bot_id : {2, 3}) {
     const Holding& holding = holdings[bot_id];
@@ -203,6 +205,35 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesFortifiedSettlements) {
   EXPECT_TRUE(has_firecamp);
   EXPECT_TRUE(has_weapon_rack);
   EXPECT_TRUE(has_supply_cart);
+}
+
+TEST(MissionAssetRulesTest, OffensivePlayerCampsUseAuthoredMinimalStructures) {
+  auto player_structure_counts = [](const QString& map_name) {
+    const QJsonObject root =
+        load_json_object(asset_dir_path(QStringLiteral("maps/%1").arg(map_name)));
+    QHash<QString, int> counts;
+    for (const auto& value : root.value("structures").toArray()) {
+      const QJsonObject structure = value.toObject();
+      if (structure.value("player_id").toInt() == 1) {
+        ++counts[structure.value("type").toString()];
+      }
+    }
+    return counts;
+  };
+
+  const auto ticino = player_structure_counts(QStringLiteral("map_battle_ticino.json"));
+  EXPECT_EQ(ticino.size(), 1);
+  EXPECT_EQ(ticino.value(QStringLiteral("barracks")), 1);
+
+  const auto cannae = player_structure_counts(QStringLiteral("map_battle_cannae.json"));
+  EXPECT_EQ(cannae.size(), 1);
+  EXPECT_EQ(cannae.value(QStringLiteral("barracks")), 1);
+
+  const auto zama = player_structure_counts(QStringLiteral("map_battle_zama.json"));
+  EXPECT_EQ(zama.size(), 3);
+  EXPECT_EQ(zama.value(QStringLiteral("barracks")), 1);
+  EXPECT_EQ(zama.value(QStringLiteral("defense_tower")), 2);
+  EXPECT_EQ(zama.value(QStringLiteral("home")), 1);
 }
 
 TEST(MissionAssetRulesTest, AlpsMapYieldsEnoughHarvestForItsGatherObjective) {
@@ -259,6 +290,34 @@ TEST(MissionAssetRulesTest, AlpsMapYieldsEnoughHarvestForItsGatherObjective) {
     has_builder = has_builder || unit.type == QStringLiteral("builder");
   }
   EXPECT_TRUE(has_builder) << "a gather objective needs builders to gather with";
+}
+
+TEST(MissionAssetRulesTest, AlpsRiverHasAFlatRuntimeSurface) {
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      asset_dir_path(QStringLiteral("maps/map_crossing_alps.json")), map, &error))
+      << error.toStdString();
+
+  Game::Map::TerrainHeightMap height_map(
+      map.grid.width, map.grid.height, map.grid.tile_size);
+  height_map.apply_biome_variation(map.biome);
+  height_map.build_from_features(map.terrain);
+  height_map.add_lakes(map.lakes);
+  height_map.add_river_segments(map.rivers);
+
+  const auto& rivers = height_map.get_river_segments();
+  ASSERT_FALSE(rivers.empty());
+  const float surface_height = rivers.front().start.y();
+  for (const auto& river : rivers) {
+    EXPECT_FLOAT_EQ(river.start.y(), surface_height);
+    EXPECT_FLOAT_EQ(river.end.y(), surface_height);
+
+    const QVector3D midpoint = (river.start + river.end) * 0.5F;
+    EXPECT_NEAR(height_map.get_height_at(midpoint.x(), midpoint.z()),
+                surface_height - 0.10F,
+                0.0001F);
+  }
 }
 
 TEST(MissionAssetRulesTest, CaptureObjectivesMatchEnemyOwnedBarracks) {
