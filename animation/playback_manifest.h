@@ -38,6 +38,7 @@ struct HumanoidPlaybackPhaseInputs {
   float attack_phase{0.0F};
   HumanoidAmbientIdle ambient_idle{HumanoidAmbientIdle::None};
   float ambient_idle_phase{0.0F};
+  float idle_breath_phase{0.0F};
   float gait_cycle_phase{0.0F};
 };
 

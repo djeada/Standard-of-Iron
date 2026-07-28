@@ -315,6 +315,44 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
   return spec;
 }
 
+namespace {
+
+auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
+                                  const Render::GL::HumanoidAnimationContext& anim,
+                                  const UnitVisualSpec& spec,
+                                  std::uint32_t seed,
+                                  const Render::GL::HumanoidVariant* variant) noexcept
+    -> bool {
+  if (anim.ambient_idle_type == Render::GL::AmbientIdleType::None) {
+    return false;
+  }
+  if (selection.state != Render::Creature::AnimationStateId::Idle &&
+      selection.state != Render::Creature::AnimationStateId::RidingIdle) {
+    return false;
+  }
+  float const blend = std::clamp(anim.ambient_idle_blend, 0.0F, 1.0F);
+  if (blend >= 0.999F) {
+    return true;
+  }
+
+  HumanoidAnimationSelection const ambient = selection;
+
+  Render::GL::HumanoidAnimationContext resting = anim;
+  resting.ambient_idle_type = Render::GL::AmbientIdleType::None;
+  resting.ambient_idle_phase = 0.0F;
+  resting.ambient_idle_blend = 0.0F;
+  selection = build_selection_for_pose(
+      spec, resting, Render::Creature::resolve_pose(resting.inputs), seed, variant);
+
+  if (blend > 0.001F && ambient.clip_id.has_value()) {
+    selection.full_body_blend = playback_layer_from_selection(
+        ambient, blend, Render::Creature::PlaybackLayerMode::FullBodyBlend);
+  }
+  return true;
+}
+
+} // namespace
+
 auto resolve_humanoid_animation_selection(
     const UnitVisualSpec& spec,
     const Render::GL::HumanoidAnimationContext& anim,
@@ -322,6 +360,10 @@ auto resolve_humanoid_animation_selection(
     const Render::GL::HumanoidVariant* variant) noexcept -> HumanoidAnimationSelection {
   HumanoidAnimationSelection selection = build_selection_for_pose(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
+
+  if (apply_ambient_idle_crossfade(selection, anim, spec, seed, variant)) {
+    return selection;
+  }
 
   auto const* combat =
       anim.inputs.combat_visual.authoritative ? &anim.inputs.combat_visual : nullptr;

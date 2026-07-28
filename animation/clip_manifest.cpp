@@ -188,6 +188,16 @@ auto humanoid_sword_attack_name(SwordAttackAnimation animation) noexcept
   return "attack_sword_a";
 }
 
+auto humanoid_idle_breath_offset(std::uint32_t inst_seed) noexcept -> float {
+  std::uint32_t x = inst_seed ^ 0x2F1B3C7DU;
+  x ^= x >> 16U;
+  x *= 0x7feb352dU;
+  x ^= x >> 15U;
+  x *= 0x846ca68bU;
+  x ^= x >> 16U;
+  return static_cast<float>(x & 0x7FFFFFU) / static_cast<float>(0x7FFFFFU);
+}
+
 auto humanoid_ambient_idle_clip_variant(HumanoidAmbientIdle idle) noexcept
     -> std::uint8_t {
   switch (idle) {
@@ -222,6 +232,8 @@ auto humanoid_idle_variant_clip_name(std::uint8_t clip_variant) noexcept
     return "idle_weapon";
   case 4U:
     return "idle_weave";
+  case 5U:
+    return "idle_plant_flag";
   default:
     return "idle";
   }
@@ -360,6 +372,7 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_idle_jump_clip:
   case k_humanoid_idle_weapon_clip:
   case k_humanoid_idle_weave_clip:
+  case k_humanoid_idle_plant_flag_clip:
   case k_humanoid_walk_clip:
   case k_humanoid_run_clip:
   case k_humanoid_riding_idle_clip:

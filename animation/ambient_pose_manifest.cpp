@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include <span>
 
 namespace Animation {
 
@@ -43,104 +44,171 @@ plateau01(float phase, float enter_end, float exit_start) noexcept -> float {
   return smooth01((1.0F - phase) / (1.0F - exit_start));
 }
 
-} // namespace
-
-auto resolve_humanoid_ambient_schedule(
-    const HumanoidAmbientScheduleInputs& inputs) noexcept
-    -> HumanoidAmbientScheduleSample {
-  constexpr float k_min_idle_duration = 5.0F;
-  constexpr float k_wave_period = 18.0F;
-  constexpr float k_activation_stagger_max = 1.75F;
-  constexpr float k_activation_duration_base = 3.4F;
-  constexpr float k_activation_duration_range = 1.3F;
-  constexpr std::uint32_t k_participation_bucket_count = 15U;
-  constexpr std::uint32_t k_participation_bucket_min = 3U;
-  constexpr std::uint32_t k_participation_bucket_range = 3U;
-
-  if (inputs.idle_duration < k_min_idle_duration) {
-    return {};
-  }
-
-  float const ambient_elapsed = inputs.idle_duration - k_min_idle_duration;
-  auto const cycle_number = static_cast<std::uint32_t>(ambient_elapsed / k_wave_period);
-  float const cycle_time =
-      ambient_elapsed - static_cast<float>(cycle_number) * k_wave_period;
-  std::uint32_t const cycle_mix = hash_u32(cycle_number ^ 0x9E3779B9U);
-  float const participation_ratio =
-      static_cast<float>(k_participation_bucket_min +
-                         (cycle_mix % k_participation_bucket_range)) /
-      static_cast<float>(k_participation_bucket_count);
-  if (hash_to_unit(inputs.seed ^ cycle_mix ^ 0x6C8E9CF5U) >= participation_ratio) {
-    return {};
-  }
-
-  float const activation_start =
-      hash_to_unit(inputs.seed ^ cycle_mix ^ 0x41D64E6DU) * k_activation_stagger_max;
-  float const activation_duration =
-      k_activation_duration_base +
-      hash_to_unit(inputs.seed ^ cycle_mix ^ 0xA511E9B3U) * k_activation_duration_range;
-  float const activation_time = cycle_time - activation_start;
-  if (activation_time < 0.0F || activation_time >= activation_duration) {
-    return {};
-  }
-
-  std::uint32_t const anim_selector = hash_u32(inputs.seed ^ cycle_mix ^ 0xB5297A4DU);
-  constexpr std::array<HumanoidAmbientIdle, 4> k_baked_types{
+[[nodiscard]] auto
+ambient_catalog(bool mounted) noexcept -> std::span<const HumanoidAmbientIdle> {
+  static constexpr std::array<HumanoidAmbientIdle, 4> k_infantry{
       HumanoidAmbientIdle::SitDown,
       HumanoidAmbientIdle::Jump,
       HumanoidAmbientIdle::RaiseWeapon,
       HumanoidAmbientIdle::ShiftWeight};
-  auto type_index = static_cast<std::size_t>(anim_selector % k_baked_types.size());
-  if (cycle_number > 0U) {
-    std::uint32_t const previous_cycle_mix =
-        hash_u32((cycle_number - 1U) ^ 0x9E3779B9U);
-    std::uint32_t const previous_selector =
-        hash_u32(inputs.seed ^ previous_cycle_mix ^ 0xB5297A4DU);
-    auto const previous_index =
-        static_cast<std::size_t>(previous_selector % k_baked_types.size());
-    if (type_index == previous_index) {
-      type_index =
-          (type_index + 1U + ((anim_selector >> 4U) % (k_baked_types.size() - 1U))) %
-          k_baked_types.size();
-    }
+  static constexpr std::array<HumanoidAmbientIdle, 2> k_mounted{
+      HumanoidAmbientIdle::RaiseWeapon, HumanoidAmbientIdle::ShiftWeight};
+  return mounted ? std::span<const HumanoidAmbientIdle>{k_mounted}
+                 : std::span<const HumanoidAmbientIdle>{k_infantry};
+}
+
+[[nodiscard]] auto
+pick_ambient_type(std::uint32_t seed,
+                  std::uint32_t play_count,
+                  bool mounted,
+                  HumanoidAmbientIdle previous) noexcept -> HumanoidAmbientIdle {
+  auto const catalog = ambient_catalog(mounted);
+  std::uint32_t const selector = hash_u32(seed ^ (play_count * 0x9E3779B9U));
+  auto index = static_cast<std::size_t>(selector % catalog.size());
+  if (catalog.size() > 1U && catalog[index] == previous) {
+    index = (index + 1U + ((selector >> 8U) % (catalog.size() - 1U))) % catalog.size();
+  }
+  return catalog[index];
+}
+
+[[nodiscard]] auto roll_cooldown(std::uint32_t seed,
+                                 std::uint32_t play_count) noexcept -> float {
+  return k_ambient_cooldown_min +
+         hash_to_unit(seed ^ (play_count * 0x85EBCA6BU) ^ 0x1D3C9F5BU) *
+             k_ambient_cooldown_range;
+}
+
+[[nodiscard]] auto advance_ambient_state(
+    const HumanoidAmbientTickInputs& inputs) noexcept -> HumanoidAmbientRuntimeState {
+  HumanoidAmbientRuntimeState state = inputs.previous;
+  float const dt = state.initialized
+                       ? std::clamp(inputs.sample_time - state.last_sample_time,
+                                    0.0F,
+                                    k_ambient_max_step)
+                       : 0.0F;
+  if (!state.initialized) {
+
+    state.cooldown = hash_to_unit(inputs.seed ^ 0x7A3B19C5U) * k_ambient_initial_spread;
+    state.initialized = true;
+  }
+  state.last_sample_time = inputs.sample_time;
+
+  if (!inputs.eligible && state.stage != HumanoidAmbientStage::Dormant &&
+      state.stage != HumanoidAmbientStage::BlendOut) {
+    state.stage = HumanoidAmbientStage::BlendOut;
   }
 
-  return {
+  switch (state.stage) {
+  case HumanoidAmbientStage::Dormant: {
+    state.blend = 0.0F;
+    state.clip_phase = 0.0F;
+    state.type = HumanoidAmbientIdle::None;
+    state.cooldown = std::max(0.0F, state.cooldown - dt);
+    bool const may_start = inputs.eligible && state.cooldown <= 0.0F &&
+                           inputs.idle_duration >= k_ambient_min_idle_duration;
+    if (may_start) {
+      state.type = pick_ambient_type(
+          inputs.seed, state.play_count, inputs.mounted, state.previous_type);
+      state.previous_type = state.type;
+      state.stage = HumanoidAmbientStage::BlendIn;
+      state.play_count += 1U;
+    }
+    break;
+  }
+  case HumanoidAmbientStage::BlendIn: {
+    state.blend = std::min(1.0F, state.blend + dt / k_ambient_blend_in_duration);
+    state.clip_phase = std::min(1.0F, state.clip_phase + dt / k_ambient_clip_duration);
+    if (state.blend >= 1.0F) {
+      state.stage = HumanoidAmbientStage::Hold;
+    }
+    break;
+  }
+  case HumanoidAmbientStage::Hold: {
+    state.blend = 1.0F;
+    state.clip_phase = std::min(1.0F, state.clip_phase + dt / k_ambient_clip_duration);
+
+    float const fade_start =
+        1.0F - (k_ambient_blend_out_duration / k_ambient_clip_duration);
+    if (state.clip_phase >= fade_start) {
+      state.stage = HumanoidAmbientStage::BlendOut;
+    }
+    break;
+  }
+  case HumanoidAmbientStage::BlendOut: {
+    state.blend = std::max(0.0F, state.blend - dt / k_ambient_blend_out_duration);
+    state.clip_phase = std::min(1.0F, state.clip_phase + dt / k_ambient_clip_duration);
+    if (state.blend <= 0.0F) {
+      state.stage = HumanoidAmbientStage::Dormant;
+      state.type = HumanoidAmbientIdle::None;
+      state.clip_phase = 0.0F;
+      state.cooldown = roll_cooldown(inputs.seed, state.play_count);
+    }
+    break;
+  }
+  }
+
+  return state;
+}
+
+} // namespace
+
+auto resolve_humanoid_ambient_tick(const HumanoidAmbientTickInputs& inputs) noexcept
+    -> HumanoidAmbientTickSample {
+  HumanoidAmbientTickSample result{};
+  result.state = advance_ambient_state(inputs);
+  if (result.state.stage == HumanoidAmbientStage::Dormant ||
+      result.state.type == HumanoidAmbientIdle::None) {
+    return result;
+  }
+  result.sample = {
       .active = true,
-      .type = k_baked_types[type_index],
-      .phase = std::clamp(activation_time / activation_duration, 0.0F, 1.0F),
+      .type = result.state.type,
+      .phase = std::clamp(result.state.clip_phase, 0.0F, 1.0F),
+      .blend = std::clamp(result.state.blend, 0.0F, 1.0F),
   };
+  return result;
+}
+
+auto humanoid_ambient_eligible(const HumanoidAmbientSelectionInputs& inputs) noexcept
+    -> bool {
+
+  return !inputs.mounted && !inputs.has_locomotion && !inputs.attacking &&
+         !inputs.in_hold_mode && !inputs.guarding && !inputs.exiting_guard &&
+         !inputs.constructing && !inputs.healing && !inputs.hit_reacting &&
+         !inputs.dying && !inputs.dead && !inputs.routing;
 }
 
 auto resolve_humanoid_ambient_selection(
     const HumanoidAmbientSelectionInputs& inputs) noexcept
-    -> HumanoidAmbientScheduleSample {
+    -> HumanoidAmbientTickSample {
+  HumanoidAmbientTickSample scripted{};
+  scripted.state = inputs.ambient_state;
+
   if (inputs.jump_active) {
-    return {
+    scripted.sample = {
         .active = true,
         .type = HumanoidAmbientIdle::Jump,
         .phase = std::clamp(inputs.jump_phase, 0.0F, 1.0F),
+        .blend = 1.0F,
     };
+    return scripted;
   }
 
   if (inputs.flag_rally_active) {
-    return {
+    scripted.sample = {
         .active = true,
         .type = HumanoidAmbientIdle::PlantFlag,
         .phase = std::clamp(inputs.flag_rally_phase, 0.0F, 1.0F),
+        .blend = 1.0F,
     };
+    return scripted;
   }
 
-  bool const eligible = !inputs.mounted && !inputs.has_locomotion &&
-                        !inputs.attacking && !inputs.in_hold_mode && !inputs.guarding &&
-                        !inputs.exiting_guard && !inputs.constructing &&
-                        !inputs.healing && !inputs.hit_reacting && !inputs.dying &&
-                        !inputs.dead;
-  if (!eligible) {
-    return {};
-  }
-
-  return resolve_humanoid_ambient_schedule({
+  return resolve_humanoid_ambient_tick({
+      .previous = inputs.ambient_state,
+      .sample_time = inputs.sample_time,
+      .eligible = humanoid_ambient_eligible(inputs),
+      .mounted = inputs.mounted,
       .seed = inputs.seed,
       .idle_duration = inputs.idle_duration,
   });

@@ -786,7 +786,7 @@ TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {
   }
 }
 
-TEST(BpatRegistry, HumanoidIdleClipRemainsStableAcrossLoop) {
+TEST(BpatRegistry, HumanoidIdleClipBreathesAndLoopsSeamlessly) {
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
@@ -796,34 +796,61 @@ TEST(BpatRegistry, HumanoidIdleClipRemainsStableAcrossLoop) {
   ASSERT_TRUE(
       reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
-  auto verify_idle_clip_stable = [&](std::uint32_t species_id) {
-    auto const* blob = reg.blob(species_id);
-    ASSERT_NE(blob, nullptr);
-    auto const idle_clip = blob->clip(Render::Creature::k_humanoid_idle_clip);
-    ASSERT_GT(idle_clip.frame_count, 2U);
-
-    std::array<QMatrix4x4, 64> start_palette{};
-    std::array<QMatrix4x4, 64> mid_palette{};
-    auto const bone_count = reg.sample_palette(species_id,
-                                               Render::Creature::k_humanoid_idle_clip,
-                                               0U,
-                                               std::span<QMatrix4x4>(start_palette));
-    ASSERT_GT(bone_count, 0U);
-    ASSERT_EQ(reg.sample_palette(species_id,
-                                 Render::Creature::k_humanoid_idle_clip,
-                                 idle_clip.frame_count / 2U,
-                                 std::span<QMatrix4x4>(mid_palette)),
-              bone_count);
-
+  auto max_component_delta = [](const std::array<QMatrix4x4, 64>& a,
+                                const std::array<QMatrix4x4, 64>& b,
+                                std::uint32_t bone_count) {
+    float worst = 0.0F;
     for (std::uint32_t bone = 0U; bone < bone_count; ++bone) {
-      EXPECT_EQ(start_palette[bone], mid_palette[bone])
-          << "species " << species_id
-          << " idle clip should stay stable across the loop";
+      const float* lhs = a[bone].constData();
+      const float* rhs = b[bone].constData();
+      for (int i = 0; i < 16; ++i) {
+        worst = std::max(worst, std::abs(lhs[i] - rhs[i]));
+      }
     }
+    return worst;
   };
 
-  verify_idle_clip_stable(k_species_humanoid);
-  verify_idle_clip_stable(k_species_humanoid_sword);
+  auto verify_idle_clip_breathes =
+      [&](std::uint32_t species_id, std::uint16_t clip_id, const char* label) {
+        auto const* blob = reg.blob(species_id);
+        ASSERT_NE(blob, nullptr);
+        auto const idle_clip = blob->clip(clip_id);
+        ASSERT_GT(idle_clip.frame_count, 2U);
+
+        std::array<QMatrix4x4, 64> first{};
+        std::array<QMatrix4x4, 64> previous{};
+        std::array<QMatrix4x4, 64> current{};
+        auto const bone_count =
+            reg.sample_palette(species_id, clip_id, 0U, std::span<QMatrix4x4>(first));
+        ASSERT_GT(bone_count, 0U);
+        previous = first;
+
+        float range = 0.0F;
+        float worst_step = 0.0F;
+        for (std::uint32_t frame = 1U; frame < idle_clip.frame_count; ++frame) {
+          ASSERT_EQ(reg.sample_palette(
+                        species_id, clip_id, frame, std::span<QMatrix4x4>(current)),
+                    bone_count);
+          range = std::max(range, max_component_delta(first, current, bone_count));
+          worst_step =
+              std::max(worst_step, max_component_delta(previous, current, bone_count));
+          previous = current;
+        }
+
+        EXPECT_GT(range, 0.01F) << label << " idle clip is a frozen pose, not a breath";
+
+        float const seam = max_component_delta(previous, first, bone_count);
+        EXPECT_LE(seam, worst_step * 2.0F + 1.0e-4F)
+            << label << " idle loop jumps at the seam (" << seam << " vs typical step "
+            << worst_step << ")";
+      };
+
+  verify_idle_clip_breathes(
+      k_species_humanoid, Render::Creature::k_humanoid_idle_clip, "humanoid");
+  verify_idle_clip_breathes(
+      k_species_humanoid, Render::Creature::k_humanoid_riding_idle_clip, "riding");
+  verify_idle_clip_breathes(
+      k_species_humanoid_sword, Render::Creature::k_humanoid_idle_clip, "sword");
 }
 
 TEST(BpatRegistry, HumanoidAmbientIdleClipStillAnimatesAcrossSequence) {

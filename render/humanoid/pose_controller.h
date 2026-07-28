@@ -17,6 +17,8 @@ public:
 
   void apply_micro_idle(float time, std::uint32_t seed);
 
+  void apply_idle_breath(float phase, bool mounted);
+
   void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
 
   void kneel(float depth);

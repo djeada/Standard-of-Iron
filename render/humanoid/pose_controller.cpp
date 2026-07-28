@@ -281,6 +281,14 @@ void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   apply_posture_delta_sample(m_pose, sample);
 }
 
+void HumanoidPoseController::apply_idle_breath(float phase, bool mounted) {
+  auto const sample = Animation::resolve_humanoid_idle_breath_pose({
+      .phase = phase,
+      .mounted = mounted,
+  });
+  apply_posture_delta_sample(m_pose, sample);
+}
+
 void HumanoidPoseController::apply_ambient_idle_explicit(AmbientIdleType idle_type,
                                                          float phase) {
   auto const sample = Animation::resolve_humanoid_ambient_pose({
