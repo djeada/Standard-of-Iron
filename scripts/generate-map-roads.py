@@ -426,8 +426,6 @@ class RoutingField:
                 self.coords.distance_to_grid(float(item.get("width", 3.0))),
             )
 
-
-
             duplicate_radius = max(
                 4.0, river_width * 0.90, 2.0 * (self.clearance + 3.0)
             )
@@ -1101,11 +1099,7 @@ def inject_bridge_endpoints(
         else:
             suffix.append(exit_approach)
 
-        result = (
-            prefix
-            + [entry, exit_point, exit_approach]
-            + suffix
-        )
+        result = prefix + [entry, exit_point, exit_approach] + suffix
         fixed_points.extend((entry_approach, entry, exit_point, exit_approach))
 
     result = deduplicate(result)
@@ -1252,11 +1246,8 @@ def generate_road(
         field.line_passable(a, b) for a, b in zip(sampled, sampled[1:], strict=False)
     ):
 
-
-
         sampled = rounded
     authored_output = [field.coords.from_grid(point) for point in sampled]
-
 
     def encode_points(digits: int) -> list[list[int | float]]:
         return [
@@ -1278,7 +1269,6 @@ def generate_road(
 
     invalid_encoded = invalid_serialized_segments(encoded)
     if invalid_encoded:
-
 
         encoded = encode_points(15)
         invalid_encoded = invalid_serialized_segments(encoded)
@@ -1595,10 +1585,6 @@ def connect_road_components(
         obstacle_failures = 0
         crossing_failures = 0
         first_generation_error = ""
-
-
-
-
 
         for _, start, end in sorted(candidates, key=lambda item: item[0])[:512]:
             authored_start = field.coords.from_grid(start)
