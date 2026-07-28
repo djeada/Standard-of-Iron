@@ -408,7 +408,6 @@ Rectangle {
 
                         Flow {
                             Layout.fillWidth: true
-                            width: mission_content_container.width
                             spacing: Theme.spacingTiny
 
                             Repeater {
@@ -466,7 +465,6 @@ Rectangle {
 
                         Flow {
                             Layout.fillWidth: true
-                            width: mission_content_container.width
                             spacing: Theme.spacingSmall
 
                             Repeater {

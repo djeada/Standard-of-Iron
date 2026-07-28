@@ -353,10 +353,14 @@ def _chunks(items: Sequence[str], size: int) -> Iterable[list[str]]:
 
 def _ensure_qmllint_symlinks(build_dir: str) -> None:
     """Create symlinks so qmllint can resolve StandardOfIron.Design from source."""
-    _link_to(Path(build_dir) / "StandardOfIron" / "Design",
-             REPO_ROOT / "ui" / "qml" / "design")
-    _link_to(Path(build_dir) / "StandardOfIron" / "TestSupport",
-             REPO_ROOT / "tests" / "ui" / "qml" / "TestSupport")
+    _link_to(
+        Path(build_dir) / "StandardOfIron" / "Design",
+        REPO_ROOT / "ui" / "qml" / "design",
+    )
+    _link_to(
+        Path(build_dir) / "StandardOfIron" / "TestSupport",
+        REPO_ROOT / "tests" / "ui" / "qml" / "TestSupport",
+    )
 
 
 def _link_to(link_path: Path, source: Path) -> None:
@@ -375,11 +379,24 @@ def _link_to(link_path: Path, source: Path) -> None:
 
 
 def _qmllint_check(exe: str, files: list[str]) -> list[str]:
+    """Check structural QML rules without runtime-only context and type metadata."""
     _ensure_qmllint_symlinks(str(REPO_ROOT / "build"))
     cmd = [
         exe,
-        "-I", str(REPO_ROOT / "ui/qml"),
-        "-I", str(REPO_ROOT / "build"),
+        "--unqualified",
+        "disable",
+        "--property",
+        "disable",
+        "--type",
+        "disable",
+        "--import",
+        "disable",
+        "--deferred-property-id",
+        "disable",
+        "-I",
+        str(REPO_ROOT / "ui/qml"),
+        "-I",
+        str(REPO_ROOT / "build"),
         *files,
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, check=False)

@@ -733,8 +733,8 @@ Item {
                             spacing: Theme.spacingTiny
 
                             Rectangle {
-                                width: 12
-                                height: 12
+                                Layout.preferredWidth: 12
+                                Layout.preferredHeight: 12
                                 radius: 2
                                 color: modelData.color
                                 border.color: Theme.border

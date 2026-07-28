@@ -106,8 +106,8 @@ Item {
                 }
 
                 Rectangle {
-                    width: staggerLabel.implicitWidth + 12
-                    height: 18
+                    Layout.preferredWidth: staggerLabel.implicitWidth + 12
+                    Layout.preferredHeight: 18
                     radius: 4
                     color: root.target_staggered ? "#88ff8800" : "#88ff2200"
                     visible: root.target_staggered || root.target_guard_broken
@@ -137,7 +137,7 @@ Item {
 
             Item {
                 Layout.fillWidth: true
-                height: 16
+                Layout.preferredHeight: 16
 
                 Rectangle {
                     anchors.fill: parent
