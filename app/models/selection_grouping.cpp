@@ -1,11 +1,11 @@
-#include "selected_units_model.h"
-
 #include <QRegularExpression>
 #include <qvariant.h>
 
 #include <algorithm>
 #include <iterator>
 #include <vector>
+
+#include "selected_units_model.h"
 
 namespace App::Models {
 
