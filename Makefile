@@ -39,6 +39,8 @@ FORMAT_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || echo 4)
 FORMAT_BASE ?= origin/main
 # Extra flags forwarded to the driver (e.g. FORMAT_ARGS="--verbose").
 FORMAT_ARGS ?=
+# Allow the lint step to skip comment stripping (set to empty to skip).
+LINT_STRIP ?= --strip-comments
 # Extra GoogleTest flags (e.g. TEST_ARGS="--gtest_filter=SaveLoadServiceTest.*").
 TEST_ARGS ?=
 
@@ -384,7 +386,7 @@ test-validator: build
 ## Format every tracked file, then run the complete non-compiler quality gate.
 format: clean-format-trash
 	@$(FORMAT_DRIVER) --all --strip-comments --fix --strict --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
-	@$(MAKE) --no-print-directory quality
+	@$(MAKE) --no-print-directory quality LINT_STRIP=
 
 ## Verify formatting without writing anything (CI gate).
 format-check:
@@ -421,7 +423,7 @@ clean-format-trash:
 
 ## Run every linter: clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON.
 lint:
-	@$(FORMAT_DRIVER) --all --strip-comments --lint --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all $(LINT_STRIP) --lint --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
 
 ## Apply the linters' automated fixes. Explicit and separate from `format`.
 lint-fix:

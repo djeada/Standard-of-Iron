@@ -8,8 +8,9 @@ trap 'echo "error: line $LINENO: $BASH_COMMAND" >&2' ERR
 EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py"
 ROOTS=(".")
 DRY_RUN=0
-BACKUP=0 # OFF by default
+BACKUP=0
 QUIET=0
+JOBS=0
 EXTS="$EXTS_DEFAULT"
 EXCLUDE_DIRS=(.git .svn build build-tidy build-debug third_party venv .venv)
 
@@ -22,13 +23,15 @@ Usage:
 
 Options:
   -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py)
+  -j, --jobs      Number of parallel workers (default: nproc)
   -n, --dry-run   Show files that would be modified; don't write changes
   --exclude-dir   Directory basename to skip (can be repeated)
-  --backup        Create FILE.bak before writing (default: OFF)
+  --backup        Create FILE.bak before writing
   -q, --quiet     Less output
   -h, --help      Show this help
 Examples:
   scripts/remove-comments.sh
+  scripts/remove-comments.sh -j 4
   scripts/remove-comments.sh --backup src/ include/
   scripts/remove-comments.sh -x c,cpp,hpp
   scripts/remove-comments.sh assets/shaders/
@@ -47,6 +50,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -x | --ext)
       EXTS="${2:?missing extensions}"
+      shift 2
+      ;;
+    -j | --jobs)
+      JOBS="${2:?missing job count}"
       shift 2
       ;;
     -n | --dry-run)
@@ -82,24 +89,23 @@ while [[ $# -gt 0 ]]; do
 done
 ((${#args[@]})) && ROOTS=("${args[@]}")
 
-# Build extension list (portable; no mapfile)
+# Build extension list
 IFS=',' read -r -a EXT_ARR <<<"$EXTS"
 ((${#EXT_ARR[@]})) || die "No extensions provided"
 
-# Build find predicates
 FIND_NAME=()
 for e in "${EXT_ARR[@]}"; do
   e="${e#.}"
   FIND_NAME+=(-o -iname "*.${e}")
 done
-FIND_NAME=("${FIND_NAME[@]:1}") # drop leading -o
+FIND_NAME=("${FIND_NAME[@]:1}")
 
 FIND_PRUNE=()
 for d in "${EXCLUDE_DIRS[@]}"; do
   [[ -n "$d" ]] || continue
   FIND_PRUNE+=(-o -name "$d")
 done
-FIND_PRUNE=("${FIND_PRUNE[@]:1}") # drop leading -o
+FIND_PRUNE=("${FIND_PRUNE[@]:1}")
 
 # Pick Python
 if command -v python3 >/dev/null 2>&1; then
@@ -110,18 +116,17 @@ else
   die "Python is required but not found."
 fi
 
-# Python filter as a literal (processes BYTES; preserves UTF-8/Unicode)
-PY_FILTER=$(
-  cat <<'PYCODE'
-import sys, re, os
+# Default jobs
+if ((JOBS == 0)); then
+  JOBS=$(command -v nproc >/dev/null 2>&1 && nproc || echo 4)
+fi
 
-# Read raw bytes and operate purely on bytes so UTF-8 (and any other) is preserved.
-path = sys.argv[1]
-with open(path, 'rb') as f:
-    data = f.read()
+# Write the Python filter to a temp script
+TMP_SCRIPT=$(mktemp /tmp/rmcomments.XXXXXX.py)
+trap 'rm -f "$TMP_SCRIPT"' EXIT
 
-# Detect file type based on extension
-is_python = path.lower().endswith('.py')
+cat > "$TMP_SCRIPT" << 'PYEOF'
+import sys, os, re, shutil
 
 RAW_PREFIX = re.compile(rb'(?:u8|u|U|L)?R"([^\s()\\]{0,16})\(')
 NAMESPACE_END_COMMENT = re.compile(
@@ -130,7 +135,7 @@ NAMESPACE_END_COMMENT = re.compile(
     rb'[ \t]*\r?$'
 )
 
-def isspace(b):  # b is an int 0..255
+def isspace(b):
     return b in b' \t\r\n\v\f'
 
 def trim_horizontal_space(out):
@@ -146,7 +151,6 @@ def strip_cpp_comments(b: bytes) -> bytes:
         return out[-1] if out else None
 
     while i < n:
-        # C++ raw string?
         m = RAW_PREFIX.match(b, i)
         if m:
             delim = m.group(1)
@@ -160,22 +164,19 @@ def strip_cpp_comments(b: bytes) -> bytes:
 
         c = b[i]
 
-        # Regular string / char literals
-        if c == 0x22 or c == 0x27:  # " or '
+        if c == 0x22 or c == 0x27:
             quote = c
             out.append(c); i += 1
             while i < n:
                 ch = b[i]; out.append(ch); i += 1
-                if ch == 0x5C and i < n:  # backslash -> escape next byte verbatim
+                if ch == 0x5C and i < n:
                     out.append(b[i]); i += 1
                 elif ch == quote:
                     break
             continue
 
-        # Comments
-        if c == 0x2F and i + 1 < n:  # '/'
+        if c == 0x2F and i + 1 < n:
             nx = b[i+1]
-            # // line comment
             if nx == 0x2F:
                 line_end = b.find(b'\n', i)
                 if line_end == -1:
@@ -196,14 +197,12 @@ def strip_cpp_comments(b: bytes) -> bytes:
                 while i < n and b[i] != 0x0A:
                     i += 1
                 if i < n and b[i] == 0x0A:
-                    # Preserve CRLF if present
                     if i > 0 and b[i-1] == 0x0D:
                         out += b'\r\n'
                     else:
                         out += b'\n'
                     i += 1
                 continue
-            # /* block comment */
             if nx == 0x2A:
                 i += 2
                 had_nl = False
@@ -214,22 +213,20 @@ def strip_cpp_comments(b: bytes) -> bytes:
                         i += 2
                         break
                     i += 1
-                # Insert minimal whitespace so tokens don't glue
                 nextc = b[i] if i < n else None
                 p = prev_byte()
                 if had_nl:
                     trim_horizontal_space(out)
                     p = prev_byte()
                     if p not in (None, 0x0A, 0x0D):
-                        out.append(0x0A)  # '\n'
+                        out.append(0x0A)
                 else:
                     if nextc in (None, 0x0A, 0x0D):
                         trim_horizontal_space(out)
                     elif p is not None and not isspace(p) and not isspace(nextc):
-                        out.append(0x20)  # ' '
+                        out.append(0x20)
                 continue
 
-        # Default: copy byte verbatim (preserves any UTF-8 / binary)
         out.append(c); i += 1
 
     return bytes(out)
@@ -239,8 +236,7 @@ def strip_python_comments(b: bytes) -> bytes:
     i = 0
     n = len(b)
 
-    # Preserve shebang line if present at start of file
-    if n > 2 and b[0] == 0x23 and b[1] == 0x21:  # '#!'
+    if n > 2 and b[0] == 0x23 and b[1] == 0x21:
         while i < n and b[i] != 0x0A:
             out.append(b[i])
             i += 1
@@ -251,52 +247,45 @@ def strip_python_comments(b: bytes) -> bytes:
     while i < n:
         c = b[i]
 
-        # String literals (single, double, and triple-quoted)
-        if c == 0x22 or c == 0x27:  # " or '
+        if c == 0x22 or c == 0x27:
             quote = c
-            # Check for triple-quote
             if i + 2 < n and b[i+1] == quote and b[i+2] == quote:
-                # Triple-quoted string
                 out.append(c); out.append(c); out.append(c)
                 i += 3
                 while i < n:
                     ch = b[i]
                     out.append(ch)
                     i += 1
-                    if ch == 0x5C and i < n:  # backslash escape
+                    if ch == 0x5C and i < n:
                         out.append(b[i])
                         i += 1
                     elif ch == quote and i + 1 < n and b[i] == quote and i + 2 < n and b[i+1] == quote:
-                        # Found closing triple-quote
                         out.append(b[i])
                         out.append(b[i+1])
                         i += 2
                         break
             else:
-                # Single or double quoted string
                 out.append(c)
                 i += 1
                 while i < n:
                     ch = b[i]
                     out.append(ch)
                     i += 1
-                    if ch == 0x5C and i < n:  # backslash escape
+                    if ch == 0x5C and i < n:
                         out.append(b[i])
                         i += 1
                     elif ch == quote:
                         break
-                    elif ch == 0x0A:  # newline ends unclosed string
+                    elif ch == 0x0A:
                         break
             continue
 
-        # # comment
-        if c == 0x23:  # '#'
+        if c == 0x23:
             trim_horizontal_space(out)
             i += 1
             while i < n and b[i] != 0x0A:
                 i += 1
             if i < n and b[i] == 0x0A:
-                # Preserve line ending
                 if i > 0 and b[i-1] == 0x0D:
                     out += b'\r\n'
                 else:
@@ -304,77 +293,94 @@ def strip_python_comments(b: bytes) -> bytes:
                 i += 1
             continue
 
-        # Default: copy byte verbatim
         out.append(c)
         i += 1
 
     return bytes(out)
 
-if is_python:
-    sys.stdout.buffer.write(strip_python_comments(data))
-else:
-    sys.stdout.buffer.write(strip_cpp_comments(data))
-PYCODE
-)
 
-changed=0
-processed=0
+def process(path):
+    dry_run = os.environ.get('DRY_RUN') == '1'
+    backup = os.environ.get('BACKUP') == '1'
 
-process_file() {
-  local f="$1"
-  log "processing: $f"
+    with open(path, 'rb') as f:
+        original = f.read()
 
-  # Capture current file mode (GNU and BSD)
-  local mode
-  mode="$(stat -c '%a' "$f" 2>/dev/null || stat -f '%Lp' "$f" 2>/dev/null || echo '')"
+    is_python = path.lower().endswith('.py')
+    result = strip_python_comments(original) if is_python else strip_cpp_comments(original)
 
-  # mktemp: handle BSD/GNU differences
-  local tmp
-  tmp="$(mktemp 2>/dev/null || mktemp -t rmcomments)" || die "mktemp failed"
+    if result == original:
+        return 'unchanged'
 
-  # Run the Python filter; keep argv[1] = file path
-  if ! printf '%s\n' "$PY_FILTER" | "$PYTHON_BIN" - "$f" >"$tmp"; then
-    rm -f "$tmp"
-    die "Python filter failed on $f"
-  fi
+    if dry_run:
+        return 'would_modify'
 
-  if ! cmp -s "$f" "$tmp"; then
-    if ((DRY_RUN == 1)); then
-      echo "would modify: $f"
-      rm -f "$tmp"
-      ((changed += 1))
-      ((processed += 1))
-      return
-    fi
-    if ((BACKUP == 1)); then
-      cp -p -- "$f" "$f.bak" 2>/dev/null || cp -p "$f" "$f.bak" || true
-    fi
-    # Replace file
-    mv -- "$tmp" "$f" 2>/dev/null || mv "$tmp" "$f"
-    # Restore original mode if we captured it
-    [[ -n "$mode" ]] && chmod "$mode" "$f" 2>/dev/null || true
-    ((changed += 1))
-  else
-    rm -f "$tmp"
-  fi
-  ((processed += 1))
-}
+    if backup:
+        shutil.copy2(path, path + '.bak')
+
+    mode = os.stat(path).st_mode
+    with open(path, 'wb') as f:
+        f.write(result)
+    os.chmod(path, mode)
+    return 'modified'
+
+
+if __name__ == '__main__':
+    path = sys.argv[1]
+    try:
+        status = process(path)
+        print(f'{status}:{path}')
+    except Exception as e:
+        print(f'error:{path}:{e}')
+        sys.exit(1)
+PYEOF
+
+# Export settings for parallel workers
+export DRY_RUN BACKUP
+RESULTS=$(mktemp /tmp/rmcomments.XXXXXX)
+trap 'rm -f "$TMP_SCRIPT" "$RESULTS"' EXIT
 
 log "Scanning: ${ROOTS[*]}"
 log "Extensions: $EXTS"
 log "Excluded dirs: ${EXCLUDE_DIRS[*]}"
+log "Jobs: $JOBS"
 ((DRY_RUN)) && log "(dry run)"
 
-# Find files and process
-while IFS= read -r -d '' f; do
-  process_file "$f"
-done < <(
-  find "${ROOTS[@]}" \( -type d \( "${FIND_PRUNE[@]}" \) -prune \) -o \
-    \( -type f \( "${FIND_NAME[@]}" \) -print0 \)
-)
+# Find and process files in parallel
+find "${ROOTS[@]}" \( -type d \( "${FIND_PRUNE[@]}" \) -prune \) -o \
+    \( -type f \( "${FIND_NAME[@]}" \) -print0 \) | \
+    xargs -0 -P "$JOBS" -n 1 "$PYTHON_BIN" "$TMP_SCRIPT" > "$RESULTS"
+
+# Parse results
+processed=0
+modified=0
+would_modify=0
+
+while IFS= read -r line; do
+  ((processed += 1))
+  case "$line" in
+    modified:*)
+      ((modified += 1))
+      ((QUIET)) || echo "${line#modified:}" >&2
+      ;;
+    would_modify:*)
+      ((would_modify += 1))
+      ((DRY_RUN)) && echo "would modify: ${line#would_modify:}"
+      ;;
+    unchanged:*)
+      ;;
+    error:*)
+      path="${line#error:}"
+      echo "error: Python filter failed on ${path%%:*}" >&2
+      ;;
+  esac
+done < "$RESULTS"
+
+rm -f "$RESULTS" "$TMP_SCRIPT"
+trap '' EXIT
 
 if ((DRY_RUN == 1)); then
-  echo "dry run complete. processed: $processed file(s); would modify: $changed"
+  echo "dry run complete. processed: $processed file(s); would modify: $would_modify"
 else
-  echo "done. processed: $processed file(s); modified: $changed"
+  echo "done. processed: $processed file(s); modified: $modified"
 fi
