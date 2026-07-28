@@ -603,6 +603,14 @@ void InputCommandHandler::select_unit_by_id(int unit_id, int local_owner_id) {
       static_cast<Engine::Core::EntityID>(unit_id), local_owner_id);
 }
 
+void InputCommandHandler::select_selected_units_by_type(const QString& unit_type,
+                                                        int local_owner_id) {
+  if (m_is_spectator_mode || m_selection_controller == nullptr) {
+    return;
+  }
+  m_selection_controller->select_selected_units_by_type(unit_type, local_owner_id);
+}
+
 void InputCommandHandler::set_hover_at_screen(qreal sx,
                                               qreal sy,
                                               const ViewportState& viewport) {

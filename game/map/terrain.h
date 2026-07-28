@@ -718,8 +718,6 @@ struct Bridge {
   float height = 0.5F;
 };
 
-inline constexpr float k_bridge_riverbank_visual_padding = 1.0F;
-
 [[nodiscard]] inline auto xz_cross(const QVector3D& a,
                                    const QVector3D& b) noexcept -> float {
   return a.x() * b.z() - a.z() * b.x();
@@ -748,9 +746,7 @@ inline constexpr float k_bridge_riverbank_visual_padding = 1.0F;
     return std::nullopt;
   }
 
-  float const effective_river_half_width =
-      river.width * 0.5F + k_bridge_riverbank_visual_padding;
-  return effective_river_half_width / sin_angle;
+  return river.width * 0.5F / sin_angle;
 }
 
 inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
@@ -772,14 +768,10 @@ inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
     float const cross = xz_cross(bridge_vec, river_vec);
     QVector3D const diff = river.start - bridge.start;
     float const t = xz_cross(diff, river_vec) / cross;
-    float const before = std::max(0.0F, *required_half - t * bridge_len);
-    float const after = std::max(0.0F, *required_half - (1.0F - t) * bridge_len);
-    if (before > 0.0F) {
-      bridge.start -= dir * before;
-    }
-    if (after > 0.0F) {
-      bridge.end += dir * after;
-    }
+    QVector3D const crossing = bridge.start + dir * (t * bridge_len);
+    bridge.start = crossing - dir * *required_half;
+    bridge.end = crossing + dir * *required_half;
+    return;
   }
 }
 

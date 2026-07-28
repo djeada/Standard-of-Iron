@@ -39,6 +39,8 @@ FORMAT_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || echo 4)
 FORMAT_BASE ?= origin/main
 # Extra flags forwarded to the driver (e.g. FORMAT_ARGS="--verbose").
 FORMAT_ARGS ?=
+# Extra GoogleTest flags (e.g. TEST_ARGS="--gtest_filter=SaveLoadServiceTest.*").
+TEST_ARGS ?=
 
 # Colors for output
 BOLD := \033[1m
@@ -67,7 +69,8 @@ help:
 	@echo "  $(GREEN)editor$(RESET)        - Run the map editor"
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)       - Clean and build"
-	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
+	@echo "  $(GREEN)test$(RESET)          - Build only test binaries, then run them"
+	@echo "  $(GREEN)test-only$(RESET)     - Run existing test binaries without building"
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
@@ -75,7 +78,7 @@ help:
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
 	@echo ""
 	@echo "$(BOLD)Formatting (also strips comments via remove-comments.sh):$(RESET)"
-	@echo "  $(GREEN)format$(RESET)        - Format all code in place"
+	@echo "  $(GREEN)format$(RESET)        - Format, lint, verify, and check quality markers"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting, change nothing (CI gate)"
 	@echo "  $(GREEN)format-changed$(RESET) - Format only files changed vs FORMAT_BASE"
 	@echo "  $(GREEN)format-check-changed$(RESET) - Fast check of changed files only"
@@ -86,7 +89,7 @@ help:
 	@echo "  $(GREEN)lint$(RESET)          - clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON"
 	@echo "  $(GREEN)lint-fix$(RESET)      - Apply the linters' automated fixes (explicit)"
 	@echo "  $(GREEN)lint-changed$(RESET)  - Lint only files changed vs FORMAT_BASE"
-	@echo "  $(GREEN)quality$(RESET)       - format-check + lint + quality markers"
+	@echo "  $(GREEN)quality$(RESET)       - lint + format-check + quality markers"
 	@echo "  $(GREEN)validate$(RESET)      - quality + build + test + content validation"
 	@echo "  $(GREEN)hooks-install$(RESET) - Install the pre-commit git hooks"
 	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files"
@@ -138,8 +141,6 @@ configure: build-dir
 		rm -rf "$(BUILD_DIR)/_deps/googletest-src" \
 		       "$(BUILD_DIR)/_deps/googletest-build" \
 		       "$(BUILD_DIR)/_deps/googletest-subbuild"; \
-	else \
-		rm -rf "$(BUILD_DIR)/_deps/googletest-subbuild"; \
 	fi
 	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
@@ -309,14 +310,27 @@ dev: install build
 	@echo "  make arena    # Run the arena playground"
 	@echo "  make editor   # Run the map editor"
 
-# Run tests (placeholder for future test implementation)
+# Build only the binaries required by the test suite.
+.PHONY: test-build
+test-build: configure
+	@echo "$(BOLD)$(BLUE)Building test binaries...$(RESET)"
+	@cmake --build $(BUILD_DIR) -j$$(nproc) --target soi_test_binaries
+	@echo "$(GREEN)✓ Test binaries built$(RESET)"
+
+# Incrementally build and run tests.
 .PHONY: test
-test: build
+test: test-build
+	@$(MAKE) --no-print-directory test-only
+
+# Run tests without configuring or compiling.
+.PHONY: test-only
+test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@if [ -f "$(BUILD_DIR)/bin/standard_of_iron_tests" ]; then \
-		./$(BUILD_DIR)/bin/standard_of_iron_tests; \
+		QT_QPA_PLATFORM=offscreen \
+			./$(BUILD_DIR)/bin/standard_of_iron_tests --gtest_brief=1 $(TEST_ARGS); \
 	else \
-		echo "$(RED)Test executable not found. Build may have failed.$(RESET)"; \
+		echo "$(RED)Test executable not found. Run 'make test' first.$(RESET)"; \
 		exit 1; \
 	fi
 	@# The QML design-system suite is skipped when Qt QuickTest is unavailable,
@@ -361,9 +375,10 @@ test-validator: build
 .PHONY: format format-check format-changed format-check-changed \
 	format-staged format-doctor format-bootstrap clean-format-trash
 
-## Format every tracked file in place.
+## Format every tracked file, then run the complete non-compiler quality gate.
 format: clean-format-trash
-	@$(FORMAT_DRIVER) --all --strip-comments --fix --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all --strip-comments --fix --strict --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(MAKE) --no-print-directory quality
 
 ## Verify formatting without writing anything (CI gate).
 format-check:
@@ -436,8 +451,10 @@ format-strip-comments: strip-comments
 # ---- Aggregate gates ----
 .PHONY: quality validate hooks-install
 
-## Everything that does not need a compiler: formatting + linting + markers.
-quality: format-check lint
+## Everything that does not need a compiler: comment stripping, linting, formatting, markers.
+quality:
+	@$(MAKE) --no-print-directory lint FORMAT_ARGS="$(FORMAT_ARGS) --strict"
+	@$(MAKE) --no-print-directory format-check FORMAT_ARGS="$(FORMAT_ARGS) --strict"
 	@echo "$(BOLD)$(BLUE)Checking quality markers...$(RESET)"
 	@git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
 		| xargs -0 -r $(PYTHON) scripts/check-quality-markers.py

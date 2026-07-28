@@ -215,6 +215,7 @@ public:
   on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive = false);
   Q_INVOKABLE void select_all_troops();
   Q_INVOKABLE void select_unit_by_id(int unit_id);
+  Q_INVOKABLE void select_selected_units_by_type(const QString& unit_type);
   Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_stop_command();

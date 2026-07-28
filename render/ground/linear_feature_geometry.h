@@ -32,6 +32,7 @@ struct LinearFeatureRibbonSettings {
   float y_offset = 0.0F;
   bool sample_terrain_envelope = false;
   bool follow_terrain_centerline = false;
+  bool use_segment_elevation_profile = false;
   bool junction_uses_center_uv = false;
   const Game::Map::TerrainHeightMap* height_map = nullptr;
 };

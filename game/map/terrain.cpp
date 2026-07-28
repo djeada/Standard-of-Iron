@@ -1142,35 +1142,96 @@ void TerrainHeightMap::add_river_segments(
       river.end.setY(water_surface_height(river.end));
     }
     m_river_segments.push_back(river);
-    QVector3D dir = river.end - river.start;
-    float const length = dir.length();
-    if (length < 0.01F) {
+  }
+
+  constexpr float connected_endpoint_epsilon_sq = 0.0001F;
+  const auto endpoints_connect = [](const RiverSegment& lhs, const RiverSegment& rhs) {
+    const auto points_match = [](const QVector3D& first, const QVector3D& second) {
+      const float dx = first.x() - second.x();
+      const float dz = first.z() - second.z();
+      return dx * dx + dz * dz <= connected_endpoint_epsilon_sq;
+    };
+    return points_match(lhs.start, rhs.start) || points_match(lhs.start, rhs.end) ||
+           points_match(lhs.end, rhs.start) || points_match(lhs.end, rhs.end);
+  };
+
+  std::vector<bool> flattened(m_river_segments.size(), false);
+  for (std::size_t root = 0; root < m_river_segments.size(); ++root) {
+    if (flattened[root] ||
+        m_river_segments[root].elevation_mode != WaterElevationMode::Terrain) {
       continue;
     }
 
-    dir.normalize();
-    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    std::vector<std::size_t> component{root};
+    flattened[root] = true;
+    float water_height =
+        std::min(m_river_segments[root].start.y(), m_river_segments[root].end.y());
 
-    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
+    for (std::size_t cursor = 0; cursor < component.size(); ++cursor) {
+      const RiverSegment& connected = m_river_segments[component[cursor]];
+      for (std::size_t candidate = 0; candidate < m_river_segments.size();
+           ++candidate) {
+        if (flattened[candidate] ||
+            m_river_segments[candidate].elevation_mode != WaterElevationMode::Terrain ||
+            !endpoints_connect(connected, m_river_segments[candidate])) {
+          continue;
+        }
+        flattened[candidate] = true;
+        component.push_back(candidate);
+        water_height = std::min(water_height,
+                                std::min(m_river_segments[candidate].start.y(),
+                                         m_river_segments[candidate].end.y()));
+      }
+    }
+
+    for (const std::size_t index : component) {
+      m_river_segments[index].start.setY(water_height);
+      m_river_segments[index].end.setY(water_height);
+    }
+  }
+
+  constexpr float river_bed_depth = 0.10F;
+  constexpr float minimum_bank_blend_cells = 2.5F;
+  const float campaign_bank_blend_cells =
+      std::clamp(std::max(m_width, m_height) * 0.025F, minimum_bank_blend_cells, 16.0F);
+  for (const auto& river : m_river_segments) {
+    const float delta_x = river.end.x() - river.start.x();
+    const float delta_z = river.end.z() - river.start.z();
+    const float horizontal_length = std::hypot(delta_x, delta_z);
+    if (horizontal_length < 0.01F) {
+      continue;
+    }
+
+    const QVector3D horizontal_direction(
+        delta_x / horizontal_length, 0.0F, delta_z / horizontal_length);
+    const QVector3D perpendicular(
+        -horizontal_direction.z(), 0.0F, horizontal_direction.x());
+
+    int const steps = static_cast<int>(std::ceil(horizontal_length / m_tile_size)) + 1;
 
     for (int i = 0; i < steps; ++i) {
       float const t =
           static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
-      QVector3D const center_pos = river.start + dir * (length * t);
+      QVector3D const center_pos = river.start + (river.end - river.start) * t;
 
       float const grid_center_x = (center_pos.x() / m_tile_size) + grid_half_width;
       float const grid_center_z = (center_pos.z() / m_tile_size) + grid_half_height;
 
       float const half_width = river.width * 0.5F / m_tile_size;
+      float const bank_blend_width =
+          std::max(campaign_bank_blend_cells, half_width * 0.90F);
+      float const channel_extent = half_width + bank_blend_width;
 
-      int const min_x =
-          std::max(0, static_cast<int>(std::floor(grid_center_x - half_width - 1.0F)));
-      int const max_x = std::min(
-          m_width - 1, static_cast<int>(std::ceil(grid_center_x + half_width + 1.0F)));
-      int const min_z =
-          std::max(0, static_cast<int>(std::floor(grid_center_z - half_width - 1.0F)));
-      int const max_z = std::min(
-          m_height - 1, static_cast<int>(std::ceil(grid_center_z + half_width + 1.0F)));
+      int const min_x = std::max(
+          0, static_cast<int>(std::floor(grid_center_x - channel_extent - 1.0F)));
+      int const max_x =
+          std::min(m_width - 1,
+                   static_cast<int>(std::ceil(grid_center_x + channel_extent + 1.0F)));
+      int const min_z = std::max(
+          0, static_cast<int>(std::floor(grid_center_z - channel_extent - 1.0F)));
+      int const max_z =
+          std::min(m_height - 1,
+                   static_cast<int>(std::ceil(grid_center_z + channel_extent + 1.0F)));
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -1180,12 +1241,25 @@ void TerrainHeightMap::add_river_segments(
           float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
+          if (dist_along_perp > channel_extent) {
+            continue;
+          }
+
+          int const idx = indexAt(x, z);
+          const float bed_height = center_pos.y() - river_bed_depth;
           if (dist_along_perp <= half_width) {
-            int const idx = indexAt(x, z);
-            if (m_terrain_types[idx] != TerrainType::Mountain) {
-              m_terrain_types[idx] = TerrainType::River;
-              m_heights[idx] = center_pos.y() - 0.10F;
-            }
+            m_terrain_types[idx] = TerrainType::River;
+            m_hill_entrances[idx] = false;
+            m_hill_walkable[idx] = false;
+            m_heights[idx] = bed_height;
+            continue;
+          }
+
+          if (m_heights[idx] > bed_height) {
+            float const bank_t = std::clamp(
+                (dist_along_perp - half_width) / bank_blend_width, 0.0F, 1.0F);
+            const float smooth_bank_t = bank_t * bank_t * (3.0F - 2.0F * bank_t);
+            m_heights[idx] = bed_height + (m_heights[idx] - bed_height) * smooth_bank_t;
           }
         }
       }

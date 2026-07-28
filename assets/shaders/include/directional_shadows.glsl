@@ -11,6 +11,10 @@ layout(std140) uniform DirectionalShadows {
 
 uniform sampler2DArray u_directional_shadow_map;
 
+vec3 environment_primary_direction();
+vec3 environment_shadow_tint();
+float environment_shadow_strength();
+
 float sample_shadow_cascade(vec3 world_position, vec3 normal, int cascade) {
   vec4 light_clip = u_shadow_light_vp[cascade] * vec4(world_position, 1.0);
   vec3 projected = light_clip.xyz / max(light_clip.w, 0.00001);

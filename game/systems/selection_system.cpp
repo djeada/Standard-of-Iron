@@ -206,6 +206,40 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
   emit selection_changed();
 }
 
+void SelectionController::select_selected_units_by_type(const QString& unit_type,
+                                                        int local_owner_id) {
+  if (m_selection_system == nullptr || m_world == nullptr || unit_type.isEmpty()) {
+    return;
+  }
+
+  std::vector<Engine::Core::EntityID> matching;
+  for (const auto id : m_selection_system->get_selected_units()) {
+    auto* entity = m_world->get_entity(id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit == nullptr || unit->health <= 0 || unit->owner_id != local_owner_id ||
+        entity->has_component<Engine::Core::BuildingComponent>()) {
+      continue;
+    }
+    if (QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type)) ==
+        unit_type) {
+      matching.push_back(id);
+    }
+  }
+
+  if (matching.empty()) {
+    return;
+  }
+
+  m_selection_system->clear_selection();
+  for (const auto id : matching) {
+    m_selection_system->select_unit(id);
+  }
+  sync_selection_flags();
+  emit selection_changed();
+}
+
 auto SelectionController::has_units_selected() const -> bool {
   if (m_selection_system == nullptr) {
     return false;

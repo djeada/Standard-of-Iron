@@ -64,6 +64,7 @@ public:
   void on_right_click_clear_selection();
   void select_all_player_troops(int local_owner_id);
   void select_single_unit(Engine::Core::EntityID id, int local_owner_id);
+  void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
 
   [[nodiscard]] auto has_units_selected() const -> bool;
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
