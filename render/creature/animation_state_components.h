@@ -9,6 +9,7 @@
 #include "../elephant/dimensions.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "../horse/dimensions.h"
+#include "animation/ambient_pose_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
 #include "animation/rig/horse_gait.h"
 #include "combat_visual_state.h"
@@ -34,6 +35,7 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   bool locomotion_initialized{false};
   float guard_pose_progress{0.0F};
   float hold_pose_progress{0.0F};
+  Animation::HumanoidAmbientRuntimeState ambient_idle{};
   CombatVisualPersistentState combat_visual{};
 };
 

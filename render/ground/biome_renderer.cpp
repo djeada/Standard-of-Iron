@@ -32,7 +32,7 @@ using std::uint32_t;
 using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
-constexpr float k_grass_height_scale = 1.12F;
+constexpr float k_grass_height_scale = 0.56F;
 constexpr float k_grass_width_scale = 1.55F;
 
 constexpr float k_grass_full_screen_fraction = 0.0040F;

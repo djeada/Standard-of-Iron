@@ -43,6 +43,12 @@ humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
 [[nodiscard]] auto humanoid_phase_for_anim(
     const Render::GL::HumanoidAnimationContext& anim) noexcept -> float;
 
+[[nodiscard]] auto
+humanoid_idle_breath_phase_for_lod(float sample_time,
+                                   std::uint32_t inst_seed,
+                                   Render::Creature::CreatureLOD lod,
+                                   bool template_prewarm) noexcept -> float;
+
 [[nodiscard]] auto humanoid_clip_variant_for_state(
     Render::Creature::ArchetypeId archetype_id,
     const Render::GL::HumanoidAnimationContext& anim,

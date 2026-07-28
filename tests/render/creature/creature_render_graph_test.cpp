@@ -135,9 +135,10 @@ TEST(ArchetypeRegistry, BaselineAnimationManifestPreservesHumanoidMappings) {
       registry.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Cast),
       registry.bpat_clip(ArchetypeRegistry::k_humanoid_base,
                          AnimationStateId::AttackBow));
+
   EXPECT_EQ(registry.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                         AnimationStateId::Idle),
-            5U);
+            6U);
   EXPECT_FALSE(
       registry.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Walk));
   EXPECT_EQ(

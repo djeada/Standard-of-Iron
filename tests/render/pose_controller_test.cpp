@@ -20,55 +20,30 @@ using namespace Render::GL;
 
 namespace {
 
-constexpr float k_sample_cycle_period = 18.0F;
-constexpr float k_sample_cycle_midpoint = 7.75F;
+constexpr float k_step = 1.0F / 60.0F;
 
-auto ambient_idle_type(std::uint32_t seed, float idle_duration) -> AmbientIdleType {
-  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
-      .seed = seed,
-      .idle_duration = idle_duration,
-  });
-  return schedule.active ? schedule.type : AmbientIdleType::None;
-}
+struct AmbientSim {
+  Animation::HumanoidAmbientRuntimeState state{};
+  float time{0.0F};
+  float idle_duration{0.0F};
+  std::uint32_t seed{0U};
+  bool mounted{false};
 
-auto ambient_idle_phase(std::uint32_t seed, float idle_duration) -> float {
-  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
-      .seed = seed,
-      .idle_duration = idle_duration,
-  });
-  return schedule.active ? schedule.phase : 0.0F;
-}
-
-auto find_seed_with_ambient_idle(float max_idle_duration) -> std::uint32_t {
-  for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
-    for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
-         idle_duration += 0.25F) {
-      if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
-        return seed;
-      }
-    }
+  auto step(float dt, bool eligible) -> Animation::HumanoidAmbientScheduleSample {
+    time += dt;
+    idle_duration = eligible ? idle_duration + dt : 0.0F;
+    Animation::HumanoidAmbientSelectionInputs inputs{};
+    inputs.ambient_state = state;
+    inputs.sample_time = time;
+    inputs.mounted = mounted;
+    inputs.seed = seed;
+    inputs.has_locomotion = !eligible;
+    inputs.idle_duration = idle_duration;
+    auto const tick = Animation::resolve_humanoid_ambient_selection(inputs);
+    state = tick.state;
+    return tick.sample;
   }
-  return 0U;
-}
-
-auto find_seed_with_multiple_ambient_types(float max_idle_duration,
-                                           std::size_t min_types) -> std::uint32_t {
-  for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
-    std::unordered_set<int> selected_types;
-    for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
-         idle_duration += 0.25F) {
-      auto const type = ambient_idle_type(seed, idle_duration);
-      if (type == AmbientIdleType::None) {
-        continue;
-      }
-      selected_types.insert(static_cast<int>(type));
-      if (selected_types.size() >= min_types) {
-        return seed;
-      }
-    }
-  }
-  return 0U;
-}
+};
 
 } // namespace
 
@@ -132,128 +107,157 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
   EXPECT_TRUE(approx_equal(pose.shoulder_l, original_shoulder_l));
 }
 
-TEST_F(HumanoidPoseControllerTest,
-       AmbientIdleSelectionDependsOnContinuousIdleTimeNotWorldTime) {
-  std::uint32_t const seed = find_seed_with_ambient_idle(80.0F);
-  ASSERT_NE(seed, 0U);
-  float activation_time = -1.0F;
-  for (float idle_duration = 5.0F; idle_duration <= 80.0F; idle_duration += 0.01F) {
-    if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
-      activation_time = idle_duration;
-      break;
-    }
+TEST_F(HumanoidPoseControllerTest, AmbientIdleNeverStartsBeforeMinimumIdleDuration) {
+  AmbientSim sim{.seed = 4242U};
+  for (float t = 0.0F; t < Animation::k_ambient_min_idle_duration - k_step;
+       t += k_step) {
+    EXPECT_FALSE(sim.step(k_step, true).active)
+        << "ambient fired after only " << sim.idle_duration << "s of standing";
   }
-
-  ASSERT_GT(activation_time, 0.0F);
-  auto const idle_type_now = ambient_idle_type(seed, activation_time);
-  auto const idle_type_later = ambient_idle_type(seed, activation_time);
-  EXPECT_EQ(idle_type_now, idle_type_later);
-  EXPECT_NE(idle_type_now, AmbientIdleType::None);
-
-  float const start_phase = ambient_idle_phase(seed, activation_time);
-  float const progressed_phase = ambient_idle_phase(seed, activation_time + 1.0F);
-  EXPECT_LT(start_phase, 0.10F);
-  EXPECT_GT(progressed_phase, start_phase);
 }
 
-TEST_F(HumanoidPoseControllerTest,
-       AmbientIdleLongStandstillRotatesThroughMultipleVariants) {
-  std::uint32_t const seed = find_seed_with_multiple_ambient_types(140.0F, 2U);
-  ASSERT_NE(seed, 0U);
-  std::unordered_set<int> selected_types;
-  for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
-    auto const type = ambient_idle_type(seed, idle_duration);
-    if (type == AmbientIdleType::None) {
+TEST_F(HumanoidPoseControllerTest, AmbientIdleEasesInAndOutWithoutSnapping) {
+  AmbientSim sim{.seed = 4242U};
+  float previous_blend = 0.0F;
+  float peak_blend = 0.0F;
+  bool saw_active = false;
+  bool returned_to_rest = false;
+
+  float const max_delta = k_step / std::min(Animation::k_ambient_blend_in_duration,
+                                            Animation::k_ambient_blend_out_duration) +
+                          1.0e-4F;
+
+  for (float t = 0.0F; t < 40.0F; t += k_step) {
+    auto const sample = sim.step(k_step, true);
+    float const blend = sample.active ? sample.blend : 0.0F;
+    EXPECT_LE(std::abs(blend - previous_blend), max_delta)
+        << "crossfade jumped from " << previous_blend << " to " << blend;
+    if (sample.active) {
+      saw_active = true;
+      peak_blend = std::max(peak_blend, blend);
+    } else if (saw_active) {
+      returned_to_rest = true;
+    }
+    previous_blend = blend;
+  }
+
+  EXPECT_TRUE(saw_active) << "no ambient idle played in 40s of standing";
+  EXPECT_NEAR(peak_blend, 1.0F, 1.0e-3F) << "ambient never reached full weight";
+  EXPECT_TRUE(returned_to_rest) << "ambient never settled back into the idle loop";
+}
+
+TEST_F(HumanoidPoseControllerTest, AmbientIdleClipPhaseAdvancesMonotonically) {
+  AmbientSim sim{.seed = 77U};
+  float previous_phase = 0.0F;
+  bool saw_active = false;
+
+  for (float t = 0.0F; t < 40.0F; t += k_step) {
+    auto const sample = sim.step(k_step, true);
+    if (!sample.active) {
+      previous_phase = 0.0F;
       continue;
     }
-    selected_types.insert(static_cast<int>(type));
-  }
-
-  EXPECT_GE(selected_types.size(), 2U);
-}
-
-TEST_F(HumanoidPoseControllerTest,
-       AmbientIdleEachWaveKeepsFormationParticipationSparse) {
-  constexpr std::uint32_t base_seed = 1234U;
-  constexpr int soldier_count = 64;
-
-  for (int cycle = 0; cycle < 4; ++cycle) {
-    int active = 0;
-    float const idle_duration =
-        k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
-    for (int idx = 0; idx < soldier_count; ++idx) {
-      std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      if (ambient_idle_type(seed, idle_duration) != AmbientIdleType::None) {
-        ++active;
-      }
+    if (saw_active) {
+      EXPECT_GE(sample.phase, previous_phase) << "ambient clip phase ran backwards";
     }
-
-    EXPECT_GE(active, soldier_count / 6);
-    EXPECT_LE(active, soldier_count / 3 + 3);
+    saw_active = true;
+    previous_phase = sample.phase;
   }
+  EXPECT_TRUE(saw_active);
 }
 
-TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeeds) {
-  constexpr std::uint32_t base_seed = 1234U;
-  constexpr int soldier_count = 64;
-  constexpr std::array<float, 4> sample_idle_durations{
-      k_sample_cycle_midpoint,
-      k_sample_cycle_midpoint + k_sample_cycle_period,
-      k_sample_cycle_midpoint + k_sample_cycle_period * 2.0F,
-      k_sample_cycle_midpoint + k_sample_cycle_period * 3.0F};
+TEST_F(HumanoidPoseControllerTest, AmbientIdleInterruptionBlendsOutInsteadOfCutting) {
+  AmbientSim sim{.seed = 4242U};
 
-  std::unordered_set<int> selected_types;
-  int peak_active = 0;
-  for (float const idle_duration : sample_idle_durations) {
-    int active = 0;
-    for (int idx = 0; idx < soldier_count; ++idx) {
-      std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      auto const type = ambient_idle_type(seed, idle_duration);
-      if (type == AmbientIdleType::None) {
-        continue;
-      }
-      ++active;
-      selected_types.insert(static_cast<int>(type));
+  bool reached_hold = false;
+  for (float t = 0.0F; t < 40.0F && !reached_hold; t += k_step) {
+    auto const sample = sim.step(k_step, true);
+    reached_hold = sample.active && sample.blend >= 0.999F;
+  }
+  ASSERT_TRUE(reached_hold) << "ambient never reached full weight";
+
+  int fade_frames = 0;
+  float previous_blend = 1.0F;
+  for (int i = 0; i < 240; ++i) {
+    auto const sample = sim.step(k_step, false);
+    float const blend = sample.active ? sample.blend : 0.0F;
+    EXPECT_LE(blend, previous_blend + 1.0e-4F) << "interrupted ambient re-strengthened";
+    if (!sample.active) {
+      break;
     }
-    peak_active = std::max(peak_active, active);
+    ++fade_frames;
+    previous_blend = blend;
   }
 
-  EXPECT_GE(selected_types.size(), 4U);
-  EXPECT_LT(peak_active, soldier_count / 3 + 4);
+  EXPECT_GT(fade_frames, 10) << "interrupted ambient snapped instead of blending out";
 }
 
-TEST_F(HumanoidPoseControllerTest,
-       AmbientIdleLongStandstillRotatesParticipationAcrossFormation) {
+TEST_F(HumanoidPoseControllerTest, AmbientIdleRotatesVariantsWithoutImmediateRepeats) {
+  AmbientSim sim{.seed = 909U};
+  std::vector<AmbientIdleType> plays;
+  AmbientIdleType current = AmbientIdleType::None;
+
+  for (float t = 0.0F; t < 400.0F; t += k_step) {
+    auto const sample = sim.step(k_step, true);
+    auto const type = sample.active ? sample.type : AmbientIdleType::None;
+    if (type != AmbientIdleType::None && type != current) {
+      plays.push_back(type);
+    }
+    current = type;
+  }
+
+  ASSERT_GE(plays.size(), 4U) << "ambient idles never repeated over 400s";
+  std::unordered_set<int> distinct;
+  for (std::size_t i = 0; i < plays.size(); ++i) {
+    distinct.insert(static_cast<int>(plays[i]));
+    if (i > 0) {
+      EXPECT_NE(plays[i], plays[i - 1]) << "same ambient idle played back to back";
+    }
+  }
+  EXPECT_GE(distinct.size(), 2U);
+}
+
+TEST_F(HumanoidPoseControllerTest, AmbientIdleKeepsFormationParticipationSparse) {
   constexpr std::uint32_t base_seed = 1234U;
   constexpr int soldier_count = 64;
 
+  std::vector<AmbientSim> squad;
+  squad.reserve(soldier_count);
+  for (int idx = 0; idx < soldier_count; ++idx) {
+    squad.push_back(
+        AmbientSim{.seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176)});
+  }
+
+  int peak_concurrent = 0;
   std::unordered_set<int> ever_active;
-  std::array<int, soldier_count> previous_active{};
-  bool previous_initialized = false;
-  bool saw_rotation = false;
-
-  for (int cycle = 0; cycle < 6; ++cycle) {
-    std::array<int, soldier_count> active{};
-    float const idle_duration =
-        k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
+  for (float t = 0.0F; t < 240.0F; t += k_step) {
+    int active = 0;
     for (int idx = 0; idx < soldier_count; ++idx) {
-      std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-      if (ambient_idle_type(seed, idle_duration) == AmbientIdleType::None) {
-        continue;
+      if (squad[static_cast<std::size_t>(idx)].step(k_step, true).active) {
+        ++active;
+        ever_active.insert(idx);
       }
-      active[static_cast<std::size_t>(idx)] = 1;
-      ever_active.insert(idx);
     }
-
-    if (previous_initialized && active != previous_active) {
-      saw_rotation = true;
-    }
-    previous_active = active;
-    previous_initialized = true;
+    peak_concurrent = std::max(peak_concurrent, active);
   }
 
-  EXPECT_TRUE(saw_rotation);
-  EXPECT_GT(ever_active.size(), static_cast<std::size_t>(soldier_count / 2));
+  EXPECT_LE(peak_concurrent, soldier_count / 2)
+      << peak_concurrent << " of " << soldier_count << " soldiers animated at once";
+  EXPECT_GT(ever_active.size(), static_cast<std::size_t>(soldier_count * 3 / 4));
+}
+
+TEST_F(HumanoidPoseControllerTest, MountedUnitsDoNotScheduleAmbientIdles) {
+  for (std::uint32_t seed = 1U; seed <= 24U; ++seed) {
+    AmbientSim sim{.seed = seed, .mounted = true};
+    for (float t = 0.0F; t < 200.0F; t += k_step) {
+      auto const sample = sim.step(k_step, true);
+      ASSERT_FALSE(sample.active)
+          << "a mounted rider scheduled an ambient idle it cannot render (seed " << seed
+          << ")";
+      ASSERT_NE(sample.type, AmbientIdleType::SitDown)
+          << "a mounted rider tried to squat on the ground (seed " << seed << ")";
+    }
+  }
 }
 
 TEST_F(HumanoidPoseControllerTest, AirborneJumpAmbientIdleLiftsFeetAndPelvis) {

@@ -64,6 +64,8 @@ struct DrawContext {
   bool has_seed_override = false;
   uint32_t seed_override = 0;
   bool template_prewarm = false;
+
+  bool prewarming_via_runtime_path = false;
   bool suppress_animation_state_persistence = false;
   bool force_single_soldier = false;
 

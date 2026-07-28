@@ -186,7 +186,7 @@ void PlantRenderer::generate_plant_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
-    float const scale = remap(rand_01(state), 0.30F, 0.80F) * tile_safe *
+    float const scale = remap(rand_01(state), 0.15F, 0.40F) * tile_safe *
                         scatter_scale_bias(ScatterRuleSpecies::Plant, scene);
 
     float plant_type = 0.0F;
