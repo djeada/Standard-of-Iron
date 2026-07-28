@@ -28,17 +28,17 @@ ScrollView {
 
                 Text {
                     text: qsTr("Iron and Ember")
-                    color: Theme.textPrimary
-                    font.family: Typography.displayFamily
-                    font.pixelSize: Typography.title
-                    font.weight: Typography.bold
+                    color: Design.Theme.textPrimary
+                    font.family: Design.Typography.displayFamily
+                    font.pixelSize: Design.Typography.title
+                    font.weight: Design.Typography.bold
                 }
 
                 Text {
-                    text: qsTr("Scale %1×  ·  %2  ·  colour vision: %3").arg(A11y.uiScale.toFixed(2)).arg(A11y.reducedMotion ? qsTr("reduced motion") : qsTr("full motion")).arg(A11y.colorVisionMode)
-                    color: Theme.textSecondary
-                    font.family: Typography.family
-                    font.pixelSize: Typography.caption
+                    text: qsTr("Scale %1×  ·  %2  ·  colour vision: %3").arg(Design.A11y.uiScale.toFixed(2)).arg(Design.A11y.reducedMotion ? qsTr("reduced motion") : qsTr("full motion")).arg(Design.A11y.colorVisionMode)
+                    color: Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
                 }
             }
         }
@@ -69,10 +69,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Buttons")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Flow {
@@ -128,10 +128,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Orders")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Flow {
@@ -185,16 +185,17 @@ ScrollView {
 
                         Text {
                             text: qsTr("Faction skins")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Repeater {
                             model: ["roman_republic", "carthage", "iron_sepulcher"]
 
                             delegate: Row {
+                                id: factionRow
                                 required property string modelData
 
                                 width: factions.width
@@ -203,7 +204,7 @@ ScrollView {
                                 Rectangle {
                                     width: Design.Metrics.space4
                                     height: crest.implicitHeight
-                                    color: Design.FactionTheme.accentFor(modelData)
+                                    color: Design.FactionTheme.accentFor(factionRow.modelData)
                                 }
 
                                 Column {
@@ -212,18 +213,18 @@ ScrollView {
                                     spacing: Design.Metrics.space2
 
                                     Text {
-                                        text: Design.FactionTheme.glyphFor(modelData) + "  " + Design.FactionTheme.nameFor(modelData)
-                                        color: Design.FactionTheme.accentFor(modelData)
-                                        font.family: Typography.displayFamily
-                                        font.pixelSize: Typography.label
-                                        font.weight: Typography.medium
+                                        text: Design.FactionTheme.glyphFor(factionRow.modelData) + "  " + Design.FactionTheme.nameFor(factionRow.modelData)
+                                        color: Design.FactionTheme.accentFor(factionRow.modelData)
+                                        font.family: Design.Typography.displayFamily
+                                        font.pixelSize: Design.Typography.label
+                                        font.weight: Design.Typography.medium
                                     }
 
                                     Text {
-                                        text: Design.FactionTheme.describe(modelData).motto
-                                        color: Theme.textSecondary
-                                        font.family: Typography.family
-                                        font.pixelSize: Typography.caption
+                                        text: Design.FactionTheme.describe(factionRow.modelData).motto
+                                        color: Design.Theme.textSecondary
+                                        font.family: Design.Typography.family
+                                        font.pixelSize: Design.Typography.caption
                                     }
                                 }
                             }
@@ -244,10 +245,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Selection")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Design.IronUnitCard {
@@ -299,10 +300,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Inputs")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Design.IronSearchField {
@@ -327,7 +328,7 @@ ScrollView {
                         Design.IronCheckBox {
                             text: qsTr("Reduced motion")
                             description: qsTr("Collapses transitions to an instant state change")
-                            checked: A11y.reducedMotion
+                            checked: Design.A11y.reducedMotion
                             enabled: false
                         }
                     }
@@ -346,10 +347,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Objectives")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Design.IronObjectiveRow {
@@ -388,10 +389,10 @@ ScrollView {
 
                         Text {
                             text: qsTr("Notification priorities")
-                            color: Theme.textSecondary
-                            font.family: Typography.family
-                            font.pixelSize: Typography.caption
-                            font.weight: Typography.bold
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
                         }
 
                         Design.IronNotification {

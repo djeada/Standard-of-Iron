@@ -327,8 +327,12 @@ test: test-build
 test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@if [ -f "$(BUILD_DIR)/bin/standard_of_iron_tests" ]; then \
+		echo "$(BOLD)--- C++ tests (standard_of_iron_tests) ---$(RESET)"; \
 		QT_QPA_PLATFORM=offscreen \
 			./$(BUILD_DIR)/bin/standard_of_iron_tests --gtest_brief=1 $(TEST_ARGS); \
+		_status=$$?; \
+		echo "$(BOLD)--- C++ tests complete (exit code: $$_status) ---$(RESET)"; \
+		if [ $$_status -ne 0 ]; then exit $$_status; fi; \
 	else \
 		echo "$(RED)Test executable not found. Run 'make test' first.$(RESET)"; \
 		exit 1; \
@@ -336,9 +340,11 @@ test-only:
 	@# The QML design-system suite is skipped when Qt QuickTest is unavailable,
 	@# so a missing binary is not a build failure here.
 	@if [ -f "$(BUILD_DIR)/bin/design_system_qml_tests" ]; then \
-		echo "$(BOLD)$(BLUE)Running design system QML tests...$(RESET)"; \
+		echo ""; \
+		echo "$(BOLD)--- QML design system tests (design_system_qml_tests) ---$(RESET)"; \
 		QT_QPA_PLATFORM=offscreen ./$(BUILD_DIR)/bin/design_system_qml_tests \
 			-input tests/ui/qml; \
+		echo "$(BOLD)--- QML tests complete ---$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ design_system_qml_tests not built (Qt QuickTest missing). Skipping.$(RESET)"; \
 	fi

@@ -22,15 +22,14 @@ Dialog {
     closePolicy: Popup.CloseOnEscape
     implicitWidth: Design.Metrics.space24 * 20
 
-    Accessible.role: Accessible.Dialog
-    Accessible.name: root.title
-    Accessible.description: root.message
-
     background: Rectangle {
         color: Design.Theme.backgroundRaised
         radius: Design.Metrics.radiusLarge
         border.width: Design.Metrics.borderFocus
         border.color: root.toneColor
+        Accessible.role: Accessible.Dialog
+        Accessible.name: root.title
+        Accessible.description: root.message
     }
 
     Overlay.modal: Rectangle {

@@ -824,8 +824,8 @@ Rectangle {
                         spacing: Theme.spacingTiny
 
                         Rectangle {
-                            width: 12
-                            height: 12
+                            Layout.preferredWidth: 12
+                            Layout.preferredHeight: 12
                             radius: 2
                             color: modelData.color
                             border.color: "#5a4a3a"

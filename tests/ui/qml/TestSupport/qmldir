@@ -1,0 +1,2 @@
+module StandardOfIron.TestSupport
+singleton GlyphProbe 1.0 GlyphProbe.qml

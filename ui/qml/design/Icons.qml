@@ -148,7 +148,7 @@ QtObject {
     readonly property string defaultUnitGlyph: "\u25CF"
 
     function artPath(filename) {
-        return filename ? Qt.resolvedUrl("../assets/visuals/icons/" + filename) : "";
+        return filename ? Qt.resolvedUrl("../../assets/visuals/icons/" + filename) : "";
     }
 
     function command(actionId) {

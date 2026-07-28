@@ -21,8 +21,8 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.leftMargin: parent.radius
-        anchors.rightMargin: parent.radius
+        anchors.leftMargin: root.radius
+        anchors.rightMargin: root.radius
         anchors.topMargin: Design.Metrics.borderThin
         height: Design.Metrics.borderThin
         color: root.border.color

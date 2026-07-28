@@ -321,6 +321,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
+        app/models/selection_grouping.cpp
         app/models/minimap_image_provider.cpp
         app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
@@ -373,6 +374,7 @@ else()
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
+        app/models/selection_grouping.cpp
         app/models/minimap_image_provider.cpp
         app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
