@@ -141,18 +141,12 @@ inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip = 33U;
 inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip = 34U;
 inline constexpr std::uint16_t k_humanoid_clip_count = 35U;
 
-// The standing/riding idle clips are baked as a long seamless breathing loop, and
-// every unit walks that one clip at its own phase offset. The frame count is a
-// multiple of the template-prewarm grid (see k_anim_frame_count) so a quantized
-// phase lands exactly on a baked frame — that is what keeps distant idle units on
-// prebaked snapshot meshes instead of baking at draw time.
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;
 inline constexpr float k_humanoid_idle_breath_fps =
     static_cast<float>(k_humanoid_idle_breath_frames) /
     k_humanoid_idle_breath_cycle_time;
 
-// Per-unit offset into that shared loop, spread across the whole cycle.
 [[nodiscard]] auto
 humanoid_idle_breath_offset(std::uint32_t inst_seed) noexcept -> float;
 

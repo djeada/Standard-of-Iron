@@ -1472,8 +1472,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
-    // Long standstill, close camera: this is the scenario for eyeballing the idle
-    // breathing loop and watching ambient idles ease in and back out again.
+
     auto s = definition(QString::fromLatin1(k_infantry_idle_ambient_id),
                         QStringLiteral("Infantry Idle Ambient"),
                         QStringLiteral("Swordsmen, spearmen and archers stand at ease "
@@ -1523,8 +1522,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
-    // Orders land while ambient idles are mid-play. A unit must stand up out of the
-    // animation rather than cutting straight to the walk pose.
+
     auto s = definition(QString::fromLatin1(k_idle_ambient_interrupt_id),
                         QStringLiteral("Idle Ambient Interrupt"),
                         QStringLiteral("Repeated move orders arrive while ambient "

@@ -319,7 +319,7 @@ struct HumanoidAnimationContext {
   float yaw_degrees{0.0F};
   AmbientIdleType ambient_idle_type{AmbientIdleType::None};
   float ambient_idle_phase{0.0F};
-  // Crossfade weight from the breathing idle loop toward the ambient clip.
+
   float ambient_idle_blend{0.0F};
   float idle_breath_phase{0.0F};
   ConstructionRole construction_role{ConstructionRole::None};

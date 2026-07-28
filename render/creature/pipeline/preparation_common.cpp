@@ -107,10 +107,7 @@ auto humanoid_idle_breath_phase_for_lod(float sample_time,
                                         std::uint32_t inst_seed,
                                         Render::Creature::CreatureLOD lod,
                                         bool template_prewarm) noexcept -> float {
-  // Template prewarm enumerates poses by anim key frame, and hands us that frame
-  // as a normalized time in [0,1]. Feeding the seeded wall-clock formula here
-  // would bake a narrow, per-seed slice of the breath cycle instead of the grid
-  // the runtime will actually ask for.
+
   float const phase = template_prewarm
                           ? sample_time
                           : sample_time / Animation::k_humanoid_idle_breath_cycle_time +
@@ -177,12 +174,7 @@ auto humanoid_clip_variant_for_state(Render::Creature::ArchetypeId archetype_id,
   if (variant_count <= 1U) {
     return 0U;
   }
-  // Ambient idle variants are baked as the clips *immediately after* the idle clip,
-  // so a variant index is only meaningful when this archetype's Idle actually
-  // resolves to that idle clip. Archers hold a bow-ready pose and riders sit a
-  // saddle, both mapped to unrelated clips; offsetting from those bases lands on
-  // whatever clip happens to follow them — which is how an archer ended up sitting
-  // cross-legged in mid-air on an invisible horse.
+
   if (state == Render::Creature::AnimationStateId::Idle &&
       registry.bpat_clip(resolved_archetype, state) !=
           Render::Creature::k_humanoid_idle_clip) {

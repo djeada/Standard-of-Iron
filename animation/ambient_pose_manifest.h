@@ -10,18 +10,9 @@ struct HumanoidAmbientScheduleSample {
   bool active{false};
   HumanoidAmbientIdle type{HumanoidAmbientIdle::None};
   float phase{0.0F};
-  // Crossfade weight toward the ambient clip. The caller drives a full-body blend
-  // layer with this so the unit eases out of the breathing idle loop and back into
-  // it instead of snapping between clips.
+
   float blend{0.0F};
 };
-
-// --- Ambient idle state machine -------------------------------------------
-//
-// Ambient idles used to be a pure function of (seed, idle_duration). That made a
-// clean exit impossible: the instant a unit became active its idle_duration was
-// reset and the pose vanished mid-squat. The stage below is carried per entity so
-// an interrupted ambient blends out rather than cutting.
 
 inline constexpr float k_ambient_blend_in_duration = 0.40F;
 inline constexpr float k_ambient_blend_out_duration = 0.45F;
@@ -29,8 +20,7 @@ inline constexpr float k_ambient_clip_duration = 3.0F;
 inline constexpr float k_ambient_min_idle_duration = 5.0F;
 inline constexpr float k_ambient_cooldown_min = 9.0F;
 inline constexpr float k_ambient_cooldown_range = 13.0F;
-// Spread applied to a unit's *first* ambient so a freshly spawned formation does
-// not fire every soldier's opening animation on the same frame.
+
 inline constexpr float k_ambient_initial_spread = 18.0F;
 
 enum class HumanoidAmbientStage : std::uint8_t {
@@ -40,8 +30,6 @@ enum class HumanoidAmbientStage : std::uint8_t {
   BlendOut,
 };
 
-// Longest step the machine will integrate in one go. A frame hitch, a pause, or
-// a scenario time jump must not teleport a unit through a whole ambient beat.
 inline constexpr float k_ambient_max_step = 0.25F;
 
 struct HumanoidAmbientRuntimeState {
@@ -59,8 +47,7 @@ struct HumanoidAmbientRuntimeState {
 struct HumanoidAmbientTickInputs {
   HumanoidAmbientRuntimeState previous{};
   float sample_time{0.0F};
-  // False whenever the unit is doing anything at all (moving, fighting, routing,
-  // building, gathering, holding formation, dying). A running ambient blends out.
+
   bool eligible{false};
   bool mounted{false};
   std::uint32_t seed{0U};

@@ -64,10 +64,7 @@ struct DrawContext {
   bool has_seed_override = false;
   uint32_t seed_override = 0;
   bool template_prewarm = false;
-  // Set while the prewarm runs its work through the ordinary runtime submission
-  // path (template_prewarm itself is cleared there so the pass behaves like a real
-  // frame). Anything that must enumerate poses by anim-key frame rather than by
-  // wall clock has to look at this, not at template_prewarm.
+
   bool prewarming_via_runtime_path = false;
   bool suppress_animation_state_persistence = false;
   bool force_single_soldier = false;

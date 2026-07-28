@@ -117,8 +117,7 @@ auto resolve_humanoid_playback_phase(const HumanoidPlaybackPhaseInputs& inputs) 
     return inputs.ambient_idle_phase;
   }
   if (inputs.state == StateId::Idle || inputs.state == StateId::RidingIdle) {
-    // The idle clips are a long breathing loop walked at a per-unit offset, not
-    // the short locomotion cycle.
+
     return normalize_clip_phase(inputs.idle_breath_phase, true);
   }
   return inputs.gait_cycle_phase;

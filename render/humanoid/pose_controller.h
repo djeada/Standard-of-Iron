@@ -17,7 +17,6 @@ public:
 
   void apply_micro_idle(float time, std::uint32_t seed);
 
-  // Loop-safe breathing/sway for the baked idle clips; phase wraps at 1.0.
   void apply_idle_breath(float phase, bool mounted);
 
   void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);

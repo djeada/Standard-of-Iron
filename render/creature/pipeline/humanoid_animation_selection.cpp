@@ -317,13 +317,6 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
 
 namespace {
 
-// Crossfade the ambient idle against the breathing idle loop it grew out of, so a
-// unit eases into a squat and settles back into its cycle instead of the clip
-// swapping under it. At full weight the blend is bit-identical to just playing the
-// ambient clip, so the steady-state hold stays on the shared-palette fast path.
-//
-// Returns true when an ambient idle owns this frame; combat layering is skipped in
-// that case so the two cannot fight over the same blend slot.
 auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
                                   const Render::GL::HumanoidAnimationContext& anim,
                                   const UnitVisualSpec& spec,

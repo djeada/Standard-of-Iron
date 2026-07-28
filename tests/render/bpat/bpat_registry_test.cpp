@@ -786,9 +786,6 @@ TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {
   }
 }
 
-// The idle clip is a breathing loop, not a held pose. It has to actually move, and
-// the wrap from the last frame back to frame 0 has to be no larger than an ordinary
-// step, or standing units visibly hitch once per cycle.
 TEST(BpatRegistry, HumanoidIdleClipBreathesAndLoopsSeamlessly) {
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
@@ -842,7 +839,6 @@ TEST(BpatRegistry, HumanoidIdleClipBreathesAndLoopsSeamlessly) {
 
         EXPECT_GT(range, 0.01F) << label << " idle clip is a frozen pose, not a breath";
 
-        // `previous` now holds the final frame; wrapping to frame 0 must be smooth.
         float const seam = max_component_delta(previous, first, bone_count);
         EXPECT_LE(seam, worst_step * 2.0F + 1.0e-4F)
             << label << " idle loop jumps at the seam (" << seam << " vs typical step "

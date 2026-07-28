@@ -44,8 +44,6 @@ plateau01(float phase, float enter_end, float exit_start) noexcept -> float {
   return smooth01((1.0F - phase) / (1.0F - exit_start));
 }
 
-// Which ambient idles a unit category is allowed to play. Squatting is infantry
-// only; a mounted rider obviously cannot sit down on the ground.
 [[nodiscard]] auto
 ambient_catalog(bool mounted) noexcept -> std::span<const HumanoidAmbientIdle> {
   static constexpr std::array<HumanoidAmbientIdle, 4> k_infantry{
@@ -89,17 +87,12 @@ pick_ambient_type(std::uint32_t seed,
                                     k_ambient_max_step)
                        : 0.0F;
   if (!state.initialized) {
-    // Without this every soldier in a formation clears the minimum idle time on
-    // the same frame and the whole unit squats in unison. Spreading the very
-    // first cooldown staggers the opening wave the same way later cooldowns
-    // stagger every wave after it.
+
     state.cooldown = hash_to_unit(inputs.seed ^ 0x7A3B19C5U) * k_ambient_initial_spread;
     state.initialized = true;
   }
   state.last_sample_time = inputs.sample_time;
 
-  // An ineligible unit never cuts to the base pose; it retreats through BlendOut
-  // so a move order issued mid-squat still stands the soldier up.
   if (!inputs.eligible && state.stage != HumanoidAmbientStage::Dormant &&
       state.stage != HumanoidAmbientStage::BlendOut) {
     state.stage = HumanoidAmbientStage::BlendOut;
@@ -133,8 +126,7 @@ pick_ambient_type(std::uint32_t seed,
   case HumanoidAmbientStage::Hold: {
     state.blend = 1.0F;
     state.clip_phase = std::min(1.0F, state.clip_phase + dt / k_ambient_clip_duration);
-    // Start fading before the clip runs out so the blend finishes exactly as the
-    // clip reaches its final frame; otherwise the tail is a hard stop.
+
     float const fade_start =
         1.0F - (k_ambient_blend_out_duration / k_ambient_clip_duration);
     if (state.clip_phase >= fade_start) {
@@ -179,10 +171,7 @@ auto resolve_humanoid_ambient_tick(const HumanoidAmbientTickInputs& inputs) noex
 
 auto humanoid_ambient_eligible(const HumanoidAmbientSelectionInputs& inputs) noexcept
     -> bool {
-  // Mounted riders are excluded until saddle-aligned ambient clips are baked.
-  // Their Idle resolves to `riding_idle`, and ambient variants are indexed off the
-  // standing `idle` clip, so there is nothing correct for a rider to play yet — the
-  // riding idle loop already breathes on its own. See ambient_catalog().
+
   return !inputs.mounted && !inputs.has_locomotion && !inputs.attacking &&
          !inputs.in_hold_mode && !inputs.guarding && !inputs.exiting_guard &&
          !inputs.constructing && !inputs.healing && !inputs.hit_reacting &&
@@ -195,8 +184,6 @@ auto resolve_humanoid_ambient_selection(
   HumanoidAmbientTickSample scripted{};
   scripted.state = inputs.ambient_state;
 
-  // Scripted one-shots outrank the ambient scheduler and are fully weighted:
-  // they are an explicit order, not idle flavour.
   if (inputs.jump_active) {
     scripted.sample = {
         .active = true,

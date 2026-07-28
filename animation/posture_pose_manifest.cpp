@@ -110,16 +110,11 @@ auto resolve_humanoid_idle_breath_pose(
     const HumanoidIdleBreathPoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample {
   constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
 
-  // Every harmonic below is an integer multiple of the loop, so phase 1 lands
-  // exactly back on phase 0. Over the authored k_humanoid_idle_cycle_time this
-  // reads as ~15 breaths/minute with a single slow weight shift per loop.
   float const phase = inputs.phase - std::floor(inputs.phase);
   auto harmonic = [phase](float cycles, float phase_offset) {
     return std::sin((phase * cycles + phase_offset) * k_two_pi);
   };
 
-  // Asymmetric breath: the 2nd harmonic makes the inhale quicker than the
-  // exhale, which is what stops it reading as a pure sine pulse.
   float const breath = harmonic(2.0F, 0.0F) + 0.24F * harmonic(4.0F, 0.12F);
   float const sway = harmonic(1.0F, 0.31F);
   float const head_yaw = harmonic(1.0F, 0.68F);

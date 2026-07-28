@@ -135,7 +135,7 @@ TEST(ArchetypeRegistry, BaselineAnimationManifestPreservesHumanoidMappings) {
       registry.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Cast),
       registry.bpat_clip(ArchetypeRegistry::k_humanoid_base,
                          AnimationStateId::AttackBow));
-  // idle, squat, jump, weapon, weave, plant_flag
+
   EXPECT_EQ(registry.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                         AnimationStateId::Idle),
             6U);

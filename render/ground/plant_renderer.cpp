@@ -186,9 +186,6 @@ void PlantRenderer::generate_plant_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
-    // Halved: shrubs were standing as tall as the infantry they grow around.
-    // Plant instances carry a single uniform scale, so this shrinks them evenly
-    // rather than squashing them.
     float const scale = remap(rand_01(state), 0.15F, 0.40F) * tile_safe *
                         scatter_scale_bias(ScatterRuleSpecies::Plant, scene);
 

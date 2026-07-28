@@ -1071,9 +1071,6 @@ to_ambient_idle_type(BakerAmbientIdleType t) noexcept -> Render::GL::AmbientIdle
   return Render::GL::AmbientIdleType::None;
 }
 
-// The resting weapon stance for a bake profile. Both the plain locomotion clips
-// and the ambient idle clips go through here so the two can never disagree —
-// when they did, spearmen snapped 1.6 units entering and leaving every ambient.
 void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
                                      HumanoidBakeProfile profile) {
   switch (profile) {
@@ -1261,8 +1258,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       }
     }
     if (clip.riding_type == BakerRidingType::Idle) {
-      // A seated rider still breathes and settles in the saddle; without this the
-      // riding idle clip is 96 identical frames.
+
       Render::GL::HumanoidPoseController breath_ctrl(pose, anim_ctx_r);
       breath_ctrl.apply_idle_breath(phase, true);
     }
@@ -1305,11 +1301,9 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       anim_ctx.gait = gait;
       anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      // Must match the stance the plain idle clip is baked in, or the unit snaps
-      // on the way into and out of every ambient idle.
+
       apply_ground_stance_for_profile(ctrl, profile);
-      // Keep the chest moving through the ambient beat as well, otherwise the unit
-      // visibly holds its breath for the three seconds the ambient clip lasts.
+
       ctrl.apply_idle_breath(ambient_phase * clip.cycle_time /
                                  Animation::k_humanoid_idle_breath_cycle_time,
                              false);

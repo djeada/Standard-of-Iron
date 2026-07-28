@@ -780,8 +780,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     };
     auto const ambient_tick =
         Animation::resolve_humanoid_ambient_selection(ambient_inputs);
-    // Only the pass that owns animation persistence may commit the advanced state;
-    // shadow and LOD re-entries observe the same frame instead of stepping it again.
+
     if (allow_animation_persistence && locomotion_persistent_state != nullptr) {
       locomotion_persistent_state->ambient_idle = ambient_tick.state;
     }
@@ -878,9 +877,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
     auto const soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
 
-    // Archers resolve Idle to the bow-ready clip rather than the idle loop, and
-    // that clip's phase is a draw, not a breath. Keep them on the neutral phase the
-    // locomotion override already pinned instead of walking them through a shot.
     anim_ctx.idle_breath_phase =
         phase_override.active
             ? locomotion_state.gait.cycle_phase

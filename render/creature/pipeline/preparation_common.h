@@ -43,13 +43,6 @@ humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
 [[nodiscard]] auto humanoid_phase_for_anim(
     const Render::GL::HumanoidAnimationContext& anim) noexcept -> float;
 
-// Position in the shared idle breathing loop for one soldier.
-//
-// Near the camera this is continuous, so the breath interpolates smoothly between
-// baked frames. Further out it is quantized onto the template-prewarm phase grid,
-// because that is the set of frames the prewarm baked snapshot meshes for — an
-// arbitrary phase out there would force a snapshot bake at draw time. The
-// breathing is imperceptible at those distances, so nothing is lost visually.
 [[nodiscard]] auto
 humanoid_idle_breath_phase_for_lod(float sample_time,
                                    std::uint32_t inst_seed,

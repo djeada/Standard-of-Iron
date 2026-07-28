@@ -522,8 +522,6 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
         unit->spawn_type == Game::Units::SpawnType::Archer;
   }
 
-  // A broken unit has no business stretching or inspecting its weapon, even on
-  // the frames where it happens to be standing still.
   if (auto const* morale = ctx.entity->get_component<Engine::Core::MoraleComponent>();
       morale != nullptr) {
     anim.is_routing = morale->routing;

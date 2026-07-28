@@ -22,10 +22,6 @@ namespace {
 
 constexpr float k_step = 1.0F / 60.0F;
 
-// Drives one soldier's ambient idle machine over simulated time, the way the
-// render path does. The old scheduler was a pure function of idle_duration, so
-// tests could poke it at arbitrary times; the machine is stateful and has to be
-// stepped.
 struct AmbientSim {
   Animation::HumanoidAmbientRuntimeState state{};
   float time{0.0F};
@@ -127,8 +123,6 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleEasesInAndOutWithoutSnapping) {
   bool saw_active = false;
   bool returned_to_rest = false;
 
-  // One step can only move the crossfade by dt/blend_duration; anything larger is
-  // the clip swapping under the unit, which is exactly the artefact being fixed.
   float const max_delta = k_step / std::min(Animation::k_ambient_blend_in_duration,
                                             Animation::k_ambient_blend_out_duration) +
                           1.0e-4F;
@@ -175,7 +169,6 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleClipPhaseAdvancesMonotonically) {
 TEST_F(HumanoidPoseControllerTest, AmbientIdleInterruptionBlendsOutInsteadOfCutting) {
   AmbientSim sim{.seed = 4242U};
 
-  // Run until the ambient is at full weight, then issue an order.
   bool reached_hold = false;
   for (float t = 0.0F; t < 40.0F && !reached_hold; t += k_step) {
     auto const sample = sim.step(k_step, true);
@@ -196,7 +189,6 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleInterruptionBlendsOutInsteadOfCutt
     previous_blend = blend;
   }
 
-  // A cut would be a single frame. Require a real fade.
   EXPECT_GT(fade_frames, 10) << "interrupted ambient snapped instead of blending out";
 }
 
@@ -249,16 +241,11 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleKeepsFormationParticipationSparse)
     peak_concurrent = std::max(peak_concurrent, active);
   }
 
-  // A whole formation squatting at once would read as a scripted event, not idle
-  // flavour; over four minutes every soldier should still get a turn.
   EXPECT_LE(peak_concurrent, soldier_count / 2)
       << peak_concurrent << " of " << soldier_count << " soldiers animated at once";
   EXPECT_GT(ever_active.size(), static_cast<std::size_t>(soldier_count * 3 / 4));
 }
 
-// Riders have no saddle-aligned ambient clips baked yet, and the ambient variants
-// are indexed off the standing idle clip, so a mounted unit must not schedule one at
-// all. Their riding idle loop still breathes; that is verified in the arena.
 TEST_F(HumanoidPoseControllerTest, MountedUnitsDoNotScheduleAmbientIdles) {
   for (std::uint32_t seed = 1U; seed <= 24U; ++seed) {
     AmbientSim sim{.seed = seed, .mounted = true};

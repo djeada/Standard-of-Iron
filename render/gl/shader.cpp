@@ -75,12 +75,6 @@ void record_shader_bind(const QString& name) {
 }
 #endif
 
-// Splices #include directives textually, skipping any file already pulled in.
-//
-// The dedupe is what lets an include declare its own dependencies: without it a
-// shader that includes both A and B, where A also includes B, would get B twice
-// and fail to compile on redefinition. With it, include order at the call site no
-// longer matters.
 auto resolve_shader_includes(const QString& source,
                              const QString& base_dir,
                              QSet<QString>& already_included) -> QString {

@@ -32,9 +32,6 @@ using std::uint32_t;
 using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
-// Blades were reading as knee-to-waist high next to a soldier. Height only —
-// the width scale stays put so blades keep their shape rather than turning into
-// thin spikes.
 constexpr float k_grass_height_scale = 0.56F;
 constexpr float k_grass_width_scale = 1.55F;
 

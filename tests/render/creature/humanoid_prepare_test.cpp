@@ -1077,11 +1077,6 @@ TEST(HumanoidPrepare, BuiltInArchersPreserveBowRoleColorsBeyondLegacyLimit) {
   EXPECT_GT(render_archer_role_color_count("troops/carthage/archer"), 16U);
 }
 
-// Ambient idle variants are the clips baked immediately after `idle`, so a variant
-// index only means anything for archetypes whose Idle really is that clip. Archers
-// map Idle to the bow-ready clip; before this guard existed, requesting the squat
-// variant offset off that base and landed on `riding_idle`, which rendered the
-// archer sitting cross-legged in mid-air on a horse that was not there.
 TEST(HumanoidPrepare, AmbientIdleVariantsAreSuppressedWhenIdleIsRemapped) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::Pipeline::humanoid_clip_variant_for_state;
@@ -2918,7 +2913,7 @@ TEST(AnimationCoreAmbientPoseManifest, SelectionPrioritizesCommanderOverrides) {
   EXPECT_TRUE(jump.sample.active);
   EXPECT_EQ(jump.sample.type, Animation::HumanoidAmbientIdle::Jump);
   EXPECT_FLOAT_EQ(jump.sample.phase, 1.0F);
-  // Scripted actions are an order, not flavour: they play at full weight.
+
   EXPECT_FLOAT_EQ(jump.sample.blend, 1.0F);
 
   auto const rally = Animation::resolve_humanoid_ambient_selection({
@@ -2994,7 +2989,7 @@ TEST(AnimationCoreAmbientPoseManifest, SelectionSuppressesAmbientWhileBusy) {
 }
 
 TEST(AnimationCoreAmbientPoseManifest, TickSurvivesTimeJumpsWithoutTeleporting) {
-  // Prime the machine so it has a timebase, then jump the clock far forward.
+
   auto const first = Animation::resolve_humanoid_ambient_tick({
       .sample_time = 10.0F,
       .eligible = true,
@@ -3009,8 +3004,6 @@ TEST(AnimationCoreAmbientPoseManifest, TickSurvivesTimeJumpsWithoutTeleporting) 
       .idle_duration = 510.0F,
   });
 
-  // A 500-second step must be clamped, not integrated, or a unit would snap
-  // straight through an entire ambient beat in one frame.
   EXPECT_LE(jumped.state.blend,
             Animation::k_ambient_max_step / Animation::k_ambient_blend_in_duration +
                 1.0e-4F);
@@ -4368,9 +4361,7 @@ TEST(HumanoidPrepare, VariantTableOverrideRecomputesPhaseAndClipVariant) {
   Render::GL::HumanoidAnimationContext anim{};
   anim.ambient_idle_type = Render::GL::AmbientIdleType::Jump;
   anim.ambient_idle_phase = 0.5F;
-  // Fully blended in, so the ambient clip owns the selection outright. Below full
-  // weight the selection is the idle loop with the ambient hung off it as a
-  // crossfade layer, which this test is not about.
+
   anim.ambient_idle_blend = 1.0F;
 
   auto const baseline = resolve_humanoid_animation_selection(baseline_spec, anim, 5U);
