@@ -11,6 +11,18 @@ struct HumanoidMicroIdlePoseInputs {
   std::uint32_t seed{0U};
 };
 
+// Loop-safe standing-idle life (breath, weight sway, head drift).
+//
+// Unlike resolve_humanoid_micro_idle_pose, which is driven by absolute time and
+// therefore cannot be baked into a looping clip, every term here is a sine of an
+// *integer* multiple of the normalized phase. The pose at phase 1 is exactly the
+// pose at phase 0, so a clip baked across phase [0,1) wraps seamlessly.
+struct HumanoidIdleBreathPoseInputs {
+  float phase{0.0F};
+  // Seated riders damp the leg/pelvis terms and keep the torso motion.
+  bool mounted{false};
+};
+
 struct HumanoidPostureDeltaSample {
   float pelvis_x_delta{0.0F};
   float pelvis_y_delta{0.0F};
@@ -123,6 +135,9 @@ struct MountedRiderTorsoSculptPoseInputs {
 
 [[nodiscard]] auto resolve_humanoid_micro_idle_pose(
     const HumanoidMicroIdlePoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample;
+
+[[nodiscard]] auto resolve_humanoid_idle_breath_pose(
+    const HumanoidIdleBreathPoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample;
 
 [[nodiscard]] auto resolve_humanoid_kneel_pose(
     const HumanoidKneelPoseInputs& inputs) noexcept -> HumanoidKneelPoseSample;

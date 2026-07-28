@@ -106,6 +106,53 @@ auto resolve_humanoid_micro_idle_pose(
   return sample;
 }
 
+auto resolve_humanoid_idle_breath_pose(
+    const HumanoidIdleBreathPoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample {
+  constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
+
+  // Every harmonic below is an integer multiple of the loop, so phase 1 lands
+  // exactly back on phase 0. Over the authored k_humanoid_idle_cycle_time this
+  // reads as ~15 breaths/minute with a single slow weight shift per loop.
+  float const phase = inputs.phase - std::floor(inputs.phase);
+  auto harmonic = [phase](float cycles, float phase_offset) {
+    return std::sin((phase * cycles + phase_offset) * k_two_pi);
+  };
+
+  // Asymmetric breath: the 2nd harmonic makes the inhale quicker than the
+  // exhale, which is what stops it reading as a pure sine pulse.
+  float const breath = harmonic(2.0F, 0.0F) + 0.24F * harmonic(4.0F, 0.12F);
+  float const sway = harmonic(1.0F, 0.31F);
+  float const head_yaw = harmonic(1.0F, 0.68F);
+  float const head_nod = harmonic(2.0F, 0.22F);
+  float const arm_drift = harmonic(1.0F, 0.05F);
+
+  float const torso_scale = inputs.mounted ? 0.55F : 1.0F;
+  float const lower_scale = inputs.mounted ? 0.0F : 1.0F;
+
+  float const chest_lift = breath * 0.0115F * torso_scale;
+  float const breath_torso_z = breath * 0.0048F * torso_scale;
+  float const lateral = sway * 0.0165F * lower_scale;
+  float const weight_dip = -std::abs(sway) * 0.0052F * lower_scale;
+
+  HumanoidPostureDeltaSample sample{};
+  sample.shoulder_l_y_delta += chest_lift;
+  sample.shoulder_r_y_delta += chest_lift;
+  sample.neck_y_delta += chest_lift * 0.75F;
+  sample.head_y_delta += chest_lift * 0.55F;
+  sample.shoulder_l_z_delta -= breath_torso_z;
+  sample.shoulder_r_z_delta -= breath_torso_z;
+  sample.pelvis_x_delta += lateral;
+  sample.pelvis_y_delta += weight_dip;
+  sample.shoulder_l_x_delta += lateral * 0.40F;
+  sample.shoulder_r_x_delta += lateral * 0.40F;
+  sample.neck_x_delta += lateral * 0.30F;
+  sample.head_x_delta += lateral * 0.25F + head_yaw * 0.0135F * torso_scale;
+  sample.head_z_delta += head_nod * 0.0058F * torso_scale;
+  sample.hand_l_y_delta += arm_drift * 0.0088F * torso_scale;
+  sample.hand_r_y_delta += arm_drift * 0.0075F * torso_scale;
+  return sample;
+}
+
 auto resolve_humanoid_kneel_pose(const HumanoidKneelPoseInputs& inputs) noexcept
     -> HumanoidKneelPoseSample {
   float const depth = std::clamp(inputs.depth, 0.0F, 1.0F);

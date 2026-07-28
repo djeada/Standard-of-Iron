@@ -99,7 +99,8 @@ enum class BakerAmbientIdleType : std::uint8_t {
   SitDown,
   Jump,
   RaiseWeapon,
-  ShiftWeight
+  ShiftWeight,
+  PlantFlag
 };
 enum class HumanoidBakeProfile : std::uint8_t {
   Default,
@@ -164,9 +165,9 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
-     24U,
-     24.0F,
-     1.6F,
+     Animation::k_humanoid_idle_breath_frames,
+     Animation::k_humanoid_idle_breath_fps,
+     Animation::k_humanoid_idle_breath_cycle_time,
      true},
     {"idle_squat",
      Render::GL::HumanoidMotionState::Idle,
@@ -212,6 +213,18 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::ShiftWeight,
+     72U,
+     24.0F,
+     3.0F,
+     false},
+    {"idle_plant_flag",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::PlantFlag,
      72U,
      24.0F,
      3.0F,
@@ -356,9 +369,9 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::Idle,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
-     24U,
-     24.0F,
-     1.6F,
+     Animation::k_humanoid_idle_breath_frames,
+     Animation::k_humanoid_idle_breath_fps,
+     Animation::k_humanoid_idle_breath_cycle_time,
      true},
     {"riding_charge",
      Render::GL::HumanoidMotionState::Attacking,
@@ -1039,6 +1052,43 @@ void bake_death_pose(BakerDeathType death_type,
   }
 }
 
+[[nodiscard]] auto
+to_ambient_idle_type(BakerAmbientIdleType t) noexcept -> Render::GL::AmbientIdleType {
+  switch (t) {
+  case BakerAmbientIdleType::SitDown:
+    return Render::GL::AmbientIdleType::SitDown;
+  case BakerAmbientIdleType::Jump:
+    return Render::GL::AmbientIdleType::Jump;
+  case BakerAmbientIdleType::RaiseWeapon:
+    return Render::GL::AmbientIdleType::RaiseWeapon;
+  case BakerAmbientIdleType::ShiftWeight:
+    return Render::GL::AmbientIdleType::ShiftWeight;
+  case BakerAmbientIdleType::PlantFlag:
+    return Render::GL::AmbientIdleType::PlantFlag;
+  case BakerAmbientIdleType::None:
+    break;
+  }
+  return Render::GL::AmbientIdleType::None;
+}
+
+// The resting weapon stance for a bake profile. Both the plain locomotion clips
+// and the ambient idle clips go through here so the two can never disagree —
+// when they did, spearmen snapped 1.6 units entering and leaving every ambient.
+void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
+                                     HumanoidBakeProfile profile) {
+  switch (profile) {
+  case HumanoidBakeProfile::SwordReady:
+    ctrl.carry_sword_and_shield();
+    break;
+  case HumanoidBakeProfile::SpearReady:
+    ctrl.hold_spear_idle();
+    break;
+  case HumanoidBakeProfile::Default:
+  case HumanoidBakeProfile::Skeleton:
+    break;
+  }
+}
+
 void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
                               const HumanoidClipSpec& clip,
                               std::uint32_t frame_index,
@@ -1210,11 +1260,16 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         break;
       }
     }
+    if (clip.riding_type == BakerRidingType::Idle) {
+      // A seated rider still breathes and settles in the saddle; without this the
+      // riding idle clip is 96 identical frames.
+      Render::GL::HumanoidPoseController breath_ctrl(pose, anim_ctx_r);
+      breath_ctrl.apply_idle_breath(phase, true);
+    }
   } else {
     Render::GL::HumanoidGaitDescriptor gait{};
     gait.state = clip.state;
     gait.cycle_time = clip.cycle_time;
-    float idle_time = phase * clip.cycle_time;
 
     switch (clip.state) {
     case Render::GL::HumanoidMotionState::Idle:
@@ -1246,40 +1301,24 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
       float const ambient_phase = transition_phase(frame_index, clip.frames);
-      idle_time = ambient_phase * clip.cycle_time;
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
       anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      if (profile == HumanoidBakeProfile::SwordReady) {
-        ctrl.carry_sword_and_shield();
-      } else if (profile == HumanoidBakeProfile::SpearReady) {
-        ctrl.hold_spear_idle();
-      }
-      auto to_ambient_type = [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
-        switch (t) {
-        case BakerAmbientIdleType::SitDown:
-          return Render::GL::AmbientIdleType::SitDown;
-        case BakerAmbientIdleType::Jump:
-          return Render::GL::AmbientIdleType::Jump;
-        case BakerAmbientIdleType::RaiseWeapon:
-          return Render::GL::AmbientIdleType::RaiseWeapon;
-        case BakerAmbientIdleType::ShiftWeight:
-          return Render::GL::AmbientIdleType::ShiftWeight;
-        default:
-          return Render::GL::AmbientIdleType::None;
-        }
-      };
-      ctrl.apply_ambient_idle_explicit(to_ambient_type(clip.ambient_idle_type),
+      // Must match the stance the plain idle clip is baked in, or the unit snaps
+      // on the way into and out of every ambient idle.
+      apply_ground_stance_for_profile(ctrl, profile);
+      // Keep the chest moving through the ambient beat as well, otherwise the unit
+      // visibly holds its breath for the three seconds the ambient clip lasts.
+      ctrl.apply_idle_breath(ambient_phase * clip.cycle_time /
+                                 Animation::k_humanoid_idle_breath_cycle_time,
+                             false);
+      ctrl.apply_ambient_idle_explicit(to_ambient_idle_type(clip.ambient_idle_type),
                                        ambient_phase);
     } else {
       gait.cycle_phase = phase;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, phase * clip.cycle_time, gait, variation, pose);
-    }
-    if (profile == HumanoidBakeProfile::SwordReady &&
-        clip.hold_type == BakerHoldType::None &&
-        clip.ambient_idle_type == BakerAmbientIdleType::None) {
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
       anim_ctx.gait.state = clip.state;
@@ -1287,17 +1326,10 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
           (gait.speed > 0.1F) ? Render::Creature::MovementAnimationState::Walk
                               : Render::Creature::MovementAnimationState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      ctrl.carry_sword_and_shield();
-    }
-    if (clip.state == Render::GL::HumanoidMotionState::Idle &&
-        clip.riding_type == BakerRidingType::Idle &&
-        clip.hold_type == BakerHoldType::None &&
-        clip.ambient_idle_type == BakerAmbientIdleType::None) {
-      Render::GL::HumanoidAnimationContext anim_ctx{};
-      anim_ctx.gait = gait;
-      anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
-      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      ctrl.apply_micro_idle(idle_time, 0U);
+      apply_ground_stance_for_profile(ctrl, profile);
+      if (clip.state == Render::GL::HumanoidMotionState::Idle) {
+        ctrl.apply_idle_breath(phase, false);
+      }
     }
   }
 
@@ -1868,22 +1900,23 @@ int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_idle_jump_clip == 2U);
   static_assert(Render::Creature::k_humanoid_idle_weapon_clip == 3U);
   static_assert(Render::Creature::k_humanoid_idle_weave_clip == 4U);
-  static_assert(Render::Creature::k_humanoid_hold_clip == 7U);
-  static_assert(Render::Creature::k_humanoid_hold_bow_clip == 8U);
-  static_assert(Render::Creature::k_humanoid_attack_sword_a_clip == 9U);
-  static_assert(Render::Creature::k_humanoid_attack_spear_a_clip == 12U);
-  static_assert(Render::Creature::k_humanoid_attack_bow_clip == 15U);
-  static_assert(Render::Creature::k_humanoid_riding_idle_clip == 16U);
-  static_assert(Render::Creature::k_humanoid_riding_bow_shot_clip == 19U);
-  static_assert(Render::Creature::k_humanoid_riding_sword_strike_clip == 20U);
-  static_assert(Render::Creature::k_humanoid_riding_spear_thrust_clip == 21U);
-  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 22U);
-  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 25U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_left_clip == 26U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_right_clip == 27U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 28U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 29U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 30U);
+  static_assert(Render::Creature::k_humanoid_idle_plant_flag_clip == 5U);
+  static_assert(Render::Creature::k_humanoid_hold_clip == 8U);
+  static_assert(Render::Creature::k_humanoid_hold_bow_clip == 9U);
+  static_assert(Render::Creature::k_humanoid_attack_sword_a_clip == 10U);
+  static_assert(Render::Creature::k_humanoid_attack_spear_a_clip == 13U);
+  static_assert(Render::Creature::k_humanoid_attack_bow_clip == 16U);
+  static_assert(Render::Creature::k_humanoid_riding_idle_clip == 17U);
+  static_assert(Render::Creature::k_humanoid_riding_bow_shot_clip == 20U);
+  static_assert(Render::Creature::k_humanoid_riding_sword_strike_clip == 21U);
+  static_assert(Render::Creature::k_humanoid_riding_spear_thrust_clip == 22U);
+  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 23U);
+  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 26U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_left_clip == 27U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_right_clip == 28U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 29U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 30U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 31U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];

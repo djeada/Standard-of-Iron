@@ -9,6 +9,7 @@
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
+#include "../../anim_key.h"
 #include "../../elephant/elephant_spec.h"
 #include "../../entity/registry.h"
 #include "../../gl/humanoid/humanoid_types.h"
@@ -16,9 +17,11 @@
 #include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
+#include "../humanoid_clip_ids.h"
 #include "../pose_intent.h"
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
+#include "animation/locomotion_manifest.h"
 #include "animation/playback_manifest.h"
 
 namespace Render::Creature::Pipeline {
@@ -86,6 +89,7 @@ auto humanoid_playback_phase_inputs_for_state(
       .attack_phase = anim.attack_phase,
       .ambient_idle = anim.ambient_idle_type,
       .ambient_idle_phase = anim.ambient_idle_phase,
+      .idle_breath_phase = anim.idle_breath_phase,
       .gait_cycle_phase = anim.gait.cycle_phase,
   };
 }
@@ -97,6 +101,28 @@ auto humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
     -> float {
   return Animation::resolve_humanoid_playback_phase(
       humanoid_playback_phase_inputs_for_state(anim, state));
+}
+
+auto humanoid_idle_breath_phase_for_lod(float sample_time,
+                                        std::uint32_t inst_seed,
+                                        Render::Creature::CreatureLOD lod,
+                                        bool template_prewarm) noexcept -> float {
+  // Template prewarm enumerates poses by anim key frame, and hands us that frame
+  // as a normalized time in [0,1]. Feeding the seeded wall-clock formula here
+  // would bake a narrow, per-seed slice of the breath cycle instead of the grid
+  // the runtime will actually ask for.
+  float const phase = template_prewarm
+                          ? sample_time
+                          : sample_time / Animation::k_humanoid_idle_breath_cycle_time +
+                                Animation::humanoid_idle_breath_offset(inst_seed);
+
+  if (lod == Render::Creature::CreatureLOD::Full) {
+    return Animation::wrap_locomotion_phase(phase);
+  }
+
+  constexpr auto k_steps = static_cast<float>(Render::GL::k_anim_frame_count - 1U);
+  float const wrapped = Animation::wrap_locomotion_phase(phase);
+  return Animation::wrap_locomotion_phase(std::round(wrapped * k_steps) / k_steps);
 }
 
 namespace {
@@ -146,10 +172,20 @@ auto humanoid_clip_variant_for_state(Render::Creature::ArchetypeId archetype_id,
                                      Render::Creature::AnimationStateId state) noexcept
     -> std::uint8_t {
   auto const resolved_archetype = default_humanoid_archetype(archetype_id);
-  auto const variant_count =
-      Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
-          resolved_archetype, state);
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const variant_count = registry.clip_variant_count(resolved_archetype, state);
   if (variant_count <= 1U) {
+    return 0U;
+  }
+  // Ambient idle variants are baked as the clips *immediately after* the idle clip,
+  // so a variant index is only meaningful when this archetype's Idle actually
+  // resolves to that idle clip. Archers hold a bow-ready pose and riders sit a
+  // saddle, both mapped to unrelated clips; offsetting from those bases lands on
+  // whatever clip happens to follow them — which is how an archer ended up sitting
+  // cross-legged in mid-air on an invisible horse.
+  if (state == Render::Creature::AnimationStateId::Idle &&
+      registry.bpat_clip(resolved_archetype, state) !=
+          Render::Creature::k_humanoid_idle_clip) {
     return 0U;
   }
   return Animation::resolve_humanoid_clip_variant(
@@ -352,6 +388,7 @@ auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> Render::GL::DrawContext {
   Render::GL::DrawContext runtime_ctx = ctx;
   runtime_ctx.template_prewarm = false;
+  runtime_ctx.prewarming_via_runtime_path = true;
   runtime_ctx.allow_template_cache = false;
   runtime_ctx.suppress_animation_state_persistence = true;
   return runtime_ctx;

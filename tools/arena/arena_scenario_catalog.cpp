@@ -1472,6 +1472,86 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    // Long standstill, close camera: this is the scenario for eyeballing the idle
+    // breathing loop and watching ambient idles ease in and back out again.
+    auto s = definition(QString::fromLatin1(k_infantry_idle_ambient_id),
+                        QStringLiteral("Infantry Idle Ambient"),
+                        QStringLiteral("Swordsmen, spearmen and archers stand at ease "
+                                       "long enough to breathe and to play ambient "
+                                       "idles, easing in and out of the idle cycle."),
+                        70.0F,
+                        {7.5F, 18.0F, 18.0F});
+    s.groups = {
+        group(QStringLiteral("swords"), Troop::Swordsman, 1, 1, {-3.0F, 0.0F, 0.0F}, 3),
+        group(QStringLiteral("spears"), Troop::Spearman, 1, 1, {0.0F, 0.0F, 0.0F}, 3),
+        group(QStringLiteral("archers"), Troop::Archer, 1, 1, {3.0F, 0.0F, 0.0F}, 3)};
+    s.steps = {at(0.25F, Command::Stand, QStringLiteral("swords")),
+               at(0.25F, Command::Stand, QStringLiteral("spears")),
+               at(0.25F, Command::Stand, QStringLiteral("archers"))};
+    add_visual_stability(s,
+                         {QStringLiteral("swords"),
+                          QStringLiteral("spears"),
+                          QStringLiteral("archers")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(QString::fromLatin1(k_mounted_idle_ambient_id),
+                        QStringLiteral("Mounted Idle Ambient"),
+                        QStringLiteral("Riders sit a long halt: the saddle stays "
+                                       "aligned while mounted ambient idles play, and "
+                                       "no rider tries to squat on the ground."),
+                        70.0F,
+                        {17.0F, 26.0F, 20.0F});
+    s.groups = {group(QStringLiteral("knights"),
+                      Troop::MountedKnight,
+                      1,
+                      1,
+                      {-5.0F, 0.0F, 0.0F},
+                      4),
+                group(QStringLiteral("horse_archers"),
+                      Troop::HorseArcher,
+                      1,
+                      1,
+                      {5.0F, 0.0F, 0.0F},
+                      4)};
+    s.steps = {at(0.25F, Command::Stand, QStringLiteral("knights")),
+               at(0.25F, Command::Stand, QStringLiteral("horse_archers"))};
+    add_visual_stability(s,
+                         {QStringLiteral("knights"), QStringLiteral("horse_archers")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    // Orders land while ambient idles are mid-play. A unit must stand up out of the
+    // animation rather than cutting straight to the walk pose.
+    auto s = definition(QString::fromLatin1(k_idle_ambient_interrupt_id),
+                        QStringLiteral("Idle Ambient Interrupt"),
+                        QStringLiteral("Repeated move orders arrive while ambient "
+                                       "idles are running; every interruption has to "
+                                       "blend out instead of snapping."),
+                        60.0F,
+                        {20.0F, 32.0F, 20.0F});
+    s.groups = {
+        group(QStringLiteral("swords"), Troop::Swordsman, 1, 1, {-4.0F, 0.0F, 0.0F}, 6),
+        group(QStringLiteral("spears"), Troop::Spearman, 1, 1, {4.0F, 0.0F, 0.0F}, 6)};
+    s.steps = {at(0.25F, Command::Stand, QStringLiteral("swords")),
+               at(0.25F, Command::Stand, QStringLiteral("spears")),
+               at(14.0F, Command::Move, QStringLiteral("swords")),
+               at(24.0F, Command::Move, QStringLiteral("swords")),
+               at(34.0F, Command::Move, QStringLiteral("spears")),
+               at(44.0F, Command::Move, QStringLiteral("spears")),
+               at(52.0F, Command::Move, QStringLiteral("swords"))};
+    s.steps[2].destination = {-4.0F, 0.0F, -7.0F};
+    s.steps[3].destination = {-4.0F, 0.0F, 3.0F};
+    s.steps[4].destination = {4.0F, 0.0F, -7.0F};
+    s.steps[5].destination = {4.0F, 0.0F, 3.0F};
+    s.steps[6].destination = {-4.0F, 0.0F, -5.0F};
+    add_visual_stability(s, {QStringLiteral("swords"), QStringLiteral("spears")});
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(
         QString::fromLatin1(k_archer_melee_lock_id),
         QStringLiteral("Archers Forced Into Melee"),

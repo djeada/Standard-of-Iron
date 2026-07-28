@@ -1,3 +1,4 @@
+#include "environment_lighting.glsl"
 const int SOI_MAX_SHADOW_CASCADES = 4;
 
 layout(std140) uniform DirectionalShadows {

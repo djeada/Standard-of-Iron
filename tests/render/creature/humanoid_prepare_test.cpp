@@ -1077,6 +1077,45 @@ TEST(HumanoidPrepare, BuiltInArchersPreserveBowRoleColorsBeyondLegacyLimit) {
   EXPECT_GT(render_archer_role_color_count("troops/carthage/archer"), 16U);
 }
 
+// Ambient idle variants are the clips baked immediately after `idle`, so a variant
+// index only means anything for archetypes whose Idle really is that clip. Archers
+// map Idle to the bow-ready clip; before this guard existed, requesting the squat
+// variant offset off that base and landed on `riding_idle`, which rendered the
+// archer sitting cross-legged in mid-air on a horse that was not there.
+TEST(HumanoidPrepare, AmbientIdleVariantsAreSuppressedWhenIdleIsRemapped) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_clip_variant_for_state;
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.ambient_idle_type = Render::GL::AmbientIdleType::SitDown;
+  anim.ambient_idle_blend = 1.0F;
+
+  auto const base_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  ASSERT_EQ(registry.bpat_clip(base_id, AnimationStateId::Idle),
+            Render::Creature::k_humanoid_idle_clip);
+  EXPECT_EQ(humanoid_clip_variant_for_state(base_id, anim, AnimationStateId::Idle),
+            Render::GL::ambient_idle_clip_variant(Render::GL::AmbientIdleType::SitDown))
+      << "a plain humanoid should still get its ambient idle variant";
+
+  auto const archer_id = find_archetype_id("troops/roman/archer");
+  ASSERT_NE(archer_id, Render::Creature::k_invalid_archetype);
+  ASSERT_NE(registry.bpat_clip(archer_id, AnimationStateId::Idle),
+            Render::Creature::k_humanoid_idle_clip)
+      << "test premise: archers remap Idle away from the idle clip";
+  EXPECT_EQ(humanoid_clip_variant_for_state(archer_id, anim, AnimationStateId::Idle),
+            0U)
+      << "archers must fall back to variant 0 instead of indexing off the bow clip";
+
+  auto const rider_id = Render::Creature::ArchetypeRegistry::k_rider_base;
+  if (registry.bpat_clip(rider_id, AnimationStateId::Idle) !=
+      Render::Creature::k_humanoid_idle_clip) {
+    EXPECT_EQ(humanoid_clip_variant_for_state(rider_id, anim, AnimationStateId::Idle),
+              0U)
+        << "riders must not index ambient variants off the riding idle clip";
+  }
+}
+
 TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   using Render::Creature::AnimationStateId;
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
@@ -2866,28 +2905,6 @@ TEST(AnimationCorePosturePoseManifest, MountedTorsoSculptOwnsCompressionAndTwist
   EXPECT_FLOAT_EQ(sample.head_delta.up, 0.0048F);
 }
 
-TEST(AnimationCoreAmbientPoseManifest, ScheduleSuppressesShortIdleDurations) {
-  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
-      .seed = 0U,
-      .idle_duration = 4.99F,
-  });
-
-  EXPECT_FALSE(schedule.active);
-  EXPECT_EQ(schedule.type, Animation::HumanoidAmbientIdle::None);
-  EXPECT_FLOAT_EQ(schedule.phase, 0.0F);
-}
-
-TEST(AnimationCoreAmbientPoseManifest, ScheduleOwnsSeededActivationWindow) {
-  auto const schedule = Animation::resolve_humanoid_ambient_schedule({
-      .seed = 0U,
-      .idle_duration = 5.40F,
-  });
-
-  EXPECT_TRUE(schedule.active);
-  EXPECT_EQ(schedule.type, Animation::HumanoidAmbientIdle::ShiftWeight);
-  EXPECT_NEAR(schedule.phase, 0.0221572F, 0.000001F);
-}
-
 TEST(AnimationCoreAmbientPoseManifest, SelectionPrioritizesCommanderOverrides) {
   auto const jump = Animation::resolve_humanoid_ambient_selection({
       .jump_active = true,
@@ -2898,9 +2915,11 @@ TEST(AnimationCoreAmbientPoseManifest, SelectionPrioritizesCommanderOverrides) {
       .seed = 0U,
       .idle_duration = 5.40F,
   });
-  EXPECT_TRUE(jump.active);
-  EXPECT_EQ(jump.type, Animation::HumanoidAmbientIdle::Jump);
-  EXPECT_FLOAT_EQ(jump.phase, 1.0F);
+  EXPECT_TRUE(jump.sample.active);
+  EXPECT_EQ(jump.sample.type, Animation::HumanoidAmbientIdle::Jump);
+  EXPECT_FLOAT_EQ(jump.sample.phase, 1.0F);
+  // Scripted actions are an order, not flavour: they play at full weight.
+  EXPECT_FLOAT_EQ(jump.sample.blend, 1.0F);
 
   auto const rally = Animation::resolve_humanoid_ambient_selection({
       .jump_active = false,
@@ -2910,27 +2929,94 @@ TEST(AnimationCoreAmbientPoseManifest, SelectionPrioritizesCommanderOverrides) {
       .seed = 0U,
       .idle_duration = 5.40F,
   });
-  EXPECT_TRUE(rally.active);
-  EXPECT_EQ(rally.type, Animation::HumanoidAmbientIdle::PlantFlag);
-  EXPECT_FLOAT_EQ(rally.phase, 0.0F);
+  EXPECT_TRUE(rally.sample.active);
+  EXPECT_EQ(rally.sample.type, Animation::HumanoidAmbientIdle::PlantFlag);
+  EXPECT_FLOAT_EQ(rally.sample.phase, 0.0F);
+  EXPECT_FLOAT_EQ(rally.sample.blend, 1.0F);
 }
 
-TEST(AnimationCoreAmbientPoseManifest, SelectionOwnsEligibilityAndSchedule) {
-  auto const suppressed = Animation::resolve_humanoid_ambient_selection({
-      .has_locomotion = true,
-      .seed = 0U,
-      .idle_duration = 5.40F,
-  });
-  EXPECT_FALSE(suppressed.active);
-  EXPECT_EQ(suppressed.type, Animation::HumanoidAmbientIdle::None);
+TEST(AnimationCoreAmbientPoseManifest, SelectionSuppressesAmbientWhileBusy) {
+  using Inputs = Animation::HumanoidAmbientSelectionInputs;
+  struct Case {
+    const char* name;
+    void (*apply)(Inputs&);
+  };
+  constexpr std::array<Case, 8> cases{{
+      {"moving",
+       [](Inputs& in) {
+         in.has_locomotion = true;
+       }},
+      {"attacking",
+       [](Inputs& in) {
+         in.attacking = true;
+       }},
+      {"hold mode",
+       [](Inputs& in) {
+         in.in_hold_mode = true;
+       }},
+      {"guarding",
+       [](Inputs& in) {
+         in.guarding = true;
+       }},
+      {"constructing",
+       [](Inputs& in) {
+         in.constructing = true;
+       }},
+      {"healing",
+       [](Inputs& in) {
+         in.healing = true;
+       }},
+      {"dying",
+       [](Inputs& in) {
+         in.dying = true;
+       }},
+      {"routing",
+       [](Inputs& in) {
+         in.routing = true;
+       }},
+  }};
 
-  auto const scheduled = Animation::resolve_humanoid_ambient_selection({
-      .seed = 0U,
-      .idle_duration = 5.40F,
+  for (auto const& c : cases) {
+    Inputs inputs{};
+    inputs.seed = 0U;
+    inputs.idle_duration = 60.0F;
+    inputs.sample_time = 60.0F;
+    c.apply(inputs);
+    EXPECT_FALSE(Animation::humanoid_ambient_eligible(inputs))
+        << c.name << " should block ambient idles";
+  }
+
+  Inputs resting{};
+  resting.seed = 0U;
+  resting.idle_duration = 60.0F;
+  resting.sample_time = 60.0F;
+  EXPECT_TRUE(Animation::humanoid_ambient_eligible(resting));
+}
+
+TEST(AnimationCoreAmbientPoseManifest, TickSurvivesTimeJumpsWithoutTeleporting) {
+  // Prime the machine so it has a timebase, then jump the clock far forward.
+  auto const first = Animation::resolve_humanoid_ambient_tick({
+      .sample_time = 10.0F,
+      .eligible = true,
+      .seed = 5U,
+      .idle_duration = 10.0F,
   });
-  EXPECT_TRUE(scheduled.active);
-  EXPECT_EQ(scheduled.type, Animation::HumanoidAmbientIdle::ShiftWeight);
-  EXPECT_NEAR(scheduled.phase, 0.0221572F, 0.000001F);
+  auto const jumped = Animation::resolve_humanoid_ambient_tick({
+      .previous = first.state,
+      .sample_time = 510.0F,
+      .eligible = true,
+      .seed = 5U,
+      .idle_duration = 510.0F,
+  });
+
+  // A 500-second step must be clamped, not integrated, or a unit would snap
+  // straight through an entire ambient beat in one frame.
+  EXPECT_LE(jumped.state.blend,
+            Animation::k_ambient_max_step / Animation::k_ambient_blend_in_duration +
+                1.0e-4F);
+  EXPECT_LE(jumped.state.clip_phase,
+            Animation::k_ambient_max_step / Animation::k_ambient_clip_duration +
+                1.0e-4F);
 }
 
 TEST(AnimationCoreAmbientPoseManifest, SitDownOwnsCrouchAndFootSpread) {
@@ -4213,6 +4299,7 @@ TEST(HumanoidPrepare, HealingSelectionStillUsesIdleClipFamily) {
   anim.inputs.healing_target_dx = 1.0F;
   anim.inputs.healing_target_dz = -0.25F;
   anim.gait.cycle_phase = 0.37F;
+  anim.idle_breath_phase = 0.37F;
 
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 11U);
 
@@ -4241,6 +4328,7 @@ TEST(HumanoidPrepare, HitReactionSelectionStillUsesIdleClipFamily) {
   anim.inputs.is_hit_reacting = true;
   anim.inputs.hit_reaction_intensity = 0.8F;
   anim.gait.cycle_phase = 0.61F;
+  anim.idle_breath_phase = 0.61F;
 
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 19U);
 
@@ -4280,6 +4368,10 @@ TEST(HumanoidPrepare, VariantTableOverrideRecomputesPhaseAndClipVariant) {
   Render::GL::HumanoidAnimationContext anim{};
   anim.ambient_idle_type = Render::GL::AmbientIdleType::Jump;
   anim.ambient_idle_phase = 0.5F;
+  // Fully blended in, so the ambient clip owns the selection outright. Below full
+  // weight the selection is the idle loop with the ambient hung off it as a
+  // crossfade layer, which this test is not about.
+  anim.ambient_idle_blend = 1.0F;
 
   auto const baseline = resolve_humanoid_animation_selection(baseline_spec, anim, 5U);
   auto const override = resolve_humanoid_animation_selection(override_spec, anim, 5U);
