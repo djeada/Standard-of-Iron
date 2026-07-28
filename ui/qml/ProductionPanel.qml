@@ -586,7 +586,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(archerCard.unit_info), archerCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: archerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: archerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -594,7 +594,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: archerCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -708,7 +708,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(swordsmanCard.unit_info), swordsmanCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: swordsmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: swordsmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -716,7 +716,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: swordsmanCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -830,7 +830,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(spearmanCard.unit_info), spearmanCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: spearmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: spearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -838,7 +838,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: spearmanCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -952,7 +952,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(horseKnightCard.unit_info), horseKnightCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: horseKnightCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: horseKnightCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -960,7 +960,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: horseKnightCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1074,7 +1074,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(horseArcherCard.unit_info), horseArcherCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: horseArcherCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: horseArcherCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -1082,7 +1082,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: horseArcherCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1196,7 +1196,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(horseSpearmanCard.unit_info), horseSpearmanCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: horseSpearmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: horseSpearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -1204,7 +1204,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: horseSpearmanCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1318,7 +1318,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(healerCard.unit_info), healerCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: healerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: healerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -1326,7 +1326,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: healerCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1440,7 +1440,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(builderRecruitCard.unit_info), builderRecruitCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: builderRecruitCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderRecruitCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -1448,7 +1448,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: builderRecruitCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1563,7 +1563,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(productionPanel.population_cost(elephantCard.unit_info), elephantCard.unit_info.resource_costs || {}, true)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: elephantCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: elephantCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -1571,7 +1571,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: elephantCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -1734,7 +1734,7 @@ Rectangle {
                                 model: productionPanel.cost_entries(productionPanel.population_cost(civilianCard.unit_info), civilianCard.unit_info.resource_costs || {}, true)
 
                                 delegate: Rectangle {
-                                    width: costRow.implicitWidth + 8
+                                    width: civilianCostRow.implicitWidth + 8
                                     height: 16
                                     radius: 8
                                     color: civilianCard.is_enabled ? "#000000b3" : "#00000066"
@@ -1742,7 +1742,7 @@ Rectangle {
                                     border.width: 1
 
                                     Row {
-                                        id: costRow
+                                        id: civilianCostRow
 
                                         anchors.centerIn: parent
                                         spacing: 3
@@ -2065,7 +2065,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderCatapultCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: catapultCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderCatapultCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2073,7 +2073,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: catapultCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -2197,7 +2197,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderBallistaCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: ballistaCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderBallistaCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2205,7 +2205,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: ballistaCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -2329,7 +2329,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderDefenseTowerCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: defenseTowerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderDefenseTowerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2337,7 +2337,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: defenseTowerCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -2461,7 +2461,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderHomeCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: homeCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderHomeCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2469,7 +2469,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: homeCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -2593,7 +2593,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderWallSegmentCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: wallSegmentCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderWallSegmentCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2601,7 +2601,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: wallSegmentCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
@@ -2725,7 +2725,7 @@ Rectangle {
                                     model: productionPanel.cost_entries(0, builderMarketplaceCard.construction_info.resource_costs || {}, false)
 
                                     delegate: Rectangle {
-                                        width: costRow.implicitWidth + 8
+                                        width: marketplaceCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
                                         color: builderMarketplaceCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
@@ -2733,7 +2733,7 @@ Rectangle {
                                         border.width: 1
 
                                         Row {
-                                            id: costRow
+                                            id: marketplaceCostRow
 
                                             anchors.centerIn: parent
                                             spacing: 3
