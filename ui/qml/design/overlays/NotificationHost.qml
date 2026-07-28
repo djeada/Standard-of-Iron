@@ -24,6 +24,7 @@ Item {
             model: root.entries
 
             delegate: Design.IronNotification {
+                id: notificationDelegate
                 required property var modelData
 
                 width: column.width
@@ -35,9 +36,9 @@ Item {
                 onDismissRequested: Design.Notifications.dismiss(modelData.id)
 
                 Timer {
-                    running: !modelData.sticky
-                    interval: Design.Motion.dwellFor(modelData.priority)
-                    onTriggered: Design.Notifications.dismiss(modelData.id)
+                    running: !notificationDelegate.modelData.sticky
+                    interval: Design.Motion.dwellFor(notificationDelegate.modelData.priority)
+                    onTriggered: Design.Notifications.dismiss(notificationDelegate.modelData.id)
                 }
 
                 opacity: 0
