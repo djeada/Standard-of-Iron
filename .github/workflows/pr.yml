@@ -20,7 +20,7 @@ concurrency:
 
 env:
   QT_VERSION: "6.8.2"
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
 
 jobs:
   # ---------------------------------------------------------------------
@@ -65,13 +65,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 clang-tidy-18
+            ninja-build libgl1-mesa-dev libegl1
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1
         with:
           key: pr-ubuntu-24.04-${{ env.BUILD_TYPE }}
-          max-size: 500M
+          max-size: 1G
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -94,21 +94,10 @@ jobs:
       - name: Unit tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ./build/bin/standard_of_iron_tests
+        run: ./build/bin/standard_of_iron_tests --gtest_brief=1
 
       - name: Content validation
         run: ./build/bin/content_validator assets
 
       - name: Validator integration tests
         run: bash tests/validator_integration_test.sh
-
-      # Changed files only: a whole-project pass takes hours and runs nightly.
-      # Advisory - it reports findings without blocking the pull request.
-      - name: clang-tidy (changed files)
-        continue-on-error: true
-        env:
-          CLANG_TIDY: clang-tidy-18
-        run: |
-          python scripts/format.py \
-            --changed "origin/${{ github.base_ref || 'main' }}" \
-            --lint --languages cxx --build-dir build

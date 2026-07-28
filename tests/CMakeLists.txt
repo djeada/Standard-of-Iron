@@ -402,3 +402,8 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
 else()
     message(STATUS "Qt QuickTest not found; skipping design_system_qml_tests")
 endif()
+
+add_custom_target(soi_test_binaries DEPENDS standard_of_iron_tests)
+if(TARGET design_system_qml_tests)
+    add_dependencies(soi_test_binaries design_system_qml_tests)
+endif()
