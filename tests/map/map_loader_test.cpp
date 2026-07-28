@@ -362,7 +362,7 @@ TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
   EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 0);
 }
 
-TEST(MapLoaderTest, ExtendsBridgeEndpointsToSpanRiverbanks) {
+TEST(MapLoaderTest, FitsBridgeEndpointsExactlyToRiverbanks) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
@@ -390,8 +390,8 @@ TEST(MapLoaderTest, ExtendsBridgeEndpointsToSpanRiverbanks) {
 
   ASSERT_EQ(map_def.bridges.size(), 1U);
   const auto& bridge = map_def.bridges.front();
-  EXPECT_LE(bridge.start.x(), -6.0F);
-  EXPECT_GE(bridge.end.x(), 6.0F);
+  EXPECT_NEAR(bridge.start.x(), -5.0F, 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), 5.0F, 0.0001F);
 }
 
 TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {

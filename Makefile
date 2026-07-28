@@ -75,7 +75,7 @@ help:
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
 	@echo ""
 	@echo "$(BOLD)Formatting (also strips comments via remove-comments.sh):$(RESET)"
-	@echo "  $(GREEN)format$(RESET)        - Format all code in place"
+	@echo "  $(GREEN)format$(RESET)        - Format, lint, verify, and check quality markers"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting, change nothing (CI gate)"
 	@echo "  $(GREEN)format-changed$(RESET) - Format only files changed vs FORMAT_BASE"
 	@echo "  $(GREEN)format-check-changed$(RESET) - Fast check of changed files only"
@@ -86,7 +86,7 @@ help:
 	@echo "  $(GREEN)lint$(RESET)          - clang-tidy, qmllint, Ruff, ShellCheck, yamllint, JSON"
 	@echo "  $(GREEN)lint-fix$(RESET)      - Apply the linters' automated fixes (explicit)"
 	@echo "  $(GREEN)lint-changed$(RESET)  - Lint only files changed vs FORMAT_BASE"
-	@echo "  $(GREEN)quality$(RESET)       - format-check + lint + quality markers"
+	@echo "  $(GREEN)quality$(RESET)       - lint + format-check + quality markers"
 	@echo "  $(GREEN)validate$(RESET)      - quality + build + test + content validation"
 	@echo "  $(GREEN)hooks-install$(RESET) - Install the pre-commit git hooks"
 	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files"
@@ -361,9 +361,10 @@ test-validator: build
 .PHONY: format format-check format-changed format-check-changed \
 	format-staged format-doctor format-bootstrap clean-format-trash
 
-## Format every tracked file in place.
+## Format every tracked file, then run the complete non-compiler quality gate.
 format: clean-format-trash
-	@$(FORMAT_DRIVER) --all --strip-comments --fix --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all --strip-comments --fix --strict --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(MAKE) --no-print-directory quality
 
 ## Verify formatting without writing anything (CI gate).
 format-check:
@@ -436,8 +437,10 @@ format-strip-comments: strip-comments
 # ---- Aggregate gates ----
 .PHONY: quality validate hooks-install
 
-## Everything that does not need a compiler: formatting + linting + markers.
-quality: format-check lint
+## Everything that does not need a compiler: comment stripping, linting, formatting, markers.
+quality:
+	@$(MAKE) --no-print-directory lint FORMAT_ARGS="$(FORMAT_ARGS) --strict"
+	@$(MAKE) --no-print-directory format-check FORMAT_ARGS="$(FORMAT_ARGS) --strict"
 	@echo "$(BOLD)$(BLUE)Checking quality markers...$(RESET)"
 	@git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
 		| xargs -0 -r $(PYTHON) scripts/check-quality-markers.py

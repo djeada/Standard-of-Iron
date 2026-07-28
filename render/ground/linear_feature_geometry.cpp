@@ -246,11 +246,12 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
     const auto cross_section =
         sample_linear_feature_cross_section(segment, t, settings);
     QVector3D const center_pos = cross_section.center;
-    const float centerline_height =
-        settings.height_map != nullptr && settings.follow_terrain_centerline
-            ? sample_water_surface_height_clamped(
-                  *settings.height_map, center_pos.x(), center_pos.z())
-            : center_pos.y();
+    float centerline_height = center_pos.y();
+    if (!settings.use_segment_elevation_profile && settings.height_map != nullptr &&
+        settings.follow_terrain_centerline) {
+      centerline_height = sample_water_surface_height_clamped(
+          *settings.height_map, center_pos.x(), center_pos.z());
+    }
 
     float const normal[3] = {0.0F, 1.0F, 0.0F};
 
@@ -266,7 +267,9 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
       QVector3D const vertex_pos = center_pos + perpendicular * lateral_offset;
 
       float vertex_y = vertex_pos.y();
-      if (settings.height_map != nullptr) {
+      if (settings.use_segment_elevation_profile) {
+        vertex_y = centerline_height;
+      } else if (settings.height_map != nullptr) {
         if (settings.follow_terrain_centerline) {
 
           vertex_y = centerline_height;
@@ -394,7 +397,7 @@ auto build_linear_feature_junction_meshes(
 
     auto append_vertex = [&](const QVector3D& position, float radial_t, float angle_t) {
       QVector3D surface_position = position;
-      if (settings.height_map != nullptr) {
+      if (!settings.use_segment_elevation_profile && settings.height_map != nullptr) {
         surface_position.setY(
             settings.follow_terrain_centerline
                 ? sample_water_surface_height_clamped(

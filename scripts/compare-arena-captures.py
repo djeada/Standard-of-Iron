@@ -44,7 +44,7 @@ except ImportError:
         "error: Pillow is required (pip install pillow)",
         file=sys.stderr,
     )
-    raise SystemExit(2)
+    raise SystemExit(2) from None
 
 DEFAULT_FRAME = "final.png"
 DEFAULT_BASELINE_DIR = Path("tests/baselines/arena")
@@ -67,7 +67,7 @@ def compare(candidate: Image.Image, baseline: Image.Image, pixel_threshold: int)
 
     diff_sum = 0
     over_threshold = 0
-    for lhs, rhs in zip(cand, base):
+    for lhs, rhs in zip(cand, base, strict=True):
         d0 = abs(lhs[0] - rhs[0])
         d1 = abs(lhs[1] - rhs[1])
         d2 = abs(lhs[2] - rhs[2])

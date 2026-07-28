@@ -124,9 +124,18 @@ with open(path, 'rb') as f:
 is_python = path.lower().endswith('.py')
 
 RAW_PREFIX = re.compile(rb'(?:u8|u|U|L)?R"([^\s()\\]{0,16})\(')
+NAMESPACE_END_COMMENT = re.compile(
+    rb'//[ \t]*namespace'
+    rb'(?:[ \t]+[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)?'
+    rb'[ \t]*\r?$'
+)
 
 def isspace(b):  # b is an int 0..255
     return b in b' \t\r\n\v\f'
+
+def trim_horizontal_space(out):
+    while out and out[-1] in (0x20, 0x09):
+        out.pop()
 
 def strip_cpp_comments(b: bytes) -> bytes:
     out = bytearray()
@@ -168,6 +177,21 @@ def strip_cpp_comments(b: bytes) -> bytes:
             nx = b[i+1]
             # // line comment
             if nx == 0x2F:
+                line_end = b.find(b'\n', i)
+                if line_end == -1:
+                    line_end = n
+                line_start = out.rfind(b'\n') + 1
+                line_prefix = bytes(out[line_start:]).rstrip(b' \t\r')
+                comment = b[i:line_end]
+                if (
+                    line_prefix == b'}'
+                    and NAMESPACE_END_COMMENT.fullmatch(comment) is not None
+                ):
+                    out += comment
+                    i = line_end
+                    continue
+
+                trim_horizontal_space(out)
                 i += 2
                 while i < n and b[i] != 0x0A:
                     i += 1
@@ -194,10 +218,14 @@ def strip_cpp_comments(b: bytes) -> bytes:
                 nextc = b[i] if i < n else None
                 p = prev_byte()
                 if had_nl:
+                    trim_horizontal_space(out)
+                    p = prev_byte()
                     if p not in (None, 0x0A, 0x0D):
                         out.append(0x0A)  # '\n'
                 else:
-                    if p is not None and not isspace(p) and (nextc is not None) and not isspace(nextc):
+                    if nextc in (None, 0x0A, 0x0D):
+                        trim_horizontal_space(out)
+                    elif p is not None and not isspace(p) and not isspace(nextc):
                         out.append(0x20)  # ' '
                 continue
 
@@ -263,6 +291,7 @@ def strip_python_comments(b: bytes) -> bytes:
 
         # # comment
         if c == 0x23:  # '#'
+            trim_horizontal_space(out)
             i += 1
             while i < n and b[i] != 0x0A:
                 i += 1
