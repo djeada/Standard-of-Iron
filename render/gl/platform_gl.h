@@ -20,9 +20,7 @@ inline auto supports_persistent_mapping() -> bool {
     return true;
   }
 
-  const auto extensions = QString::fromLatin1(
-      reinterpret_cast<const char*>(ctx->extraFunctions()->glGetString(GL_EXTENSIONS)));
-  return extensions.contains("GL_ARB_buffer_storage");
+  return ctx->hasExtension(QByteArrayLiteral("GL_ARB_buffer_storage"));
 }
 
 inline auto get_buffer_storage_function() -> void* {

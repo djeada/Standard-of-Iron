@@ -1758,6 +1758,13 @@ void GameEngine::select_unit_by_id(int unit_id) {
   }
 }
 
+void GameEngine::select_selected_units_by_type(const QString& unit_type) {
+  ensure_initialized();
+  if (m_input_handler) {
+    m_input_handler->select_selected_units_by_type(unit_type, m_runtime.local_owner_id);
+  }
+}
+
 void GameEngine::ensure_initialized() {
   QString error;
   App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,

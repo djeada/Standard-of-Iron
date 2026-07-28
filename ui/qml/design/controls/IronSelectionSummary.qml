@@ -19,6 +19,7 @@ Design.IronPanel {
     readonly property bool groupedSquad: squad && groups.length >= 4
 
     signal unitActivated(var unitId)
+    signal groupActivated(string unitType)
 
     accessibleName: qsTr("Selected units")
     Accessible.description: header.text
@@ -146,6 +147,8 @@ Design.IronPanel {
         id: singleUnitView
 
         Rectangle {
+            id: singleUnitCard
+
             width: parent.width
             height: Design.Metrics.space24 * 3
             radius: Design.Metrics.radiusMedium
@@ -211,6 +214,15 @@ Design.IronPanel {
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label
                 font.weight: Design.Typography.bold
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                cursorShape: Qt.ArrowCursor
+                onClicked: function (mouse) {
+                    mouse.accepted = true;
+                }
             }
         }
     }
@@ -311,11 +323,11 @@ Design.IronPanel {
                     width: groupFlow.cardWidth
                     height: groupFlow.cardHeight
                     radius: Design.Metrics.radiusMedium
-                    color: Design.Theme.backgroundDeep
-                    border.width: Design.Metrics.borderThin
-                    border.color: groupCard.modelData.woundedCount > 0 ? root.healthColor(groupCard.modelData.health) : Design.Theme.borderSubtle
+                    color: groupMouse.containsMouse ? Design.Theme.panelLeather : Design.Theme.backgroundDeep
+                    border.width: groupMouse.containsMouse ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+                    border.color: groupMouse.containsMouse ? Design.Theme.selection : groupCard.modelData.woundedCount > 0 ? root.healthColor(groupCard.modelData.health) : Design.Theme.borderSubtle
 
-                    Accessible.role: Accessible.StaticText
+                    Accessible.role: Accessible.Button
                     Accessible.name: groupCard.modelData.name + " ×" + groupCard.modelData.count
                     Accessible.description: Math.round(groupCard.modelData.health * 100) + "%"
 
@@ -406,6 +418,18 @@ Design.IronPanel {
                         color: Design.Theme.warning
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
+                    }
+
+                    MouseArea {
+                        id: groupMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: function (mouse) {
+                            root.groupActivated(groupCard.modelData.typeKey);
+                            mouse.accepted = true;
+                        }
                     }
                 }
             }

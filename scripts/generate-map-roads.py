@@ -419,13 +419,18 @@ class RoutingField:
             if dot(crossing_direction, authored_direction) < 0.0:
                 crossing_direction = mul(crossing_direction, -1.0)
 
-            crossing_length = river_width + self.coords.distance_to_grid(1.0)
+            crossing_length = river_width
             candidate = Bridge(
                 sub(crossing_center, mul(crossing_direction, crossing_length * 0.5)),
                 add(crossing_center, mul(crossing_direction, crossing_length * 0.5)),
                 self.coords.distance_to_grid(float(item.get("width", 3.0))),
             )
-            duplicate_radius = max(4.0, river_width * 0.90)
+            # Overlapping approach corridors let routing "slide" sideways
+            # between adjacent decks. Coalesce crossings that are too close
+            # to have independent, safe approaches.
+            duplicate_radius = max(
+                4.0, river_width * 0.90, 2.0 * (self.clearance + 3.0)
+            )
             if any(
                 distance(
                     crossing_center,
@@ -464,7 +469,7 @@ class RoutingField:
                     crossing_direction = (-river_direction[1], river_direction[0])
                     if dot(crossing_direction, road_direction) < 0.0:
                         crossing_direction = mul(crossing_direction, -1.0)
-                    crossing_length = river_width + self.coords.distance_to_grid(1.0)
+                    crossing_length = river_width
                     result.append(
                         Bridge(
                             sub(
@@ -550,7 +555,7 @@ class RoutingField:
                 crossing_direction = (-river_direction[1], river_direction[0])
                 if dot(crossing_direction, bridge.direction) < 0.0:
                     crossing_direction = mul(crossing_direction, -1.0)
-                local_bridge_length = river_width + self.coords.distance_to_grid(1.0)
+                local_bridge_length = river_width
                 sample_count = max(1, int(math.ceil(distance(river_start, river_end))))
                 for sample in range(sample_count):
                     candidate_center = add(
@@ -571,7 +576,9 @@ class RoutingField:
                         ),
                         bridge.width,
                     )
-                    duplicate_radius = max(4.0, river_width * 0.90)
+                    duplicate_radius = max(
+                        4.0, river_width * 0.90, 2.0 * (self.clearance + 3.0)
+                    )
                     if deck_is_clear(candidate) and not any(
                         distance(
                             candidate_center,
@@ -766,7 +773,7 @@ class RoutingField:
             crossing_direction = (-river_direction[1], river_direction[0])
             segment_span = distance(river_start, river_end)
             samples = max(1, int(math.ceil(segment_span / 2.0)))
-            crossing_length = river_width + self.coords.distance_to_grid(1.0)
+            crossing_length = river_width
             for sample in range(samples):
                 center = add(
                     river_start,
@@ -777,6 +784,18 @@ class RoutingField:
                     add(center, mul(crossing_direction, crossing_length * 0.5)),
                     road_width + self.coords.distance_to_grid(1.2),
                 )
+                duplicate_radius = max(
+                    4.0, river_width * 0.90, 2.0 * (self.clearance + 3.0)
+                )
+                if any(
+                    distance(
+                        center,
+                        mul(add(existing.start, existing.end), 0.5),
+                    )
+                    <= duplicate_radius
+                    for existing in self.bridges
+                ):
+                    continue
                 deck_span = distance(candidate.start, candidate.end)
                 deck_samples = max(1, int(math.ceil(deck_span / 0.25)))
                 if any(
@@ -1057,10 +1076,35 @@ def inject_bridge_endpoints(
         entry_approach = sub(entry, mul(crossing_direction, approach_distance))
         exit_approach = add(exit_point, mul(crossing_direction, approach_distance))
 
+        prefix = result[:first]
+        suffix = result[last + 1 :]
+        if prefix:
+            approach = route_astar(
+                field,
+                prefix[-1],
+                entry_approach,
+                [prefix[-1], entry_approach],
+                directional_state=False,
+            )
+            prefix.extend(approach[1:])
+        else:
+            prefix.append(entry_approach)
+        if suffix:
+            departure = route_astar(
+                field,
+                exit_approach,
+                suffix[0],
+                [exit_approach, suffix[0]],
+                directional_state=False,
+            )
+            suffix = departure[:-1] + suffix
+        else:
+            suffix.append(exit_approach)
+
         result = (
-            result[:first]
-            + [entry_approach, entry, exit_point, exit_approach]
-            + result[last + 1 :]
+            prefix
+            + [entry, exit_point, exit_approach]
+            + suffix
         )
         fixed_points.extend((entry_approach, entry, exit_point, exit_approach))
 
@@ -1152,8 +1196,8 @@ def resample_polyline(
     return deduplicate(result)
 
 
-def json_number(value: float) -> int | float:
-    rounded = round(value, 2)
+def json_number(value: float, digits: int = 2) -> int | float:
+    rounded = round(value, digits)
     return int(round(rounded)) if abs(rounded - round(rounded)) < 1.0e-7 else rounded
 
 
@@ -1204,8 +1248,46 @@ def generate_road(
     ):
         rounded = simplified
     sampled = resample_polyline(rounded, max_segment_length / field.coords.tile_size)
+    if not all(
+        field.line_passable(a, b) for a, b in zip(sampled, sampled[1:], strict=False)
+    ):
+        # Splitting a diagonal exactly on a raster-cell corner can make the
+        # conservative supercover check stricter than it was for the unsplit
+        # line. Preserve the already validated unsplit line in that rare case.
+        sampled = rounded
     authored_output = [field.coords.from_grid(point) for point in sampled]
-    encoded = [[json_number(x), json_number(z)] for x, z in authored_output]
+    # Road lines are rasterized conservatively. Retain enough precision that
+    # serializing a safe route cannot move a segment across a cell boundary.
+    def encode_points(digits: int) -> list[list[int | float]]:
+        return [
+            [json_number(x, digits=digits), json_number(z, digits=digits)]
+            for x, z in authored_output
+        ]
+
+    encoded = encode_points(4)
+
+    def invalid_serialized_segments(points: Sequence[Sequence[float]]) -> list[int]:
+        grid_points = [field.coords.to_grid(point) for point in points]
+        return [
+            index
+            for index, (a, b) in enumerate(
+                zip(grid_points, grid_points[1:], strict=False)
+            )
+            if not field.line_passable(a, b)
+        ]
+
+    invalid_encoded = invalid_serialized_segments(encoded)
+    if invalid_encoded:
+        # Retain full round-trip precision only for lines that sit exactly on
+        # the conservative rasterizer's cell boundary.
+        encoded = encode_points(15)
+        invalid_encoded = invalid_serialized_segments(encoded)
+    if invalid_encoded:
+        index = invalid_encoded[0]
+        raise RoadGenerationError(
+            "safe route became invalid after serialization: "
+            f"{sampled[index:index + 2]} -> {encoded[index:index + 2]}"
+        )
 
     output = dict(road)
     output["start"] = encoded[0]
@@ -1339,7 +1421,7 @@ def invalid_bridge_geometry(
 ) -> int:
     """Count decks that are not a short, perpendicular local river span."""
     invalid = 0
-    bearing = field.coords.distance_to_grid(1.0)
+    span_tolerance = max(0.02, field.coords.distance_to_grid(0.05))
     for bridge in field.bridges if bridges is None else bridges:
         center = mul(add(bridge.start, bridge.end), 0.5)
         intersecting = [
@@ -1359,11 +1441,8 @@ def invalid_bridge_geometry(
         )
         river_direction = normalized(sub(river[1], river[0]))
         bridge_length = distance(bridge.start, bridge.end)
-        maximum_length = river[2] + bearing + 0.25
-        minimum_length = max(river[2] * 0.80, river[2] - bearing)
         if (
-            bridge_length < minimum_length
-            or bridge_length > maximum_length
+            abs(bridge_length - river[2]) > span_tolerance
             or abs(dot(bridge.direction, river_direction)) > 0.25
         ):
             invalid += 1
@@ -1512,8 +1591,16 @@ def connect_road_components(
                         candidates.append((distance(first, second), first, second))
 
         connector: RouteResult | None = None
+        generation_failures = 0
+        obstacle_failures = 0
+        crossing_failures = 0
+        first_generation_error = ""
 
-        for _, start, end in sorted(candidates, key=lambda item: item[0])[:96]:
+        # Dense road networks can have many locally close pairs on the same
+        # blocked riverbank. Keep searching farther pairs so a legal bridge
+        # approach is not discarded merely because it is outside a small
+        # nearest-neighbour shortlist.
+        for _, start, end in sorted(candidates, key=lambda item: item[0])[:512]:
             authored_start = field.coords.from_grid(start)
             authored_end = field.coords.from_grid(end)
             road = {
@@ -1530,16 +1617,27 @@ def connect_road_components(
                     (start, end),
                     directional_state=False,
                 )
-            except RoadGenerationError:
+            except RoadGenerationError as error:
+                if not first_generation_error:
+                    first_generation_error = str(error)
+                generation_failures += 1
                 continue
             validation = validate_roads(field, [candidate.road])
-            if validation.obstacle_violations or validation.invalid_bridge_crossings:
+            if validation.obstacle_violations:
+                obstacle_failures += 1
+                continue
+            if validation.invalid_bridge_crossings:
+                crossing_failures += 1
                 continue
             connector = candidate
             break
         if connector is None:
             raise RoadGenerationError(
-                f"cannot legally connect {len(components)} remaining road components"
+                f"cannot legally connect {len(components)} remaining road components "
+                f"({generation_failures} unroutable, "
+                f"{obstacle_failures} obstacle, "
+                f"{crossing_failures} bridge-crossing candidates; "
+                f"first error: {first_generation_error})"
             )
         roads.append(connector.road)
         connectors.append(connector)

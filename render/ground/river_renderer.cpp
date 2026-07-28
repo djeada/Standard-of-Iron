@@ -48,7 +48,8 @@ void WaterRenderer::build_meshes() {
 
   Ground::LinearFeatureRibbonSettings settings = Ground::make_river_ribbon_settings();
   settings.height_map = m_height_map;
-  settings.follow_terrain_centerline = true;
+  settings.use_segment_elevation_profile = true;
+  settings.y_offset = 0.02F;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());

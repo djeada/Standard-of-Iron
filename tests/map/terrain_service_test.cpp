@@ -346,6 +346,44 @@ TEST_F(TerrainServiceTest, ForestAndRiverAreaFeaturesKeepTheirRuntimeTypes) {
   EXPECT_FALSE(height_map.is_walkable(15, 10));
 }
 
+TEST_F(TerrainServiceTest, RiverProfileIsFlatAndCarvesThroughMountain) {
+  Game::Map::TerrainHeightMap height_map(41, 41, 1.0F);
+  const Game::Map::TerrainFeature mountain{
+      .type = Game::Map::TerrainType::Mountain,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .radius = 10.0F,
+      .height = 8.0F,
+  };
+  height_map.build_from_features({mountain});
+
+  const float original_shoulder_height = height_map.get_height_at(0.0F, 4.0F);
+  ASSERT_GT(original_shoulder_height, 0.1F);
+
+  Game::Map::RiverSegment first{
+      .start = QVector3D(-15.0F, 0.0F, 0.0F),
+      .end = QVector3D(0.0F, 0.0F, 0.0F),
+      .width = 4.0F,
+  };
+  Game::Map::RiverSegment second{
+      .start = QVector3D(0.0F, 0.0F, 0.0F),
+      .end = QVector3D(15.0F, 0.0F, 0.0F),
+      .width = 4.0F,
+  };
+  height_map.add_river_segments({first, second});
+
+  const auto& runtime_rivers = height_map.get_river_segments();
+  ASSERT_EQ(runtime_rivers.size(), 2U);
+  EXPECT_FLOAT_EQ(runtime_rivers[0].end.y(), runtime_rivers[1].start.y());
+  EXPECT_FLOAT_EQ(runtime_rivers[0].start.y(), runtime_rivers[0].end.y());
+  EXPECT_FLOAT_EQ(runtime_rivers[0].end.y(), runtime_rivers[1].end.y());
+  EXPECT_EQ(height_map.getTerrainType(20, 20), Game::Map::TerrainType::River);
+  EXPECT_NEAR(
+      height_map.get_height_at(0.0F, 0.0F), runtime_rivers[0].end.y() - 0.10F, 0.0001F);
+  EXPECT_LT(height_map.get_height_at(0.0F, 4.0F), original_shoulder_height);
+  EXPECT_EQ(height_map.getTerrainType(20, 24), Game::Map::TerrainType::Mountain);
+}
+
 TEST_F(TerrainServiceTest, LakeBodyBlocksItsIrregularEllipseAndRemainsDistinct) {
   Game::Map::MapDefinition map_def;
   map_def.grid = {41, 41, 1.0F};

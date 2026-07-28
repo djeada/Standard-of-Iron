@@ -282,6 +282,10 @@ RowLayout {
             if (bottomRoot.game_ready() && game.select_unit_by_id)
                 game.select_unit_by_id(unitId);
         }
+        onGroupActivated: function (unitType) {
+            if (bottomRoot.game_ready() && game.select_selected_units_by_type)
+                game.select_selected_units_by_type(unitType);
+        }
     }
 
     ColumnLayout {
