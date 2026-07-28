@@ -194,6 +194,48 @@ TEST(LinearFeatureGeometryTest, BuildsRiverRibbonMeshWithMeanderSupport) {
   EXPECT_FLOAT_EQ(mesh->get_vertices().front().position[1], 0.0F);
 }
 
+TEST(LinearFeatureGeometryTest, RiverProfileIgnoresTerrainHumps) {
+  std::vector<float> const heights(25U, 20.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(
+      heights.size(), Game::Map::TerrainType::Mountain);
+  Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
+  height_map.restore_from_data(heights, terrain_types, {}, {});
+
+  Render::Ground::LinearFeatureRibbonSettings settings =
+      Render::Ground::make_river_ribbon_settings();
+  settings.sample_step = 1.0F;
+  settings.min_length_steps = 2;
+  settings.cross_section_segments = 4;
+  settings.height_map = &height_map;
+  settings.use_segment_elevation_profile = true;
+  settings.y_offset = 0.02F;
+
+  auto mesh = Render::Ground::build_linear_ribbon_mesh(
+      {QVector3D(-2.0F, 1.0F, 0.0F), QVector3D(2.0F, 3.0F, 0.0F), 2.0F},
+      1.0F,
+      settings);
+
+  ASSERT_NE(mesh, nullptr);
+  auto const& vertices = mesh->get_vertices();
+  const std::size_t vertices_per_row =
+      static_cast<std::size_t>(settings.cross_section_segments + 1);
+  ASSERT_GE(vertices.size(), vertices_per_row * 2U);
+
+  for (std::size_t index = 0; index < vertices_per_row; ++index) {
+    EXPECT_NEAR(vertices[index].position[1], 1.02F, 0.0001F);
+    EXPECT_NEAR(vertices[vertices.size() - vertices_per_row + index].position[1],
+                3.02F,
+                0.0001F);
+  }
+  for (std::size_t row = 0; row < vertices.size() / vertices_per_row; ++row) {
+    const float row_height = vertices[row * vertices_per_row].position[1];
+    for (std::size_t column = 1; column < vertices_per_row; ++column) {
+      EXPECT_NEAR(
+          vertices[row * vertices_per_row + column].position[1], row_height, 0.0001F);
+    }
+  }
+}
+
 TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   Game::Map::Bridge bridge;
   bridge.start = QVector3D(-2.0F, 0.5F, 0.0F);

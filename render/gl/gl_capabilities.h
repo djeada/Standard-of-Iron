@@ -45,22 +45,20 @@ public:
     qInfo() << "Platform: Unknown";
 #endif
 
-    const QString extensions = QString::fromLatin1(
-        reinterpret_cast<const char*>(gl->glGetString(GL_EXTENSIONS)));
-
     qInfo() << "=== Extension Support ===";
-    qInfo() << "GL_ARB_buffer_storage:" << extensions.contains("GL_ARB_buffer_storage");
+    qInfo() << "GL_ARB_buffer_storage:"
+            << ctx->hasExtension(QByteArrayLiteral("GL_ARB_buffer_storage"));
     qInfo() << "GL_ARB_direct_state_access:"
-            << extensions.contains("GL_ARB_direct_state_access");
+            << ctx->hasExtension(QByteArrayLiteral("GL_ARB_direct_state_access"));
     qInfo() << "GL_ARB_vertex_array_object:"
-            << extensions.contains("GL_ARB_vertex_array_object");
+            << ctx->hasExtension(QByteArrayLiteral("GL_ARB_vertex_array_object"));
     qInfo() << "GL_ARB_uniform_buffer_object:"
-            << extensions.contains("GL_ARB_uniform_buffer_object");
+            << ctx->hasExtension(QByteArrayLiteral("GL_ARB_uniform_buffer_object"));
 
     const bool has_persistent_mapping =
         (format.majorVersion() > 4 ||
          (format.majorVersion() == 4 && format.minorVersion() >= 4)) ||
-        extensions.contains("GL_ARB_buffer_storage");
+        ctx->hasExtension(QByteArrayLiteral("GL_ARB_buffer_storage"));
 
     qInfo() << "Persistent Buffer Mapping:"
             << (has_persistent_mapping ? "Supported" : "Not Supported");
@@ -74,11 +72,7 @@ public:
       return false;
     }
 
-    auto* gl = ctx->extraFunctions();
-    const QString extensions = QString::fromLatin1(
-        reinterpret_cast<const char*>(gl->glGetString(GL_EXTENSIONS)));
-
-    return extensions.contains(extension);
+    return ctx->hasExtension(QByteArray(extension));
   }
 };
 

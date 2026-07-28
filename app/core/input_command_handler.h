@@ -91,6 +91,7 @@ public:
                         const ViewportState& viewport);
   void select_all_troops(int local_owner_id);
   void select_unit_by_id(int unit_id, int local_owner_id);
+  void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
   void set_hover_at_screen(qreal sx, qreal sy, const ViewportState& viewport);
   static void reset_movement(Engine::Core::Entity* entity);
 
