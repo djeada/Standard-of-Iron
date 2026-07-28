@@ -425,9 +425,9 @@ class RoutingField:
                 add(crossing_center, mul(crossing_direction, crossing_length * 0.5)),
                 self.coords.distance_to_grid(float(item.get("width", 3.0))),
             )
-            # Overlapping approach corridors let routing "slide" sideways
-            # between adjacent decks. Coalesce crossings that are too close
-            # to have independent, safe approaches.
+
+
+
             duplicate_radius = max(
                 4.0, river_width * 0.90, 2.0 * (self.clearance + 3.0)
             )
@@ -1251,13 +1251,13 @@ def generate_road(
     if not all(
         field.line_passable(a, b) for a, b in zip(sampled, sampled[1:], strict=False)
     ):
-        # Splitting a diagonal exactly on a raster-cell corner can make the
-        # conservative supercover check stricter than it was for the unsplit
-        # line. Preserve the already validated unsplit line in that rare case.
+
+
+
         sampled = rounded
     authored_output = [field.coords.from_grid(point) for point in sampled]
-    # Road lines are rasterized conservatively. Retain enough precision that
-    # serializing a safe route cannot move a segment across a cell boundary.
+
+
     def encode_points(digits: int) -> list[list[int | float]]:
         return [
             [json_number(x, digits=digits), json_number(z, digits=digits)]
@@ -1278,8 +1278,8 @@ def generate_road(
 
     invalid_encoded = invalid_serialized_segments(encoded)
     if invalid_encoded:
-        # Retain full round-trip precision only for lines that sit exactly on
-        # the conservative rasterizer's cell boundary.
+
+
         encoded = encode_points(15)
         invalid_encoded = invalid_serialized_segments(encoded)
     if invalid_encoded:
@@ -1596,10 +1596,10 @@ def connect_road_components(
         crossing_failures = 0
         first_generation_error = ""
 
-        # Dense road networks can have many locally close pairs on the same
-        # blocked riverbank. Keep searching farther pairs so a legal bridge
-        # approach is not discarded merely because it is outside a small
-        # nearest-neighbour shortlist.
+
+
+
+
         for _, start, end in sorted(candidates, key=lambda item: item[0])[:512]:
             authored_start = field.coords.from_grid(start)
             authored_end = field.coords.from_grid(end)

@@ -513,7 +513,7 @@ def distance_to_water(definition: dict, x: float, z: float) -> float:
         points = river.get("waypoints") or [river.get("start"), river.get("end")]
         points = [point for point in points if point]
         half_width = float(river.get("width", 3.0)) * 0.5
-        for start, end in zip(points, points[1:]):
+        for start, end in zip(points, points[1:], strict=False):
             delta_x = float(end[0]) - float(start[0])
             delta_z = float(end[1]) - float(start[1])
             length_sq = delta_x * delta_x + delta_z * delta_z
