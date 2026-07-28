@@ -43,7 +43,7 @@ add_executable(
     core/settings_persistence_test.cpp
     ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
     ui/preferences_test.cpp
-    ${CMAKE_SOURCE_DIR}/app/models/selected_units_model.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/selection_grouping.cpp
     ui/selection_grouping_test.cpp
     ui/icon_resources_test.cpp
     ${CMAKE_SOURCE_DIR}/ui/theme.cpp
@@ -378,6 +378,7 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
         ${CMAKE_SOURCE_DIR}/ui/theme.cpp
         ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
         ${CMAKE_SOURCE_DIR}/design_resources.qrc
+        ${CMAKE_SOURCE_DIR}/assets.qrc
     )
     target_link_libraries(
         design_system_qml_tests

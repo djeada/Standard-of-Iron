@@ -11,22 +11,22 @@ ApplicationWindow {
     height: 800
     visible: true
     title: qsTr("Standard of Iron — Iron and Ember Gallery")
-    color: Theme.backgroundDeep
+    color: Design.Theme.backgroundDeep
 
     Design.ToolShell {
         anchors.fill: parent
 
         toolbar: RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: Metrics.space12
-            anchors.rightMargin: Metrics.space12
-            spacing: Metrics.space12
+            anchors.leftMargin: Design.Metrics.space12
+            anchors.rightMargin: Design.Metrics.space12
+            spacing: Design.Metrics.space12
 
             Text {
                 text: qsTr("Scale")
-                color: Theme.textSecondary
-                font.family: Typography.family
-                font.pixelSize: Typography.caption
+                color: Design.Theme.textSecondary
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.caption
             }
 
             Design.IronSlider {
@@ -75,12 +75,12 @@ ApplicationWindow {
 
         statusBar: Text {
             anchors.fill: parent
-            anchors.leftMargin: Metrics.space12
+            anchors.leftMargin: Design.Metrics.space12
             verticalAlignment: Text.AlignVCenter
             text: qsTr("Iron and Ember — every control the product may use")
-            color: Theme.textSecondary
-            font.family: Typography.family
-            font.pixelSize: Typography.caption
+            color: Design.Theme.textSecondary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
         }
     }
 }

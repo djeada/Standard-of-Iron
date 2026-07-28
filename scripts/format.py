@@ -351,6 +351,60 @@ def _chunks(items: Sequence[str], size: int) -> Iterable[list[str]]:
         yield list(items[start : start + size])
 
 
+def _ensure_qmllint_symlinks(build_dir: str) -> None:
+    """Create symlinks so qmllint can resolve StandardOfIron.Design from source."""
+    _link_to(
+        Path(build_dir) / "StandardOfIron" / "Design",
+        REPO_ROOT / "ui" / "qml" / "design",
+    )
+    _link_to(
+        Path(build_dir) / "StandardOfIron" / "TestSupport",
+        REPO_ROOT / "tests" / "ui" / "qml" / "TestSupport",
+    )
+
+
+def _link_to(link_path: Path, source: Path) -> None:
+    if not source.is_dir():
+        return
+    try:
+        target = link_path.resolve()
+        if link_path.is_symlink() or link_path.exists():
+            if target == source:
+                return
+            link_path.unlink()
+        link_path.parent.mkdir(parents=True, exist_ok=True)
+        link_path.symlink_to(source, target_is_directory=True)
+    except (FileNotFoundError, NotADirectoryError, OSError):
+        pass
+
+
+def _qmllint_check(exe: str, files: list[str]) -> list[str]:
+    """Check structural QML rules without runtime-only context and type metadata."""
+    _ensure_qmllint_symlinks(str(REPO_ROOT / "build"))
+    cmd = [
+        exe,
+        "--unqualified",
+        "disable",
+        "--property",
+        "disable",
+        "--type",
+        "disable",
+        "--import",
+        "disable",
+        "--deferred-property-id",
+        "disable",
+        "-I",
+        str(REPO_ROOT / "ui/qml"),
+        "-I",
+        str(REPO_ROOT / "build"),
+        *files,
+    ]
+    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        return [(proc.stdout + proc.stderr).strip()]
+    return []
+
+
 def _qmlformat_check(exe: str, files: list[str]) -> list[str]:
     """qmlformat has no --check mode; compare formatted output to the file."""
     offenders: list[str] = []
@@ -558,7 +612,7 @@ def build_tools() -> list[Tool]:
             advisory=True,
             install_hint="ships with Qt (qt6-declarative-dev-tools)",
             batch=32,
-            check_cmd=lambda exe, files: [exe, "-I", "ui/qml", *files],
+            custom_check=_qmllint_check,
         ),
         Tool(
             name="markdownlint",
