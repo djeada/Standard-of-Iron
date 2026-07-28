@@ -15,6 +15,8 @@ inline constexpr std::uint16_t k_humanoid_idle_weapon_clip =
     Animation::k_humanoid_idle_weapon_clip;
 inline constexpr std::uint16_t k_humanoid_idle_weave_clip =
     Animation::k_humanoid_idle_weave_clip;
+inline constexpr std::uint16_t k_humanoid_idle_plant_flag_clip =
+    Animation::k_humanoid_idle_plant_flag_clip;
 
 inline constexpr std::uint16_t k_humanoid_walk_clip = Animation::k_humanoid_walk_clip;
 inline constexpr std::uint16_t k_humanoid_run_clip = Animation::k_humanoid_run_clip;

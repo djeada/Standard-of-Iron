@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
+#include <QSet>
 #include <QStringList>
 #include <QTextStream>
 #include <qdebug.h>
@@ -75,7 +76,8 @@ void record_shader_bind(const QString& name) {
 #endif
 
 auto resolve_shader_includes(const QString& source,
-                             const QString& base_dir) -> QString {
+                             const QString& base_dir,
+                             QSet<QString>& already_included) -> QString {
   QString result;
   result.reserve(source.size());
 
@@ -100,13 +102,18 @@ auto resolve_shader_includes(const QString& source,
 
         const QString include_path =
             QStringLiteral(":/assets/shaders/include/") + include_name;
+        if (already_included.contains(include_name)) {
+          continue;
+        }
         const QString resolved = Utils::Resources::resolve_resource_path(include_path);
         QFile include_file(resolved);
         if (include_file.open(QIODevice::ReadOnly)) {
           QTextStream stream(&include_file);
           const QString included_source = stream.readAll();
 
-          result += resolve_shader_includes(included_source, base_dir);
+          already_included.insert(include_name);
+          result +=
+              resolve_shader_includes(included_source, base_dir, already_included);
           result += '\n';
           continue;
         }
@@ -117,6 +124,12 @@ auto resolve_shader_includes(const QString& source,
     result += '\n';
   }
   return result;
+}
+
+auto resolve_shader_includes(const QString& source,
+                             const QString& base_dir) -> QString {
+  QSet<QString> already_included;
+  return resolve_shader_includes(source, base_dir, already_included);
 }
 } // namespace
 

@@ -752,7 +752,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.finisher_attack = anim_ctx.inputs.combat_visual.finisher_attack;
 
     auto const rally_pose = preparation_mode.flag_rally_pose();
-    auto const ambient_selection = Animation::resolve_humanoid_ambient_selection({
+    Animation::HumanoidAmbientRuntimeState previous_ambient{};
+    if (locomotion_persistent_state != nullptr) {
+      previous_ambient = locomotion_persistent_state->ambient_idle;
+    }
+    Animation::HumanoidAmbientSelectionInputs ambient_inputs{
+        .ambient_state = previous_ambient,
+        .sample_time = anim.time,
         .jump_active = commander_jump.active,
         .jump_phase = commander_jump.phase,
         .flag_rally_active = rally_pose.active,
@@ -768,12 +774,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         .hit_reacting = anim_ctx.inputs.is_hit_reacting,
         .dying = anim_ctx.inputs.is_dying,
         .dead = anim_ctx.inputs.is_dead,
+        .routing = anim_ctx.inputs.is_routing,
         .seed = inst_seed,
         .idle_duration = anim_ctx.inputs.idle_duration,
-    });
-    if (ambient_selection.active) {
-      anim_ctx.ambient_idle_type = ambient_selection.type;
-      anim_ctx.ambient_idle_phase = ambient_selection.phase;
+    };
+    auto const ambient_tick =
+        Animation::resolve_humanoid_ambient_selection(ambient_inputs);
+
+    if (allow_animation_persistence && locomotion_persistent_state != nullptr) {
+      locomotion_persistent_state->ambient_idle = ambient_tick.state;
+    }
+    if (ambient_tick.sample.active) {
+      anim_ctx.ambient_idle_type = ambient_tick.sample.type;
+      anim_ctx.ambient_idle_phase = ambient_tick.sample.phase;
+      anim_ctx.ambient_idle_blend = ambient_tick.sample.blend;
     }
 
     HumanoidPose const pose{};
@@ -862,6 +876,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       return;
     }
     auto const soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
+
+    anim_ctx.idle_breath_phase =
+        phase_override.active
+            ? locomotion_state.gait.cycle_phase
+            : RCP::humanoid_idle_breath_phase_for_lod(
+                  anim.time, inst_seed, soldier_lod, ctx.prewarming_via_runtime_path);
 
     ++s_render_stats.soldiers_rendered;
 

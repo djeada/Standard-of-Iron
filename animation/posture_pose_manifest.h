@@ -11,6 +11,12 @@ struct HumanoidMicroIdlePoseInputs {
   std::uint32_t seed{0U};
 };
 
+struct HumanoidIdleBreathPoseInputs {
+  float phase{0.0F};
+
+  bool mounted{false};
+};
+
 struct HumanoidPostureDeltaSample {
   float pelvis_x_delta{0.0F};
   float pelvis_y_delta{0.0F};
@@ -123,6 +129,9 @@ struct MountedRiderTorsoSculptPoseInputs {
 
 [[nodiscard]] auto resolve_humanoid_micro_idle_pose(
     const HumanoidMicroIdlePoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample;
+
+[[nodiscard]] auto resolve_humanoid_idle_breath_pose(
+    const HumanoidIdleBreathPoseInputs& inputs) noexcept -> HumanoidPostureDeltaSample;
 
 [[nodiscard]] auto resolve_humanoid_kneel_pose(
     const HumanoidKneelPoseInputs& inputs) noexcept -> HumanoidKneelPoseSample;
