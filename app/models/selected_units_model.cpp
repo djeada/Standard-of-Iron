@@ -42,7 +42,8 @@ auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVari
   bool is_b = false;
   bool alive = false;
   if (role == UnitIdRole) {
-    return QVariant::fromValue<int>(static_cast<int>(id));
+
+    return QVariant::fromValue<qulonglong>(static_cast<qulonglong>(id));
   }
   if (role == UnitTypeRole) {
     QString type_key;
@@ -112,6 +113,7 @@ QVariantList SelectedUnitsModel::grouped_by_type() const {
     unit[QStringLiteral("name")] = data(model_index, NameRole);
     unit[QStringLiteral("nation")] = data(model_index, NationRole);
     unit[QStringLiteral("health_ratio")] = data(model_index, HealthRatioRole);
+    unit[QStringLiteral("stamina_ratio")] = data(model_index, StaminaRatioRole);
     units.append(unit);
   }
   return App::Models::selection_groups_to_variant(

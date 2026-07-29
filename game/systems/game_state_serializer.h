@@ -13,7 +13,7 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -52,6 +52,10 @@ struct RuntimeSnapshot {
   bool follow_selection = false;
   std::vector<OwnerResourceState> resources_by_owner;
   std::vector<OwnerResourceState> harvested_by_owner;
+
+  std::uint64_t simulation_tick = 0;
+  std::uint64_t rng_seed = 0;
+  std::uint64_t rng_draw_count = 0;
 };
 
 class GameStateSerializer {

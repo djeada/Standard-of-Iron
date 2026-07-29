@@ -35,7 +35,6 @@ inline constexpr float k_ambient_max_step = 0.25F;
 struct HumanoidAmbientRuntimeState {
   HumanoidAmbientStage stage{HumanoidAmbientStage::Dormant};
   HumanoidAmbientIdle type{HumanoidAmbientIdle::None};
-  HumanoidAmbientIdle previous_type{HumanoidAmbientIdle::None};
   float clip_phase{0.0F};
   float blend{0.0F};
   float cooldown{0.0F};

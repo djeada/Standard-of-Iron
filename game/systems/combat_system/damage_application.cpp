@@ -21,6 +21,7 @@
 #include "../wall_network_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "structure_combat.h"
 
 namespace Game::Systems::Combat {
 
@@ -110,10 +111,116 @@ void apply_death_sequence(Engine::Core::DeathAnimationComponent& death,
   death.sequence_variant = timing.sequence_variant;
 }
 
+auto preferred_formation_hit_slot(Engine::Core::Entity* target,
+                                  Engine::Core::Entity* attacker)
+    -> std::optional<std::uint16_t> {
+  if (target == nullptr || attacker == nullptr) {
+    return std::nullopt;
+  }
+  if (!FormationCombat::has_formation_slots(*target)) {
+    return std::nullopt;
+  }
+
+  auto const* contact =
+      attacker->get_component<Engine::Core::FormationContactComponent>();
+  if (contact != nullptr) {
+    auto const* pairs = &contact->engagement_pairs;
+    auto const front =
+        std::find_if(contact->fronts.begin(),
+                     contact->fronts.end(),
+                     [target](auto const& candidate) {
+                       return candidate.outgoing && candidate.in_contact &&
+                              candidate.opponent_id == target->get_id() &&
+                              !candidate.engagement_pairs.empty();
+                     });
+    if (front != contact->fronts.end()) {
+      pairs = &front->engagement_pairs;
+    }
+    if (auto const selected = FormationCombat::select_damage_engagement_pair(
+            *attacker, target->get_id(), *pairs);
+        selected.has_value()) {
+      return selected->target_slot;
+    }
+  }
+
+  auto const layout = FormationCombat::resolve_layout(*target);
+  auto const* attacker_transform =
+      attacker->get_component<Engine::Core::TransformComponent>();
+  if (layout.live_slots.empty()) {
+    return std::nullopt;
+  }
+  if (attacker_transform == nullptr) {
+    return layout.live_slots.front().index;
+  }
+  auto const closest = std::min_element(
+      layout.live_slots.begin(),
+      layout.live_slots.end(),
+      [attacker_transform](auto const& lhs, auto const& rhs) {
+        float const lhs_dx = lhs.world_x - attacker_transform->position.x;
+        float const lhs_dz = lhs.world_z - attacker_transform->position.z;
+        float const rhs_dx = rhs.world_x - attacker_transform->position.x;
+        float const rhs_dz = rhs.world_z - attacker_transform->position.z;
+        return lhs_dx * lhs_dx + lhs_dz * lhs_dz < rhs_dx * rhs_dx + rhs_dz * rhs_dz;
+      });
+  return closest->index;
+}
+
+auto ensure_formation_roster(Engine::Core::Entity& target,
+                             int total_count,
+                             int expected_live_count)
+    -> Engine::Core::FormationRosterPresentationComponent* {
+  auto* roster = Engine::Core::get_or_add_component<
+      Engine::Core::FormationRosterPresentationComponent>(&target);
+  if (roster == nullptr) {
+    return nullptr;
+  }
+
+  int const current_live_count = static_cast<int>(std::count(
+      roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
+  bool const valid = roster->total_count == total_count &&
+                     roster->alive.size() == static_cast<std::size_t>(total_count) &&
+                     current_live_count == expected_live_count;
+  if (valid) {
+    roster->live_count = static_cast<std::uint16_t>(expected_live_count);
+    return roster;
+  }
+
+  roster->total_count = static_cast<std::uint16_t>(total_count);
+  roster->live_count = static_cast<std::uint16_t>(expected_live_count);
+  roster->alive.assign(static_cast<std::size_t>(total_count), 0U);
+  int const first_live = std::max(0, total_count - expected_live_count);
+  for (int slot = first_live; slot < total_count; ++slot) {
+    roster->alive[static_cast<std::size_t>(slot)] = 1U;
+  }
+  ++roster->revision;
+  return roster;
+}
+
+void publish_formation_hit(Engine::Core::Entity& target,
+                           Engine::Core::EntityID attacker_id,
+                           std::optional<std::uint16_t> slot) {
+  if (!slot.has_value()) {
+    return;
+  }
+  auto* hit = Engine::Core::get_or_add_component<
+      Engine::Core::FormationHitPresentationComponent>(&target);
+  if (hit == nullptr) {
+    return;
+  }
+  hit->attacker_id = attacker_id;
+  hit->soldier_slot = *slot;
+  hit->remaining = 0.28F;
+  hit->intensity = 0.85F;
+  ++hit->revision;
+}
+
 auto begin_soldier_casualties(Engine::Core::Entity* target,
                               Engine::Core::Entity* attacker,
                               int prev_health,
-                              int new_health) -> int {
+                              int new_health,
+                              std::optional<std::uint16_t> preferred_slot,
+                              const FormationCombat::FormationLayout& previous_layout)
+    -> int {
   if (target == nullptr) {
     return 0;
   }
@@ -139,6 +246,7 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     return 0;
   }
 
+  auto* roster = ensure_formation_roster(*target, individuals_per_unit, prev_survivors);
   auto const profile = resolve_death_profile(unit);
   auto* casualties = Engine::Core::get_or_add_component<
       Engine::Core::SoldierCasualtyAnimationComponent>(target);
@@ -148,10 +256,67 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
 
   auto const variant = resolve_death_variant(target, attacker, profile);
   auto const timing = resolve_death_timing(profile, variant);
+  auto const* presentation =
+      target->get_component<Engine::Core::FormationPresentationComponent>();
+  auto presentation_for_slot =
+      [presentation](
+          std::uint16_t slot) -> const Engine::Core::FormationSoldierPresentation* {
+    if (presentation == nullptr) {
+      return nullptr;
+    }
+    auto const found = std::find_if(
+        presentation->soldiers.begin(),
+        presentation->soldiers.end(),
+        [slot](auto const& soldier) { return soldier.slot_index == slot; });
+    return found != presentation->soldiers.end() ? &*found : nullptr;
+  };
+  auto layout_for_slot =
+      [&previous_layout](std::uint16_t slot) -> const FormationCombat::SoldierSlot* {
+    auto const found =
+        std::find_if(previous_layout.live_slots.begin(),
+                     previous_layout.live_slots.end(),
+                     [slot](auto const& soldier) { return soldier.index == slot; });
+    return found != previous_layout.live_slots.end() ? &*found : nullptr;
+  };
+  auto next_casualty_slot = [&]() -> std::optional<std::uint16_t> {
+    if (roster == nullptr) {
+      return std::nullopt;
+    }
+    if (preferred_slot.has_value() && *preferred_slot < roster->alive.size() &&
+        roster->alive[*preferred_slot] != 0U) {
+      auto const selected = preferred_slot;
+      preferred_slot.reset();
+      return selected;
+    }
+    for (std::size_t slot = 0; slot < roster->alive.size(); ++slot) {
+      if (roster->alive[slot] != 0U) {
+        return static_cast<std::uint16_t>(slot);
+      }
+    }
+    return std::nullopt;
+  };
+
   int queued_casualties = 0;
-  for (int slot = previous_front_casualties; slot < new_front_casualties; ++slot) {
+  for (int casualty_index = previous_front_casualties;
+       casualty_index < new_front_casualties;
+       ++casualty_index) {
+    auto const selected_slot = next_casualty_slot();
+    int const slot =
+        selected_slot.has_value() ? static_cast<int>(*selected_slot) : casualty_index;
     Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
     entry.slot_index = static_cast<std::uint16_t>(slot);
+    if (auto const* soldier = presentation_for_slot(static_cast<std::uint16_t>(slot))) {
+      entry.has_local_anchor = true;
+      entry.local_x = soldier->local_x;
+      entry.local_z = soldier->local_z;
+      entry.local_yaw = soldier->local_yaw;
+    } else if (auto const* soldier =
+                   layout_for_slot(static_cast<std::uint16_t>(slot))) {
+      entry.has_local_anchor = true;
+      entry.local_x = soldier->local_x;
+      entry.local_z = soldier->local_z;
+      entry.local_yaw = soldier->local_yaw;
+    }
     entry.profile = profile;
     entry.state = Engine::Core::DeathSequenceState::Dying;
     entry.state_time = 0.0F;
@@ -167,6 +332,11 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
       *existing = entry;
     } else {
       casualties->entries.push_back(entry);
+    }
+    if (roster != nullptr && slot >= 0 && slot < individuals_per_unit) {
+      roster->alive[static_cast<std::size_t>(slot)] = 0U;
+      roster->live_count = static_cast<std::uint16_t>(std::max(0, new_survivors));
+      ++roster->revision;
     }
     ++queued_casualties;
   }
@@ -484,6 +654,89 @@ void spawn_blood_stain(Engine::Core::World* world, const Engine::Core::Entity* t
       seed);
 }
 
+void queue_structure_impact(Engine::Core::Entity& target,
+                            const Engine::Core::Entity* attacker,
+                            const std::optional<QVector3D>& contact_point) {
+  auto const* target_transform =
+      target.get_component<Engine::Core::TransformComponent>();
+  if (target_transform == nullptr) {
+    return;
+  }
+
+  QVector3D source(target_transform->position.x,
+                   target_transform->position.y,
+                   target_transform->position.z - 2.0F);
+  if (auto const* attacker_transform =
+          attacker != nullptr
+              ? attacker->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      attacker_transform != nullptr) {
+    source = {attacker_transform->position.x,
+              attacker_transform->position.y,
+              attacker_transform->position.z};
+  }
+
+  auto const profile = structure_attack_profile(attacker);
+  auto const surface = closest_structure_surface(target, source);
+  QVector3D const point = contact_point.value_or(
+      structure_impact_point(target, source, 0.0F, profile.impact_height));
+
+  float radius = 0.38F;
+  float intensity = 1.0F;
+  float lifetime = 0.75F;
+  switch (profile.impact_style) {
+  case StructureImpactStyle::LightMelee:
+    break;
+  case StructureImpactStyle::HeavyMelee:
+    radius = 0.48F;
+    intensity = 1.25F;
+    lifetime = 0.90F;
+    break;
+  case StructureImpactStyle::Elephant:
+    radius = 0.78F;
+    intensity = 2.2F;
+    lifetime = 1.25F;
+    break;
+  case StructureImpactStyle::Ballista:
+    radius = 0.55F;
+    intensity = 1.7F;
+    lifetime = 1.0F;
+    break;
+  case StructureImpactStyle::Catapult:
+    radius = 0.95F;
+    intensity = 2.6F;
+    lifetime = 1.4F;
+    break;
+  case StructureImpactStyle::Magic:
+    radius = 0.68F;
+    intensity = 1.9F;
+    lifetime = 1.15F;
+    break;
+  }
+
+  auto* presentation = Engine::Core::get_or_add_component<
+      Engine::Core::StructureDamagePresentationComponent>(&target);
+  if (presentation == nullptr) {
+    return;
+  }
+  constexpr std::size_t k_max_structure_impacts = 16U;
+  if (presentation->impacts.size() >= k_max_structure_impacts) {
+    presentation->impacts.erase(presentation->impacts.begin());
+  }
+  presentation->impacts.push_back({
+      .x = point.x(),
+      .y = point.y(),
+      .z = point.z(),
+      .normal_x = surface.outward_normal.x(),
+      .normal_z = surface.outward_normal.z(),
+      .age = 0.0F,
+      .lifetime = lifetime,
+      .radius = radius,
+      .intensity = intensity,
+      .style = static_cast<std::uint8_t>(profile.impact_style),
+  });
+}
+
 } // namespace
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
@@ -516,10 +769,13 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
   }
 }
 
-DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
-                                          Engine::Core::Entity* target,
-                                          int damage,
-                                          Engine::Core::EntityID attacker_id) {
+DamageApplicationResult
+apply_unit_damage(Engine::Core::World* world,
+                  Engine::Core::Entity* target,
+                  int damage,
+                  Engine::Core::EntityID attacker_id,
+                  std::optional<QVector3D> contact_point,
+                  std::optional<std::uint16_t> preferred_soldier_slot) {
   DamageApplicationResult result;
   if (target == nullptr || damage <= 0) {
     return result;
@@ -544,17 +800,44 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
     }
   }
 
+  bool const structure = target->has_component<Engine::Core::BuildingComponent>();
+  int const effective_damage =
+      structure ? resolve_structure_damage(attacker, damage) : damage;
   result.previous_health = unit->health;
-  result.applied_damage = damage;
-  result.new_health = std::max(0, result.previous_health - damage);
+  result.new_health = result.previous_health;
+  if (effective_damage <= 0 || result.previous_health <= 0) {
+    return result;
+  }
+  result.applied_damage = effective_damage;
+  result.new_health = std::max(0, result.previous_health - effective_damage);
   result.killed = result.previous_health > 0 && result.new_health <= 0;
   bool const is_killing_blow =
-      result.previous_health > 0 && result.previous_health <= damage;
+      result.previous_health > 0 && result.previous_health <= effective_damage;
+  auto const previous_layout = FormationCombat::resolve_layout(*target);
 
   unit->health = result.new_health;
 
-  result.queued_soldier_casualties = begin_soldier_casualties(
-      target, attacker, result.previous_health, result.new_health);
+  if (preferred_soldier_slot.has_value()) {
+    bool const slot_is_live =
+        std::any_of(previous_layout.live_slots.begin(),
+                    previous_layout.live_slots.end(),
+                    [preferred_soldier_slot](auto const& slot) {
+                      return slot.index == *preferred_soldier_slot;
+                    });
+    if (!slot_is_live) {
+      preferred_soldier_slot.reset();
+    }
+  }
+  auto const preferred_hit_slot = preferred_soldier_slot.has_value()
+                                      ? preferred_soldier_slot
+                                      : preferred_formation_hit_slot(target, attacker);
+  publish_formation_hit(*target, attacker_id, preferred_hit_slot);
+  result.queued_soldier_casualties = begin_soldier_casualties(target,
+                                                              attacker,
+                                                              result.previous_health,
+                                                              result.new_health,
+                                                              preferred_hit_slot,
+                                                              previous_layout);
   if (result.queued_soldier_casualties > 0 && !is_killing_blow &&
       !target->has_component<Engine::Core::BuildingComponent>()) {
     spawn_blood_stain(world, target);
@@ -563,7 +846,11 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
   Game::Units::SpawnType const attacker_type =
       attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
   Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
-      attacker_id, target->get_id(), damage, attacker_type, is_killing_blow));
+      attacker_id, target->get_id(), effective_damage, attacker_type, is_killing_blow));
+
+  if (structure) {
+    queue_structure_impact(*target, attacker, contact_point);
+  }
 
   if (unit->health > 0) {
     apply_hit_feedback(target, attacker_id, world);
@@ -577,7 +864,7 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
                                             unit->spawn_type,
                                             attacker_id,
                                             attacker_owner_id,
-                                            damage));
+                                            effective_damage));
   }
 
   if (unit->health <= 0) {

@@ -60,6 +60,33 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.head_z_delta = 0.02F;
     sample.head_y_delta = -0.01F + 0.004F * hold_cycle;
     break;
+  case HumanoidHeldPoseKind::CasterChannel: {
+
+    float const bob = 0.014F * hold_cycle;
+    sample.right_hand = {0.19F, shoulder_y - 0.15F + bob, 0.44F};
+    sample.left_hand = {-0.19F, shoulder_y - 0.15F - bob, 0.44F};
+    sample.shoulder_r_z_delta = 0.05F;
+    sample.shoulder_l_z_delta = 0.05F;
+    sample.shoulder_r_y_delta = -0.01F;
+    sample.shoulder_l_y_delta = -0.01F;
+    sample.neck_z_delta = 0.02F;
+    sample.head_z_delta = 0.015F;
+    sample.head_y_delta = -0.012F;
+    break;
+  }
+  case HumanoidHeldPoseKind::StaveCarry: {
+
+    float const bob = 0.012F * hold_cycle;
+    sample.right_hand = {0.31F, shoulder_y - 0.13F, 0.28F};
+    sample.left_hand = {-0.15F, shoulder_y - 0.02F + bob, 0.46F};
+    sample.shoulder_r_x_delta = 0.02F;
+    sample.shoulder_r_z_delta = 0.03F;
+    sample.shoulder_l_z_delta = 0.07F;
+    sample.shoulder_l_y_delta = 0.01F;
+    sample.neck_z_delta = 0.02F;
+    sample.head_z_delta = 0.015F;
+    break;
+  }
   case HumanoidHeldPoseKind::SwordShieldCarry: {
     float const moving_mix = inputs.moving ? 1.0F : 0.0F;
     sample.right_hand = {0.34F + moving_mix * 0.03F,

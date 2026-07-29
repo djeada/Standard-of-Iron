@@ -120,7 +120,6 @@ auto advance_combat_action_events(Engine::Core::RpgCommanderActionComponent& act
     action.action_active = false;
     action.weapon_trace_active = false;
     action.phase = Engine::Core::RpgCommanderActionPhase::None;
-    action.active_target_id = 0;
   }
   return crossed;
 }
@@ -141,6 +140,9 @@ void reset_combat_action_event_runtime(
   action.input_buffered = false;
   action.hit_target_ids.fill(0U);
   action.hit_target_count = 0U;
+  action.last_hit_target_id = 0U;
+  action.last_hit_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
 }
 
 } // namespace Game::Systems::CombatActions

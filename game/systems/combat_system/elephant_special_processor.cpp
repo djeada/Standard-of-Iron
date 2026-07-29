@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <numbers>
+#include <span>
 
 #include "../../core/component.h"
 #include "../../core/entity.h"
@@ -64,6 +65,76 @@ void add_all_foot_stomps(Engine::Core::TransformComponent* transform,
     impact.z = transform->position.z - local.x * sin_y + local.z * cos_y;
     impact.time = 0.0F;
     stomp_impact->impacts.push_back(impact);
+  }
+}
+
+auto apply_stomp_damage(Engine::Core::Entity& elephant,
+                        Engine::Core::World& world,
+                        std::span<Engine::Core::Entity* const> units,
+                        int damage,
+                        float minimum_launch_speed) -> bool {
+  auto* elephant_comp = elephant.get_component<Engine::Core::ElephantComponent>();
+  auto* unit = elephant.get_component<Engine::Core::UnitComponent>();
+  auto* transform = elephant.get_component<Engine::Core::TransformComponent>();
+  if (elephant_comp == nullptr || unit == nullptr || transform == nullptr ||
+      unit->health <= 0 || damage <= 0) {
+    return false;
+  }
+
+  bool hit_any = false;
+  for (auto* other_entity : units) {
+    if (other_entity == nullptr || other_entity == &elephant ||
+        !is_valid_enemy_unit(unit, other_entity, false)) {
+      continue;
+    }
+
+    auto* other_unit = other_entity->get_component<Engine::Core::UnitComponent>();
+    auto* other_transform =
+        other_entity->get_component<Engine::Core::TransformComponent>();
+    if (other_unit == nullptr || other_transform == nullptr) {
+      continue;
+    }
+
+    float const dx = other_transform->position.x - transform->position.x;
+    float const dz = other_transform->position.z - transform->position.z;
+    if (std::hypot(dx, dz) > elephant_comp->trample_radius) {
+      continue;
+    }
+
+    int const old_health = other_unit->health;
+    auto const application =
+        apply_unit_damage(&world, other_entity, damage, elephant.get_id());
+    bool const infantry_target =
+        !Game::Units::is_cavalry(other_unit->spawn_type) &&
+        other_unit->spawn_type != Game::Units::SpawnType::Elephant &&
+        other_unit->spawn_type != Game::Units::SpawnType::Catapult &&
+        other_unit->spawn_type != Game::Units::SpawnType::Ballista;
+    if (infantry_target) {
+      float impact_speed = minimum_launch_speed;
+      if (auto const* motion =
+              elephant.get_component<Engine::Core::MotionPresentationComponent>();
+          motion != nullptr) {
+        impact_speed = std::max(impact_speed, motion->speed);
+      }
+      launch_new_casualties(
+          *other_entity, elephant, application.queued_soldier_casualties, impact_speed);
+    }
+    hit_any = hit_any || (old_health > 0 && other_unit->health < old_health);
+  }
+  return hit_any;
+}
+
+void publish_foot_stomps(Engine::Core::Entity& elephant) {
+  auto* elephant_comp = elephant.get_component<Engine::Core::ElephantComponent>();
+  auto* transform = elephant.get_component<Engine::Core::TransformComponent>();
+  if (elephant_comp == nullptr || transform == nullptr) {
+    return;
+  }
+  auto* impacts =
+      Engine::Core::get_or_add_component<Engine::Core::ElephantStompImpactComponent>(
+          &elephant);
+  if (impacts != nullptr) {
+    add_all_foot_stomps(transform, elephant_comp, impacts);
   }
 }
 
@@ -162,106 +233,34 @@ void process_trample_damage(Engine::Core::Entity* elephant,
   auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
   auto* unit = elephant->get_component<Engine::Core::UnitComponent>();
   auto* transform = elephant->get_component<Engine::Core::TransformComponent>();
-  auto* attack = elephant->get_component<Engine::Core::AttackComponent>();
-  auto* attack_target = elephant->get_component<Engine::Core::AttackTargetComponent>();
 
   if (elephant_comp == nullptr || unit == nullptr || transform == nullptr) {
     return;
   }
 
   bool const is_moving = is_motion_active(*elephant);
-
-  bool has_close_target = false;
-  if (!is_moving && attack_target != nullptr && attack_target->target_id != 0) {
-    auto* target =
-        get_entity_from_query_context(query_context, attack_target->target_id);
-    if (is_valid_enemy_unit(unit, target, false)) {
-      auto* target_transform =
-          target->get_component<Engine::Core::TransformComponent>();
-      if (target_transform != nullptr) {
-        float const dx = target_transform->position.x - transform->position.x;
-        float const dz = target_transform->position.z - transform->position.z;
-        float const dist = std::sqrt(dx * dx + dz * dz);
-        float const engage_range =
-            (attack != nullptr)
-                ? std::max(elephant_comp->trample_radius, attack->melee_range)
-                : elephant_comp->trample_radius;
-        has_close_target = (dist <= engage_range);
-      }
-    }
-  }
-
-  if (!is_moving && !has_close_target) {
+  if (!is_moving) {
     elephant_comp->trample_damage_accumulator = 0.0F;
     return;
   }
 
   elephant_comp->trample_damage_accumulator +=
       static_cast<float>(elephant_comp->trample_damage) * delta_time;
-  int const damage = static_cast<int>(elephant_comp->trample_damage_accumulator);
-  if (damage <= 0) {
+  constexpr float k_moving_footfall_interval = 0.28F;
+  int const footfall_damage = std::max(
+      1,
+      static_cast<int>(std::lround(static_cast<float>(elephant_comp->trample_damage) *
+                                   k_moving_footfall_interval)));
+  int const footfalls =
+      static_cast<int>(elephant_comp->trample_damage_accumulator) / footfall_damage;
+  if (footfalls <= 0) {
     return;
   }
+  int const damage = footfalls * footfall_damage;
+  elephant_comp->trample_damage_accumulator -= static_cast<float>(damage);
 
-  auto* stomp_impact =
-      elephant->get_component<Engine::Core::ElephantStompImpactComponent>();
-  if (stomp_impact == nullptr) {
-    stomp_impact =
-        elephant->add_component<Engine::Core::ElephantStompImpactComponent>();
-  }
-
-  bool hit_any = false;
-  for (auto* other_entity : query_context.units) {
-    if (other_entity == elephant) {
-      continue;
-    }
-    if (!is_valid_enemy_unit(unit, other_entity, false)) {
-      continue;
-    }
-
-    auto* other_unit = other_entity->get_component<Engine::Core::UnitComponent>();
-    auto* other_transform =
-        other_entity->get_component<Engine::Core::TransformComponent>();
-    if (other_unit == nullptr || other_transform == nullptr) {
-      continue;
-    }
-
-    float const dx = other_transform->position.x - transform->position.x;
-    float const dz = other_transform->position.z - transform->position.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-
-    if (dist <= elephant_comp->trample_radius) {
-      int const old_health = other_unit->health;
-      auto const application =
-          apply_unit_damage(world, other_entity, damage, elephant->get_id());
-
-      bool const infantry_target =
-          !Game::Units::is_cavalry(other_unit->spawn_type) &&
-          other_unit->spawn_type != Game::Units::SpawnType::Elephant &&
-          other_unit->spawn_type != Game::Units::SpawnType::Catapult &&
-          other_unit->spawn_type != Game::Units::SpawnType::Ballista;
-      if (infantry_target) {
-        float impact_speed = 5.5F;
-        if (auto const* motion =
-                elephant->get_component<Engine::Core::MotionPresentationComponent>();
-            motion != nullptr) {
-          impact_speed = std::max(impact_speed, motion->speed);
-        }
-        launch_new_casualties(*other_entity,
-                              *elephant,
-                              application.queued_soldier_casualties,
-                              impact_speed);
-      }
-
-      if (old_health > 0 && other_unit->health < old_health) {
-        hit_any = true;
-      }
-    }
-  }
-
-  if (hit_any) {
-    add_all_foot_stomps(transform, elephant_comp, stomp_impact);
-    elephant_comp->trample_damage_accumulator -= damage;
+  if (apply_stomp_damage(*elephant, *world, query_context.units, damage, 5.5F)) {
+    publish_foot_stomps(*elephant);
   } else {
     elephant_comp->trample_damage_accumulator = 0.0F;
   }
@@ -306,6 +305,24 @@ void process_elephant(Engine::Core::Entity* entity,
 }
 
 } // namespace
+
+auto apply_elephant_stomp_impact(Engine::Core::World* world,
+                                 Engine::Core::Entity* elephant) -> bool {
+  if (world == nullptr || elephant == nullptr) {
+    return false;
+  }
+  auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
+  if (elephant_comp == nullptr) {
+    return false;
+  }
+  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  bool const hit = apply_stomp_damage(
+      *elephant, *world, units, std::max(1, elephant_comp->trample_damage), 4.5F);
+  if (hit) {
+    publish_foot_stomps(*elephant);
+  }
+  return hit;
+}
 
 void process_elephant_specials(Engine::Core::World* world,
                                const CombatQueryContext& query_context,

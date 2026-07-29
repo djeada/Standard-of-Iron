@@ -112,7 +112,7 @@ void CameraService::set_follow_lerp(Render::GL::Camera& camera, float alpha) {
 void CameraService::reset_camera(Render::GL::Camera& camera,
                                  Engine::Core::World& world,
                                  int local_owner_id,
-                                 unsigned int player_unit_id) {
+                                 Engine::Core::EntityID player_unit_id) {
   sync_map_bounds(camera);
   Engine::Core::Entity* focus_entity = nullptr;
   for (auto* e : world.get_entities_with<Engine::Core::UnitComponent>()) {

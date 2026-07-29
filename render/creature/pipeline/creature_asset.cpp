@@ -158,6 +158,17 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
   m_skeleton_humanoid.bind_palette = &humanoid_bind;
   m_skeleton_humanoid.fill_role_colors = &humanoid_fill_roles;
+
+  m_caster_humanoid = m_humanoid;
+  m_caster_humanoid.id = k_caster_humanoid_asset;
+  m_caster_humanoid.debug_name = "humanoid.caster.v1";
+  m_caster_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_caster;
+
+  m_stave_caster_humanoid = m_humanoid;
+  m_stave_caster_humanoid.id = k_stave_caster_humanoid_asset;
+  m_stave_caster_humanoid.debug_name = "humanoid.stave_caster.v1";
+  m_stave_caster_humanoid.bpat_species_id =
+      Render::Creature::Bpat::k_species_humanoid_stave_caster;
 }
 
 auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
@@ -175,6 +186,10 @@ auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
     return &m_humanoid_spear;
   case k_skeleton_humanoid_asset:
     return &m_skeleton_humanoid;
+  case k_caster_humanoid_asset:
+    return &m_caster_humanoid;
+  case k_stave_caster_humanoid_asset:
+    return &m_stave_caster_humanoid;
   default:
     return nullptr;
   }

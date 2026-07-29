@@ -276,6 +276,10 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("clean-capture")},
       QStringLiteral("Hide stats, controls and spawn markers so captured frames "
                      "record only the scene."));
+  QCommandLineOption const prewarm_option(
+      QStringList{QStringLiteral("prewarm")},
+      QStringLiteral("Prewarm unit templates after the scenario loads and then "
+                     "forbid render-time baking, matching the campaign path."));
   QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
                                        QStringLiteral("List scenario ids and exit."));
   parser.addOptions({batch_option,
@@ -294,6 +298,7 @@ auto main(int argc, char** argv) -> int {
                      capture_interval_option,
                      clean_capture_option,
                      capture_orbit_option,
+                     prewarm_option,
                      promo_distance_option,
                      promo_tilt_option,
                      list_option});
@@ -346,6 +351,7 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_environment_time(environment_hour);
   window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
   window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
+  window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
 

@@ -74,12 +74,14 @@
     },
     "troops/roman/civilian": {
       "armor": "builder_tunic_roman",
-      "cloak": "roman_civilian_mantle"
+      "cloak": "roman_civilian_mantle",
+      "work_apron": "civilian_pack_roman"
     },
     "troops/carthage/civilian": {
       "helmet": "headwrap_carthage_civilian",
       "armor": "carthage_robes",
-      "cloak": "carthage_civilian_sash"
+      "cloak": "carthage_civilian_sash",
+      "work_apron": "civilian_pack_carthage"
     },
     "troops/roman/commanders/fabius_maximus": {
       "spear": "spear_fabius",

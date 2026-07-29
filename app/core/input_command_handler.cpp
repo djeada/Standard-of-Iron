@@ -14,6 +14,7 @@
 #include "game/core/world.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
+#include "game/view/selection_controller.h"
 #include "scene/camera.h"
 
 InputCommandHandler::InputCommandHandler(
@@ -95,7 +96,8 @@ void InputCommandHandler::on_right_click(qreal sx,
   }
 }
 
-void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target) {
+void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
+                                                 int local_owner_id) {
   if (m_is_spectator_mode || (m_world == nullptr)) {
     return;
   }
@@ -110,9 +112,7 @@ void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target) 
     return;
   }
 
-  auto plan =
-      Game::Systems::CommandService::plan_ground_move(*m_world, selected, world_target);
-  Game::Systems::CommandService::issue_ground_move(*m_world, selected, plan);
+  App::Utils::submit_ground_move(*m_world, selected, world_target, local_owner_id);
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx,
@@ -227,8 +227,11 @@ auto InputCommandHandler::on_right_press(qreal sx,
             if (m_command_controller != nullptr) {
               m_command_controller->disable_run_mode_for_selected();
             }
-            Game::Systems::CommandService::attack_target(
-                *m_world, attackers, target_id, true);
+            Game::Command::submit(
+                *m_world,
+                Game::Command::Source::LocalPlayer,
+                local_owner_id,
+                Game::Command::AttackTarget{.units = attackers, .target = target_id});
             return true;
           }
         }
@@ -592,15 +595,15 @@ void InputCommandHandler::select_all_troops(int local_owner_id) {
   }
 }
 
-void InputCommandHandler::select_unit_by_id(int unit_id, int local_owner_id) {
+void InputCommandHandler::select_unit_by_id(Engine::Core::EntityID unit_id,
+                                            int local_owner_id) {
   if (m_is_spectator_mode) {
     return;
   }
-  if ((m_selection_controller == nullptr) || (unit_id <= 0)) {
+  if (m_selection_controller == nullptr || unit_id == Engine::Core::NULL_ENTITY) {
     return;
   }
-  m_selection_controller->select_single_unit(
-      static_cast<Engine::Core::EntityID>(unit_id), local_owner_id);
+  m_selection_controller->select_single_unit(unit_id, local_owner_id);
 }
 
 void InputCommandHandler::select_selected_units_by_type(const QString& unit_type,

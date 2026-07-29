@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
 namespace Engine::Core {
@@ -9,6 +10,10 @@ class Entity;
 
 namespace Render::GL {
 class Camera;
+}
+
+namespace Engine::Core {
+using EntityID = std::uint64_t;
 }
 
 namespace Game::Systems {
@@ -35,7 +40,7 @@ public:
   static void reset_camera(Render::GL::Camera& camera,
                            Engine::Core::World& world,
                            int local_owner_id,
-                           unsigned int player_unit_id);
+                           Engine::Core::EntityID player_unit_id);
   static void snap_to_entity(Render::GL::Camera& camera, Engine::Core::Entity& entity);
   void update_follow(Render::GL::Camera& camera,
                      Engine::Core::World& world,

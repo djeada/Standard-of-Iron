@@ -420,10 +420,10 @@ Item {
                                     to: 10
                                     stepSize: 1
                                     snapMode: Slider.SnapAlways
-                                    value: typeof game !== 'undefined' ? game.autosave_slot_count : 3
+                                    value: typeof game !== 'undefined' ? game.saves.autosave_slot_count : 3
                                     onMoved: {
                                         if (typeof game !== 'undefined')
-                                            game.autosave_slot_count = Math.round(value);
+                                            game.saves.autosave_slot_count = Math.round(value);
                                     }
                                 }
 
@@ -454,10 +454,10 @@ Item {
                                     to: 60
                                     stepSize: 5
                                     snapMode: Slider.SnapAlways
-                                    value: typeof game !== 'undefined' ? game.autosave_interval_minutes : 5
+                                    value: typeof game !== 'undefined' ? game.saves.autosave_interval_minutes : 5
                                     onMoved: {
                                         if (typeof game !== 'undefined')
-                                            game.autosave_interval_minutes = Math.round(value);
+                                            game.saves.autosave_interval_minutes = Math.round(value);
                                     }
                                 }
 

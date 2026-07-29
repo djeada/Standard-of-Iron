@@ -4,10 +4,12 @@
 #include <QString>
 #include <QVector3D>
 
+#include <cstdint>
+
 namespace Engine::Core {
 class World;
 class Entity;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -55,7 +57,7 @@ public:
   [[nodiscard]] bool
   on_right_press(qreal sx, qreal sy, int local_owner_id, const ViewportState& viewport);
   void on_right_drag_orient(qreal sx, qreal sy, const ViewportState& viewport);
-  void on_minimap_right_click(const QVector3D& world_target);
+  void on_minimap_right_click(const QVector3D& world_target, int local_owner_id);
   void on_attack_click(qreal sx, qreal sy, const ViewportState& viewport);
   void on_stop_command();
   void on_hold_command();
@@ -90,7 +92,7 @@ public:
                         int local_owner_id,
                         const ViewportState& viewport);
   void select_all_troops(int local_owner_id);
-  void select_unit_by_id(int unit_id, int local_owner_id);
+  void select_unit_by_id(Engine::Core::EntityID unit_id, int local_owner_id);
   void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
   void set_hover_at_screen(qreal sx, qreal sy, const ViewportState& viewport);
   static void reset_movement(Engine::Core::Entity* entity);

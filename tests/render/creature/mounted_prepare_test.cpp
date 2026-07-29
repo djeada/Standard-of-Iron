@@ -264,14 +264,17 @@ TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
             &Render::GL::scale_barding_neck_archetype());
   EXPECT_EQ(desc->attachments_view()[7].archetype, &Render::GL::crupper_archetype());
   EXPECT_EQ(desc->extra_role_color_fn_count, 6U);
-  EXPECT_EQ(
-      desc->role_count,
-      Render::Creature::Pipeline::CreatureAssetRegistry::instance()
-              .for_species(Render::Creature::Pipeline::CreatureKind::Horse)
-              ->role_count +
-          Render::GL::k_roman_saddle_role_count + Render::GL::k_bridle_role_count +
-          Render::GL::k_reins_role_count + Render::GL::k_blanket_role_count +
-          Render::GL::k_scale_barding_role_count + Render::GL::k_crupper_role_count);
+
+  constexpr int k_one_based_role_offset = 1;
+  EXPECT_EQ(desc->role_count,
+            Render::Creature::Pipeline::CreatureAssetRegistry::instance()
+                    .for_species(Render::Creature::Pipeline::CreatureKind::Horse)
+                    ->role_count +
+                k_one_based_role_offset + Render::GL::k_roman_saddle_role_count +
+                Render::GL::k_bridle_role_count + Render::GL::k_reins_role_count +
+                Render::GL::k_blanket_role_count +
+                Render::GL::k_scale_barding_role_count +
+                Render::GL::k_crupper_role_count);
 }
 
 TEST(MountedPrepare, RomanAndCarthageHorseMountArchetypesStayDistinct) {

@@ -30,6 +30,13 @@ struct OwnerInfo {
 
 class OwnerRegistry {
 public:
+  OwnerRegistry() = default;
+  ~OwnerRegistry() = default;
+  OwnerRegistry(const OwnerRegistry&) = delete;
+  OwnerRegistry(OwnerRegistry&&) = delete;
+  auto operator=(const OwnerRegistry&) -> OwnerRegistry& = delete;
+  auto operator=(OwnerRegistry&&) -> OwnerRegistry& = delete;
+
   static auto instance() -> OwnerRegistry&;
 
   void clear();
@@ -71,11 +78,6 @@ public:
   void from_json(const QJsonObject& json);
 
 private:
-  OwnerRegistry() = default;
-  ~OwnerRegistry() = default;
-  OwnerRegistry(const OwnerRegistry&) = delete;
-  auto operator=(const OwnerRegistry&) -> OwnerRegistry& = delete;
-
   int m_next_owner_id = 1;
   int m_local_player_id = 1;
   std::vector<OwnerInfo> m_owners;

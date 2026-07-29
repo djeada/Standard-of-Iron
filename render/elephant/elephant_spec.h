@@ -144,6 +144,7 @@ struct ElephantPoseMotion {
 
   float anim_time{0.0F};
   Render::GL::CombatAnimPhase combat_phase{Render::GL::CombatAnimPhase::Idle};
+  float combat_phase_progress{0.0F};
 };
 
 void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims,

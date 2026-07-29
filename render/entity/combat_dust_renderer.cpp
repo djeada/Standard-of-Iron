@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <unordered_set>
 
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
@@ -12,9 +11,9 @@
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/combat_rules.h"
+#include "../../game/systems/combat_system/structure_combat.h"
 #include "../../game/systems/formation_combat_geometry.h"
-#include "../../game/systems/projectile_kind.h"
-#include "../../game/systems/projectile_system.h"
+#include "../../game/systems/rpg_combat_system/rpg_targeting.h"
 #include "../combat_dust_defaults.h"
 #include "../scene_renderer.h"
 
@@ -53,12 +52,8 @@ constexpr float k_blood_y_offset = 0.02F;
 
 constexpr float k_elephant_stomp_impact_radius = 0.52F;
 constexpr float k_stone_impact_intensity = 1.5F;
-constexpr float k_stone_impact_color_r = 0.75F;
-constexpr float k_stone_impact_color_g = 0.65F;
-constexpr float k_stone_impact_color_b = 0.45F;
 constexpr float k_stone_impact_y_offset = 0.1F;
 constexpr float k_stone_impact_duration = 10.0F;
-constexpr float k_stone_impact_trigger_progress = 0.99F;
 struct UnitFlameAnchor {
   float local_x{0.0F};
   float local_y{0.0F};
@@ -89,8 +84,6 @@ auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
   }
   return std::clamp(remaining_time / fade_window, 0.0F, 1.0F);
 }
-
-std::unordered_set<const void*> g_tracked_projectiles;
 
 auto transform_unit_anchor(const Engine::Core::TransformComponent& transform,
                            const UnitFlameAnchor& anchor,
@@ -288,6 +281,111 @@ void render_combat_dust(Renderer* renderer,
 
     renderer->building_flame(
         position, color, k_flame_radius, flame_intensity, animation_time);
+  }
+
+  auto structure_impacts =
+      world->get_entities_with<Engine::Core::StructureDamagePresentationComponent>();
+  for (auto* building : structure_impacts) {
+    if (building == nullptr ||
+        building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto const* impacts =
+        building->get_component<Engine::Core::StructureDamagePresentationComponent>();
+    if (impacts == nullptr) {
+      continue;
+    }
+    for (auto const& impact : impacts->impacts) {
+      if (impact.lifetime <= 0.0F || impact.age >= impact.lifetime ||
+          !is_fog_visible(impact.x, impact.z) ||
+          !visibility.is_entity_visible(
+              impact.x, impact.z, std::max(k_visibility_check_radius, impact.radius))) {
+        continue;
+      }
+
+      QVector3D color(0.58F, 0.52F, 0.43F);
+      using Game::Systems::Combat::StructureImpactStyle;
+      switch (static_cast<StructureImpactStyle>(impact.style)) {
+      case StructureImpactStyle::LightMelee:
+        color = {0.64F, 0.58F, 0.47F};
+        break;
+      case StructureImpactStyle::HeavyMelee:
+        color = {0.60F, 0.54F, 0.44F};
+        break;
+      case StructureImpactStyle::Elephant:
+        color = {0.68F, 0.58F, 0.43F};
+        break;
+      case StructureImpactStyle::Ballista:
+        color = {0.76F, 0.67F, 0.45F};
+        break;
+      case StructureImpactStyle::Catapult:
+        color = {0.54F, 0.50F, 0.45F};
+        break;
+      case StructureImpactStyle::Magic:
+        color = {0.72F, 0.28F, 0.88F};
+        break;
+      }
+
+      QVector3D const position(impact.x, impact.y, impact.z);
+      renderer->stone_impact(
+          position, color, impact.radius, impact.intensity, impact.age);
+      float const dust_fade =
+          std::clamp(1.0F - impact.age / std::min(impact.lifetime, 0.65F), 0.0F, 1.0F);
+      if (dust_fade > 0.0F) {
+        QVector3D const dust_position(impact.x + impact.normal_x * 0.08F,
+                                      impact.y,
+                                      impact.z + impact.normal_z * 0.08F);
+        renderer->combat_dust(dust_position,
+                              color,
+                              impact.radius * 1.25F,
+                              impact.intensity * dust_fade,
+                              animation_time + impact.x * 0.17F + impact.z * 0.11F);
+      }
+    }
+  }
+
+  auto rpg_contacts =
+      world->get_entities_with<Engine::Core::RpgContactPresentationComponent>();
+  for (auto* entity : rpg_contacts) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto const* presentation =
+        entity->get_component<Engine::Core::RpgContactPresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto const& contact : presentation->entries) {
+      if (contact.lifetime <= 0.0F || contact.age >= contact.lifetime ||
+          !is_fog_visible(contact.x, contact.z) ||
+          !visibility.is_entity_visible(contact.x, contact.z, 2.0F)) {
+        continue;
+      }
+      QVector3D color(0.96F, 0.22F, 0.08F);
+      float radius = 0.34F;
+      switch (contact.outcome) {
+      case Engine::Core::RpgContactOutcome::Block:
+        color = {0.95F, 0.72F, 0.20F};
+        radius = 0.42F;
+        break;
+      case Engine::Core::RpgContactOutcome::PerfectGuard:
+        color = {0.72F, 0.94F, 1.0F};
+        radius = 0.55F;
+        break;
+      case Engine::Core::RpgContactOutcome::Dodge:
+        color = {0.22F, 0.85F, 1.0F};
+        radius = 0.28F;
+        break;
+      case Engine::Core::RpgContactOutcome::Damage:
+        break;
+      }
+      renderer->metal_spark(QVector3D(contact.x, contact.y, contact.z),
+                            color,
+                            radius,
+                            contact.intensity,
+                            contact.age);
+    }
   }
 
   auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
@@ -501,70 +599,7 @@ void render_combat_dust(Renderer* renderer,
     }
   }
 
-  auto* projectile_sys = world->get_system<Game::Systems::ProjectileSystem>();
   auto& impact_tracker = StoneImpactTracker::instance();
-
-  if (projectile_sys != nullptr) {
-    const auto& projectiles = projectile_sys->projectiles();
-
-    for (const auto& projectile : projectiles) {
-      if (projectile == nullptr) {
-        continue;
-      }
-
-      auto const kind = projectile->get_kind();
-      if (kind != Game::Systems::ProjectileKind::Stone) {
-        continue;
-      }
-
-      float const progress = projectile->get_progress();
-      if (progress < k_stone_impact_trigger_progress) {
-        continue;
-      }
-
-      const void* proj_ptr = static_cast<const void*>(projectile.get());
-      if (g_tracked_projectiles.find(proj_ptr) != g_tracked_projectiles.end()) {
-        continue;
-      }
-
-      g_tracked_projectiles.insert(proj_ptr);
-
-      QVector3D const impact_pos = projectile->get_end();
-
-      if (!is_fog_visible(impact_pos.x(), impact_pos.z())) {
-        continue;
-      }
-
-      if (!visibility.is_entity_visible(
-              impact_pos.x(), impact_pos.z(), k_visibility_check_radius * 2.0F)) {
-        continue;
-      }
-
-      QVector3D const position(
-          impact_pos.x(), impact_pos.y() + k_stone_impact_y_offset, impact_pos.z());
-      QVector3D const color(
-          k_stone_impact_color_r, k_stone_impact_color_g, k_stone_impact_color_b);
-
-      impact_tracker.add_impact(position,
-                                animation_time,
-                                k_elephant_stomp_impact_radius,
-                                k_stone_impact_intensity,
-                                color);
-    }
-  }
-
-  std::erase_if(g_tracked_projectiles, [projectile_sys](const void* ptr) {
-    if (projectile_sys == nullptr) {
-      return true;
-    }
-    const auto& projectiles = projectile_sys->projectiles();
-    for (const auto& p : projectiles) {
-      if (static_cast<const void*>(p.get()) == ptr) {
-        return false;
-      }
-    }
-    return true;
-  });
 
   auto elephants =
       world->get_entities_with<Engine::Core::ElephantStompImpactComponent>();
@@ -647,6 +682,8 @@ constexpr QVector3D k_stagger_cyan{0.15F, 0.92F, 1.0F};
 constexpr QVector3D k_flash_white{1.0F, 0.85F, 0.45F};
 constexpr QVector3D k_lock_gold{1.0F, 0.82F, 0.10F};
 constexpr QVector3D k_lock_white{1.0F, 1.0F, 0.95F};
+constexpr QVector3D k_aim_cyan{0.16F, 0.92F, 1.0F};
+constexpr QVector3D k_contact_red{1.0F, 0.18F, 0.08F};
 
 inline float pulse(float t, float hz, float phase = 0.0F) {
   return 0.5F + 0.5F * std::sin(t * 6.2832F * hz + phase);
@@ -708,9 +745,14 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (csc == nullptr || tf == nullptr) {
       continue;
     }
-    const float ex = tf->position.x;
-    const float ez = tf->position.z;
-    const float ey = tf->position.y;
+    auto const visible_attacker =
+        Game::Systems::RpgCombat::resolve_damage_carrier(*entity, commander_id);
+    const float ex =
+        visible_attacker.has_value() ? visible_attacker->position.x() : tf->position.x;
+    const float ez =
+        visible_attacker.has_value() ? visible_attacker->position.z() : tf->position.z;
+    const float ey =
+        visible_attacker.has_value() ? visible_attacker->position.y() : tf->position.y;
     const float dx = ex - cx;
     const float dz = ez - cz;
     if (dx * dx + dz * dz > k_telegraph_range * k_telegraph_range) {
@@ -775,40 +817,20 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
             ? std::clamp(csc->state_time / csc->state_duration, 0.0F, 1.0F)
             : 0.0F;
 
-    const float inner_r = 0.70F + 0.55F * progress;
-    constexpr float outer_r = 1.65F;
-
+    const float ring_r = 0.50F + 0.18F * progress;
     const float pulse_speed = 4.0F + 6.0F * progress;
-    const float inner_alpha = 0.70F + 0.25F * pulse(anim_time, pulse_speed);
-    const float outer_alpha = 0.35F + 0.18F * pulse(anim_time, 2.5F, 1.047F);
+    const float ring_alpha = 0.62F + 0.25F * pulse(anim_time, pulse_speed);
+    QVector3D const ring_color =
+        k_warning_orange * (1.0F - progress) + k_danger_red * progress;
 
     submit_ring(renderer,
                 entry.last_pos_x,
                 entry.base_y,
                 entry.last_pos_z,
-                inner_r,
-                inner_alpha,
-                inner_alpha * 0.60F,
-                k_danger_red);
-    submit_ring(renderer,
-                entry.last_pos_x,
-                entry.base_y,
-                entry.last_pos_z,
-                outer_r,
-                outer_alpha,
-                outer_alpha * 0.45F,
-                k_warning_orange);
-
-    const float halo_r = outer_r + 0.30F + 0.20F * pulse(anim_time, 3.0F, 2.0F);
-    const float halo_alpha = 0.18F * progress;
-    submit_ring(renderer,
-                entry.last_pos_x,
-                entry.base_y,
-                entry.last_pos_z,
-                halo_r,
-                halo_alpha,
-                halo_alpha * 0.3F,
-                k_danger_red);
+                ring_r,
+                ring_alpha,
+                ring_alpha * 0.46F,
+                ring_color);
   }
 
   for (auto* entity : world->get_entities_with<StaggerComponent>()) {
@@ -838,23 +860,14 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 stagger_alpha,
                 stagger_alpha * 0.40F,
                 k_stagger_cyan);
-
-    submit_ring(renderer,
-                ex,
-                tf->position.y,
-                ez,
-                1.20F,
-                stagger_alpha * 0.5F,
-                stagger_alpha * 0.20F,
-                k_stagger_cyan);
   }
 
   for (const auto& flash : m_strike_flashes) {
     const float elapsed = anim_time - flash.start_time;
     const float t = elapsed / StrikeFlash::k_duration;
 
-    const float flash_r = 1.2F + 1.0F * t;
-    const float flash_alpha = (1.0F - t) * 0.90F;
+    const float flash_r = 0.48F + 0.42F * t;
+    const float flash_alpha = (1.0F - t) * 0.78F;
     submit_ring(renderer,
                 flash.pos.x(),
                 flash.pos.y(),
@@ -864,8 +877,8 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 flash_alpha * 0.45F,
                 k_flash_white);
 
-    const float core_r = 0.4F + 0.6F * t;
-    const float core_alpha = (1.0F - t * t) * 0.95F;
+    const float core_r = 0.22F + 0.24F * t;
+    const float core_alpha = (1.0F - t * t) * 0.82F;
     submit_ring(renderer,
                 flash.pos.x(),
                 flash.pos.y(),
@@ -878,31 +891,79 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (elapsed < 0.08F) {
       QVector3D const spark_pos(flash.pos.x(), flash.pos.y() + 0.4F, flash.pos.z());
       QVector3D const spark_color(1.0F, 0.85F, 0.4F);
-      renderer->metal_spark(spark_pos, spark_color, 0.6F, 1.8F, elapsed);
+      renderer->metal_spark(spark_pos, spark_color, 0.24F, 1.15F, elapsed);
     }
   }
 
-  if (locked_target_id != 0) {
-    auto* lock_ent = world->get_entity(locked_target_id);
-    if (lock_ent != nullptr) {
-      auto* lock_tf = lock_ent->get_component<TransformComponent>();
-      auto* lock_unit = lock_ent->get_component<Engine::Core::UnitComponent>();
-      if (lock_tf != nullptr && lock_unit != nullptr && lock_unit->health > 0) {
-        const float lx = lock_tf->position.x;
-        const float lz = lock_tf->position.z;
-        const float ly = lock_tf->position.y;
+  auto const* targets =
+      commander_ent->get_component<Engine::Core::RpgCommanderTargetComponent>();
+  auto resolve_target = [world](Engine::Core::EntityID entity_id,
+                                std::uint16_t soldier_slot)
+      -> std::optional<Game::Systems::RpgCombat::SoldierTarget> {
+    auto* entity = world->get_entity(entity_id);
+    return entity != nullptr
+               ? Game::Systems::RpgCombat::resolve_soldier_target(*entity, soldier_slot)
+               : std::nullopt;
+  };
 
-        const float lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);
-        const float lock_outer = 0.28F + 0.10F * pulse(anim_time, 3.0F, 1.047F);
-        submit_ring(
-            renderer, lx, ly, lz, 1.10F, lock_alpha, lock_alpha * 0.48F, k_lock_gold);
-        submit_ring(
-            renderer, lx, ly, lz, 1.35F, lock_outer, lock_outer * 0.35F, k_lock_white);
+  Engine::Core::EntityID const resolved_lock_id =
+      targets != nullptr ? targets->explicit_lock_target_id : locked_target_id;
+  std::uint16_t const resolved_lock_slot =
+      targets != nullptr ? targets->explicit_lock_soldier_slot
+                         : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  bool aim_is_lock = false;
+  if (targets != nullptr && targets->aim_candidate_in_range &&
+      targets->aim_candidate_id != 0) {
+    auto const aim =
+        resolve_target(targets->aim_candidate_id, targets->aim_candidate_soldier_slot);
+    if (aim.has_value()) {
+      aim_is_lock = targets->aim_candidate_id == resolved_lock_id &&
+                    targets->aim_candidate_soldier_slot == resolved_lock_slot;
+      float const alpha = 0.78F + 0.18F * pulse(anim_time, 4.0F);
+      float const radius =
+          std::max(0.54F, aim->body_radius * (aim_is_lock ? 1.30F : 1.22F));
+      submit_ring(renderer,
+                  aim->position.x(),
+                  aim->position.y(),
+                  aim->position.z(),
+                  radius,
+                  alpha,
+                  alpha * 0.42F,
+                  aim_is_lock ? k_lock_gold : k_aim_cyan);
+    }
+  }
 
-        const float inner_lock = 0.48F + 0.08F * pulse(anim_time, 4.0F, 0.5F);
-        submit_ring(
-            renderer, lx, ly, lz, 0.60F, inner_lock, inner_lock * 0.40F, k_lock_gold);
-      }
+  if (resolved_lock_id != 0 && !aim_is_lock) {
+    auto const lock = resolve_target(resolved_lock_id, resolved_lock_slot);
+    if (lock.has_value()) {
+      float const lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);
+      float const radius = std::max(0.62F, lock->body_radius * 1.36F);
+      submit_ring(renderer,
+                  lock->position.x(),
+                  lock->position.y(),
+                  lock->position.z(),
+                  radius,
+                  lock_alpha,
+                  lock_alpha * 0.48F,
+                  k_lock_gold);
+    }
+  }
+
+  if (targets != nullptr && targets->recent_hit_target_id != 0 &&
+      targets->recent_hit_timer > 0.0F) {
+    auto const hit =
+        resolve_target(targets->recent_hit_target_id, targets->recent_hit_soldier_slot);
+    if (hit.has_value()) {
+      float const life = std::clamp(targets->recent_hit_timer / 0.28F, 0.0F, 1.0F);
+      float const radius = std::max(0.50F, hit->body_radius) + (1.0F - life) * 0.55F;
+      submit_ring(renderer,
+                  hit->position.x(),
+                  hit->position.y(),
+                  hit->position.z(),
+                  radius,
+                  life * 0.72F,
+                  life * 0.30F,
+                  k_contact_red);
     }
   }
 }

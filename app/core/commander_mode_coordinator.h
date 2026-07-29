@@ -3,10 +3,12 @@
 #include <QVector3D>
 #include <QtGlobal>
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 
 #include "../models/cursor_mode.h"
+#include "game/view/selection_controller.h"
 
 class CommanderControlController;
 class ProductionManager;
@@ -15,7 +17,7 @@ struct ViewportState;
 namespace Engine::Core {
 class Entity;
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {

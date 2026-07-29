@@ -35,7 +35,7 @@ auto resolve_unit_renderer_key(const Engine::Core::UnitComponent& unit,
   return resolve_profile_unit_renderer_key(unit);
 }
 
-auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
+auto UnitRenderCache::get_or_create(Engine::Core::EntityID entity_id,
                                     Engine::Core::Entity* entity,
                                     std::uint32_t frame) -> CachedUnitData& {
   auto [it, inserted] = m_cache.emplace(entity_id, CachedUnitData{});
@@ -165,7 +165,7 @@ auto UnitRenderCache::update_model_matrix(CachedUnitData& data) -> bool {
   return true;
 }
 
-auto ModelMatrixCache::get_or_create(std::uint32_t entity_id,
+auto ModelMatrixCache::get_or_create(Engine::Core::EntityID entity_id,
                                      Engine::Core::TransformComponent* transform,
                                      std::uint32_t frame) -> const QMatrix4x4& {
   auto& entry = m_cache[entity_id];

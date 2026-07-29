@@ -35,6 +35,13 @@ struct WorldPropTarget {
 
 class TerrainService {
 public:
+  TerrainService() = default;
+  ~TerrainService() = default;
+  TerrainService(const TerrainService&) = delete;
+  TerrainService(TerrainService&&) = delete;
+  auto operator=(const TerrainService&) -> TerrainService& = delete;
+  auto operator=(TerrainService&&) -> TerrainService& = delete;
+
   static auto instance() -> TerrainService&;
 
   void initialize(const MapDefinition& map_def);
@@ -176,12 +183,6 @@ public:
                                const std::vector<Lake>& lakes = {});
 
 private:
-  TerrainService() = default;
-  ~TerrainService() = default;
-
-  TerrainService(const TerrainService&) = delete;
-  auto operator=(const TerrainService&) -> TerrainService& = delete;
-
   void rebuild_terrain_field();
   void rebuild_road_spatial_index();
   [[nodiscard]] auto is_point_near_indexed_road(float world_x,

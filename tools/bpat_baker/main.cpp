@@ -106,7 +106,9 @@ enum class HumanoidBakeProfile : std::uint8_t {
   Default,
   SwordReady,
   SpearReady,
-  Skeleton
+  Skeleton,
+  Caster,
+  StaveCaster
 };
 
 auto animation_profile_for_bake(HumanoidBakeProfile profile) noexcept
@@ -120,6 +122,10 @@ auto animation_profile_for_bake(HumanoidBakeProfile profile) noexcept
     return Animation::HumanoidClipProfile::SpearReady;
   case HumanoidBakeProfile::Skeleton:
     return Animation::HumanoidClipProfile::Skeleton;
+  case HumanoidBakeProfile::Caster:
+    return Animation::HumanoidClipProfile::Caster;
+  case HumanoidBakeProfile::StaveCaster:
+    return Animation::HumanoidClipProfile::StaveCaster;
   }
   return Animation::HumanoidClipProfile::Default;
 }
@@ -1080,6 +1086,12 @@ void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
   case HumanoidBakeProfile::SpearReady:
     ctrl.hold_spear_idle();
     break;
+  case HumanoidBakeProfile::Caster:
+    ctrl.channel_spell_idle();
+    break;
+  case HumanoidBakeProfile::StaveCaster:
+    ctrl.carry_stave();
+    break;
   case HumanoidBakeProfile::Default:
   case HumanoidBakeProfile::Skeleton:
     break;
@@ -1935,6 +1947,16 @@ int main(int argc, char** argv) {
                      bpat::k_species_humanoid_skeleton,
                      "humanoid_skeleton.bpat",
                      HumanoidBakeProfile::Skeleton) &&
+       ok;
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid_caster,
+                     "humanoid_caster.bpat",
+                     HumanoidBakeProfile::Caster) &&
+       ok;
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid_stave_caster,
+                     "humanoid_stave_caster.bpat",
+                     HumanoidBakeProfile::StaveCaster) &&
        ok;
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
   ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;

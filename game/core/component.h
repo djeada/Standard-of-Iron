@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -180,6 +181,7 @@ public:
     vx = 0.0F;
     vz = 0.0F;
     precise_arrival = false;
+    structure_approach_target_id = 0;
   }
 
   [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
@@ -224,6 +226,16 @@ public:
     vz = new_vz;
   }
 
+  void set_structure_approach_target(EntityID target_id) {
+    structure_approach_target_id = target_id;
+  }
+
+  void clear_structure_approach_target() { structure_approach_target_id = 0; }
+
+  [[nodiscard]] auto get_structure_approach_target() const -> EntityID {
+    return structure_approach_target_id;
+  }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -241,6 +253,7 @@ private:
   float stuck_timer{0.0F};
 
   bool precise_arrival{false};
+  EntityID structure_approach_target_id{0};
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {
@@ -393,9 +406,16 @@ class RpgCommanderTargetComponent : public Component {
 public:
   RpgCommanderTargetComponent() = default;
 
+  static constexpr std::uint16_t k_no_soldier_slot =
+      std::numeric_limits<std::uint16_t>::max();
+
   EntityID explicit_lock_target_id{0};
+  std::uint16_t explicit_lock_soldier_slot{k_no_soldier_slot};
   EntityID aim_candidate_id{0};
+  std::uint16_t aim_candidate_soldier_slot{k_no_soldier_slot};
+  bool aim_candidate_in_range{false};
   EntityID recent_hit_target_id{0};
+  std::uint16_t recent_hit_soldier_slot{k_no_soldier_slot};
   float recent_hit_timer{0.0F};
 };
 
@@ -416,7 +436,10 @@ public:
   std::uint8_t combat_action_id{0};
   std::uint8_t melee_attack_sequence{0};
   EntityID active_target_id{0};
+  std::uint16_t active_target_soldier_slot{
+      RpgCommanderTargetComponent::k_no_soldier_slot};
   EntityID last_hit_target_id{0};
+  std::uint16_t last_hit_soldier_slot{RpgCommanderTargetComponent::k_no_soldier_slot};
   static constexpr std::size_t k_max_action_hit_targets = 8;
   std::array<EntityID, k_max_action_hit_targets> hit_target_ids{};
   std::uint8_t hit_target_count{0};
@@ -435,6 +458,29 @@ public:
   bool action_completed{false};
   bool cancel_window_active{false};
   bool input_buffered{false};
+};
+
+enum class RpgContactOutcome : std::uint8_t {
+  Damage = 0,
+  Block = 1,
+  PerfectGuard = 2,
+  Dodge = 3,
+};
+
+class RpgContactPresentationComponent : public Component {
+public:
+  struct Entry {
+    float x{0.0F};
+    float y{0.0F};
+    float z{0.0F};
+    float age{0.0F};
+    float lifetime{0.24F};
+    float intensity{1.0F};
+    RpgContactOutcome outcome{RpgContactOutcome::Damage};
+  };
+
+  static constexpr std::size_t k_max_entries = 6U;
+  std::vector<Entry> entries;
 };
 
 enum class CombatAttackFamily : std::uint8_t {
@@ -834,7 +880,7 @@ public:
 
   bool active{false};
   float frontal_arc_dot{0.15F};
-  float damage_multiplier{0.45F};
+  float damage_multiplier{0.0F};
   float perfect_guard_remaining{0.0F};
   float guard_break_remaining{0.0F};
   bool rearm_requires_release{false};
@@ -1114,6 +1160,10 @@ class SoldierCasualtyAnimationComponent : public Component {
 public:
   struct Entry {
     std::uint16_t slot_index{0};
+    bool has_local_anchor{false};
+    float local_x{0.0F};
+    float local_z{0.0F};
+    float local_yaw{0.0F};
     DeathSequenceProfile profile{DeathSequenceProfile::Infantry};
     DeathSequenceState state{DeathSequenceState::Dying};
     float state_time{0.0F};
@@ -1366,6 +1416,26 @@ public:
   std::vector<ImpactRecord> impacts;
 };
 
+class StructureDamagePresentationComponent : public Component {
+public:
+  struct ImpactRecord {
+    float x{0.0F};
+    float y{0.0F};
+    float z{0.0F};
+    float normal_x{0.0F};
+    float normal_z{-1.0F};
+    float age{0.0F};
+    float lifetime{1.0F};
+    float radius{0.45F};
+    float intensity{1.0F};
+    std::uint8_t style{0};
+  };
+
+  StructureDamagePresentationComponent() = default;
+
+  std::vector<ImpactRecord> impacts;
+};
+
 class HomeComponent : public Component {
 public:
   HomeComponent() = default;
@@ -1426,6 +1496,16 @@ struct FormationEngagementPair {
   auto operator==(const FormationEngagementPair&) const -> bool = default;
 };
 
+struct FormationContactFront {
+  EntityID opponent_id{0};
+  float surface_gap{0.0F};
+  bool in_contact{false};
+  bool outgoing{false};
+  std::vector<FormationEngagementPair> engagement_pairs;
+
+  auto operator==(const FormationContactFront&) const -> bool = default;
+};
+
 class FormationContactComponent : public Component {
 public:
   FormationContactComponent() = default;
@@ -1437,14 +1517,26 @@ public:
   std::vector<std::uint16_t> engaged_soldier_indices;
 
   std::vector<FormationEngagementPair> engagement_pairs;
+  std::vector<FormationContactFront> fronts;
 };
 
 enum class FormationSoldierAction : std::uint8_t {
   FollowUnit,
   MeleeReady,
   MeleeEngaged,
-
+  MeleeGuard,
+  MeleeReposition,
   MeleeFollowThrough,
+};
+
+enum class FormationSoldierCombatRole : std::uint8_t {
+  None,
+  LeadStrike,
+  SupportStrike,
+  Guard,
+  StepIn,
+  StepOut,
+  Ready,
 };
 
 struct FormationSoldierPresentation {
@@ -1456,10 +1548,36 @@ struct FormationSoldierPresentation {
   float local_yaw{0.0F};
   bool alive{false};
   FormationSoldierAction action{FormationSoldierAction::FollowUnit};
+  FormationSoldierCombatRole combat_role{FormationSoldierCombatRole::None};
+  EntityID opponent_id{0};
   std::uint16_t target_slot{0};
   float engagement_surface_gap{0.0F};
+  float combat_phase_bias{0.0F};
+  float combat_speed_scale{1.0F};
+  bool damage_carrier{false};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
+};
+
+class FormationRosterPresentationComponent : public Component {
+public:
+  FormationRosterPresentationComponent() = default;
+
+  std::uint16_t total_count{0};
+  std::uint16_t live_count{0};
+  std::uint32_t revision{0};
+  std::vector<std::uint8_t> alive;
+};
+
+class FormationHitPresentationComponent : public Component {
+public:
+  FormationHitPresentationComponent() = default;
+
+  EntityID attacker_id{0};
+  std::uint16_t soldier_slot{0};
+  float remaining{0.0F};
+  float intensity{0.0F};
+  std::uint32_t revision{0};
 };
 
 class FormationPresentationComponent : public Component {
@@ -1474,6 +1592,7 @@ public:
   bool target_alive{false};
   bool melee_ordered{false};
   bool allow_full_body_hit_reaction{true};
+  float combat_motion_time{0.0F};
   std::uint32_t revision{0};
   std::vector<FormationSoldierPresentation> soldiers;
 };

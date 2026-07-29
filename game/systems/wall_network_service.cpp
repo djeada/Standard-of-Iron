@@ -155,7 +155,8 @@ auto collides_with_registered_building(Engine::Core::World& world,
                                        float pos_z,
                                        float radius,
                                        const std::string& building_type,
-                                       unsigned int ignore_entity_id = 0) -> bool {
+                                       Engine::Core::EntityID ignore_entity_id = 0)
+    -> bool {
   auto& collision_registry = BuildingCollisionRegistry::instance();
   if (!placement_can_touch_wall_network_structures(building_type)) {
     return collision_registry.is_circle_overlapping_building(
@@ -188,7 +189,7 @@ auto is_buildable_world_position(float pos_x,
                                  float pos_z,
                                  Engine::Core::World& world,
                                  const std::string& building_type,
-                                 unsigned int ignore_entity_id = 0) -> bool {
+                                 Engine::Core::EntityID ignore_entity_id = 0) -> bool {
   auto size =
       Game::Systems::BuildingCollisionRegistry::get_building_size(building_type);
 
@@ -233,7 +234,7 @@ auto is_wall_key_occupied(Engine::Core::World& world,
                           int grid_x,
                           int grid_z,
                           bool include_construction_sites,
-                          unsigned int ignore_entity_id = 0) -> bool {
+                          Engine::Core::EntityID ignore_entity_id = 0) -> bool {
   auto entities = world.get_entities_with<WallSegmentComponent>();
   for (auto* entity : entities) {
     if (entity == nullptr || entity->get_id() == ignore_entity_id ||
@@ -518,7 +519,7 @@ auto WallNetworkService::validate_wall_segment_placement(
     Engine::Core::World& world,
     const WallGridPosition& position,
     bool include_construction_sites,
-    unsigned int ignore_entity_id) -> WallPlacementValidation {
+    Engine::Core::EntityID ignore_entity_id) -> WallPlacementValidation {
   if (is_wall_key_occupied(world,
                            position.x,
                            position.z,

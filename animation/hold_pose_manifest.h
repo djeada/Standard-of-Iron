@@ -12,6 +12,8 @@ enum class HumanoidHeldPoseKind : std::uint8_t {
   SpearBrace,
   BowReady,
   SwordShieldCarry,
+  CasterChannel,
+  StaveCarry,
 };
 
 struct HumanoidHeldPoseInputs {

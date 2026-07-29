@@ -21,6 +21,8 @@ constexpr std::array<std::string_view, k_species_count> k_species_asset_name{
     "humanoid_sword.bpat",
     "humanoid_spear.bpat",
     "humanoid_skeleton.bpat",
+    "humanoid_caster.bpat",
+    "humanoid_stave_caster.bpat",
 };
 
 auto find_existing_asset_root(const std::string& asset_root) -> std::string {

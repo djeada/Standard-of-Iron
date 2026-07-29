@@ -1,5 +1,10 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+#include <optional>
+
 #include "../../core/entity.h"
 
 namespace Engine::Core {
@@ -12,6 +17,7 @@ struct CommanderDamageResult {
   int effective_damage{0};
   bool blocked{false};
   bool perfect_guarded{false};
+  bool dodged{false};
   bool guard_broken{false};
   bool killed{false};
 };
@@ -21,11 +27,14 @@ struct CommanderDamageProfile {
   float guard_pressure{0.0F};
 };
 
-CommanderDamageResult deal_commander_attack_damage(Engine::Core::World* world,
-                                                   Engine::Core::Entity* target,
-                                                   int raw_damage,
-                                                   Engine::Core::EntityID commander_id,
-                                                   CommanderDamageProfile profile = {});
+CommanderDamageResult deal_commander_attack_damage(
+    Engine::Core::World* world,
+    Engine::Core::Entity* target,
+    int raw_damage,
+    Engine::Core::EntityID commander_id,
+    CommanderDamageProfile profile = {},
+    std::optional<std::uint16_t> target_soldier_slot = std::nullopt,
+    std::optional<QVector3D> contact_point = std::nullopt);
 
 CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
                                                    Engine::Core::Entity* commander,

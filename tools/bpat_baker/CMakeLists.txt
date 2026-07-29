@@ -22,6 +22,8 @@ set(_soi_creature_asset_names
     humanoid_sword.bpat
     humanoid_spear.bpat
     humanoid_skeleton.bpat
+    humanoid_caster.bpat
+    humanoid_stave_caster.bpat
     horse.bpat
     horse_minimal.bpsm
     elephant.bpat

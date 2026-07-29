@@ -16,10 +16,11 @@ struct ProjectileReleaseResult {
   int damage{0};
 };
 
-[[nodiscard]] auto release_projectile_for_action(
-    Engine::Core::World* world,
-    Engine::Core::Entity& attacker,
-    const CombatActionDefinition& definition,
-    Engine::Core::EntityID target_hint_id) -> ProjectileReleaseResult;
+[[nodiscard]] auto
+release_projectile_for_action(Engine::Core::World* world,
+                              Engine::Core::Entity& attacker,
+                              const CombatActionDefinition& definition,
+                              Engine::Core::EntityID target_hint_id,
+                              int explicit_damage = 0) -> ProjectileReleaseResult;
 
 } // namespace Game::Systems::CombatActions

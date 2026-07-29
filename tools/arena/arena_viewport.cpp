@@ -23,6 +23,7 @@
 #include <limits>
 #include <string>
 
+#include "app/core/commander_control_controller.h"
 #include "app/core/renderer_bootstrap.h"
 #include "app/core/world_bootstrap.h"
 #include "app/utils/movement_utils.h"
@@ -42,6 +43,7 @@
 #include "game/systems/arrow_system.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/camera_visibility_service.h"
+#include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/healing_beam_system.h"
@@ -325,6 +327,8 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   m_rain = std::move(rendering.rain);
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
+  m_rpg_commander_controller = std::make_unique<CommanderControlController>();
+  m_rpg_telegraphs = std::make_unique<Render::GL::RpgTelegraphRenderer>();
   set_force_full_creature_lod(true);
 
   RendererBootstrap::initialize_world_systems(*m_world);
@@ -486,6 +490,7 @@ void ArenaViewport::paintGL() {
   }
 
   if (!m_paused) {
+    update_rpg_scenario_controller(simulation_dt);
     m_world->update(simulation_dt);
   }
 
@@ -538,6 +543,20 @@ void ArenaViewport::paintGL() {
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_commander_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+    if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr) {
+      Engine::Core::EntityID locked_target_id = 0;
+      if (auto* commander = m_world->get_entity(m_rpg_commander_id)) {
+        if (auto const* targets =
+                commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+          locked_target_id = targets->explicit_lock_target_id;
+        }
+      }
+      m_rpg_telegraphs->render(m_renderer.get(),
+                               m_world.get(),
+                               m_rpg_commander_id,
+                               locked_target_id,
+                               m_renderer->get_animation_time());
+    }
   }
   timings.effects_submit_ms = elapsed_phase_ms();
   m_renderer->end_frame();
@@ -1187,7 +1206,7 @@ void ArenaViewport::update_selected_entities() {
     return;
   }
   const auto& selected = selection->get_selected_units();
-  std::vector<unsigned int> const ids(selected.begin(), selected.end());
+  const std::vector<Engine::Core::EntityID> ids(selected.begin(), selected.end());
   m_renderer->set_selected_entities(ids);
 }
 
@@ -2183,6 +2202,7 @@ void ArenaViewport::clear_world_props_of_type() {
 
 void ArenaViewport::reset_arena() {
   m_scenario_runner.reset();
+  clear_rpg_scenario_state();
   m_frame_continuity_analyzer.reset();
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
@@ -2698,6 +2718,37 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   host.set_force_full_creature_lod = [this](bool enabled) {
     set_force_full_creature_lod(enabled);
   };
+  host.configure_rpg_commander = [this](Engine::Core::EntityID entity_id) {
+    configure_rpg_scenario_commander(entity_id);
+  };
+  host.rpg_primary_attack = [this](Engine::Core::EntityID entity_id) {
+    return m_world != nullptr && m_rpg_commander_controller != nullptr &&
+           entity_id == m_rpg_commander_id &&
+           m_rpg_commander_controller->primary_action(
+               *m_world, entity_id, k_local_owner_id);
+  };
+  host.set_rpg_guard = [this](Engine::Core::EntityID entity_id, bool enabled) {
+    if (m_world == nullptr || m_rpg_commander_controller == nullptr ||
+        entity_id != m_rpg_commander_id) {
+      return;
+    }
+    if (enabled) {
+      m_rpg_commander_controller->secondary_action_down();
+    } else {
+      m_rpg_commander_controller->secondary_action_up();
+      m_rpg_commander_controller->release_guard(*m_world, entity_id, k_local_owner_id);
+    }
+  };
+  host.request_rpg_dodge = [this](Engine::Core::EntityID entity_id,
+                                  const QVector3D& world_direction) {
+    if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
+      if (world_direction.lengthSquared() > 0.0001F) {
+        m_rpg_commander_controller->request_dodge(world_direction);
+      } else {
+        m_rpg_commander_controller->request_dodge();
+      }
+    }
+  };
 
   m_scenario_runner = std::make_unique<Arena::ArenaScenarioRunner>(
       *m_world, std::move(host), *definition, scenario_origin);
@@ -2729,6 +2780,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   }
 
   place_scenario_resource_patches(*definition, scenario_origin);
+  if (m_prewarm_unit_templates && m_renderer != nullptr) {
+    m_renderer->prewarm_unit_templates(m_world.get(), {});
+  }
   reconfigure_terrain_from_state();
   configure_scenario_undead_zones(*definition, scenario_origin);
 
@@ -2870,6 +2924,103 @@ void ArenaViewport::play_idle_animation() {
 void ArenaViewport::update_active_scenario(float simulation_dt) {
   if (m_scenario_runner != nullptr && simulation_dt > 0.0F) {
     m_scenario_runner->update(simulation_dt);
+  }
+}
+
+void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID entity_id) {
+  if (m_world == nullptr || m_rpg_commander_controller == nullptr) {
+    return;
+  }
+  auto* entity = m_world->get_entity(entity_id);
+  auto* unit = entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                                 : nullptr;
+  auto* commander = entity != nullptr
+                        ? entity->get_component<Engine::Core::CommanderComponent>()
+                        : nullptr;
+  auto* transform = entity != nullptr
+                        ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (entity == nullptr || unit == nullptr || commander == nullptr ||
+      transform == nullptr) {
+    return;
+  }
+
+  m_rpg_commander_id = entity_id;
+  m_rpg_commander_controller->reset();
+  m_rpg_commander_controller->set_view_yaw(transform->rotation.y);
+  m_rpg_commander_controller->set_view_pitch(-4.0F);
+  commander->fpv_controlled = true;
+  commander->posture = 0.0F;
+  commander->punish_window_remaining = 0.0F;
+  Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
+
+  auto* rpg =
+      Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(entity);
+  if (rpg != nullptr) {
+    rpg->active = true;
+    rpg->rpg_hp = rpg->rpg_max_hp;
+    rpg->crit_chance = 0.0F;
+    rpg->dodge_invincible = false;
+  }
+  if (auto* guard =
+          Engine::Core::get_or_add_component<Engine::Core::CommanderGuardComponent>(
+              entity)) {
+    guard->active = false;
+    guard->damage_multiplier = 0.0F;
+    guard->perfect_guard_remaining = 0.0F;
+    guard->guard_break_remaining = 0.0F;
+    guard->rearm_requires_release = false;
+  }
+  if (auto* targets =
+          Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
+              entity)) {
+    *targets = Engine::Core::RpgCommanderTargetComponent{};
+  }
+  if (m_renderer != nullptr) {
+    m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+  }
+  if (m_rpg_telegraphs != nullptr) {
+    m_rpg_telegraphs->clear();
+  }
+}
+
+void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {
+  if (simulation_dt <= 0.0F || m_rpg_commander_id == 0 ||
+      m_rpg_commander_controller == nullptr || m_world == nullptr ||
+      m_camera == nullptr) {
+    return;
+  }
+  if (!m_rpg_commander_controller->update(
+          *m_world, m_rpg_commander_id, k_local_owner_id, *m_camera, simulation_dt)) {
+    clear_rpg_scenario_state();
+  }
+}
+
+void ArenaViewport::clear_rpg_scenario_state() {
+  if (m_world != nullptr && m_rpg_commander_id != 0) {
+    if (auto* entity = m_world->get_entity(m_rpg_commander_id)) {
+      if (auto* commander = entity->get_component<Engine::Core::CommanderComponent>()) {
+        commander->fpv_controlled = false;
+      }
+      if (auto* rpg = entity->get_component<Engine::Core::RpgHealthComponent>()) {
+        rpg->active = false;
+        rpg->dodge_invincible = false;
+      }
+      if (auto* guard =
+              entity->get_component<Engine::Core::CommanderGuardComponent>()) {
+        guard->active = false;
+      }
+    }
+  }
+  m_rpg_commander_id = 0;
+  if (m_rpg_commander_controller != nullptr) {
+    m_rpg_commander_controller->reset();
+  }
+  if (m_rpg_telegraphs != nullptr) {
+    m_rpg_telegraphs->clear();
+  }
+  if (m_renderer != nullptr) {
+    m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rts);
   }
 }
 

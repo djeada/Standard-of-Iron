@@ -10,10 +10,14 @@ namespace Game::Systems {
 
 class PlayerResourceRegistry {
 public:
-  static auto instance() -> PlayerResourceRegistry& {
-    static PlayerResourceRegistry s_instance;
-    return s_instance;
-  }
+  PlayerResourceRegistry() = default;
+  ~PlayerResourceRegistry() = default;
+  PlayerResourceRegistry(const PlayerResourceRegistry&) = delete;
+  PlayerResourceRegistry(PlayerResourceRegistry&&) = delete;
+  auto operator=(const PlayerResourceRegistry&) -> PlayerResourceRegistry& = delete;
+  auto operator=(PlayerResourceRegistry&&) -> PlayerResourceRegistry& = delete;
+
+  static auto instance() -> PlayerResourceRegistry&;
 
   void clear() {
     m_resources_by_owner.clear();
@@ -105,8 +109,6 @@ public:
 
 private:
   using OwnerAmounts = std::unordered_map<int, ResourceAmounts>;
-
-  PlayerResourceRegistry() = default;
 
   [[nodiscard]] static auto
   build_snapshot(const OwnerAmounts& source) -> std::vector<OwnerResourceState> {

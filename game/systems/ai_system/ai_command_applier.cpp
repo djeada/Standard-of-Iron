@@ -7,10 +7,14 @@
 #include <string_view>
 #include <vector>
 
+#include "../../command/command.h"
+#include "../../command/command_dispatcher.h"
+#include "../../command/command_queue.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"
+#include "../../session/session_context.h"
 #include "../../units/troop_config.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
@@ -36,6 +40,10 @@ constexpr float BUILD_TIME_BARRACKS = 15.0F;
 constexpr float BUILD_TIME_MARKETPLACE = 12.0F;
 constexpr float BUILD_TIME_DEFAULT = 10.0F;
 constexpr float HARVEST_TIME = 6.0F;
+
+void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload payload) {
+  Game::Command::submit(world, Game::Command::Source::AI, owner_id, std::move(payload));
+}
 } // namespace
 
 void AICommandApplier::apply(Engine::Core::World& world,
@@ -72,34 +80,14 @@ void AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
 
-      std::vector<Engine::Core::EntityID> owned_units;
-      std::vector<QVector3D> owned_targets;
-      owned_units.reserve(command.units.size());
-      owned_targets.reserve(command.units.size());
-
+      Game::Command::Move move;
+      move.kind = MoveOrderKind::ScriptedMove;
+      move.units = command.units;
+      move.targets.reserve(command.units.size());
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
-        auto entity_id = command.units[idx];
-        auto* entity = world.get_entity(entity_id);
-        if (entity == nullptr) {
-          continue;
-        }
-
-        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
-          continue;
-        }
-
-        owned_units.push_back(entity_id);
-        owned_targets.emplace_back(expanded_x[idx], expanded_y[idx], expanded_z[idx]);
+        move.targets.emplace_back(expanded_x[idx], expanded_y[idx], expanded_z[idx]);
       }
-
-      if (owned_units.empty()) {
-        break;
-      }
-
-      CommandService::MoveOptions opts;
-      opts.kind = MoveOrderKind::ScriptedMove;
-      CommandService::move_units(world, owned_units, owned_targets, opts);
+      submit(world, ai_owner_id, std::move(move));
       break;
     }
 
@@ -108,29 +96,11 @@ void AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
 
-      std::vector<Engine::Core::EntityID> owned_units;
-      owned_units.reserve(command.units.size());
-
-      for (auto entity_id : command.units) {
-        auto* entity = world.get_entity(entity_id);
-        if (entity == nullptr) {
-          continue;
-        }
-
-        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
-          continue;
-        }
-
-        owned_units.push_back(entity_id);
-      }
-
-      if (owned_units.empty()) {
-        break;
-      }
-
-      CommandService::attack_target(
-          world, owned_units, command.target_id, command.should_chase);
+      submit(world,
+             ai_owner_id,
+             Game::Command::AttackTarget{.units = command.units,
+                                         .target = command.target_id,
+                                         .should_chase = command.should_chase});
       break;
     }
 

@@ -82,6 +82,13 @@ struct Nation {
 
 class NationRegistry {
 public:
+  NationRegistry() = default;
+  ~NationRegistry() = default;
+  NationRegistry(const NationRegistry&) = delete;
+  NationRegistry(NationRegistry&&) = delete;
+  auto operator=(const NationRegistry&) -> NationRegistry& = delete;
+  auto operator=(NationRegistry&&) -> NationRegistry& = delete;
+
   static auto instance() -> NationRegistry&;
 
   void register_nation(Nation nation);
@@ -107,8 +114,6 @@ public:
   auto default_nation_id() const -> NationID { return m_default_nation; }
 
 private:
-  NationRegistry() = default;
-
   std::vector<Nation> m_nations;
   std::unordered_map<NationID, size_t> m_nation_index;
   std::unordered_map<int, NationID> m_player_nations;

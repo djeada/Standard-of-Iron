@@ -160,8 +160,21 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
     rpg->active = true;
   }
 
-  (void)Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
-      context.commander);
+  if (auto* rpg_targets =
+          Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
+              context.commander)) {
+    rpg_targets->explicit_lock_target_id = 0;
+    rpg_targets->explicit_lock_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    rpg_targets->aim_candidate_id = 0;
+    rpg_targets->aim_candidate_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    rpg_targets->aim_candidate_in_range = false;
+    rpg_targets->recent_hit_target_id = 0;
+    rpg_targets->recent_hit_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    rpg_targets->recent_hit_timer = 0.0F;
+  }
   if (auto* rpg_action =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
               context.commander)) {
@@ -169,7 +182,11 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
     rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
     rpg_action->active_target_id = 0;
+    rpg_action->active_target_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->last_hit_target_id = 0;
+    rpg_action->last_hit_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->hit_target_ids.fill(0U);
     rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;
@@ -466,8 +483,15 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   if (auto* rpg_targets =
           commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
     rpg_targets->explicit_lock_target_id = 0;
+    rpg_targets->explicit_lock_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_targets->aim_candidate_id = 0;
+    rpg_targets->aim_candidate_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    rpg_targets->aim_candidate_in_range = false;
     rpg_targets->recent_hit_target_id = 0;
+    rpg_targets->recent_hit_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_targets->recent_hit_timer = 0.0F;
   }
   if (auto* rpg_action =
@@ -476,7 +500,11 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
     rpg_action->active_target_id = 0;
+    rpg_action->active_target_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->last_hit_target_id = 0;
+    rpg_action->last_hit_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->hit_target_ids.fill(0U);
     rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;

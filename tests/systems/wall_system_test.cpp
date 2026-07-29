@@ -157,7 +157,7 @@ TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Catapult;
 
   auto* wall = make_wall(world, 4.0F, 0.0F, 1.0F, 2, 40);
   auto* renderable = wall->get_component<RenderableComponent>();

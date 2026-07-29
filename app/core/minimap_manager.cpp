@@ -156,21 +156,20 @@ void MinimapManager::update_units(Engine::Core::World* world,
 
   {
     const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
-    const auto& entities = world->get_entities();
-
-    for (const auto& [entity_id, entity] : entities) {
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    world->for_each_entity([&](Engine::Core::Entity& entity) {
+      const auto entity_id = entity.get_id();
+      const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
       if (unit == nullptr) {
-        continue;
+        return;
       }
 
       if (unit->health <= 0) {
-        continue;
+        return;
       }
 
-      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
       if (transform == nullptr) {
-        continue;
+        return;
       }
 
       Game::Map::Minimap::UnitMarker marker;
@@ -188,7 +187,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
       unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(marker.owner_id));
       unit_hash = hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
       unit_hash = hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
-    }
+    });
   }
   unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
 

@@ -55,6 +55,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["attack_direction"] = 0;
   result["is_attacking"] = false;
   result["dodge_active"] = false;
+  result["aim_candidate_in_range"] = false;
   result["finisher_ready"] = false;
   result["camera_mode"] = QStringLiteral("Chase");
   result["shield_bash_cooldown"] = 3.0;
@@ -223,6 +224,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
                     ->get_component<Engine::Core::RpgCommanderTargetComponent>()
               : nullptr) {
     locked_id = rpg_targets->explicit_lock_target_id;
+    result["aim_candidate_in_range"] =
+        rpg_targets->aim_candidate_in_range && rpg_targets->aim_candidate_id != 0;
   }
   if (locked_id != 0 && world != nullptr) {
     auto* locked_ent = world->get_entity(locked_id);

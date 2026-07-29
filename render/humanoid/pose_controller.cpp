@@ -551,6 +551,28 @@ void HumanoidPoseController::hold_spear_idle() {
   apply_held_pose_sample(*this, m_pose, sample);
 }
 
+void HumanoidPoseController::channel_spell_idle() {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::CasterChannel,
+      .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
+  });
+  apply_held_pose_sample(*this, m_pose, sample);
+}
+
+void HumanoidPoseController::carry_stave() {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::StaveCarry,
+      .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
+  });
+  apply_held_pose_sample(*this, m_pose, sample);
+}
+
 void HumanoidPoseController::brace_spear_for_hold() {
   using HP = HumanProportions;
 
