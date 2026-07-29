@@ -19,7 +19,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "minimap_manager.h"
-#include "utils/resource_utils.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -34,6 +33,7 @@
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
+#include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
 
 void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
@@ -168,10 +168,9 @@ void GameStateRestorer::restore_environment_from_metadata(
   const QString& map_path = level.map_path;
 
   if (!terrain_already_restored && !map_path.isEmpty()) {
-    const QString resolved_map_path =
-        Utils::Resources::resolve_resource_path(map_path);
-    loaded_definition = Game::Map::MapLoader::load_from_json_file(
-        resolved_map_path, def, &map_error);
+    const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
+    loaded_definition =
+        Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &map_error);
     if (!loaded_definition) {
       qWarning() << "GameStateRestorer: Failed to load map definition from" << map_path
                  << "during save load:" << map_error;

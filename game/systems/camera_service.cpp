@@ -26,7 +26,7 @@ CameraService::CameraService()
 
 CameraService::~CameraService() = default;
 
-/* static */ void CameraService::sync_map_bounds(Render::GL::Camera& camera) {
+void CameraService::sync_map_bounds(Render::GL::Camera& camera) {
   const auto& visibility = Game::Map::VisibilityService::instance();
   if (!visibility.is_initialized()) {
     camera.clear_map_bounds();
