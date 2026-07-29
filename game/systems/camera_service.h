@@ -27,6 +27,7 @@ public:
   CameraService();
   ~CameraService();
 
+  static void sync_map_bounds(Render::GL::Camera& camera);
   void move(Render::GL::Camera& camera, float dx, float dz);
   void elevate(Render::GL::Camera& camera, float dy);
   void zoom(Render::GL::Camera& camera, float delta);
