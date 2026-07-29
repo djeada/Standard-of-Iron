@@ -737,17 +737,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     }
     processed_owner_ids.insert(owner_id);
 
-    for (auto* entity :
-         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-        ctx.world.destroy_entity(entity->get_id());
-      }
-    }
-
     const auto* assigned_nation = nation_registry.get_nation_for_player(owner_id);
     const auto nation_id = assigned_nation != nullptr
                                ? assigned_nation->id
@@ -778,23 +767,51 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       continue;
     }
 
+    // Collect existing commander IDs and their positions before modifying anything.
+    std::vector<Engine::Core::EntityID> existing_commanders;
+    QVector3D existing_position{0.0F, 0.0F, 0.0F};
+    bool has_existing_position = false;
+    for (auto* entity :
+         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        existing_commanders.push_back(entity->get_id());
+        if (!has_existing_position) {
+          if (const auto* xform =
+                  entity->get_component<Engine::Core::TransformComponent>()) {
+            existing_position = QVector3D(xform->position.x, xform->position.y, xform->position.z);
+            has_existing_position = true;
+          }
+        }
+      }
+    }
+
+    // Use existing commander position or fallback to spawn anchors / map spawns.
     App::Core::ResolvedCommanderPosition commander_position;
-    const auto anchors = existing_owner_spawn_anchors(owner_id);
-    if (!anchors.empty()) {
-      commander_position =
-          App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
-    } else if (const auto fallback = map_spawn_fallback(owner_id);
-               fallback.has_value()) {
-      commander_position = {.position = fallback.value(),
+    if (has_existing_position) {
+      commander_position = {.position = {existing_position.x(), existing_position.z()},
                             .space = App::Core::CommanderPositionSpace::World};
     } else {
-      commander_position = {.position = {0.0F, 0.0F},
-                            .space = App::Core::CommanderPositionSpace::World};
+      const auto anchors = existing_owner_spawn_anchors(owner_id);
+      if (!anchors.empty()) {
+        commander_position =
+            App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
+      } else if (const auto fallback = map_spawn_fallback(owner_id);
+                 fallback.has_value()) {
+        commander_position = {.position = fallback.value(),
+                              .space = App::Core::CommanderPositionSpace::World};
+      } else {
+        commander_position = {.position = {0.0F, 0.0F},
+                              .space = App::Core::CommanderPositionSpace::World};
+      }
     }
 
     Game::Units::SpawnParams params;
-    params.position =
-        QVector3D(commander_position.position.x, 0.0F, commander_position.position.z);
+    params.position = QVector3D(
+        commander_position.position.x, 0.0F, commander_position.position.z);
     params.player_id = owner_id;
     params.spawn_type = *spawn_type;
     params.ai_controlled = owner_registry.is_ai(owner_id);
@@ -805,6 +822,12 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
                  << commander_troop << "for owner" << owner_id;
       continue;
     }
+
+    // Only destroy the old commanders after the replacement exists.
+    for (const auto id : existing_commanders) {
+      ctx.world.destroy_entity(id);
+    }
+
     apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
   }
   return effects;

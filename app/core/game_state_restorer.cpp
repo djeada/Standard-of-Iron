@@ -160,24 +160,23 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   auto& terrain_service = Game::Map::TerrainService::instance();
 
-  bool const terrain_already_restored = terrain_service.is_initialized();
-
   Game::Map::MapDefinition def;
   QString map_error;
   bool loaded_definition = false;
   const QString& map_path = level.map_path;
 
-  if (!terrain_already_restored && !map_path.isEmpty()) {
+  if (!map_path.isEmpty()) {
     const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
     loaded_definition =
         Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &map_error);
     if (!loaded_definition) {
       qWarning() << "GameStateRestorer: Failed to load map definition from" << map_path
-                 << "during save load:" << map_error;
+                 << "(resolved:" << resolved_map_path << "):" << map_error;
     }
   }
 
-  if (!terrain_already_restored && loaded_definition) {
+  if (loaded_definition) {
+    terrain_service.clear();
     terrain_service.initialize(def);
 
     if (!def.name.isEmpty()) {

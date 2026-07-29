@@ -3380,9 +3380,6 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     request_exit_commander_control_mode();
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  terrain_service.clear();
-
   reset_preload_interaction_state();
   reset_mission_runtime_state();
 

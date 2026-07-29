@@ -18,10 +18,10 @@ CameraController::CameraController(Render::GL::Camera* camera,
 }
 
 void CameraController::sync_map_bounds() {
-  if (!m_camera || !m_camera_service) {
+  if (!m_camera) {
     return;
   }
-  m_camera_service->sync_map_bounds(*m_camera);
+  Game::Systems::CameraService::sync_map_bounds(*m_camera);
 }
 
 void CameraController::move(float dx, float dz) {

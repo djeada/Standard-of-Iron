@@ -341,6 +341,17 @@ Item {
                                     visible: !model.isEmpty
 
                                     StyledButton {
+                                        text: qsTr("Export")
+                                        button_style: "secondary"
+                                        onClicked: {
+                                            if (typeof game === 'undefined' || !game.saves.export_save_slot)
+                                                return;
+                                            var path = game.saves.export_save_slot(model.slot_name);
+                                            root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
+                                        }
+                                    }
+
+                                    StyledButton {
                                         text: qsTr("Verify")
                                         button_style: "secondary"
                                         onClicked: {
@@ -348,7 +359,7 @@ Item {
                                                 return;
                                             var ok = game.saves.verify_save_slot(model.slot_name);
                                             root.verify_result_title = ok ? qsTr("Verification Passed") : qsTr("Verification Failed");
-                                            root.verify_result_message = ok ? qsTr("\"%1\" is intact. The save file has not been corrupted.").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded. The checksum does not match.").arg(model.slot_name);
+                                            root.verify_result_message = ok ? qsTr("\"%1\" is intact. The save file has not been corrupted.").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded. The save failed its integrity check.").arg(model.slot_name);
                                             root.verify_result_success = ok;
                                             verifyResultDialog.open();
                                         }
@@ -424,6 +435,8 @@ Item {
                                 "title": "",
                                 "timestamp": 0,
                                 "map_name": "",
+                                "mode": "",
+                                "kind": "",
                                 "playTime": "",
                                 "thumbnail": "",
                                 "isEmpty": true
