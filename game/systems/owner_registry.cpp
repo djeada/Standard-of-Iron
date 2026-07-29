@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "../session/session_context.h"
+
 namespace {
 
 auto owner_type_to_string(Game::Systems::OwnerType type) -> QString {
@@ -61,8 +63,7 @@ auto color_from_json(const QJsonArray& array) -> std::array<float, 3> {
 namespace Game::Systems {
 
 auto OwnerRegistry::instance() -> OwnerRegistry& {
-  static OwnerRegistry inst;
-  return inst;
+  return Game::Session::SessionContext::active().owners();
 }
 
 void OwnerRegistry::clear() {

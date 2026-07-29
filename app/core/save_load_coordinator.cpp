@@ -12,6 +12,9 @@
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/session/deterministic_rng.h"
+#include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/save_load_service.h"
@@ -55,6 +58,11 @@ auto SaveLoadCoordinator::to_runtime_snapshot(const SaveRuntimeContext& context)
       Game::Systems::PlayerResourceRegistry::instance().snapshot();
   snapshot.harvested_by_owner =
       Game::Systems::PlayerResourceRegistry::instance().harvested_snapshot();
+
+  auto& session = Game::Session::SessionContext::active();
+  snapshot.simulation_tick = session.clock().tick();
+  snapshot.rng_seed = session.rng().seed();
+  snapshot.rng_draw_count = session.rng().draw_count();
   return snapshot;
 }
 
@@ -70,6 +78,11 @@ void SaveLoadCoordinator::apply_runtime_snapshot(
       snapshot.resources_by_owner);
   Game::Systems::PlayerResourceRegistry::instance().restore_harvested(
       snapshot.harvested_by_owner);
+
+  auto& session = Game::Session::SessionContext::active();
+  session.clock().restore(snapshot.simulation_tick);
+  session.rng().restore(snapshot.rng_seed, snapshot.rng_draw_count);
+
   context.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
 }
 

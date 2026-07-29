@@ -164,9 +164,9 @@ Item {
 
                             function load_from_game() {
                                 clear();
-                                if (typeof game === 'undefined' || !game.get_save_slots)
+                                if (typeof game === 'undefined' || !game.saves.get_save_slots)
                                     return;
-                                var entries = game.get_save_slots();
+                                var entries = game.saves.get_save_slots();
                                 for (var i = 0; i < entries.length; i++) {
                                     append({
                                             "slot_name": entries[i].slot_name,

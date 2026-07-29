@@ -9,6 +9,7 @@
 #include <QTimer>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -23,7 +24,7 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {
@@ -57,6 +58,7 @@ class FogRenderer;
 class MapBoundaryFogRenderer;
 class AmbientFogRenderer;
 class RainRenderer;
+class RpgTelegraphRenderer;
 } // namespace Render::GL
 
 class QMouseEvent;
@@ -65,6 +67,7 @@ class QWheelEvent;
 class QPainter;
 class QPointF;
 class QFocusEvent;
+class CommanderControlController;
 
 class ArenaViewport : public QOpenGLWidget {
   Q_OBJECT
@@ -132,6 +135,8 @@ public slots:
   void set_terrain_review_content_enabled(bool enabled);
 
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
+
+  void set_prewarm_unit_templates(bool enabled) { m_prewarm_unit_templates = enabled; }
 
   void set_capture_orbit_speed(float degrees_per_second) {
     m_capture_orbit_speed = degrees_per_second;
@@ -229,6 +234,9 @@ private:
   void clear_camera_key_state();
   [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
+  void configure_rpg_scenario_commander(Engine::Core::EntityID entity_id);
+  void update_rpg_scenario_controller(float simulation_dt);
+  void clear_rpg_scenario_state();
   void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
   auto spawn_single_unit(int owner_id,
@@ -287,6 +295,7 @@ private:
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
+  bool m_prewarm_unit_templates{false};
   std::unique_ptr<Render::GL::Camera> m_camera;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
@@ -298,6 +307,9 @@ private:
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
+  std::unique_ptr<CommanderControlController> m_rpg_commander_controller;
+  std::unique_ptr<Render::GL::RpgTelegraphRenderer> m_rpg_telegraphs;
+  Engine::Core::EntityID m_rpg_commander_id{0};
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_unit_factory;
   std::vector<std::unique_ptr<Game::Units::Unit>> m_units;
   int m_spawn_owner_id = 1;

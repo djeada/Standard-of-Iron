@@ -132,7 +132,7 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_F9:
-            if (root.game.has_save_slot && root.game.has_save_slot("quicksave"))
+            if (root.game.saves.has_save_slot && root.game.saves.has_save_slot("quicksave"))
                 root.game.load_game_from_slot("quicksave");
             event.accepted = true;
             break;

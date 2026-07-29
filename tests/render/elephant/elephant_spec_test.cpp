@@ -438,8 +438,9 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
 
   Render::Elephant::ElephantSpecPose fight_pose{};
   Render::Elephant::ElephantPoseMotion fight_motion{};
-  fight_motion.anim_time = 1.15F * 0.25F;
   fight_motion.is_fighting = true;
+  fight_motion.combat_phase = Render::GL::CombatAnimPhase::WindUp;
+  fight_motion.combat_phase_progress = 0.75F;
   Render::Elephant::make_elephant_spec_pose_animated(
       dims, gait, fight_motion, fight_pose);
 
@@ -461,6 +462,32 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
   EXPECT_NEAR(fight_pose.head_center.x(), idle_pose.head_center.x(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.y(), idle_pose.head_center.y(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.z(), idle_pose.head_center.z(), 0.0001F);
+}
+
+TEST(ElephantSpecTest, AuthoredStompImpactLowersFootAndDrivesTrunkForward) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+
+  Render::Elephant::ElephantPoseMotion windup{};
+  windup.is_fighting = true;
+  windup.combat_phase = Render::GL::CombatAnimPhase::WindUp;
+  windup.combat_phase_progress = 0.60F;
+  Render::Elephant::ElephantSpecPose windup_pose{};
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, windup, windup_pose);
+
+  Render::Elephant::ElephantPoseMotion impact{};
+  impact.is_fighting = true;
+  impact.combat_phase = Render::GL::CombatAnimPhase::Strike;
+  impact.combat_phase_progress = 0.0F;
+  Render::Elephant::ElephantSpecPose impact_pose{};
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, impact, impact_pose);
+
+  EXPECT_GT(windup_pose.foot_pose_fl.y(),
+            impact_pose.foot_pose_fl.y() + dims.leg_length * 0.20F);
+  EXPECT_GT(windup_pose.trunk_end.y(),
+            impact_pose.trunk_end.y() + dims.trunk_length * 0.10F);
+  EXPECT_GT(impact_pose.trunk_end.z(),
+            windup_pose.trunk_end.z() + dims.trunk_length * 0.08F);
 }
 
 TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {

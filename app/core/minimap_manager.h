@@ -19,7 +19,7 @@ class CameraViewportLayer;
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {

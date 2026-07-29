@@ -11,7 +11,7 @@
 #include "../units/troop_type.h"
 
 namespace Engine::Core {
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 class World;
 } // namespace Engine::Core
 

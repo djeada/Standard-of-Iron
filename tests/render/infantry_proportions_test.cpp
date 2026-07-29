@@ -40,9 +40,9 @@ struct ProportionTolerance {
 
 constexpr ProportionTolerance k_infantry_tolerance{};
 
-constexpr ProportionTolerance k_support_tolerance{.min_height_ratio = 0.90F,
+constexpr ProportionTolerance k_support_tolerance{.min_height_ratio = 0.85F,
                                                   .max_height_ratio = 1.12F,
-                                                  .min_silhouette_ratio = 0.82F,
+                                                  .min_silhouette_ratio = 0.80F,
                                                   .max_silhouette_ratio = 1.22F};
 
 class BoundsSubmitter : public ISubmitter {

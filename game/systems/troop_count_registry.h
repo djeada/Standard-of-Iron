@@ -12,6 +12,13 @@ namespace Game::Systems {
 
 class TroopCountRegistry {
 public:
+  TroopCountRegistry() = default;
+  ~TroopCountRegistry() = default;
+  TroopCountRegistry(const TroopCountRegistry&) = delete;
+  TroopCountRegistry(TroopCountRegistry&&) = delete;
+  auto operator=(const TroopCountRegistry&) -> TroopCountRegistry& = delete;
+  auto operator=(TroopCountRegistry&&) -> TroopCountRegistry& = delete;
+
   static auto instance() -> TroopCountRegistry&;
 
   void initialize();
@@ -25,11 +32,6 @@ public:
   void rebuild_from_world(Engine::Core::World& world);
 
 private:
-  TroopCountRegistry() = default;
-  ~TroopCountRegistry() = default;
-  TroopCountRegistry(const TroopCountRegistry&) = delete;
-  auto operator=(const TroopCountRegistry&) -> TroopCountRegistry& = delete;
-
   std::unordered_map<int, int> m_troop_counts;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>

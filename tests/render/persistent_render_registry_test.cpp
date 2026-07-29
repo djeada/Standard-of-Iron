@@ -8,7 +8,8 @@
 
 namespace {
 
-auto has_id(const std::vector<std::uint32_t>& vec, std::uint32_t id) -> bool {
+auto has_id(const std::vector<Engine::Core::EntityID>& vec,
+            Engine::Core::EntityID id) -> bool {
   return std::find(vec.begin(), vec.end(), id) != vec.end();
 }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "../command/command_system.h"
 #include "../core/world.h"
 #include "ai_system.h"
 #include "arrow_system.h"
@@ -27,6 +28,8 @@
 namespace Game::Systems {
 
 void register_runtime_systems(Engine::Core::World& world) {
+
+  world.add_system(std::make_unique<Game::Command::CommandSystem>());
   world.add_system(std::make_unique<ArrowSystem>());
   world.add_system(std::make_unique<CombatStatusEffectSystem>());
   world.add_system(std::make_unique<ProjectileSystem>());

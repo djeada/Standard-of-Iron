@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "../session/session_context.h"
 #include "command_service.h"
 #include "pathfinding.h"
 
@@ -26,8 +27,7 @@ float BuildingCollisionRegistry::s_grid_padding =
     BuildingCollisionRegistry::k_default_grid_padding;
 
 auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
-  static BuildingCollisionRegistry instance;
-  return instance;
+  return Game::Session::SessionContext::active().building_collision();
 }
 
 auto BuildingCollisionRegistry::get_building_size(const std::string& building_type)
@@ -40,7 +40,7 @@ auto BuildingCollisionRegistry::get_building_size(const std::string& building_ty
   return {2.0F, 2.0F};
 }
 
-void BuildingCollisionRegistry::register_building(unsigned int entity_id,
+void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_id,
                                                   const std::string& building_type,
                                                   float center_x,
                                                   float center_z,
@@ -65,7 +65,7 @@ void BuildingCollisionRegistry::register_building(unsigned int entity_id,
   }
 }
 
-void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
+void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entity_id) {
   auto it = m_entity_to_index.find(entity_id);
   if (it == m_entity_to_index.end()) {
     return;
@@ -93,9 +93,8 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   }
 }
 
-void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
-                                                         float center_x,
-                                                         float center_z) {
+void BuildingCollisionRegistry::update_building_position(
+    Engine::Core::EntityID entity_id, float center_x, float center_z) {
   auto it = m_entity_to_index.find(entity_id);
   if (it == m_entity_to_index.end()) {
     return;
@@ -118,7 +117,7 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
   }
 }
 
-void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
+void BuildingCollisionRegistry::update_building_owner(Engine::Core::EntityID entity_id,
                                                       int owner_id) {
   auto it = m_entity_to_index.find(entity_id);
   if (it == m_entity_to_index.end()) {
@@ -130,7 +129,7 @@ void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
 }
 
 auto BuildingCollisionRegistry::is_point_in_building(
-    float x, float z, unsigned int ignore_entity_id) const -> bool {
+    float x, float z, Engine::Core::EntityID ignore_entity_id) const -> bool {
   for (const auto& building : m_buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;
@@ -195,7 +194,10 @@ namespace {
 } // namespace
 
 auto BuildingCollisionRegistry::is_circle_overlapping_building(
-    float x, float z, float radius, unsigned int ignore_entity_id) const -> bool {
+    float x,
+    float z,
+    float radius,
+    Engine::Core::EntityID ignore_entity_id) const -> bool {
   for (const auto& building : m_buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;

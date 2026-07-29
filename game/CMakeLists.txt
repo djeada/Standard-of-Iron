@@ -17,15 +17,39 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui animation_core
 )
 
+# The simulation kernel.
+#
+# Everything a match needs to run with nothing on screen: the ECS systems, the
+# session, the command pipeline, terrain, units and world serialisation.
+#
+# It deliberately does NOT link scene_core or render_gl. That is the boundary
+# the build enforces: if a gameplay file starts needing a camera, this target
+# stops linking rather than the dependency slipping in unnoticed. Headless
+# balance runs, deterministic replay and a dedicated server all consume this
+# target alone.
+#
+# Qt::Gui is present only for the value types (QVector3D, QImage); it pulls in
+# no windowing or GL.
 add_library(
-    game_systems
+    game_sim
     STATIC
+    command/command.cpp
+    command/command_dispatcher.cpp
+    command/command_queue.cpp
+    command/command_system.cpp
+    command/command_validator.cpp
+    save/snapshot_contract.cpp
+    util/json_vec_utils.cpp
+    session/session_context.cpp
+    session/simulation_clock.cpp
+    systems/player_resource_registry.cpp
     systems/runtime_system_registry.cpp
     systems/battlefield_capture.cpp
     systems/order_service.cpp
     systems/movement_system.cpp
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
+    systems/combat_system/structure_combat.cpp
     systems/combat_system/damage_application.cpp
     systems/combat_system/damage_processor.cpp
     systems/combat_system/combat_mode_processor.cpp
@@ -52,6 +76,7 @@ add_library(
     systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
     systems/rpg_combat_system/rpg_combat_processor.cpp
+    systems/rpg_combat_system/rpg_targeting.cpp
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
     systems/ai_system/ai_command_filter.cpp
@@ -82,15 +107,11 @@ add_library(
     systems/wall_network_service.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
+    systems/arrow_visual_profile.cpp
     systems/combat_status_effect_system.cpp
     systems/projectile_system.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp
-    systems/camera_follow_system.cpp
-    systems/camera_controller.cpp
-    systems/camera_service.cpp
-    systems/camera_visibility_service.cpp
-    systems/picking_service.cpp
     systems/command_service.cpp
     systems/movement_orders.cpp
     systems/commander_system.cpp
@@ -100,6 +121,7 @@ add_library(
     systems/civilian_delivery_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
+    systems/healing_rules.cpp
     systems/healing_system.cpp
     systems/healing_beam.cpp
     systems/healing_beam_system.cpp
@@ -112,7 +134,6 @@ add_library(
     systems/save_format.cpp
     systems/save_load_service.cpp
     systems/save_storage.cpp
-    systems/game_state_serializer.cpp
     systems/nation_registry.cpp
     systems/nation_loader.cpp
     systems/formation_system.cpp
@@ -134,11 +155,6 @@ add_library(
     map/terrain_topology_audit.cpp
     map/visibility_service.cpp
     map/map_catalog.cpp
-    map/minimap/minimap_generator.cpp
-    map/minimap/map_preview_generator.cpp
-    map/minimap/minimap_fog_compositor.cpp
-    map/minimap/unit_layer.cpp
-    map/minimap/camera_viewport_layer.cpp
     visuals/building_asset_key.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
@@ -170,16 +186,46 @@ add_library(
     systems/home_system.cpp
 )
 
-target_include_directories(game_systems PUBLIC .)
+target_include_directories(game_sim PUBLIC .)
 target_link_libraries(
-    game_systems
+    game_sim
     PUBLIC
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
         animation_core
-        scene_core
 )
+
+# Presentation-facing gameplay services.
+#
+# These need a camera to do their job -- unprojecting a click, framing the
+# minimap, writing the camera into a save. They consume the kernel; the kernel
+# never consumes them.
+add_library(
+    game_view
+    STATIC
+    view/selection_controller.cpp
+    systems/camera_controller.cpp
+    systems/camera_follow_system.cpp
+    systems/camera_service.cpp
+    systems/camera_visibility_service.cpp
+    systems/picking_service.cpp
+    systems/game_state_serializer.cpp
+    map/minimap/minimap_generator.cpp
+    map/minimap/map_preview_generator.cpp
+    map/minimap/minimap_fog_compositor.cpp
+    map/minimap/unit_layer.cpp
+    map/minimap/camera_viewport_layer.cpp
+)
+
+target_include_directories(game_view PUBLIC .)
+target_link_libraries(game_view PUBLIC game_sim scene_core)
+
+# Compatibility facade for consumers that just want "all of gameplay". New
+# targets should depend on game_sim or game_view directly so the boundary keeps
+# meaning something.
+add_library(game_systems INTERFACE)
+target_link_libraries(game_systems INTERFACE game_sim game_view)
 
 add_subdirectory(audio)

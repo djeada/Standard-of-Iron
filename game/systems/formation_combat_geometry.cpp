@@ -175,38 +175,63 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   result.all_slots.reserve(static_cast<std::size_t>(result.total_count));
   result.live_slots.reserve(static_cast<std::size_t>(result.live_count));
   result.occupied_slots.reserve(static_cast<std::size_t>(result.total_count));
-  auto resolve_slot = [&](int idx) {
-    int const row = result.rows - 1 - idx / result.cols;
-    int const col = idx % result.cols;
-    auto const offset =
-        FormationSystem::instance().get_local_offset(definition.type,
-                                                     definition.category,
-                                                     idx,
-                                                     row,
-                                                     col,
-                                                     result.rows,
-                                                     result.cols,
-                                                     result.spacing,
-                                                     result.seed);
-    auto const [world_x, world_z] =
-        world_slot(resolved_transform, offset.offset_x, offset.offset_z);
-    return SoldierSlot{static_cast<std::uint16_t>(idx),
-                       static_cast<std::uint16_t>(row),
-                       static_cast<std::uint16_t>(col),
-                       offset.offset_x,
-                       offset.offset_z,
-                       offset.yaw_offset,
-                       world_x,
-                       world_z};
-  };
+  auto resolve_slot =
+      [&](int stable_idx, int layout_idx, int layout_rows, int layout_cols) {
+        int const row = layout_rows - 1 - layout_idx / layout_cols;
+        int const col = layout_idx % layout_cols;
+        auto const offset =
+            FormationSystem::instance().get_local_offset(definition.type,
+                                                         definition.category,
+                                                         layout_idx,
+                                                         row,
+                                                         col,
+                                                         layout_rows,
+                                                         layout_cols,
+                                                         result.spacing,
+                                                         result.seed);
+        auto const [world_x, world_z] =
+            world_slot(resolved_transform, offset.offset_x, offset.offset_z);
+        return SoldierSlot{static_cast<std::uint16_t>(stable_idx),
+                           static_cast<std::uint16_t>(row),
+                           static_cast<std::uint16_t>(col),
+                           offset.offset_x,
+                           offset.offset_z,
+                           offset.yaw_offset,
+                           world_x,
+                           world_z};
+      };
   for (int idx = 0; idx < result.total_count; ++idx) {
-    result.all_slots.push_back(resolve_slot(idx));
+    result.all_slots.push_back(resolve_slot(idx, idx, result.rows, result.cols));
   }
-  int const retired_count = result.total_count - result.live_count;
+
+  std::vector<bool> live_slots(static_cast<std::size_t>(result.total_count), false);
+  bool roster_is_valid = false;
+  if (auto const* roster =
+          entity.get_component<Engine::Core::FormationRosterPresentationComponent>();
+      roster != nullptr && roster->total_count == result.total_count &&
+      roster->alive.size() == static_cast<std::size_t>(result.total_count)) {
+    int const roster_live_count = static_cast<int>(std::count(
+        roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
+    roster_is_valid = roster_live_count == result.live_count;
+    if (roster_is_valid) {
+      for (int idx = 0; idx < result.total_count; ++idx) {
+        live_slots[static_cast<std::size_t>(idx)] =
+            roster->alive[static_cast<std::size_t>(idx)] != 0U;
+      }
+    }
+  }
+  if (!roster_is_valid) {
+    int const retired_count = result.total_count - result.live_count;
+    for (int idx = retired_count; idx < result.total_count; ++idx) {
+      live_slots[static_cast<std::size_t>(idx)] = true;
+    }
+  }
+
   std::vector<bool> active_casualty_slots(static_cast<std::size_t>(result.total_count),
                                           false);
-  if (auto const* casualties =
-          entity.get_component<Engine::Core::SoldierCasualtyAnimationComponent>()) {
+  auto const* casualties =
+      entity.get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  if (casualties != nullptr) {
     for (auto const& casualty : casualties->entries) {
       int const idx = static_cast<int>(casualty.slot_index);
       if (idx >= 0 && idx < result.total_count) {
@@ -215,15 +240,44 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
     }
   }
 
-  for (int idx = retired_count; idx < result.total_count; ++idx) {
-    auto const& slot = result.all_slots[static_cast<std::size_t>(idx)];
+  int const compact_cols = std::max(1, std::min(result.cols, result.live_count));
+  int const compact_rows =
+      std::max(1, (result.live_count + compact_cols - 1) / compact_cols);
+  int compact_idx = 0;
+  for (int stable_idx = 0; stable_idx < result.total_count; ++stable_idx) {
+    if (!live_slots[static_cast<std::size_t>(stable_idx)]) {
+      continue;
+    }
+    auto const slot = resolve_slot(stable_idx, compact_idx, compact_rows, compact_cols);
     result.live_slots.push_back(slot);
     result.occupied_slots.push_back(slot);
+    ++compact_idx;
   }
-  for (int idx = 0; idx < retired_count; ++idx) {
-    if (active_casualty_slots[static_cast<std::size_t>(idx)]) {
-      result.occupied_slots.push_back(result.all_slots[static_cast<std::size_t>(idx)]);
+
+  for (int idx = 0; idx < result.total_count; ++idx) {
+    if (live_slots[static_cast<std::size_t>(idx)] ||
+        !active_casualty_slots[static_cast<std::size_t>(idx)]) {
+      continue;
     }
+    SoldierSlot casualty_slot = result.all_slots[static_cast<std::size_t>(idx)];
+    if (casualties != nullptr) {
+      auto const found =
+          std::find_if(casualties->entries.begin(),
+                       casualties->entries.end(),
+                       [idx](auto const& entry) {
+                         return entry.slot_index == static_cast<std::uint16_t>(idx);
+                       });
+      if (found != casualties->entries.end() && found->has_local_anchor) {
+        casualty_slot.local_x = found->local_x;
+        casualty_slot.local_z = found->local_z;
+        casualty_slot.local_yaw = found->local_yaw;
+        auto const [world_x, world_z] =
+            world_slot(resolved_transform, found->local_x, found->local_z);
+        casualty_slot.world_x = world_x;
+        casualty_slot.world_z = world_z;
+      }
+    }
+    result.occupied_slots.push_back(casualty_slot);
   }
   return result;
 }
@@ -354,20 +408,11 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
         attacker_attack != nullptr && attacker_attack->in_melee_lock &&
         attacker_attack->melee_lock_target_id == target.get_id() &&
         geometry.surface_gap <= k_contact_numeric_epsilon;
-    auto const* target_attack = target.get_component<Engine::Core::AttackComponent>();
-    bool const occupied_battle_edge =
-        target_attack != nullptr && target_attack->in_melee_lock &&
-        target_attack->melee_lock_target_id != 0U &&
-        target_attack->melee_lock_target_id != attacker.get_id();
-    bool const reinforcement_has_visible_overlap =
-        occupied_battle_edge && geometry.surface_gap <= -(geometry.contact_tolerance +
-                                                          k_contact_numeric_epsilon);
 
     bool const degenerate_slot_contact =
         geometry.contact_center_distance <= k_contact_numeric_epsilon &&
         geometry.center_distance <= melee_reach(attacker) + k_contact_numeric_epsilon;
-    return deep_front_rank_overlap || locked_visible_overlap ||
-           reinforcement_has_visible_overlap || degenerate_slot_contact;
+    return deep_front_rank_overlap || locked_visible_overlap || degenerate_slot_contact;
   }
   if (attacker.has_component<Engine::Core::ElephantComponent>() &&
       has_formation_slots(target)) {
@@ -431,6 +476,49 @@ auto engagement_pairs(const Engine::Core::Entity& attacker,
     return lhs.attacker_slot < rhs.attacker_slot;
   });
   return result;
+}
+
+auto select_damage_engagement_pair(
+    const Engine::Core::Entity& attacker,
+    Engine::Core::EntityID opponent_id,
+    const std::vector<Engine::Core::FormationEngagementPair>& pairs)
+    -> std::optional<Engine::Core::FormationEngagementPair> {
+  if (pairs.empty()) {
+    return std::nullopt;
+  }
+
+  auto const closest = std::min_element(
+      pairs.begin(), pairs.end(), [](auto const& lhs, auto const& rhs) {
+        if (lhs.surface_gap != rhs.surface_gap) {
+          return lhs.surface_gap < rhs.surface_gap;
+        }
+        return lhs.attacker_slot < rhs.attacker_slot;
+      });
+  float const spacing = resolve_layout(attacker).spacing;
+  float const equivalent_contact_band = std::max(0.05F, spacing * 0.18F);
+  std::vector<const Engine::Core::FormationEngagementPair*> contact_candidates;
+  contact_candidates.reserve(pairs.size());
+  for (auto const& pair : pairs) {
+    if (pair.surface_gap <= closest->surface_gap + equivalent_contact_band) {
+      contact_candidates.push_back(&pair);
+    }
+  }
+
+  std::uint32_t seed = attacker.get_id() * 0x9e3779b9U;
+  seed ^= opponent_id * 0x85ebca6bU;
+  if (auto const* state =
+          attacker.get_component<Engine::Core::CombatStateComponent>()) {
+    seed ^= static_cast<std::uint32_t>(state->attack_variant) * 0xc2b2ae35U;
+  }
+  if (auto const* action =
+          attacker.get_component<Engine::Core::RpgCommanderActionComponent>()) {
+    seed ^= static_cast<std::uint32_t>(action->combat_action_id) * 0x27d4eb2dU;
+    seed ^= static_cast<std::uint32_t>(action->melee_attack_sequence) * 0x165667b1U;
+  }
+  seed ^= seed >> 16U;
+  seed *= 0x7feb352dU;
+  seed ^= seed >> 15U;
+  return *contact_candidates[seed % contact_candidates.size()];
 }
 
 } // namespace Game::Systems::FormationCombat

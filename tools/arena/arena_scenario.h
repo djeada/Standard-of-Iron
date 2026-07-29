@@ -19,7 +19,7 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Units {
@@ -64,6 +64,9 @@ enum class ScenarioCommandKind : std::uint8_t {
   MeleeLock,
   SetFullCreatureLod,
   TriggerCommanderAura,
+  RpgPrimaryAttack,
+  RpgGuard,
+  RpgDodge,
 };
 
 struct ArenaScenarioGroup {
@@ -136,6 +139,13 @@ enum class ArenaExpectationKind : std::uint8_t {
   HoldPoseMaintained,
   RepeatedAttackAnimationObserved,
   AttackHasVisibleContact,
+  ProjectileFlightObserved,
+  ProjectileImpactObserved,
+  ProjectileImpactSynchronized,
+  GroupHealthUnchanged,
+  GroupHealthReduced,
+  StructureDamageCueObserved,
+  StructureFacadeContactObserved,
   AttackRecoveryObserved,
   NoActiveCombatAtEnd,
   HitReactionObserved,
@@ -159,6 +169,13 @@ enum class ArenaExpectationKind : std::uint8_t {
   CommanderAuraBuffObserved,
   CommanderAuraExpired,
   NoCommanderAuraBuffObserved,
+  ExactRpgTargetObserved,
+  RpgDamageContactObserved,
+  RpgBlockContactObserved,
+  RpgDodgeContactObserved,
+  RpgDodgeWindowObserved,
+  RpgHealthReduced,
+  RpgHealthUnchanged,
   UndeadZoneDormantBefore,
   UndeadZoneAwakened,
   UndeadZoneCleared,
@@ -195,6 +212,8 @@ struct ArenaScenarioDefinition {
   bool suppress_ui_overlays{false};
   bool force_full_creature_lod{true};
   bool collect_animation_diagnostics{true};
+  bool rpg_mode{false};
+  QString rpg_commander_group;
   Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
   Game::Map::EnvironmentDefinition environment{};
   Game::Map::WeatherLightingInput weather{};
@@ -267,6 +286,10 @@ struct ArenaScenarioHost {
                      const ArenaCameraView&)>
       set_camera;
   std::function<void(bool)> set_force_full_creature_lod;
+  std::function<void(Engine::Core::EntityID)> configure_rpg_commander;
+  std::function<bool(Engine::Core::EntityID)> rpg_primary_attack;
+  std::function<void(Engine::Core::EntityID, bool)> set_rpg_guard;
+  std::function<void(Engine::Core::EntityID, const QVector3D&)> request_rpg_dodge;
 };
 
 struct ArenaRenderedFrameTimings {

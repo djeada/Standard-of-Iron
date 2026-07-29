@@ -18,6 +18,10 @@ class RenderableComponent;
 class MovementComponent;
 } // namespace Engine::Core
 
+namespace Engine::Core {
+using EntityID = std::uint64_t;
+}
+
 namespace Render {
 
 [[nodiscard]] auto resolve_profile_unit_renderer_key(
@@ -28,7 +32,7 @@ namespace Render {
     const Engine::Core::RenderableComponent* renderable) -> std::string;
 
 struct CachedUnitData {
-  std::uint32_t entity_id{0};
+  Engine::Core::EntityID entity_id{0};
   Engine::Core::Entity* entity{nullptr};
 
   Engine::Core::TransformComponent* transform{nullptr};
@@ -70,7 +74,7 @@ struct CachedUnitData {
 
 class UnitRenderCache {
 public:
-  auto get_or_create(std::uint32_t entity_id,
+  auto get_or_create(Engine::Core::EntityID entity_id,
                      Engine::Core::Entity* entity,
                      std::uint32_t frame) -> CachedUnitData&;
 
@@ -83,7 +87,7 @@ public:
   static auto update_model_matrix(CachedUnitData& data) -> bool;
 
 private:
-  std::unordered_map<std::uint32_t, CachedUnitData> m_cache;
+  std::unordered_map<Engine::Core::EntityID, CachedUnitData> m_cache;
 };
 
 struct CachedModelMatrix {
@@ -103,7 +107,7 @@ struct CachedModelMatrix {
 
 class ModelMatrixCache {
 public:
-  auto get_or_create(std::uint32_t entity_id,
+  auto get_or_create(Engine::Core::EntityID entity_id,
                      Engine::Core::TransformComponent* transform,
                      std::uint32_t frame) -> const QMatrix4x4&;
 
@@ -111,7 +115,7 @@ public:
   void clear() { m_cache.clear(); }
 
 private:
-  std::unordered_map<std::uint32_t, CachedModelMatrix> m_cache;
+  std::unordered_map<Engine::Core::EntityID, CachedModelMatrix> m_cache;
 };
 
 } // namespace Render

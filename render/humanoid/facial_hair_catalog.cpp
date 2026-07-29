@@ -8,6 +8,7 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "../creature/runtime_bake_guard.h"
 #include "../equipment/attachment_builder.h"
 #include "../equipment/generated_equipment.h"
 #include "humanoid_spec.h"
@@ -556,6 +557,10 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
     if (it != facial_hair_cache().end()) {
       return it->second;
     }
+  }
+
+  if (Render::Creature::runtime_bake_forbidden()) {
+    return base_archetype;
   }
 
   auto& registry = Render::Creature::ArchetypeRegistry::instance();

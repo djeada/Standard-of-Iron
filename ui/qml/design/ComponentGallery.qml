@@ -267,14 +267,16 @@ ScrollView {
                                     "nation": "roman_republic",
                                     "count": 40,
                                     "woundedCount": 7,
-                                    "health": 0.82
+                                    "health": 0.82,
+                                    "stamina": 0.65
                                 }, {
                                     "typeKey": "archer",
                                     "name": qsTr("Archers"),
                                     "nation": "roman_republic",
                                     "count": 24,
                                     "woundedCount": 0,
-                                    "health": 1
+                                    "health": 1,
+                                    "stamina": 0.9
                                 }]
                         }
                     }

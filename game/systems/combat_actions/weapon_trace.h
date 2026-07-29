@@ -16,7 +16,11 @@ namespace Game::Systems::CombatActions {
 
 struct WeaponTraceContact {
   Engine::Core::EntityID attacker_id{0};
+  std::uint16_t attacker_soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   Engine::Core::EntityID target_id{0};
+  std::uint16_t target_soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   QVector3D contact_point{0.0F, 0.0F, 0.0F};
   float distance{0.0F};
   float local_forward{0.0F};

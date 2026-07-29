@@ -256,6 +256,7 @@ auto build_elephant_pose_motion(const ElephantMotionSample& motion,
       .is_fighting = motion.is_fighting,
       .anim_time = anim.time,
       .combat_phase = anim.combat_phase,
+      .combat_phase_progress = anim.combat_phase_progress,
   };
 }
 

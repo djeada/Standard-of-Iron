@@ -5,10 +5,13 @@
 #include <QJsonObject>
 #include <QString>
 
+#include "../save/snapshot_contract.h"
+
 namespace Game::Systems::Save {
 
 inline constexpr int k_format_version = 1;
-inline constexpr int k_schema_version = 1;
+
+inline constexpr int k_schema_version = Game::Save::k_snapshot_version;
 
 enum class Compression {
   None,

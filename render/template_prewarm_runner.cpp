@@ -147,7 +147,8 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
                                         bool force_horse_lod,
                                         const AnimationInputs* animation_override,
                                         std::uint8_t attack_variant_override,
-                                        bool has_attack_variant_override)
+                                        bool has_attack_variant_override,
+                                        const FacialHairStyle* facial_hair_override)
     -> DrawContext {
   DrawContext ctx{renderer.resources(), &entity, nullptr, QMatrix4x4()};
   ctx.renderer_id = renderer_id;
@@ -168,23 +169,29 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
   ctx.animation_override = animation_override;
   ctx.has_attack_variant_override = has_attack_variant_override;
   ctx.attack_variant_override = attack_variant_override;
+  if (facial_hair_override != nullptr) {
+    ctx.has_facial_hair_override = true;
+    ctx.facial_hair_override = *facial_hair_override;
+  }
   return ctx;
 }
 
-void execute_template_prewarm_item(Renderer& renderer,
-                                   std::size_t profile_index,
-                                   Game::Units::SpawnType spawn_type,
-                                   Game::Systems::NationID nation_id,
-                                   int max_health,
-                                   const std::string& renderer_id,
-                                   bool is_mounted,
-                                   bool is_elephant,
-                                   const RenderFunc& fn,
-                                   int owner_id,
-                                   HumanoidLOD lod,
-                                   std::uint8_t variant,
-                                   bool allow_template_cache,
-                                   const AnimKey& anim_key);
+void execute_template_prewarm_item(
+    Renderer& renderer,
+    std::size_t profile_index,
+    Game::Units::SpawnType spawn_type,
+    Game::Systems::NationID nation_id,
+    int max_health,
+    const std::string& renderer_id,
+    bool is_mounted,
+    bool is_elephant,
+    const RenderFunc& fn,
+    int owner_id,
+    HumanoidLOD lod,
+    std::uint8_t variant,
+    bool allow_template_cache,
+    const AnimKey& anim_key,
+    const FacialHairStyle* facial_hair_override = nullptr);
 
 class CreatureCacheWarmupSubmitter final : public BatchingSubmitter {
 public:
@@ -240,7 +247,8 @@ void execute_template_prewarm_item(Renderer& renderer,
                                    HumanoidLOD lod,
                                    std::uint8_t variant,
                                    bool allow_template_cache,
-                                   const AnimKey& anim_key) {
+                                   const AnimKey& anim_key,
+                                   const FacialHairStyle* facial_hair_override) {
   if (!fn) {
     return;
   }
@@ -262,7 +270,8 @@ void execute_template_prewarm_item(Renderer& renderer,
                                                              is_mounted || is_elephant,
                                                              &anim,
                                                              anim_key.attack_variant,
-                                                             attack_state);
+                                                             attack_state,
+                                                             facial_hair_override);
 
   CreatureCacheWarmupSubmitter warmup_submitter(&renderer);
   fn(ctx, warmup_submitter);
@@ -700,6 +709,17 @@ void Renderer::prewarm_unit_templates(
     idle_key.combat_phase = CombatAnimPhase::Idle;
     const int owner_id = owner_ids.front();
 
+    constexpr FacialHairStyle k_facial_hair_styles[] = {
+        FacialHairStyle::None,
+        FacialHairStyle::Stubble,
+        FacialHairStyle::ShortBeard,
+        FacialHairStyle::FullBeard,
+        FacialHairStyle::LongBeard,
+        FacialHairStyle::Goatee,
+        FacialHairStyle::Mustache,
+        FacialHairStyle::MustacheAndBeard};
+    constexpr HumanoidLOD k_preload_lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
+
     for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
       const PrewarmProfile& profile = profiles[profile_idx];
       for (std::uint8_t variant = 0; variant < k_template_variant_count; ++variant) {
@@ -717,6 +737,25 @@ void Renderer::prewarm_unit_templates(
                                       variant,
                                       false,
                                       idle_key);
+      }
+      for (HumanoidLOD const lod : k_preload_lods) {
+        for (FacialHairStyle const style : k_facial_hair_styles) {
+          execute_template_prewarm_item(*this,
+                                        profile_idx,
+                                        profile.spawn_type,
+                                        profile.nation_id,
+                                        profile.max_health,
+                                        profile.renderer_id,
+                                        profile.is_mounted,
+                                        profile.is_elephant,
+                                        profile.fn,
+                                        owner_id,
+                                        lod,
+                                        0U,
+                                        false,
+                                        idle_key,
+                                        &style);
+        }
       }
     }
   };

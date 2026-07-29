@@ -137,7 +137,7 @@ auto resolve_commander_guard(Engine::Core::World* world,
 
   result.blocked = true;
   result.damage = std::max(
-      1,
+      0,
       static_cast<int>(std::round(static_cast<float>(damage) *
                                   std::clamp(guard->damage_multiplier, 0.0F, 1.0F))));
   float const guard_pressure =
@@ -184,11 +184,14 @@ void mark_commander_hit(Engine::Core::CommanderComponent& commander,
 
 } // namespace
 
-CommanderDamageResult deal_commander_attack_damage(Engine::Core::World* world,
-                                                   Engine::Core::Entity* target,
-                                                   int raw_damage,
-                                                   Engine::Core::EntityID commander_id,
-                                                   CommanderDamageProfile profile) {
+CommanderDamageResult
+deal_commander_attack_damage(Engine::Core::World* world,
+                             Engine::Core::Entity* target,
+                             int raw_damage,
+                             Engine::Core::EntityID commander_id,
+                             CommanderDamageProfile profile,
+                             std::optional<std::uint16_t> target_soldier_slot,
+                             std::optional<QVector3D> contact_point) {
   CommanderDamageResult result;
   if (world == nullptr || target == nullptr || raw_damage <= 0 || commander_id == 0) {
     return result;
@@ -232,12 +235,21 @@ CommanderDamageResult deal_commander_attack_damage(Engine::Core::World* world,
     return result;
   }
 
-  auto const application =
-      Game::Systems::Combat::apply_unit_damage(world, target, damage, commander_id);
+  auto const application = Game::Systems::Combat::apply_unit_damage(
+      world, target, damage, commander_id, contact_point, target_soldier_slot);
   result.effective_damage = application.applied_damage;
   result.killed = application.killed;
 
   if (application.applied_damage > 0) {
+    if (commander_entity != nullptr) {
+      if (auto* targets = Engine::Core::get_or_add_component<
+              Engine::Core::RpgCommanderTargetComponent>(commander_entity)) {
+        targets->recent_hit_target_id = target->get_id();
+        targets->recent_hit_soldier_slot = target_soldier_slot.value_or(
+            Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
+        targets->recent_hit_timer = 0.28F;
+      }
+    }
     if (commander != nullptr) {
       mark_commander_hit(*commander, combo_step, power_strike_hit);
     }
@@ -262,6 +274,12 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
                                                    CommanderDamageProfile profile) {
   CommanderDamageResult result;
   if (world == nullptr || commander == nullptr || raw_damage <= 0) {
+    return result;
+  }
+
+  if (auto const* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
+      rpg != nullptr && rpg->active && rpg->dodge_invincible) {
+    result.dodged = true;
     return result;
   }
 

@@ -19,7 +19,9 @@ enum class HumanoidClipProfile : std::uint8_t {
   Default,
   SwordReady,
   SpearReady,
-  Skeleton
+  Skeleton,
+  Caster,
+  StaveCaster
 };
 
 enum class AttackClipFamily : std::uint8_t {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -8,7 +9,7 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {
@@ -43,6 +44,20 @@ struct ProductionState {
 
 class ProductionService {
 public:
+  static auto start_production(Engine::Core::World& world,
+                               Engine::Core::EntityID building_id,
+                               Game::Units::TroopType unit_type) -> ProductionResult;
+
+  static auto set_rally_point(Engine::Core::World& world,
+                              Engine::Core::EntityID building_id,
+                              float x,
+                              float z) -> bool;
+
+  static auto
+  find_selected_barracks(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& selected,
+                         int owner_id) -> Engine::Core::EntityID;
+
   static auto start_production_for_first_selected_barracks(
       Engine::Core::World& world,
       const std::vector<Engine::Core::EntityID>& selected,

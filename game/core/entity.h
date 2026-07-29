@@ -8,17 +8,41 @@
 #include <typeindex>
 #include <vector>
 
+#include "component_pool.h"
+#include "component_registry.h"
+
 namespace Engine::Core {
 
-using EntityID = std::uint32_t;
+using EntityID = std::uint64_t;
 constexpr EntityID NULL_ENTITY = 0;
+
+namespace Handle {
+
+constexpr unsigned k_index_bits = 32U;
+constexpr EntityID k_index_mask = (EntityID{1} << k_index_bits) - 1U;
+
+constexpr auto make(std::uint32_t index, std::uint32_t generation) -> EntityID {
+  return (static_cast<EntityID>(generation) << k_index_bits) |
+         static_cast<EntityID>(index);
+}
+
+constexpr auto index_of(EntityID id) -> std::uint32_t {
+  return static_cast<std::uint32_t>(id & k_index_mask);
+}
+
+constexpr auto generation_of(EntityID id) -> std::uint32_t {
+  return static_cast<std::uint32_t>(id >> k_index_bits);
+}
+
+} // namespace Handle
 
 class Component {
 public:
   virtual ~Component() = default;
 };
 
-using ComponentChangeCallback = std::function<void(EntityID, std::type_index, bool)>;
+using ComponentChangeCallback =
+    std::function<void(EntityID, ComponentTypeId, std::type_index, bool)>;
 
 class Entity {
 public:
@@ -31,17 +55,18 @@ public:
   template <typename T, typename... Args>
   auto add_component(Args&&... args) -> T* {
     static_assert(std::is_base_of_v<Component, T>, "T must inherit from Component");
-    auto component = std::make_unique<T>(std::forward<Args>(args)...);
-    auto ptr = component.get();
-    std::size_t const slot = component_type_id<T>();
+
+    T* ptr =
+        Detail::ComponentPool<T>::instance().construct(std::forward<Args>(args)...);
+    const ComponentTypeId slot = component_type_id<T>();
     if (m_components_by_type.size() <= slot) {
       m_components_by_type.resize(slot + 1);
     }
-    m_components_by_type[slot] = std::move(component);
-    std::type_index const type_idx = std::type_index(typeid(T));
+    m_components_by_type[slot] =
+        ComponentPtr(ptr, Detail::PooledComponentDeleter{&Detail::release_to_pool<T>});
 
     if (m_component_change_callback) {
-      m_component_change_callback(m_id, type_idx, true);
+      m_component_change_callback(m_id, slot, std::type_index(typeid(T)), true);
     }
 
     return ptr;
@@ -49,7 +74,7 @@ public:
 
   template <typename T>
   auto get_component() -> T* {
-    std::size_t const slot = component_type_id<T>();
+    const ComponentTypeId slot = component_type_id<T>();
     if (slot < m_components_by_type.size()) {
       return static_cast<T*>(m_components_by_type[slot].get());
     }
@@ -58,7 +83,7 @@ public:
 
   template <typename T>
   auto get_component() const -> const T* {
-    std::size_t const slot = component_type_id<T>();
+    const ComponentTypeId slot = component_type_id<T>();
     if (slot < m_components_by_type.size()) {
       return static_cast<const T*>(m_components_by_type[slot].get());
     }
@@ -67,34 +92,25 @@ public:
 
   template <typename T>
   void remove_component() {
-    std::size_t const slot = component_type_id<T>();
-    std::type_index const type_idx = std::type_index(typeid(T));
+    const ComponentTypeId slot = component_type_id<T>();
     if (slot < m_components_by_type.size() && m_components_by_type[slot] != nullptr) {
       m_components_by_type[slot].reset();
 
       if (m_component_change_callback) {
-        m_component_change_callback(m_id, type_idx, false);
+        m_component_change_callback(m_id, slot, std::type_index(typeid(T)), false);
       }
     }
   }
 
   template <typename T>
   auto has_component() const -> bool {
-    std::size_t const slot = component_type_id<T>();
+    const ComponentTypeId slot = component_type_id<T>();
     return slot < m_components_by_type.size() && m_components_by_type[slot] != nullptr;
   }
 
 private:
-  static auto resolve_component_type_id(std::type_index type) -> std::size_t;
-
-  template <typename T>
-  static auto component_type_id() -> std::size_t {
-    static const std::size_t id = resolve_component_type_id(std::type_index(typeid(T)));
-    return id;
-  }
-
   EntityID m_id;
-  std::vector<std::unique_ptr<Component>> m_components_by_type;
+  std::vector<ComponentPtr> m_components_by_type;
   ComponentChangeCallback m_component_change_callback;
 };
 

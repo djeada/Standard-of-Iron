@@ -12,7 +12,7 @@ Primary focus is army management and tactical strategy.
 
 ### Game Engine
 
-The game logic layer follows an _Entity-Component-System_ architecture. This separates data storage from processing logic, making it easier to add new gameplay features without rewriting existing systems.
+The game logic layer follows an _Entity-Component-System_ architecture, in a simulation kernel that links no rendering code. This separates data storage from processing logic and lets the same match run with or without a screen.
 
 - When units receive movement orders, the _pathfinding_ module computes grid-based routes through walkable cells. Formation spacing is applied only when initial targets are assigned; each unit then follows its own path.
 - Damage resolution is handled by a dedicated _combat system_. It calculates hit detection, applies damage, and triggers death handling. Without these steps, units could become immortal or fail silently during combat.
@@ -108,7 +108,7 @@ The Punic Wars setting pits the _Roman Republic_ against the _Carthaginian Empir
 
 **Runtime requirements:**
 
-- A GPU with _OpenGL 3.3_ drivers is mandatory. Software rendering is not supported.
+- A GPU with _OpenGL 3.3_ drivers is expected for normal play. A CPU rasteriser backend also ships and can be selected with `--force-software` (or `--quality none`); it draws a reduced-fidelity image and exists for diagnostics and for machines without a 3.3 driver, not as a supported way to play.
 - At least 4 GB of RAM is required, though 8 GB is recommended for battles with several hundred units.
 - Supported operating systems include _Linux_ distributions such as Ubuntu 20.04+, Arch, and Manjaro, as well as _Windows 10_ or later.
 
@@ -172,13 +172,19 @@ See [tests/README.md](https://github.com/djeada/Standard-of-Iron/blob/main/tests
 ```
 app/
   controllers/   Input handling, VFX triggers
-  core/          Engine loop, level orchestration, state transitions
+  core/          Composition root, level orchestration, state transitions
+  viewmodels/    Focused QML-facing objects split out of GameEngine
 
 game/
   core/          ECS primitives, component definitions, world state
-  systems/       Per-frame logic (movement, combat, AI, production)
+  session/       Per-match context: clock, RNG, and the registries a match owns
+  command/       Typed command model, validation, queue, dispatch
+  save/          The versioned snapshot contract
+  systems/       Per-tick logic (movement, combat, AI, production)
+  view/          Gameplay services that need a camera (selection controller)
   map/           Level loading, victory condition parsing
   units/         Unit type factories and stat definitions
+  util/          Shared helpers the kernel and the app both use
   visuals/       Team colors, visual configuration
 
 render/
@@ -205,9 +211,12 @@ scripts/         Build helpers, validation scripts, deployment tools
 
 The engine uses an _Entity-Component-System_ pattern to decouple data from logic.
 
-- Each game object is represented by a 64-bit _entity ID_ with no behavior of its own. Attached components determine which systems process it.
-- A _component_ is a plain data struct, such as Transform, Unit, Movement, or Health, stored contiguously for cache efficiency. Polymorphism is avoided.
-- A _system_ iterates over entities with the required component set and performs one logical step per frame. System ordering is explicit to avoid race conditions.
+- Each game object is a 64-bit _generational entity handle_: a 32-bit slot index plus a 32-bit generation, bumped whenever the slot is recycled. A handle to a dead entity therefore fails to resolve instead of silently addressing whatever took its place. Entities live in a contiguous slot array, so resolving a handle is a bounds check and a generation compare.
+- A _component_ is a data struct such as Transform, Unit, Movement or Production. Each type has its own chunked pool, so instances of one type are contiguous in memory rather than one heap allocation each. Components still derive from a small polymorphic base with a virtual destructor; the base carries no behaviour, and access goes through a dense per-type id rather than RTTI.
+- Membership per component type is a _sparse set_: a contiguous array of the handles that own the component, plus an index from slot to position. Iterating everything with a component is a straight walk, and add/remove are O(1).
+- A _system_ iterates over entities with the required component set and performs one logical step per fixed tick. System ordering is explicit to avoid race conditions.
+
+Full detail, including the layer boundaries and where they are enforced, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 **Core component types:**
 
@@ -219,15 +228,16 @@ The engine uses an _Entity-Component-System_ pattern to decouple data from logic
 - `ProductionComponent` manages the build queue, spawn timer, and rally point position. Buildings without this component cannot train units.
 - `BuildingComponent` stores building type, capture progress, and ownership. It distinguishes structures from mobile units.
 
-**System execution order per frame:**
+**System execution order per fixed tick** (abridged; `game/systems/runtime_system_registry.cpp` is the full list):
 
-1. _ArrowSystem_ updates projectile positions and triggers hit detection.
-2. _MovementSystem_ advances units along their assigned path, recovers units that are inside invalid cells, and stops only for explicit movement overrides or arrival.
-3. _PatrolSystem_ cycles waypoints and scans for enemies within aggro range.
-4. _CombatSystem_ executes attacks, applies damage, and removes dead entities.
-5. _AISystem_ evaluates strategic state and issues commands to AI-owned units.
-6. _ProductionSystem_ decrements spawn timers and instantiates new units at rally points.
-7. _SelectionSystem_ synchronizes UI state with entity selection sets.
+1. _CommandSystem_ drains the match's command queue, so every order — player, AI or replay — is applied before any other system observes the world.
+2. _ArrowSystem_ updates projectile positions and triggers hit detection.
+3. _MovementSystem_ advances units along their assigned path, recovers units that are inside invalid cells, and stops only for explicit movement overrides or arrival.
+4. _PatrolSystem_ cycles waypoints and scans for enemies within aggro range.
+5. _CombatSystem_ executes attacks, applies damage, and removes dead entities.
+6. _AISystem_ evaluates strategic state and submits commands for AI-owned units, which the next tick's _CommandSystem_ applies.
+7. _ProductionSystem_ decrements spawn timers and instantiates new units at rally points.
+8. _SelectionSystem_ synchronizes UI state with entity selection sets.
 
 ### Render Pipeline
 
@@ -483,12 +493,24 @@ The engine is moving from a single hardcoded nation toward a scalable multi-fact
 - Full _save/load_ serialization preserves campaign state across sessions.
 - _Spatial audio_ provides positional sound for combat and movement.
 - Multiple _map files_ are playable with distinct layouts and objectives.
+- A _resource economy_ with gathering, spending, and marketplace trade.
+- _Campaign progression_ with mission unlocking and per-slot save metadata.
+- A _simulation kernel_ (`game_sim`) that builds and runs with no renderer linked, exercised by `bin/headless_simulation_tests`.
+- A _session context_ that owns all per-match state, so two matches can run in one process and tests get isolation.
+- A _canonical command pipeline_: player, AI and scripted orders share one validation pass, one queue and one execution point per tick.
+- A _fixed-tick simulation clock_ and a seeded deterministic RNG, both persisted in saves.
+- A _versioned snapshot contract_ that classifies every component as serialised, rebuilt, presentational or campaign-level, enforced by tests.
+
+**In progress:**
+
+- Migrating gameplay call sites from the ambient `instance()` accessors to explicit `SessionContext&` parameters.
+- Moving `GameEngine`'s QML surface onto focused view models; the save-slot browser has moved, placement and campaign are next.
 
 **Planned:**
 
 - _Multiplayer networking_ for LAN and online matchmaking.
-- A _resource economy_ with gathering and spending.
-- _Campaign progression_ that tracks territory control and unit veterancy.
+- _Replay recording and playback_ on top of the command stream.
+- _Unit veterancy_ and territory control across a campaign.
 - _Mod support_ with exposed data formats and tooling.
 
 ## License

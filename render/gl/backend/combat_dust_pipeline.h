@@ -154,6 +154,8 @@ private:
   void shutdown_geometry();
   auto create_fireball_geometry() -> bool;
   void shutdown_fireball_geometry();
+  auto create_metal_spark_geometry() -> bool;
+  void shutdown_metal_spark_geometry();
   auto create_blood_geometry() -> bool;
   void shutdown_blood_geometry();
   void render_blood_pools(const Camera& cam);
@@ -171,6 +173,10 @@ private:
   GLuint m_fireball_vertex_buffer = 0;
   GLuint m_fireball_index_buffer = 0;
   GLsizei m_fireball_index_count = 0;
+  GLuint m_metal_spark_vao = 0;
+  GLuint m_metal_spark_vertex_buffer = 0;
+  GLuint m_metal_spark_index_buffer = 0;
+  GLsizei m_metal_spark_index_count = 0;
   GLuint m_blood_vao = 0;
   GLuint m_blood_vertex_buffer = 0;
   GLuint m_blood_index_buffer = 0;

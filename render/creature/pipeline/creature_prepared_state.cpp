@@ -48,7 +48,7 @@ auto admits_contact_shadow(const Render::GL::DrawContext& ctx,
                            bool standing_idle) -> bool {
   const auto& graphics = Render::GraphicsSettings::instance();
   return ctx.allow_template_cache && graphics.shadows_enabled() &&
-         lod == Render::Creature::CreatureLOD::Full &&
+         lod != Render::Creature::CreatureLOD::Billboard &&
          camera_distance < graphics.shadow_max_distance() &&
          Render::VisibilityBudgetTracker::instance().request_contact_shadow(
              formation_id, standing_idle);

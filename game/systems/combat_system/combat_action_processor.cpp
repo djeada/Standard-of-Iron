@@ -13,10 +13,12 @@
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_actions/projectile_release.h"
 #include "../combat_actions/weapon_trace.h"
+#include "../combat_rules.h"
 #include "attack_processor.h"
 #include "combat_hit_resolver.h"
 #include "combat_utils.h"
 #include "damage_processor.h"
+#include "elephant_special_processor.h"
 #include "mounted_charge_processor.h"
 
 namespace Game::Systems::Combat {
@@ -25,12 +27,19 @@ namespace {
 
 auto is_rts_melee_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
   return id == Game::Systems::CombatActions::CombatActionId::RtsSwordStrike ||
-         id == Game::Systems::CombatActions::CombatActionId::RtsSpearThrust;
+         id == Game::Systems::CombatActions::CombatActionId::RtsSpearThrust ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp;
 }
 
 auto is_rts_attack_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
   return is_rts_melee_action(id) ||
          id == Game::Systems::CombatActions::CombatActionId::RtsBowShot;
+}
+
+auto target_uses_rpg_combat(Engine::Core::World& world,
+                            Engine::Core::EntityID target_id) -> bool {
+  auto* target = world.get_entity(target_id);
+  return target != nullptr && Game::Systems::CombatRules::uses_rpg_combat_rules(target);
 }
 
 void deal_rts_melee_contact_damage(
@@ -119,6 +128,7 @@ void deal_weapon_trace_damage(
       &world,
       {.contact = {.attacker_id = attacker.get_id(),
                    .target_id = contact.target_id,
+                   .target_soldier_slot = contact.target_soldier_slot,
                    .action_id = definition.id,
                    .weapon_family = definition.weapon_family,
                    .attack_family = definition.attack_family,
@@ -127,7 +137,11 @@ void deal_weapon_trace_damage(
                    .distance = contact.distance,
                    .local_forward = contact.local_forward,
                    .local_right = contact.local_right},
-       .damage_profile = definition.damage});
+       .damage_profile = definition.damage,
+
+       .explicit_raw_damage = is_rts_melee_action(definition.id)
+                                  ? std::max(1, action.requested_damage)
+                                  : 0});
   if (!result.attempted) {
     return;
   }
@@ -136,6 +150,7 @@ void deal_weapon_trace_damage(
     presentation_state->damage_dealt_this_swing = true;
   }
   action.last_hit_target_id = contact.target_id;
+  action.last_hit_soldier_slot = contact.target_soldier_slot;
   action.last_damage = result.damage.effective_damage;
   action.hit_target_ids[action.hit_target_count++] = contact.target_id;
 }
@@ -209,7 +224,16 @@ void handle_action_events(
     if (event.type ==
             Game::Systems::CombatActions::CombatActionEventType::ActiveStart &&
         is_rts_melee_action(action_id) && action.hit_target_count == 0U) {
-      deal_rts_melee_contact_damage(world, entity, action, definition);
+      bool const requires_visible_weapon_contact =
+          target_uses_rpg_combat(world, action.active_target_id) &&
+          action_id != Game::Systems::CombatActions::CombatActionId::RtsElephantStomp;
+      if (!requires_visible_weapon_contact) {
+        deal_rts_melee_contact_damage(world, entity, action, definition);
+      }
+      if (action_id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp &&
+          action.hit_target_count > 0U) {
+        (void)apply_elephant_stomp_impact(&world, &entity);
+      }
       continue;
     }
     if (event.type !=
@@ -217,8 +241,23 @@ void handle_action_events(
       continue;
     }
     if (action_id == Game::Systems::CombatActions::CombatActionId::RtsBowShot) {
-      if (release_rts_arrow_volley(
-              world, entity, action.active_target_id, action.requested_damage)) {
+      auto const* special =
+          entity.get_component<Engine::Core::SpecialAttackComponent>();
+      bool released = false;
+      if (special != nullptr && special->use_projectile_system) {
+        auto const release =
+            Game::Systems::CombatActions::release_projectile_for_action(
+                &world,
+                entity,
+                definition,
+                action.active_target_id,
+                action.requested_damage);
+        released = release.released;
+      } else {
+        released = release_rts_arrow_volley(
+            world, entity, action.active_target_id, action.requested_damage);
+      }
+      if (released) {
         action.last_hit_target_id = action.active_target_id;
         action.last_damage = std::max(1, action.requested_damage);
       }
@@ -276,7 +315,11 @@ void process_authored_combat_action(
   handle_action_events(*world, entity, *action, *definition, events);
 
   auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
-  if (commander != nullptr && commander->fpv_controlled) {
+  bool const attacks_rpg_target =
+      is_rts_melee_action(action_id) &&
+      action_id != Game::Systems::CombatActions::CombatActionId::RtsElephantStomp &&
+      target_uses_rpg_combat(*world, action->active_target_id);
+  if ((commander != nullptr && commander->fpv_controlled) || attacks_rpg_target) {
     deal_weapon_trace_damage(*world, entity, presentation_state, *action, *definition);
   }
   deal_mount_body_impact(*world, entity, *action, *definition);

@@ -18,7 +18,7 @@ void CombatSystem::update(Engine::Core::World* world, float delta_time) {
   Combat::process_hit_feedback(world, delta_time);
   Combat::process_combat_state(world, delta_time);
   Combat::process_attacks(world, m_query_context, delta_time);
-  Combat::update_formation_contacts(world);
+  Combat::update_formation_contacts(world, delta_time);
   Combat::process_siege_specials(world, m_query_context, delta_time);
   Combat::process_elephant_specials(world, m_query_context, delta_time);
   m_auto_engagement.process(world, m_query_context, delta_time);

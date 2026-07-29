@@ -11,13 +11,17 @@
 #include <numbers>
 #include <vector>
 
+#include "../../game/command/command.h"
+#include "../../game/command/command_queue.h"
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/session/session_context.h"
 #include "../../game/systems/combat_rules.h"
 #include "../../game/systems/command_service.h"
 #include "../../game/systems/formation_planner.h"
 #include "../../game/systems/order_service.h"
+#include "../../game/systems/owner_registry.h"
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
@@ -29,6 +33,24 @@
 #include "units/spawn_type.h"
 
 namespace App::Controllers {
+
+namespace {
+
+auto local_owner(Engine::Core::World* world) -> int {
+  if (auto* session = Game::Session::SessionContext::for_world(*world)) {
+    return session->owners().get_local_player_id();
+  }
+  return Game::Systems::OwnerRegistry::instance().get_local_player_id();
+}
+
+void submit(Engine::Core::World* world, Game::Command::Payload payload) {
+  Game::Command::submit(*world,
+                        Game::Command::Source::LocalPlayer,
+                        local_owner(world),
+                        std::move(payload));
+}
+
+} // namespace
 
 CommandController::CommandController(Engine::Core::World* world,
                                      Game::Systems::SelectionSystem* selection_system,
@@ -85,7 +107,7 @@ auto CommandController::on_attack_click(qreal sx,
     return result;
   }
 
-  Game::Systems::CommandService::attack_target(*m_world, attackers, target_id, true);
+  submit(m_world, Game::Command::AttackTarget{.units = attackers, .target = target_id});
 
   emit attack_target_selected();
 
@@ -105,25 +127,28 @@ auto CommandController::on_stop_command() -> CommandResult {
     return result;
   }
 
+  bool had_hold_mode = false;
+  bool had_active_formation = false;
   for (auto id : selected) {
     auto* entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
-
-    Game::Systems::OrderService::apply_stop(entity);
-
-    auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-    if (hold_mode != nullptr) {
-      emit hold_mode_changed(false);
-    }
-
-    auto* formation_mode =
+    had_hold_mode = had_hold_mode ||
+                    entity->get_component<Engine::Core::HoldModeComponent>() != nullptr;
+    const auto* formation_mode =
         entity->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode != nullptr) && formation_mode->active) {
-      formation_mode->active = false;
-      emit formation_mode_changed(false);
-    }
+    had_active_formation =
+        had_active_formation || (formation_mode != nullptr && formation_mode->active);
+  }
+
+  submit(m_world, Game::Command::Stop{.units = {selected.begin(), selected.end()}});
+
+  if (had_hold_mode) {
+    emit hold_mode_changed(false);
+  }
+  if (had_active_formation) {
+    emit formation_mode_changed(false);
   }
 
   result.input_consumed = true;
@@ -174,63 +199,9 @@ auto CommandController::on_hold_command() -> CommandResult {
 
   const bool should_enable_hold = (hold_active_count < eligible_count);
 
-  for (auto id : selected) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (!Game::Units::can_use_hold_mode(unit->spawn_type)) {
-      continue;
-    }
-
-    auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-    if (should_enable_hold) {
-
-      auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
-      if (attack_comp != nullptr && attack_comp->in_melee_lock &&
-          Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
-        auto* locked_target = m_world->get_entity(attack_comp->melee_lock_target_id);
-        auto const* locked_unit =
-            locked_target != nullptr
-                ? locked_target->get_component<Engine::Core::UnitComponent>()
-                : nullptr;
-        bool const locked_opponent_alive =
-            locked_unit != nullptr && locked_unit->health > 0 &&
-            !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
-        if (locked_opponent_alive) {
-          continue;
-        }
-        Game::Systems::CombatRules::clear_rts_melee_lock(entity);
-      }
-
-      Game::Systems::OrderService::reset_movement(entity);
-      Game::Systems::OrderService::clear_attack_target(entity);
-      Game::Systems::OrderService::clear_player_order_intent(entity);
-
-      if (attack_comp != nullptr) {
-        Game::Systems::CombatRules::clear_rts_melee_lock(entity);
-      }
-
-      Game::Systems::OrderService::clear_patrol(entity);
-
-      if (hold_mode == nullptr) {
-        hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
-      }
-      hold_mode->active = true;
-      hold_mode->exit_cooldown = 0.0F;
-    } else {
-
-      if ((hold_mode != nullptr) && hold_mode->active) {
-        hold_mode->begin_exit();
-      }
-    }
-  }
+  submit(m_world,
+         Game::Command::SetHold{.units = {selected.begin(), selected.end()},
+                                .active = should_enable_hold});
 
   emit hold_mode_changed(should_enable_hold);
 
@@ -293,30 +264,10 @@ auto CommandController::on_patrol_click(qreal sx,
 
   QVector3D const second_waypoint = hit;
 
-  for (auto id : patrol_units) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* patrol = entity->get_component<Engine::Core::PatrolComponent>();
-    if (patrol == nullptr) {
-      patrol = entity->add_component<Engine::Core::PatrolComponent>();
-    }
-
-    if (patrol != nullptr) {
-      patrol->waypoints.clear();
-      patrol->waypoints.emplace_back(m_patrol_first_waypoint.x(),
-                                     m_patrol_first_waypoint.z());
-      patrol->waypoints.emplace_back(second_waypoint.x(), second_waypoint.z());
-      patrol->current_waypoint = 0;
-      patrol->patrolling = true;
-    }
-
-    Game::Systems::OrderService::reset_movement(entity);
-    Game::Systems::OrderService::clear_attack_target(entity);
-    Game::Systems::OrderService::clear_player_order_intent(entity);
-  }
+  submit(m_world,
+         Game::Command::Patrol{.units = {patrol_units.begin(), patrol_units.end()},
+                               .first_waypoint = m_patrol_first_waypoint,
+                               .second_waypoint = second_waypoint});
 
   clear_patrol_first_waypoint();
   result.input_consumed = true;
@@ -343,12 +294,15 @@ auto CommandController::set_rally_at_screen(qreal sx,
     return result;
   }
 
-  Game::Systems::ProductionService::set_rally_for_first_selected_barracks(
-      *m_world,
-      m_selection_system->get_selected_units(),
-      local_owner_id,
-      hit.x(),
-      hit.z());
+  const auto barracks = Game::Systems::ProductionService::find_selected_barracks(
+      *m_world, m_selection_system->get_selected_units(), local_owner_id);
+  if (barracks != Engine::Core::NULL_ENTITY) {
+    Game::Command::submit(
+        *m_world,
+        Game::Command::Source::LocalPlayer,
+        local_owner_id,
+        Game::Command::SetRallyPoint{.building = barracks, .position = hit});
+  }
 
   result.input_consumed = true;
   return result;
@@ -503,57 +457,9 @@ auto CommandController::on_guard_command() -> CommandResult {
 
   const bool should_enable_guard = (guard_active_count < eligible_count);
 
-  for (auto id : selected) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (!Game::Units::can_use_guard_mode(unit->spawn_type)) {
-      continue;
-    }
-
-    auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-
-    if (should_enable_guard) {
-
-      if (guard_mode == nullptr) {
-        guard_mode = entity->add_component<Engine::Core::GuardModeComponent>();
-      }
-      guard_mode->active = true;
-      guard_mode->returning_to_guard_position = false;
-
-      auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (transform != nullptr) {
-        guard_mode->guard_position_x = transform->position.x;
-        guard_mode->guard_position_z = transform->position.z;
-        guard_mode->has_guard_target = true;
-        guard_mode->guarded_entity_id = 0;
-      }
-
-      auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-      if ((hold_mode != nullptr) && hold_mode->active) {
-        hold_mode->active = false;
-      }
-
-      Game::Systems::OrderService::clear_patrol(entity);
-    } else {
-
-      if ((guard_mode != nullptr) && guard_mode->active) {
-        guard_mode->active = false;
-        guard_mode->guarded_entity_id = 0;
-        guard_mode->guard_position_x = 0.0F;
-        guard_mode->guard_position_z = 0.0F;
-        guard_mode->returning_to_guard_position = false;
-        guard_mode->has_guard_target = false;
-      }
-    }
-  }
+  submit(m_world,
+         Game::Command::SetGuard{.units = {selected.begin(), selected.end()},
+                                 .active = should_enable_guard});
 
   emit guard_mode_changed(should_enable_guard);
 
@@ -938,11 +844,12 @@ void CommandController::confirm_formation_placement() {
     Game::Systems::OrderService::clear_patrol(entity);
   }
 
-  Game::Systems::CommandService::MoveOptions opts;
-  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
-  opts.preserve_formation_mode = formation_result.used_tactical_formation;
-  Game::Systems::CommandService::move_units(
-      *m_world, m_formation_units, formation_result.positions, opts);
+  Game::Command::Move move;
+  move.units = m_formation_units;
+  move.targets = formation_result.positions;
+  move.kind = Game::Systems::MoveOrderKind::FormationMove;
+  move.preserve_formation_mode = formation_result.used_tactical_formation;
+  submit(m_world, std::move(move));
 
   m_is_placing_formation = false;
   m_formation_units.clear();
@@ -1085,32 +992,9 @@ void CommandController::enable_run_mode_for_selected() {
     return;
   }
 
-  for (const auto id : selected) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
-      continue;
-    }
-
-    auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-    if (stamina == nullptr) {
-      stamina = entity->add_component<Engine::Core::StaminaComponent>();
-
-      const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
-      if (troop_type.has_value()) {
-        const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-            unit->nation_id, *troop_type);
-        stamina->initialize_from_stats(profile.combat.max_stamina,
-                                       profile.combat.stamina_regen_rate,
-                                       profile.combat.stamina_depletion_rate);
-      }
-    }
-    stamina->run_requested = true;
-  }
+  submit(m_world,
+         Game::Command::SetRunMode{.units = {selected.begin(), selected.end()},
+                                   .active = true});
 
   emit run_mode_changed(true);
 }
@@ -1125,18 +1009,9 @@ void CommandController::disable_run_mode_for_selected() {
     return;
   }
 
-  for (const auto id : selected) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-    if (stamina != nullptr) {
-      stamina->run_requested = false;
-      stamina->is_running = false;
-    }
-  }
+  submit(m_world,
+         Game::Command::SetRunMode{.units = {selected.begin(), selected.end()},
+                                   .active = false});
 
   emit run_mode_changed(false);
 }

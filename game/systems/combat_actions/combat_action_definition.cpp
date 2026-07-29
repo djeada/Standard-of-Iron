@@ -85,9 +85,10 @@ constexpr std::array<CombatActionEvent, 4> k_mounted_charge_impact_events{{
     {CombatActionEventType::ExitSafe, 0.90F},
 }};
 
-constexpr std::array<CombatActionEvent, 5> k_rts_melee_events{{
+constexpr std::array<CombatActionEvent, 6> k_rts_melee_events{{
     {CombatActionEventType::WindupStart, 0.08F},
     {CombatActionEventType::ActiveStart, 0.40F},
+    {CombatActionEventType::WeaponTraceStart, 0.40F},
     {CombatActionEventType::WeaponTraceEnd, 0.56F},
     {CombatActionEventType::RecoveryStart, 0.72F},
     {CombatActionEventType::ExitSafe, 0.92F},
@@ -101,7 +102,15 @@ constexpr std::array<CombatActionEvent, 5> k_rts_bow_events{{
     {CombatActionEventType::ExitSafe, 0.90F},
 }};
 
-constexpr std::array<CombatActionDefinition, 14> k_definitions{{
+constexpr std::array<CombatActionEvent, 5> k_rts_elephant_stomp_events{{
+    {CombatActionEventType::WindupStart, 0.06F},
+    {CombatActionEventType::ActiveStart, 0.46F},
+    {CombatActionEventType::WeaponTraceEnd, 0.58F},
+    {CombatActionEventType::RecoveryStart, 0.72F},
+    {CombatActionEventType::ExitSafe, 0.92F},
+}};
+
+constexpr std::array<CombatActionDefinition, 15> k_definitions{{
     {
         .id = CombatActionId::RpgSwordSlashLeft,
         .weapon_family = WeaponFamily::Sword,
@@ -277,6 +286,16 @@ constexpr std::array<CombatActionDefinition, 14> k_definitions{{
         .duration_seconds = 1.0F,
         .events = k_rts_bow_events,
         .requires_projectile_release = true,
+    },
+    {
+        .id = CombatActionId::RtsElephantStomp,
+        .weapon_family = WeaponFamily::Body,
+        .attack_family = Engine::Core::CombatAttackFamily::None,
+        .attack_direction = Engine::Core::AttackDirection::HeavyOverhead,
+        .hit_shape = {.reach = 3.0F, .radius = 2.5F},
+        .duration_seconds = 1.15F,
+        .events = k_rts_elephant_stomp_events,
+        .max_targets = 8,
     },
 }};
 

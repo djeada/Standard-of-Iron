@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <qvectornd.h>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <vector>
@@ -11,6 +12,7 @@
 #include "../core/world.h"
 #include "healing_beam_system.h"
 #include "healing_colors.h"
+#include "healing_rules.h"
 #include "nation_id.h"
 
 namespace Game::Systems {
@@ -83,7 +85,7 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
         continue;
       }
 
-      if (target_unit->health <= 0 || target_unit->health >= target_unit->max_health) {
+      if (!HealingRules::can_receive_healing(*target)) {
         continue;
       }
 
@@ -99,10 +101,9 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
       float const dist = std::sqrt(dx * dx + dz * dz);
 
       if (dist <= healer_comp->healing_range) {
-        target_unit->health += healer_comp->healing_amount;
-        if (target_unit->health > target_unit->max_health) {
-          target_unit->health = target_unit->max_health;
-        }
+        target_unit->health =
+            std::min(target_unit->health + healer_comp->healing_amount,
+                     HealingRules::maximum_recoverable_health(*target));
 
         healer_comp->healing_target_x = target_transform->position.x;
         healer_comp->healing_target_z = target_transform->position.z;

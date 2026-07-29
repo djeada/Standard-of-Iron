@@ -117,6 +117,31 @@ TEST_F(ElephantSpecialProcessorTest, TrampleLaunchesInfantryCasualties) {
       }));
 }
 
+TEST_F(ElephantSpecialProcessorTest,
+       StationaryStompDamageOnlyOccursAtTheAuthoredImpact) {
+  auto* elephant = add_elephant(*world, 1);
+  elephant->get_component<MotionPresentationComponent>()->set_state(
+      MotionPresentationState::Idle);
+  auto* enemy = add_unit(*world, Game::Units::SpawnType::Spearman, 2, 1.0F, 0.0F);
+  auto* enemy_unit = enemy->get_component<UnitComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  enemy_unit->render_individuals_per_unit_override = 4;
+
+  update(1.0F);
+  EXPECT_EQ(enemy_unit->health, enemy_unit->max_health)
+      << "stationary proximity must not apply invisible continuous damage";
+
+  EXPECT_TRUE(Combat::apply_elephant_stomp_impact(world.get(), elephant));
+  EXPECT_LT(enemy_unit->health, enemy_unit->max_health);
+  auto const* impacts = elephant->get_component<ElephantStompImpactComponent>();
+  ASSERT_NE(impacts, nullptr);
+  EXPECT_EQ(impacts->impacts.size(), 4U);
+  auto const* casualties = enemy->get_component<SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_FALSE(casualties->entries.empty());
+  EXPECT_TRUE(casualties->entries.front().launched);
+}
+
 TEST_F(ElephantSpecialProcessorTest, PanicDoesNotCreateHiddenRandomMoveTarget) {
   auto* elephant = add_elephant(*world, 1);
   auto* panic = elephant->add_component<ElephantPanicComponent>();

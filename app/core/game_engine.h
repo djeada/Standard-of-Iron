@@ -25,7 +25,6 @@
 #include "../models/selected_units_model.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
-#include "../utils/selection_utils.h"
 #include "ambient_state_manager.h"
 #include "app_scene_context.h"
 #include "camera_controller.h"
@@ -35,8 +34,11 @@
 #include "game/audio/audio_event_handler.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
+#include "game/session/session_context.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/save_format.h"
+#include "game/util/selection_utils.h"
+#include "game/view/selection_controller.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "mission_setup_coordinator.h"
@@ -54,7 +56,7 @@ class AudioCoordinator;
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 struct MovementComponent;
 struct TransformComponent;
 struct RenderableComponent;
@@ -96,6 +98,9 @@ struct MapDefinition;
 } // namespace Game
 
 namespace App {
+namespace ViewModels {
+class SaveSlotsViewModel;
+}
 namespace Controllers {
 class CommandController;
 }
@@ -198,10 +203,8 @@ public:
       QString save_progress_stage READ save_progress_stage NOTIFY save_progress_changed)
   Q_PROPERTY(
       QString save_progress_slot READ save_progress_slot NOTIFY save_progress_changed)
-  Q_PROPERTY(int autosave_slot_count READ autosave_slot_count WRITE
-                 set_autosave_slot_count NOTIFY autosave_settings_changed)
-  Q_PROPERTY(int autosave_interval_minutes READ autosave_interval_minutes WRITE
-                 set_autosave_interval_minutes NOTIFY autosave_settings_changed)
+
+  Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -214,7 +217,7 @@ public:
   Q_INVOKABLE void
   on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive = false);
   Q_INVOKABLE void select_all_troops();
-  Q_INVOKABLE void select_unit_by_id(int unit_id);
+  Q_INVOKABLE void select_unit_by_id(qulonglong unit_id);
   Q_INVOKABLE void select_selected_units_by_type(const QString& unit_type);
   Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
@@ -379,23 +382,12 @@ public:
   Q_INVOKABLE void autosave();
   Q_INVOKABLE void cancel_active_save();
   Q_INVOKABLE void load_game_from_slot(const QString& slot_name);
-  Q_INVOKABLE [[nodiscard]] QVariantList get_save_slots() const;
-  Q_INVOKABLE void refresh_save_slots();
-  Q_INVOKABLE bool delete_save_slot(const QString& slot_name);
-  Q_INVOKABLE [[nodiscard]] bool has_save_slot(const QString& slot_name) const;
-  Q_INVOKABLE [[nodiscard]] bool verify_save_slot(const QString& slot_name);
-  Q_INVOKABLE [[nodiscard]] QString export_save_slot(const QString& slot_name);
-  Q_INVOKABLE [[nodiscard]] QVariantList list_exported_saves() const;
-  Q_INVOKABLE [[nodiscard]] QString import_save_file(const QString& file_path);
+  [[nodiscard]] QObject* save_slots_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
   [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
   [[nodiscard]] QString save_progress_stage() const { return m_save_progress_stage; }
   [[nodiscard]] QString save_progress_slot() const { return m_save_progress_slot; }
-  [[nodiscard]] int autosave_slot_count() const;
-  void set_autosave_slot_count(int count);
-  [[nodiscard]] int autosave_interval_minutes() const;
-  void set_autosave_interval_minutes(int minutes);
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
   [[nodiscard]] QString local_player_nation() const;
@@ -470,7 +462,6 @@ private:
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
     float minimap_unit_update_accumulator = 0.0F;
-    float simulation_accumulator = 0.0F;
   };
   using PendingMissionWave = App::Core::PendingMissionWave;
   using MissionWaveTracker = App::Core::MissionWaveTracker;
@@ -572,7 +563,11 @@ private:
   void seed_commander_rally_preview_from_view_center();
   void seed_barracks_rally_preview_from_selection();
 
-  std::unique_ptr<Engine::Core::World> m_world;
+  std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
+
+  std::unique_ptr<Game::Session::SessionContext> m_session;
+  std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
+  Engine::Core::World* m_world = nullptr;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_rts_camera;
   std::unique_ptr<Render::GL::Camera> m_commander_camera;

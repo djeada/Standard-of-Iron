@@ -15,7 +15,8 @@ public:
                   bool should_apply_damage = false,
                   int damage = 0,
                   Engine::Core::EntityID attacker_id = 0,
-                  Engine::Core::EntityID target_id = 0);
+                  Engine::Core::EntityID target_id = 0,
+                  QVector3D target_origin_at_launch = {});
 
   auto get_start() const -> QVector3D override { return m_start; }
   auto get_end() const -> QVector3D override { return m_end; }
@@ -34,7 +35,7 @@ public:
     return m_attacker_id;
   }
   auto get_target_locked_position() const -> QVector3D override {
-    return m_target_locked_position;
+    return m_target_origin_at_launch;
   }
 
   void update(float delta_time) override;
@@ -57,7 +58,7 @@ private:
   int m_damage{};
   Engine::Core::EntityID m_target_id{0};
   Engine::Core::EntityID m_attacker_id{0};
-  QVector3D m_target_locked_position;
+  QVector3D m_target_origin_at_launch;
 };
 
 } // namespace Game::Systems

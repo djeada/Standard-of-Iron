@@ -12,17 +12,18 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
-#include "../arrow_system.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
 #include "../formation_combat_geometry.h"
+#include "../healing_rules.h"
 #include "../order_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
 #include "../projectile_system.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
+#include "../rpg_combat_system/rpg_targeting.h"
 #include "../troop_profile_service.h"
 #include "combat_animation_timing.h"
 #include "combat_mode_processor.h"
@@ -30,6 +31,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "damage_processor.h"
+#include "structure_combat.h"
 
 namespace Game::Systems::Combat {
 
@@ -212,11 +214,14 @@ void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
       action->combat_action_id);
   if (action_id != Game::Systems::CombatActions::CombatActionId::RtsSwordStrike &&
       action_id != Game::Systems::CombatActions::CombatActionId::RtsSpearThrust &&
-      action_id != Game::Systems::CombatActions::CombatActionId::RtsBowShot) {
+      action_id != Game::Systems::CombatActions::CombatActionId::RtsBowShot &&
+      action_id != Game::Systems::CombatActions::CombatActionId::RtsElephantStomp) {
     return;
   }
   action->combat_action_id = 0U;
   action->active_target_id = 0U;
+  action->active_target_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->action_running = false;
   action->action_completed = false;
   action->action_active = false;
@@ -267,8 +272,8 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
     auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
     auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
     if (target_unit == nullptr || target_transform == nullptr ||
-        target_unit->owner_id != healer_unit->owner_id || target_unit->health <= 0 ||
-        target_unit->health >= target_unit->max_health ||
+        target_unit->owner_id != healer_unit->owner_id ||
+        !HealingRules::can_receive_healing(*target) ||
         !matches_heal_affinity(target, healer_component->target_affinity)) {
       continue;
     }
@@ -282,82 +287,6 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
   }
 
   return false;
-}
-
-auto projectile_color_for_kind(Game::Systems::ProjectileKind kind,
-                               const QVector3D& team_color) -> QVector3D {
-  switch (kind) {
-  case Game::Systems::ProjectileKind::Fireball:
-    return {1.0F, 0.45F, 0.10F};
-  case Game::Systems::ProjectileKind::CursedArrow:
-    return {0.58F, 0.20F, 0.82F};
-  case Game::Systems::ProjectileKind::Arrow:
-  case Game::Systems::ProjectileKind::Stone:
-  default:
-    return team_color;
-  }
-}
-
-auto projectile_speed_for_kind(Game::Systems::ProjectileKind kind) -> float {
-  switch (kind) {
-  case Game::Systems::ProjectileKind::Fireball:
-    return Constants::k_arrow_speed * 0.72F;
-  case Game::Systems::ProjectileKind::CursedArrow:
-    return Constants::k_arrow_speed * 0.92F;
-  case Game::Systems::ProjectileKind::Arrow:
-  case Game::Systems::ProjectileKind::Stone:
-  default:
-    return Constants::k_arrow_speed;
-  }
-}
-
-void launch_special_projectile(Engine::Core::Entity* attacker,
-                               Engine::Core::Entity* target,
-                               int damage,
-                               ProjectileSystem* projectile_system) {
-  if (attacker == nullptr || target == nullptr || projectile_system == nullptr) {
-    return;
-  }
-
-  auto* attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-  auto* special_attack =
-      attacker->get_component<Engine::Core::SpecialAttackComponent>();
-  if (attacker_transform == nullptr || target_transform == nullptr ||
-      attacker_unit == nullptr || special_attack == nullptr) {
-    return;
-  }
-
-  QVector3D const attacker_pos(attacker_transform->position.x,
-                               attacker_transform->position.y,
-                               attacker_transform->position.z);
-  QVector3D const target_pos(target_transform->position.x,
-                             target_transform->position.y,
-                             target_transform->position.z);
-  QVector3D const direction = (target_pos - attacker_pos).normalized();
-  QVector3D const start = attacker_pos + QVector3D(0.0F, 1.15F, 0.0F) +
-                          direction * Constants::k_arrow_start_offset;
-  QVector3D const end = target_pos + QVector3D(0.0F, 0.85F, 0.0F) +
-                        direction * Constants::k_arrow_target_offset;
-  QVector3D const team_color =
-      Game::Visuals::team_colorForOwner(attacker_unit->owner_id);
-
-  projectile_system->spawn_arrow(
-      start,
-      end,
-      projectile_color_for_kind(special_attack->projectile_kind, team_color),
-      projectile_speed_for_kind(special_attack->projectile_kind),
-      false,
-      special_attack->projectile_kind,
-      true,
-      damage,
-      attacker->get_id(),
-      target->get_id(),
-      special_attack->splash_radius,
-      special_attack->splash_damage_multiplier,
-      special_attack->friendly_fire);
 }
 
 void face_target(Engine::Core::TransformComponent* attacker_transform,
@@ -764,10 +693,11 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
   return multiplier;
 }
 
-void spawn_arrows(Engine::Core::Entity* attacker,
-                  Engine::Core::Entity* target,
-                  ArrowSystem* arrow_sys) {
-  if (arrow_sys == nullptr) {
+void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
+                            Engine::Core::Entity* target,
+                            ProjectileSystem* projectile_sys,
+                            int damage) {
+  if (projectile_sys == nullptr) {
     return;
   }
 
@@ -781,11 +711,52 @@ void spawn_arrows(Engine::Core::Entity* attacker,
 
   QVector3D const a_pos(att_t->position.x, att_t->position.y, att_t->position.z);
   QVector3D const t_pos(tgt_t->position.x, tgt_t->position.y, tgt_t->position.z);
-  QVector3D const dir = (t_pos - a_pos).normalized();
+  bool const target_is_structure = is_building(target);
   QVector3D const color = (att_u != nullptr)
                               ? Game::Visuals::team_colorForOwner(att_u->owner_id)
                               : QVector3D(0.8F, 0.9F, 1.0F);
 
+  if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
+    QVector3D source_pos = a_pos;
+    if (auto const damage_carrier = Game::Systems::RpgCombat::resolve_damage_carrier(
+            *attacker, target->get_id());
+        damage_carrier.has_value()) {
+      source_pos = damage_carrier->position;
+    }
+
+    QVector3D direction = t_pos - source_pos;
+    if (direction.lengthSquared() <= 1.0e-6F) {
+      direction = QVector3D(0.0F, 0.0F, 1.0F);
+    } else {
+      direction.normalize();
+    }
+    QVector3D const start = source_pos + QVector3D(0.0F, 1.18F, 0.0F) +
+                            direction * Constants::k_arrow_start_offset;
+    QVector3D const end = t_pos + QVector3D(0.0F, 1.25F, 0.0F) - direction * 0.42F;
+    projectile_sys->spawn_arrow(start,
+                                end,
+                                color,
+                                Constants::k_arrow_speed,
+                                false,
+                                ProjectileKind::Arrow,
+                                true,
+                                std::max(1, damage),
+                                attacker->get_id(),
+                                target->get_id(),
+                                0.0F,
+                                0.0F,
+                                false,
+                                ArrowVisualStyle::Focused,
+                                t_pos);
+    return;
+  }
+
+  auto const structure_profile = structure_attack_profile(attacker);
+  QVector3D const central_aim =
+      target_is_structure ? structure_impact_point(
+                                *target, a_pos, 0.0F, structure_profile.impact_height)
+                          : t_pos;
+  QVector3D const dir = (central_aim - a_pos).normalized();
   int arrow_count = 1;
   if (att_u != nullptr) {
     int const troop_size =
@@ -853,12 +824,32 @@ void spawn_arrows(Engine::Core::Entity* attacker,
     QVector3D const start = a_pos +
                             QVector3D(0.0F, Constants::k_arrow_start_height, 0.0F) +
                             dir * Constants::k_arrow_start_offset + start_offset;
-    QVector3D const end = t_pos + dir * Constants::k_arrow_target_offset +
-                          QVector3D(0.0F, Constants::k_arrow_target_offset, 0.0F) +
-                          end_offset;
+    QVector3D const end =
+        target_is_structure
+            ? structure_impact_point(*target,
+                                     a_pos,
+                                     target_lateral,
+                                     structure_profile.impact_height +
+                                         target_height * 0.35F)
+            : t_pos + dir * Constants::k_arrow_target_offset +
+                  QVector3D(0.0F, Constants::k_arrow_target_offset, 0.0F) + end_offset;
 
-    arrow_sys->spawn_arrow(
-        start, end, color, Constants::k_arrow_speed, ArrowVisualStyle::Volley);
+    bool const damage_carrier = i == arrow_count / 2;
+    projectile_sys->spawn_arrow(start,
+                                end,
+                                color,
+                                Constants::k_arrow_speed,
+                                false,
+                                ProjectileKind::Arrow,
+                                damage_carrier,
+                                damage_carrier ? std::max(1, damage) : 0,
+                                attacker->get_id(),
+                                target->get_id(),
+                                0.0F,
+                                0.0F,
+                                false,
+                                ArrowVisualStyle::Volley,
+                                t_pos);
   }
 }
 
@@ -992,12 +983,17 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   }
   auto const family = Engine::Core::resolve_combat_attack_family(
       unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
-  auto const id = family == Engine::Core::CombatAttackFamily::Spear
-                      ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
-                      : Game::Systems::CombatActions::CombatActionId::RtsSwordStrike;
+  auto const id =
+      attacker->has_component<Engine::Core::ElephantComponent>()
+          ? Game::Systems::CombatActions::CombatActionId::RtsElephantStomp
+          : (family == Engine::Core::CombatAttackFamily::Spear
+                 ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
+                 : Game::Systems::CombatActions::CombatActionId::RtsSwordStrike);
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
   action->combat_action_id = static_cast<std::uint8_t>(id);
   action->active_target_id = target->get_id();
+  action->active_target_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->requested_damage = damage;
   action->action_duration = std::max(0.001F, duration);
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
@@ -1017,6 +1013,8 @@ void begin_rts_bow_action(Engine::Core::Entity* attacker,
   action->combat_action_id = static_cast<std::uint8_t>(
       Game::Systems::CombatActions::CombatActionId::RtsBowShot);
   action->active_target_id = target->get_id();
+  action->active_target_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->requested_damage = damage;
   action->action_duration = std::max(0.001F, duration);
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
@@ -1034,10 +1032,11 @@ bool release_rts_arrow_volley(Engine::Core::World& world,
       !is_valid_enemy_unit(attacker_unit, target, true)) {
     return false;
   }
-  if (auto* arrow_system = world.get_system<ArrowSystem>()) {
-    spawn_arrows(&attacker, target, arrow_system);
+  auto* projectile_system = world.get_system<ProjectileSystem>();
+  if (projectile_system == nullptr) {
+    return false;
   }
-  deal_damage(&world, target, std::max(1, damage), attacker.get_id());
+  spawn_rts_arrow_volley(&attacker, target, projectile_system, std::max(1, damage));
   return true;
 }
 
@@ -1045,7 +1044,6 @@ void process_attacks(Engine::Core::World* world,
                      const CombatQueryContext& query_context,
                      float delta_time) {
   auto const& units = query_context.units;
-  auto* arrow_sys = world->get_system<ArrowSystem>();
   auto* projectile_sys = world->get_system<ProjectileSystem>();
   std::vector<CommandService::MoveIntent> chase_move_intents;
   chase_move_intents.reserve(units.size());
@@ -1232,8 +1230,24 @@ void process_attacks(Engine::Core::World* world,
           float const distance =
               distance_sq > 0.000001F ? std::sqrt(distance_sq) : 0.0F;
 
-          if (target_is_building ||
-              target->has_component<Engine::Core::ElephantComponent>()) {
+          if (target_is_building) {
+            if (ranged_unit) {
+              auto const surface = closest_structure_surface(*target, attacker_pos);
+              float const optimal_range = range * Constants::k_optimal_range_factor;
+              if (surface.distance >
+                  optimal_range + Constants::k_optimal_range_buffer) {
+                desired_pos = surface.point + surface.outward_normal * optimal_range;
+                desired_pos.setY(0.0F);
+              } else {
+                hold_position = true;
+              }
+            } else {
+              auto const approach = structure_melee_approach(*attacker, *target);
+              desired_pos = approach.destination;
+              desired_pos.setY(0.0F);
+              hold_position = approach.reached;
+            }
+          } else if (target->has_component<Engine::Core::ElephantComponent>()) {
             float const target_radius = combat_radius(target);
             if (distance > 0.0F) {
               float const desired_distance =
@@ -1299,6 +1313,11 @@ void process_attacks(Engine::Core::World* world,
           }
 
           if (movement != nullptr) {
+            if (target_is_building && !ranged_unit) {
+              movement->set_structure_approach_target(target->get_id());
+            } else {
+              movement->clear_structure_approach_target();
+            }
             if (hold_position) {
               movement->stop();
               movement->set_rest_position(attacker_transform->position.x,
@@ -1417,14 +1436,6 @@ void process_attacks(Engine::Core::World* world,
           (attacker_unit->spawn_type == Game::Units::SpawnType::Archer ||
            attacker_unit->spawn_type == Game::Units::SpawnType::HorseArcher);
 
-      if (should_show_arrow_vfx &&
-          ((attacker_atk == nullptr) ||
-           attacker_atk->current_mode !=
-               Engine::Core::AttackComponent::CombatMode::Melee) &&
-          !use_special_projectile && !use_rts_bow_action) {
-        spawn_arrows(attacker, best_target, arrow_sys);
-      }
-
       bool const is_melee_attack = (attacker_atk != nullptr) &&
                                    attacker_atk->current_mode ==
                                        Engine::Core::AttackComponent::CombatMode::Melee;
@@ -1436,9 +1447,11 @@ void process_attacks(Engine::Core::World* world,
           is_melee_attack && !fpv_commander && cooldown > 0.001F;
 
       if (use_special_projectile) {
-        launch_special_projectile(attacker, best_target, damage, projectile_sys);
+        begin_rts_bow_action(attacker, best_target, damage, cooldown);
       } else if (use_rts_bow_action) {
         begin_rts_bow_action(attacker, best_target, damage, cooldown);
+      } else if (should_show_arrow_vfx && ranged_unit && projectile_sys != nullptr) {
+        spawn_rts_arrow_volley(attacker, best_target, projectile_sys, damage);
       } else if (defer_melee_strike) {
         begin_rts_melee_action(attacker, best_target, damage, cooldown);
       } else {

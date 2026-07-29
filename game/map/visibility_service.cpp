@@ -14,6 +14,7 @@
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
+#include "../session/session_context.h"
 #include "../systems/owner_registry.h"
 
 namespace Game::Map {
@@ -25,7 +26,7 @@ constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};
 constexpr std::uint8_t k_current_visible_marker = 0x80U;
-constexpr std::uint32_t k_rally_flag_visibility_tag = 0x80000000U;
+constexpr std::uint64_t k_rally_flag_visibility_tag = 0x8000000000000000ULL;
 
 auto in_bounds_static(int grid_x, int grid_z, int width, int height) -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
@@ -40,15 +41,14 @@ auto world_to_grid_static(float world_coord, float half, float tile_size) -> int
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
-auto rally_flag_visibility_id(std::uint32_t commander_id) -> std::uint32_t {
+auto rally_flag_visibility_id(std::uint64_t commander_id) -> std::uint64_t {
   return commander_id ^ k_rally_flag_visibility_tag;
 }
 
 } // namespace
 
 auto VisibilityService::instance() -> VisibilityService& {
-  static VisibilityService s_instance;
-  return s_instance;
+  return Game::Session::SessionContext::active().visibility();
 }
 
 VisibilityService::~VisibilityService() {
@@ -151,7 +151,7 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
 
-  std::unordered_map<std::uint32_t, CachedPosition> current_positions;
+  std::unordered_map<std::uint64_t, CachedPosition> current_positions;
   bool any_moved = m_force_full_update;
 
   for (auto* entity : entities) {
@@ -181,7 +181,7 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
       continue;
     }
 
-    std::uint32_t const entity_id = entity->get_id();
+    const std::uint64_t entity_id = entity->get_id();
     current_positions[entity_id] = {center_x, center_z};
 
     if (!any_moved) {
@@ -213,7 +213,7 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
       continue;
     }
 
-    std::uint32_t const rally_id = rally_flag_visibility_id(entity_id);
+    const std::uint64_t rally_id = rally_flag_visibility_id(entity_id);
     current_positions[rally_id] = {rally_center_x, rally_center_z};
     if (!any_moved) {
       auto it = m_last_positions.find(rally_id);

@@ -37,7 +37,7 @@ void PersistentRenderRegistry::attach(Engine::Core::World* world) {
   m_world = world;
 
   m_component_observer_handle = world->add_component_observer(
-      [this](std::uint32_t entity_id, std::type_index type, bool added) {
+      [this](Engine::Core::EntityID entity_id, std::type_index type, bool added) {
         if (m_world == nullptr) {
           return;
         }
@@ -45,7 +45,7 @@ void PersistentRenderRegistry::attach(Engine::Core::World* world) {
       });
 
   m_entity_destroyed_observer_handle =
-      world->add_entity_destroyed_observer([this](std::uint32_t entity_id) {
+      world->add_entity_destroyed_observer([this](Engine::Core::EntityID entity_id) {
         if (m_world == nullptr) {
           return;
         }
@@ -59,12 +59,13 @@ void PersistentRenderRegistry::attach(Engine::Core::World* world) {
     on_world_cleared();
   });
 
-  for (const auto& [id, entity] : world->get_entities()) {
-    if (entity->has_component<Engine::Core::RenderableComponent>()) {
+  world->for_each_entity([this](Engine::Core::Entity& entity) {
+    if (entity.has_component<Engine::Core::RenderableComponent>()) {
+      const auto id = entity.get_id();
       m_renderable_ids.insert(id);
       reclassify(id);
     }
-  }
+  });
 }
 
 void PersistentRenderRegistry::detach() {
@@ -90,7 +91,7 @@ void PersistentRenderRegistry::detach() {
   m_other_ids.clear();
 }
 
-void PersistentRenderRegistry::on_component_changed(std::uint32_t entity_id,
+void PersistentRenderRegistry::on_component_changed(Engine::Core::EntityID entity_id,
                                                     std::type_index type,
                                                     bool added) {
 
@@ -115,7 +116,7 @@ void PersistentRenderRegistry::on_component_changed(std::uint32_t entity_id,
   }
 }
 
-void PersistentRenderRegistry::on_entity_destroyed(std::uint32_t entity_id) {
+void PersistentRenderRegistry::on_entity_destroyed(Engine::Core::EntityID entity_id) {
   m_renderable_ids.erase(entity_id);
   remove_from_lists(entity_id);
 }
@@ -127,7 +128,7 @@ void PersistentRenderRegistry::on_world_cleared() {
   m_other_ids.clear();
 }
 
-void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
+void PersistentRenderRegistry::reclassify(Engine::Core::EntityID entity_id) {
   if (m_world == nullptr) {
     return;
   }
@@ -147,7 +148,7 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
   const bool has_unit = entity->has_component<Engine::Core::UnitComponent>();
   const bool has_building = entity->has_component<Engine::Core::BuildingComponent>();
 
-  std::vector<std::uint32_t>* target_list{nullptr};
+  std::vector<Engine::Core::EntityID>* target_list{nullptr};
   if (has_unit) {
     target_list = &m_unit_ids;
   } else if (has_building) {
@@ -172,14 +173,14 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
   }
 }
 
-void PersistentRenderRegistry::remove_from_lists(std::uint32_t entity_id) {
+void PersistentRenderRegistry::remove_from_lists(Engine::Core::EntityID entity_id) {
   remove_id(m_unit_ids, entity_id);
   remove_id(m_building_ids, entity_id);
   remove_id(m_other_ids, entity_id);
 }
 
-void PersistentRenderRegistry::remove_id(std::vector<std::uint32_t>& vec,
-                                         std::uint32_t id) {
+void PersistentRenderRegistry::remove_id(std::vector<Engine::Core::EntityID>& vec,
+                                         Engine::Core::EntityID id) {
 
   const auto it = std::find(vec.begin(), vec.end(), id);
   if (it != vec.end()) {

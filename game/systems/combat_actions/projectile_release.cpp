@@ -10,6 +10,7 @@
 #include "../../visuals/team_colors.h"
 #include "../combat_system/combat_types.h"
 #include "../combat_system/combat_utils.h"
+#include "../combat_system/structure_combat.h"
 #include "../projectile_system.h"
 
 namespace Game::Systems::CombatActions {
@@ -66,8 +67,8 @@ resolve_target(Engine::Core::World* world,
 auto release_projectile_for_action(Engine::Core::World* world,
                                    Engine::Core::Entity& attacker,
                                    const CombatActionDefinition& definition,
-                                   Engine::Core::EntityID target_hint_id)
-    -> ProjectileReleaseResult {
+                                   Engine::Core::EntityID target_hint_id,
+                                   int explicit_damage) -> ProjectileReleaseResult {
   ProjectileReleaseResult result;
   if (world == nullptr || !definition.requires_projectile_release) {
     return result;
@@ -95,7 +96,16 @@ auto release_projectile_for_action(Engine::Core::World* world,
   QVector3D const target_pos(target_transform->position.x,
                              target_transform->position.y,
                              target_transform->position.z);
-  QVector3D direction = target_pos - attacker_pos;
+  bool const target_is_structure =
+      target->has_component<Engine::Core::BuildingComponent>();
+  auto const structure_profile =
+      Game::Systems::Combat::structure_attack_profile(&attacker);
+  QVector3D const aim_point =
+      target_is_structure
+          ? Game::Systems::Combat::structure_impact_point(
+                *target, attacker_pos, 0.0F, structure_profile.impact_height)
+          : target_pos;
+  QVector3D direction = aim_point - attacker_pos;
   if (direction.lengthSquared() <= 0.000001F) {
     direction = QVector3D(0.0F, 0.0F, 1.0F);
   } else {
@@ -115,18 +125,23 @@ auto release_projectile_for_action(Engine::Core::World* world,
     friendly_fire = special_attack->friendly_fire;
   }
 
-  int const damage = std::max(
-      1,
-      static_cast<int>(std::round(static_cast<float>(attack->get_current_damage()) *
-                                  definition.damage.base_multiplier)));
+  int const damage =
+      explicit_damage > 0
+          ? explicit_damage
+          : std::max(1,
+                     static_cast<int>(
+                         std::round(static_cast<float>(attack->get_current_damage()) *
+                                    definition.damage.base_multiplier)));
   QVector3D const team_color =
       Game::Visuals::team_colorForOwner(attacker_unit->owner_id);
   QVector3D const start =
       attacker_pos + QVector3D(0.0F, 1.15F, 0.0F) +
       direction * Game::Systems::Combat::Constants::k_arrow_start_offset;
   QVector3D const end =
-      target_pos + QVector3D(0.0F, 0.85F, 0.0F) +
-      direction * Game::Systems::Combat::Constants::k_arrow_target_offset;
+      target_is_structure
+          ? aim_point
+          : target_pos + QVector3D(0.0F, 0.85F, 0.0F) +
+                direction * Game::Systems::Combat::Constants::k_arrow_target_offset;
 
   projectile_system->spawn_arrow(start,
                                  end,
@@ -140,7 +155,9 @@ auto release_projectile_for_action(Engine::Core::World* world,
                                  target->get_id(),
                                  splash_radius,
                                  splash_damage_multiplier,
-                                 friendly_fire);
+                                 friendly_fire,
+                                 Game::Systems::ArrowVisualStyle::Focused,
+                                 target_pos);
 
   result.released = true;
   result.target_id = target->get_id();

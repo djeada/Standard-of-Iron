@@ -9,6 +9,7 @@
 #include <optional>
 
 #include "../../game/audio/audio_constants.h"
+#include "../../game/audio/audio_settings.h"
 #include "../../render/graphics_settings.h"
 
 namespace App::Core::UserSettings {
@@ -40,13 +41,7 @@ inline constexpr double kDefaultUiScale = 1.0;
 inline constexpr double kMinUiScale = 0.75;
 inline constexpr double kMaxUiScale = 2.0;
 
-struct AudioVolumes {
-  float master{AudioConstants::DEFAULT_VOLUME};
-  float sound{AudioConstants::DEFAULT_VOLUME};
-  float music{AudioConstants::DEFAULT_VOLUME};
-  float voice{AudioConstants::DEFAULT_VOLUME};
-  float ambience{AudioConstants::DEFAULT_VOLUME};
-};
+using AudioVolumes = Game::Audio::Settings::Volumes;
 
 inline auto open() -> QSettings {
   return QSettings(QSettings::IniFormat,
@@ -122,76 +117,28 @@ inline void save_language(const QString& language) {
   settings.sync();
 }
 
-inline auto load_audio_volume(const char* key, const char* label) -> float {
-  auto settings = open();
-  const QVariant value = settings.value(QString::fromLatin1(key));
-  if (!value.isValid()) {
-    return AudioConstants::DEFAULT_VOLUME;
-  }
-
-  bool ok = false;
-  const float stored = value.toFloat(&ok);
-  if (!ok || !std::isfinite(stored)) {
-    qWarning() << "Ignoring invalid saved audio volume for" << label << ":" << value;
-    return AudioConstants::DEFAULT_VOLUME;
-  }
-
-  const float clamped =
-      std::clamp(stored, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
-  if (clamped != stored) {
-    qWarning() << "Clamping saved audio volume for" << label << "from" << stored << "to"
-               << clamped;
-  }
-  return clamped;
-}
-
 inline auto load_audio_volumes() -> AudioVolumes {
-  return {
-      .master = load_audio_volume(kMasterVolumeKey, "master"),
-      .sound = load_audio_volume(kSoundVolumeKey, "sound"),
-      .music = load_audio_volume(kMusicVolumeKey, "music"),
-      .voice = load_audio_volume(kVoiceVolumeKey, "voice"),
-      .ambience = load_audio_volume(kAmbienceVolumeKey, "ambience"),
-  };
-}
-
-inline void save_audio_volume(const char* key, float volume, const char* label) {
-  if (!std::isfinite(volume)) {
-    qWarning() << "Refusing to save non-finite audio volume for" << label << ":"
-               << volume;
-    return;
-  }
-
-  const float clamped =
-      std::clamp(volume, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
-  if (clamped != volume) {
-    qWarning() << "Clamping saved audio volume for" << label << "from" << volume << "to"
-               << clamped;
-  }
-
-  auto settings = open();
-  settings.setValue(QString::fromLatin1(key), clamped);
-  settings.sync();
+  return Game::Audio::Settings::load_volumes();
 }
 
 inline void save_master_volume(float volume) {
-  save_audio_volume(kMasterVolumeKey, volume, "master");
+  Game::Audio::Settings::save_master_volume(volume);
 }
 
 inline void save_sound_volume(float volume) {
-  save_audio_volume(kSoundVolumeKey, volume, "sound");
+  Game::Audio::Settings::save_sound_volume(volume);
 }
 
 inline void save_music_volume(float volume) {
-  save_audio_volume(kMusicVolumeKey, volume, "music");
+  Game::Audio::Settings::save_music_volume(volume);
 }
 
 inline void save_voice_volume(float volume) {
-  save_audio_volume(kVoiceVolumeKey, volume, "voice");
+  Game::Audio::Settings::save_voice_volume(volume);
 }
 
 inline void save_ambience_volume(float volume) {
-  save_audio_volume(kAmbienceVolumeKey, volume, "ambience");
+  Game::Audio::Settings::save_ambience_volume(volume);
 }
 
 inline auto load_autosave_slot_count() -> int {

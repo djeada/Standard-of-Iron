@@ -203,6 +203,14 @@ void MovementSystem::assign_navigation_target(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     const QVector3D& requested_target) {
+  QVector3D const approach_delta =
+      requested_target -
+      QVector3D(transform.position.x, requested_target.y(), transform.position.z);
+  if (movement.structure_approach_target_id != 0 &&
+      approach_delta.lengthSquared() <= 9.0F) {
+    assign_direct_target(movement, requested_target);
+    return;
+  }
   if (pathfinder == nullptr) {
     assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
     return;

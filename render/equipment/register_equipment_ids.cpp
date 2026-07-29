@@ -87,6 +87,10 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_placeholder_equipment(EquipmentCategory::Armor, "carthage_robes");
   registry.register_placeholder_equipment(EquipmentCategory::Armor,
                                           "carthage_civilian_sash");
+  registry.register_placeholder_equipment(EquipmentCategory::Armor,
+                                          "civilian_pack_roman");
+  registry.register_placeholder_equipment(EquipmentCategory::Armor,
+                                          "civilian_pack_carthage");
 
   registry.register_equipment_id(EquipmentCategory::HorseTack, "roman_horse_saddle");
   registry.register_equipment_id(EquipmentCategory::HorseTack, "carthage_horse_saddle");

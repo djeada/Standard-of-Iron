@@ -22,7 +22,11 @@
 #include "../../../creature/archetype_registry.h"
 #include "../../../creature/pipeline/creature_asset.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
+#include "../../../equipment/armor/torso_local_archetype_utils.h"
+#include "../../../equipment/attachment_builder.h"
 #include "../../../equipment/equipment_submit.h"
+#include "../../../equipment/generated_equipment.h"
+#include "../../../equipment/humanoid_attachment_archetype.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -95,6 +99,431 @@ void apply_grave_priest_cast_pose_layer(
   io_pose.head_pos += up * (0.015F * intensity) + forward * (0.025F * intensity);
 }
 
+constexpr std::uint32_t k_dark_mage_role_count = 6;
+
+constexpr auto k_dark_mage_base_role =
+    static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
+
+enum DarkMagePaletteSlot : std::uint8_t {
+  k_mage_robe_slot = 0U,
+  k_mage_robe_lit_slot = 1U,
+  k_mage_glyph_slot = 2U,
+  k_mage_metal_slot = 3U,
+  k_mage_bone_slot = 4U,
+  k_mage_shadow_slot = 5U,
+};
+
+auto dark_mage_fill_role_colors(const HumanoidPalette& palette,
+                                QVector3D* out,
+                                std::size_t max) -> std::uint32_t {
+  if (max < k_dark_mage_role_count) {
+    return 0U;
+  }
+  QVector3D const robe = Render::GL::Humanoid::saturate_color(
+      palette.cloth * 0.13F + QVector3D(0.044F, 0.038F, 0.076F));
+  out[k_mage_robe_slot] = robe;
+  out[k_mage_robe_lit_slot] = Render::GL::Humanoid::saturate_color(
+      robe * 2.30F + QVector3D(0.035F, 0.028F, 0.070F));
+
+  out[k_mage_glyph_slot] = Render::GL::Humanoid::saturate_color(
+      QVector3D(0.30F, 0.86F, 0.62F) * 0.76F + palette.cloth * 0.24F);
+  out[k_mage_metal_slot] = Render::GL::Humanoid::saturate_color(
+      palette.metal * 0.55F + QVector3D(0.10F, 0.07F, 0.02F));
+  out[k_mage_bone_slot] = QVector3D(0.78F, 0.75F, 0.66F);
+  out[k_mage_shadow_slot] = QVector3D(0.022F, 0.020F, 0.034F);
+  return k_dark_mage_role_count;
+}
+
+auto dark_mage_extra_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  if (variant_void == nullptr || max_count <= base_count) {
+    return base_count;
+  }
+  const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
+  return base_count + dark_mage_fill_role_colors(
+                          variant.palette, out + base_count, max_count - base_count);
+}
+
+auto dark_mage_robe_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame& torso = bind_frames.torso;
+    const AttachmentFrame& waist = bind_frames.waist;
+    const TorsoLocalFrame torso_local = make_torso_local_frame(QMatrix4x4{}, torso);
+
+    float const tr = torso.radius;
+    constexpr float pi = std::numbers::pi_v<float>;
+
+    float const y_top = 0.010F;
+    float const y_waist = torso_local.point(waist.origin).y();
+    float const y_hem = y_waist - 0.66F;
+
+    float const chest_w = tr * 0.98F;
+    float const chest_d = tr * 0.70F;
+    float const waist_w = tr * 1.06F;
+    float const waist_d = tr * 0.77F;
+    float const skirt_mid_w = tr * 1.36F;
+    float const skirt_mid_d = tr * 1.02F;
+    float const hem_w = tr * 1.74F;
+    float const hem_d = tr * 1.32F;
+
+    RenderArchetypeBuilder builder{"carthage_dark_mage_robe"};
+
+    auto add_shell = [&](float y_bottom,
+                         float y_top_edge,
+                         float bottom_w,
+                         float bottom_d,
+                         float top_w,
+                         std::uint8_t slot) {
+      QMatrix4x4 model;
+      model.translate(0.0F, (y_bottom + y_top_edge) * 0.5F, 0.0F);
+      model.scale(bottom_w, y_top_edge - y_bottom, bottom_d);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(1.0F, top_w / bottom_w, 18), model, slot);
+    };
+
+    auto add_band = [&](float y_center,
+                        float thickness,
+                        float half_w,
+                        float half_d,
+                        std::uint8_t slot) {
+      QMatrix4x4 model;
+      model.translate(0.0F, y_center, 0.0F);
+      model.scale(half_w, thickness, half_d);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 18), model, slot);
+    };
+
+    add_shell(y_waist, y_top, waist_w, waist_d, chest_w, k_mage_robe_slot);
+    add_shell(y_waist - 0.30F,
+              y_waist + 0.01F,
+              skirt_mid_w,
+              skirt_mid_d,
+              waist_w,
+              k_mage_robe_slot);
+    add_shell(y_hem, y_waist - 0.29F, hem_w, hem_d, skirt_mid_w, k_mage_robe_slot);
+
+    constexpr int k_folds = 14;
+    for (int i = 0; i < k_folds; ++i) {
+      float const a = (static_cast<float>(i) / k_folds) * 2.0F * pi;
+      float const sa = std::sin(a);
+      float const ca = std::cos(a);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(
+              QVector3D(sa * hem_w * 0.99F, y_hem + 0.03F, ca * hem_d * 0.99F),
+              QVector3D(
+                  sa * skirt_mid_w * 0.99F, y_waist - 0.29F, ca * skirt_mid_d * 0.99F),
+              0.012F),
+          (i % 2 == 0) ? k_mage_robe_lit_slot : k_mage_robe_slot);
+    }
+
+    add_band(
+        y_hem + 0.020F, 0.038F, hem_w * 1.015F, hem_d * 1.015F, k_mage_shadow_slot);
+    add_band(y_hem + 0.048F, 0.010F, hem_w * 1.008F, hem_d * 1.008F, k_mage_glyph_slot);
+
+    {
+      float const mantle_top = y_top + 0.062F;
+      float const mantle_bottom = y_top - 0.21F;
+      QMatrix4x4 model;
+      model.translate(0.0F, (mantle_bottom + mantle_top) * 0.5F, 0.0F);
+      model.scale(tr * 1.40F, mantle_top - mantle_bottom, tr * 1.00F);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(1.0F, 0.74F, 18), model, k_mage_robe_slot);
+      add_band(
+          mantle_bottom + 0.013F, 0.022F, tr * 1.385F, tr * 0.99F, k_mage_metal_slot);
+      constexpr int k_collar = 10;
+      for (int i = 0; i < k_collar; ++i) {
+        float const a = (static_cast<float>(i) / k_collar) * 2.0F * pi;
+        builder.add_palette_mesh(get_unit_sphere(),
+                                 local_scale_model(QVector3D(std::sin(a) * tr * 0.94F,
+                                                             mantle_top - 0.008F,
+                                                             std::cos(a) * tr * 0.70F),
+                                                   QVector3D(0.028F, 0.026F, 0.028F)),
+                                 k_mage_robe_slot);
+      }
+    }
+
+    QVector3D const shoulder_l = torso_local.point(bind_frames.shoulder_l.origin);
+    float const shoulder_x =
+        std::abs(shoulder_l.x()) > 0.01F ? std::abs(shoulder_l.x()) : chest_w;
+
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side) * shoulder_x;
+      for (int step = 0; step < 5; ++step) {
+        float const t = static_cast<float>(step) / 4.0F;
+        builder.add_palette_mesh(
+            get_unit_sphere(),
+            local_scale_model(
+                QVector3D(sx * (1.00F + 0.07F * t), y_top - 0.10F - t * 0.18F, -0.006F),
+                QVector3D(0.038F + 0.013F * t, 0.046F, 0.034F + 0.011F * t)),
+            (step == 4) ? k_mage_robe_lit_slot : k_mage_robe_slot);
+      }
+    }
+
+    {
+      QVector3D const base(0.0F, y_top - 0.300F, chest_d * 1.24F);
+      float const arm = tr * 0.30F;
+      builder.add_palette_mesh(
+          get_unit_cone(),
+          Render::Geom::cone_from_to(base, base + QVector3D(0.0F, 0.098F, 0.0F), arm),
+          k_mage_glyph_slot);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(base + QVector3D(-arm * 1.22F, 0.110F, 0.003F),
+                           base + QVector3D(arm * 1.22F, 0.110F, 0.003F),
+                           0.010F),
+          k_mage_glyph_slot);
+      builder.add_palette_mesh(get_unit_sphere(),
+                               local_scale_model(base + QVector3D(0.0F, 0.150F, 0.003F),
+                                                 QVector3D(0.028F, 0.028F, 0.013F)),
+                               k_mage_glyph_slot);
+      for (int side = -1; side <= 1; side += 2) {
+        float const sx = static_cast<float>(side);
+        builder.add_palette_mesh(
+            get_unit_cylinder(),
+            cylinder_between(base + QVector3D(sx * arm * 1.16F, 0.110F, 0.003F),
+                             base + QVector3D(sx * arm * 1.38F, 0.150F, 0.003F),
+                             0.008F),
+            k_mage_glyph_slot);
+      }
+    }
+
+    add_band(
+        y_waist + 0.015F, 0.030F, waist_w * 1.04F, waist_d * 1.04F, k_mage_shadow_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(QVector3D(0.0F, y_waist + 0.015F, waist_d * 1.03F),
+                          QVector3D(0.030F, 0.024F, 0.018F)),
+        k_mage_metal_slot);
+    for (int i = -1; i <= 1; i += 2) {
+      float const bx = static_cast<float>(i) * waist_w * 0.62F;
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(QVector3D(bx, y_waist - 0.005F, waist_d * 0.86F),
+                           QVector3D(bx, y_waist - 0.090F, waist_d * 0.90F),
+                           0.006F),
+          k_mage_shadow_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(bx, y_waist - 0.108F, waist_d * 0.90F),
+                            QVector3D(0.020F, 0.028F, 0.016F)),
+          k_mage_bone_slot);
+    }
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto dark_mage_hood_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    constexpr float pi = std::numbers::pi_v<float>;
+    constexpr float k_head_r = 0.168F;
+
+    RenderArchetypeBuilder builder{"carthage_dark_mage_hood"};
+
+    constexpr int k_lobes = 14;
+    for (int i = 0; i < k_lobes; ++i) {
+      float const t = static_cast<float>(i) / (k_lobes - 1);
+      float const a = (0.26F + t * 1.48F) * pi;
+      float const sa = std::sin(a);
+      float const ca = std::cos(a);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(
+              QVector3D(sa * k_head_r * 1.10F, 0.006F, ca * k_head_r * 1.10F),
+              QVector3D(0.042F, 0.086F, 0.042F)),
+          k_mage_robe_slot);
+    }
+
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(
+            QVector3D(0.0F, 0.058F, -0.010F),
+            QVector3D(k_head_r * 1.10F, k_head_r * 0.80F, k_head_r * 1.12F)),
+        k_mage_robe_slot);
+
+    builder.add_palette_mesh(
+        get_unit_cone(),
+        Render::Geom::cone_from_to(QVector3D(0.0F, 0.086F, -0.006F),
+                                   QVector3D(0.0F, 0.232F, -0.030F),
+                                   k_head_r * 0.74F),
+        k_mage_robe_slot);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             local_scale_model(QVector3D(0.0F, 0.236F, -0.030F),
+                                               QVector3D(0.026F, 0.026F, 0.026F)),
+                             k_mage_metal_slot);
+
+    constexpr int k_diadem = 12;
+    for (int i = 0; i < k_diadem; ++i) {
+      float const a = (static_cast<float>(i) / k_diadem) * 2.0F * pi;
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(std::sin(a) * k_head_r * 1.09F,
+                                      0.086F,
+                                      std::cos(a) * k_head_r * 1.11F),
+                            QVector3D(0.021F, 0.016F, 0.021F)),
+          k_mage_metal_slot);
+    }
+
+    for (int step = 0; step < 5; ++step) {
+      float const t = static_cast<float>(step) / 4.0F;
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(
+              QVector3D(0.0F, 0.020F - t * 0.072F, -(k_head_r * 1.06F + t * 0.014F)),
+              QVector3D(0.074F - 0.008F * t, 0.048F, 0.032F)),
+          (step % 2 == 0) ? k_mage_robe_slot : k_mage_robe_lit_slot);
+    }
+
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side);
+      for (int step = 0; step < 4; ++step) {
+        float const t = static_cast<float>(step) / 3.0F;
+        builder.add_palette_mesh(
+            get_unit_sphere(),
+            local_scale_model(QVector3D(sx * k_head_r * (1.02F + 0.06F * t),
+                                        -0.010F - t * 0.070F,
+                                        -k_head_r * (0.30F + 0.16F * t)),
+                              QVector3D(0.034F, 0.046F, 0.030F)),
+            k_mage_robe_slot);
+      }
+    }
+
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(QVector3D(0.0F, -0.030F, k_head_r * 0.44F),
+                          QVector3D(0.100F, 0.086F, 0.062F)),
+        k_mage_shadow_slot);
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto dark_mage_stave_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    constexpr float pi = std::numbers::pi_v<float>;
+    RenderArchetypeBuilder builder{"carthage_dark_mage_stave"};
+
+    QVector3D const foot(0.012F, -0.66F, 0.010F);
+    QVector3D const grip(0.0F, -0.04F, 0.0F);
+    QVector3D const neck(-0.012F, 0.42F, -0.008F);
+    QVector3D const crown(0.004F, 0.70F, 0.002F);
+
+    builder.add_palette_mesh(
+        get_unit_cylinder(), cylinder_between(foot, grip, 0.016F), k_mage_bone_slot);
+    builder.add_palette_mesh(
+        get_unit_cylinder(), cylinder_between(grip, neck, 0.018F), k_mage_bone_slot);
+    builder.add_palette_mesh(
+        get_unit_cylinder(), cylinder_between(neck, crown, 0.015F), k_mage_bone_slot);
+
+    for (float y : {-0.34F, -0.02F, 0.34F}) {
+      builder.add_palette_mesh(get_unit_sphere(),
+                               local_scale_model(QVector3D(0.0F, y, 0.0F),
+                                                 QVector3D(0.026F, 0.013F, 0.026F)),
+                               k_mage_metal_slot);
+    }
+
+    constexpr int k_crescent = 9;
+    for (int i = 0; i < k_crescent; ++i) {
+      float const t = static_cast<float>(i) / (k_crescent - 1);
+      float const a = (-0.42F + t * 0.84F) * pi;
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(crown + QVector3D(std::sin(a) * 0.070F,
+                                              0.058F + std::cos(a) * 0.070F,
+                                              0.0F),
+                            QVector3D(0.017F, 0.017F, 0.014F)),
+          k_mage_metal_slot);
+    }
+    builder.add_palette_mesh(get_unit_sphere(),
+                             local_scale_model(crown + QVector3D(0.0F, 0.058F, 0.0F),
+                                               QVector3D(0.030F, 0.030F, 0.022F)),
+                             k_mage_glyph_slot);
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto dark_mage_stave_make_static_attachment()
+    -> Render::Creature::StaticAttachmentSpec {
+  constexpr auto k_socket = Render::Humanoid::HumanoidSocket::GripR;
+  constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandR;
+  QMatrix4x4 const bind_bone =
+      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
+  QMatrix4x4 const bind_socket = Render::Humanoid::bind_socket_transform(k_socket);
+  auto spec = Render::Equipment::build_socket_static_attachment({
+      .archetype = &dark_mage_stave_archetype(),
+      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
+      .bind_bone_transform = bind_bone,
+      .bind_socket_transform = bind_socket,
+      .mesh_from_socket = QMatrix4x4{},
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_dark_mage_role_count); ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(k_dark_mage_base_role + i);
+  }
+  return spec;
+}
+
+auto dark_mage_make_static_attachment(const RenderArchetype& archetype,
+                                      std::uint16_t bone_index,
+                                      const QMatrix4x4& bind_pose)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &archetype,
+      .socket_bone_index = bone_index,
+      .unit_local_pose_at_bind = bind_pose,
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_dark_mage_role_count); ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(k_dark_mage_base_role + i);
+  }
+  return spec;
+}
+
+auto carthage_dark_mage_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = []() {
+    auto& registry = Render::Creature::ArchetypeRegistry::instance();
+    const auto* base_desc =
+        registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+    if (base_desc == nullptr) {
+      return Render::Creature::k_invalid_archetype;
+    }
+
+    const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+    const TorsoLocalFrame torso_local =
+        make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
+    QMatrix4x4 const head_bind =
+        make_humanoid_attachment_transform_scaled(QMatrix4x4{},
+                                                  bind_frames.head,
+                                                  QVector3D(0.0F, 0.0F, 0.0F),
+                                                  QVector3D(1.0F, 1.0F, 1.0F));
+
+    Render::Creature::ArchetypeDescriptor desc = *base_desc;
+    desc.debug_name = "troops/carthage/healer";
+    desc.bake_attachments[desc.bake_attachment_count++] =
+        dark_mage_make_static_attachment(
+            dark_mage_robe_archetype(),
+            static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
+            torso_local.world);
+    desc.bake_attachments[desc.bake_attachment_count++] =
+        dark_mage_make_static_attachment(
+            dark_mage_hood_archetype(),
+            static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head),
+            head_bind);
+    desc.bake_attachments[desc.bake_attachment_count++] =
+        dark_mage_stave_make_static_attachment();
+    desc.role_count =
+        static_cast<std::uint8_t>(k_dark_mage_base_role + k_dark_mage_role_count);
+    desc.append_extra_role_colors_fn(&dark_mage_extra_role_colors);
+    return registry.register_archetype(desc);
+  }();
+  return archetype;
+}
+
 auto make_healer_spec(std::string_view renderer_key,
                       Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
                       const Render::GL::Humanoid::ProportionProfile& profile)
@@ -125,10 +554,18 @@ const Render::Creature::Pipeline::UnitVisualSpec& carthage_healer_visual_spec(
     Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
     const Render::GL::HealerStyleConfig&,
     const Render::GL::Humanoid::ProportionProfile& profile) {
-  static const auto healer_spec =
-      make_healer_spec("troops/carthage/healer",
-                       Render::Creature::Pipeline::k_invalid_creature_asset,
-                       profile);
+  using namespace Render::Creature::Pipeline;
+
+  static const auto healer_spec = [&]() {
+    UnitVisualSpec out{};
+    out.kind = CreatureKind::Humanoid;
+    out.debug_name = "troops/carthage/healer";
+    out.scaling = profile.as_pipeline_scaling();
+    out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    out.archetype_id = carthage_dark_mage_archetype();
+    out.creature_asset_id = Render::Creature::Pipeline::k_stave_caster_humanoid_asset;
+    return out;
+  }();
   static const auto grave_priest_spec =
       make_healer_spec("troops/iron_sepulcher/grave_priest",
                        Render::Creature::Pipeline::k_skeleton_humanoid_asset,
@@ -205,7 +642,9 @@ const HealerRendererProfile k_healer_profile{
 };
 
 const std::array<HealerRendererRegistration, 1> k_healer_renderers{{
-    {"troops/carthage/healer", "carthage"},
+    {"troops/carthage/healer",
+     "carthage",
+     Render::Creature::Pipeline::k_stave_caster_humanoid_asset},
 }};
 
 const std::array<HealerRendererRegistration, 1> k_grave_priest_renderers{{
