@@ -11,6 +11,9 @@ Item {
     signal load_requested(string slot_name)
 
     property string status_message: ""
+    property string verify_result_title: ""
+    property string verify_result_message: ""
+    property bool verify_result_success: false
 
     function format_play_time(seconds) {
         if (!seconds || seconds <= 0)
@@ -218,7 +221,7 @@ Item {
 
                         delegate: Rectangle {
                             width: loadListView.width
-                            height: model.isEmpty ? 100 : 130
+                            height: model.isEmpty ? 100 : 120
                             color: loadListView.selected_index === index ? Theme.selectedBg : mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
                             border.color: loadListView.selected_index === index ? Theme.selectedBr : Theme.cardBorder
@@ -321,47 +324,55 @@ Item {
                                     visible: model.isEmpty
                                 }
 
-                                StyledButton {
-                                    text: qsTr("Load")
-                                    button_style: "small"
+                                ColumnLayout {
+                                    spacing: Theme.spacingTiny
                                     visible: !model.isEmpty
-                                    onClicked: {
-                                        root.load_requested(model.slot_name);
-                                    }
-                                }
 
-                                StyledButton {
-                                    text: qsTr("Export")
-                                    button_style: "small"
-                                    visible: !model.isEmpty
-                                    onClicked: {
-                                        if (typeof game === 'undefined' || !game.saves.export_save_slot)
-                                            return;
-                                        var path = game.saves.export_save_slot(model.slot_name);
-                                        root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
+                                    StyledButton {
+                                        text: qsTr("Load")
+                                        button_style: "small"
+                                        Layout.fillWidth: true
+                                        onClicked: {
+                                            root.load_requested(model.slot_name);
+                                        }
                                     }
-                                }
 
-                                StyledButton {
-                                    text: qsTr("Verify")
-                                    button_style: "small"
-                                    visible: !model.isEmpty
-                                    onClicked: {
-                                        if (typeof game === 'undefined' || !game.saves.verify_save_slot)
-                                            return;
-                                        root.status_message = game.saves.verify_save_slot(model.slot_name) ? qsTr("\"%1\" is intact").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded").arg(model.slot_name);
+                                    StyledButton {
+                                        text: qsTr("Export")
+                                        button_style: "small"
+                                        Layout.fillWidth: true
+                                        onClicked: {
+                                            if (typeof game === 'undefined' || !game.saves.export_save_slot)
+                                                return;
+                                            var path = game.saves.export_save_slot(model.slot_name);
+                                            root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
+                                        }
                                     }
-                                }
 
-                                StyledButton {
-                                    text: qsTr("Delete")
-                                    button_style: "danger"
-                                    implicitWidth: 80
-                                    visible: !model.isEmpty
-                                    onClicked: {
-                                        confirmDeleteDialog.slot_name = model.slot_name;
-                                        confirmDeleteDialog.slot_index = index;
-                                        confirmDeleteDialog.open();
+                                    StyledButton {
+                                        text: qsTr("Verify")
+                                        button_style: "small"
+                                        Layout.fillWidth: true
+                                        onClicked: {
+                                            if (typeof game === 'undefined' || !game.saves.verify_save_slot)
+                                                return;
+                                            var ok = game.saves.verify_save_slot(model.slot_name);
+                                            root.verify_result_title = ok ? qsTr("Verification Passed") : qsTr("Verification Failed");
+                                            root.verify_result_message = ok ? qsTr("\"%1\" is intact. The save file has not been corrupted.").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded. The checksum does not match.").arg(model.slot_name);
+                                            root.verify_result_success = ok;
+                                            verifyResultDialog.open();
+                                        }
+                                    }
+
+                                    StyledButton {
+                                        text: qsTr("Delete")
+                                        button_style: "danger"
+                                        Layout.fillWidth: true
+                                        onClicked: {
+                                            confirmDeleteDialog.slot_name = model.slot_name;
+                                            confirmDeleteDialog.slot_index = index;
+                                            confirmDeleteDialog.open();
+                                        }
                                     }
                                 }
                             }
@@ -467,6 +478,43 @@ Item {
                 color: Theme.textMain
                 wrapMode: Text.WordWrap
                 font.pointSize: Theme.fontSizeMedium
+            }
+        }
+    }
+
+    Dialog {
+        id: verifyResultDialog
+
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.5, 420)
+        title: qsTr("Save Verification")
+        modal: true
+        standardButtons: Dialog.Close
+
+        contentItem: Rectangle {
+            color: Theme.cardBase
+            implicitHeight: 140
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Theme.spacingXLarge
+                spacing: Theme.spacingMedium
+
+                Label {
+                    text: root.verify_result_title
+                    color: root.verify_result_success ? Theme.success : Theme.danger
+                    font.pointSize: Theme.fontSizeHero
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                Label {
+                    text: root.verify_result_message
+                    color: Theme.textMain
+                    font.pointSize: Theme.fontSizeMedium
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                }
             }
         }
     }

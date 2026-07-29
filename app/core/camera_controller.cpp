@@ -17,6 +17,13 @@ CameraController::CameraController(Render::GL::Camera* camera,
     , m_world(world) {
 }
 
+void CameraController::sync_map_bounds() {
+  if (!m_camera || !m_camera_service) {
+    return;
+  }
+  m_camera_service->sync_map_bounds(*m_camera);
+}
+
 void CameraController::move(float dx, float dz) {
   if (!m_camera || !m_camera_service) {
     return;

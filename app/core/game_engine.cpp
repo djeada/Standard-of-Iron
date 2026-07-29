@@ -3380,6 +3380,9 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     request_exit_commander_control_mode();
   }
 
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  terrain_service.clear();
+
   reset_preload_interaction_state();
   reset_mission_runtime_state();
 
@@ -3428,6 +3431,12 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     if (m_renderer) {
       m_renderer->set_environment_lighting(m_environment_clock->lighting());
     }
+  }
+
+  sync_scatter_world_props();
+
+  if (m_camera_controller) {
+    m_camera_controller->sync_map_bounds();
   }
 
   m_runtime.loading = false;

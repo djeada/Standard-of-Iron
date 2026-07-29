@@ -19,6 +19,7 @@ public:
                    Game::Systems::CameraService* camera_service,
                    Engine::Core::World* world);
 
+  void sync_map_bounds();
   void move(float dx, float dz);
   void elevate(float dy);
   void reset(int local_owner_id, const Game::Systems::LevelSnapshot& level);

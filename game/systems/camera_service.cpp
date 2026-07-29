@@ -26,9 +26,7 @@ CameraService::CameraService()
 
 CameraService::~CameraService() = default;
 
-namespace {
-
-void sync_map_bounds(Render::GL::Camera& camera) {
+/* static */ void CameraService::sync_map_bounds(Render::GL::Camera& camera) {
   const auto& visibility = Game::Map::VisibilityService::instance();
   if (!visibility.is_initialized()) {
     camera.clear_map_bounds();
@@ -38,8 +36,6 @@ void sync_map_bounds(Render::GL::Camera& camera) {
                          .width = visibility.get_width(),
                          .height = visibility.get_height()});
 }
-
-} // namespace
 
 void CameraService::move(Render::GL::Camera& camera, float dx, float dz) {
   sync_map_bounds(camera);
