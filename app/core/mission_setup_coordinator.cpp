@@ -767,7 +767,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       continue;
     }
 
-    // Collect existing commander IDs and their positions before modifying anything.
     std::vector<Engine::Core::EntityID> existing_commanders;
     QVector3D existing_position{0.0F, 0.0F, 0.0F};
     bool has_existing_position = false;
@@ -782,14 +781,14 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
         if (!has_existing_position) {
           if (const auto* xform =
                   entity->get_component<Engine::Core::TransformComponent>()) {
-            existing_position = QVector3D(xform->position.x, xform->position.y, xform->position.z);
+            existing_position =
+                QVector3D(xform->position.x, xform->position.y, xform->position.z);
             has_existing_position = true;
           }
         }
       }
     }
 
-    // Use existing commander position or fallback to spawn anchors / map spawns.
     App::Core::ResolvedCommanderPosition commander_position;
     if (has_existing_position) {
       commander_position = {.position = {existing_position.x(), existing_position.z()},
@@ -810,8 +809,8 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     }
 
     Game::Units::SpawnParams params;
-    params.position = QVector3D(
-        commander_position.position.x, 0.0F, commander_position.position.z);
+    params.position =
+        QVector3D(commander_position.position.x, 0.0F, commander_position.position.z);
     params.player_id = owner_id;
     params.spawn_type = *spawn_type;
     params.ai_controlled = owner_registry.is_ai(owner_id);
@@ -823,7 +822,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       continue;
     }
 
-    // Only destroy the old commanders after the replacement exists.
     for (const auto id : existing_commanders) {
       ctx.world.destroy_entity(id);
     }
