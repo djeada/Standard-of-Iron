@@ -3430,6 +3430,12 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     }
   }
 
+  sync_scatter_world_props();
+
+  if (m_camera_controller) {
+    m_camera_controller->sync_map_bounds();
+  }
+
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
@@ -3438,6 +3444,8 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
+
+  emit minimap_image_changed();
 
   if (effects.emit_selected_units_changed) {
     emit selected_units_changed();

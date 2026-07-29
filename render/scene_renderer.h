@@ -202,6 +202,14 @@ public:
   void resume() { m_paused = false; }
   auto is_paused() const -> bool { return m_paused; }
 
+  void clear_entity_render_caches() {
+    m_unit_render_cache.clear();
+    m_model_matrix_cache.clear();
+    m_rigged_mesh_cache.clear();
+    m_snapshot_mesh_cache.clear();
+    m_animation_time_cache.clear();
+  }
+
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
 
   void mesh(Mesh* mesh,

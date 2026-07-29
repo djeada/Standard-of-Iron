@@ -721,20 +721,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     return std::nullopt;
   };
 
-  auto owner_has_living_commander = [&](int owner_id) {
-    for (auto* entity :
-         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   QSet<int> processed_owner_ids;
   for (const QVariant& config_var : player_configs) {
     const QVariantMap config = config_var.toMap();
@@ -746,8 +732,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     if (config.value("isHuman", false).toBool()) {
       owner_id = ctx.local_owner_id;
     }
-    if (owner_id < 0 || processed_owner_ids.contains(owner_id) ||
-        owner_has_living_commander(owner_id)) {
+    if (owner_id < 0 || processed_owner_ids.contains(owner_id)) {
       continue;
     }
     processed_owner_ids.insert(owner_id);
@@ -756,11 +741,8 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     const auto nation_id = assigned_nation != nullptr
                                ? assigned_nation->id
                                : nation_registry.default_nation_id();
-    QString nation_key = config.value("nationId").toString();
-    if (nation_key.isEmpty()) {
-      nation_key =
-          QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
-    }
+    const QString nation_key =
+        QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
     const auto configured_commander =
         config.contains("commanderTroop")
             ? std::optional<QString>(config.value("commanderTroop").toString())
@@ -785,18 +767,45 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       continue;
     }
 
+    std::vector<Engine::Core::EntityID> existing_commanders;
+    QVector3D existing_position{0.0F, 0.0F, 0.0F};
+    bool has_existing_position = false;
+    for (auto* entity :
+         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        existing_commanders.push_back(entity->get_id());
+        if (!has_existing_position) {
+          if (const auto* xform =
+                  entity->get_component<Engine::Core::TransformComponent>()) {
+            existing_position =
+                QVector3D(xform->position.x, xform->position.y, xform->position.z);
+            has_existing_position = true;
+          }
+        }
+      }
+    }
+
     App::Core::ResolvedCommanderPosition commander_position;
-    const auto anchors = existing_owner_spawn_anchors(owner_id);
-    if (!anchors.empty()) {
-      commander_position =
-          App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
-    } else if (const auto fallback = map_spawn_fallback(owner_id);
-               fallback.has_value()) {
-      commander_position = {.position = fallback.value(),
+    if (has_existing_position) {
+      commander_position = {.position = {existing_position.x(), existing_position.z()},
                             .space = App::Core::CommanderPositionSpace::World};
     } else {
-      commander_position = {.position = {0.0F, 0.0F},
-                            .space = App::Core::CommanderPositionSpace::World};
+      const auto anchors = existing_owner_spawn_anchors(owner_id);
+      if (!anchors.empty()) {
+        commander_position =
+            App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
+      } else if (const auto fallback = map_spawn_fallback(owner_id);
+                 fallback.has_value()) {
+        commander_position = {.position = fallback.value(),
+                              .space = App::Core::CommanderPositionSpace::World};
+      } else {
+        commander_position = {.position = {0.0F, 0.0F},
+                              .space = App::Core::CommanderPositionSpace::World};
+      }
     }
 
     Game::Units::SpawnParams params;
@@ -812,6 +821,11 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
                  << commander_troop << "for owner" << owner_id;
       continue;
     }
+
+    for (const auto id : existing_commanders) {
+      ctx.world.destroy_entity(id);
+    }
+
     apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
   }
   return effects;
