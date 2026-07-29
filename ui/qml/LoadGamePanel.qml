@@ -169,7 +169,7 @@ Item {
 
                             function load_from_game() {
                                 clear();
-                                if (typeof game === 'undefined' || !game.get_save_slots) {
+                                if (typeof game === 'undefined' || !game.saves.get_save_slots) {
                                     append({
                                             "slot_name": qsTr("No saves found"),
                                             "title": "",
@@ -183,7 +183,7 @@ Item {
                                         });
                                     return;
                                 }
-                                var entries = game.get_save_slots();
+                                var entries = game.saves.get_save_slots();
                                 for (var i = 0; i < entries.length; i++) {
                                     append({
                                             "slot_name": entries[i].slot_name,
@@ -335,9 +335,9 @@ Item {
                                     button_style: "small"
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        if (typeof game === 'undefined' || !game.export_save_slot)
+                                        if (typeof game === 'undefined' || !game.saves.export_save_slot)
                                             return;
-                                        var path = game.export_save_slot(model.slot_name);
+                                        var path = game.saves.export_save_slot(model.slot_name);
                                         root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
                                     }
                                 }
@@ -347,9 +347,9 @@ Item {
                                     button_style: "small"
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        if (typeof game === 'undefined' || !game.verify_save_slot)
+                                        if (typeof game === 'undefined' || !game.saves.verify_save_slot)
                                             return;
-                                        root.status_message = game.verify_save_slot(model.slot_name) ? qsTr("\"%1\" is intact").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded").arg(model.slot_name);
+                                        root.status_message = game.saves.verify_save_slot(model.slot_name) ? qsTr("\"%1\" is intact").arg(model.slot_name) : qsTr("\"%1\" is corrupted and cannot be loaded").arg(model.slot_name);
                                     }
                                 }
 
@@ -435,8 +435,8 @@ Item {
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
-            if (typeof game !== 'undefined' && game.delete_save_slot) {
-                if (game.delete_save_slot(slot_name)) {
+            if (typeof game !== 'undefined' && game.saves.delete_save_slot) {
+                if (game.saves.delete_save_slot(slot_name)) {
                     loadListModel.remove(slot_index);
                     if (loadListModel.count === 0)
                         loadListModel.append({
@@ -509,9 +509,9 @@ Item {
 
                         function reload() {
                             clear();
-                            if (typeof game === 'undefined' || !game.list_exported_saves)
+                            if (typeof game === 'undefined' || !game.saves.list_exported_saves)
                                 return;
-                            var files = game.list_exported_saves();
+                            var files = game.saves.list_exported_saves();
                             for (var i = 0; i < files.length; i++)
                                 append({
                                         "path": files[i].path,
@@ -536,7 +536,7 @@ Item {
                             text: qsTr("Import")
                             button_style: "small"
                             onClicked: {
-                                var slot = game.import_save_file(model.path);
+                                var slot = game.saves.import_save_file(model.path);
                                 root.status_message = slot !== "" ? qsTr("Imported as \"%1\"").arg(slot) : qsTr("Import failed");
                                 if (slot !== "")
                                     importDialog.close();

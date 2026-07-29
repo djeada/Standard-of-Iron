@@ -9,11 +9,11 @@
 #include <utility>
 #include <vector>
 
-#include "app/utils/json_vec_utils.h"
 #include "game/game_config.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/util/json_vec_utils.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {
@@ -105,8 +105,9 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
 
   if (camera != nullptr) {
     QJsonObject camera_obj;
-    camera_obj["position"] = App::JsonUtils::vec3_to_json_array(camera->get_position());
-    camera_obj["target"] = App::JsonUtils::vec3_to_json_array(camera->get_target());
+    camera_obj["position"] =
+        Game::JsonUtils::vec3_to_json_array(camera->get_position());
+    camera_obj["target"] = Game::JsonUtils::vec3_to_json_array(camera->get_target());
     camera_obj["distance"] = camera->get_distance();
     camera_obj["pitch_deg"] = camera->get_pitch_deg();
     camera_obj["fov"] = camera->get_fov();
@@ -126,6 +127,9 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
       owner_resources_to_json(runtime.resources_by_owner);
   runtime_obj["harvested_by_owner"] =
       owner_resources_to_json(runtime.harvested_by_owner);
+  runtime_obj["simulation_tick"] = static_cast<qint64>(runtime.simulation_tick);
+  runtime_obj["rng_seed"] = static_cast<qint64>(runtime.rng_seed);
+  runtime_obj["rng_draw_count"] = static_cast<qint64>(runtime.rng_draw_count);
   metadata["runtime"] = runtime_obj;
 
   QJsonArray nations_array;
@@ -150,9 +154,9 @@ void GameStateSerializer::restore_camera_from_metadata(const QJsonObject& metada
   }
 
   const auto camera_obj = metadata.value("camera").toObject();
-  const QVector3D position = App::JsonUtils::json_array_to_vec3(
+  const QVector3D position = Game::JsonUtils::json_array_to_vec3(
       camera_obj.value("position"), camera->get_position());
-  const QVector3D target = App::JsonUtils::json_array_to_vec3(
+  const QVector3D target = Game::JsonUtils::json_array_to_vec3(
       camera_obj.value("target"), camera->get_target());
   camera->look_at(position, target, QVector3D(0.0F, 1.0F, 0.0F));
 
@@ -219,6 +223,18 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
   if (runtime_obj.contains("harvested_by_owner")) {
     owner_resources_from_json(runtime_obj.value("harvested_by_owner").toArray(),
                               runtime.harvested_by_owner);
+  }
+
+  if (runtime_obj.contains("simulation_tick")) {
+    runtime.simulation_tick = static_cast<std::uint64_t>(
+        runtime_obj.value("simulation_tick").toVariant().toULongLong());
+  }
+
+  if (runtime_obj.contains("rng_seed")) {
+    runtime.rng_seed = static_cast<std::uint64_t>(
+        runtime_obj.value("rng_seed").toVariant().toULongLong());
+    runtime.rng_draw_count = static_cast<std::uint64_t>(
+        runtime_obj.value("rng_draw_count").toVariant().toULongLong());
   }
 }
 

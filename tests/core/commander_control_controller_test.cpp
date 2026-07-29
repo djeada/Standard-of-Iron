@@ -11,6 +11,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "scene/camera.h"
@@ -104,6 +105,29 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_data, nullptr);
   EXPECT_TRUE(commander_data->jump_active);
+}
+
+TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  auto* rpg = commander->add_component<Engine::Core::RpgHealthComponent>();
+  ASSERT_NE(rpg, nullptr);
+  rpg->active = true;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.request_dodge(QVector3D(0.0F, 0.0F, -1.0F));
+
+  Render::GL::Camera camera;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.10F));
+
+  EXPECT_NEAR(transform->position.x, 0.0F, 0.0001F);
+  EXPECT_LT(transform->position.z, -0.60F);
+  EXPECT_TRUE(controller.is_dodge_rolling());
+  EXPECT_TRUE(rpg->dodge_invincible);
 }
 
 TEST_F(CommanderControlControllerTest,
@@ -286,6 +310,45 @@ TEST_F(CommanderControlControllerTest, SoftAimDoesNotBecomeCommanderFocus) {
 
   EXPECT_EQ(controller.locked_target_id(), 0U);
   EXPECT_EQ(controller.focus_target_id(), 0U);
+}
+
+TEST_F(CommanderControlControllerTest, AimCandidateTracksExactInRangeFormationSoldier) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  auto* enemy = create_enemy(world, 0.0F, 1.8F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  auto* enemy_unit = enemy->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  enemy_unit->render_individuals_per_unit_override = 6;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  auto const* targets =
+      commander->get_component<Engine::Core::RpgCommanderTargetComponent>();
+  ASSERT_NE(targets, nullptr);
+  EXPECT_TRUE(targets->aim_candidate_in_range);
+  EXPECT_EQ(targets->aim_candidate_id, enemy->get_id());
+  EXPECT_NE(targets->aim_candidate_soldier_slot,
+            Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
+  auto const exact_target = Game::Systems::RpgCombat::resolve_soldier_target(
+      *enemy, targets->aim_candidate_soldier_slot);
+  ASSERT_TRUE(exact_target.has_value());
+  EXPECT_TRUE(Game::Systems::RpgCombat::target_in_melee_envelope(
+      *commander, *exact_target, 2.05F));
+
+  auto* enemy_transform = enemy->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(enemy_transform, nullptr);
+  enemy_transform->position.z = 10.0F;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  EXPECT_FALSE(targets->aim_candidate_in_range);
+  EXPECT_EQ(targets->aim_candidate_id, 0U);
+  EXPECT_EQ(targets->aim_candidate_soldier_slot,
+            Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
 }
 
 TEST_F(CommanderControlControllerTest, RunBackwardBreaksCommanderLockOn) {

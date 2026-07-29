@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "app/core/user_settings.h"
+#include "audio_settings.h"
 #include "miniaudio_backend.h"
 #include "music_player.h"
 #include "sound.h"
@@ -143,7 +143,7 @@ void AudioSystem::stop_music() {
 
 void AudioSystem::set_master_volume(float volume) {
   master_volume = sanitize_volume(volume);
-  App::Core::UserSettings::save_master_volume(master_volume.load());
+  Game::Audio::Settings::save_master_volume(master_volume.load());
 
   if (m_music_player != nullptr) {
     m_music_player->set_volume(master_volume.load() * music_volume.load());
@@ -152,12 +152,12 @@ void AudioSystem::set_master_volume(float volume) {
 
 void AudioSystem::set_sound_volume(float volume) {
   sound_volume = sanitize_volume(volume);
-  App::Core::UserSettings::save_sound_volume(sound_volume.load());
+  Game::Audio::Settings::save_sound_volume(sound_volume.load());
 }
 
 void AudioSystem::set_music_volume(float volume) {
   music_volume = sanitize_volume(volume);
-  App::Core::UserSettings::save_music_volume(music_volume.load());
+  Game::Audio::Settings::save_music_volume(music_volume.load());
   if (m_music_player != nullptr) {
     m_music_player->set_volume(master_volume.load() * music_volume.load());
   }
@@ -165,16 +165,16 @@ void AudioSystem::set_music_volume(float volume) {
 
 void AudioSystem::set_voice_volume(float volume) {
   voice_volume = sanitize_volume(volume);
-  App::Core::UserSettings::save_voice_volume(voice_volume.load());
+  Game::Audio::Settings::save_voice_volume(voice_volume.load());
 }
 
 void AudioSystem::set_ambience_volume(float volume) {
   ambience_volume = sanitize_volume(volume);
-  App::Core::UserSettings::save_ambience_volume(ambience_volume.load());
+  Game::Audio::Settings::save_ambience_volume(ambience_volume.load());
 }
 
 void AudioSystem::load_persisted_volumes() {
-  const auto volumes = App::Core::UserSettings::load_audio_volumes();
+  const auto volumes = Game::Audio::Settings::load_volumes();
   master_volume = volumes.master;
   sound_volume = volumes.sound;
   music_volume = volumes.music;

@@ -39,6 +39,13 @@ struct HealerStyleRegistration {
   HealerStyleConfig style;
 };
 
+void apply_healer_channel_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    HumanoidPose& io_pose);
+void apply_healer_staff_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    HumanoidPose& io_pose);
+
 void register_healer_style(std::string_view style_key, const HealerStyleConfig& style);
 void register_healer_styles(std::span<const HealerStyleRegistration> styles);
 

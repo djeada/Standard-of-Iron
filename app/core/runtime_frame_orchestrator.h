@@ -21,7 +21,6 @@ struct RuntimeFrameState {
   bool selection_refresh_enabled = false;
   int selection_refresh_counter = 0;
   float minimap_unit_update_accumulator = 0.0F;
-  float simulation_accumulator = 0.0F;
 };
 
 class RuntimeFrameOrchestrator {

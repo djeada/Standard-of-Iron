@@ -7,14 +7,9 @@
 #include "../core/system.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "arrow_visual_profile.h"
 
 namespace Game::Systems {
-
-enum class ArrowVisualStyle : std::uint8_t {
-  Focused,
-  Volley,
-  Marker,
-};
 
 struct ArrowInstance {
   QVector3D start;

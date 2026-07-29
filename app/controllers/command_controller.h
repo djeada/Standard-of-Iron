@@ -4,12 +4,13 @@
 #include <QString>
 #include <QVector3D>
 
+#include <cstdint>
 #include <vector>
 
 namespace Engine::Core {
 class World;
 class Entity;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {

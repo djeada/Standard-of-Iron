@@ -212,8 +212,9 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
 
-  EXPECT_TRUE(contains(source, "camera.look_at(m_cam_eye_smooth + shake_offset"));
-  EXPECT_TRUE(contains(source, "m_cam_target_smooth + shake_offset"));
+  EXPECT_TRUE(contains(
+      source, "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));
+  EXPECT_FALSE(contains(source, "shake_offset"));
 
   EXPECT_TRUE(contains(source, "bob_v + breath_v"));
   EXPECT_TRUE(contains(source, "flat_right * bob_l"));
@@ -495,8 +496,9 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "render" / "entity" / "combat_dust_renderer.cpp");
   const auto combat_dust_pipeline =
       read_text(root / "render" / "gl" / "backend" / "combat_dust_pipeline.cpp");
-  const auto command_controller =
-      read_text(root / "app" / "controllers" / "command_controller.cpp");
+
+  const auto command_dispatcher =
+      read_text(root / "game" / "command" / "command_dispatcher.cpp");
   const auto game_engine = read_text(root / "app" / "core" / "game_engine.cpp");
   const auto controller =
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
@@ -512,7 +514,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(prepared_state.empty());
   ASSERT_FALSE(combat_dust_renderer.empty());
   ASSERT_FALSE(combat_dust_pipeline.empty());
-  ASSERT_FALSE(command_controller.empty());
+  ASSERT_FALSE(command_dispatcher.empty());
   ASSERT_FALSE(game_engine.empty());
   ASSERT_FALSE(controller.empty());
   ASSERT_FALSE(commander_mode.empty());
@@ -539,7 +541,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   EXPECT_TRUE(
       contains(combat_dust_pipeline, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
-      contains(command_controller, "CombatRules::clear_rts_melee_lock(entity);"));
+      contains(command_dispatcher, "CombatRules::clear_rts_melee_lock(&entity);"));
 
   EXPECT_TRUE(contains(commander_mode, "commander_data->fpv_controlled = true;"));
   EXPECT_TRUE(contains(commander_mode, "commander_data->fpv_controlled = false;"));
@@ -548,7 +550,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   EXPECT_FALSE(contains(controller, "atk->in_melee_lock = false;"));
 }
 
-TEST(CommanderControlRegressionTest, FpvHitShakeUsesHitFeedbackComponentTrauma) {
+TEST(CommanderControlRegressionTest, FpvCombatCameraHasNoSyntheticHitShakeOrPunch) {
   const auto root = find_repo_root();
   const auto controller_src =
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
@@ -557,13 +559,14 @@ TEST(CommanderControlRegressionTest, FpvHitShakeUsesHitFeedbackComponentTrauma) 
   ASSERT_FALSE(controller_src.empty());
   ASSERT_FALSE(controller_hdr.empty());
 
-  EXPECT_TRUE(contains(controller_hdr, "m_hit_trauma"));
-  EXPECT_TRUE(contains(controller_hdr, "m_hit_shake_phase"));
-
-  EXPECT_TRUE(contains(controller_src, "m_hit_trauma = fb->reaction_intensity;"));
-
-  EXPECT_TRUE(contains(controller_src, "shake_offset"));
-  EXPECT_TRUE(contains(controller_src, "m_cam_eye_smooth + shake_offset"));
+  EXPECT_FALSE(contains(controller_hdr, "m_hit_trauma"));
+  EXPECT_FALSE(contains(controller_hdr, "m_hit_shake_phase"));
+  EXPECT_FALSE(contains(controller_hdr, "m_strike_camera_punch"));
+  EXPECT_FALSE(contains(controller_hdr, "m_impact_shake"));
+  EXPECT_FALSE(contains(controller_src, "shake_offset"));
+  EXPECT_TRUE(
+      contains(controller_src,
+               "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {

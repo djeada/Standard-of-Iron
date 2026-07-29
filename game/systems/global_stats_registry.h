@@ -16,14 +16,22 @@ struct PlayerStats {
   int enemies_killed = 0;
   int losses = 0;
   int barracks_owned = 0;
-  std::chrono::steady_clock::time_point game_start_time;
-  std::chrono::steady_clock::time_point game_end_time;
+
+  double game_start_sim_sec = 0.0;
+  double game_end_sim_sec = 0.0;
   float play_time_sec = 0.0F;
   bool game_ended = false;
 };
 
 class GlobalStatsRegistry {
 public:
+  GlobalStatsRegistry() = default;
+  ~GlobalStatsRegistry() = default;
+  GlobalStatsRegistry(const GlobalStatsRegistry&) = delete;
+  GlobalStatsRegistry(GlobalStatsRegistry&&) = delete;
+  auto operator=(const GlobalStatsRegistry&) -> GlobalStatsRegistry& = delete;
+  auto operator=(GlobalStatsRegistry&&) -> GlobalStatsRegistry& = delete;
+
   static auto instance() -> GlobalStatsRegistry&;
 
   void initialize();
@@ -43,11 +51,6 @@ public:
   void rebuild_from_world(Engine::Core::World& world);
 
 private:
-  GlobalStatsRegistry() = default;
-  ~GlobalStatsRegistry() = default;
-  GlobalStatsRegistry(const GlobalStatsRegistry&) = delete;
-  auto operator=(const GlobalStatsRegistry&) -> GlobalStatsRegistry& = delete;
-
   std::unordered_map<int, PlayerStats> m_player_stats;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>

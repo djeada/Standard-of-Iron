@@ -189,37 +189,16 @@ void main() {
                     0.0,
                     1.0);
   } else if (u_effect_type == 5) {
-
-    float height = a_texcoord.y;
-    float angle_t = a_texcoord.x;
-    float angle = angle_t * 6.28318;
     float t = u_time;
+    float along = clamp(a_texcoord.x, 0.0, 1.0);
+    float expansion = mix(0.40, 1.0, smoothstep(0.0, 0.09, t));
+    pos *= expansion;
+    pos.y += t * (0.08 + 0.15 * along) - 0.5 * 1.4 * t * t * along;
 
-    float spark_count = 16.0;
-    float spark_id = floor(angle_t * spark_count);
-    float spark_hash = fract(sin(spark_id * 93.17 + 217.3) * 61523.7);
-    float spark_hash2 = fract(sin(spark_id * 41.3 + 89.7) * 35197.1);
-
-    float spark_speed = 3.2 + 2.8 * spark_hash;
-    float spark_angle = angle + (spark_hash2 - 0.5) * 1.2;
-    vec2 spark_dir = vec2(cos(spark_angle), sin(spark_angle));
-
-    float radial_spread = t * spark_speed * (0.4 + 0.6 * spark_hash);
-    pos.xz += spark_dir * radial_spread * height;
-
-    float up_velocity = 2.5 + 3.5 * spark_hash2;
-    float gravity = 12.0;
-    float spark_y = height * (up_velocity * t - 0.5 * gravity * t * t);
-    pos.y += max(spark_y, -0.1);
-
-    float streak_length = 0.08 + 0.12 * spark_hash;
-    pos.y += streak_length * height * (1.0 - t * 2.0);
-
-    float life = (1.0 - smoothstep(0.15, 0.45, t));
+    float life = 1.0 - smoothstep(0.08, 0.28, t);
     float spark_fade = smoothstep(0.0, 0.05, t) * life;
-    float flicker = 0.7 + 0.3 * sin(t * 40.0 + spark_id * 7.0);
-
-    v_alpha = clamp(spark_fade * flicker * u_intensity * 1.5, 0.0, 1.0);
+    float flicker = 0.82 + 0.18 * sin(t * 45.0 + along * 11.0);
+    v_alpha = clamp(spark_fade * flicker * u_intensity, 0.0, 1.0);
   } else {
     vec3 normal_dir = normalize(a_normal);
     vec2 flow_uv = vec2(a_texcoord.x * 6.0 + normal_dir.y * 1.4,

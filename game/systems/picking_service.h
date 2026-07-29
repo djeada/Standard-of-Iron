@@ -4,12 +4,13 @@
 #include <QRectF>
 #include <QVector3D>
 
+#include <cstdint>
 #include <limits>
 #include <vector>
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Render::GL {

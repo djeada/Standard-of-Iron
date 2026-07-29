@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <mutex>
 
+#include "../elephant/elephant_spec.h"
+#include "../humanoid/humanoid_spec.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
 
@@ -76,6 +78,13 @@ ArchetypeRegistry::ArchetypeRegistry() {
 }
 
 void ArchetypeRegistry::seed_baseline() {
+
+  constexpr std::uint8_t k_humanoid_base_roles =
+      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
+  constexpr std::uint8_t k_horse_base_roles = 9U;
+  constexpr std::uint8_t k_elephant_base_roles =
+      static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count + 1U);
+
   static constexpr auto k_humanoid_manifest = make_humanoid_animation_manifest();
   static constexpr auto k_horse_manifest = make_horse_animation_manifest();
   static constexpr auto k_elephant_manifest = make_elephant_animation_manifest();
@@ -85,22 +94,22 @@ void ArchetypeRegistry::seed_baseline() {
       make_baseline_archetype("humanoid_base",
                               Render::Creature::Pipeline::CreatureKind::Humanoid,
                               k_humanoid_manifest,
-                              6U));
+                              k_humanoid_base_roles));
   register_archetype(
       make_baseline_archetype("horse_base",
                               Render::Creature::Pipeline::CreatureKind::Horse,
                               k_horse_manifest,
-                              8U));
+                              k_horse_base_roles));
   register_archetype(
       make_baseline_archetype("elephant_base",
                               Render::Creature::Pipeline::CreatureKind::Elephant,
                               k_elephant_manifest,
-                              6U));
+                              k_elephant_base_roles));
   register_archetype(
       make_baseline_archetype("rider_base",
                               Render::Creature::Pipeline::CreatureKind::Humanoid,
                               k_rider_manifest,
-                              6U));
+                              k_humanoid_base_roles));
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {

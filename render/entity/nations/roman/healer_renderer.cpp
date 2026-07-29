@@ -24,6 +24,7 @@
 #include "../../../equipment/armor/torso_local_archetype_utils.h"
 #include "../../../equipment/attachment_builder.h"
 #include "../../../equipment/generated_equipment.h"
+#include "../../../equipment/humanoid_attachment_archetype.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -56,232 +57,311 @@ namespace {
 
 constexpr auto k_profile =
     Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = -0.01F});
-constexpr std::uint32_t k_healer_tunic_role_count = 6;
 
-enum HealerTunicPaletteSlot : std::uint8_t {
-  k_healer_white_slot = 0U,
-  k_healer_offwhite_slot = 1U,
-  k_healer_cream_slot = 2U,
-  k_healer_sash_slot = 3U,
-  k_healer_trim_slot = 4U,
-  k_healer_leather_slot = 5U,
+constexpr std::uint32_t k_senator_role_count = 6;
+
+constexpr auto k_senator_base_role =
+    static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
+
+enum SenatorPaletteSlot : std::uint8_t {
+  k_toga_cloth_slot = 0U,
+  k_toga_shade_slot = 1U,
+  k_toga_clavus_slot = 2U,
+  k_toga_gold_slot = 3U,
+  k_toga_leather_slot = 4U,
+  k_toga_laurel_slot = 5U,
 };
 
-auto healer_tunic_fill_role_colors(const HumanoidPalette& palette,
-                                   QVector3D* out,
-                                   std::size_t max) -> std::uint32_t {
-  if (max < k_healer_tunic_role_count) {
+auto senator_fill_role_colors(const HumanoidPalette& palette,
+                              QVector3D* out,
+                              std::size_t max) -> std::uint32_t {
+  if (max < k_senator_role_count) {
     return 0U;
   }
-  out[0] = QVector3D(0.96F, 0.95F, 0.92F);
-  out[1] = QVector3D(0.93F, 0.91F, 0.86F);
-  out[2] = QVector3D(0.89F, 0.86F, 0.80F);
-  out[3] = QVector3D(0.72F, 0.18F, 0.15F);
-  out[4] = Render::GL::Humanoid::saturate_color(palette.metal * 0.92F +
-                                                QVector3D(0.05F, 0.04F, 0.0F));
-  out[5] = palette.leather;
-  return k_healer_tunic_role_count;
+  out[k_toga_cloth_slot] = QVector3D(0.94F, 0.92F, 0.86F);
+  out[k_toga_shade_slot] = QVector3D(0.79F, 0.76F, 0.69F);
+  out[k_toga_clavus_slot] = Render::GL::Humanoid::saturate_color(
+      palette.cloth * 0.62F + QVector3D(0.15F, 0.01F, 0.17F));
+  out[k_toga_gold_slot] = Render::GL::Humanoid::saturate_color(
+      palette.metal * 0.45F + QVector3D(0.46F, 0.34F, 0.10F));
+  out[k_toga_leather_slot] = palette.leather;
+  out[k_toga_laurel_slot] = QVector3D(0.27F, 0.40F, 0.20F);
+  return k_senator_role_count;
 }
 
-auto healer_tunic_archetype() -> const RenderArchetype& {
+auto senator_extra_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  if (variant_void == nullptr || max_count <= base_count) {
+    return base_count;
+  }
+  const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
+  return base_count + senator_fill_role_colors(
+                          variant.palette, out + base_count, max_count - base_count);
+}
+
+auto senator_toga_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::vector<GeneratedEquipmentPrimitive> primitives;
     const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
     const AttachmentFrame& torso = bind_frames.torso;
     const AttachmentFrame& waist = bind_frames.waist;
-    const AttachmentFrame& back = bind_frames.back;
     const TorsoLocalFrame torso_local = make_torso_local_frame(QMatrix4x4{}, torso);
 
-    float const torso_r = torso.radius * 1.05F;
-    float const torso_depth =
-        (torso.depth > 0.0F) ? torso.depth * 0.95F : torso.radius * 0.82F;
-    float const y_shoulder = 0.030F;
-    float const y_waist = torso_local.point(waist.origin).y();
-    float const y_robe_bottom = y_waist - 0.38F;
+    float const tr = torso.radius;
 
-    constexpr int segs = 14;
-    constexpr float pi = std::numbers::pi_v<float>;
-    auto add_ring =
-        [&](float y, float width, float depth, std::uint8_t slot, float thickness) {
-          for (int i = 0; i < segs; ++i) {
-            float const a1 = (static_cast<float>(i) / segs) * 2.0F * pi;
-            float const a2 = (static_cast<float>(i + 1) / segs) * 2.0F * pi;
-            primitives.push_back(generated_cylinder(
-                QVector3D(width * std::sin(a1), y, depth * std::cos(a1)),
-                QVector3D(width * std::sin(a2), y, depth * std::cos(a2)),
-                thickness,
-                slot));
-          }
-        };
-    auto add_section = [&](float y_top,
-                           float y_bot,
-                           float width_top,
-                           float width_bot,
-                           std::uint8_t slot) {
-      float const avg_r = (width_top + width_bot) * 0.5F;
-      primitives.push_back(generated_cylinder(
-          QVector3D(0.0F, y_bot, 0.0F), QVector3D(0.0F, y_top, 0.0F), avg_r, slot));
+    float const y_top = 0.010F;
+    float const y_waist = torso_local.point(waist.origin).y();
+    float const y_knee = y_waist - 0.52F;
+
+    float const chest_w = tr * 1.30F;
+    float const chest_d = tr * 0.92F;
+    float const waist_w = tr * 1.50F;
+    float const waist_d = tr * 1.08F;
+    float const skirt_mid_w = tr * 1.80F;
+    float const skirt_mid_d = tr * 1.36F;
+    float const hem_w = tr * 2.15F;
+    float const hem_d = tr * 1.70F;
+
+    RenderArchetypeBuilder builder{"roman_senator_toga"};
+
+    auto add_shell = [&](float y_bottom,
+                         float y_top_edge,
+                         float bottom_w,
+                         float bottom_d,
+                         float top_w,
+                         float top_d,
+                         std::uint8_t slot) {
+      float const height = y_top_edge - y_bottom;
+      QMatrix4x4 model;
+      model.translate(0.0F, (y_bottom + y_top_edge) * 0.5F, 0.0F);
+      model.scale(bottom_w, height, bottom_d);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(1.0F, top_w / bottom_w, 18), model, slot);
+      (void)top_d;
     };
 
-    add_ring(y_shoulder + 0.07F,
-             torso_r * 0.72F,
-             torso_depth * 0.64F,
-             k_healer_cream_slot,
-             0.024F);
-    add_ring(y_shoulder + 0.05F,
-             torso_r * 1.16F,
-             torso_depth * 1.10F,
-             k_healer_white_slot,
-             0.036F);
-    add_ring(y_shoulder + 0.010F,
-             torso_r * 1.10F,
-             torso_depth * 1.04F,
-             k_healer_white_slot,
-             0.034F);
-    add_section(y_shoulder + 0.02F,
-                y_shoulder - 0.10F,
-                torso_r * 1.08F,
-                torso_r * 1.02F,
-                k_healer_white_slot);
-    add_section(y_shoulder - 0.10F,
-                y_shoulder - 0.20F,
-                torso_r * 1.02F,
-                torso_r * 0.92F,
-                k_healer_offwhite_slot);
-    add_ring(y_shoulder - 0.14F,
-             torso_r * 0.98F,
-             torso_depth * 0.92F,
-             k_healer_offwhite_slot,
-             0.030F);
-    add_section(y_shoulder - 0.20F,
-                y_waist + 0.02F,
-                torso_r * 0.90F,
-                torso_r * 0.82F,
-                k_healer_offwhite_slot);
+    auto add_band = [&](float y_center,
+                        float thickness,
+                        float half_w,
+                        float half_d,
+                        std::uint8_t slot) {
+      QMatrix4x4 model;
+      model.translate(0.0F, y_center, 0.0F);
+      model.scale(half_w, thickness, half_d);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 18), model, slot);
+    };
 
-    float const sash_y = y_waist + 0.010F;
-    primitives.push_back(generated_cylinder(QVector3D(0.0F, sash_y - 0.022F, 0.0F),
-                                            QVector3D(0.0F, sash_y + 0.022F, 0.0F),
-                                            torso_r * 0.86F,
-                                            k_healer_sash_slot));
-    primitives.push_back(generated_cylinder(QVector3D(0.0F, sash_y + 0.020F, 0.0F),
-                                            QVector3D(0.0F, sash_y + 0.026F, 0.0F),
-                                            torso_r * 0.88F,
-                                            k_healer_trim_slot));
-    primitives.push_back(generated_cylinder(QVector3D(0.0F, sash_y - 0.026F, 0.0F),
-                                            QVector3D(0.0F, sash_y - 0.020F, 0.0F),
-                                            torso_r * 0.88F,
-                                            k_healer_trim_slot));
+    add_shell(y_waist, y_top, waist_w, waist_d, chest_w, chest_d, k_toga_cloth_slot);
+    add_shell(y_waist - 0.26F,
+              y_waist + 0.01F,
+              skirt_mid_w,
+              skirt_mid_d,
+              waist_w,
+              waist_d,
+              k_toga_cloth_slot);
+    add_shell(y_knee,
+              y_waist - 0.25F,
+              hem_w,
+              hem_d,
+              skirt_mid_w,
+              skirt_mid_d,
+              k_toga_cloth_slot);
+
+    constexpr int k_folds = 12;
+    constexpr float pi = std::numbers::pi_v<float>;
+    for (int i = 0; i < k_folds; ++i) {
+      float const a = (static_cast<float>(i) / k_folds) * 2.0F * pi;
+      float const s = std::sin(a);
+      float const c = std::cos(a);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(
+              QVector3D(s * hem_w * 0.99F, y_knee + 0.03F, c * hem_d * 0.99F),
+              QVector3D(
+                  s * skirt_mid_w * 0.99F, y_waist - 0.25F, c * skirt_mid_d * 0.99F),
+              0.011F),
+          (i % 2 == 0) ? k_toga_shade_slot : k_toga_cloth_slot);
+    }
+
+    add_band(y_knee + 0.024F, 0.048F, hem_w * 1.02F, hem_d * 1.02F, k_toga_clavus_slot);
+    add_band(y_knee + 0.056F, 0.011F, hem_w * 1.01F, hem_d * 1.01F, k_toga_gold_slot);
+
+    for (int side = -1; side <= 1; side += 2) {
+      float const x_top = static_cast<float>(side) * chest_w * 0.40F;
+      float const x_bot = static_cast<float>(side) * waist_w * 0.42F;
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(QVector3D(x_top, y_top - 0.02F, chest_d * 0.90F),
+                           QVector3D(x_bot, y_waist + 0.03F, waist_d * 0.90F),
+                           0.017F),
+          k_toga_clavus_slot);
+    }
 
     QVector3D const shoulder_l = torso_local.point(bind_frames.shoulder_l.origin);
     QVector3D const shoulder_r = torso_local.point(bind_frames.shoulder_r.origin);
-    QVector3D const back_forward = torso_local.direction(back.forward);
-    float const cape_bottom_y = std::max(y_robe_bottom + 0.08F, y_waist - 0.20F);
-    QVector3D const left_top =
-        shoulder_l + back_forward * 0.03F + QVector3D(0.0F, 0.015F, 0.0F);
-    QVector3D const right_top =
-        shoulder_r + back_forward * 0.03F + QVector3D(0.0F, 0.015F, 0.0F);
-    QVector3D const left_bottom =
-        left_top + QVector3D(0.0F, cape_bottom_y - left_top.y(), 0.05F);
-    QVector3D const right_bottom =
-        right_top + QVector3D(0.0F, cape_bottom_y - right_top.y(), 0.05F);
-    primitives.push_back(
-        generated_cylinder(left_top, right_top, 0.020F, k_healer_sash_slot));
-    primitives.push_back(
-        generated_cylinder(left_top, left_bottom, 0.028F, k_healer_sash_slot));
-    primitives.push_back(
-        generated_cylinder(right_top, right_bottom, 0.028F, k_healer_sash_slot));
-    primitives.push_back(
-        generated_cylinder(left_bottom, right_bottom, 0.022F, k_healer_sash_slot));
-    primitives.push_back(
-        generated_sphere((left_top + right_top) * 0.5F + back_forward * 0.01F,
-                         torso_r * 0.16F,
-                         k_healer_trim_slot));
+    float const shoulder_x =
+        std::abs(shoulder_l.x()) > 0.01F ? std::abs(shoulder_l.x()) : chest_w;
 
-    float const robe_length = y_waist - y_robe_bottom;
-    constexpr int skirt_layers = 10;
-    for (int layer = 0; layer < skirt_layers; ++layer) {
-      float const t = static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
-      float const y = y_waist - 0.02F - t * robe_length;
-      float const flare = 1.0F + t * 0.45F;
-      add_ring(y,
-               torso_r * 0.88F * flare,
-               torso_depth * 0.82F * flare,
-               t < 0.5F ? k_healer_white_slot : k_healer_cream_slot,
-               0.018F + t * 0.014F);
+    QVector3D const drape_top(-shoulder_x * 0.72F, y_top + 0.030F, chest_d * 0.62F);
+    QVector3D const drape_mid(-chest_w * 0.14F, y_top - 0.20F, chest_d * 1.02F);
+    QVector3D const drape_low(waist_w * 0.94F, y_waist + 0.01F, waist_d * 0.74F);
+    constexpr int k_drape_steps = 16;
+    for (int step = 0; step <= k_drape_steps; ++step) {
+      float const t = static_cast<float>(step) / k_drape_steps;
+      float const inv = 1.0F - t;
+      QVector3D const point =
+          drape_top * (inv * inv) + drape_mid * (2.0F * inv * t) + drape_low * (t * t);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(point, QVector3D(0.046F, 0.046F, 0.020F)),
+          k_toga_clavus_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(point + QVector3D(0.030F, -0.036F, 0.005F),
+                            QVector3D(0.013F, 0.013F, 0.011F)),
+          k_toga_gold_slot);
     }
-    add_ring(y_robe_bottom + 0.01F,
-             torso_r * 1.276F,
-             torso_depth * 1.189F,
-             k_healer_cream_slot,
-             0.035F);
-    add_ring(y_robe_bottom - 0.002F,
-             torso_r * 1.305F,
-             torso_depth * 1.218F,
-             k_healer_trim_slot,
-             0.015F);
 
-    QVector3D const emblem_center(0.0F, y_shoulder - 0.06F, torso_depth * 0.90F);
-    float const cross_half = torso_r * 0.36F;
-    float const cross_thickness = torso_r * 0.18F;
-    primitives.push_back(
-        generated_cylinder(emblem_center - QVector3D(cross_half, 0.0F, 0.0F),
-                           emblem_center + QVector3D(cross_half, 0.0F, 0.0F),
-                           cross_thickness,
-                           k_healer_sash_slot));
-    primitives.push_back(
-        generated_cylinder(emblem_center - QVector3D(0.0F, cross_half * 1.1F, 0.0F),
-                           emblem_center + QVector3D(0.0F, cross_half * 1.1F, 0.0F),
-                           cross_thickness,
-                           k_healer_sash_slot));
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(QVector3D(-shoulder_x * 0.86F, y_top + 0.004F, 0.0F),
+                          QVector3D(0.062F, 0.046F, chest_d * 1.02F)),
+        k_toga_cloth_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(
+            QVector3D(-shoulder_x * 0.70F, y_top - 0.070F, -chest_d * 0.72F),
+            QVector3D(0.054F, 0.052F, 0.030F)),
+        k_toga_shade_slot);
+    constexpr int k_tail_steps = 7;
+    for (int step = 0; step < k_tail_steps; ++step) {
+      float const t = static_cast<float>(step) / (k_tail_steps - 1);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(-shoulder_x * (0.72F - 0.10F * t),
+                                      y_top - 0.115F - t * 0.30F,
+                                      -(chest_d * 1.06F + t * 0.014F)),
+                            QVector3D(0.048F - 0.005F * t, 0.044F, 0.024F)),
+          t > 0.78F ? k_toga_clavus_slot : k_toga_shade_slot);
+    }
 
-    QVector3D const satchel_pos(torso_r * 0.75F, y_waist - 0.08F, torso_depth * 0.15F);
-    primitives.push_back(generated_box(
-        satchel_pos, QVector3D(0.045F, 0.06F, 0.035F), k_healer_leather_slot));
-    primitives.push_back(generated_box(satchel_pos + QVector3D(0.0F, 0.035F, 0.01F),
-                                       QVector3D(0.048F, 0.015F, 0.038F),
-                                       k_healer_leather_slot));
-    primitives.push_back(
-        generated_sphere(QVector3D(torso_r * 0.4F, y_shoulder, torso_depth * 0.3F),
-                         0.022F,
-                         k_healer_trim_slot));
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(
+            QVector3D(-shoulder_x * 0.74F, y_top - 0.016F, chest_d * 0.66F),
+            QVector3D(0.024F, 0.024F, 0.018F)),
+        k_toga_gold_slot);
 
-    return build_generated_equipment_archetype(
-        "roman_healer_tunic",
-        std::span<const GeneratedEquipmentPrimitive>(primitives.data(),
-                                                     primitives.size()));
+    add_band(
+        y_waist + 0.020F, 0.032F, waist_w * 1.03F, waist_d * 1.03F, k_toga_clavus_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(QVector3D(0.0F, y_waist + 0.020F, waist_d * 1.02F),
+                          QVector3D(0.028F, 0.022F, 0.018F)),
+        k_toga_gold_slot);
+
+    QVector3D const capsa(waist_w * 1.02F, y_waist - 0.085F, waist_d * 0.20F);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(capsa + QVector3D(0.0F, 0.042F, 0.0F),
+                                              capsa - QVector3D(0.0F, 0.042F, 0.0F),
+                                              0.032F),
+                             k_toga_leather_slot);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             local_scale_model(capsa + QVector3D(0.0F, 0.046F, 0.0F),
+                                               QVector3D(0.034F, 0.010F, 0.034F)),
+                             k_toga_gold_slot);
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(QVector3D(shoulder_r.x() * 0.45F, y_top - 0.030F, 0.0F),
+                         capsa + QVector3D(0.0F, 0.036F, 0.0F),
+                         0.009F),
+        k_toga_leather_slot);
+
+    return std::move(builder).build();
   }();
   return archetype;
 }
 
-auto healer_tunic_make_static_attachment(std::uint16_t chest_bone_index,
-                                         std::uint8_t base_role_byte)
+auto senator_laurel_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    constexpr float pi = std::numbers::pi_v<float>;
+    constexpr float k_head_silhouette_r = 0.168F;
+
+    RenderArchetypeBuilder builder{"roman_senator_laurel"};
+
+    constexpr int k_leaves = 18;
+    for (int i = 0; i < k_leaves; ++i) {
+      float const a = (static_cast<float>(i) / k_leaves) * 2.0F * pi;
+      float const s = std::sin(a);
+      float const c = std::cos(a);
+      QVector3D const base(
+          s * k_head_silhouette_r * 1.01F, 0.030F, c * k_head_silhouette_r * 1.01F);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(base, QVector3D(0.030F, 0.017F, 0.030F)),
+          k_toga_laurel_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(base + QVector3D(s * 0.012F, 0.032F, c * 0.012F),
+                            QVector3D(0.023F, 0.030F, 0.023F)),
+          k_toga_laurel_slot);
+    }
+
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(QVector3D(0.0F, 0.036F, -k_head_silhouette_r * 1.04F),
+                          QVector3D(0.034F, 0.026F, 0.022F)),
+        k_toga_gold_slot);
+    for (int i = 0; i < 3; ++i) {
+      float const t = static_cast<float>(i);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(0.024F * (i % 2 == 0 ? 1.0F : -1.0F),
+                                      0.010F - t * 0.048F,
+                                      -k_head_silhouette_r * 1.06F),
+                            QVector3D(0.017F, 0.026F, 0.013F)),
+          k_toga_gold_slot);
+    }
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto senator_toga_make_static_attachment(std::uint16_t chest_bone_index)
     -> Render::Creature::StaticAttachmentSpec {
   const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
   const TorsoLocalFrame torso_local =
       make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
   auto spec = Render::Equipment::build_static_attachment({
-      .archetype = &healer_tunic_archetype(),
+      .archetype = &senator_toga_archetype(),
       .socket_bone_index = chest_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
-  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_healer_tunic_role_count);
-       ++i) {
-    spec.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_senator_role_count); ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(k_senator_base_role + i);
   }
   return spec;
 }
 
-auto healer_tunic_extra_role_colors(const void* variant_void,
-                                    QVector3D* out,
-                                    std::uint32_t base_count,
-                                    std::size_t max_count) -> std::uint32_t {
-  if (variant_void == nullptr || max_count <= base_count) {
-    return base_count;
+auto senator_laurel_make_static_attachment(std::uint16_t head_bone_index)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  QMatrix4x4 const head_bind =
+      make_humanoid_attachment_transform_scaled(QMatrix4x4{},
+                                                bind_frames.head,
+                                                QVector3D(0.0F, 0.0F, 0.0F),
+                                                QVector3D(1.0F, 1.0F, 1.0F));
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &senator_laurel_archetype(),
+      .socket_bone_index = head_bone_index,
+      .unit_local_pose_at_bind = head_bind,
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_senator_role_count); ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(k_senator_base_role + i);
   }
-  const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
-  return base_count + healer_tunic_fill_role_colors(
-                          variant.palette, out + base_count, max_count - base_count);
+  return spec;
 }
 
 const Render::Creature::Pipeline::UnitVisualSpec&
@@ -302,21 +382,23 @@ roman_healer_visual_spec(std::string_view,
       }
 
       Render::Creature::ArchetypeDescriptor desc = *base_desc;
-      desc.debug_name = "troops/roman/healer/base";
+      desc.debug_name = "troops/roman/healer";
       desc.bake_attachments[desc.bake_attachment_count++] =
-          healer_tunic_make_static_attachment(
-              static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
-              desc.role_count);
+          senator_toga_make_static_attachment(
+              static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest));
+      desc.bake_attachments[desc.bake_attachment_count++] =
+          senator_laurel_make_static_attachment(
+              static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head));
       desc.role_count =
-          static_cast<std::uint8_t>(desc.role_count + k_healer_tunic_role_count);
-      desc.append_extra_role_colors_fn(&healer_tunic_extra_role_colors);
+          static_cast<std::uint8_t>(k_senator_base_role + k_senator_role_count);
+      desc.append_extra_role_colors_fn(&senator_extra_role_colors);
       return registry.register_archetype(desc);
     }();
     const auto loadout =
         Render::GL::Nation::resolve_equipment_loadout("troops/roman/healer");
     const std::array<EquipmentHandle, 2> handles{
         style.show_helmet ? loadout.helmet_handle : k_invalid_equipment_handle,
-        loadout.armor_handle};
+        style.show_armor ? loadout.armor_handle : k_invalid_equipment_handle};
 
     UnitVisualSpec out{};
     out.kind = CreatureKind::Humanoid;
@@ -325,6 +407,7 @@ roman_healer_visual_spec(std::string_view,
     out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
     out.archetype_id = resolve_humanoid_equipment_archetype(
         "troops/roman/healer", k_healer_base_archetype, handles);
+    out.creature_asset_id = Render::Creature::Pipeline::k_caster_humanoid_asset;
     return out;
   }();
   return spec;
@@ -337,7 +420,9 @@ const HealerRendererProfile k_healer_profile{
 };
 
 const std::array<HealerRendererRegistration, 1> k_healer_renderers{{
-    {"troops/roman/healer", "roman_republic"},
+    {"troops/roman/healer",
+     "roman_republic",
+     Render::Creature::Pipeline::k_caster_humanoid_asset},
 }};
 
 } // namespace

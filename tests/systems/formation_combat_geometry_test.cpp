@@ -107,6 +107,36 @@ TEST(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {
   EXPECT_EQ(definition.max_per_row, 3);
 }
 
+TEST(FormationCombatGeometry, DamageCarrierRotatesOnlyAcrossClosestContactBand) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* action = attacker->add_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  std::vector<Engine::Core::FormationEngagementPair> const pairs{
+      {.attacker_slot = 0,
+       .target_slot = 0,
+       .root_distance = 1.0F,
+       .surface_gap = 0.10F},
+      {.attacker_slot = 1,
+       .target_slot = 0,
+       .root_distance = 1.05F,
+       .surface_gap = 0.15F},
+      {.attacker_slot = 2,
+       .target_slot = 0,
+       .root_distance = 2.0F,
+       .surface_gap = 1.10F},
+  };
+
+  for (std::uint8_t sequence = 0; sequence < 24; ++sequence) {
+    action->melee_attack_sequence = sequence;
+    auto const selected = Game::Systems::FormationCombat::select_damage_engagement_pair(
+        *attacker, 99U, pairs);
+    ASSERT_TRUE(selected.has_value());
+    EXPECT_LT(selected->surface_gap, 0.30F);
+    EXPECT_NE(selected->attacker_slot, 2U);
+  }
+}
+
 TEST(FormationCombatGeometry, MeleeUsesVisibleFormationContactNotEntityRange) {
   Engine::Core::World world;
   auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
@@ -251,13 +281,22 @@ TEST(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
                      [&](auto const& candidate) {
                        return candidate.attacker_slot == directive.slot_index;
                      });
-    EXPECT_EQ(directive.action == Engine::Core::FormationSoldierAction::MeleeEngaged,
+    EXPECT_EQ(directive.opponent_id == target->get_id(),
               pair != contact->engagement_pairs.end());
     if (pair != contact->engagement_pairs.end()) {
+      EXPECT_NE(directive.action, Engine::Core::FormationSoldierAction::FollowUnit);
+      EXPECT_NE(directive.combat_role, Engine::Core::FormationSoldierCombatRole::None);
       EXPECT_EQ(directive.target_slot, pair->target_slot);
       EXPECT_EQ(directive.engagement_surface_gap, pair->surface_gap);
     }
   }
+  EXPECT_TRUE(std::any_of(presentation->soldiers.begin() + 1,
+                          presentation->soldiers.end(),
+                          [&](auto const& soldier) {
+                            return soldier.combat_role !=
+                                   presentation->soldiers.front().combat_role;
+                          }))
+      << "a fully engaged formation should not animate as one synchronized block";
 }
 
 TEST(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {
@@ -488,7 +527,8 @@ TEST(FormationCombatGeometry, EngagementLeasePersistsUntilTargetDeath) {
   EXPECT_FALSE(Game::Systems::Combat::is_in_range(attacker, target, 2.5F));
 }
 
-TEST(FormationCombatGeometry, ReinforcementJoinsAnExistingFormationFightAtItsEdge) {
+TEST(FormationCombatGeometry,
+     ReinforcementJoinsAnExistingFormationFightAtTheSharedCenter) {
   Engine::Core::World world;
   auto* primary = add_spearmen(world, 1, -6.0F, 0.0F);
   auto* defender = add_spearmen(world, 2, 0.0F, 180.0F);
@@ -501,8 +541,7 @@ TEST(FormationCombatGeometry, ReinforcementJoinsAnExistingFormationFightAtItsEdg
   auto const reinforcement_geometry =
       Game::Systems::FormationCombat::contact_geometry(*reinforcement, *defender);
   reinforcement->get_component<Engine::Core::TransformComponent>()->position.z =
-      reinforcement_geometry.contact_center_distance -
-      reinforcement_geometry.contact_tolerance * 1.5F;
+      reinforcement_geometry.engagement_center_distance;
 
   auto* primary_attack = primary->get_component<Engine::Core::AttackComponent>();
   auto* defender_attack = defender->get_component<Engine::Core::AttackComponent>();
@@ -511,14 +550,12 @@ TEST(FormationCombatGeometry, ReinforcementJoinsAnExistingFormationFightAtItsEdg
   defender_attack->in_melee_lock = true;
   defender_attack->melee_lock_target_id = primary->get_id();
 
-  auto const occupied_edge_geometry =
+  auto const shared_center_geometry =
       Game::Systems::FormationCombat::contact_geometry(*reinforcement, *defender);
-  EXPECT_GT(occupied_edge_geometry.center_distance,
-            occupied_edge_geometry.engagement_center_distance);
-  EXPECT_LT(occupied_edge_geometry.surface_gap,
-            -occupied_edge_geometry.contact_tolerance);
+  EXPECT_LE(shared_center_geometry.center_distance,
+            shared_center_geometry.engagement_center_distance + 0.001F);
   EXPECT_TRUE(Game::Systems::FormationCombat::contact_is_active(
-      *reinforcement, *defender, occupied_edge_geometry));
+      *reinforcement, *defender, shared_center_geometry));
 
   auto* reinforcement_attack =
       reinforcement->get_component<Engine::Core::AttackComponent>();
@@ -553,9 +590,11 @@ TEST(FormationCombatGeometry, ReinforcementJoinsAnExistingFormationFightAtItsEdg
   EXPECT_TRUE(std::all_of(
       presentation->soldiers.begin(),
       presentation->soldiers.end(),
-      [](auto const& soldier) {
+      [defender](auto const& soldier) {
         return !soldier.alive ||
-               soldier.action == Engine::Core::FormationSoldierAction::MeleeEngaged;
+               (soldier.opponent_id == defender->get_id() &&
+                soldier.combat_role != Engine::Core::FormationSoldierCombatRole::None &&
+                soldier.action != Engine::Core::FormationSoldierAction::FollowUnit);
       }));
 }
 
@@ -803,4 +842,99 @@ TEST(FormationCombatGeometry, FormationHitDoesNotSteerTheSharedRoot) {
   ASSERT_NE(feedback, nullptr);
   EXPECT_TRUE(feedback->is_reacting);
   EXPECT_EQ(feedback->source_attacker_id, attacker->get_id());
+}
+
+TEST(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
+  Engine::Core::World world;
+  auto* defender = add_spearmen(world, 2, 0.0F, 180.0F);
+  auto* front_attacker = add_spearmen(world, 1, -3.0F, 0.0F);
+  auto* flank_attacker = add_spearmen(world, 1, 0.0F, -90.0F);
+
+  auto const front_geometry =
+      Game::Systems::FormationCombat::contact_geometry(*front_attacker, *defender);
+  front_attacker->get_component<Engine::Core::TransformComponent>()->position.z =
+      -front_geometry.engagement_center_distance;
+
+  auto* flank_transform =
+      flank_attacker->get_component<Engine::Core::TransformComponent>();
+  flank_transform->position.x =
+      Game::Systems::FormationCombat::contact_geometry(*flank_attacker, *defender)
+          .engagement_center_distance;
+  flank_transform->position.z = 0.0F;
+
+  for (auto* attacker : {front_attacker, flank_attacker}) {
+    auto* target = attacker->add_component<Engine::Core::AttackTargetComponent>();
+    target->target_id = defender->get_id();
+    target->should_chase = true;
+  }
+
+  Game::Systems::Combat::update_formation_contacts(&world, 1.0F / 60.0F);
+
+  auto const* contact =
+      defender->get_component<Engine::Core::FormationContactComponent>();
+  ASSERT_NE(contact, nullptr);
+  ASSERT_EQ(contact->fronts.size(), 2U);
+  EXPECT_TRUE(std::all_of(
+      contact->fronts.begin(), contact->fronts.end(), [](auto const& front) {
+        return !front.outgoing && front.in_contact && !front.engagement_pairs.empty();
+      }));
+
+  auto const* presentation =
+      defender->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  EXPECT_TRUE(presentation->melee_ordered);
+  EXPECT_TRUE(std::any_of(presentation->soldiers.begin(),
+                          presentation->soldiers.end(),
+                          [front_attacker](auto const& soldier) {
+                            return soldier.opponent_id == front_attacker->get_id();
+                          }));
+  EXPECT_TRUE(std::any_of(presentation->soldiers.begin(),
+                          presentation->soldiers.end(),
+                          [flank_attacker](auto const& soldier) {
+                            return soldier.opponent_id == flank_attacker->get_id();
+                          }));
+}
+
+TEST(FormationCombatGeometry, FinalSurvivorsUseACompactCenteredLayout) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* unit_stats = unit->get_component<Engine::Core::UnitComponent>();
+  unit_stats->health = 20;
+
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_EQ(layout.live_slots.size(), 2U);
+  EXPECT_EQ(layout.live_slots[0].index, 10U);
+  EXPECT_EQ(layout.live_slots[1].index, 11U);
+
+  float const dx = layout.live_slots[1].local_x - layout.live_slots[0].local_x;
+  float const dz = layout.live_slots[1].local_z - layout.live_slots[0].local_z;
+  EXPECT_LE(std::hypot(dx, dz), layout.spacing * 1.5F);
+  EXPECT_NEAR((layout.live_slots[0].local_x + layout.live_slots[1].local_x) * 0.5F,
+              0.0F,
+              layout.spacing * 0.25F);
+  EXPECT_NEAR((layout.live_slots[0].local_z + layout.live_slots[1].local_z) * 0.5F,
+              0.0F,
+              layout.spacing * 0.25F);
+}
+
+TEST(FormationCombatGeometry,
+     CasualtyWithoutPresentationKeepsItsLastLivingLayoutAnchor) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_FALSE(before.live_slots.empty());
+  auto const expected = before.live_slots.front();
+
+  auto const result = Game::Systems::Combat::apply_unit_damage(&world, unit, 10, 0U);
+  ASSERT_EQ(result.queued_soldier_casualties, 1);
+  auto const* casualties =
+      unit->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_EQ(casualties->entries.size(), 1U);
+  auto const& casualty = casualties->entries.front();
+  EXPECT_TRUE(casualty.has_local_anchor);
+  EXPECT_EQ(casualty.slot_index, expected.index);
+  EXPECT_FLOAT_EQ(casualty.local_x, expected.local_x);
+  EXPECT_FLOAT_EQ(casualty.local_z, expected.local_z);
+  EXPECT_FLOAT_EQ(casualty.local_yaw, expected.local_yaw);
 }

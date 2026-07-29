@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 
 #include "i_render_backend.h"
@@ -150,7 +151,8 @@ public:
     return k_base_humanoid_full * m_lod_multipliers.humanoid_full;
   }
   [[nodiscard]] auto humanoid_minimal_detail_distance() const noexcept -> float {
-    return k_base_humanoid_minimal * m_lod_multipliers.humanoid_minimal;
+    return std::max(k_base_humanoid_minimal * m_lod_multipliers.humanoid_minimal,
+                    k_never_cull_distance);
   }
   [[nodiscard]] auto humanoid_billboard_distance() const noexcept -> float {
     return k_base_humanoid_billboard * m_lod_multipliers.humanoid_billboard;
@@ -160,7 +162,8 @@ public:
     return k_base_horse_full * m_lod_multipliers.horse_full;
   }
   [[nodiscard]] auto horse_minimal_detail_distance() const noexcept -> float {
-    return k_base_horse_minimal * m_lod_multipliers.horse_minimal;
+    return std::max(k_base_horse_minimal * m_lod_multipliers.horse_minimal,
+                    k_never_cull_distance);
   }
   [[nodiscard]] auto horse_billboard_distance() const noexcept -> float {
     return k_base_horse_billboard * m_lod_multipliers.horse_billboard;
@@ -170,7 +173,8 @@ public:
     return k_base_elephant_full * m_lod_multipliers.elephant_full;
   }
   [[nodiscard]] auto elephant_minimal_detail_distance() const noexcept -> float {
-    return k_base_elephant_minimal * m_lod_multipliers.elephant_minimal;
+    return std::max(k_base_elephant_minimal * m_lod_multipliers.elephant_minimal,
+                    k_never_cull_distance);
   }
   [[nodiscard]] auto elephant_billboard_distance() const noexcept -> float {
     return k_base_elephant_billboard * m_lod_multipliers.elephant_billboard;
@@ -199,7 +203,7 @@ private:
                            .elephant_full = 0.8F,
                            .elephant_minimal = 0.8F,
                            .elephant_billboard = 0.8F,
-                           .shadow_distance = 25.0F,
+                           .shadow_distance = 60.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = false,
                     .enable_tail_detail = false,
@@ -236,7 +240,7 @@ private:
                            .elephant_full = 1.0F,
                            .elephant_minimal = 1.0F,
                            .elephant_billboard = 1.0F,
-                           .shadow_distance = 40.0F,
+                           .shadow_distance = 90.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
@@ -274,7 +278,7 @@ private:
                            .elephant_full = 2.0F,
                            .elephant_minimal = 2.0F,
                            .elephant_billboard = 2.0F,
-                           .shadow_distance = 80.0F,
+                           .shadow_distance = 140.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
@@ -340,6 +344,8 @@ private:
       break;
     }
   }
+
+  static constexpr float k_never_cull_distance = 200.0F;
 
   static constexpr float k_base_humanoid_full = 10.0F;
   static constexpr float k_base_humanoid_minimal = 70.0F;

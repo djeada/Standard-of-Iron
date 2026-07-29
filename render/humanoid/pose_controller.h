@@ -46,6 +46,8 @@ public:
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
   void mount_on_horse(float saddle_height);
   void hold_spear_idle();
+  void channel_spell_idle();
+  void carry_stave();
   void brace_spear_for_hold();
   void hold_bow_ready();
   void guard_sword_and_shield_for_defense();

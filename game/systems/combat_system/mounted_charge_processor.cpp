@@ -85,6 +85,8 @@ void clear_charge_action(Engine::Core::Entity& entity) {
     action->combat_action_id = static_cast<std::uint8_t>(ActionId::None);
     action->phase = Engine::Core::RpgCommanderActionPhase::None;
     action->active_target_id = 0;
+    action->active_target_soldier_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     action->action_running = false;
     action->action_completed = true;
   }
@@ -122,6 +124,8 @@ void clear_charge_action(Engine::Core::Entity& entity) {
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
   action->combat_action_id = static_cast<std::uint8_t>(definition.id);
   action->active_target_id = target_hint;
+  action->active_target_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->action_duration = definition.duration_seconds;
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 

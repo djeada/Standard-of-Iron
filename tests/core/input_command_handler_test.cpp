@@ -12,6 +12,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
+#include "game/view/selection_controller.h"
 #include "scene/camera.h"
 
 namespace {
@@ -292,7 +293,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickMovesSelectedUnitsToWorldPositi
   ASSERT_NE(unit, nullptr);
   selection_system->select_unit(unit->get_id());
 
-  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
@@ -303,7 +304,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingWithNoSelection) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
 
-  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
@@ -316,7 +317,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingInSpectatorMode) {
   selection_system->select_unit(unit->get_id());
 
   input_handler->set_spectator_mode(true);
-  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
@@ -331,7 +332,7 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickMovesMultipleSelectedUnitsToTar
   selection_system->select_unit(unit1->get_id());
   selection_system->select_unit(unit2->get_id());
 
-  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F), 1);
 
   auto* mv1 = unit1->get_component<Engine::Core::MovementComponent>();
   auto* mv2 = unit2->get_component<Engine::Core::MovementComponent>();

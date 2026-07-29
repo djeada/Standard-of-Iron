@@ -188,6 +188,7 @@ void reset_humanoid_animation_state(
   case Game::Systems::CombatActions::CombatActionId::MountedChargeImpact:
   case Game::Systems::CombatActions::CombatActionId::RtsSpearThrust:
   case Game::Systems::CombatActions::CombatActionId::RtsBowShot:
+  case Game::Systems::CombatActions::CombatActionId::RtsElephantStomp:
   case Game::Systems::CombatActions::CombatActionId::None:
     break;
   case Game::Systems::CombatActions::CombatActionId::RtsSwordStrike:

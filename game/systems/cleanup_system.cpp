@@ -33,6 +33,50 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
+  auto structure_damage_entities =
+      world->get_entities_with<Engine::Core::StructureDamagePresentationComponent>();
+  for (auto* entity : structure_damage_entities) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto* presentation =
+        entity->get_component<Engine::Core::StructureDamagePresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto& impact : presentation->impacts) {
+      impact.age += std::max(0.0F, delta_time);
+    }
+    std::erase_if(presentation->impacts,
+                  [](auto const& impact) { return impact.age >= impact.lifetime; });
+    if (presentation->impacts.empty()) {
+      entity->remove_component<Engine::Core::StructureDamagePresentationComponent>();
+    }
+  }
+
+  auto rpg_contact_entities =
+      world->get_entities_with<Engine::Core::RpgContactPresentationComponent>();
+  for (auto* entity : rpg_contact_entities) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto* presentation =
+        entity->get_component<Engine::Core::RpgContactPresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto& contact : presentation->entries) {
+      contact.age += std::max(0.0F, delta_time);
+    }
+    std::erase_if(presentation->entries,
+                  [](auto const& contact) { return contact.age >= contact.lifetime; });
+    if (presentation->entries.empty()) {
+      entity->remove_component<Engine::Core::RpgContactPresentationComponent>();
+    }
+  }
+
   auto casualty_entities =
       world->get_entities_with<Engine::Core::SoldierCasualtyAnimationComponent>();
   for (auto* entity : casualty_entities) {

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <optional>
+
 #include "../../core/component.h"
 #include "../../core/entity.h"
 
@@ -17,10 +21,13 @@ struct DamageApplicationResult {
   int queued_soldier_casualties{0};
 };
 
-DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
-                                          Engine::Core::Entity* target,
-                                          int damage,
-                                          Engine::Core::EntityID attacker_id = 0);
+DamageApplicationResult
+apply_unit_damage(Engine::Core::World* world,
+                  Engine::Core::Entity* target,
+                  int damage,
+                  Engine::Core::EntityID attacker_id = 0,
+                  std::optional<QVector3D> contact_point = std::nullopt,
+                  std::optional<std::uint16_t> preferred_soldier_slot = std::nullopt);
 
 void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,

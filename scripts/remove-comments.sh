@@ -125,7 +125,7 @@ fi
 TMP_SCRIPT=$(mktemp /tmp/rmcomments.XXXXXX.py)
 trap 'rm -f "$TMP_SCRIPT"' EXIT
 
-cat > "$TMP_SCRIPT" << 'PYEOF'
+cat >"$TMP_SCRIPT" <<'PYEOF'
 import sys, os, re, shutil
 
 RAW_PREFIX = re.compile(rb'(?:u8|u|U|L)?R"([^\s()\\]{0,16})\(')
@@ -348,8 +348,8 @@ log "Jobs: $JOBS"
 
 # Find and process files in parallel
 find "${ROOTS[@]}" \( -type d \( "${FIND_PRUNE[@]}" \) -prune \) -o \
-    \( -type f \( "${FIND_NAME[@]}" \) -print0 \) | \
-    xargs -0 -P "$JOBS" -n 1 "$PYTHON_BIN" "$TMP_SCRIPT" > "$RESULTS"
+  \( -type f \( "${FIND_NAME[@]}" \) -print0 \) |
+  xargs -0 -P "$JOBS" -n 1 "$PYTHON_BIN" "$TMP_SCRIPT" >"$RESULTS"
 
 # Parse results
 processed=0
@@ -367,14 +367,13 @@ while IFS= read -r line; do
       ((would_modify += 1))
       ((DRY_RUN)) && echo "would modify: ${line#would_modify:}"
       ;;
-    unchanged:*)
-      ;;
+    unchanged:*) ;;
     error:*)
       path="${line#error:}"
       echo "error: Python filter failed on ${path%%:*}" >&2
       ;;
   esac
-done < "$RESULTS"
+done <"$RESULTS"
 
 rm -f "$RESULTS" "$TMP_SCRIPT"
 trap '' EXIT

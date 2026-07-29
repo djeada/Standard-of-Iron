@@ -1921,15 +1921,12 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
 
-  const auto& entities = world->get_entities();
-  for (const auto& [id, entity] : entities) {
-    if (entity != nullptr &&
-        entity->get_component<ConstructionPreviewComponent>() != nullptr) {
-      continue;
+  world->for_each_entity([&entities_array](Entity& entity) {
+    if (entity.get_component<ConstructionPreviewComponent>() != nullptr) {
+      return;
     }
-    QJsonObject const entity_obj = serialize_entity(entity.get());
-    entities_array.append(entity_obj);
-  }
+    entities_array.append(serialize_entity(&entity));
+  });
 
   world_obj["entities"] = entities_array;
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());

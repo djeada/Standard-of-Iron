@@ -7,6 +7,8 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/environment_lighting.h"
+#include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/rain_manager.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
@@ -19,8 +21,6 @@
 namespace {
 constexpr int k_selection_refresh_interval = 15;
 constexpr float k_minimap_unit_update_interval = 0.05F;
-constexpr float k_simulation_step = 1.0F / 60.0F;
-constexpr float k_max_accumulated_simulation_time = 0.25F;
 constexpr int k_max_simulation_steps_per_frame = 8;
 } // namespace
 
@@ -46,24 +46,24 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.world != nullptr) {
-    state.simulation_accumulator =
-        std::min(state.simulation_accumulator + std::max(dt, 0.0F),
-                 k_max_accumulated_simulation_time);
+
+    Game::Session::SimulationClock& clock =
+        scene.session != nullptr ? scene.session->clock()
+                                 : Game::Session::SessionContext::active().clock();
+
+    clock.advance(static_cast<double>(std::max(dt, 0.0F)));
+
     int simulation_steps = 0;
-    while (state.simulation_accumulator >= k_simulation_step &&
-           simulation_steps < k_max_simulation_steps_per_frame) {
-      simulation_step(k_simulation_step);
+    while (simulation_steps < k_max_simulation_steps_per_frame &&
+           clock.consume_tick()) {
+      const auto step = static_cast<float>(clock.tick_seconds());
+      simulation_step(step);
       if (scene.environment_clock != nullptr) {
-        scene.environment_clock->update(k_simulation_step, false);
+        scene.environment_clock->update(step, false);
       }
-      state.simulation_accumulator -= k_simulation_step;
       ++simulation_steps;
     }
-    if (simulation_steps == k_max_simulation_steps_per_frame &&
-        state.simulation_accumulator >= k_simulation_step) {
-      state.simulation_accumulator =
-          std::fmod(state.simulation_accumulator, k_simulation_step);
-    }
+    clock.drop_pending_ticks();
 
     if (scene.visibility_coordinator != nullptr) {
       scene.visibility_coordinator->update(

@@ -1,11 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <typeindex>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "entity.h"
@@ -39,6 +38,8 @@ public:
   auto get_entity(EntityID entity_id) -> Entity*;
   void clear();
 
+  [[nodiscard]] auto is_alive(EntityID entity_id) const -> bool;
+
   void add_system(std::unique_ptr<System> system);
   void update(float delta_time);
 
@@ -56,25 +57,7 @@ public:
 
   template <typename T>
   auto get_entities_with() -> std::vector<Entity*> {
-    const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-    std::type_index const type_idx = std::type_index(typeid(T));
-
-    auto it = m_component_index.find(type_idx);
-    if (it == m_component_index.end()) {
-      return {};
-    }
-
-    std::vector<Entity*> result;
-    result.reserve(it->second.size());
-
-    for (EntityID entity_id : it->second) {
-      auto entity_it = m_entities.find(entity_id);
-      if (entity_it != m_entities.end()) {
-        result.push_back(entity_it->second.get());
-      }
-    }
-
-    return result;
+    return collect_entities_with(component_type_id<T>());
   }
 
   auto get_units_owned_by(int owner_id) const -> std::vector<Entity*>;
@@ -83,9 +66,16 @@ public:
   auto get_enemy_units(int owner_id) const -> std::vector<Entity*>;
   static auto count_troops_for_player(int owner_id) -> int;
 
-  auto
-  get_entities() const -> const std::unordered_map<EntityID, std::unique_ptr<Entity>>& {
-    return m_entities;
+  [[nodiscard]] auto entity_count() const -> std::size_t;
+
+  template <typename Fn>
+  void for_each_entity(Fn&& fn) const {
+    const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+    for (const auto& slot : m_slots) {
+      if (slot.entity != nullptr) {
+        fn(*slot.entity);
+      }
+    }
   }
 
   auto get_next_entity_id() const -> EntityID;
@@ -101,17 +91,44 @@ public:
   void remove_world_cleared_observer(ObserverHandle handle);
 
 private:
-  void
-  on_component_changed(EntityID entity_id, std::type_index component_type, bool added);
+  struct ComponentSet {
+    static constexpr std::uint32_t k_absent = 0xFFFFFFFFU;
+
+    std::vector<EntityID> dense;
+    std::vector<std::uint32_t> sparse;
+
+    void insert(EntityID id);
+    void erase(EntityID id);
+    [[nodiscard]] auto contains(EntityID id) const -> bool;
+    void clear();
+  };
+
+  struct EntitySlot {
+    std::unique_ptr<Entity> entity;
+
+    std::uint32_t generation = 0;
+  };
+
+  void on_component_changed(EntityID entity_id,
+                            ComponentTypeId type_id,
+                            std::type_index component_type,
+                            bool added);
 
   void setup_entity_callback(Entity* entity);
 
-  EntityID m_next_entity_id = 1;
-  std::unordered_map<EntityID, std::unique_ptr<Entity>> m_entities;
+  auto collect_entities_with(ComponentTypeId type_id) -> std::vector<Entity*>;
+
+  [[nodiscard]] auto resolve(EntityID entity_id) const -> Entity*;
+  void detach_from_all_component_sets(EntityID entity_id);
+
+  std::vector<EntitySlot> m_slots;
+  std::vector<std::uint32_t> m_free_slots;
+  std::size_t m_live_count = 0;
+
   std::vector<std::unique_ptr<System>> m_systems;
   mutable std::recursive_mutex m_entity_mutex;
 
-  std::unordered_map<std::type_index, std::unordered_set<EntityID>> m_component_index;
+  std::vector<ComponentSet> m_component_sets;
 
   template <typename Callback>
   struct ObserverEntry {

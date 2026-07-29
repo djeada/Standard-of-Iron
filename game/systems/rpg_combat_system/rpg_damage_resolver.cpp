@@ -23,7 +23,7 @@ RpgDamageResult resolve_rpg_damage(Engine::Core::World*,
                                    int raw_damage,
                                    Engine::Core::EntityID) {
   RpgDamageResult result;
-  if (target == nullptr) {
+  if (target == nullptr || raw_damage <= 0) {
     return result;
   }
 

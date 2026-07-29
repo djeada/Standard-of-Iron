@@ -13,6 +13,10 @@ namespace Engine::Core {
 class World;
 }
 
+namespace Engine::Core {
+using EntityID = std::uint64_t;
+}
+
 namespace Game::Systems {
 
 struct WallGridPosition {
@@ -60,11 +64,11 @@ public:
   static auto compute_connection_mask(const OccupancySet& occupancy,
                                       int grid_x,
                                       int grid_z) -> std::uint8_t;
-  static auto validate_wall_segment_placement(Engine::Core::World& world,
-                                              const WallGridPosition& position,
-                                              bool include_construction_sites = true,
-                                              unsigned int ignore_entity_id = 0)
-      -> WallPlacementValidation;
+  static auto validate_wall_segment_placement(
+      Engine::Core::World& world,
+      const WallGridPosition& position,
+      bool include_construction_sites = true,
+      Engine::Core::EntityID ignore_entity_id = 0) -> WallPlacementValidation;
   static auto find_tower_snap_socket(Engine::Core::World& world,
                                      int owner_id,
                                      float world_x,

@@ -2,7 +2,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <numbers>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -11,9 +16,104 @@
 namespace Game::Systems::Combat {
 namespace {
 
+using FrontMap = std::unordered_map<Engine::Core::EntityID,
+                                    std::vector<Engine::Core::FormationContactFront>>;
+
+auto mix_hash(std::uint32_t value) noexcept -> std::uint32_t {
+  value ^= value >> 16U;
+  value *= 0x7feb352dU;
+  value ^= value >> 15U;
+  value *= 0x846ca68bU;
+  value ^= value >> 16U;
+  return value;
+}
+
+auto hash_unit_float(std::uint32_t seed, std::uint32_t salt) noexcept -> float {
+  return static_cast<float>(mix_hash(seed ^ salt) & 0x00ffffffU) /
+         static_cast<float>(0x01000000U);
+}
+
+auto valid_melee_edge(Engine::Core::World& world,
+                      Engine::Core::Entity& attacker,
+                      Engine::Core::Entity*& target) -> bool {
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  auto const* target_ref =
+      attacker.get_component<Engine::Core::AttackTargetComponent>();
+  if (attack == nullptr || target_ref == nullptr || target_ref->target_id == 0 ||
+      attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
+    return false;
+  }
+
+  target = world.get_entity(target_ref->target_id);
+  auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto const* target_unit = target != nullptr
+                                ? target->get_component<Engine::Core::UnitComponent>()
+                                : nullptr;
+  return target != nullptr && attacker_unit != nullptr && target_unit != nullptr &&
+         attacker_unit->health > 0 && target_unit->health > 0 &&
+         !target->has_component<Engine::Core::PendingRemovalComponent>() &&
+         (FormationCombat::has_formation_slots(attacker) ||
+          FormationCombat::has_formation_slots(*target));
+}
+
+void sort_fronts(std::vector<Engine::Core::FormationContactFront>& fronts) {
+  std::sort(fronts.begin(), fronts.end(), [](auto const& lhs, auto const& rhs) {
+    if (lhs.outgoing != rhs.outgoing) {
+      return lhs.outgoing > rhs.outgoing;
+    }
+    return lhs.opponent_id < rhs.opponent_id;
+  });
+}
+
+auto build_fronts(Engine::Core::World& world) -> FrontMap {
+  FrontMap result;
+  auto attackers = world.get_entities_with<Engine::Core::AttackTargetComponent>();
+  std::sort(attackers.begin(), attackers.end(), [](auto const* lhs, auto const* rhs) {
+    return lhs->get_id() < rhs->get_id();
+  });
+
+  for (auto* attacker : attackers) {
+    if (attacker == nullptr) {
+      continue;
+    }
+    Engine::Core::Entity* target = nullptr;
+    if (!valid_melee_edge(world, *attacker, target)) {
+      continue;
+    }
+
+    auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
+    bool const in_contact =
+        FormationCombat::contact_is_active(*attacker, *target, geometry);
+    auto outgoing_pairs = in_contact
+                              ? FormationCombat::engagement_pairs(*attacker, *target)
+                              : std::vector<Engine::Core::FormationEngagementPair>{};
+    auto incoming_pairs = in_contact
+                              ? FormationCombat::engagement_pairs(*target, *attacker)
+                              : std::vector<Engine::Core::FormationEngagementPair>{};
+
+    result[attacker->get_id()].push_back(
+        {.opponent_id = target->get_id(),
+         .surface_gap = geometry.surface_gap,
+         .in_contact = in_contact,
+         .outgoing = true,
+         .engagement_pairs = std::move(outgoing_pairs)});
+    result[target->get_id()].push_back({.opponent_id = attacker->get_id(),
+                                        .surface_gap = geometry.surface_gap,
+                                        .in_contact = in_contact,
+                                        .outgoing = false,
+                                        .engagement_pairs = std::move(incoming_pairs)});
+  }
+
+  for (auto& [_, fronts] : result) {
+    sort_fronts(fronts);
+  }
+  return result;
+}
+
 void clear_contact(Engine::Core::FormationContactComponent& contact) {
   if (contact.target_id == 0 && !contact.in_contact &&
-      contact.engaged_soldier_indices.empty() && contact.engagement_pairs.empty()) {
+      contact.engaged_soldier_indices.empty() && contact.engagement_pairs.empty() &&
+      contact.fronts.empty()) {
     return;
   }
   contact.target_id = 0;
@@ -21,14 +121,224 @@ void clear_contact(Engine::Core::FormationContactComponent& contact) {
   contact.in_contact = false;
   contact.engaged_soldier_indices.clear();
   contact.engagement_pairs.clear();
+  contact.fronts.clear();
   ++contact.revision;
 }
 
-void publish_formation_presentation(Engine::Core::World& world) {
+void publish_contacts(Engine::Core::World& world, FrontMap fronts_by_entity) {
+  for (auto* entity :
+       world.get_entities_with<Engine::Core::FormationContactComponent>()) {
+    if (entity != nullptr && !fronts_by_entity.contains(entity->get_id())) {
+      clear_contact(*entity->get_component<Engine::Core::FormationContactComponent>());
+    }
+  }
+
+  for (auto& [entity_id, fronts] : fronts_by_entity) {
+    auto* entity = world.get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto* contact =
+        Engine::Core::get_or_add_component<Engine::Core::FormationContactComponent>(
+            entity);
+    if (contact == nullptr) {
+      continue;
+    }
+
+    auto const* target_ref =
+        entity->get_component<Engine::Core::AttackTargetComponent>();
+    Engine::Core::EntityID const outgoing_target =
+        target_ref != nullptr ? target_ref->target_id : 0U;
+    auto const primary = std::find_if(
+        fronts.begin(), fronts.end(), [outgoing_target](auto const& front) {
+          return front.outgoing && front.opponent_id == outgoing_target;
+        });
+
+    Engine::Core::EntityID const next_target =
+        primary != fronts.end() ? primary->opponent_id : 0U;
+    float const next_gap = primary != fronts.end() ? primary->surface_gap : 0.0F;
+    bool const next_in_contact = primary != fronts.end() && primary->in_contact;
+    std::vector<Engine::Core::FormationEngagementPair> next_pairs =
+        primary != fronts.end() ? primary->engagement_pairs
+                                : std::vector<Engine::Core::FormationEngagementPair>{};
+    std::vector<std::uint16_t> next_engaged;
+    next_engaged.reserve(next_pairs.size());
+    for (auto const& pair : next_pairs) {
+      next_engaged.push_back(pair.attacker_slot);
+    }
+
+    bool const changed =
+        contact->target_id != next_target || contact->surface_gap != next_gap ||
+        contact->in_contact != next_in_contact ||
+        contact->engaged_soldier_indices != next_engaged ||
+        contact->engagement_pairs != next_pairs || contact->fronts != fronts;
+    contact->target_id = next_target;
+    contact->surface_gap = next_gap;
+    contact->in_contact = next_in_contact;
+    contact->engaged_soldier_indices = std::move(next_engaged);
+    contact->engagement_pairs = std::move(next_pairs);
+    contact->fronts = std::move(fronts);
+    if (changed) {
+      ++contact->revision;
+    }
+  }
+}
+
+auto find_live_slot(const FormationCombat::FormationLayout& layout,
+                    std::uint16_t stable_index) -> const FormationCombat::SoldierSlot* {
+  auto const found = std::find_if(
+      layout.live_slots.begin(),
+      layout.live_slots.end(),
+      [stable_index](auto const& slot) { return slot.index == stable_index; });
+  return found != layout.live_slots.end() ? &*found : nullptr;
+}
+
+auto opponent_alive(Engine::Core::World& world,
+                    Engine::Core::EntityID opponent_id) -> bool {
+  auto* opponent = world.get_entity(opponent_id);
+  auto const* unit = opponent != nullptr
+                         ? opponent->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  return opponent != nullptr && unit != nullptr && unit->health > 0 &&
+         !opponent->has_component<Engine::Core::PendingRemovalComponent>();
+}
+
+auto combat_role_for(std::uint32_t formation_seed,
+                     std::uint16_t stable_slot,
+                     bool engaged) -> Engine::Core::FormationSoldierCombatRole {
+  if (!engaged) {
+    return Engine::Core::FormationSoldierCombatRole::Ready;
+  }
+  std::uint32_t const choice =
+      mix_hash(formation_seed ^
+               (static_cast<std::uint32_t>(stable_slot) * 0x9e3779b9U)) %
+      100U;
+  if (choice < 26U) {
+    return Engine::Core::FormationSoldierCombatRole::LeadStrike;
+  }
+  if (choice < 48U) {
+    return Engine::Core::FormationSoldierCombatRole::SupportStrike;
+  }
+  if (choice < 66U) {
+    return Engine::Core::FormationSoldierCombatRole::Guard;
+  }
+  if (choice < 79U) {
+    return Engine::Core::FormationSoldierCombatRole::StepIn;
+  }
+  if (choice < 90U) {
+    return Engine::Core::FormationSoldierCombatRole::StepOut;
+  }
+  return Engine::Core::FormationSoldierCombatRole::Ready;
+}
+
+auto action_for_role(Engine::Core::FormationSoldierCombatRole role)
+    -> Engine::Core::FormationSoldierAction {
+  using Action = Engine::Core::FormationSoldierAction;
+  using Role = Engine::Core::FormationSoldierCombatRole;
+  switch (role) {
+  case Role::LeadStrike:
+  case Role::SupportStrike:
+    return Action::MeleeEngaged;
+  case Role::Guard:
+    return Action::MeleeGuard;
+  case Role::StepIn:
+  case Role::StepOut:
+    return Action::MeleeReposition;
+  case Role::Ready:
+    return Action::MeleeReady;
+  case Role::None:
+    return Action::FollowUnit;
+  }
+  return Action::FollowUnit;
+}
+
+struct SoldierAssignment {
+  const Engine::Core::FormationContactFront* front{nullptr};
+  const Engine::Core::FormationEngagementPair* pair{nullptr};
+};
+
+auto assignment_for_slot(const Engine::Core::FormationContactComponent* contact,
+                         const Engine::Core::FormationSoldierPresentation* previous,
+                         std::uint16_t stable_slot) -> SoldierAssignment {
+  if (contact == nullptr) {
+    return {};
+  }
+
+  SoldierAssignment best;
+  float best_distance = std::numeric_limits<float>::infinity();
+  for (auto const& front : contact->fronts) {
+    if (!front.in_contact) {
+      continue;
+    }
+    auto const pair = std::find_if(front.engagement_pairs.begin(),
+                                   front.engagement_pairs.end(),
+                                   [stable_slot](auto const& candidate) {
+                                     return candidate.attacker_slot == stable_slot;
+                                   });
+    if (pair == front.engagement_pairs.end()) {
+      continue;
+    }
+    if (previous != nullptr && previous->opponent_id == front.opponent_id) {
+      return {&front, &*pair};
+    }
+    if (pair->root_distance < best_distance) {
+      best = {&front, &*pair};
+      best_distance = pair->root_distance;
+    }
+  }
+  return best;
+}
+
+struct LocalContactVector {
+  float x{0.0F};
+  float z{0.0F};
+  float distance{0.0F};
+  float yaw{0.0F};
+};
+
+auto local_contact_vector(const Engine::Core::TransformComponent& actor,
+                          float source_local_x,
+                          float source_local_z,
+                          float target_world_x,
+                          float target_world_z) -> LocalContactVector {
+  float const actor_yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(actor_yaw);
+  float const cos_yaw = std::cos(actor_yaw);
+  float const source_world_x =
+      actor.position.x + cos_yaw * source_local_x + sin_yaw * source_local_z;
+  float const source_world_z =
+      actor.position.z - sin_yaw * source_local_x + cos_yaw * source_local_z;
+  float const world_x = target_world_x - source_world_x;
+  float const world_z = target_world_z - source_world_z;
+
+  LocalContactVector result;
+  result.x = cos_yaw * world_x - sin_yaw * world_z;
+  result.z = sin_yaw * world_x + cos_yaw * world_z;
+  result.distance = std::hypot(result.x, result.z);
+  if (result.distance > 0.0001F) {
+    result.yaw = std::atan2(result.x, result.z) * 180.0F / std::numbers::pi_v<float>;
+  }
+  return result;
+}
+
+void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
+  auto* hit = entity.get_component<Engine::Core::FormationHitPresentationComponent>();
+  if (hit == nullptr) {
+    return;
+  }
+  hit->remaining = std::max(0.0F, hit->remaining - std::max(0.0F, delta_time));
+  if (hit->remaining <= 0.0F) {
+    entity.remove_component<Engine::Core::FormationHitPresentationComponent>();
+  }
+}
+
+void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr || !FormationCombat::has_formation_slots(*entity)) {
       continue;
     }
+    tick_formation_hit(*entity, delta_time);
+
     auto const layout = FormationCombat::resolve_layout(*entity);
     auto* presentation = Engine::Core::get_or_add_component<
         Engine::Core::FormationPresentationComponent>(entity);
@@ -41,93 +351,186 @@ void publish_formation_presentation(Engine::Core::World& world) {
         entity->get_component<Engine::Core::AttackTargetComponent>();
     auto const* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();
-    Engine::Core::EntityID const target_id =
+    Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
-    auto* target = target_id != 0U ? world.get_entity(target_id) : nullptr;
-    auto const* target_unit = target != nullptr
-                                  ? target->get_component<Engine::Core::UnitComponent>()
-                                  : nullptr;
-    bool const target_alive =
-        target_unit != nullptr && target_unit->health > 0 &&
-        !target->has_component<Engine::Core::PendingRemovalComponent>();
-    bool const melee_ordered =
-        attack != nullptr && target_id != 0U &&
+    bool const outgoing_melee =
+        attack != nullptr && outgoing_target != 0U &&
         attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+    bool const incoming_contact =
+        contact != nullptr && std::any_of(contact->fronts.begin(),
+                                          contact->fronts.end(),
+                                          [](auto const& front) {
+                                            return !front.outgoing && front.in_contact;
+                                          });
+    bool const melee_ordered = outgoing_melee || incoming_contact;
+
+    Engine::Core::EntityID display_target = outgoing_target;
+    if (display_target == 0U && contact != nullptr) {
+      auto const first_contact =
+          std::find_if(contact->fronts.begin(),
+                       contact->fronts.end(),
+                       [](auto const& front) { return front.in_contact; });
+      if (first_contact != contact->fronts.end()) {
+        display_target = first_contact->opponent_id;
+      }
+    }
+    bool const target_alive = opponent_alive(world, display_target);
+    float const combat_motion_time =
+        melee_ordered ? presentation->combat_motion_time + std::max(0.0F, delta_time)
+                      : presentation->combat_motion_time;
+
     auto const* actor_transform =
         entity->get_component<Engine::Core::TransformComponent>();
-    auto const* target_transform =
-        target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-    bool const owns_contact_facing =
-        contact != nullptr && contact->in_contact && contact->target_id == target_id &&
-        actor_transform != nullptr && target_transform != nullptr;
-    float desired_contact_local_yaw = 0.0F;
-    if (owns_contact_facing) {
-      float const dx = target_transform->position.x - actor_transform->position.x;
-      float const dz = target_transform->position.z - actor_transform->position.z;
-      float const target_world_yaw =
-          std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-      desired_contact_local_yaw =
-          std::remainder(target_world_yaw - actor_transform->rotation.y, 360.0F);
-    }
-
-    std::vector<bool> live(static_cast<std::size_t>(layout.total_count), false);
-    for (auto const& slot : layout.live_slots) {
-      if (slot.index < live.size()) {
-        live[slot.index] = true;
-      }
-    }
     std::vector<Engine::Core::FormationSoldierPresentation> directives;
     directives.reserve(layout.all_slots.size());
-    for (auto const& slot : layout.all_slots) {
+    for (auto const& original_slot : layout.all_slots) {
+      auto const* live_slot = find_live_slot(layout, original_slot.index);
+      auto const* previous = original_slot.index < presentation->soldiers.size()
+                                 ? &presentation->soldiers[original_slot.index]
+                                 : nullptr;
+
       Engine::Core::FormationSoldierPresentation directive;
-      directive.slot_index = slot.index;
-      directive.row = slot.row;
-      directive.col = slot.col;
-      directive.local_x = slot.local_x;
-      directive.local_z = slot.local_z;
-      directive.local_yaw = slot.local_yaw;
-      if (owns_contact_facing) {
-        float previous_yaw = slot.local_yaw;
-        if (presentation->target_id == target_id &&
-            slot.index < presentation->soldiers.size()) {
-          previous_yaw = presentation->soldiers[slot.index].local_yaw;
+      directive.slot_index = original_slot.index;
+      directive.row = live_slot != nullptr ? live_slot->row : original_slot.row;
+      directive.col = live_slot != nullptr ? live_slot->col : original_slot.col;
+      directive.local_x =
+          live_slot != nullptr ? live_slot->local_x : original_slot.local_x;
+      directive.local_z =
+          live_slot != nullptr ? live_slot->local_z : original_slot.local_z;
+      directive.local_yaw =
+          live_slot != nullptr ? live_slot->local_yaw : original_slot.local_yaw;
+      directive.alive = live_slot != nullptr;
+      directive.combat_speed_scale =
+          0.94F + hash_unit_float(layout.seed, original_slot.index * 73U + 19U) * 0.12F;
+      directive.combat_phase_bias =
+          (hash_unit_float(layout.seed, original_slot.index * 131U + 41U) - 0.5F) *
+          0.56F;
+
+      auto const assignment =
+          directive.alive ? assignment_for_slot(contact, previous, original_slot.index)
+                          : SoldierAssignment{};
+      if (assignment.front != nullptr && assignment.pair != nullptr) {
+        directive.opponent_id = assignment.front->opponent_id;
+        directive.target_slot = assignment.pair->target_slot;
+        directive.engagement_surface_gap = assignment.pair->surface_gap;
+        directive.combat_role = combat_role_for(layout.seed, original_slot.index, true);
+        directive.action = action_for_role(directive.combat_role);
+
+        auto* opponent = world.get_entity(assignment.front->opponent_id);
+        auto const opponent_layout = opponent != nullptr
+                                         ? FormationCombat::resolve_layout(*opponent)
+                                         : FormationCombat::FormationLayout{};
+        auto const* target_slot =
+            find_live_slot(opponent_layout, assignment.pair->target_slot);
+        auto const* opponent_transform =
+            opponent != nullptr
+                ? opponent->get_component<Engine::Core::TransformComponent>()
+                : nullptr;
+        if (actor_transform != nullptr && opponent_transform != nullptr) {
+          float const target_x = target_slot != nullptr
+                                     ? target_slot->world_x
+                                     : opponent_transform->position.x;
+          float const target_z = target_slot != nullptr
+                                     ? target_slot->world_z
+                                     : opponent_transform->position.z;
+          auto const contact_vector = local_contact_vector(*actor_transform,
+                                                           directive.local_x,
+                                                           directive.local_z,
+                                                           target_x,
+                                                           target_z);
+          float const desired_yaw = contact_vector.yaw;
+          float const prior_yaw =
+              previous != nullptr ? previous->local_yaw : directive.local_yaw;
+          float const yaw_delta = std::remainder(desired_yaw - prior_yaw, 360.0F);
+          float const max_turn = 300.0F * std::max(0.0F, delta_time);
+          directive.local_yaw = prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+
+          constexpr float k_weapon_contact_distance = 0.72F;
+          float const pull_distance =
+              std::clamp(contact_vector.distance - k_weapon_contact_distance,
+                         0.0F,
+                         layout.spacing * 1.35F);
+          if (contact_vector.distance > 0.0001F) {
+            directive.local_x +=
+                contact_vector.x / contact_vector.distance * pull_distance;
+            directive.local_z +=
+                contact_vector.z / contact_vector.distance * pull_distance;
+          }
+
+          float const yaw_rad = desired_yaw * std::numbers::pi_v<float> / 180.0F;
+          float const forward_x = std::sin(yaw_rad);
+          float const forward_z = std::cos(yaw_rad);
+          float const right_x = std::cos(yaw_rad);
+          float const right_z = -std::sin(yaw_rad);
+          std::uint32_t const soldier_seed =
+              layout.seed ^
+              (static_cast<std::uint32_t>(original_slot.index) * 0x9e3779b9U);
+          float lateral = (hash_unit_float(soldier_seed, 0x4f1bbcdcU) - 0.5F) *
+                          std::min(0.45F, layout.spacing * 0.48F);
+          float depth = (hash_unit_float(soldier_seed, 0x94d049bbU) - 0.5F) *
+                        std::min(0.34F, layout.spacing * 0.36F);
+          float const motion_phase =
+              combat_motion_time * directive.combat_speed_scale *
+                  (2.0F * std::numbers::pi_v<float> / 0.95F) +
+              directive.combat_phase_bias * 2.0F * std::numbers::pi_v<float>;
+          float const forward_pulse = std::max(0.0F, std::sin(motion_phase));
+          using Role = Engine::Core::FormationSoldierCombatRole;
+          switch (directive.combat_role) {
+          case Role::LeadStrike:
+            depth += forward_pulse * 0.14F;
+            break;
+          case Role::SupportStrike:
+            depth += forward_pulse * 0.09F;
+            break;
+          case Role::StepIn:
+            depth += 0.08F + forward_pulse * 0.08F;
+            break;
+          case Role::StepOut:
+            depth -= 0.08F + forward_pulse * 0.06F;
+            break;
+          case Role::Guard:
+            depth -= 0.03F;
+            break;
+          case Role::Ready:
+          case Role::None:
+            break;
+          }
+          lateral += std::sin(motion_phase * 0.47F) * 0.035F;
+          directive.local_x += right_x * lateral + forward_x * depth;
+          directive.local_z += right_z * lateral + forward_z * depth;
         }
-        float const yaw_delta =
-            std::remainder(desired_contact_local_yaw - previous_yaw, 360.0F);
-        constexpr float k_max_contact_turn_per_tick = 4.0F;
-        directive.local_yaw = previous_yaw + std::clamp(yaw_delta,
-                                                        -k_max_contact_turn_per_tick,
-                                                        k_max_contact_turn_per_tick);
-      }
-      directive.alive = slot.index < live.size() && live[slot.index];
-      directive.action = melee_ordered
-                             ? Engine::Core::FormationSoldierAction::MeleeReady
-                             : Engine::Core::FormationSoldierAction::FollowUnit;
-      if (contact != nullptr && contact->in_contact &&
-          contact->target_id == target_id) {
-        auto const pair = std::find_if(contact->engagement_pairs.begin(),
-                                       contact->engagement_pairs.end(),
-                                       [&](auto const& candidate) {
-                                         return candidate.attacker_slot == slot.index;
-                                       });
-        if (pair != contact->engagement_pairs.end()) {
-          directive.action = Engine::Core::FormationSoldierAction::MeleeEngaged;
-          directive.target_slot = pair->target_slot;
-          directive.engagement_surface_gap = pair->surface_gap;
+
+        if (assignment.front->outgoing) {
+          auto const carrier = FormationCombat::select_damage_engagement_pair(
+              *entity,
+              assignment.front->opponent_id,
+              assignment.front->engagement_pairs);
+          directive.damage_carrier =
+              carrier.has_value() && carrier->attacker_slot == directive.slot_index;
         }
-      }
-      if (directive.action == Engine::Core::FormationSoldierAction::MeleeReady &&
-          presentation->target_id == target_id &&
-          slot.index < presentation->soldiers.size()) {
-        auto const& previous = presentation->soldiers[slot.index];
-        if (previous.action == Engine::Core::FormationSoldierAction::MeleeEngaged ||
-            previous.action ==
-                Engine::Core::FormationSoldierAction::MeleeFollowThrough) {
+      } else if (directive.alive && melee_ordered) {
+        directive.combat_role =
+            combat_role_for(layout.seed, original_slot.index, false);
+        directive.action = action_for_role(directive.combat_role);
+        if (previous != nullptr && presentation->target_id == display_target &&
+            (previous->action == Engine::Core::FormationSoldierAction::MeleeEngaged ||
+             previous->action ==
+                 Engine::Core::FormationSoldierAction::MeleeFollowThrough)) {
           directive.action = Engine::Core::FormationSoldierAction::MeleeFollowThrough;
-          directive.target_slot = previous.target_slot;
-          directive.engagement_surface_gap = previous.engagement_surface_gap;
+          directive.combat_role = previous->combat_role;
+          directive.target_slot = previous->target_slot;
+          directive.engagement_surface_gap = previous->engagement_surface_gap;
         }
+      } else {
+        directive.action = Engine::Core::FormationSoldierAction::FollowUnit;
+      }
+
+      if (previous != nullptr && directive.alive) {
+        float const blend = 1.0F - std::exp(-6.5F * std::max(0.0F, delta_time));
+        directive.local_x =
+            previous->local_x + (directive.local_x - previous->local_x) * blend;
+        directive.local_z =
+            previous->local_z + (directive.local_z - previous->local_z) * blend;
       }
       directives.push_back(directive);
     }
@@ -136,7 +539,7 @@ void publish_formation_presentation(Engine::Core::World& world) {
                          presentation->rows != layout.rows ||
                          presentation->cols != layout.cols ||
                          presentation->spacing != layout.spacing ||
-                         presentation->target_id != target_id ||
+                         presentation->target_id != display_target ||
                          presentation->target_alive != target_alive ||
                          presentation->melee_ordered != melee_ordered ||
                          presentation->allow_full_body_hit_reaction ||
@@ -145,11 +548,11 @@ void publish_formation_presentation(Engine::Core::World& world) {
     presentation->rows = static_cast<std::uint16_t>(layout.rows);
     presentation->cols = static_cast<std::uint16_t>(layout.cols);
     presentation->spacing = layout.spacing;
-    presentation->target_id = target_id;
+    presentation->target_id = display_target;
     presentation->target_alive = target_alive;
     presentation->melee_ordered = melee_ordered;
-
     presentation->allow_full_body_hit_reaction = layout.live_slots.size() == 1U;
+    presentation->combat_motion_time = combat_motion_time;
     presentation->soldiers = std::move(directives);
     if (changed) {
       ++presentation->revision;
@@ -159,89 +562,12 @@ void publish_formation_presentation(Engine::Core::World& world) {
 
 } // namespace
 
-void update_formation_contacts(Engine::Core::World* world) {
+void update_formation_contacts(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
-
-  for (auto* attacker :
-       world->get_entities_with<Engine::Core::FormationContactComponent>()) {
-    auto* attack = attacker->get_component<Engine::Core::AttackComponent>();
-    auto* target_ref = attacker->get_component<Engine::Core::AttackTargetComponent>();
-    if (attack == nullptr || target_ref == nullptr || target_ref->target_id == 0 ||
-        attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
-      clear_contact(
-          *attacker->get_component<Engine::Core::FormationContactComponent>());
-    }
-  }
-
-  for (auto* attacker :
-       world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
-    auto* attack = attacker->get_component<Engine::Core::AttackComponent>();
-    auto* target_ref = attacker->get_component<Engine::Core::AttackTargetComponent>();
-    if (attack == nullptr || target_ref == nullptr || target_ref->target_id == 0 ||
-        attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
-      continue;
-    }
-    auto* target = world->get_entity(target_ref->target_id);
-    auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-    auto* target_unit = target != nullptr
-                            ? target->get_component<Engine::Core::UnitComponent>()
-                            : nullptr;
-    if (target == nullptr || attacker_unit == nullptr || target_unit == nullptr ||
-        attacker_unit->health <= 0 || target_unit->health <= 0 ||
-        !FormationCombat::has_formation_slots(*attacker) &&
-            !FormationCombat::has_formation_slots(*target)) {
-      if (auto* existing =
-              attacker->get_component<Engine::Core::FormationContactComponent>()) {
-        clear_contact(*existing);
-      }
-      continue;
-    }
-
-    auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
-    auto* contact =
-        Engine::Core::get_or_add_component<Engine::Core::FormationContactComponent>(
-            attacker);
-    if (contact == nullptr) {
-      continue;
-    }
-    bool const same_target = contact->target_id == target->get_id();
-    bool const in_contact =
-        FormationCombat::contact_is_active(*attacker, *target, geometry);
-    auto pairs = in_contact ? FormationCombat::engagement_pairs(*attacker, *target)
-                            : std::vector<Engine::Core::FormationEngagementPair>{};
-    std::vector<std::uint16_t> engaged;
-    engaged.reserve(pairs.size());
-    for (auto const& pair : pairs) {
-      engaged.push_back(pair.attacker_slot);
-    }
-    auto same_pair_ids = [](auto const& lhs, auto const& rhs) {
-      if (lhs.size() != rhs.size()) {
-        return false;
-      }
-      for (std::size_t index = 0; index < lhs.size(); ++index) {
-        if (lhs[index].attacker_slot != rhs[index].attacker_slot ||
-            lhs[index].target_slot != rhs[index].target_slot) {
-          return false;
-        }
-      }
-      return true;
-    };
-    bool const changed = !same_target || contact->in_contact != in_contact ||
-                         contact->engaged_soldier_indices != engaged ||
-                         !same_pair_ids(contact->engagement_pairs, pairs);
-    contact->target_id = target->get_id();
-    contact->surface_gap = geometry.surface_gap;
-    contact->in_contact = in_contact;
-    contact->engaged_soldier_indices = std::move(engaged);
-    contact->engagement_pairs = std::move(pairs);
-    if (changed) {
-      ++contact->revision;
-    }
-  }
-
-  publish_formation_presentation(*world);
+  publish_contacts(*world, build_fronts(*world));
+  publish_formation_presentation(*world, delta_time);
 }
 
 } // namespace Game::Systems::Combat

@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "../core/rts_action_model.h"
+#include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -174,10 +176,33 @@ issue_civilian_delivery_command(Engine::Core::World* world,
     return false;
   }
 
-  Game::Systems::CommandService::MoveOptions opts;
-  opts.kind = Game::Systems::MoveOrderKind::ScriptedMove;
-  Game::Systems::CommandService::move_units(*world, civilian_ids, targets, opts);
+  Game::Command::Move move;
+  move.units = std::move(civilian_ids);
+  move.targets = std::move(targets);
+  move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Command::submit(
+      *world, Game::Command::Source::LocalPlayer, local_owner_id, std::move(move));
   return true;
+}
+
+inline void submit_ground_move(Engine::Core::World& world,
+                               const std::vector<Engine::Core::EntityID>& units,
+                               const QVector3D& destination,
+                               int owner_id) {
+  const auto plan =
+      Game::Systems::CommandService::plan_ground_move(world, units, destination);
+  if (units.size() != plan.positions.size()) {
+    return;
+  }
+
+  Game::Command::Move move;
+  move.units = units;
+  move.targets.assign(plan.positions.begin(), plan.positions.end());
+  move.facing_angles = plan.facing_angles;
+  move.kind = Game::Systems::MoveOrderKind::FormationMove;
+  move.preserve_formation_mode = plan.preserve_formation_mode;
+  Game::Command::submit(
+      world, Game::Command::Source::LocalPlayer, owner_id, std::move(move));
 }
 
 inline void
@@ -216,8 +241,11 @@ issue_move_or_attack_command(Engine::Core::World* world,
           if (attackers.empty()) {
             return;
           }
-          Game::Systems::CommandService::attack_target(
-              *world, attackers, target_id, true);
+          Game::Command::submit(
+              *world,
+              Game::Command::Source::LocalPlayer,
+              local_owner_id,
+              Game::Command::AttackTarget{.units = attackers, .target = target_id});
           return;
         }
       }
@@ -229,9 +257,7 @@ issue_move_or_attack_command(Engine::Core::World* world,
           QPointF(sx, sy), *camera, viewport_width, viewport_height, hit)) {
     return;
   }
-  auto const plan =
-      Game::Systems::CommandService::plan_ground_move(*world, selected, hit);
-  Game::Systems::CommandService::issue_ground_move(*world, selected, plan);
+  submit_ground_move(*world, selected, hit, local_owner_id);
 }
 
 } // namespace App::Utils

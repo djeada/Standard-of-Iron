@@ -21,8 +21,34 @@ uniform vec3 u_camera_position;
 
 out vec4 frag_color;
 
+const float k_readable_zoom_near = 18.0;
+const float k_readable_zoom_far = 70.0;
+const float k_readable_pivot = 0.42;
+const float k_readable_contrast_gain = 0.38;
+const float k_readable_saturation_gain = 0.30;
+const float k_readable_rim_gain = 2.20;
+
 float hash13(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+}
+
+float readable_zoom(vec3 world_position) {
+  float view_distance = length(u_camera_position - world_position);
+  return smoothstep(k_readable_zoom_near, k_readable_zoom_far, view_distance);
+}
+
+vec3 apply_zoom_readability(vec3 color, float zoom) {
+  if (zoom <= 0.0) {
+    return color;
+  }
+
+  vec3 contrasted =
+      (color - k_readable_pivot) * (1.0 + k_readable_contrast_gain * zoom) +
+      k_readable_pivot;
+  contrasted = clamp(contrasted, 0.0, 1.0);
+  float luma = dot(contrasted, vec3(0.299, 0.587, 0.114));
+  vec3 saturated = mix(vec3(luma), contrasted, 1.0 + k_readable_saturation_gain * zoom);
+  return clamp(saturated, 0.0, 1.0);
 }
 
 vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4 wear) {
@@ -139,10 +165,8 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
   return clamp(worn, 0.0, 1.0);
 }
 
-vec3 shade_readable_character(vec3 base,
-                              vec3 surface_normal,
-                              vec3 world_position,
-                              int material_id) {
+vec3 shade_readable_character(
+    vec3 base, vec3 surface_normal, vec3 world_position, int material_id, float zoom) {
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_position - world_position);
   float scene_ambient = clamp(environment_ambient_intensity(), 0.08, 0.40);
@@ -162,7 +186,7 @@ vec3 shade_readable_character(vec3 base,
 
   float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);
   float creature_scale = material_id == 6 ? 0.035 : 0.14;
-  color += sky_color * rim * creature_scale;
+  color += sky_color * rim * creature_scale * (1.0 + k_readable_rim_gain * zoom);
 
   if (material_id == 2) {
     vec3 half_vector = normalize(light_dir + view_dir);
@@ -186,7 +210,9 @@ void main() {
   vec3 light_dir = environment_primary_direction();
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
-  vec3 color = shade_readable_character(base, surface_normal, v_pos_ws, u_material_id);
+  float zoom = readable_zoom(v_pos_ws);
+  vec3 color =
+      shade_readable_character(base, surface_normal, v_pos_ws, u_material_id, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
   if (u_material_id == 6) {
     bool horse_hair = v_color_role == 5 || v_color_role == 6;
@@ -201,5 +227,6 @@ void main() {
       color = min(color, base * 1.10 + vec3(0.015));
     }
   }
+  color = apply_zoom_readability(color, zoom);
   frag_color = vec4(color, u_alpha);
 }

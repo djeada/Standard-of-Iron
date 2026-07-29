@@ -4,13 +4,16 @@
 #include <QVector3D>
 #include <Qt>
 
+#include <cstdint>
+#include <limits>
+
 class QQuickWindow;
 
 namespace Engine::Core {
 class Entity;
 class CommanderComponent;
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -63,6 +66,7 @@ public:
   void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow* window);
   void poll_mouse_look(QQuickWindow* window);
   void request_dodge();
+  void request_dodge(const QVector3D& world_direction);
   void request_jump();
   void special_action();
   void request_vanguard_rush();
@@ -145,16 +149,12 @@ private:
   int m_move_forward_axis = 0;
   bool m_move_running = false;
 
-  float m_hit_trauma = 0.0F;
-  float m_hit_shake_phase = 0.0F;
-  float m_strike_punch_fwd = 0.0F;
-
   DodgeState m_dodge_state = DodgeState::None;
   float m_dodge_timer = 0.0F;
   QVector3D m_dodge_direction{0.0F, 0.0F, 1.0F};
+  QVector3D m_requested_dodge_direction{0.0F, 0.0F, 0.0F};
+  bool m_has_requested_dodge_direction = false;
   float m_dodge_fov_kick = 0.0F;
-  float m_impact_shake = 0.0F;
-  float m_impact_shake_seed = 0.0F;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
   QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
@@ -166,7 +166,10 @@ private:
   float m_second_wind_cooldown = 0.0F;
 
   Engine::Core::EntityID m_locked_target_id = 0;
+  std::uint16_t m_locked_target_slot{std::numeric_limits<std::uint16_t>::max()};
   Engine::Core::EntityID m_soft_target_id = 0;
+  std::uint16_t m_soft_target_slot{std::numeric_limits<std::uint16_t>::max()};
+  std::uint16_t m_primary_target_slot{std::numeric_limits<std::uint16_t>::max()};
   float m_lock_lost_timer = 0.0F;
   bool m_guard_was_active = false;
 };

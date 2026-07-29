@@ -177,6 +177,7 @@ auto CombatActionService::request_attack(
       action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
       action->combat_action_id = static_cast<std::uint8_t>(action_id);
       action->active_target_id = request.target_hint_id;
+      action->active_target_soldier_slot = request.target_soldier_slot;
       action->action_duration =
           definition != nullptr ? definition->duration_seconds : 0.0F;
       reset_combat_action_event_runtime(*action);

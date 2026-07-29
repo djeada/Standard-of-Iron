@@ -23,6 +23,7 @@
 #include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/arm_guards_renderer.h"
 #include "../../../equipment/armor/tool_belt_renderer.h"
+#include "../../../equipment/armor/torso_local_archetype_utils.h"
 #include "../../../equipment/armor/work_apron_renderer.h"
 #include "../../../equipment/attachment_builder.h"
 #include "../../../equipment/equipment_registry.h"
@@ -94,6 +95,13 @@ constexpr std::uint32_t k_carthage_hammer_role_count = 2U;
 constexpr std::uint32_t k_carthage_saw_role_count = 4U;
 constexpr std::uint32_t k_carthage_chisel_role_count = 2U;
 constexpr std::uint32_t k_carthage_civilian_sash_role_count = 2U;
+constexpr std::uint32_t k_civilian_pack_role_count = 3U;
+
+enum CivilianPackSlot : std::uint8_t {
+  k_pack_clay_slot = 0U,
+  k_pack_strap_slot = 1U,
+  k_pack_weave_slot = 2U,
+};
 
 auto carthage_headwrap_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
@@ -187,6 +195,125 @@ auto carthage_robes_archetype() -> const RenderArchetype& {
     return std::move(builder).build();
   }();
   return arch;
+}
+
+auto civilian_pack_fill_role_colors(const HumanoidPalette& palette,
+                                    QVector3D* out,
+                                    std::size_t max) -> std::uint32_t {
+  if (max < k_civilian_pack_role_count) {
+    return 0U;
+  }
+  out[k_pack_clay_slot] = QVector3D(0.60F, 0.38F, 0.24F);
+  out[k_pack_strap_slot] = palette.leather_dark;
+  out[k_pack_weave_slot] = Render::GL::Humanoid::saturate_color(
+      palette.cloth * 0.48F + QVector3D(0.26F, 0.21F, 0.13F));
+  return k_civilian_pack_role_count;
+}
+
+auto civilian_pack_extra_role_colors(const void* variant_void,
+                                     QVector3D* out,
+                                     std::uint32_t base_count,
+                                     std::size_t max_count) -> std::uint32_t {
+  if (variant_void == nullptr || max_count <= base_count) {
+    return base_count;
+  }
+  const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
+  return base_count + civilian_pack_fill_role_colors(
+                          variant.palette, out + base_count, max_count - base_count);
+}
+
+auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    const auto& bind = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame& torso = bind.torso;
+    const AttachmentFrame& waist = bind.waist;
+    const TorsoLocalFrame local = make_torso_local_frame(QMatrix4x4{}, torso);
+
+    float const tr = torso.radius;
+    float const y_sh = 0.010F;
+    float const y_w = local.point(waist.origin).y();
+
+    RenderArchetypeBuilder builder{"carthage_civilian_pack"};
+
+    QVector3D const jar(0.0F, y_sh - 0.150F, -tr * 1.16F);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(jar, QVector3D(tr * 0.52F, 0.135F, tr * 0.44F)),
+        k_pack_clay_slot);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(jar + QVector3D(0.0F, 0.110F, 0.0F),
+                                              jar + QVector3D(0.0F, 0.205F, 0.010F),
+                                              tr * 0.16F),
+                             k_pack_clay_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(jar + QVector3D(0.0F, 0.212F, 0.010F),
+                          QVector3D(tr * 0.22F, 0.020F, tr * 0.20F)),
+        k_pack_clay_slot);
+    builder.add_palette_mesh(
+        get_unit_cone(),
+        Render::Geom::cone_from_to(jar - QVector3D(0.0F, 0.105F, 0.0F),
+                                   jar - QVector3D(0.0F, 0.215F, 0.0F),
+                                   tr * 0.26F),
+        k_pack_clay_slot);
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(jar + QVector3D(sx * tr * 0.18F, 0.170F, 0.0F),
+                           jar + QVector3D(sx * tr * 0.44F, 0.070F, 0.0F),
+                           tr * 0.055F),
+          k_pack_clay_slot);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(QVector3D(sx * tr * 0.40F, y_sh + 0.010F, -tr * 1.05F),
+                           QVector3D(sx * tr * 0.52F, y_sh - 0.060F, tr * 0.80F),
+                           tr * 0.060F),
+          k_pack_strap_slot);
+    }
+
+    QVector3D const satchel(-tr * 1.00F, y_w - 0.070F, tr * 0.10F);
+    {
+      QMatrix4x4 m;
+      m.translate(satchel);
+      m.scale(tr * 0.40F, 0.140F, tr * 0.30F);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(1.05F, 0.85F, 10), m, k_pack_weave_slot);
+    }
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(satchel + QVector3D(0.0F, 0.070F, 0.0F),
+                         QVector3D(tr * 0.42F, y_sh - 0.020F, tr * 0.30F),
+                         tr * 0.050F),
+        k_pack_strap_slot);
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto carthage_civilian_pack_make_static_attachment(std::uint16_t chest_bone_index,
+                                                   std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const TorsoLocalFrame torso_local =
+      make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &carthage_civilian_pack_archetype(),
+      .socket_bone_index = chest_bone_index,
+      .unit_local_pose_at_bind = torso_local.world,
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_civilian_pack_role_count);
+       ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
+  }
+  return spec;
+}
+
+auto carthage_civilian_pack_contribution_attachments(std::uint8_t base_role)
+    -> std::vector<Render::Creature::StaticAttachmentSpec> {
+  return {carthage_civilian_pack_make_static_attachment(
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest), base_role)};
 }
 
 auto carthage_civilian_sash_archetype() -> const RenderArchetype& {
@@ -637,6 +764,13 @@ void ensure_carthage_civilian_equipment_contributions_registered() {
            .role_count =
                static_cast<std::uint8_t>(k_carthage_civilian_sash_role_count)});
     }
+    if (loadout.work_apron_handle != k_invalid_equipment_handle) {
+      register_humanoid_equipment_contribution(
+          loadout.work_apron_handle,
+          {.build_attachments = &carthage_civilian_pack_contribution_attachments,
+           .append_role_colors = &civilian_pack_extra_role_colors,
+           .role_count = static_cast<std::uint8_t>(k_civilian_pack_role_count)});
+    }
     return true;
   }();
   (void)registered;
@@ -1003,8 +1137,10 @@ public:
       ensure_carthage_civilian_equipment_contributions_registered();
       const auto loadout =
           Render::GL::Nation::resolve_equipment_loadout("troops/carthage/civilian");
-      const std::array<EquipmentHandle, 3> handles{
-          loadout.helmet_handle, loadout.armor_handle, loadout.cloak_handle};
+      const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
+                                                   loadout.armor_handle,
+                                                   loadout.cloak_handle,
+                                                   loadout.work_apron_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
@@ -1043,6 +1179,8 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ar.register_archetype("carthage_robes", [] { (void)carthage_robes_archetype(); });
   ar.register_archetype("carthage_civilian_sash",
                         [] { (void)carthage_civilian_sash_archetype(); });
+  ar.register_archetype("carthage_civilian_pack",
+                        [] { (void)carthage_civilian_pack_archetype(); });
   ar.register_archetype("carthage_builder_hammer",
                         [] { (void)carthage_hammer_archetype(); });
   ar.register_archetype("carthage_builder_saw", [] { (void)carthage_saw_archetype(); });

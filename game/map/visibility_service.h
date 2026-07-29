@@ -48,6 +48,12 @@ public:
 
   using SnapshotPtr = std::shared_ptr<const Snapshot>;
 
+  VisibilityService() = default;
+  VisibilityService(const VisibilityService&) = delete;
+  VisibilityService(VisibilityService&&) = delete;
+  auto operator=(const VisibilityService&) -> VisibilityService& = delete;
+  auto operator=(VisibilityService&&) -> VisibilityService& = delete;
+
   static auto instance() -> VisibilityService&;
 
   void initialize(int width, int height, float tile_size);
@@ -112,8 +118,6 @@ private:
   void ensure_worker_running();
   static auto execute_job(JobPayload payload) -> JobResult;
 
-  VisibilityService() = default;
-
   bool m_initialized = false;
   int m_width = 0;
   int m_height = 0;
@@ -140,7 +144,7 @@ private:
     int grid_x;
     int grid_z;
   };
-  std::unordered_map<std::uint32_t, CachedPosition> m_last_positions;
+  std::unordered_map<std::uint64_t, CachedPosition> m_last_positions;
   bool m_force_full_update{true};
 };
 

@@ -33,11 +33,11 @@ constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_rear_stride_scale = 0.58F;
 constexpr float k_rear_backward_stride_damping = 0.60F;
 constexpr float k_fight_leg_cycle_time = 0.95F;
-constexpr float k_fight_trunk_side_swing = 0.12F;
-constexpr float k_fight_trunk_lift_base = 0.18F;
-constexpr float k_fight_trunk_lift_wave = 0.06F;
-constexpr float k_fight_trunk_forward_base = 0.03F;
-constexpr float k_fight_trunk_forward_wave = 0.05F;
+constexpr float k_fight_trunk_side_swing = 0.20F;
+constexpr float k_fight_trunk_lift_base = 0.12F;
+constexpr float k_fight_trunk_lift_wave = 0.10F;
+constexpr float k_fight_trunk_forward_base = 0.06F;
+constexpr float k_fight_trunk_forward_wave = 0.12F;
 
 [[nodiscard]] auto translation_matrix(const QVector3D& origin) noexcept -> QMatrix4x4 {
   QMatrix4x4 m;
@@ -89,6 +89,29 @@ struct LegResult {
   QVector3D foot;
 };
 
+[[nodiscard]] auto
+combat_cycle_phase(const ElephantPoseMotion& motion) noexcept -> float {
+  float const progress = std::clamp(motion.combat_phase_progress, 0.0F, 1.0F);
+  using Phase = Render::GL::CombatAnimPhase;
+  switch (motion.combat_phase) {
+  case Phase::Advance:
+    return 0.08F * progress;
+  case Phase::WindUp:
+    return 0.08F + 0.69F * progress;
+  case Phase::Strike:
+    return 0.78F + 0.05F * progress;
+  case Phase::Impact:
+    return 0.83F + 0.04F * progress;
+  case Phase::Recover:
+    return 0.87F + 0.09F * progress;
+  case Phase::Reposition:
+    return 0.96F + 0.04F * progress;
+  case Phase::Idle:
+    break;
+  }
+  return std::fmod(motion.anim_time / k_fight_leg_cycle_time, 1.0F);
+}
+
 [[nodiscard]] auto compute_pose_leg(const Render::GL::ElephantDimensions& d,
                                     const Render::GL::ElephantGait& g,
                                     const ElephantPoseMotion& motion,
@@ -96,9 +119,8 @@ struct LegResult {
                                     float forward_bias,
                                     float phase_offset) noexcept -> LegResult {
   float const leg_phase =
-      motion.is_fighting
-          ? std::fmod(motion.anim_time / k_fight_leg_cycle_time + phase_offset, 1.0F)
-          : std::fmod(motion.phase + phase_offset, 1.0F);
+      motion.is_fighting ? std::fmod(combat_cycle_phase(motion) + phase_offset, 1.0F)
+                         : std::fmod(motion.phase + phase_offset, 1.0F);
   bool const is_front = (forward_bias > 0.0F);
 
   float stride = 0.0F;
@@ -324,24 +346,31 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims
   out_pose.trunk_base_radius = dims.trunk_base_radius * 0.8F;
 
   if (motion.is_fighting) {
-    float const phase_wave = std::sin(motion.anim_time * k_pi * 2.0F / 1.15F);
+    float const phase_wave = std::sin(combat_cycle_phase(motion) * k_pi * 2.0F);
     float const phase_push = 0.5F + 0.5F * phase_wave;
     float combat_lift = 0.0F;
     float combat_reach = 0.0F;
+    float const combat_progress = std::clamp(motion.combat_phase_progress, 0.0F, 1.0F);
     switch (motion.combat_phase) {
+    case Render::GL::CombatAnimPhase::Advance:
+      combat_lift = 0.02F;
+      combat_reach = -0.02F;
+      break;
     case Render::GL::CombatAnimPhase::WindUp:
-      combat_lift = 0.05F;
-      combat_reach = -0.01F;
+      combat_lift = 0.10F * combat_progress;
+      combat_reach = -0.03F;
       break;
     case Render::GL::CombatAnimPhase::Strike:
     case Render::GL::CombatAnimPhase::Impact:
-      combat_lift = -0.03F;
-      combat_reach = 0.07F;
+      combat_lift = -0.12F * (1.0F - 0.5F * combat_progress);
+      combat_reach = 0.18F * (1.0F - 0.4F * combat_progress);
       break;
     case Render::GL::CombatAnimPhase::Recover:
-      combat_lift = -0.01F;
-      combat_reach = 0.03F;
+      combat_lift = -0.03F * (1.0F - combat_progress);
+      combat_reach = 0.06F * (1.0F - combat_progress);
       break;
+    case Render::GL::CombatAnimPhase::Reposition:
+    case Render::GL::CombatAnimPhase::Idle:
     default:
       break;
     }

@@ -16,37 +16,18 @@ add_executable(
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/element_ops.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/json_schema.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/visibility_coordinator.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/skirmish_loader.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/level_loader.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/environment.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/commander_control_controller.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/input_command_handler.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/production_manager.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/rts_action_model.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/language_manager.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
-    ${CMAKE_SOURCE_DIR}/app/core/ambient_state_manager.cpp
-    ${CMAKE_SOURCE_DIR}/app/models/graphics_settings_proxy.cpp
-    ${CMAKE_SOURCE_DIR}/app/models/cursor_manager.cpp
-    ${CMAKE_SOURCE_DIR}/app/models/hover_tracker.cpp
-    ${CMAKE_SOURCE_DIR}/app/controllers/action_vfx.cpp
-    ${CMAKE_SOURCE_DIR}/app/controllers/command_controller.cpp
+    session/session_context_test.cpp
+    command/command_pipeline_test.cpp
+    save/snapshot_contract_test.cpp
+    core/entity_handle_test.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     core/audio_system_test.cpp
     core/settings_persistence_test.cpp
-    ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
     ui/preferences_test.cpp
-    ${CMAKE_SOURCE_DIR}/app/models/selection_grouping.cpp
     ui/selection_grouping_test.cpp
     ui/icon_resources_test.cpp
-    ${CMAKE_SOURCE_DIR}/ui/theme.cpp
     ui/widget_theme_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
@@ -83,6 +64,7 @@ add_executable(
     systems/patrol_system_test.cpp
     systems/formation_system_test.cpp
     systems/formation_combat_geometry_test.cpp
+    systems/structure_combat_test.cpp
     systems/guard_system_test.cpp
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp
@@ -135,6 +117,8 @@ add_executable(
     render/ground_utils_test.cpp
     render/dead_tree_mesh_test.cpp
     architecture/layering_test.cpp
+    architecture/qml_surface_test.cpp
+    architecture/documentation_accuracy_test.cpp
     render/local_lighting_test.cpp
     render/graphics_lighting_settings_test.cpp
     render/scatter_composition_test.cpp
@@ -229,6 +213,8 @@ target_link_libraries(
         engine_core
         render_gl
         game_systems
+        app_core
+        ui_shell
         arena_scenario_harness
         balance_sim_harness
         audio_system
@@ -254,6 +240,34 @@ endif()
 include(GoogleTest)
 gtest_discover_tests(
     standard_of_iron_tests
+    DISCOVERY_MODE PRE_TEST
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+# ---- Headless simulation binary ----
+# Links the simulation kernel and nothing else. The value is as much in the link
+# step as in the assertions: a gameplay file that starts depending on scene_core
+# or render_gl breaks this target immediately, which is the boundary item 1 of
+# the architecture review asked the build to enforce.
+add_executable(
+    headless_simulation_tests
+    headless/headless_simulation_test.cpp
+    headless/headless_main.cpp
+)
+target_link_libraries(
+    headless_simulation_tests
+    PRIVATE GTest::gtest Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+)
+target_include_directories(
+    headless_simulation_tests
+    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
+)
+set_target_properties(
+    headless_simulation_tests
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
+)
+gtest_discover_tests(
+    headless_simulation_tests
     DISCOVERY_MODE PRE_TEST
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
@@ -349,6 +363,8 @@ target_link_libraries(
         engine_core
         render_gl
         game_systems
+        app_core
+        ui_shell
         arena_scenario_harness
         balance_sim_harness
         audio_system
@@ -375,8 +391,6 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
     add_executable(
         design_system_qml_tests
         ui/design_system_qml_test.cpp
-        ${CMAKE_SOURCE_DIR}/ui/theme.cpp
-        ${CMAKE_SOURCE_DIR}/ui/preferences.cpp
         ${CMAKE_SOURCE_DIR}/design_resources.qrc
         ${CMAKE_SOURCE_DIR}/assets.qrc
     )
@@ -388,6 +402,7 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
             Qt${QT_VERSION_MAJOR}::Qml
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::QuickTest
+            ui_shell
     )
     target_include_directories(design_system_qml_tests PRIVATE ${CMAKE_SOURCE_DIR})
     set_target_properties(
