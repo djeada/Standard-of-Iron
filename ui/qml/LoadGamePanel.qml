@@ -221,12 +221,27 @@ Item {
 
                         delegate: Rectangle {
                             width: loadListView.width
-                            height: model.isEmpty ? 100 : 120
-                            color: loadListView.selected_index === index ? Theme.selectedBg : mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
+                            height: model.isEmpty ? 100 : 130
+                            color: loadListView.selected_index === index ? Qt.rgba(0.86, 0.72, 0.40, 0.15) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
-                            border.color: loadListView.selected_index === index ? Theme.selectedBr : Theme.cardBorder
-                            border.width: 1
+                            border.color: loadListView.selected_index === index ? Theme.accent : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Theme.cardBorder
+                            border.width: loadListView.selected_index === index ? 2 : 1
                             visible: !model.isEmpty || loadListModel.count === 1
+
+                            MouseArea {
+                                id: mouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: !model.isEmpty
+                                onClicked: {
+                                    loadListView.selected_index = index;
+                                }
+                                onDoubleClicked: {
+                                    if (!model.isEmpty)
+                                        root.load_requested(model.slot_name);
+                                }
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -250,17 +265,22 @@ Item {
 
                                         anchors.fill: parent
                                         anchors.margins: 2
-                                        fillMode: Image.PreserveAspectCrop
+                                        fillMode: Image.PreserveAspectFit
                                         source: model.thumbnail && model.thumbnail.length > 0 ? "data:image/png;base64," + model.thumbnail : ""
                                         visible: source !== ""
                                     }
 
-                                    Label {
-                                        anchors.centerIn: parent
+                                    Rectangle {
+                                        anchors.fill: parent
                                         visible: !loadThumbnailImage.visible
-                                        text: qsTr("No Preview")
-                                        color: Theme.textHint
-                                        font.pointSize: Theme.fontSizeTiny
+                                        color: Theme.cardBase
+
+                                        Label {
+                                            anchors.centerIn: parent
+                                            text: qsTr("No Preview")
+                                            color: Theme.textHint
+                                            font.pointSize: Theme.fontSizeTiny
+                                        }
                                     }
                                 }
 
@@ -279,15 +299,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: qsTr("Slot: %1").arg(model.slot_name)
-                                        color: Theme.textSub
-                                        font.pointSize: Theme.fontSizeSmall
-                                        Layout.fillWidth: true
-                                        elide: Label.ElideRight
-                                    }
-
-                                    Label {
-                                        text: model.isEmpty ? "" : qsTr("%1 - %2").arg(model.map_name).arg(root.describe_mode(model.mode, model.kind))
+                                        text: qsTr("%1 · %2").arg(model.map_name).arg(root.describe_mode(model.mode, model.kind))
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeMedium
                                         Layout.fillWidth: true
@@ -299,7 +311,7 @@ Item {
                                         spacing: Theme.spacingLarge
 
                                         Label {
-                                            text: qsTr("Last saved: %1").arg(Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss"))
+                                            text: qsTr("Saved %1").arg(Qt.formatDateTime(new Date(model.timestamp), "MMM d, yyyy · h:mm AP"))
                                             color: Theme.textHint
                                             font.pointSize: Theme.fontSizeSmall
                                             Layout.fillWidth: true
@@ -307,7 +319,7 @@ Item {
                                         }
 
                                         Label {
-                                            text: model.playTime !== "" ? qsTr("Play time: %1").arg(model.playTime) : ""
+                                            text: model.playTime !== "" ? qsTr("Played %1").arg(model.playTime) : ""
                                             color: Theme.textHint
                                             font.pointSize: Theme.fontSizeSmall
                                             visible: model.playTime !== ""
@@ -324,35 +336,13 @@ Item {
                                     visible: model.isEmpty
                                 }
 
-                                ColumnLayout {
+                                RowLayout {
                                     spacing: Theme.spacingTiny
                                     visible: !model.isEmpty
 
                                     StyledButton {
-                                        text: qsTr("Load")
-                                        button_style: "small"
-                                        Layout.fillWidth: true
-                                        onClicked: {
-                                            root.load_requested(model.slot_name);
-                                        }
-                                    }
-
-                                    StyledButton {
-                                        text: qsTr("Export")
-                                        button_style: "small"
-                                        Layout.fillWidth: true
-                                        onClicked: {
-                                            if (typeof game === 'undefined' || !game.saves.export_save_slot)
-                                                return;
-                                            var path = game.saves.export_save_slot(model.slot_name);
-                                            root.status_message = path !== "" ? qsTr("Exported to %1").arg(path) : qsTr("Export failed");
-                                        }
-                                    }
-
-                                    StyledButton {
                                         text: qsTr("Verify")
-                                        button_style: "small"
-                                        Layout.fillWidth: true
+                                        button_style: "secondary"
                                         onClicked: {
                                             if (typeof game === 'undefined' || !game.saves.verify_save_slot)
                                                 return;
@@ -367,28 +357,12 @@ Item {
                                     StyledButton {
                                         text: qsTr("Delete")
                                         button_style: "danger"
-                                        Layout.fillWidth: true
                                         onClicked: {
                                             confirmDeleteDialog.slot_name = model.slot_name;
                                             confirmDeleteDialog.slot_index = index;
                                             confirmDeleteDialog.open();
                                         }
                                     }
-                                }
-                            }
-
-                            MouseArea {
-                                id: mouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                enabled: !model.isEmpty
-                                onClicked: {
-                                    loadListView.selected_index = index;
-                                }
-                                onDoubleClicked: {
-                                    if (!model.isEmpty)
-                                        root.load_requested(model.slot_name);
                                 }
                             }
                         }
@@ -414,14 +388,9 @@ Item {
                     elide: Label.ElideRight
                 }
 
-                Label {
-                    text: loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty ? qsTr("Selected: %1").arg(loadListModel.get(loadListView.selected_index).title) : qsTr("Select a save to load")
-                    color: Theme.textSub
-                    font.pointSize: Theme.fontSizeMedium
-                }
-
                 StyledButton {
-                    text: qsTr("Load Selected")
+                    text: qsTr("Load")
+                    button_style: "primary"
                     enabled: loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty
                     onClicked: {
                         if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
