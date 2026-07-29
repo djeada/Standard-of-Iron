@@ -9,7 +9,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
-#include "systems/arrow_system.h"
+#include "systems/arrow_projectile.h"
 #include "systems/cleanup_system.h"
 #include "systems/combat_actions/body_impact.h"
 #include "systems/combat_actions/combat_action_definition.h"
@@ -35,6 +35,7 @@
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
 #include "systems/rpg_combat_system/rpg_commander_damage.h"
+#include "systems/rpg_combat_system/rpg_targeting.h"
 #include "tests/support/movement_test_access.h"
 #include "units/troop_config.h"
 
@@ -61,6 +62,16 @@ void advance_projectiles(World& world, float total_time = 1.5F, float step = 0.1
     (void)Game::Systems::Combat::process_combat_status_effects(&world, step);
     projectile_system->update(&world, step);
   }
+}
+
+void complete_authored_action(World& world, Entity& attacker) {
+  auto* action = attacker.get_component<RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  Game::Systems::Combat::process_authored_combat_action(
+      &world,
+      attacker,
+      attacker.get_component<CombatStateComponent>(),
+      std::max(0.01F, action->action_duration));
 }
 
 void use_single_body_combat_geometry(std::initializer_list<Entity*> entities) {
@@ -1921,7 +1932,7 @@ TEST_F(CombatModeTest, RangedVolleySpawnsOnlyAtAuthoredBowRelease) {
     }
   } refresh_guard;
 
-  world->add_system(std::make_unique<Game::Systems::ArrowSystem>());
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
   Game::Units::TroopConfig::instance().register_troop_type(
       Game::Units::TroopType::Archer, 60);
 
@@ -1953,9 +1964,9 @@ TEST_F(CombatModeTest, RangedVolleySpawnsOnlyAtAuthoredBowRelease) {
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
-  auto* arrow_system = world->get_system<Game::Systems::ArrowSystem>();
-  ASSERT_NE(arrow_system, nullptr);
-  EXPECT_TRUE(arrow_system->arrows().empty());
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
   EXPECT_EQ(enemy_unit->health, 100);
   auto* action = attacker->get_component<RpgCommanderActionComponent>();
   ASSERT_NE(action, nullptr);
@@ -1965,20 +1976,78 @@ TEST_F(CombatModeTest, RangedVolleySpawnsOnlyAtAuthoredBowRelease) {
 
   Game::Systems::Combat::process_authored_combat_action(
       world.get(), *attacker, attacker->get_component<CombatStateComponent>(), 0.45F);
-  EXPECT_TRUE(arrow_system->arrows().empty());
+  EXPECT_TRUE(projectile_system->projectiles().empty());
   EXPECT_EQ(enemy_unit->health, 100);
 
   Game::Systems::Combat::process_authored_combat_action(
       world.get(), *attacker, attacker->get_component<CombatStateComponent>(), 0.02F);
-  EXPECT_EQ(arrow_system->arrows().size(),
+  EXPECT_EQ(projectile_system->projectiles().size(),
             static_cast<std::size_t>(
                 Game::Systems::Combat::Constants::k_max_visual_arrows_per_volley));
-  EXPECT_EQ(enemy_unit->health, 83);
+  EXPECT_EQ(enemy_unit->health, 100);
   EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
+  advance_projectiles(*world, 0.60F, 0.05F);
+  EXPECT_EQ(enemy_unit->health, 83);
+  ASSERT_FALSE(projectile_system->impacts().empty());
+  EXPECT_TRUE(std::any_of(projectile_system->impacts().begin(),
+                          projectile_system->impacts().end(),
+                          [](auto const& impact) { return impact.damage_applied; }));
+}
+
+TEST_F(CombatModeTest, RangedAttackAgainstRpgCommanderSpawnsOneFocusedArrow) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 6.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 2;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Archer;
+  attacker_unit->render_individuals_per_unit_override = 1;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = false;
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 10.0F;
+  attacker_attack->damage = 17;
+  attacker_attack->cooldown = 1.0F;
+  attacker_attack->time_since_last = 1.0F;
+
+  auto* commander = world->create_entity();
+  commander->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* commander_unit = commander->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  commander_unit->owner_id = 1;
+  commander_unit->render_individuals_per_unit_override = 1;
+  auto* commander_data = commander->add_component<CommanderComponent>();
+  commander_data->fpv_controlled = true;
+  auto* commander_rpg = commander->add_component<RpgHealthComponent>();
+  commander_rpg->active = true;
+  commander_rpg->rpg_hp = 100;
+  commander_rpg->rpg_max_hp = 100;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = commander->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  Game::Systems::Combat::process_authored_combat_action(
+      world.get(), *attacker, attacker->get_component<CombatStateComponent>(), 0.50F);
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  ASSERT_EQ(projectile_system->projectiles().size(), 1U);
+  auto const* arrow = dynamic_cast<Game::Systems::ArrowProjectile const*>(
+      projectile_system->projectiles().front().get());
+  ASSERT_NE(arrow, nullptr);
+  EXPECT_EQ(arrow->visual_style(), Game::Systems::ArrowVisualStyle::Focused);
+  EXPECT_TRUE(arrow->should_apply_damage());
+  EXPECT_EQ(arrow->get_target_id(), commander->get_id());
 }
 
 TEST_F(CombatModeTest, InterruptedBowActionCreatesNoProjectileOrDamage) {
-  world->add_system(std::make_unique<Game::Systems::ArrowSystem>());
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
 
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -2009,9 +2078,9 @@ TEST_F(CombatModeTest, InterruptedBowActionCreatesNoProjectileOrDamage) {
   Game::Systems::Combat::process_authored_combat_action(
       world.get(), *attacker, attacker->get_component<CombatStateComponent>(), 0.5F);
 
-  auto* arrow_system = world->get_system<Game::Systems::ArrowSystem>();
-  ASSERT_NE(arrow_system, nullptr);
-  EXPECT_TRUE(arrow_system->arrows().empty());
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
   EXPECT_EQ(enemy_unit->health, 100);
   auto* action = attacker->get_component<RpgCommanderActionComponent>();
   ASSERT_NE(action, nullptr);
@@ -2019,7 +2088,7 @@ TEST_F(CombatModeTest, InterruptedBowActionCreatesNoProjectileOrDamage) {
 }
 
 TEST_F(CombatModeTest, MultipleArchersReleaseFromTheirOwnVisibleActions) {
-  world->add_system(std::make_unique<Game::Systems::ArrowSystem>());
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
 
   auto* enemy = world->create_entity();
   enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
@@ -2050,9 +2119,9 @@ TEST_F(CombatModeTest, MultipleArchersReleaseFromTheirOwnVisibleActions) {
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
-  auto* arrow_system = world->get_system<Game::Systems::ArrowSystem>();
-  ASSERT_NE(arrow_system, nullptr);
-  EXPECT_TRUE(arrow_system->arrows().empty());
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
 
   for (auto* archer : archers) {
     auto* action = archer->get_component<RpgCommanderActionComponent>();
@@ -2065,7 +2134,9 @@ TEST_F(CombatModeTest, MultipleArchersReleaseFromTheirOwnVisibleActions) {
     EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
   }
 
-  EXPECT_FALSE(arrow_system->arrows().empty());
+  EXPECT_FALSE(projectile_system->projectiles().empty());
+  EXPECT_EQ(enemy_unit->health, 100);
+  advance_projectiles(*world);
   EXPECT_EQ(enemy_unit->health, 70);
 }
 
@@ -2174,7 +2245,10 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
   auto* casualties = target->get_component<SoldierCasualtyAnimationComponent>();
   ASSERT_NE(casualties, nullptr);
   ASSERT_EQ(casualties->entries.size(), 1U);
-  EXPECT_EQ(casualties->entries.front().slot_index, 0U);
+  auto const* hit = target->get_component<FormationHitPresentationComponent>();
+  ASSERT_NE(hit, nullptr);
+  EXPECT_EQ(casualties->entries.front().slot_index, hit->soldier_slot);
+  EXPECT_LT(casualties->entries.front().slot_index, 3U);
   EXPECT_EQ(casualties->entries.front().state, DeathSequenceState::Dying);
   EXPECT_FALSE(target->has_component<DeathAnimationComponent>());
 
@@ -2441,6 +2515,45 @@ TEST_F(CombatModeTest, GravePriestHealingTargetsUndeadAndLivingHealersSkipThem) 
   EXPECT_EQ(living_unit->health, 54);
 }
 
+TEST_F(CombatModeTest, HealingRestoresSurvivorsWithoutResurrectingFormationCasualties) {
+  HealingSystem healing_system;
+
+  auto* healer_entity = world->create_entity();
+  healer_entity->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* healer_unit =
+      healer_entity->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  healer_unit->owner_id = 1;
+  auto* healer = healer_entity->add_component<HealerComponent>();
+  healer->healing_range = 8.0F;
+  healer->healing_amount = 20;
+  healer->healing_cooldown = 1.0F;
+  healer->time_since_last_heal = 1.0F;
+
+  auto* formation = world->create_entity();
+  formation->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* formation_unit = formation->add_component<UnitComponent>(30, 180, 1.0F, 12.0F);
+  formation_unit->owner_id = 1;
+  auto* roster = formation->add_component<FormationRosterPresentationComponent>();
+  roster->total_count = 18;
+  roster->live_count = 4;
+  roster->alive.assign(18U, 0U);
+  std::fill(roster->alive.end() - 4, roster->alive.end(), std::uint8_t{1U});
+
+  healing_system.update(world.get(), 0.1F);
+
+  EXPECT_EQ(formation_unit->health, 40);
+  EXPECT_EQ(resolve_surviving_individual_count(
+                formation_unit->health, formation_unit->max_health, 18),
+            4);
+  EXPECT_EQ(std::count(roster->alive.begin(), roster->alive.end(), std::uint8_t{1U}),
+            4);
+
+  healer->time_since_last_heal = healer->healing_cooldown;
+  healing_system.update(world.get(), 0.1F);
+  EXPECT_EQ(formation_unit->health, 40);
+  EXPECT_FALSE(healer->is_healing_active);
+}
+
 TEST_F(CombatModeTest, GravePriestSuppressesFireballWhileUndeadHealingIsAvailable) {
   world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
 
@@ -2549,6 +2662,7 @@ TEST_F(CombatModeTest,
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
 
   auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
   ASSERT_NE(projectile_system, nullptr);
@@ -2652,6 +2766,7 @@ TEST_F(CombatModeTest, FireballBurnContinuesAfterCasterDies) {
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
   advance_projectiles(*world, 0.8F, 0.08F);
 
   ASSERT_NE(enemy->get_component<BurningStatusComponent>(), nullptr);
@@ -2702,6 +2817,7 @@ TEST_F(CombatModeTest, FireballBurnKeepsIgnitionAgeWhileFirePatchRefreshesDurati
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
   advance_projectiles(*world, 0.8F, 0.08F);
 
   auto* burning = enemy->get_component<BurningStatusComponent>();
@@ -2754,6 +2870,7 @@ TEST_F(CombatModeTest, CursedVolleyAppliesAndRefreshesCurseOnLivingTargets) {
 
   auto query_context = Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
   advance_projectiles(*world, 0.8F, 0.08F);
 
   auto* cursed = enemy->get_component<CursedStatusComponent>();
@@ -2765,6 +2882,7 @@ TEST_F(CombatModeTest, CursedVolleyAppliesAndRefreshesCurseOnLivingTargets) {
   attacker_attack->time_since_last = 1.0F;
   query_context = Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
   advance_projectiles(*world, 0.8F, 0.08F);
 
   ASSERT_NE(enemy->get_component<CursedStatusComponent>(), nullptr);
@@ -2811,6 +2929,7 @@ TEST_F(CombatModeTest, CursedVolleyDoesNotAffectUndeadTargets) {
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  complete_authored_action(*world, *attacker);
   advance_projectiles(*world, 0.8F, 0.08F);
 
   EXPECT_EQ(enemy_unit->health, 86);
@@ -2823,6 +2942,7 @@ TEST_F(CombatModeTest, BuildingDeathsDoNotCreateBloodStains) {
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Catapult;
 
   auto* building = world->create_entity();
   building->add_component<TransformComponent>(4.0F, 0.0F, 1.0F);
@@ -3192,7 +3312,7 @@ TEST_F(CombatModeTest, TimedSpearTraceUsesBakedShaftSegmentWhenAvailable) {
   }
 
   auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
-  auto* forward_enemy = make_enemy_soldier(*world, -0.30F, 2.25F);
+  auto* forward_enemy = make_enemy_soldier(*world, 0.30F, 2.25F);
   auto* broad_shape_enemy = make_enemy_soldier(*world, 0.50F, 2.45F);
   ASSERT_NE(forward_enemy, nullptr);
   ASSERT_NE(broad_shape_enemy, nullptr);
@@ -3409,6 +3529,73 @@ TEST_F(CombatModeTest, TimedSwordTraceRejectsBroadConeTargetOutsideBladeSegment)
 
   EXPECT_EQ(contact.target_id, 0U) << "local_forward=" << contact.local_forward
                                    << " local_right=" << contact.local_right;
+}
+
+TEST_F(CombatModeTest, RpgTargetingUsesExactPresentedFormationSoldierPose) {
+  auto* formation = make_enemy_soldier(*world, 10.0F, 10.0F);
+  auto* formation_unit = formation->get_component<UnitComponent>();
+  ASSERT_NE(formation_unit, nullptr);
+  formation_unit->render_individuals_per_unit_override = 6;
+
+  auto* presentation = formation->add_component<FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  presentation->soldiers.resize(6);
+  presentation->soldiers[0].slot_index = 0;
+  presentation->soldiers[0].alive = true;
+  presentation->soldiers[0].local_x = 1.25F;
+  presentation->soldiers[0].local_z = -7.5F;
+  presentation->soldiers[0].local_yaw = 37.0F;
+
+  auto const target = Game::Systems::RpgCombat::resolve_soldier_target(*formation, 0U);
+
+  ASSERT_TRUE(target.has_value());
+  EXPECT_EQ(target->soldier_slot, 0U);
+  EXPECT_NEAR(target->position.x(), 11.25F, 0.0001F);
+  EXPECT_NEAR(target->position.z(), 2.5F, 0.0001F);
+  EXPECT_NEAR(target->yaw_degrees, 37.0F, 0.0001F);
+}
+
+TEST_F(CombatModeTest, TimedTraceFollowsVisibleFormationDamageCarrier) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* attacker = make_enemy_soldier(*world, 0.0F, -3.45F);
+  auto* attacker_unit = attacker->get_component<UnitComponent>();
+  ASSERT_NE(attacker_unit, nullptr);
+  attacker_unit->render_individuals_per_unit_override = 6;
+
+  auto* presentation = attacker->add_component<FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  presentation->soldiers.resize(6);
+  for (std::uint16_t slot = 0; slot < presentation->soldiers.size(); ++slot) {
+    presentation->soldiers[slot].slot_index = slot;
+    presentation->soldiers[slot].alive = true;
+  }
+  auto& carrier = presentation->soldiers[0];
+  carrier.local_z = 2.0F;
+  carrier.local_yaw = 0.0F;
+  carrier.opponent_id = commander->get_id();
+  carrier.damage_carrier = true;
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RtsSwordStrike);
+  ASSERT_NE(definition, nullptr);
+
+  auto const root_segment =
+      Game::Systems::CombatActions::sample_authored_weapon_trace_segment(
+          *attacker,
+          *definition,
+          {.previous_normalized_time = 0.40F, .current_normalized_time = 0.56F});
+  ASSERT_TRUE(root_segment.valid);
+  EXPECT_LT(root_segment.current_tip.z(), -1.0F);
+
+  auto const contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world,
+      *attacker,
+      *definition,
+      {.previous_normalized_time = 0.40F, .current_normalized_time = 0.56F},
+      commander->get_id());
+
+  EXPECT_EQ(contact.target_id, commander->get_id());
+  EXPECT_EQ(contact.attacker_soldier_slot, 0U);
 }
 
 TEST_F(CombatModeTest, CombatHitResolverRoutesCommanderActionContactToUnitDamage) {
@@ -4156,6 +4343,51 @@ TEST_F(CombatModeTest, CombatHitResolverUsesCommanderGuardForCommanderTarget) {
   EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
 }
 
+TEST_F(CombatModeTest, NormalCommanderBlockPreventsHealthDamageAtWeaponContact) {
+  auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
+  auto* target = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  ASSERT_NE(target_cmd, nullptr);
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  guard->perfect_guard_remaining = 0.0F;
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+  target_rpg->crit_chance = 0.0F;
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = attacker->get_id(),
+                   .target_id = target->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RpgSwordThrust,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::Thrust,
+                   .contact_point = QVector3D(0.0F, 0.9F, 0.35F),
+                   .distance = 1.0F,
+                   .local_forward = 1.0F},
+       .damage_profile = {.posture_damage = 10.0F, .guard_pressure = 14.0F},
+       .explicit_raw_damage = 18});
+
+  EXPECT_TRUE(result.attempted);
+  EXPECT_FALSE(result.applied);
+  EXPECT_TRUE(result.damage.blocked);
+  EXPECT_FALSE(result.damage.guard_broken);
+  EXPECT_EQ(result.damage.effective_damage, 0);
+  EXPECT_EQ(target_rpg->rpg_hp, 100);
+  EXPECT_GT(target_cmd->posture, 0.0F);
+  auto const* presentation = target->get_component<RpgContactPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_EQ(presentation->entries.size(), 1U);
+  EXPECT_EQ(presentation->entries.front().outcome, RpgContactOutcome::Block);
+  EXPECT_FLOAT_EQ(presentation->entries.front().x, 0.0F);
+  EXPECT_FLOAT_EQ(presentation->entries.front().y, 0.9F);
+  EXPECT_FLOAT_EQ(presentation->entries.front().z, 0.35F);
+}
+
 TEST_F(CombatModeTest, CombatHitResolverAppliesAuthoredPostureDamageToCommander) {
   auto* attacker = make_fpv_commander(*world, 0.0F, 1.0F);
 
@@ -4263,8 +4495,13 @@ TEST_F(CombatModeTest, CommanderActionContactRespectsDodgeInvulnerability) {
 
   EXPECT_TRUE(result.attempted);
   EXPECT_FALSE(result.applied);
+  EXPECT_TRUE(result.damage.dodged);
   EXPECT_EQ(result.damage.effective_damage, 0);
   EXPECT_EQ(target_rpg->rpg_hp, 100);
+  auto const* presentation = target->get_component<RpgContactPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_EQ(presentation->entries.size(), 1U);
+  EXPECT_EQ(presentation->entries.front().outcome, RpgContactOutcome::Dodge);
 }
 
 TEST_F(CombatModeTest, CommanderFinisherUsesPunishOpeningThroughSharedResolver) {
@@ -4644,6 +4881,84 @@ TEST_F(CombatModeTest, ProjectileSystemImpactRoutesThroughRpgResolver) {
   EXPECT_EQ(target->get_component<UnitComponent>()->health, 100);
 }
 
+TEST_F(CombatModeTest, ProjectileDamageAndVisibleImpactPublishOnTheSameArrivalTick) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(10.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  projectile_system->spawn_arrow(QVector3D(0.0F, 1.0F, 0.0F),
+                                 QVector3D(10.0F, 0.0F, 0.0F),
+                                 QVector3D(0.8F, 0.9F, 1.0F),
+                                 10.0F,
+                                 false,
+                                 Game::Systems::ProjectileKind::Arrow,
+                                 true,
+                                 17,
+                                 attacker->get_id(),
+                                 target->get_id());
+
+  projectile_system->update(world.get(), 0.98F);
+  EXPECT_EQ(target_unit->health, 100);
+  EXPECT_TRUE(projectile_system->impacts().empty());
+  ASSERT_EQ(projectile_system->projectiles().size(), 1U);
+
+  projectile_system->update(world.get(), 0.10F);
+  EXPECT_EQ(target_unit->health, 83);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
+  ASSERT_EQ(projectile_system->impacts().size(), 1U);
+  auto const& impact = projectile_system->impacts().front();
+  EXPECT_FLOAT_EQ(impact.age, 0.0F);
+  EXPECT_TRUE(impact.hit_target);
+  EXPECT_TRUE(impact.damage_applied);
+  EXPECT_EQ(impact.attacker_id, attacker->get_id());
+  EXPECT_EQ(impact.target_id, target->get_id());
+}
+
+TEST_F(CombatModeTest, EscapedProjectileStillPublishesVisibleMissWithoutDamage) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* target = world->create_entity();
+  auto* target_transform = target->add_component<TransformComponent>(8.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  projectile_system->spawn_arrow(QVector3D(0.0F, 1.0F, 0.0F),
+                                 QVector3D(8.0F, 0.0F, 0.0F),
+                                 QVector3D(0.8F, 0.9F, 1.0F),
+                                 8.0F,
+                                 false,
+                                 Game::Systems::ProjectileKind::Arrow,
+                                 true,
+                                 17,
+                                 attacker->get_id(),
+                                 target->get_id());
+  target_transform->position.z = 3.0F;
+
+  projectile_system->update(world.get(), 1.1F);
+
+  EXPECT_EQ(target_unit->health, 100);
+  ASSERT_EQ(projectile_system->impacts().size(), 1U);
+  EXPECT_FALSE(projectile_system->impacts().front().hit_target);
+  EXPECT_FALSE(projectile_system->impacts().front().damage_applied);
+}
+
 TEST_F(CombatModeTest, CommanderActionSwordTraceDealsDamageWhenBladeTouches) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   auto* enemy = make_enemy_soldier(*world, 0.0F, 1.5F);
@@ -4670,6 +4985,118 @@ TEST_F(CombatModeTest, CommanderActionSwordTraceDealsDamageWhenBladeTouches) {
   EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
   EXPECT_EQ(action->hit_target_count, 1U);
   EXPECT_EQ(action->hit_target_ids[0], enemy->get_id());
+}
+
+TEST_F(CombatModeTest, CommanderBladeContactSelectsExactFormationSoldier) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* formation = make_enemy_soldier(*world, 0.0F, 1.45F);
+  auto* formation_unit = formation->get_component<UnitComponent>();
+  ASSERT_NE(formation_unit, nullptr);
+  formation_unit->render_individuals_per_unit_override = 6;
+  auto* combat_state = begin_commander_strike(commander, formation->get_id());
+  combat_state->state_duration = 0.30F;
+
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+      0.33F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = formation->get_id();
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.24F);
+
+  EXPECT_LT(formation_unit->health, 100);
+  EXPECT_EQ(action->last_hit_target_id, formation->get_id());
+  EXPECT_NE(action->last_hit_soldier_slot,
+            RpgCommanderTargetComponent::k_no_soldier_slot);
+  auto const* hit = formation->get_component<FormationHitPresentationComponent>();
+  ASSERT_NE(hit, nullptr);
+  EXPECT_EQ(hit->soldier_slot, action->last_hit_soldier_slot);
+  auto const resolved = Game::Systems::RpgCombat::resolve_soldier_target(
+      *formation, action->last_hit_soldier_slot);
+  EXPECT_TRUE(resolved.has_value());
+  auto const* target_state = commander->get_component<RpgCommanderTargetComponent>();
+  ASSERT_NE(target_state, nullptr);
+  EXPECT_EQ(target_state->recent_hit_target_id, formation->get_id());
+  EXPECT_EQ(target_state->recent_hit_soldier_slot, action->last_hit_soldier_slot);
+}
+
+TEST_F(CombatModeTest, EnemyRtsSwordDamagesCommanderOnlyAtAuthoredBladeContact) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg_health = commander->add_component<RpgHealthComponent>();
+  rpg_health->active = true;
+  rpg_health->rpg_hp = 100;
+  rpg_health->rpg_max_hp = 100;
+  rpg_health->crit_chance = 0.0F;
+
+  auto* attacker = make_enemy_soldier(*world, 0.0F, -1.45F);
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_damage = 23;
+  auto* target = attacker->add_component<AttackTargetComponent>();
+  target->target_id = commander->get_id();
+  auto* state = attacker->add_component<CombatStateComponent>();
+  state->animation_state = CombatAnimationState::Strike;
+  state->state_duration = 1.0F;
+  auto* action = start_authored_action_at(
+      attacker, Game::Systems::CombatActions::CombatActionId::RtsSwordStrike, 0.20F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = commander->get_id();
+  action->requested_damage = 23;
+
+  Game::Systems::Combat::process_authored_combat_action(
+      world.get(), *attacker, state, 0.15F);
+  EXPECT_EQ(rpg_health->rpg_hp, 100);
+
+  Game::Systems::Combat::process_authored_combat_action(
+      world.get(), *attacker, state, 0.20F);
+
+  EXPECT_EQ(rpg_health->rpg_hp, 77);
+  EXPECT_EQ(action->last_hit_target_id, commander->get_id());
+  EXPECT_EQ(action->last_damage, 23);
+  auto const* presentation =
+      commander->get_component<RpgContactPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_FALSE(presentation->entries.empty());
+  EXPECT_EQ(presentation->entries.back().outcome, RpgContactOutcome::Damage);
+}
+
+TEST_F(CombatModeTest, MovingCommanderOutsideBladeTracePreventsEnemyRtsDamage) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* commander_transform = commander->get_component<TransformComponent>();
+  ASSERT_NE(commander_transform, nullptr);
+  auto* rpg_health = commander->add_component<RpgHealthComponent>();
+  rpg_health->active = true;
+  rpg_health->rpg_hp = 100;
+  rpg_health->rpg_max_hp = 100;
+  rpg_health->crit_chance = 0.0F;
+
+  auto* attacker = make_enemy_soldier(*world, 0.0F, -1.45F);
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_damage = 23;
+  auto* target = attacker->add_component<AttackTargetComponent>();
+  target->target_id = commander->get_id();
+  auto* state = attacker->add_component<CombatStateComponent>();
+  state->animation_state = CombatAnimationState::Strike;
+  state->state_duration = 1.0F;
+  auto* action = start_authored_action_at(
+      attacker, Game::Systems::CombatActions::CombatActionId::RtsSwordStrike, 0.20F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = commander->get_id();
+  action->requested_damage = 23;
+
+  Game::Systems::Combat::process_authored_combat_action(
+      world.get(), *attacker, state, 0.15F);
+  commander_transform->position.x = 5.0F;
+  Game::Systems::Combat::process_authored_combat_action(
+      world.get(), *attacker, state, 0.25F);
+
+  EXPECT_EQ(rpg_health->rpg_hp, 100);
+  EXPECT_EQ(action->last_hit_target_id, 0U);
+  EXPECT_EQ(commander->get_component<RpgContactPresentationComponent>(), nullptr);
 }
 
 TEST_F(CombatModeTest, CommanderActionSwordTraceMissDoesNotUseImpactFallback) {

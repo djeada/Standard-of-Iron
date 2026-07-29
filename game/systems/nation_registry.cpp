@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "../session/session_context.h"
 #include "systems/formation_system.h"
 #include "systems/nation_loader.h"
 #include "systems/troop_profile_service.h"
@@ -108,8 +109,7 @@ auto Nation::is_ranged_unit(Game::Units::TroopType unit_type) const -> bool {
 }
 
 auto NationRegistry::instance() -> NationRegistry& {
-  static NationRegistry inst;
-  return inst;
+  return Game::Session::SessionContext::active().nations();
 }
 
 void NationRegistry::register_nation(Nation nation) {

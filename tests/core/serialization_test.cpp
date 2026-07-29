@@ -337,8 +337,7 @@ TEST_F(SerializationTest, WorldSerializationRoundTrip) {
   auto new_world = std::make_unique<World>();
   Serialization::deserialize_world(new_world.get(), doc);
 
-  const auto& entities = new_world->get_entities();
-  EXPECT_EQ(entities.size(), 2UL);
+  EXPECT_EQ(new_world->entity_count(), 2UL);
 }
 
 TEST_F(SerializationTest, ReplacingEntityIdClearsOldComponentIndex) {
@@ -382,17 +381,15 @@ TEST_F(SerializationTest, SaveAndLoadFromFile) {
   auto new_world = std::make_unique<World>();
   Serialization::deserialize_world(new_world.get(), loaded_doc);
 
-  const auto& entities = new_world->get_entities();
-  EXPECT_EQ(entities.size(), 1UL);
+  EXPECT_EQ(new_world->entity_count(), 1UL);
 
-  if (!entities.empty()) {
-    auto* loaded_entity = entities.begin()->second.get();
-    auto* loaded_transform = loaded_entity->get_component<TransformComponent>();
+  new_world->for_each_entity([](Engine::Core::Entity& loaded_entity) {
+    auto* loaded_transform = loaded_entity.get_component<TransformComponent>();
     ASSERT_NE(loaded_transform, nullptr);
     EXPECT_FLOAT_EQ(loaded_transform->position.x, 42.0F);
     EXPECT_FLOAT_EQ(loaded_transform->position.y, 43.0F);
     EXPECT_FLOAT_EQ(loaded_transform->position.z, 44.0F);
-  }
+  });
 }
 
 TEST_F(SerializationTest, WorldSerializationPreservesScatterSources) {
@@ -1599,8 +1596,7 @@ TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  const auto& entities = restored_world->get_entities();
-  EXPECT_EQ(entities.size(), original_units.size());
+  EXPECT_EQ(restored_world->entity_count(), original_units.size());
 
   for (size_t i = 0; i < entity_ids.size(); ++i) {
     auto* entity = restored_world->get_entity(entity_ids[i]);

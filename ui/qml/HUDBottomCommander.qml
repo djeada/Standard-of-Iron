@@ -286,49 +286,65 @@ RowLayout {
                 spacing: 4
                 visible: !bottomRoot.fpv_mode
 
-                Text {
-                    text: qsTr("HP %1 / %2").arg(bottomRoot.status_value("health", 0)).arg(bottomRoot.status_value("max_health", 0))
-                    color: Theme.textMain
-                    font.pointSize: 8
-                    font.bold: true
-                }
-
-                Rectangle {
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: bottomRoot.fpv_mode ? 14 : 16
-                    color: Theme.bgShade
-                    radius: 8
-                    border.color: hs.bronzeDeep
-                    border.width: 1
+                    spacing: 6
 
-                    Rectangle {
-                        width: parent.width * Number(bottomRoot.status_value("health_ratio", 0))
-                        height: parent.height
-                        radius: 8
-                        color: bottomRoot.ratio_color(Number(bottomRoot.status_value("health_ratio", 0)))
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: qsTr("HP %1/%2").arg(bottomRoot.status_value("health", 0)).arg(bottomRoot.status_value("max_health", 0))
+                            color: Theme.textMain
+                            font.pointSize: 8
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 12
+                            color: Theme.bgShade
+                            radius: 6
+                            border.color: hs.bronzeDeep
+                            border.width: 1
+
+                            Rectangle {
+                                width: parent.width * Number(bottomRoot.status_value("health_ratio", 0))
+                                height: parent.height
+                                radius: 6
+                                color: "#cc3333"
+                            }
+                        }
                     }
-                }
 
-                Text {
-                    text: bottomRoot.status_value("can_run", false) ? qsTr("Stamina") : qsTr("Stamina stable")
-                    color: Theme.textMain
-                    font.pointSize: 8
-                }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        opacity: bottomRoot.status_value("can_run", false) ? 1 : 0.45
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: bottomRoot.fpv_mode ? 8 : 12
-                    color: Theme.bgShade
-                    radius: 6
-                    border.color: hs.bronzeDeep
-                    border.width: 1
-                    opacity: bottomRoot.status_value("can_run", false) ? 1 : 0.45
+                        Text {
+                            text: bottomRoot.status_value("can_run", false) ? qsTr("STM %1%").arg(Math.round(Number(bottomRoot.status_value("stamina_ratio", 1)) * 100)) : qsTr("Stable")
+                            color: Theme.textMain
+                            font.pointSize: 8
+                            font.bold: true
+                        }
 
-                    Rectangle {
-                        width: parent.width * Number(bottomRoot.status_value("stamina_ratio", 1))
-                        height: parent.height
-                        radius: 6
-                        color: bottomRoot.status_value("is_running", false) ? hs.bronze : Theme.textSubLite
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 12
+                            color: Theme.bgShade
+                            radius: 6
+                            border.color: hs.bronzeDeep
+                            border.width: 1
+
+                            Rectangle {
+                                width: parent.width * Number(bottomRoot.status_value("stamina_ratio", 1))
+                                height: parent.height
+                                radius: 6
+                                color: "#3a9e3a"
+                            }
+                        }
                     }
                 }
 

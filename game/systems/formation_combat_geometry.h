@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 #include "../core/component.h"
@@ -86,6 +87,12 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 [[nodiscard]] auto engagement_pairs(const Engine::Core::Entity& attacker,
                                     const Engine::Core::Entity& target)
     -> std::vector<Engine::Core::FormationEngagementPair>;
+
+[[nodiscard]] auto select_damage_engagement_pair(
+    const Engine::Core::Entity& attacker,
+    Engine::Core::EntityID opponent_id,
+    const std::vector<Engine::Core::FormationEngagementPair>& pairs)
+    -> std::optional<Engine::Core::FormationEngagementPair>;
 
 [[nodiscard]] auto has_formation_slots(const Engine::Core::Entity& entity) -> bool;
 

@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Layouts 2.15
 
 Item {
     id: root
@@ -513,8 +514,9 @@ Item {
         property bool finisherReady: root.status_value("finisher_ready", false) === true
         property bool punishActive: root.status_value("punish_active", false) === true
         property bool lockedOn: root.status_value("locked_target_name", "") !== ""
-        property color crossColor: finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (lockedOn ? "#bfe8ff" : "#f3efe6"))
-        property real crossSize: finisherReady ? 1.18 : (comboStep >= 2 ? 1.08 : 1.0)
+        property bool targetInRange: root.status_value("aim_candidate_in_range", false) === true
+        property color crossColor: finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (targetInRange ? "#52f4ff" : (lockedOn ? "#bfe8ff" : "#f3efe6")))
+        property real crossSize: finisherReady ? 1.18 : (targetInRange ? 1.12 : (comboStep >= 2 ? 1.08 : 1.0))
 
         scale: crossSize
 
@@ -585,135 +587,139 @@ Item {
     }
 
     Item {
-        id: healthBarContainer
+        id: hudBarsRow
         anchors.bottom: parent.bottom
         anchors.bottomMargin: root.bottomInset + 28
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 352
-        height: 40
+        width: 400
+        height: 28
 
-        Rectangle {
+        RowLayout {
             anchors.fill: parent
-            radius: 10
-            color: "#d20a0b10"
-            border.color: "#55f0c58a"
-            border.width: 1
+            spacing: 8
 
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                height: parent.height * 0.5
-                radius: parent.radius
-                color: "#18ffffff"
-            }
-        }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-        Rectangle {
-            id: healthDrain
-            property real drainRatio: Number(root.status_value("health_ratio", 1.0))
-            anchors.left: parent.left
-            anchors.leftMargin: 4
-            anchors.verticalCenter: parent.verticalCenter
-            width: (parent.width - 8) * drainRatio
-            height: parent.height - 8
-            radius: 6
-            color: "#885a0a0a"
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 6
+                    color: "#d20a0b10"
+                    border.color: "#55cc3333"
+                    border.width: 1
+                }
 
-            Behavior on width  {
-                NumberAnimation {
-                    duration: 600
-                    easing.type: Easing.OutQuad
+                Rectangle {
+                    id: healthDrain
+                    property real drainRatio: Number(root.status_value("health_ratio", 1.0))
+                    anchors.left: parent.left
+                    anchors.leftMargin: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: (parent.width - 6) * drainRatio
+                    height: parent.height - 6
+                    radius: 4
+                    color: "#66442222"
+
+                    Behavior on width  {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: healthFill
+                    property real hpRatio: Number(root.status_value("health_ratio", 1.0))
+                    anchors.left: parent.left
+                    anchors.leftMargin: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: (parent.width - 6) * hpRatio
+                    height: parent.height - 6
+                    radius: 4
+                    color: "#cc3333"
+
+                    Behavior on width  {
+                        NumberAnimation {
+                            duration: 180
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "HP " + Number(root.status_value("health", 0)) + "/" + Number(root.status_value("max_health", 100))
+                    color: "#ffffff"
+                    font.pixelSize: 10
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "#88000000"
                 }
             }
-        }
 
-        Rectangle {
-            id: healthFill
-            property real hpRatio: Number(root.status_value("health_ratio", 1.0))
-            anchors.left: parent.left
-            anchors.leftMargin: 4
-            anchors.verticalCenter: parent.verticalCenter
-            width: (parent.width - 8) * hpRatio
-            height: parent.height - 8
-            radius: 6
-            color: hpRatio > 0.55 ? "#de2ecc6c" : (hpRatio > 0.28 ? "#decf9732" : "#dedc4a32")
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-            Behavior on width  {
-                NumberAnimation {
-                    duration: 180
-                    easing.type: Easing.OutQuad
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 6
+                    color: "#d20a0b10"
+                    border.color: "#443a9e3a"
+                    border.width: 1
+                }
+
+                Rectangle {
+                    id: staminaDrain
+                    property real stamRatio: Number(root.status_value("stamina_ratio", 1.0))
+                    anchors.left: parent.left
+                    anchors.leftMargin: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: (parent.width - 6) * stamRatio
+                    height: parent.height - 6
+                    radius: 4
+                    color: "#662e8b2e"
+
+                    Behavior on width  {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: staminaFill
+                    property real stamRatio: Number(root.status_value("stamina_ratio", 1.0))
+                    anchors.left: parent.left
+                    anchors.leftMargin: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: (parent.width - 6) * stamRatio
+                    height: parent.height - 6
+                    radius: 4
+                    color: "#3a9e3a"
+                    opacity: stamRatio < 0.20 ? (0.5 + 0.5 * Math.sin(Date.now() * 0.008)) : 1.0
+
+                    Behavior on width  {
+                        NumberAnimation {
+                            duration: 140
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "STM " + Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0) + "%"
+                    color: "#cff7ffff"
+                    font.pixelSize: 10
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "#66000000"
                 }
             }
-            Behavior on color  {
-                ColorAnimation {
-                    duration: 300
-                }
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: "HP  " + Number(root.status_value("health", 0)) + " / " + Number(root.status_value("max_health", 100))
-            color: "#ffffff"
-            font.pixelSize: 14
-            font.bold: true
-            style: Text.Outline
-            styleColor: "#88000000"
-        }
-    }
-
-    Item {
-        id: staminaBarContainer
-        anchors.top: healthBarContainer.bottom
-        anchors.topMargin: 6
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: 260
-        height: 16
-
-        Rectangle {
-            anchors.fill: parent
-            radius: 5
-            color: "#b30a0a0d"
-            border.color: "#44bfe7d9"
-            border.width: 1
-        }
-
-        Rectangle {
-            id: staminaFill
-            property real stamRatio: Number(root.status_value("stamina_ratio", 1.0))
-            anchors.left: parent.left
-            anchors.leftMargin: 3
-            anchors.verticalCenter: parent.verticalCenter
-            width: (parent.width - 6) * stamRatio
-            height: parent.height - 6
-            radius: 4
-            color: stamRatio > 0.30 ? "#cc3ad7a0" : "#cccf9732"
-            opacity: stamRatio < 0.20 ? (0.5 + 0.5 * Math.sin(Date.now() * 0.008)) : 1.0
-
-            Behavior on width  {
-                NumberAnimation {
-                    duration: 140
-                    easing.type: Easing.OutQuad
-                }
-            }
-            Behavior on color  {
-                ColorAnimation {
-                    duration: 250
-                }
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: "STAMINA"
-            color: "#cff7ffff"
-            font.pixelSize: 9
-            font.bold: true
-            font.letterSpacing: 1.5
-            style: Text.Outline
-            styleColor: "#66000000"
-            visible: staminaBarContainer.width > 120
         }
     }
 

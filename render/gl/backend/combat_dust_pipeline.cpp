@@ -184,6 +184,11 @@ auto CombatDustPipeline::initialize() -> bool {
     return false;
   }
 
+  if (!create_metal_spark_geometry()) {
+    qWarning() << "CombatDustPipeline: Failed to create metal spark geometry";
+    return false;
+  }
+
   if (m_blood_shader != nullptr && !create_blood_geometry()) {
     qWarning() << "CombatDustPipeline: Blood pools disabled; failed to create "
                   "blood geometry";
@@ -198,6 +203,7 @@ auto CombatDustPipeline::initialize() -> bool {
 
 void CombatDustPipeline::shutdown() {
   shutdown_blood_geometry();
+  shutdown_metal_spark_geometry();
   shutdown_fireball_geometry();
   shutdown_geometry();
   m_blood_shader = nullptr;
@@ -260,6 +266,33 @@ void CombatDustPipeline::shutdown_fireball_geometry() {
   m_fireball_index_count = 0;
 }
 
+void CombatDustPipeline::shutdown_metal_spark_geometry() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_metal_spark_vao = 0;
+    m_metal_spark_vertex_buffer = 0;
+    m_metal_spark_index_buffer = 0;
+    m_metal_spark_index_count = 0;
+    return;
+  }
+
+  initializeOpenGLFunctions();
+  clear_gl_errors();
+
+  if (m_metal_spark_vao != 0) {
+    glDeleteVertexArrays(1, &m_metal_spark_vao);
+    m_metal_spark_vao = 0;
+  }
+  if (m_metal_spark_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_metal_spark_vertex_buffer);
+    m_metal_spark_vertex_buffer = 0;
+  }
+  if (m_metal_spark_index_buffer != 0) {
+    glDeleteBuffers(1, &m_metal_spark_index_buffer);
+    m_metal_spark_index_buffer = 0;
+  }
+  m_metal_spark_index_count = 0;
+}
+
 void CombatDustPipeline::shutdown_blood_geometry() {
   if (QOpenGLContext::currentContext() == nullptr) {
     m_blood_vao = 0;
@@ -314,7 +347,8 @@ void CombatDustPipeline::cache_uniforms() {
 
 auto CombatDustPipeline::is_initialized() const -> bool {
   return m_dust_shader != nullptr && m_vao != 0 && m_index_count > 0 &&
-         m_fireball_vao != 0 && m_fireball_index_count > 0;
+         m_fireball_vao != 0 && m_fireball_index_count > 0 && m_metal_spark_vao != 0 &&
+         m_metal_spark_index_count > 0;
 }
 
 struct DustVertex {
@@ -578,6 +612,127 @@ auto CombatDustPipeline::create_fireball_geometry() -> bool {
     return false;
   }
 
+  return true;
+}
+
+auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
+  initializeOpenGLFunctions();
+  shutdown_metal_spark_geometry();
+  clear_gl_errors();
+
+  std::vector<DustVertex> vertices;
+  std::vector<unsigned int> indices;
+
+  constexpr int ray_count = 10;
+  constexpr float pi = std::numbers::pi_v<float>;
+  vertices.reserve(static_cast<std::size_t>(ray_count * 4));
+  indices.reserve(static_cast<std::size_t>(ray_count * 6));
+
+  for (int ray = 0; ray < ray_count; ++ray) {
+    float const seed =
+        std::fmod(std::sin(static_cast<float>(ray + 1) * 78.233F) * 43758.5453F, 1.0F);
+    float const unit_seed = seed < 0.0F ? seed + 1.0F : seed;
+    float const angle =
+        (static_cast<float>(ray) + unit_seed * 0.42F) * (2.0F * pi / ray_count);
+    float const elevation = 0.10F + unit_seed * 0.58F;
+    QVector3D direction(std::cos(angle) * std::cos(elevation),
+                        std::sin(elevation),
+                        std::sin(angle) * std::cos(elevation));
+    direction.normalize();
+
+    QVector3D side = QVector3D::crossProduct(direction, QVector3D(0.0F, 1.0F, 0.0F));
+    if (side.lengthSquared() < 1.0e-5F) {
+      side = QVector3D(1.0F, 0.0F, 0.0F);
+    } else {
+      side.normalize();
+    }
+
+    float const base_distance = 0.05F + unit_seed * 0.05F;
+    float const tip_distance = 0.58F + unit_seed * 0.36F;
+    float const base_width = 0.030F + unit_seed * 0.012F;
+    float const tip_width = base_width * 0.28F;
+    QVector3D const base = direction * base_distance;
+    QVector3D const tip = direction * tip_distance;
+
+    auto append_vertex =
+        [&vertices, &direction](const QVector3D& position, float along, float across) {
+          DustVertex vertex{};
+          vertex.position[0] = position.x();
+          vertex.position[1] = position.y();
+          vertex.position[2] = position.z();
+          vertex.normal[0] = direction.x();
+          vertex.normal[1] = direction.y();
+          vertex.normal[2] = direction.z();
+          vertex.tex_coord[0] = along;
+          vertex.tex_coord[1] = across;
+          vertices.push_back(vertex);
+        };
+
+    unsigned int const first = static_cast<unsigned int>(vertices.size());
+    append_vertex(base - side * base_width, 0.0F, 0.0F);
+    append_vertex(base + side * base_width, 0.0F, 1.0F);
+    append_vertex(tip - side * tip_width, 1.0F, 0.0F);
+    append_vertex(tip + side * tip_width, 1.0F, 1.0F);
+    indices.insert(indices.end(),
+                   {first, first + 1U, first + 2U, first + 2U, first + 1U, first + 3U});
+  }
+
+  glGenVertexArrays(1, &m_metal_spark_vao);
+  if (!check_gl_error("glGenVertexArrays metal spark") || m_metal_spark_vao == 0) {
+    return false;
+  }
+
+  glBindVertexArray(m_metal_spark_vao);
+  glGenBuffers(1, &m_metal_spark_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_metal_spark_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
+               vertices.data(),
+               GL_STATIC_DRAW);
+  if (!check_gl_error("metal spark vertex buffer")) {
+    shutdown_metal_spark_geometry();
+    return false;
+  }
+
+  glGenBuffers(1, &m_metal_spark_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_metal_spark_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+               indices.data(),
+               GL_STATIC_DRAW);
+  if (!check_gl_error("metal spark index buffer")) {
+    shutdown_metal_spark_geometry();
+    return false;
+  }
+  m_metal_spark_index_count = static_cast<GLsizei>(indices.size());
+
+  glEnableVertexAttribArray(VertexAttrib::position);
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
+  glBindVertexArray(0);
+
+  if (!check_gl_error("metal spark vertex attributes")) {
+    shutdown_metal_spark_geometry();
+    return false;
+  }
   return true;
 }
 
@@ -1059,8 +1214,10 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     }
 
     bool const use_fireball_geometry = inst.effect_type == EffectType::Fireball;
+    bool const use_additive_blending =
+        use_fireball_geometry || inst.effect_type == EffectType::MetalSpark;
     EffectStateMode const target_state =
-        use_fireball_geometry ? EffectStateMode::Additive
+        use_additive_blending ? EffectStateMode::Additive
                               : (inst.overlay ? EffectStateMode::AlphaOverlay
                                               : EffectStateMode::AlphaDepth);
     if (!state_initialized || current_state != target_state) {
@@ -1075,9 +1232,14 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
       state_initialized = true;
     }
 
-    GLuint const target_vao = use_fireball_geometry ? m_fireball_vao : m_vao;
+    bool const use_metal_spark_geometry = inst.effect_type == EffectType::MetalSpark;
+    GLuint const target_vao =
+        use_fireball_geometry ? m_fireball_vao
+                              : (use_metal_spark_geometry ? m_metal_spark_vao : m_vao);
     GLsizei const target_index_count =
-        use_fireball_geometry ? m_fireball_index_count : m_index_count;
+        use_fireball_geometry
+            ? m_fireball_index_count
+            : (use_metal_spark_geometry ? m_metal_spark_index_count : m_index_count);
     if (target_vao == 0 || target_index_count <= 0) {
       continue;
     }

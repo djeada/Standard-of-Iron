@@ -9,6 +9,7 @@
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
+#include "structure_combat.h"
 
 namespace Game::Systems::Combat {
 
@@ -167,6 +168,27 @@ auto is_in_range(Engine::Core::Entity* attacker,
   bool const melee =
       (attacker_atk != nullptr) &&
       attacker_atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+  if (is_building(target)) {
+    QVector3D const attacker_position(attacker_transform->position.x,
+                                      attacker_transform->position.y,
+                                      attacker_transform->position.z);
+    if (melee) {
+      if (!structure_melee_contact_active(
+              *attacker,
+              *target,
+              Engine::Core::AttackComponent::k_melee_contact_range_grace)) {
+        return false;
+      }
+    } else if (structure_surface_distance(*target, attacker_position) > range) {
+      return false;
+    }
+
+    if (melee && std::abs(dy) > attacker_atk->max_height_difference) {
+      return false;
+    }
+    return true;
+  }
+
   auto const formation_geometry =
       Game::Systems::FormationCombat::contact_geometry(*attacker, *target);
   if (melee && formation_geometry.uses_formation_slots) {

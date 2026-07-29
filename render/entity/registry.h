@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../creature/part_graph.h"
+#include "../gl/humanoid/humanoid_types.h"
 #include "../submission_visibility.h"
 #include "../submitter.h"
 
@@ -75,6 +76,9 @@ struct DrawContext {
   std::uint8_t variant_override = 0;
   bool has_attack_variant_override = false;
   std::uint8_t attack_variant_override = 0;
+
+  bool has_facial_hair_override = false;
+  FacialHairStyle facial_hair_override = FacialHairStyle::None;
   bool order_markers_visible = false;
 };
 

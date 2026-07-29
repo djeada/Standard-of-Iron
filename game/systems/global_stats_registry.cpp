@@ -1,10 +1,11 @@
 #include "global_stats_registry.h"
 
-#include <chrono>
 #include <unordered_map>
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../session/session_context.h"
+#include "../session/simulation_clock.h"
 #include "../units/troop_config.h"
 #include "core/event_manager.h"
 #include "owner_registry.h"
@@ -13,8 +14,7 @@
 namespace Game::Systems {
 
 auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry& {
-  static GlobalStatsRegistry inst;
-  return inst;
+  return Game::Session::SessionContext::active().stats();
 }
 
 void GlobalStatsRegistry::initialize() {
@@ -55,7 +55,8 @@ auto GlobalStatsRegistry::get_stats(int owner_id) -> PlayerStats* {
 
 void GlobalStatsRegistry::mark_game_start(int owner_id) {
   auto& stats = m_player_stats[owner_id];
-  stats.game_start_time = std::chrono::steady_clock::now();
+  stats.game_start_sim_sec =
+      Game::Session::SessionContext::active().clock().now_seconds();
   stats.game_ended = false;
   stats.play_time_sec = 0.0F;
 }
@@ -63,12 +64,11 @@ void GlobalStatsRegistry::mark_game_start(int owner_id) {
 void GlobalStatsRegistry::mark_game_end(int owner_id) {
   auto it = m_player_stats.find(owner_id);
   if (it != m_player_stats.end() && !it->second.game_ended) {
-    it->second.game_end_time = std::chrono::steady_clock::now();
+    it->second.game_end_sim_sec =
+        Game::Session::SessionContext::active().clock().now_seconds();
     it->second.game_ended = true;
-
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        it->second.game_end_time - it->second.game_start_time);
-    it->second.play_time_sec = duration.count() / 1000.0F;
+    it->second.play_time_sec =
+        static_cast<float>(it->second.game_end_sim_sec - it->second.game_start_sim_sec);
   }
 }
 
@@ -154,12 +154,12 @@ void GlobalStatsRegistry::on_barrack_captured(
 
 void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World& world) {
 
-  std::unordered_map<int, std::chrono::steady_clock::time_point> start_times;
+  std::unordered_map<int, double> start_times;
   std::unordered_map<int, int> troops_recruited_values;
   std::unordered_map<int, int> enemies_killed_values;
   std::unordered_map<int, int> losses_values;
   for (auto& [owner_id, stats] : m_player_stats) {
-    start_times[owner_id] = stats.game_start_time;
+    start_times[owner_id] = stats.game_start_sim_sec;
     troops_recruited_values[owner_id] = stats.troops_recruited;
     enemies_killed_values[owner_id] = stats.enemies_killed;
     losses_values[owner_id] = stats.losses;
@@ -168,7 +168,7 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World& world) {
   m_player_stats.clear();
 
   for (auto& [owner_id, start_time] : start_times) {
-    m_player_stats[owner_id].game_start_time = start_time;
+    m_player_stats[owner_id].game_start_sim_sec = start_time;
     m_player_stats[owner_id].troops_recruited = troops_recruited_values[owner_id];
     m_player_stats[owner_id].enemies_killed = enemies_killed_values[owner_id];
     m_player_stats[owner_id].losses = losses_values[owner_id];

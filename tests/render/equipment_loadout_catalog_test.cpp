@@ -182,8 +182,10 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanCivilianLoadoutResolvesHandleOnlyGarmen
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.armor, "builder_tunic_roman");
   EXPECT_EQ(loadout.ids.cloak, "roman_civilian_mantle");
+  EXPECT_EQ(loadout.ids.work_apron, "civilian_pack_roman");
   EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.work_apron_handle, k_invalid_equipment_handle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageCivilianLoadoutResolvesHandleOnlyGarments) {
@@ -194,9 +196,11 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageCivilianLoadoutResolvesHandleOnlyGar
   EXPECT_EQ(loadout.ids.helmet, "headwrap_carthage_civilian");
   EXPECT_EQ(loadout.ids.armor, "carthage_robes");
   EXPECT_EQ(loadout.ids.cloak, "carthage_civilian_sash");
+  EXPECT_EQ(loadout.ids.work_apron, "civilian_pack_carthage");
   EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.work_apron_handle, k_invalid_equipment_handle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {

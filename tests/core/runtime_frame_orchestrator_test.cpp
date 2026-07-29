@@ -8,6 +8,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
+#include "game/session/session_context.h"
 #include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
@@ -37,6 +38,7 @@ auto add_unit(Engine::Core::World& world,
 }
 
 TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
+  Game::Session::SessionContext session;
   Engine::Core::World world;
   world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
 
@@ -59,7 +61,8 @@ TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
   bool simulation_ran = false;
   int minimap_notifications = 0;
 
-  orchestrator.update(AppSceneContext{.world = &world,
+  orchestrator.update(AppSceneContext{.session = &session,
+                                      .world = &world,
                                       .active_camera = &camera,
                                       .minimap_manager = &minimap_manager},
                       state,
@@ -79,6 +82,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
 }
 
 TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
+  Game::Session::SessionContext session;
   Engine::Core::World world;
   RuntimeFrameOrchestrator orchestrator;
   RuntimeFrameState state;
@@ -88,7 +92,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
     steps.push_back(dt);
   };
 
-  orchestrator.update(AppSceneContext{.world = &world},
+  orchestrator.update(AppSceneContext{.session = &session, .world = &world},
                       state,
                       entity_cache,
                       nullptr,
@@ -98,7 +102,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
                       simulation_step);
   EXPECT_TRUE(steps.empty());
 
-  orchestrator.update(AppSceneContext{.world = &world},
+  orchestrator.update(AppSceneContext{.session = &session, .world = &world},
                       state,
                       entity_cache,
                       nullptr,
@@ -109,7 +113,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
   ASSERT_EQ(steps.size(), 1U);
   EXPECT_NEAR(steps.front(), 1.0F / 60.0F, 0.000001F);
 
-  orchestrator.update(AppSceneContext{.world = &world},
+  orchestrator.update(AppSceneContext{.session = &session, .world = &world},
                       state,
                       entity_cache,
                       nullptr,
@@ -124,6 +128,7 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
 }
 
 TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
+  Game::Session::SessionContext session;
   Engine::Core::World world;
   world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
   auto* unit = add_unit(world, 1.0F, 1.0F, 1);
@@ -162,6 +167,7 @@ TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
 }
 
 TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
+  Game::Session::SessionContext session;
   Engine::Core::World world;
   world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
   auto* selection_system = world.get_system<Game::Systems::SelectionSystem>();
@@ -178,7 +184,7 @@ TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
   EntityCache entity_cache;
   int selection_notifications = 0;
 
-  orchestrator.update(AppSceneContext{.world = &world},
+  orchestrator.update(AppSceneContext{.session = &session, .world = &world},
                       state,
                       entity_cache,
                       nullptr,

@@ -35,7 +35,11 @@ TEST(BpatRegistry, LoadsAllSpecies) {
       static_cast<std::size_t>(
           reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat")) +
       static_cast<std::size_t>(reg.load_species(k_species_humanoid_skeleton,
-                                                root + "/humanoid_skeleton.bpat"));
+                                                root + "/humanoid_skeleton.bpat")) +
+      static_cast<std::size_t>(
+          reg.load_species(k_species_humanoid_caster, root + "/humanoid_caster.bpat")) +
+      static_cast<std::size_t>(reg.load_species(k_species_humanoid_stave_caster,
+                                                root + "/humanoid_stave_caster.bpat"));
   EXPECT_EQ(loaded, k_species_count);
   EXPECT_TRUE(reg.has_species(k_species_humanoid));
   EXPECT_TRUE(reg.has_species(k_species_horse));

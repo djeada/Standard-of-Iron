@@ -459,7 +459,7 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
   }
 }
 
-void Renderer::enqueue_mode_indicator(std::uint32_t entity_id,
+void Renderer::enqueue_mode_indicator(Engine::Core::EntityID entity_id,
                                       Engine::Core::TransformComponent* transform,
                                       Engine::Core::UnitComponent* unit_comp,
                                       bool has_attack,

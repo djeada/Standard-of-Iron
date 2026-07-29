@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -10,7 +11,7 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 struct MovementComponent;
 } // namespace Engine::Core
 

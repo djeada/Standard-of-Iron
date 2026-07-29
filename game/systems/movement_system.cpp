@@ -8,7 +8,9 @@
 
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
+#include "building_collision_registry.h"
 #include "combat_rules.h"
+#include "combat_system/structure_combat.h"
 #include "command_service.h"
 #include "core/component.h"
 #include "formation_combat_geometry.h"
@@ -103,7 +105,8 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
 }
 
 auto is_point_allowed(const QVector3D& pos,
-                      const Engine::Core::Entity& entity) -> bool {
+                      const Engine::Core::Entity& entity,
+                      Engine::Core::World* world) -> bool {
   if (auto const* builder_prod =
           entity.get_component<Engine::Core::BuilderProductionComponent>();
       builder_prod != nullptr && builder_prod->in_progress &&
@@ -117,7 +120,27 @@ auto is_point_allowed(const QVector3D& pos,
     }
   }
 
-  return CommandService::is_world_position_walkable(pos);
+  if (CommandService::is_world_position_walkable(pos)) {
+    return true;
+  }
+
+  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
+  auto* structure = world != nullptr && movement != nullptr &&
+                            movement->get_structure_approach_target() != 0
+                        ? world->get_entity(movement->get_structure_approach_target())
+                        : nullptr;
+  if (structure == nullptr ||
+      !structure->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+  float const facade_distance =
+      Game::Systems::Combat::structure_surface_distance(*structure, pos);
+  constexpr float k_max_final_approach_depth = 2.25F;
+  constexpr float k_min_physical_clearance = 0.04F;
+  return facade_distance >= k_min_physical_clearance &&
+         facade_distance <= k_max_final_approach_depth &&
+         !BuildingCollisionRegistry::instance().is_circle_overlapping_building(
+             pos.x(), pos.z(), 0.04F, structure->get_id());
 }
 
 } // namespace
@@ -358,8 +381,9 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F, transform->position.z);
-  bool const current_position_allowed = is_point_allowed(current_pos_3d, *entity);
-  bool const destination_allowed = is_point_allowed(final_goal, *entity);
+  bool const current_position_allowed =
+      is_point_allowed(current_pos_3d, *entity, world);
+  bool const destination_allowed = is_point_allowed(final_goal, *entity, world);
 
   auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
   const float max_speed = max_navigation_speed(*unit, stamina);
@@ -479,9 +503,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
-  Point const pre_grid =
-      CommandService::world_to_grid(transform->position.x, transform->position.z);
-  bool const was_on_valid_tile = CommandService::is_grid_walkable(pre_grid);
+  bool const was_on_valid_tile = is_point_allowed(current_pos_3d, *entity, world);
 
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
@@ -495,8 +517,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const new_x = old_x + translated_vx * delta_time;
   float const new_z = old_z + translated_vz * delta_time;
 
-  auto cell_walkable = [](float wx, float wz) -> bool {
-    return CommandService::is_grid_walkable(CommandService::world_to_grid(wx, wz));
+  auto cell_walkable = [entity, world](float wx, float wz) -> bool {
+    return is_point_allowed(QVector3D(wx, 0.0F, wz), *entity, world);
   };
 
   if (!was_on_valid_tile || cell_walkable(new_x, new_z)) {

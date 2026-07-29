@@ -82,7 +82,9 @@
 
 namespace {
 
-constexpr std::uint32_t k_roman_healer_tunic_role_count = 6;
+constexpr std::uint32_t k_roman_senator_role_count = 6;
+constexpr std::uint32_t k_carthage_dark_mage_role_count = 6;
+constexpr std::uint32_t k_civilian_pack_role_count = 3;
 constexpr std::uint32_t k_roman_builder_tunic_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
 constexpr std::uint32_t k_carthage_builder_headwrap_role_count = 1;
@@ -7306,7 +7308,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
                 Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
-TEST(HumanoidPrepare, RomanHealerUsesSupportLoadoutRoleLayout) {
+TEST(HumanoidPrepare, RomanHealerUsesSenatorRobeRoleLayout) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get("troops/roman/healer");
@@ -7329,12 +7331,11 @@ TEST(HumanoidPrepare, RomanHealerUsesSupportLoadoutRoleLayout) {
 
   auto const archetype_id = find_archetype_id("troops/roman/healer");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(extra_role_color_count(archetype_id),
-            k_roman_healer_tunic_role_count +
-                Render::GL::k_roman_light_armor_role_count);
+
+  EXPECT_EQ(extra_role_color_count(archetype_id), k_roman_senator_role_count);
 }
 
-TEST(HumanoidPrepare, CarthageHealerUsesSupportLoadoutRoleLayout) {
+TEST(HumanoidPrepare, CarthageHealerUsesDarkMageRobeRoleLayout) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get("troops/carthage/healer");
@@ -7357,8 +7358,8 @@ TEST(HumanoidPrepare, CarthageHealerUsesSupportLoadoutRoleLayout) {
 
   auto const archetype_id = find_archetype_id("troops/carthage/healer");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::k_armor_light_carthage_role_count);
+
+  EXPECT_EQ(extra_role_color_count(archetype_id), k_carthage_dark_mage_role_count);
 }
 
 TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
@@ -7445,7 +7446,8 @@ TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
   auto const archetype_id = find_archetype_id("troops/roman/civilian");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            k_roman_builder_tunic_role_count + k_roman_civilian_mantle_role_count);
+            k_roman_builder_tunic_role_count + k_roman_civilian_mantle_role_count +
+                k_civilian_pack_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
@@ -7474,7 +7476,7 @@ TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
   EXPECT_EQ(extra_role_color_count(archetype_id),
             k_carthage_builder_headwrap_role_count +
                 k_carthage_builder_robes_role_count +
-                k_carthage_civilian_sash_role_count);
+                k_carthage_civilian_sash_role_count + k_civilian_pack_role_count);
 }
 
 TEST(HumanoidPrepare, RomanCivilianGarmentsUseCompactAttachmentCount) {
@@ -8544,49 +8546,63 @@ TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
   EXPECT_FLOAT_EQ(requests.front().phase, 0.5F);
 }
 
-TEST(HumanoidPrepare, EveryLivingSpearmanThrustsDuringFormationMeleeLock) {
+TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::Entity entity(4242);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
   ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Spearman;
-  unit->render_individuals_per_unit_override = 6;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->render_individuals_per_unit_override = 12;
   entity.add_component<Engine::Core::TransformComponent>();
-  auto* formation =
-      entity.add_component<Engine::Core::FormationPresentationComponent>();
-  ASSERT_NE(formation, nullptr);
-  formation->rows = 2;
-  formation->cols = 3;
-  formation->target_id = 99U;
-  formation->target_alive = true;
-  formation->melee_ordered = true;
-  for (std::uint16_t index = 0; index < 6U; ++index) {
-    formation->soldiers.push_back({
-        .slot_index = index,
-        .row = static_cast<std::uint16_t>(index / 3U),
-        .col = static_cast<std::uint16_t>(index % 3U),
-        .alive = true,
-        .action = index == 0U ? Engine::Core::FormationSoldierAction::MeleeEngaged
-                              : Engine::Core::FormationSoldierAction::MeleeReady,
-    });
-  }
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs between_gameplay_strikes{};
-  between_gameplay_strikes.time = 4.25F;
-  between_gameplay_strikes.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  std::array<std::unordered_set<std::uint8_t>, 12> variants_by_soldier;
+  std::unordered_set<std::uint8_t> concurrently_active_variants;
+  bool saw_staggered_activation = false;
+  bool saw_distinct_concurrent_variants = false;
 
-  Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, between_gameplay_strikes, 0U, prep);
+  constexpr float k_step = Animation::k_ambient_max_step;
+  for (std::uint32_t frame = 0U; frame < 1600U; ++frame) {
+    Render::GL::AnimationInputs anim{};
+    anim.time = static_cast<float>(frame) * k_step;
+    anim.idle_duration = anim.time;
+    ctx.animation_time = anim.time;
 
-  ASSERT_EQ(prep.bodies.requests().size(), 6U);
-  for (auto const& request : prep.bodies.requests()) {
-    EXPECT_EQ(request.state, Render::Creature::AnimationStateId::AttackSpear)
-        << "soldier " << request.instance_index << " idled during formation melee";
+    Render::Humanoid::HumanoidPreparation prep;
+    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, frame, prep);
+
+    std::size_t active_count = 0U;
+    concurrently_active_variants.clear();
+    for (auto const& request : prep.bodies.requests()) {
+      auto variant = request.clip_variant;
+      if (request.full_body_blend.active()) {
+        variant = request.full_body_blend.clip_variant;
+      }
+      if (variant == 0U) {
+        continue;
+      }
+      ++active_count;
+      ASSERT_LT(request.instance_index, variants_by_soldier.size());
+      variants_by_soldier[request.instance_index].insert(variant);
+      concurrently_active_variants.insert(variant);
+    }
+    saw_staggered_activation =
+        saw_staggered_activation ||
+        (active_count > 0U && active_count < variants_by_soldier.size());
+    saw_distinct_concurrent_variants =
+        saw_distinct_concurrent_variants || concurrently_active_variants.size() >= 2U;
+  }
+
+  EXPECT_TRUE(saw_staggered_activation);
+  EXPECT_TRUE(saw_distinct_concurrent_variants);
+  for (std::size_t soldier = 0; soldier < variants_by_soldier.size(); ++soldier) {
+    EXPECT_EQ(variants_by_soldier[soldier].size(), 4U)
+        << "soldier " << soldier << " did not rotate through every ambient idle";
   }
 }
 

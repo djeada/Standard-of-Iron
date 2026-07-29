@@ -26,10 +26,16 @@ namespace Game::Map {
 class EnvironmentClock;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 class MinimapManager;
 class VisibilityCoordinator;
 
 struct AppSceneContext {
+
+  Game::Session::SessionContext* session = nullptr;
   Engine::Core::World* world = nullptr;
   Render::GL::Renderer* renderer = nullptr;
   Render::GL::Camera* active_camera = nullptr;

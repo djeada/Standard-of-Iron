@@ -1,6 +1,7 @@
 #include "healer_renderer_common.h"
 
 #include <array>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -12,6 +13,9 @@
 #include "../equipment/equipment_registry.h"
 #include "../equipment/humanoid_equipment_archetype.h"
 #include "../humanoid/humanoid_renderer_base.h"
+#include "../humanoid/humanoid_spec.h"
+#include "../humanoid/pose_controller.h"
+#include "../humanoid/skeleton.h"
 #include "../humanoid/style_palette.h"
 #include "../palette.h"
 #include "nations/equipment_loadout_catalog.h"
@@ -155,7 +159,85 @@ private:
   }
 };
 
+auto channel_pose_weight(const Render::GL::HumanoidAnimationContext& anim) -> float {
+  const auto& inputs = anim.inputs;
+  if (inputs.is_dying || inputs.is_dead || inputs.is_attacking ||
+      inputs.is_hit_reacting || inputs.is_routing) {
+    return 0.0F;
+  }
+  if (inputs.is_healing || inputs.is_casting) {
+    return 1.0F;
+  }
+  switch (inputs.movement_state) {
+  case Render::Creature::MovementAnimationState::Idle:
+    return 1.0F;
+  case Render::Creature::MovementAnimationState::Walk:
+    return 0.55F;
+  default:
+    return 0.22F;
+  }
+}
+
 } // namespace
+
+void apply_healer_channel_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    HumanoidPose& io_pose) {
+  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, io_pose);
+  if (context.animation == nullptr) {
+    return;
+  }
+  const auto& anim = *context.animation;
+  float const weight = channel_pose_weight(anim);
+  if (weight <= 0.0F) {
+    return;
+  }
+
+  QVector3D const forward = anim.heading_forward();
+  QVector3D const right = anim.heading_right();
+  QVector3D const up = anim.heading_up();
+  float const breathe = 0.014F * std::sin(anim.inputs.time * 1.6F);
+
+  HumanoidPoseController controller(io_pose, anim);
+  controller.tilt_torso(0.0F, -0.07F * weight);
+
+  io_pose.hand_l +=
+      (forward * 0.30F + up * (0.20F + breathe) + right * 0.045F) * weight;
+  io_pose.hand_r +=
+      (forward * 0.30F + up * (0.20F - breathe) - right * 0.045F) * weight;
+  io_pose.elbow_l += (forward * 0.09F + up * 0.04F - right * 0.10F) * weight;
+  io_pose.elbow_r += (forward * 0.09F + up * 0.04F + right * 0.10F) * weight;
+  io_pose.head_pos += forward * (0.012F * weight);
+}
+
+void apply_healer_staff_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    HumanoidPose& io_pose) {
+  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, io_pose);
+  if (context.animation == nullptr) {
+    return;
+  }
+  const auto& anim = *context.animation;
+
+  QVector3D const forward = anim.heading_forward();
+  QVector3D const right = anim.heading_right();
+  QVector3D const up = anim.heading_up();
+
+  io_pose.hand_r += forward * 0.20F + right * 0.13F - up * 0.02F;
+  io_pose.elbow_r += forward * 0.05F + right * 0.11F - up * 0.04F;
+
+  float const weight = channel_pose_weight(anim);
+  if (weight <= 0.0F) {
+    return;
+  }
+  float const breathe = 0.016F * std::sin(anim.inputs.time * 1.4F);
+
+  HumanoidPoseController controller(io_pose, anim);
+  controller.tilt_torso(0.0F, -0.06F * weight);
+  io_pose.hand_l += (forward * 0.34F + up * (0.26F + breathe) + right * 0.02F) * weight;
+  io_pose.elbow_l += (forward * 0.10F + up * 0.06F - right * 0.09F) * weight;
+  io_pose.head_pos += forward * (0.010F * weight);
+}
 
 void register_healer_style(std::string_view style_key, const HealerStyleConfig& style) {
   style_registry()[std::string(style_key)] = style;

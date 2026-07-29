@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
+#include <set>
 
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
-#include "systems/arrow_system.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/siege_special_processor.h"
 #include "systems/owner_registry.h"
+#include "systems/projectile_system.h"
 #include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 
@@ -18,7 +19,7 @@ class SiegeSpecialProcessorTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
-    world->add_system(std::make_unique<ArrowSystem>());
+    world->add_system(std::make_unique<ProjectileSystem>());
     OwnerRegistry::instance().clear();
   }
 
@@ -30,11 +31,19 @@ protected:
   }
 
   [[nodiscard]] auto arrow_count() const -> std::size_t {
-    auto* arrow_sys = world->get_system<ArrowSystem>();
-    if (arrow_sys == nullptr) {
+    auto* projectile_sys = world->get_system<ProjectileSystem>();
+    if (projectile_sys == nullptr) {
       return 0;
     }
-    return arrow_sys->arrows().size();
+    return projectile_sys->projectiles().size();
+  }
+
+  void resolve_projectiles(float duration = 2.0F) {
+    auto* projectile_sys = world->get_system<ProjectileSystem>();
+    ASSERT_NE(projectile_sys, nullptr);
+    for (float elapsed = 0.0F; elapsed < duration; elapsed += 0.05F) {
+      projectile_sys->update(world.get(), 0.05F);
+    }
   }
 
   auto make_tower(float x,
@@ -80,6 +89,8 @@ TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyInRange) {
   EXPECT_EQ(arrow_count(), 2U);
   auto* enemy_unit = enemy->get_component<UnitComponent>();
   ASSERT_NE(enemy_unit, nullptr);
+  EXPECT_EQ(enemy_unit->health, 100);
+  resolve_projectiles();
   EXPECT_LT(enemy_unit->health, 100);
 }
 
@@ -175,6 +186,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerTargetsNearestEnemy) {
   auto* near_enemy = make_enemy(5.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
+  resolve_projectiles();
 
   auto* far_unit = far_enemy->get_component<UnitComponent>();
   auto* near_unit = near_enemy->get_component<UnitComponent>();
@@ -184,19 +196,32 @@ TEST_F(SiegeSpecialProcessorTest, TowerTargetsNearestEnemy) {
   EXPECT_LT(near_unit->health, 100);
 }
 
-TEST_F(SiegeSpecialProcessorTest, TowerCanAttackEnemyDefenseTowerInRange) {
+TEST_F(SiegeSpecialProcessorTest,
+       TowerArrowsVisiblyHitEnemyTowerWithoutDamagingEitherStructure) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy_tower = make_tower(10.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
 
   EXPECT_EQ(arrow_count(), 4U);
+  auto* projectile_system = world->get_system<ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  std::set<std::uint64_t> harmless_hits;
+  for (float elapsed = 0.0F; elapsed < 2.0F; elapsed += 0.05F) {
+    projectile_system->update(world.get(), 0.05F);
+    for (auto const& impact : projectile_system->impacts()) {
+      if (impact.hit_target && !impact.damage_applied) {
+        harmless_hits.insert(impact.sequence);
+      }
+    }
+  }
   auto* tower_unit = tower->get_component<UnitComponent>();
   auto* enemy_unit = enemy_tower->get_component<UnitComponent>();
   ASSERT_NE(tower_unit, nullptr);
   ASSERT_NE(enemy_unit, nullptr);
-  EXPECT_LT(tower_unit->health, 2000);
-  EXPECT_LT(enemy_unit->health, 2000);
+  EXPECT_EQ(tower_unit->health, 2000);
+  EXPECT_EQ(enemy_unit->health, 2000);
+  EXPECT_EQ(harmless_hits.size(), 4U);
 }
 
 TEST_F(SiegeSpecialProcessorTest, TargetUnitRetaliatesAgainstAttackingDefenseTower) {
@@ -215,6 +240,7 @@ TEST_F(SiegeSpecialProcessorTest, TargetUnitRetaliatesAgainstAttackingDefenseTow
   intent->suppress_opportunistic_combat = true;
 
   update(0.1F);
+  resolve_projectiles();
 
   auto* attack_target = enemy->get_component<AttackTargetComponent>();
   ASSERT_NE(attack_target, nullptr);
@@ -233,6 +259,7 @@ TEST_F(SiegeSpecialProcessorTest, MeleeLockedUnitDoesNotRetaliateAgainstTowerAtt
   attack->melee_lock_target_id = 999;
 
   update(0.1F);
+  resolve_projectiles();
 
   auto* attack_target = enemy->get_component<AttackTargetComponent>();
   EXPECT_TRUE((attack_target == nullptr) ||

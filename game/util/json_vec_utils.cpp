@@ -3,7 +3,7 @@
 #include <qjsonarray.h>
 #include <qvectornd.h>
 
-namespace App::JsonUtils {
+namespace Game::JsonUtils {
 
 auto vec3_to_json_array(const QVector3D& vec) -> QJsonArray {
   QJsonArray arr;
@@ -27,4 +27,4 @@ auto json_array_to_vec3(const QJsonValue& value,
           static_cast<float>(arr.at(2).toDouble(fallback.z()))};
 }
 
-} // namespace App::JsonUtils
+} // namespace Game::JsonUtils

@@ -19,6 +19,7 @@ struct SelectionGroup {
   int wounded_count = 0;
 
   double health = 0.0;
+  double stamina = 1.0;
 };
 
 [[nodiscard]] auto

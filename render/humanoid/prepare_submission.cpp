@@ -35,6 +35,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       ctx.entity != nullptr
           ? ctx.entity->get_component<Engine::Core::CreaturePresentationComponent>()
           : nullptr;
+  auto const* formation_hit =
+      ctx.entity != nullptr
+          ? ctx.entity->get_component<Engine::Core::FormationHitPresentationComponent>()
+          : nullptr;
 
   Engine::Core::TransformComponent* transform_comp = nullptr;
   if (ctx.entity != nullptr) {
@@ -102,7 +106,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       live_slot_indices.push_back(index);
     }
   }
-  if (has_entity_death && live_slot_indices.empty()) {
+  bool const casualty_sequence_owns_last_body =
+      casualties_comp != nullptr && !casualties_comp->entries.empty();
+  if (has_entity_death && live_slot_indices.empty() &&
+      !casualty_sequence_owns_last_body) {
     live_slot_indices.push_back(std::max(0, total_layout_count - 1));
   }
   if (ctx.max_rendered_individuals > 0 &&
@@ -140,6 +147,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
   HumanoidVariant variant;
   owner.get_variant(ctx, seed, variant);
+  if (ctx.has_facial_hair_override) {
+    variant.facial_hair.style = ctx.facial_hair_override;
+    if (variant.facial_hair.style != FacialHairStyle::None) {
+      variant.facial_hair.coverage = std::max(variant.facial_hair.coverage, 1.0F);
+    }
+  }
   seed_missing_humanoid_wear(variant, seed);
 
   if (!owner.m_proportion_scale_cached) {
@@ -410,7 +423,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                      float casualty_offset_y = 0.0F,
                                      float casualty_offset_z = 0.0F,
                                      float casualty_pitch = 0.0F,
-                                     float casualty_roll = 0.0F) {
+                                     float casualty_roll = 0.0F,
+                                     float casualty_yaw = 0.0F) {
     SoldierLayout const& layout = soldier_layouts[static_cast<std::size_t>(idx)];
     AnimationInputs soldier_render_anim = soldier_anim;
     if (creature_presentation != nullptr &&
@@ -421,6 +435,18 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       soldier_render_anim.hit_reaction_intensity = 0.0F;
       soldier_render_anim.hit_recoil_x = 0.0F;
       soldier_render_anim.hit_recoil_z = 0.0F;
+    }
+    if (formation_hit != nullptr && formation_hit->remaining > 0.0F &&
+        formation_hit->soldier_slot == static_cast<std::uint16_t>(idx)) {
+      soldier_render_anim.is_hit_reacting = true;
+      soldier_render_anim.hit_reaction_intensity = formation_hit->intensity;
+      if (ctx.entity != nullptr) {
+        if (auto const* feedback =
+                ctx.entity->get_component<Engine::Core::HitFeedbackComponent>()) {
+          soldier_render_anim.hit_recoil_x = feedback->hit_direction_x;
+          soldier_render_anim.hit_recoil_z = feedback->hit_direction_z;
+        }
+      }
     }
     if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F &&
         soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
@@ -442,7 +468,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     float const offset_z = layout.offset_z;
     uint32_t const inst_seed = layout.inst_seed;
     float const phase_offset = layout.phase_offset;
-    float const applied_yaw_offset = layout.yaw_offset;
+    float const applied_yaw_offset = layout.yaw_offset + casualty_yaw;
     auto const commander_jump = preparation_mode.jump_pose();
     bool const soldier_has_locomotion =
         Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
@@ -609,8 +635,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     bool const formation_melee =
         soldier_directive != nullptr && formation_presentation->melee_ordered;
     bool const soldier_has_contact =
-        !formation_melee ||
-        soldier_directive->action == Engine::Core::FormationSoldierAction::MeleeEngaged;
+        !formation_melee || soldier_directive->opponent_id != 0U;
     bool const soldier_in_formation_fight = formation_fight_active &&
                                             soldier_directive != nullptr &&
                                             soldier_directive->alive;
@@ -628,11 +653,38 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     auto lane_resolution =
         Render::Creature::resolve_soldier_combat_lane(lane_snapshot, lane_inputs);
     if (soldier_in_formation_fight) {
-
-      constexpr float k_centered_layout_phase = 0.125F;
-      constexpr float k_combat_stagger_scale = 0.55F;
-      lane_resolution.profile.phase_bias +=
-          (phase_offset - k_centered_layout_phase) * k_combat_stagger_scale;
+      using CoreRole = Engine::Core::FormationSoldierCombatRole;
+      using Lane = Render::Creature::SoldierCombatLane;
+      Lane preferred_lane = lane_resolution.profile.lane;
+      switch (soldier_directive->combat_role) {
+      case CoreRole::LeadStrike:
+        preferred_lane = Lane::LeadStrike;
+        break;
+      case CoreRole::SupportStrike:
+        preferred_lane = Lane::SupportStrike;
+        break;
+      case CoreRole::Guard:
+        preferred_lane = Lane::ShieldBrace;
+        break;
+      case CoreRole::StepIn:
+        preferred_lane = Lane::StepIn;
+        break;
+      case CoreRole::StepOut:
+        preferred_lane = Lane::StepOut;
+        break;
+      case CoreRole::Ready:
+        preferred_lane = Lane::IdleReady;
+        break;
+      case CoreRole::None:
+        break;
+      }
+      if (soldier_directive->damage_carrier) {
+        preferred_lane = Lane::LeadStrike;
+      }
+      lane_resolution.state.lane = preferred_lane;
+      lane_resolution.profile =
+          Animation::profile_with_lane(lane_resolution.profile, preferred_lane);
+      lane_resolution.profile.phase_bias += soldier_directive->combat_phase_bias;
     }
     if (allow_animation_persistence && cached_lane_state != nullptr) {
       *cached_lane_state = lane_resolution.state;
@@ -643,12 +695,21 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       previous_combat_visual = locomotion_persistent_state->combat_visual;
     }
     Render::Creature::CombatVisualRawInputs raw_combat{};
-    raw_combat.sample_time = soldier_render_anim.time;
+    raw_combat.sample_time =
+        soldier_render_anim.time *
+        (soldier_directive != nullptr ? soldier_directive->combat_speed_scale : 1.0F);
     raw_combat.attack_offset = soldier_render_anim.attack_offset;
     raw_combat.has_attack_offset = soldier_render_anim.has_attack_offset;
 
-    raw_combat.attack_requested =
+    bool visual_attack_requested =
         soldier_render_anim.is_attacking || soldier_in_formation_fight;
+    if (soldier_in_formation_fight && !soldier_directive->damage_carrier) {
+      using Role = Engine::Core::FormationSoldierCombatRole;
+      visual_attack_requested = soldier_directive->combat_role == Role::LeadStrike ||
+                                soldier_directive->combat_role == Role::SupportStrike ||
+                                soldier_directive->combat_role == Role::StepIn;
+    }
+    raw_combat.attack_requested = visual_attack_requested;
     raw_combat.is_melee = soldier_render_anim.is_melee || soldier_in_formation_fight;
     raw_combat.is_mounted = is_mounted_spawn;
     raw_combat.is_casting = soldier_render_anim.is_casting;
@@ -660,11 +721,22 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     raw_combat.is_dying = soldier_render_anim.is_dying;
     raw_combat.is_dead = soldier_render_anim.is_dead;
     raw_combat.locomotion = soldier_render_anim.movement_state;
-    raw_combat.combat_phase = soldier_render_anim.combat_phase;
-    raw_combat.combat_phase_progress = soldier_render_anim.combat_phase_progress;
+    bool const follows_authoritative_strike =
+        soldier_directive == nullptr || soldier_directive->damage_carrier;
+    raw_combat.combat_phase = follows_authoritative_strike
+                                  ? soldier_render_anim.combat_phase
+                                  : Render::GL::CombatAnimPhase::Idle;
+    raw_combat.combat_phase_progress =
+        follows_authoritative_strike ? soldier_render_anim.combat_phase_progress : 0.0F;
     raw_combat.attack_variant = base_attack_variant;
-    raw_combat.attack_target_id = unit_attack_target_id;
-    raw_combat.attack_target_alive = unit_attack_target_alive;
+    raw_combat.attack_target_id =
+        soldier_directive != nullptr && soldier_directive->opponent_id != 0U
+            ? soldier_directive->opponent_id
+            : unit_attack_target_id;
+    raw_combat.attack_target_alive =
+        soldier_directive != nullptr && soldier_directive->opponent_id != 0U
+            ? true
+            : unit_attack_target_alive;
     raw_combat.attack_family = soldier_render_anim.attack_family;
 
     auto combat_resolution = Render::Creature::resolve_combat_visual_state(
@@ -1039,13 +1111,22 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         launch_pitch = entry.launch_pitch_speed * flight_time;
         launch_roll = entry.launch_roll_speed * flight_time;
       }
+      auto const& casualty_layout =
+          soldier_layouts[static_cast<std::size_t>(entry.slot_index)];
+      float const anchor_offset_x =
+          entry.has_local_anchor ? entry.local_x - casualty_layout.offset_x : 0.0F;
+      float const anchor_offset_z =
+          entry.has_local_anchor ? entry.local_z - casualty_layout.offset_z : 0.0F;
+      float const anchor_yaw =
+          entry.has_local_anchor ? entry.local_yaw - casualty_layout.yaw_offset : 0.0F;
       append_prepared_soldier(static_cast<int>(entry.slot_index),
                               casualty_anim,
-                              launch_x,
+                              anchor_offset_x + launch_x,
                               launch_y,
-                              launch_z,
+                              anchor_offset_z + launch_z,
                               launch_pitch,
-                              launch_roll);
+                              launch_roll,
+                              anchor_yaw);
     }
   }
 }

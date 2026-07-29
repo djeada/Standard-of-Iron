@@ -37,6 +37,7 @@ class World;
 class Entity;
 class TransformComponent;
 class UnitComponent;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Map {
@@ -84,7 +85,7 @@ public:
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
   }
-  void set_hovered_entity_id(unsigned int id) { m_hovered_entity_id = id; }
+  void set_hovered_entity_id(Engine::Core::EntityID id) { m_hovered_entity_id = id; }
   void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
   void set_order_marker_spectator_mode(bool enabled) {
     m_order_marker_spectator_mode = enabled;
@@ -120,7 +121,7 @@ public:
     return m_backend ? m_backend->frame_tracker() : nullptr;
   }
 
-  void set_selected_entities(const std::vector<unsigned int>& ids) {
+  void set_selected_entities(const std::vector<Engine::Core::EntityID>& ids) {
     m_selected_ids.clear();
     m_selected_ids.insert(ids.begin(), ids.end());
   }
@@ -360,7 +361,7 @@ private:
                               Engine::Core::UnitComponent* unit_comp,
                               bool selected,
                               bool hovered);
-  void enqueue_mode_indicator(std::uint32_t entity_id,
+  void enqueue_mode_indicator(Engine::Core::EntityID entity_id,
                               Engine::Core::TransformComponent* transform,
                               Engine::Core::UnitComponent* unit_comp,
                               bool has_attack,
@@ -398,7 +399,7 @@ private:
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
   std::unique_ptr<EffectsSubmitter> m_effects_submitter;
   unsigned int m_hovered_entity_id = 0;
-  std::unordered_set<unsigned int> m_selected_ids;
+  std::unordered_set<Engine::Core::EntityID> m_selected_ids;
 
   int m_viewport_width = 0;
   int m_viewport_height = 0;

@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 
+#include "../session/session_context.h"
 #include "../systems/building_collision_registry.h"
 #include "../units/spawn_type.h"
 #include "map_definition.h"
@@ -274,8 +275,7 @@ auto is_point_within_linear_feature(float world_x,
 } // namespace
 
 auto TerrainService::instance() -> TerrainService& {
-  static TerrainService s_instance;
-  return s_instance;
+  return Game::Session::SessionContext::active().terrain();
 }
 
 auto TerrainService::world_prop_world_position(const WorldProp& prop,

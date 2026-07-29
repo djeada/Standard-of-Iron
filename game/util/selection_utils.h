@@ -8,7 +8,7 @@
 #include "game/core/world.h"
 #include "game/systems/selection_system.h"
 
-namespace App::Utils {
+namespace Game::Selection {
 
 inline void sanitize_selection(Engine::Core::World* world,
                                Game::Systems::SelectionSystem* selection_system) {
@@ -36,4 +36,4 @@ inline void sanitize_selection(Engine::Core::World* world,
   }
 }
 
-} // namespace App::Utils
+} // namespace Game::Selection

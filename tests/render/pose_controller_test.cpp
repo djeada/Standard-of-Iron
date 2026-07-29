@@ -192,7 +192,7 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleInterruptionBlendsOutInsteadOfCutt
   EXPECT_GT(fade_frames, 10) << "interrupted ambient snapped instead of blending out";
 }
 
-TEST_F(HumanoidPoseControllerTest, AmbientIdleRotatesVariantsWithoutImmediateRepeats) {
+TEST_F(HumanoidPoseControllerTest, AmbientIdleRotatesThroughEveryVariant) {
   AmbientSim sim{.seed = 909U};
   std::vector<AmbientIdleType> plays;
   AmbientIdleType current = AmbientIdleType::None;
@@ -206,15 +206,23 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleRotatesVariantsWithoutImmediateRep
     current = type;
   }
 
-  ASSERT_GE(plays.size(), 4U) << "ambient idles never repeated over 400s";
-  std::unordered_set<int> distinct;
+  constexpr std::size_t k_infantry_ambient_variant_count = 4U;
+  ASSERT_GE(plays.size(), k_infantry_ambient_variant_count * 2U)
+      << "ambient idles did not complete two rotations over 400s";
+
+  std::unordered_set<int> first_rotation;
+  for (std::size_t i = 0; i < k_infantry_ambient_variant_count; ++i) {
+    first_rotation.insert(static_cast<int>(plays[i]));
+  }
+  EXPECT_EQ(first_rotation.size(), k_infantry_ambient_variant_count);
+
   for (std::size_t i = 0; i < plays.size(); ++i) {
-    distinct.insert(static_cast<int>(plays[i]));
     if (i > 0) {
       EXPECT_NE(plays[i], plays[i - 1]) << "same ambient idle played back to back";
     }
+    EXPECT_EQ(plays[i], plays[i % k_infantry_ambient_variant_count])
+        << "ambient idle sequence stopped rotating at play " << i;
   }
-  EXPECT_GE(distinct.size(), 2U);
 }
 
 TEST_F(HumanoidPoseControllerTest, AmbientIdleKeepsFormationParticipationSparse) {

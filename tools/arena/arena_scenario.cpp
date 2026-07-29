@@ -18,9 +18,13 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
+#include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
+#include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/systems/projectile_system.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/units/unit.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 
@@ -104,6 +108,12 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("SetFullCreatureLod");
   case ScenarioCommandKind::TriggerCommanderAura:
     return QStringLiteral("TriggerCommanderAura");
+  case ScenarioCommandKind::RpgPrimaryAttack:
+    return QStringLiteral("RpgPrimaryAttack");
+  case ScenarioCommandKind::RpgGuard:
+    return QStringLiteral("RpgGuard");
+  case ScenarioCommandKind::RpgDodge:
+    return QStringLiteral("RpgDodge");
   }
   return QStringLiteral("Unknown");
 }
@@ -150,6 +160,20 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("RepeatedAttackAnimationObserved");
   case ArenaExpectationKind::AttackHasVisibleContact:
     return QStringLiteral("AttackHasVisibleContact");
+  case ArenaExpectationKind::ProjectileFlightObserved:
+    return QStringLiteral("ProjectileFlightObserved");
+  case ArenaExpectationKind::ProjectileImpactObserved:
+    return QStringLiteral("ProjectileImpactObserved");
+  case ArenaExpectationKind::ProjectileImpactSynchronized:
+    return QStringLiteral("ProjectileImpactSynchronized");
+  case ArenaExpectationKind::GroupHealthUnchanged:
+    return QStringLiteral("GroupHealthUnchanged");
+  case ArenaExpectationKind::GroupHealthReduced:
+    return QStringLiteral("GroupHealthReduced");
+  case ArenaExpectationKind::StructureDamageCueObserved:
+    return QStringLiteral("StructureDamageCueObserved");
+  case ArenaExpectationKind::StructureFacadeContactObserved:
+    return QStringLiteral("StructureFacadeContactObserved");
   case ArenaExpectationKind::AttackRecoveryObserved:
     return QStringLiteral("AttackRecoveryObserved");
   case ArenaExpectationKind::NoActiveCombatAtEnd:
@@ -196,6 +220,20 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("CommanderAuraExpired");
   case ArenaExpectationKind::NoCommanderAuraBuffObserved:
     return QStringLiteral("NoCommanderAuraBuffObserved");
+  case ArenaExpectationKind::ExactRpgTargetObserved:
+    return QStringLiteral("ExactRpgTargetObserved");
+  case ArenaExpectationKind::RpgDamageContactObserved:
+    return QStringLiteral("RpgDamageContactObserved");
+  case ArenaExpectationKind::RpgBlockContactObserved:
+    return QStringLiteral("RpgBlockContactObserved");
+  case ArenaExpectationKind::RpgDodgeContactObserved:
+    return QStringLiteral("RpgDodgeContactObserved");
+  case ArenaExpectationKind::RpgDodgeWindowObserved:
+    return QStringLiteral("RpgDodgeWindowObserved");
+  case ArenaExpectationKind::RpgHealthReduced:
+    return QStringLiteral("RpgHealthReduced");
+  case ArenaExpectationKind::RpgHealthUnchanged:
+    return QStringLiteral("RpgHealthUnchanged");
   case ArenaExpectationKind::UndeadZoneDormantBefore:
     return QStringLiteral("UndeadZoneDormantBefore");
   case ArenaExpectationKind::UndeadZoneAwakened:
@@ -308,6 +346,23 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
           {field, QStringLiteral("unknown group reference '%1'").arg(value)});
     }
   };
+
+  if (definition.rpg_mode) {
+    check_group(
+        definition.rpg_commander_group, QStringLiteral("rpg_commander_group"), true);
+    auto const commander_group = std::find_if(
+        definition.groups.begin(), definition.groups.end(), [&](auto const& group) {
+          return group.name == definition.rpg_commander_group;
+        });
+    if (commander_group != definition.groups.end() && commander_group->count != 1) {
+      errors.push_back(
+          {QStringLiteral("rpg_commander_group"),
+           QStringLiteral("RPG commander group must contain exactly one unit")});
+    }
+  } else if (!definition.rpg_commander_group.isEmpty()) {
+    errors.push_back({QStringLiteral("rpg_commander_group"),
+                      QStringLiteral("RPG commander group requires rpg_mode")});
+  }
 
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
@@ -464,6 +519,11 @@ struct ArenaScenarioRunner::Impl {
     float construction_time_remaining{0.0F};
     bool commander_aura_active{false};
     bool commander_aura_buffed{false};
+    int rpg_health{-1};
+    bool rpg_guard_active{false};
+    bool rpg_dodge_invincible{false};
+    Engine::Core::EntityID rpg_aim_target_id{0};
+    int rpg_aim_soldier_slot{-1};
   };
 
   struct TraceSoldier {
@@ -528,12 +588,19 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> charge_impacts;
   QHash<QString, bool> melee_locks_after_charge;
   QHash<QString, bool> paired_visible_attacks;
+  QHash<QString, bool> projectile_flights;
+  QHash<QString, bool> projectile_contacts;
+  QHash<QString, bool> projectile_impacts;
+  QSet<std::uint64_t> observed_projectile_impacts;
   QHash<QString, QSet<std::uint64_t>> living_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> engaged_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> attacking_soldiers_by_group;
   QHash<std::uint64_t, int> attack_entries_by_soldier;
   QHash<QString, bool> staggered_attack_phases;
   QHash<QString, bool> damage_seen;
+  QHash<QString, int> initial_health_by_group;
+  QHash<QString, bool> structure_damage_cues;
+  QHash<QString, bool> structure_facade_contacts;
   QHash<QString, float> minimum_formation_surface_gap;
   QHash<QString, bool> bridge_traversal_seen;
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
@@ -545,6 +612,13 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> commander_aura_active_seen;
   QHash<QString, bool> commander_aura_expired_seen;
   QHash<QString, bool> commander_aura_buff_seen;
+  QHash<QString, bool> exact_rpg_target_seen;
+  QHash<QString, bool> rpg_damage_contact_seen;
+  QHash<QString, bool> rpg_block_contact_seen;
+  QHash<QString, bool> rpg_dodge_contact_seen;
+  QHash<QString, bool> rpg_dodge_window_seen;
+  QHash<QString, int> initial_rpg_health_by_group;
+  QHash<QString, int> minimum_rpg_health_by_group;
   QHash<int, int> completed_construction_by_owner;
   QHash<int, int> completed_harvest_by_owner;
   QSet<Engine::Core::EntityID> latched_builder_completions;
@@ -598,6 +672,20 @@ struct ArenaScenarioRunner::Impl {
                            : nullptr;
     return unit != nullptr && unit->health > 0 &&
            !entity->has_component<Engine::Core::PendingRemovalComponent>();
+  }
+
+  [[nodiscard]] auto group_health(const QString& group) const -> int {
+    int total = 0;
+    for (auto entity_id : ids(group)) {
+      auto* entity = world.get_entity(entity_id);
+      auto const* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit != nullptr) {
+        total += std::max(0, unit->health);
+      }
+    }
+    return total;
   }
 
   [[nodiscard]] auto group_destroyed(const QString& group) const -> bool {
@@ -689,6 +777,12 @@ struct ArenaScenarioRunner::Impl {
       spawned.push_back(entity_id);
       entity_groups.insert(entity_id, group.name);
       auto* entity = world.get_entity(entity_id);
+      auto const* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit != nullptr) {
+        initial_health_by_group[group.name] += unit->health;
+      }
       auto const* transform =
           entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
                             : nullptr;
@@ -913,17 +1007,16 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       break;
-    case ScenarioCommandKind::ApplyDamage:
+    case ScenarioCommandKind::ApplyDamage: {
+      Engine::Core::EntityID const attacker_id =
+          !ids(step.target_group).empty() ? ids(step.target_group).front() : 0U;
       for (auto entity_id : ids(step.group)) {
         auto* entity = world.get_entity(entity_id);
-        auto* unit = entity != nullptr
-                         ? entity->get_component<Engine::Core::UnitComponent>()
-                         : nullptr;
-        if (unit != nullptr) {
-          unit->health = std::max(0, unit->health - std::max(0, step.value));
-        }
+        (void)Game::Systems::Combat::apply_unit_damage(
+            &world, entity, std::max(0, step.value), attacker_id);
       }
       break;
+    }
     case ScenarioCommandKind::MeleeLock: {
       attack_group(step.group, step.target_group, false);
       auto const& targets = ids(step.target_group);
@@ -967,6 +1060,38 @@ struct ArenaScenarioRunner::Impl {
           commander->aura_ability_duration = static_cast<float>(step.value);
         }
         commander->request_aura_ability();
+      }
+      break;
+    case ScenarioCommandKind::RpgPrimaryAttack:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.rpg_primary_attack || !host.rpg_primary_attack(entity_id)) {
+          add_issue(QStringLiteral("rpg_attack_failed"),
+                    QStringLiteral("%1 could not start an RPG primary attack")
+                        .arg(step.group),
+                    entity_id);
+        }
+      }
+      break;
+    case ScenarioCommandKind::RpgGuard:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.set_rpg_guard) {
+          add_issue(QStringLiteral("rpg_guard_unavailable"),
+                    QStringLiteral("%1 has no RPG guard host callback").arg(step.group),
+                    entity_id);
+          continue;
+        }
+        host.set_rpg_guard(entity_id, step.enabled);
+      }
+      break;
+    case ScenarioCommandKind::RpgDodge:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.request_rpg_dodge) {
+          add_issue(QStringLiteral("rpg_dodge_unavailable"),
+                    QStringLiteral("%1 has no RPG dodge host callback").arg(step.group),
+                    entity_id);
+          continue;
+        }
+        host.request_rpg_dodge(entity_id, step.destination);
       }
       break;
     }
@@ -1053,6 +1178,54 @@ struct ArenaScenarioRunner::Impl {
            elapsed <= expectation.end_seconds + 1.0e-5F;
   }
 
+  [[nodiscard]] auto
+  projectile_pair_key(Engine::Core::EntityID attacker_id,
+                      Engine::Core::EntityID target_id) const -> QString {
+    auto const attacker = entity_groups.constFind(attacker_id);
+    auto const target = entity_groups.constFind(target_id);
+    if (attacker == entity_groups.cend() || target == entity_groups.cend()) {
+      return {};
+    }
+    return attacker.value() + QChar(0x1f) + target.value();
+  }
+
+  [[nodiscard]] static auto
+  projectile_pair_key(const QString& attacker_group,
+                      const QString& target_group) -> QString {
+    return attacker_group + QChar(0x1f) + target_group;
+  }
+
+  void observe_projectiles() {
+    auto const* system = world.get_system<Game::Systems::ProjectileSystem>();
+    if (system == nullptr) {
+      return;
+    }
+    for (auto const& projectile : system->projectiles()) {
+      if (projectile == nullptr || !projectile->is_active() ||
+          projectile->get_progress() < 0.0F) {
+        continue;
+      }
+      auto const key = projectile_pair_key(projectile->get_attacker_id(),
+                                           projectile->get_target_id());
+      if (!key.isEmpty()) {
+        projectile_flights[key] = true;
+      }
+    }
+    for (auto const& impact : system->impacts()) {
+      if (observed_projectile_impacts.contains(impact.sequence)) {
+        continue;
+      }
+      observed_projectile_impacts.insert(impact.sequence);
+      auto const key = projectile_pair_key(impact.attacker_id, impact.target_id);
+      if (!key.isEmpty() && impact.hit_target) {
+        projectile_contacts[key] = true;
+      }
+      if (!key.isEmpty() && impact.hit_target && impact.damage_applied) {
+        projectile_impacts[key] = true;
+      }
+    }
+  }
+
   [[nodiscard]] auto applies_to(const ArenaExpectation& expectation,
                                 const QString& group) const -> bool {
     return expectation.group.isEmpty() || expectation.group == group;
@@ -1070,6 +1243,78 @@ struct ArenaScenarioRunner::Impl {
                            : nullptr;
     if (transform == nullptr || unit == nullptr) {
       return;
+    }
+    if (auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+        rpg != nullptr && rpg->active) {
+      if (!initial_rpg_health_by_group.contains(group)) {
+        initial_rpg_health_by_group[group] = rpg->rpg_hp;
+        minimum_rpg_health_by_group[group] = rpg->rpg_hp;
+      } else {
+        minimum_rpg_health_by_group[group] =
+            std::min(minimum_rpg_health_by_group.value(group), rpg->rpg_hp);
+      }
+      if (rpg->dodge_invincible) {
+        rpg_dodge_window_seen[group] = true;
+      }
+    }
+    if (auto const* targets =
+            entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+        targets != nullptr && targets->aim_candidate_in_range &&
+        targets->aim_candidate_id != 0) {
+      auto* target = world.get_entity(targets->aim_candidate_id);
+      bool const exact_slot_required =
+          target != nullptr &&
+          Game::Systems::FormationCombat::has_formation_slots(*target);
+      bool const has_exact_slot =
+          targets->aim_candidate_soldier_slot !=
+          Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+      if (target != nullptr && (!exact_slot_required || has_exact_slot) &&
+          Game::Systems::RpgCombat::resolve_soldier_target(
+              *target, targets->aim_candidate_soldier_slot)
+              .has_value()) {
+        exact_rpg_target_seen[group] = true;
+      }
+    }
+    if (auto const* contacts =
+            entity->get_component<Engine::Core::RpgContactPresentationComponent>()) {
+      for (auto const& contact : contacts->entries) {
+        switch (contact.outcome) {
+        case Engine::Core::RpgContactOutcome::Damage:
+          rpg_damage_contact_seen[group] = true;
+          break;
+        case Engine::Core::RpgContactOutcome::Block:
+        case Engine::Core::RpgContactOutcome::PerfectGuard:
+          rpg_block_contact_seen[group] = true;
+          break;
+        case Engine::Core::RpgContactOutcome::Dodge:
+          rpg_dodge_contact_seen[group] = true;
+          break;
+        }
+      }
+    }
+    if (auto const* structure_damage =
+            entity->get_component<Engine::Core::StructureDamagePresentationComponent>();
+        structure_damage != nullptr && !structure_damage->impacts.empty()) {
+      structure_damage_cues[group] = true;
+    }
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind != ArenaExpectationKind::StructureFacadeContactObserved ||
+          !expectation_active(expectation) || expectation.group != group) {
+        continue;
+      }
+      for (auto target_id : ids(expectation.target_group)) {
+        auto* structure = world.get_entity(target_id);
+        if (structure != nullptr &&
+            structure->has_component<Engine::Core::BuildingComponent>() &&
+            Game::Systems::Combat::structure_melee_contact_active(
+                *entity,
+                *structure,
+                Engine::Core::AttackComponent::k_melee_contact_range_grace)) {
+          structure_facade_contacts[projectile_pair_key(
+              expectation.group, expectation.target_group)] = true;
+          break;
+        }
+      }
     }
     QVector3D const position = vector_from_transform(*transform);
     if (!initial_elevation.contains(group)) {
@@ -1195,6 +1440,35 @@ struct ArenaScenarioRunner::Impl {
            auto const* buff =
                entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
            return buff != nullptr && buff->active;
+         }(),
+         [&]() {
+           auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+           return rpg != nullptr && rpg->active ? rpg->rpg_hp : -1;
+         }(),
+         [&]() {
+           auto const* guard =
+               entity->get_component<Engine::Core::CommanderGuardComponent>();
+           return guard != nullptr && guard->active;
+         }(),
+         [&]() {
+           auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+           return rpg != nullptr && rpg->active && rpg->dodge_invincible;
+         }(),
+         [&]() {
+           auto const* targets =
+               entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+           return targets != nullptr ? targets->aim_candidate_id
+                                     : Engine::Core::EntityID{0};
+         }(),
+         [&]() {
+           auto const* targets =
+               entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+           if (targets == nullptr ||
+               targets->aim_candidate_soldier_slot ==
+                   Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot) {
+             return -1;
+           }
+           return static_cast<int>(targets->aim_candidate_soldier_slot);
          }()});
 
     auto& previous = entity_states[entity_id];
@@ -1319,11 +1593,8 @@ struct ArenaScenarioRunner::Impl {
       if (lock_target != nullptr) {
         auto const geometry =
             Game::Systems::FormationCombat::contact_geometry(*entity, *lock_target);
-        bool const visibly_interpenetrating =
-            geometry.surface_gap <= -(geometry.contact_tolerance + 0.001F);
         if (!previous.melee_lock && geometry.formation_overlap_required &&
-            geometry.center_distance > geometry.engagement_center_distance + 0.01F &&
-            !visibly_interpenetrating) {
+            geometry.center_distance > geometry.engagement_center_distance + 0.01F) {
           add_issue(QStringLiteral("insufficient_formation_overlap"),
                     QStringLiteral("%1 entity %2 locked at center distance %3 m "
                                    "instead of the %4 m overlap contract")
@@ -1493,6 +1764,19 @@ struct ArenaScenarioRunner::Impl {
                   entity_id);
       }
       return;
+    }
+    if (entity->has_component<Engine::Core::ElephantComponent>() &&
+        debug->unit.is_attacking) {
+      visible_attacks[group] = true;
+      useful_bot_action[group] = true;
+      auto const* contact =
+          entity->get_component<Engine::Core::FormationContactComponent>();
+      if (contact != nullptr &&
+          std::any_of(contact->fronts.begin(),
+                      contact->fronts.end(),
+                      [](auto const& front) { return front.in_contact; })) {
+        paired_visible_attacks[group] = true;
+      }
     }
     entities_with_render_samples.insert(entity_id);
     QSet<int> sampled_this_frame;
@@ -1973,6 +2257,90 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group, expectation.target_group));
         }
         break;
+      case ArenaExpectationKind::ProjectileFlightObserved: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (!projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("projectile_flight_not_observed"),
+                    QStringLiteral("%1 never showed an in-flight projectile toward %2")
+                        .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::ProjectileImpactObserved: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (!projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("projectile_flight_not_observed"),
+                    QStringLiteral("%1 never showed an in-flight projectile toward %2")
+                        .arg(expectation.group, expectation.target_group));
+        } else if (!projectile_contacts.value(key, false)) {
+          add_issue(QStringLiteral("projectile_contact_not_observed"),
+                    QStringLiteral("%1 produced no visible projectile contact on %2")
+                        .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::ProjectileImpactSynchronized: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (!projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("projectile_flight_not_observed"),
+                    QStringLiteral("%1 never showed an in-flight projectile toward %2")
+                        .arg(expectation.group, expectation.target_group));
+        } else if (!projectile_impacts.value(key, false)) {
+          add_issue(
+              QStringLiteral("projectile_impact_not_synchronized"),
+              QStringLiteral("%1 produced no renderer-facing impact record in the "
+                             "same simulation event that damaged %2")
+                  .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::GroupHealthUnchanged: {
+        int const initial = initial_health_by_group.value(expectation.group, -1);
+        int const current = group_health(expectation.group);
+        if (initial < 0 || current != initial) {
+          add_issue(QStringLiteral("group_health_changed"),
+                    QStringLiteral("%1 health changed from %2 to %3")
+                        .arg(expectation.group)
+                        .arg(initial)
+                        .arg(current));
+        }
+        break;
+      }
+      case ArenaExpectationKind::GroupHealthReduced: {
+        int const initial = initial_health_by_group.value(expectation.group, -1);
+        int const current = group_health(expectation.group);
+        int const required_drop = std::max(1, static_cast<int>(expectation.threshold));
+        if (initial < 0 || current > initial - required_drop) {
+          add_issue(QStringLiteral("group_health_not_reduced"),
+                    QStringLiteral("%1 health changed from %2 to %3; expected at "
+                                   "least %4 damage")
+                        .arg(expectation.group)
+                        .arg(initial)
+                        .arg(current)
+                        .arg(required_drop));
+        }
+        break;
+      }
+      case ArenaExpectationKind::StructureDamageCueObserved:
+        if (!structure_damage_cues.value(expectation.group, false)) {
+          add_issue(QStringLiteral("structure_damage_cue_not_observed"),
+                    QStringLiteral("%1 never exposed a localized facade damage cue")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::StructureFacadeContactObserved: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (!structure_facade_contacts.value(key, false)) {
+          add_issue(QStringLiteral("structure_facade_contact_not_observed"),
+                    QStringLiteral("%1 never reached the visible facade of %2")
+                        .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
       case ArenaExpectationKind::FormationBodyOverlapObserved: {
         float const required_overlap =
             expectation.threshold > 0.0F ? expectation.threshold : 0.20F;
@@ -2308,6 +2676,59 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::ExactRpgTargetObserved:
+        if (!exact_rpg_target_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("exact_rpg_target_not_observed"),
+                    QStringLiteral("%1 never selected an exact in-range soldier")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgDamageContactObserved:
+        if (!rpg_damage_contact_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_damage_contact_not_observed"),
+                    QStringLiteral("%1 never published a visible RPG damage contact")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgBlockContactObserved:
+        if (!rpg_block_contact_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_block_contact_not_observed"),
+                    QStringLiteral("%1 never published a visible block contact")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgDodgeContactObserved:
+        if (!rpg_dodge_contact_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_dodge_contact_not_observed"),
+                    QStringLiteral("%1 never published a visible dodge contact")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgDodgeWindowObserved:
+        if (!rpg_dodge_window_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_dodge_window_not_observed"),
+                    QStringLiteral("%1 never entered its RPG dodge protection window")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgHealthReduced:
+        if (!initial_rpg_health_by_group.contains(expectation.group) ||
+            minimum_rpg_health_by_group.value(expectation.group) >=
+                initial_rpg_health_by_group.value(expectation.group)) {
+          add_issue(
+              QStringLiteral("rpg_health_not_reduced"),
+              QStringLiteral("%1 took no RPG health damage").arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgHealthUnchanged:
+        if (!initial_rpg_health_by_group.contains(expectation.group) ||
+            minimum_rpg_health_by_group.value(expectation.group) !=
+                initial_rpg_health_by_group.value(expectation.group)) {
+          add_issue(QStringLiteral("rpg_health_changed"),
+                    QStringLiteral("%1 lost RPG health during a protected scenario")
+                        .arg(expectation.group));
+        }
+        break;
       case ArenaExpectationKind::UndeadZoneDormantBefore: {
         auto const state = undead_zone_state(expectation.zone_id);
         float const window = std::max(expectation.end_seconds, expectation.threshold);
@@ -2380,6 +2801,32 @@ auto ArenaScenarioRunner::start() -> bool {
       m_impl->spawn_group(group);
     }
   }
+  if (m_impl->scenario.rpg_mode) {
+    auto const& commanders = m_impl->ids(m_impl->scenario.rpg_commander_group);
+    if (commanders.size() != 1U || !m_impl->host.configure_rpg_commander) {
+      m_impl->add_issue(
+          QStringLiteral("rpg_commander_setup_failed"),
+          QStringLiteral("RPG scenario requires one spawned commander and an "
+                         "RPG-capable host"));
+      return false;
+    }
+    Engine::Core::EntityID const commander_id = commanders.front();
+    m_impl->host.configure_rpg_commander(commander_id);
+    auto* commander = m_impl->world.get_entity(commander_id);
+    auto const* rpg = commander != nullptr
+                          ? commander->get_component<Engine::Core::RpgHealthComponent>()
+                          : nullptr;
+    if (rpg == nullptr || !rpg->active) {
+      m_impl->add_issue(QStringLiteral("rpg_commander_setup_failed"),
+                        QStringLiteral("RPG host did not activate commander health"),
+                        commander_id);
+      return false;
+    }
+    m_impl->initial_rpg_health_by_group[m_impl->scenario.rpg_commander_group] =
+        rpg->rpg_hp;
+    m_impl->minimum_rpg_health_by_group[m_impl->scenario.rpg_commander_group] =
+        rpg->rpg_hp;
+  }
   for (auto* entity :
        m_impl->world.get_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity != nullptr) {
@@ -2413,6 +2860,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
     }
   }
   m_impl->observe_commander_aura_state();
+  m_impl->observe_projectiles();
   for (auto const& expectation : m_impl->scenario.expectations) {
     if (expectation.kind == ArenaExpectationKind::FormationOrderPreserved &&
         m_impl->expectation_active(expectation)) {
@@ -2653,7 +3101,13 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("construction_time_remaining"),
            unit.construction_time_remaining},
           {QStringLiteral("commander_aura_active"), unit.commander_aura_active},
-          {QStringLiteral("commander_aura_buffed"), unit.commander_aura_buffed}});
+          {QStringLiteral("commander_aura_buffed"), unit.commander_aura_buffed},
+          {QStringLiteral("rpg_health"), unit.rpg_health},
+          {QStringLiteral("rpg_guard_active"), unit.rpg_guard_active},
+          {QStringLiteral("rpg_dodge_invincible"), unit.rpg_dodge_invincible},
+          {QStringLiteral("rpg_aim_target_id"),
+           static_cast<qint64>(unit.rpg_aim_target_id)},
+          {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot}});
     }
     QJsonArray soldiers;
     for (auto const& soldier : frame.soldiers) {

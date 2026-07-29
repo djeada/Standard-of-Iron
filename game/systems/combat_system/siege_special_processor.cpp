@@ -12,11 +12,10 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../../visuals/team_colors.h"
-#include "../arrow_system.h"
 #include "../projectile_system.h"
 #include "combat_random.h"
 #include "combat_utils.h"
-#include "damage_processor.h"
+#include "structure_combat.h"
 
 namespace Game::Systems::Combat {
 
@@ -60,17 +59,28 @@ void face_locked_target(Engine::Core::Entity* siege,
 
 void start_loading(Engine::Core::Entity* siege, Engine::Core::Entity* target) {
   auto* loading = siege->get_component<Engine::Core::CatapultLoadingComponent>();
+  auto* siege_transform = siege->get_component<Engine::Core::TransformComponent>();
   auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  if (loading == nullptr || target_transform == nullptr) {
+  if (loading == nullptr || siege_transform == nullptr || target_transform == nullptr) {
     return;
   }
 
+  QVector3D const source(siege_transform->position.x,
+                         siege_transform->position.y,
+                         siege_transform->position.z);
+  QVector3D const locked_target =
+      target->has_component<Engine::Core::BuildingComponent>()
+          ? structure_impact_point(
+                *target, source, 0.0F, structure_attack_profile(siege).impact_height)
+          : QVector3D(target_transform->position.x,
+                      target_transform->position.y + 0.85F,
+                      target_transform->position.z);
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Loading;
   loading->loading_time = 0.0F;
   loading->target_id = target->get_id();
-  loading->target_locked_x = target_transform->position.x;
-  loading->target_locked_y = target_transform->position.y;
-  loading->target_locked_z = target_transform->position.z;
+  loading->target_locked_x = locked_target.x();
+  loading->target_locked_y = locked_target.y();
+  loading->target_locked_z = locked_target.z();
   loading->target_position_locked = true;
 
   face_locked_target(siege, target_transform);
@@ -85,10 +95,28 @@ void start_loading(Engine::Core::Entity* siege, Engine::Core::Entity* target) {
     return false;
   }
 
+  if (target->has_component<Engine::Core::BuildingComponent>()) {
+    QVector3D const source(siege_transform->position.x,
+                           siege_transform->position.y,
+                           siege_transform->position.z);
+    return structure_surface_distance(*target, source) <= attack->range;
+  }
   float const dx = target_transform->position.x - siege_transform->position.x;
   float const dz = target_transform->position.z - siege_transform->position.z;
-  float const dist = std::sqrt(dx * dx + dz * dz);
-  return dist <= attack->range;
+  return std::hypot(dx, dz) <= attack->range;
+}
+
+[[nodiscard]] auto target_origin_at_launch(
+    Engine::Core::World* world,
+    const Engine::Core::CatapultLoadingComponent& loading) -> QVector3D {
+  auto* target = world != nullptr ? world->get_entity(loading.target_id) : nullptr;
+  auto const* transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (transform != nullptr) {
+    return {transform->position.x, transform->position.y, transform->position.z};
+  }
+  return {loading.target_locked_x, loading.target_locked_y, loading.target_locked_z};
 }
 
 void update_loading(Engine::Core::Entity* siege,
@@ -152,6 +180,7 @@ void fire_catapult(Engine::Core::World* world, Engine::Core::Entity* catapult) {
       transform->position.x, transform->position.y + 1.5F, transform->position.z);
   QVector3D const end(
       loading->target_locked_x, loading->target_locked_y, loading->target_locked_z);
+  QVector3D const target_origin = target_origin_at_launch(world, *loading);
   QVector3D const color = (unit != nullptr)
                               ? Game::Visuals::team_colorForOwner(unit->owner_id)
                               : QVector3D(0.45F, 0.42F, 0.38F);
@@ -164,7 +193,8 @@ void fire_catapult(Engine::Core::World* world, Engine::Core::Entity* catapult) {
                               true,
                               attack->damage,
                               catapult->get_id(),
-                              loading->target_id);
+                              loading->target_id,
+                              target_origin);
 
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Firing;
   loading->firing_time = 0.0F;
@@ -189,27 +219,26 @@ void fire_ballista(Engine::Core::World* world, Engine::Core::Entity* ballista) {
       transform->position.x, transform->position.y + 1.0F, transform->position.z);
   QVector3D const end(
       loading->target_locked_x, loading->target_locked_y, loading->target_locked_z);
+  QVector3D const target_origin = target_origin_at_launch(world, *loading);
   QVector3D const color = (unit != nullptr)
                               ? Game::Visuals::team_colorForOwner(unit->owner_id)
                               : QVector3D(0.8F, 0.7F, 0.2F);
 
-  projectile_sys->spawn_arrow(start, end, color, 10.0F, true);
-
-  auto* target = world->get_entity(loading->target_id);
-  if (target != nullptr) {
-    auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-    QVector3D const locked_pos(
-        loading->target_locked_x, loading->target_locked_y, loading->target_locked_z);
-    if (target_transform != nullptr) {
-      QVector3D const current_pos(target_transform->position.x,
-                                  target_transform->position.y,
-                                  target_transform->position.z);
-      constexpr float k_escape_radius = 1.5F;
-      if ((current_pos - locked_pos).length() <= k_escape_radius) {
-        deal_damage(world, target, attack->damage, ballista->get_id());
-      }
-    }
-  }
+  projectile_sys->spawn_arrow(start,
+                              end,
+                              color,
+                              10.0F,
+                              true,
+                              ProjectileKind::Arrow,
+                              true,
+                              attack->damage,
+                              ballista->get_id(),
+                              loading->target_id,
+                              0.0F,
+                              0.0F,
+                              false,
+                              ArrowVisualStyle::Focused,
+                              target_origin);
 
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Firing;
   loading->firing_time = 0.0F;
@@ -332,8 +361,9 @@ find_nearest_tower_target(Engine::Core::Entity* tower,
 
 void spawn_tower_arrows(Engine::Core::Entity* tower,
                         Engine::Core::Entity* target,
-                        ArrowSystem* arrow_sys) {
-  if (arrow_sys == nullptr) {
+                        ProjectileSystem* projectile_sys,
+                        int damage) {
+  if (projectile_sys == nullptr) {
     return;
   }
 
@@ -366,7 +396,22 @@ void spawn_tower_arrows(Engine::Core::Entity* tower,
     QVector3D const start = tower_pos + dir * 0.5F + perpendicular * lateral_offset;
     QVector3D const end =
         target_pos + QVector3D(0.0F, 0.8F, 0.0F) + perpendicular * lateral_offset;
-    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed, ArrowVisualStyle::Focused);
+    bool const damage_carrier = i == 0;
+    projectile_sys->spawn_arrow(start,
+                                end,
+                                color,
+                                k_arrow_speed,
+                                false,
+                                ProjectileKind::Arrow,
+                                damage_carrier,
+                                damage_carrier ? std::max(1, damage) : 0,
+                                tower->get_id(),
+                                target->get_id(),
+                                0.0F,
+                                0.0F,
+                                false,
+                                ArrowVisualStyle::Focused,
+                                target_pos);
   }
 }
 
@@ -397,8 +442,11 @@ void process_defense_tower(Engine::Core::World* world,
     return;
   }
 
-  spawn_tower_arrows(tower, target, world->get_system<ArrowSystem>());
-  deal_damage(world, target, attack->damage, tower->get_id());
+  auto* projectile_system = world->get_system<ProjectileSystem>();
+  if (projectile_system == nullptr) {
+    return;
+  }
+  spawn_tower_arrows(tower, target, projectile_system, attack->damage);
   attack->time_since_last = 0.0F;
 }
 

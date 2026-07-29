@@ -16,6 +16,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
+#include "../rpg_combat_system/rpg_targeting.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_playback.h"
 #include "animation/bpat/bpat_reader.h"
@@ -29,6 +30,8 @@ namespace {
 
 struct LocalTargetSample {
   Engine::Core::Entity* entity{nullptr};
+  std::uint16_t soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   float forward{0.0F};
   float right{0.0F};
   float distance{0.0F};
@@ -72,11 +75,45 @@ struct SampledSocketFrame {
 
   float const yaw = transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
   frame.forward = QVector3D(std::sin(yaw), 0.0F, std::cos(yaw));
-  frame.right = QVector3D(-frame.forward.z(), 0.0F, frame.forward.x());
+  frame.right = QVector3D(frame.forward.z(), 0.0F, -frame.forward.x());
   frame.origin =
       QVector3D(transform->position.x, transform->position.y, transform->position.z);
   frame.valid = true;
   return frame;
+}
+
+[[nodiscard]] auto attacker_frame(
+    const Game::Systems::RpgCombat::SoldierTarget& soldier) -> AttackerFrame {
+  AttackerFrame frame;
+  if (soldier.entity == nullptr) {
+    return frame;
+  }
+  float const yaw = soldier.yaw_degrees * (std::numbers::pi_v<float> / 180.0F);
+  frame.forward = QVector3D(std::sin(yaw), 0.0F, std::cos(yaw));
+  frame.right = QVector3D(frame.forward.z(), 0.0F, -frame.forward.x());
+  frame.origin = soldier.position;
+  frame.valid = true;
+  return frame;
+}
+
+struct PresentedAttackerFrame {
+  AttackerFrame frame{};
+  std::uint16_t soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
+};
+
+[[nodiscard]] auto
+presented_attacker_frame(Engine::Core::Entity& attacker,
+                         Engine::Core::EntityID target_id) -> PresentedAttackerFrame {
+  auto const carrier =
+      Game::Systems::RpgCombat::resolve_damage_carrier(attacker, target_id);
+  if (carrier.has_value()) {
+    return {
+        .frame = attacker_frame(*carrier),
+        .soldier_slot = carrier->soldier_slot,
+    };
+  }
+  return {.frame = attacker_frame(attacker)};
 }
 
 [[nodiscard]] auto to_world(const AttackerFrame& frame,
@@ -152,6 +189,7 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::MountedChargeImpact:
     case CombatActionId::RtsSpearThrust:
     case CombatActionId::RtsBowShot:
+    case CombatActionId::RtsElephantStomp:
       break;
     }
   } else if (definition.weapon_family == WeaponFamily::Spear) {
@@ -186,6 +224,7 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::MountedChargeImpact:
     case CombatActionId::RtsSwordStrike:
     case CombatActionId::RtsBowShot:
+    case CombatActionId::RtsElephantStomp:
       break;
     }
   }
@@ -622,35 +661,25 @@ sample_mounted_spear_trace_segment(const AttackerFrame& frame,
   return best;
 }
 
-[[nodiscard]] auto
-make_local_sample(Engine::Core::Entity& attacker,
-                  Engine::Core::Entity& target) -> LocalTargetSample {
+[[nodiscard]] auto make_local_sample(
+    const AttackerFrame& frame,
+    const Game::Systems::RpgCombat::SoldierTarget& target) -> LocalTargetSample {
   LocalTargetSample sample;
-  sample.entity = &target;
+  sample.entity = target.entity;
+  sample.soldier_slot = target.soldier_slot;
 
-  auto* attacker_transform = attacker.get_component<Engine::Core::TransformComponent>();
-  auto* target_transform = target.get_component<Engine::Core::TransformComponent>();
-  if (attacker_transform == nullptr || target_transform == nullptr) {
+  if (!frame.valid || target.entity == nullptr) {
     sample.entity = nullptr;
     return sample;
   }
 
-  float const yaw =
-      attacker_transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
-  QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
-  QVector3D const right(-forward.z(), 0.0F, forward.x());
-  QVector3D const origin(attacker_transform->position.x,
-                         attacker_transform->position.y,
-                         attacker_transform->position.z);
-  sample.world_position = QVector3D(target_transform->position.x,
-                                    target_transform->position.y,
-                                    target_transform->position.z);
-  QVector3D const to_target = sample.world_position - origin;
-  sample.forward = QVector3D::dotProduct(to_target, forward);
-  sample.right = QVector3D::dotProduct(to_target, right);
+  sample.world_position = target.position;
+  QVector3D const to_target = sample.world_position - frame.origin;
+  sample.forward = QVector3D::dotProduct(to_target, frame.forward);
+  sample.right = QVector3D::dotProduct(to_target, frame.right);
   sample.distance =
       std::sqrt(sample.forward * sample.forward + sample.right * sample.right);
-  sample.radius = Game::Systems::Combat::combat_radius(&target);
+  sample.radius = target.body_radius;
   return sample;
 }
 
@@ -701,7 +730,9 @@ weapon_contact_score(const LocalTargetSample& sample,
 
 } // namespace
 
-auto sample_authored_weapon_trace_segment(Engine::Core::Entity& attacker,
+namespace {
+
+auto sample_authored_weapon_trace_segment(const AttackerFrame& frame,
                                           const CombatActionDefinition& definition,
                                           WeaponTraceTimeSpan time_span)
     -> WeaponTraceSegment {
@@ -711,7 +742,6 @@ auto sample_authored_weapon_trace_segment(Engine::Core::Entity& attacker,
     return segment;
   }
 
-  auto const frame = attacker_frame(attacker);
   if (!frame.valid) {
     return segment;
   }
@@ -790,6 +820,16 @@ auto sample_authored_weapon_trace_segment(Engine::Core::Entity& attacker,
   return segment;
 }
 
+} // namespace
+
+auto sample_authored_weapon_trace_segment(Engine::Core::Entity& attacker,
+                                          const CombatActionDefinition& definition,
+                                          WeaponTraceTimeSpan time_span)
+    -> WeaponTraceSegment {
+  return sample_authored_weapon_trace_segment(
+      attacker_frame(attacker), definition, time_span);
+}
+
 auto find_weapon_trace_contact(
     Engine::Core::World& world,
     Engine::Core::Entity& attacker,
@@ -825,8 +865,9 @@ auto find_weapon_trace_contact(
     return {};
   }
 
-  auto const segment =
-      sample_authored_weapon_trace_segment(attacker, definition, time_span);
+  auto const presented_attacker = presented_attacker_frame(attacker, target_hint_id);
+  auto const segment = sample_authored_weapon_trace_segment(
+      presented_attacker.frame, definition, time_span);
   if (!segment.valid) {
     return find_weapon_trace_contact(
         world, attacker, definition, target_hint_id, ignored_target_ids);
@@ -834,6 +875,7 @@ auto find_weapon_trace_contact(
 
   WeaponTraceContact contact;
   contact.attacker_id = attacker.get_id();
+  contact.attacker_soldier_slot = presented_attacker.soldier_slot;
   auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
   if (attacker_unit == nullptr) {
     return contact;
@@ -852,30 +894,34 @@ auto find_weapon_trace_contact(
       return;
     }
 
-    auto sample = make_local_sample(attacker, *candidate);
-    if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
-        !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
-        sample.forward <= 0.0F) {
-      return;
-    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      auto sample = make_local_sample(presented_attacker.frame, soldier);
+      if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
+          !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
+          sample.forward <= 0.0F) {
+        continue;
+      }
 
-    auto const distance = best_segment_distance_xz(segment, sample.world_position);
-    float const hit_radius = segment.radius + sample.radius;
-    if (!std::isfinite(distance.distance) || distance.distance > hit_radius) {
-      return;
-    }
+      auto const distance = best_segment_distance_xz(segment, sample.world_position);
+      float const hit_radius = segment.radius + sample.radius;
+      if (!std::isfinite(distance.distance) || distance.distance > hit_radius) {
+        continue;
+      }
 
-    float const score = distance.distance + sample.distance * 0.03F;
-    if (score >= best_score) {
-      return;
-    }
+      float const score = distance.distance + sample.distance * 0.03F;
+      if (score >= best_score) {
+        continue;
+      }
 
-    best_score = score;
-    best_contact.target_id = candidate->get_id();
-    best_contact.distance = sample.distance;
-    best_contact.local_forward = sample.forward;
-    best_contact.local_right = sample.right;
-    best_contact.contact_point = distance.point;
+      best_score = score;
+      best_contact.target_id = candidate->get_id();
+      best_contact.target_soldier_slot = sample.soldier_slot;
+      best_contact.distance = sample.distance;
+      best_contact.local_forward = sample.forward;
+      best_contact.local_right = sample.right;
+      best_contact.contact_point = distance.point;
+    }
   };
 
   float best_score = std::numeric_limits<float>::infinity();
@@ -907,6 +953,8 @@ auto find_weapon_trace_contact(
                                    definition.weapon_family != WeaponFamily::Spear)) {
     return contact;
   }
+  auto const presented_attacker = presented_attacker_frame(attacker, target_hint_id);
+  contact.attacker_soldier_slot = presented_attacker.soldier_slot;
 
   auto consider = [&](Engine::Core::Entity* candidate,
                       float& best_score,
@@ -921,29 +969,33 @@ auto find_weapon_trace_contact(
       return;
     }
 
-    auto sample = make_local_sample(attacker, *candidate);
-    if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
-        !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
-        sample.forward <= 0.0F) {
-      return;
-    }
-    if (definition.weapon_family == WeaponFamily::Spear &&
-        definition.attack_direction == Engine::Core::AttackDirection::Thrust &&
-        std::abs(sample.right) > definition.hit_shape.radius + sample.radius) {
-      return;
-    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      auto sample = make_local_sample(presented_attacker.frame, soldier);
+      if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
+          !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
+          sample.forward <= 0.0F) {
+        continue;
+      }
+      if (definition.weapon_family == WeaponFamily::Spear &&
+          definition.attack_direction == Engine::Core::AttackDirection::Thrust &&
+          std::abs(sample.right) > definition.hit_shape.radius + sample.radius) {
+        continue;
+      }
 
-    float const score = weapon_contact_score(sample, definition);
-    if (!std::isfinite(score) || score >= best_score) {
-      return;
-    }
+      float const score = weapon_contact_score(sample, definition);
+      if (!std::isfinite(score) || score >= best_score) {
+        continue;
+      }
 
-    best_score = score;
-    best_contact.target_id = candidate->get_id();
-    best_contact.distance = sample.distance;
-    best_contact.local_forward = sample.forward;
-    best_contact.local_right = sample.right;
-    best_contact.contact_point = sample.world_position;
+      best_score = score;
+      best_contact.target_id = candidate->get_id();
+      best_contact.target_soldier_slot = sample.soldier_slot;
+      best_contact.distance = sample.distance;
+      best_contact.local_forward = sample.forward;
+      best_contact.local_right = sample.right;
+      best_contact.contact_point = sample.world_position;
+    }
   };
 
   float best_score = std::numeric_limits<float>::infinity();

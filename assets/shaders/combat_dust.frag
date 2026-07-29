@@ -221,17 +221,18 @@ void main() {
     color = clamp(color, 0.0, 3.4) * fireball_alpha;
     frag_color = vec4(color, fireball_alpha);
   } else if (u_effect_type == 5) {
-
-    float height = clamp(v_texcoord.y, 0.0, 1.0);
+    float along = clamp(v_texcoord.x, 0.0, 1.0);
+    float across = abs(v_texcoord.y * 2.0 - 1.0);
     float spark_age = clamp(u_time * 3.0, 0.0, 1.0);
 
-    vec3 white_hot = vec3(3.0, 2.8, 2.2);
-    vec3 hot_orange = vec3(2.4, 1.2, 0.15);
-    vec3 cool_red = vec3(1.4, 0.3, 0.05);
+    vec3 accent = max(u_dust_color, vec3(0.02));
+    vec3 white_hot = mix(accent * 2.2, vec3(3.0, 2.8, 2.4), 0.68);
+    vec3 hot_accent = accent * 2.4;
+    vec3 cool_accent = accent * 0.85;
 
-    float core_heat = pow(max(0.0, 1.0 - height), 2.0);
-    color = mix(hot_orange, white_hot, core_heat * (1.0 - spark_age * 0.6));
-    color = mix(color, cool_red, height * spark_age);
+    float core_heat = pow(max(0.0, 1.0 - along), 2.0);
+    color = mix(hot_accent, white_hot, core_heat * (1.0 - spark_age * 0.6));
+    color = mix(color, cool_accent, along * spark_age);
 
     float glint = pow(max(0.0,
                           sin(v_texcoord.x * 40.0 + u_time * 25.0) *
@@ -242,7 +243,9 @@ void main() {
     color *= v_intensity * 1.4;
     color = clamp(color, 0.0, 4.0);
 
-    float spark_alpha = v_alpha * (0.8 + 0.2 * (1.0 - height));
+    float edge_fade = 1.0 - smoothstep(0.55, 1.0, across);
+    float tip_fade = 1.0 - smoothstep(0.72, 1.0, along);
+    float spark_alpha = v_alpha * edge_fade * (0.72 + 0.28 * tip_fade);
     frag_color = vec4(color, clamp(spark_alpha, 0.0, 1.0));
   } else {
 

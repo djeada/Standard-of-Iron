@@ -104,16 +104,15 @@ struct MotionPresentationSample {
 
 void begin_motion_presentation_frame(World& world, float delta_time) {
   const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  for (const auto& [entity_id, entity] : world.get_entities()) {
-    (void)entity_id;
-    auto* transform = entity->get_component<TransformComponent>();
-    auto* unit = entity->get_component<UnitComponent>();
+  world.for_each_entity([delta_time](Entity& entity) {
+    auto* transform = entity.get_component<TransformComponent>();
+    auto* unit = entity.get_component<UnitComponent>();
     if (transform == nullptr || unit == nullptr) {
-      continue;
+      return;
     }
-    auto* motion = get_or_add_component<MotionPresentationComponent>(entity.get());
+    auto* motion = get_or_add_component<MotionPresentationComponent>(entity);
     if (motion == nullptr) {
-      continue;
+      return;
     }
     motion->previous_x = transform->position.x;
     motion->previous_y = transform->position.y;
@@ -121,27 +120,26 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
     motion->tick_delta_time = std::max(0.0F, delta_time);
     motion->snapshot_valid = false;
     motion->initialized = true;
-  }
+  });
 }
 
 void finalize_motion_presentation_frame(World& world, float delta_time) {
   const float safe_dt = std::max(delta_time, 1.0e-5F);
   const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  for (const auto& [entity_id, entity] : world.get_entities()) {
-    (void)entity_id;
-    auto* motion = entity->get_component<MotionPresentationComponent>();
-    auto* transform = entity->get_component<TransformComponent>();
-    auto* unit = entity->get_component<UnitComponent>();
+  world.for_each_entity([&world, delta_time, safe_dt](Entity& entity) {
+    auto* motion = entity.get_component<MotionPresentationComponent>();
+    auto* transform = entity.get_component<TransformComponent>();
+    auto* unit = entity.get_component<UnitComponent>();
     if (motion == nullptr || transform == nullptr || unit == nullptr) {
-      continue;
+      return;
     }
 
-    auto* movement = entity->get_component<MovementComponent>();
-    auto* attack = entity->get_component<AttackComponent>();
-    auto* attack_target = entity->get_component<AttackTargetComponent>();
-    auto* commander = entity->get_component<CommanderComponent>();
-    auto* builder_prod = entity->get_component<BuilderProductionComponent>();
-    auto* stamina = entity->get_component<StaminaComponent>();
+    auto* movement = entity.get_component<MovementComponent>();
+    auto* attack = entity.get_component<AttackComponent>();
+    auto* attack_target = entity.get_component<AttackTargetComponent>();
+    auto* commander = entity.get_component<CommanderComponent>();
+    auto* builder_prod = entity.get_component<BuilderProductionComponent>();
+    auto* stamina = entity.get_component<StaminaComponent>();
 
     float const displacement_x = transform->position.x - motion->previous_x;
     float const displacement_z = transform->position.z - motion->previous_z;
@@ -172,8 +170,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     bool const builder_bypass =
         builder_prod != nullptr && builder_prod->bypass_movement_active;
 
-    motion->attack_target_in_range = attack_target_is_in_range(
-        world, entity.get(), attack, attack_target, transform);
+    motion->attack_target_in_range =
+        attack_target_is_in_range(world, &entity, attack, attack_target, transform);
     motion->has_chase_intent =
         attack_target != nullptr && attack_target->target_id > 0 &&
         attack_target->should_chase && !motion->attack_target_in_range;
@@ -276,7 +274,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
             ? 0.0F
             : motion->seconds_since_motion + std::max(0.0F, delta_time);
     motion->snapshot_valid = true;
-  }
+  });
 }
 
 [[nodiscard]] constexpr auto
@@ -531,10 +529,9 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
 
 void publish_creature_presentation_frame(World& world) {
   const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  for (const auto& [entity_id, owned_entity] : world.get_entities()) {
-    (void)entity_id;
-    publish_creature_presentation_entity(owned_entity.get(), &world);
-  }
+  world.for_each_entity([&world](Entity& entity) {
+    publish_creature_presentation_entity(&entity, &world);
+  });
 }
 
 } // namespace
@@ -543,25 +540,87 @@ void publish_creature_presentation(Entity* entity, World* world) {
   publish_creature_presentation_entity(entity, world);
 }
 
-World::World() = default;
+void World::ComponentSet::insert(EntityID id) {
+  const std::uint32_t index = Handle::index_of(id);
+  if (sparse.size() <= index) {
+    sparse.resize(static_cast<std::size_t>(index) + 1, k_absent);
+  }
+  if (sparse[index] != k_absent) {
+
+    dense[sparse[index]] = id;
+    return;
+  }
+  sparse[index] = static_cast<std::uint32_t>(dense.size());
+  dense.push_back(id);
+}
+
+void World::ComponentSet::erase(EntityID id) {
+  const std::uint32_t index = Handle::index_of(id);
+  if (index >= sparse.size()) {
+    return;
+  }
+  const std::uint32_t position = sparse[index];
+  if (position == k_absent) {
+    return;
+  }
+
+  const EntityID moved = dense.back();
+  dense[position] = moved;
+  sparse[Handle::index_of(moved)] = position;
+  dense.pop_back();
+  sparse[index] = k_absent;
+}
+
+auto World::ComponentSet::contains(EntityID id) const -> bool {
+  const std::uint32_t index = Handle::index_of(id);
+  return index < sparse.size() && sparse[index] != k_absent &&
+         dense[sparse[index]] == id;
+}
+
+void World::ComponentSet::clear() {
+  dense.clear();
+  sparse.clear();
+}
+
+World::World() {
+
+  m_slots.emplace_back();
+}
+
 World::~World() = default;
 
+auto World::resolve(EntityID entity_id) const -> Entity* {
+  const std::uint32_t index = Handle::index_of(entity_id);
+  if (index == 0 || index >= m_slots.size()) {
+    return nullptr;
+  }
+  const auto& slot = m_slots[index];
+  if (slot.entity == nullptr || slot.generation != Handle::generation_of(entity_id)) {
+    return nullptr;
+  }
+  return slot.entity.get();
+}
+
+void World::detach_from_all_component_sets(EntityID entity_id) {
+  for (auto& set : m_component_sets) {
+    set.erase(entity_id);
+  }
+}
+
 void World::on_component_changed(EntityID entity_id,
+                                 ComponentTypeId type_id,
                                  std::type_index component_type,
                                  bool added) {
 
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
+  if (m_component_sets.size() <= type_id) {
+    m_component_sets.resize(static_cast<std::size_t>(type_id) + 1);
+  }
   if (added) {
-    m_component_index[component_type].insert(entity_id);
+    m_component_sets[type_id].insert(entity_id);
   } else {
-    auto it = m_component_index.find(component_type);
-    if (it != m_component_index.end()) {
-      it->second.erase(entity_id);
-      if (it->second.empty()) {
-        m_component_index.erase(it);
-      }
-    }
+    m_component_sets[type_id].erase(entity_id);
   }
 
   const auto observers = m_component_observers;
@@ -571,20 +630,49 @@ void World::on_component_changed(EntityID entity_id,
 }
 
 void World::setup_entity_callback(Entity* entity) {
-  entity->set_component_change_callback(
-      [this](EntityID entity_id, std::type_index component_type, bool added) {
-        this->on_component_changed(entity_id, component_type, added);
-      });
+  entity->set_component_change_callback([this](EntityID entity_id,
+                                               ComponentTypeId type_id,
+                                               std::type_index component_type,
+                                               bool added) {
+    this->on_component_changed(entity_id, type_id, component_type, added);
+  });
+}
+
+auto World::collect_entities_with(ComponentTypeId type_id) -> std::vector<Entity*> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  if (type_id >= m_component_sets.size()) {
+    return {};
+  }
+
+  const auto& dense = m_component_sets[type_id].dense;
+  std::vector<Entity*> result;
+  result.reserve(dense.size());
+  for (const EntityID id : dense) {
+    if (auto* entity = resolve(id)) {
+      result.push_back(entity);
+    }
+  }
+  return result;
 }
 
 auto World::create_entity() -> Entity* {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  EntityID const id = m_next_entity_id++;
-  auto entity = std::make_unique<Entity>(id);
-  auto* ptr = entity.get();
-  setup_entity_callback(ptr);
-  m_entities[id] = std::move(entity);
-  return ptr;
+
+  std::uint32_t index = 0;
+  if (!m_free_slots.empty()) {
+    index = m_free_slots.back();
+    m_free_slots.pop_back();
+  } else {
+    index = static_cast<std::uint32_t>(m_slots.size());
+    m_slots.emplace_back();
+  }
+
+  auto& slot = m_slots[index];
+  const EntityID id = Handle::make(index, slot.generation);
+  slot.entity = std::make_unique<Entity>(id);
+  setup_entity_callback(slot.entity.get());
+  ++m_live_count;
+  return slot.entity.get();
 }
 
 auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
@@ -593,42 +681,50 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
     return nullptr;
   }
 
-  if (m_entities.contains(entity_id)) {
-    for (auto it = m_component_index.begin(); it != m_component_index.end();) {
-      it->second.erase(entity_id);
-      if (it->second.empty()) {
-        it = m_component_index.erase(it);
-      } else {
-        ++it;
-      }
+  const std::uint32_t index = Handle::index_of(entity_id);
+  if (index == 0) {
+    return nullptr;
+  }
+
+  if (m_slots.size() <= index) {
+    const auto previous_size = m_slots.size();
+    m_slots.resize(static_cast<std::size_t>(index) + 1);
+
+    for (std::size_t i = previous_size; i < index; ++i) {
+      m_free_slots.push_back(static_cast<std::uint32_t>(i));
     }
+  } else {
+    std::erase(m_free_slots, index);
   }
 
-  auto entity = std::make_unique<Entity>(entity_id);
-  auto* ptr = entity.get();
-  setup_entity_callback(ptr);
-  m_entities[entity_id] = std::move(entity);
-
-  if (entity_id >= m_next_entity_id) {
-    m_next_entity_id = entity_id + 1;
+  auto& slot = m_slots[index];
+  if (slot.entity != nullptr) {
+    detach_from_all_component_sets(slot.entity->get_id());
+    slot.entity.reset();
+    --m_live_count;
   }
 
-  return ptr;
+  slot.generation = Handle::generation_of(entity_id);
+  slot.entity = std::make_unique<Entity>(entity_id);
+  setup_entity_callback(slot.entity.get());
+  ++m_live_count;
+  return slot.entity.get();
 }
 
 void World::destroy_entity(EntityID entity_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
-  auto it = m_entities.find(entity_id);
+  const std::uint32_t index = Handle::index_of(entity_id);
+  if (index != 0 && index < m_slots.size()) {
+    auto& slot = m_slots[index];
+    if (slot.entity != nullptr && slot.generation == Handle::generation_of(entity_id)) {
+      detach_from_all_component_sets(entity_id);
+      slot.entity.reset();
 
-  for (auto& [type, entity_set] : m_component_index) {
-    entity_set.erase(entity_id);
-  }
-
-  if (it != m_entities.end()) {
-    m_entities.erase(it);
-  } else {
-    m_entities.erase(entity_id);
+      ++slot.generation;
+      m_free_slots.push_back(index);
+      --m_live_count;
+    }
   }
 
   const auto observers = m_entity_destroyed_observers;
@@ -639,9 +735,22 @@ void World::destroy_entity(EntityID entity_id) {
 
 void World::clear() {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  m_entities.clear();
-  m_component_index.clear();
-  m_next_entity_id = 1;
+
+  for (std::size_t i = 1; i < m_slots.size(); ++i) {
+    if (m_slots[i].entity != nullptr) {
+      m_slots[i].entity.reset();
+      ++m_slots[i].generation;
+    }
+  }
+  m_free_slots.clear();
+  for (std::size_t i = m_slots.size(); i-- > 1;) {
+    m_free_slots.push_back(static_cast<std::uint32_t>(i));
+  }
+  m_live_count = 0;
+
+  for (auto& set : m_component_sets) {
+    set.clear();
+  }
 
   const auto observers = m_world_cleared_observers;
   for (const auto& observer : observers) {
@@ -651,8 +760,17 @@ void World::clear() {
 
 auto World::get_entity(EntityID entity_id) -> Entity* {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  auto it = m_entities.find(entity_id);
-  return it != m_entities.end() ? it->second.get() : nullptr;
+  return resolve(entity_id);
+}
+
+auto World::is_alive(EntityID entity_id) const -> bool {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  return resolve(entity_id) != nullptr;
+}
+
+auto World::entity_count() const -> std::size_t {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  return m_live_count;
 }
 
 void World::add_system(std::unique_ptr<System> system) {
@@ -669,75 +787,48 @@ void World::update(float delta_time) {
   publish_creature_presentation_frame(*this);
 }
 
-auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity*> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+namespace {
+
+template <typename Predicate>
+auto collect_units(const World& world, Predicate&& predicate) -> std::vector<Entity*> {
   std::vector<Entity*> result;
-  result.reserve(m_entities.size());
-  for (const auto& [entity_id, entity] : m_entities) {
-    auto* unit = entity->get_component<UnitComponent>();
-    if (unit == nullptr) {
-      continue;
+  result.reserve(world.entity_count());
+  world.for_each_entity([&](Entity& entity) {
+    auto* unit = entity.get_component<UnitComponent>();
+    if (unit != nullptr && predicate(*unit)) {
+      result.push_back(&entity);
     }
-    if (unit->owner_id == owner_id) {
-      result.push_back(entity.get());
-    }
-  }
+  });
   return result;
+}
+
+} // namespace
+
+auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity*> {
+  return collect_units(*this, [owner_id](const UnitComponent& unit) {
+    return unit.owner_id == owner_id;
+  });
 }
 
 auto World::get_units_not_owned_by(int owner_id) const -> std::vector<Entity*> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity*> result;
-  result.reserve(m_entities.size());
-  for (const auto& [entity_id, entity] : m_entities) {
-    auto* unit = entity->get_component<UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    if (unit->owner_id != owner_id) {
-      result.push_back(entity.get());
-    }
-  }
-  return result;
+  return collect_units(*this, [owner_id](const UnitComponent& unit) {
+    return unit.owner_id != owner_id;
+  });
 }
 
 auto World::get_allied_units(int owner_id) const -> std::vector<Entity*> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity*> result;
-  result.reserve(m_entities.size());
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-
-  for (const auto& [entity_id, entity] : m_entities) {
-    auto* unit = entity->get_component<UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (unit->owner_id == owner_id ||
-        owner_registry.are_allies(owner_id, unit->owner_id)) {
-      result.push_back(entity.get());
-    }
-  }
-  return result;
+  return collect_units(*this, [owner_id, &owner_registry](const UnitComponent& unit) {
+    return unit.owner_id == owner_id ||
+           owner_registry.are_allies(owner_id, unit.owner_id);
+  });
 }
 
 auto World::get_enemy_units(int owner_id) const -> std::vector<Entity*> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity*> result;
-  result.reserve(m_entities.size());
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-
-  for (const auto& [entity_id, entity] : m_entities) {
-    auto* unit = entity->get_component<UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (owner_registry.are_enemies(owner_id, unit->owner_id)) {
-      result.push_back(entity.get());
-    }
-  }
-  return result;
+  return collect_units(*this, [owner_id, &owner_registry](const UnitComponent& unit) {
+    return owner_registry.are_enemies(owner_id, unit.owner_id);
+  });
 }
 
 auto World::count_troops_for_player(int owner_id) -> int {
@@ -746,12 +837,19 @@ auto World::count_troops_for_player(int owner_id) -> int {
 
 auto World::get_next_entity_id() const -> EntityID {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  return m_next_entity_id;
+  return Handle::make(static_cast<std::uint32_t>(m_slots.size()), 0);
 }
 
 void World::set_next_entity_id(EntityID next_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  m_next_entity_id = std::max(next_id, m_next_entity_id);
+  const std::uint32_t index = Handle::index_of(next_id);
+  if (m_slots.size() < index) {
+    const auto previous_size = m_slots.size();
+    m_slots.resize(index);
+    for (std::size_t i = previous_size; i < index; ++i) {
+      m_free_slots.push_back(static_cast<std::uint32_t>(i));
+    }
+  }
 }
 
 auto World::add_component_observer(ComponentObserverCallback callback)

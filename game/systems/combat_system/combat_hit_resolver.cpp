@@ -93,12 +93,14 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
   float const vertical_impulse =
       std::clamp(6.8F + std::max(impact_speed - 4.0F, 0.0F) * 0.48F, 6.8F, 9.2F);
   int remaining = casualty_count;
+  int launched_index = 0;
   for (auto it = casualties->entries.rbegin();
        it != casualties->entries.rend() && remaining > 0;
-       ++it, --remaining) {
-    float const side = (it->slot_index & 1U) == 0U ? -1.0F : 1.0F;
+       ++it, --remaining, ++launched_index) {
+
+    float const side = (launched_index & 1) == 0 ? -1.0F : 1.0F;
     float const spread =
-        side * (0.85F + 0.22F * static_cast<float>(it->slot_index % 3U));
+        side * (0.85F + 0.22F * static_cast<float>(launched_index % 3));
     it->launched = true;
     it->launch_velocity_x = local_x * horizontal_impulse + local_z * spread;
     it->launch_velocity_y =
@@ -131,6 +133,50 @@ namespace {
       1,
       static_cast<int>(std::round(static_cast<float>(damage) *
                                   std::max(0.0F, damage_profile.base_multiplier))));
+}
+
+void queue_rpg_contact_presentation(
+    Engine::Core::Entity& target,
+    const QVector3D& contact_point,
+    const Game::Systems::RpgCombat::CommanderDamageResult& result,
+    bool applied) {
+  using Engine::Core::RpgContactOutcome;
+  std::optional<RpgContactOutcome> outcome;
+  if (result.perfect_guarded) {
+    outcome = RpgContactOutcome::PerfectGuard;
+  } else if (result.dodged) {
+    outcome = RpgContactOutcome::Dodge;
+  } else if (result.blocked) {
+    outcome = RpgContactOutcome::Block;
+  } else if (applied) {
+    outcome = RpgContactOutcome::Damage;
+  }
+  if (!outcome.has_value()) {
+    return;
+  }
+
+  auto* presentation =
+      Engine::Core::get_or_add_component<Engine::Core::RpgContactPresentationComponent>(
+          &target);
+  if (presentation == nullptr) {
+    return;
+  }
+  if (presentation->entries.size() >=
+      Engine::Core::RpgContactPresentationComponent::k_max_entries) {
+    presentation->entries.erase(presentation->entries.begin());
+  }
+  float const intensity = *outcome == RpgContactOutcome::PerfectGuard
+                              ? 1.35F
+                              : (*outcome == RpgContactOutcome::Damage ? 1.0F : 0.85F);
+  presentation->entries.push_back({
+      .x = contact_point.x(),
+      .y = contact_point.y(),
+      .z = contact_point.z(),
+      .age = 0.0F,
+      .lifetime = *outcome == RpgContactOutcome::Dodge ? 0.16F : 0.24F,
+      .intensity = intensity,
+      .outcome = *outcome,
+  });
 }
 
 [[nodiscard]] auto commander_damage_profile(
@@ -496,14 +542,24 @@ auto resolve_commander_action_hit(Engine::Core::World* world,
         std::max(result.contact.relative_speed, charge->impact_speed);
   }
   result.attempted = true;
-  result.raw_damage = commander_action_raw_damage(*attacker, request.damage_profile);
+  result.raw_damage =
+      request.explicit_raw_damage > 0
+          ? request.explicit_raw_damage
+          : commander_action_raw_damage(*attacker, request.damage_profile);
   result.damage = Game::Systems::RpgCombat::deal_commander_attack_damage(
       world,
       target,
       result.raw_damage,
       attacker->get_id(),
-      commander_damage_profile(request.damage_profile));
+      commander_damage_profile(request.damage_profile),
+      request.contact.target_soldier_slot ==
+              Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot
+          ? std::nullopt
+          : std::optional<std::uint16_t>(request.contact.target_soldier_slot),
+      request.contact.contact_point);
   result.applied = result.damage.effective_damage > 0;
+  queue_rpg_contact_presentation(
+      *target, result.contact.contact_point, result.damage, result.applied);
   result.interrupted_charge =
       apply_cavalry_interrupt_if_needed(*attacker, *target, result.contact);
   return result;
@@ -541,12 +597,18 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
         request.contact.attacker_id,
         commander_damage_profile(request.damage_profile));
     result.applied = result.damage.effective_damage > 0;
+    queue_rpg_contact_presentation(
+        *target, result.contact.contact_point, result.damage, result.applied);
     apply_projectile_impact_effects_if_needed(*target, special_attack, result.contact);
     return result;
   }
 
-  auto const application = Game::Systems::Combat::apply_unit_damage(
-      world, target, result.raw_damage, request.contact.attacker_id);
+  auto const application =
+      Game::Systems::Combat::apply_unit_damage(world,
+                                               target,
+                                               result.raw_damage,
+                                               request.contact.attacker_id,
+                                               request.contact.contact_point);
   result.damage.effective_damage = application.applied_damage;
   result.damage.killed = application.killed;
   result.applied = application.applied_damage > 0;

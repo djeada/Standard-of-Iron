@@ -1,12 +1,12 @@
 #include "marketplace_system.h"
 
+#include "../session/session_context.h"
 #include "player_resource_registry.h"
 
 namespace Game::Systems {
 
 auto MarketplaceSystem::instance() -> MarketplaceSystem& {
-  static MarketplaceSystem s_instance;
-  return s_instance;
+  return Game::Session::SessionContext::active().marketplace();
 }
 
 auto MarketplaceSystem::get_rates() const -> const MarketplaceTradeRates& {

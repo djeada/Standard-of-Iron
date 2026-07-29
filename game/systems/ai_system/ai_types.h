@@ -2,6 +2,7 @@
 
 #include <QString>
 
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
@@ -11,7 +12,7 @@
 #include "../resource_types.h"
 
 namespace Engine::Core {
-using EntityID = unsigned int;
+using EntityID = std::uint64_t;
 }
 
 namespace Game::Systems {

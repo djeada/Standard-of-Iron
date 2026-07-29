@@ -279,112 +279,89 @@ foreach(_icon IN LISTS SOI_UNIT_ICON_ABS)
 endforeach()
 list(SORT SOI_UNIT_ICON_RESOURCES)
 
+# ---- Application layer ----
+# The composition root, view models and input adapters, built once as a library
+# so the executable and the test suite consume the same binary instead of each
+# recompiling the same translation units with their own flags. Tests that
+# recompiled these files could disagree with the shipped build; linking one
+# target removes that whole class of drift.
+add_library(
+    app_core
+    STATIC
+    app/controllers/action_vfx.cpp
+    app/viewmodels/save_slots_view_model.cpp
+    app/controllers/command_controller.cpp
+    app/core/ambient_state_manager.cpp
+    app/core/audio_coordinator.cpp
+    app/core/audio_resource_loader.cpp
+    app/core/camera_controller.cpp
+    app/core/campaign_manager.cpp
+    app/core/commander_control_controller.cpp
+    app/core/commander_input_adapter.cpp
+    app/core/commander_mode_coordinator.cpp
+    app/core/commander_status_builder.cpp
+    app/core/environment.cpp
+    app/core/frame_ui_coordinator.cpp
+    app/core/game_engine.cpp
+    app/core/game_state_restorer.cpp
+    app/core/input_command_handler.cpp
+    app/core/language_manager.cpp
+    app/core/level_loader.cpp
+    app/core/level_orchestrator.cpp
+    app/core/loading_progress_tracker.cpp
+    app/core/minimap_manager.cpp
+    app/core/mission_commander_setup.cpp
+    app/core/mission_definition_view.cpp
+    app/core/mission_setup_coordinator.cpp
+    app/core/mission_wave_tracker.cpp
+    app/core/production_manager.cpp
+    app/core/renderer_bootstrap.cpp
+    app/core/rts_action_model.cpp
+    app/core/runtime_frame_orchestrator.cpp
+    app/core/save_load_coordinator.cpp
+    app/core/selection_query_service.cpp
+    app/core/skirmish_loader.cpp
+    app/core/skirmish_runtime_coordinator.cpp
+    app/core/visibility_coordinator.cpp
+    app/core/world_bootstrap.cpp
+    app/models/audio_system_proxy.cpp
+    app/models/cursor_manager.cpp
+    app/models/graphics_settings_proxy.cpp
+    app/models/hover_tracker.cpp
+    app/models/map_preview_image_provider.cpp
+    app/models/minimap_image_provider.cpp
+    app/models/selected_units_model.cpp
+    app/models/selection_grouping.cpp
+)
+
+target_include_directories(app_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(
+    app_core
+    PUBLIC
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Quick
+        Qt${QT_VERSION_MAJOR}::Qml
+        Qt${QT_VERSION_MAJOR}::Sql
+        $<$<TARGET_EXISTS:Qt${QT_VERSION_MAJOR}::Multimedia>:Qt${QT_VERSION_MAJOR}::Multimedia>
+        engine_core
+        render_gl
+        game_sim
+        game_view
+        audio_system
+)
+set_target_properties(app_core PROPERTIES AUTOMOC ON)
+
 # ---- Executable ----
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
-        app/core/game_engine.cpp
-        app/core/commander_control_controller.cpp
-        app/core/commander_input_adapter.cpp
-        app/core/mission_commander_setup.cpp
-        app/core/mission_definition_view.cpp
-        app/core/production_manager.cpp
-        app/core/campaign_manager.cpp
-        app/core/rts_action_model.cpp
-        app/core/selection_query_service.cpp
-        app/core/language_manager.cpp
-        app/core/minimap_manager.cpp
-        app/core/visibility_coordinator.cpp
-        app/core/world_bootstrap.cpp
-        app/core/environment.cpp
-        app/core/level_loader.cpp
-        app/core/skirmish_loader.cpp
-        app/core/ambient_state_manager.cpp
-        app/core/audio_resource_loader.cpp
-        app/core/audio_coordinator.cpp
-        app/core/commander_status_builder.cpp
-        app/core/commander_mode_coordinator.cpp
-        app/core/frame_ui_coordinator.cpp
-        app/core/mission_setup_coordinator.cpp
-        app/core/mission_wave_tracker.cpp
-        app/core/save_load_coordinator.cpp
-        app/core/skirmish_runtime_coordinator.cpp
-        app/core/renderer_bootstrap.cpp
-        app/core/level_orchestrator.cpp
-        app/core/loading_progress_tracker.cpp
-        app/core/input_command_handler.cpp
-        app/core/camera_controller.cpp
-        app/core/game_state_restorer.cpp
-        app/core/runtime_frame_orchestrator.cpp
-        app/models/audio_system_proxy.cpp
-        app/models/graphics_settings_proxy.cpp
-        app/models/cursor_manager.cpp
-        app/models/hover_tracker.cpp
-        app/models/selected_units_model.cpp
-        app/models/selection_grouping.cpp
-        app/models/minimap_image_provider.cpp
-        app/models/map_preview_image_provider.cpp
-        app/controllers/command_controller.cpp
-        app/controllers/action_vfx.cpp
-        app/utils/json_vec_utils.cpp
         ui/campaign_map_view.cpp
         ui/gl_view.cpp
-        ui/theme.cpp
-        ui/preferences.cpp
     )
 else()
-    add_executable(
-        standard_of_iron
-        main.cpp
-        app/core/game_engine.cpp
-        app/core/commander_control_controller.cpp
-        app/core/commander_input_adapter.cpp
-        app/core/mission_commander_setup.cpp
-        app/core/mission_definition_view.cpp
-        app/core/production_manager.cpp
-        app/core/campaign_manager.cpp
-        app/core/rts_action_model.cpp
-        app/core/selection_query_service.cpp
-        app/core/language_manager.cpp
-        app/core/minimap_manager.cpp
-        app/core/visibility_coordinator.cpp
-        app/core/world_bootstrap.cpp
-        app/core/environment.cpp
-        app/core/level_loader.cpp
-        app/core/skirmish_loader.cpp
-        app/core/ambient_state_manager.cpp
-        app/core/audio_resource_loader.cpp
-        app/core/audio_coordinator.cpp
-        app/core/commander_status_builder.cpp
-        app/core/commander_mode_coordinator.cpp
-        app/core/frame_ui_coordinator.cpp
-        app/core/mission_setup_coordinator.cpp
-        app/core/mission_wave_tracker.cpp
-        app/core/save_load_coordinator.cpp
-        app/core/skirmish_runtime_coordinator.cpp
-        app/core/renderer_bootstrap.cpp
-        app/core/level_orchestrator.cpp
-        app/core/loading_progress_tracker.cpp
-        app/core/input_command_handler.cpp
-        app/core/camera_controller.cpp
-        app/core/game_state_restorer.cpp
-        app/core/runtime_frame_orchestrator.cpp
-        app/models/audio_system_proxy.cpp
-        app/models/graphics_settings_proxy.cpp
-        app/models/cursor_manager.cpp
-        app/models/hover_tracker.cpp
-        app/models/selected_units_model.cpp
-        app/models/selection_grouping.cpp
-        app/models/minimap_image_provider.cpp
-        app/models/map_preview_image_provider.cpp
-        app/controllers/command_controller.cpp
-        app/controllers/action_vfx.cpp
-        app/utils/json_vec_utils.cpp
-        ui/campaign_map_view.cpp
-        ui/gl_view.cpp
-        ui/theme.cpp
-        ui/preferences.cpp
-    )
+    add_executable(standard_of_iron main.cpp ui/campaign_map_view.cpp ui/gl_view.cpp)
 endif()
 
 # ---- QML module ----
@@ -534,9 +511,19 @@ target_link_libraries(
         render_gl
         game_systems
         audio_system
+        app_core
+        ui_shell
 )
 
-add_dependencies(standard_of_iron engine_core render_gl game_systems audio_system)
+add_dependencies(
+    standard_of_iron
+    engine_core
+    render_gl
+    game_sim
+    game_view
+    audio_system
+    app_core
+)
 
 # Windows-specific OpenGL linking
 if(WIN32)

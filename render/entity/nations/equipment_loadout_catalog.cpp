@@ -107,12 +107,14 @@ auto default_loadouts() -> LoadoutMap {
   EquipmentLoadoutIds roman_civilian{};
   roman_civilian.armor = "builder_tunic_roman";
   roman_civilian.cloak = "roman_civilian_mantle";
+  roman_civilian.work_apron = "civilian_pack_roman";
   map.emplace("troops/roman/civilian", std::move(roman_civilian));
 
   EquipmentLoadoutIds carthage_civilian{};
   carthage_civilian.helmet = "headwrap_carthage_civilian";
   carthage_civilian.armor = "carthage_robes";
   carthage_civilian.cloak = "carthage_civilian_sash";
+  carthage_civilian.work_apron = "civilian_pack_carthage";
   map.emplace("troops/carthage/civilian", std::move(carthage_civilian));
 
   EquipmentLoadoutIds roman_horse_archer{};

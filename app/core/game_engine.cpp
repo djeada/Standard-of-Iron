@@ -58,6 +58,7 @@
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
 #include "../models/selected_units_model.h"
+#include "../viewmodels/save_slots_view_model.h"
 #include "ambient_state_manager.h"
 #include "app/core/environment.h"
 #include "app/core/skirmish_loader.h"
@@ -65,7 +66,6 @@
 #include "app/models/cursor_mode.h"
 #include "app/utils/engine_view_helpers.h"
 #include "app/utils/movement_utils.h"
-#include "app/utils/selection_utils.h"
 #include "audio_coordinator.h"
 #include "audio_event_handler.h"
 #include "audio_resource_loader.h"
@@ -132,6 +132,8 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
+#include "game/util/selection_utils.h"
+#include "game/view/selection_controller.h"
 #include "game/visuals/team_colors.h"
 #include "game_state_restorer.h"
 #include "input_command_handler.h"
@@ -269,11 +271,28 @@ GameEngine::GameEngine(QObject* parent)
     , m_commander_input(this, this)
     , m_selected_units_model(new SelectedUnitsModel(this, this)) {
 
+  m_save_slots_view_model =
+      std::make_unique<App::ViewModels::SaveSlotsViewModel>(m_save_load_service, this);
+  connect(m_save_slots_view_model.get(),
+          &App::ViewModels::SaveSlotsViewModel::error_occurred,
+          this,
+          [this](const QString& message) { set_error(message); });
+  connect(m_save_slots_view_model.get(),
+          &App::ViewModels::SaveSlotsViewModel::save_slots_changed,
+          this,
+          &GameEngine::save_slots_changed);
+  connect(m_save_slots_view_model.get(),
+          &App::ViewModels::SaveSlotsViewModel::autosave_interval_changed,
+          this,
+          [this] { restart_autosave_timer(); });
+
+  m_session = std::make_unique<Game::Session::SessionContext>();
+  m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
+  m_world = &m_session->world();
+
   Game::Systems::NationRegistry::instance().initialize_defaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::GlobalStatsRegistry::instance().initialize();
-
-  m_world = std::make_unique<Engine::Core::World>();
 
   auto rendering = RendererBootstrap::initialize_rendering();
   m_renderer = std::move(rendering.renderer);
@@ -314,9 +333,9 @@ GameEngine::GameEngine(QObject* parent)
 
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   m_selection_controller = std::make_unique<Game::Systems::SelectionController>(
-      m_world.get(), selection_system, m_picking_service.get());
+      m_world, selection_system, m_picking_service.get());
   m_command_controller = std::make_unique<App::Controllers::CommandController>(
-      m_world.get(), selection_system, m_picking_service.get());
+      m_world, selection_system, m_picking_service.get());
 
   m_cursor_manager = std::make_unique<CursorManager>();
   m_hover_tracker = std::make_unique<HoverTracker>(m_picking_service.get());
@@ -354,7 +373,7 @@ GameEngine::GameEngine(QObject* parent)
   m_visibility_coordinator->set_presenters(m_fog.get(), m_minimap_manager.get());
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
-  m_input_handler = std::make_unique<InputCommandHandler>(m_world.get(),
+  m_input_handler = std::make_unique<InputCommandHandler>(m_world,
                                                           m_selection_controller.get(),
                                                           m_command_controller.get(),
                                                           m_cursor_manager.get(),
@@ -363,10 +382,10 @@ GameEngine::GameEngine(QObject* parent)
                                                           m_rts_camera.get());
 
   m_camera_controller = std::make_unique<CameraController>(
-      m_rts_camera.get(), m_camera_service.get(), m_world.get());
+      m_rts_camera.get(), m_camera_service.get(), m_world);
 
   m_production_manager = std::make_unique<ProductionManager>(
-      m_world.get(), m_picking_service.get(), m_rts_camera.get(), this);
+      m_world, m_picking_service.get(), m_rts_camera.get(), this);
   connect(m_production_manager.get(),
           &ProductionManager::placing_construction_changed,
           this,
@@ -398,11 +417,9 @@ GameEngine::GameEngine(QObject* parent)
           this,
           &GameEngine::available_campaigns_changed);
 
-  m_selection_query_service =
-      std::make_unique<SelectionQueryService>(m_world.get(), this);
+  m_selection_query_service = std::make_unique<SelectionQueryService>(m_world, this);
 
-  m_audio_event_handler =
-      std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
+  m_audio_event_handler = std::make_unique<Game::Audio::AudioEventHandler>(m_world);
   m_audio_coordinator = std::make_unique<AudioCoordinator>(m_audio_event_handler.get());
   m_commander_mode = std::make_unique<App::Core::CommanderModeCoordinator>();
   m_mission_setup = std::make_unique<App::Core::MissionSetupCoordinator>();
@@ -459,8 +476,7 @@ GameEngine::GameEngine(QObject* parent)
                                                                      m_viewport.height,
                                                                      0);
                   if (target_id != 0) {
-                    App::Controllers::ActionVFX::spawn_attack_arrow(m_world.get(),
-                                                                    target_id);
+                    App::Controllers::ActionVFX::spawn_attack_arrow(m_world, target_id);
                   }
                 }
               }
@@ -1138,7 +1154,7 @@ void GameEngine::select_controlled_commander() {
 
 void GameEngine::restore_rts_selection() {
   auto const effects = m_commander_mode->restore_rts_selection(
-      {.world = m_world.get(),
+      {.world = m_world,
        .local_owner_id = m_runtime.local_owner_id,
        .saved_rts_selection_ids = &m_saved_rts_selection_ids});
   if (effects.sync_selection_flags) {
@@ -1181,7 +1197,7 @@ void GameEngine::request_enter_commander_control_mode() {
 
   store_rts_selection();
   auto const effects = m_commander_mode->enter_commander_control_mode(
-      {.world = m_world.get(),
+      {.world = m_world,
        .commander = commander,
        .commander_camera = m_commander_camera.get(),
        .commander_control = &m_commander_control,
@@ -1227,7 +1243,7 @@ void GameEngine::request_exit_commander_control_mode() {
   exit_commander_runtime_mode();
   reset_commander_input();
   auto const effects = m_commander_mode->exit_commander_control_mode(
-      {.world = m_world.get(),
+      {.world = m_world,
        .controlled_commander_id = m_controlled_commander_id,
        .rts_follow_selection_snapshot_valid = m_rts_camera_snapshot.valid,
        .rts_follow_selection_snapshot = m_rts_camera_snapshot.follow_selection});
@@ -1363,7 +1379,7 @@ void GameEngine::begin_commander_flag_rally() {
   }
 
   auto const effects = m_commander_mode->begin_commander_flag_rally(
-      {.world = m_world.get(),
+      {.world = m_world,
        .local_commander = find_local_commander(),
        .controlled_commander = controlled_commander_entity(),
        .local_owner_id = m_runtime.local_owner_id,
@@ -1393,7 +1409,7 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
   }
 
   auto const effects = m_commander_mode->confirm_commander_flag_rally(
-      {.world = m_world.get(),
+      {.world = m_world,
        .local_commander = find_local_commander(),
        .controlled_commander = controlled_commander_entity(),
        .picking_service = m_picking_service.get(),
@@ -1443,7 +1459,7 @@ auto GameEngine::get_commander_rally_preview() const -> QVector3D {
 void GameEngine::begin_barracks_rally_placement() {
   ensure_initialized();
   auto const effects = m_commander_mode->begin_barracks_rally_placement(
-      {.world = m_world.get(), .local_owner_id = m_runtime.local_owner_id});
+      {.world = m_world, .local_owner_id = m_runtime.local_owner_id});
   if (effects.clear_rally_preview) {
     m_commander_rally_preview_pos = std::nullopt;
   }
@@ -1457,7 +1473,7 @@ void GameEngine::begin_barracks_rally_placement() {
 
 void GameEngine::confirm_barracks_rally_placement(qreal sx, qreal sy) {
   auto const effects = m_commander_mode->confirm_barracks_rally_placement(
-      {.world = m_world.get(),
+      {.world = m_world,
        .production_manager = m_production_manager.get(),
        .viewport = &m_viewport,
        .local_owner_id = m_runtime.local_owner_id,
@@ -1540,7 +1556,7 @@ void GameEngine::seed_commander_rally_preview_from_view_center() {
 
 void GameEngine::seed_barracks_rally_preview_from_selection() {
   if (auto preview = m_commander_mode->seed_barracks_rally_preview_from_selection(
-          {.world = m_world.get(), .local_owner_id = m_runtime.local_owner_id});
+          {.world = m_world, .local_owner_id = m_runtime.local_owner_id});
       preview.has_value()) {
     m_commander_rally_preview_pos = *preview;
   }
@@ -1549,7 +1565,7 @@ void GameEngine::seed_barracks_rally_preview_from_selection() {
 void GameEngine::restore_controlled_commander_direct_control_if_ready() {
   auto const effects =
       m_commander_mode->restore_controlled_commander_direct_control_if_ready(
-          {.world = m_world.get(),
+          {.world = m_world,
            .controlled_commander_id = m_controlled_commander_id,
            .commander_mode_active = m_control_mode == PlayerControlMode::Commander,
            .placing_commander_rally = is_placing_commander_rally()});
@@ -1692,7 +1708,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
   }
   const bool civilian_delivery_available =
       App::Core::FrameUiCoordinator::civilian_delivery_available(
-          {.world = m_world.get(),
+          {.world = m_world,
            .hover_tracker = m_hover_tracker.get(),
            .local_owner_id = m_runtime.local_owner_id});
   if (m_civilian_delivery_available != civilian_delivery_available) {
@@ -1751,10 +1767,11 @@ void GameEngine::select_all_troops() {
   }
 }
 
-void GameEngine::select_unit_by_id(int unit_id) {
+void GameEngine::select_unit_by_id(qulonglong unit_id) {
   ensure_initialized();
   if (m_input_handler) {
-    m_input_handler->select_unit_by_id(unit_id, m_runtime.local_owner_id);
+    m_input_handler->select_unit_by_id(static_cast<Engine::Core::EntityID>(unit_id),
+                                       m_runtime.local_owner_id);
   }
 }
 
@@ -1796,7 +1813,8 @@ void GameEngine::set_selected_player_id(int id) {
 }
 
 auto GameEngine::scene_context() const -> AppSceneContext {
-  return AppSceneContext{.world = m_world.get(),
+  return AppSceneContext{.session = m_session.get(),
+                         .world = m_world,
                          .renderer = m_renderer.get(),
                          .active_camera = m_camera,
                          .ground = m_surface ? m_surface->ground() : nullptr,
@@ -1848,13 +1866,13 @@ void GameEngine::update_rts_control_mode(float dt) {
 
 void GameEngine::clear_controlled_commander_state() {
   m_commander_mode->clear_controlled_commander_state(
-      {.world = m_world.get(), .controlled_commander_id = m_controlled_commander_id});
+      {.world = m_world, .controlled_commander_id = m_controlled_commander_id});
 }
 
 void GameEngine::update_commander_control_mode(float dt) {
   poll_commander_mouse_look();
   auto const effects = m_commander_mode->update_commander_control_mode(
-      {.world = m_world.get(),
+      {.world = m_world,
        .commander_camera = m_commander_camera.get(),
        .commander_control = &m_commander_control,
        .controlled_commander_id = m_controlled_commander_id,
@@ -1928,7 +1946,7 @@ void GameEngine::render_runtime_mode_effects() {
   }
 
   m_rpg_telegraphs.render(m_renderer.get(),
-                          m_world.get(),
+                          m_world,
                           m_controlled_commander_id,
                           locked_target_id,
                           m_renderer->get_animation_time());
@@ -1956,8 +1974,7 @@ void GameEngine::update(float dt) {
       .viewport_height = m_viewport.height,
       .selection_refresh_enabled = (m_selected_units_model != nullptr),
       .selection_refresh_counter = m_runtime.selection_refresh_counter,
-      .minimap_unit_update_accumulator = m_runtime.minimap_unit_update_accumulator,
-      .simulation_accumulator = m_runtime.simulation_accumulator};
+      .minimap_unit_update_accumulator = m_runtime.minimap_unit_update_accumulator};
   const FrameUpdateCallbacks callbacks{
       .on_minimap_image_changed = [this]() { emit minimap_image_changed(); },
       .on_selected_units_data_changed =
@@ -1986,7 +2003,6 @@ void GameEngine::update(float dt) {
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
-  m_runtime.simulation_accumulator = frame_state.simulation_accumulator;
   sync_scatter_world_props();
   sync_selected_player_state();
 }
@@ -2012,7 +2028,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
 
   if (auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>()) {
     const auto& sel = selection_system->get_selected_units();
-    std::vector<unsigned int> ids;
+    std::vector<Engine::Core::EntityID> ids;
     ids.reserve(sel.size());
     for (const auto id : sel) {
       if (!should_render_selected_entity(id)) {
@@ -2039,10 +2055,10 @@ void GameEngine::render(int pixel_width, int pixel_height) {
         qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ORDER_MARKERS"));
   }
 
-  m_renderer->render_world(m_world.get());
+  m_renderer->render_world(m_world);
   App::Core::FrameUiCoordinator::render_effects(
       {.renderer = m_renderer.get(),
-       .world = m_world.get(),
+       .world = m_world,
        .command_controller = m_command_controller.get(),
        .local_owner_id = m_runtime.local_owner_id,
        .commander_rally_preview_pos = m_commander_rally_preview_pos},
@@ -2177,10 +2193,10 @@ void GameEngine::sync_selection_flags() {
     return;
   }
 
-  App::Utils::sanitize_selection(m_world.get(), selection_system);
+  Game::Selection::sanitize_selection(m_world, selection_system);
   const auto prune_effects =
       App::Core::FrameUiCoordinator::prune_selection_action_context(
-          {.world = m_world.get(),
+          {.world = m_world,
            .cursor_manager = m_cursor_manager.get(),
            .production_manager = m_production_manager.get(),
            .command_controller = m_command_controller.get(),
@@ -2215,7 +2231,7 @@ void GameEngine::sync_selection_flags() {
   emit run_mode_changed(any_selected_in_run_mode());
   const bool civilian_delivery_available =
       App::Core::FrameUiCoordinator::civilian_delivery_available(
-          {.world = m_world.get(),
+          {.world = m_world,
            .hover_tracker = m_hover_tracker.get(),
            .local_owner_id = m_runtime.local_owner_id});
   if (m_civilian_delivery_available != civilian_delivery_available) {
@@ -2382,7 +2398,8 @@ void GameEngine::on_minimap_right_click(qreal mx,
                                          m_minimap_manager->get_tile_size());
 
   if (m_input_handler) {
-    m_input_handler->on_minimap_right_click(QVector3D(world_x, 0.0F, world_z));
+    m_input_handler->on_minimap_right_click(QVector3D(world_x, 0.0F, world_z),
+                                            m_runtime.local_owner_id);
   }
 }
 
@@ -2565,7 +2582,7 @@ bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
 
 auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   App::Core::CommanderStatusInput input;
-  input.world = m_world.get();
+  input.world = m_world;
   input.controlled_commander_id = m_controlled_commander_id;
   input.dodge_active = m_commander_control.is_dodge_rolling();
   input.locked_target_id = m_commander_control.locked_target_id();
@@ -2632,7 +2649,7 @@ void GameEngine::start_builder_construction(const QString& item_type) {
 
 auto GameEngine::get_selected_units_command_mode() const -> QString {
   App::Core::ActionContext context;
-  context.world = m_world.get();
+  context.world = m_world;
   context.cursor_mode =
       m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal;
   context.placing_construction = m_production_manager != nullptr &&
@@ -2649,16 +2666,16 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
 }
 
 auto GameEngine::get_selected_units_toggle_state(const QString& mode) const -> QString {
-  return App::Core::get_toggle_state(m_world.get(), mode);
+  return App::Core::get_toggle_state(m_world, mode);
 }
 
 auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
-  return App::Core::get_mode_availability(m_world.get());
+  return App::Core::get_mode_availability(m_world);
 }
 
 auto GameEngine::get_hud_action_states() const -> QVariantMap {
   App::Core::ActionContext context;
-  context.world = m_world.get();
+  context.world = m_world;
   context.cursor_mode =
       m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal;
   context.placing_construction = m_production_manager != nullptr &&
@@ -3003,7 +3020,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     }
     if (finalize_effects.rebuild_entity_cache) {
       GameStateRestorer::rebuild_entity_cache(
-          m_world.get(), m_entity_cache, m_runtime.local_owner_id);
+          m_world, m_entity_cache, m_runtime.local_owner_id);
     }
     if (finalize_effects.emit_troop_count_changed) {
       emit troop_count_changed();
@@ -3044,7 +3061,7 @@ void GameEngine::apply_mission_setup() {
                                                        m_runtime.local_owner_id,
                                                        m_pending_mission_waves,
                                                        m_entity_cache});
-  m_mission_wave_tracker.bind(&m_pending_mission_waves, m_world.get());
+  m_mission_wave_tracker.bind(&m_pending_mission_waves, m_world);
   if (m_victory_service) {
     m_victory_service->set_mission_wave_query(&m_mission_wave_tracker);
   }
@@ -3053,7 +3070,7 @@ void GameEngine::apply_mission_setup() {
   }
   if (effects.center_camera_on_local_forces) {
     m_skirmish_runtime->center_camera_on_local_forces(
-        {m_world.get(), m_camera, m_runtime.local_owner_id});
+        {m_world, m_camera, m_runtime.local_owner_id});
   }
   if (effects.troop_count_changed) {
     emit troop_count_changed();
@@ -3146,7 +3163,6 @@ void GameEngine::reset_preload_interaction_state() {
 void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
-  m_runtime.simulation_accumulator = 0.0F;
   m_pending_mission_waves.clear();
   m_mission_wave_tracker.bind(nullptr, nullptr);
   Game::Systems::PlayerResourceRegistry::instance().clear();
@@ -3258,7 +3274,7 @@ void GameEngine::connect_save_service_signals() {
 }
 
 void GameEngine::restart_autosave_timer() {
-  const int minutes = autosave_interval_minutes();
+  const int minutes = m_save_slots_view_model->autosave_interval_minutes();
   if (minutes <= 0) {
     m_autosave_timer.stop();
     return;
@@ -3339,7 +3355,7 @@ void GameEngine::autosave() {
     return;
   }
 
-  const int retention = autosave_slot_count();
+  const int retention = m_save_slots_view_model->autosave_slot_count();
   begin_save(m_save_load_service->next_autosave_slot(retention),
              Game::Systems::Save::SlotKind::Autosave,
              retention);
@@ -3352,34 +3368,6 @@ void GameEngine::cancel_active_save() {
   m_save_load_service->cancel_save(m_active_save_job);
   m_save_progress_stage = tr("Cancelling...");
   emit save_progress_changed();
-}
-
-auto GameEngine::autosave_slot_count() const -> int {
-  return App::Core::UserSettings::load_autosave_slot_count();
-}
-
-void GameEngine::set_autosave_slot_count(int count) {
-  if (count == autosave_slot_count()) {
-    return;
-  }
-  App::Core::UserSettings::save_autosave_slot_count(count);
-  if (m_save_load_service != nullptr) {
-    m_save_load_service->prune_autosaves(autosave_slot_count());
-  }
-  emit autosave_settings_changed();
-}
-
-auto GameEngine::autosave_interval_minutes() const -> int {
-  return App::Core::UserSettings::load_autosave_interval_minutes();
-}
-
-void GameEngine::set_autosave_interval_minutes(int minutes) {
-  if (minutes == autosave_interval_minutes()) {
-    return;
-  }
-  App::Core::UserSettings::save_autosave_interval_minutes(minutes);
-  restart_autosave_timer();
-  emit autosave_settings_changed();
 }
 
 void GameEngine::load_game_from_slot(const QString& slot_name) {
@@ -3457,107 +3445,6 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   if (effects.emit_owner_info_changed) {
     emit owner_info_changed();
   }
-}
-
-auto GameEngine::get_save_slots() const -> QVariantList {
-  if (m_save_load_service == nullptr) {
-    qWarning() << "Cannot get save slots: service not initialized";
-    return {};
-  }
-
-  return m_save_load_service->get_save_slots();
-}
-
-void GameEngine::refresh_save_slots() {
-  emit save_slots_changed();
-}
-
-auto GameEngine::delete_save_slot(const QString& slot_name) -> bool {
-  if (m_save_load_service == nullptr) {
-    qWarning() << "Cannot delete save slot: service not initialized";
-    return false;
-  }
-
-  bool const success = m_save_load_service->delete_save_slot(slot_name);
-
-  if (!success) {
-    QString const error = m_save_load_service->get_last_error();
-    qWarning() << "Failed to delete save slot:" << error;
-    set_error(error);
-  }
-
-  return success;
-}
-
-auto GameEngine::has_save_slot(const QString& slot_name) const -> bool {
-  return m_save_load_service != nullptr && m_save_load_service->slot_exists(slot_name);
-}
-
-auto GameEngine::verify_save_slot(const QString& slot_name) -> bool {
-  if (m_save_load_service == nullptr) {
-    return false;
-  }
-
-  QString error;
-  if (!m_save_load_service->verify_save_slot(slot_name, &error)) {
-    set_error(error);
-    return false;
-  }
-  return true;
-}
-
-auto GameEngine::export_save_slot(const QString& slot_name) -> QString {
-  if (m_save_load_service == nullptr) {
-    return {};
-  }
-
-  const QString file_stem = Game::Systems::Save::sanitize_file_stem(slot_name);
-  if (file_stem.isEmpty()) {
-    set_error(tr("Cannot export a save with an empty name"));
-    return {};
-  }
-
-  const QString file_path =
-      QStringLiteral("%1/%2.%3")
-          .arg(Game::Systems::SaveLoadService::exports_directory(),
-               file_stem,
-               Game::Systems::Save::package_file_suffix());
-
-  QString error;
-  if (!m_save_load_service->export_slot(slot_name, file_path, &error)) {
-    set_error(error);
-    return {};
-  }
-  return file_path;
-}
-
-auto GameEngine::list_exported_saves() const -> QVariantList {
-  QVariantList result;
-  if (m_save_load_service == nullptr) {
-    return result;
-  }
-
-  for (const QString& path : m_save_load_service->list_exported_packages()) {
-    QVariantMap entry;
-    entry.insert(QStringLiteral("path"), path);
-    entry.insert(QStringLiteral("name"), QFileInfo(path).completeBaseName());
-    result.append(entry);
-  }
-  return result;
-}
-
-auto GameEngine::import_save_file(const QString& file_path) -> QString {
-  if (m_save_load_service == nullptr) {
-    return {};
-  }
-
-  QString slot_name;
-  QString error;
-  if (!m_save_load_service->import_package(file_path, slot_name, &error)) {
-    set_error(error);
-    return {};
-  }
-  return slot_name;
 }
 
 auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
@@ -3887,4 +3774,8 @@ QString GameEngine::loading_stage_text() const {
     return stage_name;
   }
   return {};
+}
+
+auto GameEngine::save_slots_view_model() const -> QObject* {
+  return m_save_slots_view_model.get();
 }

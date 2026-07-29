@@ -1,4 +1,5 @@
 #pragma once
+#include "arrow_visual_profile.h"
 #include "projectile.h"
 
 namespace Game::Systems {
@@ -19,7 +20,10 @@ public:
                   Engine::Core::EntityID target_id = 0,
                   float impact_radius = 0.0F,
                   float splash_damage_multiplier = 0.6F,
-                  bool friendly_fire = false);
+                  bool friendly_fire = false,
+                  ArrowVisualStyle visual_style = ArrowVisualStyle::Focused,
+                  ArrowVisualProfile visual_profile = {},
+                  QVector3D target_origin_at_launch = {});
 
   auto get_start() const -> QVector3D override { return m_start; }
   auto get_end() const -> QVector3D override { return m_end; }
@@ -31,6 +35,12 @@ public:
   auto get_kind() const -> ProjectileKind override { return m_kind; }
   auto is_active() const -> bool override { return m_active; }
   auto is_ballista_bolt() const -> bool { return m_is_ballista_bolt; }
+  auto visual_style() const -> ArrowVisualStyle { return m_visual_style; }
+  auto roll_deg() const -> float { return m_roll_deg; }
+  auto spin_rate_deg() const -> float { return m_spin_rate_deg; }
+  auto trail_alpha() const -> float { return m_trail_alpha; }
+  auto trail_length() const -> float { return m_trail_length; }
+  auto brightness() const -> float { return m_brightness; }
   auto impact_radius() const -> float { return m_impact_radius; }
   auto splash_damage_multiplier() const -> float { return m_splash_damage_multiplier; }
   auto friendly_fire() const -> bool { return m_friendly_fire; }
@@ -41,7 +51,9 @@ public:
   auto get_attacker_id() const -> Engine::Core::EntityID override {
     return m_attacker_id;
   }
-  auto get_target_locked_position() const -> QVector3D override { return m_end; }
+  auto get_target_locked_position() const -> QVector3D override {
+    return m_target_origin_at_launch;
+  }
 
   void update(float delta_time) override;
   void deactivate() override {
@@ -65,9 +77,16 @@ private:
   int m_damage{0};
   Engine::Core::EntityID m_attacker_id{0};
   Engine::Core::EntityID m_target_id{0};
+  QVector3D m_target_origin_at_launch;
   float m_impact_radius{0.0F};
   float m_splash_damage_multiplier{0.6F};
   bool m_friendly_fire{false};
+  ArrowVisualStyle m_visual_style{ArrowVisualStyle::Focused};
+  float m_roll_deg{0.0F};
+  float m_spin_rate_deg{0.0F};
+  float m_trail_alpha{0.0F};
+  float m_trail_length{0.0F};
+  float m_brightness{1.0F};
 };
 
 } // namespace Game::Systems

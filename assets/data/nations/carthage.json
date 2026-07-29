@@ -118,21 +118,21 @@
       "combat": {
         "health": 1850,
         "max_health": 1850,
-        "speed": 3.6,
-        "vision_range": 18.5,
-        "ranged_range": 1.5,
-        "ranged_damage": 5,
-        "ranged_cooldown": 1.6,
-        "melee_range": 2.0,
-        "melee_damage": 34,
-        "melee_cooldown": 0.63,
-        "can_ranged": false,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.82,
-        "selection_ring_size": 2.1,
-        "renderer_id": "troops/carthage/horse_swordsman"
+      "speed": 4.6,
+      "vision_range": 18.5,
+      "ranged_range": 1.5,
+      "ranged_damage": 5,
+      "ranged_cooldown": 1.6,
+      "melee_range": 2.0,
+      "melee_damage": 34,
+      "melee_cooldown": 0.63,
+      "can_ranged": false,
+      "can_melee": true
+    },
+    "visuals": {
+      "render_scale": 0.82,
+      "selection_ring_size": 2.1,
+      "renderer_id": "troops/carthage/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,
@@ -185,21 +185,21 @@
       "combat": {
         "health": 1450,
         "max_health": 1450,
-        "speed": 3.2,
-        "vision_range": 18.0,
-        "ranged_range": 8.0,
-        "ranged_damage": 42,
-        "ranged_cooldown": 1.05,
-        "melee_range": 1.8,
-        "melee_damage": 9,
-        "melee_cooldown": 0.9,
-        "can_ranged": true,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.75,
-        "selection_ring_size": 1.8,
-        "renderer_id": "troops/carthage/horse_archer"
+      "speed": 4.2,
+      "vision_range": 18.0,
+      "ranged_range": 8.0,
+      "ranged_damage": 42,
+      "ranged_cooldown": 1.05,
+      "melee_range": 1.8,
+      "melee_damage": 9,
+      "melee_cooldown": 0.9,
+      "can_ranged": true,
+      "can_melee": true
+    },
+    "visuals": {
+      "render_scale": 0.75,
+      "selection_ring_size": 1.8,
+      "renderer_id": "troops/carthage/horse_archer"
       },
       "formation": {
         "individuals_per_unit": 10,
@@ -218,21 +218,21 @@
       "combat": {
         "health": 1850,
         "max_health": 1850,
-        "speed": 3.2,
-        "vision_range": 16.0,
-        "ranged_range": 1.5,
-        "ranged_damage": 5,
-        "ranged_cooldown": 2.0,
-        "melee_range": 3.0,
-        "melee_damage": 35,
-        "melee_cooldown": 0.79,
-        "can_ranged": false,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.78,
-        "selection_ring_size": 1.9,
-        "renderer_id": "troops/carthage/horse_spearman"
+      "speed": 4.2,
+      "vision_range": 16.0,
+      "ranged_range": 1.5,
+      "ranged_damage": 5,
+      "ranged_cooldown": 2.0,
+      "melee_range": 3.0,
+      "melee_damage": 35,
+      "melee_cooldown": 0.79,
+      "can_ranged": false,
+      "can_melee": true
+    },
+    "visuals": {
+      "render_scale": 0.78,
+      "selection_ring_size": 1.9,
+      "renderer_id": "troops/carthage/horse_spearman"
       },
       "formation": {
         "individuals_per_unit": 9,

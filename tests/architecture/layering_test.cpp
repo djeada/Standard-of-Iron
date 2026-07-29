@@ -76,6 +76,51 @@ const std::set<std::string>& known_inversions() {
   return entries;
 }
 
+auto quoted_includes(const fs::path& file) -> std::vector<std::string> {
+  std::vector<std::string> result;
+  std::ifstream stream(file);
+  std::string line;
+  while (std::getline(stream, line)) {
+    const auto include_pos = line.find("#include");
+    if (include_pos == std::string::npos) {
+      continue;
+    }
+    const auto quote = line.find('"', include_pos);
+    if (quote == std::string::npos) {
+      continue;
+    }
+    const auto end = line.find('"', quote + 1);
+    if (end == std::string::npos) {
+      continue;
+    }
+    std::string path = line.substr(quote + 1, end - quote - 1);
+    while (path.rfind("../", 0) == 0) {
+      path.erase(0, 3);
+    }
+    result.push_back(path);
+  }
+  return result;
+}
+
+auto is_view_layer(const std::string& relative) -> bool {
+  static const std::set<std::string> files{
+      "game/systems/camera_controller.cpp",
+      "game/systems/camera_controller.h",
+      "game/systems/camera_follow_system.cpp",
+      "game/systems/camera_follow_system.h",
+      "game/systems/camera_service.cpp",
+      "game/systems/camera_service.h",
+      "game/systems/camera_visibility_service.cpp",
+      "game/systems/camera_visibility_service.h",
+      "game/systems/picking_service.cpp",
+      "game/systems/picking_service.h",
+      "game/systems/game_state_serializer.cpp",
+      "game/systems/game_state_serializer.h",
+  };
+  return files.contains(relative) || relative.rfind("game/view/", 0) == 0 ||
+         relative.rfind("game/map/minimap/", 0) == 0;
+}
+
 } // namespace
 
 TEST(ArchitectureLayering, GameDoesNotDependOnTheRendererBeyondKnownInversions) {
@@ -145,4 +190,61 @@ TEST(ArchitectureLayering, SharedSceneAndAnimationLayersStayLeaves) {
       }
     }
   }
+}
+
+TEST(ArchitectureLayering, SimulationKernelDoesNotDependOnACamera) {
+
+  const auto root = find_repo_root();
+  ASSERT_TRUE(fs::exists(root / "game"));
+
+  std::vector<std::string> offenders;
+  for (const auto& file : sources_under(root / "game")) {
+    const auto relative = fs::relative(file, root).generic_string();
+    if (is_view_layer(relative)) {
+      continue;
+    }
+    for (const auto& include : quoted_includes(file)) {
+
+      if (include == "scene/camera.h") {
+        offenders.push_back(relative + " -> " + include);
+      }
+    }
+  }
+
+  EXPECT_TRUE(offenders.empty())
+      << "the simulation kernel gained a view dependency. Either move the file "
+         "into game/view/ (and into the game_view target), or keep the camera "
+         "out of it:\n  "
+      << [&] {
+           std::string joined;
+           for (const auto& entry : offenders) {
+             joined += entry + "\n  ";
+           }
+           return joined;
+         }();
+}
+
+TEST(ArchitectureLayering, GameDoesNotDependOnTheApplicationLayer) {
+
+  const auto root = find_repo_root();
+  ASSERT_TRUE(fs::exists(root / "game"));
+
+  std::vector<std::string> offenders;
+  for (const auto& file : sources_under(root / "game")) {
+    const auto relative = fs::relative(file, root).generic_string();
+    for (const auto& include : quoted_includes(file)) {
+      if (include.rfind("app/", 0) == 0) {
+        offenders.push_back(relative + " -> " + include);
+      }
+    }
+  }
+
+  EXPECT_TRUE(offenders.empty())
+      << "game/ included app/. Move the shared code down into game/util/:\n  " << [&] {
+           std::string joined;
+           for (const auto& entry : offenders) {
+             joined += entry + "\n  ";
+           }
+           return joined;
+         }();
 }

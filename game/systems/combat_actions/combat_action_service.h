@@ -12,6 +12,8 @@ namespace Game::Systems::CombatActions {
 struct AttackRequest {
   Engine::Core::EntityID attacker_id{0};
   Engine::Core::EntityID target_hint_id{0};
+  std::uint16_t target_soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   int move_right_axis{0};
   int move_forward_axis{0};
   float primary_held_duration{0.0F};

@@ -81,6 +81,13 @@ constexpr std::uint32_t k_builder_hammer_role_count = 3;
 constexpr std::uint32_t k_builder_saw_role_count = 4;
 constexpr std::uint32_t k_builder_chisel_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
+constexpr std::uint32_t k_civilian_pack_role_count = 3;
+
+enum CivilianPackSlot : std::uint8_t {
+  k_pack_bedroll_slot = 0U,
+  k_pack_strap_slot = 1U,
+  k_pack_wicker_slot = 2U,
+};
 constexpr auto k_builder_profile =
     Render::GL::Humanoid::k_laborer_proportion_profile.with_offset(
         {.x = 0.02F, .y = -0.01F, .z = 0.02F});
@@ -310,6 +317,118 @@ auto builder_work_tunic_contribution_attachments(std::uint8_t base_role_byte)
   return {builder_work_tunic_make_static_attachment(
       static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
       base_role_byte)};
+}
+
+auto civilian_pack_fill_role_colors(const HumanoidPalette& palette,
+                                    QVector3D* out,
+                                    std::size_t max) -> std::uint32_t {
+  if (max < k_civilian_pack_role_count) {
+    return 0U;
+  }
+  out[k_pack_bedroll_slot] = Render::GL::Humanoid::saturate_color(
+      palette.cloth * 0.62F + QVector3D(0.20F, 0.17F, 0.12F));
+  out[k_pack_strap_slot] = palette.leather_dark;
+  out[k_pack_wicker_slot] = QVector3D(0.68F, 0.55F, 0.32F);
+  return k_civilian_pack_role_count;
+}
+
+auto civilian_pack_extra_role_colors(const void* variant_void,
+                                     QVector3D* out,
+                                     std::uint32_t base_count,
+                                     std::size_t max_count) -> std::uint32_t {
+  if (variant_void == nullptr || max_count <= base_count) {
+    return base_count;
+  }
+  const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
+  return base_count + civilian_pack_fill_role_colors(
+                          variant.palette, out + base_count, max_count - base_count);
+}
+
+auto roman_civilian_pack_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    const auto& bind = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame& torso = bind.torso;
+    const AttachmentFrame& waist = bind.waist;
+    const TorsoLocalFrame local = make_torso_local_frame(QMatrix4x4{}, torso);
+
+    float const tr = torso.radius;
+    float const y_sh = 0.010F;
+    float const y_w = local.point(waist.origin).y();
+
+    RenderArchetypeBuilder builder{"roman_civilian_pack"};
+
+    QVector3D const roll_l(-tr * 0.82F, y_sh - 0.030F, -tr * 1.30F);
+    QVector3D const roll_r(tr * 0.82F, y_sh - 0.060F, -tr * 1.36F);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(roll_l, roll_r, tr * 0.52F),
+                             k_pack_bedroll_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(roll_l, QVector3D(tr * 0.18F, tr * 0.52F, tr * 0.52F)),
+        k_pack_strap_slot);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        local_scale_model(roll_r, QVector3D(tr * 0.18F, tr * 0.52F, tr * 0.52F)),
+        k_pack_strap_slot);
+
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(QVector3D(sx * tr * 0.36F, y_sh + 0.020F, -tr * 1.90F),
+                           QVector3D(sx * tr * 0.36F, y_sh - 0.120F, -tr * 0.80F),
+                           tr * 0.060F),
+          k_pack_strap_slot);
+    }
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(QVector3D(-tr * 0.72F, y_sh - 0.030F, -tr * 0.60F),
+                         QVector3D(tr * 0.60F, y_w + 0.070F, tr * 0.82F),
+                         tr * 0.075F),
+        k_pack_strap_slot);
+
+    QVector3D const basket(tr * 1.06F, y_w - 0.085F, -tr * 0.30F);
+    {
+      QMatrix4x4 m;
+      m.translate(basket);
+      m.scale(tr * 0.40F, 0.145F, tr * 0.34F);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(0.78F, 1.02F, 10), m, k_pack_wicker_slot);
+    }
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(basket + QVector3D(-tr * 0.30F, 0.080F, 0.0F),
+                         basket + QVector3D(tr * 0.30F, 0.080F, 0.0F),
+                         tr * 0.055F),
+        k_pack_strap_slot);
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto roman_civilian_pack_make_static_attachment(std::uint16_t chest_bone_index,
+                                                std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const TorsoLocalFrame torso_local =
+      make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &roman_civilian_pack_archetype(),
+      .socket_bone_index = chest_bone_index,
+      .unit_local_pose_at_bind = torso_local.world,
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_civilian_pack_role_count);
+       ++i) {
+    spec.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
+  }
+  return spec;
+}
+
+auto roman_civilian_pack_contribution_attachments(std::uint8_t base_role)
+    -> std::vector<Render::Creature::StaticAttachmentSpec> {
+  return {roman_civilian_pack_make_static_attachment(
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest), base_role)};
 }
 
 auto roman_civilian_mantle_archetype() -> const RenderArchetype& {
@@ -580,6 +699,13 @@ void ensure_roman_civilian_equipment_contributions_registered() {
            .append_role_colors = &roman_civilian_mantle_extra_role_colors,
            .role_count =
                static_cast<std::uint8_t>(k_roman_civilian_mantle_role_count)});
+    }
+    if (loadout.work_apron_handle != k_invalid_equipment_handle) {
+      register_humanoid_equipment_contribution(
+          loadout.work_apron_handle,
+          {.build_attachments = &roman_civilian_pack_contribution_attachments,
+           .append_role_colors = &civilian_pack_extra_role_colors,
+           .role_count = static_cast<std::uint8_t>(k_civilian_pack_role_count)});
     }
     return true;
   }();
@@ -924,8 +1050,8 @@ public:
       ensure_roman_civilian_equipment_contributions_registered();
       const auto loadout =
           Render::GL::Nation::resolve_equipment_loadout("troops/roman/civilian");
-      const std::array<EquipmentHandle, 2> handles{loadout.armor_handle,
-                                                   loadout.cloak_handle};
+      const std::array<EquipmentHandle, 3> handles{
+          loadout.armor_handle, loadout.cloak_handle, loadout.work_apron_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
@@ -962,6 +1088,8 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
                         [] { (void)builder_work_tunic_archetype(); });
   ar.register_archetype("roman_civilian_mantle",
                         [] { (void)roman_civilian_mantle_archetype(); });
+  ar.register_archetype("roman_civilian_pack",
+                        [] { (void)roman_civilian_pack_archetype(); });
   ar.register_archetype("roman_builder_hammer",
                         [] { (void)builder_hammer_archetype(); });
   ar.register_archetype("roman_builder_saw", [] { (void)builder_saw_archetype(); });

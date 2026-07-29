@@ -131,29 +131,29 @@
       "combat": {
         "health": 1800,
         "max_health": 1800,
-        "speed": 3.0,
-        "vision_range": 16.0,
-        "ranged_range": 1.5,
-        "ranged_damage": 5,
-        "ranged_cooldown": 2.0,
-        "melee_range": 2.0,
-        "melee_damage": 37,
-        "melee_cooldown": 0.72,
-        "can_ranged": false,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.8,
-        "selection_ring_size": 2.0,
-        "renderer_id": "troops/roman/horse_swordsman"
-      },
-      "formation": {
-        "individuals_per_unit": 9,
-        "max_units_per_row": 3
-      }
+      "speed": 4.0,
+      "vision_range": 16.0,
+      "ranged_range": 1.5,
+      "ranged_damage": 5,
+      "ranged_cooldown": 2.0,
+      "melee_range": 2.0,
+      "melee_damage": 37,
+      "melee_cooldown": 0.72,
+      "can_ranged": false,
+      "can_melee": true
     },
-    {
-      "id": "horse_archer",
+    "visuals": {
+      "render_scale": 0.8,
+      "selection_ring_size": 2.0,
+      "renderer_id": "troops/roman/horse_swordsman"
+    },
+    "formation": {
+      "individuals_per_unit": 9,
+      "max_units_per_row": 3
+    }
+  },
+  {
+    "id": "horse_archer",
       "display_name": "Horse Archer",
       "production": {
         "cost": 120,
@@ -168,29 +168,29 @@
       "combat": {
         "health": 1500,
         "max_health": 1500,
-        "speed": 3.0,
-        "vision_range": 18.0,
-        "ranged_range": 8.5,
-        "ranged_damage": 42,
-        "ranged_cooldown": 1.1,
-        "melee_range": 1.8,
-        "melee_damage": 9,
-        "melee_cooldown": 0.9,
-        "can_ranged": true,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.75,
-        "selection_ring_size": 1.8,
-        "renderer_id": "troops/roman/horse_archer"
-      },
-      "formation": {
-        "individuals_per_unit": 10,
-        "max_units_per_row": 3
-      }
+      "speed": 4.0,
+      "vision_range": 18.0,
+      "ranged_range": 8.5,
+      "ranged_damage": 42,
+      "ranged_cooldown": 1.1,
+      "melee_range": 1.8,
+      "melee_damage": 9,
+      "melee_cooldown": 0.9,
+      "can_ranged": true,
+      "can_melee": true
     },
-    {
-      "id": "horse_spearman",
+    "visuals": {
+      "render_scale": 0.75,
+      "selection_ring_size": 1.8,
+      "renderer_id": "troops/roman/horse_archer"
+    },
+    "formation": {
+      "individuals_per_unit": 10,
+      "max_units_per_row": 3
+    }
+  },
+  {
+    "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
         "cost": 135,
@@ -205,21 +205,21 @@
       "combat": {
         "health": 1700,
         "max_health": 1700,
-        "speed": 3.0,
-        "vision_range": 16.0,
-        "ranged_range": 1.5,
-        "ranged_damage": 5,
-        "ranged_cooldown": 2.0,
-        "melee_range": 3.0,
-        "melee_damage": 36,
-        "melee_cooldown": 0.8,
-        "can_ranged": false,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.78,
-        "selection_ring_size": 1.9,
-        "renderer_id": "troops/roman/horse_spearman"
+      "speed": 4.0,
+      "vision_range": 16.0,
+      "ranged_range": 1.5,
+      "ranged_damage": 5,
+      "ranged_cooldown": 2.0,
+      "melee_range": 3.0,
+      "melee_damage": 36,
+      "melee_cooldown": 0.8,
+      "can_ranged": false,
+      "can_melee": true
+    },
+    "visuals": {
+      "render_scale": 0.78,
+      "selection_ring_size": 1.9,
+      "renderer_id": "troops/roman/horse_spearman"
       },
       "formation": {
         "individuals_per_unit": 9,

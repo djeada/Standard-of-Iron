@@ -21,6 +21,13 @@ struct MarketplaceTradeRates {
 
 class MarketplaceSystem {
 public:
+  MarketplaceSystem() = default;
+  ~MarketplaceSystem() = default;
+  MarketplaceSystem(const MarketplaceSystem&) = delete;
+  MarketplaceSystem(MarketplaceSystem&&) = delete;
+  auto operator=(const MarketplaceSystem&) -> MarketplaceSystem& = delete;
+  auto operator=(MarketplaceSystem&&) -> MarketplaceSystem& = delete;
+
   static auto instance() -> MarketplaceSystem&;
 
   [[nodiscard]] auto get_rates() const -> const MarketplaceTradeRates&;

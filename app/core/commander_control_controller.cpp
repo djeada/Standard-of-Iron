@@ -22,6 +22,7 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "scene/camera.h"
 
 namespace {
@@ -169,17 +170,20 @@ void CommanderControlController::reset() {
   m_move_right_axis = 0;
   m_move_forward_axis = 0;
   m_move_running = false;
-  m_hit_trauma = 0.0F;
-  m_hit_shake_phase = 0.0F;
-  m_strike_punch_fwd = 0.0F;
   m_dodge_state = DodgeState::None;
   m_dodge_timer = 0.0F;
+  m_dodge_direction = QVector3D(0.0F, 0.0F, 1.0F);
+  m_requested_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+  m_has_requested_dodge_direction = false;
   m_dodge_fov_kick = 0.0F;
   m_jump_timer = 0.0F;
   m_jump_safe_position_valid = false;
   m_jump_last_walkable_position = QVector3D(0.0F, 0.0F, 0.0F);
   m_locked_target_id = 0;
+  m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   m_soft_target_id = 0;
+  m_soft_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  m_primary_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   m_lock_lost_timer = 0.0F;
   m_guard_was_active = false;
   m_combo_miss_timer = 0.0F;
@@ -372,6 +376,15 @@ void CommanderControlController::poll_mouse_look(QQuickWindow* window) {
 }
 
 void CommanderControlController::request_dodge() {
+  m_has_requested_dodge_direction = false;
+  m_input.dodge_requested = true;
+}
+
+void CommanderControlController::request_dodge(const QVector3D& world_direction) {
+  m_requested_dodge_direction =
+      QVector3D(world_direction.x(), 0.0F, world_direction.z());
+  m_has_requested_dodge_direction =
+      m_requested_dodge_direction.lengthSquared() > 0.0001F;
   m_input.dodge_requested = true;
 }
 
@@ -434,6 +447,8 @@ void CommanderControlController::cycle_lock_on_target(
 
   struct Candidate {
     Engine::Core::EntityID id = 0;
+    std::uint16_t soldier_slot{
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
     float angle_diff = 0.0F;
     float distance_sq = 0.0F;
     bool visible = false;
@@ -452,29 +467,51 @@ void CommanderControlController::cycle_lock_on_target(
     if (!owners.are_enemies(local_owner_id, u->owner_id)) {
       continue;
     }
-    const float dx = t->position.x - origin.x();
-    const float dz = t->position.z - origin.z();
-    const float distance_sq = dx * dx + dz * dz;
-    if (distance_sq > k_lock_range_sq) {
-      continue;
+    std::optional<Candidate> best_soldier;
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      const float dx = soldier.position.x() - origin.x();
+      const float dz = soldier.position.z() - origin.z();
+      const float distance_sq = dx * dx + dz * dz;
+      if (distance_sq > k_lock_range_sq) {
+        continue;
+      }
+      const float angle_diff =
+          signed_angle_delta(std::atan2(dx, dz) * 57.29577951308232F, m_view_yaw);
+      if (std::abs(angle_diff) > k_lock_max_angle_degrees ||
+          !has_clear_building_los(origin, soldier.position)) {
+        continue;
+      }
+      Candidate const resolved{
+          candidate->get_id(), soldier.soldier_slot, angle_diff, distance_sq, true};
+      if (!best_soldier.has_value() ||
+          std::abs(resolved.angle_diff) < std::abs(best_soldier->angle_diff) ||
+          (std::abs(resolved.angle_diff) == std::abs(best_soldier->angle_diff) &&
+           resolved.distance_sq < best_soldier->distance_sq)) {
+        best_soldier = resolved;
+      }
     }
-    const float angle_diff =
-        signed_angle_delta(std::atan2(dx, dz) * 57.29577951308232F, m_view_yaw);
-    if (std::abs(angle_diff) > k_lock_max_angle_degrees) {
-      continue;
+    if (best_soldier.has_value()) {
+      candidates.push_back(*best_soldier);
     }
-    const QVector3D target_pos(t->position.x, 0.0F, t->position.z);
-    const bool visible = has_clear_building_los(origin, target_pos);
-    if (!visible) {
-      continue;
-    }
-    candidates.push_back({candidate->get_id(), angle_diff, distance_sq, visible});
   }
 
   if (candidates.empty()) {
     m_locked_target_id = 0;
+    m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_soft_target_id = 0;
+    m_soft_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_lock_lost_timer = 0.0F;
+    if (auto* targets =
+            commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+      targets->explicit_lock_target_id = 0;
+      targets->explicit_lock_soldier_slot =
+          Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+      targets->aim_candidate_id = 0;
+      targets->aim_candidate_soldier_slot =
+          Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+      targets->aim_candidate_in_range = false;
+    }
     return;
   }
 
@@ -491,6 +528,7 @@ void CommanderControlController::cycle_lock_on_target(
 
   if (m_locked_target_id == 0) {
     m_locked_target_id = candidates[0].id;
+    m_locked_target_slot = candidates[0].soldier_slot;
   } else {
     auto it =
         std::find_if(candidates.begin(), candidates.end(), [this](const Candidate& c) {
@@ -498,17 +536,23 @@ void CommanderControlController::cycle_lock_on_target(
         });
     if (it == candidates.end() || std::next(it) == candidates.end()) {
       m_locked_target_id = candidates[0].id;
+      m_locked_target_slot = candidates[0].soldier_slot;
     } else {
-      m_locked_target_id = std::next(it)->id;
+      auto const& next = *std::next(it);
+      m_locked_target_id = next.id;
+      m_locked_target_slot = next.soldier_slot;
     }
   }
   m_soft_target_id = m_locked_target_id;
+  m_soft_target_slot = m_locked_target_slot;
   m_lock_lost_timer = 0.0F;
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
               commander)) {
     rpg_targets->explicit_lock_target_id = m_locked_target_id;
+    rpg_targets->explicit_lock_soldier_slot = m_locked_target_slot;
     rpg_targets->aim_candidate_id = m_soft_target_id;
+    rpg_targets->aim_candidate_soldier_slot = m_soft_target_slot;
   }
 }
 
@@ -528,23 +572,24 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   auto* target_unit = (target != nullptr)
                           ? target->get_component<Engine::Core::UnitComponent>()
                           : nullptr;
-  auto* target_transform =
-      (target != nullptr) ? target->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-
+  auto target_sample = target != nullptr
+                           ? Game::Systems::RpgCombat::resolve_soldier_target(
+                                 *target, m_locked_target_slot)
+                           : std::nullopt;
   if (target_unit == nullptr || target_unit->health <= 0 ||
-      target_transform == nullptr) {
+      !target_sample.has_value()) {
     m_locked_target_id = 0;
+    m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_lock_lost_timer = 0.0F;
     return;
   }
+  m_locked_target_slot = target_sample->soldier_slot;
 
-  const float dx = target_transform->position.x - cmd_transform->position.x;
-  const float dz = target_transform->position.z - cmd_transform->position.z;
+  const float dx = target_sample->position.x() - cmd_transform->position.x;
+  const float dz = target_sample->position.z() - cmd_transform->position.z;
   constexpr float k_lock_drop_sq = 18.0F * 18.0F;
   const QVector3D origin(cmd_transform->position.x, 0.0F, cmd_transform->position.z);
-  const QVector3D target_pos(
-      target_transform->position.x, 0.0F, target_transform->position.z);
+  const QVector3D target_pos = target_sample->position;
   const bool target_visible = has_clear_building_los(origin, target_pos);
 
   const float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
@@ -554,7 +599,9 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
       (m_input.dodge_requested && (m_input.backward || m_input.run));
   if (escape_input || (m_input.run && std::abs(diff) > 95.0F)) {
     m_locked_target_id = 0;
+    m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_soft_target_id = 0;
+    m_soft_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_lock_lost_timer = 0.0F;
     return;
   }
@@ -568,6 +615,7 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   }
   if (m_lock_lost_timer > 0.35F) {
     m_locked_target_id = 0;
+    m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_lock_lost_timer = 0.0F;
     return;
   }
@@ -600,6 +648,11 @@ auto CommanderControlController::find_primary_target(
     Engine::Core::World& world,
     Engine::Core::EntityID commander_id,
     int local_owner_id) -> Engine::Core::EntityID {
+  using Target = Game::Systems::RpgCombat::SoldierTarget;
+  constexpr auto k_no_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  m_primary_target_slot = k_no_slot;
+
   auto* commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
     return 0;
@@ -613,34 +666,22 @@ auto CommanderControlController::find_primary_target(
   }
 
   constexpr float k_commander_attack_cone_dot = 0.45F;
-  float max_range = 2.5F;
+  float max_range = 2.05F;
   if (commander_attack != nullptr) {
-    max_range = std::max(max_range, commander_attack->melee_range + 0.65F);
-  }
-  const float max_range_sq = max_range * max_range;
-
-  if (m_locked_target_id != 0) {
-    auto* locked_ent = world.get_entity(m_locked_target_id);
-    auto* locked_unit = (locked_ent != nullptr)
-                            ? locked_ent->get_component<Engine::Core::UnitComponent>()
-                            : nullptr;
-    if (locked_unit == nullptr || locked_unit->health <= 0) {
-      m_locked_target_id = 0;
+    auto const* commander_unit =
+        commander->get_component<Engine::Core::UnitComponent>();
+    auto const family = commander_unit != nullptr
+                            ? Engine::Core::resolve_combat_attack_family(
+                                  commander_unit->spawn_type,
+                                  Engine::Core::AttackComponent::CombatMode::Melee)
+                            : Engine::Core::CombatAttackFamily::Sword;
+    if (family == Engine::Core::CombatAttackFamily::Spear) {
+      max_range = 2.75F;
+    } else if (family == Engine::Core::CombatAttackFamily::Bow &&
+               commander_attack->can_ranged) {
+      max_range = commander_attack->range;
     } else {
-      auto* locked_transform =
-          locked_ent->get_component<Engine::Core::TransformComponent>();
-      if (locked_transform != nullptr) {
-        const float dx = locked_transform->position.x - commander_transform->position.x;
-        const float dz = locked_transform->position.z - commander_transform->position.z;
-        const QVector3D locked_pos(
-            locked_transform->position.x, 0.0F, locked_transform->position.z);
-        const QVector3D origin(
-            commander_transform->position.x, 0.0F, commander_transform->position.z);
-        if (dx * dx + dz * dz <= max_range_sq &&
-            has_clear_building_los(origin, locked_pos)) {
-          return m_locked_target_id;
-        }
-      }
+      max_range = std::max(max_range, commander_attack->melee_range);
     }
   }
 
@@ -650,30 +691,73 @@ auto CommanderControlController::find_primary_target(
       commander_transform->position.x, 0.0F, commander_transform->position.z);
   auto& owners = Game::Systems::OwnerRegistry::instance();
 
-  if (m_soft_target_id != 0) {
-    auto* soft_ent = world.get_entity(m_soft_target_id);
-    auto* soft_unit = (soft_ent != nullptr)
-                          ? soft_ent->get_component<Engine::Core::UnitComponent>()
-                          : nullptr;
-    auto* soft_transform =
-        (soft_ent != nullptr)
-            ? soft_ent->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
-    if (soft_unit == nullptr || soft_unit->health <= 0 || soft_transform == nullptr) {
-      m_soft_target_id = 0;
-    } else {
-      const QVector3D soft_target(
-          soft_transform->position.x, 0.0F, soft_transform->position.z);
-      QVector3D to_target = soft_target - origin;
-      const float dist_sq = to_target.lengthSquared();
-      if (dist_sq > 0.0001F && dist_sq <= max_range_sq &&
-          has_clear_building_los(origin, soft_target)) {
-        const float distance = std::sqrt(dist_sq);
-        to_target /= distance;
-        if (QVector3D::dotProduct(forward, to_target) >= 0.15F) {
-          return m_soft_target_id;
-        }
+  auto eligible_samples = [&](Engine::Core::EntityID entity_id) -> std::vector<Target> {
+    auto* entity = world.get_entity(entity_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (entity == nullptr || unit == nullptr || unit->health <= 0 ||
+        entity->has_component<Engine::Core::BuildingComponent>() ||
+        !owners.are_enemies(local_owner_id, unit->owner_id)) {
+      return {};
+    }
+    return Game::Systems::RpgCombat::live_soldier_targets(*entity);
+  };
+
+  auto choose_sample = [&](Engine::Core::EntityID entity_id,
+                           std::uint16_t preferred_slot,
+                           float minimum_facing) -> std::optional<Target> {
+    auto samples = eligible_samples(entity_id);
+    std::optional<Target> best;
+    float best_score = -1000000.0F;
+    for (auto const& sample : samples) {
+      QVector3D to_target = sample.position - origin;
+      to_target.setY(0.0F);
+      float const distance = to_target.length();
+      if (distance <= 0.0001F ||
+          distance > max_range + std::max(0.0F, sample.body_radius) ||
+          !has_clear_building_los(origin, sample.position)) {
+        continue;
       }
+      to_target /= distance;
+      float const facing = QVector3D::dotProduct(forward, to_target);
+      if (facing < minimum_facing) {
+        continue;
+      }
+      float score = facing * 10.0F - distance;
+      if (sample.soldier_slot == preferred_slot) {
+        score += 3.0F;
+      }
+      if (!best.has_value() || score > best_score) {
+        best = sample;
+        best_score = score;
+      }
+    }
+    return best;
+  };
+
+  auto accept = [&](const Target& target) -> Engine::Core::EntityID {
+    m_primary_target_slot = target.soldier_slot;
+    m_soft_target_id = target.entity_id;
+    m_soft_target_slot = target.soldier_slot;
+    return target.entity_id;
+  };
+
+  if (m_locked_target_id != 0) {
+    if (auto target = choose_sample(m_locked_target_id, m_locked_target_slot, -0.05F);
+        target.has_value()) {
+      m_locked_target_slot = target->soldier_slot;
+      return accept(*target);
+    }
+    m_soft_target_id = 0;
+    m_soft_target_slot = k_no_slot;
+    return 0;
+  }
+
+  if (m_soft_target_id != 0) {
+    if (auto target = choose_sample(m_soft_target_id, m_soft_target_slot, 0.15F);
+        target.has_value()) {
+      return accept(*target);
     }
   }
 
@@ -684,76 +768,42 @@ auto CommanderControlController::find_primary_target(
         engagement->front_attacker_id,
         engagement->left_threat_id,
         engagement->right_threat_id};
-    for (auto ring_target_id : ring_targets) {
-      auto* ring_target = world.get_entity(ring_target_id);
-      auto* ring_unit = ring_target != nullptr
-                            ? ring_target->get_component<Engine::Core::UnitComponent>()
-                            : nullptr;
-      auto* ring_transform =
-          ring_target != nullptr
-              ? ring_target->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
-      if (ring_unit == nullptr || ring_transform == nullptr || ring_unit->health <= 0 ||
-          !owners.are_enemies(local_owner_id, ring_unit->owner_id)) {
-        continue;
-      }
-      const QVector3D ring_pos(
-          ring_transform->position.x, 0.0F, ring_transform->position.z);
-      QVector3D to_ring_target = ring_pos - origin;
-      float const dist_sq = to_ring_target.lengthSquared();
-      if (dist_sq > 0.0001F && dist_sq <= max_range_sq &&
-          has_clear_building_los(origin, ring_pos)) {
-        to_ring_target.normalize();
-        if (QVector3D::dotProduct(forward, to_ring_target) >= 0.05F) {
-          return ring_target_id;
-        }
+    for (auto const ring_target_id : ring_targets) {
+      if (auto target = choose_sample(ring_target_id, k_no_slot, 0.05F);
+          target.has_value()) {
+        return accept(*target);
       }
     }
   }
 
-  Engine::Core::EntityID best_id = 0;
+  std::optional<Target> best;
   float best_score = -1000000.0F;
-
   for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate == commander) {
       continue;
     }
-    auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (candidate_unit == nullptr || candidate_transform == nullptr ||
-        candidate_unit->health <= 0) {
+    auto target =
+        choose_sample(candidate->get_id(), k_no_slot, k_commander_attack_cone_dot);
+    if (!target.has_value()) {
       continue;
     }
-    if (!owners.are_enemies(local_owner_id, candidate_unit->owner_id)) {
-      continue;
-    }
-
-    const QVector3D target(
-        candidate_transform->position.x, 0.0F, candidate_transform->position.z);
-    QVector3D to_target = target - origin;
-    const float dist_sq = to_target.lengthSquared();
-    if (dist_sq <= 0.0001F || dist_sq > max_range_sq) {
-      continue;
-    }
-    const float distance = std::sqrt(dist_sq);
-    to_target /= distance;
-    const float facing = QVector3D::dotProduct(forward, to_target);
-    if (facing < k_commander_attack_cone_dot) {
-      continue;
-    }
-    if (!has_clear_building_los(origin, target)) {
-      continue;
-    }
-
-    const float score = facing * 10.0F - distance;
+    QVector3D to_target = target->position - origin;
+    to_target.setY(0.0F);
+    float const distance = to_target.length();
+    to_target /= std::max(distance, 0.0001F);
+    float const score = QVector3D::dotProduct(forward, to_target) * 10.0F - distance;
     if (score > best_score) {
       best_score = score;
-      best_id = candidate->get_id();
+      best = *target;
     }
   }
 
-  return best_id;
+  if (best.has_value()) {
+    return accept(*best);
+  }
+  m_soft_target_id = 0;
+  m_soft_target_slot = k_no_slot;
+  return 0;
 }
 
 auto CommanderControlController::primary_action(Engine::Core::World& world,
@@ -770,6 +820,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
           world,
           {.attacker_id = commander_id,
            .target_hint_id = target_id,
+           .target_soldier_slot = m_primary_target_slot,
            .move_right_axis = m_move_right_axis,
            .move_forward_axis = m_move_forward_axis,
            .primary_held_duration = m_primary_held_duration});
@@ -779,12 +830,6 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
 
   if (auto* cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
       cmd_comp != nullptr && !attack_result.buffered) {
-    if (cmd_comp->combo_step >= 3) {
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 16.0F);
-    }
-    if (m_primary_held_duration >= 0.4F) {
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 14.0F);
-    }
     m_combo_miss_timer = 0.0F;
   }
   return true;
@@ -925,7 +970,6 @@ void CommanderControlController::try_activate_shield_bash(
   if (cmd_comp != nullptr) {
     cmd_comp->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
   }
-  m_dodge_fov_kick = std::max(m_dodge_fov_kick, 4.5F);
 }
 
 void CommanderControlController::try_activate_vanguard_rush(
@@ -970,7 +1014,6 @@ void CommanderControlController::try_activate_vanguard_rush(
             commander, Engine::Core::MountedChargeIntentSource::Player)) {
       m_vanguard_rush_cooldown = k_rush_cooldown;
       m_input.primary_action_scan_cooldown = 0.18F;
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 6.0F);
       if (cmd_comp != nullptr) {
         cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
       }
@@ -1009,7 +1052,6 @@ void CommanderControlController::try_activate_vanguard_rush(
     movement->set_manual_velocity(rush_direction.x() * 8.0F, rush_direction.z() * 8.0F);
   }
   m_input.primary_action_scan_cooldown = 0.18F;
-  m_dodge_fov_kick = std::max(m_dodge_fov_kick, 6.0F);
 
   if (target != nullptr) {
     auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
@@ -1082,7 +1124,6 @@ void CommanderControlController::try_activate_second_wind(
         std::max(guard->perfect_guard_remaining, k_second_wind_guard_window);
   }
 
-  m_hit_trauma *= 0.35F;
   m_second_wind_cooldown = k_second_wind_cooldown;
   cmd_comp->second_wind_cooldown_remaining = m_second_wind_cooldown;
 }
@@ -1182,8 +1223,6 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
-  constexpr float k_shake_decay = 18.0F;
-  m_impact_shake = std::max(0.0F, m_impact_shake - k_shake_decay * dt);
   constexpr float k_jump_duration = 0.58F;
   constexpr float k_jump_peak_height = 0.34F;
 
@@ -1244,16 +1283,17 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   if (m_locked_target_id != 0) {
     auto* lock_ent = world.get_entity(m_locked_target_id);
-    auto* lock_tf = (lock_ent != nullptr)
-                        ? lock_ent->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
     auto* lock_unit = (lock_ent != nullptr)
                           ? lock_ent->get_component<Engine::Core::UnitComponent>()
                           : nullptr;
-    if (lock_tf != nullptr && lock_unit != nullptr && lock_unit->health > 0) {
-      QVector3D away(transform->position.x - lock_tf->position.x,
+    auto const lock_target = lock_ent != nullptr
+                                 ? Game::Systems::RpgCombat::resolve_soldier_target(
+                                       *lock_ent, m_locked_target_slot)
+                                 : std::nullopt;
+    if (lock_target.has_value() && lock_unit != nullptr && lock_unit->health > 0) {
+      QVector3D away(transform->position.x - lock_target->position.x(),
                      0.0F,
-                     transform->position.z - lock_tf->position.z);
+                     transform->position.z - lock_target->position.z());
       if (away.lengthSquared() > 0.0001F) {
         away.normalize();
         const QVector3D tangent(-away.z(), 0.0F, away.x());
@@ -1266,10 +1306,17 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   const bool should_dodge = m_input.dodge_requested &&
                             m_dodge_state == DodgeState::None && m_jump_timer <= 0.0F;
+  QVector3D const requested_dodge_direction = m_requested_dodge_direction;
+  bool const has_requested_dodge_direction = m_has_requested_dodge_direction;
   m_input.dodge_requested = false;
+  m_has_requested_dodge_direction = false;
+  m_requested_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
 
   if (should_dodge) {
-    m_dodge_direction = (move.lengthSquared() > 0.0001F) ? move.normalized() : forward;
+    m_dodge_direction =
+        has_requested_dodge_direction
+            ? requested_dodge_direction.normalized()
+            : ((move.lengthSquared() > 0.0001F) ? move.normalized() : forward);
     m_dodge_state = DodgeState::Rolling;
     constexpr float k_dodge_roll_duration = 0.22F;
     m_dodge_timer = k_dodge_roll_duration;
@@ -1484,62 +1531,25 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_input.primary_action_scan_cooldown = 0.08F;
   }
 
-  if (m_locked_target_id != 0) {
-    m_soft_target_id = m_locked_target_id;
-  } else {
-    constexpr float k_soft_target_range = 8.0F;
-    constexpr float k_soft_target_range_sq = k_soft_target_range * k_soft_target_range;
-    constexpr float k_soft_target_min_facing = 0.35F;
-    auto& owners = Game::Systems::OwnerRegistry::instance();
-    const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
-    Engine::Core::EntityID best_id = 0;
-    float best_score = -1000000.0F;
-    for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
-      if (candidate == nullptr || candidate->get_id() == commander_id) {
-        continue;
-      }
-      auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-      auto* candidate_transform =
-          candidate->get_component<Engine::Core::TransformComponent>();
-      if (candidate_unit == nullptr || candidate_transform == nullptr ||
-          candidate_unit->health <= 0 ||
-          !owners.are_enemies(local_owner_id, candidate_unit->owner_id)) {
-        continue;
-      }
-      const QVector3D target(
-          candidate_transform->position.x, 0.0F, candidate_transform->position.z);
-      QVector3D to_target = target - origin;
-      const float dist_sq = to_target.lengthSquared();
-      if (dist_sq <= 0.0001F || dist_sq > k_soft_target_range_sq ||
-          !has_clear_building_los(origin, target)) {
-        continue;
-      }
-      const float distance = std::sqrt(dist_sq);
-      to_target /= distance;
-      const float facing = QVector3D::dotProduct(forward, to_target);
-      if (facing < k_soft_target_min_facing) {
-        continue;
-      }
-      float score = facing * 120.0F - distance * 3.5F;
-      if (candidate->get_id() == m_soft_target_id) {
-        score += 12.0F;
-      }
-      if (score > best_score) {
-        best_score = score;
-        best_id = candidate->get_id();
-      }
-    }
-    m_soft_target_id = best_id;
-  }
+  Engine::Core::EntityID const aim_candidate_id =
+      find_primary_target(world, commander_id, local_owner_id);
 
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
               commander)) {
     rpg_targets->explicit_lock_target_id = m_locked_target_id;
-    rpg_targets->aim_candidate_id = m_soft_target_id;
+    rpg_targets->explicit_lock_soldier_slot = m_locked_target_slot;
+    rpg_targets->aim_candidate_id = aim_candidate_id;
+    rpg_targets->aim_candidate_soldier_slot =
+        aim_candidate_id != 0
+            ? m_primary_target_slot
+            : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    rpg_targets->aim_candidate_in_range = aim_candidate_id != 0;
     rpg_targets->recent_hit_timer = std::max(0.0F, rpg_targets->recent_hit_timer - dt);
     if (rpg_targets->recent_hit_timer <= 0.0F) {
       rpg_targets->recent_hit_target_id = 0;
+      rpg_targets->recent_hit_soldier_slot =
+          Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     }
   }
   update_camera(world, *commander, camera, dt);
@@ -1608,12 +1618,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
                    (1.0F - std::exp(-k_lean_follow * std::max(dt, 0.0F)));
 
   bool close_camera_mode = false;
-  std::uint8_t last_strike_combo_step = 0U;
   float jump_height_offset = 0.0F;
   if (auto const* cmd = commander.get_component<Engine::Core::CommanderComponent>()) {
     jump_height_offset = cmd->jump_height_offset;
     close_camera_mode = cmd->close_camera_mode;
-    last_strike_combo_step = cmd->last_strike_combo_step;
   }
 
   const float fov_target =
@@ -1648,29 +1656,22 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * bob_l;
 
-  if (m_impact_shake > 0.1F) {
-    float const shake_intensity = m_impact_shake * 0.012F;
-    float const shake_t = m_impact_shake_seed + m_impact_shake * 7.0F;
-    float const shake_x = std::sin(shake_t * 23.0F) * shake_intensity;
-    float const shake_y = std::cos(shake_t * 31.0F) * shake_intensity * 0.7F;
-    eye_desired += flat_right * shake_x + QVector3D(0.0F, shake_y, 0.0F);
-  }
   QVector3D target_desired = pivot + forward_vec * target_distance;
 
   const Engine::Core::EntityID focus_id = locked_target_id();
   if (focus_id != 0) {
     auto* target = world.get_entity(focus_id);
-    auto* target_transform =
-        (target != nullptr) ? target->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
     auto* target_unit = (target != nullptr)
                             ? target->get_component<Engine::Core::UnitComponent>()
                             : nullptr;
-    if (target_transform != nullptr && target_unit != nullptr &&
+    auto const target_sample = target != nullptr
+                                   ? Game::Systems::RpgCombat::resolve_soldier_target(
+                                         *target, m_locked_target_slot)
+                                   : std::nullopt;
+    if (target_sample.has_value() && target_unit != nullptr &&
         target_unit->health > 0) {
-      const QVector3D enemy_focus(target_transform->position.x,
-                                  target_transform->position.y + 1.1F,
-                                  target_transform->position.z);
+      const QVector3D enemy_focus =
+          target_sample->position + QVector3D(0.0F, 1.1F, 0.0F);
       QVector3D to_enemy = enemy_focus - pivot;
       if (to_enemy.lengthSquared() > 0.0001F) {
         const float enemy_distance = std::sqrt(to_enemy.lengthSquared());
@@ -1714,42 +1715,6 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   const QVector3D up_leaned =
       (world_up + right_world * std::sin(lean_rad)).normalized();
 
-  constexpr float k_shake_freq = 28.0F;
-  constexpr float k_shake_decay = 7.5F;
-  constexpr float k_shake_lateral = 0.22F;
-  constexpr float k_shake_vert = 0.09F;
-
-  if (auto const* fb = commander.get_component<Engine::Core::HitFeedbackComponent>()) {
-
-    if (fb->is_reacting && fb->reaction_time < 0.05F &&
-        fb->reaction_intensity > m_hit_trauma * 0.5F) {
-      m_hit_trauma = fb->reaction_intensity;
-      m_hit_shake_phase = 0.0F;
-    }
-  }
-  m_hit_shake_phase += k_shake_freq * std::max(dt, 0.0F);
-  m_hit_trauma *= std::exp(-k_shake_decay * std::max(dt, 0.0F));
-
-  const float shake_lat = std::sin(m_hit_shake_phase) * m_hit_trauma * k_shake_lateral;
-  const float shake_v =
-      std::abs(std::sin(m_hit_shake_phase * 0.6F)) * m_hit_trauma * k_shake_vert;
-  const float camera_effect_scale = close_camera_mode ? 0.35F : 1.0F;
-  const QVector3D shake_offset =
-      (flat_right * shake_lat - QVector3D(0.0F, shake_v, 0.0F)) * camera_effect_scale;
-
-  if (auto const* cmd = commander.get_component<Engine::Core::CommanderComponent>()) {
-    if (cmd->just_struck_enemy) {
-      m_strike_punch_fwd =
-          (last_strike_combo_step >= 3 ? 0.52F : 0.38F) * camera_effect_scale;
-
-      m_impact_shake = last_strike_combo_step >= 3 ? 5.5F : 3.2F;
-      m_impact_shake_seed = static_cast<float>(last_strike_combo_step) * 1.7F;
-    }
-  }
-  constexpr float k_punch_decay = 11.0F;
-  m_strike_punch_fwd *= std::exp(-k_punch_decay * std::max(dt, 0.0F));
-  const QVector3D punch_offset = forward_vec * m_strike_punch_fwd;
-
   float dodge_tilt_rad = 0.0F;
   if (m_dodge_state == DodgeState::Rolling) {
     const float dodge_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
@@ -1761,7 +1726,5 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   const QVector3D up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();
 
-  camera.look_at(m_cam_eye_smooth + shake_offset + punch_offset,
-                 m_cam_target_smooth + shake_offset + punch_offset,
-                 up_final);
+  camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);
 }

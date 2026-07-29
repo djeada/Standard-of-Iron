@@ -57,17 +57,13 @@ ambient_catalog(bool mounted) noexcept -> std::span<const HumanoidAmbientIdle> {
                  : std::span<const HumanoidAmbientIdle>{k_infantry};
 }
 
-[[nodiscard]] auto
-pick_ambient_type(std::uint32_t seed,
-                  std::uint32_t play_count,
-                  bool mounted,
-                  HumanoidAmbientIdle previous) noexcept -> HumanoidAmbientIdle {
+[[nodiscard]] auto pick_ambient_type(std::uint32_t seed,
+                                     std::uint32_t play_count,
+                                     bool mounted) noexcept -> HumanoidAmbientIdle {
   auto const catalog = ambient_catalog(mounted);
-  std::uint32_t const selector = hash_u32(seed ^ (play_count * 0x9E3779B9U));
-  auto index = static_cast<std::size_t>(selector % catalog.size());
-  if (catalog.size() > 1U && catalog[index] == previous) {
-    index = (index + 1U + ((selector >> 8U) % (catalog.size() - 1U))) % catalog.size();
-  }
+  std::uint32_t const first_index = hash_u32(seed ^ 0xB5297A4DU);
+  auto const index =
+      (static_cast<std::size_t>(first_index) + play_count) % catalog.size();
   return catalog[index];
 }
 
@@ -107,9 +103,7 @@ pick_ambient_type(std::uint32_t seed,
     bool const may_start = inputs.eligible && state.cooldown <= 0.0F &&
                            inputs.idle_duration >= k_ambient_min_idle_duration;
     if (may_start) {
-      state.type = pick_ambient_type(
-          inputs.seed, state.play_count, inputs.mounted, state.previous_type);
-      state.previous_type = state.type;
+      state.type = pick_ambient_type(inputs.seed, state.play_count, inputs.mounted);
       state.stage = HumanoidAmbientStage::BlendIn;
       state.play_count += 1U;
     }

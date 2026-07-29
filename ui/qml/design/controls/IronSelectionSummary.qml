@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 2.15
 import ".." as Design
 
 Design.IronPanel {
@@ -182,10 +183,10 @@ Design.IronPanel {
             Column {
                 anchors.left: singlePortrait.right
                 anchors.leftMargin: Design.Metrics.space12
-                anchors.right: healthPercent.left
+                anchors.right: parent.right
                 anchors.rightMargin: Design.Metrics.space12
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: Design.Metrics.space2
+                spacing: Design.Metrics.space4
 
                 Text {
                     width: parent.width
@@ -196,24 +197,40 @@ Design.IronPanel {
                     elide: Text.ElideRight
                 }
 
-                Design.IronProgressBar {
+                Column {
                     width: parent.width
-                    value: root.groups[0].health
-                    fillColor: root.healthColor(value)
+                    spacing: 2
+
+                    Row {
+                        spacing: Design.Metrics.space12
+                        Text {
+                            text: qsTr("HP %1%").arg(Math.round(root.groups[0].health * 100))
+                            color: Design.Theme.danger
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+                        Text {
+                            text: qsTr("STM %1%").arg(Math.round((root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0) * 100))
+                            color: Design.Theme.success
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+                    }
+
+                    Design.IronProgressBar {
+                        width: parent.width
+                        value: root.groups[0].health
+                        fillColor: Design.Theme.danger
+                    }
+
+                    Design.IronProgressBar {
+                        width: parent.width
+                        value: root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0
+                        fillColor: Design.Theme.success
+                    }
                 }
-            }
-
-            Text {
-                id: healthPercent
-
-                anchors.right: parent.right
-                anchors.rightMargin: Design.Metrics.space12
-                anchors.verticalCenter: parent.verticalCenter
-                text: Math.round(root.groups[0].health * 100) + "%"
-                color: root.healthColor(root.groups[0].health)
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.label
-                font.weight: Design.Typography.bold
             }
 
             MouseArea {
@@ -413,7 +430,7 @@ Design.IronPanel {
                         anchors.leftMargin: Design.Metrics.space8
                         anchors.bottom: groupHealth.top
                         anchors.bottomMargin: Design.Metrics.space2
-                        visible: groupCard.modelData.woundedCount > 0 && groupCard.height >= Design.Metrics.space24 * 3
+                        visible: groupCard.modelData.woundedCount > 0 && groupFlow.cardHeight >= Design.Metrics.space24 * 3
                         text: qsTr("%1 wounded").arg(groupCard.modelData.woundedCount)
                         color: Design.Theme.warning
                         font.family: Design.Typography.family

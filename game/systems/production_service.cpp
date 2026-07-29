@@ -86,16 +86,19 @@ auto home_committed_civilian_count(const Engine::Core::ProductionComponent* prod
 
 } // namespace
 
-auto ProductionService::start_production_for_first_selected_barracks(
-    Engine::Core::World& world,
-    const std::vector<Engine::Core::EntityID>& selected,
-    int owner_id,
-    Game::Units::TroopType unit_type) -> ProductionResult {
-  auto* e = find_first_selected_barracks(world, selected, owner_id);
+auto ProductionService::start_production(Engine::Core::World& world,
+                                         Engine::Core::EntityID building_id,
+                                         Game::Units::TroopType unit_type)
+    -> ProductionResult {
+  auto* e = world.get_entity(building_id);
   if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
   auto* unit = e->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return ProductionResult::NoBarracks;
+  }
+  const int owner_id = unit->owner_id;
   const auto nation_id = resolve_nation_id(owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
@@ -152,13 +155,23 @@ auto ProductionService::start_production_for_first_selected_barracks(
   return ProductionResult::Success;
 }
 
-auto ProductionService::set_rally_for_first_selected_barracks(
+auto ProductionService::start_production_for_first_selected_barracks(
     Engine::Core::World& world,
     const std::vector<Engine::Core::EntityID>& selected,
     int owner_id,
-    float x,
-    float z) -> bool {
+    Game::Units::TroopType unit_type) -> ProductionResult {
   auto* e = find_first_selected_barracks(world, selected, owner_id);
+  if (e == nullptr) {
+    return ProductionResult::NoBarracks;
+  }
+  return start_production(world, e->get_id(), unit_type);
+}
+
+auto ProductionService::set_rally_point(Engine::Core::World& world,
+                                        Engine::Core::EntityID building_id,
+                                        float x,
+                                        float z) -> bool {
+  auto* e = world.get_entity(building_id);
   if (e == nullptr) {
     return false;
   }
@@ -173,6 +186,24 @@ auto ProductionService::set_rally_for_first_selected_barracks(
   p->rally_z = z;
   p->rally_set = true;
   return true;
+}
+
+auto ProductionService::find_selected_barracks(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    int owner_id) -> Engine::Core::EntityID {
+  auto* e = find_first_selected_barracks(world, selected, owner_id);
+  return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
+}
+
+auto ProductionService::set_rally_for_first_selected_barracks(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    int owner_id,
+    float x,
+    float z) -> bool {
+  auto* e = find_first_selected_barracks(world, selected, owner_id);
+  return e != nullptr && set_rally_point(world, e->get_id(), x, z);
 }
 
 auto ProductionService::get_selected_barracks_state(

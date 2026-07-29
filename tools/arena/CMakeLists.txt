@@ -21,6 +21,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
+        ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
         ../../ui/theme.cpp
@@ -38,6 +39,7 @@ else()
         building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
+        ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
         ../../ui/theme.cpp
@@ -55,6 +57,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Qml
+        Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::OpenGL
         $<$<TARGET_EXISTS:Qt${QT_VERSION_MAJOR}::OpenGLWidgets>:Qt${QT_VERSION_MAJOR}::OpenGLWidgets>
         ${OPENGL_LIBRARIES}

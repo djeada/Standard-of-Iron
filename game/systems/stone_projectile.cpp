@@ -12,7 +12,8 @@ StoneProjectile::StoneProjectile(const QVector3D& start,
                                  bool should_apply_damage,
                                  int damage,
                                  Engine::Core::EntityID attacker_id,
-                                 Engine::Core::EntityID target_id)
+                                 Engine::Core::EntityID target_id,
+                                 QVector3D target_origin_at_launch)
     : m_start(start)
     , m_end(end)
     , m_color(color)
@@ -24,7 +25,7 @@ StoneProjectile::StoneProjectile(const QVector3D& start,
     , m_damage(damage)
     , m_target_id(target_id)
     , m_attacker_id(attacker_id)
-    , m_target_locked_position(end) {
+    , m_target_origin_at_launch(target_origin_at_launch) {
 }
 
 void StoneProjectile::update(float delta_time) {
@@ -35,7 +36,6 @@ void StoneProjectile::update(float delta_time) {
   m_t += delta_time * m_speed * m_inv_dist;
   if (m_t >= 1.0F) {
     m_t = 1.0F;
-    m_active = false;
   }
 }
 
