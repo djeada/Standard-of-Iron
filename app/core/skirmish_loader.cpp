@@ -97,6 +97,8 @@ void SkirmishLoader::reset_game_state() {
 
   m_world.clear();
 
+  m_renderer.clear_entity_render_caches();
+
   Game::Systems::BuildingCollisionRegistry::instance().clear();
   Game::Systems::MarketplaceSystem::instance().clear();
 
