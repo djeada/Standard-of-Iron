@@ -721,20 +721,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     return std::nullopt;
   };
 
-  auto owner_has_living_commander = [&](int owner_id) {
-    for (auto* entity :
-         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   QSet<int> processed_owner_ids;
   for (const QVariant& config_var : player_configs) {
     const QVariantMap config = config_var.toMap();
@@ -746,21 +732,28 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     if (config.value("isHuman", false).toBool()) {
       owner_id = ctx.local_owner_id;
     }
-    if (owner_id < 0 || processed_owner_ids.contains(owner_id) ||
-        owner_has_living_commander(owner_id)) {
+    if (owner_id < 0 || processed_owner_ids.contains(owner_id)) {
       continue;
     }
     processed_owner_ids.insert(owner_id);
+
+    for (auto* entity :
+         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        ctx.world.destroy_entity(entity->get_id());
+      }
+    }
 
     const auto* assigned_nation = nation_registry.get_nation_for_player(owner_id);
     const auto nation_id = assigned_nation != nullptr
                                ? assigned_nation->id
                                : nation_registry.default_nation_id();
-    QString nation_key = config.value("nationId").toString();
-    if (nation_key.isEmpty()) {
-      nation_key =
-          QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
-    }
+    const QString nation_key =
+        QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
     const auto configured_commander =
         config.contains("commanderTroop")
             ? std::optional<QString>(config.value("commanderTroop").toString())

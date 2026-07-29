@@ -3448,6 +3448,8 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
 
+  emit minimap_image_changed();
+
   if (effects.emit_selected_units_changed) {
     emit selected_units_changed();
   }
