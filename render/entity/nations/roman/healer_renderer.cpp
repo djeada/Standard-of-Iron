@@ -114,14 +114,14 @@ auto senator_toga_archetype() -> const RenderArchetype& {
     float const y_waist = torso_local.point(waist.origin).y();
     float const y_knee = y_waist - 0.52F;
 
-    float const chest_w = tr * 1.30F;
-    float const chest_d = tr * 0.92F;
-    float const waist_w = tr * 1.50F;
-    float const waist_d = tr * 1.08F;
-    float const skirt_mid_w = tr * 1.80F;
-    float const skirt_mid_d = tr * 1.36F;
-    float const hem_w = tr * 2.15F;
-    float const hem_d = tr * 1.70F;
+    float const chest_w = tr * 0.99F;
+    float const chest_d = tr * 0.70F;
+    float const waist_w = tr * 1.04F;
+    float const waist_d = tr * 0.74F;
+    float const skirt_mid_w = tr * 1.56F;
+    float const skirt_mid_d = tr * 1.08F;
+    float const hem_w = tr * 2.05F;
+    float const hem_d = tr * 1.46F;
 
     RenderArchetypeBuilder builder{"roman_senator_toga"};
 
@@ -202,6 +202,25 @@ auto senator_toga_archetype() -> const RenderArchetype& {
     QVector3D const shoulder_r = torso_local.point(bind_frames.shoulder_r.origin);
     float const shoulder_x =
         std::abs(shoulder_l.x()) > 0.01F ? std::abs(shoulder_l.x()) : chest_w;
+
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side) * shoulder_x;
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(sx * 0.96F, y_top - 0.012F, 0.0F),
+                            QVector3D(0.098F, 0.086F, 0.090F)),
+          k_toga_cloth_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(sx * 1.04F, y_top - 0.104F, 0.004F),
+                            QVector3D(0.084F, 0.062F, 0.078F)),
+          k_toga_cloth_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(sx * 1.06F, y_top - 0.152F, 0.006F),
+                            QVector3D(0.076F, 0.030F, 0.070F)),
+          k_toga_shade_slot);
+    }
 
     QVector3D const drape_top(-shoulder_x * 0.72F, y_top + 0.030F, chest_d * 0.62F);
     QVector3D const drape_mid(-chest_w * 0.14F, y_top - 0.20F, chest_d * 1.02F);
@@ -290,37 +309,42 @@ auto senator_laurel_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"roman_senator_laurel"};
 
-    constexpr int k_leaves = 18;
+    constexpr float k_ring_y = 0.132F;
+    float const ring_r =
+        std::sqrt(std::max(
+            0.0F, k_head_silhouette_r * k_head_silhouette_r - k_ring_y * k_ring_y)) *
+        1.03F;
+
+    constexpr int k_leaves = 16;
     for (int i = 0; i < k_leaves; ++i) {
       float const a = (static_cast<float>(i) / k_leaves) * 2.0F * pi;
       float const s = std::sin(a);
       float const c = std::cos(a);
-      QVector3D const base(
-          s * k_head_silhouette_r * 1.01F, 0.030F, c * k_head_silhouette_r * 1.01F);
+      QVector3D const base(s * ring_r, k_ring_y, c * ring_r);
       builder.add_palette_mesh(
           get_unit_sphere(),
-          local_scale_model(base, QVector3D(0.030F, 0.017F, 0.030F)),
+          local_scale_model(base, QVector3D(0.026F, 0.015F, 0.026F)),
           k_toga_laurel_slot);
       builder.add_palette_mesh(
           get_unit_sphere(),
-          local_scale_model(base + QVector3D(s * 0.012F, 0.032F, c * 0.012F),
-                            QVector3D(0.023F, 0.030F, 0.023F)),
+          local_scale_model(base + QVector3D(s * 0.008F, 0.026F, c * 0.008F),
+                            QVector3D(0.020F, 0.026F, 0.020F)),
           k_toga_laurel_slot);
     }
 
     builder.add_palette_mesh(
         get_unit_sphere(),
-        local_scale_model(QVector3D(0.0F, 0.036F, -k_head_silhouette_r * 1.04F),
-                          QVector3D(0.034F, 0.026F, 0.022F)),
+        local_scale_model(QVector3D(0.0F, k_ring_y + 0.004F, -ring_r * 1.04F),
+                          QVector3D(0.030F, 0.022F, 0.020F)),
         k_toga_gold_slot);
     for (int i = 0; i < 3; ++i) {
       float const t = static_cast<float>(i);
       builder.add_palette_mesh(
           get_unit_sphere(),
-          local_scale_model(QVector3D(0.024F * (i % 2 == 0 ? 1.0F : -1.0F),
-                                      0.010F - t * 0.048F,
-                                      -k_head_silhouette_r * 1.06F),
-                            QVector3D(0.017F, 0.026F, 0.013F)),
+          local_scale_model(QVector3D(0.022F * (i % 2 == 0 ? 1.0F : -1.0F),
+                                      k_ring_y - 0.030F - t * 0.044F,
+                                      -k_head_silhouette_r * 0.94F),
+                            QVector3D(0.015F, 0.023F, 0.013F)),
           k_toga_gold_slot);
     }
 

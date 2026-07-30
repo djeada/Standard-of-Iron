@@ -105,11 +105,16 @@ enum CivilianPackSlot : std::uint8_t {
 
 auto carthage_headwrap_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
-    QVector3D const top_local(0.0F, 0.05F, 0.0F);
-    QVector3D const back_local(0.0F, 0.02F, -0.03F);
-    std::array<GeneratedEquipmentPrimitive, 2> const prims{{
-        generated_sphere(top_local, 0.052F, 0U),
-        generated_sphere(back_local, 0.048F, 0U),
+    constexpr float k_head_silhouette_r = 0.168F;
+    QVector3D const crown_local(0.0F, k_head_silhouette_r * 0.40F, 0.0F);
+    QVector3D const nape_local(
+        0.0F, -k_head_silhouette_r * 0.12F, -k_head_silhouette_r * 0.92F);
+    QVector3D const fold_local(
+        0.0F, k_head_silhouette_r * 0.30F, -k_head_silhouette_r * 0.86F);
+    std::array<GeneratedEquipmentPrimitive, 3> const prims{{
+        generated_sphere(crown_local, k_head_silhouette_r * 0.86F, 0U),
+        generated_sphere(fold_local, k_head_silhouette_r * 0.46F, 0U),
+        generated_sphere(nape_local, k_head_silhouette_r * 0.40F, 0U),
     }};
     return build_generated_equipment_archetype("carthage_headwrap", prims);
   }();
@@ -235,7 +240,7 @@ auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"carthage_civilian_pack"};
 
-    QVector3D const jar(0.0F, y_sh - 0.150F, -tr * 1.16F);
+    QVector3D const jar(0.0F, y_sh - 0.115F, -tr * 2.05F);
     builder.add_palette_mesh(
         get_unit_sphere(),
         local_scale_model(jar, QVector3D(tr * 0.52F, 0.135F, tr * 0.44F)),
@@ -266,7 +271,7 @@ auto carthage_civilian_pack_archetype() -> const RenderArchetype& {
           k_pack_clay_slot);
       builder.add_palette_mesh(
           get_unit_cylinder(),
-          cylinder_between(QVector3D(sx * tr * 0.40F, y_sh + 0.010F, -tr * 1.05F),
+          cylinder_between(QVector3D(sx * tr * 0.40F, y_sh + 0.010F, -tr * 1.95F),
                            QVector3D(sx * tr * 0.52F, y_sh - 0.060F, tr * 0.80F),
                            tr * 0.060F),
           k_pack_strap_slot);
@@ -539,7 +544,7 @@ auto carthage_headwrap_fill_role_colors(QVector3D* out,
   if (max < k_carthage_headwrap_role_count) {
     return 0U;
   }
-  out[0] = QVector3D(0.88F, 0.82F, 0.72F);
+  out[0] = QVector3D(0.60F, 0.54F, 0.43F);
   return k_carthage_headwrap_role_count;
 }
 
@@ -549,8 +554,10 @@ auto carthage_robes_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_carthage_robes_role_count) {
     return 0U;
   }
-  out[0] = palette.cloth;
-  out[1] = palette.cloth * 0.84F;
+  out[0] = Render::GL::Humanoid::saturate_color(palette.cloth * 0.22F +
+                                                QVector3D(0.64F, 0.58F, 0.45F));
+  out[1] = Render::GL::Humanoid::saturate_color(palette.cloth * 0.20F +
+                                                QVector3D(0.44F, 0.38F, 0.28F));
   return k_carthage_robes_role_count;
 }
 
@@ -561,7 +568,7 @@ auto carthage_headwrap_extra_role_colors(const void*,
   if (max_count - base_count < k_carthage_headwrap_role_count) {
     return base_count;
   }
-  out[base_count] = QVector3D(0.88F, 0.82F, 0.72F);
+  out[base_count] = QVector3D(0.60F, 0.54F, 0.43F);
   return base_count + k_carthage_headwrap_role_count;
 }
 

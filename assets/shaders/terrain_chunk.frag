@@ -197,7 +197,12 @@ vec3 heightmap_normal(vec2 uv) {
   return normalize(vec3(-dhdx, 1.0, -dhdz));
 }
 
+float tactical_zoom() {
+  return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
+}
+
 void main() {
+  float tactical = tactical_zoom();
   float biome_forest = float(u_ground_type == 0);
   float biome_dry = float(u_ground_type == 1);
   float biome_rocky = float(u_ground_type == 2);
@@ -303,6 +308,10 @@ void main() {
                    granular_fade;
   float speckle =
       gradient_fbm(world_coord * speck_frequency + vec2(-63.0, 24.0)) * speck_fade;
+
+  surface_grain *= mix(1.0, 0.35, tactical);
+  granular *= mix(1.0, 0.45, tactical);
+  speckle *= mix(1.0, 0.30, tactical);
 
   float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
   float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
@@ -576,6 +585,10 @@ void main() {
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
   terrain_color *= vec3(1.01, 0.99, 0.99);
 
+  float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
+  terrain_color =
+      mix(terrain_color, mix(vec3(terrain_luma), terrain_color, 0.88), tactical);
+
   float wet_surface =
       damp_patch * soil_mix * max(u_moisture_level, environment_wetness());
   terrain_color *= 1.0 - u_moisture_level * 0.06 * (1.0 - rock_mask);
@@ -607,6 +620,7 @@ void main() {
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
                      0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
+  relief_amp *= mix(1.0, 0.55, tactical);
   vec3 relief_offset =
       mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),
           vec3(relief_gradient.x, relief_gradient.y, 0.0) * wall_axis +
