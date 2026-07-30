@@ -26,7 +26,13 @@ const float k_readable_zoom_far = 70.0;
 const float k_readable_pivot = 0.42;
 const float k_readable_contrast_gain = 0.38;
 const float k_readable_saturation_gain = 0.30;
-const float k_readable_rim_gain = 2.20;
+const float k_readable_fill_near = 0.12;
+const float k_readable_fill_far = 0.22;
+const float k_readable_rim_near = 0.015;
+const float k_readable_rim_far = 0.035;
+const float k_readable_wear_far = 0.30;
+const float k_readable_grime_far = 0.20;
+const float k_readable_blood_far = 0.75;
 
 float hash13(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
@@ -184,9 +190,15 @@ vec3 shade_readable_character(
   vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure();
   color += base * local_lighting(world_position, surface_normal);
 
-  float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);
-  float creature_scale = material_id == 6 ? 0.035 : 0.14;
-  color += sky_color * rim * creature_scale * (1.0 + k_readable_rim_gain * zoom);
+  // Skylight fill on the surfaces the sun misses. This lifts the shadowed half of the
+  // figure off the ground the way a real overcast sky does, instead of outlining the
+  // silhouette with a bright edge that reads as a glow.
+  float shadow_side = 1.0 - wrapped_diffuse;
+  color += base * sky_color * fill * shadow_side *
+           mix(k_readable_fill_near, k_readable_fill_far, zoom);
+
+  float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
+  color += sky_color * rim * mix(k_readable_rim_near, k_readable_rim_far, zoom);
 
   if (material_id == 2) {
     vec3 half_vector = normalize(light_dir + view_dir);
@@ -204,13 +216,21 @@ void main() {
   if (u_use_texture) {
     base *= texture(u_texture, v_tex).rgb;
   }
-  base = apply_wear(base, u_material_id, v_color_role, v_pos_local, v_wear_params);
+  float zoom = readable_zoom(v_pos_ws);
+
+  // Grime and fading are close-range storytelling. At tactical range they break the
+  // team-colored cloth into per-pixel noise, so fade them out and keep only blood,
+  // which carries gameplay information about the unit's condition.
+  vec4 readable_wear = v_wear_params;
+  readable_wear.x *= mix(1.0, k_readable_wear_far, zoom);
+  readable_wear.y *= mix(1.0, k_readable_grime_far, zoom);
+  readable_wear.z *= mix(1.0, k_readable_blood_far, zoom);
+  base = apply_wear(base, u_material_id, v_color_role, v_pos_local, readable_wear);
 
   vec3 surface_normal = normalize(v_normal_ws);
   vec3 light_dir = environment_primary_direction();
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
-  float zoom = readable_zoom(v_pos_ws);
   vec3 color =
       shade_readable_character(base, surface_normal, v_pos_ws, u_material_id, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);

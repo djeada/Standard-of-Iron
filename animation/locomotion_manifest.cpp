@@ -8,6 +8,16 @@ namespace Animation {
 
 namespace {
 
+constexpr float k_abs_sine_mean = 0.63662F;
+constexpr float k_torso_lag_phase = 0.06F;
+constexpr float k_shoulder_bob_lag_phase = 0.045F;
+constexpr float k_neck_bob_lag_phase = 0.065F;
+constexpr float k_head_bob_lag_phase = 0.085F;
+constexpr float k_arm_swing_phase_shift = 0.30F;
+constexpr float k_arm_forward_bias = 0.86F;
+constexpr float k_arm_backward_bias = 1.18F;
+constexpr float k_arm_back_lift_ratio = 0.35F;
+
 [[nodiscard]] auto smoothing_alpha(float dt, float tau) noexcept -> float {
   if (dt <= 1.0e-4F) {
     return 1.0F;
@@ -599,13 +609,24 @@ auto resolve_humanoid_locomotion_pose(
                      acceleration_push * 0.04F + turn_abs * 0.04F,
                  0.38F,
                  0.74F);
-  float const vertical_bob =
-      -std::abs(std::sin(cycle_radians)) * profile.vertical_bob * stride_scale;
+  float const bob_direction = 1.0F - 2.0F * run_blend;
+  auto bob_at = [&](float phase_lag) {
+    float const lagged =
+        cycle_radians - phase_lag * 2.0F * std::numbers::pi_v<float>;
+    return (std::abs(std::sin(lagged)) - k_abs_sine_mean) * bob_direction *
+           profile.vertical_bob * stride_scale;
+  };
+  float const vertical_bob = bob_at(0.0F);
+  float const shoulder_bob = bob_at(k_shoulder_bob_lag_phase);
+  float const neck_bob = bob_at(k_neck_bob_lag_phase);
+  float const head_bob = bob_at(k_head_bob_lag_phase);
   float const sway_raw = std::sin(cycle_radians);
+  float const sway_lagged =
+      std::sin(cycle_radians - k_torso_lag_phase * 2.0F * std::numbers::pi_v<float>);
   float const hip_sway = sway_raw * profile.hip_sway * stride_scale;
   float const shoulder_counter_sway =
-      -sway_raw * profile.shoulder_counter_sway * stride_scale;
-  float const shoulder_twist = sway_raw * profile.shoulder_twist * stride_scale;
+      -sway_lagged * profile.shoulder_counter_sway * stride_scale;
+  float const shoulder_twist = sway_lagged * profile.shoulder_twist * stride_scale;
   float const acceleration_lean = acceleration * 0.006F;
   float const braking_sink = braking * 0.010F * locomotion_blend;
   float const forward_lean = profile.forward_lean * stride_scale + acceleration_lean;
@@ -669,11 +690,11 @@ auto resolve_humanoid_locomotion_pose(
 
   sample.pelvis_delta.y += vertical_bob - braking_sink - pelvis_drop;
   sample.shoulder_l_delta.y +=
-      vertical_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
+      shoulder_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
   sample.shoulder_r_delta.y +=
-      vertical_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
-  sample.neck_delta.y += vertical_bob * 0.28F + head_counter_bob * 0.55F;
-  sample.head_delta.y += vertical_bob * 0.18F +
+      shoulder_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
+  sample.neck_delta.y += neck_bob * 0.28F + head_counter_bob * 0.55F;
+  sample.head_delta.y += head_bob * 0.18F +
                          acceleration_push * 0.003F * locomotion_blend +
                          head_counter_bob;
 
@@ -691,24 +712,27 @@ auto resolve_humanoid_locomotion_pose(
   sample.neck_delta.z += forward_lean * 0.78F;
   sample.head_delta.z += forward_lean * 0.68F - braking * 0.004F * locomotion_blend;
 
-  float const left_swing_raw = std::sin(left_phase * 2.0F * std::numbers::pi_v<float>);
-  float const left_arm_swing = std::clamp(left_swing_raw * profile.arm_swing,
-                                          -profile.max_arm_displacement,
-                                          profile.max_arm_displacement) *
-                               stride_scale;
-  sample.hand_l_delta.z -= left_arm_swing;
-  sample.hand_l_delta.y += std::abs(left_arm_swing) * profile.arm_lift_scale;
-  sample.hand_l_delta.x -= left_arm_swing * profile.arm_counter_shift;
-
-  float const right_swing_raw =
-      std::sin(right_phase * 2.0F * std::numbers::pi_v<float>);
-  float const right_arm_swing = std::clamp(right_swing_raw * profile.arm_swing,
-                                           -profile.max_arm_displacement,
-                                           profile.max_arm_displacement) *
-                                stride_scale;
-  sample.hand_r_delta.z -= right_arm_swing;
-  sample.hand_r_delta.y += std::abs(right_arm_swing) * profile.arm_lift_scale;
-  sample.hand_r_delta.x -= right_arm_swing * profile.arm_counter_shift;
+  auto arm_forward_swing = [&](float phase) {
+    float const raw = std::sin((phase - k_arm_swing_phase_shift) * 2.0F *
+                               std::numbers::pi_v<float>);
+    float const bias = (raw >= 0.0F) ? k_arm_forward_bias : k_arm_backward_bias;
+    return std::clamp(raw * bias * profile.arm_swing,
+                      -profile.max_arm_displacement * k_arm_backward_bias,
+                      profile.max_arm_displacement * k_arm_forward_bias) *
+           stride_scale;
+  };
+  auto apply_arm_swing =
+      [&](PoseVec3& hand_delta, float phase, float lateral_sign) {
+        float const forward = arm_forward_swing(phase);
+        float const lift = (forward >= 0.0F)
+                               ? forward
+                               : -forward * k_arm_back_lift_ratio;
+        hand_delta.z += forward;
+        hand_delta.y += lift * profile.arm_lift_scale;
+        hand_delta.x -= lateral_sign * forward * profile.arm_counter_shift;
+      };
+  apply_arm_swing(sample.hand_l_delta, left_phase, -1.0F);
+  apply_arm_swing(sample.hand_r_delta, right_phase, 1.0F);
   sample.hand_l_delta.x += turn_amount * 0.010F * locomotion_blend;
   sample.hand_r_delta.x += turn_amount * 0.010F * locomotion_blend;
   return sample;

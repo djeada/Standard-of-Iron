@@ -65,7 +65,14 @@ mat2 rot2(float a) {
   return mat2(c, -s, s, c);
 }
 
+// See terrain_chunk.frag: suppress only the small-scale ground noise once the camera
+// pulls back, so soldiers are not competing with the surface they stand on.
+float tactical_zoom() {
+  return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
+}
+
 void main() {
+  float tactical = tactical_zoom();
   float moisture = max(u_moisture_level, environment_wetness());
   float biome_forest = float(u_ground_type == 0);
   float biome_dry = float(u_ground_type == 1);
@@ -181,6 +188,10 @@ void main() {
   base_col = mix(gray_level, base_col, grounded_saturation);
   base_col *= vec3(1.025, 0.965, 0.985);
 
+  float ground_luma = dot(base_col, vec3(0.299, 0.587, 0.114));
+  base_col =
+      mix(base_col, mix(vec3(ground_luma), base_col, 0.88), tactical);
+
   float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);
 
@@ -226,12 +237,15 @@ void main() {
                             0.0,
                             1.0);
   float micro_amp = clamp(u_micro_bump_amp, 0.02, 0.28) * mix(0.82, 1.55, relief_mask);
+  micro_amp *= mix(1.0, 0.55, tactical);
   vec3 micro_perturb = normalize(n - (t * g.x + b * g.y) * micro_amp);
   vec3 n_micro =
       normalize(mix(n, micro_perturb, clamp(u_micro_normal_weight, 0.0, 1.0)));
   float jitter_amp = max(0.01, u_albedo_jitter) * (0.65 + u_soil_roughness * 0.6);
   float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
+  jitter *= mix(1.0, 0.35, tactical);
   float speckle = step(0.74, noise21(wuv * 23.0 + vec2(2.0, 5.0)));
+  speckle = mix(speckle, 0.35, tactical);
   float patch_brightness = (broad_breakup - 0.5) * 0.13 +
                            (broad_breakup2 - 0.5) * 0.10 + (patch_noise - 0.5) * 0.06 +
                            (landform - 0.5) * 0.08;

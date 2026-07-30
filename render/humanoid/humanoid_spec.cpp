@@ -180,7 +180,7 @@ make_full_upper_arm_proximal(bool left) noexcept -> Creature::PrimitiveInstance 
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
   p.params.tail_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
-  p.params.radius = HP::UPPER_ARM_R * 1.28F;
+  p.params.radius = HP::UPPER_ARM_R * 1.14F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -195,7 +195,7 @@ make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
   p.params.head_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
   p.params.tail_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.radius = HP::UPPER_ARM_R * 0.98F;
+  p.params.radius = HP::UPPER_ARM_R * 0.86F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -206,7 +206,7 @@ constexpr auto make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstanc
   p.debug_name = left ? "humanoid_full_elbow_l" : "humanoid_full_elbow_r";
   p.shape = Creature::PrimitiveShape::Sphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.radius = HP::UPPER_ARM_R * 1.00F;
+  p.params.radius = HP::UPPER_ARM_R * 0.88F;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -337,7 +337,7 @@ make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
   p.params.tail_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
-  p.params.radius = HP::UPPER_LEG_R * 1.50F;
+  p.params.radius = HP::UPPER_LEG_R * 1.34F;
   p.color_role = ClothDark;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -351,7 +351,7 @@ make_full_thigh_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(left ? HumanoidBone::HipL : HumanoidBone::HipR);
   p.params.head_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
   p.params.tail_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.radius = HP::UPPER_LEG_R * 1.02F;
+  p.params.radius = HP::UPPER_LEG_R * 0.94F;
   p.color_role = ClothDark;
   p.lod_mask = Creature::k_lod_full;
   return p;

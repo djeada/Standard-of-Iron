@@ -357,10 +357,10 @@ auto roman_civilian_pack_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"roman_civilian_pack"};
 
-    QVector3D const roll_l(-tr * 0.82F, y_sh - 0.030F, -tr * 1.30F);
-    QVector3D const roll_r(tr * 0.82F, y_sh - 0.060F, -tr * 1.36F);
+    QVector3D const roll_l(-tr * 1.16F, y_sh + 0.075F, -tr * 2.05F);
+    QVector3D const roll_r(tr * 1.16F, y_sh + 0.045F, -tr * 2.12F);
     builder.add_palette_mesh(get_unit_cylinder(),
-                             cylinder_between(roll_l, roll_r, tr * 0.52F),
+                             cylinder_between(roll_l, roll_r, tr * 0.60F),
                              k_pack_bedroll_slot);
     builder.add_palette_mesh(
         get_unit_sphere(),
@@ -375,7 +375,7 @@ auto roman_civilian_pack_archetype() -> const RenderArchetype& {
       float const sx = static_cast<float>(side);
       builder.add_palette_mesh(
           get_unit_cylinder(),
-          cylinder_between(QVector3D(sx * tr * 0.36F, y_sh + 0.020F, -tr * 1.90F),
+          cylinder_between(QVector3D(sx * tr * 0.36F, y_sh + 0.140F, -tr * 2.40F),
                            QVector3D(sx * tr * 0.36F, y_sh - 0.120F, -tr * 0.80F),
                            tr * 0.060F),
           k_pack_strap_slot);
