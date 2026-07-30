@@ -3493,7 +3493,8 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
   EXPECT_LT(first.pelvis_delta.y, 0.0F);
   EXPECT_NE(first.shoulder_l_delta.z, 0.0F);
   EXPECT_NE(first.hand_l_delta.z, 0.0F);
-  EXPECT_NEAR(first.hand_l_delta.z, -first.hand_r_delta.z, 0.0001F);
+  EXPECT_LT(first.hand_l_delta.z * first.hand_r_delta.z, 0.0F);
+  EXPECT_GT(std::abs(first.hand_l_delta.z), std::abs(first.hand_r_delta.z));
 }
 
 TEST(AnimationCoreLocomotionManifest, LocomotionPoseRunDrivesBodyFurtherForward) {

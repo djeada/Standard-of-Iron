@@ -19,6 +19,10 @@ namespace {
 using FrontMap = std::unordered_map<Engine::Core::EntityID,
                                     std::vector<Engine::Core::FormationContactFront>>;
 
+constexpr float k_target_switch_hysteresis = 0.35F;
+
+constexpr float k_max_reposition_speed = 1.8F;
+
 auto mix_hash(std::uint32_t value) noexcept -> std::uint32_t {
   value ^= value >> 16U;
   value *= 0x7feb352dU;
@@ -289,6 +293,35 @@ auto assignment_for_slot(const Engine::Core::FormationContactComponent* contact,
   return best;
 }
 
+struct RetainedTarget {
+  std::uint16_t slot{0};
+  float root_distance{0.0F};
+};
+
+auto retained_target_slot(const FormationCombat::FormationLayout& opponent_layout,
+                          const FormationCombat::SoldierSlot* attacker_slot,
+                          const Engine::Core::FormationSoldierPresentation* previous,
+                          const SoldierAssignment& assignment,
+                          float spacing) -> RetainedTarget {
+  RetainedTarget result{assignment.pair->target_slot, assignment.pair->root_distance};
+  if (previous == nullptr || attacker_slot == nullptr ||
+      previous->opponent_id != assignment.front->opponent_id ||
+      previous->target_slot == result.slot) {
+    return result;
+  }
+
+  auto const* held = find_live_slot(opponent_layout, previous->target_slot);
+  if (held == nullptr) {
+    return result;
+  }
+  float const held_distance = std::hypot(held->world_x - attacker_slot->world_x,
+                                         held->world_z - attacker_slot->world_z);
+  if (held_distance <= result.root_distance + spacing * k_target_switch_hysteresis) {
+    return {previous->target_slot, held_distance};
+  }
+  return result;
+}
+
 struct LocalContactVector {
   float x{0.0F};
   float z{0.0F};
@@ -410,18 +443,22 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           directive.alive ? assignment_for_slot(contact, previous, original_slot.index)
                           : SoldierAssignment{};
       if (assignment.front != nullptr && assignment.pair != nullptr) {
-        directive.opponent_id = assignment.front->opponent_id;
-        directive.target_slot = assignment.pair->target_slot;
-        directive.engagement_surface_gap = assignment.pair->surface_gap;
-        directive.combat_role = combat_role_for(layout.seed, original_slot.index, true);
-        directive.action = action_for_role(directive.combat_role);
-
         auto* opponent = world.get_entity(assignment.front->opponent_id);
         auto const opponent_layout = opponent != nullptr
                                          ? FormationCombat::resolve_layout(*opponent)
                                          : FormationCombat::FormationLayout{};
-        auto const* target_slot =
-            find_live_slot(opponent_layout, assignment.pair->target_slot);
+        auto const retained = retained_target_slot(
+            opponent_layout, live_slot, previous, assignment, layout.spacing);
+
+        directive.opponent_id = assignment.front->opponent_id;
+        directive.target_slot = retained.slot;
+        directive.engagement_surface_gap =
+            assignment.pair->surface_gap +
+            (retained.root_distance - assignment.pair->root_distance);
+        directive.combat_role = combat_role_for(layout.seed, original_slot.index, true);
+        directive.action = action_for_role(directive.combat_role);
+
+        auto const* target_slot = find_live_slot(opponent_layout, retained.slot);
         auto const* opponent_transform =
             opponent != nullptr
                 ? opponent->get_component<Engine::Core::TransformComponent>()
@@ -526,11 +563,20 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       }
 
       if (previous != nullptr && directive.alive) {
-        float const blend = 1.0F - std::exp(-6.5F * std::max(0.0F, delta_time));
-        directive.local_x =
-            previous->local_x + (directive.local_x - previous->local_x) * blend;
-        directive.local_z =
-            previous->local_z + (directive.local_z - previous->local_z) * blend;
+        float const step_time = std::max(0.0F, delta_time);
+        float const blend = 1.0F - std::exp(-6.5F * step_time);
+        float step_x = (directive.local_x - previous->local_x) * blend;
+        float step_z = (directive.local_z - previous->local_z) * blend;
+
+        float const step_length = std::hypot(step_x, step_z);
+        float const max_step = k_max_reposition_speed * step_time;
+        if (step_length > max_step && step_length > 0.0001F) {
+          float const scale = max_step / step_length;
+          step_x *= scale;
+          step_z *= scale;
+        }
+        directive.local_x = previous->local_x + step_x;
+        directive.local_z = previous->local_z + step_z;
       }
       directives.push_back(directive);
     }

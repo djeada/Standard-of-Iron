@@ -63,10 +63,10 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   case HumanoidHeldPoseKind::CasterChannel: {
 
     float const bob = 0.014F * hold_cycle;
-    sample.right_hand = {0.19F, shoulder_y - 0.15F + bob, 0.44F};
-    sample.left_hand = {-0.19F, shoulder_y - 0.15F - bob, 0.44F};
-    sample.shoulder_r_z_delta = 0.05F;
-    sample.shoulder_l_z_delta = 0.05F;
+    sample.right_hand = {0.145F, shoulder_y - 0.095F + bob, 0.52F};
+    sample.left_hand = {-0.145F, shoulder_y - 0.095F - bob, 0.52F};
+    sample.shoulder_r_z_delta = 0.09F;
+    sample.shoulder_l_z_delta = 0.09F;
     sample.shoulder_r_y_delta = -0.01F;
     sample.shoulder_l_y_delta = -0.01F;
     sample.neck_z_delta = 0.02F;
@@ -78,7 +78,7 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
 
     float const bob = 0.012F * hold_cycle;
     sample.right_hand = {0.31F, shoulder_y - 0.13F, 0.28F};
-    sample.left_hand = {-0.15F, shoulder_y - 0.02F + bob, 0.46F};
+    sample.left_hand = {-0.16F, shoulder_y + 0.055F + bob, 0.44F};
     sample.shoulder_r_x_delta = 0.02F;
     sample.shoulder_r_z_delta = 0.03F;
     sample.shoulder_l_z_delta = 0.07F;

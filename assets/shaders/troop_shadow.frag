@@ -25,21 +25,18 @@ void main() {
   float along = dot(uv, dir);
   float across = dot(uv, tangent);
 
-  float along_scale = 1.15;
-  float across_scale = 0.95;
-
-  float ax = along / along_scale;
-  float ay = across / across_scale;
-
-  float r = length(vec2(ax, ay));
-
   float wobble = 0.04 * sin(uv.x * 5.3) * sin(uv.y * 4.7);
-  r = max(0.0, r + wobble);
+  vec2 elliptic = vec2(along, across) * (1.0 + wobble);
 
-  float gaussian = exp(-r * r * mix(3.0, 1.45, environment_shadow_softness()));
-  float feather = clamp(1.0 - r, 0.0, 1.0);
-  float shadow_intensity = mix(feather, gaussian, 0.7);
-  shadow_intensity = pow(shadow_intensity, 1.35);
+  float softness = environment_shadow_softness();
+
+  vec2 contact_uv = elliptic / vec2(0.58, 0.44);
+  float contact = exp(-dot(contact_uv, contact_uv) * mix(6.2, 4.0, softness));
+
+  vec2 cast_uv = elliptic / vec2(1.18, 0.92);
+  float cast_shadow = exp(-dot(cast_uv, cast_uv) * mix(2.6, 1.6, softness));
+
+  float shadow_intensity = max(contact * 0.82, cast_shadow * 0.26);
 
   float height_fade = clamp(1.0 - max(v_world_pos.y, 0.0) * 0.08, 0.6, 1.0);
   shadow_intensity *= height_fade;

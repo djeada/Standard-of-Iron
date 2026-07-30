@@ -52,6 +52,19 @@ auto melee_reach(const Engine::Core::Entity& entity) noexcept -> float {
   return attack != nullptr ? std::max(0.0F, attack->melee_range) : 1.5F;
 }
 
+auto holds_formation_line(const Engine::Core::Entity& entity) noexcept -> bool {
+  auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
+  if (attack != nullptr && attack->in_melee_lock) {
+    return true;
+  }
+  auto const* contact = entity.get_component<Engine::Core::FormationContactComponent>();
+  return contact != nullptr &&
+         (contact->in_contact ||
+          std::any_of(contact->fronts.begin(),
+                      contact->fronts.end(),
+                      [](auto const& front) { return front.in_contact; }));
+}
+
 auto slot_distance(const SoldierSlot& lhs, const SoldierSlot& rhs) noexcept -> float {
   float const dx = rhs.world_x - lhs.world_x;
   float const dz = rhs.world_z - lhs.world_z;
@@ -243,12 +256,18 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   int const compact_cols = std::max(1, std::min(result.cols, result.live_count));
   int const compact_rows =
       std::max(1, (result.live_count + compact_cols - 1) / compact_cols);
+
+  bool const preserve_stable_slots = holds_formation_line(entity);
+
   int compact_idx = 0;
   for (int stable_idx = 0; stable_idx < result.total_count; ++stable_idx) {
     if (!live_slots[static_cast<std::size_t>(stable_idx)]) {
       continue;
     }
-    auto const slot = resolve_slot(stable_idx, compact_idx, compact_rows, compact_cols);
+    int const layout_idx = preserve_stable_slots ? stable_idx : compact_idx;
+    int const layout_rows = preserve_stable_slots ? result.rows : compact_rows;
+    int const layout_cols = preserve_stable_slots ? result.cols : compact_cols;
+    auto const slot = resolve_slot(stable_idx, layout_idx, layout_rows, layout_cols);
     result.live_slots.push_back(slot);
     result.occupied_slots.push_back(slot);
     ++compact_idx;

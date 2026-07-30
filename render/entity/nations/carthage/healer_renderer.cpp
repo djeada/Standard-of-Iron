@@ -120,7 +120,7 @@ auto dark_mage_fill_role_colors(const HumanoidPalette& palette,
     return 0U;
   }
   QVector3D const robe = Render::GL::Humanoid::saturate_color(
-      palette.cloth * 0.13F + QVector3D(0.044F, 0.038F, 0.076F));
+      palette.cloth * 0.42F + QVector3D(0.055F, 0.048F, 0.088F));
   out[k_mage_robe_slot] = robe;
   out[k_mage_robe_lit_slot] = Render::GL::Humanoid::saturate_color(
       robe * 2.30F + QVector3D(0.035F, 0.028F, 0.070F));
@@ -164,10 +164,10 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
     float const chest_d = tr * 0.70F;
     float const waist_w = tr * 1.06F;
     float const waist_d = tr * 0.77F;
-    float const skirt_mid_w = tr * 1.36F;
-    float const skirt_mid_d = tr * 1.02F;
-    float const hem_w = tr * 1.74F;
-    float const hem_d = tr * 1.32F;
+    float const skirt_mid_w = tr * 1.58F;
+    float const skirt_mid_d = tr * 1.18F;
+    float const hem_w = tr * 2.02F;
+    float const hem_d = tr * 1.56F;
 
     RenderArchetypeBuilder builder{"carthage_dark_mage_robe"};
 
@@ -251,14 +251,20 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
 
     for (int side = -1; side <= 1; side += 2) {
       float const sx = static_cast<float>(side) * shoulder_x;
-      for (int step = 0; step < 5; ++step) {
-        float const t = static_cast<float>(step) / 4.0F;
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(sx * 0.94F, y_top - 0.008F, 0.0F),
+                            QVector3D(0.100F, 0.090F, 0.092F)),
+          k_mage_robe_slot);
+      for (int step = 0; step < 6; ++step) {
+        float const t = static_cast<float>(step) / 5.0F;
         builder.add_palette_mesh(
             get_unit_sphere(),
             local_scale_model(
-                QVector3D(sx * (1.00F + 0.07F * t), y_top - 0.10F - t * 0.18F, -0.006F),
-                QVector3D(0.038F + 0.013F * t, 0.046F, 0.034F + 0.011F * t)),
-            (step == 4) ? k_mage_robe_lit_slot : k_mage_robe_slot);
+                QVector3D(
+                    sx * (0.98F + 0.09F * t), y_top - 0.085F - t * 0.20F, -0.004F),
+                QVector3D(0.084F - 0.020F * t, 0.052F, 0.076F - 0.018F * t)),
+            (step == 5) ? k_mage_robe_lit_slot : k_mage_robe_slot);
       }
     }
 

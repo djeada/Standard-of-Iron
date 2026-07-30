@@ -1,10 +1,12 @@
 #include "elephant_manifest.h"
 
+#include <QDebug>
 #include <QMatrix4x4>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <span>
@@ -46,6 +48,17 @@ constexpr float k_elephant_front_thigh_tail_z = 0.01F;
 constexpr float k_elephant_rear_thigh_tail_z = 0.04F;
 constexpr float k_elephant_thigh_thickness_scale = 2.0F;
 constexpr float k_elephant_hoof_thickness_scale = 0.8F;
+
+constexpr float k_elephant_eye_side_bias = 0.72F;
+constexpr float k_elephant_eye_height_bias = 0.18F;
+constexpr float k_elephant_eye_forward_bias = 0.82F;
+constexpr float k_elephant_eye_radius_x_scale = 0.12F;
+constexpr float k_elephant_eye_radius_y_scale = 0.095F;
+constexpr float k_elephant_eye_radius_z_scale = 0.075F;
+
+constexpr float k_elephant_eye_surface_push = 0.45F;
+
+constexpr float k_elephant_eye_side_epsilon = 1.0e-3F;
 
 struct ElephantClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -202,8 +215,6 @@ auto build_elephant_whole_nodes()
 
   float const head_front_z = head.center.z() + head.radii.z();
   float const trunk_base_z = bl * 1.16F;
-  float const eye_radius_z = hl * 0.035F;
-  float const head_eye_z = head_front_z - 3.5F * eye_radius_z;
 
   EllipsoidNode trunk_bridge;
   trunk_bridge.center = QVector3D(0.0F, bh * 0.02F, head_front_z - hl * 0.045F);
@@ -219,11 +230,27 @@ auto build_elephant_whole_nodes()
 
   auto add_eye = [&](float side) {
     EllipsoidNode eye;
-    eye.center = QVector3D(side * hw * 0.34F, bh * 0.24F, head_eye_z);
-    eye.radii = QVector3D(hw * 0.055F, hh * 0.055F, eye_radius_z);
-    eye.ring_count = 4U;
-    eye.ring_vertices = 6U;
-    nodes.push_back({"elephant.eye",
+
+    eye.radii = QVector3D(head.radii.x() * k_elephant_eye_radius_x_scale,
+                          head.radii.y() * k_elephant_eye_radius_y_scale,
+                          head.radii.z() * k_elephant_eye_radius_z_scale);
+
+    QVector3D const direction = QVector3D(side * k_elephant_eye_side_bias,
+                                          k_elephant_eye_height_bias,
+                                          k_elephant_eye_forward_bias)
+                                    .normalized();
+
+    eye.center = head.center + QVector3D(head.radii.x() * direction.x(),
+                                         head.radii.y() * direction.y(),
+                                         head.radii.z() * direction.z());
+
+    float const surface_push = std::max({eye.radii.x(), eye.radii.y(), eye.radii.z()}) *
+                               k_elephant_eye_surface_push;
+    eye.center += direction * surface_push;
+
+    eye.ring_count = 5U;
+    eye.ring_vertices = 8U;
+    nodes.push_back({side > 0.0F ? "elephant.eye.right" : "elephant.eye.left",
                      static_cast<BoneIndex>(ElephantBone::Head),
                      k_role_eye,
                      k_lod_all,
@@ -432,6 +459,37 @@ const auto k_elephant_whole_nodes = build_elephant_whole_nodes();
 const std::array<std::string_view, 1> k_elephant_full_excluded_prefixes{
     "elephant.leg."};
 
+void log_source_mesh_bounds(const Render::Creature::Quadruped::MeshNode& node) {
+  using Render::Creature::Quadruped::CustomMeshNode;
+
+  auto const* mesh = std::get_if<CustomMeshNode>(&node.data);
+  if (mesh == nullptr || mesh->vertices.empty()) {
+    return;
+  }
+
+  QVector3D minimum(std::numeric_limits<float>::max(),
+                    std::numeric_limits<float>::max(),
+                    std::numeric_limits<float>::max());
+  QVector3D maximum(std::numeric_limits<float>::lowest(),
+                    std::numeric_limits<float>::lowest(),
+                    std::numeric_limits<float>::lowest());
+  for (auto const& vertex : mesh->vertices) {
+    QVector3D const point(vertex.position[0], vertex.position[1], vertex.position[2]);
+    minimum.setX(std::min(minimum.x(), point.x()));
+    minimum.setY(std::min(minimum.y(), point.y()));
+    minimum.setZ(std::min(minimum.z(), point.z()));
+    maximum.setX(std::max(maximum.x(), point.x()));
+    maximum.setY(std::max(maximum.y(), point.y()));
+    maximum.setZ(std::max(maximum.z(), point.z()));
+  }
+
+  qInfo() << "elephant source part"
+          << QString::fromUtf8(node.debug_name.data(),
+                               static_cast<int>(node.debug_name.size()))
+          << "vertices:" << mesh->vertices.size() << "min:" << minimum
+          << "max:" << maximum << "center:" << (minimum + maximum) * 0.5F;
+}
+
 auto build_elephant_production_nodes()
     -> std::vector<Render::Creature::Quadruped::MeshNode> {
   using Render::Creature::Quadruped::CustomMeshNode;
@@ -441,18 +499,56 @@ auto build_elephant_production_nodes()
   std::vector<MeshNode> nodes(source_nodes.begin(), source_nodes.end());
   auto const bind = elephant_source_bind_palette();
 
+  if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ELEPHANT_SOURCE_BOUNDS")) {
+    for (auto const& source : source_nodes) {
+      log_source_mesh_bounds(source);
+    }
+  }
+
   for (auto const& source : source_nodes) {
     if (source.debug_name != "elephant.production.eyes" ||
         source.anchor_bone >= bind.size()) {
       continue;
     }
     auto const* source_mesh = std::get_if<CustomMeshNode>(&source.data);
-    if (source_mesh == nullptr) {
+    if (source_mesh == nullptr || source_mesh->vertices.empty()) {
       continue;
     }
 
     QMatrix4x4 const root_from_mesh = bind[source.anchor_bone];
     QMatrix4x4 const mesh_from_root = root_from_mesh.inverted();
+    auto rest_position = [&](auto const& vertex) {
+      return root_from_mesh.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+    };
+
+    bool has_front_left = false;
+    bool has_front_right = false;
+    float max_x = std::numeric_limits<float>::lowest();
+    for (auto const& vertex : source_mesh->vertices) {
+      QVector3D const rest = rest_position(vertex);
+      if (rest.z() > 0.0F) {
+        if (rest.x() < -k_elephant_eye_side_epsilon) {
+          has_front_left = true;
+        }
+        if (rest.x() > k_elephant_eye_side_epsilon) {
+          has_front_right = true;
+        }
+      }
+      max_x = std::max(max_x, rest.x());
+    }
+
+    if (has_front_left && has_front_right) {
+      break;
+    }
+
+    bool const source_is_right = !has_front_left;
+    auto belongs_to_source_side = [&](unsigned int vertex_index) {
+      float const rest_x = rest_position(source_mesh->vertices[vertex_index]).x();
+      return source_is_right ? rest_x > k_elephant_eye_side_epsilon
+                             : rest_x < -k_elephant_eye_side_epsilon;
+    };
+
     CustomMeshNode mirrored;
     std::vector<int> mirrored_index(source_mesh->vertices.size(), -1);
     auto append_mirrored_vertex = [&](unsigned int source_index) {
@@ -462,8 +558,7 @@ auto build_elephant_production_nodes()
       }
 
       auto vertex = source_mesh->vertices[source_index];
-      QVector3D rest = root_from_mesh.map(
-          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+      QVector3D rest = rest_position(vertex);
       rest.setX(-rest.x());
       QVector3D const local = mesh_from_root.map(rest);
       vertex.position = {local.x(), local.y(), local.z()};
@@ -484,14 +579,8 @@ auto build_elephant_production_nodes()
       unsigned int const a = source_mesh->indices[index];
       unsigned int const b = source_mesh->indices[index + 1U];
       unsigned int const c = source_mesh->indices[index + 2U];
-      auto is_front_eye_vertex = [&](unsigned int vertex_index) {
-        auto const& vertex = source_mesh->vertices[vertex_index];
-        QVector3D const rest = root_from_mesh.map(
-            QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
-        return rest.z() > 0.0F;
-      };
-      if (!is_front_eye_vertex(a) || !is_front_eye_vertex(b) ||
-          !is_front_eye_vertex(c)) {
+      if (!belongs_to_source_side(a) || !belongs_to_source_side(b) ||
+          !belongs_to_source_side(c)) {
         continue;
       }
 
