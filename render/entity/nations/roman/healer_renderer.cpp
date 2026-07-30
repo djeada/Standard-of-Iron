@@ -311,9 +311,8 @@ auto senator_laurel_archetype() -> const RenderArchetype& {
 
     constexpr float k_ring_y = 0.132F;
     float const ring_r =
-        std::sqrt(std::max(0.0F,
-                           k_head_silhouette_r * k_head_silhouette_r -
-                               k_ring_y * k_ring_y)) *
+        std::sqrt(std::max(
+            0.0F, k_head_silhouette_r * k_head_silhouette_r - k_ring_y * k_ring_y)) *
         1.03F;
 
     constexpr int k_leaves = 16;

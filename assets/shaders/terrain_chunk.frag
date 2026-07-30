@@ -197,9 +197,6 @@ vec3 heightmap_normal(vec2 uv) {
   return normalize(vec3(-dhdx, 1.0, -dhdz));
 }
 
-// Terrain detail and soldiers occupy the same spatial frequency once the camera pulls
-// back, so the ground competes with the units instead of sitting behind them. This
-// fades only the small-scale noise; the large grass, soil, road and rock shapes stay.
 float tactical_zoom() {
   return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
 }
@@ -589,9 +586,8 @@ void main() {
   terrain_color *= vec3(1.01, 0.99, 0.99);
 
   float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
-  terrain_color = mix(terrain_color,
-                      mix(vec3(terrain_luma), terrain_color, 0.88),
-                      tactical);
+  terrain_color =
+      mix(terrain_color, mix(vec3(terrain_luma), terrain_color, 0.88), tactical);
 
   float wet_surface =
       damp_patch * soil_mix * max(u_moisture_level, environment_wetness());

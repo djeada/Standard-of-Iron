@@ -235,19 +235,17 @@ auto build_elephant_whole_nodes()
                           head.radii.y() * k_elephant_eye_radius_y_scale,
                           head.radii.z() * k_elephant_eye_radius_z_scale);
 
-    QVector3D const direction =
-        QVector3D(side * k_elephant_eye_side_bias,
-                  k_elephant_eye_height_bias,
-                  k_elephant_eye_forward_bias)
-            .normalized();
+    QVector3D const direction = QVector3D(side * k_elephant_eye_side_bias,
+                                          k_elephant_eye_height_bias,
+                                          k_elephant_eye_forward_bias)
+                                    .normalized();
 
     eye.center = head.center + QVector3D(head.radii.x() * direction.x(),
                                          head.radii.y() * direction.y(),
                                          head.radii.z() * direction.z());
 
-    float const surface_push =
-        std::max({eye.radii.x(), eye.radii.y(), eye.radii.z()}) *
-        k_elephant_eye_surface_push;
+    float const surface_push = std::max({eye.radii.x(), eye.radii.y(), eye.radii.z()}) *
+                               k_elephant_eye_surface_push;
     eye.center += direction * surface_push;
 
     eye.ring_count = 5U;
@@ -524,19 +522,27 @@ auto build_elephant_production_nodes()
           QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
     };
 
-    float min_x = std::numeric_limits<float>::max();
+    bool has_front_left = false;
+    bool has_front_right = false;
     float max_x = std::numeric_limits<float>::lowest();
     for (auto const& vertex : source_mesh->vertices) {
-      float const rest_x = rest_position(vertex).x();
-      min_x = std::min(min_x, rest_x);
-      max_x = std::max(max_x, rest_x);
+      QVector3D const rest = rest_position(vertex);
+      if (rest.z() > 0.0F) {
+        if (rest.x() < -k_elephant_eye_side_epsilon) {
+          has_front_left = true;
+        }
+        if (rest.x() > k_elephant_eye_side_epsilon) {
+          has_front_right = true;
+        }
+      }
+      max_x = std::max(max_x, rest.x());
     }
 
-    if (min_x < -k_elephant_eye_side_epsilon && max_x > k_elephant_eye_side_epsilon) {
+    if (has_front_left && has_front_right) {
       break;
     }
 
-    bool const source_is_right = max_x > 0.0F;
+    bool const source_is_right = !has_front_left;
     auto belongs_to_source_side = [&](unsigned int vertex_index) {
       float const rest_x = rest_position(source_mesh->vertices[vertex_index]).x();
       return source_is_right ? rest_x > k_elephant_eye_side_epsilon

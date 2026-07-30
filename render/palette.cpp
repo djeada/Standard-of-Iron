@@ -15,10 +15,6 @@ using Render::Geom::clamp_vec_01;
 
 namespace {
 
-// A team color chosen purely for identity can land anywhere in the gamut, and the
-// dark/desaturated end of that range sits at the same lightness as grass, soil or
-// rock. Remapping the hue into a bounded lightness/chroma window keeps the team
-// readable against every biome without changing which color the player picked.
 constexpr float k_cloth_min_lightness = 0.52F;
 constexpr float k_cloth_max_lightness = 0.72F;
 constexpr float k_cloth_min_chroma = 0.12F;
@@ -91,15 +87,12 @@ auto oklch_to_rgb(const Oklch& color) -> QVector3D {
                                 linear_to_srgb(std::max(b, 0.0F))));
 }
 
-// Preserves the hue the player picked, constrains only how light and how saturated
-// the cloth is allowed to be.
 auto make_readable_team_cloth(const QVector3D& team_tint) -> QVector3D {
   Oklch color = rgb_to_oklch(team_tint);
   color.lightness =
       std::clamp(color.lightness, k_cloth_min_lightness, k_cloth_max_lightness);
   if (color.chroma > k_achromatic_epsilon) {
-    // A neutral team color has no hue to preserve; forcing chroma onto it would
-    // invent one, so leave true grays alone and only bound their lightness.
+
     color.chroma = std::clamp(color.chroma, k_cloth_min_chroma, k_cloth_max_chroma);
   }
   return oklch_to_rgb(color);
@@ -151,9 +144,6 @@ auto make_humanoid_palette(const QVector3D& team_tint,
     return clamp_vec_01(tinted);
   }();
 
-  // Leather and metal stay neutral on purpose. Tinting them toward the team hue
-  // pushed the whole soldier into one value band; keeping them dark-brown and
-  // bright-gray gives the figure internal contrast that survives any background.
   float const leather_var = (hash_01(seed ^ 0x1234U) - 0.5F) * 0.06F;
   QVector3D const neutral_leather(0.24F, 0.15F, 0.09F);
   p.leather = clamp_vec_01(neutral_leather * (1.0F + leather_var));

@@ -261,7 +261,8 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
         builder.add_palette_mesh(
             get_unit_sphere(),
             local_scale_model(
-                QVector3D(sx * (0.98F + 0.09F * t), y_top - 0.085F - t * 0.20F, -0.004F),
+                QVector3D(
+                    sx * (0.98F + 0.09F * t), y_top - 0.085F - t * 0.20F, -0.004F),
                 QVector3D(0.084F - 0.020F * t, 0.052F, 0.076F - 0.018F * t)),
             (step == 5) ? k_mage_robe_lit_slot : k_mage_robe_slot);
       }

@@ -190,9 +190,6 @@ vec3 shade_readable_character(
   vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure();
   color += base * local_lighting(world_position, surface_normal);
 
-  // Skylight fill on the surfaces the sun misses. This lifts the shadowed half of the
-  // figure off the ground the way a real overcast sky does, instead of outlining the
-  // silhouette with a bright edge that reads as a glow.
   float shadow_side = 1.0 - wrapped_diffuse;
   color += base * sky_color * fill * shadow_side *
            mix(k_readable_fill_near, k_readable_fill_far, zoom);
@@ -218,9 +215,6 @@ void main() {
   }
   float zoom = readable_zoom(v_pos_ws);
 
-  // Grime and fading are close-range storytelling. At tactical range they break the
-  // team-colored cloth into per-pixel noise, so fade them out and keep only blood,
-  // which carries gameplay information about the unit's condition.
   vec4 readable_wear = v_wear_params;
   readable_wear.x *= mix(1.0, k_readable_wear_far, zoom);
   readable_wear.y *= mix(1.0, k_readable_grime_far, zoom);

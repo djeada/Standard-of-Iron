@@ -65,8 +65,6 @@ mat2 rot2(float a) {
   return mat2(c, -s, s, c);
 }
 
-// See terrain_chunk.frag: suppress only the small-scale ground noise once the camera
-// pulls back, so soldiers are not competing with the surface they stand on.
 float tactical_zoom() {
   return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
 }
@@ -189,8 +187,7 @@ void main() {
   base_col *= vec3(1.025, 0.965, 0.985);
 
   float ground_luma = dot(base_col, vec3(0.299, 0.587, 0.114));
-  base_col =
-      mix(base_col, mix(vec3(ground_luma), base_col, 0.88), tactical);
+  base_col = mix(base_col, mix(vec3(ground_luma), base_col, 0.88), tactical);
 
   float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);

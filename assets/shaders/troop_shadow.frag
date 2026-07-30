@@ -30,9 +30,6 @@ void main() {
 
   float softness = environment_shadow_softness();
 
-  // Two lobes instead of one broad ellipse. The tight core anchors the figure to the
-  // ground and is what makes it readable against busy terrain; the wide lobe is only
-  // the weak directional falloff. A single soft ellipse gave presence but no anchor.
   vec2 contact_uv = elliptic / vec2(0.58, 0.44);
   float contact = exp(-dot(contact_uv, contact_uv) * mix(6.2, 4.0, softness));
 

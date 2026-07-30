@@ -611,8 +611,7 @@ auto resolve_humanoid_locomotion_pose(
                  0.74F);
   float const bob_direction = 1.0F - 2.0F * run_blend;
   auto bob_at = [&](float phase_lag) {
-    float const lagged =
-        cycle_radians - phase_lag * 2.0F * std::numbers::pi_v<float>;
+    float const lagged = cycle_radians - phase_lag * 2.0F * std::numbers::pi_v<float>;
     return (std::abs(std::sin(lagged)) - k_abs_sine_mean) * bob_direction *
            profile.vertical_bob * stride_scale;
   };
@@ -713,24 +712,21 @@ auto resolve_humanoid_locomotion_pose(
   sample.head_delta.z += forward_lean * 0.68F - braking * 0.004F * locomotion_blend;
 
   auto arm_forward_swing = [&](float phase) {
-    float const raw = std::sin((phase - k_arm_swing_phase_shift) * 2.0F *
-                               std::numbers::pi_v<float>);
+    float const raw =
+        std::sin((phase - k_arm_swing_phase_shift) * 2.0F * std::numbers::pi_v<float>);
     float const bias = (raw >= 0.0F) ? k_arm_forward_bias : k_arm_backward_bias;
     return std::clamp(raw * bias * profile.arm_swing,
                       -profile.max_arm_displacement * k_arm_backward_bias,
                       profile.max_arm_displacement * k_arm_forward_bias) *
            stride_scale;
   };
-  auto apply_arm_swing =
-      [&](PoseVec3& hand_delta, float phase, float lateral_sign) {
-        float const forward = arm_forward_swing(phase);
-        float const lift = (forward >= 0.0F)
-                               ? forward
-                               : -forward * k_arm_back_lift_ratio;
-        hand_delta.z += forward;
-        hand_delta.y += lift * profile.arm_lift_scale;
-        hand_delta.x -= lateral_sign * forward * profile.arm_counter_shift;
-      };
+  auto apply_arm_swing = [&](PoseVec3& hand_delta, float phase, float lateral_sign) {
+    float const forward = arm_forward_swing(phase);
+    float const lift = (forward >= 0.0F) ? forward : -forward * k_arm_back_lift_ratio;
+    hand_delta.z += forward;
+    hand_delta.y += lift * profile.arm_lift_scale;
+    hand_delta.x -= lateral_sign * forward * profile.arm_counter_shift;
+  };
   apply_arm_swing(sample.hand_l_delta, left_phase, -1.0F);
   apply_arm_swing(sample.hand_r_delta, right_phase, 1.0F);
   sample.hand_l_delta.x += turn_amount * 0.010F * locomotion_blend;
