@@ -8,6 +8,8 @@
 #include <optional>
 #include <string>
 
+#include "../systems/nation_id.h"
+
 namespace Game::Units {
 
 enum class TroopType {
@@ -207,6 +209,37 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
   default:
     return false;
   }
+}
+
+[[nodiscard]] inline auto commander_troop_nation(TroopType type) noexcept
+    -> std::optional<Game::Systems::NationID> {
+  switch (type) {
+  case TroopType::RomanLegionOrganizer:
+  case TroopType::RomanVeteranConsul:
+  case TroopType::RomanFieldCommander:
+    return Game::Systems::NationID::RomanRepublic;
+  case TroopType::CarthageMercenaryBroker:
+  case TroopType::CarthageCavalryPatron:
+  case TroopType::CarthageElephantMaster:
+    return Game::Systems::NationID::Carthage;
+  default:
+    return std::nullopt;
+  }
+}
+
+[[nodiscard]] inline auto default_commander_troop_for_nation(
+    Game::Systems::NationID nation) noexcept -> TroopType {
+  if (nation == Game::Systems::NationID::Carthage) {
+    return TroopType::CarthageElephantMaster;
+  }
+  return TroopType::RomanVeteranConsul;
+}
+
+[[nodiscard]] inline auto
+default_commander_troop_for_nation(const QString& nation) -> QString {
+  Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
+  Game::Systems::try_parse_nation_id(nation, nation_id);
+  return troop_typeToQString(default_commander_troop_for_nation(nation_id));
 }
 
 } // namespace Game::Units

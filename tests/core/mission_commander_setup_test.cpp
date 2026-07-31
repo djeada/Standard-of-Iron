@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "app/core/mission_commander_setup.h"
+#include "game/units/commander_catalog.h"
+#include "game/units/troop_type.h"
 
 TEST(MissionCommanderSetupTest, FallsBackToHannibalForCarthage) {
   EXPECT_EQ(App::Core::resolve_commander_troop("carthage", std::nullopt),
@@ -69,4 +71,23 @@ TEST(MissionCommanderSetupTest,
   EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::World);
   EXPECT_FLOAT_EQ(resolved.position.x, 34.8333321F);
   EXPECT_FLOAT_EQ(resolved.position.z, 58.8333321F);
+}
+
+TEST(MissionCommanderSetupTest, CommanderNationLookupMatchesTheCatalog) {
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    const auto nation = Game::Units::commander_troop_nation(definition.troop_type);
+    ASSERT_TRUE(nation.has_value())
+        << "catalog commander " << definition.id << " has no nation in troop_type.h";
+    EXPECT_EQ(*nation, definition.nation_id) << "nation drift for " << definition.id;
+  }
+}
+
+TEST(MissionCommanderSetupTest, NationDefaultsResolveToCatalogCommanders) {
+  for (const auto nation :
+       {Game::Systems::NationID::RomanRepublic, Game::Systems::NationID::Carthage}) {
+    const auto troop = Game::Units::default_commander_troop_for_nation(nation);
+    const auto* definition = Game::Units::commander_definition(troop);
+    ASSERT_NE(definition, nullptr);
+    EXPECT_EQ(definition->nation_id, nation);
+  }
 }

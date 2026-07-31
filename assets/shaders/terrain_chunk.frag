@@ -45,7 +45,6 @@ uniform float u_height_tex_to_world;
 uniform float u_screen_toe_mul;
 uniform float u_screen_toe_clamp;
 uniform vec3 u_camera_pos;
-uniform vec3 u_fog_color;
 uniform float u_fog_start;
 uniform float u_fog_end;
 uniform int u_has_visibility;
@@ -198,7 +197,7 @@ vec3 heightmap_normal(vec2 uv) {
 }
 
 float tactical_zoom() {
-  return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
+  return smoothstep(58.0, 115.0, length(u_camera_pos - v_world_pos));
 }
 
 void main() {
@@ -309,9 +308,9 @@ void main() {
   float speckle =
       gradient_fbm(world_coord * speck_frequency + vec2(-63.0, 24.0)) * speck_fade;
 
-  surface_grain *= mix(1.0, 0.35, tactical);
-  granular *= mix(1.0, 0.45, tactical);
-  speckle *= mix(1.0, 0.30, tactical);
+  surface_grain *= mix(1.0, 0.62, tactical);
+  granular *= mix(1.0, 0.68, tactical);
+  speckle *= mix(1.0, 0.58, tactical);
 
   float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
   float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
@@ -587,7 +586,7 @@ void main() {
 
   float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
   terrain_color =
-      mix(terrain_color, mix(vec3(terrain_luma), terrain_color, 0.88), tactical);
+      mix(terrain_color, mix(vec3(terrain_luma), terrain_color, 0.94), tactical);
 
   float wet_surface =
       damp_patch * soil_mix * max(u_moisture_level, environment_wetness());
@@ -620,7 +619,7 @@ void main() {
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
                      0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
-  relief_amp *= mix(1.0, 0.55, tactical);
+  relief_amp *= mix(1.0, 0.78, tactical);
   vec3 relief_offset =
       mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),
           vec3(relief_gradient.x, relief_gradient.y, 0.0) * wall_axis +
@@ -668,11 +667,9 @@ void main() {
     }
   }
   lit_color *= visibility_factor;
-  float distance_fog =
-      smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.20, 0.88, 1.0 - abs(view_dir.y));
-  float fog_amount = clamp(distance_fog * (0.72 + 0.60 * horizon_fog), 0.0, 1.0);
-  fog_amount = max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+  float fog_amount = atmospheric_fog_amount(
+      view_distance, u_fog_start, u_fog_end, 0.72, 0.60 * horizon_fog);
   lit_color = mix(lit_color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(clamp(lit_color, 0.0, 1.0), 1.0);

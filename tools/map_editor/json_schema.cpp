@@ -198,6 +198,16 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
                                         "Road surface variant.",
                                         QStringLiteral("default")));
   }
+  if (sub_type == QStringLiteral("road") || sub_type == QStringLiteral("river") ||
+      sub_type.isEmpty()) {
+    schema.fields.append(
+        optional_field("waypoints",
+                       "[[x, z], ...]",
+                       "none",
+                       "Intermediate points; the runtime walks start, every "
+                       "waypoint, then end as one chain of segments.",
+                       QJsonArray{QJsonArray{0, 0}}));
+  }
   if (sub_type == QStringLiteral("wall") || sub_type.isEmpty()) {
     schema.fields.append(
         optional_field("player_id", "integer", "0", "Owning player; 0 is neutral.", 0));

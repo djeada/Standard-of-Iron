@@ -14,7 +14,6 @@ uniform int u_has_visibility;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
 uniform vec3 u_camera_pos;
-uniform vec3 u_fog_color;
 uniform float u_fog_start;
 uniform float u_fog_end;
 
@@ -195,8 +194,7 @@ void main() {
 
   float view_distance = length(u_camera_pos - world_pos);
   float fog_amount =
-      smoothstep(u_fog_start, max(u_fog_start + 0.001, u_fog_end), view_distance);
-  fog_amount = max(fog_amount, 1.0 - exp(-environment_fog_density() * view_distance));
+      atmospheric_fog_amount(view_distance, u_fog_start, u_fog_end, 1.0, 0.0);
   color = mix(color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(saturate(color), 1.0);
