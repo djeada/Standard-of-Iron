@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "map_json_keys.h"
+
 namespace MapEditor::ElementOps {
 
 namespace {
@@ -16,6 +18,29 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 
 auto round_cell(float value) -> float {
   return std::round(value);
+}
+
+auto translated_entrances(const QJsonArray& entrances,
+                          float dx,
+                          float dz) -> QJsonArray {
+  QJsonArray moved;
+  for (const QJsonValue& value : entrances) {
+    if (!value.isObject()) {
+      moved.append(value);
+      continue;
+    }
+    QJsonObject entrance = value.toObject();
+    if (entrance.contains(MapJsonKeys::x)) {
+      entrance[MapJsonKeys::x] =
+          entrance.value(MapJsonKeys::x).toDouble() + static_cast<double>(dx);
+    }
+    if (entrance.contains(MapJsonKeys::z)) {
+      entrance[MapJsonKeys::z] =
+          entrance.value(MapJsonKeys::z).toDouble() + static_cast<double>(dz);
+    }
+    moved.append(entrance);
+  }
+  return moved;
 }
 
 } // namespace
@@ -131,6 +156,16 @@ auto translated(const ElementSnapshot& snap, const QPointF& delta) -> ElementSna
                           const QVector2D shift(dx, dz);
                           e.start += shift;
                           e.end += shift;
+                          for (QPointF& waypoint : e.waypoints) {
+                            waypoint += QPointF(static_cast<double>(dx),
+                                                static_cast<double>(dz));
+                          }
+                          return ElementSnapshot{e};
+                        },
+                        [&](TerrainElement e) {
+                          e.x += dx;
+                          e.z += dz;
+                          e.entrances = translated_entrances(e.entrances, dx, dz);
                           return ElementSnapshot{e};
                         },
                         [&](auto e) {
@@ -155,8 +190,22 @@ auto snapped_to_grid(const ElementSnapshot& snap) -> ElementSnapshot {
       Overloaded{
           [](std::monostate) { return ElementSnapshot{}; },
           [](LinearElement e) {
+            const QVector2D shift(round_cell(e.start.x()) - e.start.x(),
+                                  round_cell(e.start.y()) - e.start.y());
             e.start = QVector2D(round_cell(e.start.x()), round_cell(e.start.y()));
             e.end = QVector2D(round_cell(e.end.x()), round_cell(e.end.y()));
+            for (QPointF& waypoint : e.waypoints) {
+              waypoint += QPointF(static_cast<double>(shift.x()),
+                                  static_cast<double>(shift.y()));
+            }
+            return ElementSnapshot{e};
+          },
+          [](TerrainElement e) {
+            const float dx = round_cell(e.x) - e.x;
+            const float dz = round_cell(e.z) - e.z;
+            e.x += dx;
+            e.z += dz;
+            e.entrances = translated_entrances(e.entrances, dx, dz);
             return ElementSnapshot{e};
           },
           [](auto e) {

@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QSignalBlocker>
+#include <QSpinBox>
 #include <QSplitter>
 #include <QVBoxLayout>
 
@@ -23,9 +24,11 @@ JsonEditDialog::JsonEditDialog(const QString& title,
                                const QJsonObject& json,
                                bool enable_hill_projection,
                                JsonSchema schema,
-                               QWidget* parent)
+                               QWidget* parent,
+                               HillProjection::MapContext map_context)
     : QDialog(parent)
     , m_schema(std::move(schema))
+    , m_map_context(map_context)
     , m_enable_hill_projection(enable_hill_projection) {
   setup_ui(title, json);
 }
@@ -49,6 +52,7 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
 
   QJsonDocument const doc(json);
   m_editor->setPlainText(doc.toJson(QJsonDocument::Indented));
+  m_opening_json = json;
   m_model_json = json;
   m_result = json;
 
@@ -79,6 +83,7 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     } else {
       m_projection = new HillProjectionWidget(projection_panel);
     }
+    m_projection->set_map_context(m_map_context);
 
     auto* marker_row = new QWidget(projection_panel);
     auto* marker_layout = new QHBoxLayout(marker_row);
@@ -114,6 +119,34 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     }
 
     marker_layout->addStretch(1);
+
+    marker_layout->addWidget(new QLabel("Brush:", marker_row));
+    auto* brush_spin = new QSpinBox(marker_row);
+    brush_spin->setRange(1, 12);
+    brush_spin->setValue(m_projection->brush_size());
+    brush_spin->setSuffix(" cells");
+    brush_spin->setToolTip(
+        "Width of the paint stroke in cells; drag across the grid to paint a whole "
+        "run at once");
+    marker_layout->addWidget(brush_spin);
+    connect(brush_spin, &QSpinBox::valueChanged, this, [this](int value) {
+      if (m_projection != nullptr) {
+        m_projection->set_brush_size(value);
+      }
+    });
+
+    if (entrance_idx >= 0) {
+      m_clear_entrances_button = new QPushButton("Clear Entrances", marker_row);
+      m_clear_entrances_button->setToolTip(
+          "Drop every entrance from this hill; paint new ones on the outlined edge "
+          "cells");
+      marker_layout->addWidget(m_clear_entrances_button);
+      connect(m_clear_entrances_button,
+              &QPushButton::clicked,
+              this,
+              &JsonEditDialog::clear_entrances);
+    }
+
     projection_layout->addWidget(marker_row);
 
     m_projection_hint_label = new QLabel(projection_panel);
@@ -144,19 +177,35 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
             &TerrainProjectionWidget::projection_changed,
             this,
             &JsonEditDialog::on_projection_entrances_changed);
+    connect(m_projection,
+            &TerrainProjectionWidget::entrance_rejected,
+            this,
+            [this](const QString& reason) {
+              m_projection_warning = reason;
+              refresh_projection_hint();
+            });
   }
 
   auto* button_layout = new QHBoxLayout();
+  m_restore_button = new QPushButton("Restore Opening Version", this);
+  m_restore_button->setToolTip(
+      "Put back the JSON exactly as it was when this editor opened, discarding every "
+      "change made here");
   auto* cancel_button = new QPushButton("Cancel", this);
   m_ok_button = new QPushButton("OK", this);
   m_ok_button->setDefault(true);
   m_ok_button->setProperty("primary", true);
 
+  button_layout->addWidget(m_restore_button);
   button_layout->addStretch();
   button_layout->addWidget(cancel_button);
   button_layout->addWidget(m_ok_button);
   layout->addLayout(button_layout);
 
+  connect(m_restore_button,
+          &QPushButton::clicked,
+          this,
+          &JsonEditDialog::restore_opening_json);
   connect(cancel_button, &QPushButton::clicked, this, &QDialog::reject);
   connect(m_ok_button, &QPushButton::clicked, this, &JsonEditDialog::on_accepted);
 
@@ -422,8 +471,65 @@ void JsonEditDialog::validate_json() {
     m_result = m_model_json;
   }
 
+  if (m_is_valid && model_has_entrances()) {
+    m_entrances_cleared = false;
+  }
+
   update_schema_state();
   update_projection_state();
+  update_restore_state();
+  update_entrance_button_state();
+}
+
+void JsonEditDialog::update_restore_state() {
+  if (m_restore_button == nullptr) {
+    return;
+  }
+  m_restore_button->setEnabled(!m_is_valid || m_model_json != m_opening_json);
+}
+
+bool JsonEditDialog::model_has_entrances() const {
+  return !m_model_json.value(MapJsonKeys::entrances).toArray().isEmpty();
+}
+
+void JsonEditDialog::update_entrance_button_state() {
+  if (m_clear_entrances_button == nullptr) {
+    return;
+  }
+  const bool is_hill =
+      m_is_valid &&
+      m_model_json.value(MapJsonKeys::type).toString().trimmed().toLower() ==
+          QStringLiteral("hill");
+  m_clear_entrances_button->setEnabled(is_hill && model_has_entrances());
+}
+
+void JsonEditDialog::clear_entrances() {
+  if (!m_is_valid || !model_has_entrances()) {
+    return;
+  }
+
+  m_entrances_cleared = true;
+  m_projection_warning.clear();
+  m_model_json.remove(MapJsonKeys::entrances);
+  m_result = m_model_json;
+  sync_editor_from_model();
+}
+
+void JsonEditDialog::restore_opening_json() {
+  m_projection_warning.clear();
+  m_entrances_cleared = false;
+  m_model_json = m_opening_json;
+  m_result = m_opening_json;
+
+  m_syncing_editor = true;
+  {
+    QSignalBlocker const blocker(m_editor);
+    m_editor->setPlainText(
+        QJsonDocument(m_opening_json).toJson(QJsonDocument::Indented));
+  }
+  m_syncing_editor = false;
+
+  validate_json();
 }
 
 void JsonEditDialog::sync_editor_from_model() {
@@ -459,6 +565,7 @@ void JsonEditDialog::update_projection_state() {
   };
 
   if (!m_is_valid) {
+    m_projection_hint_label->setTextFormat(Qt::PlainText);
     m_projection_hint_label->setText(
         "Projection disabled until JSON is valid.\n"
         "Fix syntax errors in JSON to continue editing the terrain footprint.");
@@ -471,6 +578,7 @@ void JsonEditDialog::update_projection_state() {
       m_model_json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool is_mountain = terrain_type == QStringLiteral("mountain");
   if (terrain_type != QStringLiteral("hill") && !is_mountain) {
+    m_projection_hint_label->setTextFormat(Qt::PlainText);
     m_projection_hint_label->setText(
         R"(Projection is only active for terrain with type "hill" or "mountain".)");
     m_projection->setEnabled(false);
@@ -478,28 +586,65 @@ void JsonEditDialog::update_projection_state() {
     return;
   }
 
-  if (is_mountain) {
-    m_projection_hint_label->setText(
-        "Grid max: 80 x 80 cells\n"
-        "Left drag: paint mountain footprint\n"
-        "Right drag: erase mountain footprint\n"
-        "Mountains stay entrance-free; rotation still comes from JSON.");
-  } else {
-    m_projection_hint_label->setText(
-        "Grid max: 80 x 80 cells\n"
-        "Left drag: paint selected marker\n"
-        "Right drag: erase selected marker\n"
-        "Adjacent entrance cells are saved as one JSON entry");
-  }
   m_projection->setEnabled(true);
   set_buttons_enabled(true);
 
-  if (m_syncing_projection) {
+  if (!m_syncing_projection) {
+    m_syncing_projection = true;
+    m_projection_warning.clear();
+    m_projection->set_terrain_json(m_model_json);
+    m_syncing_projection = false;
+  }
+
+  refresh_projection_hint();
+}
+
+void JsonEditDialog::refresh_projection_hint() {
+  if (m_projection == nullptr || m_projection_hint_label == nullptr ||
+      !m_projection->is_active()) {
     return;
   }
-  m_syncing_projection = true;
-  m_projection->set_terrain_json(m_model_json);
-  m_syncing_projection = false;
+
+  const HillProjection::Model& model = m_projection->get_model();
+  QStringList lines;
+  lines << QStringLiteral("Grid: %1 x %2 cells (auto-fitted to the JSON footprint)")
+               .arg(model.grid_width)
+               .arg(model.grid_height);
+  lines << QStringLiteral(
+               "Left drag: paint selected marker (brush %1 cells wide, JSON updates "
+               "when the stroke ends)")
+               .arg(m_projection->brush_size());
+  lines << QStringLiteral("Right drag: erase selected marker");
+  if (model.is_mountain) {
+    lines << QStringLiteral("Mountains stay entrance-free; rotation comes from JSON.");
+  } else {
+    lines << QStringLiteral(
+                 "Entrances: %1-%2 ramps. Each connected blob is stored as one "
+                 "{x, z, radius} entry centred on the hill edge, so painted cells "
+                 "snap to the disc that entry describes.")
+                 .arg(HillProjection::k_min_entrances)
+                 .arg(HillProjection::k_max_entrances);
+  }
+
+  if (m_entrances_cleared) {
+    lines << QStringLiteral(
+        "<span style='color:#e0a860;'>Entrances cleared. The runtime still carves one "
+        "default ramp on the hill's western face (rotated with the hill) until you "
+        "paint new ones.</span>");
+  } else {
+    const QStringList issues = m_projection->issues();
+    if (!issues.isEmpty()) {
+      lines << QStringLiteral("<span style='color:#e0a860;'>%1</span>")
+                   .arg(issues.join(QStringLiteral(" ")));
+    }
+  }
+  if (!m_projection_warning.isEmpty()) {
+    lines << QStringLiteral("<span style='color:#e06060;'>%1</span>")
+                 .arg(m_projection_warning);
+  }
+
+  m_projection_hint_label->setTextFormat(Qt::RichText);
+  m_projection_hint_label->setText(lines.join(QStringLiteral("<br/>")));
 }
 
 void JsonEditDialog::apply_projection_to_model_json() {
@@ -510,12 +655,24 @@ void JsonEditDialog::apply_projection_to_model_json() {
   const HillProjection::Model& model = m_projection->get_model();
   m_model_json = HillProjection::apply_projection_to_hill_json(
       m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());
+  if (m_entrances_cleared) {
+    m_model_json.remove(MapJsonKeys::entrances);
+  }
   m_result = m_model_json;
+
+  if (!model.is_mountain) {
+    m_projection->set_entrance_cells(HillProjection::entrance_cells_from_json(
+        model, m_model_json.value(MapJsonKeys::entrances).toArray()));
+  }
 }
 
 void JsonEditDialog::on_projection_entrances_changed() {
   if (!m_is_valid || m_syncing_projection) {
     return;
+  }
+
+  if (!m_projection->entrance_cells().isEmpty()) {
+    m_entrances_cleared = false;
   }
 
   m_syncing_projection = true;
@@ -524,8 +681,36 @@ void JsonEditDialog::on_projection_entrances_changed() {
   m_syncing_projection = false;
 }
 
+void JsonEditDialog::normalize_projection_entrances() {
+  if (m_projection == nullptr || !m_projection->is_active() || m_entrances_cleared ||
+      m_model_json == m_opening_json) {
+    return;
+  }
+
+  const HillProjection::Model& model = m_projection->get_model();
+  if (model.is_mountain) {
+    return;
+  }
+
+  const QVector<QPoint> body = m_projection->body_cells();
+  const QVector<QPoint> entrances = m_projection->entrance_cells();
+  if (HillProjection::entrance_issues(model, body, entrances).isEmpty()) {
+    return;
+  }
+
+  const QJsonArray normalized = HillProjection::entrances_from_cells(
+      model, HillProjection::normalize_entrance_cells(model, body, entrances));
+  if (normalized.isEmpty()) {
+    m_model_json.remove(MapJsonKeys::entrances);
+  } else {
+    m_model_json[MapJsonKeys::entrances] = normalized;
+  }
+  m_result = m_model_json;
+}
+
 void JsonEditDialog::on_accepted() {
   if (m_is_valid) {
+    normalize_projection_entrances();
     m_result = m_model_json;
     accept();
   } else {

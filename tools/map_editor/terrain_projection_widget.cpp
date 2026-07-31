@@ -17,6 +17,11 @@ constexpr QColor k_grid_border_color(31, 139, 245);
 constexpr QColor k_entrance_color(31, 139, 245, 210);
 constexpr QColor k_overlap_color(210, 121, 255, 220);
 constexpr QColor k_mountain_body_color(100, 110, 130, 95);
+constexpr QColor k_rim_hint_color(126, 148, 160, 130);
+constexpr QColor k_entrance_outline_color(8, 20, 30, 235);
+constexpr int k_max_brush_cells = 12;
+constexpr int k_entrance_body_reach_cells = 2;
+constexpr double k_min_entrance_marker_px = 5.0;
 
 } // namespace
 
@@ -26,14 +31,20 @@ TerrainProjectionWidget::TerrainProjectionWidget(QWidget* parent)
   setMouseTracking(true);
 }
 
+void TerrainProjectionWidget::set_map_context(
+    const HillProjection::MapContext& context) {
+  m_map_context = context;
+}
+
 void TerrainProjectionWidget::set_terrain_json(const QJsonObject& json) {
   m_active = true;
   m_drag_mode = DragMode::None;
   m_body_cells.clear();
   m_entrance_cells.clear();
   m_last_drag_cell = QPoint();
+  m_rim_dirty = true;
 
-  m_model = HillProjection::build_model(json);
+  m_model = HillProjection::build_model(json, m_map_context);
   for (const QPoint& cell : m_model.hill_cells) {
     m_body_cells.insert(encode_cell(cell));
   }
@@ -46,6 +57,11 @@ void TerrainProjectionWidget::set_terrain_json(const QJsonObject& json) {
 
 void TerrainProjectionWidget::set_active_layer(int index) {
   m_active_layer = index;
+  update();
+}
+
+void TerrainProjectionWidget::set_brush_size(int cells) {
+  m_brush_size = std::clamp(cells, 1, k_max_brush_cells);
 }
 
 QVector<QPoint> TerrainProjectionWidget::body_cells() const {
@@ -70,6 +86,24 @@ QVector<QPoint> TerrainProjectionWidget::entrance_cells() const {
     return lhs.y() != rhs.y() ? lhs.y() < rhs.y() : lhs.x() < rhs.x();
   });
   return cells;
+}
+
+QStringList TerrainProjectionWidget::issues() const {
+  if (!m_active) {
+    return {};
+  }
+  return HillProjection::entrance_issues(m_model, body_cells(), entrance_cells());
+}
+
+const QSet<quint64>& TerrainProjectionWidget::rim_cells() const {
+  if (m_rim_dirty) {
+    m_rim_cells.clear();
+    for (const QPoint& cell : HillProjection::rim_cells(body_cells())) {
+      m_rim_cells.insert(encode_cell(cell));
+    }
+    m_rim_dirty = false;
+  }
+  return m_rim_cells;
 }
 
 void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
@@ -104,24 +138,37 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
     body_color = defs[body_idx].second;
   }
 
+  const double cell_inset = std::min(1.0, geometry.cell_size * 0.18);
+  const auto cell_rect_at = [this, &geometry](const QPoint& cell) {
+    return cell_rect(geometry, cell);
+  };
+
   for (quint64 const encoded : m_body_cells) {
-    const QPoint cell = decode_cell(encoded);
-    const QRectF cell_rect(geometry.rect.left() + geometry.cell_size * cell.x(),
-                           geometry.rect.top() + geometry.cell_size * cell.y(),
-                           geometry.cell_size,
-                           geometry.cell_size);
-    painter.fillRect(cell_rect.adjusted(1.0, 1.0, -1.0, -1.0), body_color);
+    painter.fillRect(cell_rect_at(decode_cell(encoded))
+                         .adjusted(cell_inset, cell_inset, -cell_inset, -cell_inset),
+                     body_color);
   }
 
+  if (m_active_layer == entrance_layer_index()) {
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(k_rim_hint_color, 1));
+    for (quint64 const encoded : rim_cells()) {
+      painter.drawRect(
+          cell_rect_at(decode_cell(encoded)).adjusted(0.5, 0.5, -0.5, -0.5));
+    }
+  }
+
+  const double entrance_size =
+      std::max(k_min_entrance_marker_px, geometry.cell_size - (cell_inset * 2.0));
   for (quint64 const encoded : m_entrance_cells) {
-    const QPoint cell = decode_cell(encoded);
-    const QRectF cell_rect(geometry.rect.left() + geometry.cell_size * cell.x(),
-                           geometry.rect.top() + geometry.cell_size * cell.y(),
-                           geometry.cell_size,
-                           geometry.cell_size);
-    const bool overlaps_body = m_body_cells.contains(encoded);
-    painter.fillRect(cell_rect.adjusted(1.0, 1.0, -1.0, -1.0),
-                     overlaps_body ? k_overlap_color : k_entrance_color);
+    const QRectF cell_rect = cell_rect_at(decode_cell(encoded));
+    QRectF marker(0.0, 0.0, entrance_size, entrance_size);
+    marker.moveCenter(cell_rect.center());
+
+    painter.setPen(QPen(k_entrance_outline_color, 1.0));
+    painter.setBrush(m_body_cells.contains(encoded) ? k_entrance_color
+                                                    : k_overlap_color);
+    painter.drawRect(marker);
   }
 
   painter.setRenderHint(QPainter::Antialiasing, false);
@@ -161,10 +208,12 @@ void TerrainProjectionWidget::mousePressEvent(QMouseEvent* event) {
   const QSet<quint64> before_entrance = m_entrance_cells;
   m_drag_mode = (event->button() == Qt::LeftButton) ? DragMode::Paint : DragMode::Erase;
   m_last_drag_cell = *cell;
-  set_cell_marked(*cell, m_drag_mode == DragMode::Paint);
+  m_stroke_changed = false;
+  m_stroke_rejected = false;
+  stamp_brush(*cell, m_drag_mode == DragMode::Paint);
 
   if (before_body != m_body_cells || before_entrance != m_entrance_cells) {
-    emit projection_changed();
+    m_stroke_changed = true;
     update();
   }
 
@@ -194,7 +243,7 @@ void TerrainProjectionWidget::mouseMoveEvent(QMouseEvent* event) {
   m_last_drag_cell = *cell;
 
   if (before_body != m_body_cells || before_entrance != m_entrance_cells) {
-    emit projection_changed();
+    m_stroke_changed = true;
     update();
   }
 
@@ -204,10 +253,24 @@ void TerrainProjectionWidget::mouseMoveEvent(QMouseEvent* event) {
 void TerrainProjectionWidget::mouseReleaseEvent(QMouseEvent* event) {
   if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
     m_drag_mode = DragMode::None;
+    finish_stroke();
     event->accept();
     return;
   }
   QWidget::mouseReleaseEvent(event);
+}
+
+void TerrainProjectionWidget::finish_stroke() {
+  if (m_stroke_rejected) {
+    m_stroke_rejected = false;
+    emit entrance_rejected(
+        QStringLiteral("Entrance cells have to touch the hill — paint on or beside "
+                       "the outlined edge ring."));
+  }
+  if (m_stroke_changed) {
+    m_stroke_changed = false;
+    emit projection_changed();
+  }
 }
 
 TerrainProjectionWidget::GridGeometry
@@ -240,6 +303,16 @@ TerrainProjectionWidget::compute_geometry() const {
   return geometry;
 }
 
+QRectF TerrainProjectionWidget::cell_rect(const GridGeometry& geometry,
+                                          const QPoint& cell) const {
+  const int column = m_model.grid_width - 1 - cell.x();
+  const int row = m_model.grid_height - 1 - cell.y();
+  return {geometry.rect.left() + (geometry.cell_size * column),
+          geometry.rect.top() + (geometry.cell_size * row),
+          geometry.cell_size,
+          geometry.cell_size};
+}
+
 std::optional<QPoint>
 TerrainProjectionWidget::cell_from_position(const QPoint& position) const {
   const GridGeometry geometry = compute_geometry();
@@ -247,10 +320,12 @@ TerrainProjectionWidget::cell_from_position(const QPoint& position) const {
     return std::nullopt;
   }
 
-  const int cell_x = static_cast<int>(
+  const int column = static_cast<int>(
       std::floor((position.x() - geometry.rect.left()) / geometry.cell_size));
-  const int cell_y = static_cast<int>(
+  const int row = static_cast<int>(
       std::floor((position.y() - geometry.rect.top()) / geometry.cell_size));
+  const int cell_x = m_model.grid_width - 1 - column;
+  const int cell_y = m_model.grid_height - 1 - row;
   if (cell_x < 0 || cell_x >= m_model.grid_width || cell_y < 0 ||
       cell_y >= m_model.grid_height) {
     return std::nullopt;
@@ -272,7 +347,7 @@ void TerrainProjectionWidget::apply_line(const QPoint& from, const QPoint& to) {
 
   int error = dx - dy;
   while (true) {
-    set_cell_marked(QPoint(x0, y0), m_drag_mode == DragMode::Paint);
+    stamp_brush(QPoint(x0, y0), m_drag_mode == DragMode::Paint);
     if (x0 == x1 && y0 == y1) {
       break;
     }
@@ -284,6 +359,44 @@ void TerrainProjectionWidget::apply_line(const QPoint& from, const QPoint& to) {
     if (doubled_error < dx) {
       error += dx;
       y0 += step_y;
+    }
+  }
+}
+
+bool TerrainProjectionWidget::reaches_body(const QPoint& cell) const {
+  for (int offset_z = -k_entrance_body_reach_cells;
+       offset_z <= k_entrance_body_reach_cells;
+       ++offset_z) {
+    for (int offset_x = -k_entrance_body_reach_cells;
+         offset_x <= k_entrance_body_reach_cells;
+         ++offset_x) {
+      if (m_body_cells.contains(
+              encode_cell(QPoint(cell.x() + offset_x, cell.y() + offset_z)))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void TerrainProjectionWidget::set_entrance_cells(const QVector<QPoint>& cells) {
+  QSet<quint64> updated;
+  updated.reserve(cells.size());
+  for (const QPoint& cell : cells) {
+    updated.insert(encode_cell(cell));
+  }
+  if (updated == m_entrance_cells) {
+    return;
+  }
+  m_entrance_cells = updated;
+  update();
+}
+
+void TerrainProjectionWidget::stamp_brush(const QPoint& cell, bool marked) {
+  const int radius = (std::clamp(m_brush_size, 1, k_max_brush_cells) - 1) / 2;
+  for (int offset_z = -radius; offset_z <= radius; ++offset_z) {
+    for (int offset_x = -radius; offset_x <= radius; ++offset_x) {
+      set_cell_marked(QPoint(cell.x() + offset_x, cell.y() + offset_z), marked);
     }
   }
 }
@@ -301,6 +414,7 @@ void TerrainProjectionWidget::set_cell_marked(const QPoint& cell, bool marked) {
       defs[m_active_layer].first == QStringLiteral("Nothing")) {
     if (body_cells_user_editable()) {
       m_body_cells.remove(encoded);
+      m_rim_dirty = true;
     }
     m_entrance_cells.remove(encoded);
     return;
@@ -312,12 +426,17 @@ void TerrainProjectionWidget::set_cell_marked(const QPoint& cell, bool marked) {
     } else {
       m_body_cells.remove(encoded);
     }
+    m_rim_dirty = true;
   } else if (m_active_layer == entrance_layer_index()) {
-    if (marked) {
-      m_entrance_cells.insert(encoded);
-    } else {
+    if (!marked) {
       m_entrance_cells.remove(encoded);
+      return;
     }
+    if (!reaches_body(cell)) {
+      m_stroke_rejected = true;
+      return;
+    }
+    m_entrance_cells.insert(encoded);
   }
 }
 

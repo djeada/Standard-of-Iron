@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QPolygonF>
 #include <QSizeF>
 #include <QWidget>
 
@@ -8,6 +9,7 @@
 #include <functional>
 
 #include "element_ops.h"
+#include "game/map/terrain_footprint.h"
 #include "map_data.h"
 #include "mission_data.h"
 #include "tool_panel.h"
@@ -114,17 +116,24 @@ private:
   void draw_structure_element(QPainter& painter, int index);
   void draw_troop_spawn_element(QPainter& painter, int index);
   void draw_linear_element(QPainter& painter, int index);
+  [[nodiscard]] float linear_width_px(const LinearElement& elem) const;
+  [[nodiscard]] QPolygonF linear_polyline_px(const LinearElement& elem) const;
   void draw_undead_zone_element(QPainter& painter, int index);
   void draw_linear_preview(QPainter& painter);
   void draw_mission_overlays(QPainter& painter);
+  void draw_derived_commanders(QPainter& painter);
   void draw_current_placement(QPainter& painter);
   void draw_rubber_band(QPainter& painter);
   void finish_rubber_band();
 
   [[nodiscard]] QVector<int> category_draw_order(int kind) const;
+  [[nodiscard]] QVector<ElementSnapshot>
+  without_duplicate_commanders(const QVector<ElementSnapshot>& snaps,
+                               int* rejected_count) const;
   void draw_terrain_feature(QPainter& painter,
                             const TerrainElement& elem,
                             const QPoint& center);
+  void draw_terrain_entrances(QPainter& painter, const TerrainElement& elem);
   void draw_world_prop_icon(QPainter& painter,
                             const QString& type,
                             const QPoint& pos,
@@ -134,6 +143,8 @@ private:
                     const QPoint& pos,
                     int player_id = 0,
                     int marker_radius_px = -1);
+  [[nodiscard]] Game::Map::FootprintCells
+  terrain_footprint(const TerrainElement& elem) const;
   [[nodiscard]] QSizeF terrain_ellipse_px(const TerrainElement& elem) const;
   [[nodiscard]] int terrain_marker_radius_px(const TerrainElement& elem) const;
   [[nodiscard]] float terrain_hit_radius_px(const TerrainElement& elem) const;

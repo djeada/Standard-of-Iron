@@ -7,6 +7,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         mission_data.cpp
         mission_panel.cpp
         map_canvas.cpp
+        commander_preview.cpp
         element_ops.cpp
         json_schema.cpp
         spawn_icon_library.cpp
@@ -31,6 +32,7 @@ else()
         mission_data.cpp
         mission_panel.cpp
         map_canvas.cpp
+        commander_preview.cpp
         element_ops.cpp
         json_schema.cpp
         spawn_icon_library.cpp
