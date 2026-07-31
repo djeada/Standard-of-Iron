@@ -94,9 +94,9 @@ float atmospheric_fog_amount(float view_distance,
   float fog_depth = max(view_distance - fog_start, 0.0);
   float normalized_depth = clamp(fog_depth / fog_span, 0.0, 1.0);
 
-  float ranged = smoothstep(0.0, 1.0, normalized_depth) *
-                 (horizon_weight + horizon_gain);
-  float weather = 1.0 - exp(-environment_fog_density() * normalized_depth *
-                            k_fog_reference_span);
+  float ranged =
+      smoothstep(0.0, 1.0, normalized_depth) * (horizon_weight + horizon_gain);
+  float weather =
+      1.0 - exp(-environment_fog_density() * normalized_depth * k_fog_reference_span);
   return clamp(max(ranged, weather), 0.0, 1.0);
 }

@@ -335,5 +335,3 @@ TEST(MissionAssetRulesTest, TrasimeneIsTheTimeBoundOffensiveMission) {
   ASSERT_TRUE(time_limit->duration.has_value());
   EXPECT_FLOAT_EQ(*time_limit->duration, 1200.0F);
 }
-
-
