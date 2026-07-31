@@ -82,18 +82,12 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
     };
 
     auto set_water_environment = [&](Shader* shader, const auto& uniforms) {
-      QVector3D const fog_color(
-          m_clear_color[red], m_clear_color[green], m_clear_color[blue]);
-      float const fog_start = std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
-      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
+      auto const [fog_start, fog_end] = fog_range_for_camera(cam);
       if (uniforms.camera_position != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.camera_position, cam.get_position());
       }
       if (uniforms.light_direction != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.light_direction, m_light_dir);
-      }
-      if (uniforms.fog_color != Shader::InvalidUniform) {
-        shader->set_uniform(uniforms.fog_color, fog_color);
       }
       if (uniforms.fog_start != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.fog_start, fog_start);

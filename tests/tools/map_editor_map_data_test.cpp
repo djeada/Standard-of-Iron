@@ -10,6 +10,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "game/map/terrain_footprint.h"
 #include "tools/map_editor/map_data.h"
 #include "tools/map_editor/map_json_keys.h"
 
@@ -681,4 +682,173 @@ TEST(ComputeMinBridgeWidthTest, ZeroLengthBridgeReturnsAbsoluteMinimum) {
   const float result = MapEditor::compute_min_bridge_width(
       QVector2D(0.0F, 0.0F), QVector2D(0.0F, 0.0F), elements);
   EXPECT_FLOAT_EQ(result, MapEditor::k_min_bridge_width);
+}
+
+TEST(MapEditorMapDataTest, RoadAndRiverWaypointsSurviveLoadAndSave) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString input_path = temp_dir.filePath("waypoints_input.json");
+  const QString output_path = temp_dir.filePath("waypoints_output.json");
+
+  const QJsonArray road_waypoints{
+      QJsonArray{2.0, 2.0}, QJsonArray{12.0, 4.0}, QJsonArray{30.0, 20.0}};
+  QJsonObject const input{
+      {"name", "Waypoints"},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 64},
+                   {MapJsonKeys::height, 64},
+                   {MapJsonKeys::tile_size, 1.0}}},
+      {MapJsonKeys::roads,
+       QJsonArray{QJsonObject{{MapJsonKeys::start, QJsonArray{2.0, 2.0}},
+                              {MapJsonKeys::end, QJsonArray{30.0, 20.0}},
+                              {MapJsonKeys::width, 5.25},
+                              {MapJsonKeys::style, "default"},
+                              {MapJsonKeys::waypoints, road_waypoints}}}},
+      {MapJsonKeys::rivers,
+       QJsonArray{QJsonObject{{MapJsonKeys::start, QJsonArray{0.0, 40.0}},
+                              {MapJsonKeys::end, QJsonArray{60.0, 44.0}},
+                              {MapJsonKeys::width, 6.0},
+                              {MapJsonKeys::waypoints,
+                               QJsonArray{QJsonArray{0.0, 40.0},
+                                          QJsonArray{30.0, 42.0},
+                                          QJsonArray{60.0, 44.0}}}}}}};
+  write_json(input_path, input);
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+
+  const MapEditor::LinearElement* road = nullptr;
+  const MapEditor::LinearElement* river = nullptr;
+  for (const auto& element : data.linear_elements()) {
+    if (element.type == QLatin1String("road")) {
+      road = &element;
+    } else if (element.type == QLatin1String("river")) {
+      river = &element;
+    }
+  }
+  ASSERT_NE(road, nullptr);
+  ASSERT_NE(river, nullptr);
+
+  ASSERT_EQ(road->waypoints.size(), 3);
+  EXPECT_DOUBLE_EQ(road->waypoints[1].x(), 12.0);
+  EXPECT_FALSE(road->extra_fields.contains(MapJsonKeys::waypoints));
+  EXPECT_EQ(MapEditor::linear_polyline(*road).size(), 3);
+  EXPECT_EQ(river->waypoints.size(), 3);
+
+  ASSERT_TRUE(data.save_to_json(output_path));
+  const QJsonObject output = read_json(output_path);
+  const QJsonObject saved_road =
+      output.value(MapJsonKeys::roads).toArray()[0].toObject();
+  EXPECT_EQ(saved_road.value(MapJsonKeys::waypoints).toArray(), road_waypoints);
+  const QJsonObject saved_river =
+      output.value(MapJsonKeys::rivers).toArray()[0].toObject();
+  EXPECT_EQ(saved_river.value(MapJsonKeys::waypoints).toArray().size(), 3);
+}
+
+TEST(MapEditorMapDataTest, CampaignRoadWaypointsSurviveAnUntouchedRoundTrip) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString source_path = repo_root() + "/assets/maps/map_campania_campaign.json";
+  MapEditor::MapData data;
+  QString error;
+  ASSERT_TRUE(data.load_from_json(source_path, &error)) << error.toStdString();
+
+  int roads_with_waypoints = 0;
+  for (const auto& element : data.linear_elements()) {
+    if (element.type == QLatin1String("road") && !element.waypoints.isEmpty()) {
+      ++roads_with_waypoints;
+    }
+  }
+  EXPECT_GT(roads_with_waypoints, 0);
+
+  const QString output_path = temp_dir.filePath("campania_roundtrip.json");
+  ASSERT_TRUE(data.save_to_json(output_path));
+
+  const QJsonArray original =
+      read_json(source_path).value(MapJsonKeys::roads).toArray();
+  const QJsonArray saved = read_json(output_path).value(MapJsonKeys::roads).toArray();
+  ASSERT_EQ(saved.size(), original.size());
+
+  for (qsizetype road = 0; road < original.size(); ++road) {
+    const QJsonArray original_points =
+        original[road].toObject().value(MapJsonKeys::waypoints).toArray();
+    const QJsonArray saved_points =
+        saved[road].toObject().value(MapJsonKeys::waypoints).toArray();
+    ASSERT_EQ(saved_points.size(), original_points.size()) << "road " << road;
+    for (qsizetype point = 0; point < original_points.size(); ++point) {
+      const QJsonArray expected = original_points[point].toArray();
+      const QJsonArray actual = saved_points[point].toArray();
+      ASSERT_EQ(actual.size(), expected.size());
+      for (qsizetype axis = 0; axis < expected.size(); ++axis) {
+        const double normalized = std::round(expected[axis].toDouble() * 100.0) / 100.0;
+        EXPECT_NEAR(actual[axis].toDouble(), normalized, 1e-9)
+            << "road " << road << " point " << point;
+      }
+    }
+  }
+}
+
+TEST(MapEditorMapDataTest, RadiusOnlyTerrainKeepsExtentsUnauthored) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString input_path = temp_dir.filePath("radius_terrain.json");
+  const QString output_path = temp_dir.filePath("radius_terrain_out.json");
+
+  QJsonObject const input{{"name", "Radius Terrain"},
+                          {MapJsonKeys::grid,
+                           QJsonObject{{MapJsonKeys::width, 200},
+                                       {MapJsonKeys::height, 200},
+                                       {MapJsonKeys::tile_size, 1.0}}},
+                          {MapJsonKeys::terrain,
+                           QJsonArray{QJsonObject{{MapJsonKeys::type, "mountain"},
+                                                  {MapJsonKeys::x, 60},
+                                                  {MapJsonKeys::z, 40},
+                                                  {MapJsonKeys::radius, 20.53},
+                                                  {MapJsonKeys::height, 8}},
+                                      QJsonObject{{MapJsonKeys::type, "hill"},
+                                                  {MapJsonKeys::x, 120},
+                                                  {MapJsonKeys::z, 90},
+                                                  {MapJsonKeys::width, 60.0},
+                                                  {MapJsonKeys::depth, 60.0},
+                                                  {MapJsonKeys::height, 3}}}}};
+  write_json(input_path, input);
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+  ASSERT_EQ(data.terrain_elements().size(), 2);
+
+  const MapEditor::TerrainElement& mountain = data.terrain_elements()[0];
+  EXPECT_FLOAT_EQ(mountain.radius, 20.53F);
+  EXPECT_FLOAT_EQ(mountain.width, 0.0F);
+  EXPECT_FLOAT_EQ(mountain.depth, 0.0F);
+
+  const auto mountain_footprint =
+      Game::Map::mountain_footprint_cells({.width = mountain.width,
+                                           .depth = mountain.depth,
+                                           .radius = mountain.radius,
+                                           .tile_size = 1.0F});
+  EXPECT_GT(mountain_footprint.half_width, mountain_footprint.half_depth * 2.0F);
+  EXPECT_FLOAT_EQ(mountain_footprint.half_width,
+                  Game::Map::mountain_major_radius_cells(20.53F));
+
+  const MapEditor::TerrainElement& hill = data.terrain_elements()[1];
+  EXPECT_FLOAT_EQ(hill.width, 60.0F);
+  EXPECT_FLOAT_EQ(hill.depth, 60.0F);
+
+  ASSERT_TRUE(data.save_to_json(output_path));
+  const QJsonArray saved = read_json(output_path).value(MapJsonKeys::terrain).toArray();
+  ASSERT_EQ(saved.size(), 2);
+
+  const QJsonObject saved_mountain = saved[0].toObject();
+  EXPECT_FALSE(saved_mountain.contains(MapJsonKeys::width));
+  EXPECT_FALSE(saved_mountain.contains(MapJsonKeys::depth));
+  EXPECT_NEAR(saved_mountain.value(MapJsonKeys::radius).toDouble(), 20.53, 1e-6);
+
+  const QJsonObject saved_hill = saved[1].toObject();
+  EXPECT_FALSE(saved_hill.contains(MapJsonKeys::radius));
+  EXPECT_NEAR(saved_hill.value(MapJsonKeys::width).toDouble(), 60.0, 1e-6);
+  EXPECT_NEAR(saved_hill.value(MapJsonKeys::depth).toDouble(), 60.0, 1e-6);
 }

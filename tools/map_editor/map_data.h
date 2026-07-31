@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QObject>
+#include <QPointF>
 #include <QString>
 #include <QVector2D>
 #include <QVector>
@@ -18,8 +19,8 @@ struct TerrainElement {
   float x = 0.0F;
   float z = 0.0F;
   float radius = 10.0F;
-  float width = 10.0F;
-  float depth = 10.0F;
+  float width = 0.0F;
+  float depth = 0.0F;
   float height = 3.0F;
   float rotation = 0.0F;
   QJsonArray entrances;
@@ -42,6 +43,7 @@ struct LinearElement {
   QString type;
   QVector2D start;
   QVector2D end;
+  QVector<QPointF> waypoints;
   float width = 3.0F;
   float height = 0.5F;
   QString style;
@@ -49,6 +51,11 @@ struct LinearElement {
   QString nation;
   QJsonObject extra_fields;
 };
+
+[[nodiscard]] auto waypoints_from_json(const QJsonArray& array) -> QVector<QPointF>;
+[[nodiscard]] auto waypoints_to_json(const QVector<QPointF>& waypoints) -> QJsonArray;
+[[nodiscard]] auto linear_polyline(const LinearElement& element) -> QVector<QPointF>;
+[[nodiscard]] auto supports_waypoints(const QString& type) -> bool;
 
 inline constexpr float k_min_bridge_height = 0.1F;
 inline constexpr float k_min_bridge_width = 8.0F;
@@ -179,6 +186,8 @@ public:
   [[nodiscard]] const QVector<TroopSpawnElement>& troop_spawns() const {
     return m_troop_spawns;
   }
+  [[nodiscard]] static bool is_commander_troop_type(const QString& type);
+  [[nodiscard]] int commander_spawn_index_for_player(int player_id) const;
   void add_troop_spawn(const TroopSpawnElement& element);
   void insert_troop_spawn(int index, const TroopSpawnElement& element);
   void update_troop_spawn(int index, const TroopSpawnElement& element);

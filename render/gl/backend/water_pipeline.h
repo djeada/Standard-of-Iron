@@ -35,7 +35,6 @@ public:
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
@@ -66,7 +65,6 @@ public:
     GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
