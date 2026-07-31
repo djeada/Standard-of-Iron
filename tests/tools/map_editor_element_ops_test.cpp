@@ -1,3 +1,6 @@
+#include <QJsonArray>
+#include <QJsonObject>
+
 #include <gtest/gtest.h>
 
 #include "tools/map_editor/element_ops.h"
@@ -232,3 +235,54 @@ TEST(MapEditorElementOpsTest, SummaryMentionsCategoryTypeAndPosition) {
 }
 
 } // namespace
+
+TEST(MapEditorElementOpsTest, HillEntrancesFollowTheHillWhenItMoves) {
+  MapEditor::TerrainElement hill;
+  hill.type = QStringLiteral("hill");
+  hill.x = 40.0F;
+  hill.z = 40.0F;
+  hill.width = 20.0F;
+  hill.depth = 20.0F;
+  hill.entrances = QJsonArray{QJsonObject{{"x", 30.0}, {"z", 40.0}, {"radius", 2.0}},
+                              QJsonObject{{"x", 50.0}, {"z", 40.0}}};
+
+  const ElementSnapshot moved =
+      Ops::translated(ElementSnapshot{hill}, QPointF(12.5, -6.0));
+  const auto& moved_hill = std::get<MapEditor::TerrainElement>(moved);
+
+  EXPECT_FLOAT_EQ(moved_hill.x, 52.5F);
+  EXPECT_FLOAT_EQ(moved_hill.z, 34.0F);
+  ASSERT_EQ(moved_hill.entrances.size(), 2);
+  EXPECT_DOUBLE_EQ(moved_hill.entrances[0].toObject().value("x").toDouble(), 42.5);
+  EXPECT_DOUBLE_EQ(moved_hill.entrances[0].toObject().value("z").toDouble(), 34.0);
+  EXPECT_DOUBLE_EQ(moved_hill.entrances[0].toObject().value("radius").toDouble(), 2.0);
+  EXPECT_DOUBLE_EQ(moved_hill.entrances[1].toObject().value("x").toDouble(), 62.5);
+
+  const ElementSnapshot snapped = Ops::snapped_to_grid(moved);
+  const auto& snapped_hill = std::get<MapEditor::TerrainElement>(snapped);
+  EXPECT_FLOAT_EQ(snapped_hill.x, 53.0F);
+  EXPECT_DOUBLE_EQ(snapped_hill.entrances[0].toObject().value("x").toDouble(), 43.0);
+}
+
+TEST(MapEditorElementOpsTest, RoadWaypointsFollowTheRoadWhenItMoves) {
+  MapEditor::LinearElement road;
+  road.type = QStringLiteral("road");
+  road.start = QVector2D(10.0F, 10.0F);
+  road.end = QVector2D(40.0F, 30.0F);
+  road.waypoints = {QPointF(10.0, 10.0), QPointF(22.5, 18.0), QPointF(40.0, 30.0)};
+
+  const ElementSnapshot moved =
+      Ops::translated(ElementSnapshot{road}, QPointF(5.0, -2.0));
+  const auto& moved_road = std::get<MapEditor::LinearElement>(moved);
+
+  ASSERT_EQ(moved_road.waypoints.size(), 3);
+  EXPECT_DOUBLE_EQ(moved_road.waypoints[1].x(), 27.5);
+  EXPECT_DOUBLE_EQ(moved_road.waypoints[1].y(), 16.0);
+  EXPECT_FLOAT_EQ(moved_road.start.x(), 15.0F);
+  EXPECT_DOUBLE_EQ(moved_road.waypoints.first().x(),
+                   static_cast<double>(moved_road.start.x()));
+
+  const QVector<QPointF> path = MapEditor::linear_polyline(moved_road);
+  EXPECT_EQ(path.size(), 3);
+  EXPECT_DOUBLE_EQ(path.last().x(), static_cast<double>(moved_road.end.x()));
+}

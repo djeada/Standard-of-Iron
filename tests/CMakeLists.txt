@@ -14,6 +14,7 @@ add_executable(
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/mission_data.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
+    ${CMAKE_SOURCE_DIR}/tools/map_editor/commander_preview.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/element_ops.cpp
     ${CMAKE_SOURCE_DIR}/tools/map_editor/json_schema.cpp
     session/session_context_test.cpp
@@ -57,6 +58,7 @@ add_executable(
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/hill_crown_geometry_test.cpp
+    map/terrain_footprint_test.cpp
     map/mission_victory_rules_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp
@@ -187,6 +189,7 @@ add_executable(
     tools/map_editor_element_ops_test.cpp
     tools/map_editor_json_schema_test.cpp
     tools/hill_projection_model_test.cpp
+    tools/map_editor_commander_preview_test.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp
     ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp
     tools/arena_scenarios_test.cpp

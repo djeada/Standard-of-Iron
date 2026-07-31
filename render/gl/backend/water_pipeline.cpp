@@ -83,7 +83,6 @@ void WaterPipeline::cache_water_uniforms() {
       m_water_shader->optional_uniform_handle("u_camera_pos");
   m_water_uniforms.light_direction =
       m_water_shader->optional_uniform_handle("u_light_dir");
-  m_water_uniforms.fog_color = m_water_shader->optional_uniform_handle("u_fog_color");
   m_water_uniforms.fog_start = m_water_shader->optional_uniform_handle("u_fog_start");
   m_water_uniforms.fog_end = m_water_shader->optional_uniform_handle("u_fog_end");
 }
@@ -139,8 +138,6 @@ void WaterPipeline::cache_riverbank_uniforms() {
       m_riverbank_shader->optional_uniform_handle("u_camera_pos");
   m_riverbank_uniforms.light_direction =
       m_riverbank_shader->optional_uniform_handle("u_light_dir");
-  m_riverbank_uniforms.fog_color =
-      m_riverbank_shader->optional_uniform_handle("u_fog_color");
   m_riverbank_uniforms.fog_start =
       m_riverbank_shader->optional_uniform_handle("u_fog_start");
   m_riverbank_uniforms.fog_end =

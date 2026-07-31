@@ -8,6 +8,7 @@
 #include <numbers>
 #include <vector>
 
+#include "terrain_footprint.h"
 #include "terrain_landform.h"
 
 namespace {
@@ -17,13 +18,11 @@ constexpr int k_hill_ramp_extra_steps = 7;
 
 constexpr float k_hill_ramp_steepness_exponent = 0.92F;
 
-constexpr float k_entry_ramp_width = 3.0F;
-
 constexpr float k_width_falloff_padding = 2.50F;
 
 constexpr float k_entry_bowl_exponent = 1.30F;
 
-constexpr float k_entry_base_width_scale = 1.72F;
+constexpr float k_entry_base_width_scale = Game::Map::k_hill_entry_base_width_scale;
 constexpr float k_entry_top_width_scale = 1.12F;
 
 constexpr float k_entry_outward_steps_fraction = 1.08F;
@@ -39,7 +38,8 @@ constexpr float k_entry_toe_height_fraction = 0.0F;
 constexpr float k_walkable_width_threshold = 0.38F;
 
 constexpr float k_entry_lower_ramp_delay = 0.0F;
-constexpr float k_entry_mouth_flare_strength = 0.38F;
+constexpr float k_entry_mouth_flare_strength =
+    Game::Map::k_hill_entry_mouth_flare_strength;
 constexpr float k_entry_mouth_soften_strength = 0.045F;
 constexpr float k_entry_floor_flatten_strength = 0.075F;
 constexpr float k_entry_shoulder_raise_strength = 0.065F;
@@ -182,16 +182,19 @@ void TerrainHeightMap::build_from_features(
     if (feature.type == TerrainType::Mountain) {
 
       const bool has_authored_extents = feature.width > 0.0F && feature.depth > 0.0F;
-      const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
+      const bool campaign_landform_scale =
+          Game::Map::is_campaign_landform_scale(m_width, m_height);
 
       const float mountain_height =
           feature.height * (campaign_landform_scale ? 1.90F : 1.0F);
-      const float major_radius =
-          has_authored_extents ? std::max(feature.width * 0.5F / m_tile_size, 2.0F)
-                               : std::max(grid_radius * 1.38F, grid_radius + 6.0F);
-      const float minor_radius =
-          has_authored_extents ? std::max(feature.depth * 0.5F / m_tile_size, 2.0F)
-                               : std::max(grid_radius * 0.55F, 5.0F);
+      const auto footprint =
+          Game::Map::mountain_footprint_cells({.width = feature.width,
+                                               .depth = feature.depth,
+                                               .radius = feature.radius,
+                                               .rotation_deg = feature.rotation_deg,
+                                               .tile_size = m_tile_size});
+      const float major_radius = footprint.half_width;
+      const float minor_radius = footprint.half_depth;
       const float bound = std::max(major_radius, minor_radius) + 2.0F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - bound)));
       const int max_x = std::min(m_width - 1, int(std::ceil(grid_center_x + bound)));
@@ -266,47 +269,26 @@ void TerrainHeightMap::build_from_features(
     }
 
     if (feature.type == TerrainType::Hill) {
-      float grid_width = std::max(feature.width / m_tile_size, 1.0F);
-      float const grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
+      const bool campaign_landform_scale =
+          Game::Map::is_campaign_landform_scale(m_width, m_height);
+      const auto footprint =
+          Game::Map::hill_footprint_cells({.width = feature.width,
+                                           .depth = feature.depth,
+                                           .radius = feature.radius,
+                                           .rotation_deg = feature.rotation_deg,
+                                           .tile_size = m_tile_size,
+                                           .grid_center_x = grid_center_x,
+                                           .grid_center_z = grid_center_z,
+                                           .campaign_scale = campaign_landform_scale});
+      float const hill_rotation_deg = footprint.rotation_deg;
+      const auto crown = Game::Map::hill_crown_cells(
+          footprint, feature.height, m_tile_size, campaign_landform_scale);
+      const float hill_height = crown.height;
 
-      const bool campaign_landform_scale = std::max(m_width, m_height) >= 128;
-      const bool radius_authored =
-          feature.radius > 0.0F &&
-          std::abs(feature.width - feature.radius * 2.0F) < 0.01F &&
-          std::abs(feature.depth - feature.radius * 2.0F) < 0.01F;
-      float hill_rotation_deg = feature.rotation_deg;
-      if (campaign_landform_scale && radius_authored) {
-
-        grid_width *= 1.18F;
-        hill_rotation_deg += hash_to_float01(hash_coords(int(std::round(grid_center_x)),
-                                                         int(std::round(grid_center_z)),
-                                                         0x81E7U)) *
-                             180.0F;
-      }
-      const float authored_hill_height =
-          feature.height * (campaign_landform_scale ? 2.80F : 1.0F);
-      const float footprint_height =
-          std::min(grid_width, grid_depth) * m_tile_size * 0.18F;
-      const float hill_height = campaign_landform_scale
-                                    ? std::max(authored_hill_height, footprint_height)
-                                    : authored_hill_height;
-
-      const float slope_width = std::max(2.0F, grid_width * 0.50F);
-      const float slope_depth = std::max(2.0F, grid_depth * 0.50F);
-      const float elevation_cells = std::max(hill_height / m_tile_size, 0.25F);
-      const float slope_run = campaign_landform_scale
-                                  ? std::max(7.0F, elevation_cells * 4.2F)
-                                  : std::max(3.25F, elevation_cells * 3.15F);
-      const float minimum_crown_fraction = campaign_landform_scale ? 0.42F : 0.68F;
-      const float maximum_slope_fraction = campaign_landform_scale ? 0.62F : 0.46F;
-      const float plateau_width = std::max(
-          {1.5F,
-           slope_width * minimum_crown_fraction,
-           slope_width - std::min(slope_width * maximum_slope_fraction, slope_run)});
-      const float plateau_depth = std::max(
-          {1.5F,
-           slope_depth * minimum_crown_fraction,
-           slope_depth - std::min(slope_depth * maximum_slope_fraction, slope_run)});
+      const float slope_width = footprint.half_width;
+      const float slope_depth = footprint.half_depth;
+      const float plateau_width = crown.half_width;
+      const float plateau_depth = crown.half_depth;
 
       const float max_extent = std::max(slope_width, slope_depth) * 1.18F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
@@ -512,11 +494,8 @@ void TerrainHeightMap::build_from_features(
             k_entry_outward_steps_max);
         int const total_ramp_steps = outward_steps + ramp_steps;
 
-        float const hill_min_extent = std::min(plateau_width, plateau_depth);
-        const float authored_entry_width =
-            (campaign_landform_scale ? 7.25F : k_entry_ramp_width) + entrance.radius;
-        float const entry_width =
-            std::max(1.5F, std::min(authored_entry_width, hill_min_extent * 0.62F));
+        float const entry_width = Game::Map::hill_entry_half_width_cells(
+            crown, entrance.radius, campaign_landform_scale);
 
         float const perp_x = -dir_z;
         float const perp_z = dir_x;

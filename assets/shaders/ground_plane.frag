@@ -36,7 +36,6 @@ uniform float u_micro_normal_weight;
 uniform float u_albedo_jitter;
 uniform vec3 u_snow_color;
 uniform vec3 u_camera_pos;
-uniform vec3 u_fog_color;
 uniform float u_fog_start;
 uniform float u_fog_end;
 
@@ -66,7 +65,7 @@ mat2 rot2(float a) {
 }
 
 float tactical_zoom() {
-  return smoothstep(18.0, 55.0, length(u_camera_pos - v_world_pos));
+  return smoothstep(58.0, 115.0, length(u_camera_pos - v_world_pos));
 }
 
 void main() {
@@ -187,7 +186,7 @@ void main() {
   base_col *= vec3(1.025, 0.965, 0.985);
 
   float ground_luma = dot(base_col, vec3(0.299, 0.587, 0.114));
-  base_col = mix(base_col, mix(vec3(ground_luma), base_col, 0.88), tactical);
+  base_col = mix(base_col, mix(vec3(ground_luma), base_col, 0.94), tactical);
 
   float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);
@@ -234,13 +233,13 @@ void main() {
                             0.0,
                             1.0);
   float micro_amp = clamp(u_micro_bump_amp, 0.02, 0.28) * mix(0.82, 1.55, relief_mask);
-  micro_amp *= mix(1.0, 0.55, tactical);
+  micro_amp *= mix(1.0, 0.78, tactical);
   vec3 micro_perturb = normalize(n - (t * g.x + b * g.y) * micro_amp);
   vec3 n_micro =
       normalize(mix(n, micro_perturb, clamp(u_micro_normal_weight, 0.0, 1.0)));
   float jitter_amp = max(0.01, u_albedo_jitter) * (0.65 + u_soil_roughness * 0.6);
   float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
-  jitter *= mix(1.0, 0.35, tactical);
+  jitter *= mix(1.0, 0.62, tactical);
   float speckle = step(0.74, noise21(wuv * 23.0 + vec2(2.0, 5.0)));
   speckle = mix(speckle, 0.35, tactical);
   float patch_brightness = (broad_breakup - 0.5) * 0.13 +
@@ -277,12 +276,9 @@ void main() {
   vec3 to_camera = u_camera_pos - v_world_pos;
   float view_distance = max(length(to_camera), 1e-4);
   vec3 fog_view_dir = to_camera / view_distance;
-  float distance_fog =
-      smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.18, 0.85, 1.0 - abs(fog_view_dir.y));
-  float fog_amount = clamp(distance_fog * (0.75 + 0.55 * horizon_fog), 0.0, 1.0);
-  float environment_fog = 1.0 - exp(-environment_fog_density() * view_distance);
-  fog_amount = max(fog_amount, environment_fog);
+  float fog_amount = atmospheric_fog_amount(
+      view_distance, u_fog_start, u_fog_end, 0.75, 0.55 * horizon_fog);
   lit = mix(lit, environment_fog_color(), fog_amount);
 
   frag_color = vec4(clamp(lit, 0.0, 1.0), 1.0);

@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPolygonF>
+#include <QSet>
 #include <QSizeF>
 #include <QToolTip>
 #include <QWheelEvent>
@@ -19,7 +20,9 @@
 #include <limits>
 
 #include "canvas_transform.h"
+#include "commander_preview.h"
 #include "element_ops.h"
+#include "map_json_keys.h"
 #include "spawn_icon_library.h"
 #include "troop_tool_specs.h"
 #include "ui/theme.h"
@@ -40,6 +43,7 @@ constexpr float k_minor_grid_spacing_px = 12.0F;
 constexpr int k_minor_grid_alpha = 90;
 const QColor k_hover_select_color(100, 200, 255);
 const QColor k_hover_erase_color(255, 80, 80);
+constexpr float k_entry_crest_width_scale = 1.12F;
 
 QPointF snap_pos(const QPointF& gp) {
   return {std::round(gp.x()), std::round(gp.y())};
@@ -497,10 +501,19 @@ void MapCanvas::paste_from_clipboard(const QPointF& grid_pos) {
   }
   const QPointF delta = clamp_to_grid(grid_pos) - *anchor;
 
-  QVector<ElementSnapshot> pasted;
-  pasted.reserve(m_clipboard.size());
+  QVector<ElementSnapshot> translated;
+  translated.reserve(m_clipboard.size());
   for (const ElementSnapshot& snap : m_clipboard) {
-    pasted.append(ElementOps::translated(snap, delta));
+    translated.append(ElementOps::translated(snap, delta));
+  }
+
+  int rejected_commanders = 0;
+  const QVector<ElementSnapshot> pasted =
+      without_duplicate_commanders(translated, &rejected_commanders);
+  if (rejected_commanders > 0) {
+    emit action_feedback(
+        QStringLiteral("Skipped %1 commander spawn(s): one commander per owner.")
+            .arg(rejected_commanders));
   }
 
   std::unique_ptr<Command> cmd = ElementOps::make_add_many(*m_map_data, pasted);
@@ -530,10 +543,19 @@ void MapCanvas::duplicate_selection() {
     return;
   }
 
-  QVector<ElementSnapshot> copies;
-  copies.reserve(snaps.size());
+  QVector<ElementSnapshot> offset;
+  offset.reserve(snaps.size());
   for (const ElementSnapshot& snap : snaps) {
-    copies.append(ElementOps::translated(snap, QPointF(1.0, 1.0)));
+    offset.append(ElementOps::translated(snap, QPointF(1.0, 1.0)));
+  }
+
+  int rejected_commanders = 0;
+  const QVector<ElementSnapshot> copies =
+      without_duplicate_commanders(offset, &rejected_commanders);
+  if (rejected_commanders > 0) {
+    emit action_feedback(
+        QStringLiteral("Skipped %1 commander spawn(s): one commander per owner.")
+            .arg(rejected_commanders));
   }
 
   std::unique_ptr<Command> cmd = ElementOps::make_add_many(*m_map_data, copies);
@@ -618,15 +640,74 @@ void MapCanvas::snap_selection_to_grid() {
 }
 
 void MapCanvas::set_selection_player_id(int player_id) {
+  const bool owner_has_commander =
+      m_map_data != nullptr &&
+      m_map_data->commander_spawn_index_for_player(player_id) >= 0;
+
+  QVector<QString> blocked_commanders;
+  if (owner_has_commander) {
+    for (const ElementSnapshot& snap : selected_snapshots()) {
+      if (ElementOps::supports_player_id(snap) &&
+          ElementOps::player_id(snap) != player_id &&
+          MapData::is_commander_troop_type(ElementOps::type_name(snap))) {
+        blocked_commanders.append(ElementOps::type_name(snap));
+      }
+    }
+  }
+
   apply_to_selection(
-      [player_id](const ElementSnapshot& snap) -> std::optional<ElementSnapshot> {
+      [player_id, owner_has_commander](
+          const ElementSnapshot& snap) -> std::optional<ElementSnapshot> {
         if (!ElementOps::supports_player_id(snap) ||
             ElementOps::player_id(snap) == player_id) {
+          return std::nullopt;
+        }
+        if (owner_has_commander &&
+            MapData::is_commander_troop_type(ElementOps::type_name(snap))) {
           return std::nullopt;
         }
         return ElementOps::with_player_id(snap, player_id);
       },
       QStringLiteral("Set player %1").arg(player_id));
+
+  if (owner_has_commander && !blocked_commanders.isEmpty()) {
+    emit action_feedback(
+        QStringLiteral("Player %1 already has a commander — %2 commander spawn(s) "
+                       "kept their owner.")
+            .arg(player_id)
+            .arg(blocked_commanders.size()));
+  }
+}
+
+QVector<ElementSnapshot>
+MapCanvas::without_duplicate_commanders(const QVector<ElementSnapshot>& snaps,
+                                        int* rejected_count) const {
+  QVector<ElementSnapshot> accepted;
+  accepted.reserve(snaps.size());
+  QSet<int> owners_with_commander;
+
+  for (const ElementSnapshot& snap : snaps) {
+    if (!MapData::is_commander_troop_type(ElementOps::type_name(snap)) ||
+        !ElementOps::supports_player_id(snap)) {
+      accepted.append(snap);
+      continue;
+    }
+
+    const int owner = ElementOps::player_id(snap);
+    const bool taken = owners_with_commander.contains(owner) ||
+                       (m_map_data != nullptr &&
+                        m_map_data->commander_spawn_index_for_player(owner) >= 0);
+    if (taken) {
+      if (rejected_count != nullptr) {
+        ++(*rejected_count);
+      }
+      continue;
+    }
+    owners_with_commander.insert(owner);
+    accepted.append(snap);
+  }
+
+  return accepted;
 }
 
 void MapCanvas::nudge_selection(const QPointF& delta_cells) {
@@ -1031,11 +1112,13 @@ void MapCanvas::draw_terrain_element(QPainter& painter, int i) {
   } else {
     outline_pen = QPen(Qt::white, 1);
   }
+  const auto outline_rotation =
+      static_cast<double>(terrain_footprint(elem).rotation_deg);
   painter.save();
   painter.setPen(outline_pen);
   painter.setBrush(Qt::NoBrush);
   painter.translate(pos);
-  painter.rotate(static_cast<double>(elem.rotation));
+  painter.rotate(outline_rotation);
   painter.drawEllipse(QPointF(0, 0), static_cast<double>(rx), static_cast<double>(ry));
   painter.restore();
 
@@ -1044,11 +1127,100 @@ void MapCanvas::draw_terrain_element(QPainter& painter, int i) {
     painter.setPen(QPen(hover_ring_color, 2));
     painter.setBrush(Qt::NoBrush);
     painter.translate(pos);
-    painter.rotate(static_cast<double>(elem.rotation));
+    painter.rotate(outline_rotation);
     painter.drawEllipse(
         QPointF(0, 0), static_cast<double>(rx + 4), static_cast<double>(ry + 4));
     painter.restore();
   }
+
+  draw_terrain_entrances(painter, elem);
+}
+
+void MapCanvas::draw_terrain_entrances(QPainter& painter, const TerrainElement& elem) {
+  if (elem.entrances.isEmpty() || elem.type != QStringLiteral("hill")) {
+    return;
+  }
+
+  const float tile_size =
+      m_map_data != nullptr ? std::max(m_map_data->grid().tile_size, 0.0001F) : 1.0F;
+  const bool campaign_scale =
+      m_map_data != nullptr && Game::Map::is_campaign_landform_scale(
+                                   m_map_data->grid().width, m_map_data->grid().height);
+  const Game::Map::FootprintCells footprint = terrain_footprint(elem);
+  const Game::Map::HillCrownCells crown =
+      Game::Map::hill_crown_cells(footprint, elem.height, tile_size, campaign_scale);
+  const float cell_px = static_cast<float>(grid_cell_size) * m_zoom;
+
+  painter.save();
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  for (const QJsonValue& entrance_value : elem.entrances) {
+    const QJsonObject entrance = entrance_value.toObject();
+    if (!entrance.contains(MapJsonKeys::x) || !entrance.contains(MapJsonKeys::z)) {
+      continue;
+    }
+    const auto entrance_x =
+        static_cast<float>(entrance.value(MapJsonKeys::x).toDouble());
+    const auto entrance_z =
+        static_cast<float>(entrance.value(MapJsonKeys::z).toDouble());
+    const auto entrance_radius = static_cast<float>(
+        entrance.value(MapJsonKeys::radius)
+            .toDouble(entrance.value(MapJsonKeys::width).toDouble(0.0) * 0.5));
+
+    const float entry_half_width_cells = Game::Map::hill_entry_half_width_cells(
+        crown, entrance_radius / tile_size, campaign_scale);
+    const float mouth_half_width_cells =
+        Game::Map::hill_entry_mouth_half_width_cells(entry_half_width_cells);
+
+    const QPointF pos(grid_to_widget(entrance_x, entrance_z));
+    const QPointF centre(grid_to_widget(elem.x, elem.z));
+    QPointF ramp_dir = centre - pos;
+    const auto ramp_length = static_cast<float>(std::hypot(ramp_dir.x(), ramp_dir.y()));
+    if (ramp_length > 0.001F) {
+      ramp_dir /= ramp_length;
+    } else {
+      ramp_dir = QPointF(1.0, 0.0);
+    }
+    const QPointF gate_dir(-ramp_dir.y(), ramp_dir.x());
+
+    const auto mouth_px = static_cast<double>(mouth_half_width_cells * cell_px);
+    const auto marker_px =
+        static_cast<double>(std::max(entrance_radius / tile_size, 0.6F) * cell_px);
+    const double ramp_px = std::min(
+        static_cast<double>(ramp_length),
+        static_cast<double>(std::min(crown.half_width, crown.half_depth) * cell_px));
+
+    const auto crest_px = static_cast<double>(entry_half_width_cells *
+                                              k_entry_crest_width_scale * cell_px);
+    const QPointF gate_a = pos + (gate_dir * mouth_px);
+    const QPointF gate_b = pos - (gate_dir * mouth_px);
+    const QPointF crest = pos + (ramp_dir * ramp_px);
+
+    QPolygonF ramp;
+    ramp << gate_a << (crest + (gate_dir * crest_px)) << (crest - (gate_dir * crest_px))
+         << gate_b;
+    painter.setBrush(QColor(90, 190, 255, 45));
+    painter.setPen(QPen(QColor(120, 205, 255, 130), 1.0, Qt::DashLine));
+    painter.drawPolygon(ramp);
+
+    const double gate_pen_px =
+        std::clamp(static_cast<double>(cell_px) * 0.22, 2.0, 6.0);
+    painter.setPen(QPen(QColor(150, 220, 255, 235), gate_pen_px));
+    painter.drawLine(gate_a, gate_b);
+
+    painter.setPen(QPen(QColor(16, 34, 52, 220), 1.4));
+    painter.setBrush(QColor(90, 190, 255, 190));
+    painter.drawEllipse(pos, marker_px, marker_px);
+
+    const double arrow_px = std::max(6.0, std::min(mouth_px, ramp_px) * 0.55);
+    const QPointF tip = pos + (ramp_dir * arrow_px);
+    QPolygonF arrow;
+    arrow << tip << (pos + (gate_dir * arrow_px * 0.45))
+          << (pos - (gate_dir * arrow_px * 0.45));
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(235, 250, 255, 220));
+    painter.drawPolygon(arrow);
+  }
+  painter.restore();
 }
 
 void MapCanvas::draw_world_prop_element(QPainter& painter, int i) {
@@ -1128,20 +1300,37 @@ void MapCanvas::draw_troop_spawn_element(QPainter& painter, int i) {
                     static_cast<float>(marker_radius_px()) * 1.375F);
 }
 
+float MapCanvas::linear_width_px(const LinearElement& elem) const {
+  const float tile_size =
+      m_map_data != nullptr ? std::max(m_map_data->grid().tile_size, 0.0001F) : 1.0F;
+  const float width_cells = std::max(elem.width, 0.0F) / tile_size;
+  return std::max(2.0F, width_cells * static_cast<float>(grid_cell_size) * m_zoom);
+}
+
+QPolygonF MapCanvas::linear_polyline_px(const LinearElement& elem) const {
+  QPolygonF points;
+  for (const QPointF& point : linear_polyline(elem)) {
+    points.append(QPointF(
+        grid_to_widget(static_cast<float>(point.x()), static_cast<float>(point.y()))));
+  }
+  return points;
+}
+
 void MapCanvas::draw_linear_element(QPainter& painter, int i) {
   const QColor& hover_ring_color =
       m_current_tool == ToolType::Eraser ? k_hover_erase_color : k_hover_select_color;
   const auto& elem = m_map_data->linear_elements()[i];
-  QPoint const start_pos = grid_to_widget(elem.start.x(), elem.start.y());
-  QPoint const end_pos = grid_to_widget(elem.end.x(), elem.end.y());
+  const QPolygonF path = linear_polyline_px(elem);
+  if (path.size() < 2) {
+    return;
+  }
+  const QPointF start_pos = path.first();
+  const QPointF end_pos = path.last();
 
   bool const is_selected = is_selected_element(2, i);
   bool const is_hovered = (m_hovered_type == 2 && m_hovered_index == i);
 
   QColor color;
-  int line_width = static_cast<int>(elem.width * m_zoom);
-  line_width = std::max(2, std::min(line_width, 20));
-
   if (elem.type == "river") {
     color = QColor(70, 130, 200);
   } else if (elem.type == "road") {
@@ -1152,16 +1341,39 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
     color = player_color_for_editor(elem.player_id);
   }
 
-  if (is_selected) {
-    painter.setPen(QPen(Qt::yellow, line_width + 4));
-    painter.drawLine(start_pos, end_pos);
-  } else if (is_hovered) {
-    painter.setPen(QPen(hover_ring_color, line_width + 4));
-    painter.drawLine(start_pos, end_pos);
+  const qreal band_width = linear_width_px(elem);
+  const qreal centre_width = std::clamp(band_width * 0.18, 1.0, 3.0);
+
+  painter.save();
+  if (is_selected || is_hovered) {
+    painter.setPen(QPen(is_selected ? QColor(Qt::yellow) : hover_ring_color,
+                        band_width + 4.0,
+                        Qt::SolidLine,
+                        Qt::RoundCap,
+                        Qt::RoundJoin));
+    painter.drawPolyline(path);
   }
 
-  painter.setPen(QPen(color, line_width));
-  painter.drawLine(start_pos, end_pos);
+  QColor band_color = color;
+  band_color.setAlpha(150);
+  painter.setPen(
+      QPen(band_color, band_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.drawPolyline(path);
+
+  painter.setPen(QPen(
+      color.lighter(115), centre_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.drawPolyline(path);
+  painter.restore();
+
+  if (path.size() > 2) {
+    painter.save();
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(color.lighter(140));
+    for (int index = 1; index < path.size() - 1; ++index) {
+      painter.drawEllipse(path[index], 2.5, 2.5);
+    }
+    painter.restore();
+  }
 
   int const endpoint_size = 6;
   painter.setBrush(color.lighter());
@@ -1246,6 +1458,42 @@ void MapCanvas::draw_undead_zone_element(QPainter& painter, int i) {
   painter.restore();
 }
 
+void MapCanvas::draw_derived_commanders(QPainter& painter) {
+  if (m_mission_data == nullptr || m_map_data == nullptr) {
+    return;
+  }
+
+  const QVector<DerivedCommander> commanders =
+      derive_mission_commanders(*m_map_data, m_mission_data->root());
+  const auto badge_size = static_cast<float>(marker_radius_px()) * 1.55F;
+
+  painter.save();
+  for (const DerivedCommander& commander : commanders) {
+    if (commander.authored_in_map) {
+      continue;
+    }
+
+    const QPoint pos = grid_to_widget(static_cast<float>(commander.position.x()),
+                                      static_cast<float>(commander.position.y()));
+    draw_troop_marker(
+        painter, pos, commander.troop_type, commander.owner_id, badge_size);
+
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(255, 214, 120, 220), 2, Qt::DashLine));
+    const int ring = static_cast<int>(badge_size * 0.5F) + 5;
+    painter.drawEllipse(pos, ring, ring);
+
+    if (labels_visible()) {
+      painter.setPen(QColor(255, 226, 168));
+      painter.drawText(QRect(pos.x() - 80, pos.y() + ring + 2, 160, 16),
+                       Qt::AlignHCenter | Qt::AlignTop,
+                       QStringLiteral("%1 commander (auto): %2")
+                           .arg(commander.label, commander.troop_type));
+    }
+  }
+  painter.restore();
+}
+
 void MapCanvas::draw_mission_overlays(QPainter& painter) {
   if (m_mission_data == nullptr || m_map_data == nullptr ||
       !m_layer_visible[LayerMissionOverlay]) {
@@ -1318,6 +1566,8 @@ void MapCanvas::draw_mission_overlays(QPainter& painter) {
     }
     ++owner_id;
   }
+
+  draw_derived_commanders(painter);
 
   const QStringList objective_keys = {QStringLiteral("victory_conditions"),
                                       QStringLiteral("optional_objectives")};
@@ -1674,30 +1924,48 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
   painter.restore();
 }
 
-QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
-  float rx_cells = NAN;
-  float ry_cells = NAN;
+Game::Map::FootprintCells
+MapCanvas::terrain_footprint(const TerrainElement& elem) const {
+  const float tile_size =
+      m_map_data != nullptr ? std::max(m_map_data->grid().tile_size, 0.0001F) : 1.0F;
+  const bool campaign_scale =
+      m_map_data != nullptr && Game::Map::is_campaign_landform_scale(
+                                   m_map_data->grid().width, m_map_data->grid().height);
 
   if (elem.type == QStringLiteral("mountain")) {
-
-    const float r = std::max(elem.radius, 1.0F);
-    rx_cells = r * 1.8F;
-    ry_cells = r * 0.22F;
-  } else if (elem.type == QStringLiteral("lake")) {
-    rx_cells = elem.width > 0.0F ? elem.width * 0.5F : std::max(elem.radius, 1.0F);
-    ry_cells = elem.depth > 0.0F ? elem.depth * 0.5F : std::max(elem.radius, 1.0F);
-  } else {
-
-    if (elem.width > 0.0F && elem.depth > 0.0F) {
-      rx_cells = elem.width;
-      ry_cells = elem.depth;
-    } else {
-      rx_cells = ry_cells = std::max(elem.radius, 1.0F);
-    }
+    return Game::Map::mountain_footprint_cells({.width = elem.width,
+                                                .depth = elem.depth,
+                                                .radius = elem.radius,
+                                                .rotation_deg = elem.rotation,
+                                                .tile_size = tile_size});
   }
 
-  const float rx = rx_cells * static_cast<float>(grid_cell_size) * m_zoom;
-  const float ry = ry_cells * static_cast<float>(grid_cell_size) * m_zoom;
+  if (elem.type == QStringLiteral("lake")) {
+    Game::Map::FootprintCells lake;
+    lake.half_width = elem.width > 0.0F ? elem.width * 0.5F / tile_size
+                                        : std::max(elem.radius / tile_size, 1.0F);
+    lake.half_depth = elem.depth > 0.0F ? elem.depth * 0.5F / tile_size
+                                        : std::max(elem.radius / tile_size, 1.0F);
+    lake.width_cells = lake.half_width * 2.0F;
+    lake.depth_cells = lake.half_depth * 2.0F;
+    lake.rotation_deg = elem.rotation;
+    return lake;
+  }
+
+  return Game::Map::hill_footprint_cells({.width = elem.width,
+                                          .depth = elem.depth,
+                                          .radius = elem.radius,
+                                          .rotation_deg = elem.rotation,
+                                          .tile_size = tile_size,
+                                          .grid_center_x = elem.x,
+                                          .grid_center_z = elem.z,
+                                          .campaign_scale = campaign_scale});
+}
+
+QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
+  const Game::Map::FootprintCells footprint = terrain_footprint(elem);
+  const float rx = footprint.half_width * static_cast<float>(grid_cell_size) * m_zoom;
+  const float ry = footprint.half_depth * static_cast<float>(grid_cell_size) * m_zoom;
 
   return {std::max(static_cast<float>(marker_radius_px()), rx), std::max(4.0F, ry)};
 }
@@ -1705,13 +1973,14 @@ QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
 void MapCanvas::draw_terrain_feature(QPainter& painter,
                                      const TerrainElement& elem,
                                      const QPoint& center) {
+  const Game::Map::FootprintCells footprint = terrain_footprint(elem);
   const QSizeF ellipse = terrain_ellipse_px(elem);
   const auto rx = ellipse.width();
   const auto ry = ellipse.height();
 
   painter.save();
   painter.translate(center);
-  painter.rotate(static_cast<double>(elem.rotation));
+  painter.rotate(static_cast<double>(footprint.rotation_deg));
 
   if (elem.type == QStringLiteral("hill")) {
 
@@ -1760,6 +2029,13 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.drawEllipse(QPointF(0, 0), rx, ry);
     painter.setPen(QPen(QColor(145, 205, 215, 175), 1.0));
     painter.drawEllipse(QPointF(0, 0), rx * 0.82, ry * 0.82);
+  }
+
+  if (footprint.organic_spread > 0.0F) {
+    const double spread = 1.0 + static_cast<double>(footprint.organic_spread);
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(255, 226, 168, 130), 1.0, Qt::DotLine));
+    painter.drawEllipse(QPointF(0, 0), rx * spread, ry * spread);
   }
 
   painter.restore();
@@ -1858,44 +2134,6 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
       update();
       break;
     }
-    case ToolType::Hill:
-    case ToolType::Mountain:
-    case ToolType::PropFirecamp:
-    case ToolType::PropTent:
-    case ToolType::PropSupplyCart:
-    case ToolType::PropWeaponRack:
-    case ToolType::PropRuins:
-    case ToolType::PropMagicShrine:
-    case ToolType::PropDeadTree:
-    case ToolType::PropBoulder:
-    case ToolType::Barracks:
-    case ToolType::Village:
-    case ToolType::TroopArcher:
-    case ToolType::TroopSwordsman:
-    case ToolType::TroopSpearman:
-    case ToolType::TroopHorseSwordsman:
-    case ToolType::TroopHorseArcher:
-    case ToolType::TroopHorseSpearman:
-    case ToolType::TroopHealer:
-    case ToolType::TroopCatapult:
-    case ToolType::TroopBallista:
-    case ToolType::TroopElephant:
-    case ToolType::TroopRomanLegionOrganizer:
-    case ToolType::TroopRomanVeteranConsul:
-    case ToolType::TroopRomanFieldCommander:
-    case ToolType::TroopCarthageMercenaryBroker:
-    case ToolType::TroopCarthageCavalryPatron:
-    case ToolType::TroopCarthageElephantMaster:
-    case ToolType::TroopSkeletonSwordsman:
-    case ToolType::TroopSkeletonArcher:
-    case ToolType::TroopGravePriest:
-    case ToolType::TroopCivilian:
-    case ToolType::TroopBuilder:
-    case ToolType::UndeadZone:
-    case ToolType::DefenseTower:
-    case ToolType::Home:
-      place_element(grid_pos);
-      break;
     case ToolType::River:
     case ToolType::Road:
     case ToolType::Bridge:
@@ -1908,6 +2146,9 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
       break;
     case ToolType::Eraser:
       erase_at_position(grid_pos);
+      break;
+    default:
+      place_element(grid_pos);
       break;
     }
   }
@@ -2436,30 +2677,29 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
 
   for (int i = linear.size() - 1; i >= 0; --i) {
     const auto& elem = linear[i];
-    const QPoint start_pos = grid_to_widget(elem.start.x(), elem.start.y());
-    const QPoint end_pos = grid_to_widget(elem.end.x(), elem.end.y());
-
-    const QVector2D a(static_cast<float>(start_pos.x()),
-                      static_cast<float>(start_pos.y()));
-    const QVector2D b(static_cast<float>(end_pos.x()), static_cast<float>(end_pos.y()));
-    const QVector2D ab = b - a;
-    const float ab_length_sq = QVector2D::dotProduct(ab, ab);
-
-    float dist = std::numeric_limits<float>::infinity();
-    if (ab_length_sq < 0.0001F) {
-      dist = (cursor - a).length();
-    } else {
-      const float t =
-          std::clamp(QVector2D::dotProduct(cursor - a, ab) / ab_length_sq, 0.0F, 1.0F);
-      const QVector2D closest = a + t * ab;
-      dist = (cursor - closest).length();
+    const QPolygonF path = linear_polyline_px(elem);
+    if (path.size() < 2) {
+      continue;
     }
 
-    int line_width_px = static_cast<int>(elem.width * m_zoom);
-    line_width_px = std::max(2, std::min(line_width_px, 20));
-    const float line_hit_radius_px = static_cast<float>(line_width_px) * 0.5F + 4.0F;
-    if ((cursor - a).length() <= point_hit_radius_px ||
-        (cursor - b).length() <= point_hit_radius_px) {
+    float dist = std::numeric_limits<float>::infinity();
+    for (int point = 1; point < path.size(); ++point) {
+      const QVector2D a(path[point - 1]);
+      const QVector2D b(path[point]);
+      const QVector2D ab = b - a;
+      const float ab_length_sq = QVector2D::dotProduct(ab, ab);
+      if (ab_length_sq < 0.0001F) {
+        dist = std::min(dist, (cursor - a).length());
+        continue;
+      }
+      const float t =
+          std::clamp(QVector2D::dotProduct(cursor - a, ab) / ab_length_sq, 0.0F, 1.0F);
+      dist = std::min(dist, (cursor - (a + t * ab)).length());
+    }
+
+    const float line_hit_radius_px = (linear_width_px(elem) * 0.5F) + 4.0F;
+    if ((cursor - QVector2D(path.first())).length() <= point_hit_radius_px ||
+        (cursor - QVector2D(path.last())).length() <= point_hit_radius_px) {
       continue;
     }
     consider_hit(2, i, -1, dist, line_hit_radius_px, 5);
@@ -2535,6 +2775,14 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
     elem.player_id = m_current_player_id;
     elem.max_population = default_troop_max_population;
     elem.nation = m_current_nation;
+    if (MapData::is_commander_troop_type(elem.type) &&
+        m_map_data->commander_spawn_index_for_player(elem.player_id) >= 0) {
+      emit action_feedback(
+          QStringLiteral("Player %1 already has a commander — only one commander "
+                         "per owner is spawned.")
+              .arg(elem.player_id));
+      return;
+    }
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
   } else if (m_current_tool == ToolType::UndeadZone) {
     UndeadZoneElement elem;

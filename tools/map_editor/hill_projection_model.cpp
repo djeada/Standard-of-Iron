@@ -6,19 +6,18 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
+#include "game/map/terrain_footprint.h"
 #include "map_json_keys.h"
 
 namespace MapEditor::HillProjection {
 
 namespace {
 
-constexpr int k_max_projection_size = 80;
-constexpr int k_grid_half_span = k_max_projection_size / 2;
 constexpr double k_pi = 3.14159265358979323846;
-constexpr double k_mountain_major_scale = 1.8;
-constexpr double k_mountain_minor_scale = 0.22;
+constexpr double k_entrance_rim_tolerance_cells = 2.0;
 
 struct RotationAxes {
   double cos_yaw = 1.0;
@@ -31,6 +30,12 @@ struct OrientedBounds {
   double max_u = 0.0;
   double min_v = 0.0;
   double max_v = 0.0;
+};
+
+struct EntranceSpec {
+  double x = 0.0;
+  double z = 0.0;
+  double radius = 0.0;
 };
 
 auto encode_cell(const QPoint& cell) -> quint64 {
@@ -83,6 +88,10 @@ auto in_bounds(const Model& model, const QPoint& cell) -> bool {
          cell.y() < model.grid_height;
 }
 
+auto model_tile_size(const Model& model) -> double {
+  return model.context.tile_size > 0.0 ? model.context.tile_size : 1.0;
+}
+
 auto sort_cells(QVector<QPoint>* cells) -> void {
   std::sort(cells->begin(), cells->end(), [](const QPoint& lhs, const QPoint& rhs) {
     if (lhs.y() == rhs.y()) {
@@ -112,15 +121,20 @@ auto unique_in_bounds_cells(const Model& model,
   return normalized;
 }
 
+auto cell_set(const QVector<QPoint>& cells) -> QSet<quint64> {
+  QSet<quint64> set;
+  set.reserve(cells.size());
+  for (const QPoint& cell : cells) {
+    set.insert(encode_cell(cell));
+  }
+  return set;
+}
+
 auto connected_components(const QVector<QPoint>& cells) -> QVector<QVector<QPoint>> {
   constexpr int k_neighbors[8][2] = {
       {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}};
 
-  QSet<quint64> cell_set;
-  for (const QPoint& cell : cells) {
-    cell_set.insert(encode_cell(cell));
-  }
-
+  const QSet<quint64> known = cell_set(cells);
   QSet<quint64> visited;
   QVector<QVector<QPoint>> components;
 
@@ -143,7 +157,7 @@ auto connected_components(const QVector<QPoint>& cells) -> QVector<QVector<QPoin
       for (const auto& delta : k_neighbors) {
         const QPoint neighbor(current.x() + delta[0], current.y() + delta[1]);
         const quint64 neighbor_key = encode_cell(neighbor);
-        if (!cell_set.contains(neighbor_key) || visited.contains(neighbor_key)) {
+        if (!known.contains(neighbor_key) || visited.contains(neighbor_key)) {
           continue;
         }
         visited.insert(neighbor_key);
@@ -158,36 +172,24 @@ auto connected_components(const QVector<QPoint>& cells) -> QVector<QVector<QPoin
   return components;
 }
 
-auto mountain_major_radius(double radius) -> double {
-  return std::max(radius * k_mountain_major_scale, radius + 3.0);
-}
-
-auto mountain_minor_radius(double radius) -> double {
-  return std::max(radius * k_mountain_minor_scale, 0.8);
-}
-
 auto mountain_radius_threshold(double local_u,
                                double local_v,
                                double base_radius) -> double {
+  const auto normalized = [&](double radius) {
+    const double major = Game::Map::mountain_major_radius_cells(float(radius));
+    const double minor = Game::Map::mountain_minor_radius_cells(float(radius));
+    return (local_u * local_u) / (major * major) +
+           (local_v * local_v) / (minor * minor);
+  };
+
   double low = 0.5;
   double high = std::max(base_radius, low);
-  while (true) {
-    const double major = mountain_major_radius(high);
-    const double minor = mountain_minor_radius(high);
-    const double norm =
-        (local_u * local_u) / (major * major) + (local_v * local_v) / (minor * minor);
-    if (norm <= 1.0 || high >= 512.0) {
-      break;
-    }
+  while (normalized(high) > 1.0 && high < 512.0) {
     high *= 2.0;
   }
   for (int iter = 0; iter < 28; ++iter) {
     const double mid = (low + high) * 0.5;
-    const double major = mountain_major_radius(mid);
-    const double minor = mountain_minor_radius(mid);
-    const double norm =
-        (local_u * local_u) / (major * major) + (local_v * local_v) / (minor * minor);
-    if (norm <= 1.0) {
+    if (normalized(mid) <= 1.0) {
       high = mid;
     } else {
       low = mid;
@@ -208,10 +210,7 @@ auto radius_from_matching_cells(const Model& model,
   }
 
   const RotationAxes axes = rotation_axes(rotation_deg);
-  QSet<quint64> selected_set;
-  for (const QPoint& cell : selected_cells) {
-    selected_set.insert(encode_cell(cell));
-  }
+  const QSet<quint64> selected_set = cell_set(selected_cells);
 
   double lower = 0.5;
   double upper = 512.0;
@@ -292,6 +291,107 @@ auto oriented_bounds_from_cells(const Model& model,
   return bounds;
 }
 
+auto read_entrance_specs(const QJsonArray& entrances,
+                         QJsonArray* out_invalid) -> QVector<EntranceSpec> {
+  QVector<EntranceSpec> specs;
+  specs.reserve(entrances.size());
+  for (const QJsonValue& entrance_value : entrances) {
+    if (!entrance_value.isObject()) {
+      out_invalid->append(entrance_value);
+      continue;
+    }
+
+    const QJsonObject entrance = entrance_value.toObject();
+    EntranceSpec spec;
+    if (!numeric_value(entrance.value(MapJsonKeys::x), &spec.x) ||
+        !numeric_value(entrance.value(MapJsonKeys::z), &spec.z)) {
+      out_invalid->append(entrance_value);
+      continue;
+    }
+    if (!numeric_value(entrance.value(MapJsonKeys::radius), &spec.radius)) {
+      double width = 0.0;
+      if (numeric_value(entrance.value(MapJsonKeys::width), &width)) {
+        spec.radius = width * 0.5;
+      }
+    }
+    specs.append(spec);
+  }
+  return specs;
+}
+
+auto projection_half_span(const Model& model,
+                          const Game::Map::FootprintCells& footprint,
+                          const QVector<EntranceSpec>& entrances) -> int {
+  const double spread = 1.0 + static_cast<double>(footprint.organic_spread);
+  const double span_u = static_cast<double>(footprint.half_width) * spread;
+  const double span_v = static_cast<double>(footprint.half_depth) * spread;
+  const RotationAxes axes = rotation_axes(model.runtime_rotation_deg);
+  const double half_x =
+      std::abs(axes.cos_yaw) * span_u + std::abs(axes.sin_yaw) * span_v;
+  const double half_z =
+      std::abs(axes.sin_yaw) * span_u + std::abs(axes.cos_yaw) * span_v;
+
+  double required = std::max(half_x, half_z);
+  for (const EntranceSpec& entrance : entrances) {
+    const double reach = std::max(entrance.radius, 0.0);
+    required = std::max(required, std::abs(entrance.x - model.center_x) + reach);
+    required = std::max(required, std::abs(entrance.z - model.center_z) + reach);
+  }
+
+  const int half_span =
+      static_cast<int>(std::ceil(required)) + k_projection_padding_cells;
+  const int size = std::clamp(
+      (half_span * 2) + 1, k_min_projection_size + 1, k_max_projection_size + 1);
+  return (size - 1) / 2;
+}
+
+auto append_entrance_cells(const Model& model,
+                           const EntranceSpec& entrance,
+                           QSet<quint64>* out_cells) -> bool {
+  const QPoint center_cell = cell_from_world(model, entrance.x, entrance.z);
+  if (entrance.radius > 0.0) {
+    const double radius_sq = entrance.radius * entrance.radius;
+    const int min_cell_x = std::max(
+        0,
+        static_cast<int>(std::floor((entrance.x - entrance.radius) - model.origin_x)));
+    const int max_cell_x = std::min(
+        model.grid_width - 1,
+        static_cast<int>(std::ceil((entrance.x + entrance.radius) - model.origin_x)));
+    const int min_cell_z = std::max(
+        0,
+        static_cast<int>(std::floor((entrance.z - entrance.radius) - model.origin_z)));
+    const int max_cell_z = std::min(
+        model.grid_height - 1,
+        static_cast<int>(std::ceil((entrance.z + entrance.radius) - model.origin_z)));
+
+    bool has_visible_cell = false;
+    for (int cell_z = min_cell_z; cell_z <= max_cell_z; ++cell_z) {
+      for (int cell_x = min_cell_x; cell_x <= max_cell_x; ++cell_x) {
+        const double dx = world_x_from_cell(model, cell_x) - entrance.x;
+        const double dz = world_z_from_cell(model, cell_z) - entrance.z;
+        if ((dx * dx + dz * dz) > radius_sq) {
+          continue;
+        }
+        const QPoint sampled(cell_x, cell_z);
+        if (!in_bounds(model, sampled)) {
+          continue;
+        }
+        out_cells->insert(encode_cell(sampled));
+        has_visible_cell = true;
+      }
+    }
+    if (has_visible_cell) {
+      return true;
+    }
+  }
+
+  if (in_bounds(model, center_cell)) {
+    out_cells->insert(encode_cell(center_cell));
+    return true;
+  }
+  return false;
+}
+
 auto fit_mountain_radius(const Model& model,
                          const QVector<QPoint>& mountain_cells,
                          double center_x,
@@ -302,37 +402,103 @@ auto fit_mountain_radius(const Model& model,
       model, mountain_cells, center_x, center_z, rotation_deg, base_radius, true);
 }
 
+auto component_centre(const Model& model, const QVector<QPoint>& component) -> QPointF {
+  double sum_x = 0.0;
+  double sum_z = 0.0;
+  for (const QPoint& cell : component) {
+    sum_x += world_x_from_cell(model, cell.x());
+    sum_z += world_z_from_cell(model, cell.y());
+  }
+  const auto count = static_cast<double>(std::max<qsizetype>(component.size(), 1));
+  return {sum_x / count, sum_z / count};
+}
+
+auto centre_reaches_rim(const Model& model,
+                        const QPointF& centre,
+                        const QVector<QPoint>& rim) -> bool {
+  const double tolerance_sq =
+      k_entrance_rim_tolerance_cells * k_entrance_rim_tolerance_cells;
+  for (const QPoint& cell : rim) {
+    const double dx = world_x_from_cell(model, cell.x()) - centre.x();
+    const double dz = world_z_from_cell(model, cell.y()) - centre.y();
+    if ((dx * dx) + (dz * dz) <= tolerance_sq) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto component_order(const QVector<QPoint>& lhs, const QVector<QPoint>& rhs) -> bool {
+  if (lhs.size() != rhs.size()) {
+    return lhs.size() > rhs.size();
+  }
+  if (lhs.isEmpty() || rhs.isEmpty()) {
+    return !lhs.isEmpty();
+  }
+  if (lhs.first().y() != rhs.first().y()) {
+    return lhs.first().y() < rhs.first().y();
+  }
+  return lhs.first().x() < rhs.first().x();
+}
+
 } // namespace
 
-auto build_model(const QJsonObject& hill_json) -> Model {
+auto build_model(const QJsonObject& hill_json, const MapContext& context) -> Model {
   Model model;
-  model.grid_width = k_max_projection_size;
-  model.grid_height = k_max_projection_size;
+  model.context = context;
+  const auto tile = static_cast<float>(model_tile_size(model));
 
   model.center_x = hill_json.value(MapJsonKeys::x).toDouble(0.0);
   model.center_z = hill_json.value(MapJsonKeys::z).toDouble(0.0);
   model.rotation_deg = hill_json.value(MapJsonKeys::rotation).toDouble(0.0);
-  model.origin_x = std::floor(model.center_x) - static_cast<double>(k_grid_half_span);
-  model.origin_z = std::floor(model.center_z) - static_cast<double>(k_grid_half_span);
 
   const double radius =
       std::max(1.0, hill_json.value(MapJsonKeys::radius).toDouble(10.0));
-  model.base_radius = radius;
+  model.base_radius = radius / static_cast<double>(tile);
   const QString terrain_type =
       hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
   model.is_mountain = terrain_type == QStringLiteral("mountain");
 
-  if (model.is_mountain) {
-    model.hill_half_width = mountain_major_radius(radius);
-    model.hill_half_depth = mountain_minor_radius(radius);
-  } else {
-    const double width = hill_json.value(MapJsonKeys::width).toDouble(0.0);
-    const double depth = hill_json.value(MapJsonKeys::depth).toDouble(0.0);
-    model.hill_half_width = std::max(0.5, width > 0.0 ? width : radius);
-    model.hill_half_depth = std::max(0.5, depth > 0.0 ? depth : radius);
-  }
+  const auto width =
+      static_cast<float>(hill_json.value(MapJsonKeys::width).toDouble(0.0));
+  const auto depth =
+      static_cast<float>(hill_json.value(MapJsonKeys::depth).toDouble(0.0));
+  const bool campaign_scale = Game::Map::is_campaign_landform_scale(
+      context.map_grid_width, context.map_grid_height);
+
+  const Game::Map::FootprintCells footprint =
+      model.is_mountain ? Game::Map::mountain_footprint_cells(
+                              {.width = width,
+                               .depth = depth,
+                               .radius = static_cast<float>(radius),
+                               .rotation_deg = static_cast<float>(model.rotation_deg),
+                               .tile_size = tile})
+                        : Game::Map::hill_footprint_cells(
+                              {.width = width,
+                               .depth = depth,
+                               .radius = static_cast<float>(radius),
+                               .rotation_deg = static_cast<float>(model.rotation_deg),
+                               .tile_size = tile,
+                               .grid_center_x = static_cast<float>(model.center_x),
+                               .grid_center_z = static_cast<float>(model.center_z),
+                               .campaign_scale = campaign_scale});
+
+  model.hill_half_width = footprint.half_width;
+  model.hill_half_depth = footprint.half_depth;
+  model.runtime_rotation_deg = footprint.rotation_deg;
+  model.organic_spread = footprint.organic_spread;
+
+  const QVector<EntranceSpec> entrance_specs = read_entrance_specs(
+      hill_json.value(MapJsonKeys::entrances).toArray(), &model.invalid_entrances);
+
+  const int half_span = projection_half_span(model, footprint, entrance_specs);
+  model.grid_width = (half_span * 2) + 1;
+  model.grid_height = model.grid_width;
+  model.origin_x = std::round(model.center_x) - static_cast<double>(half_span);
+  model.origin_z = std::round(model.center_z) - static_cast<double>(half_span);
+
   append_rotated_ellipse_cells(
-      &model, model.hill_half_width, model.hill_half_depth, model.rotation_deg);
+      &model, model.hill_half_width, model.hill_half_depth, model.runtime_rotation_deg);
   if (model.hill_cells.isEmpty()) {
     const QPoint center_cell = cell_from_world(model, model.center_x, model.center_z);
     if (in_bounds(model, center_cell)) {
@@ -340,76 +506,13 @@ auto build_model(const QJsonObject& hill_json) -> Model {
     }
   }
 
-  const QJsonArray entrances = hill_json.value(MapJsonKeys::entrances).toArray();
   QSet<quint64> unique_entrances;
-  for (const QJsonValue& entrance_value : entrances) {
-    if (!entrance_value.isObject()) {
-      model.preserved_entrances.append(entrance_value);
+  for (const EntranceSpec& entrance : entrance_specs) {
+    if (append_entrance_cells(model, entrance, &unique_entrances)) {
       continue;
     }
-
-    const QJsonObject entrance = entrance_value.toObject();
-    double x = 0.0;
-    double z = 0.0;
-    double radius = 0.0;
-    if (numeric_value(entrance.value(MapJsonKeys::x), &x) &&
-        numeric_value(entrance.value(MapJsonKeys::z), &z)) {
-      if (!numeric_value(entrance.value(MapJsonKeys::radius), &radius)) {
-        double width = 0.0;
-        if (numeric_value(entrance.value(MapJsonKeys::width), &width)) {
-          radius = width * 0.5;
-        }
-      }
-
-      const QPoint center_cell = cell_from_world(model, x, z);
-      if (radius <= 0.0) {
-        if (in_bounds(model, center_cell)) {
-          unique_entrances.insert(encode_cell(center_cell));
-          continue;
-        }
-      } else {
-        const double radius_sq = radius * radius;
-        const int min_cell_x =
-            std::max(0, static_cast<int>(std::floor((x - radius) - model.origin_x)));
-        const int max_cell_x =
-            std::min(model.grid_width - 1,
-                     static_cast<int>(std::ceil((x + radius) - model.origin_x)));
-        const int min_cell_z =
-            std::max(0, static_cast<int>(std::floor((z - radius) - model.origin_z)));
-        const int max_cell_z =
-            std::min(model.grid_height - 1,
-                     static_cast<int>(std::ceil((z + radius) - model.origin_z)));
-        bool has_visible_cell = false;
-        for (int cell_z = min_cell_z; cell_z <= max_cell_z; ++cell_z) {
-          for (int cell_x = min_cell_x; cell_x <= max_cell_x; ++cell_x) {
-            const double world_cell_x = world_x_from_cell(model, cell_x);
-            const double world_cell_z = world_z_from_cell(model, cell_z);
-            const double dx = world_cell_x - x;
-            const double dz = world_cell_z - z;
-            const double dist_sq = dx * dx + dz * dz;
-            if (dist_sq > radius_sq) {
-              continue;
-            }
-            const QPoint sampled(cell_x, cell_z);
-            if (!in_bounds(model, sampled)) {
-              continue;
-            }
-            unique_entrances.insert(encode_cell(sampled));
-            has_visible_cell = true;
-          }
-        }
-        if (has_visible_cell) {
-          continue;
-        }
-      }
-
-      if (in_bounds(model, center_cell)) {
-        unique_entrances.insert(encode_cell(center_cell));
-        continue;
-      }
-    }
-
-    model.preserved_entrances.append(entrance_value);
+    model.invalid_entrances.append(
+        QJsonObject{{MapJsonKeys::x, entrance.x}, {MapJsonKeys::z, entrance.z}});
   }
 
   for (quint64 key : unique_entrances) {
@@ -423,9 +526,154 @@ auto build_model(const QJsonObject& hill_json) -> Model {
   return model;
 }
 
+auto entrance_cells_from_json(const Model& model,
+                              const QJsonArray& entrances) -> QVector<QPoint> {
+  QJsonArray ignored_invalid;
+  const QVector<EntranceSpec> specs = read_entrance_specs(entrances, &ignored_invalid);
+
+  QSet<quint64> cells;
+  for (const EntranceSpec& spec : specs) {
+    append_entrance_cells(model, spec, &cells);
+  }
+
+  QVector<QPoint> expanded;
+  expanded.reserve(cells.size());
+  for (quint64 key : cells) {
+    expanded.append(QPoint(static_cast<int>(key & 0xFFFFFFFFULL),
+                           static_cast<int>((key >> 32U) & 0xFFFFFFFFULL)));
+  }
+  sort_cells(&expanded);
+  return expanded;
+}
+
+auto rim_cells(const QVector<QPoint>& body_cells) -> QVector<QPoint> {
+  constexpr int k_neighbors[4][2] = {{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
+  const QSet<quint64> body = cell_set(body_cells);
+
+  QVector<QPoint> rim;
+  rim.reserve(body_cells.size());
+  for (const QPoint& cell : body_cells) {
+    for (const auto& delta : k_neighbors) {
+      const QPoint neighbor(cell.x() + delta[0], cell.y() + delta[1]);
+      if (!body.contains(encode_cell(neighbor))) {
+        rim.append(cell);
+        break;
+      }
+    }
+  }
+  sort_cells(&rim);
+  return rim;
+}
+
+auto default_entrance_cell(const Model& model,
+                           const QVector<QPoint>& body_cells) -> QPoint {
+  const QVector<QPoint> rim = rim_cells(unique_in_bounds_cells(model, body_cells));
+  if (rim.isEmpty()) {
+    return {-1, -1};
+  }
+
+  const RotationAxes axes = rotation_axes(model.runtime_rotation_deg);
+  const QPointF offset = unproject_world(-model.hill_half_width * 0.98, 0.0, axes);
+  const double target_x = model.center_x + offset.x();
+  const double target_z = model.center_z + offset.y();
+
+  QPoint best = rim.first();
+  double best_distance_sq = std::numeric_limits<double>::max();
+  for (const QPoint& cell : rim) {
+    const double dx = world_x_from_cell(model, cell.x()) - target_x;
+    const double dz = world_z_from_cell(model, cell.y()) - target_z;
+    const double distance_sq = (dx * dx) + (dz * dz);
+    if (distance_sq < best_distance_sq) {
+      best_distance_sq = distance_sq;
+      best = cell;
+    }
+  }
+  return best;
+}
+
+auto normalize_entrance_cells(const Model& model,
+                              const QVector<QPoint>& body_cells,
+                              const QVector<QPoint>& entrance_cells)
+    -> QVector<QPoint> {
+  const QVector<QPoint> body = unique_in_bounds_cells(model, body_cells);
+  const QVector<QPoint> rim = rim_cells(body);
+
+  QVector<QVector<QPoint>> components =
+      connected_components(unique_in_bounds_cells(model, entrance_cells));
+  components.removeIf([&](const QVector<QPoint>& component) {
+    return !centre_reaches_rim(model, component_centre(model, component), rim);
+  });
+
+  if (components.size() > k_max_entrances) {
+    std::stable_sort(components.begin(), components.end(), component_order);
+    components.resize(k_max_entrances);
+  }
+
+  QVector<QPoint> normalized;
+  for (const QVector<QPoint>& component : components) {
+    normalized.append(component);
+  }
+
+  if (normalized.isEmpty() && !body.isEmpty()) {
+    const QPoint generated = default_entrance_cell(model, body);
+    if (in_bounds(model, generated)) {
+      normalized.append(generated);
+    }
+  }
+
+  sort_cells(&normalized);
+  return normalized;
+}
+
+auto entrance_issues(const Model& model,
+                     const QVector<QPoint>& body_cells,
+                     const QVector<QPoint>& entrance_cells) -> QStringList {
+  QStringList issues;
+  if (model.is_mountain) {
+    return issues;
+  }
+
+  const QVector<QPoint> body = unique_in_bounds_cells(model, body_cells);
+  const QVector<QPoint> rim = rim_cells(body);
+
+  int off_rim_ramps = 0;
+  int cluster_count = 0;
+  for (const QVector<QPoint>& component :
+       connected_components(unique_in_bounds_cells(model, entrance_cells))) {
+    if (centre_reaches_rim(model, component_centre(model, component), rim)) {
+      ++cluster_count;
+    } else {
+      ++off_rim_ramps;
+    }
+  }
+
+  if (!model.invalid_entrances.isEmpty()) {
+    issues << QStringLiteral("%1 authored entrance(s) sit outside the projection and "
+                             "will be dropped.")
+                  .arg(model.invalid_entrances.size());
+  }
+  if (off_rim_ramps > 0) {
+    issues << QStringLiteral("%1 entrance(s) centre away from the hill edge and will "
+                             "be dropped; a ramp has to start on the slope.")
+                  .arg(off_rim_ramps);
+  }
+
+  if (cluster_count > k_max_entrances) {
+    issues << QStringLiteral("%1 entrances authored; only the %2 largest are kept.")
+                  .arg(cluster_count)
+                  .arg(k_max_entrances);
+  }
+  if (cluster_count < k_min_entrances && !body.isEmpty()) {
+    issues << QStringLiteral(
+        "No entrance on the hill edge; one is generated so units can climb.");
+  }
+
+  return issues;
+}
+
 auto entrances_from_cells(const Model& model,
                           const QVector<QPoint>& entrance_cells) -> QJsonArray {
-  QJsonArray entrances = model.preserved_entrances;
+  QJsonArray entrances;
   const QVector<QPoint> normalized_cells =
       unique_in_bounds_cells(model, entrance_cells);
   const QVector<QVector<QPoint>> components = connected_components(normalized_cells);
@@ -449,15 +697,13 @@ auto entrances_from_cells(const Model& model,
     entrance[MapJsonKeys::z] = center_z;
 
     if (component.size() > 1) {
-      double max_dist = 0.0;
+      double component_radius = 0.0;
       for (const QPoint& cell : component) {
-        const double cell_x = world_x_from_cell(model, cell.x());
-        const double cell_z = world_z_from_cell(model, cell.y());
-        const double dx = cell_x - center_x;
-        const double dz = cell_z - center_z;
-        max_dist = std::max(max_dist, std::sqrt(dx * dx + dz * dz));
+        const double dx = world_x_from_cell(model, cell.x()) - center_x;
+        const double dz = world_z_from_cell(model, cell.y()) - center_z;
+        component_radius = std::max(component_radius, std::sqrt((dx * dx) + (dz * dz)));
       }
-      entrance[MapJsonKeys::radius] = std::max(0.5, max_dist);
+      entrance[MapJsonKeys::radius] = std::max(0.5, component_radius);
     }
     entrances.append(entrance);
   }
@@ -475,7 +721,8 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
   const QString terrain_type =
       base_hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool is_mountain = terrain_type == QStringLiteral("mountain");
-  const double rotation_deg = base_hill_json.value(MapJsonKeys::rotation).toDouble(0.0);
+  const double rotation_deg = model.runtime_rotation_deg;
+  const double tile = model_tile_size(model);
 
   const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
   if (!normalized_hill.isEmpty()) {
@@ -488,6 +735,9 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
       const QPointF center = unproject_world(center_u, center_v, axes);
       updated[MapJsonKeys::x] = center.x();
       updated[MapJsonKeys::z] = center.y();
+      if (std::abs(rotation_deg - model.rotation_deg) > 1e-6) {
+        updated[MapJsonKeys::rotation] = rotation_deg;
+      }
 
       if (is_mountain) {
         const double radius = fit_mountain_radius(
@@ -496,8 +746,9 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
             center.x(),
             center.y(),
             rotation_deg,
-            base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius));
-        updated[MapJsonKeys::radius] = radius;
+            base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius) /
+                tile);
+        updated[MapJsonKeys::radius] = radius * tile;
         updated.remove(MapJsonKeys::width);
         updated.remove(MapJsonKeys::depth);
       } else {
@@ -510,14 +761,15 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
               center.x(),
               center.y(),
               rotation_deg,
-              base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius),
+              base_hill_json.value(MapJsonKeys::radius).toDouble(model.base_radius) /
+                  tile,
               false);
-          updated[MapJsonKeys::radius] = radius;
+          updated[MapJsonKeys::radius] = radius * tile;
           updated.remove(MapJsonKeys::width);
           updated.remove(MapJsonKeys::depth);
         } else {
-          updated[MapJsonKeys::width] = half_width;
-          updated[MapJsonKeys::depth] = half_depth;
+          updated[MapJsonKeys::width] = half_width * 2.0 * tile;
+          updated[MapJsonKeys::depth] = half_depth * 2.0 * tile;
           updated.remove(MapJsonKeys::radius);
         }
       }
@@ -529,7 +781,8 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
     return updated;
   }
 
-  const QJsonArray entrances = entrances_from_cells(model, entrance_cells);
+  const QJsonArray entrances = entrances_from_cells(
+      model, normalize_entrance_cells(model, normalized_hill, entrance_cells));
   if (entrances.isEmpty()) {
     updated.remove(MapJsonKeys::entrances);
   } else {

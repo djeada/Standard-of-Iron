@@ -82,3 +82,21 @@ vec3 environment_lighting(vec3 normal, float wrap) {
   return (environment_ambient_light(normal) + environment_direct_light(normal, wrap)) *
          environment_exposure();
 }
+
+const float k_fog_reference_span = 88.0;
+
+float atmospheric_fog_amount(float view_distance,
+                             float fog_start,
+                             float fog_end,
+                             float horizon_weight,
+                             float horizon_gain) {
+  float fog_span = max(fog_end - fog_start, 1e-4);
+  float fog_depth = max(view_distance - fog_start, 0.0);
+  float normalized_depth = clamp(fog_depth / fog_span, 0.0, 1.0);
+
+  float ranged = smoothstep(0.0, 1.0, normalized_depth) *
+                 (horizon_weight + horizon_gain);
+  float weather = 1.0 - exp(-environment_fog_density() * normalized_depth *
+                            k_fog_reference_span);
+  return clamp(max(ranged, weather), 0.0, 1.0);
+}

@@ -1136,22 +1136,14 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
     const QString terrain_type = elem.type.trimmed().toLower();
     const bool is_mountain = terrain_type == QStringLiteral("mountain");
-    const bool is_circular_hill = terrain_type == QStringLiteral("hill") &&
-                                  elem.radius > 0.0F && elem.width > 0.0F &&
-                                  elem.depth > 0.0F &&
-                                  std::abs(elem.width - elem.depth) <= 1e-3F &&
-                                  std::abs(elem.width - elem.radius) <= 1e-3F;
-    if (elem.radius > 0.0F &&
-        (is_mountain || is_circular_hill || elem.width <= 0.0F || elem.depth <= 0.0F)) {
-      json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+    if (elem.width > 0.0F) {
+      json[MapJsonKeys::width] = static_cast<double>(elem.width);
     }
-    if (!is_mountain && !is_circular_hill) {
-      if (elem.width > 0.0F) {
-        json[MapJsonKeys::width] = static_cast<double>(elem.width);
-      }
-      if (elem.depth > 0.0F) {
-        json[MapJsonKeys::depth] = static_cast<double>(elem.depth);
-      }
+    if (elem.depth > 0.0F) {
+      json[MapJsonKeys::depth] = static_cast<double>(elem.depth);
+    }
+    if (elem.radius > 0.0F && (elem.width <= 0.0F || elem.depth <= 0.0F)) {
+      json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
     }
     if (!is_mountain && !elem.entrances.isEmpty()) {
       json[MapJsonKeys::entrances] = elem.entrances;
@@ -1198,6 +1190,9 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::end] = QJsonArray{static_cast<double>(elem.end.x()),
                                         static_cast<double>(elem.end.y())};
     json[MapJsonKeys::width] = static_cast<double>(elem.width);
+    if (!elem.waypoints.isEmpty()) {
+      json[MapJsonKeys::waypoints] = waypoints_to_json(elem.waypoints);
+    }
     if (elem.type == "bridge") {
       json[MapJsonKeys::height] = static_cast<double>(elem.height);
     }
@@ -1305,11 +1300,16 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
   const QString sub_type = element_type == 5
                                ? json.value(QStringLiteral("anchor_type")).toString()
                                : json.value(MapJsonKeys::type).toString();
+  const HillProjection::MapContext map_context{
+      .tile_size = static_cast<double>(m_map_data->grid().tile_size),
+      .map_grid_width = m_map_data->grid().width,
+      .map_grid_height = m_map_data->grid().height};
   JsonEditDialog dialog(title,
                         json,
                         enable_hill_projection,
                         schema_for_element(element_type, sub_type),
-                        this);
+                        this,
+                        map_context);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     QJsonObject new_json = dialog.get_json();
 
@@ -1399,6 +1399,10 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.style = new_json[MapJsonKeys::style].toString("default");
       elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
       elem.nation = new_json[MapJsonKeys::nation].toString();
+      if (supports_waypoints(elem.type)) {
+        elem.waypoints =
+            waypoints_from_json(new_json[MapJsonKeys::waypoints].toArray());
+      }
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::start,
@@ -1407,7 +1411,8 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                       MapJsonKeys::height,
                                       MapJsonKeys::style,
                                       MapJsonKeys::player_id,
-                                      MapJsonKeys::nation};
+                                      MapJsonKeys::nation,
+                                      MapJsonKeys::waypoints};
       for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];

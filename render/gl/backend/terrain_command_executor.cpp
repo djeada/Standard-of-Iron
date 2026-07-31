@@ -45,20 +45,14 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
       m_last_bound_texture = nullptr;
     }
 
-    QVector3D const fog_color(
-        m_clear_color[red], m_clear_color[green], m_clear_color[blue]);
     QVector3D const camera_position = cam.get_position();
-    float const fog_start = std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
-    float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
+    auto const [fog_start, fog_end] = fog_range_for_camera(cam);
 
     auto draw_surface = [&](const TerrainSurfaceCmd& single) {
       const QMatrix4x4 mvp = view_proj * single.model;
       auto const set_fog_uniforms = [&](const auto& uniforms) {
         if (uniforms.camera_position != Shader::InvalidUniform) {
           active_shader->set_uniform(uniforms.camera_position, camera_position);
-        }
-        if (uniforms.fog_color != Shader::InvalidUniform) {
-          active_shader->set_uniform(uniforms.fog_color, fog_color);
         }
         if (uniforms.fog_start != Shader::InvalidUniform) {
           active_shader->set_uniform(uniforms.fog_start, fog_start);
