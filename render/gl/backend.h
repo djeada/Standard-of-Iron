@@ -13,6 +13,7 @@
 #include "../draw_queue.h"
 #include "../frame_budget.h"
 #include "../i_render_backend.h"
+#include "../local_lighting.h"
 #include "../world_chunk.h"
 #include "persistent_buffer.h"
 #include "resources.h"
@@ -71,6 +72,7 @@ public:
   environment_lighting() const noexcept -> const EnvironmentLightingState& {
     return m_environment_lighting;
   }
+  void reset_local_lights() noexcept { m_local_light_fader.reset(); }
   [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& {
     return m_light_dir;
   }
@@ -237,6 +239,7 @@ private:
   GLuint m_frame_ubo{0};
   GLuint m_environment_lighting_ubo{0};
   GLuint m_local_lighting_ubo{0};
+  Render::LocalLightFader m_local_light_fader{};
   GLuint m_directional_shadow_ubo{0};
   GLuint m_directional_shadow_fbo{0};
   GLuint m_directional_shadow_texture{0};

@@ -55,6 +55,92 @@ TEST(LocalLightingTest, SanitizesNegativeRadiusAndIntensity) {
   EXPECT_FLOAT_EQ(selected.front().intensity, 0.0F);
 }
 
+TEST(LocalLightingTest, FaderRampsNewLightsInInsteadOfPoppingThem) {
+  Render::LocalLightFader fader;
+  Render::LocalLight camp;
+  camp.position = QVector3D(0.0F, 1.0F, 0.0F);
+  camp.radius = 8.0F;
+  camp.intensity = 1.0F;
+
+  const auto first_frame = fader.update({}, QVector3D(), 0.0F);
+  EXPECT_FLOAT_EQ(first_frame.front().intensity, 0.0F);
+
+  const auto appearing = fader.update({camp}, QVector3D(), 0.05F);
+  EXPECT_GT(appearing.front().intensity, 0.0F);
+  EXPECT_LT(appearing.front().intensity, camp.intensity)
+      << "a light entering the budget must ramp up, not pop";
+
+  auto settled = appearing;
+  for (int frame = 2; frame < 30; ++frame) {
+    settled = fader.update({camp}, QVector3D(), 0.05F * static_cast<float>(frame));
+  }
+  EXPECT_FLOAT_EQ(settled.front().intensity, camp.intensity);
+}
+
+TEST(LocalLightingTest, FaderRampsDroppedLightsOutInsteadOfPoppingThem) {
+  Render::LocalLightFader fader;
+  Render::LocalLight camp;
+  camp.position = QVector3D(0.0F, 1.0F, 0.0F);
+  camp.radius = 8.0F;
+  camp.intensity = 1.0F;
+
+  float time = 0.0F;
+  auto lit = fader.update({camp}, QVector3D(), time);
+  ASSERT_FLOAT_EQ(lit.front().intensity, camp.intensity);
+
+  time += 0.05F;
+  const auto fading = fader.update({}, QVector3D(), time);
+  EXPECT_GT(fading.front().intensity, 0.0F)
+      << "a light leaving the budget must ramp down, not pop";
+  EXPECT_LT(fading.front().intensity, camp.intensity);
+
+  auto dark = fading;
+  for (int frame = 2; frame < 30; ++frame) {
+    time += 0.05F;
+    dark = fader.update({}, QVector3D(), time);
+  }
+  EXPECT_FLOAT_EQ(dark.front().intensity, 0.0F);
+  EXPECT_FLOAT_EQ(dark.front().radius, 0.0F);
+}
+
+TEST(LocalLightingTest, FaderResetDropsLightsFromThePreviousMap) {
+  Render::LocalLightFader fader;
+  Render::LocalLight camp;
+  camp.position = QVector3D(12.0F, 1.0F, -4.0F);
+  camp.radius = 8.0F;
+  camp.intensity = 1.0F;
+
+  ASSERT_FLOAT_EQ(fader.update({camp}, QVector3D(), 0.0F).front().intensity,
+                  camp.intensity);
+
+  fader.reset();
+  const auto after_reset = fader.update({}, QVector3D(), 0.05F);
+  EXPECT_FLOAT_EQ(after_reset.front().intensity, 0.0F);
+  EXPECT_FLOAT_EQ(after_reset.front().radius, 0.0F);
+}
+
+TEST(LocalLightingTest, FaderPacksActiveLightsContiguously) {
+  Render::LocalLightFader fader;
+  std::vector<Render::LocalLight> lights;
+  for (int i = 0; i < 3; ++i) {
+    Render::LocalLight light;
+    light.position = QVector3D(static_cast<float>(i) * 10.0F, 1.0F, 0.0F);
+    light.radius = 6.0F;
+    light.intensity = 1.0F;
+    lights.push_back(light);
+  }
+
+  const auto selected = fader.update(lights, QVector3D(), 0.0F);
+  for (std::size_t i = 0; i < selected.size(); ++i) {
+    if (i < lights.size()) {
+      EXPECT_GT(selected[i].intensity, 0.0F) << "slot " << i;
+    } else {
+      EXPECT_FLOAT_EQ(selected[i].intensity, 0.0F) << "slot " << i;
+      EXPECT_FLOAT_EQ(selected[i].radius, 0.0F) << "slot " << i;
+    }
+  }
+}
+
 TEST(LocalLightingTest, EqualScoresKeepInputOrderSoLightsDoNotSwap) {
 
   std::vector<Render::LocalLight> lights;

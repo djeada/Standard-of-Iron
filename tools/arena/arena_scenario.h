@@ -217,6 +217,7 @@ struct ArenaScenarioDefinition {
   Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
   Game::Map::EnvironmentDefinition environment{};
   Game::Map::WeatherLightingInput weather{};
+  Game::Map::RainSettings precipitation{};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;

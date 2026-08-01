@@ -2155,10 +2155,12 @@
   "rain": {
     "enabled": true,
     "type": "snow",
-    "intensity": 0.82,
+    "intensity": "heavy",
     "cycle_duration": 300.0,
-    "active_duration": 120.0,
-    "fade_duration": 8.0
+    "active_duration": 150.0,
+    "fade_duration": 10.0,
+    "wind_strength": 0.65,
+    "wind_direction": 330.0
   },
   "undead_zones": [
     {

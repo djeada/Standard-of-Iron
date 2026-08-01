@@ -1179,5 +1179,8 @@
       "nation": "roman_republic",
       "description": "Player 2 Roman barracks"
     }
-  ]
+  ],
+  "rain": {
+    "enabled": false
+  }
 }

@@ -48,12 +48,20 @@ Shaders pull from it through `assets/shaders/include/environment_lighting.glsl` 
 
 Time of day is a continuous decimal hour with `locked`, `scripted` and `continuous` modes, not four fixed presets; the legacy `morning`/`day`/`afternoon`/`night` strings still load and alias onto hours. Weather feeds the same state, so rain and snow shift cloud cover, wetness, fog and sky tint coherently.
 
-Directional shadows are cascaded (up to four, quality-dependent) with texel snapping and cascade blending. Contact shadows remain as a cheap grounding effect and a low-quality fallback.
+Directional shadows are cascaded (up to four, quality-dependent) with texel snapping and cascade blending. Contact shadows remain as a cheap grounding effect and a low-quality fallback: `render/contact_shadow.h` derives their compass direction and length from the same `EnvironmentLightingState` sun rather than a baked constant, so a blob points and stretches the way the map's clock says it should. The same helper fades them out -- towards a subtle patch directly under the feet where a real cascade already covers the unit, and towards zero at the contact-shadow distance limit -- so nothing pops in or doubles up.
+
+Local lights are budgeted (`Render::k_max_local_lights`) and go through `Render::LocalLightFader`, which holds a slot until its light has ramped down. Entering and leaving the budget is a fade over `k_local_light_fade_seconds`, never a pop, and `Renderer::clear_entity_render_caches()` resets the fader so a new map never inherits the previous map's fires.
 
 Two practical notes:
 
 - **Texture units are a shared, program-wide namespace.** Two samplers of different types resolving to the same unit make every draw using that program raise `GL_INVALID_OPERATION`. The units in play are listed in `Render::GL::TextureUnit` (`render/gl/render_constants.h`) -- add new long-lived samplers there rather than picking a number.
 - **Instanced emitters can't be recovered from draw commands.** Fire camps and shrines reach the GPU as instance buffers, so the backend cannot read their positions back to build local lights. They advertise themselves through `Renderer::local_light()` instead, and the backend budgets those alongside effect-driven lights.
+
+## Precipitation
+
+Every shipped map states its weather explicitly in a `"rain"` block -- `enabled`, `type` (`rain` or `snow`), `intensity` (a number, or the words `light`/`medium`/`heavy`), the cycle timings, and `wind_strength` plus `wind_direction` in compass degrees. `Game::Systems::RainManager` runs the cycle; its state, cycle position and transition progress round-trip through the save metadata's `weather` object, so loading mid-downpour resumes mid-downpour.
+
+Particles live in one fixed pool owned by `RainPipeline` and are recycled in the vertex shader, positioned relative to the camera rather than across the map. How much of that pool is drawn each frame is `RainBatchParams::density`, computed by `Render::GL::weather_particle_density()` from the active intensity, the quality preset's `WeatherBudget::particle_scale`, and how far the camera has pulled back. Each particle carries a `rank` in the pool and fades out as the density cutoff approaches it, so raising or lowering the budget dissolves particles instead of popping them.
 
 ## QSG render-thread stages
 
@@ -742,6 +750,8 @@ Here's a quick reference for common tasks:
 | Tune battle performance                  | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling                                                                                    |
 | Share a type between gameplay and render | Put it in `scene/` (view data), `animation/rig/` (skeleton, reach) or `animation/bpat/` (baked poses) -- never include `render/` from `game/`                                                                                                              |
 | Change lighting or time of day           | `scene/environment_lighting.h` for the state, `game/map/environment_lighting.cpp` for the curves, `assets/shaders/include/environment_lighting.glsl` for shader access                                                                                     |
+| Tune unit blob shadows                   | `render/contact_shadow.h` -- direction, length and fade all derive from the environment sun and the directional-shadow settings                                                                                                                            |
+| Change a map's weather                   | The map's `"rain"` block (or the map editor's Weather panel); particle budgets live in `Render::GL::weather_particle_density` and `GraphicsSettings::weather_budget`                                                                                       |
 | Add a shader sampler                     | Register the unit in `Render::GL::TextureUnit` ([render/gl/render_constants.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/render_constants.h)) so it cannot collide                                                                    |
 | Make a prop cast light                   | Call `Renderer::local_light()` from its renderer; instanced props cannot be recovered from draw commands                                                                                                                                                   |
 | Review props or lighting visually        | `arena_app --batch --scenario world_prop_lineup` (or any `lighting_*` scenario) `--clean-capture --artifact-dir <dir>`; compare with `scripts/compare-arena-captures.py`                                                                                   |

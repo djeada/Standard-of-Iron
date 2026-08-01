@@ -73,4 +73,102 @@ struct LocalLight {
   return result;
 }
 
+inline constexpr float k_local_light_fade_seconds = 0.35F;
+inline constexpr float k_local_light_match_distance = 0.75F;
+
+class LocalLightFader {
+public:
+  [[nodiscard]] auto
+  update(const std::vector<LocalLight>& candidates,
+         const QVector3D& camera_position,
+         float elapsed_seconds) -> std::array<LocalLight, k_max_local_lights> {
+    const float delta = m_has_previous_time
+                            ? std::clamp(elapsed_seconds - m_previous_time, 0.0F, 0.25F)
+                            : 0.0F;
+    m_previous_time = elapsed_seconds;
+    m_has_previous_time = true;
+
+    const auto selected = select_local_lights(candidates, camera_position);
+    std::array<bool, k_max_local_lights> claimed{};
+
+    for (auto& slot : m_slots) {
+      if (!slot.occupied) {
+        continue;
+      }
+      slot.target = 0.0F;
+      for (std::size_t i = 0; i < selected.size(); ++i) {
+        if (claimed[i] || selected[i].radius <= 0.0F || selected[i].intensity <= 0.0F) {
+          continue;
+        }
+        if ((selected[i].position - slot.light.position).length() >
+            k_local_light_match_distance) {
+          continue;
+        }
+        claimed[i] = true;
+        slot.light = selected[i];
+        slot.target = 1.0F;
+        break;
+      }
+    }
+
+    for (std::size_t i = 0; i < selected.size(); ++i) {
+      if (claimed[i] || selected[i].radius <= 0.0F || selected[i].intensity <= 0.0F) {
+        continue;
+      }
+      for (auto& slot : m_slots) {
+        if (slot.occupied) {
+          continue;
+        }
+        slot.occupied = true;
+        slot.light = selected[i];
+        slot.weight = 0.0F;
+        slot.target = 1.0F;
+        claimed[i] = true;
+        break;
+      }
+    }
+
+    const float step = delta <= 0.0F ? 1.0F : delta / k_local_light_fade_seconds;
+    std::array<LocalLight, k_max_local_lights> result{};
+    std::size_t emitted = 0;
+    for (auto& slot : m_slots) {
+      if (!slot.occupied) {
+        continue;
+      }
+      slot.weight = std::clamp(
+          slot.weight + std::clamp(slot.target - slot.weight, -step, step), 0.0F, 1.0F);
+      if (slot.weight <= 0.0F && slot.target <= 0.0F) {
+        slot = Slot{};
+        continue;
+      }
+      result[emitted] = slot.light;
+      result[emitted].intensity = slot.light.intensity * slot.weight;
+      ++emitted;
+    }
+    for (std::size_t i = emitted; i < result.size(); ++i) {
+      result[i].radius = 0.0F;
+      result[i].intensity = 0.0F;
+    }
+    return result;
+  }
+
+  void reset() noexcept {
+    m_slots = {};
+    m_previous_time = 0.0F;
+    m_has_previous_time = false;
+  }
+
+private:
+  struct Slot {
+    LocalLight light;
+    float weight = 0.0F;
+    float target = 0.0F;
+    bool occupied = false;
+  };
+
+  std::array<Slot, k_max_local_lights> m_slots{};
+  float m_previous_time = 0.0F;
+  bool m_has_previous_time = false;
+};
+
 } // namespace Render

@@ -4659,6 +4659,143 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
+  struct PrecipitationFixture {
+    const char* id;
+    const char* title;
+    bool snow;
+    float intensity;
+    float wind_strength;
+    float wind_direction_deg;
+    float hour;
+    Render::GraphicsQuality quality;
+  };
+
+  for (const auto& fixture :
+       std::array{PrecipitationFixture{k_weather_rain_light_id,
+                                       "Weather: Light Rain",
+                                       false,
+                                       Game::Map::k_weather_intensity_light,
+                                       0.15F,
+                                       20.0F,
+                                       14.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_rain_medium_id,
+                                       "Weather: Medium Rain",
+                                       false,
+                                       Game::Map::k_weather_intensity_medium,
+                                       0.30F,
+                                       145.0F,
+                                       14.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_rain_heavy_id,
+                                       "Weather: Heavy Rain",
+                                       false,
+                                       Game::Map::k_weather_intensity_heavy,
+                                       0.60F,
+                                       250.0F,
+                                       14.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_snow_light_id,
+                                       "Weather: Light Snow",
+                                       true,
+                                       Game::Map::k_weather_intensity_light,
+                                       0.15F,
+                                       70.0F,
+                                       11.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_snow_medium_id,
+                                       "Weather: Medium Snow",
+                                       true,
+                                       Game::Map::k_weather_intensity_medium,
+                                       0.32F,
+                                       70.0F,
+                                       11.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_snow_heavy_id,
+                                       "Weather: Heavy Snow",
+                                       true,
+                                       Game::Map::k_weather_intensity_heavy,
+                                       0.65F,
+                                       330.0F,
+                                       11.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_snow_crosswind_id,
+                                       "Weather: Snow Crosswind",
+                                       true,
+                                       Game::Map::k_weather_intensity_medium,
+                                       1.20F,
+                                       270.0F,
+                                       17.0F,
+                                       Render::GraphicsQuality::High},
+                  PrecipitationFixture{k_weather_rain_budget_low_id,
+                                       "Weather: Rain Budget (Low)",
+                                       false,
+                                       Game::Map::k_weather_intensity_heavy,
+                                       0.35F,
+                                       145.0F,
+                                       14.0F,
+                                       Render::GraphicsQuality::Low},
+                  PrecipitationFixture{k_weather_rain_budget_ultra_id,
+                                       "Weather: Rain Budget (Ultra)",
+                                       false,
+                                       Game::Map::k_weather_intensity_heavy,
+                                       0.35F,
+                                       145.0F,
+                                       14.0F,
+                                       Render::GraphicsQuality::Ultra}}) {
+    auto s = definition(
+        QString::fromLatin1(fixture.id),
+        QString::fromLatin1(fixture.title),
+        QStringLiteral("Locked-camera precipitation fixture: troops, structures and "
+                       "vegetation under one authored weather setting."),
+        8.0F,
+        {24.0F, 48.0F, 32.0F});
+    s.environment.start_time = fixture.hour;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.graphics_quality = fixture.quality;
+    if (fixture.snow) {
+      s.weather.snow = fixture.intensity;
+    } else {
+      s.weather.rain = fixture.intensity;
+      s.weather.storm = fixture.intensity * 0.35F;
+    }
+    s.precipitation.enabled = true;
+    s.precipitation.type =
+        fixture.snow ? Game::Map::WeatherType::Snow : Game::Map::WeatherType::Rain;
+    s.precipitation.intensity = fixture.intensity;
+    s.precipitation.wind_strength = fixture.wind_strength;
+    s.precipitation.wind_direction_deg = fixture.wind_direction_deg;
+    s.groups = {group(QStringLiteral("roman_line"),
+                      Troop::Swordsman,
+                      1,
+                      3,
+                      {-5.0F, 0.0F, 0.0F},
+                      8,
+                      {0.0F, 0.0F, 2.5F}),
+                nation_group(QStringLiteral("carthage_line"),
+                             Troop::Spearman,
+                             Nation::Carthage,
+                             2,
+                             3,
+                             {5.0F, 0.0F, 0.0F},
+                             8,
+                             {0.0F, 0.0F, 2.5F}),
+                building(QStringLiteral("home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {-10.0F, 0.0F, 6.0F})};
+    s.resource_patches = {{QStringLiteral("pine"),
+                           4,
+                           QVector3D(10.0F, 0.0F, 4.0F),
+                           QVector3D(2.0F, 0.0F, 1.0F),
+                           1.0F}};
+    add_visual_stability(
+        s, {QStringLiteral("roman_line"), QStringLiteral("carthage_line")});
+    result.push_back(std::move(s));
+  }
+
   for (const auto& transition : std::array{
            std::tuple{k_lighting_dawn_to_day_id,
                       "Lighting: Dawn To Day",

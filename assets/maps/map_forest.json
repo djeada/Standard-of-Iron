@@ -78,10 +78,13 @@
   },
   "rain": {
     "enabled": true,
+    "type": "rain",
+    "intensity": "medium",
     "cycle_duration": 320.0,
     "active_duration": 75.0,
-    "intensity": 0.55,
-    "fade_duration": 6.0
+    "fade_duration": 6.0,
+    "wind_strength": 0.2,
+    "wind_direction": 250.0
   },
   "rivers": [],
   "bridges": [],

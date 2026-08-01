@@ -5189,5 +5189,8 @@
       "nation": "roman_republic",
       "max_population": 170
     }
-  ]
+  ],
+  "rain": {
+    "enabled": false
+  }
 }

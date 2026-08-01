@@ -74,6 +74,7 @@ private:
     GL::Shader::UniformHandle wind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle weather_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle density{GL::Shader::InvalidUniform};
   };
 
   RainUniforms m_uniforms;
