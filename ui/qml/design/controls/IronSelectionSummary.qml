@@ -37,6 +37,10 @@ Design.IronPanel {
         return Design.Icons.unit(typeKey !== "" ? typeKey : Design.Icons.typeKeyFromName(name), nation);
     }
 
+    function groupCanRun(group) {
+        return group.canRun === undefined || group.canRun;
+    }
+
     implicitWidth: Design.Metrics.space24 * 10
     implicitHeight: body.implicitHeight + Design.Metrics.space24
 
@@ -151,7 +155,7 @@ Design.IronPanel {
             id: singleUnitCard
 
             width: parent.width
-            height: Design.Metrics.space24 * 3
+            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 4 : 3)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -210,6 +214,7 @@ Design.IronPanel {
                             spacing: Design.Metrics.space8
 
                             Text {
+                                objectName: "selectionHealthLabel"
                                 text: qsTr("HEALTH")
                                 color: Design.Theme.textPrimary
                                 font.family: Design.Typography.family
@@ -222,6 +227,7 @@ Design.IronPanel {
                             }
 
                             Text {
+                                objectName: "selectionHealthValue"
                                 text: qsTr("%1%").arg(Math.round(root.groups[0].health * 100))
                                 color: root.healthColor(root.groups[0].health)
                                 font.family: Design.Typography.family
@@ -242,15 +248,18 @@ Design.IronPanel {
                     }
 
                     Column {
+                        objectName: "selectionStaminaSection"
                         width: parent.width
                         spacing: 2
                         opacity: 0.7
+                        visible: root.groupCanRun(root.groups[0])
 
                         RowLayout {
                             width: parent.width
                             spacing: Design.Metrics.space8
 
                             Text {
+                                objectName: "selectionStaminaLabel"
                                 text: qsTr("STAMINA")
                                 color: Design.Theme.textSecondary
                                 font.family: Design.Typography.family
@@ -262,6 +271,7 @@ Design.IronPanel {
                             }
 
                             Text {
+                                objectName: "selectionStaminaValue"
                                 text: qsTr("%1%").arg(Math.round((root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0) * 100))
                                 color: Design.Theme.success
                                 font.family: Design.Typography.family
