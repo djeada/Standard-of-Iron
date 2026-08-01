@@ -20,6 +20,7 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
         {"home", {3.F, 3.F}},
         {"marketplace", {3.F, 3.F}},
         {"wall_segment", {2.0F, 2.0F}},
+        {"wall_gate", {2.0F, 2.0F}},
 
 };
 
@@ -161,6 +162,31 @@ void BuildingCollisionRegistry::update_building_owner(Engine::Core::EntityID ent
   m_buildings[index].owner_id = owner_id;
 }
 
+void BuildingCollisionRegistry::set_building_navigation_blocking(
+    Engine::Core::EntityID entity_id, bool blocks_navigation) {
+  auto it = m_entity_to_index.find(entity_id);
+  if (it == m_entity_to_index.end()) {
+    return;
+  }
+
+  auto& footprint = m_buildings[it->second];
+  if (footprint.blocks_navigation == blocks_navigation) {
+    return;
+  }
+  footprint.blocks_navigation = blocks_navigation;
+
+  if (auto* pf = CommandService::get_pathfinder()) {
+    pf->mark_building_region_dirty(
+        footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
+  }
+}
+
+auto BuildingCollisionRegistry::find_building(Engine::Core::EntityID entity_id) const
+    -> const BuildingFootprint* {
+  auto it = m_entity_to_index.find(entity_id);
+  return it == m_entity_to_index.end() ? nullptr : &m_buildings[it->second];
+}
+
 auto BuildingCollisionRegistry::is_point_in_building(
     float x, float z, Engine::Core::EntityID ignore_entity_id) const -> bool {
   for (const auto& building : m_buildings) {
@@ -249,23 +275,39 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
   return false;
 }
 
-auto BuildingCollisionRegistry::get_occupied_grid_cells(
-    const BuildingFootprint& footprint,
-    float grid_cell_size) -> std::vector<std::pair<int, int>> {
+auto BuildingCollisionRegistry::get_rect_grid_cells(float center_x,
+                                                    float center_z,
+                                                    float width,
+                                                    float depth,
+                                                    float padding,
+                                                    float grid_cell_size)
+    -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
 
-  float const half_width = footprint.width / 2.0F;
-  float const half_depth = footprint.depth / 2.0F;
+  float const half_width = width / 2.0F;
+  float const half_depth = depth / 2.0F;
 
-  float const padding = footprint.grid_padding;
-  int const min_grid_x = static_cast<int>(
-      std::floor((footprint.center_x - half_width - padding) / grid_cell_size));
-  int const max_grid_x = static_cast<int>(
-      std::ceil((footprint.center_x + half_width + padding) / grid_cell_size));
-  int const min_grid_z = static_cast<int>(
-      std::floor((footprint.center_z - half_depth - padding) / grid_cell_size));
-  int const max_grid_z = static_cast<int>(
-      std::ceil((footprint.center_z + half_depth + padding) / grid_cell_size));
+float const padding = footprint.grid_padding;
+
+int const min_grid_x = static_cast<int>(
+    std::floor(
+        (footprint.center_x - half_width - padding) /
+        grid_cell_size));
+
+int const max_grid_x = static_cast<int>(
+    std::ceil(
+        (footprint.center_x + half_width + padding) /
+        grid_cell_size));
+
+int const min_grid_z = static_cast<int>(
+    std::floor(
+        (footprint.center_z - half_depth - padding) /
+        grid_cell_size));
+
+int const max_grid_z = static_cast<int>(
+    std::ceil(
+        (footprint.center_z + half_depth + padding) /
+        grid_cell_size));
 
   for (int gx = min_grid_x; gx < max_grid_x; ++gx) {
     for (int gz = min_grid_z; gz < max_grid_z; ++gz) {
@@ -276,9 +318,55 @@ auto BuildingCollisionRegistry::get_occupied_grid_cells(
   return cells;
 }
 
+auto BuildingCollisionRegistry::get_occupied_grid_cells(
+    const BuildingFootprint& footprint,
+    float grid_cell_size) -> std::vector<std::pair<int, int>> {
+  return get_rect_grid_cells(footprint.center_x,
+                             footprint.center_z,
+                             footprint.width,
+                             footprint.depth,
+                             s_grid_padding,
+                             grid_cell_size);
+}
+
+void BuildingCollisionRegistry::set_navigation_passages(
+    std::vector<NavigationPassage> passages) {
+  auto same_rect = [](const NavigationPassage& lhs, const NavigationPassage& rhs) {
+    constexpr float k_epsilon = 1.0e-3F;
+    return std::fabs(lhs.center_x - rhs.center_x) < k_epsilon &&
+           std::fabs(lhs.center_z - rhs.center_z) < k_epsilon &&
+           std::fabs(lhs.width - rhs.width) < k_epsilon &&
+           std::fabs(lhs.depth - rhs.depth) < k_epsilon;
+  };
+
+  if (m_navigation_passages.size() == passages.size() &&
+      std::equal(m_navigation_passages.begin(),
+                 m_navigation_passages.end(),
+                 passages.begin(),
+                 same_rect)) {
+    return;
+  }
+
+  auto* pathfinder = CommandService::get_pathfinder();
+  auto mark_dirty = [pathfinder](const std::vector<NavigationPassage>& list) {
+    if (pathfinder == nullptr) {
+      return;
+    }
+    for (const auto& passage : list) {
+      pathfinder->mark_building_region_dirty(
+          passage.center_x, passage.center_z, passage.width, passage.depth);
+    }
+  };
+
+  mark_dirty(m_navigation_passages);
+  m_navigation_passages = std::move(passages);
+  mark_dirty(m_navigation_passages);
+}
+
 void BuildingCollisionRegistry::clear() {
   m_buildings.clear();
   m_entity_to_index.clear();
+  m_navigation_passages.clear();
   m_authored_obstacles.clear();
 
   if (auto* pf = CommandService::get_pathfinder()) {

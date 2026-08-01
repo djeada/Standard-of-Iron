@@ -2,6 +2,7 @@
 
 #include "../../building_render_common.h"
 #include "../../registry.h"
+#include "../../wall_gate_renderer_common.h"
 #include "../../wall_renderer_common.h"
 
 namespace Render::GL::Roman {
@@ -37,6 +38,12 @@ auto wall_archetypes() -> const std::array<RenderArchetype, 6>& {
   return archetypes;
 }
 
+auto gate_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype =
+      build_wall_gate_archetype("roman_wall_variant", k_wall_palette, k_wall_geometry);
+  return archetype;
+}
+
 } // namespace
 
 void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
@@ -46,6 +53,11 @@ void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
           submit_wall_segment_variant(out, p, wall_archetypes(), variant);
         });
   }
+
+  register_building_renderer(
+      registry, "roman", "wall_gate", [](const DrawContext& p, ISubmitter& out) {
+        submit_wall_gate(out, p, gate_archetype(), k_wall_palette, k_wall_geometry);
+      });
 }
 
 } // namespace Render::GL::Roman

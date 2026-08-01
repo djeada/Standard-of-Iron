@@ -15,6 +15,7 @@
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "construction_cost_catalog.h"
 #include "nation_registry.h"
 #include "pathfinding.h"
 #include "player_resource_registry.h"
@@ -230,8 +231,14 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
     return false;
   }
 
-  PlayerResourceRegistry::instance().add(
-      site->owner_id, ResourceType::Wood, WallNetworkService::k_wall_segment_wood_cost);
+  const auto refund =
+      construction_cost_info(Game::Units::spawn_typeToString(site->product_type))
+          .resource_costs;
+  for (const auto resource_type : k_all_resource_types) {
+    if (const int amount = refund.get(resource_type); amount > 0) {
+      PlayerResourceRegistry::instance().add(site->owner_id, resource_type, amount);
+    }
+  }
   world->destroy_entity(site_entity->get_id());
   builder->construction_site_entity_id = 0;
   builder->has_construction_site = false;
@@ -244,6 +251,10 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   WallNetworkService::refresh_world(*world);
   assign_next_wall_site(world, builder_entity, builder);
   return true;
+}
+
+auto is_wall_network_product(const std::string& product_type) -> bool {
+  return product_type == "wall_segment" || product_type == "wall_gate";
 }
 
 } // namespace
@@ -363,7 +374,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     auto* transform = e->get_component<Engine::Core::TransformComponent>();
     auto* movement = e->get_component<Engine::Core::MovementComponent>();
 
-    if (builder_prod->product_type == "wall_segment" &&
+    if (is_wall_network_product(builder_prod->product_type) &&
         builder_prod->construction_site_entity_id != 0 &&
         world->get_entity(builder_prod->construction_site_entity_id) == nullptr) {
       builder_prod->construction_site_entity_id = 0;
@@ -373,7 +384,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->time_remaining = 0.0F;
     }
 
-    if (builder_prod->product_type == "wall_segment" &&
+    if (is_wall_network_product(builder_prod->product_type) &&
         !builder_prod->has_construction_site && !builder_prod->in_progress &&
         !builder_prod->queued_construction_site_ids.empty()) {
       assign_next_wall_site(world, e, builder_prod);
@@ -432,7 +443,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     builder_prod->time_remaining -= delta_time;
-    if (builder_prod->product_type == "wall_segment" &&
+    if (is_wall_network_product(builder_prod->product_type) &&
         builder_prod->construction_site_entity_id != 0) {
       if (auto* site_entity =
               world->get_entity(builder_prod->construction_site_entity_id)) {
@@ -492,7 +503,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             }
             float construction_rotation_y = builder_prod->construction_site_rotation_y;
             Engine::Core::Entity* wall_site_entity = nullptr;
-            if (builder_prod->product_type == "wall_segment" &&
+            if (is_wall_network_product(builder_prod->product_type) &&
                 builder_prod->construction_site_entity_id != 0) {
               wall_site_entity =
                   world->get_entity(builder_prod->construction_site_entity_id);
@@ -526,7 +537,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               sp.spawn_type = Game::Units::SpawnType::Barracks;
             } else if (builder_prod->product_type == "defense_tower") {
               sp.spawn_type = Game::Units::SpawnType::DefenseTower;
-            } else if (builder_prod->product_type == "wall_segment") {
+            } else if (is_wall_network_product(builder_prod->product_type)) {
               sp.spawn_type = Game::Units::SpawnType::WallSegment;
             } else if (builder_prod->product_type == "home") {
               sp.spawn_type = Game::Units::SpawnType::Home;
@@ -543,7 +554,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
             reg->create(sp.spawn_type, *world, sp);
 
-            if (builder_prod->product_type == "wall_segment" &&
+            if (is_wall_network_product(builder_prod->product_type) &&
                 builder_prod->construction_site_entity_id != 0) {
               world->destroy_entity(builder_prod->construction_site_entity_id);
               builder_prod->construction_site_entity_id = 0;

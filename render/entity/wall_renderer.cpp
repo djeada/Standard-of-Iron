@@ -44,6 +44,10 @@ void register_wall_renderer(EntityRendererRegistry& registry) {
       "wall_segment_cross",
       building_renderer_key("roman", "wall_segment_cross"),
       building_renderer_key("carthage", "wall_segment_cross"));
+  register_nation_variant_renderer(registry,
+                                   "wall_gate",
+                                   building_renderer_key("roman", "wall_gate"),
+                                   building_renderer_key("carthage", "wall_gate"));
 }
 
 } // namespace Render::GL

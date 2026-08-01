@@ -25,6 +25,7 @@ QtObject {
     readonly property string collect: "⛏"
     readonly property string deliver: "⇥"
     readonly property string aura: "◌"
+    readonly property string gate: "\u25A2"
     readonly property string population: "☷"
     readonly property string defeated: "☠"
     readonly property string pause: "⏸"
@@ -69,6 +70,7 @@ QtObject {
             "rally": root.rally,
             "deliver": root.deliver,
             "aura": root.aura,
+            "gate": root.gate,
             "stop": root.stop
         })
 
@@ -110,7 +112,8 @@ QtObject {
             "home": "house",
             "house": "house",
             "wall": "wall",
-            "wall_segment": "wall"
+            "wall_segment": "wall",
+            "wall_gate": "wall"
         })
 
     readonly property var unitArtShared: ({
@@ -120,7 +123,8 @@ QtObject {
 
     readonly property var unitArtNeutral: ({
             "wall": "wall.png",
-            "wall_segment": "wall.png"
+            "wall_segment": "wall.png",
+            "wall_gate": "wall.png"
         })
 
     readonly property var unitGlyphs: ({
@@ -139,6 +143,7 @@ QtObject {
             "defense_tower": "\u265C",
             "wall": "\u25AC",
             "wall_segment": "\u25AC",
+            "wall_gate": "\u25A2",
             "home": "\u2302",
             "house": "\u2302",
             "marketplace": "\u25C7",

@@ -22,6 +22,7 @@ namespace {
 
 using Engine::Core::BuildingComponent;
 using Engine::Core::ConstructionPreviewComponent;
+using Engine::Core::GateComponent;
 using Engine::Core::PendingRemovalComponent;
 using Engine::Core::RenderableComponent;
 using Engine::Core::TransformComponent;
@@ -35,6 +36,7 @@ constexpr std::string_view k_wall_variant_straight = "wall_segment_straight";
 constexpr std::string_view k_wall_variant_corner = "wall_segment_corner";
 constexpr std::string_view k_wall_variant_tee = "wall_segment_tee";
 constexpr std::string_view k_wall_variant_cross = "wall_segment_cross";
+constexpr std::string_view k_wall_gate_variant = "wall_gate";
 
 auto is_excluded_from_wall_network(const Engine::Core::Entity* entity) -> bool {
   return entity == nullptr || entity->has_component<PendingRemovalComponent>() ||
@@ -53,7 +55,7 @@ auto is_live_wall_entity(Engine::Core::Entity* entity,
   }
 
   if (const auto* unit = entity->get_component<UnitComponent>()) {
-    return unit->spawn_type == Game::Units::SpawnType::WallSegment && unit->health > 0;
+    return Game::Units::is_wall_network_spawn(unit->spawn_type) && unit->health > 0;
   }
 
   return include_construction_sites &&
@@ -141,13 +143,14 @@ auto entity_allows_wall_boundary_touch(const Engine::Core::Entity* entity) -> bo
     return false;
   }
 
-  return unit->spawn_type == Game::Units::SpawnType::WallSegment ||
+  return Game::Units::is_wall_network_spawn(unit->spawn_type) ||
          unit->spawn_type == Game::Units::SpawnType::DefenseTower;
 }
 
 auto placement_can_touch_wall_network_structures(const std::string& building_type)
     -> bool {
-  return building_type == "wall_segment" || building_type == "defense_tower";
+  return building_type == "wall_segment" || building_type == "wall_gate" ||
+         building_type == "defense_tower";
 }
 
 auto collides_with_registered_building(Engine::Core::World& world,
@@ -354,16 +357,21 @@ void update_wall_entity_visuals(Engine::Core::Entity* entity,
   }
 
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
+  bool is_gate = entity->has_component<GateComponent>();
   if (const auto* unit = entity->get_component<UnitComponent>()) {
     nation_id = unit->nation_id;
   } else if (const auto* site =
                  entity->get_component<WallConstructionSiteComponent>()) {
     nation_id = site->nation_id;
+
+    is_gate = site->product_type == Game::Units::SpawnType::WallGate;
   }
 
   const auto appearance =
-      WallNetworkService::resolve_appearance(nation_id, connection_mask);
-  transform->rotation.y = connection_mask == 0U
+      is_gate ? WallNetworkService::resolve_gate_appearance(
+                    nation_id, connection_mask, transform->rotation.y)
+              : WallNetworkService::resolve_appearance(nation_id, connection_mask);
+  transform->rotation.y = (connection_mask == 0U && !is_gate)
                               ? preserved_isolated_rotation(transform->rotation.y)
                               : appearance.rotation_y;
   renderable->renderer_id = appearance.renderer_id;
@@ -601,6 +609,28 @@ auto WallNetworkService::find_tower_snap_socket(Engine::Core::World& world,
   return best_position;
 }
 
+auto WallNetworkService::resolve_gate_appearance(Game::Systems::NationID nation_id,
+                                                 std::uint8_t mask,
+                                                 float current_rotation_y)
+    -> WallAppearance {
+  const bool spans_east_west = (mask & (k_connection_east | k_connection_west)) != 0U;
+  const bool spans_north_south =
+      (mask & (k_connection_north | k_connection_south)) != 0U;
+
+  float rotation_y = preserved_isolated_rotation(current_rotation_y);
+  if (spans_east_west && !spans_north_south) {
+    rotation_y = 0.0F;
+  } else if (spans_north_south && !spans_east_west) {
+    rotation_y = 90.0F;
+  }
+
+  return {
+      .renderer_id = Game::Visuals::building_asset_key(nation_id, k_wall_gate_variant),
+      .rotation_y = rotation_y,
+      .connection_mask = mask,
+  };
+}
+
 auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
                                             std::uint8_t mask) -> WallAppearance {
   const auto [variant_name, rotation_y] = canonical_variant_for_mask(mask);
@@ -610,6 +640,108 @@ auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
       .connection_mask = mask,
   };
 }
+
+namespace {
+
+auto blocking_building_covers(float world_x, float world_z) -> bool {
+  for (const auto& building :
+       BuildingCollisionRegistry::instance().get_all_buildings()) {
+    if (!building.blocks_navigation) {
+      continue;
+    }
+    const float half_width = building.width / 2.0F;
+    const float half_depth = building.depth / 2.0F;
+    if (world_x >= building.center_x - half_width &&
+        world_x <= building.center_x + half_width &&
+        world_z >= building.center_z - half_depth &&
+        world_z <= building.center_z + half_depth) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto collect_navigation_passages(
+    Engine::Core::World& world,
+    const WallNetworkService::OwnerOccupancyMap& connection_occupancy)
+    -> std::vector<NavigationPassage> {
+  std::vector<NavigationPassage> passages;
+  WallNetworkService::OccupancySet emitted;
+
+  const float crossing_depth =
+      2.0F + (2.0F * BuildingCollisionRegistry::get_grid_padding());
+
+  const auto emit_passage = [&passages, &emitted, crossing_depth](
+                                int grid_x, int grid_z, std::uint8_t mask) {
+    if (!emitted.insert(WallNetworkService::encode_key(grid_x, grid_z)).second) {
+      return;
+    }
+
+    const bool spans_east_west = (mask & (WallNetworkService::k_connection_east |
+                                          WallNetworkService::k_connection_west)) != 0U;
+    const bool spans_north_south =
+        (mask & (WallNetworkService::k_connection_north |
+                 WallNetworkService::k_connection_south)) != 0U;
+
+    const auto center = CommandService::grid_to_world(Point{grid_x, grid_z});
+    passages.push_back(
+        NavigationPassage{.center_x = center.x(),
+                          .center_z = center.z(),
+                          .width = spans_north_south ? crossing_depth : 2.0F,
+                          .depth = spans_east_west ? crossing_depth : 2.0F});
+  };
+
+  for (auto* entity : world.get_entities_with<GateComponent>()) {
+    if (!is_live_wall_entity(entity, false)) {
+      continue;
+    }
+    if (const auto* wall = entity->get_component<WallSegmentComponent>()) {
+      emit_passage(wall->grid_x, wall->grid_z, wall->connection_mask);
+    }
+  }
+
+  constexpr int k_spacing = WallNetworkService::k_segment_spacing;
+  const std::array<WallGridPosition, 4> k_offsets{WallGridPosition{0, -k_spacing},
+                                                  WallGridPosition{k_spacing, 0},
+                                                  WallGridPosition{0, k_spacing},
+                                                  WallGridPosition{-k_spacing, 0}};
+
+  for (const auto& [owner_id, occupancy] : connection_occupancy) {
+    for (const auto key : occupancy) {
+      const auto occupied = decode_key(key);
+      for (const auto& offset : k_offsets) {
+        const int gap_x = occupied.x + offset.x;
+        const int gap_z = occupied.z + offset.z;
+        if (occupancy.find(WallNetworkService::encode_key(gap_x, gap_z)) !=
+            occupancy.end()) {
+          continue;
+        }
+
+        const auto mask =
+            WallNetworkService::compute_connection_mask(occupancy, gap_x, gap_z);
+        const bool spans_east_west =
+            (mask & WallNetworkService::k_connection_east) != 0U &&
+            (mask & WallNetworkService::k_connection_west) != 0U;
+        const bool spans_north_south =
+            (mask & WallNetworkService::k_connection_north) != 0U &&
+            (mask & WallNetworkService::k_connection_south) != 0U;
+        if (!spans_east_west && !spans_north_south) {
+          continue;
+        }
+
+        const auto center = CommandService::grid_to_world(Point{gap_x, gap_z});
+        if (blocking_building_covers(center.x(), center.z())) {
+          continue;
+        }
+        emit_passage(gap_x, gap_z, mask);
+      }
+    }
+  }
+
+  return passages;
+}
+
+} // namespace
 
 void WallNetworkService::refresh_world(Engine::Core::World& world) {
   OwnerOccupancyMap connection_occupancy;
@@ -637,6 +769,9 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
     const auto mask = compute_connection_mask(occupancy, wall->grid_x, wall->grid_z);
     update_wall_entity_visuals(entity, wall, mask);
   }
+
+  BuildingCollisionRegistry::instance().set_navigation_passages(
+      collect_navigation_passages(world, connection_occupancy));
 }
 
 } // namespace Game::Systems

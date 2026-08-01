@@ -17,6 +17,7 @@
 #include "core/component.h"
 #include "defense_formation_service.h"
 #include "formation_combat_geometry.h"
+#include "gate_service.h"
 #include "order_service.h"
 #include "pathfinding.h"
 
@@ -118,6 +119,13 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
 auto is_point_allowed(const QVector3D& pos,
                       const Engine::Core::Entity& entity,
                       Engine::Core::World* world) -> bool {
+  if (auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+      transform != nullptr &&
+      GateService::blocks_move(
+          QVector3D(transform->position.x, 0.0F, transform->position.z), pos)) {
+    return false;
+  }
+
   if (auto const* builder_prod =
           entity.get_component<Engine::Core::BuilderProductionComponent>();
       builder_prod != nullptr && builder_prod->in_progress &&

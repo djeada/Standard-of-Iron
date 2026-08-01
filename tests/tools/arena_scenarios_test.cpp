@@ -112,6 +112,14 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(path_id)),
               ids.end());
   }
+  for (auto const* gate_id : {Arena::Scenarios::k_gate_friendly_passage_id,
+                              Arena::Scenarios::k_gate_allied_access_id,
+                              Arena::Scenarios::k_gate_enemy_blocked_id,
+                              Arena::Scenarios::k_gate_destroyed_breach_id,
+                              Arena::Scenarios::k_gate_consecutive_transit_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(gate_id)),
+              ids.end());
+  }
   EXPECT_NE(std::find(ids.begin(),
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_water_showcase_id)),
@@ -174,7 +182,7 @@ TEST(ArenaScenariosTest, WallGroupsSitOnTheWallNetworkLattice) {
   for (const auto& scenario : Arena::Scenarios::definitions()) {
     for (const auto& group : scenario.groups) {
       if (!group.spawn_type.has_value() ||
-          *group.spawn_type != Game::Units::SpawnType::WallSegment) {
+          !Game::Units::is_wall_network_spawn(*group.spawn_type)) {
         continue;
       }
 

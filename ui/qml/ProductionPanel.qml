@@ -57,6 +57,11 @@ Rectangle {
             "label": qsTr("Wall Segment"),
             "description": qsTr("Wooden defensive wall\nBlocks enemy movement"),
             "fallback_emoji": Design.Icons.collect
+        }, {
+            "item_type": "wall_gate",
+            "label": qsTr("Wall Gate"),
+            "description": qsTr("Gated opening in a wall\nOpens for your troops and allies"),
+            "fallback_emoji": Design.Icons.gate
         }]
 
     function default_production_state() {
@@ -1991,6 +1996,8 @@ Rectangle {
                                 label = qsTr("Collect Iron Ore");
                             } else if (label === "wall_segment") {
                                 label = qsTr("Wall Segment");
+                            } else if (label === "wall_gate") {
+                                label = qsTr("Wall Gate");
                             }
                             return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
                         }
@@ -2644,6 +2651,138 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderWallSegmentMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            id: builderWallGateCard
+
+                            property var construction_info: productionPanel.get_construction_info("wall_gate")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderWallGateMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderWallGateIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unit_icon_source("wall_gate")
+                                visible: source !== ""
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderWallGateIcon.visible
+                                text: Design.Icons.gate
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pointSize: 34
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 24
+                                text: qsTr("Wall Gate")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderWallGateCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: wallGateCostRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderWallGateCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderWallGateCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: wallGateCostRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderWallGateCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderWallGateMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled)
+                                        productionPanel.builder_construction("wall_gate");
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Gate\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Gated opening in a wall\nOpens for your troops and allies")).arg(productionPanel.format_cost_summary(0, builderWallGateCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderWallGateCard.construction_info.build_time || 12).toFixed(0)) : builderWallGateCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderWallGateMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

@@ -42,6 +42,7 @@ public:
 
   static constexpr int k_segment_spacing = 2;
   static constexpr int k_wall_segment_wood_cost = 25;
+  static constexpr int k_wall_gate_wood_cost = 45;
   static constexpr std::uint8_t k_connection_north = 1U << 0U;
   static constexpr std::uint8_t k_connection_east = 1U << 1U;
   static constexpr std::uint8_t k_connection_south = 1U << 2U;
@@ -77,6 +78,10 @@ public:
       -> std::optional<WallGridPosition>;
   static auto resolve_appearance(Game::Systems::NationID nation_id,
                                  std::uint8_t mask) -> WallAppearance;
+
+  static auto resolve_gate_appearance(Game::Systems::NationID nation_id,
+                                      std::uint8_t mask,
+                                      float current_rotation_y) -> WallAppearance;
 
   static void refresh_world(Engine::Core::World& world);
 };
