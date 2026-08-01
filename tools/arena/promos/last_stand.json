@@ -156,16 +156,16 @@
         {
           "time": 0.0,
           "distance": 15,
-          "pitch": 18,
-          "yaw": 210,
+          "pitch": 20.0,
+          "yaw": 150.0,
           "fov": 46,
           "height": 1.4
         },
         {
           "time": 2.3,
           "distance": 12,
-          "pitch": 15,
-          "yaw": 256,
+          "pitch": 17.0,
+          "yaw": 196.0,
           "fov": 46,
           "height": 1.4,
           "ease": "linear"
@@ -187,7 +187,7 @@
         {
           "time": 0.0,
           "distance": 6.0,
-          "pitch": 8,
+          "pitch": 16.0,
           "yaw": 150,
           "fov": 46,
           "height": 1.4,
@@ -196,7 +196,7 @@
         {
           "time": 1.1,
           "distance": 4.8,
-          "pitch": 10,
+          "pitch": 18.0,
           "yaw": 138,
           "fov": 46,
           "height": 1.4,
@@ -238,10 +238,12 @@
   ],
   "subtitle": "STANDARD OF IRON",
   "grade": {
-    "contrast": 1.14,
-    "saturation": 1.18,
-    "gamma": 0.97,
-    "grain": 5
+    "contrast": 1.1,
+    "saturation": 1.16,
+    "brightness": 0.045,
+    "gamma": 1.14,
+    "grain": 4,
+    "vignette": 0.08
   },
   "music": "assets/audio/music/combat/combat_large_scale_rome_carthage.ogg",
   "music_start": 22.0

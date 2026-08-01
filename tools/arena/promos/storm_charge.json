@@ -204,10 +204,12 @@
   ],
   "subtitle": "STANDARD OF IRON",
   "grade": {
-    "contrast": 1.16,
-    "saturation": 0.94,
-    "gamma": 0.98,
-    "grain": 6
+    "contrast": 1.12,
+    "saturation": 0.96,
+    "brightness": 0.04,
+    "gamma": 1.12,
+    "grain": 5,
+    "vignette": 0.08
   },
   "music": "assets/audio/music/combat/combat_cavalry_flank_fast.ogg",
   "music_start": 18.0

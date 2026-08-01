@@ -66,6 +66,27 @@ def resolve_font(requested: str | None) -> str:
     raise AssertionError("unreachable")
 
 
+def fit_font_size(text: str, font: str, size: int, max_width: int) -> int:
+    """Shrink a font size until the rendered string fits the frame width.
+
+    drawtext has no auto-fit, and a title that overruns the frame is silently
+    cropped rather than reported.
+    """
+    try:
+        from PIL import ImageFont
+    except ImportError:
+        # Without a metrics library, fall back to a conservative estimate of
+        # advance width for a bold serif face.
+        estimated = int(max_width / max(len(text), 1) / 0.62)
+        return max(18, min(size, estimated))
+
+    for candidate in range(size, 17, -2):
+        face = ImageFont.truetype(font, candidate)
+        if face.getbbox(text)[2] <= max_width:
+            return candidate
+    return 18
+
+
 def escape_text(text: str) -> str:
     """Escape a caption for ffmpeg's drawtext, which parses its own syntax."""
     out = text.replace("\\", r"\\\\")
@@ -101,9 +122,9 @@ def build_grade(grade: dict) -> str:
     """Contrast, colour and texture pass applied once to the whole cut."""
     contrast = float(grade.get("contrast", 1.12))
     saturation = float(grade.get("saturation", 1.14))
-    brightness = float(grade.get("brightness", 0.01))
-    gamma = float(grade.get("gamma", 0.98))
-    vignette = float(grade.get("vignette", 0.28))
+    brightness = float(grade.get("brightness", 0.03))
+    gamma = float(grade.get("gamma", 1.08))
+    vignette = float(grade.get("vignette", 0.10))
     grain = float(grade.get("grain", 5))
     sharpen = float(grade.get("sharpen", 0.6))
 
@@ -220,6 +241,7 @@ def main() -> int:
         title_size = max(60, int(width * 0.105))
         subtitle_size = max(30, int(width * 0.040))
         caption_y = f"h*{CAPTION_Y_FRACTION}"
+        safe_width = int(width * 0.88)
         step = 0
         for name, start, end in timeline:
             caption = captions.get(name)
@@ -233,7 +255,7 @@ def main() -> int:
                 + drawtext(
                     text=caption,
                     font=font,
-                    size=caption_size,
+                    size=fit_font_size(caption, font, caption_size, safe_width),
                     y_expr=caption_y,
                     start=visible_start,
                     end=visible_end,
@@ -251,7 +273,7 @@ def main() -> int:
                 + drawtext(
                     text=title,
                     font=font,
-                    size=title_size,
+                    size=fit_font_size(title, font, title_size, safe_width),
                     y_expr=f"h*{TITLE_Y_FRACTION}",
                     start=card_start,
                     end=total,
@@ -266,7 +288,7 @@ def main() -> int:
                 + drawtext(
                     text=subtitle,
                     font=font,
-                    size=subtitle_size,
+                    size=fit_font_size(subtitle, font, subtitle_size, safe_width),
                     y_expr=f"h*{TITLE_Y_FRACTION}+{int(title_size * 1.35)}",
                     start=card_start + 0.35,
                     end=total,
@@ -276,9 +298,10 @@ def main() -> int:
             )
             stage = "sub"
 
+    # No fade in: social platforms take the first frame as the cover image, and
+    # a fade would hand them a black one. The cut opens on picture instead.
     chain.append(
-        f"[{stage}]fade=t=in:st=0:d=0.35,"
-        f"fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]"
+        f"[{stage}]fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]"
     )
 
     command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *inputs]

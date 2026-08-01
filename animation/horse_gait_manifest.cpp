@@ -143,17 +143,22 @@ auto horse_bob_scale_for_gait(HorseGaitType gait) noexcept -> float {
 }
 
 auto horse_reference_speed_for_gait(HorseGaitType gait) noexcept -> float {
+  // The top of each selection band, not its middle. A gait's authored cycle is
+  // its fastest, most extended version, and a unit sits at the top of its band
+  // whenever it is at full speed -- anchoring on the midpoint instead compresses
+  // the cycle for every unit travelling at its own top speed, which is what made
+  // cavalry legs blur.
   switch (gait) {
   case HorseGaitType::Idle:
     return 0.0F;
   case HorseGaitType::Walk:
-    return 1.8F;
+    return 3.0F;
   case HorseGaitType::Trot:
-    return 4.2F;
+    return 5.5F;
   case HorseGaitType::Canter:
-    return 6.7F;
+    return 8.0F;
   case HorseGaitType::Gallop:
-    return 9.5F;
+    return 11.0F;
   }
   return 0.0F;
 }

@@ -14,7 +14,11 @@
       "slow_motion": 1.0,
       "focus": {
         "mode": "point",
-        "point": [0.0, 0.0, 6.0]
+        "point": [
+          0.0,
+          0.0,
+          6.0
+        ]
       },
       "camera": [
         {
@@ -79,7 +83,11 @@
       "shake": 0.03,
       "focus": {
         "mode": "point",
-        "point": [0.0, 0.0, 5.0]
+        "point": [
+          0.0,
+          0.0,
+          5.0
+        ]
       },
       "camera": [
         {
@@ -143,7 +151,11 @@
       "slow_motion": 2.0,
       "focus": {
         "mode": "point",
-        "point": [0.0, 0.0, 4.0]
+        "point": [
+          0.0,
+          0.0,
+          4.0
+        ]
       },
       "camera": [
         {
@@ -175,7 +187,11 @@
       "slow_motion": 1.0,
       "focus": {
         "mode": "point",
-        "point": [0.0, 0.0, 3.0]
+        "point": [
+          0.0,
+          0.0,
+          3.0
+        ]
       },
       "camera": [
         {
@@ -200,12 +216,12 @@
   ],
   "subtitle": "STANDARD OF IRON",
   "grade": {
-    "contrast": 1.2,
-    "saturation": 1.08,
-    "brightness": 0.02,
-    "gamma": 1.03,
-    "grain": 7,
-    "vignette": 0.34
+    "contrast": 1.14,
+    "saturation": 1.06,
+    "brightness": 0.05,
+    "gamma": 1.2,
+    "grain": 6,
+    "vignette": 0.1
   },
   "music": "assets/audio/music/combat/combat_battlefield_escalation.ogg",
   "music_start": 30.0

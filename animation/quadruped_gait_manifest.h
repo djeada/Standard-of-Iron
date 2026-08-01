@@ -160,7 +160,7 @@ struct QuadrupedCadenceInputs {
 
   float stride_to_local{1.0F};
 
-  float min_cycle_scale{0.55F};
+  float min_cycle_scale{0.70F};
   float max_cycle_scale{2.00F};
 
   float max_stride_scale{3.00F};
