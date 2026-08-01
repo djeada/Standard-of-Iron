@@ -291,6 +291,28 @@ The path scenes suppress incidental scatter and use a fixed feature-centered
 camera so the route, obstacle, and formation motion remain readable in batch
 captures.
 
+## Road and bridge surface contracts
+
+Three scenes exist to review the road network surface itself. They declare authored
+`roads` (and, for the bridge scene, a river and a bridge) and drive a short infantry
+column through them so the capture also proves the surface stays navigable:
+
+- `road_junction_showcase` puts a crossroads, a T-junction, a Y-branch, a sharp bend,
+  and two side turnings only a road-width apart in one frame. Junction geometry is
+  built as a single merged surface, so the capture should show no doubled texture, no
+  dark seam where roads meet, and no polygon spiking past a corner.
+- `road_slope_showcase` runs one road straight up a rise and a second across the fall
+  line, crossing on the flank. Use it to check that the surface stays on top of the
+  terrain and that the crossing still reads as one continuous junction on a slope.
+- `road_bridge_approach` runs a road onto a bridge deck from both banks. The river must
+  stay continuous underneath the span, the deck must land on bank at both ends, and the
+  approach must rise onto the deck instead of stopping short of it.
+
+```bash
+build/bin/arena_app --batch --scenario road_junction_showcase \
+  --fps 30 --clean-capture --artifact-dir artifacts/roads
+```
+
 ## Gate contracts
 
 Five scenes cover the wall gate, each cutting one gate into a palisade running
