@@ -126,6 +126,10 @@ public:
   [[nodiscard]] auto frame_tracker() const -> const FrameTimeTracker* {
     return m_backend ? m_backend->frame_tracker() : nullptr;
   }
+  [[nodiscard]] auto last_draw_command_count() const -> std::size_t {
+    return m_queues[m_render_queue_index].size();
+  }
+  [[nodiscard]] auto last_playback_stats() const noexcept -> Backend::PlaybackStats;
 
   void set_selected_entities(const std::vector<Engine::Core::EntityID>& ids) {
     m_selected_ids.clear();
@@ -427,6 +431,7 @@ private:
   std::atomic<bool> m_paused{false};
   float m_alpha_override = 1.0F;
   WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
+  std::shared_ptr<Engine::Core::World> m_render_world_snapshot;
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;

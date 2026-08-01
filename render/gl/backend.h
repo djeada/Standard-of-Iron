@@ -44,6 +44,19 @@ namespace Render::GL {
 
 class Backend : public IRenderBackend, protected QOpenGLFunctions_3_3_Core {
 public:
+  struct PlaybackStats {
+    std::size_t submitted_commands{0};
+    std::size_t prepared_batches{0};
+    std::size_t rigged_commands{0};
+    std::size_t rigged_prepared_batches{0};
+    std::size_t rigged_instanced_draws{0};
+    std::size_t rigged_instanced_instances{0};
+    std::size_t rigged_single_draws{0};
+    std::size_t shadow_rigged_instanced_draws{0};
+    std::size_t shadow_rigged_instanced_instances{0};
+    std::size_t shadow_rigged_single_draws{0};
+  };
+
   friend class BackendPipelines::CylinderPipeline;
   friend class BackendPipelines::VegetationPipeline;
 
@@ -78,6 +91,9 @@ public:
   }
   [[nodiscard]] auto ambient_strength() const noexcept -> float {
     return m_ambient_strength;
+  }
+  [[nodiscard]] auto last_playback_stats() const noexcept -> const PlaybackStats& {
+    return m_last_playback_stats;
   }
 
   [[nodiscard]] auto resources() const -> ResourceManager* override {
@@ -251,9 +267,9 @@ private:
     const QMatrix4x4* model = nullptr;
   };
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
-  std::vector<const RiggedCreatureCmd*> m_shadow_rigged_casters;
 
   std::size_t m_rigged_drawn_this_frame = 0;
+  PlaybackStats m_last_playback_stats{};
 
   std::array<QMatrix4x4, 4> m_directional_shadow_matrices{};
   std::array<float, 4> m_directional_shadow_splits{};

@@ -73,7 +73,7 @@ struct VisibilityMaskResources {
   Texture* texture = nullptr;
   QVector2D size{0.0F, 0.0F};
   float tile_size = 1.0F;
-  float explored_alpha = 0.6F;
+  float explored_alpha = 0.82F;
   bool enabled = false;
 };
 

@@ -433,6 +433,9 @@ void Backend::begin_frame() {
   if (m_mesh_instancing_pipeline) {
     m_mesh_instancing_pipeline->begin_frame();
   }
+  if (m_rigged_character_pipeline) {
+    m_rigged_character_pipeline->begin_frame();
+  }
 }
 
 void Backend::set_viewport(int w, int h) {
@@ -601,6 +604,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const auto render_static_mesh = [&](Mesh* mesh,
                                       const QMatrix4x4& model,
                                       const QMatrix4x4& light_vp,
+                                      float cascade_near_distance,
                                       float cascade_distance) {
     if (mesh == nullptr) {
       return;
@@ -610,8 +614,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                                   model.column(1).toVector3D().length(),
                                   model.column(2).toVector3D().length()});
     const float world_radius = mesh->bounds_radius() * scale;
-    if ((world_center - cam.get_position()).length() >
-        cascade_distance + world_radius) {
+    const float camera_distance = (world_center - cam.get_position()).length();
+    if (camera_distance > cascade_distance + world_radius ||
+        camera_distance + world_radius < cascade_near_distance) {
       return;
     }
     m_directional_shadow_depth_shader->use();
@@ -621,7 +626,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   };
 
   m_shadow_static_casters.clear();
-  m_shadow_rigged_casters.clear();
   for (const auto& item : queue.items()) {
     if (const auto* mesh = std::get_if<MeshCmd>(&item)) {
       if (mesh->alpha >= k_opaque_threshold && mesh->shader != m_shadow_shader) {
@@ -633,11 +637,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
       m_shadow_static_casters.push_back({terrain->mesh, &terrain->model});
-    } else if (const auto* rigged = std::get_if<RiggedCreatureCmd>(&item)) {
-      if (rigged->mesh != nullptr && rigged->alpha >= k_opaque_threshold &&
-          rigged->palette_ubo != 0) {
-        m_shadow_rigged_casters.push_back(rigged);
-      }
     }
   }
 
@@ -681,25 +680,71 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     glClear(GL_DEPTH_BUFFER_BIT);
 
     for (const auto& caster : m_shadow_static_casters) {
-      render_static_mesh(caster.mesh, *caster.model, light_vp, cascade_far);
+      render_static_mesh(
+          caster.mesh, *caster.model, light_vp, cascade_near, cascade_far);
     }
 
-    for (const auto* rigged : m_shadow_rigged_casters) {
-      if ((rigged->world.column(3).toVector3D() - cam.get_position()).length() >
-          cascade_far + 8.0F) {
-        continue;
-      }
+    const auto draw_single_rigged_shadow = [&](const RiggedCreatureCmd& rigged) {
       glBindBufferRange(GL_UNIFORM_BUFFER,
                         k_bone_palette_binding_point,
-                        rigged->palette_ubo,
-                        static_cast<GLintptr>(rigged->palette_offset),
+                        rigged.palette_ubo,
+                        static_cast<GLintptr>(rigged.palette_offset),
                         static_cast<GLsizeiptr>(64U * sizeof(QMatrix4x4)));
       m_directional_shadow_rigged_shader->use();
       m_directional_shadow_rigged_shader->set_uniform("u_light_vp", light_vp);
-      m_directional_shadow_rigged_shader->set_uniform("u_model", rigged->world);
+      m_directional_shadow_rigged_shader->set_uniform("u_model", rigged.world);
       m_directional_shadow_rigged_shader->set_uniform("u_variation_scale",
-                                                      rigged->variation_scale);
-      rigged->mesh->draw();
+                                                      rigged.variation_scale);
+      rigged.mesh->draw();
+      ++m_last_playback_stats.shadow_rigged_single_draws;
+    };
+
+    thread_local std::vector<const RiggedCreatureCmd*> visible_rigged;
+    const std::size_t rigged_cap =
+        m_rigged_character_pipeline != nullptr
+            ? std::max<std::size_t>(
+                  1U, m_rigged_character_pipeline->max_instances_per_batch())
+            : 1U;
+    for (const PreparedBatch& prepared : queue.prepared_batches()) {
+      if (prepared.count == 0U ||
+          queue.get_sorted(prepared.start).index() != RiggedCreatureCmdIndex) {
+        continue;
+      }
+      visible_rigged.clear();
+      for (std::size_t index = prepared.start; index < prepared.end(); ++index) {
+        const auto& rigged = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(index));
+        const float camera_distance =
+            (rigged.world.column(3).toVector3D() - cam.get_position()).length();
+        if (rigged.mesh == nullptr || rigged.bone_palette == nullptr ||
+            rigged.alpha < k_opaque_threshold || camera_distance > cascade_far + 8.0F ||
+            camera_distance + 8.0F < cascade_near) {
+          continue;
+        }
+        visible_rigged.push_back(&rigged);
+      }
+
+      std::size_t start = 0U;
+      while (start < visible_rigged.size()) {
+        const std::size_t count = std::min(rigged_cap, visible_rigged.size() - start);
+        bool const instanced = m_rigged_character_pipeline != nullptr &&
+                               m_rigged_character_pipeline->draw_shadow_instanced(
+                                   visible_rigged.data() + start, count, light_vp);
+        if (instanced) {
+          if (count > 1U) {
+            ++m_last_playback_stats.shadow_rigged_instanced_draws;
+            m_last_playback_stats.shadow_rigged_instanced_instances += count;
+          } else {
+            ++m_last_playback_stats.shadow_rigged_single_draws;
+          }
+        } else {
+          for (std::size_t offset = 0; offset < count; ++offset) {
+            if (visible_rigged[start + offset]->palette_ubo != 0U) {
+              draw_single_rigged_shadow(*visible_rigged[start + offset]);
+            }
+          }
+        }
+        start += count;
+      }
     }
 
     bool shadow_polygon_offset_enabled = true;
@@ -797,6 +842,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
 }
 
 void Backend::execute(const DrawQueue& queue, const Camera& cam) {
+  m_last_playback_stats = {};
+  m_last_playback_stats.submitted_commands = queue.size();
+  m_last_playback_stats.prepared_batches = queue.prepared_batches().size();
   m_frame_tracker.begin_frame();
 
   if (m_basic_shader == nullptr) {

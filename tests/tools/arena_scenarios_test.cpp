@@ -175,6 +175,47 @@ TEST(ArenaScenariosTest,
             scenario->expectations.end());
 }
 
+TEST(ArenaScenariosTest, PerformanceBattlesHaveExactArmySizesAndOver100FpsBudget) {
+  struct ExpectedScenario {
+    const char* id;
+    int units_per_side;
+  };
+  for (auto const expected :
+       {ExpectedScenario{Arena::Scenarios::k_performance_20v20_id, 20},
+        ExpectedScenario{Arena::Scenarios::k_performance_30v30_id, 30}}) {
+    auto const* scenario =
+        Arena::Scenarios::find_definition(QString::fromLatin1(expected.id));
+    ASSERT_NE(scenario, nullptr);
+
+    std::map<int, int> unit_count_by_owner;
+    std::map<int, int> soldier_count_by_owner;
+    for (auto const& group : scenario->groups) {
+      unit_count_by_owner[group.owner_id] += group.count;
+      soldier_count_by_owner[group.owner_id] +=
+          group.count * group.individuals_per_unit;
+    }
+
+    EXPECT_EQ(unit_count_by_owner[1], expected.units_per_side);
+    EXPECT_EQ(unit_count_by_owner[2], expected.units_per_side);
+    EXPECT_EQ(soldier_count_by_owner[1], expected.units_per_side);
+    EXPECT_EQ(soldier_count_by_owner[2], expected.units_per_side);
+    EXPECT_TRUE(scenario->force_full_creature_lod);
+    EXPECT_TRUE(scenario->require_rigged_instancing);
+    EXPECT_EQ(scenario->graphics_quality, Render::GraphicsQuality::Ultra);
+    EXPECT_FALSE(scenario->collect_animation_diagnostics);
+
+    auto const budget =
+        std::find_if(scenario->expectations.begin(),
+                     scenario->expectations.end(),
+                     [](auto const& item) {
+                       return item.kind == Arena::ArenaExpectationKind::FrameBudget;
+                     });
+    ASSERT_NE(budget, scenario->expectations.end());
+    EXPECT_LT(budget->threshold, 10.0F);
+    EXPECT_GE(budget->start_seconds, 2.0F);
+  }
+}
+
 TEST(ArenaScenariosTest, WallGroupsSitOnTheWallNetworkLattice) {
 
   constexpr int k_spacing = Game::Systems::WallNetworkService::k_segment_spacing;

@@ -40,6 +40,8 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
   const auto& cmd = queue.get_sorted(i);
   switch (cmd.index()) {
   case RiggedCreatureCmdIndex: {
+    ++m_last_playback_stats.rigged_prepared_batches;
+    m_last_playback_stats.rigged_commands += prepared.count;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     ++debug_rigged_batches;
     debug_rigged_cmds += prepared.count;
@@ -72,6 +74,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
           const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
           m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
           ++m_rigged_drawn_this_frame;
+          ++m_last_playback_stats.rigged_single_draws;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
           ++debug_rigged_single_draws;
 #endif
@@ -98,6 +101,8 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
           ++debug_rigged_instanced_successes;
 #endif
           m_rigged_drawn_this_frame += rig_batch_refs.size();
+          ++m_last_playback_stats.rigged_instanced_draws;
+          m_last_playback_stats.rigged_instanced_instances += rig_batch_refs.size();
           m_last_bound_shader = m_rigged_character_pipeline->instanced_shader();
           m_last_bound_texture = nullptr;
           j = chunk_end;
@@ -117,6 +122,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
         m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
         ++m_rigged_drawn_this_frame;
+        ++m_last_playback_stats.rigged_single_draws;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
         ++debug_rigged_single_draws;
 #endif

@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <deque>
 #include <vector>
 
 #include "../core/component.h"
@@ -74,6 +75,23 @@ private:
                                    const std::vector<Engine::Core::Entity*>& movers);
 
   std::uint64_t m_obstruction_revision{0};
+  void process_pending_path_requests(Engine::Core::World& world);
+  struct PendingPathRequest {
+    Engine::Core::EntityID entity_id{0};
+    QVector3D target;
+    std::uint64_t navigation_revision{0};
+    bool precise_arrival{false};
+  };
+
+  auto enqueue_pending_path_request(Engine::Core::EntityID entity_id,
+                                    const QVector3D& target,
+                                    bool precise_arrival,
+                                    std::uint64_t navigation_revision) -> bool;
+  void cancel_pending_path_request(Engine::Core::EntityID entity_id);
+  std::deque<PendingPathRequest> m_pending_path_requests;
+
+  static constexpr std::size_t k_path_requests_per_tick = 8U;
+  static constexpr std::size_t k_max_pending_path_requests = 2048U;
 };
 
 } // namespace Game::Systems

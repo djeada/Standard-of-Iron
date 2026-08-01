@@ -157,12 +157,52 @@ auto RiggedCharacterPipeline::initialize() -> bool {
   }
   m_max_instances_per_batch = cap;
 
+  (void)m_palette_stream.initialize(k_palette_stream_instance_capacity *
+                                    BonePaletteArena::k_palette_floats);
+
   if (!build_instanced_shader_source()) {
     qWarning() << "RiggedCharacterPipeline: instanced shader unavailable; "
                   "falling back to per-cmd draws";
   }
+  if (!build_shadow_instanced_shader_source()) {
+    qWarning() << "RiggedCharacterPipeline: instanced shadow shader unavailable; "
+                  "falling back to per-creature shadow draws";
+  }
 
   return is_initialized();
+}
+
+auto RiggedCharacterPipeline::build_shadow_instanced_shader_source() -> bool {
+  QString vert_src = load_shader_source(
+      QStringLiteral(":/assets/shaders/directional_shadow_rigged_instanced.vert"));
+  QString frag_src = load_shader_source(
+      QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  if (vert_src.isEmpty() || frag_src.isEmpty()) {
+    return false;
+  }
+
+  QString const define_line =
+      QStringLiteral("#define INSTANCED_BATCH_SIZE %1\n")
+          .arg(static_cast<qulonglong>(m_max_instances_per_batch));
+  int newline = vert_src.indexOf('\n');
+  newline = newline < 0 ? 0 : newline + 1;
+  vert_src.insert(newline, define_line);
+  vert_src = Shader::preprocess_source(vert_src);
+  frag_src = Shader::preprocess_source(frag_src);
+
+  m_shadow_instanced_shader_storage = std::make_unique<Shader>();
+  m_shadow_instanced_shader_storage->set_debug_name(
+      QStringLiteral("directional_shadow_rigged_instanced"));
+  if (!m_shadow_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
+    m_shadow_instanced_shader_storage.reset();
+    return false;
+  }
+  m_shadow_instanced_shader = m_shadow_instanced_shader_storage.get();
+  m_shadow_instanced_shader->bind_uniform_block("BonePalette",
+                                                k_bone_palette_binding_point);
+  m_shadow_instanced_view_proj =
+      m_shadow_instanced_shader->uniform_handle("u_light_vp");
+  return m_shadow_instanced_view_proj != GL::Shader::InvalidUniform;
 }
 
 auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
@@ -212,12 +252,15 @@ void RiggedCharacterPipeline::shutdown() {
   m_shader = nullptr;
   m_instanced_shader = nullptr;
   m_instanced_shader_storage.reset();
+  m_shadow_instanced_shader = nullptr;
+  m_shadow_instanced_shader_storage.reset();
   m_uniforms = Uniforms{};
   m_instanced_view_proj = GL::Shader::InvalidUniform;
   m_instanced_role_color_tbo = GL::Shader::InvalidUniform;
   m_instanced_light_dir = GL::Shader::InvalidUniform;
   m_instanced_ambient_strength = GL::Shader::InvalidUniform;
   m_instanced_camera_position = GL::Shader::InvalidUniform;
+  m_shadow_instanced_view_proj = GL::Shader::InvalidUniform;
 
   auto* fn = gl_funcs();
   if (fn != nullptr) {
@@ -247,6 +290,51 @@ void RiggedCharacterPipeline::shutdown() {
   m_role_color_tbo_tex = 0;
   m_role_color_buffer_capacity_bytes = 0;
   m_instanced_vaos.clear();
+  m_palette_stream.destroy();
+}
+
+void RiggedCharacterPipeline::begin_frame() {
+  if (m_palette_stream.is_valid()) {
+    m_palette_stream.begin_frame();
+  }
+}
+
+auto RiggedCharacterPipeline::bind_streamed_palette_batch(
+    const RiggedCreatureCmd* const* cmds, std::size_t count) -> bool {
+  if (!m_palette_stream.is_valid() || cmds == nullptr || count == 0U ||
+      count > m_max_instances_per_batch) {
+    return false;
+  }
+  const std::size_t palette_stride =
+      m_max_instances_per_batch * BonePaletteArena::k_palette_floats;
+  if (m_palette_stream.count() + palette_stride > m_palette_stream.capacity()) {
+    return false;
+  }
+  m_palette_scratch.assign(palette_stride, 0.0F);
+  for (std::size_t k = 0; k < count; ++k) {
+    if (cmds[k] == nullptr || cmds[k]->bone_palette == nullptr) {
+      return false;
+    }
+    BonePaletteArena::pack_palette_for_gpu(cmds[k]->bone_palette,
+                                           m_palette_scratch.data() +
+                                               k * BonePaletteArena::k_palette_floats);
+  }
+  const std::size_t element_offset =
+      m_palette_stream.write(m_palette_scratch.data(), palette_stride);
+  const std::size_t byte_offset =
+      m_palette_stream.current_offset() + element_offset * sizeof(float);
+  auto* fn = gl_funcs();
+  if (fn == nullptr) {
+    return true;
+  }
+  fn->glBindBufferRange(
+      GL_UNIFORM_BUFFER,
+      k_bone_palette_binding_point,
+      m_palette_stream.buffer(),
+      static_cast<GLintptr>(byte_offset),
+      static_cast<GLsizeiptr>(
+          palette_range_bytes_for_instanced_shader(m_max_instances_per_batch)));
+  return true;
 }
 
 void RiggedCharacterPipeline::cache_uniforms() {
@@ -798,43 +886,44 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
     m_instanced_shader->set_uniform(m_instanced_role_color_tbo, 0);
   }
 
-  std::size_t const upload_palette_bytes = count * BonePaletteArena::k_palette_bytes;
-  std::size_t const bound_palette_bytes =
-      palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
-  if (m_palette_ubo == 0) {
-    fn->glGenBuffers(1, &m_palette_ubo);
-  }
-  if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
+  if (!bind_streamed_palette_batch(cmds, count)) {
+    std::size_t const upload_palette_bytes = count * BonePaletteArena::k_palette_bytes;
+    std::size_t const bound_palette_bytes =
+        palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
+    if (m_palette_ubo == 0) {
+      fn->glGenBuffers(1, &m_palette_ubo);
+    }
+    if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
+      fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+      fn->glBufferData(GL_UNIFORM_BUFFER,
+                       static_cast<GLsizeiptr>(bound_palette_bytes),
+                       nullptr,
+                       GL_DYNAMIC_DRAW);
+      m_palette_ubo_capacity_bytes = bound_palette_bytes;
+    }
+
+    std::size_t const floats_per_palette = BonePaletteArena::k_palette_floats;
+    m_palette_scratch.resize(count * floats_per_palette);
+    for (std::size_t k = 0; k < count; ++k) {
+      const auto& c = *cmds[k];
+      float* dst = m_palette_scratch.data() + k * floats_per_palette;
+      BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
+    }
     fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
     fn->glBufferData(GL_UNIFORM_BUFFER,
-                     static_cast<GLsizeiptr>(bound_palette_bytes),
+                     static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
                      nullptr,
                      GL_DYNAMIC_DRAW);
-    m_palette_ubo_capacity_bytes = bound_palette_bytes;
-  }
-
-  std::size_t const floats_per_palette = BonePaletteArena::k_palette_floats;
-  m_palette_scratch.resize(count * floats_per_palette);
-  for (std::size_t k = 0; k < count; ++k) {
-    const auto& c = *cmds[k];
-    float* dst = m_palette_scratch.data() + k * floats_per_palette;
-    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
-  }
-  fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-
-  fn->glBufferData(GL_UNIFORM_BUFFER,
-                   static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
-                   nullptr,
-                   GL_DYNAMIC_DRAW);
-  fn->glBufferSubData(GL_UNIFORM_BUFFER,
-                      0,
-                      static_cast<GLsizeiptr>(upload_palette_bytes),
-                      m_palette_scratch.data());
-  fn->glBindBufferRange(GL_UNIFORM_BUFFER,
-                        k_bone_palette_binding_point,
-                        m_palette_ubo,
+    fn->glBufferSubData(GL_UNIFORM_BUFFER,
                         0,
-                        static_cast<GLsizeiptr>(bound_palette_bytes));
+                        static_cast<GLsizeiptr>(upload_palette_bytes),
+                        m_palette_scratch.data());
+    fn->glBindBufferRange(GL_UNIFORM_BUFFER,
+                          k_bone_palette_binding_point,
+                          m_palette_ubo,
+                          0,
+                          static_cast<GLsizeiptr>(bound_palette_bytes));
+  }
 
   fn->glBindVertexArray(vao);
   auto const idx_count = static_cast<GLsizei>(cmds[0]->mesh->index_count());
@@ -852,6 +941,75 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
   m_batch_sizes.push_back(count);
   m_last_instance_count = count;
   return true;
+}
+
+auto RiggedCharacterPipeline::draw_shadow_instanced(
+    const RiggedCreatureCmd* const* cmds,
+    std::size_t count,
+    const QMatrix4x4& light_view_proj) -> bool {
+  if (cmds == nullptr || count == 0U || count > m_max_instances_per_batch ||
+      m_shadow_instanced_shader == nullptr || cmds[0] == nullptr ||
+      cmds[0]->mesh == nullptr) {
+    return false;
+  }
+  for (std::size_t k = 1; k < count; ++k) {
+    if (cmds[k] == nullptr || !same_instanced_batch_key(*cmds[0], *cmds[k])) {
+      return false;
+    }
+  }
+  if (!batch_palettes_are_packable(cmds, count)) {
+    return false;
+  }
+
+  auto* fn = gl_funcs();
+  if (fn == nullptr) {
+    return true;
+  }
+
+  m_instance_scratch.resize(count);
+  for (std::size_t k = 0; k < count; ++k) {
+    const auto& cmd = *cmds[k];
+    InstanceAttrib& instance = m_instance_scratch[k];
+    std::memcpy(instance.world, cmd.world.constData(), sizeof(instance.world));
+    instance.variation_material[0] = cmd.variation_scale.x();
+    instance.variation_material[1] = cmd.variation_scale.y();
+    instance.variation_material[2] = cmd.variation_scale.z();
+    instance.variation_material[3] = 0.0F;
+  }
+
+  const std::size_t instance_bytes = count * sizeof(InstanceAttrib);
+  if (!ensure_instance_vbo(instance_bytes)) {
+    return false;
+  }
+  fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
+  fn->glBufferData(GL_ARRAY_BUFFER,
+                   static_cast<GLsizeiptr>(m_instance_vbo_capacity_bytes),
+                   nullptr,
+                   GL_DYNAMIC_DRAW);
+  fn->glBufferSubData(GL_ARRAY_BUFFER,
+                      0,
+                      static_cast<GLsizeiptr>(instance_bytes),
+                      m_instance_scratch.data());
+
+  const GLuint vao = ensure_instanced_vao(*cmds[0]->mesh);
+  if (vao == 0U) {
+    return false;
+  }
+
+  if (!bind_streamed_palette_batch(cmds, count)) {
+    return false;
+  }
+
+  m_shadow_instanced_shader->use();
+  m_shadow_instanced_shader->set_uniform(m_shadow_instanced_view_proj, light_view_proj);
+  fn->glBindVertexArray(vao);
+  fn->glDrawElementsInstanced(GL_TRIANGLES,
+                              static_cast<GLsizei>(cmds[0]->mesh->index_count()),
+                              GL_UNSIGNED_INT,
+                              nullptr,
+                              static_cast<GLsizei>(count));
+  fn->glBindVertexArray(0);
+  return fn->glGetError() == GL_NO_ERROR;
 }
 
 } // namespace Render::GL::BackendPipelines

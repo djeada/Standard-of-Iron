@@ -47,8 +47,8 @@ TEST(LinearFeatureVisibilityTest, DimsExploredSegments) {
       &snapshot, QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 0.0F, 0.0F));
 
   EXPECT_TRUE(result.visible);
-  EXPECT_FLOAT_EQ(result.alpha, 0.5F);
-  EXPECT_EQ(result.color_multiplier, QVector3D(0.4F, 0.4F, 0.45F));
+  EXPECT_FLOAT_EQ(result.alpha, 0.82F);
+  EXPECT_EQ(result.color_multiplier, QVector3D(0.90F, 0.91F, 0.95F));
 }
 
 TEST(LinearFeatureVisibilityTest, AllowsOutOfBoundsOverride) {

@@ -1,10 +1,12 @@
 #include "world.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <memory>
 #include <mutex>
 #include <numbers>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -104,16 +106,19 @@ struct MotionPresentationSample {
 }
 
 void begin_motion_presentation_frame(World& world, float delta_time) {
-  const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  world.for_each_entity([delta_time](Entity& entity) {
-    auto* transform = entity.get_component<TransformComponent>();
-    auto* unit = entity.get_component<UnitComponent>();
-    if (transform == nullptr || unit == nullptr) {
-      return;
+  auto const unit_ids = world.entities_with<UnitComponent>();
+  for (EntityID const id : unit_ids) {
+    Entity* entity = world.get_entity(id);
+    if (entity == nullptr) {
+      continue;
     }
-    auto* motion = get_or_add_component<MotionPresentationComponent>(entity);
+    auto* transform = entity->get_component<TransformComponent>();
+    if (transform == nullptr) {
+      continue;
+    }
+    auto* motion = get_or_add_component<MotionPresentationComponent>(*entity);
     if (motion == nullptr) {
-      return;
+      continue;
     }
     motion->previous_x = transform->position.x;
     motion->previous_y = transform->position.y;
@@ -121,161 +126,167 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
     motion->tick_delta_time = std::max(0.0F, delta_time);
     motion->snapshot_valid = false;
     motion->initialized = true;
-  });
+  }
 }
 
 void finalize_motion_presentation_frame(World& world, float delta_time) {
   const float safe_dt = std::max(delta_time, 1.0e-5F);
-  const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  world.for_each_entity([&world, delta_time, safe_dt](Entity& entity) {
-    auto* motion = entity.get_component<MotionPresentationComponent>();
-    auto* transform = entity.get_component<TransformComponent>();
-    auto* unit = entity.get_component<UnitComponent>();
-    if (motion == nullptr || transform == nullptr || unit == nullptr) {
-      return;
-    }
-
-    auto* movement = entity.get_component<MovementComponent>();
-    auto* attack = entity.get_component<AttackComponent>();
-    auto* attack_target = entity.get_component<AttackTargetComponent>();
-    auto* commander = entity.get_component<CommanderComponent>();
-    auto* builder_prod = entity.get_component<BuilderProductionComponent>();
-    auto* stamina = entity.get_component<StaminaComponent>();
-
-    float const displacement_x = transform->position.x - motion->previous_x;
-    float const displacement_z = transform->position.z - motion->previous_z;
-    float const displacement_sq =
-        displacement_x * displacement_x + displacement_z * displacement_z;
-    bool const displaced = displacement_sq > k_motion_displacement_epsilon_sq;
-
-    float movement_speed_sq = 0.0F;
-    if (movement != nullptr) {
-      movement_speed_sq = movement->get_vx() * movement->get_vx() +
-                          movement->get_vz() * movement->get_vz();
-    }
-    bool const has_component_velocity =
-        movement_speed_sq > k_motion_velocity_epsilon_sq;
-
-    bool const has_active_navigation_segment =
-        movement != nullptr &&
-        (movement->get_has_target() || movement->has_waypoints());
-    bool const has_navigation_intent =
-        has_active_navigation_segment || has_component_velocity;
-
-    bool const direct_control_moving =
-        commander != nullptr && commander->fpv_controlled &&
-        ((commander->fpv_motion_vx * commander->fpv_motion_vx +
-          commander->fpv_motion_vz * commander->fpv_motion_vz) >
-             k_motion_velocity_epsilon_sq ||
-         has_component_velocity);
-    bool const builder_bypass =
-        builder_prod != nullptr && builder_prod->bypass_movement_active;
-
-    motion->attack_target_in_range =
-        attack_target_is_in_range(world, &entity, attack, attack_target, transform);
-    motion->has_chase_intent =
-        attack_target != nullptr && attack_target->target_id > 0 &&
-        attack_target->should_chase && !motion->attack_target_in_range;
-
-    MotionPresentationSample sample{};
-    sample.displaced = displaced;
-    sample.has_component_velocity = has_component_velocity;
-    sample.has_navigation_intent = has_navigation_intent;
-    sample.direct_control_moving = direct_control_moving;
-    sample.builder_bypass = builder_bypass;
-    sample.has_chase_intent = motion->has_chase_intent;
-    sample.has_active_navigation_segment = has_active_navigation_segment;
-    sample.is_running = stamina != nullptr && stamina->is_running;
-
-    const MotionPresentationState next_state =
-        resolve_motion_presentation_state(sample);
-    motion->set_state(next_state);
-    motion->state_time =
-        motion->state_changed ? 0.0F : motion->state_time + std::max(0.0F, delta_time);
-    motion->has_velocity = displaced || has_component_velocity;
-    motion->has_navigation_intent = has_navigation_intent || builder_bypass;
-
-    motion->displacement_x = displacement_x;
-    motion->displacement_z = displacement_z;
-    if (has_component_velocity && movement != nullptr) {
-      motion->velocity_x = movement->get_vx();
-      motion->velocity_z = movement->get_vz();
-      motion->speed = std::sqrt(movement_speed_sq);
-    } else if (displaced) {
-      motion->velocity_x = displacement_x / safe_dt;
-      motion->velocity_z = displacement_z / safe_dt;
-      motion->speed = std::sqrt(displacement_sq) / safe_dt;
-    } else {
-      motion->velocity_x = 0.0F;
-      motion->velocity_z = 0.0F;
-      motion->speed = next_state != MotionPresentationState::Idle
-                          ? std::max(0.1F, unit->speed)
-                          : 0.0F;
-      if (next_state == MotionPresentationState::Run && stamina != nullptr) {
-        motion->speed *= StaminaComponent::k_run_speed_multiplier;
-      }
-    }
-
-    motion->has_movement_target = false;
-    if (builder_bypass) {
-      motion->movement_target_x = builder_prod->bypass_target_x;
-      motion->movement_target_z = builder_prod->bypass_target_z;
-      motion->has_movement_target = true;
-    } else if (movement != nullptr && movement->has_waypoints()) {
-      auto const& waypoint = movement->current_waypoint();
-      motion->movement_target_x = waypoint.first;
-      motion->movement_target_z = waypoint.second;
-      motion->has_movement_target = true;
-    } else if (movement != nullptr && movement->get_has_target()) {
-      motion->movement_target_x = movement->get_target_x();
-      motion->movement_target_z = movement->get_target_y();
-      motion->has_movement_target = true;
-    } else if (motion->has_chase_intent && attack_target != nullptr) {
-      if (auto* target = world.get_entity(attack_target->target_id)) {
-        if (auto* target_transform = target->get_component<TransformComponent>()) {
-          motion->movement_target_x = target_transform->position.x;
-          motion->movement_target_z = target_transform->position.z;
-          motion->has_movement_target = true;
+  world.each<MotionPresentationComponent, TransformComponent, UnitComponent>(
+      [&world, delta_time, safe_dt](EntityID id,
+                                    MotionPresentationComponent& motion_value,
+                                    TransformComponent& transform_value,
+                                    UnitComponent& unit_value) {
+        Entity* entity_ptr = world.get_entity(id);
+        if (entity_ptr == nullptr) {
+          return;
         }
-      }
-    }
+        Entity& entity = *entity_ptr;
+        auto* motion = &motion_value;
+        auto* transform = &transform_value;
+        auto* unit = &unit_value;
 
-    if (has_component_velocity && movement != nullptr) {
-      motion->direction_x = movement->get_vx();
-      motion->direction_z = movement->get_vz();
-    } else if (displaced) {
-      motion->direction_x = displacement_x;
-      motion->direction_z = displacement_z;
-    } else if (motion->has_movement_target) {
-      motion->direction_x = motion->movement_target_x - transform->position.x;
-      motion->direction_z = motion->movement_target_z - transform->position.z;
-    } else {
-      auto [forward_x, forward_z] = forward_xz_from_yaw(transform->rotation.y);
-      motion->direction_x = forward_x;
-      motion->direction_z = forward_z;
-    }
-    normalize_xz(motion->direction_x, motion->direction_z);
+        auto* movement = entity.get_component<MovementComponent>();
+        auto* attack = entity.get_component<AttackComponent>();
+        auto* attack_target = entity.get_component<AttackTargetComponent>();
+        auto* commander = entity.get_component<CommanderComponent>();
+        auto* builder_prod = entity.get_component<BuilderProductionComponent>();
+        auto* stamina = entity.get_component<StaminaComponent>();
 
-    if (direct_control_moving) {
-      motion->source = MotionPresentationSource::DirectControl;
-    } else if (builder_bypass) {
-      motion->source = MotionPresentationSource::BuilderBypass;
-    } else if (motion->has_chase_intent) {
-      motion->source = MotionPresentationSource::Chase;
-    } else if (has_navigation_intent) {
-      motion->source = MotionPresentationSource::Navigation;
-    } else if (displaced) {
-      motion->source = MotionPresentationSource::ForcedDisplacement;
-    } else {
-      motion->source = MotionPresentationSource::None;
-    }
+        float const displacement_x = transform->position.x - motion->previous_x;
+        float const displacement_z = transform->position.z - motion->previous_z;
+        float const displacement_sq =
+            displacement_x * displacement_x + displacement_z * displacement_z;
+        bool const displaced = displacement_sq > k_motion_displacement_epsilon_sq;
 
-    motion->seconds_since_motion =
-        motion->has_locomotion()
-            ? 0.0F
-            : motion->seconds_since_motion + std::max(0.0F, delta_time);
-    motion->snapshot_valid = true;
-  });
+        float movement_speed_sq = 0.0F;
+        if (movement != nullptr) {
+          movement_speed_sq = movement->get_vx() * movement->get_vx() +
+                              movement->get_vz() * movement->get_vz();
+        }
+        bool const has_component_velocity =
+            movement_speed_sq > k_motion_velocity_epsilon_sq;
+
+        bool const has_active_navigation_segment =
+            movement != nullptr &&
+            (movement->get_has_target() || movement->has_waypoints());
+        bool const has_navigation_intent =
+            has_active_navigation_segment || has_component_velocity;
+
+        bool const direct_control_moving =
+            commander != nullptr && commander->fpv_controlled &&
+            ((commander->fpv_motion_vx * commander->fpv_motion_vx +
+              commander->fpv_motion_vz * commander->fpv_motion_vz) >
+                 k_motion_velocity_epsilon_sq ||
+             has_component_velocity);
+        bool const builder_bypass =
+            builder_prod != nullptr && builder_prod->bypass_movement_active;
+
+        motion->attack_target_in_range =
+            attack_target_is_in_range(world, &entity, attack, attack_target, transform);
+        motion->has_chase_intent =
+            attack_target != nullptr && attack_target->target_id > 0 &&
+            attack_target->should_chase && !motion->attack_target_in_range;
+
+        MotionPresentationSample sample{};
+        sample.displaced = displaced;
+        sample.has_component_velocity = has_component_velocity;
+        sample.has_navigation_intent = has_navigation_intent;
+        sample.direct_control_moving = direct_control_moving;
+        sample.builder_bypass = builder_bypass;
+        sample.has_chase_intent = motion->has_chase_intent;
+        sample.has_active_navigation_segment = has_active_navigation_segment;
+        sample.is_running = stamina != nullptr && stamina->is_running;
+
+        const MotionPresentationState next_state =
+            resolve_motion_presentation_state(sample);
+        motion->set_state(next_state);
+        motion->state_time = motion->state_changed
+                                 ? 0.0F
+                                 : motion->state_time + std::max(0.0F, delta_time);
+        motion->has_velocity = displaced || has_component_velocity;
+        motion->has_navigation_intent = has_navigation_intent || builder_bypass;
+
+        motion->displacement_x = displacement_x;
+        motion->displacement_z = displacement_z;
+        if (has_component_velocity && movement != nullptr) {
+          motion->velocity_x = movement->get_vx();
+          motion->velocity_z = movement->get_vz();
+          motion->speed = std::sqrt(movement_speed_sq);
+        } else if (displaced) {
+          motion->velocity_x = displacement_x / safe_dt;
+          motion->velocity_z = displacement_z / safe_dt;
+          motion->speed = std::sqrt(displacement_sq) / safe_dt;
+        } else {
+          motion->velocity_x = 0.0F;
+          motion->velocity_z = 0.0F;
+          motion->speed = next_state != MotionPresentationState::Idle
+                              ? std::max(0.1F, unit->speed)
+                              : 0.0F;
+          if (next_state == MotionPresentationState::Run && stamina != nullptr) {
+            motion->speed *= StaminaComponent::k_run_speed_multiplier;
+          }
+        }
+
+        motion->has_movement_target = false;
+        if (builder_bypass) {
+          motion->movement_target_x = builder_prod->bypass_target_x;
+          motion->movement_target_z = builder_prod->bypass_target_z;
+          motion->has_movement_target = true;
+        } else if (movement != nullptr && movement->has_waypoints()) {
+          auto const& waypoint = movement->current_waypoint();
+          motion->movement_target_x = waypoint.first;
+          motion->movement_target_z = waypoint.second;
+          motion->has_movement_target = true;
+        } else if (movement != nullptr && movement->get_has_target()) {
+          motion->movement_target_x = movement->get_target_x();
+          motion->movement_target_z = movement->get_target_y();
+          motion->has_movement_target = true;
+        } else if (motion->has_chase_intent && attack_target != nullptr) {
+          if (auto* target = world.get_entity(attack_target->target_id)) {
+            if (auto* target_transform = target->get_component<TransformComponent>()) {
+              motion->movement_target_x = target_transform->position.x;
+              motion->movement_target_z = target_transform->position.z;
+              motion->has_movement_target = true;
+            }
+          }
+        }
+
+        if (has_component_velocity && movement != nullptr) {
+          motion->direction_x = movement->get_vx();
+          motion->direction_z = movement->get_vz();
+        } else if (displaced) {
+          motion->direction_x = displacement_x;
+          motion->direction_z = displacement_z;
+        } else if (motion->has_movement_target) {
+          motion->direction_x = motion->movement_target_x - transform->position.x;
+          motion->direction_z = motion->movement_target_z - transform->position.z;
+        } else {
+          auto [forward_x, forward_z] = forward_xz_from_yaw(transform->rotation.y);
+          motion->direction_x = forward_x;
+          motion->direction_z = forward_z;
+        }
+        normalize_xz(motion->direction_x, motion->direction_z);
+
+        if (direct_control_moving) {
+          motion->source = MotionPresentationSource::DirectControl;
+        } else if (builder_bypass) {
+          motion->source = MotionPresentationSource::BuilderBypass;
+        } else if (motion->has_chase_intent) {
+          motion->source = MotionPresentationSource::Chase;
+        } else if (has_navigation_intent) {
+          motion->source = MotionPresentationSource::Navigation;
+        } else if (displaced) {
+          motion->source = MotionPresentationSource::ForcedDisplacement;
+        } else {
+          motion->source = MotionPresentationSource::None;
+        }
+
+        motion->seconds_since_motion =
+            motion->has_locomotion()
+                ? 0.0F
+                : motion->seconds_since_motion + std::max(0.0F, delta_time);
+        motion->snapshot_valid = true;
+      });
 }
 
 [[nodiscard]] constexpr auto
@@ -529,10 +540,175 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
 }
 
 void publish_creature_presentation_frame(World& world) {
-  const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
-  world.for_each_entity([&world](Entity& entity) {
-    publish_creature_presentation_entity(&entity, &world);
-  });
+  auto const unit_ids = world.entities_with<UnitComponent>();
+  for (EntityID const id : unit_ids) {
+    publish_creature_presentation_entity(world.get_entity(id), &world);
+  }
+}
+
+template <typename ComponentType>
+void copy_snapshot_component(const Entity& source, Entity& destination) {
+  if (auto const* component = source.get_component<ComponentType>()) {
+    static_assert(std::is_copy_constructible_v<ComponentType>);
+    destination.add_component<ComponentType>(*component);
+  }
+}
+
+void copy_render_components(const Entity& source, Entity& destination) {
+  copy_snapshot_component<TransformComponent>(source, destination);
+  copy_snapshot_component<UnitComponent>(source, destination);
+  copy_snapshot_component<RenderableComponent>(source, destination);
+  copy_snapshot_component<MovementComponent>(source, destination);
+  copy_snapshot_component<MotionPresentationComponent>(source, destination);
+  copy_snapshot_component<CreaturePresentationComponent>(source, destination);
+  copy_snapshot_component<BuildingComponent>(source, destination);
+  copy_snapshot_component<PendingRemovalComponent>(source, destination);
+  copy_snapshot_component<AttackComponent>(source, destination);
+  copy_snapshot_component<AttackTargetComponent>(source, destination);
+  copy_snapshot_component<CombatStateComponent>(source, destination);
+  copy_snapshot_component<FormationContactComponent>(source, destination);
+  copy_snapshot_component<FormationRosterPresentationComponent>(source, destination);
+  copy_snapshot_component<FormationPresentationComponent>(source, destination);
+  copy_snapshot_component<FormationHitPresentationComponent>(source, destination);
+  copy_snapshot_component<SoldierCasualtyAnimationComponent>(source, destination);
+  copy_snapshot_component<DeathAnimationComponent>(source, destination);
+  copy_snapshot_component<BuilderProductionComponent>(source, destination);
+  copy_snapshot_component<ProductionComponent>(source, destination);
+  copy_snapshot_component<CaptureComponent>(source, destination);
+  copy_snapshot_component<CommanderComponent>(source, destination);
+  copy_snapshot_component<CommanderAuraBuffComponent>(source, destination);
+  copy_snapshot_component<RpgCommanderActionComponent>(source, destination);
+  copy_snapshot_component<RpgCommanderTargetComponent>(source, destination);
+  copy_snapshot_component<HealerComponent>(source, destination);
+  copy_snapshot_component<PatrolComponent>(source, destination);
+  copy_snapshot_component<GuardModeComponent>(source, destination);
+  copy_snapshot_component<HoldModeComponent>(source, destination);
+  copy_snapshot_component<FormationModeComponent>(source, destination);
+  copy_snapshot_component<SpearBraceComponent>(source, destination);
+  copy_snapshot_component<StaminaComponent>(source, destination);
+  copy_snapshot_component<MoraleComponent>(source, destination);
+  copy_snapshot_component<BurningStatusComponent>(source, destination);
+  copy_snapshot_component<StaggerComponent>(source, destination);
+  copy_snapshot_component<HitFeedbackComponent>(source, destination);
+  copy_snapshot_component<ConstructionPreviewComponent>(source, destination);
+  copy_snapshot_component<WallConstructionSiteComponent>(source, destination);
+  copy_snapshot_component<StructureDamagePresentationComponent>(source, destination);
+  copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
+  copy_snapshot_component<BloodStainComponent>(source, destination);
+  copy_snapshot_component<FirePatchComponent>(source, destination);
+  copy_snapshot_component<ElephantComponent>(source, destination);
+  copy_snapshot_component<ElephantStompImpactComponent>(source, destination);
+  copy_snapshot_component<CatapultLoadingComponent>(source, destination);
+}
+
+void render_hash_combine(std::uint64_t& seed, std::uint64_t value) {
+  seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+}
+
+void render_hash_float(std::uint64_t& seed, float value) {
+  render_hash_combine(seed, std::bit_cast<std::uint32_t>(value));
+}
+
+auto render_entity_is_stable(const Entity& entity) -> bool {
+  auto const* movement = entity.get_component<MovementComponent>();
+  auto const* motion = entity.get_component<MotionPresentationComponent>();
+  auto const* creature = entity.get_component<CreaturePresentationComponent>();
+  auto const* target = entity.get_component<AttackTargetComponent>();
+  auto const* combat = entity.get_component<CombatStateComponent>();
+  auto const* contact = entity.get_component<FormationContactComponent>();
+  auto const* casualties = entity.get_component<SoldierCasualtyAnimationComponent>();
+  bool const moving = (movement != nullptr &&
+                       (movement->get_has_target() || movement->has_waypoints() ||
+                        std::hypot(movement->get_vx(), movement->get_vz()) > 0.001F)) ||
+                      (motion != nullptr && motion->has_locomotion());
+  bool const active_creature =
+      creature != nullptr &&
+      (creature->combat_active || creature->is_constructing || creature->is_healing ||
+       creature->is_dying || creature->is_dead || creature->jump_active ||
+       creature->flag_rally_planting || creature->authored_action_running);
+  bool const active_combat =
+      (target != nullptr && target->target_id != 0) ||
+      (combat != nullptr && combat->animation_state != CombatAnimationState::Idle) ||
+      (contact != nullptr && (contact->in_contact || !contact->fronts.empty())) ||
+      (casualties != nullptr && !casualties->entries.empty());
+  bool const transient = entity.has_component<PendingRemovalComponent>() ||
+                         entity.has_component<DeathAnimationComponent>() ||
+                         entity.has_component<BuilderProductionComponent>() ||
+                         entity.has_component<ProductionComponent>() ||
+                         entity.has_component<CaptureComponent>() ||
+                         entity.has_component<CommanderComponent>() ||
+                         entity.has_component<CommanderAuraBuffComponent>() ||
+                         entity.has_component<RpgCommanderActionComponent>() ||
+                         entity.has_component<RpgCommanderTargetComponent>() ||
+                         entity.has_component<HealerComponent>() ||
+                         entity.has_component<BurningStatusComponent>() ||
+                         entity.has_component<StaggerComponent>() ||
+                         entity.has_component<HitFeedbackComponent>() ||
+                         entity.has_component<FormationHitPresentationComponent>() ||
+                         entity.has_component<ConstructionPreviewComponent>() ||
+                         entity.has_component<WallConstructionSiteComponent>() ||
+                         entity.has_component<StructureDamagePresentationComponent>() ||
+                         entity.has_component<RpgContactPresentationComponent>() ||
+                         entity.has_component<BloodStainComponent>() ||
+                         entity.has_component<FirePatchComponent>() ||
+                         entity.has_component<ElephantStompImpactComponent>() ||
+                         entity.has_component<CatapultLoadingComponent>();
+  return !moving && !active_creature && !active_combat && !transient;
+}
+
+auto render_entity_signature(const Entity& entity) -> std::uint64_t {
+  std::uint64_t signature = 0xcbf29ce484222325ULL;
+  if (auto const* transform = entity.get_component<TransformComponent>()) {
+    render_hash_float(signature, transform->position.x);
+    render_hash_float(signature, transform->position.y);
+    render_hash_float(signature, transform->position.z);
+    render_hash_float(signature, transform->rotation.x);
+    render_hash_float(signature, transform->rotation.y);
+    render_hash_float(signature, transform->rotation.z);
+    render_hash_float(signature, transform->scale.x);
+    render_hash_float(signature, transform->scale.y);
+    render_hash_float(signature, transform->scale.z);
+  }
+  if (auto const* unit = entity.get_component<UnitComponent>()) {
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->health));
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->max_health));
+    render_hash_float(signature, unit->speed);
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->spawn_type));
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->owner_id));
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->nation_id));
+    render_hash_combine(
+        signature,
+        static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+  }
+  if (auto const* renderable = entity.get_component<RenderableComponent>()) {
+    render_hash_combine(signature, std::hash<std::string>{}(renderable->mesh_path));
+    render_hash_combine(signature, std::hash<std::string>{}(renderable->texture_path));
+    render_hash_combine(signature, std::hash<std::string>{}(renderable->renderer_id));
+    render_hash_combine(signature, renderable->visible ? 1U : 0U);
+    render_hash_combine(signature, static_cast<std::uint64_t>(renderable->mesh));
+    for (float const channel : renderable->color) {
+      render_hash_float(signature, channel);
+    }
+  }
+  if (auto const* morale = entity.get_component<MoraleComponent>()) {
+    render_hash_float(signature, morale->morale);
+    render_hash_float(signature, morale->commander_aura_bonus);
+    render_hash_combine(signature, morale->wavering ? 1U : 0U);
+    render_hash_combine(signature, morale->routing ? 1U : 0U);
+  }
+  if (auto const* creature = entity.get_component<CreaturePresentationComponent>()) {
+    render_hash_combine(signature, creature->revision);
+  }
+  if (auto const* formation = entity.get_component<FormationPresentationComponent>()) {
+    render_hash_combine(signature, formation->revision);
+  }
+  if (auto const* roster =
+          entity.get_component<FormationRosterPresentationComponent>()) {
+    render_hash_combine(signature, roster->revision);
+  }
+  render_hash_combine(signature, entity.has_component<UnitComponent>() ? 1U : 0U);
+  render_hash_combine(signature, entity.has_component<BuildingComponent>() ? 1U : 0U);
+  return signature;
 }
 
 } // namespace
@@ -583,8 +759,13 @@ void World::ComponentSet::clear() {
   sparse.clear();
 }
 
-World::World() {
+World::World()
+    : World(true, false) {
+}
 
+World::World(bool presentation_enabled, bool render_snapshot)
+    : m_presentation_enabled(presentation_enabled)
+    , m_is_render_snapshot(render_snapshot) {
   m_slots.emplace_back();
 }
 
@@ -654,6 +835,28 @@ auto World::collect_entities_with(ComponentTypeId type_id) -> std::vector<Entity
     }
   }
   return result;
+}
+
+auto World::entities_with(ComponentTypeId type_id) const -> std::span<const EntityID> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  if (type_id >= m_component_sets.size()) {
+    return {};
+  }
+  return m_component_sets[type_id].dense;
+}
+
+void World::resolve_entities_into(std::span<const EntityID> ids,
+                                  std::vector<Entity*>& output) const {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  output.clear();
+  if (output.capacity() < ids.size()) {
+    output.reserve(ids.size());
+  }
+  for (const EntityID id : ids) {
+    if (Entity* entity = resolve(id)) {
+      output.push_back(entity);
+    }
+  }
 }
 
 auto World::create_entity() -> Entity* {
@@ -786,12 +989,93 @@ void World::add_system(std::unique_ptr<System> system) {
 
 void World::update(float delta_time) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  begin_motion_presentation_frame(*this, delta_time);
+  if (m_presentation_enabled) {
+    begin_motion_presentation_frame(*this, delta_time);
+  }
   for (auto& system : m_systems) {
     system->update(this, delta_time);
   }
-  finalize_motion_presentation_frame(*this, delta_time);
-  publish_creature_presentation_frame(*this);
+  if (m_presentation_enabled) {
+    finalize_motion_presentation_frame(*this, delta_time);
+    publish_creature_presentation_frame(*this);
+  }
+  if (!m_is_render_snapshot &&
+      m_render_snapshots_requested.load(std::memory_order_acquire)) {
+    publish_render_snapshot();
+  }
+}
+
+auto World::acquire_render_snapshot() const -> std::shared_ptr<World> {
+  return std::atomic_load_explicit(&m_render_snapshot, std::memory_order_acquire);
+}
+
+void World::publish_render_snapshot() {
+  std::size_t const buffer_index = m_next_render_snapshot_buffer;
+  m_next_render_snapshot_buffer =
+      (m_next_render_snapshot_buffer + 1U) % m_render_snapshot_buffers.size();
+  auto& buffer = m_render_snapshot_buffers[buffer_index];
+  auto const published = acquire_render_snapshot();
+  if (buffer == nullptr || buffer == published || buffer.use_count() > 1) {
+    buffer = std::shared_ptr<World>(new World(false, true));
+  }
+  auto snapshot = buffer;
+  snapshot->m_render_unit_ids.clear();
+  snapshot->m_render_building_ids.clear();
+  snapshot->m_render_other_ids.clear();
+  if (snapshot->m_render_entity_signatures.size() < m_slots.size()) {
+    snapshot->m_render_entity_signatures.resize(m_slots.size(), 0U);
+  }
+  ++m_render_publish_revision;
+  snapshot->m_render_unit_ids.reserve(entities_with<UnitComponent>().size());
+  snapshot->m_render_building_ids.reserve(entities_with<BuildingComponent>().size());
+  snapshot->m_render_other_ids.reserve(entities_with<RenderableComponent>().size());
+
+  for (std::size_t index = 1; index < m_slots.size(); ++index) {
+    auto const& slot = m_slots[index];
+    auto& snapshot_slot = index < snapshot->m_slots.size()
+                              ? snapshot->m_slots[index]
+                              : snapshot->m_slots.emplace_back();
+    if (slot.entity == nullptr) {
+      if (snapshot_slot.entity != nullptr) {
+        snapshot->destroy_entity(snapshot_slot.entity->get_id());
+      }
+      snapshot->m_render_entity_signatures[index] = 0U;
+      continue;
+    }
+    Entity const& source = *slot.entity;
+    std::uint64_t signature = render_entity_signature(source);
+    if (!render_entity_is_stable(source)) {
+      render_hash_combine(signature, m_render_publish_revision);
+    }
+    Entity* destination = snapshot->resolve(source.get_id());
+    bool const reusable = destination != nullptr &&
+                          snapshot->m_render_entity_signatures[index] == signature;
+    if (!reusable) {
+      if (snapshot_slot.entity != nullptr) {
+        snapshot->destroy_entity(snapshot_slot.entity->get_id());
+      }
+      destination = snapshot->create_entity_with_id(source.get_id());
+      if (destination == nullptr) {
+        continue;
+      }
+      copy_render_components(source, *destination);
+      snapshot->m_render_entity_signatures[index] = signature;
+    }
+
+    if (!destination->has_component<RenderableComponent>() ||
+        destination->has_component<PendingRemovalComponent>()) {
+      continue;
+    }
+    if (destination->has_component<UnitComponent>()) {
+      snapshot->m_render_unit_ids.push_back(source.get_id());
+    } else if (destination->has_component<BuildingComponent>()) {
+      snapshot->m_render_building_ids.push_back(source.get_id());
+    } else {
+      snapshot->m_render_other_ids.push_back(source.get_id());
+    }
+  }
+  std::atomic_store_explicit(
+      &m_render_snapshot, std::move(snapshot), std::memory_order_release);
 }
 
 namespace {

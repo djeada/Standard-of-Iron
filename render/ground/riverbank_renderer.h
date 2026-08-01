@@ -41,7 +41,7 @@ private:
 
   int m_visibility_width = 0;
   int m_visibility_height = 0;
-  float m_explored_dim_factor = 0.6F;
+  float m_explored_dim_factor = 0.82F;
 };
 
 } // namespace Render::GL

@@ -114,6 +114,72 @@ TEST(ComponentIndexTest, TracksMembershipAcrossAddAndRemove) {
   EXPECT_EQ(transforms.front(), a);
 }
 
+TEST(ComponentIndexTest, IdViewsAndDirectIterationAvoidOwningQueryResults) {
+  World world;
+  auto* first = world.create_entity();
+  auto* second = world.create_entity();
+  first->add_component<TransformComponent>()->position.x = 2.0F;
+  second->add_component<TransformComponent>()->position.x = 5.0F;
+  second->add_component<UnitComponent>();
+
+  auto const ids = world.entities_with<TransformComponent>();
+  ASSERT_EQ(ids.size(), 2U);
+
+  float sum = 0.0F;
+  std::size_t matches = 0;
+  world.each<TransformComponent, UnitComponent>(
+      [&sum, &matches](EntityID, TransformComponent& transform, UnitComponent&) {
+        sum += transform.position.x;
+        ++matches;
+      });
+  EXPECT_EQ(matches, 1U);
+  EXPECT_FLOAT_EQ(sum, 5.0F);
+}
+
+TEST(WorldPresentationTest, CanDisablePresentationForHeadlessSimulation) {
+  World world;
+  world.set_presentation_enabled(false);
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+
+  world.update(1.0F / 60.0F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::MotionPresentationComponent>(),
+            nullptr);
+  EXPECT_EQ(entity->get_component<Engine::Core::CreaturePresentationComponent>(),
+            nullptr);
+}
+
+TEST(WorldPresentationTest, PublishesDetachedDoubleBufferedRenderWorlds) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<TransformComponent>();
+  transform->position.x = 4.0F;
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+  auto first = world.acquire_render_snapshot();
+  ASSERT_NE(first, nullptr);
+  EXPECT_TRUE(first->is_render_snapshot());
+  ASSERT_EQ(first->render_unit_ids().size(), 1U);
+  auto* first_entity = first->get_entity(id);
+  ASSERT_NE(first_entity, nullptr);
+  EXPECT_FLOAT_EQ(first_entity->get_component<TransformComponent>()->position.x, 4.0F);
+
+  transform->position.x = 9.0F;
+  EXPECT_FLOAT_EQ(first_entity->get_component<TransformComponent>()->position.x, 4.0F);
+  world.update(1.0F / 60.0F);
+  auto second = world.acquire_render_snapshot();
+  ASSERT_NE(second, nullptr);
+  EXPECT_NE(second.get(), first.get());
+  EXPECT_FLOAT_EQ(
+      second->get_entity(id)->get_component<TransformComponent>()->position.x, 9.0F);
+}
+
 TEST(ComponentIndexTest, DestroyingAnEntityDropsItFromEveryIndex) {
   World world;
 
