@@ -53,6 +53,18 @@ auto contains(const std::string& text, const std::string& needle) -> bool {
   return text.find(needle) != std::string::npos;
 }
 
+auto occurrences(const std::string& text, const std::string& needle) -> int {
+  if (needle.empty()) {
+    return 0;
+  }
+  int count = 0;
+  for (std::size_t pos = text.find(needle); pos != std::string::npos;
+       pos = text.find(needle, pos + needle.size())) {
+    ++count;
+  }
+  return count;
+}
+
 } // namespace
 
 TEST(CommanderControlRegressionTest, CommanderStrafeUsesRightHandedBasis) {
@@ -206,18 +218,21 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 2.15F;"));
-  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 1.25F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 3.45F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 2.30F;"));
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
+  // Over-the-shoulder lateral offset keeps the commander's body out of the
+  // screen centre so the target being fought stays visible.
+  EXPECT_TRUE(contains(source, "constexpr float k_camera_side_offset = 0.55F;"));
 
   EXPECT_TRUE(contains(
       source, "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));
   EXPECT_FALSE(contains(source, "shake_offset"));
 
   EXPECT_TRUE(contains(source, "bob_v + breath_v"));
-  EXPECT_TRUE(contains(source, "flat_right * bob_l"));
+  EXPECT_TRUE(contains(source, "flat_right * (side_offset + bob_l)"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderModePreservesAndRestoresRtsSelection) {
@@ -384,10 +399,14 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
-  EXPECT_TRUE(
-      contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 28"));
-  EXPECT_TRUE(
-      contains(fpv_overlay_source, "anchors.bottomMargin: root.bottomInset + 20"));
+  // Vitals and the ability chips share one baseline above the bottom panel so
+  // they read as a single band of HUD chrome; both offsets are scaled so the
+  // overlay stays legible above 1080p.
+  EXPECT_TRUE(contains(fpv_overlay_source,
+                       "anchors.bottomMargin: root.bottomInset + root.scaled(20)"));
+  EXPECT_EQ(2,
+            occurrences(fpv_overlay_source,
+                        "anchors.bottomMargin: root.bottomInset + root.scaled(20)"));
 }
 
 TEST(CommanderControlRegressionTest,

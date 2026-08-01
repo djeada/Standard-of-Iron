@@ -257,6 +257,24 @@ void apply_held_pose_sample(HumanoidPoseController& controller,
     hand_l_target.setZ(hand_l_target.z() + sample.left_hand_z_delta);
   }
 
+  // Both attack paths clamp the hand to the arm's own bone length, but the
+  // held/ready pose did not. A two-handed spear grip derives the offhand from a
+  // point down the shaft, so an unclamped ready stance stretched the forearm
+  // past full extension (measured ~0.685 m against a 0.59 m arm) for as long as
+  // a spear formation stood in melee_ready. Only the derived grip needs this:
+  // authored one-handed ready poses (a bow held out at arm's length) sit right
+  // at full extension by design and must not be pulled in.
+  if (sample.use_offhand_spear_grip) {
+    using HP = HumanProportions;
+    constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
+    QVector3D const shoulder_to_hand = hand_l_target - pose.shoulder_l;
+    float const requested_reach = shoulder_to_hand.length();
+    if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
+      hand_l_target =
+          pose.shoulder_l + shoulder_to_hand * (k_max_arm_reach / requested_reach);
+    }
+  }
+
   controller.place_hand_at(Side::Right, hand_r_target);
   controller.place_hand_at(Side::Left, hand_l_target);
   apply_held_pose_body_deltas(pose, sample);

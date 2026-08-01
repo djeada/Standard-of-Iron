@@ -1178,6 +1178,24 @@ struct ArenaScenarioRunner::Impl {
            elapsed <= expectation.end_seconds + 1.0e-5F;
   }
 
+  // True while at least one RpgHealthUnchanged expectation covering this group
+  // is inside its declared window. Expectations with no window stay active for
+  // the whole run, preserving the behaviour of scenarios that never set one.
+  [[nodiscard]] auto rpg_health_protection_active(const QString& group) const -> bool {
+    bool has_protection = false;
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind != ArenaExpectationKind::RpgHealthUnchanged ||
+          expectation.group != group) {
+        continue;
+      }
+      has_protection = true;
+      if (expectation_active(expectation)) {
+        return true;
+      }
+    }
+    return !has_protection;
+  }
+
   [[nodiscard]] auto
   projectile_pair_key(Engine::Core::EntityID attacker_id,
                       Engine::Core::EntityID target_id) const -> QString {
@@ -1249,7 +1267,11 @@ struct ArenaScenarioRunner::Impl {
       if (!initial_rpg_health_by_group.contains(group)) {
         initial_rpg_health_by_group[group] = rpg->rpg_hp;
         minimum_rpg_health_by_group[group] = rpg->rpg_hp;
-      } else {
+      } else if (rpg_health_protection_active(group)) {
+        // Only sample health while a protecting expectation is inside its own
+        // window. A defensive scene guarantees survival across the block and
+        // dodge it authored, not for the whole run: once those windows close
+        // the attacker is free to legitimately re-engage and connect.
         minimum_rpg_health_by_group[group] =
             std::min(minimum_rpg_health_by_group.value(group), rpg->rpg_hp);
       }

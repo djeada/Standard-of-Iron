@@ -8,6 +8,29 @@ Item {
     property real bottomInset: 0
     property var status: ({})
 
+    // The overlay was authored against a 1080p window with hard-coded pixel
+    // sizes, so its bars and labels shrank into illegibility on taller screens.
+    // Everything sized for readability scales off this instead.
+    readonly property real uiScale: Math.max(0.75, Math.min(2.0, height / 1080))
+    function scaled(value) {
+        return Math.round(value * root.uiScale);
+    }
+
+    // Shared reactive pulse. QML bindings do not re-evaluate on Date.now(), so
+    // anything that pulsed off it silently froze at whatever value it was first
+    // assigned; drive the animated properties from a real animation instead.
+    property real pulsePhase
+
+    NumberAnimation on pulsePhase {
+        running: root.visible
+        from: 0.0
+        to: 1.0
+        duration: 1000
+        loops: Animation.Infinite
+    }
+
+    readonly property real slowPulse: 0.5 + 0.5 * Math.sin(pulsePhase * 2 * Math.PI)
+
     function status_value(key, fallback) {
         if (!status || status[key] === undefined || status[key] === null) {
             return fallback;
@@ -589,14 +612,16 @@ Item {
     Item {
         id: hudBarsRow
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: root.bottomInset + 28
+        // Share the ability row's baseline so vitals and cooldowns read as one
+        // band of HUD chrome instead of two unrelated floating clusters.
+        anchors.bottomMargin: root.bottomInset + root.scaled(20)
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 400
-        height: 28
+        width: root.scaled(460)
+        height: root.scaled(34)
 
         RowLayout {
             anchors.fill: parent
-            spacing: 8
+            spacing: root.scaled(8)
 
             Item {
                 Layout.fillWidth: true
@@ -652,7 +677,7 @@ Item {
                     anchors.centerIn: parent
                     text: "HP " + Number(root.status_value("health", 0)) + "/" + Number(root.status_value("max_health", 100))
                     color: "#ffffff"
-                    font.pixelSize: 10
+                    font.pixelSize: root.scaled(12)
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#88000000"
@@ -700,7 +725,7 @@ Item {
                     height: parent.height - 6
                     radius: 4
                     color: "#3a9e3a"
-                    opacity: stamRatio < 0.20 ? (0.5 + 0.5 * Math.sin(Date.now() * 0.008)) : 1.0
+                    opacity: stamRatio < 0.20 ? (0.45 + 0.55 * root.slowPulse) : 1.0
 
                     Behavior on width  {
                         NumberAnimation {
@@ -714,7 +739,7 @@ Item {
                     anchors.centerIn: parent
                     text: "STM " + Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0) + "%"
                     color: "#cff7ffff"
-                    font.pixelSize: 10
+                    font.pixelSize: root.scaled(12)
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#66000000"
@@ -772,17 +797,20 @@ Item {
             border.width: 3
             border.color: "#88ffdd00"
             visible: comboIndicator.finisherReady
-            opacity: 0.5 + 0.5 * Math.sin(Date.now() * 0.006)
+            opacity: 0.4 + 0.6 * root.slowPulse
         }
     }
 
     Item {
         id: postureBar
-        anchors.bottom: healthBarContainer.top
-        anchors.bottomMargin: 6
+        // Was anchored to a "healthBarContainer" id that does not exist in this
+        // file, which left the posture bar unpositioned. The bars row is the
+        // element it was meant to sit above.
+        anchors.bottom: hudBarsRow.top
+        anchors.bottomMargin: root.scaled(6)
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 216
-        height: 12
+        width: root.scaled(216)
+        height: root.scaled(14)
         visible: Number(root.status_value("posture_ratio", 0.0)) > 0.05
         opacity: visible ? 1.0 : 0.0
 
@@ -821,7 +849,7 @@ Item {
             anchors.centerIn: parent
             text: "POSTURE"
             color: "#99ffffff"
-            font.pixelSize: 7
+            font.pixelSize: root.scaled(8)
             font.bold: true
             font.letterSpacing: 1.0
         }
@@ -879,10 +907,10 @@ Item {
     Row {
         id: abilityCooldowns
         anchors.right: parent.right
-        anchors.rightMargin: 28
+        anchors.rightMargin: root.scaled(28)
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: root.bottomInset + 20
-        spacing: 12
+        anchors.bottomMargin: root.bottomInset + root.scaled(20)
+        spacing: root.scaled(12)
 
         Repeater {
             model: [{
@@ -898,7 +926,9 @@ Item {
                     "totalKey": "vanguard_rush_cooldown",
                     "readyKey": "vanguard_rush_ready"
                 }, {
-                    "name": "HEAL",
+                    // Named to match the "[2] Second Wind" reference line and
+                    // the ability's actual name; the chip used to read "HEAL".
+                    "name": "WIND",
                     "key": "2",
                     "cdKey": "second_wind_cooldown_remaining",
                     "totalKey": "second_wind_cooldown",

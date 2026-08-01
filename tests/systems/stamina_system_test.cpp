@@ -112,6 +112,39 @@ TEST_F(StaminaSystemTest, RunningStopsWhenStaminaDepleted) {
   EXPECT_FLOAT_EQ(stamina->stamina, 0.0F);
 }
 
+TEST_F(StaminaSystemTest, ExhaustedRunnerStillRegeneratesWhileRunIsHeld) {
+  auto* unit = world->create_entity();
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit_comp->owner_id = 1;
+  unit_comp->spawn_type = Game::Units::SpawnType::Archer;
+
+  auto* movement = unit->add_component<MovementComponent>();
+  MovementTestAccess::set_vx(*movement, 1.0F);
+  MovementTestAccess::set_vz(*movement, 1.0F);
+
+  auto* stamina = unit->add_component<StaminaComponent>();
+  stamina->stamina = 0.0F;
+  stamina->max_stamina = 100.0F;
+  stamina->regen_rate = 10.0F;
+  stamina->depletion_rate = 20.0F;
+  // Run is still held and the unit is still moving: previously this combination
+  // skipped regeneration entirely, pinning the unit at zero stamina forever.
+  stamina->run_requested = true;
+  stamina->is_running = false;
+
+  stamina_system.update(world.get(), 1.0F);
+
+  EXPECT_FALSE(stamina->is_running);
+  EXPECT_FLOAT_EQ(stamina->stamina, 10.0F);
+
+  // Once past the start threshold, holding run picks the sprint back up on the
+  // next frame-sized step.
+  stamina_system.update(world.get(), 0.1F);
+  EXPECT_TRUE(stamina->is_running);
+  EXPECT_FLOAT_EQ(stamina->stamina, 8.0F);
+}
+
 TEST_F(StaminaSystemTest, CatapultsCannotRun) {
   auto* unit = world->create_entity();
   unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
