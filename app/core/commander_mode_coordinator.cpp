@@ -2,6 +2,8 @@
 
 #include <QPointF>
 
+#include <algorithm>
+
 #include "commander_control_controller.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -15,6 +17,19 @@
 
 namespace App::Core {
 namespace {
+
+constexpr int k_rpg_pool_base = 120;
+constexpr int k_rpg_pool_min = 130;
+constexpr int k_rpg_pool_max = 220;
+constexpr int k_rpg_pool_health_divisor = 60;
+
+auto rpg_pool_for_commander(const Engine::Core::UnitComponent* unit) -> int {
+  if (unit == nullptr) {
+    return 150;
+  }
+  const int scaled = k_rpg_pool_base + (unit->max_health / k_rpg_pool_health_divisor);
+  return std::clamp(scaled, k_rpg_pool_min, k_rpg_pool_max);
+}
 
 auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
                                       int local_owner_id) -> std::optional<QVector3D> {
@@ -154,7 +169,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
           context.commander)) {
     auto* unit = context.commander->get_component<Engine::Core::UnitComponent>();
     if (!rpg->active) {
-      rpg->rpg_max_hp = (unit != nullptr) ? unit->max_health * 3 : 150;
+      rpg->rpg_max_hp = rpg_pool_for_commander(unit);
       rpg->rpg_hp = rpg->rpg_max_hp;
     }
     rpg->active = true;

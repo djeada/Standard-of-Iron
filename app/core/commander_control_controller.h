@@ -26,6 +26,8 @@ enum class DodgeState {
   Recovering
 };
 
+inline constexpr float k_commander_rest_view_pitch_degrees = -6.0F;
+
 class CommanderControlController {
 public:
   struct InputState {

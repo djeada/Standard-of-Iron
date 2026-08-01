@@ -1665,13 +1665,13 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   constexpr float k_focus_height = 1.45F;
 
-  constexpr float k_camera_back_offset = 3.45F;
-  constexpr float k_camera_up_offset = 0.95F;
-  constexpr float k_camera_side_offset = 0.55F;
+  constexpr float k_camera_back_offset = 3.10F;
+  constexpr float k_camera_up_offset = 1.15F;
+  constexpr float k_camera_side_offset = 0.90F;
   constexpr float k_target_distance = 6.0F;
-  constexpr float k_close_camera_back_offset = 2.30F;
-  constexpr float k_close_camera_up_offset = 0.62F;
-  constexpr float k_close_camera_side_offset = 0.42F;
+  constexpr float k_close_camera_back_offset = 2.25F;
+  constexpr float k_close_camera_up_offset = 1.05F;
+  constexpr float k_close_camera_side_offset = 0.72F;
   constexpr float k_close_target_distance = 5.2F;
 
   constexpr float k_bob_freq = 3.5F;
@@ -1688,7 +1688,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   constexpr float k_lean_max_deg = 2.2F;
   constexpr float k_lean_follow = 6.5F;
 
-  constexpr float k_fov_walk = 75.0F;
+  constexpr float k_fov_walk = 68.0F;
   constexpr float k_fov_run_boost = 7.0F;
   constexpr float k_fov_lerp = 5.0F;
 
@@ -1723,7 +1723,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   }
 
   const float fov_target =
-      (close_camera_mode ? 72.0F : k_fov_walk) +
+      (close_camera_mode ? 64.0F : k_fov_walk) +
       ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F) +
       m_dodge_fov_kick;
   m_fov_current += (fov_target - m_fov_current) *
@@ -1756,7 +1756,8 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * (side_offset + bob_l);
 
-  QVector3D target_desired = pivot + forward_vec * target_distance;
+  const QVector3D free_look_target = eye_desired + forward_vec * target_distance;
+  QVector3D target_desired = free_look_target;
 
   const Engine::Core::EntityID focus_id = locked_target_id();
   if (focus_id != 0) {
@@ -1777,9 +1778,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
         const float enemy_distance = std::sqrt(to_enemy.lengthSquared());
         to_enemy /= enemy_distance;
         target_desired =
-            (pivot + forward_vec * target_distance) * 0.40F +
+            free_look_target * 0.40F +
             (enemy_focus + to_enemy * std::min(1.2F, enemy_distance * 0.15F)) * 0.60F;
-        eye_desired += flat_right * (close_camera_mode ? 0.10F : 0.22F);
+        eye_desired += flat_right * (close_camera_mode ? 0.24F : 0.38F);
       }
     }
   }
