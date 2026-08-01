@@ -119,6 +119,7 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"BuilderProductionComponent", AuthoritativeSerialized, "Construction queue."},
     {"WallConstructionSiteComponent", AuthoritativeSerialized, "Unbuilt wall segment."},
     {"WallSegmentComponent", AuthoritativeSerialized, "Built wall segment."},
+    {"GateComponent", AuthoritativeSerialized, "Gate leaf position and manual mode."},
     {"TerrainContextComponent",
      AuthoritativeSerialized,
      "Cached terrain sample the movement system depends on being consistent."},

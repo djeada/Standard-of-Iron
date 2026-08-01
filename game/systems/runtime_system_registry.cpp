@@ -12,6 +12,7 @@
 #include "combat_status_effect_system.h"
 #include "combat_system.h"
 #include "commander_system.h"
+#include "gate_system.h"
 #include "guard_system.h"
 #include "healing_beam_system.h"
 #include "healing_system.h"
@@ -34,6 +35,8 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<CombatStatusEffectSystem>());
   world.add_system(std::make_unique<ProjectileSystem>());
   world.add_system(std::make_unique<StaminaSystem>());
+
+  world.add_system(std::make_unique<GateSystem>());
   world.add_system(std::make_unique<MovementSystem>());
   world.add_system(std::make_unique<PatrolSystem>());
   world.add_system(std::make_unique<GuardSystem>());

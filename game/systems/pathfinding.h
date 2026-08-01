@@ -107,6 +107,7 @@ private:
   auto find_path_internal(const Point& start, const Point& end) -> std::vector<Point>;
   auto resolve_walkable_endpoint(const Point& requested, Point& resolved) const -> bool;
   void force_map_passage_cells_walkable(int min_x, int max_x, int min_z, int max_z);
+  void force_navigation_passages_walkable(int min_x, int max_x, int min_z, int max_z);
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 

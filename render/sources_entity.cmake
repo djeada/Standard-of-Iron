@@ -44,6 +44,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_desc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_render_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_gate_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/barracks_renderer.cpp

@@ -97,6 +97,11 @@ struct ArenaScenarioResourcePatch {
   float scale{1.0F};
 };
 
+struct ArenaScenarioOwnerTeam {
+  int owner_id{0};
+  int team_id{0};
+};
+
 struct ArenaScenarioElevationPatch {
   QVector3D center;
   float radius{8.0F};
@@ -160,6 +165,9 @@ enum class ArenaExpectationKind : std::uint8_t {
   GroupExists,
   GroupDestroyed,
   GroupReachedDestination,
+  GroupHeldOutsideDestination,
+  GateOpenedObserved,
+  GateRemainedClosed,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,
@@ -223,6 +231,7 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::Bridge> bridges;
   std::vector<ArenaScenarioElevationPatch> elevation_patches;
   std::vector<Game::Map::UndeadZone> undead_zones;
+  std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioGroup> groups;
   std::vector<ArenaScenarioResourcePatch> resource_patches;
   std::vector<ArenaScenarioStep> steps;

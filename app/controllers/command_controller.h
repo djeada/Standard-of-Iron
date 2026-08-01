@@ -40,6 +40,7 @@ public:
                        void* camera) -> CommandResult;
   auto on_stop_command() -> CommandResult;
   auto on_hold_command() -> CommandResult;
+  auto on_gate_command() -> CommandResult;
   auto on_guard_command() -> CommandResult;
   auto on_formation_command() -> CommandResult;
   auto on_run_command() -> CommandResult;
@@ -102,6 +103,7 @@ signals:
   void insufficient_manpower();
   void insufficient_resources(const QString& message);
   void hold_mode_changed(bool active);
+  void gate_mode_changed(const QString& mode);
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);
   void run_mode_changed(bool active);

@@ -210,6 +210,60 @@ auto CommandController::on_hold_command() -> CommandResult {
   return result;
 }
 
+namespace {
+
+auto gate_mode_name(Engine::Core::GateComponent::ManualMode mode) -> QString {
+  switch (mode) {
+  case Engine::Core::GateComponent::ManualMode::ForcedOpen:
+    return QStringLiteral("open");
+  case Engine::Core::GateComponent::ManualMode::ForcedClosed:
+    return QStringLiteral("closed");
+  case Engine::Core::GateComponent::ManualMode::Automatic:
+    break;
+  }
+  return QStringLiteral("auto");
+}
+
+} // namespace
+
+auto CommandController::on_gate_command() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  auto const gates = App::Core::filter_selected_units_for_action(
+      m_world, m_selection_system->get_selected_units(), QStringLiteral("gate"));
+  if (gates.empty()) {
+    return result;
+  }
+
+  auto next_mode = Engine::Core::GateComponent::ManualMode::ForcedOpen;
+  if (auto* first = m_world->get_entity(gates.front())) {
+    if (const auto* gate = first->get_component<Engine::Core::GateComponent>()) {
+      switch (gate->manual_mode) {
+      case Engine::Core::GateComponent::ManualMode::Automatic:
+        next_mode = Engine::Core::GateComponent::ManualMode::ForcedOpen;
+        break;
+      case Engine::Core::GateComponent::ManualMode::ForcedOpen:
+        next_mode = Engine::Core::GateComponent::ManualMode::ForcedClosed;
+        break;
+      case Engine::Core::GateComponent::ManualMode::ForcedClosed:
+        next_mode = Engine::Core::GateComponent::ManualMode::Automatic;
+        break;
+      }
+    }
+  }
+
+  submit(m_world, Game::Command::SetGateMode{.units = gates, .mode = next_mode});
+
+  emit gate_mode_changed(gate_mode_name(next_mode));
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
 auto CommandController::on_patrol_click(qreal sx,
                                         qreal sy,
                                         int viewport_width,

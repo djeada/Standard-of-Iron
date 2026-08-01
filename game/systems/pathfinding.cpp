@@ -254,6 +254,9 @@ void Pathfinding::process_dirty_regions() {
       const auto& buildings = registry.get_all_buildings();
 
       for (const auto& building : buildings) {
+        if (!building.blocks_navigation) {
+          continue;
+        }
         auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
             building, m_grid_cell_size);
         for (const auto& cell : cells) {
@@ -267,6 +270,7 @@ void Pathfinding::process_dirty_regions() {
         }
       }
 
+      force_navigation_passages_walkable(0, m_width - 1, 0, m_height - 1);
       apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
       force_map_passage_cells_walkable(0, m_width - 1, 0, m_height - 1);
 
@@ -308,6 +312,9 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   const auto& buildings = registry.get_all_buildings();
 
   for (const auto& building : buildings) {
+    if (!building.blocks_navigation) {
+      continue;
+    }
     auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
         building, m_grid_cell_size);
     for (const auto& cell : cells) {
@@ -321,8 +328,40 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
     }
   }
 
+  force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
+}
+
+void Pathfinding::force_navigation_passages_walkable(int min_x,
+                                                     int max_x,
+                                                     int min_z,
+                                                     int max_z) {
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+  if (min_x > max_x || min_z > max_z) {
+    return;
+  }
+
+  for (const auto& passage :
+       BuildingCollisionRegistry::instance().navigation_passages()) {
+    auto cells = BuildingCollisionRegistry::get_rect_grid_cells(passage.center_x,
+                                                                passage.center_z,
+                                                                passage.width,
+                                                                passage.depth,
+                                                                0.0F,
+                                                                m_grid_cell_size);
+    for (const auto& cell : cells) {
+      int const grid_x = static_cast<int>(std::round(cell.first - m_grid_offset_x));
+      int const grid_z = static_cast<int>(std::round(cell.second - m_grid_offset_z));
+      if (grid_x < min_x || grid_x > max_x || grid_z < min_z || grid_z > max_z) {
+        continue;
+      }
+      m_navigation_grid.set(grid_x, grid_z, CellValue::Walkable);
+    }
+  }
 }
 
 void Pathfinding::force_map_passage_cells_walkable(int min_x,

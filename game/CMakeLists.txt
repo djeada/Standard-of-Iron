@@ -105,6 +105,8 @@ add_library(
     systems/cohort_system.cpp
     systems/building_collision_registry.cpp
     systems/wall_network_service.cpp
+    systems/gate_service.cpp
+    systems/gate_system.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
     systems/arrow_visual_profile.cpp
@@ -184,6 +186,7 @@ add_library(
     units/home.cpp
     units/marketplace.cpp
     units/wall_segment.cpp
+    units/wall_gate.cpp
     systems/home_system.cpp
 )
 

@@ -509,6 +509,10 @@ GameEngine::GameEngine(QObject* parent)
           this,
           &GameEngine::hold_mode_changed);
   connect(m_command_controller.get(),
+          &App::Controllers::CommandController::gate_mode_changed,
+          this,
+          &GameEngine::gate_mode_changed);
+  connect(m_command_controller.get(),
           &App::Controllers::CommandController::guard_mode_changed,
           this,
           &GameEngine::guard_mode_changed);
@@ -818,6 +822,14 @@ void GameEngine::on_hold_command() {
   }
   ensure_initialized();
   m_input_handler->on_hold_command();
+}
+
+void GameEngine::on_gate_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_gate_command();
 }
 
 void GameEngine::on_guard_command() {

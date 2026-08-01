@@ -1077,6 +1077,46 @@ public:
   Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
   float build_time{0.0F};
   float progress{0.0F};
+
+  Game::Units::SpawnType product_type{Game::Units::SpawnType::WallSegment};
+};
+
+class GateComponent : public Component {
+public:
+  enum class State : std::uint8_t {
+    Closed = 0,
+    Opening,
+    Open,
+    Closing
+  };
+
+  enum class ManualMode : std::uint8_t {
+    Automatic = 0,
+    ForcedOpen,
+    ForcedClosed
+  };
+
+  static constexpr float k_passable_open_amount = 0.75F;
+  static constexpr float k_blocking_open_amount = 0.25F;
+
+  GateComponent() = default;
+
+  State state{State::Closed};
+  ManualMode manual_mode{ManualMode::Automatic};
+
+  float open_amount{0.0F};
+  float open_speed{1.6F};
+  float trigger_radius{4.0F};
+  float hold_open_seconds{1.25F};
+  float hold_timer{0.0F};
+
+  [[nodiscard]] auto is_passable() const -> bool {
+    return open_amount >= k_passable_open_amount;
+  }
+
+  [[nodiscard]] auto blocks_movement() const -> bool {
+    return open_amount < k_passable_open_amount;
+  }
 };
 
 class ConstructionPreviewComponent : public Component {

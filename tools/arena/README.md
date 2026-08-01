@@ -269,3 +269,33 @@ the same depth for direct weapon and motion comparison.
 The path scenes suppress incidental scatter and use a fixed feature-centered
 camera so the route, obstacle, and formation motion remain readable in batch
 captures.
+
+## Gate contracts
+
+Five scenes cover the wall gate, each cutting one gate into a palisade running
+east-west through the origin:
+
+- `gate_friendly_passage` sends the wall owner's own infantry at it and requires
+  the gate to open and the column to arrive on the far side.
+- `gate_allied_access` repeats the run with a third player sharing the wall
+  owner's team, proving admission follows the diplomacy tables rather than the
+  literal owner id.
+- `gate_enemy_blocked` walks hostile infantry into a shut gate and requires it to
+  stay shut and the raiders to stay on their own side.
+- `gate_destroyed_breach` breaks a low-health gate and requires the attackers to
+  pour through the opening it leaves, with both flanking runs intact.
+- `gate_consecutive_transit` pushes three files through in succession so the gate
+  is never observed shutting on a body mid-crossing.
+
+Three acceptance kinds back these scenes:
+
+- `GateOpenedObserved` fails when no gate in the group ever opened far enough to
+  walk through.
+- `GateRemainedClosed` fails when a gate opened, or when the named group was never
+  sampled as a gate at all.
+- `GroupHeldOutsideDestination` is the mirror of `GroupReachedDestination`: it
+  fails when the group's living centroid ends up within tolerance of a place it
+  was supposed to be kept out of.
+
+Scenarios that need two owners on one team declare it with `owner_teams`, which
+the Arena applies to the owner registry before spawning.

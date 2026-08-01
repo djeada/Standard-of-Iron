@@ -12,6 +12,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/game_state_serializer.h"
+#include "game/systems/gate_service.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
@@ -136,6 +137,10 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
                                transform->position.x,
                                transform->position.z,
                                unit->owner_id);
+
+    if (entity->has_component<Engine::Core::GateComponent>()) {
+      Game::Systems::GateService::mark_gate_footprint_navigable(entity->get_id());
+    }
   }
 
   Game::Systems::WallNetworkService::refresh_world(*world);

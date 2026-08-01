@@ -2817,6 +2817,260 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+
+    auto gate_line = [](ArenaScenarioDefinition& scenario, int gate_owner) {
+      scenario.groups.push_back(building(QStringLiteral("west_wall"),
+                                         Game::Units::SpawnType::WallSegment,
+                                         Nation::RomanRepublic,
+                                         gate_owner,
+                                         4,
+                                         {-5.0F, 0.0F, 0.0F},
+                                         {2.0F, 0.0F, 0.0F}));
+      scenario.groups.push_back(building(QStringLiteral("east_wall"),
+                                         Game::Units::SpawnType::WallSegment,
+                                         Nation::RomanRepublic,
+                                         gate_owner,
+                                         4,
+                                         {5.0F, 0.0F, 0.0F},
+                                         {2.0F, 0.0F, 0.0F}));
+    };
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_gate_friendly_passage_id),
+          QStringLiteral("Gate: Friendly Passage"),
+          QStringLiteral("The owner's infantry approach their own gate, it swings "
+                         "open ahead of them, and they march through the wall line."),
+          14.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      s.groups.push_back(building(QStringLiteral("gate"),
+                                  Game::Units::SpawnType::WallGate,
+                                  Nation::RomanRepublic,
+                                  1,
+                                  1,
+                                  {0.0F, 0.0F, 0.0F}));
+      s.groups.push_back(group(
+          QStringLiteral("garrison"), Troop::Swordsman, 1, 1, {-0.5F, 0.0F, -9.0F}, 6));
+      auto move = at(0.5F, Command::FormationMove, QStringLiteral("garrison"));
+      move.destination = {-0.5F, 0.0F, 9.0F};
+      s.steps = {move};
+      add_visual_stability(s, {QStringLiteral("garrison")});
+      s.expectations.push_back(
+          expectation(Expect::MovementAnimationObserved, QStringLiteral("garrison")));
+      s.expectations.push_back(
+          expectation(Expect::GateOpenedObserved, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("gate")));
+      auto reached = expectation(Expect::GroupReachedDestination,
+                                 QStringLiteral("garrison"),
+                                 {},
+                                 0.0F,
+                                 0.0F,
+                                 3.0F);
+      reached.position = move.destination;
+      s.expectations.push_back(reached);
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_gate_allied_access_id),
+          QStringLiteral("Gate: Allied Access"),
+          QStringLiteral(
+              "A Carthaginian column sharing the wall owner's team is "
+              "admitted through the gate on the same terms as its garrison."),
+          14.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1},
+                       {.owner_id = 2, .team_id = 2},
+                       {.owner_id = 3, .team_id = 1}};
+      gate_line(s, 1);
+      s.groups.push_back(building(QStringLiteral("gate"),
+                                  Game::Units::SpawnType::WallGate,
+                                  Nation::RomanRepublic,
+                                  1,
+                                  1,
+                                  {0.0F, 0.0F, 0.0F}));
+      auto allies = group(
+          QStringLiteral("allies"), Troop::Spearman, 3, 1, {-0.5F, 0.0F, -9.0F}, 6);
+      allies.facing_degrees = 0.0F;
+      s.groups.push_back(allies);
+      auto move = at(0.5F, Command::FormationMove, QStringLiteral("allies"));
+      move.destination = {-0.5F, 0.0F, 9.0F};
+      s.steps = {move};
+      add_visual_stability(s, {QStringLiteral("allies")});
+      s.expectations.push_back(
+          expectation(Expect::GateOpenedObserved, QStringLiteral("gate")));
+      auto reached = expectation(Expect::GroupReachedDestination,
+                                 QStringLiteral("allies"),
+                                 {},
+                                 0.0F,
+                                 0.0F,
+                                 3.0F);
+      reached.position = move.destination;
+      s.expectations.push_back(reached);
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_gate_enemy_blocked_id),
+          QStringLiteral("Gate: Enemy Blocked"),
+          QStringLiteral("Hostile infantry walk up to a shut gate, fail to trigger "
+                         "it, and are held on their side of the wall."),
+          12.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      auto gate = building(QStringLiteral("gate"),
+                           Game::Units::SpawnType::WallGate,
+                           Nation::RomanRepublic,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F});
+      gate.health_override = gate.max_health_override = 6000;
+      s.groups.push_back(gate);
+      s.groups.push_back(group(
+          QStringLiteral("raiders"), Troop::Spearman, 2, 1, {-0.5F, 0.0F, -9.0F}, 6));
+      auto move = at(0.5F, Command::FormationMove, QStringLiteral("raiders"));
+      move.destination = {-0.5F, 0.0F, 9.0F};
+      s.steps = {move};
+      add_visual_stability(s, {QStringLiteral("raiders")});
+      s.expectations.push_back(
+          expectation(Expect::GateRemainedClosed, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("gate")));
+      auto held = expectation(Expect::GroupHeldOutsideDestination,
+                              QStringLiteral("raiders"),
+                              {},
+                              0.0F,
+                              0.0F,
+                              4.0F);
+      held.position = move.destination;
+      s.expectations.push_back(held);
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_gate_destroyed_breach_id),
+          QStringLiteral("Gate: Destroyed Breach"),
+          QStringLiteral("Attackers break a gate that will not open for them and "
+                         "pour through the breach it leaves in the wall."),
+          20.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      auto gate = building(QStringLiteral("gate"),
+                           Game::Units::SpawnType::WallGate,
+                           Nation::RomanRepublic,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F});
+      gate.health_override = gate.max_health_override = 60;
+      s.groups.push_back(gate);
+      s.groups.push_back(group(QStringLiteral("breachers"),
+                               Troop::Swordsman,
+                               2,
+                               1,
+                               {-0.5F, 0.0F, -8.0F},
+                               8));
+      auto attack = at(
+          0.4F, Command::Attack, QStringLiteral("breachers"), QStringLiteral("gate"));
+      auto pass = when_destroyed(QStringLiteral("gate"),
+                                 Command::FormationMove,
+                                 QStringLiteral("breachers"),
+                                 {});
+      pass.destination = {-0.5F, 0.0F, 8.0F};
+      s.steps = {attack, pass};
+      add_visual_stability(s, {QStringLiteral("breachers")});
+      s.expectations.push_back(
+          expectation(Expect::AttackAnimationObserved, QStringLiteral("breachers")));
+      s.expectations.push_back(
+          expectation(Expect::GroupDestroyed, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("west_wall")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("east_wall")));
+      auto reached = expectation(Expect::GroupReachedDestination,
+                                 QStringLiteral("breachers"),
+                                 {},
+                                 0.0F,
+                                 0.0F,
+                                 3.5F);
+      reached.position = pass.destination;
+      s.expectations.push_back(reached);
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_gate_consecutive_transit_id),
+          QStringLiteral("Gate: Consecutive Transit"),
+          QStringLiteral("Three files cross the same gate back to back; it must "
+                         "stay open under them and never shut on a body."),
+          20.0F,
+          {30.0F, 54.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      s.groups.push_back(building(QStringLiteral("gate"),
+                                  Game::Units::SpawnType::WallGate,
+                                  Nation::RomanRepublic,
+                                  1,
+                                  1,
+                                  {0.0F, 0.0F, 0.0F}));
+      s.groups.push_back(group(QStringLiteral("column"),
+                               Troop::Swordsman,
+                               1,
+                               3,
+                               {-0.5F, 0.0F, -6.0F},
+                               4,
+                               {0.0F, 0.0F, -2.5F}));
+      auto move = at(0.5F, Command::Move, QStringLiteral("column"));
+      move.destination = {-0.5F, 0.0F, 8.0F};
+      s.steps = {move};
+      add_visual_stability(s, {QStringLiteral("column")});
+      s.expectations.push_back(
+          expectation(Expect::GateOpenedObserved, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::MovementAnimationObserved, QStringLiteral("column")));
+      auto reached = expectation(Expect::GroupReachedDestination,
+                                 QStringLiteral("column"),
+                                 {},
+                                 0.0F,
+                                 0.0F,
+                                 4.0F);
+      reached.position = move.destination;
+      s.expectations.push_back(reached);
+      result.push_back(std::move(s));
+    }
+  }
+
+  {
     auto s = definition(
         QString::fromLatin1(k_crossing_formations_id),
         QStringLiteral("Crossing Formations"),

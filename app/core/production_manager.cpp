@@ -184,6 +184,9 @@ auto spawn_type_for_construction_item(const QString& item_type)
   if (item_type == QStringLiteral("wall_segment")) {
     return Game::Units::SpawnType::WallSegment;
   }
+  if (item_type == QStringLiteral("wall_gate")) {
+    return Game::Units::SpawnType::WallGate;
+  }
   if (item_type == QStringLiteral("home")) {
     return Game::Units::SpawnType::Home;
   }
@@ -1287,7 +1290,7 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
   std::string const item_str = item_type.toStdString();
   float const build_time = get_construction_build_time(item_str);
 
-  if (item_type == QStringLiteral("wall_segment")) {
+  if (is_wall_construction_mode()) {
     clear_builder_preview_sites();
     set_construction_preview_active(false);
     set_construction_preview_valid(false);
@@ -1484,7 +1487,12 @@ auto ProductionManager::pending_construction_nation_id() const
 }
 
 auto ProductionManager::is_wall_construction_mode() const -> bool {
-  return m_pending_construction_type == QStringLiteral("wall_segment");
+  return m_pending_construction_type == QStringLiteral("wall_segment") ||
+         is_gate_construction_mode();
+}
+
+auto ProductionManager::is_gate_construction_mode() const -> bool {
+  return m_pending_construction_type == QStringLiteral("wall_gate");
 }
 
 void ProductionManager::clear_preview_entities() {
@@ -1572,6 +1580,7 @@ void ProductionManager::rebuild_non_wall_preview_entity(
 }
 
 void ProductionManager::rebuild_wall_preview_entities() {
+  const bool gate_mode = is_gate_construction_mode();
   clear_preview_entities();
   if (m_world == nullptr || m_wall_preview_segments.empty()) {
     return;
@@ -1608,9 +1617,12 @@ void ProductionManager::rebuild_wall_preview_entities() {
 
     renderable->visible = false;
     renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-    renderable->renderer_id = Game::Systems::WallNetworkService::resolve_appearance(
-                                  nation_id, segment.connection_mask)
-                                  .renderer_id;
+    renderable->renderer_id =
+        (gate_mode ? Game::Systems::WallNetworkService::resolve_gate_appearance(
+                         nation_id, segment.connection_mask, segment.rotation_y)
+                   : Game::Systems::WallNetworkService::resolve_appearance(
+                         nation_id, segment.connection_mask))
+            .renderer_id;
     renderable->color[0] = team_color.x();
     renderable->color[1] = team_color.y();
     renderable->color[2] = team_color.z();
@@ -1658,8 +1670,14 @@ void ProductionManager::rebuild_wall_preview_plan(
       target.z = anchor.z;
     }
   }
+
   const auto chain =
-      Game::Systems::WallNetworkService::build_axis_aligned_chain(anchor, target);
+      is_gate_construction_mode()
+          ? std::vector<Game::Systems::WallGridPosition>{target}
+          : Game::Systems::WallNetworkService::build_axis_aligned_chain(anchor, target);
+  const QString item_type = m_pending_construction_type;
+  const int wood_cost =
+      construction_costs_for_item(item_type).get(Game::Systems::ResourceType::Wood);
 
   auto occupancy = Game::Systems::WallNetworkService::OccupancySet{};
   Game::Systems::WallNetworkService::add_world_occupancy(*m_world, occupancy, true);
@@ -1690,13 +1708,12 @@ void ProductionManager::rebuild_wall_preview_plan(
                        *m_world, grid_pos, true);
                !validation.valid) {
       segment.failure_reason = validation.failure_reason;
-    } else if (available_wood <
-               Game::Systems::WallNetworkService::k_wall_segment_wood_cost) {
+    } else if (available_wood < wood_cost) {
       segment.failure_reason = "Not enough wood.";
     } else {
       segment.valid = true;
       ++valid_segment_count;
-      available_wood -= Game::Systems::WallNetworkService::k_wall_segment_wood_cost;
+      available_wood -= wood_cost;
       occupancy.insert(key);
     }
 
@@ -1719,8 +1736,12 @@ void ProductionManager::rebuild_wall_preview_plan(
     segment.connection_mask =
         Game::Systems::WallNetworkService::compute_connection_mask(
             preview_occupancy, segment.grid_x, segment.grid_z);
-    const auto appearance = Game::Systems::WallNetworkService::resolve_appearance(
-        nation_id, segment.connection_mask);
+    const auto appearance =
+        is_gate_construction_mode()
+            ? Game::Systems::WallNetworkService::resolve_gate_appearance(
+                  nation_id, segment.connection_mask, m_wall_preview_rotation_y)
+            : Game::Systems::WallNetworkService::resolve_appearance(
+                  nation_id, segment.connection_mask);
     segment.rotation_y = appearance.rotation_y;
     if (chain.size() == 1U && segment.connection_mask == 0U) {
       segment.rotation_y =
@@ -1734,11 +1755,9 @@ void ProductionManager::rebuild_wall_preview_plan(
 
   set_construction_preview_active(!m_wall_preview_segments.empty());
   set_construction_preview_valid(valid_segment_count > 0);
-  set_construction_preview_summary(
-      static_cast<int>(m_wall_preview_segments.size()),
-      valid_segment_count,
-      valid_segment_count *
-          Game::Systems::WallNetworkService::k_wall_segment_wood_cost);
+  set_construction_preview_summary(static_cast<int>(m_wall_preview_segments.size()),
+                                   valid_segment_count,
+                                   valid_segment_count * wood_cost);
   rebuild_wall_preview_entities();
 }
 
@@ -1761,9 +1780,11 @@ void ProductionManager::confirm_wall_construction_plan() {
     return;
   }
 
+  const QString item_type = m_pending_construction_type;
+  const bool gate_mode = is_gate_construction_mode();
   const int owner_id = pending_construction_owner_id();
   const Game::Systems::ResourceAmounts total_cost = scaled_resource_amounts(
-      construction_costs_for_item(QStringLiteral("wall_segment")), valid_segment_count);
+      construction_costs_for_item(item_type), valid_segment_count);
   if (!Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
                                                                       total_cost)) {
     emit construction_placement_rejected(
@@ -1777,7 +1798,7 @@ void ProductionManager::confirm_wall_construction_plan() {
 
   const auto nation_id = pending_construction_nation_id();
   const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-  const float build_time = get_construction_build_time("wall_segment");
+  const float build_time = get_construction_build_time(item_type.toStdString());
 
   std::vector<Engine::Core::EntityID> site_ids;
   site_ids.reserve(valid_segment_count);
@@ -1814,9 +1835,12 @@ void ProductionManager::confirm_wall_construction_plan() {
 
     renderable->visible = false;
     renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-    renderable->renderer_id = Game::Systems::WallNetworkService::resolve_appearance(
-                                  nation_id, segment.connection_mask)
-                                  .renderer_id;
+    renderable->renderer_id =
+        (gate_mode ? Game::Systems::WallNetworkService::resolve_gate_appearance(
+                         nation_id, segment.connection_mask, segment.rotation_y)
+                   : Game::Systems::WallNetworkService::resolve_appearance(
+                         nation_id, segment.connection_mask))
+            .renderer_id;
     renderable->color[0] = team_color.x();
     renderable->color[1] = team_color.y();
     renderable->color[2] = team_color.z();
@@ -1829,6 +1853,8 @@ void ProductionManager::confirm_wall_construction_plan() {
     site->nation_id = nation_id;
     site->build_time = build_time;
     site->progress = 0.0F;
+    site->product_type = gate_mode ? Game::Units::SpawnType::WallGate
+                                   : Game::Units::SpawnType::WallSegment;
 
     site_ids.push_back(entity->get_id());
   }
@@ -1864,7 +1890,7 @@ void ProductionManager::confirm_wall_construction_plan() {
       continue;
     }
 
-    builder_prod->product_type = "wall_segment";
+    builder_prod->product_type = item_type.toStdString();
     builder_prod->build_time = build_time;
     builder_prod->time_remaining = build_time;
     builder_prod->construction_complete = false;
@@ -2371,6 +2397,7 @@ auto ProductionManager::get_construction_build_time(const std::string& item_type
   constexpr float BALLISTA_BUILD_TIME = 12.0F;
   constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
   constexpr float WALL_SEGMENT_BUILD_TIME = 8.0F;
+  constexpr float WALL_GATE_BUILD_TIME = 12.0F;
 
   if (item_type == "catapult") {
     return CATAPULT_BUILD_TIME;
@@ -2383,6 +2410,9 @@ auto ProductionManager::get_construction_build_time(const std::string& item_type
   }
   if (item_type == "wall_segment") {
     return WALL_SEGMENT_BUILD_TIME;
+  }
+  if (item_type == "wall_gate") {
+    return WALL_GATE_BUILD_TIME;
   }
   if (item_type == k_cut_tree_item_type || item_type == k_collect_item_type ||
       item_type == k_collect_stone_item_type ||
