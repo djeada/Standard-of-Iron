@@ -10,8 +10,8 @@ Item {
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
     property bool is_placing_construction: false
-    property bool construction_preview_active: typeof game !== 'undefined' && game.construction_preview_active
-    property bool construction_preview_valid: typeof game !== 'undefined' && game.construction_preview_valid
+    property bool construction_preview_active: typeof game !== 'undefined' && game.placement.construction_preview_active
+    property bool construction_preview_valid: typeof game !== 'undefined' && game.placement.construction_preview_valid
     property var pressed_keys: ({})
 
     onConstruction_preview_activeChanged: {
@@ -224,11 +224,11 @@ Item {
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
         switch (event.key) {
         case Qt.Key_Escape:
-            if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_cancel) {
-                game.on_construction_cancel();
+            if (typeof game !== 'undefined' && game.placement.is_placing_construction && game.placement.on_construction_cancel) {
+                game.placement.on_construction_cancel();
                 event.accepted = true;
-            } else if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_cancel) {
-                game.on_formation_cancel();
+            } else if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_cancel) {
+                game.placement.on_formation_cancel();
                 event.accepted = true;
             } else if (game_view.is_rally_placement()) {
                 game_view.cancel_rally_placement();
@@ -389,19 +389,6 @@ Item {
                     game_view.cursor_mode = game.cursor_mode;
             }
 
-            function onPlacing_formation_changed() {
-                if (typeof game !== 'undefined') {
-                    game_view.is_placing_formation = game.is_placing_formation;
-                    if (!game.is_placing_formation)
-                        mouseArea.is_selecting = false;
-                }
-            }
-
-            function onPlacing_construction_changed() {
-                if (typeof game !== 'undefined')
-                    game_view.is_placing_construction = game.is_placing_construction;
-            }
-
             function onControl_mode_changed() {
                 if (typeof game === 'undefined')
                     return;
@@ -420,6 +407,23 @@ Item {
             }
 
             target: game
+        }
+
+        Connections {
+            function onPlacing_formation_changed() {
+                if (typeof game !== 'undefined') {
+                    game_view.is_placing_formation = game.placement.is_placing_formation;
+                    if (!game.placement.is_placing_formation)
+                        mouseArea.is_selecting = false;
+                }
+            }
+
+            function onPlacing_construction_changed() {
+                if (typeof game !== 'undefined')
+                    game_view.is_placing_construction = game.placement.is_placing_construction;
+            }
+
+            target: typeof game !== 'undefined' ? game.placement : null
         }
 
         MouseArea {
@@ -458,26 +462,26 @@ Item {
                         if (!game_view.is_rally_placement())
                             game.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
-                        if (typeof game !== 'undefined' && game.on_formation_mouse_move)
-                            game.on_formation_mouse_move(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.placement.on_formation_mouse_move)
+                            game.placement.on_formation_mouse_move(mouse.x, mouse.y);
                     }
                     if (game_view.is_placing_construction) {
-                        if (typeof game !== 'undefined' && game.on_construction_mouse_move)
-                            game.on_construction_mouse_move(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.placement.on_construction_mouse_move)
+                            game.placement.on_construction_mouse_move(mouse.x, mouse.y);
                     }
                 }
             }
             onWheel: function (w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
-                if (typeof game !== 'undefined' && game.construction_preview_rotatable && game.construction_preview_rotatable()) {
-                    if (game.on_construction_scroll)
-                        game.on_construction_scroll(dy);
+                if (typeof game !== 'undefined' && game.placement.construction_preview_rotatable && game.placement.construction_preview_rotatable()) {
+                    if (game.placement.on_construction_scroll)
+                        game.placement.on_construction_scroll(dy);
                     w.accepted = true;
                     return;
                 }
-                if (typeof game !== 'undefined' && game.is_placing_formation) {
-                    if (game.on_formation_scroll)
-                        game.on_formation_scroll(dy);
+                if (typeof game !== 'undefined' && game.placement.is_placing_formation) {
+                    if (game.placement.on_formation_scroll)
+                        game.placement.on_formation_scroll(dy);
                     w.accepted = true;
                     return;
                 }
@@ -509,10 +513,10 @@ Item {
                         return;
                     }
                     if (game_view.cursor_mode === "place_building") {
-                        if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_pointer_pressed)
-                            game.on_construction_pointer_pressed(mouse.x, mouse.y);
-                        else if (typeof game !== 'undefined' && game.place_building_at_screen)
-                            game.place_building_at_screen(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.placement.is_placing_construction && game.placement.on_construction_pointer_pressed)
+                            game.placement.on_construction_pointer_pressed(mouse.x, mouse.y);
+                        else if (typeof game !== 'undefined' && game.placement.place_building_at_screen)
+                            game.placement.place_building_at_screen(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "place_commander_rally") {
@@ -525,14 +529,14 @@ Item {
                             game.confirm_barracks_rally_placement(mouse.x, mouse.y);
                         return;
                     }
-                    if (typeof game !== 'undefined' && game.is_placing_formation) {
-                        if (game.on_formation_confirm)
-                            game.on_formation_confirm();
+                    if (typeof game !== 'undefined' && game.placement.is_placing_formation) {
+                        if (game.placement.on_formation_confirm)
+                            game.placement.on_formation_confirm();
                         return;
                     }
-                    if (typeof game !== 'undefined' && game.is_placing_construction) {
-                        if (game.on_construction_pointer_pressed)
-                            game.on_construction_pointer_pressed(mouse.x, mouse.y);
+                    if (typeof game !== 'undefined' && game.placement.is_placing_construction) {
+                        if (game.placement.on_construction_pointer_pressed)
+                            game.placement.on_construction_pointer_pressed(mouse.x, mouse.y);
                         return;
                     }
                     is_selecting = true;
@@ -573,9 +577,9 @@ Item {
                         if (typeof game !== 'undefined' && game.on_click_select)
                             game.on_click_select(mouse.x, mouse.y, false);
                     }
-                } else if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.is_placing_construction) {
-                    if (game.on_construction_pointer_released)
-                        game.on_construction_pointer_released(mouse.x, mouse.y);
+                } else if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.placement.is_placing_construction) {
+                    if (game.placement.on_construction_pointer_released)
+                        game.placement.on_construction_pointer_released(mouse.x, mouse.y);
                 }
                 if (mouse.button === Qt.RightButton) {
                     if (typeof game !== 'undefined' && game.on_right_release)
@@ -1005,7 +1009,7 @@ Item {
     }
 
     Rectangle {
-        visible: game_view.is_placing_construction && typeof game !== 'undefined' && game.construction_preview_segment_count > 0
+        visible: game_view.is_placing_construction && typeof game !== 'undefined' && game.placement.construction_preview_segment_count > 0
         z: 999999
         radius: 6
         color: "#B8141414"
@@ -1023,7 +1027,7 @@ Item {
 
             anchors.centerIn: parent
             color: Theme.textMain
-            text: game.construction_preview_valid_segment_count + "/" + game.construction_preview_segment_count + " walls  •  " + game.construction_preview_total_cost + " wood"
+            text: game.placement.construction_preview_valid_segment_count + "/" + game.placement.construction_preview_segment_count + " walls  •  " + game.placement.construction_preview_total_cost + " wood"
             font.pixelSize: 14
         }
     }

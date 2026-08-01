@@ -33,8 +33,8 @@ auto count_occurrences(const fs::path& file, const std::string& needle) -> int {
   return count;
 }
 
-constexpr int k_max_invokables = 129;
-constexpr int k_max_properties = 46;
+constexpr int k_max_invokables = 103;
+constexpr int k_max_properties = 39;
 
 constexpr const char* k_guidance =
     "\nGameEngine is the composition root, not the UI API. New QML-facing "
@@ -73,6 +73,27 @@ TEST(QmlSurface, CeilingsStayTight) {
       << "members were removed; lower k_max_invokables to lock the win in";
   EXPECT_GE(count_occurrences(header, "Q_PROPERTY"), k_max_properties - 10)
       << "members were removed; lower k_max_properties to lock the win in";
+}
+
+TEST(QmlSurface, PlacementLivesOnItsOwnViewModel) {
+  const auto root = find_repo_root();
+  const auto engine = root / "app" / "core" / "game_engine.h";
+  const auto view_model = root / "app" / "viewmodels" / "placement_view_model.h";
+  ASSERT_TRUE(fs::exists(engine));
+  ASSERT_TRUE(fs::exists(view_model));
+
+  for (const char* member : {"on_formation_confirm",
+                             "on_construction_confirm",
+                             "construction_preview_valid",
+                             "pending_builder_construction_type",
+                             "start_builder_construction",
+                             "start_building_placement",
+                             "get_construction_info"}) {
+    EXPECT_EQ(count_occurrences(engine, member), 0)
+        << member << " is still declared on GameEngine";
+    EXPECT_GT(count_occurrences(view_model, member), 0)
+        << member << " is missing from PlacementViewModel";
+  }
 }
 
 TEST(QmlSurface, SaveSlotBrowsingLivesOnItsOwnViewModel) {

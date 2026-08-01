@@ -151,11 +151,13 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      # bash rather than pwsh so this runs the same suite list as every other
+      # platform; the runner ships Git bash.
       - name: Unit tests
-        shell: pwsh
+        shell: bash
         env:
           QT_QPA_PLATFORM: offscreen
-        run: .\build\bin\standard_of_iron_tests.exe
+        run: bash scripts/run-tests.sh build
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
