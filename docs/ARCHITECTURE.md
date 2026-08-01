@@ -39,8 +39,8 @@ enforced three ways:
 - `tests/architecture/layering_test.cpp` fails on an include of `scene/camera.h`
   from anywhere outside the view layer, and on any include of `app/` from
   `game/`;
-- `bin/headless_simulation_tests` links only `engine_core` and `game_sim`, so a
-  new dependency breaks its link step.
+- `bin/simulation_tests` links only `engine_core` and `game_sim` while covering
+  most of the gameplay suite, so a new dependency breaks its link step.
 
 `Qt::Gui` is present for the value types (`QVector3D`, `QImage`). It brings in no
 windowing or GL usage of our own.
@@ -148,20 +148,40 @@ but unclassified fails the build's test run, an authoritative component the
 serialiser never touches fails, and a derived component the serialiser _does_
 write fails.
 
+## Test binaries and what they enforce
+
+The suite is five binaries, split by link surface rather than by convenience:
+`simulation_tests` and `persistence_tests` link the kernel alone, `render_tests`
+adds `render_gl`, `app_tests` adds `app_core` and `ui_shell`, and `tools_tests`
+links the editor, arena and balance harnesses. `tests/README.md` has the table.
+
+Two rules make the split load-bearing: a test binary links production targets
+rather than re-compiling production `.cpp` files, and no test is excluded from
+the default run. `scripts/run-tests.sh` owns the suite list; the Makefile and
+all four CI workflows call it.
+
 ## The application layer
 
 `GameEngine` is the composition root: it owns the session, the renderer, the
 controllers and the services, and drives the frame.
 
-It is also, historically, the QML API — a surface of roughly 130 invokables and
-45 properties. That is being moved onto view models, one coherent slice at a
-time; `app/viewmodels/save_slots_view_model.h` is the first and shows the shape.
-`tests/architecture/qml_surface_test.cpp` caps the remaining surface so it can
-only shrink.
+It is also, historically, the QML API. That surface is being moved onto view
+models one coherent slice at a time, each exposed from `GameEngine` as a single
+CONSTANT property:
 
-Slices still on `GameEngine` and worth extracting next: placement (formation and
-construction previews), campaign progression, commander/FPV control, and camera
-control.
+- `game.saves` — `app/viewmodels/save_slots_view_model.h`
+- `game.placement` — `app/viewmodels/placement_view_model.h`: formation
+  placement, builder construction and building placement. It reaches back for
+  the few things only the root knows (lazy initialisation, the window mapping,
+  the local owner, the cursor) through `PlacementHost`, which is the shape a
+  further extraction should follow.
+
+`tests/architecture/qml_surface_test.cpp` caps what is left — currently 103
+invokables and 39 properties — so the surface can only shrink, and fails if a
+member is removed without lowering the ceiling.
+
+Slices still on `GameEngine` and worth extracting next: campaign progression,
+commander/FPV control, and camera control.
 
 ## Known limitations
 
@@ -174,3 +194,8 @@ These are real and deliberate, not oversights:
   they still derive from a small polymorphic base with a virtual destructor.
   Access is by dense type-id array index, not by RTTI.
 - `GameEngine` remains large. See above.
+- `game_sim` is still one target. Splitting it further (navigation, combat, AI,
+  economy, missions) is blocked on real cycles between those directories, not on
+  the CMake: `systems/_misc`, combat, movement, AI and units all include each
+  other today. Breaking those cycles is the prerequisite, and it is code work
+  rather than build work.

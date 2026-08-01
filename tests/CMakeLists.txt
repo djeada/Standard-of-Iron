@@ -1,61 +1,65 @@
 # Test suite for Standard of Iron
 # Uses Google Test framework
+#
+# The suite is split by the boundary each binary exercises, not by convenience:
+#
+#   simulation_tests   the kernel. Links engine_core + game_sim and nothing
+#                      else, so a gameplay file that starts needing a camera,
+#                      the renderer or the application breaks the link step
+#                      rather than slipping in unnoticed.
+#   persistence_tests  the snapshot contract and the save stack. Kernel-only
+#                      link as well.
+#   render_tests       the renderer and the creature pipeline.
+#   app_tests          the application layer: view models, controllers, the
+#                      widget shell and the gameplay services that need a
+#                      camera or the app layer to be meaningful.
+#   tools_tests        the map editor, the arena and the balance harness.
+#   design_system_qml_tests
+#                      the QML design system, driven by QtQuickTest.
+#
+# Two rules keep this honest:
+#
+#  - a test binary links production targets; it never re-lists a production
+#    `.cpp` in its own source list. A separately compiled copy can pass while
+#    the object the game ships is broken.
+#  - no test is quarantined out of the default path. If a test cannot build or
+#    cannot pass, it is fixed or it is deleted with an issue, not omitted.
 
 set(_soi_optional_test_sources)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render/creature/combat_visual_state_test.cpp")
     list(APPEND _soi_optional_test_sources render/creature/combat_visual_state_test.cpp)
 endif()
 
-# Test executable
+# Registers a binary with CTest and parks it beside the other executables.
+function(soi_register_test_binary target)
+    set_target_properties(
+        ${target}
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
+    )
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game)
+    gtest_discover_tests(${target} DISCOVERY_MODE PRE_TEST WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endfunction()
+
+include(GoogleTest)
+
+# ---- simulation_tests --------------------------------------------------
+# The kernel under test with nothing on screen. `simulation_main.cpp` gives it a
+# QCoreApplication and the baked animation clips, and no more: a test that
+# reaches for a window fails here.
 add_executable(
-    standard_of_iron_tests
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
-    ${CMAKE_SOURCE_DIR}/translations.qrc
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/mission_data.cpp
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/hill_projection_model.cpp
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/commander_preview.cpp
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/element_ops.cpp
-    ${CMAKE_SOURCE_DIR}/tools/map_editor/json_schema.cpp
+    simulation_tests
     session/session_context_test.cpp
     command/command_pipeline_test.cpp
-    save/snapshot_contract_test.cpp
     core/entity_handle_test.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
-    core/audio_system_test.cpp
-    core/settings_persistence_test.cpp
-    ui/preferences_test.cpp
-    ui/selection_grouping_test.cpp
-    ui/icon_resources_test.cpp
-    ui/widget_theme_test.cpp
-    core/minimap_manager_test.cpp
-    core/commander_control_regression_test.cpp
-    core/commander_control_controller_test.cpp
-    core/input_command_handler_test.cpp
-    core/mission_commander_setup_test.cpp
-    core/mission_definition_view_test.cpp
-    core/production_manager_test.cpp
-    core/selection_query_service_test.cpp
-    core/rts_action_model_test.cpp
-    controllers/command_controller_test.cpp
-    core/runtime_frame_orchestrator_test.cpp
-    db/save_storage_test.cpp
-    db/save_format_test.cpp
-    db/save_load_service_test.cpp
-    db/save_preview_test.cpp
-    db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp
-    map/terrain_service_test.cpp
-    map/minimap_generator_test.cpp
-    map/minimap_utils_test.cpp
     map/map_loader_test.cpp
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
     map/map_catalog_test.cpp
     map/map_weather_coverage_test.cpp
-    map/iron_sepulcher_skirmish_test.cpp
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
     map/mission_loader_test.cpp
@@ -75,14 +79,11 @@ add_executable(
     systems/troop_catalog_loader_test.cpp
     systems/stamina_system_test.cpp
     systems/home_manpower_system_test.cpp
-    systems/civilian_delivery_system_test.cpp
     systems/building_collision_test.cpp
-    systems/building_obstruction_lifecycle_test.cpp
     systems/combat_mode_test.cpp
     systems/hold_mode_test.cpp
     systems/defense_formation_test.cpp
     systems/rpg_engagement_system_test.cpp
-    systems/command_service_test.cpp
     systems/commander_system_test.cpp
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
@@ -97,6 +98,41 @@ add_executable(
     systems/gate_system_test.cpp
     systems/battle_movement_refactor_test.cpp
     systems/battlefield_capture_test.cpp
+    headless/headless_simulation_test.cpp
+    headless/gate_traversal_test.cpp
+    architecture/layering_test.cpp
+    architecture/qml_surface_test.cpp
+    architecture/documentation_accuracy_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    simulation_tests
+    PRIVATE GTest::gtest GTest::gmock Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+)
+soi_register_test_binary(simulation_tests)
+
+# ---- persistence_tests -------------------------------------------------
+# What a save is, and whether the thing that writes it agrees. Kernel-only
+# link, because a mission snapshot must be complete without the application.
+add_executable(
+    persistence_tests
+    save/snapshot_contract_test.cpp
+    db/save_storage_test.cpp
+    db/save_format_test.cpp
+    db/save_load_service_test.cpp
+    db/mission_progress_test.cpp
+    headless/headless_main.cpp
+)
+target_link_libraries(
+    persistence_tests
+    PRIVATE GTest::gtest GTest::gmock Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+)
+soi_register_test_binary(persistence_tests)
+
+# ---- render_tests ------------------------------------------------------
+add_executable(
+    render_tests
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
@@ -105,6 +141,7 @@ add_executable(
     render/equipment_loadout_catalog_test.cpp
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
+    render/carthage_armor_bounds_test.cpp
     render/rider_proportions_test.cpp
     render/infantry_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
@@ -128,9 +165,6 @@ add_executable(
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
     render/dead_tree_mesh_test.cpp
-    architecture/layering_test.cpp
-    architecture/qml_surface_test.cpp
-    architecture/documentation_accuracy_test.cpp
     render/local_lighting_test.cpp
     render/contact_shadow_test.cpp
     render/weather_particle_budget_test.cpp
@@ -199,28 +233,61 @@ add_executable(
     render/software/software_backend_integration_test.cpp
     render/software/render_backend_factory_test.cpp
     render/profiling/frame_profile_test.cpp
-    tools/map_editor_map_data_test.cpp
-    tools/map_editor_mission_data_test.cpp
-    tools/map_editor_canvas_transform_test.cpp
-    tools/map_editor_element_ops_test.cpp
-    tools/map_editor_json_schema_test.cpp
-    tools/hill_projection_model_test.cpp
-    tools/map_editor_commander_preview_test.cpp
-    ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp
-    ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp
-    tools/arena_scenarios_test.cpp
-    tools/arena_scenario_runner_test.cpp
-    tools/arena_frame_continuity_test.cpp
-    tools/arena_panel_population_test.cpp
-    tools/arena_unit_spawn_options_test.cpp
-    tools/arena_terrain_alignment_test.cpp
-    tools/balance_sim_test.cpp
     test_main.cpp
 )
-
-# Link against GTest, project libraries
 target_link_libraries(
-    standard_of_iron_tests
+    render_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_systems
+)
+set_target_properties(render_tests PROPERTIES AUTORCC ON)
+soi_register_test_binary(render_tests)
+if(TARGET bake_creature_assets)
+    add_dependencies(render_tests bake_creature_assets)
+endif()
+
+# ---- app_tests ---------------------------------------------------------
+# View models, controllers, the widget shell, and the gameplay services that
+# only mean something with a camera or the application around them.
+add_executable(
+    app_tests
+    ${CMAKE_SOURCE_DIR}/translations.qrc
+    core/audio_system_test.cpp
+    db/save_preview_test.cpp
+    core/settings_persistence_test.cpp
+    core/minimap_manager_test.cpp
+    core/commander_control_regression_test.cpp
+    core/commander_control_controller_test.cpp
+    core/input_command_handler_test.cpp
+    core/mission_commander_setup_test.cpp
+    core/mission_definition_view_test.cpp
+    core/production_manager_test.cpp
+    core/selection_query_service_test.cpp
+    core/rts_action_model_test.cpp
+    core/runtime_frame_orchestrator_test.cpp
+    controllers/command_controller_test.cpp
+    ui/preferences_test.cpp
+    ui/selection_grouping_test.cpp
+    ui/icon_resources_test.cpp
+    ui/widget_theme_test.cpp
+    map/minimap_generator_test.cpp
+    map/minimap_utils_test.cpp
+    map/terrain_service_test.cpp
+    map/iron_sepulcher_skirmish_test.cpp
+    systems/civilian_delivery_system_test.cpp
+    systems/building_obstruction_lifecycle_test.cpp
+    systems/command_service_test.cpp
+    test_main.cpp
+)
+target_link_libraries(
+    app_tests
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -234,66 +301,58 @@ target_link_libraries(
         game_systems
         app_core
         ui_shell
-        arena_scenario_harness
-        balance_sim_harness
         audio_system
 )
-
-# Include directories
-target_include_directories(
-    standard_of_iron_tests
-    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
-)
-
-# Set output directory
-set_target_properties(
-    standard_of_iron_tests
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTORCC ON
-)
-
+set_target_properties(app_tests PROPERTIES AUTORCC ON)
+soi_register_test_binary(app_tests)
 if(TARGET bake_creature_assets)
-    add_dependencies(standard_of_iron_tests bake_creature_assets)
+    add_dependencies(app_tests bake_creature_assets)
 endif()
 
-# Add tests to CTest after target properties are finalized.
-include(GoogleTest)
-gtest_discover_tests(
-    standard_of_iron_tests
-    DISCOVERY_MODE PRE_TEST
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-# ---- Headless simulation binary ----
-# Links the simulation kernel and nothing else. The value is as much in the link
-# step as in the assertions: a gameplay file that starts depending on scene_core
-# or render_gl breaks this target immediately, which is the boundary item 1 of
-# the architecture review asked the build to enforce.
+# ---- tools_tests -------------------------------------------------------
+# The map editor document model, the arena harness and the balance runner --
+# all linked from the libraries those tools ship.
 add_executable(
-    headless_simulation_tests
-    headless/headless_simulation_test.cpp
-    headless/gate_traversal_test.cpp
-    headless/headless_main.cpp
+    tools_tests
+    tools/map_editor_map_data_test.cpp
+    tools/map_editor_mission_data_test.cpp
+    tools/map_editor_canvas_transform_test.cpp
+    tools/map_editor_element_ops_test.cpp
+    tools/map_editor_json_schema_test.cpp
+    tools/hill_projection_model_test.cpp
+    tools/map_editor_commander_preview_test.cpp
+    tools/arena_scenarios_test.cpp
+    tools/arena_scenario_runner_test.cpp
+    tools/arena_frame_continuity_test.cpp
+    tools/arena_panel_population_test.cpp
+    tools/arena_unit_spawn_options_test.cpp
+    tools/arena_terrain_alignment_test.cpp
+    tools/balance_sim_test.cpp
+    test_main.cpp
 )
 target_link_libraries(
-    headless_simulation_tests
-    PRIVATE GTest::gtest Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+    tools_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_systems
+        map_editor_core
+        arena_scenario_harness
+        arena_panels
+        balance_sim_harness
 )
-target_include_directories(
-    headless_simulation_tests
-    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
-)
-set_target_properties(
-    headless_simulation_tests
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
-)
-gtest_discover_tests(
-    headless_simulation_tests
-    DISCOVERY_MODE PRE_TEST
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+soi_register_test_binary(tools_tests)
+if(TARGET bake_creature_assets)
+    add_dependencies(tools_tests bake_creature_assets)
+endif()
 
-# Focused horse contract binary. It remains runnable when an unrelated test
-# translation unit in the monolithic suite has interface drift.
+# Focused horse contract binary. It stays runnable when an unrelated test
+# translation unit in the render suite has interface drift.
 add_executable(horse_model_tests render/horse/horse_anatomy_test.cpp test_main.cpp)
 target_link_libraries(
     horse_model_tests
@@ -306,19 +365,10 @@ target_link_libraries(
         render_gl
         game_systems
 )
-target_include_directories(horse_model_tests PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game)
-set_target_properties(
-    horse_model_tests
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
-)
+soi_register_test_binary(horse_model_tests)
 if(TARGET bake_creature_assets)
     add_dependencies(horse_model_tests bake_creature_assets)
 endif()
-gtest_discover_tests(
-    horse_model_tests
-    DISCOVERY_MODE PRE_TEST
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
 
 add_executable(elephant_model_tests render/elephant/elephant_source_asset_test.cpp test_main.cpp)
 target_link_libraries(
@@ -332,74 +382,9 @@ target_link_libraries(
         render_gl
         game_systems
 )
-target_include_directories(
-    elephant_model_tests
-    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
-)
-set_target_properties(
-    elephant_model_tests
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
-)
+soi_register_test_binary(elephant_model_tests)
 if(TARGET bake_creature_assets)
     add_dependencies(elephant_model_tests bake_creature_assets)
-endif()
-gtest_discover_tests(
-    elephant_model_tests
-    DISCOVERY_MODE PRE_TEST
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-# --- Subset test binary -------------------------------------------------
-# Three test files have pre-existing compile breakage as of Stage 15.5c
-# (equipment_registry_test.cpp / helmet_renderers_test.cpp /
-# horse_equipment_renderers_test.cpp rely on a MockEquipmentRenderer
-# whose interface drifted from the real registry). Fixing those is
-# out-of-scope for the 15.5x switchover series, so we build a subset
-# binary that skips them and run it as the per-stage verification.
-get_target_property(_soi_tests_sources standard_of_iron_tests SOURCES)
-set(_soi_tests_subset_sources)
-foreach(src IN LISTS _soi_tests_sources)
-    get_filename_component(_name "${src}" NAME)
-    if(
-        NOT _name STREQUAL "equipment_registry_test.cpp"
-        AND NOT _name STREQUAL "helmet_renderers_test.cpp"
-        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp"
-    )
-        list(APPEND _soi_tests_subset_sources "${src}")
-    endif()
-endforeach()
-
-add_executable(standard_of_iron_tests_subset ${_soi_tests_subset_sources})
-target_link_libraries(
-    standard_of_iron_tests_subset
-    PRIVATE
-        GTest::gtest
-        GTest::gmock
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Gui
-        Qt${QT_VERSION_MAJOR}::Quick
-        Qt${QT_VERSION_MAJOR}::Sql
-        Qt${QT_VERSION_MAJOR}::Widgets
-        engine_core
-        render_gl
-        game_systems
-        app_core
-        ui_shell
-        arena_scenario_harness
-        balance_sim_harness
-        audio_system
-)
-target_include_directories(
-    standard_of_iron_tests_subset
-    PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game
-)
-set_target_properties(
-    standard_of_iron_tests_subset
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON AUTOUIC ON AUTORCC ON
-)
-
-if(TARGET bake_creature_assets)
-    add_dependencies(standard_of_iron_tests_subset bake_creature_assets)
 endif()
 
 # ---- QML design system regression tests ----
@@ -435,11 +420,13 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
     )
     # The design system is presentation-only; a real GPU adds nothing to assert.
     set_tests_properties(design_system_qml PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
-else()
-    message(STATUS "Qt QuickTest not found; skipping design_system_qml_tests")
 endif()
 
-add_custom_target(soi_test_binaries DEPENDS standard_of_iron_tests)
+# Everything `make test` runs. Keep this list and scripts/run-tests.sh in step.
+add_custom_target(
+    soi_test_binaries
+    DEPENDS simulation_tests persistence_tests render_tests app_tests tools_tests
+)
 if(TARGET design_system_qml_tests)
     add_dependencies(soi_test_binaries design_system_qml_tests)
 endif()

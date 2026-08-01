@@ -325,31 +325,13 @@ test: test-build
 	@$(MAKE) --no-print-directory test-only
 
 # Run tests without configuring or compiling.
+#
+# scripts/run-tests.sh owns the suite list so the Makefile and the CI workflows
+# cannot disagree about what running the tests means.
 .PHONY: test-only
 test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
-	@if [ -f "$(BUILD_DIR)/bin/standard_of_iron_tests" ]; then \
-		echo "$(BOLD)--- C++ tests (standard_of_iron_tests) ---$(RESET)"; \
-		QT_QPA_PLATFORM=offscreen \
-			./$(BUILD_DIR)/bin/standard_of_iron_tests --gtest_brief=1 $(TEST_ARGS); \
-		_status=$$?; \
-		echo "$(BOLD)--- C++ tests complete (exit code: $$_status) ---$(RESET)"; \
-		if [ $$_status -ne 0 ]; then exit $$_status; fi; \
-	else \
-		echo "$(RED)Test executable not found. Run 'make test' first.$(RESET)"; \
-		exit 1; \
-	fi
-	@# The QML design-system suite is skipped when Qt QuickTest is unavailable,
-	@# so a missing binary is not a build failure here.
-	@if [ -f "$(BUILD_DIR)/bin/design_system_qml_tests" ]; then \
-		echo ""; \
-		echo "$(BOLD)--- QML design system tests (design_system_qml_tests) ---$(RESET)"; \
-		QT_QPA_PLATFORM=offscreen ./$(BUILD_DIR)/bin/design_system_qml_tests \
-			-input tests/ui/qml; \
-		echo "$(BOLD)--- QML tests complete ---$(RESET)"; \
-	else \
-		echo "$(YELLOW)⚠ design_system_qml_tests not built (Qt QuickTest missing). Skipping.$(RESET)"; \
-	fi
+	@bash scripts/run-tests.sh $(BUILD_DIR) --gtest_brief=1 $(TEST_ARGS)
 
 # Validate mission and campaign content
 .PHONY: validate-content

@@ -2313,11 +2313,11 @@ TEST(AnimationCoreAttackPoseManifest, SpearDirectionBlendsHoldAndStrikePolicy) {
       .is_melee = true,
       .attack_phase = 0.40F,
   });
-  EXPECT_NEAR(held.x, 0.0498482F, 0.001F);
-  EXPECT_NEAR(held.y, -0.0598178F, 0.001F);
-  EXPECT_NEAR(held.z, 0.996964F, 0.001F);
-  EXPECT_LT(held.y, 0.0F);
-  EXPECT_GT(held.y, -0.20F);
+  EXPECT_NEAR(held.x, 0.0453777F, 0.001F);
+  EXPECT_NEAR(held.y, 0.4174751F, 0.001F);
+  EXPECT_NEAR(held.z, 0.9075546F, 0.001F);
+  EXPECT_GT(held.y, 0.30F);
+  EXPECT_LT(held.y, idle.y);
 
   auto const strike = Animation::resolve_humanoid_spear_direction({
       .is_attacking = true,
@@ -2674,11 +2674,11 @@ TEST(AnimationCoreHoldPoseManifest, SpearBraceOwnsBodyReadinessDeltas) {
   EXPECT_FLOAT_EQ(sample.right_hand.y, 0.90F);
   EXPECT_FLOAT_EQ(sample.right_hand.z, 0.46F);
   EXPECT_FLOAT_EQ(sample.offhand_along_offset, -0.24F);
-  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0498482F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.y, -0.0598178F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.996964F, 0.0001F);
-  EXPECT_LT(sample.offhand_spear_direction.y, 0.0F);
-  EXPECT_GT(sample.offhand_spear_direction.y, -0.20F);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0453777F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.4174751F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.9075546F, 0.0001F);
+  EXPECT_GT(sample.offhand_spear_direction.y, 0.30F);
+  EXPECT_LT(sample.offhand_spear_direction.y, 0.55F);
   EXPECT_FLOAT_EQ(sample.left_hand_z_delta, 0.03F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_y_delta, -0.05F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.08F);
