@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "render/horse/horse_anatomy.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/horse_profile_data.h"
@@ -90,9 +91,13 @@ TEST(HorseSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
 }
 
 TEST(HorseSourceAssetTest, ProductionBoundsUseShortenedLength) {
-  EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_x, 0.59F);
-  EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_y, 0.59F);
-  EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_z / 0.59F, 0.85F);
+
+  EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_x,
+                  Render::Horse::k_horse_mesh_scale_y);
+  EXPECT_FLOAT_EQ(
+      Render::Horse::k_horse_mesh_scale_z / Render::Horse::k_horse_mesh_scale_x, 0.85F);
+  EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_x,
+                  0.59F * Render::GL::k_horse_scale);
 
   auto const bind = Render::Horse::horse_source_bind_palette();
   QVector3D bounds_min(std::numeric_limits<float>::max(),
@@ -114,11 +119,16 @@ TEST(HorseSourceAssetTest, ProductionBoundsUseShortenedLength) {
     }
   }
 
+  constexpr float k_scale = Render::GL::k_horse_scale;
   QVector3D const span = bounds_max - bounds_min;
   EXPECT_NEAR(bounds_min.y(), 0.0F, 2.0e-6F);
-  EXPECT_NEAR(span.x(), 0.830092F, 2.0e-5F);
-  EXPECT_NEAR(span.y(), 2.84613F, 2.0e-5F);
-  EXPECT_NEAR(span.z(), 2.846574F, 2.0e-5F);
+  EXPECT_NEAR(span.x(), 0.830092F * k_scale, 2.0e-5F);
+  EXPECT_NEAR(span.y(), 2.84613F * k_scale, 2.0e-5F);
+  EXPECT_NEAR(span.z(), 2.846574F * k_scale, 2.0e-5F);
+
+  float const head_up_vs_man = span.y() / Render::GL::HumanProportions::TOTAL_HEIGHT;
+  EXPECT_GT(head_up_vs_man, 1.05F) << "horse has shrunk below its rider";
+  EXPECT_LT(head_up_vs_man, 1.25F) << "horse towers over its rider";
 }
 
 TEST(HorseSourceAssetTest, WalkAndGallopRemainFiniteWithoutTriangleTearing) {

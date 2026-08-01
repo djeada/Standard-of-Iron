@@ -37,6 +37,10 @@ Design.IronPanel {
         return Design.Icons.unit(typeKey !== "" ? typeKey : Design.Icons.typeKeyFromName(name), nation);
     }
 
+    function groupCanRun(group) {
+        return group.canRun === undefined || group.canRun;
+    }
+
     implicitWidth: Design.Metrics.space24 * 10
     implicitHeight: body.implicitHeight + Design.Metrics.space24
 
@@ -151,7 +155,7 @@ Design.IronPanel {
             id: singleUnitCard
 
             width: parent.width
-            height: Design.Metrics.space24 * 3
+            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 4 : 3)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -199,36 +203,91 @@ Design.IronPanel {
 
                 Column {
                     width: parent.width
-                    spacing: 2
+                    spacing: Design.Metrics.space4
 
-                    Row {
-                        spacing: Design.Metrics.space12
-                        Text {
-                            text: qsTr("HP %1%").arg(Math.round(root.groups[0].health * 100))
-                            color: Design.Theme.danger
-                            font.family: Design.Typography.family
-                            font.pixelSize: Design.Typography.caption
-                            font.weight: Design.Typography.bold
+                    Column {
+                        width: parent.width
+                        spacing: 2
+
+                        RowLayout {
+                            width: parent.width
+                            spacing: Design.Metrics.space8
+
+                            Text {
+                                objectName: "selectionHealthLabel"
+                                text: qsTr("HEALTH")
+                                color: Design.Theme.textPrimary
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.caption
+                                font.weight: Design.Typography.bold
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                objectName: "selectionHealthValue"
+                                text: qsTr("%1%").arg(Math.round(root.groups[0].health * 100))
+                                color: root.healthColor(root.groups[0].health)
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.caption
+                                font.weight: Design.Typography.bold
+                            }
                         }
-                        Text {
-                            text: qsTr("STM %1%").arg(Math.round((root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0) * 100))
-                            color: Design.Theme.success
-                            font.family: Design.Typography.family
-                            font.pixelSize: Design.Typography.caption
-                            font.weight: Design.Typography.bold
+
+                        Design.IronProgressBar {
+                            id: healthBar
+
+                            objectName: "selectionHealthBar"
+                            width: parent.width
+                            height: Design.Metrics.space12
+                            value: root.groups[0].health
+                            fillColor: root.healthColor(value)
                         }
                     }
 
-                    Design.IronProgressBar {
+                    Column {
+                        objectName: "selectionStaminaSection"
                         width: parent.width
-                        value: root.groups[0].health
-                        fillColor: Design.Theme.danger
-                    }
+                        spacing: 2
+                        opacity: 0.7
+                        visible: root.groupCanRun(root.groups[0])
 
-                    Design.IronProgressBar {
-                        width: parent.width
-                        value: root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0
-                        fillColor: Design.Theme.success
+                        RowLayout {
+                            width: parent.width
+                            spacing: Design.Metrics.space8
+
+                            Text {
+                                objectName: "selectionStaminaLabel"
+                                text: qsTr("STAMINA")
+                                color: Design.Theme.textSecondary
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.caption
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                objectName: "selectionStaminaValue"
+                                text: qsTr("%1%").arg(Math.round((root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0) * 100))
+                                color: Design.Theme.success
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.caption
+                            }
+                        }
+
+                        Design.IronProgressBar {
+                            id: staminaBar
+
+                            objectName: "selectionStaminaBar"
+                            width: parent.width
+                            height: Design.Metrics.space8
+                            value: root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0
+                            fillColor: Design.Theme.success
+                        }
                     }
                 }
             }
@@ -292,6 +351,8 @@ Design.IronPanel {
                         height: Design.Metrics.space4
 
                         Rectangle {
+                            objectName: "selectionChipHealth_" + chip.model.unit_id
+
                             width: parent.width * chip.model.health_ratio
                             height: parent.height
                             radius: height / 2
@@ -414,6 +475,8 @@ Design.IronPanel {
 
                     Design.IronProgressBar {
                         id: groupHealth
+
+                        objectName: "selectionGroupHealthBar_" + groupCard.modelData.typeKey
 
                         anchors.left: portraitFrame.right
                         anchors.leftMargin: Design.Metrics.space8

@@ -253,14 +253,19 @@ void evaluate_elephant_skeleton(const ElephantSpecPose& pose,
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant& variant,
     std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept {
+
+  auto role = [&out_roles](std::uint8_t number) -> QVector3D& {
+    return out_roles[static_cast<std::size_t>(number) - 1U];
+  };
+
   out_roles.fill(QVector3D(0.0F, 0.0F, 0.0F));
   out_roles[0] = variant.skin_color;
-  out_roles[1] = variant.skin_color;
+  role(k_elephant_role_skin) = variant.skin_color;
   out_roles[2] = darken(variant.skin_color, 0.92F);
   out_roles[3] = darken(variant.skin_color, 0.88F);
   out_roles[4] = darken(variant.skin_color, 0.94F);
-  out_roles[5] = variant.tusk_color;
-  out_roles[6] = QVector3D(0.0F, 0.0F, 0.0F);
+  role(k_elephant_role_tusk) = variant.tusk_color;
+  role(k_elephant_role_eye) = QVector3D(0.0F, 0.0F, 0.0F);
   out_roles[7] = variant.toenail_color;
   out_roles[8] = QVector3D(0.05F, 0.04F, 0.04F);
 }

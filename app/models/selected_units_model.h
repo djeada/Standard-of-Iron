@@ -20,6 +20,7 @@ struct SelectionGroup {
 
   double health = 0.0;
   double stamina = 1.0;
+  bool can_run = false;
 };
 
 [[nodiscard]] auto

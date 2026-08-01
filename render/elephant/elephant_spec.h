@@ -154,6 +154,10 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims
 
 inline constexpr std::size_t k_elephant_role_count = 10;
 
+inline constexpr std::uint8_t k_elephant_role_skin = 1U;
+inline constexpr std::uint8_t k_elephant_role_tusk = 6U;
+inline constexpr std::uint8_t k_elephant_role_eye = 7U;
+
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant& variant,
     std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept;

@@ -9,6 +9,8 @@
 
 namespace Render::GL {
 
+inline constexpr float k_horse_scale = 0.74F;
+
 struct AnimationInputs;
 struct HumanoidAnimationContext;
 
@@ -98,7 +100,7 @@ inline void scale_horse_dimensions(HorseDimensions& dims, float scale) {
   dims.saddle_thickness *= scale;
   dims.seat_forward_offset *= scale;
   dims.stirrup_out *= scale;
-  dims.stirrup_drop *= scale;
+
   dims.barrel_center_y *= scale;
   dims.saddle_height *= scale;
   dims.idle_bob_amplitude *= scale;

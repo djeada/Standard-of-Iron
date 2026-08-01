@@ -9,6 +9,7 @@
 
 #include "../creature/quadruped/mesh_graph.h"
 #include "../creature/skeleton.h"
+#include "dimensions.h"
 
 namespace Render::GL {
 struct MountedAttachmentFrame;
@@ -18,9 +19,10 @@ namespace Render::Horse {
 
 inline constexpr std::size_t k_horse_source_bone_count = 50U;
 inline constexpr float k_horse_length_scale = 0.85F;
-inline constexpr float k_horse_mesh_scale_x = 0.59F;
-inline constexpr float k_horse_mesh_scale_y = 0.59F;
-inline constexpr float k_horse_mesh_scale_z = 0.5015F;
+
+inline constexpr float k_horse_mesh_scale_x = 0.59F * Render::GL::k_horse_scale;
+inline constexpr float k_horse_mesh_scale_y = 0.59F * Render::GL::k_horse_scale;
+inline constexpr float k_horse_mesh_scale_z = 0.5015F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_ground_y = -0.0112192873F;
 
 struct HorseSourceAssetStatus {

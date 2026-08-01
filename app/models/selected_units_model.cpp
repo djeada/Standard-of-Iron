@@ -114,6 +114,7 @@ QVariantList SelectedUnitsModel::grouped_by_type() const {
     unit[QStringLiteral("nation")] = data(model_index, NationRole);
     unit[QStringLiteral("health_ratio")] = data(model_index, HealthRatioRole);
     unit[QStringLiteral("stamina_ratio")] = data(model_index, StaminaRatioRole);
+    unit[QStringLiteral("can_run")] = data(model_index, CanRunRole);
     units.append(unit);
   }
   return App::Models::selection_groups_to_variant(
@@ -137,7 +138,8 @@ void SelectedUnitsModel::refresh() {
                         max_healthRole,
                         HealthRatioRole,
                         StaminaRatioRole,
-                        IsRunningRole});
+                        IsRunningRole,
+                        CanRunRole});
     }
     return;
   }

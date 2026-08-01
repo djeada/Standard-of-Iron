@@ -135,7 +135,6 @@ elephant_motion_config() noexcept -> Quadruped::MotionConfig {
 
 auto compute_howdah_frame(const ElephantProfile& profile) -> HowdahAttachmentFrame {
   using namespace HowdahFrameConstants;
-  const ElephantDimensions& d = profile.dims;
   HowdahAttachmentFrame frame{};
 
   frame.seat_forward = QVector3D(0.0F, 0.0F, 1.0F);
