@@ -75,6 +75,7 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
+#include "render/humanoid/render_stats.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_continuity_analyzer.h"
 #include "render/profiling/frame_profile.h"
@@ -577,8 +578,15 @@ void ArenaViewport::paintGL() {
       static_cast<double>(render_profile.bpat_playback_us) / 1000.0;
   timings.layout_generation_ms =
       static_cast<double>(render_profile.soldier_layout_generation_us) / 1000.0;
-  timings.visible_soldiers = render_profile.visible_soldiers;
-  timings.draw_calls = render_profile.draw_calls;
+  timings.visible_soldiers = Render::GL::get_humanoid_render_stats().soldiers_rendered;
+  timings.draw_calls = m_renderer->last_draw_command_count();
+  auto const playback_stats = m_renderer->last_playback_stats();
+  timings.rigged_commands = playback_stats.rigged_commands;
+  timings.rigged_instanced_instances = playback_stats.rigged_instanced_instances;
+  timings.rigged_single_draws = playback_stats.rigged_single_draws;
+  timings.shadow_rigged_instanced_instances =
+      playback_stats.shadow_rigged_instanced_instances;
+  timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;
 
   bool const suppress_ui_overlays =
       m_clean_capture || m_terrain_review_mode ||

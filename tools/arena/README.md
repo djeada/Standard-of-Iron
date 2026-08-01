@@ -136,6 +136,27 @@ triggers, production command shape, rendered-root acceptance checks, and local
 artifact serialization. Actual rendered acceptance is performed by the batch
 command above.
 
+## 100 FPS battle performance contracts
+
+Two rendered scenarios enforce a strict p95 CPU frame-work budget below 10 ms
+after a two-second warm-up. Every unit is one full-detail rendered combatant; the
+scenes force full creature LOD at Ultra quality while exercising
+simulation, combat, terrain, effects, and OpenGL playback:
+
+```bash
+build/bin/arena_app --batch --scenario performance_20v20 \
+  --fps 120 --artifact-dir artifacts/arena-performance
+build/bin/arena_app --batch --scenario performance_30v30 \
+  --fps 120 --artifact-dir artifacts/arena-performance
+```
+
+The scenarios contain exactly 20 vs 20 and 30 vs 30 units (40 and 60 rendered
+combatants respectively). `report.json` records frame-time sample count,
+p50, p95, maximum, the 9.99 ms budget, FPS derived from p95, peak visible
+soldiers, peak submitted draw commands, and main/shadow rigged-instancing
+playback counts. A p95 at or above 10 ms, a frame window containing no rendered
+soldiers, or a run that never exercises rigged instancing fails the scenario.
+
 ## Settlement and economy contracts
 
 Settlement scenes use the production building factory and nation renderers, so

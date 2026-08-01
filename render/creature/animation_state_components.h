@@ -52,6 +52,9 @@ struct HorseAnimationStateComponent : public Engine::Core::Component {
 
 struct ElephantAnimationStateComponent : public Engine::Core::Component {
   Render::GL::ElephantGaitState gait_state{};
+  float locomotion_phase{0.0F};
+  float locomotion_phase_time{0.0F};
+  bool locomotion_phase_valid{false};
 };
 
 struct HorseAnatomyComponent : public Engine::Core::Component {

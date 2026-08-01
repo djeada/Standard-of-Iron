@@ -16,6 +16,7 @@
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -376,6 +377,21 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   EXPECT_LT(motion.rump_center.z(), motion.barrel_center.z());
   EXPECT_GT(motion.head_center.z(), motion.neck_top.z());
   EXPECT_TRUE(motion.is_fighting);
+}
+
+TEST(ElephantPrepare, LocomotionClockSurvivesARenderClockRebaseWithoutLegJump) {
+  Render::GL::ElephantProfile const profile = make_test_elephant_profile();
+  Render::Creature::ElephantAnimationStateComponent state{};
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 40.0F;
+  anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+  auto const before = Render::GL::evaluate_elephant_motion(profile, anim, &state);
+
+  anim.time = 0.0F;
+  auto const after = Render::GL::evaluate_elephant_motion(profile, anim, &state);
+
+  EXPECT_NEAR(after.phase, before.phase, 0.0001F);
 }
 
 TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {

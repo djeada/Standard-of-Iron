@@ -501,11 +501,42 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
 
   float const expected_continuation =
       wrap_phase(moving_sample.phase + (idle_anim.time - moving_anim.time) / 1.1F);
-  float const old_global_clock_phase =
-      wrap_phase(idle_anim.time / 1.1F + profile.gait.phase_offset);
 
   EXPECT_NEAR(stop_sample.phase, expected_continuation, 0.0001F);
-  EXPECT_GT(phase_distance(stop_sample.phase, old_global_clock_phase), 0.05F);
+}
+
+TEST(HorsePrepare, MountOwnsItsLocomotionClockInsteadOfFollowingRiderLegPhase) {
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  Render::Creature::HorseAnimationStateComponent state{};
+  state.current_gait = Render::GL::GaitType::WALK;
+  state.target_gait = Render::GL::GaitType::WALK;
+  state.gait_transition_progress = 1.0F;
+
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  rider_ctx.gait.state = Render::GL::HumanoidMotionState::Walk;
+  rider_ctx.gait.speed = 1.8F;
+  rider_ctx.gait.normalized_speed = 0.45F;
+  rider_ctx.gait.cycle_time = 0.45F;
+  rider_ctx.gait.cycle_phase = 0.05F;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 3.0F;
+  anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+  auto const first =
+      Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
+
+  anim.time += 1.0F / 60.0F;
+  rider_ctx.gait.cycle_phase = 0.92F;
+  auto const second =
+      Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
+
+  float const expected_advance =
+      (1.0F / 60.0F) /
+      Render::GL::gait_for_type(Render::GL::GaitType::WALK, profile.gait).cycle_time;
+  EXPECT_NEAR(phase_distance(first.phase, second.phase), expected_advance, 0.0002F);
+  EXPECT_LT(phase_distance(first.phase, second.phase), 0.03F);
 }
 
 TEST(HorsePrepare, HorseGaitsMapToSharedWalkRunAnimationStates) {

@@ -154,7 +154,9 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
                               const AnimationInputs& anim,
                               Render::Creature::ElephantAnimationStateComponent*
                                   io_state) -> ElephantMotionSample {
-  (void)io_state;
+  Render::Creature::ElephantAnimationStateComponent fallback_state{};
+  Render::Creature::ElephantAnimationStateComponent& state =
+      io_state != nullptr ? *io_state : fallback_state;
   ElephantMotionSample sample{};
   const ElephantGait& g = profile.gait;
   const ElephantDimensions& d = profile.dims;
@@ -166,10 +168,26 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
   sample.is_moving = Render::Creature::is_moving_animation(movement_animation);
   sample.is_fighting =
       anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
+  float motion_time = anim.time;
+  if (sample.is_moving) {
+    float const cycle_time = std::max(g.cycle_time, 0.001F);
+    if (state.locomotion_phase_valid) {
+      float const elapsed = std::max(anim.time - state.locomotion_phase_time, 0.0F);
+      state.locomotion_phase =
+          Quadruped::wrap_phase(state.locomotion_phase + elapsed / cycle_time);
+    } else {
+      state.locomotion_phase = Quadruped::wrap_phase(anim.time / cycle_time);
+    }
+    state.locomotion_phase_time = anim.time;
+    state.locomotion_phase_valid = true;
+    motion_time = state.locomotion_phase * cycle_time;
+  } else {
+    state.locomotion_phase_valid = false;
+  }
   Quadruped::MotionSample const quadruped_motion = Quadruped::evaluate_cycle_motion(
       to_quadruped_dimensions(d),
       g,
-      anim.time,
+      motion_time,
       sample.is_moving,
       Render::Creature::is_running_animation(movement_animation),
       sample.is_fighting,

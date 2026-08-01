@@ -77,6 +77,20 @@ Every full rebuild starts with an all-free grid, then layers blockers in a fixed
 
 The order is important. Terrain decides where the map is physically traversable. Buildings and resources then override terrain by occupying cells. Mandatory traversal cells are applied last so bridge crossings and hill entrances cannot be accidentally blocked by broad terrain/resource/building masks.
 
+Dirty regions are merged before rebuilding. Building candidates come from the
+collision registry's spatial buckets rather than a scan of every registered
+building, and resource props are indexed by navigation cell. A resource revision
+marks only cells whose indexed value changed. A* results are cached by exact
+start/end cells and navigation revision; each worker thread owns independent
+generation-stamped search buffers while the immutable grid is protected by a
+shared read lock.
+
+Group movement computes one corridor for units whose starts and destinations
+fall in the same local regions. Individual targets are appended at the corridor
+exit, with per-unit A* used only when sharing is unsafe. Expensive fallbacks are
+limited per command and placed in a bounded request queue; `MovementSystem`
+services a fixed number each simulation tick.
+
 ```text
 Terrain layer:
 

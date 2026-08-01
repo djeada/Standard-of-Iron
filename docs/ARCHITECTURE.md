@@ -120,6 +120,22 @@ input / AI / replay  ->  CommandQueue::submit
 Submitting is thread-safe (the AI runs on a worker); draining belongs to the
 simulation thread.
 
+## Simulation and presentation ownership
+
+Mutable entities belong to the simulation thread. `World::update()` publishes a
+detached render world through an atomic two-buffer handoff when a renderer has
+requested snapshots. Rendering holds the snapshot's mutex and may maintain
+renderer-only animation caches there, but it does not hold the authoritative
+world mutex while culling, sorting, or invoking renderer callbacks. Unchanged
+idle entities are retained in the reusable snapshot buffer by a presentation
+signature; active entities are refreshed every tick.
+
+Headless callers disable creature and motion presentation with
+`World::set_presentation_enabled(false)`. Commands remain the write boundary for
+external producers. Sparse ECS membership is exposed as non-owning entity-ID
+spans, and hot systems either iterate components directly with `World::each()`
+or resolve IDs into retained scratch storage.
+
 ## Persistence
 
 `game/save/snapshot_contract.h` classifies every piece of match state as

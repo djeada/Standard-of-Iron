@@ -25,6 +25,7 @@ public:
 
 private:
   EngagementSlotDiagnostics m_diagnostics;
+  std::vector<Engine::Core::Entity*> m_query_scratch;
 };
 
 } // namespace Game::Systems

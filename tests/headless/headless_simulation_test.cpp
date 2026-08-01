@@ -40,6 +40,7 @@ void run_for(SessionContext& session, double seconds) {
 
 auto make_match() -> std::unique_ptr<SessionContext> {
   auto session = std::make_unique<SessionContext>();
+  session->world().set_presentation_enabled(false);
   auto& owners = session->owners();
   owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "blue");
   owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "red");
@@ -92,6 +93,7 @@ TEST(HeadlessSimulation, SameSeedAndOrdersProduceTheSameOutcome) {
     SessionContext::Config config;
     config.rng_seed = seed;
     auto session = std::make_unique<SessionContext>(config);
+    session->world().set_presentation_enabled(false);
     auto& owners = session->owners();
     owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "blue");
     owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "red");
