@@ -3,6 +3,31 @@
   "display_name": "Roman Republic",
   "primary_building": "barracks",
   "formation_type": "roman",
+  "defense_formation": {
+    "id": "testudo",
+    "display_name": "Testudo",
+    "eligible_troops": ["swordsman"],
+    "min_units": 3,
+    "max_units_per_rank": 3,
+    "rank_spacing": 1.35,
+    "file_spacing": 1.15,
+    "form_seconds": 3.0,
+    "break_seconds": 1.4,
+    "move_speed_multiplier": 0.3,
+    "turn_speed_multiplier": 0.35,
+    "allows_charge": false,
+    "damage_multipliers": {
+      "frontal_missile": 0.15,
+      "frontal_melee": 0.65,
+      "flank": 1.25,
+      "rear": 1.6,
+      "cavalry_impact": 0.85
+    },
+    "attack_output_multiplier": 0.45,
+    "frontal_arc_degrees": 110.0,
+    "cohesion_radius": 2.8,
+    "min_cohesion_ratio": 0.6
+  },
   "troops": [
     {
       "id": "archer",

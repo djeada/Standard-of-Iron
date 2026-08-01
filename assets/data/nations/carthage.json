@@ -3,6 +3,31 @@
   "display_name": "Carthaginian Empire",
   "primary_building": "barracks",
   "formation_type": "carthage",
+  "defense_formation": {
+    "id": "shield_wall",
+    "display_name": "Shield Wall",
+    "eligible_troops": ["swordsman"],
+    "min_units": 3,
+    "max_units_per_rank": 5,
+    "rank_spacing": 1.7,
+    "file_spacing": 1.5,
+    "form_seconds": 2.0,
+    "break_seconds": 0.9,
+    "move_speed_multiplier": 0.5,
+    "turn_speed_multiplier": 0.6,
+    "allows_charge": false,
+    "damage_multipliers": {
+      "frontal_missile": 0.45,
+      "frontal_melee": 0.55,
+      "flank": 1.35,
+      "rear": 1.6,
+      "cavalry_impact": 1.3
+    },
+    "attack_output_multiplier": 0.75,
+    "frontal_arc_degrees": 130.0,
+    "cohesion_radius": 3.6,
+    "min_cohesion_ratio": 0.55
+  },
   "troops": [
     {
       "id": "archer",

@@ -303,12 +303,16 @@ auto MissionSetupCoordinator::apply_mission_setup(
             guard->has_guard_target = true;
           }
         } else if (unit_setup.behavior == Game::Mission::UnitBehavior::Hold) {
-          auto* hold = entity->get_component<Engine::Core::HoldModeComponent>();
-          if (hold == nullptr) {
-            hold = entity->add_component<Engine::Core::HoldModeComponent>();
-          }
-          if (hold != nullptr) {
-            hold->active = true;
+          const auto* hold_unit = entity->get_component<Engine::Core::UnitComponent>();
+          if (hold_unit != nullptr &&
+              Game::Units::can_use_hold_mode(hold_unit->spawn_type)) {
+            auto* hold = entity->get_component<Engine::Core::HoldModeComponent>();
+            if (hold == nullptr) {
+              hold = entity->add_component<Engine::Core::HoldModeComponent>();
+            }
+            if (hold != nullptr) {
+              hold->active = true;
+            }
           }
         } else if (unit_setup.behavior == Game::Mission::UnitBehavior::Patrol) {
           std::vector<std::pair<float, float>> waypoints;

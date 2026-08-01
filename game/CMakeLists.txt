@@ -136,6 +136,7 @@ add_library(
     systems/save_storage.cpp
     systems/nation_registry.cpp
     systems/nation_loader.cpp
+    systems/defense_formation_service.cpp
     systems/formation_system.cpp
     systems/formation_combat_geometry.cpp
     systems/troop_profile_service.cpp

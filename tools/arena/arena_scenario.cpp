@@ -14,6 +14,8 @@
 #include <limits>
 #include <utility>
 
+#include "game/command/command.h"
+#include "game/command/command_dispatcher.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -967,13 +969,44 @@ struct ArenaScenarioRunner::Impl {
       break;
     case ScenarioCommandKind::Guard: {
       auto const& targets = ids(step.target_group);
-      for (auto entity_id : ids(step.group)) {
-        if (host.find_unit) {
-          if (auto* unit = host.find_unit(entity_id)) {
-            unit->set_guard_mode(step.enabled);
-            if (step.enabled && !targets.empty()) {
+      auto const& subjects = ids(step.group);
+
+      int guard_owner_id = 0;
+      if (!subjects.empty()) {
+        auto* first = world.get_entity(subjects.front());
+        auto const* first_unit =
+            first != nullptr ? first->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+        guard_owner_id = first_unit != nullptr ? first_unit->owner_id : 0;
+      }
+
+      Game::Command::Command guard_command{};
+      guard_command.source = Game::Command::Source::Script;
+      guard_command.owner_id = guard_owner_id;
+      Game::Command::SetGuard payload{};
+      payload.units = subjects;
+      payload.active = step.enabled;
+      if (step.enabled && !targets.empty()) {
+        if (auto const target_centre = centroid(step.target_group)) {
+          payload.anchor = *target_centre;
+          payload.has_anchor = true;
+        }
+      }
+      guard_command.payload = std::move(payload);
+      Game::Command::dispatch(world, guard_command);
+
+      if (step.enabled && !targets.empty()) {
+        for (auto entity_id : subjects) {
+          if (host.find_unit) {
+            if (auto* unit = host.find_unit(entity_id)) {
               unit->set_guard_target(targets.front());
-            } else if (!step.enabled) {
+            }
+          }
+        }
+      } else if (!step.enabled) {
+        for (auto entity_id : subjects) {
+          if (host.find_unit) {
+            if (auto* unit = host.find_unit(entity_id)) {
               unit->clear_guard_mode();
             }
           }
@@ -2079,7 +2112,7 @@ struct ArenaScenarioRunner::Impl {
         }
         if (expectation.kind == ArenaExpectationKind::HoldPoseMaintained && !culled) {
           auto const* hold = entity->get_component<Engine::Core::HoldModeComponent>();
-          if (hold != nullptr && hold->active &&
+          if (hold != nullptr && hold->active && hold->kneel_entry_progress >= 0.999F &&
               soldier.animation_state != Render::Creature::AnimationStateId::Hold) {
             add_issue(
                 QStringLiteral("hold_pose_replaced"),
