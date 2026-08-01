@@ -9,14 +9,6 @@
 
 namespace Render::GL {
 
-// One knob for how large a horse is, applied to both the authored mesh and the
-// dimensions the saddle, stirrups and rider seat are derived from. The two must
-// move together: the seat is positioned from dimensions but follows a mesh
-// bone, so scaling one without the other leaves the rider hovering.
-//
-// The authored horse stood 2.13 units at the withers against a 1.80 unit man -
-// taller at the shoulder than a person is tall overall. This brings the withers
-// to about 1.57, roughly where a warhorse sits against its rider.
 inline constexpr float k_horse_scale = 0.74F;
 
 struct AnimationInputs;
@@ -108,10 +100,7 @@ inline void scale_horse_dimensions(HorseDimensions& dims, float scale) {
   dims.saddle_thickness *= scale;
   dims.seat_forward_offset *= scale;
   dims.stirrup_out *= scale;
-  // stirrup_drop is deliberately not scaled: it is how far the rider's leg
-  // reaches, not how big the horse is. A smaller mount does not give its rider
-  // shorter legs, and scaling it here is what left riders crouched like
-  // jockeys with their feet tucked up under them.
+
   dims.barrel_center_y *= scale;
   dims.saddle_height *= scale;
   dims.idle_bob_amplitude *= scale;

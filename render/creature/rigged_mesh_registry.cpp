@@ -10,8 +10,6 @@ namespace Render::Creature::Rigged {
 
 namespace {
 
-// Which baked body each species uses. Bodies are named after the part graph
-// they came from, so the stances that share a graph share a file.
 constexpr std::array<std::pair<std::uint32_t, std::string_view>, 8> k_species{{
     {Render::Creature::Bpat::k_species_humanoid, "humanoid"},
     {Render::Creature::Bpat::k_species_humanoid_sword, "humanoid"},

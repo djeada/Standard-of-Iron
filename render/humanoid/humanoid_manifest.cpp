@@ -13,8 +13,6 @@
 #include <string_view>
 #include <vector>
 
-#include "animation/bpat/bpat_format.h"
-#include "animation/clip_manifest.h"
 #include "../creature/humanoid_clip_ids.h"
 #include "../creature/movement_state.h"
 #include "../entity/mounted_knight_pose.h"
@@ -23,6 +21,8 @@
 #include "../gl/humanoid/humanoid_types.h"
 #include "../horse/dimensions.h"
 #include "../horse/horse_motion.h"
+#include "animation/bpat/bpat_format.h"
+#include "animation/clip_manifest.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
 #include "humanoid_spec.h"
@@ -1103,8 +1103,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     anim_ctx.inputs.attack_variant = clip.attack_variant;
 
     Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-    float const sword_reach_scale =
-        profile == BakeProfile::Skeleton ? 0.88F : 1.0F;
+    float const sword_reach_scale = profile == BakeProfile::Skeleton ? 0.88F : 1.0F;
     switch (clip.attack_type) {
     case BakerAttackType::Sword:
       if (is_rpg_sword_clip(clip)) {
@@ -1366,15 +1365,13 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     out_sockets.push_back(Render::Humanoid::socket_transform(palette, spec.socket));
   }
 }
-// The manifest hooks are plain function pointers, so each profile gets its own
-// instantiation rather than carrying the profile through as state.
+
 template <BakeProfile P>
 void bake_clip_frame_for(std::size_t clip_index,
                          std::uint32_t frame_index,
                          std::vector<QMatrix4x4>& out_palettes,
                          std::vector<QMatrix4x4>* out_socket_transforms) {
-  // The snapshot pass asks for palettes only; give the poser somewhere to put
-  // the sockets it always computes rather than making it care.
+
   std::vector<QMatrix4x4> discarded_sockets;
   bake_humanoid_clip_frame(P,
                            k_humanoid_clips[clip_index],
@@ -1438,11 +1435,11 @@ struct ProfileBinding {
 };
 
 template <BakeProfile P>
-constexpr auto make_binding(std::uint32_t species_id,
-                            std::string_view species_name,
-                            std::string_view bpat_file_name,
-                            Render::Creature::CreatureSpecProviderFn spec)
-    -> ProfileBinding {
+constexpr auto
+make_binding(std::uint32_t species_id,
+             std::string_view species_name,
+             std::string_view bpat_file_name,
+             Render::Creature::CreatureSpecProviderFn spec) -> ProfileBinding {
   return {P,
           species_id,
           species_name,
@@ -1489,8 +1486,7 @@ auto build_manifest(const ProfileBinding& binding)
   m.species_name = binding.species_name;
   m.species_id = binding.species_id;
   m.bpat_file_name = binding.bpat_file_name;
-  // No minimal snapshot: the humanoid minimal graph is a handful of primitives,
-  // so a per-frame vertex dump would cost far more disk than it saves.
+
   m.minimal_snapshot_file_name = {};
   m.topology = &binding.creature_spec().topology;
   m.clips = clip_descriptors();

@@ -13,25 +13,11 @@
 #include "animation/bpat/bpat_format.h"
 #include "render_request.h"
 
-// A creature's body geometry, baked once at build time from the species' C++
-// part graph.
-//
-// The part graphs are the authored source for humanoid, horse and elephant
-// bodies alike; nothing here is imported from a modelling package. Turning them
-// into vertices used to happen at load time, behind the runtime bake guard.
-// Doing it in the baker instead means the runtime only ever loads geometry.
-//
-// This holds the mesh in bind pose with its bone bindings intact, unlike the
-// snapshot format alongside it, which stores vertices already posed for every
-// frame of every clip.
 namespace Render::Creature::Rigged {
 
 inline constexpr std::array<std::uint8_t, 4> k_magic{'B', 'P', 'R', 'M'};
 inline constexpr std::uint32_t k_version = 1U;
 
-// No species field: a body belongs to the part graph it was baked from, not to
-// a species. Several species share one, and the registry decides which file
-// each of them reads.
 struct RiggedMeshHeader {
   std::uint8_t magic[4];
   std::uint32_t version;
@@ -85,7 +71,6 @@ private:
   std::vector<std::uint32_t> m_indices{};
 };
 
-// File name a species/LOD pair is stored under, e.g. "humanoid_full.bprm".
 [[nodiscard]] auto asset_file_name(std::string_view species_name,
                                    Render::Creature::CreatureLOD lod) -> std::string;
 

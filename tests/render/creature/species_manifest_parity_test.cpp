@@ -1,7 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <QMatrix4x4>
 
+#include <gtest/gtest.h>
 #include <set>
 #include <string>
 #include <vector>
@@ -15,9 +14,6 @@ namespace {
 
 using Render::Creature::SpeciesManifest;
 
-// Every species is baked through one code path, so every species has to supply
-// the same manifest. These tests exist so that a new creature cannot quietly
-// grow a bespoke bake path again.
 auto all_manifests() -> std::vector<const SpeciesManifest*> {
   std::vector<const SpeciesManifest*> out;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
@@ -71,8 +67,6 @@ TEST(SpeciesManifestParityTest, ClipFrameHookFillsOnePalettePerBone) {
   }
 }
 
-// A species with sockets must emit exactly one transform per socket per frame,
-// and one without must not be handed a socket sink at all.
 TEST(SpeciesManifestParityTest, SocketsAreBakedAlongsidePalettes) {
   for (const auto* manifest : all_manifests()) {
     SCOPED_TRACE(std::string(manifest->species_name));
@@ -90,14 +84,13 @@ TEST(SpeciesManifestParityTest, SocketsAreBakedAlongsidePalettes) {
 }
 
 TEST(SpeciesManifestParityTest, OnlySpeciesNamingASnapshotShipOne) {
-  // The prebaked snapshot pays for itself on imported meshes of a few thousand
-  // vertices. The humanoid's minimal graph is a handful of primitives, so it
-  // deliberately names no snapshot rather than dumping vertices per frame.
+
   EXPECT_FALSE(Render::Horse::horse_manifest().minimal_snapshot_file_name.empty());
-  EXPECT_FALSE(Render::Elephant::elephant_manifest().minimal_snapshot_file_name.empty());
+  EXPECT_FALSE(
+      Render::Elephant::elephant_manifest().minimal_snapshot_file_name.empty());
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
-    EXPECT_TRUE(
-        Render::Humanoid::humanoid_manifest(profile).minimal_snapshot_file_name.empty());
+    EXPECT_TRUE(Render::Humanoid::humanoid_manifest(profile)
+                    .minimal_snapshot_file_name.empty());
   }
 }
 

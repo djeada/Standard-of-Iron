@@ -72,9 +72,6 @@ creature_lod_bit(Render::Creature::CreatureLOD lod) noexcept -> std::uint8_t {
   return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
 }
 
-// Whether this species ships a prebaked snapshot mesh for the given LOD. Asking
-// the asset keeps the answer in one place instead of a species list that every
-// new prebaked creature has to be remembered into.
 [[nodiscard]] inline constexpr auto
 has_prebaked_snapshot_mesh(const CreatureAsset& asset,
                            Render::Creature::CreatureLOD lod) noexcept -> bool {

@@ -45,9 +45,7 @@ constexpr float k_seat_forward_offset_min = 0.010F;
 constexpr float k_seat_forward_offset_max = 0.035F;
 constexpr float k_stirrup_out_scale_min = 0.75F;
 constexpr float k_stirrup_out_scale_max = 0.88F;
-// How far below the saddle the stirrup hangs, as a fraction of the rider's
-// straight leg. A seated rider carries roughly half a leg of bend, so the foot
-// sits a little over half a leg below the seat.
+
 constexpr float k_stirrup_leg_fraction_min = 0.44F;
 constexpr float k_stirrup_leg_fraction_max = 0.47F;
 
@@ -62,8 +60,7 @@ constexpr float k_leg_segment_ratio_lower = 0.12F;
 constexpr float k_shoulder_barrel_offset_scale = 0.05F;
 constexpr float k_shoulder_barrel_offset_base = 0.05F;
 constexpr float k_saddle_height_body_scale = 0.55F;
-// Multiplied by the shared horse scale so the saddle, stirrups and seat
-// shrink with the mesh rather than floating above it.
+
 constexpr float k_overall_scale = 0.80F * k_horse_scale;
 
 constexpr uint32_t k_salt_body_length = 0x12U;

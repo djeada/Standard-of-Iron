@@ -11,7 +11,6 @@
 #include <numbers>
 #include <vector>
 
-#include "animation/rig/humanoid_proportions.h"
 #include "../creature/pipeline/creature_visual_definition.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
@@ -20,6 +19,7 @@
 #include "../gl/primitives.h"
 #include "../humanoid/humanoid_renderer_base.h"
 #include "../submitter.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "horse_renderer_base.h"
 #include "horse_spec.h"
 #include "math/creature_math_utils.h"
@@ -166,8 +166,6 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
 
   scale_horse_dimensions(d, k_overall_scale);
 
-  // Set after scaling, and from the rider rather than the horse: the stirrup
-  // hangs where a leg reaches, so it must not shrink along with the mount.
   d.stirrup_drop = (HumanProportions::UPPER_LEG_LEN + HumanProportions::LOWER_LEG_LEN) *
                    rand_between(seed,
                                 k_salt_stirrup_drop,

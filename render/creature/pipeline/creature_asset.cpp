@@ -245,8 +245,7 @@ auto resolve_creature_render_asset_handle(CreatureAssetId asset_id,
   handle.has_static_attachments = !handle.attachments.empty();
   handle.requires_prebaked_minimal_snapshot =
       !handle.has_static_attachments &&
-      has_prebaked_snapshot_mesh(*handle.asset,
-                                 Render::Creature::CreatureLOD::Minimal);
+      has_prebaked_snapshot_mesh(*handle.asset, Render::Creature::CreatureLOD::Minimal);
   handle.attachments_hash = Render::Creature::static_attachments_hash(
       handle.attachments.data(), handle.attachments.size());
 

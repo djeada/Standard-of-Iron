@@ -21,15 +21,15 @@ eyes=elephant_production_material_2
 # The model is mirror-symmetric about x=0.03, not x=0: the tusks pair about that
 # plane to within 7e-5. Mirroring about 0 would sit the second eye off-centre.
 python3 "$here/complete_creature_mirror.py" "$package" \
-    --material "$eyes" --plane 0.03
+  --material "$eyes" --plane 0.03
 
 # The authored eyes are large flat wedges half sunk into the head; replace them
 # with discs laid against the actual skin surface. --min-z keeps the tail tuft,
 # which shares the eye material, out of it.
 python3 "$here/author_creature_eyes.py" "$package" \
-    --detail "$eyes" --body "$skin" \
-    --min-z 0 --radius "$eye_radius" --margin 0.03 --lateral-plane 0.03 \
-    --target "$eye_target"
+  --detail "$eyes" --body "$skin" \
+  --min-z 0 --radius "$eye_radius" --margin 0.03 --lateral-plane 0.03 \
+  --target "$eye_target"
 
 printf '\nsha256 for k_elephant_config: %s\n' \
-    "$(sha256sum "$package" | cut -d' ' -f1)"
+  "$(sha256sum "$package" | cut -d' ' -f1)"

@@ -24,9 +24,6 @@ struct BakeClipDescriptor {
   bool loops{false};
 };
 
-// An attachment point carried through to the baked animation table, so that
-// equipment can be positioned from prebaked data instead of being re-derived
-// from a pose at draw time.
 struct BakeSocketDescriptor {
   std::string_view name{};
   std::uint32_t anchor_bone{0U};
@@ -36,17 +33,11 @@ struct BakeSocketDescriptor {
 using BindPaletteProviderFn = std::span<const QMatrix4x4> (*)() noexcept;
 using CreatureSpecProviderFn = const CreatureSpec& (*)() noexcept;
 
-// Produces one frame of a clip. Palettes are always required; a species with no
-// sockets is passed a null socket sink. Palettes and sockets come from the same
-// call because they are derived from the same pose - computing them separately
-// would both double the work and let them drift apart.
 using BakeClipFrameFn = void (*)(std::size_t clip_index,
                                  std::uint32_t frame_index,
                                  std::vector<QMatrix4x4>& out_palettes,
                                  std::vector<QMatrix4x4>* out_socket_transforms);
 
-// Fills in authored timing markers for a clip. Species that leave this null get
-// the generic markers looked up from the clip name.
 using BakeClipMarkersFn = void (*)(std::size_t clip_index,
                                    std::string_view clip_name,
                                    Animation::ClipMarkers& out);

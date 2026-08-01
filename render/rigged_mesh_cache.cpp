@@ -194,9 +194,6 @@ auto RiggedMeshCache::get_or_bake_prehashed(
   }
   RiggedMeshEntry entry;
 
-  // A body with nothing welded on is exactly what the baker wrote out at build
-  // time, so load it rather than rebuilding it from the part graph. Only bodies
-  // carrying static attachments still have to be assembled here.
   const Render::Creature::Rigged::RiggedMeshBlob* prebaked =
       attachments.empty()
           ? Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(

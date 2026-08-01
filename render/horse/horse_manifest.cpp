@@ -106,7 +106,7 @@ void bake_horse_manifest_clip_frame(std::size_t clip_index,
                                     std::uint32_t frame_index,
                                     std::vector<QMatrix4x4>& out_palettes,
                                     std::vector<QMatrix4x4>* out_socket_transforms) {
-  (void)out_socket_transforms; // the horse carries its attachments on bones
+  (void)out_socket_transforms;
   auto const& clip = k_horse_clips[clip_index];
   float const phase =
       static_cast<float>(frame_index) /

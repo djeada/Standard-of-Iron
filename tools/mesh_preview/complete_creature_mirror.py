@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import math
 import pathlib
 import struct
 import zlib
@@ -108,22 +107,56 @@ def read_accessor(document: dict, buffer: bytes, index: int) -> list[tuple]:
 def node_matrix(node: dict) -> list[float]:
     if "matrix" in node:
         m = node["matrix"]
-        return [m[0], m[4], m[8], m[12], m[1], m[5], m[9], m[13],
-                m[2], m[6], m[10], m[14], m[3], m[7], m[11], m[15]]
+        return [
+            m[0],
+            m[4],
+            m[8],
+            m[12],
+            m[1],
+            m[5],
+            m[9],
+            m[13],
+            m[2],
+            m[6],
+            m[10],
+            m[14],
+            m[3],
+            m[7],
+            m[11],
+            m[15],
+        ]
     tx, ty, tz = node.get("translation", (0.0, 0.0, 0.0))
     x, y, z, w = node.get("rotation", (0.0, 0.0, 0.0, 1.0))
     sx, sy, sz = node.get("scale", (1.0, 1.0, 1.0))
     rotation = [
-        1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w),
-        2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w),
-        2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y),
+        1 - 2 * (y * y + z * z),
+        2 * (x * y - z * w),
+        2 * (x * z + y * w),
+        2 * (x * y + z * w),
+        1 - 2 * (x * x + z * z),
+        2 * (y * z - x * w),
+        2 * (x * z - y * w),
+        2 * (y * z + x * w),
+        1 - 2 * (x * x + y * y),
     ]
     scale = (sx, sy, sz)
     return [
-        rotation[0] * scale[0], rotation[1] * scale[1], rotation[2] * scale[2], tx,
-        rotation[3] * scale[0], rotation[4] * scale[1], rotation[5] * scale[2], ty,
-        rotation[6] * scale[0], rotation[7] * scale[1], rotation[8] * scale[2], tz,
-        0.0, 0.0, 0.0, 1.0,
+        rotation[0] * scale[0],
+        rotation[1] * scale[1],
+        rotation[2] * scale[2],
+        tx,
+        rotation[3] * scale[0],
+        rotation[4] * scale[1],
+        rotation[5] * scale[2],
+        ty,
+        rotation[6] * scale[0],
+        rotation[7] * scale[1],
+        rotation[8] * scale[2],
+        tz,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
     ]
 
 
@@ -189,11 +222,15 @@ def find_primitive(document: dict, material_name: str) -> tuple[dict, int]:
         raise SystemExit(f"material '{material_name}' is not unique; known: {known}")
     material = matches[0]
     primitives = [
-        p for m in document["meshes"] for p in m["primitives"]
+        p
+        for m in document["meshes"]
+        for p in m["primitives"]
         if p.get("material") == material
     ]
     if len(primitives) != 1:
-        raise SystemExit(f"material '{material_name}' is not used by exactly one primitive")
+        raise SystemExit(
+            f"material '{material_name}' is not used by exactly one primitive"
+        )
     return primitives[0], material
 
 
@@ -202,9 +239,6 @@ def missing_mirror_triangles(
 ) -> list[int]:
     """Return the first index of every triangle that has no mirror twin."""
 
-    # Bucketing coordinates would let a pair straddling a bucket edge look
-    # unmatched and get duplicated, so resolve each point to a canonical vertex
-    # id by explicit proximity search first.
     def near(a: tuple, b: tuple) -> bool:
         return all(abs(a[axis] - b[axis]) <= tolerance for axis in range(3))
 
@@ -232,9 +266,7 @@ def missing_mirror_triangles(
 
     missing = []
     for start in range(0, len(indices) - 2, 3):
-        twins = [
-            mirror_of(positions[indices[start + offset]]) for offset in range(3)
-        ]
+        twins = [mirror_of(positions[indices[start + offset]]) for offset in range(3)]
         if any(twin is None for twin in twins) or frozenset(twins) not in present:
             missing.append(start)
     return missing
@@ -264,7 +296,9 @@ def repack(document: dict, buffer: bytes, overrides: dict[int, list[tuple]]) -> 
             view["target"] = source_view["target"]
         views.append(view)
 
-        rebuilt = {k: v for k, v in accessor.items() if k not in ("byteOffset", "min", "max")}
+        rebuilt = {
+            k: v for k, v in accessor.items() if k not in ("byteOffset", "min", "max")
+        }
         rebuilt["bufferView"] = index
         rebuilt["count"] = len(values)
         if "min" in accessor and "max" in accessor:
@@ -307,23 +341,23 @@ def main() -> None:
         print(f"{args.package}: '{args.material}' is already mirror-complete")
         return
 
-    # A mirrored vertex keeps the bones it was skinned to, which is only correct
-    # for centreline bones. Geometry hanging off a left/right bone would need
-    # that bone swapped for its opposite, and guessing at that mapping is how
-    # you end up with an eye that follows the wrong ear.
     sided = sided_joints(document, args.tolerance)
     offenders = {
         joint
         for start in missing
         for offset in range(3)
         for joint, weight in zip(
-            joints[indices[start + offset]], weights[indices[start + offset]]
+            joints[indices[start + offset]],
+            weights[indices[start + offset]],
+            strict=True,
         )
         if weight > 0.0 and joint in sided
     }
     if offenders:
-        names = [document["nodes"][document["skins"][0]["joints"][j]].get("name", str(j))
-                 for j in sorted(offenders)]
+        names = [
+            document["nodes"][document["skins"][0]["joints"][j]].get("name", str(j))
+            for j in sorted(offenders)
+        ]
         raise SystemExit(
             "refusing to mirror geometry skinned to left/right bones "
             f"{names}; author the missing half in the source model"
@@ -376,8 +410,13 @@ def main() -> None:
     verify_buffer = load_buffer(verify)
     verify_primitive, _ = find_primitive(verify, args.material)
     left = missing_mirror_triangles(
-        read_accessor(verify, verify_buffer, verify_primitive["attributes"]["POSITION"]),
-        [v[0] for v in read_accessor(verify, verify_buffer, verify_primitive["indices"])],
+        read_accessor(
+            verify, verify_buffer, verify_primitive["attributes"]["POSITION"]
+        ),
+        [
+            v[0]
+            for v in read_accessor(verify, verify_buffer, verify_primitive["indices"])
+        ],
         args.plane,
         args.tolerance,
     )
@@ -387,7 +426,9 @@ def main() -> None:
     total_triangles = 0
     for mesh in verify["meshes"]:
         for prim in mesh["primitives"]:
-            total_vertices += verify["accessors"][prim["attributes"]["POSITION"]]["count"]
+            total_vertices += verify["accessors"][prim["attributes"]["POSITION"]][
+                "count"
+            ]
             total_triangles += verify["accessors"][prim["indices"]]["count"] // 3
     digest = zlib.crc32(args.package.read_bytes())
     print(

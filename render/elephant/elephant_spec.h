@@ -154,9 +154,6 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims
 
 inline constexpr std::size_t k_elephant_role_count = 10;
 
-// Colour roles actually carried by the production mesh. The asset loader binds
-// materials to these, and fill_elephant_role_colors paints them; naming them
-// here is what stops the two ends drifting apart.
 inline constexpr std::uint8_t k_elephant_role_skin = 1U;
 inline constexpr std::uint8_t k_elephant_role_tusk = 6U;
 inline constexpr std::uint8_t k_elephant_role_eye = 7U;

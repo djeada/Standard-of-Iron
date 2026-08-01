@@ -77,7 +77,7 @@ auto lod_suffix(Render::Creature::CreatureLOD lod) -> std::string_view {
 auto asset_file_name(std::string_view species_name,
                      Render::Creature::CreatureLOD lod) -> std::string {
   std::string name(species_name);
-  // Species names such as "humanoid.sword_ready" become file-name friendly.
+
   std::replace(name.begin(), name.end(), '.', '_');
   name += '_';
   name += lod_suffix(lod);
@@ -190,9 +190,10 @@ auto RiggedMeshBlob::indices_view() const -> std::span<const std::uint32_t> {
 RiggedMeshWriter::RiggedMeshWriter(Render::Creature::CreatureLOD lod,
                                    std::span<const Render::GL::RiggedVertex> vertices,
                                    std::span<const std::uint32_t> indices)
-    : m_lod(lod),
-      m_vertices(vertices.begin(), vertices.end()),
-      m_indices(indices.begin(), indices.end()) {}
+    : m_lod(lod)
+    , m_vertices(vertices.begin(), vertices.end())
+    , m_indices(indices.begin(), indices.end()) {
+}
 
 auto RiggedMeshWriter::write(std::ostream& out) const -> bool {
   if (m_vertices.empty() || m_indices.empty() || m_indices.size() % 3U != 0U) {
@@ -224,8 +225,7 @@ auto RiggedMeshWriter::write(std::ostream& out) const -> bool {
   if (!pad_to_alignment(out, sizeof(header))) {
     return false;
   }
-  if (!write_pod(
-          out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t))) {
+  if (!write_pod(out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t))) {
     return false;
   }
   if (!pad_to_alignment(out,

@@ -50,10 +50,6 @@ TEST(ElephantSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
   EXPECT_EQ(triangles, 772U);
 }
 
-// The production package used to ship a single eye, which the manifest patched
-// up by mirroring at load time. That repair also caught the tail tuft, which
-// shares the eye material, and duplicated it. The asset now carries both eyes,
-// so nothing downstream needs to mirror anything.
 TEST(ElephantSourceAssetTest, ProductionMeshCarriesBothEyes) {
   auto const bind = Render::Elephant::elephant_source_bind_palette();
   bool found_eyes = false;
@@ -70,7 +66,7 @@ TEST(ElephantSourceAssetTest, ProductionMeshCarriesBothEyes) {
     for (auto const& vertex : mesh.vertices) {
       QVector3D const rest = root.map(
           QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
-      // The tail tuft shares this material, so only look at the head end.
+
       if (rest.z() <= 0.0F) {
         continue;
       }

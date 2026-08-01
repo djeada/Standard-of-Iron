@@ -19,8 +19,7 @@ namespace Render::Horse {
 
 inline constexpr std::size_t k_horse_source_bone_count = 50U;
 inline constexpr float k_horse_length_scale = 0.85F;
-// See Render::GL::k_horse_scale for why these move together with the
-// dimensions the saddle and rider seat are built from.
+
 inline constexpr float k_horse_mesh_scale_x = 0.59F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_scale_y = 0.59F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_scale_z = 0.5015F * Render::GL::k_horse_scale;

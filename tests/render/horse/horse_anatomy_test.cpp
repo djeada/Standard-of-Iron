@@ -91,10 +91,7 @@ TEST(HorseSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
 }
 
 TEST(HorseSourceAssetTest, ProductionBoundsUseShortenedLength) {
-  // Width and height share a scale; the authored horse is deliberately
-  // shortened along its length. Both ride on the shared horse scale, so this
-  // states the relationship rather than pinning numbers that move whenever the
-  // horse is resized.
+
   EXPECT_FLOAT_EQ(Render::Horse::k_horse_mesh_scale_x,
                   Render::Horse::k_horse_mesh_scale_y);
   EXPECT_FLOAT_EQ(
@@ -129,9 +126,6 @@ TEST(HorseSourceAssetTest, ProductionBoundsUseShortenedLength) {
   EXPECT_NEAR(span.y(), 2.84613F * k_scale, 2.0e-5F);
   EXPECT_NEAR(span.z(), 2.846574F * k_scale, 2.0e-5F);
 
-  // The point of the shared scale: a horse standing head-up should clear a man
-  // without towering over him. Anything outside this band means cavalry and
-  // infantry have drifted out of proportion with each other again.
   float const head_up_vs_man = span.y() / Render::GL::HumanProportions::TOTAL_HEIGHT;
   EXPECT_GT(head_up_vs_man, 1.05F) << "horse has shrunk below its rider";
   EXPECT_LT(head_up_vs_man, 1.25F) << "horse towers over its rider";

@@ -509,8 +509,10 @@ TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
   constexpr std::uint32_t frame = 6U;
   manifest.bake_clip_frame(
       static_cast<std::size_t>(idle_it - manifest.clips.begin()), frame, idle, nullptr);
-  manifest.bake_clip_frame(
-      static_cast<std::size_t>(fight_it - manifest.clips.begin()), frame, fight, nullptr);
+  manifest.bake_clip_frame(static_cast<std::size_t>(fight_it - manifest.clips.begin()),
+                           frame,
+                           fight,
+                           nullptr);
   ASSERT_EQ(idle.size(), Render::Elephant::k_elephant_bone_count);
   ASSERT_EQ(fight.size(), Render::Elephant::k_elephant_bone_count);
 

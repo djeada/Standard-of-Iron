@@ -92,10 +92,6 @@ constexpr std::array<std::string_view, k_horse_source_bone_count> k_bone_names{{
     "FF.R",
 }};
 
-// Each authored material maps to one mesh node and one colour role. The
-// binding is keyed by the material's exported name rather than its slot number
-// so that a re-export which reorders or drops a material slot fails loudly
-// instead of silently painting tusks with the eye role.
 struct MaterialBinding {
   std::string_view exported_name;
   std::string_view node_name;
@@ -669,25 +665,21 @@ auto parse_source(SourceConfig const& config) -> SourceAsset {
     }
     result.status.vertex_count += mesh.vertices.size();
     result.status.triangle_count += mesh.indices.size() / 3U;
-    int const material_index =
-        primitive.value(QStringLiteral("material")).toInt(-1);
+    int const material_index = primitive.value(QStringLiteral("material")).toInt(-1);
     if (material_index < 0 || material_index >= materials.size()) {
       result.status.error = "compiled creature package material index is out of range";
       return result;
     }
-    QString const material_name = materials[material_index]
-                                      .toObject()
-                                      .value(QStringLiteral("name"))
-                                      .toString();
-    auto const binding =
-        std::find_if(config.materials.begin(),
-                     config.materials.end(),
-                     [&](MaterialBinding const& candidate) {
-                       return material_name == QLatin1String(
-                                                   candidate.exported_name.data(),
-                                                   static_cast<qsizetype>(
-                                                       candidate.exported_name.size()));
-                     });
+    QString const material_name =
+        materials[material_index].toObject().value(QStringLiteral("name")).toString();
+    auto const binding = std::find_if(
+        config.materials.begin(),
+        config.materials.end(),
+        [&](MaterialBinding const& candidate) {
+          return material_name ==
+                 QLatin1String(candidate.exported_name.data(),
+                               static_cast<qsizetype>(candidate.exported_name.size()));
+        });
     if (binding == config.materials.end()) {
       result.status.error = "compiled creature package uses an unknown material: " +
                             material_name.toStdString();

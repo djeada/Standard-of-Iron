@@ -125,9 +125,6 @@ protected:
       Render::Creature::CreatureLOD lod,
       Render::Creature::Pipeline::CreaturePreparationResult& out) const;
 
-  // Builds this unit's soldier instances and hands them to the submitter. The
-  // body geometry itself comes from the species' static part graph, exactly as
-  // it does for the horse and the elephant.
   void prepare_and_submit(const DrawContext& ctx,
                           const AnimationInputs& anim,
                           ISubmitter& out) const;

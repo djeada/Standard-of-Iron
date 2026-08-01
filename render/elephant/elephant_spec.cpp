@@ -253,9 +253,7 @@ void evaluate_elephant_skeleton(const ElephantSpecPose& pose,
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant& variant,
     std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept {
-  // Roles are 1-based when a primitive names one, and the shader looks them up
-  // as role_colors[role - 1]. Index through the same helper so the two ends
-  // cannot drift.
+
   auto role = [&out_roles](std::uint8_t number) -> QVector3D& {
     return out_roles[static_cast<std::size_t>(number) - 1U];
   };

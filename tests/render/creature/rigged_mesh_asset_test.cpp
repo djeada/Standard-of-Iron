@@ -1,18 +1,17 @@
-#include <gtest/gtest.h>
-
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <sstream>
 #include <vector>
 
 #include "render/creature/part_graph.h"
 #include "render/creature/rigged_mesh_asset.h"
 #include "render/creature/rigged_mesh_registry.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
-#include "render/creature/runtime_bake_guard.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/rigged_mesh_cache.h"
 
@@ -73,13 +72,11 @@ TEST(RiggedMeshAssetTest, FileNamesFollowThePartGraph) {
             "humanoid_full.bprm");
   EXPECT_EQ(rigged::asset_file_name("skeleton_humanoid", CreatureLOD::Minimal),
             "skeleton_humanoid_minimal.bprm");
-  // Dots in a species name would make an awkward file name.
+
   EXPECT_EQ(rigged::asset_file_name("humanoid.sword_ready", CreatureLOD::Full),
             "humanoid_sword_ready_full.bprm");
 }
 
-// The whole point of the format: what the baker wrote must be what the part
-// graph would have produced, so the runtime never has to build it.
 TEST(RiggedMeshAssetTest, BakedBodiesMatchTheirPartGraphs) {
   struct Case {
     const char* file_base;
@@ -93,7 +90,9 @@ TEST(RiggedMeshAssetTest, BakedBodiesMatchTheirPartGraphs) {
       {"skeleton_humanoid",
        &Render::Humanoid::skeleton_humanoid_creature_spec,
        &Render::Humanoid::humanoid_bind_palette},
-      {"horse", &Render::Horse::horse_creature_spec, &Render::Horse::horse_bind_palette},
+      {"horse",
+       &Render::Horse::horse_creature_spec,
+       &Render::Horse::horse_bind_palette},
       {"elephant",
        &Render::Elephant::elephant_creature_spec,
        &Render::Elephant::elephant_bind_palette},
@@ -117,7 +116,7 @@ TEST(RiggedMeshAssetTest, BakedBodiesMatchTheirPartGraphs) {
         }
       }
       if (found.empty()) {
-        continue; // assets not baked in this working tree
+        continue;
       }
 
       auto const blob = rigged::RiggedMeshBlob::from_file(found.string());
@@ -136,14 +135,10 @@ TEST(RiggedMeshAssetTest, BakedBodiesMatchTheirPartGraphs) {
   EXPECT_GT(checked, 0U) << "no baked bodies found to check";
 }
 
-// Proof that the build-time body is actually what the renderer ends up using:
-// with runtime baking forbidden outright, a body still resolves when the
-// registry is loaded, and stops resolving the moment it is not.
 TEST(RiggedMeshAssetTest, LoadedBodiesSatisfyTheRuntimeBakeGuard) {
   struct Restore {
     ~Restore() {
-      // The registry is a singleton shared with every other test in this
-      // binary, and the cache tests rely on it being empty.
+
       rigged::RiggedMeshRegistry::instance().clear();
       Render::Creature::set_runtime_bake_forbidden(false);
     }

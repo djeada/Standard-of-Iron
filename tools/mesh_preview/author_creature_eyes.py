@@ -92,7 +92,6 @@ def main() -> None:
     indices = [v[0] for v in read_accessor(document, buffer, detail["indices"])]
 
     body_positions = read_accessor(document, buffer, body["attributes"]["POSITION"])
-    body_normals = read_accessor(document, buffer, body["attributes"]["NORMAL"])
     body_indices = [v[0] for v in read_accessor(document, buffer, body["indices"])]
 
     eye_islands = []
@@ -107,7 +106,6 @@ def main() -> None:
     if not eye_islands:
         raise SystemExit(f"no '{args.detail}' island lies beyond z={args.min_z}")
 
-    # Group the patches into a left and a right eye by which side they sit on.
     sides: dict[int, list] = {}
     for island, centre in eye_islands:
         side = 1 if centre[0] >= args.lateral_plane else -1
@@ -129,15 +127,11 @@ def main() -> None:
 
     for side, group in sorted(sides.items()):
         anchor = [
-            sum(c[axis] * len(i) for i, c in group)
-            / sum(len(i) for i, _ in group)
+            sum(c[axis] * len(i) for i, c in group) / sum(len(i) for i, _ in group)
             for axis in range(3)
         ]
         outward = (float(side), 0.0, 0.0)
 
-        # Where an eye belongs is an art decision, and the authored patch is too
-        # badly placed to infer it from. Take an explicit target, mirrored for
-        # the far side, and drop it onto the nearest point of the skin.
         if args.target is not None:
             target = [
                 args.lateral_plane + side * abs(args.target[0]),
@@ -147,10 +141,6 @@ def main() -> None:
         else:
             target = anchor
 
-        # Ray casting is no use here: the body material also carries the ears,
-        # which are open sheets, so a lateral ray can miss the head entirely and
-        # strike the far ear instead. Closest-point-on-surface cannot land on
-        # the wrong half of the animal.
         best = None
         for start in range(0, len(body_indices) - 2, 3):
             tri = [body_positions[body_indices[start + k]] for k in range(3)]
@@ -168,13 +158,11 @@ def main() -> None:
 
         if dot(face_normal, outward) < 0.0:
             face_normal = (-face_normal[0], -face_normal[1], -face_normal[2])
-        # Bias towards straight out from the flank so a steeply angled cheek
-        # facet does not tip the eye into the head.
+
         face_normal = normalize(
             tuple(face_normal[axis] + outward[axis] for axis in range(3))
         )
 
-        # Build a tangent frame so the disc lies flat against the skin.
         up = (0.0, 1.0, 0.0)
         if abs(dot(face_normal, up)) > 0.9:
             up = (0.0, 0.0, 1.0)
@@ -199,24 +187,27 @@ def main() -> None:
                 + bitangent[axis] * math.sin(angle) * args.radius
                 for axis in range(3)
             ]
-            # Dish the rim back towards the skin so the eye reads as a bulge
-            # sitting in the head rather than a coin stuck on the side of it.
+
             rim = [
                 origin[axis] + offset[axis] - face_normal[axis] * args.margin * 0.6
                 for axis in range(3)
             ]
             new_positions.append(tuple(rim))
-            new_normals.append(normalize(tuple(
-                face_normal[axis] * 1.4 + offset[axis] / args.radius
-                for axis in range(3)
-            )))
+            new_normals.append(
+                normalize(
+                    tuple(
+                        face_normal[axis] * 1.4 + offset[axis] / args.radius
+                        for axis in range(3)
+                    )
+                )
+            )
             new_joints.append(joints[seed])
             new_weights.append(weights[seed])
 
         for step in range(args.segments):
             a = rim_start + step
             b = rim_start + (step + 1) % args.segments
-            # Wind so the fan faces out along face_normal.
+
             if side > 0:
                 new_indices += [centre_vertex, a, b]
             else:
@@ -250,10 +241,14 @@ def main() -> None:
     verify = read_package(args.package)
     for mesh in verify["meshes"]:
         for prim in mesh["primitives"]:
-            total_vertices += verify["accessors"][prim["attributes"]["POSITION"]]["count"]
+            total_vertices += verify["accessors"][prim["attributes"]["POSITION"]][
+                "count"
+            ]
             total_triangles += verify["accessors"][prim["indices"]]["count"] // 3
-    print(f"{args.package}: package now {total_vertices} vertices, "
-          f"{total_triangles} triangles")
+    print(
+        f"{args.package}: package now {total_vertices} vertices, "
+        f"{total_triangles} triangles"
+    )
 
 
 if __name__ == "__main__":

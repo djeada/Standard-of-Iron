@@ -124,13 +124,6 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
             << " frames, " << manifest.clips.size() << " clips, " << bind_palette.size()
             << " bones, " << manifest.sockets.size() << " sockets)\n";
 
-  // The body itself is baked here too, straight from the species' C++ part
-  // graph. Doing it at build time is what keeps the runtime free of geometry
-  // construction; no species is imported from a modelling package for this.
-  //
-  // Named after the part graph rather than the species, so the stances that
-  // share a body - every armed humanoid but the skeleton - share one file
-  // instead of writing the same million vertices five times over.
   auto const body_name = manifest.creature_spec().species_name;
   for (auto const lod :
        {Render::Creature::CreatureLOD::Full, Render::Creature::CreatureLOD::Minimal}) {
@@ -158,10 +151,6 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
               << " verts, " << body.indices.size() / 3U << " tris)\n";
   }
 
-  // A species only ships a prebaked minimal snapshot when it names one. The
-  // humanoid deliberately does not: its minimal graph is a handful of
-  // primitives, so a per-frame vertex dump would cost far more disk than the
-  // skinning it saves.
   if (manifest.minimal_snapshot_file_name.empty()) {
     return true;
   }
@@ -256,7 +245,7 @@ int main(int argc, char** argv) {
   if (argc >= 2) {
     out_dir = argv[1];
   }
-  // Every species is baked the same way: hand its manifest to the one baker.
+
   bool ok = true;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
     ok = bake_species_manifest(out_dir, Render::Humanoid::humanoid_manifest(profile)) &&
