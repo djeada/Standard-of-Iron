@@ -166,10 +166,9 @@ public slots:
   void pause_simulation(bool paused);
   void reset_camera();
 
-  // Interactive RPG commander playground: take direct control of a commander
-  // with the same CommanderControlController the game uses, so walk, run, and
-  // fight can be driven by hand instead of only by scripted scenario steps.
-  [[nodiscard]] auto rpg_interactive_active() const -> bool { return m_rpg_interactive; }
+  [[nodiscard]] auto rpg_interactive_active() const -> bool {
+    return m_rpg_interactive;
+  }
   auto enter_rpg_interactive_control(Engine::Core::EntityID entity_id = 0) -> bool;
   void exit_rpg_interactive_control();
 

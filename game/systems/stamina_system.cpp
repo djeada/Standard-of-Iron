@@ -62,9 +62,7 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
           stamina->is_running = false;
         }
       } else {
-        // Exhausted but still holding run: recover anyway. Without this the
-        // unit stays pinned at zero stamina for as long as run is held, so it
-        // can never reach the threshold that lets running start again.
+
         stamina->regenerate(delta_time);
       }
     } else {

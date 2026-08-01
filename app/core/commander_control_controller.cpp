@@ -152,20 +152,12 @@ auto resolve_reachable_ground_position(const QVector3D& start,
   return best;
 }
 
-// Radius of the commander's own body for soft collision against other troops.
 constexpr float k_commander_body_radius = 0.34F;
-// Only bodies within this range of the commander are considered each frame.
+
 constexpr float k_body_separation_scan_range = 3.0F;
-// Cap how far a single frame may displace the commander, so a crowd closing in
-// nudges instead of catapulting the player.
+
 constexpr float k_body_separation_max_push_per_second = 2.4F;
 
-// Keep the commander from standing inside other soldiers. The shared
-// LocalAvoidanceSystem computes separation but deliberately discards it (see
-// "simplify pathfinding", #1060), so RTS troops interpenetrate freely. That
-// reads as broken in a third-person view where the player is looking straight
-// at the bodies they are clipping through, so resolve overlap here for the
-// controlled commander only, without disturbing formation or AI movement.
 void separate_commander_from_bodies(Engine::Core::World& world,
                                     Engine::Core::Entity& commander,
                                     Engine::Core::EntityID commander_id,
@@ -195,8 +187,7 @@ void separate_commander_from_bodies(Engine::Core::World& world,
     }
     float const coarse_dx = candidate_transform->position.x - origin.x();
     float const coarse_dz = candidate_transform->position.z - origin.z();
-    // Generous slack on the coarse test: a formation's soldiers are laid out
-    // around the entity origin, so a distant origin can still have a near body.
+
     constexpr float k_formation_spread_slack = 6.0F;
     float const coarse_range = k_body_separation_scan_range + k_formation_spread_slack;
     if ((coarse_dx * coarse_dx) + (coarse_dz * coarse_dz) >
@@ -204,10 +195,10 @@ void separate_commander_from_bodies(Engine::Core::World& world,
       continue;
     }
 
-    // Formations render several soldiers per entity, so overlap has to be
-    // resolved against the individual bodies rather than the entity origin.
-    for (auto const& soldier : Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
-      QVector3D offset = origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      QVector3D offset =
+          origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
       float const min_distance =
           k_commander_body_radius + std::max(soldier.body_radius, 0.05F);
       float const distance_sq = offset.lengthSquared();
@@ -219,8 +210,7 @@ void separate_commander_from_bodies(Engine::Core::World& world,
       if (distance > 1.0e-4F) {
         offset /= distance;
       } else {
-        // Exactly coincident: pick a stable direction from the entity ids so
-        // the pair does not jitter between frames.
+
         auto const seed = static_cast<std::uint32_t>((commander_id * 73856093U) ^
                                                      (candidate->get_id() * 19349663U));
         float const angle = static_cast<float>(seed % 6283U) * 0.001F;
@@ -1496,9 +1486,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     if (move.lengthSquared() > 0.0001F) {
       move.normalize();
       float speed = std::max(0.1F, unit->speed);
-      // Run speed must follow the same authority the run *animation* uses
-      // (StaminaSystem::is_running), otherwise an exhausted commander keeps
-      // sprinting at 1.5x while visibly playing the walk cycle.
+
       auto const* stamina = commander->get_component<Engine::Core::StaminaComponent>();
       bool const running =
           m_input.run && (stamina == nullptr || stamina->is_running ||
@@ -1676,10 +1664,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   constexpr float k_deg2rad = 0.017453292519943295F;
 
   constexpr float k_focus_height = 1.45F;
-  // The camera used to sit 2.15 m behind a head-height pivot, so the
-  // commander's head and shoulders covered the middle of the screen and hid
-  // whatever was being fought. Pull back and up, and offset over the right
-  // shoulder, so both the player's weapon arc and the target stay readable.
+
   constexpr float k_camera_back_offset = 3.45F;
   constexpr float k_camera_up_offset = 0.95F;
   constexpr float k_camera_side_offset = 0.55F;

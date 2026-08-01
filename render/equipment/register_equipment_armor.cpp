@@ -37,11 +37,7 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig scipio = [] {
     CloakConfig cfg;
-    // Authored as a "black-crimson command cloak", but cloth shades to roughly
-    // 0.4x on screen, so the old {0.075, 0.055, 0.065} landed at RGB ~(19,14,17)
-    // — a flat black slab with no readable folds. In RPG commander mode this
-    // cloak fills the centre of the screen, so give it enough luminance and
-    // crimson hue to shade while still reading as black in silhouette.
+
     cfg.primary_color = {0.46F, 0.060F, 0.085F};
     cfg.trim_color = {0.94F, 0.62F, 0.15F};
     cfg.length_scale = 1.02F;
@@ -84,8 +80,7 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig hannibal = [] {
     CloakConfig cfg;
-    // Same problem as the Scipio cloak: {0.025, 0.028, 0.035} is pure black on
-    // screen. Charcoal-indigo keeps the near-black read with visible form.
+
     cfg.primary_color = {0.175F, 0.185F, 0.235F};
     cfg.trim_color = {0.74F, 0.44F, 0.10F};
     cfg.length_scale = 1.30F;

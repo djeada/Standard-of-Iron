@@ -776,8 +776,7 @@ void ArenaViewport::keyReleaseEvent(QKeyEvent* event) {
 void ArenaViewport::focusOutEvent(QFocusEvent* event) {
   clear_camera_key_state();
   if (m_rpg_interactive) {
-    // Drop pointer capture and held inputs so the commander does not keep
-    // walking or swinging while the window is in the background.
+
     m_rpg_mouse_captured = false;
     unsetCursor();
     if (m_rpg_commander_controller != nullptr) {
@@ -3956,11 +3955,12 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
     QRect const outer(left, y, bar_w, bar_h);
     painter.fillRect(outer, QColor(0, 0, 0, 170));
     QRect inner = outer.adjusted(1, 1, -1, -1);
-    inner.setWidth(
-        static_cast<int>(static_cast<float>(inner.width()) * std::clamp(ratio, 0.0F, 1.0F)));
+    inner.setWidth(static_cast<int>(static_cast<float>(inner.width()) *
+                                    std::clamp(ratio, 0.0F, 1.0F)));
     painter.fillRect(inner, fill);
     painter.setPen(QColor(240, 240, 240, 235));
-    painter.drawText(outer.adjusted(6, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, label);
+    painter.drawText(
+        outer.adjusted(6, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, label);
     y += bar_h + 6;
   };
 
@@ -3970,8 +3970,8 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   painter.setFont(hud_font);
 
   if (rpg != nullptr && rpg->rpg_max_hp > 0) {
-    float const ratio = static_cast<float>(rpg->rpg_hp) /
-                        static_cast<float>(rpg->rpg_max_hp);
+    float const ratio =
+        static_cast<float>(rpg->rpg_hp) / static_cast<float>(rpg->rpg_max_hp);
     draw_bar(ratio,
              QColor(196, 62, 54, 225),
              QStringLiteral("HP  %1 / %2").arg(rpg->rpg_hp).arg(rpg->rpg_max_hp));
@@ -4022,7 +4022,6 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   painter.setPen(QColor(240, 240, 240, 235));
   painter.drawText(left + 2, y + 12, state_parts.join(QStringLiteral("  ")));
 
-  // Reticle: fixed screen center marker so aim and lock-on are readable.
   QPoint const center(width() / 2, height() / 2);
   painter.setPen(QColor(255, 255, 255, 150));
   painter.drawLine(center.x() - 7, center.y(), center.x() - 2, center.y());

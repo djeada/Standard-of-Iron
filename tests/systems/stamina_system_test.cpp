@@ -128,8 +128,7 @@ TEST_F(StaminaSystemTest, ExhaustedRunnerStillRegeneratesWhileRunIsHeld) {
   stamina->max_stamina = 100.0F;
   stamina->regen_rate = 10.0F;
   stamina->depletion_rate = 20.0F;
-  // Run is still held and the unit is still moving: previously this combination
-  // skipped regeneration entirely, pinning the unit at zero stamina forever.
+
   stamina->run_requested = true;
   stamina->is_running = false;
 
@@ -138,8 +137,6 @@ TEST_F(StaminaSystemTest, ExhaustedRunnerStillRegeneratesWhileRunIsHeld) {
   EXPECT_FALSE(stamina->is_running);
   EXPECT_FLOAT_EQ(stamina->stamina, 10.0F);
 
-  // Once past the start threshold, holding run picks the sprint back up on the
-  // next frame-sized step.
   stamina_system.update(world.get(), 0.1F);
   EXPECT_TRUE(stamina->is_running);
   EXPECT_FLOAT_EQ(stamina->stamina, 8.0F);

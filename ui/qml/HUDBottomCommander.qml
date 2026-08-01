@@ -767,9 +767,7 @@ RowLayout {
             }
 
             Text {
-                // The first-person variant used to drop [F]/[1]/[2] even though
-                // the on-screen ability chips advertise exactly those keys, so
-                // the reference panel contradicted the HUD next to it.
+
                 text: bottomRoot.fpv_mode ? qsTr("[F] Bash  [1] Rush  [2] Second Wind") : qsTr("[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash")
                 color: Theme.textMain
                 font.pointSize: 8

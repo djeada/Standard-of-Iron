@@ -223,8 +223,7 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
-  // Over-the-shoulder lateral offset keeps the commander's body out of the
-  // screen centre so the target being fought stays visible.
+
   EXPECT_TRUE(contains(source, "constexpr float k_camera_side_offset = 0.55F;"));
 
   EXPECT_TRUE(contains(
@@ -399,9 +398,7 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
-  // Vitals and the ability chips share one baseline above the bottom panel so
-  // they read as a single band of HUD chrome; both offsets are scaled so the
-  // overlay stays legible above 1080p.
+
   EXPECT_TRUE(contains(fpv_overlay_source,
                        "anchors.bottomMargin: root.bottomInset + root.scaled(20)"));
   EXPECT_EQ(2,

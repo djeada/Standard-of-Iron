@@ -8,20 +8,14 @@ Item {
     property real bottomInset: 0
     property var status: ({})
 
-    // The overlay was authored against a 1080p window with hard-coded pixel
-    // sizes, so its bars and labels shrank into illegibility on taller screens.
-    // Everything sized for readability scales off this instead.
     readonly property real uiScale: Math.max(0.75, Math.min(2.0, height / 1080))
     function scaled(value) {
         return Math.round(value * root.uiScale);
     }
 
-    // Shared reactive pulse. QML bindings do not re-evaluate on Date.now(), so
-    // anything that pulsed off it silently froze at whatever value it was first
-    // assigned; drive the animated properties from a real animation instead.
     property real pulsePhase
 
-    NumberAnimation on pulsePhase {
+    NumberAnimation on pulsePhase  {
         running: root.visible
         from: 0.0
         to: 1.0
@@ -612,8 +606,7 @@ Item {
     Item {
         id: hudBarsRow
         anchors.bottom: parent.bottom
-        // Share the ability row's baseline so vitals and cooldowns read as one
-        // band of HUD chrome instead of two unrelated floating clusters.
+
         anchors.bottomMargin: root.bottomInset + root.scaled(20)
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.scaled(460)
@@ -803,9 +796,7 @@ Item {
 
     Item {
         id: postureBar
-        // Was anchored to a "healthBarContainer" id that does not exist in this
-        // file, which left the posture bar unpositioned. The bars row is the
-        // element it was meant to sit above.
+
         anchors.bottom: hudBarsRow.top
         anchors.bottomMargin: root.scaled(6)
         anchors.horizontalCenter: parent.horizontalCenter
@@ -926,8 +917,6 @@ Item {
                     "totalKey": "vanguard_rush_cooldown",
                     "readyKey": "vanguard_rush_ready"
                 }, {
-                    // Named to match the "[2] Second Wind" reference line and
-                    // the ability's actual name; the chip used to read "HEAL".
                     "name": "WIND",
                     "key": "2",
                     "cdKey": "second_wind_cooldown_remaining",
