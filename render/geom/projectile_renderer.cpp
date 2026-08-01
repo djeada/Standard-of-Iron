@@ -56,6 +56,26 @@ void render_projectile_impact(Renderer* renderer,
     return;
   }
 
+  if (impact.kind == Game::Systems::ProjectileKind::FlamingStone) {
+    renderer->stone_impact(impact.position + QVector3D(0.0F, 0.08F, 0.0F),
+                           QVector3D(0.78F, 0.52F, 0.30F),
+                           0.86F * impact.scale,
+                           1.80F,
+                           impact.age);
+    float const burst = 0.22F + 0.85F * std::sin(progress * std::numbers::pi_v<float>);
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.18F, 0.0F),
+                       QVector3D(1.0F, 0.32F, 0.05F),
+                       burst * impact.scale * 0.6F,
+                       1.45F * fade,
+                       renderer->get_animation_time() + impact.age * 2.1F);
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.34F, 0.0F),
+                       QVector3D(1.0F, 0.70F, 0.22F),
+                       burst * impact.scale * 0.28F,
+                       1.70F * fade,
+                       renderer->get_animation_time() * 1.31F);
+    return;
+  }
+
   if (impact.kind == Game::Systems::ProjectileKind::Fireball) {
     float const expansion =
         0.18F + 0.92F * std::sin(progress * std::numbers::pi_v<float>);
@@ -388,7 +408,7 @@ void render_arrow_projectile(Renderer* renderer,
 void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
                              const Game::Systems::StoneProjectile& stone,
-                             const QVector3D&,
+                             const QVector3D& position,
                              const QMatrix4x4& base_model) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
@@ -408,8 +428,50 @@ void render_stone_projectile(Renderer* renderer,
   float const stone_scale = stone.get_scale();
   model.scale(stone_scale, stone_scale, stone_scale);
 
-  QVector3D const stone_color(0.45F, 0.42F, 0.38F);
+  bool const flaming = stone.get_kind() == Game::Systems::ProjectileKind::FlamingStone;
+  QVector3D const stone_color =
+      flaming ? QVector3D(0.32F, 0.24F, 0.20F) : QVector3D(0.45F, 0.42F, 0.38F);
   renderer->mesh(stone_mesh, model, stone_color, nullptr, 1.0F);
+
+  if (!flaming) {
+    return;
+  }
+
+  float const animation_time = renderer->get_animation_time();
+  float const pulse =
+      0.92F + 0.10F * std::sin(animation_time * 11.0F + stone.get_progress() * 27.0F);
+  float const core_radius = 0.20F * stone_scale * pulse;
+  renderer->fireball(position,
+                     QVector3D(0.95F, 0.26F, 0.04F),
+                     core_radius,
+                     0.92F,
+                     animation_time + stone.get_progress() * 3.1F);
+  renderer->fireball(position,
+                     QVector3D(1.0F, 0.66F, 0.18F),
+                     core_radius * 0.55F,
+                     1.28F,
+                     animation_time * 1.29F + 1.4F);
+
+  const QVector3D delta = stone.get_end() - stone.get_start();
+  constexpr int k_trail_segments = 4;
+  for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
+    float const trail_t = stone.get_progress() - static_cast<float>(trail_idx) * 0.045F;
+    if (trail_t < 0.0F) {
+      continue;
+    }
+
+    QVector3D trail_pos = stone.get_start() + delta * trail_t;
+    trail_pos.setY(trail_pos.y() +
+                   stone.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t));
+
+    float const falloff =
+        1.0F - static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
+    renderer->fireball(trail_pos,
+                       QVector3D(0.86F, 0.20F, 0.03F) * (0.35F + 0.65F * falloff),
+                       core_radius * (0.30F + 0.42F * falloff),
+                       0.72F * falloff,
+                       animation_time * 1.13F + static_cast<float>(trail_idx));
+  }
 }
 
 void render_projectiles(Renderer* renderer,

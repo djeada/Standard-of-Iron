@@ -1641,6 +1641,171 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s = definition(
+        QString::fromLatin1(k_structure_flaming_siege_id),
+        QStringLiteral("Structure Flaming Siege"),
+        QStringLiteral("A catapult lobs flaming stones into a home while swordsmen "
+                       "hack at a wall beside it. Only the structure taking "
+                       "incendiary shot catches fire; the melee lane produces dust "
+                       "and rubble alone."),
+        16.0F,
+        {24.0F, 50.0F, 6.0F});
+    auto catapult = group(QStringLiteral("fire_catapult"),
+                          Troop::Catapult,
+                          1,
+                          1,
+                          {6.0F, 0.0F, -10.0F},
+                          1);
+    auto swords = group(
+        QStringLiteral("wall_swords"), Troop::Swordsman, 1, 1, {-8.0F, 0.0F, -4.0F}, 6);
+    auto burning_home = building(QStringLiteral("burning_home"),
+                                 Game::Units::SpawnType::Home,
+                                 Nation::Carthage,
+                                 2,
+                                 1,
+                                 {6.0F, 0.0F, 4.0F});
+    auto chipped_wall = building(QStringLiteral("chipped_wall"),
+                                 Game::Units::SpawnType::WallSegment,
+                                 Nation::Carthage,
+                                 2,
+                                 1,
+                                 {-8.0F, 0.0F, 2.0F});
+    swords.health_override = swords.max_health_override = 1400;
+    burning_home.health_override = burning_home.max_health_override = 3200;
+    chipped_wall.health_override = chipped_wall.max_health_override = 1600;
+    s.groups = {catapult, swords, burning_home, chipped_wall};
+    s.steps = {at(0.2F,
+                  Command::Attack,
+                  QStringLiteral("fire_catapult"),
+                  QStringLiteral("burning_home")),
+               at(0.2F,
+                  Command::Attack,
+                  QStringLiteral("wall_swords"),
+                  QStringLiteral("chipped_wall"))};
+    s.select_spawned_units = false;
+    s.suppress_ui_overlays = true;
+    s.suppress_spawn_anchor = true;
+    s.expectations.push_back(expectation(Expect::FlamingProjectileObserved,
+                                         QStringLiteral("fire_catapult"),
+                                         QStringLiteral("burning_home")));
+    s.expectations.push_back(expectation(Expect::ProjectileImpactSynchronized,
+                                         QStringLiteral("fire_catapult"),
+                                         QStringLiteral("burning_home")));
+    s.expectations.push_back(
+        expectation(Expect::StructureFireObserved, QStringLiteral("burning_home")));
+    s.expectations.push_back(expectation(Expect::StructureDamageCueObserved,
+                                         QStringLiteral("burning_home")));
+    s.expectations.push_back(expectation(
+        Expect::GroupHealthReduced, QStringLiteral("burning_home"), {}, 1.0F));
+    s.expectations.push_back(expectation(Expect::StructureFacadeContactObserved,
+                                         QStringLiteral("wall_swords"),
+                                         QStringLiteral("chipped_wall")));
+    s.expectations.push_back(expectation(Expect::StructureDamageCueObserved,
+                                         QStringLiteral("chipped_wall")));
+    s.expectations.push_back(
+        expectation(Expect::NoStructureFireObserved, QStringLiteral("chipped_wall")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_structure_melee_destruction_id),
+        QStringLiteral("Structure Melee Destruction"),
+        QStringLiteral("Swordsmen dismantle a weakened wall segment by hand. The "
+                       "collapse is dust and debris from first blow to last, with "
+                       "no flame anywhere in the sequence."),
+        18.0F,
+        {20.0F, 48.0F, 8.0F});
+    auto swords = group(QStringLiteral("demolition_swords"),
+                        Troop::Swordsman,
+                        1,
+                        2,
+                        {-2.6F, 0.0F, -4.0F},
+                        8);
+    auto doomed_wall = building(QStringLiteral("doomed_wall"),
+                                Game::Units::SpawnType::WallSegment,
+                                Nation::Carthage,
+                                2,
+                                1,
+                                {0.0F, 0.0F, 2.0F});
+    swords.health_override = swords.max_health_override = 1400;
+    doomed_wall.health_override = doomed_wall.max_health_override = 120;
+    s.groups = {swords, doomed_wall};
+    s.steps = {at(0.2F,
+                  Command::Attack,
+                  QStringLiteral("demolition_swords"),
+                  QStringLiteral("doomed_wall"))};
+    s.select_spawned_units = false;
+    s.suppress_ui_overlays = true;
+    s.suppress_spawn_anchor = true;
+    s.expectations.push_back(expectation(Expect::StructureFacadeContactObserved,
+                                         QStringLiteral("demolition_swords"),
+                                         QStringLiteral("doomed_wall")));
+    s.expectations.push_back(
+        expectation(Expect::StructureDamageCueObserved, QStringLiteral("doomed_wall")));
+    s.expectations.push_back(
+        expectation(Expect::NoStructureFireObserved, QStringLiteral("doomed_wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupDestroyed, QStringLiteral("doomed_wall")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_catapult_ammunition_retarget_id),
+        QStringLiteral("Catapult Ammunition Retarget"),
+        QStringLiteral("A catapult opens on a barracks with flaming shot, then is "
+                       "swung onto infantry. The loaded round changes with the "
+                       "target: plain stone for troops, fire for the structure."),
+        22.0F,
+        {24.0F, 50.0F, 10.0F});
+    auto catapult = group(QStringLiteral("swing_catapult"),
+                          Troop::Catapult,
+                          1,
+                          1,
+                          {0.0F, 0.0F, -11.0F},
+                          1);
+    auto infantry = group(
+        QStringLiteral("swing_infantry"), Troop::Spearman, 2, 1, {8.0F, 0.0F, 2.0F}, 8);
+    auto barracks = building(QStringLiteral("swing_barracks"),
+                             Game::Units::SpawnType::Barracks,
+                             Nation::Carthage,
+                             2,
+                             1,
+                             {-4.0F, 0.0F, 3.0F});
+    infantry.health_override = infantry.max_health_override = 1600;
+    barracks.health_override = barracks.max_health_override = 3200;
+    s.groups = {catapult, infantry, barracks};
+    s.steps = {at(0.2F, Command::Hold, QStringLiteral("swing_infantry")),
+               at(0.2F,
+                  Command::Attack,
+                  QStringLiteral("swing_catapult"),
+                  QStringLiteral("swing_barracks")),
+               at(9.0F,
+                  Command::Attack,
+                  QStringLiteral("swing_catapult"),
+                  QStringLiteral("swing_infantry"))};
+    s.select_spawned_units = false;
+    s.suppress_ui_overlays = true;
+    s.suppress_spawn_anchor = true;
+    s.expectations.push_back(expectation(Expect::FlamingProjectileObserved,
+                                         QStringLiteral("swing_catapult"),
+                                         QStringLiteral("swing_barracks")));
+    s.expectations.push_back(expectation(Expect::NoFlamingProjectileObserved,
+                                         QStringLiteral("swing_catapult"),
+                                         QStringLiteral("swing_infantry")));
+    s.expectations.push_back(
+        expectation(Expect::StructureFireObserved, QStringLiteral("swing_barracks")));
+    s.expectations.push_back(expectation(Expect::ProjectileImpactSynchronized,
+                                         QStringLiteral("swing_catapult"),
+                                         QStringLiteral("swing_infantry")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s =
         definition(QString::fromLatin1(k_mounted_sword_duel_id),
                    QStringLiteral("Mounted Sword Duel"),

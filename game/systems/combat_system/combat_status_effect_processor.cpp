@@ -8,6 +8,7 @@
 #include "../combat_actions/combat_action_definition.h"
 #include "../projectile_kind.h"
 #include "combat_hit_resolver.h"
+#include "structure_fire.h"
 
 namespace Game::Systems::Combat {
 
@@ -175,6 +176,11 @@ auto process_combat_status_effects(Engine::Core::World* world,
   process_cursed_statuses(world, clamped_delta_time, result);
   process_burning_statuses(world, clamped_delta_time, result);
   process_fire_patches(world, clamped_delta_time, result);
+
+  auto const structure_fires = process_structure_fires(world, clamped_delta_time);
+  result.burning_structures = structure_fires.burning_structures;
+  result.structure_fire_ticks = structure_fires.fire_ticks;
+  result.extinguished_structure_fires = structure_fires.extinguished_fires;
   return result;
 }
 

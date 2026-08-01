@@ -159,6 +159,27 @@ Idle -> Loading -> ReadyToFire -> Firing -> Idle
 
 If a siege unit begins moving while loading or firing, its loading state is reset. This prevents the unit from firing at a previously locked target after changing position.
 
+### Siege Ammunition
+
+A catapult picks its ammunition when the shot is locked in, and picks it again whenever the order swings the arm onto a different target:
+
+- structures the catapult can damage receive `ProjectileKind::FlamingStone`;
+- troops, and anything else, receive `ProjectileKind::Stone`.
+
+The kind is stored on `CatapultLoadingComponent::loaded_projectile_kind` and copied into the projectile at launch, so a shot already in the air keeps the kind it was fired with even if the catapult retargets behind it. Ballistas and defense towers are unaffected.
+
+## Structure Fire
+
+Structures do not catch fire from being damaged. Fire is a separate track, owned by:
+
+```text
+combat_system/structure_fire.cpp
+```
+
+Incendiary impacts - flaming siege stones and fireballs - add their applied damage to `StructureFireComponent::ignition_progress`. Once the accumulated damage passes a fraction of the structure's maximum health the structure ignites, burns for a fixed duration, and takes light burn damage per tick. Progress that never reaches the threshold decays away, so scattered incendiary chip damage does not eventually set a building alight.
+
+Every other damage path - melee, ballista bolts, ordinary siege stones, script removal - leaves the structure without the component, and therefore without flames: the renderer draws structure fire only from `structure_fire_intensity()`, never from a health ratio. A fire ends when it burns out, when the structure collapses, or when the entity is removed.
+
 ### Defense Tower Targeting
 
 Defense towers select the nearest valid enemy within range.

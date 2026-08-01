@@ -20,6 +20,11 @@ inline constexpr char k_ballista_impact_id[] = "ballista_impact";
 inline constexpr char k_structure_melee_assault_id[] = "structure_melee_assault";
 inline constexpr char k_structure_projectile_assault_id[] =
     "structure_projectile_assault";
+inline constexpr char k_structure_flaming_siege_id[] = "structure_flaming_siege";
+inline constexpr char k_structure_melee_destruction_id[] =
+    "structure_melee_destruction";
+inline constexpr char k_catapult_ammunition_retarget_id[] =
+    "catapult_ammunition_retarget";
 inline constexpr char k_mounted_sword_duel_id[] = "mounted_sword_duel";
 inline constexpr char k_mounted_spear_duel_id[] = "mounted_spear_duel";
 inline constexpr char k_mounted_bow_exchange_id[] = "mounted_bow_exchange";

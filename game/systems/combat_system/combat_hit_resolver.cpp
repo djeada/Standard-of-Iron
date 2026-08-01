@@ -12,6 +12,7 @@
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "damage_application.h"
 #include "mounted_charge_processor.h"
+#include "structure_fire.h"
 
 namespace Game::Systems::Combat {
 
@@ -317,6 +318,10 @@ void apply_fireball_burning_status_if_needed(
     return;
   }
 
+  if (is_structure(target)) {
+    return;
+  }
+
   auto* target_unit = target.get_component<Engine::Core::UnitComponent>();
   if (target_unit == nullptr || target_unit->health <= 0) {
     return;
@@ -351,12 +356,24 @@ void apply_fireball_burning_status_if_needed(
                special_attack->bonus_damage_multiplier_vs_fire_vulnerable);
 }
 
+void apply_structure_ignition_if_needed(Engine::Core::Entity& target,
+                                        const CombatHitContact& contact,
+                                        int applied_damage) {
+  if (!is_incendiary_projectile_kind(contact.projectile_kind) ||
+      !is_structure(target)) {
+    return;
+  }
+  (void)apply_structure_incendiary_damage(target, applied_damage, contact.attacker_id);
+}
+
 void apply_projectile_impact_effects_if_needed(
     Engine::Core::Entity& target,
     const Engine::Core::SpecialAttackComponent* special_attack,
-    const CombatHitContact& contact) {
+    const CombatHitContact& contact,
+    int applied_damage) {
   apply_cursed_projectile_status_if_needed(target, special_attack, contact);
   apply_fireball_burning_status_if_needed(target, special_attack, contact);
+  apply_structure_ignition_if_needed(target, contact, applied_damage);
 }
 
 [[nodiscard]] auto refresh_burning_status_from_fire_patch(
@@ -599,7 +616,8 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
     result.applied = result.damage.effective_damage > 0;
     queue_rpg_contact_presentation(
         *target, result.contact.contact_point, result.damage, result.applied);
-    apply_projectile_impact_effects_if_needed(*target, special_attack, result.contact);
+    apply_projectile_impact_effects_if_needed(
+        *target, special_attack, result.contact, result.damage.effective_damage);
     return result;
   }
 
@@ -627,7 +645,8 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
                           application.queued_soldier_casualties,
                           k_catapult_stone_impact_speed);
   }
-  apply_projectile_impact_effects_if_needed(*target, special_attack, result.contact);
+  apply_projectile_impact_effects_if_needed(
+      *target, special_attack, result.contact, application.applied_damage);
   return result;
 }
 
