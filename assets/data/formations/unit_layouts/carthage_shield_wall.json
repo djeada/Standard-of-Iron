@@ -1,0 +1,14 @@
+{
+  "id": "carthage.shield_wall",
+  "shape": "arc",
+  "lateral_spacing_scale": 1.42,
+  "depth_spacing_scale": 0.8,
+  "rank_stagger": 0.5,
+  "rank_echelon": 0.18,
+  "rank_arc": 0.55,
+  "front_rank_tightening": 0.1,
+  "lateral_jitter": 0.09,
+  "depth_jitter": 0.08,
+  "facing_jitter_degrees": 6.0,
+  "min_separation_scale": 0.52
+}

@@ -66,6 +66,190 @@ void PlacementViewModel::on_formation_cancel() {
   handler->on_formation_cancel();
 }
 
+void PlacementViewModel::on_formation_drag_begin(qreal sx, qreal sy) {
+  auto* handler = m_host.input_handler();
+  if (handler == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  handler->on_formation_drag_begin(sx, sy, m_host.viewport());
+  emit formation_options_changed();
+}
+
+void PlacementViewModel::on_formation_drag_update(qreal sx, qreal sy) {
+  auto* handler = m_host.input_handler();
+  if (handler == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  handler->on_formation_drag_update(sx, sy, m_host.viewport());
+  emit formation_options_changed();
+}
+
+void PlacementViewModel::on_formation_drag_end() {
+  auto* handler = m_host.input_handler();
+  if (handler == nullptr) {
+    return;
+  }
+  handler->on_formation_drag_end();
+  emit formation_options_changed();
+}
+
+auto PlacementViewModel::is_dragging_formation() const -> bool {
+  auto* handler = m_host.input_handler();
+  return handler != nullptr && handler->is_dragging_formation();
+}
+
+void PlacementViewModel::set_formation_intent(const QString& intent_id) {
+  auto* commands = m_host.command_controller();
+  if (commands == nullptr) {
+    return;
+  }
+  commands->set_formation_intent(intent_id);
+  emit formation_options_changed();
+}
+
+auto PlacementViewModel::formation_intent() const -> QString {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QString() : commands->formation_intent();
+}
+
+auto PlacementViewModel::available_formation_intents() const -> QStringList {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QStringList() : commands->available_formation_intents();
+}
+
+auto PlacementViewModel::formation_intent_display_name(const QString& intent_id) const
+    -> QString {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QString()
+                             : commands->formation_intent_display_name(intent_id);
+}
+
+auto PlacementViewModel::formation_intent_unavailable_reason(
+    const QString& intent_id) const -> QString {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QString()
+                             : commands->formation_intent_unavailable_reason(intent_id);
+}
+
+auto PlacementViewModel::formation_options() const -> QVariantMap {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QVariantMap() : commands->formation_options();
+}
+
+void PlacementViewModel::reset_formation_options() {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->reset_formation_options();
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_frontage_preset(const QString& preset) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_frontage_preset(preset);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_depth_preset(const QString& preset) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_depth_preset(preset);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_spacing_preset(const QString& preset) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_spacing_preset(preset);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_flank_preference(const QString& preference) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_flank_preference(preference);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_ranged_placement(const QString& placement) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_ranged_placement(placement);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_reserve_rows(int rows) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_reserve_rows(rows);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_movement_policy(const QString& policy) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_movement_policy(policy);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_mixed_policy(const QString& policy) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_mixed_policy(policy);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_doctrine_override(const QString& doctrine) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_doctrine_override(doctrine);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::mirror_formation_flank() {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->mirror_formation_flank();
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_preserve_order(bool preserve) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_preserve_order(preserve);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::set_formation_tight_spacing(bool tight) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->set_formation_tight_spacing(tight);
+    emit formation_options_changed();
+  }
+}
+
+void PlacementViewModel::adjust_formation_depth(float wheel_delta) {
+  auto* commands = m_host.command_controller();
+  if (commands != nullptr) {
+    commands->adjust_formation_depth(wheel_delta);
+    emit formation_options_changed();
+  }
+}
+
 auto PlacementViewModel::is_placing_construction() const -> bool {
   auto* production = m_host.production_manager();
   return production != nullptr && production->is_placing_construction();

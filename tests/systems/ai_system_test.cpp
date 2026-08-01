@@ -406,8 +406,8 @@ TEST_F(AISystemTest, AttackBehaviorScoutsFromUnitAnchorWithoutBarracks) {
   average_target_x /= static_cast<float>(commands.front().move_target_x.size());
   average_target_z /= static_cast<float>(commands.front().move_target_z.size());
 
-  EXPECT_FLOAT_EQ(average_target_x, 40.0F);
-  EXPECT_FLOAT_EQ(average_target_z, 90.0F);
+  EXPECT_NEAR(average_target_x, 40.0F, 0.75F);
+  EXPECT_NEAR(average_target_z, 90.0F, 0.75F);
 }
 
 TEST_F(AISystemTest, AIReasonerKeepsDefensiveAIInGatheringWhenEnemyIsDistant) {
@@ -1472,8 +1472,8 @@ TEST_F(AISystemTest, AttackBehaviorMarchesTowardStrategicObjectiveWithoutVision)
   average_target_x /= static_cast<float>(commands.front().move_target_x.size());
   average_target_z /= static_cast<float>(commands.front().move_target_z.size());
 
-  EXPECT_FLOAT_EQ(average_target_x, 120.0F);
-  EXPECT_FLOAT_EQ(average_target_z, 80.0F);
+  EXPECT_NEAR(average_target_x, 120.0F, 0.75F);
+  EXPECT_NEAR(average_target_z, 80.0F, 0.75F);
 }
 
 TEST_F(AISystemTest, AttackBehaviorUsesChaseForUnitTargets) {

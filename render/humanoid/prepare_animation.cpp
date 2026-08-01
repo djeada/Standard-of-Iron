@@ -143,8 +143,7 @@ auto resolve_visual_locomotion_sample(
   return sample;
 }
 
-auto build_soldier_layout(const IFormationCalculator& formation_calculator,
-                          const SoldierLayoutInputs& inputs) -> SoldierLayout {
+auto build_soldier_layout(const SoldierLayoutInputs& inputs) -> SoldierLayout {
   SoldierLayout layout{};
   auto const policy = Animation::resolve_soldier_layout_policy({
       .idx = inputs.idx,
@@ -166,14 +165,18 @@ auto build_soldier_layout(const IFormationCalculator& formation_calculator,
   layout.phase_offset = policy.phase_offset;
 
   if (!inputs.force_single_soldier) {
-    FormationOffset const formation_offset =
-        formation_calculator.calculate_offset(inputs.idx,
-                                              inputs.row,
-                                              inputs.col,
-                                              inputs.rows,
-                                              inputs.cols,
-                                              inputs.formation_spacing,
-                                              inputs.seed);
+    Game::Formation::UnitLayoutQuery query;
+    query.layout = inputs.unit_layout;
+    query.index = inputs.idx;
+    query.row = inputs.row;
+    query.col = inputs.col;
+    query.rows = inputs.rows;
+    query.cols = inputs.cols;
+    query.spacing = inputs.formation_spacing;
+    query.seed = inputs.seed;
+    query.formed_ratio = inputs.formed_ratio;
+    auto const formation_offset =
+        Game::Formation::UnitLayoutSystem::instance().offset(query);
     layout.offset_x = formation_offset.offset_x;
     layout.offset_z = formation_offset.offset_z;
     layout.yaw_offset = formation_offset.yaw_offset;

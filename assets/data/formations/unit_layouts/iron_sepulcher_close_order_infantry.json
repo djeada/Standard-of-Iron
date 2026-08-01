@@ -1,0 +1,11 @@
+{
+  "id": "iron_sepulcher.close_order_infantry",
+  "shape": "ranks",
+  "lateral_spacing_scale": 0.8,
+  "depth_spacing_scale": 0.74,
+  "front_rank_tightening": 0.14,
+  "lateral_jitter": 0.025,
+  "depth_jitter": 0.02,
+  "facing_jitter_degrees": 1.2,
+  "min_separation_scale": 0.74
+}

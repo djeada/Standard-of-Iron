@@ -60,7 +60,7 @@ auto TroopProfileService::get_profile(NationID nation_id,
         fallback.visuals = catalog_class.visuals;
         fallback.individuals_per_unit = catalog_class.individuals_per_unit;
         fallback.max_units_per_row = catalog_class.max_units_per_row;
-        fallback.formation_type = FormationType::Roman;
+        fallback.doctrine = "rome";
         apply_archer_range_bonus(type, fallback);
         return fallback;
       }
@@ -85,7 +85,7 @@ auto TroopProfileService::build_profile(const Nation& nation,
   profile.visuals = catalog_class.visuals;
   profile.individuals_per_unit = catalog_class.individuals_per_unit;
   profile.max_units_per_row = catalog_class.max_units_per_row;
-  profile.formation_type = nation.formation_type;
+  profile.doctrine = nation.doctrine;
 
   if (const auto* nation_troop = nation.get_troop(type)) {
     profile.display_name = nation_troop->display_name;
@@ -153,8 +153,8 @@ auto TroopProfileService::build_profile(const Nation& nation,
     if (variant.render_scale) {
       profile.visuals.render_scale = *variant.render_scale;
     }
-    if (variant.formation_type) {
-      profile.formation_type = *variant.formation_type;
+    if (variant.doctrine) {
+      profile.doctrine = *variant.doctrine;
     }
     if (variant.can_ranged) {
       profile.combat.can_ranged = *variant.can_ranged;

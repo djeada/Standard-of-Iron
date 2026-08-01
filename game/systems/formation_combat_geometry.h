@@ -6,7 +6,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
-#include "formation_system.h"
+#include "../formation/unit_layout_resolver.h"
 
 namespace Game::Systems {
 struct TroopProfile;
@@ -44,8 +44,10 @@ struct FormationDefinition {
   int total_count{1};
   int max_per_row{1};
   float spacing{0.75F};
-  FormationType type{FormationType::Roman};
-  FormationUnitCategory category{FormationUnitCategory::Infantry};
+  Game::Formation::UnitLayoutId layout{Game::Formation::k_invalid_layout};
+  Game::Formation::UnitLayoutState layout_state{
+      Game::Formation::UnitLayoutState::Normal};
+  Game::Formation::FormationDoctrineId doctrine{"rome"};
 };
 
 struct ContactGeometry {

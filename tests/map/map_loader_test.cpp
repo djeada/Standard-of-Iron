@@ -394,6 +394,105 @@ TEST(MapLoaderTest, FitsBridgeEndpointsExactlyToRiverbanks) {
   EXPECT_NEAR(bridge.end.x(), 5.0F, 0.0001F);
 }
 
+TEST(MapLoaderTest, TrimsOverlongBridgesBackToTheRiverbanks) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Overlong Bridge Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"rivers",
+       QJsonArray{QJsonObject{{"start", QJsonArray{0.0, -20.0}},
+                              {"end", QJsonArray{0.0, 20.0}},
+                              {"width", 4.0}}}},
+      {"bridges",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-12.0, 0.0}},
+                              {"end", QJsonArray{12.0, 0.0}},
+                              {"width", 4.0},
+                              {"height", 0.5}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.bridges.size(), 1U);
+  const auto& bridge = map_def.bridges.front();
+
+  const float half_river = 2.0F;
+  const float overhang = Game::Map::bridge_abutment_reach(bridge.width);
+  const float longest_half = half_river + overhang;
+
+  EXPECT_GE(bridge.start.x(), -longest_half - 0.0001F);
+  EXPECT_LE(bridge.end.x(), longest_half + 0.0001F);
+  EXPECT_LE(bridge.start.x(), -half_river + 0.0001F);
+  EXPECT_GE(bridge.end.x(), half_river - 0.0001F);
+}
+
+TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Asymmetric Bridge Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"rivers",
+       QJsonArray{QJsonObject{{"start", QJsonArray{0.0, -20.0}},
+                              {"end", QJsonArray{0.0, 20.0}},
+                              {"width", 4.0}}}},
+      {"bridges",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-2.5, 0.0}},
+                              {"end", QJsonArray{3.0, 0.0}},
+                              {"width", 4.0},
+                              {"height", 0.5}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.bridges.size(), 1U);
+  const auto& bridge = map_def.bridges.front();
+
+  EXPECT_NEAR(bridge.start.x(), -2.5F, 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), 3.0F, 0.0001F);
+}
+
+TEST(MapLoaderTest, LeavesBridgesThatCrossNoRiverUntouched) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Landlocked Bridge Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"bridges",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-9.0, 0.0}},
+                              {"end", QJsonArray{9.0, 0.0}},
+                              {"width", 4.0},
+                              {"height", 0.5}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.bridges.size(), 1U);
+  EXPECT_NEAR(map_def.bridges.front().start.x(), -9.0F, 0.0001F);
+  EXPECT_NEAR(map_def.bridges.front().end.x(), 9.0F, 0.0001F);
+}
+
 TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

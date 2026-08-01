@@ -2,7 +2,7 @@
   "id": "roman_republic",
   "display_name": "Roman Republic",
   "primary_building": "barracks",
-  "formation_type": "roman",
+  "doctrine": "rome",
   "defense_formation": {
     "id": "testudo",
     "display_name": "Testudo",

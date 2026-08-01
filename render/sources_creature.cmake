@@ -20,7 +20,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_submission.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/poser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/facial_hair_catalog.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/formation_calculator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/unit_layout_spacing.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/style_palette.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/pose_controller.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/mounted_pose_controller.cpp

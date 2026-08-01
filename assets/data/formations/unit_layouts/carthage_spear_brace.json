@@ -1,0 +1,14 @@
+{
+  "id": "carthage.spear_brace",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.36,
+  "depth_spacing_scale": 1.38,
+  "weapon_clearance": 0.05,
+  "rank_stagger": 0.44,
+  "rank_echelon": 0.14,
+  "rank_arc": 0.28,
+  "lateral_jitter": 0.08,
+  "depth_jitter": 0.07,
+  "facing_jitter_degrees": 5.0,
+  "min_separation_scale": 0.52
+}

@@ -4,10 +4,10 @@
 #include <vector>
 
 #include "../../game/core/entity.h"
+#include "../../game/formation/unit_layout.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/combat_visual_state.h"
 #include "../gl/humanoid/humanoid_types.h"
-#include "formation_calculator.h"
 #include "prepare.h"
 
 namespace Render::Humanoid {
@@ -17,10 +17,7 @@ struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
   std::vector<Render::Creature::HumanoidAnimationStateComponent> animation_states;
   std::vector<Render::Creature::SoldierCombatLaneState> combat_lanes;
   Render::GL::FormationParams formation{};
-  Render::GL::FormationCalculatorFactory::Nation nation{
-      Render::GL::FormationCalculatorFactory::Nation::Roman};
-  Render::GL::FormationCalculatorFactory::UnitCategory category{
-      Render::GL::FormationCalculatorFactory::UnitCategory::Infantry};
+  Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   int rows{0};
   int cols{0};
   std::uint32_t layout_version{0};

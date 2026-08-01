@@ -249,6 +249,8 @@ Legend:
 
 Pathfinding must never leave an authored bridge crossing non-traversable. Movement still projects bridge waypoints toward `TerrainService::get_bridge_traversal_position()` so units visually enter and exit from the middle instead of drifting into rails.
 
+Bridge decks are fitted to the water they cross at load time by `fit_bridge_span_to_riverbanks`, which both extends a deck that stops short of a bank and trims one that runs far past it. Each end is clamped to `[required_half, required_half + bridge_bank_overhang]`, so a deck always reaches the bank and never overshoots it by more than a short abutment. Two details keep that bounded on awkward maps: the required half-length for an oblique crossing is capped at `k_max_oblique_bridge_span` times the perpendicular half-width, so a bridge authored at a shallow angle to the river does not grow without limit; and when a deck runs alongside a river without crossing its centreline at all, the nearest river within range is used as the reference instead of leaving the deck unfitted. The overhang is derived from the river width rather than the deck width, because `k_min_bridge_width` forces every deck to at least eight units for traversal reasons and that minimum should not dictate how far the structure spills onto land.
+
 Hills are authored as connected plateau and entrance cells:
 
 ```text

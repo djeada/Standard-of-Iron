@@ -1,0 +1,10 @@
+{
+  "id": "iron_sepulcher.marching_column",
+  "shape": "column",
+  "column_files": 3.0,
+  "lateral_spacing_scale": 0.82,
+  "depth_spacing_scale": 1.1,
+  "lateral_jitter": 0.01,
+  "depth_jitter": 0.01,
+  "facing_jitter_degrees": 0.6
+}

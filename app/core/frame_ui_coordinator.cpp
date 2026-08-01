@@ -1,5 +1,7 @@
 #include "frame_ui_coordinator.h"
 
+#include <algorithm>
+
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
@@ -144,6 +146,21 @@ void render_effects(const RenderEffectsContext& context,
       }
     }
 
+    const auto& preview = context.command_controller->formation_preview();
+    placement.slot_markers.reserve(preview.slot_list.size());
+    for (const auto& slot : preview.slot_list) {
+      Render::GL::FormationSlotMarker marker;
+      marker.position = slot.world_position;
+      marker.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
+          slot.world_position.x(), slot.world_position.z()));
+      marker.radius = std::max(0.6F, preview.spacing * 0.45F);
+      marker.facing_degrees = slot.facing;
+      marker.blocked = slot.status == Game::Formation::SlotStatus::Blocked;
+      marker.adjusted = slot.status == Game::Formation::SlotStatus::Adjusted;
+      placement.slot_markers.push_back(marker);
+    }
+
+    Render::GL::render_formation_slot_preview(context.renderer, res, placement);
     Render::GL::render_formation_arrow(context.renderer, res, placement);
   }
 }

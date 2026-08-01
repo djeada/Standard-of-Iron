@@ -1,0 +1,11 @@
+{
+  "id": "rome.shield_wall",
+  "shape": "shell",
+  "lateral_spacing_scale": 0.68,
+  "depth_spacing_scale": 0.72,
+  "front_rank_tightening": 0.12,
+  "lateral_jitter": 0.004,
+  "depth_jitter": 0.004,
+  "facing_jitter_degrees": 0.3,
+  "min_separation_scale": 0.84
+}

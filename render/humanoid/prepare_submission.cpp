@@ -165,26 +165,32 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
   const QMatrix4x4 k_identity_matrix;
 
-  using Nation = FormationCalculatorFactory::Nation;
-  using UnitCategory = FormationCalculatorFactory::UnitCategory;
-  Nation nation = Nation::Roman;
-  UnitCategory category =
-      is_mounted_spawn ? UnitCategory::Cavalry : UnitCategory::Infantry;
+  Game::Formation::UnitLayoutId unit_layout =
+      Game::Formation::UnitLayoutLibrary::instance().resolve(
+          Game::Formation::k_neutral_doctrine, "close_order_infantry");
+  float formed_ratio = 1.0F;
   if (unit_comp != nullptr) {
     auto const definition =
         Game::Systems::FormationCombat::resolve_definition(*unit_comp);
-    nation = definition.type;
-    category = definition.category;
-  }
+    unit_layout = definition.layout;
 
-  if (unit_comp != nullptr &&
-      unit_comp->spawn_type == Game::Units::SpawnType::Builder &&
-      anim.is_constructing) {
-    category = UnitCategory::BuilderConstruction;
+    bool const is_constructing =
+        unit_comp->spawn_type == Game::Units::SpawnType::Builder &&
+        anim.is_constructing;
+    if (is_constructing) {
+      unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
+          definition.doctrine, "work_party");
+    }
   }
-
-  const IFormationCalculator* formation_calculator =
-      FormationCalculatorFactory::get_calculator(nation, category);
+  if (ctx.entity != nullptr) {
+    if (const auto* layout_state =
+            ctx.entity->get_component<Engine::Core::UnitLayoutStateComponent>()) {
+      formed_ratio = std::clamp(layout_state->transition_progress, 0.0F, 1.0F);
+      if (layout_state->layout_id != Game::Formation::k_invalid_layout) {
+        unit_layout = layout_state->layout_id;
+      }
+    }
+  }
 
   s_render_stats.soldiers_total +=
       visible_count + static_cast<std::uint32_t>(active_casualty_count);
@@ -216,8 +222,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           entry.layout_version == k_humanoid_layout_cache_version &&
           entry.formation.individuals_per_unit == formation.individuals_per_unit &&
           entry.formation.max_per_row == formation.max_per_row &&
-          entry.formation.spacing == formation.spacing && entry.nation == nation &&
-          entry.category == category;
+          entry.formation.spacing == formation.spacing &&
+          entry.unit_layout == unit_layout;
       bool const matches =
           preserve_soldier_state_prefix &&
           entry.soldiers.size() == static_cast<std::size_t>(total_layout_count);
@@ -253,14 +259,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         inputs.force_single_soldier = ctx.force_single_soldier;
         inputs.melee_attack = anim.is_attacking && anim.is_melee;
         inputs.animation_time = anim.time;
-        generated_layouts.push_back(
-            build_soldier_layout(*formation_calculator, inputs));
+        inputs.unit_layout = unit_layout;
+        inputs.formed_ratio = formed_ratio;
+        generated_layouts.push_back(build_soldier_layout(inputs));
       }
 
       if (layout_cache_comp != nullptr) {
         layout_cache_comp->formation = formation;
-        layout_cache_comp->nation = nation;
-        layout_cache_comp->category = category;
+        layout_cache_comp->unit_layout = unit_layout;
         layout_cache_comp->rows = rows;
         layout_cache_comp->cols = cols;
         layout_cache_comp->layout_version = k_humanoid_layout_cache_version;

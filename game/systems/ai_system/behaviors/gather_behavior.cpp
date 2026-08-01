@@ -9,8 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "../../formation_system.h"
 #include "../../nation_registry.h"
+#include "../ai_formation.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
@@ -47,13 +47,6 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
-  const Nation* nation =
-      NationRegistry::instance().get_nation_for_player(context.player_id);
-  FormationType formation_type = FormationType::Roman;
-  if (nation != nullptr) {
-    formation_type = nation->formation_type;
-  }
-
   auto emit_move_command = [&](const std::vector<const EntitySnapshot*>& units,
                                const QVector3D& center,
                                float spacing,
@@ -63,8 +56,12 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
       return;
     }
 
-    auto formation_targets = FormationSystem::instance().get_formation_positions(
-        formation_type, static_cast<int>(units.size()), center, spacing);
+    AIFormationRequest formation_request;
+    formation_request.player_id = context.player_id;
+    formation_request.anchor = center;
+    formation_request.spacing = spacing;
+    formation_request.intent = Game::Formation::ArmyFormationIntent::FactionDefault;
+    auto formation_targets = plan_ai_formation(formation_request, units);
 
     std::vector<Engine::Core::EntityID> units_to_move;
     std::vector<float> target_x;

@@ -71,7 +71,12 @@ add_executable(
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
-    systems/formation_system_test.cpp
+    formation/unit_layout_test.cpp
+    formation/army_formation_planner_test.cpp
+    formation/army_formation_registry_test.cpp
+    formation/formation_data_loader_test.cpp
+    formation/formation_movement_test.cpp
+    formation/formation_terrain_navigation_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/structure_combat_test.cpp
     systems/structure_fire_test.cpp

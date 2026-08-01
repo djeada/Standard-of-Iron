@@ -147,6 +147,16 @@ Item {
         }
     }
 
+    FormationPanel {
+        id: formationPanel
+
+        anchors.bottom: bottomPanel.top
+        anchors.bottomMargin: 12
+        anchors.left: parent.left
+        anchors.leftMargin: 16
+        placing: typeof game !== 'undefined' && game.placement !== undefined && game.placement.is_placing_formation
+    }
+
     RpgTargetBar {
         id: rpgTargetBar
 

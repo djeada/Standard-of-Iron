@@ -79,6 +79,10 @@ public:
   void on_formation_scroll(float delta);
   void on_formation_confirm();
   void on_formation_cancel();
+  void on_formation_drag_begin(qreal sx, qreal sy, const ViewportState& viewport);
+  void on_formation_drag_update(qreal sx, qreal sy, const ViewportState& viewport);
+  void on_formation_drag_end();
+  [[nodiscard]] bool is_dragging_formation() const;
   void on_patrol_click(qreal sx, qreal sy, const ViewportState& viewport);
   void on_click_select(qreal sx,
                        qreal sy,
