@@ -108,10 +108,13 @@ TEST_F(UiPreferencesTest, CorruptedStoredValuesFallBackToDefaults) {
 
 TEST_F(UiPreferencesTest, ChangeSignalsFireOnlyOnRealChanges) {
   auto* prefs = UiPreferences::instance();
+
+  QObject context;
   int scale_changes = 0;
-  QObject::connect(prefs, &UiPreferences::ui_scale_changed, prefs, [&scale_changes]() {
-    ++scale_changes;
-  });
+  QObject::connect(prefs,
+                   &UiPreferences::ui_scale_changed,
+                   &context,
+                   [&scale_changes]() { ++scale_changes; });
 
   prefs->set_ui_scale(1.5);
   prefs->set_ui_scale(1.5);

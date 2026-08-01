@@ -11,14 +11,26 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_systems
 )
 
+# The two panels whose population rules the tests assert. Same reasoning as
+# map_editor_core: the test links the panel the arena ships, not a second copy
+# of its source.
+add_library(arena_panels STATIC unit_panel.cpp building_panel.cpp)
+target_include_directories(arena_panels PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(
+    arena_panels
+    PUBLIC
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        arena_scenario_harness
+)
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(arena_app
         main.cpp
         arena_window.cpp
         arena_viewport.cpp
         terrain_panel.cpp
-        unit_panel.cpp
-        building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
@@ -35,8 +47,6 @@ else()
         arena_window.cpp
         arena_viewport.cpp
         terrain_panel.cpp
-        unit_panel.cpp
-        building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
@@ -65,6 +75,7 @@ target_link_libraries(
         render_gl
         game_systems
         arena_scenario_harness
+        arena_panels
 )
 
 set_target_properties(

@@ -1,206 +1,118 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <limits>
 #include <sstream>
-#include <vector>
 
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/style_palette.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 using namespace Render::GL;
 
 namespace {
 
-struct MeshBounds {
-  QVector3D min;
-  QVector3D max;
-  int material_id = 0;
+auto reference_frames() -> BodyFrames {
+  BodyFrames frames{};
+  frames.torso.origin = QVector3D(0.0F, 1.10F, 0.0F);
+  frames.torso.right = QVector3D(1.0F, 0.0F, 0.0F);
+  frames.torso.up = QVector3D(0.0F, 1.0F, 0.0F);
+  frames.torso.forward = QVector3D(0.0F, 0.0F, 1.0F);
+  frames.torso.radius = 0.34F;
+  frames.torso.depth = 0.25F;
+  frames.waist.origin = QVector3D(0.0F, 0.72F, 0.0F);
+  frames.waist.right = frames.torso.right;
+  frames.waist.up = frames.torso.up;
+  frames.waist.forward = frames.torso.forward;
+  frames.waist.radius = 0.28F;
+  frames.waist.depth = 0.22F;
+  frames.head.origin = QVector3D(0.0F, 1.78F, 0.0F);
+  frames.head.up = frames.torso.up;
+  frames.head.radius = 0.16F;
+  frames.foot_l.origin = QVector3D(-0.12F, 0.0F, 0.0F);
+  frames.foot_r.origin = QVector3D(0.12F, 0.0F, 0.0F);
+  return frames;
+}
+
+struct BatchBounds {
+  float min_y = std::numeric_limits<float>::max();
+  float max_y = std::numeric_limits<float>::lowest();
+  std::size_t vertex_count = 0;
 };
 
-class BoundsSubmitter : public ISubmitter {
-public:
-  std::vector<MeshBounds> meshes;
+auto bounds_of(const EquipmentBatch& batch) -> BatchBounds {
+  BatchBounds bounds;
 
-  void mesh(Mesh* mesh,
-            const QMatrix4x4& model,
-            const QVector3D&,
-            Texture* = nullptr,
-            float = 1.0F,
-            int material_id = 0) override {
+  const auto include = [&bounds](const QMatrix4x4& world, const Mesh* mesh) {
     if (mesh == nullptr) {
       return;
     }
-
-    MeshBounds b;
-    b.min = QVector3D(std::numeric_limits<float>::max(),
-                      std::numeric_limits<float>::max(),
-                      std::numeric_limits<float>::max());
-    b.max = QVector3D(std::numeric_limits<float>::lowest(),
-                      std::numeric_limits<float>::lowest(),
-                      std::numeric_limits<float>::lowest());
-    b.material_id = material_id;
-
-    for (const auto& v : mesh->getVertices()) {
-      QVector3D p(v.position[0], v.position[1], v.position[2]);
-      QVector3D world = model.map(p);
-      b.min.setX(std::min(b.min.x(), world.x()));
-      b.min.setY(std::min(b.min.y(), world.y()));
-      b.min.setZ(std::min(b.min.z(), world.z()));
-      b.max.setX(std::max(b.max.x(), world.x()));
-      b.max.setY(std::max(b.max.y(), world.y()));
-      b.max.setZ(std::max(b.max.z(), world.z()));
+    for (const auto& vertex : mesh->get_vertices()) {
+      const QVector3D point = world.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+      bounds.min_y = std::min(bounds.min_y, point.y());
+      bounds.max_y = std::max(bounds.max_y, point.y());
+      ++bounds.vertex_count;
     }
+  };
 
-    meshes.push_back(b);
+  for (const auto& submission : batch.meshes) {
+    include(submission.model, submission.mesh);
+  }
+  for (const auto& prim : batch.archetypes) {
+    if (prim.archetype == nullptr) {
+      continue;
+    }
+    for (const auto& draw : prim.archetype->lods[0].draws) {
+      include(prim.world * draw.local_model, draw.mesh);
+    }
   }
 
-  void cylinder(
-      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
-  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
-  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
-  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
-};
+  return bounds;
+}
 
-class TestCarthageSpearmanBase : public HumanoidRendererBase {
-public:
-  auto get_proportion_scaling() const -> QVector3D override {
-    return {0.94F, 1.04F, 0.92F};
-  }
-
-  void adjust_variation(const DrawContext&,
-                        uint32_t,
-                        VariationParams& variation) const override {
-    variation.bulk_scale *= 0.90F;
-    variation.stance_width *= 0.92F;
-  }
-};
-
-class TestCarthageSwordsmanBase : public HumanoidRendererBase {
-public:
-  auto get_proportion_scaling() const -> QVector3D override {
-    return {0.95F, 1.05F, 0.95F};
-  }
-};
-
-struct PoseResult {
-  HumanoidPose pose;
-  HumanoidVariant variant;
-  DrawContext ctx;
-};
+auto describe(const char* what, const BatchBounds& bounds) -> std::string {
+  std::ostringstream out;
+  out << what << ": y=[" << bounds.min_y << ", " << bounds.max_y << "] over "
+      << bounds.vertex_count << " vertices";
+  return out.str();
+}
 
 template <typename Renderer>
-class PoseBuilder : public Renderer {
-public:
-  auto build(uint32_t seed) -> PoseResult {
-    VariationParams variation = VariationParams::from_seed(seed);
-    this->adjust_variation(DrawContext{}, seed, variation);
+auto armor_bounds() -> BatchBounds {
+  const DrawContext ctx{};
+  const HumanoidPalette palette{};
+  const HumanoidAnimationContext anim{};
+  EquipmentBatch batch;
 
-    const QVector3D prop_scale = this->get_proportion_scaling();
-    const float combined_height_scale = prop_scale.y() * variation.height_scale;
-
-    PoseResult result;
-    result.ctx.model.scale(variation.bulk_scale, combined_height_scale, 1.0F);
-
-    AnimationInputs inputs{};
-    inputs.time = 0.0F;
-    inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
-    inputs.is_attacking = false;
-    inputs.is_melee = false;
-    inputs.is_in_hold_mode = false;
-    inputs.is_exiting_hold = false;
-    inputs.hold_exit_progress = 0.0F;
-
-    HumanoidPose pose;
-    this->computeLocomotionPose(
-        seed,
-        inputs.time,
-        Render::Creature::is_moving_animation(inputs.movement_state),
-        variation,
-        pose);
-
-    HumanoidVariant variant;
-    QVector3D team_tint(0.8F, 0.9F, 1.0F);
-    variant.palette = makeHumanoidPalette(team_tint, seed);
-
-    BoundsSubmitter sink;
-    this->drawCommonBody(result.ctx, variant, pose, sink);
-
-    result.pose = pose;
-    result.variant = variant;
-    return result;
-  }
-};
-
-auto extract_min_y(const std::vector<MeshBounds>& meshes) -> float {
-  float min_y = std::numeric_limits<float>::max();
-  for (const auto& m : meshes) {
-    min_y = std::min(min_y, m.min.y());
-  }
-  return min_y;
+  Renderer armor;
+  armor.render(ctx, reference_frames(), palette, anim, batch);
+  return bounds_of(batch);
 }
 
 } // namespace
 
-TEST(CarthageArmorBoundsTest, LightArmorStaysNearWaist) {
-  PoseBuilder<TestCarthageSpearmanBase> renderer;
-  auto pose_result = renderer.build(1337U);
+TEST(CarthageArmorBoundsTest, LightArmorIsABandAtTheWaist) {
+  const BodyFrames frames = reference_frames();
+  const BatchBounds bounds = armor_bounds<ArmorLightCarthageRenderer>();
+  ASSERT_GT(bounds.vertex_count, 0U) << "the light cuirass emitted no geometry";
+  SCOPED_TRACE(describe("light", bounds));
 
-  ArmorLightCarthageRenderer armor;
-  HumanoidAnimationContext anim_ctx{};
-  BoundsSubmitter submitter;
-  armor.render(pose_result.ctx,
-               pose_result.pose.body_frames,
-               pose_result.variant.palette,
-               anim_ctx,
-               submitter);
-
-  std::ostringstream debug;
-  for (size_t i = 0; i < submitter.meshes.size(); ++i) {
-    const auto& m = submitter.meshes[i];
-    debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
-          << m.material_id << ") ";
-  }
-  debug << "waist_r=" << pose_result.pose.body_frames.waist.radius;
-  SCOPED_TRACE(debug.str());
-
-  float const armor_min_y = extract_min_y(submitter.meshes);
-  float const waist_y =
-      pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
-
-  EXPECT_GT(armor_min_y, waist_y - 0.05F)
-      << "min_y=" << armor_min_y << " waist_y=" << waist_y;
+  EXPECT_GT(bounds.min_y, frames.waist.origin.y() - frames.waist.radius);
+  EXPECT_LT(bounds.max_y, frames.head.origin.y());
 }
 
-TEST(CarthageArmorBoundsTest, HeavyArmorStaysNearWaist) {
-  PoseBuilder<TestCarthageSwordsmanBase> renderer;
-  auto pose_result = renderer.build(4242U);
+TEST(CarthageArmorBoundsTest, HeavyArmorHangsBelowTheLightOneButStaysOffTheGround) {
+  const BodyFrames frames = reference_frames();
+  const BatchBounds heavy = armor_bounds<ArmorHeavyCarthageRenderer>();
+  const BatchBounds light = armor_bounds<ArmorLightCarthageRenderer>();
+  ASSERT_GT(heavy.vertex_count, 0U) << "the heavy cuirass emitted no geometry";
+  SCOPED_TRACE(describe("heavy", heavy) + "  " + describe("light", light));
 
-  ArmorHeavyCarthageRenderer armor;
-  HumanoidAnimationContext anim_ctx{};
-  BoundsSubmitter submitter;
-  armor.render(pose_result.ctx,
-               pose_result.pose.body_frames,
-               pose_result.variant.palette,
-               anim_ctx,
-               submitter);
-
-  std::ostringstream debug;
-  for (size_t i = 0; i < submitter.meshes.size(); ++i) {
-    const auto& m = submitter.meshes[i];
-    debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
-          << m.material_id << ") ";
-  }
-  debug << "waist_r=" << pose_result.pose.body_frames.waist.radius;
-  SCOPED_TRACE(debug.str());
-
-  float const armor_min_y = extract_min_y(submitter.meshes);
-  float const waist_y =
-      pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
-
-  EXPECT_GT(armor_min_y, waist_y - 0.70F)
-      << "min_y=" << armor_min_y << " waist_y=" << waist_y;
+  EXPECT_LT(heavy.min_y, light.min_y);
+  EXPECT_GT(heavy.min_y, frames.foot_l.origin.y());
+  EXPECT_LT(heavy.max_y, frames.head.origin.y());
 }

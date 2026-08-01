@@ -122,8 +122,8 @@ Rectangle {
     }
 
     function get_construction_info(item_type) {
-        if (productionPanel.game_instance && productionPanel.game_instance.get_construction_info)
-            return productionPanel.game_instance.get_construction_info(item_type || "");
+        if (productionPanel.game_instance && productionPanel.game_instance.placement)
+            return productionPanel.game_instance.placement.get_construction_info(item_type || "");
         return {
             "build_time": 10,
             "resource_costs": {},

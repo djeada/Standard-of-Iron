@@ -150,8 +150,8 @@ RowLayout {
             "hint": qsTr("Arrange the selection in a tactical formation."),
             "unavailable": qsTr("Select multiple units to use formation"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.on_formation_command)
-                    game.on_formation_command();
+                if (bottomRoot.game_ready() && game.placement.on_formation_command)
+                    game.placement.on_formation_command();
             }
         }, {
             "id": "build",
@@ -164,8 +164,8 @@ RowLayout {
             "invoke": function () {
                 if (!bottomRoot.game_ready())
                     return;
-                if (game.is_placing_construction && game.on_construction_cancel) {
-                    game.on_construction_cancel();
+                if (game.placement.is_placing_construction && game.placement.on_construction_cancel) {
+                    game.placement.on_construction_cancel();
                     return;
                 }
                 if (bottomRoot.current_command_mode === "build") {
@@ -186,13 +186,13 @@ RowLayout {
                 if (!bottomRoot.game_ready())
                     return;
                 if (bottomRoot.action_state("collect").placing) {
-                    if (game.on_construction_cancel)
-                        game.on_construction_cancel();
+                    if (game.placement.on_construction_cancel)
+                        game.placement.on_construction_cancel();
                     bottomRoot.command_mode_changed("normal");
                     return;
                 }
-                if (game.start_builder_construction)
-                    game.start_builder_construction("collect");
+                if (game.placement.start_builder_construction)
+                    game.placement.start_builder_construction("collect");
             }
         }, {
             "id": "deliver",
@@ -266,6 +266,14 @@ RowLayout {
             bottomRoot.update_action_states();
         }
 
+        function onSelected_units_changed() {
+            bottomRoot.refresh_selection();
+        }
+
+        target: bottomRoot.game_ready() ? game : null
+    }
+
+    Connections {
         function onPlacing_construction_changed() {
             bottomRoot.update_action_states();
         }
@@ -274,11 +282,7 @@ RowLayout {
             bottomRoot.update_action_states();
         }
 
-        function onSelected_units_changed() {
-            bottomRoot.refresh_selection();
-        }
-
-        target: bottomRoot.game_ready() ? game : null
+        target: bottomRoot.game_ready() ? game.placement : null
     }
 
     Design.IronSelectionSummary {
@@ -386,12 +390,12 @@ RowLayout {
             }
         }
         onBuild_tower: {
-            if (bottomRoot.game_ready() && game.start_building_placement)
-                game.start_building_placement("defense_tower");
+            if (bottomRoot.game_ready() && game.placement.start_building_placement)
+                game.placement.start_building_placement("defense_tower");
         }
         onBuilder_construction: function (item_type) {
-            if (bottomRoot.game_ready() && game.start_builder_construction)
-                game.start_builder_construction(item_type);
+            if (bottomRoot.game_ready() && game.placement.start_builder_construction)
+                game.placement.start_builder_construction(item_type);
         }
     }
 }
