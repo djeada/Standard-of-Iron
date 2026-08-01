@@ -12,6 +12,7 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../../visuals/team_colors.h"
+#include "../projectile_kind.h"
 #include "../projectile_system.h"
 #include "combat_random.h"
 #include "combat_utils.h"
@@ -41,6 +42,26 @@ void reset_loading(Engine::Core::CatapultLoadingComponent& loading) {
   loading.firing_time = 0.0F;
   loading.target_position_locked = false;
   loading.target_id = 0;
+  loading.loaded_projectile_kind = ProjectileKind::Stone;
+}
+
+[[nodiscard]] auto
+ammunition_for_target(Engine::Core::Entity* siege,
+                      Engine::Core::Entity* target,
+                      Game::Units::SpawnType spawn_type) -> ProjectileKind {
+  if (spawn_type != Game::Units::SpawnType::Catapult || target == nullptr ||
+      !target->has_component<Engine::Core::BuildingComponent>()) {
+    return ProjectileKind::Stone;
+  }
+  auto const* target_unit = target->get_component<Engine::Core::UnitComponent>();
+  if (target_unit == nullptr || target_unit->health <= 0) {
+    return ProjectileKind::Stone;
+  }
+  auto const profile = structure_attack_profile(siege);
+  if (profile.damage_multiplier <= 0.0F) {
+    return ProjectileKind::Stone;
+  }
+  return ProjectileKind::FlamingStone;
 }
 
 void face_locked_target(Engine::Core::Entity* siege,
@@ -57,7 +78,10 @@ void face_locked_target(Engine::Core::Entity* siege,
   siege_transform->has_desired_yaw = true;
 }
 
-void start_loading(Engine::Core::Entity* siege, Engine::Core::Entity* target) {
+void start_loading(Engine::Core::Entity* siege,
+                   Engine::Core::Entity* target,
+                   Game::Units::SpawnType spawn_type,
+                   bool keep_loading_progress = false) {
   auto* loading = siege->get_component<Engine::Core::CatapultLoadingComponent>();
   auto* siege_transform = siege->get_component<Engine::Core::TransformComponent>();
   auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
@@ -76,8 +100,12 @@ void start_loading(Engine::Core::Entity* siege, Engine::Core::Entity* target) {
                       target_transform->position.y + 0.85F,
                       target_transform->position.z);
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Loading;
-  loading->loading_time = 0.0F;
+  if (!keep_loading_progress) {
+    loading->loading_time = 0.0F;
+  }
   loading->target_id = target->get_id();
+
+  loading->loaded_projectile_kind = ammunition_for_target(siege, target, spawn_type);
   loading->target_locked_x = locked_target.x();
   loading->target_locked_y = locked_target.y();
   loading->target_locked_z = locked_target.z();
@@ -194,7 +222,8 @@ void fire_catapult(Engine::Core::World* world, Engine::Core::Entity* catapult) {
                               attack->damage,
                               catapult->get_id(),
                               loading->target_id,
-                              target_origin);
+                              target_origin,
+                              loading->loaded_projectile_kind);
 
   loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Firing;
   loading->firing_time = 0.0F;
@@ -264,6 +293,21 @@ void process_loading_siege_unit(Engine::Core::World* world,
     reset_loading(*loading);
   }
 
+  if (loading->state == Engine::Core::CatapultLoadingComponent::LoadingState::Loading ||
+      loading->state ==
+          Engine::Core::CatapultLoadingComponent::LoadingState::ReadyToFire) {
+    auto* attack_target = siege->get_component<Engine::Core::AttackTargetComponent>();
+    if (attack_target != nullptr && attack_target->target_id != 0 &&
+        attack_target->target_id != loading->target_id) {
+      auto* retarget =
+          get_entity_from_query_context(query_context, attack_target->target_id);
+      if (is_valid_enemy_unit(unit, retarget, true) &&
+          locked_target_is_in_range(siege, retarget)) {
+        start_loading(siege, retarget, spawn_type, true);
+      }
+    }
+  }
+
   switch (loading->state) {
   case Engine::Core::CatapultLoadingComponent::LoadingState::Idle: {
     auto* attack_target = siege->get_component<Engine::Core::AttackTargetComponent>();
@@ -274,7 +318,7 @@ void process_loading_siege_unit(Engine::Core::World* world,
         get_entity_from_query_context(query_context, attack_target->target_id);
     if (is_valid_enemy_unit(unit, target, true) &&
         locked_target_is_in_range(siege, target)) {
-      start_loading(siege, target);
+      start_loading(siege, target, spawn_type);
     }
     break;
   }

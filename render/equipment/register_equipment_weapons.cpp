@@ -16,7 +16,7 @@ auto roman_bow_config() -> const BowRenderConfig& {
     cfg.bow_depth = 0.22F;
     cfg.bow_curve_factor = 1.0F;
     cfg.bow_height_scale = 1.0F;
-    cfg.bow_forward_offset = -0.24F;
+    cfg.bow_forward_offset = 0.0F;
     cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
     cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
     return cfg;
@@ -30,7 +30,7 @@ auto carthage_bow_config() -> const BowRenderConfig& {
     cfg.bow_depth = 0.28F;
     cfg.bow_curve_factor = 1.2F;
     cfg.bow_height_scale = 0.95F;
-    cfg.bow_forward_offset = -0.24F;
+    cfg.bow_forward_offset = 0.0F;
     cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
     cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
     return cfg;

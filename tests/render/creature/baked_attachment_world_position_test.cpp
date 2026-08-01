@@ -685,7 +685,7 @@ TEST(BakedAttachmentWorldPosition, BowUsesGripSocketPose) {
   bow_cfg.bow_top_y = Render::GL::HumanProportions::SHOULDER_Y + 0.55F;
   bow_cfg.bow_bot_y = Render::GL::HumanProportions::WAIST_Y - 0.25F;
   bow_cfg.bow_depth = 0.22F;
-  bow_cfg.bow_forward_offset = -0.24F;
+  bow_cfg.bow_forward_offset = 0.0F;
 
   Render::GL::DrawContext ctx;
   ctx.model = QMatrix4x4{};
@@ -702,16 +702,29 @@ TEST(BakedAttachmentWorldPosition, BowUsesGripSocketPose) {
   constexpr std::uint8_t k_base_role = 0;
   const auto attachments =
       Render::GL::bow_make_static_attachments(bow_cfg, k_base_role);
+  ASSERT_EQ(attachments.size(), 3U);
   std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count> bind{};
   std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
-  Render::Creature::BakeInput input{};
-  input.bind_pose = bind;
-  input.attachments = attachments;
-  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
-  ASSERT_FALSE(baked.vertices.empty());
 
-  const AABB bake = baked_aabb(baked);
+  Render::Creature::BakeInput bow_input{};
+  bow_input.bind_pose = bind;
+  bow_input.attachments =
+      std::span<const Render::Creature::StaticAttachmentSpec>(attachments.data(), 2U);
+  const auto baked_bow = Render::Creature::bake_rigged_mesh_cpu(bow_input);
+  ASSERT_FALSE(baked_bow.vertices.empty());
+
+  const AABB bake = baked_aabb(baked_bow);
   expect_aabb_close(legacy, bake, 1e-3F);
+
+  Render::Creature::BakeInput arrow_input{};
+  arrow_input.bind_pose = bind;
+  arrow_input.attachments =
+      std::span<const Render::Creature::StaticAttachmentSpec>(&attachments[2], 1U);
+  const auto baked_arrow = Render::Creature::bake_rigged_mesh_cpu(arrow_input);
+  ASSERT_FALSE(baked_arrow.vertices.empty());
+
+  const AABB arrow = baked_aabb(baked_arrow);
+  EXPECT_GT(arrow.mx.z(), bake.mx.z());
 }
 
 } // namespace

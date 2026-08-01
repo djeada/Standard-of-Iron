@@ -74,6 +74,7 @@ add_executable(
     systems/formation_system_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/structure_combat_test.cpp
+    systems/structure_fire_test.cpp
     systems/guard_system_test.cpp
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp

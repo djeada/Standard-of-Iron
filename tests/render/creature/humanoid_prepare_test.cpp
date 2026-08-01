@@ -2770,13 +2770,27 @@ TEST(AnimationCorePosturePoseManifest, KneelPoseOwnsAbsoluteLegPlacement) {
   EXPECT_FLOAT_EQ(sample.knee_l.y, 0.035F);
   EXPECT_FLOAT_EQ(sample.knee_l.z, -0.03F);
   EXPECT_FLOAT_EQ(sample.foot_l.x, -0.135F);
-  EXPECT_FLOAT_EQ(sample.foot_l.y, 0.0F);
+  EXPECT_FLOAT_EQ(sample.foot_l.y, 0.02F);
   EXPECT_NEAR(sample.foot_l.z, -0.2718F, 0.0001F);
   EXPECT_FLOAT_EQ(sample.knee_r.y, 0.43F);
   EXPECT_FLOAT_EQ(sample.foot_r.y, 0.02F);
   EXPECT_FLOAT_EQ(sample.foot_r.z, 0.14F);
   EXPECT_FLOAT_EQ(sample.upper_body.shoulder_l_y_delta, -0.20F);
   EXPECT_FLOAT_EQ(sample.upper_body.neck_z_delta, 0.012F);
+}
+
+TEST(AnimationCorePosturePoseManifest, KneelPoseRestsTheDownKneeOnItsOwnRadius) {
+  auto const sample = Animation::resolve_humanoid_kneel_pose({
+      .depth = 0.50F,
+      .waist_y = 0.75F,
+      .ground_y = 0.0F,
+      .lower_leg_len = 0.52F,
+      .foot_y_offset = 0.02F,
+      .knee_radius = 0.06F,
+  });
+
+  EXPECT_TRUE(sample.active);
+  EXPECT_FLOAT_EQ(sample.knee_l.y, 0.06F);
 }
 
 TEST(AnimationCorePosturePoseManifest,

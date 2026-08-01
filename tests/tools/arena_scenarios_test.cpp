@@ -524,3 +524,76 @@ TEST(ArenaScenariosTest, PathfindingShowcasesCarryExecutableTerrainContracts) {
                          }),
             breach->expectations.end());
 }
+
+namespace {
+
+auto has_expectation(const Arena::ArenaScenarioDefinition& scenario,
+                     Arena::ArenaExpectationKind kind,
+                     const QString& group = {},
+                     const QString& target_group = {}) -> bool {
+  return std::any_of(
+      scenario.expectations.begin(),
+      scenario.expectations.end(),
+      [&](auto const& item) {
+        return item.kind == kind && (group.isEmpty() || item.group == group) &&
+               (target_group.isEmpty() || item.target_group == target_group);
+      });
+}
+
+} // namespace
+
+TEST(ArenaScenariosTest, FlamingSiegeScenarioSeparatesFireFromMeleeDamage) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_structure_flaming_siege_id));
+  ASSERT_NE(scenario, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*scenario).empty());
+
+  using Kind = Arena::ArenaExpectationKind;
+  EXPECT_TRUE(has_expectation(*scenario,
+                              Kind::FlamingProjectileObserved,
+                              QStringLiteral("fire_catapult"),
+                              QStringLiteral("burning_home")));
+  EXPECT_TRUE(has_expectation(
+      *scenario, Kind::StructureFireObserved, QStringLiteral("burning_home")));
+  EXPECT_TRUE(has_expectation(
+      *scenario, Kind::NoStructureFireObserved, QStringLiteral("chipped_wall")));
+}
+
+TEST(ArenaScenariosTest, MeleeDestructionScenarioDemandsAFlamelessCollapse) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_structure_melee_destruction_id));
+  ASSERT_NE(scenario, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*scenario).empty());
+
+  using Kind = Arena::ArenaExpectationKind;
+  EXPECT_TRUE(
+      has_expectation(*scenario, Kind::GroupDestroyed, QStringLiteral("doomed_wall")));
+  EXPECT_TRUE(has_expectation(
+      *scenario, Kind::NoStructureFireObserved, QStringLiteral("doomed_wall")));
+  EXPECT_FALSE(has_expectation(*scenario, Kind::StructureFireObserved));
+}
+
+TEST(ArenaScenariosTest, RetargetScenarioChecksBothAmmunitionTypes) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_catapult_ammunition_retarget_id));
+  ASSERT_NE(scenario, nullptr);
+  EXPECT_TRUE(Arena::validate_scenario(*scenario).empty());
+
+  using Kind = Arena::ArenaExpectationKind;
+  EXPECT_TRUE(has_expectation(*scenario,
+                              Kind::FlamingProjectileObserved,
+                              QStringLiteral("swing_catapult"),
+                              QStringLiteral("swing_barracks")));
+  EXPECT_TRUE(has_expectation(*scenario,
+                              Kind::NoFlamingProjectileObserved,
+                              QStringLiteral("swing_catapult"),
+                              QStringLiteral("swing_infantry")));
+
+  auto const retarget = std::find_if(
+      scenario->steps.begin(), scenario->steps.end(), [](auto const& step) {
+        return step.target_group == QStringLiteral("swing_infantry") &&
+               step.command == Arena::ScenarioCommandKind::Attack;
+      });
+  ASSERT_NE(retarget, scenario->steps.end());
+  EXPECT_GT(retarget->trigger.time_seconds, 0.0F);
+}
