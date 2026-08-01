@@ -54,6 +54,7 @@ inline constexpr char k_commander_aura_pulse_id[] = "commander_aura_pulse";
 inline constexpr char k_rpg_melee_contact_id[] = "rpg_melee_contact";
 inline constexpr char k_rpg_defense_contact_id[] = "rpg_defense_contact";
 inline constexpr char k_rpg_projectile_block_id[] = "rpg_projectile_block";
+inline constexpr char k_rpg_escort_crowd_id[] = "rpg_escort_crowd";
 inline constexpr char k_commander_identity_lineup_id[] = "commander_identity_lineup";
 inline constexpr char k_healer_identity_lineup_id[] = "healer_identity_lineup";
 inline constexpr char k_healer_lod_probe_id[] = "healer_lod_probe";

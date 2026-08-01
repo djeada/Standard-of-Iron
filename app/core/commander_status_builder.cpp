@@ -7,6 +7,7 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 
 namespace App::Core {
 
@@ -217,15 +218,50 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["locked_target_staggered"] = false;
   result["locked_target_guard_broken"] = false;
 
+  result["focus_marker_valid"] = false;
+  result["focus_marker_locked"] = false;
+  result["focus_marker_x"] = 0.0;
+  result["focus_marker_y"] = 0.0;
+  result["focus_marker_z"] = 0.0;
+
   Engine::Core::EntityID locked_id = input.locked_target_id;
+  std::uint16_t locked_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  Engine::Core::EntityID aim_id = 0;
+  std::uint16_t aim_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   if (auto* rpg_targets =
           commander_entity != nullptr
               ? commander_entity
                     ->get_component<Engine::Core::RpgCommanderTargetComponent>()
               : nullptr) {
     locked_id = rpg_targets->explicit_lock_target_id;
+    locked_slot = rpg_targets->explicit_lock_soldier_slot;
     result["aim_candidate_in_range"] =
         rpg_targets->aim_candidate_in_range && rpg_targets->aim_candidate_id != 0;
+    if (rpg_targets->aim_candidate_in_range) {
+      aim_id = rpg_targets->aim_candidate_id;
+      aim_slot = rpg_targets->aim_candidate_soldier_slot;
+    }
+  }
+
+  {
+    const bool prefer_lock = locked_id != 0;
+    const Engine::Core::EntityID focus_id = prefer_lock ? locked_id : aim_id;
+    const std::uint16_t focus_slot = prefer_lock ? locked_slot : aim_slot;
+    auto* focus_entity = focus_id != 0 ? world->get_entity(focus_id) : nullptr;
+    auto* focus_unit = focus_entity != nullptr
+                           ? focus_entity->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    if (focus_entity != nullptr && focus_unit != nullptr && focus_unit->health > 0) {
+      if (auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
+              *focus_entity, focus_slot)) {
+        result["focus_marker_valid"] = true;
+        result["focus_marker_locked"] = prefer_lock;
+        result["focus_marker_x"] = static_cast<double>(sample->position.x());
+        result["focus_marker_y"] = static_cast<double>(sample->position.y());
+        result["focus_marker_z"] = static_cast<double>(sample->position.z());
+      }
+    }
   }
   if (locked_id != 0 && world != nullptr) {
     auto* locked_ent = world->get_entity(locked_id);

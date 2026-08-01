@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "app/core/commander_control_controller.h"
+#include "app/core/commander_mode_coordinator.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -941,6 +942,35 @@ TEST_F(CommanderControlControllerTest, SecondaryActionActivatesCommanderGuard) {
   auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
   ASSERT_NE(guard, nullptr);
   EXPECT_TRUE(guard->active);
+}
+
+TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto* unit = commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->max_health = 4200;
+  unit->health = 4200;
+
+  App::Core::CommanderModeCoordinator coordinator;
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  auto const effects =
+      coordinator.enter_commander_control_mode({.world = &world,
+                                                .commander = commander,
+                                                .commander_camera = &camera,
+                                                .commander_control = &controller,
+                                                .local_owner_id = 1});
+  ASSERT_TRUE(effects.entered);
+
+  auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
+  ASSERT_NE(rpg, nullptr);
+  EXPECT_TRUE(rpg->active);
+  EXPECT_EQ(rpg->rpg_hp, rpg->rpg_max_hp);
+  EXPECT_GE(rpg->rpg_max_hp, 130);
+  EXPECT_LE(rpg->rpg_max_hp, 220);
 }
 
 } // namespace
