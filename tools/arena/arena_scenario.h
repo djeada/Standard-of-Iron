@@ -230,6 +230,7 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;
+  std::vector<Game::Map::RoadSegment> roads;
   std::vector<ArenaScenarioElevationPatch> elevation_patches;
   std::vector<Game::Map::UndeadZone> undead_zones;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;

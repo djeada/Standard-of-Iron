@@ -108,10 +108,12 @@ float ggx_specular(vec3 n_vec, vec3 v_vec, vec3 l_vec, float rough, float f0) {
 void main() {
   vec2 uv = v_world_pos.xz;
   float across = clamp(v_tex_coord.x, 0.0, 1.0);
-  float edge_distance = min(across, 1.0 - across);
+
+  float boundary = clamp(v_tex_coord.y, 0.0, 1.0);
   float edge_noise = fbm_2d(uv * 0.42 + vec2(19.0, -7.0)) - 0.5;
-  float edge_width = 0.045 + edge_noise * 0.018;
-  float edge_alpha = smoothstep(0.0, edge_width, edge_distance);
+  float edge_alpha =
+      smoothstep(0.0, 1.0, clamp(boundary + edge_noise * 0.28, 0.0, 1.0));
+  float edge_distance = boundary * 0.5;
 
   float broad = fbm_2d(uv * 0.055 + vec2(7.0, 13.0));
   float medium = fbm_2d(uv * 0.34 + vec2(-11.0, 3.0));

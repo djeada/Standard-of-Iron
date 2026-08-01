@@ -1114,6 +1114,9 @@ def inject_bridge_endpoints(
 def simplify_polyline(
     field: RoutingField, points: Sequence[Point], fixed: set[int]
 ) -> tuple[list[Point], set[int]]:
+    if len(points) < 2:
+
+        return list(points), set(range(len(points)))
     mandatory = sorted(fixed | {0, len(points) - 1})
     result: list[Point] = []
     result_fixed: set[int] = set()
@@ -1213,6 +1216,13 @@ def generate_road(
             x, z = nearest_passable(field, anchors[index], radius=32)
             legal_anchors[index] = float(x), float(z)
     legal_anchors = deduplicate(legal_anchors, epsilon=0.25)
+    if len(legal_anchors) < 2:
+
+        raise RoadGenerationError(
+            f"road endpoints collapse onto one legal cell near {legal_anchors[0]}"
+            if legal_anchors
+            else "road has no legal endpoints"
+        )
     road_width = field.coords.distance_to_grid(float(road.get("width", 3.0)))
     for leg_start, leg_end in zip(legal_anchors, legal_anchors[1:], strict=False):
         field.ensure_bridge_connection(leg_start, leg_end, road_width)
@@ -1227,6 +1237,11 @@ def generate_road(
             directional_state=directional_state,
         )
         routed.extend(leg[1:])
+    if len(deduplicate(routed)) < 2:
+
+        raise RoadGenerationError(
+            f"road collapses to a single routing cell near {routed[0]}"
+        )
     with_bridges, fixed, bridge_ids = inject_bridge_endpoints(
         field, routed, required_points=legal_anchors
     )
