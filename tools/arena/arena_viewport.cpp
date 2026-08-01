@@ -3119,7 +3119,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   m_rpg_commander_id = entity_id;
   m_rpg_commander_controller->reset();
   m_rpg_commander_controller->set_view_yaw(transform->rotation.y);
-  m_rpg_commander_controller->set_view_pitch(-4.0F);
+  m_rpg_commander_controller->set_view_pitch(k_commander_rest_view_pitch_degrees);
   commander->fpv_controlled = true;
   commander->posture = 0.0F;
   commander->punish_window_remaining = 0.0F;
@@ -3149,6 +3149,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   }
   if (m_renderer != nullptr) {
     m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+    m_renderer->set_rpg_camera_focus(entity_id);
   }
   if (m_rpg_telegraphs != nullptr) {
     m_rpg_telegraphs->clear();
@@ -3196,6 +3197,7 @@ void ArenaViewport::clear_rpg_scenario_state() {
   }
   if (m_renderer != nullptr) {
     m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rts);
+    m_renderer->set_rpg_camera_focus(0);
   }
 }
 

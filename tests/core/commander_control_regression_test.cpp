@@ -218,13 +218,18 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
       read_text(root / "app" / "core" / "commander_control_controller.cpp");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 3.45F;"));
-  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 2.30F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 3.10F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 2.25F;"));
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
 
-  EXPECT_TRUE(contains(source, "constexpr float k_camera_side_offset = 0.55F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_camera_side_offset = 0.90F;"));
+
+  EXPECT_TRUE(contains(source,
+                       "const QVector3D free_look_target = eye_desired + forward_vec * "
+                       "target_distance;"));
+  EXPECT_FALSE(contains(source, "target_desired = pivot + forward_vec"));
 
   EXPECT_TRUE(contains(
       source, "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));

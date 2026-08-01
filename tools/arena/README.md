@@ -272,6 +272,29 @@ physical contact damage, show hit reactions, remain visually stable, and stay
 inside the frame budget. Their fixed midpoint camera keeps both silhouettes at
 the same depth for direct weapon and motion comparison.
 
+## Commander RPG contracts
+
+Four behind-head scenes cover commander (FPV) control:
+
+- `rpg_melee_contact` validates exact in-range soldier highlighting, authored blade
+  contact, hit reactions, and visible incoming weapon damage.
+- `rpg_defense_contact` is a frontal sword block followed by a timed dodge; health
+  must stay unchanged while the block contact and dodge window remain visible.
+- `rpg_projectile_block` requires an authored arrow to arrive at the guard, publish
+  a block contact, and leave RPG health unchanged.
+- `rpg_escort_crowd` puts the commander inside his own escort with a rank of
+  friendly spearmen between him and the lens. It is the contract for chase-camera
+  readability: the renderer drops bodies that crowd the gap in front of the lens
+  instead of letting them fill the frame or shoving the camera into first person.
+  `escort_flank` stands beside the commander and must still render, which is what
+  keeps the cull from being over-broad; `escort_rear` stays alive in the trace
+  while it is deliberately not drawn.
+
+```sh
+build/bin/arena_app --batch --scenario rpg_escort_crowd \
+  --fps 30 --capture-interval 0.4 --clean-capture --artifact-dir artifacts/rpg
+```
+
 ## Pathfinding showcase contracts
 
 - `path_bridge_crossing` uses production river, bank, bridge rendering, and

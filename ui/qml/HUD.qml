@@ -13,6 +13,7 @@ Item {
     property int selection_tick: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg"
+    property var commander_status: ({})
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
 
     signal pause_toggled
@@ -67,6 +68,16 @@ Item {
         }
     }
 
+    Timer {
+        id: commanderStatusPoll
+
+        interval: 33
+        repeat: true
+        running: typeof game !== 'undefined' && game.control_mode === "commander" && !!game.get_controlled_commander_status
+        triggeredOnStart: true
+        onTriggered: hud.commander_status = game.get_controlled_commander_status()
+    }
+
     Item {
         id: topPanel
 
@@ -99,7 +110,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.15)) : Math.max(196, parent.height * 0.22)
+        height: hud.commander_rpg_mode ? Math.max(118, Math.min(138, parent.height * 0.14)) : Math.max(196, parent.height * 0.22)
         clip: true
 
         Loader {
@@ -131,6 +142,7 @@ Item {
 
             HUDBottomCommander {
                 anchors.fill: parent
+                external_status: hud.commander_status
             }
         }
     }
@@ -143,35 +155,22 @@ Item {
         anchors.topMargin: 8
         visible: hud.commander_rpg_mode && target_max_hp > 0
 
-        property var _status: typeof game !== 'undefined' && game.get_controlled_commander_status ? game.get_controlled_commander_status() : null
+        readonly property var _status: hud.commander_status
 
         target_name: _status ? (_status["locked_target_name"] || "") : ""
         target_hp: _status ? (_status["locked_target_hp"] || 0) : 0
         target_max_hp: _status ? (_status["locked_target_max_hp"] || 0) : 0
         target_hp_ratio: _status ? (_status["locked_target_hp_ratio"] || 0.0) : 0.0
-
-        Timer {
-            interval: 100
-            repeat: true
-            running: true
-            onTriggered: {
-                if (typeof game !== 'undefined' && game.game_mode === "rpg" && game.get_controlled_commander_status) {
-                    var s = game.get_controlled_commander_status();
-                    rpgTargetBar.target_name = s["locked_target_name"] || "";
-                    rpgTargetBar.target_hp = s["locked_target_hp"] || 0;
-                    rpgTargetBar.target_max_hp = s["locked_target_max_hp"] || 0;
-                    rpgTargetBar.target_hp_ratio = s["locked_target_hp_ratio"] || 0.0;
-                    rpgTargetBar.target_staggered = !!s["locked_target_staggered"];
-                    rpgTargetBar.target_guard_broken = !!s["locked_target_guard_broken"];
-                }
-            }
-        }
+        target_staggered: _status ? !!_status["locked_target_staggered"] : false
+        target_guard_broken: _status ? !!_status["locked_target_guard_broken"] : false
     }
 
     RpgFpvOverlay {
         id: rpgFpvOverlay
         anchors.fill: parent
         bottomInset: bottomPanel.height
+        status: hud.commander_status
+        engine: typeof game !== 'undefined' ? game : null
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
     }
 

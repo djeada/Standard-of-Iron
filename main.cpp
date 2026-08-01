@@ -155,13 +155,7 @@ void capture_screenshot_and_exit(QQuickWindow* window,
   window->setWidth(1600);
   window->setHeight(900);
 
-  if (!view.isEmpty()) {
-    QTimer::singleShot(delay_ms * 3 / 4, window, [window, view]() {
-      QMetaObject::invokeMethod(window, "show_view", Q_ARG(QVariant, QVariant(view)));
-    });
-  }
-
-  QTimer::singleShot(delay_ms, window, [window, path]() {
+  auto grab_and_exit = [window, path]() {
     const QImage frame = window->grabWindow();
     if (frame.isNull()) {
       qCritical() << "SOI_SCREENSHOT: FAIL - the window produced no frame";
@@ -176,6 +170,47 @@ void capture_screenshot_and_exit(QQuickWindow* window,
     qInfo() << "SOI_SCREENSHOT: PASS -" << path << frame.width() << "x"
             << frame.height();
     QGuiApplication::exit(0);
+  };
+
+  if (view.isEmpty()) {
+    QTimer::singleShot(delay_ms, window, grab_and_exit);
+    return;
+  }
+
+  auto* settle = new QTimer(window);
+  settle->setInterval(400);
+  QObject::connect(
+      settle, &QTimer::timeout, window, [window, view, settle, delay_ms]() {
+        QMetaObject::invokeMethod(window, "show_view", Q_ARG(QVariant, QVariant(view)));
+        if (window->property("capture_view_ready").toBool()) {
+          settle->stop();
+          QTimer::singleShot(delay_ms / 8, window, [window]() {
+            window->setProperty("capture_view_settled", true);
+          });
+        }
+      });
+  settle->start();
+
+  auto* deadline = new QTimer(window);
+  deadline->setInterval(200);
+  QObject::connect(
+      deadline, &QTimer::timeout, window, [window, settle, deadline, grab_and_exit]() {
+        if (!window->property("capture_view_settled").toBool()) {
+          return;
+        }
+        settle->stop();
+        deadline->stop();
+        grab_and_exit();
+      });
+  deadline->start();
+
+  QTimer::singleShot(delay_ms, window, [settle, deadline, grab_and_exit]() {
+    if (!deadline->isActive()) {
+      return;
+    }
+    settle->stop();
+    deadline->stop();
+    grab_and_exit();
   });
 }
 
@@ -549,7 +584,7 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineOption const screenshot_view_opt(
         "screenshot-view",
         "Surface to capture: menu | skirmish | campaign | settings | load | save "
-        "| briefing | hud.",
+        "| briefing | hud | rpg.",
         "view",
         "menu");
     QCommandLineOption const screenshot_delay_opt(

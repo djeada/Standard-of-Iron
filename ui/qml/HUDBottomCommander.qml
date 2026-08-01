@@ -8,6 +8,8 @@ RowLayout {
 
     readonly property var hs: StyleGuide.historical
     readonly property bool fpv_mode: typeof game !== 'undefined' && game.game_mode === "rpg"
+
+    property var external_status: null
     property var commander_status: default_status()
 
     function default_status() {
@@ -183,10 +185,15 @@ RowLayout {
     anchors.margins: 8
     spacing: 8
 
+    onExternal_statusChanged: {
+        if (external_status)
+            commander_status = external_status;
+    }
+
     Timer {
         interval: 100
         repeat: true
-        running: bottomRoot.visible
+        running: bottomRoot.visible && !bottomRoot.external_status
         onTriggered: bottomRoot.refresh_status()
     }
 
@@ -202,9 +209,9 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(330, bottomRoot.width * 0.34)
         Layout.fillHeight: true
-        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
-        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
-        border.width: 2
+        color: bottomRoot.fpv_mode ? "#a6100b07" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? Qt.rgba(0.72, 0.55, 0.30, 0.55) : hs.bronze
+        border.width: bottomRoot.fpv_mode ? 1 : 2
         radius: 6
 
         ColumnLayout {
@@ -456,9 +463,9 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(360, bottomRoot.width * 0.4)
         Layout.fillHeight: true
-        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
-        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
-        border.width: 2
+        color: bottomRoot.fpv_mode ? "#a6100b07" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? Qt.rgba(0.72, 0.55, 0.30, 0.55) : hs.bronze
+        border.width: bottomRoot.fpv_mode ? 1 : 2
         radius: 6
 
         ColumnLayout {
@@ -483,8 +490,8 @@ RowLayout {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: bottomRoot.fpv_mode ? 5 : 8
+                    anchors.margins: bottomRoot.fpv_mode ? 6 : 8
+                    spacing: bottomRoot.fpv_mode ? 3 : 8
 
                     RowLayout {
                         Layout.fillWidth: true
@@ -492,7 +499,7 @@ RowLayout {
                         Text {
                             text: qsTr("Rally")
                             color: Theme.textMain
-                            font.pointSize: 11
+                            font.pointSize: bottomRoot.fpv_mode ? 9 : 11
                             font.bold: true
                         }
 
@@ -520,16 +527,16 @@ RowLayout {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 10
+                        Layout.preferredHeight: bottomRoot.fpv_mode ? 5 : 10
                         color: Theme.bgShade
-                        radius: 5
+                        radius: height / 2
                         border.color: hs.bronzeDeep
                         border.width: 1
 
                         Rectangle {
                             width: parent.width * bottomRoot.rally_progress()
                             height: parent.height
-                            radius: 5
+                            radius: height / 2
                             color: (bottomRoot.status_value("rally_in_progress", false) || bottomRoot.status_value("rally_has_flag", false)) ? Theme.accent : hs.bronze
                         }
                     }
@@ -543,67 +550,75 @@ RowLayout {
                         font.pointSize: 9
                     }
 
-                    Button {
+                    GridLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
-                        text: bottomRoot.rally_button_text()
-                        enabled: bottomRoot.status_value("has_commander", false) && !bottomRoot.status_value("rally_in_progress", false)
-                        focusPolicy: Qt.NoFocus
-                        onClicked: {
-                            if (typeof game === 'undefined')
-                                return;
-                            if (bottomRoot.status_value("rally_placing", false)) {
-                                if (game.cancel_commander_flag_rally)
-                                    game.cancel_commander_flag_rally();
-                            } else if (game.commander_trigger_rally) {
-                                game.commander_trigger_rally();
+                        columnSpacing: 6
+                        rowSpacing: 4
+
+                        columns: bottomRoot.fpv_mode ? 2 : 1
+
+                        Button {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
+                            text: bottomRoot.rally_button_text()
+                            enabled: bottomRoot.status_value("has_commander", false) && !bottomRoot.status_value("rally_in_progress", false)
+                            focusPolicy: Qt.NoFocus
+                            onClicked: {
+                                if (typeof game === 'undefined')
+                                    return;
+                                if (bottomRoot.status_value("rally_placing", false)) {
+                                    if (game.cancel_commander_flag_rally)
+                                        game.cancel_commander_flag_rally();
+                                } else if (game.commander_trigger_rally) {
+                                    game.commander_trigger_rally();
+                                }
+                            }
+
+                            background: Rectangle {
+                                color: parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
+                                radius: 6
+                                border.color: parent.enabled ? hs.bronze : hs.bronzeDeep
+                                border.width: 2
+                            }
+
+                            contentItem: Text {
+                                text: parent.text
+                                color: parent.enabled ? Theme.textMain : Theme.textDim
+                                font.pointSize: bottomRoot.fpv_mode ? 9 : 10
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
 
-                        background: Rectangle {
-                            color: parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
-                            radius: 6
-                            border.color: parent.enabled ? hs.bronze : hs.bronzeDeep
-                            border.width: 2
-                        }
+                        Button {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
+                            text: bottomRoot.status_value("aura_active", false) ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1)) : (bottomRoot.status_value("aura_ready", false) ? qsTr("Activate Command Aura [3]") : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
+                            enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
+                            focusPolicy: Qt.NoFocus
+                            ToolTip.visible: hovered
+                            ToolTip.text: qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.")
+                            onClicked: {
+                                if (typeof game !== 'undefined' && game.commander_trigger_aura)
+                                    game.commander_trigger_aura();
+                            }
 
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.enabled ? Theme.textMain : Theme.textDim
-                            font.pointSize: bottomRoot.fpv_mode ? 9 : 10
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
+                            background: Rectangle {
+                                color: bottomRoot.status_value("aura_active", false) ? hs.wax : (parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
+                                radius: 6
+                                border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (parent.enabled ? hs.bronze : hs.bronzeDeep)
+                                border.width: 2
+                            }
 
-                    Button {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
-                        text: bottomRoot.status_value("aura_active", false) ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1)) : (bottomRoot.status_value("aura_ready", false) ? qsTr("Activate Command Aura [3]") : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
-                        enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
-                        focusPolicy: Qt.NoFocus
-                        ToolTip.visible: hovered
-                        ToolTip.text: qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.")
-                        onClicked: {
-                            if (typeof game !== 'undefined' && game.commander_trigger_aura)
-                                game.commander_trigger_aura();
-                        }
-
-                        background: Rectangle {
-                            color: bottomRoot.status_value("aura_active", false) ? hs.wax : (parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
-                            radius: 6
-                            border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (parent.enabled ? hs.bronze : hs.bronzeDeep)
-                            border.width: 2
-                        }
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.enabled || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
-                            font.pointSize: bottomRoot.fpv_mode ? 9 : 10
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            contentItem: Text {
+                                text: parent.text
+                                color: parent.enabled || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
+                                font.pointSize: bottomRoot.fpv_mode ? 9 : 10
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
                         }
                     }
 
@@ -720,15 +735,15 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(280, bottomRoot.width * 0.26)
         Layout.fillHeight: true
-        color: bottomRoot.fpv_mode ? "#db17110c" : hs.parchmentDark
-        border.color: bottomRoot.fpv_mode ? hs.wax : hs.bronze
-        border.width: 2
+        color: bottomRoot.fpv_mode ? "#a6100b07" : hs.parchmentDark
+        border.color: bottomRoot.fpv_mode ? Qt.rgba(0.72, 0.55, 0.30, 0.55) : hs.bronze
+        border.width: bottomRoot.fpv_mode ? 1 : 2
         radius: 6
 
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 4
+            spacing: bottomRoot.fpv_mode ? 2 : 4
 
             Text {
                 text: qsTr("COMBAT CONTROLS")
@@ -737,54 +752,33 @@ RowLayout {
                 font.bold: true
             }
 
-            Text {
-                text: qsTr("[LMB] Strike  [RMB] Guard")
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
+            Grid {
+                Layout.fillWidth: true
+                columns: bottomRoot.fpv_mode ? 2 : 1
+                columnSpacing: 14
+                rowSpacing: bottomRoot.fpv_mode ? 1 : 4
+
+                Repeater {
+                    model: bottomRoot.fpv_mode ? [qsTr("[LMB] Strike  [RMB] Guard"), qsTr("[Space] Dodge  [Alt] Jump"), qsTr("[WASD] Move  [Shift] Sprint"), qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera"), qsTr("[R] Rally Orders  [Enter] Return to RTS"), qsTr("[F] Bash  [1] Rush  [2] Second Wind")] : [qsTr("[LMB] Strike  [RMB] Guard"), qsTr("[WASD] Move  [Shift] Sprint"), qsTr("[Space] Dodge  [Alt] Jump"), qsTr("[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash"), qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")]
+
+                    delegate: Text {
+                        text: modelData
+                        color: Theme.textMain
+                        font.pointSize: bottomRoot.fpv_mode ? 7 : 8
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
             }
 
             Text {
-                text: qsTr("[WASD] Move  [Shift] Sprint")
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                text: qsTr("[Space] Dodge  [Alt] Jump")
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera") : ""
-                visible: bottomRoot.fpv_mode
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-
-                text: bottomRoot.fpv_mode ? qsTr("[F] Bash  [1] Rush  [2] Second Wind") : qsTr("[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash")
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                text: bottomRoot.fpv_mode ? qsTr("[R] Rally Orders  [Enter] Return to RTS") : qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")
-                color: Theme.textMain
-                font.pointSize: 8
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
+                Layout.fillWidth: true
                 text: !bottomRoot.status_value("alive", false) ? qsTr("Commander unavailable") : (bottomRoot.status_value("rally_in_progress", false) ? qsTr("Rally autopilot engaged until the flag is planted") : (bottomRoot.fpv_mode ? qsTr("Combat HUD synced for close-quarters command") : qsTr("First-person command engaged")))
                 color: Theme.textSubLite
-                font.pointSize: 8
+                font.pointSize: bottomRoot.fpv_mode ? 7 : 8
                 wrapMode: Text.WordWrap
                 maximumLineCount: 1
                 elide: Text.ElideRight

@@ -1108,6 +1108,8 @@ void GameEngine::apply_game_mode_render_policy() {
     m_renderer->set_world_render_mode(m_game_mode == GameMode::Rpg
                                           ? Render::GL::Renderer::WorldRenderMode::Rpg
                                           : Render::GL::Renderer::WorldRenderMode::Rts);
+    m_renderer->set_rpg_camera_focus(
+        m_game_mode == GameMode::Rpg ? m_controlled_commander_id : 0);
   }
   if (m_fog != nullptr) {
     m_fog->set_soft_reveal_enabled(m_game_mode == GameMode::Rpg);
@@ -1233,7 +1235,7 @@ void GameEngine::request_enter_commander_control_mode() {
   if (effects.commander_view_yaw.has_value()) {
     m_commander_control.set_view_yaw(*effects.commander_view_yaw);
   }
-  m_commander_control.set_view_pitch(0.0F);
+  m_commander_control.set_view_pitch(k_commander_rest_view_pitch_degrees);
   reset_commander_input();
   set_active_camera(m_commander_camera.get());
 
