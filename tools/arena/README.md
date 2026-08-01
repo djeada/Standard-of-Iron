@@ -90,6 +90,57 @@ captures `failure_frame.png` at the first detected failure. The scenario does no
 use Arena's force-full override, so it also proves that Ultra itself disables
 formation-count reduction, minimal meshes, billboards, and temporal LOD shedding.
 
+## Cinematic promo capture
+
+Arena can record finished video instead of stills. A **promo spec** is a JSON
+shot list; each shot names a catalog scenario, the window of scenario time to
+record, and an authored camera track. The arena runs each shot as its own
+deterministic scenario pass, renders it into an offscreen target at the
+requested resolution -- vertical shorts are not limited by the desktop window --
+and streams the frames straight into `ffmpeg`.
+
+```bash
+build/bin/arena_app \
+  --promo-spec tools/arena/promos/last_stand.json \
+  --promo-out artifacts/promo
+
+scripts/promo-edit.py \
+  --spec tools/arena/promos/last_stand.json \
+  --clips artifacts/promo/last_stand
+```
+
+The capture writes one `NN_<shot>.mp4` per shot, an `NN_<shot>.png` poster, and
+a `shots.json` manifest. `scripts/promo-edit.py` then concatenates, grades,
+captions and scores them into one finished short in a single ffmpeg pass.
+`ffmpeg` must be on `PATH` for both steps.
+
+Shot fields:
+
+- `scenario`, `seed`, `start`, `duration` select the deterministic window. The
+  clock is scenario time, so the same window always records the same action.
+- `slow_motion` shrinks the simulation step rather than duplicating frames, so a
+  2.5x shot keeps full temporal detail. The clip runs `duration * slow_motion`
+  seconds.
+- `focus` aims the camera: a fixed `point`, the living centroid of a `group`,
+  the midpoint of a `group_pair`, or `all` spawned units. Group focus holds its
+  last good position if the tracked group is wiped out mid-shot, and `smoothing`
+  is the tracking half-life in seconds.
+- `camera` is a keyframe list over shot-local time: `distance`, `pitch`, `yaw`,
+  `fov`, `roll` for a dutch tilt, `height` to raise the aim point off the
+  ground, and `ease` (`smooth`, `linear`, `in`, `out`).
+- `shake` adds deterministic handheld jitter, so re-recording a shot is
+  reproducible.
+
+Promo runs render in cinematic mode: no selection rings, no attack/guard/hold
+markers, no order markers, no stats or control overlays. The first recorded
+frame of every shot logs its resolved focus and the live soldier culling
+counters, which is how a mis-aimed camera is told apart from a camera pointing
+somewhere the engine culled.
+
+The `promo_*` scenarios in the catalog are staged for this: short frontages that
+fill a vertical frame, dramatic authored light, and enough runtime that one
+deterministic pass can supply a whole shot list.
+
 ## Campaign terrain review
 
 Arena can render production campaign maps as terrain-only review scenes. This

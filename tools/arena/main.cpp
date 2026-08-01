@@ -25,6 +25,8 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
+#include "promo_runner.h"
+#include "promo_spec.h"
 #include "render/graphics_settings.h"
 #include "ui/theme.h"
 #include "ui/widget_shell.h"
@@ -287,6 +289,15 @@ auto main(int argc, char** argv) -> int {
                      "fog over unexplored ground."));
   QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
                                        QStringLiteral("List scenario ids and exit."));
+  QCommandLineOption const promo_spec_option(
+      QStringList{QStringLiteral("promo-spec")},
+      QStringLiteral("Record the cinematic shot list in this promo spec JSON."),
+      QStringLiteral("file"));
+  QCommandLineOption const promo_out_option(
+      QStringList{QStringLiteral("promo-out")},
+      QStringLiteral("Directory for recorded promo clips, posters, and manifest."),
+      QStringLiteral("directory"),
+      QStringLiteral("artifacts/promo"));
   parser.addOptions({batch_option,
                      all_option,
                      scenario_option,
@@ -307,6 +318,8 @@ auto main(int argc, char** argv) -> int {
                      promo_distance_option,
                      promo_tilt_option,
                      fog_of_war_option,
+                     promo_spec_option,
+                     promo_out_option,
                      list_option});
   parser.process(app);
 
@@ -361,6 +374,31 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
   window.viewport()->set_fog_of_war_enabled(parser.isSet(fog_of_war_option));
+
+  if (parser.isSet(promo_spec_option)) {
+    if (parser.isSet(batch_option) || parser.isSet(campaign_terrain_option) ||
+        parser.isSet(terrain_map_option)) {
+      qCritical() << "--promo-spec cannot be combined with --batch, "
+                     "--campaign-terrain, or --terrain-map";
+      return 2;
+    }
+    QString promo_error;
+    const auto spec =
+        Arena::Promo::load(parser.value(promo_spec_option).trimmed(), &promo_error);
+    if (!spec.has_value()) {
+      qCritical().noquote() << promo_error;
+      return 2;
+    }
+    Arena::Promo::RunOptions promo_options;
+    promo_options.output_directory =
+        QDir(QDir::cleanPath(parser.value(promo_out_option))).filePath(spec->id);
+    const int promo_status =
+        Arena::Promo::run(*window.viewport(), *spec, promo_options, &promo_error);
+    if (promo_status == 2 && !promo_error.isEmpty()) {
+      qCritical().noquote() << promo_error;
+    }
+    return promo_status;
+  }
 
   if (!parser.isSet(batch_option)) {
     if (parser.isSet(campaign_terrain_option)) {
@@ -703,8 +741,17 @@ auto main(int argc, char** argv) -> int {
                                             : lighting_profile;
       const auto effective_weather =
           scenario != nullptr ? scenario->weather : Game::Map::WeatherLightingInput{};
-      const auto lighting = Game::Map::lighting_for_hour(
+      auto lighting = Game::Map::lighting_for_hour(
           effective_hour, effective_profile, effective_weather);
+
+      if (scenario != nullptr) {
+        if (scenario->environment.fog_density_override >= 0.0F) {
+          lighting.fog_density = scenario->environment.fog_density_override;
+        }
+        if (scenario->environment.exposure_override >= 0.0F) {
+          lighting.exposure = scenario->environment.exposure_override;
+        }
+      }
       QJsonObject const config{
           {QStringLiteral("scenario"), id},
           {QStringLiteral("graphics_quality"),

@@ -39,6 +39,7 @@
 #include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/horse/tack/reins_renderer.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/gl/humanoid/humanoid_constants.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/cache_control.h"
@@ -928,6 +929,9 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
 
   Render::GL::HumanoidAnimationContext anim_ctx{};
   anim_ctx.inputs = anim;
+  anim_ctx.gait.state = Render::GL::HumanoidMotionState::Run;
+  anim_ctx.gait.speed = Render::GL::k_reference_run_speed;
+  anim_ctx.gait.normalized_speed = 1.0F;
   Render::GL::HorseProfile profile{};
   Render::GL::HorseDimensions dims{};
   Render::GL::MountedAttachmentFrame mount{};

@@ -10,8 +10,11 @@
 #include "../creature/animation_state_components.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "animation/horse_gait_manifest.h"
+#include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
 #include "dimensions.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "horse_anatomy.h"
 #include "horse_layout.h"
 #include "horse_source_asset.h"
@@ -371,11 +374,22 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
 
 } // namespace
 
+auto mount_model_scale(const Engine::Core::Entity* entity) noexcept -> float {
+  if (entity == nullptr) {
+    return 1.0F;
+  }
+  const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return 1.0F;
+  }
+  return transform->scale.x > 0.01F ? transform->scale.x : 1.0F;
+}
+
 auto evaluate_horse_motion(const HorseProfile& profile,
                            const AnimationInputs& anim,
                            const HumanoidAnimationContext& rider_ctx,
-                           Render::Creature::HorseAnimationStateComponent* io_state)
-    -> HorseMotionSample {
+                           Render::Creature::HorseAnimationStateComponent* io_state,
+                           float model_scale) -> HorseMotionSample {
   Render::Creature::HorseAnimationStateComponent fallback_state{};
   Render::Creature::HorseAnimationStateComponent& state =
       io_state != nullptr ? *io_state : fallback_state;
@@ -392,8 +406,6 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   float speed = rider_ctx.locomotion_speed();
   if (speed < 0.01F) {
     speed = anim_has_run ? 6.2F : (anim_has_motion ? 1.4F : 0.0F);
-  } else if (anim_has_run) {
-    speed = std::max(speed, 6.2F);
   }
   sample.rider_intensity = std::max(rider_ctx.locomotion_normalized_speed(),
                                     std::clamp(speed / k_canter_speed_max, 0.0F, 1.0F));
@@ -421,9 +433,26 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   state.transition_start_time = transition.transition_start_time;
   state.idle_bob_intensity = transition.idle_bob_intensity;
 
-  HorseGait const resolved = resolve_persistent_gait(state, profile);
+  HorseGait resolved = resolve_persistent_gait(state, profile);
   sample.is_moving =
       state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
+  if (sample.is_moving) {
+
+    constexpr float k_horse_stride_to_local = 0.56F;
+    auto const cadence = Animation::resolve_quadruped_cadence({
+        .ground_speed = speed / std::max(model_scale, 0.05F),
+        .reference_speed = Animation::horse_reference_speed_for_gait(
+                               to_animation_gait_type(state.current_gait)) /
+                           std::max(model_scale, 0.05F),
+        .authored_cycle_time = resolved.cycle_time,
+        .authored_stride_swing = resolved.stride_swing,
+        .stance_fraction =
+            Animation::horse_stance_fraction_for_cycle(resolved.cycle_time),
+        .stride_to_local = k_horse_stride_to_local,
+    });
+    resolved.cycle_time = cadence.cycle_time;
+    resolved.stride_swing = cadence.stride_swing;
+  }
   evaluate_phase_and_bob(state,
                          profile,
                          anim,
