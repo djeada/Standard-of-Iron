@@ -1,5 +1,9 @@
 #include "prepare.h"
 
+#include "render/math/creature_math_utils.h"
+
+#include <QDebug>
+
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -33,8 +37,7 @@ auto default_full_horse_request_seed(const Render::GL::DrawContext& ctx) noexcep
   if (ctx.entity == nullptr) {
     return 0U;
   }
-  return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ctx.entity) &
-                                    0xFFFFFFFFU);
+  return Render::Creature::stable_entity_seed(ctx.entity->get_id());
 }
 
 auto horse_state_for_motion(const Render::GL::HorseMotionSample& motion,

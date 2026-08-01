@@ -1,5 +1,7 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "render/math/creature_math_utils.h"
+
 #include <QVector3D>
 
 #include <algorithm>
@@ -142,7 +144,7 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed =
-        static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+        Render::Creature::stable_entity_seed(ctx.entity->get_id());
   }
 
   HorseDimensions const dims = get_scaled_horse_dimensions(horse_seed);
@@ -167,8 +169,7 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
 
   std::uint32_t horse_seed = seed;
   if (ctx.entity != nullptr) {
-    horse_seed = static_cast<std::uint32_t>(
-        reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+    horse_seed = Render::Creature::stable_entity_seed(ctx.entity->get_id());
   }
 
   dims = get_scaled_horse_dimensions(horse_seed);

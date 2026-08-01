@@ -1,4 +1,5 @@
 #include "quiver_renderer.h"
+#include "render/math/creature_math_utils.h"
 
 #include <array>
 #include <cmath>
@@ -145,7 +146,7 @@ void QuiverRenderer::submit(const QuiverRenderConfig& config,
 
   uint32_t seed = 0U;
   if (ctx.entity != nullptr) {
-    seed = uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+    seed = Render::Creature::stable_entity_seed(ctx.entity->get_id());
   }
 
   float const j = (hash_01(seed) - 0.5F) * 0.04F;

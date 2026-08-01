@@ -181,7 +181,7 @@ TEST(QuadrupedCadenceTest, CadenceCompressesWhenTheBodyOutrunsTheAuthoredGait) {
 
   const auto cadence = Animation::resolve_quadruped_cadence(inputs);
 
-  EXPECT_NEAR(cadence.cycle_time, 0.55F * 0.55F, 1.0e-3F);
+  EXPECT_NEAR(cadence.cycle_time, 0.55F * inputs.min_cycle_scale, 1.0e-3F);
 }
 
 TEST(QuadrupedCadenceTest, StanceSweepTracksTheGroundDistanceItCovers) {

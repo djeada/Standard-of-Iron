@@ -209,8 +209,8 @@
       "name": "field_crane",
       "scenario": "promo_last_stand",
       "start": 15.5,
-      "duration": 3.0,
-      "slow_motion": 1.0,
+      "duration": 2.6,
+      "slow_motion": 1.25,
       "focus": {
         "mode": "all",
         "smoothing": 0.8
