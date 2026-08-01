@@ -33,6 +33,8 @@ auto to_vector(const std::array<StaticAttachmentSpec, N>& attachments)
 auto humanoid_head_bone() -> std::uint16_t;
 auto humanoid_chest_bone() -> std::uint16_t;
 auto humanoid_pelvis_bone() -> std::uint16_t;
+auto humanoid_knee_l_bone() -> std::uint16_t;
+auto humanoid_knee_r_bone() -> std::uint16_t;
 auto humanoid_foot_l_bone() -> std::uint16_t;
 auto humanoid_foot_r_bone() -> std::uint16_t;
 auto humanoid_hip_l_bone() -> std::uint16_t;

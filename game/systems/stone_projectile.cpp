@@ -13,7 +13,8 @@ StoneProjectile::StoneProjectile(const QVector3D& start,
                                  int damage,
                                  Engine::Core::EntityID attacker_id,
                                  Engine::Core::EntityID target_id,
-                                 QVector3D target_origin_at_launch)
+                                 QVector3D target_origin_at_launch,
+                                 ProjectileKind kind)
     : m_start(start)
     , m_end(end)
     , m_color(color)
@@ -25,7 +26,8 @@ StoneProjectile::StoneProjectile(const QVector3D& start,
     , m_damage(damage)
     , m_target_id(target_id)
     , m_attacker_id(attacker_id)
-    , m_target_origin_at_launch(target_origin_at_launch) {
+    , m_target_origin_at_launch(target_origin_at_launch)
+    , m_kind(kind) {
 }
 
 void StoneProjectile::update(float delta_time) {

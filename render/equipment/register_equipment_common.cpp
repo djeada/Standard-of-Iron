@@ -14,6 +14,14 @@ auto humanoid_pelvis_bone() -> std::uint16_t {
   return static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
 }
 
+auto humanoid_knee_l_bone() -> std::uint16_t {
+  return static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::KneeL);
+}
+
+auto humanoid_knee_r_bone() -> std::uint16_t {
+  return static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::KneeR);
+}
+
 auto humanoid_foot_l_bone() -> std::uint16_t {
   return static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::FootL);
 }

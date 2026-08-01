@@ -602,7 +602,7 @@ TEST(StatelessWeaponRenderers, BowBodyUsesArchetypePath) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
-TEST(StatelessWeaponRenderers, BowBodyMeshIsTallerAndMoreDeeplyCurved) {
+TEST(StatelessWeaponRenderers, BowBodyMeshKeepsTheGripAtTheHand) {
   const auto frames = make_frames();
   const auto anim = make_anim();
   const auto palette = make_palette();
@@ -622,9 +622,15 @@ TEST(StatelessWeaponRenderers, BowBodyMeshIsTallerAndMoreDeeplyCurved) {
   const AABB box = archetype_local_aabb(*batch.archetypes.front().archetype);
   const float height = box.mx.y() - box.mn.y();
   const float depth = box.mx.z() - box.mn.z();
-  EXPECT_GT(height, 1.10F);
-  EXPECT_LT(height, 1.20F);
-  EXPECT_GT(depth, 0.44F);
+
+  EXPECT_GT(height, 0.70F);
+  EXPECT_LT(height, 0.90F);
+
+  EXPECT_GT(depth, 0.15F);
+  EXPECT_LT(depth, 0.32F);
+
+  EXPECT_LT(box.mn.z(), 0.0F);
+  EXPECT_GT(box.mx.z(), 0.0F);
 }
 
 TEST(StatelessWeaponRenderers, BowArrowUsesArchetypePath) {

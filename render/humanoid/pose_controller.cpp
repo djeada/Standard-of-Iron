@@ -9,6 +9,7 @@
 #include "animation/attack_pose_manifest.h"
 #include "animation/hold_pose_manifest.h"
 #include "animation/posture_pose_manifest.h"
+#include "grip_axis.h"
 #include "humanoid_math.h"
 #include "pose_primitives.h"
 #include "spear_pose_utils.h"
@@ -19,6 +20,19 @@ namespace {
 
 auto to_qvec(const Animation::PoseVec3& value) -> QVector3D {
   return {value.x, value.y, value.z};
+}
+
+const QVector3D k_baked_bow_axis(0.0F, 1.0F, 0.0F);
+
+auto baked_spear_direction() -> QVector3D {
+  return resolve_spear_direction(AnimationInputs{});
+}
+
+void aim_held_weapon(HumanoidPose& pose,
+                     const QVector3D& wanted_direction,
+                     const QVector3D& baked_direction) {
+  pose.grip_axis_r = Render::Humanoid::hand_axis_for_weapon_direction(
+      wanted_direction, baked_direction, true);
 }
 
 auto to_pose_vec(const QVector3D& value) -> Animation::PoseVec3 {
@@ -319,6 +333,7 @@ void HumanoidPoseController::kneel(float depth) {
       .ground_y = HP::GROUND_Y,
       .lower_leg_len = HP::LOWER_LEG_LEN,
       .foot_y_offset = m_pose.foot_y_offset,
+      .knee_radius = HP::LOWER_LEG_R,
   });
   if (!sample.active) {
     return;
@@ -445,6 +460,7 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   place_hand_at(Side::Right, to_qvec(sample.right_hand));
   place_hand_at(Side::Left, to_qvec(sample.left_hand));
   apply_bow_draw_body_deltas(m_pose, sample);
+  aim_held_weapon(m_pose, QVector3D(0.0F, 1.0F, 0.0F), k_baked_bow_axis);
 }
 
 void HumanoidPoseController::bow_melee_strike(float attack_phase) {
@@ -529,6 +545,9 @@ void HumanoidPoseController::spear_thrust_from_hold(float attack_phase,
           1.0F,
           hold_depth));
   apply_spear_attack_sample(*this, m_pose, sample);
+  aim_held_weapon(m_pose,
+                  spear_qvec_from_pose(sample.offhand_spear_direction),
+                  baked_spear_direction());
 }
 
 void HumanoidPoseController::sword_slash(float attack_phase) {
@@ -593,6 +612,9 @@ void HumanoidPoseController::brace_spear_for_hold() {
       .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
+  aim_held_weapon(m_pose,
+                  spear_qvec_from_pose(sample.offhand_spear_direction),
+                  baked_spear_direction());
 }
 
 void HumanoidPoseController::hold_bow_ready() {
@@ -604,6 +626,7 @@ void HumanoidPoseController::hold_bow_ready() {
       .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
+  aim_held_weapon(m_pose, QVector3D(0.0F, 0.90F, 0.44F), k_baked_bow_axis);
 }
 
 void HumanoidPoseController::guard_sword_and_shield_for_defense() {
@@ -685,6 +708,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
                                 variant,
                                 1.0F));
   apply_spear_attack_sample(*this, m_pose, sample);
+  aim_held_weapon(m_pose,
+                  spear_qvec_from_pose(sample.offhand_spear_direction),
+                  baked_spear_direction());
 }
 
 void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {

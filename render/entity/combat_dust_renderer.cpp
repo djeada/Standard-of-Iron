@@ -12,6 +12,7 @@
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/combat_rules.h"
 #include "../../game/systems/combat_system/structure_combat.h"
+#include "../../game/systems/combat_system/structure_fire.h"
 #include "../../game/systems/formation_combat_geometry.h"
 #include "../../game/systems/rpg_combat_system/rpg_targeting.h"
 #include "../combat_dust_defaults.h"
@@ -33,7 +34,6 @@ constexpr float k_flame_y_offset = 0.5F;
 constexpr float k_flame_color_r = 1.0F;
 constexpr float k_flame_color_g = 0.4F;
 constexpr float k_flame_color_b = 0.1F;
-constexpr float k_building_health_threshold = 0.5F;
 constexpr float k_fire_patch_flame_y_offset = 0.10F;
 constexpr float k_fire_patch_flame_radius_scale = 0.28F;
 constexpr float k_fire_patch_flame_min_radius = 0.26F;
@@ -239,28 +239,23 @@ void render_combat_dust(Renderer* renderer,
                           animation_time);
   }
 
-  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
+  auto burning_structures =
+      world->get_entities_with<Engine::Core::StructureFireComponent>();
 
-  for (auto* building : buildings) {
-    if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto* building : burning_structures) {
+    if (building == nullptr ||
+        building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    float const fire_intensity =
+        Game::Systems::Combat::structure_fire_intensity(*building);
+    if (fire_intensity <= 0.0F) {
       continue;
     }
 
     auto* transform = building->get_component<Engine::Core::TransformComponent>();
-    auto* unit_comp = building->get_component<Engine::Core::UnitComponent>();
-
-    if (transform == nullptr || unit_comp == nullptr) {
-      continue;
-    }
-
-    if (unit_comp->health <= 0) {
-      continue;
-    }
-
-    float const health_ratio = static_cast<float>(unit_comp->health) /
-                               static_cast<float>(unit_comp->max_health);
-
-    if (health_ratio > k_building_health_threshold) {
+    if (transform == nullptr) {
       continue;
     }
 
@@ -273,14 +268,15 @@ void render_combat_dust(Renderer* renderer,
       continue;
     }
 
-    float const flame_intensity = k_flame_intensity * (1.0F - health_ratio);
-
     QVector3D const position(
         transform->position.x, k_flame_y_offset, transform->position.z);
     QVector3D const color(k_flame_color_r, k_flame_color_g, k_flame_color_b);
 
-    renderer->building_flame(
-        position, color, k_flame_radius, flame_intensity, animation_time);
+    renderer->building_flame(position,
+                             color,
+                             k_flame_radius,
+                             k_flame_intensity * fire_intensity,
+                             animation_time);
   }
 
   auto structure_impacts =
@@ -443,6 +439,10 @@ void render_combat_dust(Renderer* renderer,
     auto* unit_comp = burning_entity->get_component<Engine::Core::UnitComponent>();
     if (transform == nullptr || burning == nullptr || unit_comp == nullptr ||
         burning->remaining_duration <= 0.0F || unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (burning_entity->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
 

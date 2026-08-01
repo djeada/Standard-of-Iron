@@ -16,7 +16,8 @@ public:
                   int damage = 0,
                   Engine::Core::EntityID attacker_id = 0,
                   Engine::Core::EntityID target_id = 0,
-                  QVector3D target_origin_at_launch = {});
+                  QVector3D target_origin_at_launch = {},
+                  ProjectileKind kind = ProjectileKind::Stone);
 
   auto get_start() const -> QVector3D override { return m_start; }
   auto get_end() const -> QVector3D override { return m_end; }
@@ -25,7 +26,8 @@ public:
   auto get_arc_height() const -> float override { return m_arc_height; }
   auto get_progress() const -> float override { return m_t; }
   auto get_scale() const -> float override { return m_scale; }
-  auto get_kind() const -> ProjectileKind override { return ProjectileKind::Stone; }
+
+  auto get_kind() const -> ProjectileKind override { return m_kind; }
   auto is_active() const -> bool override { return m_active; }
 
   auto should_apply_damage() const -> bool override { return m_should_apply_damage; }
@@ -59,6 +61,7 @@ private:
   Engine::Core::EntityID m_target_id{0};
   Engine::Core::EntityID m_attacker_id{0};
   QVector3D m_target_origin_at_launch;
+  ProjectileKind m_kind{ProjectileKind::Stone};
 };
 
 } // namespace Game::Systems

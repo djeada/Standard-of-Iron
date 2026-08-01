@@ -52,6 +52,7 @@ struct HumanoidKneelPoseInputs {
   float ground_y{0.0F};
   float lower_leg_len{0.0F};
   float foot_y_offset{0.0F};
+  float knee_radius{0.0F};
 };
 
 struct HumanoidKneelPoseSample {
