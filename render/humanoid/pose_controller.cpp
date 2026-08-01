@@ -257,6 +257,17 @@ void apply_held_pose_sample(HumanoidPoseController& controller,
     hand_l_target.setZ(hand_l_target.z() + sample.left_hand_z_delta);
   }
 
+  if (sample.use_offhand_spear_grip) {
+    using HP = HumanProportions;
+    constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
+    QVector3D const shoulder_to_hand = hand_l_target - pose.shoulder_l;
+    float const requested_reach = shoulder_to_hand.length();
+    if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
+      hand_l_target =
+          pose.shoulder_l + shoulder_to_hand * (k_max_arm_reach / requested_reach);
+    }
+  }
+
   controller.place_hand_at(Side::Right, hand_r_target);
   controller.place_hand_at(Side::Left, hand_l_target);
   apply_held_pose_body_deltas(pose, sample);

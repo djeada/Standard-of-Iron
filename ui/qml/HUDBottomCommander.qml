@@ -759,7 +759,16 @@ RowLayout {
             }
 
             Text {
-                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera") : qsTr("[Tab] Target  [1] Rush  [2] Wind  [3] Aura  [F] Bash")
+                text: bottomRoot.fpv_mode ? qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera") : ""
+                visible: bottomRoot.fpv_mode
+                color: Theme.textMain
+                font.pointSize: 8
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+
+                text: bottomRoot.fpv_mode ? qsTr("[F] Bash  [1] Rush  [2] Second Wind") : qsTr("[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash")
                 color: Theme.textMain
                 font.pointSize: 8
                 wrapMode: Text.WordWrap

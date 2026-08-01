@@ -166,6 +166,12 @@ public slots:
   void pause_simulation(bool paused);
   void reset_camera();
 
+  [[nodiscard]] auto rpg_interactive_active() const -> bool {
+    return m_rpg_interactive;
+  }
+  auto enter_rpg_interactive_control(Engine::Core::EntityID entity_id = 0) -> bool;
+  void exit_rpg_interactive_control();
+
   void set_batch_fixed_step(float seconds);
   void set_scenario_duration_override(float seconds);
   [[nodiscard]] auto active_scenario_finished() const -> bool;
@@ -237,6 +243,10 @@ private:
   void configure_rpg_scenario_commander(Engine::Core::EntityID entity_id);
   void update_rpg_scenario_controller(float simulation_dt);
   void clear_rpg_scenario_state();
+  [[nodiscard]] auto rpg_interactive_key_press(QKeyEvent* event) -> bool;
+  [[nodiscard]] auto rpg_interactive_key_release(QKeyEvent* event) -> bool;
+  void recenter_rpg_mouse();
+  void draw_rpg_hud(QPainter& painter);
   void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
   auto spawn_single_unit(int owner_id,
@@ -310,6 +320,9 @@ private:
   std::unique_ptr<CommanderControlController> m_rpg_commander_controller;
   std::unique_ptr<Render::GL::RpgTelegraphRenderer> m_rpg_telegraphs;
   Engine::Core::EntityID m_rpg_commander_id{0};
+  bool m_rpg_interactive{false};
+  bool m_rpg_mouse_captured{false};
+  QPoint m_rpg_mouse_center;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_unit_factory;
   std::vector<std::unique_ptr<Game::Units::Unit>> m_units;
   int m_spawn_owner_id = 1;
