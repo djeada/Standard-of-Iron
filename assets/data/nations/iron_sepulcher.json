@@ -6,7 +6,7 @@
   "has_economy": false,
   "ai_profile": "sepulcher_defense",
   "selectable_in_skirmish": false,
-  "formation_type": "barbarian",
+  "doctrine": "iron_sepulcher",
   "troops": [
     {
       "id": "skeleton_swordsman",

@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include "../formation/army_formation_registry.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
 #include "../systems/nation_id.h"
@@ -687,6 +688,26 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     formation_obj["stable_slot_x"] = formation->stable_slot_x;
     formation_obj["stable_slot_z"] = formation->stable_slot_z;
     entity_obj["formation_mode"] = formation_obj;
+  }
+
+  if (const auto* membership =
+          entity->get_component<ArmyFormationMembershipComponent>()) {
+    QJsonObject membership_obj;
+    membership_obj["group_id"] = static_cast<qint64>(membership->group_id);
+    membership_obj["slot_id"] = membership->slot_id;
+    entity_obj["army_formation_membership"] = membership_obj;
+  }
+
+  if (const auto* layout = entity->get_component<UnitLayoutStateComponent>()) {
+    QJsonObject layout_obj;
+    layout_obj["state"] = static_cast<int>(layout->state);
+    layout_obj["phase"] = static_cast<int>(layout->phase);
+    layout_obj["transition_progress"] =
+        static_cast<double>(layout->transition_progress);
+    layout_obj["transition_seconds"] = static_cast<double>(layout->transition_seconds);
+    layout_obj["layout_id"] = static_cast<int>(layout->layout_id);
+    layout_obj["requested_layout_id"] = static_cast<int>(layout->requested_layout_id);
+    entity_obj["unit_layout_state"] = layout_obj;
   }
 
   if (const auto* defense = entity->get_component<DefenseFormationComponent>()) {
@@ -1510,6 +1531,29 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(formation_obj["stable_slot_z"].toDouble(0.0));
   }
 
+  if (json.contains("army_formation_membership")) {
+    const auto membership_obj = json["army_formation_membership"].toObject();
+    auto* membership = entity->add_component<ArmyFormationMembershipComponent>();
+    membership->group_id = static_cast<std::uint64_t>(
+        membership_obj["group_id"].toVariant().toULongLong());
+    membership->slot_id = membership_obj["slot_id"].toInt(-1);
+  }
+
+  if (json.contains("unit_layout_state")) {
+    const auto layout_obj = json["unit_layout_state"].toObject();
+    auto* layout = entity->add_component<UnitLayoutStateComponent>();
+    layout->state = static_cast<std::uint8_t>(layout_obj["state"].toInt(0));
+    layout->phase = static_cast<std::uint8_t>(layout_obj["phase"].toInt(1));
+    layout->transition_progress =
+        static_cast<float>(layout_obj["transition_progress"].toDouble(1.0));
+    layout->transition_seconds =
+        static_cast<float>(layout_obj["transition_seconds"].toDouble(0.0));
+    layout->layout_id =
+        static_cast<std::uint16_t>(layout_obj["layout_id"].toInt(0xFFFF));
+    layout->requested_layout_id =
+        static_cast<std::uint16_t>(layout_obj["requested_layout_id"].toInt(0xFFFF));
+  }
+
   if (json.contains("defense_formation")) {
     const auto defense_obj = json["defense_formation"].toObject();
     auto* defense = entity->add_component<DefenseFormationComponent>();
@@ -2058,6 +2102,8 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 2;
   world_obj["owner_registry"] = Game::Systems::OwnerRegistry::instance().to_json();
+  world_obj["army_formations"] =
+      Game::Formation::ArmyFormationRegistry::instance().to_json();
 
   const auto& terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized() &&
@@ -2096,6 +2142,9 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
     Game::Systems::OwnerRegistry::instance().from_json(
         world_obj["owner_registry"].toObject());
   }
+
+  Game::Formation::ArmyFormationRegistry::instance().from_json(
+      world_obj["army_formations"].toObject());
 
   if (world_obj.contains("terrain")) {
     const auto terrain_obj = world_obj["terrain"].toObject();

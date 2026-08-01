@@ -59,7 +59,6 @@
 #include "animation/micro_variation_manifest.h"
 #include "cache_control.h"
 #include "facial_hair_catalog.h"
-#include "formation_calculator.h"
 #include "humanoid_math.h"
 #include "humanoid_renderer_base.h"
 #include "humanoid_spec.h"
@@ -69,6 +68,7 @@
 #include "render_stats.h"
 #include "rig_stats_shim.h"
 #include "skeleton.h"
+#include "unit_layout_spacing.h"
 
 namespace Render::GL {
 
@@ -110,8 +110,6 @@ using Render::GL::AmbientIdleType;
 using Render::GL::AnimationInputs;
 using Render::GL::DrawContext;
 using Render::GL::elbow_bend_torso;
-using Render::GL::FormationCalculatorFactory;
-using Render::GL::FormationOffset;
 using Render::GL::FormationParams;
 using Render::GL::HumanoidAnimationContext;
 using Render::GL::HumanoidLOD;
@@ -119,7 +117,6 @@ using Render::GL::HumanoidMotionState;
 using Render::GL::HumanoidPose;
 using Render::GL::HumanoidRendererBase;
 using Render::GL::HumanoidVariant;
-using Render::GL::IFormationCalculator;
 using Render::GL::ISubmitter;
 using Render::GL::k_reference_run_speed;
 using Render::GL::k_reference_walk_speed;

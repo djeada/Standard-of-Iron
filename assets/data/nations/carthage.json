@@ -2,7 +2,7 @@
   "id": "carthage",
   "display_name": "Carthaginian Empire",
   "primary_building": "barracks",
-  "formation_type": "carthage",
+  "doctrine": "carthage",
   "defense_formation": {
     "id": "shield_wall",
     "display_name": "Shield Wall",

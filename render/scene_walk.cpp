@@ -332,9 +332,10 @@ float get_unit_cull_radius(const Engine::Core::UnitComponent& unit) {
   const int rows = (definition.total_count + columns - 1) / columns;
   const float half_width = 0.5F * static_cast<float>(columns - 1) * definition.spacing;
   const float half_depth = 0.5F * static_cast<float>(rows - 1) * definition.spacing;
-  const float body_padding =
-      definition.category == Game::Systems::FormationUnitCategory::Cavalry ? 2.75F
-                                                                           : 1.75F;
+  const bool mounted = unit.spawn_type == Game::Units::SpawnType::MountedKnight ||
+                       unit.spawn_type == Game::Units::SpawnType::HorseArcher ||
+                       unit.spawn_type == Game::Units::SpawnType::HorseSpearman;
+  const float body_padding = mounted ? 2.75F : 1.75F;
   const float formation_radius = std::hypot(half_width, half_depth) + body_padding;
   return std::max(base_radius, formation_radius);
 }

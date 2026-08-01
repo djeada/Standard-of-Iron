@@ -8,6 +8,7 @@
 #include <numbers>
 #include <vector>
 
+#include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
@@ -82,7 +83,8 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
                                 const Engine::Core::StaminaComponent* stamina)
     -> float {
   return max_navigation_speed(unit, stamina) *
-         DefenseFormationService::move_speed_multiplier(entity);
+         DefenseFormationService::move_speed_multiplier(entity) *
+         Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
 }
 
 auto melee_turn_speed_degrees(const Engine::Core::UnitComponent& unit) -> float {

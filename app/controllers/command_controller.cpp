@@ -16,10 +16,12 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/formation/army_formation_registry.h"
+#include "../../game/formation/army_formation_service.h"
+#include "../../game/formation/formation_doctrine.h"
 #include "../../game/session/session_context.h"
 #include "../../game/systems/combat_rules.h"
 #include "../../game/systems/command_service.h"
-#include "../../game/systems/formation_planner.h"
 #include "../../game/systems/order_service.h"
 #include "../../game/systems/owner_registry.h"
 #include "../../game/systems/picking_service.h"
@@ -419,9 +421,13 @@ void CommandController::reset_transient_state() {
   }
 
   m_is_placing_formation = false;
+  m_formation_drag_active = false;
   m_formation_placement_position = QVector3D();
   m_formation_placement_angle = 0.0F;
+  m_formation_frontage = 0.0F;
   m_formation_units.clear();
+  m_formation_preview = Game::Formation::ArmyFormationPlan{};
+  emit formation_preview_changed();
   emit formation_placement_ended();
   emit formation_mode_changed(false);
 }
@@ -744,6 +750,9 @@ auto CommandController::on_formation_command() -> CommandResult {
       m_is_right_drag_formation = false;
       m_formation_placement_position = center;
       m_formation_placement_angle = 0.0F;
+      m_formation_frontage = 0.0F;
+      m_formation_drag_active = false;
+      refresh_formation_preview();
 
       emit formation_placement_started();
       emit formation_placement_updated(m_formation_placement_position,
@@ -783,6 +792,7 @@ void CommandController::update_formation_placement(const QVector3D& position) {
     return;
   }
   m_formation_placement_position = position;
+  refresh_formation_preview();
   emit formation_placement_updated(m_formation_placement_position,
                                    m_formation_placement_angle);
 }
@@ -792,6 +802,7 @@ void CommandController::update_formation_rotation(float angle_degrees) {
     return;
   }
   m_formation_placement_angle = angle_degrees;
+  refresh_formation_preview();
   emit formation_placement_updated(m_formation_placement_position,
                                    m_formation_placement_angle);
 }
@@ -840,31 +851,26 @@ void CommandController::confirm_formation_placement() {
     return;
   }
 
-  auto formation_result = Game::Systems::FormationPlanner::get_formation_with_facing(
-      *m_world,
-      m_formation_units,
-      m_formation_placement_position,
-      Game::GameConfig::instance().gameplay().formation_spacing_default);
+  Game::Formation::ArmyFormationRequest request;
+  request.members = m_formation_units;
+  request.anchor = m_formation_placement_position;
+  request.facing = Game::Formation::ArmyFormationService::auto_facing(
+                       *m_world, m_formation_units, m_formation_placement_position) +
+                   m_formation_placement_angle;
+  request.frontage = m_formation_frontage;
+  request.intent = m_formation_intent;
+  request.options = m_formation_options;
+  request.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
 
-  float const angle_rad =
-      m_formation_placement_angle * std::numbers::pi_v<float> / 180.0F;
-  float const cos_a = std::cos(angle_rad);
-  float const sin_a = std::sin(angle_rad);
+  auto formation_result =
+      Game::Formation::ArmyFormationService::commit(*m_world, request);
+
+  if (!formation_result.valid) {
+    emit formation_placement_rejected(
+        QString::fromStdString(formation_result.rejection_reason));
+  }
 
   for (size_t i = 0; i < m_formation_units.size(); ++i) {
-
-    if (i < formation_result.positions.size()) {
-      QVector3D& pos = formation_result.positions[i];
-      float const dx = pos.x() - m_formation_placement_position.x();
-      float const dz = pos.z() - m_formation_placement_position.z();
-
-      float const rotated_x = dx * cos_a - dz * sin_a;
-      float const rotated_z = dx * sin_a + dz * cos_a;
-
-      pos.setX(m_formation_placement_position.x() + rotated_x);
-      pos.setZ(m_formation_placement_position.z() + rotated_z);
-    }
-
     auto* entity = m_world->get_entity(m_formation_units[i]);
     if (entity == nullptr) {
       continue;
@@ -875,13 +881,13 @@ void CommandController::confirm_formation_placement() {
       float const unit_facing = (i < formation_result.facing_angles.size())
                                     ? formation_result.facing_angles[i]
                                     : 0.0F;
-      transform->desired_yaw = unit_facing + m_formation_placement_angle;
+      transform->desired_yaw = unit_facing;
       transform->has_desired_yaw = true;
     }
     auto* formation_mode =
         entity->get_component<Engine::Core::FormationModeComponent>();
     if (formation_mode != nullptr && i < formation_result.stable_slot_ids.size()) {
-      formation_mode->formation_id = formation_result.formation_id;
+      formation_mode->formation_id = formation_result.group_id;
       formation_mode->stable_slot_id = formation_result.stable_slot_ids[i];
       formation_mode->stable_rank = formation_result.stable_ranks[i];
       formation_mode->stable_file = formation_result.stable_files[i];
@@ -896,11 +902,14 @@ void CommandController::confirm_formation_placement() {
   move.units = m_formation_units;
   move.targets = formation_result.positions;
   move.kind = Game::Systems::MoveOrderKind::FormationMove;
-  move.preserve_formation_mode = formation_result.used_tactical_formation;
+  move.preserve_formation_mode = formation_result.used_army_formation;
   submit(m_world, std::move(move));
 
   m_is_placing_formation = false;
+  m_formation_drag_active = false;
   m_formation_units.clear();
+  m_formation_preview = Game::Formation::ArmyFormationPlan{};
+  emit formation_preview_changed();
   emit formation_placement_ended();
   if (!m_is_right_drag_formation) {
     emit formation_mode_changed(true);
@@ -925,8 +934,14 @@ void CommandController::cancel_formation_placement() {
     }
   }
 
+  Game::Formation::ArmyFormationService::release(*m_world, m_formation_units);
+
   m_is_placing_formation = false;
+  m_formation_drag_active = false;
+  m_formation_frontage = 0.0F;
   m_formation_units.clear();
+  m_formation_preview = Game::Formation::ArmyFormationPlan{};
+  emit formation_preview_changed();
   emit formation_placement_ended();
   if (!m_is_right_drag_formation) {
     emit formation_mode_changed(false);
@@ -1062,6 +1077,308 @@ void CommandController::disable_run_mode_for_selected() {
                                    .active = false});
 
   emit run_mode_changed(false);
+}
+
+namespace {
+
+auto scale_for_preset(const QString& preset,
+                      float low,
+                      float mid,
+                      float high) -> float {
+  const QString lowered = preset.trimmed().toLower();
+  if (lowered == QStringLiteral("narrow") || lowered == QStringLiteral("shallow") ||
+      lowered == QStringLiteral("tight")) {
+    return low;
+  }
+  if (lowered == QStringLiteral("wide") || lowered == QStringLiteral("deep") ||
+      lowered == QStringLiteral("loose")) {
+    return high;
+  }
+  return mid;
+}
+
+} // namespace
+
+void CommandController::set_formation_intent(const QString& intent_id) {
+  auto parsed = Game::Formation::try_parse_intent(intent_id);
+  if (!parsed) {
+    return;
+  }
+  if (m_formation_intent == *parsed) {
+    return;
+  }
+  m_formation_intent = *parsed;
+  apply_formation_option_change();
+}
+
+auto CommandController::formation_intent() const -> QString {
+  return QString::fromLatin1(Game::Formation::intent_to_string(m_formation_intent));
+}
+
+auto CommandController::available_formation_intents() const -> QStringList {
+  QStringList out;
+  if (m_formation_units.empty()) {
+    return out;
+  }
+  const auto& doctrine = Game::Formation::DoctrineRegistry::instance().get_or_neutral(
+      formation_doctrine().toStdString());
+  for (auto intent : Game::Formation::all_intents()) {
+    if (doctrine.supports(intent)) {
+      out.append(QString::fromLatin1(Game::Formation::intent_to_string(intent)));
+    }
+  }
+  return out;
+}
+
+auto CommandController::formation_intent_display_name(const QString& intent_id) const
+    -> QString {
+  auto parsed = Game::Formation::try_parse_intent(intent_id);
+  return Game::Formation::intent_display_name(
+      parsed.value_or(Game::Formation::ArmyFormationIntent::FactionDefault));
+}
+
+auto CommandController::formation_intent_unavailable_reason(
+    const QString& intent_id) const -> QString {
+  auto parsed = Game::Formation::try_parse_intent(intent_id);
+  if (!parsed || m_world == nullptr || m_formation_units.empty()) {
+    return QStringLiteral("No units selected.");
+  }
+  return QString::fromStdString(Game::Formation::ArmyFormationService::availability(
+      *m_world, m_formation_units, *parsed, m_formation_doctrine_override));
+}
+
+auto CommandController::formation_doctrine() const -> QString {
+  if (!m_formation_doctrine_override.empty()) {
+    return QString::fromStdString(m_formation_doctrine_override);
+  }
+  if (m_world == nullptr || m_formation_units.empty()) {
+    return QString::fromStdString(Game::Formation::k_neutral_doctrine);
+  }
+  return QString::fromStdString(
+      Game::Formation::ArmyFormationService::doctrine_for_selection(
+          *m_world, m_formation_units, m_formation_options.mixed_policy));
+}
+
+auto CommandController::formation_doctrine_display_name() const -> QString {
+  return QString::fromStdString(Game::Formation::DoctrineRegistry::instance()
+                                    .get_or_neutral(formation_doctrine().toStdString())
+                                    .display_name);
+}
+
+void CommandController::begin_formation_drag(const QVector3D& start) {
+  if (!m_is_placing_formation || m_formation_units.empty()) {
+    return;
+  }
+  m_formation_drag_active = true;
+  m_formation_drag_start = start;
+  m_formation_placement_position = start;
+  m_formation_frontage = 0.0F;
+  refresh_formation_preview();
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
+}
+
+void CommandController::update_formation_drag(const QVector3D& current) {
+  if (!m_formation_drag_active) {
+    return;
+  }
+
+  QVector3D along = current - m_formation_drag_start;
+  along.setY(0.0F);
+  float const length = along.length();
+
+  m_formation_placement_position = m_formation_drag_start + (along * 0.5F);
+
+  if (length > 0.5F) {
+    m_formation_frontage = length;
+    QVector3D const facing_dir(-along.z(), 0.0F, along.x());
+    m_formation_placement_angle =
+        std::atan2(facing_dir.x(), facing_dir.z()) * 180.0F / std::numbers::pi_v<float>;
+  }
+
+  refresh_formation_preview();
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
+}
+
+void CommandController::end_formation_drag() {
+  m_formation_drag_active = false;
+}
+
+void CommandController::adjust_formation_depth(float wheel_delta) {
+  if (!m_is_placing_formation) {
+    return;
+  }
+  float const step = wheel_delta > 0.0F ? 1.15F : (1.0F / 1.15F);
+  m_formation_options.depth_scale =
+      std::clamp(m_formation_options.depth_scale * step, 0.4F, 3.0F);
+  apply_formation_option_change();
+}
+
+void CommandController::mirror_formation_flank() {
+  using Game::Formation::FlankPreference;
+  switch (m_formation_options.flank_preference) {
+  case FlankPreference::Balanced:
+    m_formation_options.flank_preference = FlankPreference::StrongRight;
+    break;
+  case FlankPreference::StrongRight:
+    m_formation_options.flank_preference = FlankPreference::StrongLeft;
+    break;
+  case FlankPreference::StrongLeft:
+    m_formation_options.flank_preference = FlankPreference::Split;
+    break;
+  case FlankPreference::Split:
+    m_formation_options.flank_preference = FlankPreference::Balanced;
+    break;
+  }
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_preserve_order(bool preserve) {
+  m_formation_options.preserve_member_order = preserve;
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_tight_spacing(bool tight) {
+  m_formation_options.spacing_scale = tight ? 0.75F : 1.0F;
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_frontage_preset(const QString& preset) {
+  m_formation_options.frontage_scale = scale_for_preset(preset, 0.7F, 1.0F, 1.45F);
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_depth_preset(const QString& preset) {
+  m_formation_options.depth_scale = scale_for_preset(preset, 0.7F, 1.0F, 1.45F);
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_spacing_preset(const QString& preset) {
+  m_formation_options.spacing_scale = scale_for_preset(preset, 0.75F, 1.0F, 1.35F);
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_flank_preference(const QString& preference) {
+  if (auto parsed = Game::Formation::try_parse_flank_preference(preference)) {
+    m_formation_options.flank_preference = *parsed;
+    apply_formation_option_change();
+  }
+}
+
+void CommandController::set_formation_ranged_placement(const QString& placement) {
+  if (auto parsed = Game::Formation::try_parse_ranged_placement(placement)) {
+    m_formation_options.ranged_placement = *parsed;
+    apply_formation_option_change();
+  }
+}
+
+void CommandController::set_formation_reserve_rows(int rows) {
+  m_formation_options.reserve_rows = std::clamp(rows, -1, 3);
+  apply_formation_option_change();
+}
+
+void CommandController::set_formation_movement_policy(const QString& policy) {
+  if (auto parsed = Game::Formation::try_parse_movement_policy(policy)) {
+    m_formation_options.movement_policy = *parsed;
+    apply_formation_option_change();
+  }
+}
+
+void CommandController::set_formation_mixed_policy(const QString& policy) {
+  if (auto parsed = Game::Formation::try_parse_mixed_policy(policy)) {
+    m_formation_options.mixed_policy = *parsed;
+    apply_formation_option_change();
+  }
+}
+
+void CommandController::set_formation_doctrine_override(const QString& doctrine) {
+  const QString trimmed = doctrine.trimmed().toLower();
+  if (trimmed.isEmpty() || trimmed == QStringLiteral("automatic")) {
+    m_formation_doctrine_override.clear();
+    m_formation_options.doctrine_locked = false;
+  } else {
+    m_formation_doctrine_override = trimmed.toStdString();
+    m_formation_options.doctrine_locked = true;
+  }
+  apply_formation_option_change();
+}
+
+auto CommandController::formation_options() const -> QVariantMap {
+  QVariantMap map;
+  map["intent"] = formation_intent();
+  map["doctrine"] = formation_doctrine();
+  map["doctrine_display_name"] = formation_doctrine_display_name();
+  map["doctrine_locked"] = m_formation_options.doctrine_locked;
+  map["frontage_scale"] = m_formation_options.frontage_scale;
+  map["depth_scale"] = m_formation_options.depth_scale;
+  map["spacing_scale"] = m_formation_options.spacing_scale;
+  map["reserve_rows"] = m_formation_options.reserve_rows;
+  map["preserve_member_order"] = m_formation_options.preserve_member_order;
+  map["flank"] = QString::fromLatin1(Game::Formation::flank_preference_to_string(
+      m_formation_options.flank_preference));
+  map["ranged"] = QString::fromLatin1(Game::Formation::ranged_placement_to_string(
+      m_formation_options.ranged_placement));
+  map["movement"] = QString::fromLatin1(
+      Game::Formation::movement_policy_to_string(m_formation_options.movement_policy));
+  map["mixed"] = QString::fromLatin1(
+      Game::Formation::mixed_policy_to_string(m_formation_options.mixed_policy));
+  map["frontage"] = m_formation_frontage;
+  map["blocked_slots"] = m_formation_preview.blocked_count;
+  map["adjusted_slots"] = m_formation_preview.adjusted_count;
+  map["warning"] = formation_preview_warning();
+  return map;
+}
+
+void CommandController::reset_formation_options() {
+  m_formation_options = Game::Formation::ArmyFormationOptions{};
+  m_formation_doctrine_override.clear();
+  m_formation_intent = Game::Formation::ArmyFormationIntent::FactionDefault;
+  m_formation_frontage = 0.0F;
+  apply_formation_option_change();
+}
+
+auto CommandController::formation_preview_warning() const -> QString {
+  if (!m_formation_preview.rejection_reason.empty()) {
+    return QString::fromStdString(m_formation_preview.rejection_reason);
+  }
+  if (m_formation_preview.blocked_count > 0) {
+    return tr("%1 of %2 positions do not fit on this ground.")
+        .arg(m_formation_preview.blocked_count)
+        .arg(static_cast<int>(m_formation_preview.slot_list.size()));
+  }
+  return {};
+}
+
+void CommandController::refresh_formation_preview() {
+  if (m_world == nullptr || m_formation_units.empty() || !m_is_placing_formation) {
+    m_formation_preview = Game::Formation::ArmyFormationPlan{};
+    emit formation_preview_changed();
+    return;
+  }
+
+  Game::Formation::ArmyFormationRequest request;
+  request.members = m_formation_units;
+  request.anchor = m_formation_placement_position;
+  request.facing = Game::Formation::ArmyFormationService::auto_facing(
+                       *m_world, m_formation_units, m_formation_placement_position) +
+                   m_formation_placement_angle;
+  request.frontage = m_formation_frontage;
+  request.intent = m_formation_intent;
+  request.doctrine = m_formation_doctrine_override;
+  request.options = m_formation_options;
+  request.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
+  request.group_id = Game::Formation::ArmyFormationRegistry::instance().group_of(
+      m_formation_units.front());
+
+  m_formation_preview = Game::Formation::ArmyFormationPlanner::plan(*m_world, request);
+  emit formation_preview_changed();
+}
+
+void CommandController::apply_formation_option_change() {
+  refresh_formation_preview();
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
 }
 
 } // namespace App::Controllers

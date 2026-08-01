@@ -7,6 +7,7 @@
 #include <functional>
 #include <vector>
 
+#include "../../game/formation/unit_layout.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/creature_render_state.h"
 #include "../creature/pipeline/prepared_submit.h"
@@ -17,7 +18,6 @@ struct DrawContext;
 class ISubmitter;
 struct AnimationInputs;
 class HumanoidRendererBase;
-class IFormationCalculator;
 } // namespace Render::GL
 
 namespace Render::Creature {
@@ -51,11 +51,12 @@ struct SoldierLayoutInputs {
   bool force_single_soldier{false};
   bool melee_attack{false};
   float animation_time{0.0F};
+  Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
+  float formed_ratio{1.0F};
 };
 
 [[nodiscard]] auto
-build_soldier_layout(const Render::GL::IFormationCalculator& formation_calculator,
-                     const SoldierLayoutInputs& inputs) -> SoldierLayout;
+build_soldier_layout(const SoldierLayoutInputs& inputs) -> SoldierLayout;
 
 struct HumanoidLocomotionInputs {
   Render::GL::AnimationInputs anim{};

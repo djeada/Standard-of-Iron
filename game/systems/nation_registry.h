@@ -8,9 +8,9 @@
 #include <utility>
 #include <vector>
 
+#include "../formation/army_formation_types.h"
 #include "../units/building_type.h"
 #include "../units/troop_type.h"
-#include "formation_system.h"
 #include "nation_id.h"
 #include "resource_types.h"
 
@@ -34,7 +34,7 @@ struct NationTroopVariant {
   std::optional<float> selection_ring_ground_offset;
   std::optional<float> formation_spacing;
   std::optional<float> render_scale;
-  std::optional<FormationType> formation_type;
+  std::optional<Game::Formation::FormationDoctrineId> doctrine;
   std::optional<std::string> renderer_id;
   std::optional<bool> can_ranged;
   std::optional<bool> can_melee;
@@ -94,7 +94,7 @@ struct Nation {
   std::vector<TroopType> available_troops;
   std::optional<Game::Units::BuildingType> primary_building =
       Game::Units::BuildingType::Barracks;
-  FormationType formation_type = FormationType::Roman;
+  Game::Formation::FormationDoctrineId doctrine{"rome"};
   std::optional<DefenseFormationProfile> defense_formation;
   bool playable = true;
   bool has_economy = true;

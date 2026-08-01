@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <array>
 #include <initializer_list>
+#include <iterator>
 #include <tuple>
 #include <utility>
 
+#include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
 
 namespace Arena::Scenarios {
@@ -6330,7 +6332,14 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 } // namespace
 
 auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
-  static const std::vector<ArenaScenarioDefinition> catalog = build_definitions();
+  static const std::vector<ArenaScenarioDefinition> catalog = [] {
+    auto values = build_definitions();
+    auto formation = build_formation_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(formation.begin()),
+                  std::make_move_iterator(formation.end()));
+    return values;
+  }();
   return catalog;
 }
 

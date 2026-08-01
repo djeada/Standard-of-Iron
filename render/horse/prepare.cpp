@@ -1,9 +1,6 @@
 #include "prepare.h"
 
-#include "render/math/creature_math_utils.h"
-
 #include <QDebug>
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -23,6 +20,7 @@
 #include "../submitter.h"
 #include "horse_motion.h"
 #include "horse_renderer_base.h"
+#include "render/math/creature_math_utils.h"
 #include "scene/camera.h"
 
 namespace Render::Horse {

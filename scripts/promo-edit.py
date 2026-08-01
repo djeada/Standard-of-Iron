@@ -39,7 +39,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 CAPTION_Y_FRACTION = 0.70
 TITLE_Y_FRACTION = 0.42
 CAPTION_FADE = 0.25
@@ -75,8 +74,7 @@ def fit_font_size(text: str, font: str, size: int, max_width: int) -> int:
     try:
         from PIL import ImageFont
     except ImportError:
-        # Without a metrics library, fall back to a conservative estimate of
-        # advance width for a bold serif face.
+
         estimated = int(max_width / max(len(text), 1) / 0.62)
         return max(18, min(size, estimated))
 
@@ -298,11 +296,7 @@ def main() -> int:
             )
             stage = "sub"
 
-    # No fade in: social platforms take the first frame as the cover image, and
-    # a fade would hand them a black one. The cut opens on picture instead.
-    chain.append(
-        f"[{stage}]fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]"
-    )
+    chain.append(f"[{stage}]fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]")
 
     command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *inputs]
     filter_complex = ";".join(chain)

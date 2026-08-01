@@ -1421,6 +1421,30 @@ public:
   float stable_slot_z{0.0F};
 };
 
+class ArmyFormationMembershipComponent : public Component {
+public:
+  ArmyFormationMembershipComponent() = default;
+
+  std::uint64_t group_id{0};
+  int slot_id{-1};
+
+  [[nodiscard]] auto is_valid() const noexcept -> bool { return group_id != 0U; }
+};
+
+class UnitLayoutStateComponent : public Component {
+public:
+  UnitLayoutStateComponent() = default;
+
+  std::uint8_t state{0U};
+  std::uint8_t phase{1U};
+  float transition_progress{1.0F};
+  float transition_seconds{0.0F};
+  std::uint16_t layout_id{0xFFFFU};
+  std::uint16_t requested_layout_id{0xFFFFU};
+
+  [[nodiscard]] auto is_formed() const noexcept -> bool { return phase == 1U; }
+};
+
 class StaminaComponent : public Component {
 public:
   static constexpr float k_run_speed_multiplier = 1.5F;

@@ -1,0 +1,11 @@
+{
+  "id": "rome.beast_spread",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.7,
+  "depth_spacing_scale": 1.9,
+  "rank_stagger": 0.0,
+  "lateral_jitter": 0.04,
+  "depth_jitter": 0.04,
+  "facing_jitter_degrees": 2.0,
+  "min_separation_scale": 0.82
+}

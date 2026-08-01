@@ -306,6 +306,36 @@
         <file>assets/data/troops/base.json</file>
         <file>assets/data/nations/roman_republic.json</file>
         <file>assets/data/nations/carthage.json</file>
+        <file>assets/data/nations/iron_sepulcher.json</file>
+
+        <!-- Formation doctrines and unit layouts -->
+        <file>assets/data/formations/army/carthage.json</file>
+        <file>assets/data/formations/army/iron_sepulcher.json</file>
+        <file>assets/data/formations/army/rome.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_beast_spread.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_cavalry_wedge.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_close_order_infantry.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_loose_order_ranged.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_marching_column.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_shield_wall.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_spear_brace.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_spear_ranks.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_burial_guard_block.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_close_order_infantry.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_command_retinue.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_dense_advance.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_loose_order_ranged.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_marching_column.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_procession.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_sepulcher_ranged_line.json</file>
+        <file>assets/data/formations/unit_layouts/iron_sepulcher_shield_wall.json</file>
+        <file>assets/data/formations/unit_layouts/rome_cavalry_wedge.json</file>
+        <file>assets/data/formations/unit_layouts/rome_close_order_infantry.json</file>
+        <file>assets/data/formations/unit_layouts/rome_loose_order_ranged.json</file>
+        <file>assets/data/formations/unit_layouts/rome_marching_column.json</file>
+        <file>assets/data/formations/unit_layouts/rome_shield_wall.json</file>
+        <file>assets/data/formations/unit_layouts/rome_spear_brace.json</file>
+        <file>assets/data/formations/unit_layouts/rome_spear_ranks.json</file>
 
     </qresource>
 </RCC>

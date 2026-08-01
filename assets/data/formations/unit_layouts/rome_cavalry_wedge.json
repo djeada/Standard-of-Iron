@@ -1,0 +1,13 @@
+{
+  "id": "rome.cavalry_wedge",
+  "shape": "wedge",
+  "lateral_spacing_scale": 0.7,
+  "depth_spacing_scale": 1.34,
+  "wedge_slope": 0.58,
+  "rank_stagger": 0.0,
+  "rear_depth_bias": 0.2,
+  "lateral_jitter": 0.02,
+  "depth_jitter": 0.018,
+  "facing_jitter_degrees": 1.2,
+  "min_separation_scale": 0.66
+}

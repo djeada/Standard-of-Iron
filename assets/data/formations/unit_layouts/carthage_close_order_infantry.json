@@ -1,0 +1,15 @@
+{
+  "id": "carthage.close_order_infantry",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.62,
+  "depth_spacing_scale": 0.86,
+  "rank_stagger": 0.45,
+  "rank_echelon": 0.3,
+  "rank_arc": 0.42,
+  "rear_rank_loosening": 0.22,
+  "lateral_jitter": 0.18,
+  "depth_jitter": 0.15,
+  "rear_jitter_gain": 0.9,
+  "facing_jitter_degrees": 11.0,
+  "min_separation_scale": 0.46
+}

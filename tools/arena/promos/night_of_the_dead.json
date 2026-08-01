@@ -14,11 +14,7 @@
       "slow_motion": 1.0,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          6.0
-        ]
+        "point": [0.0, 0.0, 6.0]
       },
       "camera": [
         {
@@ -83,11 +79,7 @@
       "shake": 0.03,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          5.0
-        ]
+        "point": [0.0, 0.0, 5.0]
       },
       "camera": [
         {
@@ -151,11 +143,7 @@
       "slow_motion": 2.0,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          4.0
-        ]
+        "point": [0.0, 0.0, 4.0]
       },
       "camera": [
         {
@@ -187,11 +175,7 @@
       "slow_motion": 1.0,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          3.0
-        ]
+        "point": [0.0, 0.0, 3.0]
       },
       "camera": [
         {
