@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "visibility_mask.glsl"
 
 out vec4 frag_color;
 
@@ -10,12 +11,6 @@ in vec3 world_pos;
 in vec3 v_normal;
 
 uniform float time;
-
-uniform sampler2D u_visibility_tex;
-uniform vec2 u_visibility_size;
-uniform float u_visibility_tile_size;
-uniform float u_explored_alpha;
-uniform int u_has_visibility;
 
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
@@ -133,34 +128,25 @@ vec3 procedural_detail_normal(vec3 base_normal, vec2 point, float strength) {
 }
 
 float calculate_visibility() {
-  if (u_has_visibility != 1 || u_visibility_size.x <= 0.0 ||
-      u_visibility_size.y <= 0.0) {
+  if (!visibility_mask_active()) {
     return 1.0;
   }
 
-  float tile_size = max(u_visibility_tile_size, 0.0001);
-
-  vec2 grid = world_pos.xz / tile_size;
-  grid += u_visibility_size * 0.5 - vec2(0.5);
-
-  vec2 visibility_uv = (grid + vec2(0.5)) / u_visibility_size;
-
+  vec2 visibility_uv =
+      visibility_mask_uv(world_pos.xz, u_visibility_size, u_visibility_tile_size);
   if (visibility_uv.x < 0.0 || visibility_uv.y < 0.0 || visibility_uv.x > 1.0 ||
       visibility_uv.y > 1.0) {
     discard;
   }
 
-  float visibility = texture(u_visibility_tex, visibility_uv).r;
-
-  if (visibility < 0.25) {
+  VisibilityMask mask = sample_visibility_mask(
+      u_visibility_tex, world_pos.xz, u_visibility_size, u_visibility_tile_size);
+  if (visibility_is_unknown(mask)) {
     discard;
   }
 
-  if (visibility < 0.75) {
-    return saturate(u_explored_alpha);
-  }
-
-  return 1.0;
+  float memory = saturate(u_explored_alpha) * visibility_memory_falloff(mask);
+  return mix(memory, 1.0, visibility_live_weight(mask));
 }
 
 void main() {

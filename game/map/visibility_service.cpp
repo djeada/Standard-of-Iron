@@ -495,6 +495,36 @@ void VisibilityService::reveal_all() {
   publish_snapshot_locked(next_version);
 }
 
+auto VisibilityService::restore_explored(const std::vector<std::uint8_t>& explored,
+                                         int width,
+                                         int height) -> bool {
+  if (!m_initialized) {
+    return false;
+  }
+  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
+  if (width != m_width || height != m_height || explored.size() != m_cells.size()) {
+    return false;
+  }
+
+  const auto explored_val = static_cast<std::uint8_t>(VisibilityState::Explored);
+  const auto unseen_val = static_cast<std::uint8_t>(VisibilityState::Unseen);
+  bool changed = false;
+  for (std::size_t idx = 0; idx < m_cells.size(); ++idx) {
+    if (explored[idx] != 0U && m_cells[idx] == unseen_val) {
+      m_cells[idx] = explored_val;
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return true;
+  }
+
+  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
+  publish_snapshot_locked(next_version);
+  return true;
+}
+
 auto VisibilityService::in_bounds(int grid_x, int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height;
 }

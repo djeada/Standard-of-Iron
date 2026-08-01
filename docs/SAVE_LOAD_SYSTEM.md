@@ -166,6 +166,12 @@ Loading reverses the process:
 
 The crucial step is clearing the world before deserializing. This ensures no stale entities remain. The deserialization then recreates every entity with its components exactly as they were when saved.
 
+### Exploration comes back with the world
+
+One thing the world's entities cannot tell you is where the player has already been. Fog that has been cleared is player knowledge, so `GameStateSerializer` writes it into the save metadata as `visibility`: the grid size plus a run-length-encoded, base64 explored mask (`game/map/explored_mask_codec.h`). Exploration is large and uniform, so the runs squash a 650x650 map into a few hundred bytes.
+
+On load the mask is folded back in _after_ the world and the visibility grid exist, by `GameStateSerializer::restore_visibility_from_metadata()`. The restore is additive: it can only turn `Unseen` tiles into `Explored`, never take away what the restored units can already see. A mask whose dimensions do not match the restored map is ignored with a warning, and the match simply starts with fog recomputed from unit sight rather than refusing to load.
+
 ## Entity serialization
 
 Each entity is serialized as a JSON object containing all its components. Here's what a serialized soldier looks like:

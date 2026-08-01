@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "visibility_mask.glsl"
 
 in vec3 v_normal;
 in vec3 v_world_pos;
@@ -148,5 +149,6 @@ void main() {
 
   color += color * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
+  color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

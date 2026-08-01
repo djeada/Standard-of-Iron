@@ -1,16 +1,12 @@
 #version 330 core
 #include "environment_lighting.glsl"
+#include "visibility_mask.glsl"
 
 out vec4 frag_color;
 in vec2 tex_coord;
 in vec3 world_pos;
 
 uniform float time;
-uniform sampler2D u_visibility_tex;
-uniform vec2 u_visibility_size;
-uniform float u_visibility_tile_size;
-uniform float u_explored_alpha;
-uniform int u_has_visibility;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
 uniform vec3 u_camera_pos;
@@ -176,21 +172,8 @@ void main() {
   float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy));
   color = mix(color, vec3(0.76, 0.86, 0.84), foam);
 
-  float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
-    float tile_size = max(u_visibility_tile_size, 0.0001);
-    vec2 grid = world_pos.xz / tile_size;
-    grid += (u_visibility_size * 0.5) - vec2(0.5);
-    vec2 visibility_uv = (grid + vec2(0.5)) / u_visibility_size;
-    float visibility = texture(u_visibility_tex, visibility_uv).r;
-    if (visibility < 0.25) {
-      discard;
-    }
-    if (visibility < 0.75) {
-      visibility_factor = u_explored_alpha;
-    }
-  }
-  color *= visibility_factor * u_segment_visibility;
+  color = apply_visibility_memory(color, world_pos.xz);
+  color *= u_segment_visibility;
 
   float view_distance = length(u_camera_pos - world_pos);
   float fog_amount =

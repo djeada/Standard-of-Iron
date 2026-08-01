@@ -78,7 +78,8 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       },
       renderer.static_world_visibility_filter_enabled()
           ? renderer.submission_visibility().snapshot()
-          : nullptr);
+          : nullptr,
+      Scatter::ScatterMemoryMode::Remembered);
   if (visible_count == 0) {
     return;
   }
@@ -86,6 +87,7 @@ void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   PlantBatchParams params = m_plant_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
+  cmd.visibility = renderer.visibility_mask();
   cmd.species = TerrainScatterCmd::Species::Plant;
   cmd.plant = params;
   Scatter::submit_visible_chunks(renderer, m_plant_state, cmd);

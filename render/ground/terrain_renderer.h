@@ -10,9 +10,10 @@
 #include <vector>
 
 #include "../../game/map/terrain.h"
+#include "../draw_queue.h"
+#include "../gl/texture.h"
 #include "../i_render_pass.h"
 #include "../world_chunk.h"
-#include "visibility_texture_helper.h"
 
 namespace Render::GL {
 class Buffer;
@@ -85,7 +86,6 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
   QVector3D m_light_direction{0.65F, 0.50F, 0.40F};
-  Ground::VisibilityTextureHelper m_visibility_helper;
 };
 
 } // namespace Render::GL

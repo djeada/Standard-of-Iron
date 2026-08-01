@@ -1,5 +1,6 @@
 #include "game_state_serializer.h"
 
+#include <QDebug>
 #include <qglobal.h>
 #include <qjsonarray.h>
 #include <qjsonobject.h>
@@ -10,7 +11,9 @@
 #include <vector>
 
 #include "game/game_config.h"
+#include "game/map/explored_mask_codec.h"
 #include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/util/json_vec_utils.h"
@@ -142,7 +145,47 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   }
   metadata["player_nations"] = nations_array;
 
+  const auto& visibility = Game::Map::VisibilityService::instance();
+  if (visibility.is_initialized()) {
+    const auto snapshot = visibility.snapshot();
+    const auto mask = Game::Map::explored_mask_from_cells(
+        snapshot.cells, snapshot.width, snapshot.height);
+    const QString encoded = Game::Map::encode_explored_mask(mask);
+    if (!encoded.isEmpty()) {
+      QJsonObject visibility_obj;
+      visibility_obj["width"] = mask.width;
+      visibility_obj["height"] = mask.height;
+      visibility_obj["explored_rle"] = encoded;
+      metadata["visibility"] = visibility_obj;
+    }
+  }
+
   return metadata;
+}
+
+void GameStateSerializer::restore_visibility_from_metadata(
+    const QJsonObject& metadata) {
+  if (!metadata.contains("visibility")) {
+    return;
+  }
+
+  const auto visibility_obj = metadata.value("visibility").toObject();
+  const int width = visibility_obj.value("width").toInt(0);
+  const int height = visibility_obj.value("height").toInt(0);
+  const QString encoded = visibility_obj.value("explored_rle").toString();
+
+  const auto mask = Game::Map::decode_explored_mask(encoded, width, height);
+  if (!mask.is_valid()) {
+    qWarning() << "GameStateSerializer: saved exploration mask is unreadable; the "
+                  "match restores with fog recomputed from unit sight";
+    return;
+  }
+
+  auto& visibility = Game::Map::VisibilityService::instance();
+  if (!visibility.restore_explored(mask.explored, mask.width, mask.height)) {
+    qWarning() << "GameStateSerializer: saved exploration mask does not match the "
+                  "restored map grid; ignoring it";
+  }
 }
 
 void GameStateSerializer::restore_camera_from_metadata(const QJsonObject& metadata,

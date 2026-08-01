@@ -35,7 +35,6 @@ void WaterRenderer::configure(
   m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
   m_height_map = &height_map;
-  m_vis_helper.reset();
   build_meshes();
 }
 
@@ -95,7 +94,7 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   TerrainSurfaceCmd::VisibilityResources vis_res;
   if (vis_snapshot != nullptr) {
-    vis_res = m_vis_helper.update(*vis_snapshot, m_tile_size);
+    vis_res = renderer.visibility_mask();
   }
 
   QMatrix4x4 model;

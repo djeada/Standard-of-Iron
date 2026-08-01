@@ -51,6 +51,8 @@ add_executable(
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/map_loader_test.cpp
+    map/explored_mask_codec_test.cpp
+    map/visibility_restore_test.cpp
     map/map_catalog_test.cpp
     map/iron_sepulcher_skirmish_test.cpp
     map/terrain_topology_audit_test.cpp
@@ -109,6 +111,8 @@ add_executable(
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
     render/shader_source_test.cpp
+    render/visibility_mask_encoder_test.cpp
+    render/fog_renderer_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
     render/persistent_render_registry_test.cpp
