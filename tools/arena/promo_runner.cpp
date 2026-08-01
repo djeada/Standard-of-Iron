@@ -1,0 +1,384 @@
+#include "promo_runner.h"
+
+#include <QApplication>
+#include <QDebug>
+#include <QDir>
+#include <QElapsedTimer>
+#include <QFile>
+#include <QFileInfo>
+#include <QImage>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTimer>
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
+
+#include "arena_scenario.h"
+#include "arena_viewport.h"
+#include "render/humanoid/render_stats.h"
+#include "video_encoder.h"
+
+namespace Arena::Promo {
+namespace {
+
+constexpr float k_scenario_tail_seconds = 2.0F;
+constexpr int k_shot_watchdog_ms = 900'000;
+
+struct ShotResult {
+  QString name;
+  QString scenario;
+  QString clip_path;
+  QString poster_path;
+  int frames{0};
+  float scene_duration{0.0F};
+  float clip_duration{0.0F};
+};
+
+class Recorder {
+public:
+  Recorder(ArenaViewport& viewport, const Spec& spec, RunOptions options)
+      : m_viewport(viewport)
+      , m_spec(spec)
+      , m_options(std::move(options)) {}
+
+  auto start(QString* error) -> bool {
+    if (!VideoEncoder::ffmpeg_available()) {
+      if (error != nullptr) {
+        *error = QStringLiteral("ffmpeg is required for --promo-spec but was not "
+                                "found on PATH");
+      }
+      return false;
+    }
+    if (!QDir().mkpath(m_options.output_directory)) {
+      if (error != nullptr) {
+        *error = QStringLiteral("could not create promo output directory %1")
+                     .arg(m_options.output_directory);
+      }
+      return false;
+    }
+
+    m_viewport.set_promo_mode(true);
+    m_viewport.set_capture_resolution(m_spec.width * m_spec.supersample,
+                                      m_spec.height * m_spec.supersample);
+    m_viewport.set_capture_sink([this](const QImage& frame) { on_frame(frame); });
+    m_viewport.set_frame_hook([this](float scenario_time) { on_tick(scenario_time); });
+    QTimer::singleShot(250, [this]() { begin_next_shot(); });
+    return true;
+  }
+
+  [[nodiscard]] auto failed() const noexcept -> bool { return m_failed; }
+
+private:
+  void begin_next_shot() {
+    if (m_shot_index >= m_spec.shots.size()) {
+      finish_run();
+      return;
+    }
+
+    const Shot& shot = m_spec.shots[m_shot_index];
+    if (Arena::Scenarios::find_definition(shot.scenario) == nullptr) {
+      qCritical().noquote() << QStringLiteral("Promo shot '%1' names unknown scenario "
+                                              "'%2'")
+                                   .arg(shot.name, shot.scenario);
+      m_failed = true;
+      ++m_shot_index;
+      QTimer::singleShot(0, [this]() { begin_next_shot(); });
+      return;
+    }
+
+    m_clip_path = QDir(m_options.output_directory)
+                      .filePath(QStringLiteral("%1_%2.mp4")
+                                    .arg(m_shot_index + 1U, 2, 10, QLatin1Char('0'))
+                                    .arg(shot.name));
+    QString encoder_error;
+    m_encoder = std::make_unique<VideoEncoder>();
+    if (!m_encoder->open(
+            m_clip_path, m_spec.width, m_spec.height, m_spec.fps, &encoder_error)) {
+      qCritical().noquote()
+          << QStringLiteral("Promo shot '%1': %2").arg(shot.name, encoder_error);
+      m_failed = true;
+      m_encoder.reset();
+      ++m_shot_index;
+      QTimer::singleShot(0, [this]() { begin_next_shot(); });
+      return;
+    }
+
+    // Slow motion is produced by shrinking the simulation step, not by
+    // duplicating frames, so a half-speed clip keeps full temporal detail.
+    m_step_seconds = 1.0F / (static_cast<float>(m_spec.fps) * shot.slow_motion);
+    m_target_frames = std::max(
+        1, static_cast<int>(std::lround(shot.duration_seconds / m_step_seconds)));
+    m_frames_written = 0;
+    m_focus_valid = false;
+    m_logged_framing = false;
+    m_shot_active = true;
+    m_last_frame.reset();
+
+    m_viewport.set_terrain_seed(shot.seed);
+    m_viewport.set_batch_fixed_step(m_step_seconds);
+    m_viewport.set_scenario_duration_override(
+        shot.start_seconds + shot.duration_seconds + k_scenario_tail_seconds);
+    m_viewport.set_capture_active(false);
+    m_viewport.clear_cinematic_view();
+    m_viewport.load_scenario(shot.scenario);
+
+    qInfo().noquote() << QStringLiteral("Recording promo shot %1/%2: %3 (%4, %5 "
+                                        "frames at %6x%7)")
+                             .arg(m_shot_index + 1U)
+                             .arg(m_spec.shots.size())
+                             .arg(shot.name, shot.scenario)
+                             .arg(m_target_frames)
+                             .arg(m_spec.width)
+                             .arg(m_spec.height);
+
+    const std::size_t guarded_shot = m_shot_index;
+    QTimer::singleShot(k_shot_watchdog_ms, [this, guarded_shot]() {
+      if (m_shot_active && m_shot_index == guarded_shot) {
+        qCritical().noquote() << QStringLiteral("Promo shot '%1' exceeded its watchdog")
+                                     .arg(m_spec.shots[guarded_shot].name);
+        m_failed = true;
+        end_shot();
+      }
+    });
+  }
+
+  // Runs once per rendered frame, before the frame is drawn: this is where the
+  // authored camera is resolved against the live battle.
+  void on_tick(float scenario_time) {
+    if (!m_shot_active || m_shot_index >= m_spec.shots.size()) {
+      return;
+    }
+    const Shot& shot = m_spec.shots[m_shot_index];
+    const float shot_time = std::max(0.0F, scenario_time - shot.start_seconds);
+
+    const QVector3D focus = resolve_focus(shot);
+    Pose pose = evaluate(shot.keys, shot_time);
+    QVector3D target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
+    if (shot.shake > 0.0F) {
+      target += shake_offset(m_frames_written, shot.shake);
+    }
+    m_viewport.set_cinematic_view(
+        target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
+
+    const bool recording =
+        scenario_time >= shot.start_seconds && m_frames_written < m_target_frames;
+    m_viewport.set_capture_active(recording);
+
+    // Report the framing that the first recorded frame actually used. Authoring
+    // a shot blind is the slowest part of building a promo, and a focus that
+    // silently resolved to nothing looks identical to a mis-aimed camera.
+    if (recording && !m_logged_framing) {
+      m_logged_framing = true;
+      const auto& stats = Render::GL::get_humanoid_render_stats();
+      qInfo().noquote() << QStringLiteral(
+                               "  focus (%1, %2, %3) %4; soldiers %5/%6 drawn, culled "
+                               "frustum %7 fog %8 lod %9 temporal %10")
+                               .arg(QString::number(target.x(), 'f', 1),
+                                    QString::number(target.y(), 'f', 1),
+                                    QString::number(target.z(), 'f', 1),
+                                    m_focus_valid ? QStringLiteral("tracked")
+                                                  : QStringLiteral("UNRESOLVED"))
+                               .arg(stats.soldiers_rendered)
+                               .arg(stats.soldiers_total)
+                               .arg(stats.soldiers_skipped_frustum)
+                               .arg(stats.soldiers_skipped_fog)
+                               .arg(stats.soldiers_skipped_lod)
+                               .arg(stats.soldiers_skipped_temporal);
+    }
+
+    if (!recording && m_frames_written >= m_target_frames) {
+      end_shot();
+      return;
+    }
+    // A scenario that resolves early (everyone dead) can never deliver the rest
+    // of the take; stop rather than spin until the watchdog.
+    if (m_viewport.active_scenario_finished() && m_frames_written < m_target_frames) {
+      qWarning().noquote() << QStringLiteral(
+                                  "Promo shot '%1' ended early with %2 of %3 frames")
+                                  .arg(shot.name)
+                                  .arg(m_frames_written)
+                                  .arg(m_target_frames);
+      end_shot();
+    }
+  }
+
+  void on_frame(const QImage& frame) {
+    if (!m_shot_active || m_encoder == nullptr) {
+      return;
+    }
+    QImage output = frame;
+    if (m_spec.supersample > 1) {
+      output = frame.scaled(
+          m_spec.width, m_spec.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    }
+    QString error;
+    if (!m_encoder->write_frame(output, &error)) {
+      qCritical().noquote() << QStringLiteral("Promo encode failed: %1").arg(error);
+      m_failed = true;
+      end_shot();
+      return;
+    }
+    ++m_frames_written;
+    m_last_frame = output;
+  }
+
+  auto resolve_focus(const Shot& shot) -> QVector3D {
+    std::optional<QVector3D> raw;
+    switch (shot.focus.mode) {
+    case FocusMode::Point:
+      raw = shot.focus.point;
+      break;
+    case FocusMode::Group:
+      raw = m_viewport.scenario_group_center(shot.focus.group);
+      break;
+    case FocusMode::GroupPair: {
+      const auto first = m_viewport.scenario_group_center(shot.focus.group);
+      const auto second = m_viewport.scenario_group_center(shot.focus.second_group);
+      if (first.has_value() && second.has_value()) {
+        raw = (*first + *second) * 0.5F;
+      } else if (first.has_value()) {
+        raw = first;
+      } else {
+        raw = second;
+      }
+      break;
+    }
+    case FocusMode::AllUnits:
+      raw = m_viewport.scenario_center_of_mass();
+      break;
+    }
+
+    // Losing the tracked group (wiped out) must not snap the camera to the
+    // world origin mid-shot; hold the last good focus instead.
+    if (!raw.has_value()) {
+      return m_focus_valid ? m_smoothed_focus : QVector3D{};
+    }
+    if (!m_focus_valid || shot.focus.smoothing <= 0.0F) {
+      m_smoothed_focus = *raw;
+      m_focus_valid = true;
+      return m_smoothed_focus;
+    }
+    const float blend =
+        1.0F - std::exp(-m_step_seconds / std::max(0.01F, shot.focus.smoothing));
+    m_smoothed_focus += (*raw - m_smoothed_focus) * blend;
+    return m_smoothed_focus;
+  }
+
+  void end_shot() {
+    if (!m_shot_active) {
+      return;
+    }
+    m_shot_active = false;
+    m_viewport.set_capture_active(false);
+
+    const Shot& shot = m_spec.shots[m_shot_index];
+    QString error;
+    if (m_encoder != nullptr && !m_encoder->close(&error)) {
+      qCritical().noquote()
+          << QStringLiteral("Promo shot '%1': %2").arg(shot.name, error);
+      m_failed = true;
+    }
+    m_encoder.reset();
+
+    ShotResult result;
+    result.name = shot.name;
+    result.scenario = shot.scenario;
+    result.clip_path = m_clip_path;
+    result.frames = m_frames_written;
+    result.scene_duration = static_cast<float>(m_frames_written) * m_step_seconds;
+    result.clip_duration =
+        static_cast<float>(m_frames_written) / static_cast<float>(m_spec.fps);
+    if (m_options.write_posters && m_last_frame.has_value()) {
+      result.poster_path =
+          QDir(m_options.output_directory)
+              .filePath(QStringLiteral("%1_%2.png")
+                            .arg(m_shot_index + 1U, 2, 10, QLatin1Char('0'))
+                            .arg(shot.name));
+      m_last_frame->save(result.poster_path);
+    }
+    m_results.push_back(result);
+
+    qInfo().noquote() << QStringLiteral("  wrote %1 (%2 frames, %3 s)")
+                             .arg(QFileInfo(m_clip_path).fileName())
+                             .arg(m_frames_written)
+                             .arg(QString::number(result.clip_duration, 'f', 2));
+
+    ++m_shot_index;
+    QTimer::singleShot(0, [this]() { begin_next_shot(); });
+  }
+
+  void finish_run() {
+    m_viewport.set_capture_sink(nullptr);
+    m_viewport.set_frame_hook(nullptr);
+    write_manifest();
+    qInfo().noquote() << QStringLiteral("Promo capture complete: %1 shot(s) in %2")
+                             .arg(m_results.size())
+                             .arg(QDir(m_options.output_directory).absolutePath());
+    QApplication::exit(m_failed ? 1 : 0);
+  }
+
+  void write_manifest() {
+    QJsonArray shots;
+    for (const ShotResult& result : m_results) {
+      shots.append(QJsonObject{
+          {QStringLiteral("name"), result.name},
+          {QStringLiteral("scenario"), result.scenario},
+          {QStringLiteral("clip"), QFileInfo(result.clip_path).fileName()},
+          {QStringLiteral("poster"),
+           result.poster_path.isEmpty() ? QString{}
+                                        : QFileInfo(result.poster_path).fileName()},
+          {QStringLiteral("frames"), result.frames},
+          {QStringLiteral("scene_seconds"), result.scene_duration},
+          {QStringLiteral("clip_seconds"), result.clip_duration}});
+    }
+    const QJsonObject manifest{{QStringLiteral("id"), m_spec.id},
+                               {QStringLiteral("title"), m_spec.title},
+                               {QStringLiteral("width"), m_spec.width},
+                               {QStringLiteral("height"), m_spec.height},
+                               {QStringLiteral("fps"), m_spec.fps},
+                               {QStringLiteral("shots"), shots}};
+    QFile file(QDir(m_options.output_directory).filePath(QStringLiteral("shots.json")));
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      file.write(QJsonDocument(manifest).toJson(QJsonDocument::Indented));
+    }
+  }
+
+  ArenaViewport& m_viewport;
+  const Spec& m_spec;
+  RunOptions m_options;
+  std::unique_ptr<VideoEncoder> m_encoder;
+  std::vector<ShotResult> m_results;
+  std::optional<QImage> m_last_frame;
+  QString m_clip_path;
+  QVector3D m_smoothed_focus;
+  std::size_t m_shot_index{0};
+  int m_target_frames{0};
+  int m_frames_written{0};
+  float m_step_seconds{1.0F / 60.0F};
+  bool m_shot_active{false};
+  bool m_focus_valid{false};
+  bool m_logged_framing{false};
+  bool m_failed{false};
+};
+
+} // namespace
+
+auto run(ArenaViewport& viewport,
+         const Spec& spec,
+         const RunOptions& options,
+         QString* error) -> int {
+  Recorder recorder(viewport, spec, options);
+  if (!recorder.start(error)) {
+    return 2;
+  }
+  return QApplication::exec();
+}
+
+} // namespace Arena::Promo

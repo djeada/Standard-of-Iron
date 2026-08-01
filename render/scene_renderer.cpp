@@ -340,7 +340,7 @@ void Renderer::set_viewport(int width, int height) {
   }
 }
 
-auto Renderer::resolve_animation_time(uint32_t entity_id,
+auto Renderer::resolve_animation_time(Engine::Core::EntityID entity_id,
                                       bool update,
                                       float current_time,
                                       uint32_t frame) -> float {

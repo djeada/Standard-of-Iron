@@ -50,4 +50,8 @@ horse_playback_gait_for_transition(HorseGaitType current,
 
 [[nodiscard]] auto horse_bob_scale_for_gait(HorseGaitType gait) noexcept -> float;
 
+[[nodiscard]] auto horse_reference_speed_for_gait(HorseGaitType gait) noexcept -> float;
+
+[[nodiscard]] auto horse_stance_fraction_for_cycle(float cycle_time) noexcept -> float;
+
 } // namespace Animation

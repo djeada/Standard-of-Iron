@@ -80,7 +80,7 @@ help:
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
 	@echo ""
 	@echo "$(BOLD)Formatting (also strips comments via remove-comments.sh):$(RESET)"
-	@echo "  $(GREEN)format$(RESET)        - Format, lint, verify, and check quality markers"
+	@echo "  $(GREEN)format$(RESET)        - Format, apply Ruff fixes (including unsafe), and verify quality"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting, change nothing (CI gate)"
 	@echo "  $(GREEN)format-changed$(RESET) - Format only files changed vs FORMAT_BASE"
 	@echo "  $(GREEN)format-check-changed$(RESET) - Fast check of changed files only"
@@ -365,9 +365,10 @@ test-validator: build
 .PHONY: format format-check format-changed format-check-changed \
 	format-staged format-doctor format-bootstrap clean-format-trash
 
-## Format every tracked file, then run the complete non-compiler quality gate.
+## Format every tracked file, apply Ruff fixes including unsafe fixes, then run the complete non-compiler quality gate.
 format: clean-format-trash
 	@$(FORMAT_DRIVER) --all --strip-comments --fix --strict --jobs $(FORMAT_JOBS) $(FORMAT_ARGS)
+	@$(FORMAT_DRIVER) --all --lint --fix --unsafe-fixes --jobs $(FORMAT_JOBS) --build-dir $(BUILD_DIR) $(FORMAT_ARGS)
 	@$(MAKE) --no-print-directory quality LINT_STRIP=
 
 ## Verify formatting without writing anything (CI gate).
