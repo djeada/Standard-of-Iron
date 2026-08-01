@@ -206,6 +206,121 @@ auto definition(QString id,
   return result;
 }
 
+auto performance_battle_definition(QString id,
+                                   QString label,
+                                   int units_per_side) -> ArenaScenarioDefinition {
+  auto s = definition(std::move(id),
+                      std::move(label),
+                      QStringLiteral("Mixed full-LOD battle with %1 units per side and "
+                                     "a strict over-100-FPS p95 contract.")
+                          .arg(units_per_side),
+                      8.0F,
+                      {units_per_side <= 20 ? 58.0F : 68.0F, 56.0F, 0.0F});
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.select_spawned_units = false;
+  s.suppress_spawn_anchor = true;
+  s.suppress_ui_overlays = true;
+  s.force_full_creature_lod = true;
+  s.require_rigged_instancing = true;
+  s.collect_animation_diagnostics = false;
+  s.graphics_quality = Render::GraphicsQuality::Ultra;
+
+  int const swords = units_per_side * 2 / 5;
+  int const spears = units_per_side * 3 / 10;
+  int const archers = units_per_side / 5;
+  int const cavalry = units_per_side - swords - spears - archers;
+  s.groups = {
+      group(QStringLiteral("blue_swords"),
+            Troop::Swordsman,
+            1,
+            swords,
+            {-16.0F, 0.0F, -12.0F},
+            1),
+      group(QStringLiteral("blue_spears"),
+            Troop::Spearman,
+            1,
+            spears,
+            {-12.0F, 0.0F, -18.0F},
+            1),
+      group(QStringLiteral("blue_archers"),
+            Troop::Archer,
+            1,
+            archers,
+            {-8.0F, 0.0F, -25.0F},
+            1),
+      group(QStringLiteral("blue_cavalry"),
+            Troop::MountedKnight,
+            1,
+            cavalry,
+            {-23.0F, 0.0F, -20.0F},
+            1),
+      group(QStringLiteral("red_swords"),
+            Troop::Swordsman,
+            2,
+            swords,
+            {-16.0F, 0.0F, 12.0F},
+            1),
+      group(QStringLiteral("red_spears"),
+            Troop::Spearman,
+            2,
+            spears,
+            {-12.0F, 0.0F, 18.0F},
+            1),
+      group(QStringLiteral("red_archers"),
+            Troop::Archer,
+            2,
+            archers,
+            {-8.0F, 0.0F, 25.0F},
+            1),
+      group(QStringLiteral("red_cavalry"),
+            Troop::MountedKnight,
+            2,
+            cavalry,
+            {-23.0F, 0.0F, 20.0F},
+            1),
+  };
+  s.steps = {
+      at(0.25F,
+         Command::AttackMove,
+         QStringLiteral("blue_swords"),
+         QStringLiteral("red_spears")),
+      at(0.25F,
+         Command::AttackMove,
+         QStringLiteral("blue_spears"),
+         QStringLiteral("red_swords")),
+      at(0.25F,
+         Command::Attack,
+         QStringLiteral("blue_archers"),
+         QStringLiteral("red_spears")),
+      at(0.25F,
+         Command::Charge,
+         QStringLiteral("blue_cavalry"),
+         QStringLiteral("red_archers")),
+      at(0.25F,
+         Command::AttackMove,
+         QStringLiteral("red_swords"),
+         QStringLiteral("blue_spears")),
+      at(0.25F,
+         Command::AttackMove,
+         QStringLiteral("red_spears"),
+         QStringLiteral("blue_swords")),
+      at(0.25F,
+         Command::Attack,
+         QStringLiteral("red_archers"),
+         QStringLiteral("blue_spears")),
+      at(0.25F,
+         Command::Charge,
+         QStringLiteral("red_cavalry"),
+         QStringLiteral("blue_archers")),
+  };
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("blue_swords")),
+      expectation(Expect::GroupExists, QStringLiteral("red_swords")),
+      expectation(Expect::FrameBudget, {}, {}, 9.99F, 2.0F),
+  };
+  return s;
+}
+
 auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
 
@@ -3498,6 +3613,17 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
           expectation(Expect::GroupIsRendered, continuity_group.name));
     }
     result.push_back(std::move(s));
+  }
+
+  {
+    result.push_back(
+        performance_battle_definition(QString::fromLatin1(k_performance_20v20_id),
+                                      QStringLiteral("Performance: 20 vs 20 Units"),
+                                      20));
+    result.push_back(
+        performance_battle_definition(QString::fromLatin1(k_performance_30v30_id),
+                                      QStringLiteral("Performance: 30 vs 30 Units"),
+                                      30));
   }
 
   {

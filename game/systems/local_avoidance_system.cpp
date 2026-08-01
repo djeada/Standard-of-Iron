@@ -15,29 +15,12 @@ namespace Game::Systems {
 
 namespace {
 
-struct UnitCircle {
-  Engine::Core::EntityID id{0};
-  float x{0.0F};
-  float z{0.0F};
-  float radius{0.5F};
-  float vx{0.0F};
-  float vz{0.0F};
-  std::uint8_t priority{0};
-  bool is_moving{false};
-};
-
 struct CellKey {
   int cx;
   int cz;
 
   auto operator==(const CellKey& other) const -> bool {
     return cx == other.cx && cz == other.cz;
-  }
-};
-
-struct CellKeyHash {
-  auto operator()(const CellKey& key) const -> std::size_t {
-    return std::hash<int>()(key.cx) ^ (std::hash<int>()(key.cz) << 16);
   }
 };
 
@@ -67,6 +50,12 @@ auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint
 
 } // namespace
 
+auto LocalAvoidanceSystem::cell_key(int cell_x, int cell_z) -> std::int64_t {
+  auto const high = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_x));
+  auto const low = static_cast<std::uint32_t>(cell_z);
+  return static_cast<std::int64_t>((high << 32U) | low);
+}
+
 void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr || delta_time <= 0.0F) {
     return;
@@ -74,17 +63,25 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
   m_diagnostics = {};
 
-  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
-  if (entities.empty()) {
+  auto const unit_ids = world->entities_with<Engine::Core::UnitComponent>();
+  if (unit_ids.empty()) {
     return;
   }
+  world->resolve_entities_into(unit_ids, m_query_scratch);
 
   float const inv_cell_size = 1.0F / k_default_cell_size;
-  std::unordered_map<CellKey, std::vector<std::size_t>, CellKeyHash> grid;
-  std::vector<UnitCircle> circles;
-  circles.reserve(entities.size());
+  for (std::int64_t const key : m_active_cell_keys) {
+    if (auto bucket = m_grid.find(key); bucket != m_grid.end()) {
+      bucket->second.clear();
+    }
+  }
+  m_active_cell_keys.clear();
+  m_circles.clear();
+  m_grid.reserve(std::max(m_previous_cell_count, unit_ids.size() / 2U));
+  m_active_cell_keys.reserve(std::max(m_previous_cell_count, unit_ids.size() / 2U));
+  m_circles.reserve(unit_ids.size());
 
-  for (auto* entity : entities) {
+  for (auto* entity : m_query_scratch) {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (transform == nullptr || unit == nullptr || unit->health <= 0) {
@@ -117,20 +114,26 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
     circle.priority = compute_avoidance_priority(*entity);
 
-    std::size_t const idx = circles.size();
-    circles.push_back(circle);
+    std::size_t const idx = m_circles.size();
+    m_circles.push_back(circle);
 
     CellKey const key = to_cell(circle.x, circle.z, inv_cell_size);
-    grid[key].push_back(idx);
+    std::int64_t const packed_key = cell_key(key.cx, key.cz);
+    auto& bucket = m_grid[packed_key];
+    if (bucket.empty()) {
+      m_active_cell_keys.push_back(packed_key);
+    }
+    bucket.push_back(idx);
   }
+  m_previous_cell_count = std::max(m_previous_cell_count, m_active_cell_keys.size());
 
-  m_diagnostics.units_processed = static_cast<std::uint32_t>(circles.size());
+  m_diagnostics.units_processed = static_cast<std::uint32_t>(m_circles.size());
 
   std::uint32_t total_neighbors_checked = 0;
   std::uint32_t overlaps_detected = 0;
 
-  for (std::size_t i = 0; i < circles.size(); ++i) {
-    auto& ci = circles[i];
+  for (std::size_t i = 0; i < m_circles.size(); ++i) {
+    auto& ci = m_circles[i];
     if (!ci.is_moving) {
       continue;
     }
@@ -142,15 +145,15 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
     for (int dx = -1; dx <= 1; ++dx) {
       for (int dz = -1; dz <= 1; ++dz) {
         CellKey const neighbor_key{center.cx + dx, center.cz + dz};
-        auto it = grid.find(neighbor_key);
-        if (it == grid.end()) {
+        auto it = m_grid.find(cell_key(neighbor_key.cx, neighbor_key.cz));
+        if (it == m_grid.end()) {
           continue;
         }
         for (std::size_t const j : it->second) {
           if (j == i) {
             continue;
           }
-          auto& cj = circles[j];
+          auto& cj = m_circles[j];
           float const ddx = ci.x - cj.x;
           float const ddz = ci.z - cj.z;
           float const dist_sq = ddx * ddx + ddz * ddz;
@@ -212,9 +215,9 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
   }
 
   m_diagnostics.overlaps_detected = overlaps_detected;
-  if (!circles.empty()) {
+  if (!m_circles.empty()) {
     m_diagnostics.average_neighbors_checked =
-        total_neighbors_checked / static_cast<std::uint32_t>(circles.size());
+        total_neighbors_checked / static_cast<std::uint32_t>(m_circles.size());
   }
 }
 

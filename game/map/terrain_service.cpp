@@ -364,6 +364,7 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   rebuild_terrain_field();
   bump_authored_world_props_revision();
   bump_world_props_revision();
+  bump_navigation_topology_revision();
 }
 
 void TerrainService::clear() {
@@ -383,6 +384,7 @@ void TerrainService::clear() {
   m_next_world_prop_id = 1;
   bump_authored_world_props_revision();
   bump_world_props_revision();
+  bump_navigation_topology_revision();
 }
 
 void TerrainService::remove_non_persistent_props() {
@@ -923,6 +925,7 @@ void TerrainService::restore_from_serialized(
   rebuild_terrain_field();
   bump_authored_world_props_revision();
   bump_world_props_revision();
+  bump_navigation_topology_revision();
 }
 
 auto TerrainService::is_point_on_road(float world_x, float world_z) const -> bool {
@@ -1089,6 +1092,10 @@ void TerrainService::bump_world_props_revision() {
 
 void TerrainService::bump_authored_world_props_revision() {
   ++m_authored_world_props_revision;
+}
+
+void TerrainService::bump_navigation_topology_revision() {
+  ++m_navigation_topology_revision;
 }
 
 } // namespace Game::Map

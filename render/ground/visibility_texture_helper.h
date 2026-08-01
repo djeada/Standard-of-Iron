@@ -32,7 +32,7 @@ public:
 
   auto update(const Game::Map::VisibilityService::Snapshot& snapshot,
               float tile_size,
-              float explored_alpha = 0.6F) -> VisibilityResources {
+              float explored_alpha = 0.82F) -> VisibilityResources {
     const int vis_w = snapshot.width;
     const int vis_h = snapshot.height;
     auto* gl_context = QOpenGLContext::currentContext();

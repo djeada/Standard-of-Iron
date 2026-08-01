@@ -6,11 +6,14 @@
 #include <atomic>
 #include <cstdint>
 #include <mutex>
+#include <shared_mutex>
+#include <unordered_map>
 #include <vector>
 
 namespace Game::Systems {
 
 class BuildingCollisionRegistry;
+struct BuildingFootprint;
 
 struct Point {
   int x = 0;
@@ -103,6 +106,10 @@ public:
 
   auto find_path(const Point& start, const Point& end) -> std::vector<Point>;
 
+  [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
+    return m_navigation_revision.load(std::memory_order_acquire);
+  }
+
   static auto find_nearest_walkable_point(const Point& point,
                                           int max_search_radius,
                                           const Pathfinding& pathfinder) -> Point;
@@ -115,23 +122,33 @@ private:
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 
-  void ensure_working_buffers();
-  auto next_generation() -> std::uint32_t;
-  void reset_generations();
+  struct SearchBuffers;
+  static auto search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers&;
+  void ensure_working_buffers(SearchBuffers& buffers) const;
+  static auto next_generation(SearchBuffers& buffers) -> std::uint32_t;
+  static void reset_generations(SearchBuffers& buffers);
 
   auto to_index(int x, int y) const -> int { return y * m_width + x; }
   auto to_index(const Point& p) const -> int { return to_index(p.x, p.y); }
   auto to_point(int index) const -> Point { return {index % m_width, index / m_width}; }
 
-  auto is_closed(int index, std::uint32_t generation) const -> bool;
-  void set_closed(int index, std::uint32_t generation);
+  static auto
+  is_closed(const SearchBuffers& buffers, int index, std::uint32_t generation) -> bool;
+  static void set_closed(SearchBuffers& buffers, int index, std::uint32_t generation);
 
-  auto get_g_cost(int index, std::uint32_t generation) const -> int;
-  void set_g_cost(int index, std::uint32_t generation, int cost);
+  static auto
+  get_g_cost(const SearchBuffers& buffers, int index, std::uint32_t generation) -> int;
+  static void
+  set_g_cost(SearchBuffers& buffers, int index, std::uint32_t generation, int cost);
 
-  auto has_parent(int index, std::uint32_t generation) const -> bool;
-  auto get_parent(int index, std::uint32_t generation) const -> int;
-  void set_parent(int index, std::uint32_t generation, int parent_index);
+  static auto
+  has_parent(const SearchBuffers& buffers, int index, std::uint32_t generation) -> bool;
+  static auto
+  get_parent(const SearchBuffers& buffers, int index, std::uint32_t generation) -> int;
+  static void set_parent(SearchBuffers& buffers,
+                         int index,
+                         std::uint32_t generation,
+                         int parent_index);
 
   auto collect_neighbors(const Point& point,
                          std::array<Point, 8>& buffer) const -> std::size_t;
@@ -139,6 +156,7 @@ private:
                   int end_index,
                   std::uint32_t generation,
                   int expected_length,
+                  const SearchBuffers& buffers,
                   std::vector<Point>& out_path) const;
 
   struct QueueNode {
@@ -147,35 +165,59 @@ private:
     int g_cost;
   };
 
+  struct SearchBuffers {
+    std::vector<std::uint32_t> closed_generation;
+    std::vector<std::uint32_t> g_cost_generation;
+    std::vector<int> g_cost_values;
+    std::vector<std::uint32_t> parent_generation;
+    std::vector<int> parent_values;
+    std::vector<QueueNode> open_heap;
+    std::uint32_t generation_counter{0};
+  };
+
+  struct PathCacheKey {
+    int start_x;
+    int start_y;
+    int end_x;
+    int end_y;
+
+    auto operator==(const PathCacheKey&) const -> bool = default;
+  };
+
+  struct PathCacheKeyHash {
+    auto operator()(const PathCacheKey& key) const noexcept -> std::size_t;
+  };
+
   static auto heap_less(const QueueNode& lhs, const QueueNode& rhs) -> bool;
-  void push_open_node(const QueueNode& node);
-  auto pop_open_node() -> QueueNode;
+  static void push_open_node(SearchBuffers& buffers, const QueueNode& node);
+  static auto pop_open_node(SearchBuffers& buffers) -> QueueNode;
 
   void process_dirty_regions();
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
+  void apply_building_cells(
+      const BuildingFootprint& building, int min_x, int max_x, int min_z, int max_z);
   void apply_resource_prop_cells(int min_x, int max_x, int min_z, int max_z);
+  void rebuild_world_prop_index();
 
   int m_width, m_height;
   NavigationGrid m_navigation_grid;
   float m_grid_cell_size{1.0F};
   float m_grid_offset_x{0.0F}, m_grid_offset_z{0.0F};
   std::atomic<bool> m_navigation_grid_dirty;
-  mutable std::mutex m_mutex;
-
-  mutable std::vector<std::uint32_t> m_closed_generation;
-  mutable std::vector<std::uint32_t> m_g_cost_generation;
-  mutable std::vector<int> m_g_cost_values;
-  mutable std::vector<std::uint32_t> m_parent_generation;
-  mutable std::vector<int> m_parent_values;
-  mutable std::vector<QueueNode> m_open_heap;
-  mutable std::uint32_t m_generation_counter{0};
+  mutable std::shared_mutex m_navigation_mutex;
+  mutable std::mutex m_path_cache_mutex;
 
   std::mutex m_dirty_mutex;
   std::vector<DirtyRegion> m_dirty_regions;
   bool m_full_update_required{true};
   std::atomic<std::uint64_t> m_applied_world_props_revision{0};
   std::atomic<std::uint64_t> m_obstruction_revision{0};
+  std::atomic<std::uint64_t> m_applied_terrain_topology_revision{0};
+  std::unordered_map<int, CellValue> m_world_prop_cells;
+  std::atomic<std::uint64_t> m_navigation_revision{1};
+  std::uint64_t m_path_cache_revision{0};
+  std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;
 };
 
 } // namespace Game::Systems

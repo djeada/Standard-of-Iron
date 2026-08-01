@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../persistent_buffer.h"
 #include "../shader.h"
 #include "pipeline_interface.h"
 
@@ -54,6 +55,10 @@ public:
                       std::size_t count,
                       const QMatrix4x4& view_proj,
                       const QVector3D& camera_position = {}) -> bool;
+  auto draw_shadow_instanced(const RiggedCreatureCmd* const* cmds,
+                             std::size_t count,
+                             const QMatrix4x4& light_view_proj) -> bool;
+  void begin_frame();
 
   [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
   [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
@@ -116,6 +121,8 @@ private:
   GL::Shader* m_instanced_shader = nullptr;
 
   std::unique_ptr<Shader> m_instanced_shader_storage;
+  std::unique_ptr<Shader> m_shadow_instanced_shader_storage;
+  GL::Shader* m_shadow_instanced_shader = nullptr;
   Uniforms m_uniforms{};
 
   GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
@@ -123,6 +130,7 @@ private:
   GL::Shader::UniformHandle m_instanced_light_dir{GL::Shader::InvalidUniform};
   GL::Shader::UniformHandle m_instanced_ambient_strength{GL::Shader::InvalidUniform};
   GL::Shader::UniformHandle m_instanced_camera_position{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_shadow_instanced_view_proj{GL::Shader::InvalidUniform};
 
   std::size_t m_max_instances_per_batch = 0;
 
@@ -136,6 +144,8 @@ private:
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;
   std::vector<float> m_palette_scratch;
+  static constexpr std::size_t k_palette_stream_instance_capacity = 4096U;
+  PersistentRingBuffer<float> m_palette_stream;
 
   struct InstancedVaoEntry {
     unsigned int vao = 0;
@@ -156,6 +166,9 @@ private:
   std::vector<float> m_role_color_scratch;
 
   auto build_instanced_shader_source() -> bool;
+  auto build_shadow_instanced_shader_source() -> bool;
+  auto bind_streamed_palette_batch(const RiggedCreatureCmd* const* cmds,
+                                   std::size_t count) -> bool;
   auto ensure_instance_vbo(std::size_t bytes_needed) -> bool;
   auto ensure_instanced_vao(RiggedMesh& mesh) -> unsigned int;
 };

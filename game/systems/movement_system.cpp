@@ -38,12 +38,8 @@ constexpr float stopped_translation_heading_error_degrees = 100.0F;
 auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                                   const Engine::Core::UnitComponent& unit,
                                   float single_body_turn_speed) -> float {
-  auto const layout = FormationCombat::resolve_layout(entity);
-  float turn_radius = 0.0F;
-  for (auto const& slot : layout.live_slots) {
-    turn_radius = std::max(turn_radius, std::hypot(slot.local_x, slot.local_z));
-  }
-  if (layout.total_count <= 1 || turn_radius <= 0.5F) {
+  float const turn_radius = FormationCombat::formation_turn_radius(entity);
+  if (!FormationCombat::has_formation_slots(entity) || turn_radius <= 0.5F) {
     return single_body_turn_speed;
   }
 
@@ -230,7 +226,9 @@ void finalize_orientation(Engine::Core::Entity* entity,
 } // namespace
 
 void MovementSystem::update(Engine::Core::World* world, float delta_time) {
-  auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
+  if (world == nullptr) {
+    return;
+  }
 
   if (auto* pathfinder = CommandService::get_pathfinder()) {
     std::uint64_t const revision = pathfinder->obstruction_revision();
@@ -238,13 +236,64 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
       m_obstruction_revision = revision;
 
       pathfinder->update_navigation_grid();
+      auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
       repath_after_obstruction_release(*world, entities);
     }
   }
 
-  for (auto* entity : entities) {
-    move_unit(entity, world, delta_time);
+  process_pending_path_requests(*world);
+  world->each<Engine::Core::MovementComponent>(
+      [this, world, delta_time](Engine::Core::EntityID id,
+                                Engine::Core::MovementComponent&) {
+        move_unit(world->get_entity(id), world, delta_time);
+      });
+}
+
+void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
+  std::size_t processed = 0;
+  while (processed < k_path_requests_per_tick && !m_pending_path_requests.empty()) {
+    PendingPathRequest request = std::move(m_pending_path_requests.front());
+    m_pending_path_requests.pop_front();
+    auto* entity = world.get_entity(request.entity_id);
+    if (entity == nullptr) {
+      ++processed;
+      continue;
+    }
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    if (transform != nullptr && movement != nullptr) {
+      float const goal_dx = movement->get_goal_x() - request.target.x();
+      float const goal_dz = movement->get_goal_y() - request.target.z();
+      if (goal_dx * goal_dx + goal_dz * goal_dz > 0.01F) {
+        ++processed;
+        continue;
+      }
+      assign_navigation_target(
+          CommandService::get_pathfinder(), *transform, *movement, request.target);
+      movement->precise_arrival = request.precise_arrival;
+    }
+    ++processed;
   }
+}
+
+auto MovementSystem::enqueue_pending_path_request(Engine::Core::EntityID entity_id,
+                                                  const QVector3D& target,
+                                                  bool precise_arrival,
+                                                  std::uint64_t navigation_revision)
+    -> bool {
+  cancel_pending_path_request(entity_id);
+  if (m_pending_path_requests.size() >= k_max_pending_path_requests) {
+    return false;
+  }
+  m_pending_path_requests.push_back(
+      {entity_id, target, navigation_revision, precise_arrival});
+  return true;
+}
+
+void MovementSystem::cancel_pending_path_request(Engine::Core::EntityID entity_id) {
+  std::erase_if(m_pending_path_requests, [entity_id](auto const& request) {
+    return request.entity_id == entity_id;
+  });
 }
 
 void MovementSystem::repath_after_obstruction_release(
@@ -567,7 +616,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
-  bool const was_on_valid_tile = is_point_allowed(current_pos_3d, *entity, world);
+  bool const was_on_valid_tile = current_position_allowed;
 
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;

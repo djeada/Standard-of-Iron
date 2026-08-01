@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <limits>
 #include <mutex>
+#include <shared_mutex>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -50,6 +52,40 @@ auto occupied_cell_to_grid(int cell, float grid_offset) -> int {
   return static_cast<int>(std::lround((static_cast<float>(cell) + 0.5F) - grid_offset));
 }
 
+void merge_dirty_regions(std::vector<DirtyRegion>& regions) {
+  constexpr std::size_t k_max_individual_regions = 256U;
+  if (regions.size() > k_max_individual_regions) {
+    DirtyRegion merged = regions.front();
+    for (auto const& region : regions) {
+      merged.min_x = std::min(merged.min_x, region.min_x);
+      merged.max_x = std::max(merged.max_x, region.max_x);
+      merged.min_z = std::min(merged.min_z, region.min_z);
+      merged.max_z = std::max(merged.max_z, region.max_z);
+    }
+    regions.assign(1U, merged);
+    return;
+  }
+  for (std::size_t i = 0; i < regions.size(); ++i) {
+    for (std::size_t j = i + 1; j < regions.size();) {
+      bool const overlaps_x = regions[i].min_x <= regions[j].max_x + 1 &&
+                              regions[j].min_x <= regions[i].max_x + 1;
+      bool const overlaps_z = regions[i].min_z <= regions[j].max_z + 1 &&
+                              regions[j].min_z <= regions[i].max_z + 1;
+      if (!overlaps_x || !overlaps_z) {
+        ++j;
+        continue;
+      }
+      regions[i].min_x = std::min(regions[i].min_x, regions[j].min_x);
+      regions[i].max_x = std::max(regions[i].max_x, regions[j].max_x);
+      regions[i].min_z = std::min(regions[i].min_z, regions[j].min_z);
+      regions[i].max_z = std::max(regions[i].max_z, regions[j].max_z);
+      regions[j] = regions.back();
+      regions.pop_back();
+      j = i + 1;
+    }
+  }
+}
+
 } // namespace
 
 Pathfinding::NavigationGrid::NavigationGrid(int width, int height) {
@@ -89,7 +125,6 @@ Pathfinding::Pathfinding(int width, int height)
     : m_width(width)
     , m_height(height)
     , m_navigation_grid(width, height) {
-  ensure_working_buffers();
   m_navigation_grid_dirty.store(true, std::memory_order_release);
 }
 
@@ -112,7 +147,9 @@ auto Pathfinding::grid_to_world(const Point& grid_pos) const -> QVector3D {
 }
 
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
+  std::unique_lock<std::shared_mutex> const lock(m_navigation_mutex);
   m_navigation_grid.set(x, y, is_obstacle ? CellValue::Blocked : CellValue::Walkable);
+  m_navigation_revision.fetch_add(1, std::memory_order_release);
 }
 
 auto Pathfinding::is_walkable(int x, int y) const -> bool {
@@ -266,19 +303,7 @@ void Pathfinding::process_dirty_regions() {
       const auto& buildings = registry.get_all_buildings();
 
       for (const auto& building : buildings) {
-        if (!building.blocks_navigation) {
-          continue;
-        }
-        auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
-            building, m_grid_cell_size);
-        for (const auto& cell : cells) {
-          int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
-          int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
-
-          if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-            m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
-          }
-        }
+        apply_building_cells(building, 0, m_width - 1, 0, m_height - 1);
       }
 
       force_navigation_passages_walkable(0, m_width - 1, 0, m_height - 1);
@@ -295,6 +320,8 @@ void Pathfinding::process_dirty_regions() {
   if (regions_to_process.empty()) {
     return;
   }
+
+  merge_dirty_regions(regions_to_process);
 
   for (const auto& region : regions_to_process) {
     update_region(region.min_x, region.max_x, region.min_z, region.max_z);
@@ -320,24 +347,14 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   }
 
   auto& registry = BuildingCollisionRegistry::instance();
-  const auto& buildings = registry.get_all_buildings();
-
-  for (const auto& building : buildings) {
-    if (!building.blocks_navigation) {
-      continue;
-    }
-    auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
-        building, m_grid_cell_size);
-    for (const auto& cell : cells) {
-      int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
-      int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
-
-      if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
-          grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-        m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
-      }
-    }
-  }
+  registry.for_each_building_in_region(
+      static_cast<float>(min_x) + m_grid_offset_x,
+      static_cast<float>(max_x) + m_grid_offset_x,
+      static_cast<float>(min_z) + m_grid_offset_z,
+      static_cast<float>(max_z) + m_grid_offset_z,
+      [this, min_x, max_x, min_z, max_z](BuildingFootprint const& building) {
+        apply_building_cells(building, min_x, max_x, min_z, max_z);
+      });
 
   force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
@@ -371,6 +388,23 @@ void Pathfinding::force_navigation_passages_walkable(int min_x,
         continue;
       }
       m_navigation_grid.set(grid_x, grid_z, CellValue::Walkable);
+    }
+  }
+}
+
+void Pathfinding::apply_building_cells(
+    const BuildingFootprint& building, int min_x, int max_x, int min_z, int max_z) {
+  if (!building.blocks_navigation) {
+    return;
+  }
+  auto const cells =
+      BuildingCollisionRegistry::get_occupied_grid_cells(building, m_grid_cell_size);
+  for (auto const& cell : cells) {
+    int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
+    int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
+    if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
+        grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
+      m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
     }
   }
 }
@@ -411,48 +445,79 @@ void Pathfinding::apply_resource_prop_cells(int min_x,
                                             int max_x,
                                             int min_z,
                                             int max_z) {
+  for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+    for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+      auto const prop = m_world_prop_cells.find(to_index(grid_x, grid_z));
+      if (prop != m_world_prop_cells.end()) {
+        m_navigation_grid.set(grid_x, grid_z, prop->second);
+      }
+    }
+  }
+}
+
+void Pathfinding::rebuild_world_prop_index() {
   auto& terrain_service = Game::Map::TerrainService::instance();
   const auto* height_map = terrain_service.get_height_map();
   float const tile_size =
-      (height_map != nullptr) ? std::max(height_map->get_tile_size(), 0.0001F) : 1.0F;
-  const auto& world_props = terrain_service.world_props();
-  for (const auto& prop : world_props) {
-    CellValue resource_cell = CellValue::Blocked;
+      height_map != nullptr ? std::max(height_map->get_tile_size(), 0.0001F) : 1.0F;
+  std::unordered_map<int, CellValue> next;
+  next.reserve(terrain_service.world_props().size());
+  for (auto const& prop : terrain_service.world_props()) {
+    CellValue value = CellValue::Blocked;
     if (Game::Map::is_tree_world_prop_type(prop.type)) {
-      resource_cell = CellValue::Tree;
+      value = CellValue::Tree;
     } else if (Game::Map::is_boulder_world_prop_type(prop.type)) {
-      resource_cell = CellValue::Boulder;
+      value = CellValue::Boulder;
     } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
-      resource_cell = CellValue::IronOre;
+      value = CellValue::IronOre;
     } else {
       continue;
     }
-    float grid_x_f = prop.x;
-    float grid_z_f = prop.z;
+    float grid_x_value = prop.x;
+    float grid_z_value = prop.z;
     if (terrain_service.coord_system() == Game::Map::CoordSystem::World) {
-      grid_x_f = prop.x / tile_size - m_grid_offset_x;
-      grid_z_f = prop.z / tile_size - m_grid_offset_z;
+      grid_x_value = prop.x / tile_size - m_grid_offset_x;
+      grid_z_value = prop.z / tile_size - m_grid_offset_z;
     }
-    int const grid_x = static_cast<int>(std::round(grid_x_f));
-    int const grid_z = static_cast<int>(std::round(grid_z_f));
-    if (grid_x < min_x || grid_x > max_x || grid_z < min_z || grid_z > max_z ||
-        grid_x < 0 || grid_x >= m_width || grid_z < 0 || grid_z >= m_height) {
-      continue;
+    int const grid_x = static_cast<int>(std::round(grid_x_value));
+    int const grid_z = static_cast<int>(std::round(grid_z_value));
+    if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
+      next[to_index(grid_x, grid_z)] = value;
     }
-    m_navigation_grid.set(grid_x, grid_z, resource_cell);
   }
+
+  {
+    std::lock_guard<std::mutex> const dirty_lock(m_dirty_mutex);
+    if (!m_full_update_required) {
+      for (auto const& [index, value] : m_world_prop_cells) {
+        auto const replacement = next.find(index);
+        if (replacement == next.end() || replacement->second != value) {
+          Point const point = to_point(index);
+          m_dirty_regions.emplace_back(point.x, point.x, point.y, point.y);
+        }
+      }
+      for (auto const& [index, value] : next) {
+        auto const previous = m_world_prop_cells.find(index);
+        if (previous == m_world_prop_cells.end() || previous->second != value) {
+          Point const point = to_point(index);
+          m_dirty_regions.emplace_back(point.x, point.x, point.y, point.y);
+        }
+      }
+    }
+  }
+  m_world_prop_cells = std::move(next);
 }
 
 void Pathfinding::update_navigation_grid() {
   auto& terrain_service = Game::Map::TerrainService::instance();
+  std::uint64_t const terrain_topology_revision =
+      terrain_service.navigation_topology_revision();
   std::uint64_t const world_props_revision =
       terrain_service.is_initialized() ? terrain_service.world_props_revision() : 0;
-  if (world_props_revision !=
-      m_applied_world_props_revision.load(std::memory_order_acquire)) {
-    std::lock_guard<std::mutex> const dirty_lock(m_dirty_mutex);
-    if (m_dirty_regions.empty() && !m_full_update_required) {
-      m_full_update_required = true;
-    }
+  if (terrain_topology_revision !=
+          m_applied_terrain_topology_revision.load(std::memory_order_acquire) ||
+      world_props_revision !=
+          m_applied_world_props_revision.load(std::memory_order_acquire)) {
     m_navigation_grid_dirty.store(true, std::memory_order_release);
   }
 
@@ -460,14 +525,26 @@ void Pathfinding::update_navigation_grid() {
     return;
   }
 
-  std::lock_guard<std::mutex> const lock(m_mutex);
+  std::unique_lock<std::shared_mutex> const lock(m_navigation_mutex);
 
   if (!m_navigation_grid_dirty.load(std::memory_order_acquire)) {
     return;
   }
 
+  if (terrain_topology_revision !=
+      m_applied_terrain_topology_revision.load(std::memory_order_acquire)) {
+    std::lock_guard<std::mutex> const dirty_lock(m_dirty_mutex);
+    m_full_update_required = true;
+  }
+  if (world_props_revision !=
+      m_applied_world_props_revision.load(std::memory_order_acquire)) {
+    rebuild_world_prop_index();
+  }
   process_dirty_regions();
+  m_applied_terrain_topology_revision.store(terrain_topology_revision,
+                                            std::memory_order_release);
   m_applied_world_props_revision.store(world_props_revision, std::memory_order_release);
+  m_navigation_revision.fetch_add(1, std::memory_order_release);
 
   m_navigation_grid_dirty.store(false, std::memory_order_release);
 }
@@ -479,13 +556,49 @@ auto Pathfinding::find_path(const Point& start,
     update_navigation_grid();
   }
 
-  std::lock_guard<std::mutex> const lock(m_mutex);
-  return find_path_internal(start, end);
+  std::uint64_t const revision = navigation_revision();
+  PathCacheKey const key{start.x, start.y, end.x, end.y};
+  {
+    std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
+    if (m_path_cache_revision != revision) {
+      m_path_cache.clear();
+      m_path_cache_revision = revision;
+    }
+    if (auto const cached = m_path_cache.find(key); cached != m_path_cache.end()) {
+      return cached->second;
+    }
+  }
+
+  std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
+  auto path = find_path_internal(start, end);
+  std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
+  if (m_path_cache_revision != revision || navigation_revision() != revision) {
+    return path;
+  }
+  constexpr std::size_t k_max_cached_paths = 256U;
+  if (m_path_cache.size() >= k_max_cached_paths) {
+    m_path_cache.clear();
+  }
+  m_path_cache.emplace(key, path);
+  return path;
+}
+
+auto Pathfinding::PathCacheKeyHash::operator()(const PathCacheKey& key) const noexcept
+    -> std::size_t {
+  std::size_t result = std::hash<int>{}(key.start_x);
+  auto combine = [&result](int value) {
+    result ^= std::hash<int>{}(value) + 0x9e3779b9U + (result << 6U) + (result >> 2U);
+  };
+  combine(key.start_y);
+  combine(key.end_x);
+  combine(key.end_y);
+  return result;
 }
 
 auto Pathfinding::find_path_internal(const Point& start,
                                      const Point& end) -> std::vector<Point> {
-  ensure_working_buffers();
+  SearchBuffers& buffers = search_buffers_for(this);
+  ensure_working_buffers(buffers);
 
   auto const is_walkableFunc = [this](int x, int y) -> bool {
     return is_walkable(x, y);
@@ -515,14 +628,14 @@ auto Pathfinding::find_path_internal(const Point& start,
     return {start};
   }
 
-  const std::uint32_t generation = next_generation();
+  const std::uint32_t generation = next_generation(buffers);
 
-  m_open_heap.clear();
+  buffers.open_heap.clear();
 
-  set_g_cost(start_idx, generation, 0);
-  set_parent(start_idx, generation, start_idx);
+  set_g_cost(buffers, start_idx, generation, 0);
+  set_parent(buffers, start_idx, generation, start_idx);
 
-  push_open_node({start_idx, calculate_heuristic(start, end), 0});
+  push_open_node(buffers, {start_idx, calculate_heuristic(start, end), 0});
 
   const int max_iterations = std::max(m_width * m_height, 1);
   int iterations = 0;
@@ -532,19 +645,19 @@ auto Pathfinding::find_path_internal(const Point& start,
   int best_reachable_h = calculate_heuristic(start, end);
   int best_reachable_g = 0;
 
-  while (!m_open_heap.empty() && iterations < max_iterations) {
-    QueueNode const current = pop_open_node();
+  while (!buffers.open_heap.empty() && iterations < max_iterations) {
+    QueueNode const current = pop_open_node(buffers);
 
-    if (current.g_cost > get_g_cost(current.index, generation)) {
+    if (current.g_cost > get_g_cost(buffers, current.index, generation)) {
       continue;
     }
 
-    if (is_closed(current.index, generation)) {
+    if (is_closed(buffers, current.index, generation)) {
       continue;
     }
 
     ++iterations;
-    set_closed(current.index, generation);
+    set_closed(buffers, current.index, generation);
 
     Point const current_point = to_point(current.index);
     int const current_h = calculate_heuristic(current_point, end);
@@ -570,20 +683,21 @@ auto Pathfinding::find_path_internal(const Point& start,
       }
 
       const int neighbor_idx = to_index(neighbor);
-      if (is_closed(neighbor_idx, generation)) {
+      if (is_closed(buffers, neighbor_idx, generation)) {
         continue;
       }
 
       const int tentative_gcost = current.g_cost + 1;
-      if (tentative_gcost >= get_g_cost(neighbor_idx, generation)) {
+      if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
       }
 
-      set_g_cost(neighbor_idx, generation, tentative_gcost);
-      set_parent(neighbor_idx, generation, current.index);
+      set_g_cost(buffers, neighbor_idx, generation, tentative_gcost);
+      set_parent(buffers, neighbor_idx, generation, current.index);
 
       const int h_cost = calculate_heuristic(neighbor, end);
-      push_open_node({neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
+      push_open_node(buffers,
+                     {neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
     }
   }
 
@@ -593,14 +707,18 @@ auto Pathfinding::find_path_internal(const Point& start,
     }
     std::vector<Point> partial_path;
     partial_path.reserve(static_cast<std::size_t>(best_reachable_g + 1));
-    build_path(
-        start_idx, best_reachable_idx, generation, best_reachable_g + 1, partial_path);
+    build_path(start_idx,
+               best_reachable_idx,
+               generation,
+               best_reachable_g + 1,
+               buffers,
+               partial_path);
     return partial_path;
   }
 
   std::vector<Point> path;
   path.reserve(final_cost + 1);
-  build_path(start_idx, end_idx, generation, final_cost + 1, path);
+  build_path(start_idx, end_idx, generation, final_cost + 1, buffers, path);
   return path;
 }
 
@@ -673,89 +791,118 @@ auto Pathfinding::calculate_heuristic(const Point& a, const Point& b) -> int {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
-void Pathfinding::ensure_working_buffers() {
+auto Pathfinding::search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers& {
+  thread_local std::unordered_map<const Pathfinding*, SearchBuffers> buffers_by_grid;
+  return buffers_by_grid[pathfinding];
+}
+
+void Pathfinding::ensure_working_buffers(SearchBuffers& buffers) const {
   const std::size_t total_cells =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
 
-  if (m_closed_generation.size() != total_cells) {
-    m_closed_generation.assign(total_cells, 0);
-    m_g_cost_generation.assign(total_cells, 0);
-    m_g_cost_values.assign(total_cells, std::numeric_limits<int>::max());
-    m_parent_generation.assign(total_cells, 0);
-    m_parent_values.assign(total_cells, -1);
+  if (buffers.closed_generation.size() != total_cells) {
+    buffers.closed_generation.assign(total_cells, 0);
+    buffers.g_cost_generation.assign(total_cells, 0);
+    buffers.g_cost_values.assign(total_cells, std::numeric_limits<int>::max());
+    buffers.parent_generation.assign(total_cells, 0);
+    buffers.parent_values.assign(total_cells, -1);
+    buffers.generation_counter = 0;
   }
 
   const std::size_t min_open_capacity = std::max<std::size_t>(total_cells / 8, 64);
-  if (m_open_heap.capacity() < min_open_capacity) {
-    m_open_heap.reserve(min_open_capacity);
+  if (buffers.open_heap.capacity() < min_open_capacity) {
+    buffers.open_heap.reserve(min_open_capacity);
   }
 }
 
-auto Pathfinding::next_generation() -> std::uint32_t {
-  auto next = ++m_generation_counter;
+auto Pathfinding::next_generation(SearchBuffers& buffers) -> std::uint32_t {
+  auto next = ++buffers.generation_counter;
   if (next == 0) {
-    reset_generations();
-    next = ++m_generation_counter;
+    reset_generations(buffers);
+    next = ++buffers.generation_counter;
   }
   return next;
 }
 
-void Pathfinding::reset_generations() {
-  std::fill(m_closed_generation.begin(), m_closed_generation.end(), 0);
-  std::fill(m_g_cost_generation.begin(), m_g_cost_generation.end(), 0);
-  std::fill(m_parent_generation.begin(), m_parent_generation.end(), 0);
-  std::fill(
-      m_g_cost_values.begin(), m_g_cost_values.end(), std::numeric_limits<int>::max());
-  std::fill(m_parent_values.begin(), m_parent_values.end(), -1);
-  m_generation_counter = 0;
+void Pathfinding::reset_generations(SearchBuffers& buffers) {
+  std::fill(buffers.closed_generation.begin(), buffers.closed_generation.end(), 0);
+  std::fill(buffers.g_cost_generation.begin(), buffers.g_cost_generation.end(), 0);
+  std::fill(buffers.parent_generation.begin(), buffers.parent_generation.end(), 0);
+  std::fill(buffers.g_cost_values.begin(),
+            buffers.g_cost_values.end(),
+            std::numeric_limits<int>::max());
+  std::fill(buffers.parent_values.begin(), buffers.parent_values.end(), -1);
+  buffers.generation_counter = 0;
 }
 
-auto Pathfinding::is_closed(int index, std::uint32_t generation) const -> bool {
-  return index >= 0 && static_cast<std::size_t>(index) < m_closed_generation.size() &&
-         m_closed_generation[static_cast<std::size_t>(index)] == generation;
+auto Pathfinding::is_closed(const SearchBuffers& buffers,
+                            int index,
+                            std::uint32_t generation) -> bool {
+  return index >= 0 &&
+         static_cast<std::size_t>(index) < buffers.closed_generation.size() &&
+         buffers.closed_generation[static_cast<std::size_t>(index)] == generation;
 }
 
-void Pathfinding::set_closed(int index, std::uint32_t generation) {
-  if (index >= 0 && static_cast<std::size_t>(index) < m_closed_generation.size()) {
-    m_closed_generation[static_cast<std::size_t>(index)] = generation;
+void Pathfinding::set_closed(SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < buffers.closed_generation.size()) {
+    buffers.closed_generation[static_cast<std::size_t>(index)] = generation;
   }
 }
 
-auto Pathfinding::get_g_cost(int index, std::uint32_t generation) const -> int {
-  if (index < 0 || static_cast<std::size_t>(index) >= m_g_cost_generation.size()) {
+auto Pathfinding::get_g_cost(const SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation) -> int {
+  if (index < 0 ||
+      static_cast<std::size_t>(index) >= buffers.g_cost_generation.size()) {
     return std::numeric_limits<int>::max();
   }
-  if (m_g_cost_generation[static_cast<std::size_t>(index)] == generation) {
-    return m_g_cost_values[static_cast<std::size_t>(index)];
+  if (buffers.g_cost_generation[static_cast<std::size_t>(index)] == generation) {
+    return buffers.g_cost_values[static_cast<std::size_t>(index)];
   }
   return std::numeric_limits<int>::max();
 }
 
-void Pathfinding::set_g_cost(int index, std::uint32_t generation, int cost) {
-  if (index >= 0 && static_cast<std::size_t>(index) < m_g_cost_generation.size()) {
+void Pathfinding::set_g_cost(SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation,
+                             int cost) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < buffers.g_cost_generation.size()) {
     const auto idx = static_cast<std::size_t>(index);
-    m_g_cost_generation[idx] = generation;
-    m_g_cost_values[idx] = cost;
+    buffers.g_cost_generation[idx] = generation;
+    buffers.g_cost_values[idx] = cost;
   }
 }
 
-auto Pathfinding::has_parent(int index, std::uint32_t generation) const -> bool {
-  return index >= 0 && static_cast<std::size_t>(index) < m_parent_generation.size() &&
-         m_parent_generation[static_cast<std::size_t>(index)] == generation;
+auto Pathfinding::has_parent(const SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation) -> bool {
+  return index >= 0 &&
+         static_cast<std::size_t>(index) < buffers.parent_generation.size() &&
+         buffers.parent_generation[static_cast<std::size_t>(index)] == generation;
 }
 
-auto Pathfinding::get_parent(int index, std::uint32_t generation) const -> int {
-  if (has_parent(index, generation)) {
-    return m_parent_values[static_cast<std::size_t>(index)];
+auto Pathfinding::get_parent(const SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation) -> int {
+  if (has_parent(buffers, index, generation)) {
+    return buffers.parent_values[static_cast<std::size_t>(index)];
   }
   return -1;
 }
 
-void Pathfinding::set_parent(int index, std::uint32_t generation, int parent_index) {
-  if (index >= 0 && static_cast<std::size_t>(index) < m_parent_generation.size()) {
+void Pathfinding::set_parent(SearchBuffers& buffers,
+                             int index,
+                             std::uint32_t generation,
+                             int parent_index) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < buffers.parent_generation.size()) {
     const auto idx = static_cast<std::size_t>(index);
-    m_parent_generation[idx] = generation;
-    m_parent_values[idx] = parent_index;
+    buffers.parent_generation[idx] = generation;
+    buffers.parent_values[idx] = parent_index;
   }
 }
 
@@ -792,6 +939,7 @@ void Pathfinding::build_path(int start_index,
                              int end_index,
                              std::uint32_t generation,
                              int expected_length,
+                             const SearchBuffers& buffers,
                              std::vector<Point>& out_path) const {
   out_path.clear();
   if (expected_length > 0) {
@@ -806,12 +954,12 @@ void Pathfinding::build_path(int start_index,
       return;
     }
 
-    if (!has_parent(current, generation)) {
+    if (!has_parent(buffers, current, generation)) {
       out_path.clear();
       return;
     }
 
-    const int parent = get_parent(current, generation);
+    const int parent = get_parent(buffers, current, generation);
     if (parent == current || parent < 0) {
       out_path.clear();
       return;
@@ -829,42 +977,44 @@ auto Pathfinding::heap_less(const QueueNode& lhs, const QueueNode& rhs) -> bool 
   return lhs.g_cost < rhs.g_cost;
 }
 
-void Pathfinding::push_open_node(const QueueNode& node) {
-  m_open_heap.push_back(node);
-  std::size_t index = m_open_heap.size() - 1;
+void Pathfinding::push_open_node(SearchBuffers& buffers, const QueueNode& node) {
+  auto& heap = buffers.open_heap;
+  heap.push_back(node);
+  std::size_t index = heap.size() - 1;
   while (index > 0) {
     std::size_t const parent = (index - 1) / 2;
-    if (heap_less(m_open_heap[parent], m_open_heap[index])) {
+    if (heap_less(heap[parent], heap[index])) {
       break;
     }
-    std::swap(m_open_heap[parent], m_open_heap[index]);
+    std::swap(heap[parent], heap[index]);
     index = parent;
   }
 }
 
-auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
-  QueueNode top = m_open_heap.front();
-  QueueNode const last = m_open_heap.back();
-  m_open_heap.pop_back();
-  if (!m_open_heap.empty()) {
-    m_open_heap[0] = last;
+auto Pathfinding::pop_open_node(SearchBuffers& buffers) -> Pathfinding::QueueNode {
+  auto& heap = buffers.open_heap;
+  QueueNode top = heap.front();
+  QueueNode const last = heap.back();
+  heap.pop_back();
+  if (!heap.empty()) {
+    heap[0] = last;
     std::size_t index = 0;
-    const std::size_t size = m_open_heap.size();
+    const std::size_t size = heap.size();
     while (true) {
       std::size_t const left = index * 2 + 1;
       std::size_t const right = left + 1;
       std::size_t smallest = index;
 
-      if (left < size && !heap_less(m_open_heap[smallest], m_open_heap[left])) {
+      if (left < size && !heap_less(heap[smallest], heap[left])) {
         smallest = left;
       }
-      if (right < size && !heap_less(m_open_heap[smallest], m_open_heap[right])) {
+      if (right < size && !heap_less(heap[smallest], heap[right])) {
         smallest = right;
       }
       if (smallest == index) {
         break;
       }
-      std::swap(m_open_heap[index], m_open_heap[smallest]);
+      std::swap(heap[index], heap[smallest]);
       index = smallest;
     }
   }

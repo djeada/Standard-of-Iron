@@ -59,6 +59,12 @@ struct ContactGeometry {
   bool formation_overlap_required{false};
 };
 
+struct FormationContactContext {
+  FormationLayout attacker_layout;
+  FormationLayout target_layout;
+  ContactGeometry geometry;
+};
+
 [[nodiscard]] auto
 formation_seed(const Engine::Core::Entity& entity) noexcept -> std::uint32_t;
 
@@ -71,6 +77,12 @@ resolve_definition(const Engine::Core::UnitComponent& unit,
 
 [[nodiscard]] auto
 resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
+
+[[nodiscard]] auto formation_turn_radius(const Engine::Core::Entity& entity) -> float;
+
+[[nodiscard]] auto
+resolve_contact_context(const Engine::Core::Entity& attacker,
+                        const Engine::Core::Entity& target) -> FormationContactContext;
 
 [[nodiscard]] auto
 contact_geometry(const Engine::Core::Entity& attacker,
@@ -86,6 +98,12 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 
 [[nodiscard]] auto engagement_pairs(const Engine::Core::Entity& attacker,
                                     const Engine::Core::Entity& target)
+    -> std::vector<Engine::Core::FormationEngagementPair>;
+
+[[nodiscard]] auto engagement_pairs(const Engine::Core::Entity& attacker,
+                                    const Engine::Core::Entity& target,
+                                    const FormationLayout& attacker_layout,
+                                    const FormationLayout& target_layout)
     -> std::vector<Engine::Core::FormationEngagementPair>;
 
 [[nodiscard]] auto select_damage_engagement_pair(
