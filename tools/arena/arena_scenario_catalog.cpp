@@ -565,6 +565,57 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_escort_crowd_id),
+        QStringLiteral("RPG Escort Crowd"),
+        QStringLiteral(
+            "Behind-head commander standing inside his own escort, with a rank of "
+            "friendly spearmen between him and the lens. The chase camera must stay "
+            "readable: bodies that crowd the gap in front of the lens are dropped "
+            "rather than filling the frame or shoving the camera into first person."),
+        3.6F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+
+    auto escort_rear = group(
+        QStringLiteral("escort_rear"), Troop::Spearman, 1, 1, {0.0F, 0.0F, -1.7F}, 4);
+    escort_rear.facing_degrees = 0.0F;
+
+    auto escort_flank = group(
+        QStringLiteral("escort_flank"), Troop::Swordsman, 1, 1, {2.4F, 0.0F, 0.2F}, 2);
+    escort_flank.facing_degrees = 0.0F;
+    auto enemy = group(
+        QStringLiteral("enemy_line"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 3.2F}, 3);
+    enemy.health_override = enemy.max_health_override = 500;
+    s.groups = {commander, escort_rear, escort_flank, enemy};
+    s.steps = {
+        at(0.20F,
+           Command::Attack,
+           QStringLiteral("enemy_line"),
+           QStringLiteral("rpg_commander")),
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_line")});
+    s.expectations.push_back(
+        expectation(Expect::GroupIsRendered, QStringLiteral("escort_flank")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_commander_identity_lineup_id),
         QStringLiteral("Commander Identity Lineup"),
         QStringLiteral("Displays all six commanders without bodyguards or supporting "

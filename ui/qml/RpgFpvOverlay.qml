@@ -7,6 +7,7 @@ Item {
 
     property real bottomInset: 0
     property var status: ({})
+    property var engine: null
 
     readonly property real uiScale: Math.max(0.75, Math.min(2.0, height / 1080))
     function scaled(value) {
@@ -58,16 +59,43 @@ Item {
     }
 
     Timer {
-        interval: 80
+        interval: 33
         repeat: true
-        running: root.visible && typeof game !== 'undefined' && game.get_controlled_commander_status
+        running: root.visible && root.engine === null && typeof game !== 'undefined' && game.get_controlled_commander_status
         onTriggered: root.status = game.get_controlled_commander_status()
     }
 
-    Component.onCompleted: {
-        if (typeof game !== 'undefined' && game.get_controlled_commander_status) {
-            status = game.get_controlled_commander_status();
+    property bool focusProjected: false
+    property real focusScreenX: 0
+    property real focusScreenY: 0
+    property real focusScreenHeight: 0
+
+    function refresh_focus_projection() {
+        var provider = root.engine !== null ? root.engine : (typeof game !== 'undefined' ? game : null);
+        if (provider === null || !provider.rpg_project_world || root.status_value("focus_marker_valid", false) !== true) {
+            root.focusProjected = false;
+            return;
         }
+        var wx = Number(root.status_value("focus_marker_x", 0));
+        var wy = Number(root.status_value("focus_marker_y", 0));
+        var wz = Number(root.status_value("focus_marker_z", 0));
+        var chest = provider.rpg_project_world(wx, wy + 1.15, wz);
+        var feet = provider.rpg_project_world(wx, wy, wz);
+        if (!chest || !chest.valid || !feet || !feet.valid) {
+            root.focusProjected = false;
+            return;
+        }
+        root.focusProjected = true;
+        root.focusScreenX = chest.x;
+        root.focusScreenY = chest.y;
+        root.focusScreenHeight = Math.abs(feet.y - chest.y) * (1.8 / 1.15);
+    }
+
+    Timer {
+        interval: 16
+        repeat: true
+        running: root.visible
+        onTriggered: root.refresh_focus_projection()
     }
 
     Rectangle {
@@ -181,15 +209,15 @@ Item {
         anchors.fill: parent
         color: "transparent"
         visible: root.status_value("guard_active", false) === true
-        opacity: visible ? 0.6 : 0.0
+        opacity: visible ? 0.45 : 0.0
 
         Rectangle {
             anchors.fill: parent
             anchors.margins: -2
-            radius: 12
+            radius: root.scaled(12)
             color: "transparent"
-            border.width: 6
-            border.color: "#6688ccff"
+            border.width: Math.max(2, root.scaled(4))
+            border.color: "#3388ccff"
         }
 
         Behavior on opacity  {
@@ -202,8 +230,8 @@ Item {
     Item {
         id: perfectGuardFlash
         anchors.centerIn: parent
-        width: 190
-        height: 190
+        width: root.scaled(190)
+        height: width
         opacity: root.status_value("perfect_guard_active", false) === true ? 0.25 : 0.0
         visible: opacity > 0.0
 
@@ -225,8 +253,8 @@ Item {
     Item {
         id: combatEntryFlash
         anchors.centerIn: parent
-        width: 230
-        height: 230
+        width: root.scaled(230)
+        height: width
         property color accentColor: "#8bdcff"
         opacity: 0.0
         visible: opacity > 0.0
@@ -248,31 +276,31 @@ Item {
 
         Rectangle {
             anchors.left: parent.left
-            anchors.leftMargin: 24
+            anchors.leftMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            width: 4
-            height: 180
-            radius: 2
+            width: Math.max(2, root.scaled(4))
+            height: root.scaled(180)
+            radius: width / 2
             color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
         }
 
         Rectangle {
             anchors.right: parent.right
-            anchors.rightMargin: 24
+            anchors.rightMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            width: 4
-            height: 180
-            radius: 2
+            width: Math.max(2, root.scaled(4))
+            height: root.scaled(180)
+            radius: width / 2
             color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
         }
 
         Rectangle {
             anchors.left: parent.left
-            anchors.leftMargin: 24
+            anchors.leftMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -54
-            width: 92
-            height: 2
+            anchors.verticalCenterOffset: -root.scaled(54)
+            width: root.scaled(92)
+            height: Math.max(1, root.scaled(2))
             radius: 1
             rotation: -10
             color: "#88f6f3e7"
@@ -280,11 +308,11 @@ Item {
 
         Rectangle {
             anchors.left: parent.left
-            anchors.leftMargin: 24
+            anchors.leftMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: 54
-            width: 92
-            height: 2
+            anchors.verticalCenterOffset: root.scaled(54)
+            width: root.scaled(92)
+            height: Math.max(1, root.scaled(2))
             radius: 1
             rotation: 10
             color: "#88f6f3e7"
@@ -292,11 +320,11 @@ Item {
 
         Rectangle {
             anchors.right: parent.right
-            anchors.rightMargin: 24
+            anchors.rightMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -54
-            width: 92
-            height: 2
+            anchors.verticalCenterOffset: -root.scaled(54)
+            width: root.scaled(92)
+            height: Math.max(1, root.scaled(2))
             radius: 1
             rotation: 10
             color: "#88f6f3e7"
@@ -304,11 +332,11 @@ Item {
 
         Rectangle {
             anchors.right: parent.right
-            anchors.rightMargin: 24
+            anchors.rightMargin: root.scaled(24)
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: 54
-            width: 92
-            height: 2
+            anchors.verticalCenterOffset: root.scaled(54)
+            width: root.scaled(92)
+            height: Math.max(1, root.scaled(2))
             radius: 1
             rotation: -10
             color: "#88f6f3e7"
@@ -318,25 +346,25 @@ Item {
     Item {
         id: attackSweep
         anchors.centerIn: parent
-        width: 240
-        height: 240
+        width: root.scaled(240)
+        height: width
         opacity: 0.0
         visible: opacity > 0.0
 
         Rectangle {
             anchors.centerIn: parent
-            width: 164
-            height: 6
-            radius: 3
+            width: root.scaled(164)
+            height: root.scaled(6)
+            radius: height / 2
             rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0))
             color: "#d7ffd28a"
         }
 
         Rectangle {
             anchors.centerIn: parent
-            width: 108
-            height: 2
-            radius: 1
+            width: root.scaled(108)
+            height: Math.max(1, root.scaled(2))
+            radius: height / 2
             rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0)) + 90
             color: "#99ffffff"
         }
@@ -350,22 +378,22 @@ Item {
 
         Rectangle {
             anchors.left: parent.left
-            anchors.leftMargin: 72
+            anchors.leftMargin: root.scaled(72)
             anchors.verticalCenter: parent.verticalCenter
-            width: 180
-            height: 6
-            radius: 3
+            width: root.scaled(180)
+            height: root.scaled(6)
+            radius: height / 2
             rotation: -20
             color: "#88b8fff6"
         }
 
         Rectangle {
             anchors.right: parent.right
-            anchors.rightMargin: 72
+            anchors.rightMargin: root.scaled(72)
             anchors.verticalCenter: parent.verticalCenter
-            width: 180
-            height: 6
-            radius: 3
+            width: root.scaled(180)
+            height: root.scaled(6)
+            radius: height / 2
             rotation: 20
             color: "#88b8fff6"
         }
@@ -374,8 +402,8 @@ Item {
     Item {
         id: guardBreakShock
         anchors.centerIn: parent
-        width: 260
-        height: 260
+        width: root.scaled(260)
+        height: width
         opacity: 0.0
         visible: opacity > 0.0
 
@@ -391,8 +419,8 @@ Item {
     Item {
         id: punishPulseRing
         anchors.centerIn: parent
-        width: 136
-        height: 136
+        width: root.scaled(136)
+        height: width
         visible: root.status_value("punish_active", false) === true
         opacity: visible ? 0.7 : 0.0
 
@@ -424,55 +452,69 @@ Item {
 
     Item {
         id: lockBrackets
-        anchors.centerIn: parent
-        width: 92
-        height: 92
-        visible: root.status_value("locked_target_name", "") !== ""
-        opacity: visible ? 0.92 : 0.0
+
+        readonly property bool lockedOn: root.status_value("focus_marker_locked", false) === true
+        readonly property int armLength: root.scaled(lockedOn ? 20 : 15)
+        readonly property int armThickness: Math.max(2, root.scaled(3))
+        readonly property color armColor: lockedOn ? "#ffe6a8" : "#cfefff"
+
+        width: Math.max(root.scaled(38), Math.min(root.scaled(220), root.focusScreenHeight * (lockedOn ? 0.78 : 0.66)))
+        height: width
+        x: root.focusProjected ? root.focusScreenX - width / 2 : (parent.width - width) / 2
+        y: root.focusProjected ? root.focusScreenY - height / 2 : (parent.height - height) / 2
+        visible: root.focusProjected && root.status_value("focus_marker_valid", false) === true
+        opacity: visible ? (lockedOn ? 0.95 : 0.7) : 0.0
+
+        Behavior on width  {
+            NumberAnimation {
+                duration: 140
+                easing.type: Easing.OutQuad
+            }
+        }
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 120
+            }
+        }
 
         Repeater {
             model: [{
-                    "x": 0,
-                    "y": 0,
                     "hAnchor": "left",
                     "vAnchor": "top"
                 }, {
-                    "x": lockBrackets.width - 18,
-                    "y": 0,
                     "hAnchor": "right",
                     "vAnchor": "top"
                 }, {
-                    "x": 0,
-                    "y": lockBrackets.height - 18,
                     "hAnchor": "left",
                     "vAnchor": "bottom"
                 }, {
-                    "x": lockBrackets.width - 18,
-                    "y": lockBrackets.height - 18,
                     "hAnchor": "right",
                     "vAnchor": "bottom"
                 }]
 
             delegate: Item {
-                x: modelData.x
-                y: modelData.y
-                width: 18
-                height: 18
+                width: lockBrackets.armLength
+                height: lockBrackets.armLength
+                anchors.left: modelData.hAnchor === "left" ? parent.left : undefined
+                anchors.right: modelData.hAnchor === "right" ? parent.right : undefined
+                anchors.top: modelData.vAnchor === "top" ? parent.top : undefined
+                anchors.bottom: modelData.vAnchor === "bottom" ? parent.bottom : undefined
 
                 Rectangle {
-                    width: 18
-                    height: 3
-                    radius: 1.5
-                    color: "#d7d9f2ff"
+                    width: parent.width
+                    height: lockBrackets.armThickness
+                    radius: height / 2
+                    color: lockBrackets.armColor
                     anchors.top: modelData.vAnchor === "top" ? parent.top : undefined
                     anchors.bottom: modelData.vAnchor === "bottom" ? parent.bottom : undefined
                 }
 
                 Rectangle {
-                    width: 3
-                    height: 18
-                    radius: 1.5
-                    color: "#d7d9f2ff"
+                    width: lockBrackets.armThickness
+                    height: parent.height
+                    radius: width / 2
+                    color: lockBrackets.armColor
                     anchors.left: modelData.hAnchor === "left" ? parent.left : undefined
                     anchors.right: modelData.hAnchor === "right" ? parent.right : undefined
                 }
@@ -483,8 +525,8 @@ Item {
     Item {
         id: finisherBurst
         anchors.centerIn: parent
-        width: 84
-        height: 84
+        width: root.scaled(84)
+        height: width
         visible: root.status_value("finisher_ready", false) === true
         opacity: visible ? 0.9 : 0.0
         property real spin: 0
@@ -499,9 +541,9 @@ Item {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 58
-            height: 58
-            radius: 14
+            width: root.scaled(58)
+            height: width
+            radius: root.scaled(14)
             rotation: finisherBurst.spin
             color: "transparent"
             border.width: 2
@@ -510,9 +552,9 @@ Item {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 42
-            height: 42
-            radius: 12
+            width: root.scaled(42)
+            height: width
+            radius: root.scaled(12)
             rotation: -finisherBurst.spin * 0.7
             color: "transparent"
             border.width: 1
@@ -522,8 +564,8 @@ Item {
 
     Item {
         id: crosshair
-        width: 58
-        height: 58
+        width: root.scaled(58)
+        height: root.scaled(58)
         anchors.centerIn: parent
         opacity: root.status_value("guard_active", false) === true ? 0.4 : 0.96
 
@@ -546,9 +588,9 @@ Item {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 34
-            height: 34
-            radius: 17
+            width: root.scaled(34)
+            height: width
+            radius: width / 2
             color: "#18000000"
             border.width: 1
             border.color: "#30ffffff"
@@ -556,50 +598,50 @@ Item {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 7
-            height: 7
-            radius: 3.5
+            width: Math.max(3, root.scaled(7))
+            height: width
+            radius: width / 2
             color: crosshair.crossColor
         }
 
         Rectangle {
-            width: 2
-            height: 16
+            width: Math.max(2, root.scaled(2))
+            height: root.scaled(16)
             color: crosshair.crossColor
             opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.verticalCenter
-            anchors.bottomMargin: 7
+            anchors.bottomMargin: root.scaled(7)
         }
 
         Rectangle {
-            width: 2
-            height: 16
+            width: Math.max(2, root.scaled(2))
+            height: root.scaled(16)
             color: crosshair.crossColor
             opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.verticalCenter
-            anchors.topMargin: 7
+            anchors.topMargin: root.scaled(7)
         }
 
         Rectangle {
-            width: 16
-            height: 2
+            width: root.scaled(16)
+            height: Math.max(2, root.scaled(2))
             color: crosshair.crossColor
             opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.horizontalCenter
-            anchors.rightMargin: 7
+            anchors.rightMargin: root.scaled(7)
         }
 
         Rectangle {
-            width: 16
-            height: 2
+            width: root.scaled(16)
+            height: Math.max(2, root.scaled(2))
             color: crosshair.crossColor
             opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.horizontalCenter
-            anchors.leftMargin: 7
+            anchors.leftMargin: root.scaled(7)
         }
     }
 
@@ -741,14 +783,17 @@ Item {
         }
     }
 
-    Item {
+    Row {
         id: comboIndicator
-        anchors.right: parent.right
-        anchors.rightMargin: 80
-        anchors.verticalCenter: parent.verticalCenter
-        width: 80
-        height: 80
-        visible: Number(root.status_value("combo_step", 0)) > 0
+
+        property int combo: Number(root.status_value("combo_step", 0))
+        property bool finisherReady: root.status_value("finisher_ready", false) === true
+
+        anchors.bottom: postureBar.top
+        anchors.bottomMargin: root.scaled(6)
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: root.scaled(6)
+        visible: combo > 0
         opacity: visible ? 1.0 : 0.0
 
         Behavior on opacity  {
@@ -757,40 +802,44 @@ Item {
             }
         }
 
-        property int combo: Number(root.status_value("combo_step", 0))
-        property bool finisherReady: root.status_value("finisher_ready", false) === true
-
         Text {
-            anchors.centerIn: parent
-            text: comboIndicator.combo + "x"
-            color: comboIndicator.finisherReady ? "#ffdd00" : "#ffffff"
-            font.pixelSize: comboIndicator.finisherReady ? 38 : 30
-            font.bold: true
-            style: Text.Outline
-            styleColor: comboIndicator.finisherReady ? "#cc884400" : "#88000000"
-        }
-
-        Text {
-            anchors.top: parent.verticalCenter
-            anchors.topMargin: 18
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: comboIndicator.finisherReady ? "FINISHER!" : "COMBO"
-            color: comboIndicator.finisherReady ? "#ffdd00" : "#aaffffff"
-            font.pixelSize: 10
+            anchors.verticalCenter: parent.verticalCenter
+            text: comboIndicator.finisherReady ? qsTr("FINISHER") : qsTr("COMBO")
+            color: comboIndicator.finisherReady ? "#ffdd00" : "#99ffffff"
+            font.pixelSize: root.scaled(9)
             font.bold: true
             font.letterSpacing: 1.2
-            visible: comboIndicator.combo > 0
+            style: Text.Outline
+            styleColor: "#88000000"
         }
 
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: -8
-            radius: 12
-            color: "transparent"
-            border.width: 3
-            border.color: "#88ffdd00"
-            visible: comboIndicator.finisherReady
-            opacity: 0.4 + 0.6 * root.slowPulse
+        Repeater {
+            model: 4
+
+            delegate: Rectangle {
+                readonly property bool lit: index < comboIndicator.combo
+                readonly property bool isFinisher: index === 3
+
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.scaled(lit ? 16 : 11)
+                height: root.scaled(6)
+                radius: height / 2
+                color: lit ? (isFinisher ? "#ffdd00" : "#8bdcff") : "#44ffffff"
+                opacity: lit && isFinisher ? (0.55 + 0.45 * root.slowPulse) : 1.0
+
+                Behavior on width  {
+                    NumberAnimation {
+                        duration: 140
+                        easing.type: Easing.OutBack
+                    }
+                }
+
+                Behavior on color  {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
+            }
         }
     }
 
@@ -849,7 +898,7 @@ Item {
     Item {
         id: guardBreakWarning
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: -120
+        anchors.verticalCenterOffset: -root.scaled(120)
         visible: root.status_value("guard_broken", false) === true
         opacity: visible ? 1.0 : 0.0
 
@@ -861,9 +910,9 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: "GUARD BROKEN"
+            text: qsTr("GUARD BROKEN")
             color: "#ff4444"
-            font.pixelSize: 22
+            font.pixelSize: root.scaled(22)
             font.bold: true
             font.letterSpacing: 2.0
             style: Text.Outline
@@ -874,7 +923,7 @@ Item {
     Item {
         id: punishIndicator
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: -90
+        anchors.verticalCenterOffset: -root.scaled(90)
         visible: root.status_value("punish_active", false) === true
         opacity: visible ? 1.0 : 0.0
 
@@ -886,9 +935,9 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: "\u26A1 PUNISH \u26A1"
+            text: qsTr("\u26A1 PUNISH \u26A1")
             color: "#ffcc00"
-            font.pixelSize: 18
+            font.pixelSize: root.scaled(18)
             font.bold: true
             style: Text.Outline
             styleColor: "#88000000"
@@ -925,15 +974,15 @@ Item {
                 }]
 
             delegate: Item {
-                width: 64
-                height: 64
+                width: root.scaled(60)
+                height: root.scaled(60)
 
                 property bool isReady: root.status_value(modelData.readyKey, true) === true
                 property real cdRatio: root.cooldown_ratio(modelData.cdKey, modelData.totalKey)
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: 12
+                    radius: root.scaled(12)
                     color: parent.isReady ? "#5a1a3d22" : "#5a281312"
                     border.width: 2
                     border.color: parent.isReady ? "#a0ffe0a6" : "#888c6d4e"
@@ -941,8 +990,8 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 5
-                    radius: 9
+                    anchors.margins: root.scaled(5)
+                    radius: root.scaled(9)
                     color: "transparent"
                     border.width: 1
                     border.color: parent.isReady ? "#35ffffff" : "#22000000"
@@ -950,8 +999,8 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 5
-                    radius: 9
+                    anchors.margins: root.scaled(5)
+                    radius: root.scaled(9)
                     color: "#33000000"
                     clip: true
                     visible: !parent.isReady
@@ -967,42 +1016,47 @@ Item {
                 Rectangle {
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    anchors.topMargin: 6
-                    anchors.rightMargin: 6
-                    radius: 8
+                    anchors.topMargin: root.scaled(6)
+                    anchors.rightMargin: root.scaled(6)
+                    radius: width / 2
                     color: parent.isReady ? "#d6f8e6a0" : "#88796c58"
-                    width: 18
-                    height: 18
+                    width: root.scaled(18)
+                    height: width
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData.key
                         color: "#1a120b"
-                        font.pixelSize: 10
+                        font.pixelSize: root.scaled(10)
                         font.bold: true
                     }
                 }
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 11
-                    text: modelData.name
-                    color: parent.isReady ? "#eeffeeee" : "#88aaaaaa"
-                    font.pixelSize: 9
-                    font.bold: true
-                    font.letterSpacing: 0.8
-                }
+                Column {
+                    id: abilityLabels
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: root.scaled(4)
+                    spacing: root.scaled(2)
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: 22
-                    text: parent.isReady ? "READY" : Math.ceil(Number(root.status_value(modelData.cdKey, 0.0))).toString()
-                    color: parent.isReady ? "#d2ffe7cb" : "#d2f5c88f"
-                    font.pixelSize: 8
-                    font.bold: true
-                    font.letterSpacing: 0.7
+                    readonly property bool ready: root.status_value(modelData.readyKey, true) === true
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: modelData.name
+                        color: abilityLabels.ready ? "#eeffeeee" : "#88aaaaaa"
+                        font.pixelSize: root.scaled(11)
+                        font.bold: true
+                        font.letterSpacing: 0.8
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: abilityLabels.ready ? qsTr("READY") : Math.ceil(Number(root.status_value(modelData.cdKey, 0.0))).toString()
+                        color: abilityLabels.ready ? "#d2ffe7cb" : "#d2f5c88f"
+                        font.pixelSize: root.scaled(9)
+                        font.bold: true
+                        font.letterSpacing: 0.7
+                    }
                 }
             }
         }

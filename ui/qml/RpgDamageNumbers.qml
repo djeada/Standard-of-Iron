@@ -73,13 +73,6 @@ Item {
 
             Component.onCompleted: refreshProjection()
 
-            Timer {
-                interval: 16
-                running: true
-                repeat: true
-                onTriggered: burst.refreshProjection()
-            }
-
             SequentialAnimation {
                 running: true
 
@@ -236,6 +229,19 @@ Item {
     Item {
         id: effectLayer
         anchors.fill: parent
+    }
+
+    Timer {
+        interval: 16
+        running: root.engine !== null && effectLayer.children.length > 0
+        repeat: true
+        onTriggered: {
+            for (var i = 0; i < effectLayer.children.length; ++i) {
+                var burst = effectLayer.children[i];
+                if (burst && burst.refreshProjection)
+                    burst.refreshProjection();
+            }
+        }
     }
 
     Timer {
