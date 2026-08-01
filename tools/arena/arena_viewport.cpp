@@ -606,6 +606,7 @@ void ArenaViewport::paintGL() {
       QPainter stats_painter(this);
       stats_painter.setRenderHint(QPainter::Antialiasing, false);
       draw_stats_overlay(stats_painter);
+      draw_rpg_hud(stats_painter);
       if (m_controls_overlay_visible) {
         draw_controls_overlay(stats_painter);
       }
@@ -636,6 +637,18 @@ void ArenaViewport::paintGL() {
 void ArenaViewport::keyPressEvent(QKeyEvent* event) {
   if (event == nullptr) {
     return;
+  }
+
+  if (rpg_interactive_key_press(event)) {
+    event->accept();
+    return;
+  }
+
+  if (event->key() == Qt::Key_Tab && !event->isAutoRepeat()) {
+    if (enter_rpg_interactive_control()) {
+      event->accept();
+      return;
+    }
   }
 
   switch (event->key()) {
@@ -731,6 +744,11 @@ void ArenaViewport::keyReleaseEvent(QKeyEvent* event) {
     return;
   }
 
+  if (rpg_interactive_key_release(event)) {
+    event->accept();
+    return;
+  }
+
   switch (event->key()) {
   case Qt::Key_Up:
     m_pan_up_pressed = false;
@@ -757,11 +775,28 @@ void ArenaViewport::keyReleaseEvent(QKeyEvent* event) {
 
 void ArenaViewport::focusOutEvent(QFocusEvent* event) {
   clear_camera_key_state();
+  if (m_rpg_interactive) {
+
+    m_rpg_mouse_captured = false;
+    unsetCursor();
+    if (m_rpg_commander_controller != nullptr) {
+      m_rpg_commander_controller->input() = CommanderControlController::InputState{};
+    }
+  }
   QOpenGLWidget::focusOutEvent(event);
 }
 
 void ArenaViewport::mousePressEvent(QMouseEvent* event) {
   setFocus(Qt::MouseFocusReason);
+  if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
+    if (event->button() == Qt::LeftButton) {
+      m_rpg_commander_controller->primary_action_down();
+    } else if (event->button() == Qt::RightButton) {
+      m_rpg_commander_controller->secondary_action_down();
+    }
+    event->accept();
+    return;
+  }
   m_last_mouse_pos = event->pos();
   m_last_mouse_pos_valid = true;
   if (event->button() == Qt::LeftButton) {
@@ -776,6 +811,20 @@ void ArenaViewport::mousePressEvent(QMouseEvent* event) {
 }
 
 void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
+  if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
+    if (m_rpg_mouse_captured) {
+      QPoint const global_pos = event->globalPosition().toPoint();
+      QPoint const look_delta = global_pos - m_rpg_mouse_center;
+      if (!look_delta.isNull()) {
+        m_rpg_commander_controller->mouse_move(look_delta.x(), look_delta.y());
+        QCursor::setPos(m_rpg_mouse_center);
+      }
+      update();
+    }
+    event->accept();
+    return;
+  }
+
   QPoint const delta = event->pos() - m_last_mouse_pos;
   m_last_mouse_pos = event->pos();
   m_last_mouse_pos_valid = true;
@@ -813,6 +862,20 @@ void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void ArenaViewport::mouseReleaseEvent(QMouseEvent* event) {
+  if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
+    if (event->button() == Qt::LeftButton) {
+      m_rpg_commander_controller->primary_action_up();
+    } else if (event->button() == Qt::RightButton) {
+      m_rpg_commander_controller->secondary_action_up();
+      if (m_world != nullptr) {
+        m_rpg_commander_controller->release_guard(
+            *m_world, m_rpg_commander_id, k_local_owner_id);
+      }
+    }
+    event->accept();
+    return;
+  }
+
   if (event->button() == Qt::LeftButton && m_camera != nullptr && m_world != nullptr &&
       width() > 0 && height() > 0) {
     m_selection_current = event->pos();
@@ -843,6 +906,10 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void ArenaViewport::wheelEvent(QWheelEvent* event) {
+  if (m_rpg_interactive) {
+    event->accept();
+    return;
+  }
   if (m_camera != nullptr) {
     const float wheel_divisor =
         m_terrain_review_mode
@@ -2992,7 +3059,11 @@ void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {
   }
   if (!m_rpg_commander_controller->update(
           *m_world, m_rpg_commander_id, k_local_owner_id, *m_camera, simulation_dt)) {
-    clear_rpg_scenario_state();
+    if (m_rpg_interactive) {
+      exit_rpg_interactive_control();
+    } else {
+      clear_rpg_scenario_state();
+    }
   }
 }
 
@@ -3022,6 +3093,139 @@ void ArenaViewport::clear_rpg_scenario_state() {
   if (m_renderer != nullptr) {
     m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rts);
   }
+}
+
+auto ArenaViewport::enter_rpg_interactive_control(Engine::Core::EntityID entity_id)
+    -> bool {
+  if (m_world == nullptr || m_rpg_commander_controller == nullptr) {
+    return false;
+  }
+
+  Engine::Core::EntityID target_id = entity_id;
+  if (target_id == 0) {
+    for (auto candidate_id : selected_unit_ids_or_fallback()) {
+      auto* candidate = m_world->get_entity(candidate_id);
+      if (candidate != nullptr &&
+          candidate->has_component<Engine::Core::CommanderComponent>()) {
+        target_id = candidate_id;
+        break;
+      }
+    }
+  }
+  if (target_id == 0) {
+    for (auto* candidate :
+         m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+      auto const* unit = candidate != nullptr
+                             ? candidate->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit != nullptr && unit->owner_id == k_local_owner_id && unit->health > 0) {
+        target_id = candidate->get_id();
+        break;
+      }
+    }
+  }
+  if (target_id == 0) {
+    return false;
+  }
+
+  configure_rpg_scenario_commander(target_id);
+  if (m_rpg_commander_id == 0) {
+    return false;
+  }
+
+  m_rpg_interactive = true;
+  select_entity(0);
+  setMouseTracking(true);
+  setCursor(Qt::BlankCursor);
+  recenter_rpg_mouse();
+  setFocus(Qt::OtherFocusReason);
+  update();
+  return true;
+}
+
+void ArenaViewport::exit_rpg_interactive_control() {
+  if (!m_rpg_interactive) {
+    return;
+  }
+  m_rpg_interactive = false;
+  m_rpg_mouse_captured = false;
+  unsetCursor();
+  clear_rpg_scenario_state();
+  reset_camera();
+  update();
+}
+
+void ArenaViewport::recenter_rpg_mouse() {
+  if (!m_rpg_interactive || width() <= 0 || height() <= 0) {
+    return;
+  }
+  QPoint const local_center(width() / 2, height() / 2);
+  m_rpg_mouse_center = mapToGlobal(local_center);
+  m_rpg_mouse_captured = true;
+  QCursor::setPos(m_rpg_mouse_center);
+}
+
+auto ArenaViewport::rpg_interactive_key_press(QKeyEvent* event) -> bool {
+  if (!m_rpg_interactive || m_rpg_commander_controller == nullptr) {
+    return false;
+  }
+  if (event->isAutoRepeat()) {
+    return true;
+  }
+
+  switch (event->key()) {
+  case Qt::Key_Escape:
+  case Qt::Key_Tab:
+    exit_rpg_interactive_control();
+    return true;
+  case Qt::Key_Space:
+    m_rpg_commander_controller->request_dodge();
+    return true;
+  case Qt::Key_Control:
+    m_rpg_commander_controller->request_jump();
+    return true;
+  case Qt::Key_R:
+    if (m_world != nullptr) {
+      m_rpg_commander_controller->cycle_lock_on_target(
+          *m_world, m_rpg_commander_id, k_local_owner_id);
+    }
+    return true;
+  case Qt::Key_C:
+    if (m_world != nullptr) {
+      m_rpg_commander_controller->toggle_close_camera_mode(
+          *m_world, m_rpg_commander_id, k_local_owner_id);
+    }
+    return true;
+  case Qt::Key_F:
+    m_rpg_commander_controller->special_action();
+    return true;
+  case Qt::Key_V:
+    m_rpg_commander_controller->request_vanguard_rush();
+    return true;
+  case Qt::Key_G:
+    m_rpg_commander_controller->request_second_wind();
+    return true;
+  case Qt::Key_F1:
+  case Qt::Key_Question:
+    m_controls_overlay_visible = !m_controls_overlay_visible;
+    update();
+    return true;
+  default:
+    break;
+  }
+
+  m_rpg_commander_controller->key_down(event->key());
+  return true;
+}
+
+auto ArenaViewport::rpg_interactive_key_release(QKeyEvent* event) -> bool {
+  if (!m_rpg_interactive || m_rpg_commander_controller == nullptr) {
+    return false;
+  }
+  if (!event->isAutoRepeat()) {
+    m_rpg_commander_controller->key_up(event->key());
+  }
+  return true;
 }
 
 void ArenaViewport::play_walk_animation() {
@@ -3724,6 +3928,108 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
   }
 }
 
+void ArenaViewport::draw_rpg_hud(QPainter& painter) {
+  if (!m_rpg_interactive || m_world == nullptr || m_rpg_commander_id == 0 ||
+      width() <= 0 || height() <= 0) {
+    return;
+  }
+  auto* commander = m_world->get_entity(m_rpg_commander_id);
+  if (commander == nullptr) {
+    return;
+  }
+
+  auto const* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
+  auto const* stamina = commander->get_component<Engine::Core::StaminaComponent>();
+  auto const* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
+  auto const* motion =
+      commander->get_component<Engine::Core::MotionPresentationComponent>();
+  auto const* combat = commander->get_component<Engine::Core::CombatStateComponent>();
+
+  int const bar_w = 240;
+  int const bar_h = 14;
+  int const pad = 10;
+  int const left = pad;
+  int y = height() - pad - (bar_h * 2) - 6 - 18;
+
+  auto draw_bar = [&](float ratio, const QColor& fill, const QString& label) {
+    QRect const outer(left, y, bar_w, bar_h);
+    painter.fillRect(outer, QColor(0, 0, 0, 170));
+    QRect inner = outer.adjusted(1, 1, -1, -1);
+    inner.setWidth(static_cast<int>(static_cast<float>(inner.width()) *
+                                    std::clamp(ratio, 0.0F, 1.0F)));
+    painter.fillRect(inner, fill);
+    painter.setPen(QColor(240, 240, 240, 235));
+    painter.drawText(
+        outer.adjusted(6, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, label);
+    y += bar_h + 6;
+  };
+
+  QFont hud_font = painter.font();
+  hud_font.setPixelSize(11);
+  hud_font.setBold(true);
+  painter.setFont(hud_font);
+
+  if (rpg != nullptr && rpg->rpg_max_hp > 0) {
+    float const ratio =
+        static_cast<float>(rpg->rpg_hp) / static_cast<float>(rpg->rpg_max_hp);
+    draw_bar(ratio,
+             QColor(196, 62, 54, 225),
+             QStringLiteral("HP  %1 / %2").arg(rpg->rpg_hp).arg(rpg->rpg_max_hp));
+  }
+  if (stamina != nullptr && stamina->max_stamina > 0.0F) {
+    draw_bar(stamina->get_stamina_ratio(),
+             stamina->is_running ? QColor(214, 168, 54, 225) : QColor(86, 150, 92, 225),
+             QStringLiteral("STA %1%").arg(
+                 static_cast<int>(stamina->get_stamina_ratio() * 100.0F)));
+  }
+
+  QStringList state_parts;
+  if (motion != nullptr) {
+    switch (motion->state) {
+    case Engine::Core::MotionPresentationState::Run:
+      state_parts << QStringLiteral("RUN");
+      break;
+    case Engine::Core::MotionPresentationState::Walk:
+      state_parts << QStringLiteral("WALK");
+      break;
+    default:
+      state_parts << QStringLiteral("IDLE");
+      break;
+    }
+  }
+  if (m_rpg_commander_controller != nullptr &&
+      m_rpg_commander_controller->is_dodge_rolling()) {
+    state_parts << QStringLiteral("DODGE");
+  }
+  if (guard != nullptr && guard->active) {
+    state_parts << QStringLiteral("GUARD");
+  }
+  if (guard != nullptr && guard->guard_break_remaining > 0.0F) {
+    state_parts << QStringLiteral("GUARD-BREAK");
+  }
+  if (rpg != nullptr && rpg->dodge_invincible) {
+    state_parts << QStringLiteral("I-FRAMES");
+  }
+  if (combat != nullptr &&
+      combat->animation_state != Engine::Core::CombatAnimationState::Idle) {
+    state_parts << QStringLiteral("ATTACK");
+  }
+  if (m_rpg_commander_controller != nullptr &&
+      m_rpg_commander_controller->locked_target_id() != 0) {
+    state_parts << QStringLiteral("LOCKED");
+  }
+
+  painter.setPen(QColor(240, 240, 240, 235));
+  painter.drawText(left + 2, y + 12, state_parts.join(QStringLiteral("  ")));
+
+  QPoint const center(width() / 2, height() / 2);
+  painter.setPen(QColor(255, 255, 255, 150));
+  painter.drawLine(center.x() - 7, center.y(), center.x() - 2, center.y());
+  painter.drawLine(center.x() + 2, center.y(), center.x() + 7, center.y());
+  painter.drawLine(center.x(), center.y() - 7, center.x(), center.y() - 2);
+  painter.drawLine(center.x(), center.y() + 2, center.x(), center.y() + 7);
+}
+
 void ArenaViewport::draw_controls_overlay(QPainter& painter) {
   if (width() <= 0 || height() <= 0) {
     return;
@@ -3735,8 +4041,59 @@ void ArenaViewport::draw_controls_overlay(QPainter& painter) {
   QFont body_font = title_font;
   body_font.setBold(false);
 
+  if (m_rpg_interactive) {
+    QString const rpg_title = QStringLiteral("RPG Commander Controls");
+    QStringList const rpg_lines{
+        QStringLiteral("W A S D: move (relative to view)"),
+        QStringLiteral("Mouse: look"),
+        QStringLiteral("Shift: run"),
+        QStringLiteral("LMB: attack (hold to chain)"),
+        QStringLiteral("RMB: guard"),
+        QStringLiteral("Space: dodge roll"),
+        QStringLiteral("Ctrl: jump"),
+        QStringLiteral("R: cycle lock-on"),
+        QStringLiteral("C: close camera"),
+        QStringLiteral("F: shield bash"),
+        QStringLiteral("V: vanguard rush"),
+        QStringLiteral("G: second wind"),
+        QStringLiteral("Esc / Tab: leave RPG control"),
+        QStringLiteral("F1 or ?: toggle this help"),
+    };
+
+    QFontMetrics const rpg_title_metrics(title_font);
+    QFontMetrics const rpg_body_metrics(body_font);
+    int const rpg_pad = 8;
+    int const rpg_title_gap = 4;
+    int const rpg_line_h = rpg_body_metrics.height() + 2;
+
+    int rpg_box_w = rpg_title_metrics.horizontalAdvance(rpg_title);
+    for (const auto& line : rpg_lines) {
+      rpg_box_w = std::max(rpg_box_w, rpg_body_metrics.horizontalAdvance(line));
+    }
+    rpg_box_w += rpg_pad * 2;
+
+    int const rpg_box_h = rpg_pad * 2 + rpg_title_metrics.height() + rpg_title_gap +
+                          static_cast<int>(rpg_lines.size()) * rpg_line_h;
+    QRect const rpg_box(width() - rpg_box_w - rpg_pad, rpg_pad, rpg_box_w, rpg_box_h);
+    painter.fillRect(rpg_box, QColor(0, 0, 0, 150));
+    painter.setPen(QColor(235, 235, 235, 230));
+
+    int rpg_y = rpg_box.top() + rpg_pad + rpg_title_metrics.ascent();
+    painter.setFont(title_font);
+    painter.drawText(rpg_box.left() + rpg_pad, rpg_y, rpg_title);
+
+    painter.setFont(body_font);
+    rpg_y += rpg_title_gap + (rpg_title_metrics.descent() + rpg_line_h);
+    for (const auto& line : rpg_lines) {
+      painter.drawText(rpg_box.left() + rpg_pad, rpg_y, line);
+      rpg_y += rpg_line_h;
+    }
+    return;
+  }
+
   QString const title = QStringLiteral("Arena Controls");
   QStringList const lines{
+      QStringLiteral("Tab: take direct RPG control of a commander"),
       QStringLiteral("LMB click: select + set spawn anchor"),
       QStringLiteral("LMB drag: box select"),
       QStringLiteral("Shift+LMB: add to selection"),

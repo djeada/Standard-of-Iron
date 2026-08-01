@@ -152,6 +152,92 @@ auto resolve_reachable_ground_position(const QVector3D& start,
   return best;
 }
 
+constexpr float k_commander_body_radius = 0.34F;
+
+constexpr float k_body_separation_scan_range = 3.0F;
+
+constexpr float k_body_separation_max_push_per_second = 2.4F;
+
+void separate_commander_from_bodies(Engine::Core::World& world,
+                                    Engine::Core::Entity& commander,
+                                    Engine::Core::EntityID commander_id,
+                                    Engine::Core::TransformComponent& transform,
+                                    float dt) {
+  if (dt <= 0.0F) {
+    return;
+  }
+
+  const QVector3D origin(transform.position.x, 0.0F, transform.position.z);
+  QVector3D push(0.0F, 0.0F, 0.0F);
+
+  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (candidate == nullptr || candidate->get_id() == commander_id ||
+        candidate->has_component<Engine::Core::BuildingComponent>() ||
+        candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto const* unit = candidate->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->health <= 0) {
+      continue;
+    }
+    auto const* candidate_transform =
+        candidate->get_component<Engine::Core::TransformComponent>();
+    if (candidate_transform == nullptr) {
+      continue;
+    }
+    float const coarse_dx = candidate_transform->position.x - origin.x();
+    float const coarse_dz = candidate_transform->position.z - origin.z();
+
+    constexpr float k_formation_spread_slack = 6.0F;
+    float const coarse_range = k_body_separation_scan_range + k_formation_spread_slack;
+    if ((coarse_dx * coarse_dx) + (coarse_dz * coarse_dz) >
+        coarse_range * coarse_range) {
+      continue;
+    }
+
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      QVector3D offset =
+          origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
+      float const min_distance =
+          k_commander_body_radius + std::max(soldier.body_radius, 0.05F);
+      float const distance_sq = offset.lengthSquared();
+      if (distance_sq >= min_distance * min_distance) {
+        continue;
+      }
+
+      float distance = std::sqrt(std::max(distance_sq, 0.0F));
+      if (distance > 1.0e-4F) {
+        offset /= distance;
+      } else {
+
+        auto const seed = static_cast<std::uint32_t>((commander_id * 73856093U) ^
+                                                     (candidate->get_id() * 19349663U));
+        float const angle = static_cast<float>(seed % 6283U) * 0.001F;
+        offset = QVector3D(std::cos(angle), 0.0F, std::sin(angle));
+        distance = 0.0F;
+      }
+      push += offset * (min_distance - distance);
+    }
+  }
+
+  if (push.lengthSquared() <= 1.0e-8F) {
+    return;
+  }
+
+  float const max_push = k_body_separation_max_push_per_second * dt;
+  if (push.lengthSquared() > max_push * max_push) {
+    push = push.normalized() * max_push;
+  }
+
+  float const target_x = transform.position.x + push.x();
+  float const target_z = transform.position.z + push.z();
+  if (is_walkable_at(target_x, target_z)) {
+    transform.position.x = target_x;
+    transform.position.z = target_z;
+  }
+}
+
 } // namespace
 
 void CommanderControlController::reset() {
@@ -1400,7 +1486,12 @@ auto CommanderControlController::update(Engine::Core::World& world,
     if (move.lengthSquared() > 0.0001F) {
       move.normalize();
       float speed = std::max(0.1F, unit->speed);
-      if (m_input.run) {
+
+      auto const* stamina = commander->get_component<Engine::Core::StaminaComponent>();
+      bool const running =
+          m_input.run && (stamina == nullptr || stamina->is_running ||
+                          (!stamina->is_running && stamina->can_start_running()));
+      if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
       }
       const float nx = transform->position.x + move.x() * speed * dt;
@@ -1413,7 +1504,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
           movement->set_manual_velocity(move.x() * speed, move.z() * speed);
         }
         actual_speed_for_bob = speed;
-        run_for_bob = m_input.run;
+        run_for_bob = running;
       } else if (movement != nullptr) {
         movement->set_manual_velocity(0.0F, 0.0F);
       }
@@ -1432,6 +1523,10 @@ auto CommanderControlController::update(Engine::Core::World& world,
       run_for_bob = false;
     }
     m_jump_safe_position_valid = false;
+  }
+
+  if (!jump_active) {
+    separate_commander_from_bodies(world, *commander, commander_id, *transform, dt);
   }
 
   m_move_speed = actual_speed_for_bob;
@@ -1569,11 +1664,14 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   constexpr float k_deg2rad = 0.017453292519943295F;
 
   constexpr float k_focus_height = 1.45F;
-  constexpr float k_camera_back_offset = 2.15F;
-  constexpr float k_camera_up_offset = 0.65F;
+
+  constexpr float k_camera_back_offset = 3.45F;
+  constexpr float k_camera_up_offset = 0.95F;
+  constexpr float k_camera_side_offset = 0.55F;
   constexpr float k_target_distance = 6.0F;
-  constexpr float k_close_camera_back_offset = 1.25F;
-  constexpr float k_close_camera_up_offset = 0.38F;
+  constexpr float k_close_camera_back_offset = 2.30F;
+  constexpr float k_close_camera_up_offset = 0.62F;
+  constexpr float k_close_camera_side_offset = 0.42F;
   constexpr float k_close_target_distance = 5.2F;
 
   constexpr float k_bob_freq = 3.5F;
@@ -1652,9 +1750,11 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
       close_camera_mode ? k_close_camera_up_offset : k_camera_up_offset;
   const float target_distance =
       close_camera_mode ? k_close_target_distance : k_target_distance;
+  const float side_offset =
+      close_camera_mode ? k_close_camera_side_offset : k_camera_side_offset;
   QVector3D eye_desired = pivot - flat_forward * back_offset +
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
-                          flat_right * bob_l;
+                          flat_right * (side_offset + bob_l);
 
   QVector3D target_desired = pivot + forward_vec * target_distance;
 
