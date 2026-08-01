@@ -4947,5 +4947,15 @@
       "max_population": 150,
       "on_hill": false
     }
-  ]
+  ],
+  "rain": {
+    "enabled": true,
+    "type": "rain",
+    "intensity": "light",
+    "cycle_duration": 340.0,
+    "active_duration": 80.0,
+    "fade_duration": 7.0,
+    "wind_strength": 0.18,
+    "wind_direction": 20.0
+  }
 }

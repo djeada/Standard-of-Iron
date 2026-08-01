@@ -356,7 +356,12 @@ void read_rain_config(const QJsonObject& obj, RainSettings& out) {
         float(obj.value(RAIN_ACTIVE_DURATION).toDouble(out.active_duration));
   }
   if (obj.contains(RAIN_INTENSITY)) {
-    out.intensity = float(obj.value(RAIN_INTENSITY).toDouble(out.intensity));
+    const QJsonValue intensity = obj.value(RAIN_INTENSITY);
+    if (intensity.isString()) {
+      out.intensity = parse_weather_intensity(intensity.toString(), out.intensity);
+    } else {
+      out.intensity = float(intensity.toDouble(out.intensity));
+    }
   }
   if (obj.contains(RAIN_FADE_DURATION)) {
     out.fade_duration =
@@ -366,6 +371,12 @@ void read_rain_config(const QJsonObject& obj, RainSettings& out) {
     out.wind_strength =
         float(obj.value(RAIN_WIND_STRENGTH).toDouble(out.wind_strength));
   }
+  if (obj.contains(RAIN_WIND_DIRECTION)) {
+    out.wind_direction_deg =
+        float(obj.value(RAIN_WIND_DIRECTION).toDouble(out.wind_direction_deg));
+  }
+  out.intensity = std::clamp(out.intensity, 0.0F, 1.0F);
+  out.wind_strength = std::max(0.0F, out.wind_strength);
 }
 
 void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {

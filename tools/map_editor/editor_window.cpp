@@ -36,6 +36,7 @@
 #include <cmath>
 
 #include "game/map/environment_lighting.h"
+#include "game/map/map_definition.h"
 #include "json_edit_dialog.h"
 #include "json_schema.h"
 #include "map_json_keys.h"
@@ -211,6 +212,19 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   weather_intensity->setDecimals(2);
   weather_intensity->setSingleStep(0.05);
   weather_form->addRow("Intensity", weather_intensity);
+  auto* wind_strength = new QDoubleSpinBox(weather_group);
+  wind_strength->setRange(0.0, 3.0);
+  wind_strength->setDecimals(2);
+  wind_strength->setSingleStep(0.05);
+  weather_form->addRow("Wind strength", wind_strength);
+  auto* wind_direction = new QDoubleSpinBox(weather_group);
+  wind_direction->setRange(0.0, 359.0);
+  wind_direction->setDecimals(0);
+  wind_direction->setSingleStep(15.0);
+  wind_direction->setSuffix("°");
+  wind_direction->setToolTip(
+      "Compass bearing the wind blows towards; drives both particles and drift.");
+  weather_form->addRow("Wind direction", wind_direction);
   auto* shadow_quality = new QComboBox(weather_group);
   shadow_quality->addItems({"Low", "Medium", "High", "Ultra"});
   shadow_quality->setCurrentText("High");
@@ -260,8 +274,17 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
     const QString weather_value =
         enabled ? rain.value("type").toString("rain") : QStringLiteral("off");
     weather->setCurrentIndex(std::max(0, weather->findData(weather_value)));
-    weather_intensity->setValue(rain.value("intensity").toDouble(0.5));
+    const QJsonValue intensity_value = rain.value("intensity");
+    weather_intensity->setValue(
+        intensity_value.isString()
+            ? static_cast<double>(
+                  Game::Map::parse_weather_intensity(intensity_value.toString(), 0.5F))
+            : intensity_value.toDouble(0.5));
     weather_intensity->setEnabled(enabled);
+    wind_strength->setValue(rain.value("wind_strength").toDouble(0.0));
+    wind_strength->setEnabled(enabled);
+    wind_direction->setValue(rain.value("wind_direction").toDouble(45.0));
+    wind_direction->setEnabled(enabled);
 
     const auto lighting =
         Game::Map::lighting_for_hour(static_cast<float>(hour), profile->currentText());
@@ -332,6 +355,8 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
     rain["enabled"] = selected != QStringLiteral("off");
     rain["type"] = selected == QStringLiteral("snow") ? "snow" : "rain";
     rain["intensity"] = weather_intensity->value();
+    rain["wind_strength"] = wind_strength->value();
+    rain["wind_direction"] = wind_direction->value();
     map_data->set_rain(rain);
   };
   QObject::connect(weather,
@@ -339,6 +364,14 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
                    panel,
                    [=](int) { write_weather(); });
   QObject::connect(weather_intensity,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_weather(); });
+  QObject::connect(wind_strength,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   panel,
+                   [=](double) { write_weather(); });
+  QObject::connect(wind_direction,
                    qOverload<double>(&QDoubleSpinBox::valueChanged),
                    panel,
                    [=](double) { write_weather(); });

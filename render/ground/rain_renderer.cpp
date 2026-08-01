@@ -1,21 +1,9 @@
 #include "rain_renderer.h"
 
-#include <QDebug>
-
 #include <algorithm>
-#include <cmath>
-#include <cstddef>
 
-#include "../gl/buffer.h"
+#include "../graphics_settings.h"
 #include "../scene_renderer.h"
-#include "game/map/scatter/ground_utils.h"
-
-namespace {
-
-using std::uint32_t;
-using namespace Render::Ground;
-
-} // namespace
 
 namespace Render::GL {
 
@@ -30,17 +18,13 @@ void RainRenderer::configure(float world_width,
   m_world_height = std::max(1.0F, world_height);
   m_seed = seed;
 
-  m_rain_drops.clear();
-  m_instance_buffer.reset();
-  m_instance_count = 0;
-
   m_params.weather_type = type;
   m_params.time = 0.0F;
   m_params.intensity = 0.0F;
   m_params.wind_strength = 0.0F;
+  m_params.density = 0.0F;
 
   update_weather_params();
-  generate_rain_drops();
 }
 
 void RainRenderer::set_intensity(float intensity) {
@@ -67,7 +51,11 @@ void RainRenderer::update_weather_params() {
 }
 
 void RainRenderer::set_wind_strength(float strength) {
-  m_params.wind_strength = strength;
+  m_params.wind_strength = std::max(0.0F, strength);
+}
+
+void RainRenderer::set_wind_direction_deg(float degrees) {
+  m_params.wind_direction = Game::Map::weather_wind_vector(degrees);
 }
 
 void RainRenderer::set_camera_position(const QVector3D& position) {
@@ -94,79 +82,24 @@ void RainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  const float time = renderer.get_animation_time();
+  m_params.time = renderer.get_animation_time();
+  m_params.intensity = m_intensity;
+  m_params.density = weather_particle_density(
+      {.intensity = m_intensity,
+       .quality_scale = GraphicsSettings::instance().weather_budget().particle_scale,
+       .camera_height = m_camera_position.y()});
 
-  const auto visible_count =
-      static_cast<std::size_t>(static_cast<float>(m_rain_drops.size()) * m_intensity);
-
-  if (visible_count == 0) {
+  if (m_params.density < 0.001F) {
     return;
   }
 
-  if (!m_instance_buffer) {
-    m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  }
-
-  m_instance_buffer->set_data(m_rain_drops.data(),
-                              visible_count * sizeof(RainDropInstanceGpu),
-                              Buffer::Usage::Dynamic);
-
-  m_params.time = time;
-  m_params.intensity = m_intensity;
-
-  renderer.rain_batch(m_instance_buffer.get(), visible_count, m_params);
+  renderer.rain_batch(m_params);
 }
 
 void RainRenderer::clear() {
-  m_rain_drops.clear();
-  m_instance_buffer.reset();
-  m_instance_count = 0;
   m_intensity = 0.0F;
   m_target_intensity = 0.0F;
-}
-
-void RainRenderer::generate_rain_drops() {
-  m_rain_drops.clear();
-
-  const std::size_t max_drops = (m_params.weather_type == Game::Map::WeatherType::Snow)
-                                    ? k_max_snow_drops
-                                    : k_max_rain_drops;
-
-  m_rain_drops.reserve(max_drops);
-
-  uint32_t state = m_seed;
-
-  for (std::size_t i = 0; i < max_drops; ++i) {
-    state = hash_coords(
-        static_cast<int>(i), static_cast<int>(i * 17), m_seed ^ 0xDA1A1234U);
-
-    const float x = (rand_01(state) - 0.5F) * m_rain_area_radius * 2.0F;
-    state = hash_coords(static_cast<int>(i * 31), static_cast<int>(i), state);
-    const float z = (rand_01(state) - 0.5F) * m_rain_area_radius * 2.0F;
-    state = hash_coords(static_cast<int>(i * 7), static_cast<int>(i * 13), state);
-    const float y = rand_01(state) * m_rain_height;
-
-    state = hash_coords(static_cast<int>(i), static_cast<int>(i * 23), state);
-
-    float speed_variation;
-    if (m_params.weather_type == Game::Map::WeatherType::Snow) {
-
-      speed_variation = RainBatchParams::k_snow_speed_variation_min +
-                        rand_01(state) * RainBatchParams::k_snow_speed_variation_range;
-    } else {
-
-      speed_variation = RainBatchParams::k_rain_speed_variation_min +
-                        rand_01(state) * RainBatchParams::k_rain_speed_variation_range;
-    }
-
-    RainDropInstanceGpu drop;
-    drop.pos_velocity = QVector4D(x, y, z, m_params.drop_speed * speed_variation);
-    drop.size_alpha = QVector4D(m_params.drop_length, m_params.drop_width, 1.0F, 0.0F);
-
-    m_rain_drops.push_back(drop);
-  }
-
-  m_instance_count = m_rain_drops.size();
+  m_params.density = 0.0F;
 }
 
 } // namespace Render::GL

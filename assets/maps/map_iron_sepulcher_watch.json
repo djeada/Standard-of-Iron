@@ -144,5 +144,15 @@
       "nation": "roman_republic",
       "max_population": 180
     }
-  ]
+  ],
+  "rain": {
+    "enabled": true,
+    "type": "rain",
+    "intensity": "light",
+    "cycle_duration": 360.0,
+    "active_duration": 110.0,
+    "fade_duration": 10.0,
+    "wind_strength": 0.14,
+    "wind_direction": 300.0
+  }
 }

@@ -3,8 +3,6 @@
 #include <QVector3D>
 
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 #include "../i_render_pass.h"
 #include "../rain_gpu.h"
@@ -14,7 +12,6 @@ class RainManager;
 }
 
 namespace Render::GL {
-class Buffer;
 class Renderer;
 
 class RainRenderer : public IRenderPass {
@@ -33,14 +30,19 @@ public:
   void set_intensity(float intensity);
   void set_weather_type(Game::Map::WeatherType type);
   void set_wind_strength(float strength);
+  void set_wind_direction_deg(float degrees);
   void set_camera_position(const QVector3D& position);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void clear();
 
+  [[nodiscard]] auto intensity() const noexcept -> float { return m_intensity; }
+  [[nodiscard]] auto params() const noexcept -> const RainBatchParams& {
+    return m_params;
+  }
+
 private:
-  void generate_rain_drops();
   void update_weather_params();
 
   bool m_enabled = false;
@@ -51,16 +53,9 @@ private:
   std::uint32_t m_seed = 12345U;
 
   QVector3D m_camera_position{0.0F, 0.0F, 0.0F};
-  float m_rain_area_radius = 50.0F;
-  float m_rain_height = 30.0F;
 
-  std::vector<RainDropInstanceGpu> m_rain_drops;
-  std::unique_ptr<Buffer> m_instance_buffer;
-  std::size_t m_instance_count = 0;
   RainBatchParams m_params;
 
-  static constexpr std::size_t k_max_rain_drops = 5000;
-  static constexpr std::size_t k_max_snow_drops = 3000;
   static constexpr float k_intensity_lerp_speed = 2.0F;
 };
 

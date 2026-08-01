@@ -59,6 +59,11 @@ struct ContactShadowBudget {
   int max_casters_per_formation;
 };
 
+struct WeatherBudget {
+
+  float particle_scale = 1.0F;
+};
+
 struct DirectionalShadowSettings {
   bool enabled = true;
   int cascade_count = 3;
@@ -107,6 +112,9 @@ public:
   [[nodiscard]] auto
   directional_shadows() const noexcept -> const DirectionalShadowSettings& {
     return m_directional_shadows;
+  }
+  [[nodiscard]] auto weather_budget() const noexcept -> const WeatherBudget& {
+    return m_weather_budget;
   }
 
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
@@ -227,6 +235,7 @@ private:
                                .depth_bias = 0.0018F,
                                .normal_bias = 0.025F,
                                .cascade_blend = 0.0F};
+      m_weather_budget = {.particle_scale = 0.35F};
       break;
 
     case GraphicsQuality::Medium:
@@ -265,6 +274,7 @@ private:
                                .depth_bias = 0.0016F,
                                .normal_bias = 0.022F,
                                .cascade_blend = 0.08F};
+      m_weather_budget = {.particle_scale = 0.60F};
       break;
 
     case GraphicsQuality::High:
@@ -303,6 +313,7 @@ private:
                                .depth_bias = 0.0012F,
                                .normal_bias = 0.018F,
                                .cascade_blend = 0.12F};
+      m_weather_budget = {.particle_scale = 0.85F};
       break;
 
     case GraphicsQuality::Ultra:
@@ -341,6 +352,7 @@ private:
                                .depth_bias = 0.0009F,
                                .normal_bias = 0.014F,
                                .cascade_blend = 0.15F};
+      m_weather_budget = {.particle_scale = 1.00F};
       break;
     }
   }
@@ -366,6 +378,7 @@ private:
   VisibilityBudget m_visibility_budget{};
   ContactShadowBudget m_contact_shadow_budget{};
   DirectionalShadowSettings m_directional_shadows{};
+  WeatherBudget m_weather_budget{};
 };
 
 } // namespace Render

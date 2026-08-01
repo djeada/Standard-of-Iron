@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <cstdint>
 #include <functional>
 
@@ -14,6 +16,16 @@ enum class RainState {
   FadingOut
 };
 
+struct RainRuntimeState {
+  RainState state = RainState::Clear;
+  float cycle_time = 0.0F;
+  float state_time = 0.0F;
+  float intensity = 0.0F;
+};
+
+[[nodiscard]] auto parse_rain_state(const QString& value) noexcept -> RainState;
+[[nodiscard]] auto rain_state_name(RainState state) noexcept -> const char*;
+
 class RainManager {
 public:
   RainManager();
@@ -22,6 +34,9 @@ public:
   void configure(const Game::Map::RainSettings& settings, std::uint32_t map_seed);
 
   void reset();
+
+  [[nodiscard]] auto snapshot() const noexcept -> RainRuntimeState;
+  void restore(const RainRuntimeState& state) noexcept;
 
   void update(float delta_time);
 
@@ -48,6 +63,10 @@ public:
 
   [[nodiscard]] auto get_wind_strength() const -> float {
     return m_settings.wind_strength;
+  }
+
+  [[nodiscard]] auto get_wind_direction_deg() const -> float {
+    return m_settings.wind_direction_deg;
   }
 
   using StateChangeCallback = std::function<void(RainState new_state)>;

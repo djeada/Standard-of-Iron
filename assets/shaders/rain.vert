@@ -3,6 +3,7 @@
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_offset;
 layout(location = 2) in float a_alpha;
+layout(location = 3) in float a_rank;
 
 uniform mat4 u_view_proj;
 uniform float u_time;
@@ -11,6 +12,7 @@ uniform vec3 u_camera_pos;
 uniform vec3 u_wind;
 uniform int u_weather_type;
 uniform float u_wind_strength;
+uniform float u_density;
 
 out float v_alpha;
 out float v_rotation;
@@ -28,6 +30,8 @@ const float SNOW_DRIFT_AMPLITUDE_X = 0.15;
 const float SNOW_DRIFT_AMPLITUDE_Z = 0.1;
 
 const float SNOW_POINT_SIZE = 22.0;
+
+const float DENSITY_FADE_BAND = 0.12;
 
 void main() {
   float speed = a_offset.z;
@@ -55,11 +59,14 @@ void main() {
   pos.z += u_wind.z * height_factor * wind_factor * (1.0 + u_wind_strength);
 
   if (u_weather_type == 1) {
-    float drift = sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) *
+
+    vec2 wind_dir = normalize(u_wind.xz + vec2(1e-4, 0.0));
+    vec2 wind_tangent = vec2(-wind_dir.y, wind_dir.x);
+    float along = sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) *
                   SNOW_DRIFT_AMPLITUDE_X;
-    pos.x += drift;
-    pos.z += cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
-             SNOW_DRIFT_AMPLITUDE_Z;
+    float across = cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
+                   SNOW_DRIFT_AMPLITUDE_Z;
+    pos.xz += wind_dir * along + wind_tangent * across;
 
     gl_PointSize = SNOW_POINT_SIZE;
 
@@ -68,5 +75,6 @@ void main() {
 
   gl_Position = u_view_proj * vec4(pos, 1.0);
 
-  v_alpha = a_alpha * u_intensity;
+  float density_fade = clamp((u_density - a_rank) / DENSITY_FADE_BAND, 0.0, 1.0);
+  v_alpha = a_alpha * u_intensity * density_fade;
 }

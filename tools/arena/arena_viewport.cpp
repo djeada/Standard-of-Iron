@@ -1533,7 +1533,8 @@ void ArenaViewport::configure_rendering_from_terrain() {
         static_cast<float>(height_map->get_height()) * height_map->get_tile_size();
     m_rain->configure(world_width,
                       world_height,
-                      static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));
+                      static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)),
+                      m_weather_type);
   }
   if (m_boundary_fog != nullptr) {
     m_boundary_fog->configure(
@@ -1632,7 +1633,14 @@ void ArenaViewport::set_shadow_quality(const QString& quality) {
 
 auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingState {
   auto weather = m_weather_lighting;
-  weather.rain = m_rain_enabled ? m_rain_intensity : 0.0F;
+  const float active = m_rain_enabled ? m_rain_intensity : 0.0F;
+  if (m_weather_type == Game::Map::WeatherType::Snow) {
+    weather.snow = active;
+    weather.rain = 0.0F;
+  } else {
+    weather.rain = active;
+    weather.snow = 0.0F;
+  }
   return Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
 }
 
@@ -1703,6 +1711,7 @@ void ArenaViewport::set_rain_enabled(bool enabled) {
   if (!enabled) {
     m_weather_lighting.rain = 0.0F;
     m_weather_lighting.storm = 0.0F;
+    m_weather_lighting.snow = 0.0F;
   }
   if (m_rain != nullptr) {
     m_rain->set_enabled(enabled);
@@ -1716,7 +1725,11 @@ void ArenaViewport::set_rain_enabled(bool enabled) {
 
 void ArenaViewport::set_rain_intensity(float intensity) {
   m_rain_intensity = std::clamp(intensity, 0.0F, 1.0F);
-  m_weather_lighting.rain = m_rain_intensity;
+  if (m_weather_type == Game::Map::WeatherType::Snow) {
+    m_weather_lighting.snow = m_rain_intensity;
+  } else {
+    m_weather_lighting.rain = m_rain_intensity;
+  }
   if (m_rain != nullptr) {
     m_rain->set_intensity(m_rain_intensity);
   }
@@ -2746,12 +2759,19 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_environment_hour = definition->environment.start_time;
   m_lighting_profile = definition->environment.lighting_profile;
   m_environment_clock.reset(definition->environment);
-  m_rain_enabled = definition->weather.rain > 0.0F || definition->weather.storm > 0.0F;
-  m_rain_intensity = std::max(definition->weather.rain, definition->weather.storm);
+  m_rain_enabled = definition->weather.rain > 0.0F ||
+                   definition->weather.storm > 0.0F || definition->weather.snow > 0.0F;
+  m_rain_intensity = std::max(
+      {definition->weather.rain, definition->weather.storm, definition->weather.snow});
+  m_weather_type = definition->weather.snow > 0.0F ? Game::Map::WeatherType::Snow
+                                                   : Game::Map::WeatherType::Rain;
   m_weather_lighting = definition->weather;
   if (m_rain != nullptr) {
     m_rain->set_enabled(m_rain_enabled);
     m_rain->set_intensity(m_rain_intensity);
+    m_rain->set_weather_type(m_weather_type);
+    m_rain->set_wind_strength(definition->precipitation.wind_strength);
+    m_rain->set_wind_direction_deg(definition->precipitation.wind_direction_deg);
   }
   clear_camera_key_state();
   m_arena_rivers = definition->rivers;

@@ -134,8 +134,6 @@ struct TerrainScatterCmd {
 };
 
 struct RainBatchCmd {
-  Buffer* instance_buffer = nullptr;
-  std::size_t instance_count = 0;
   RainBatchParams params;
   CommandPriority priority{CommandPriority::Low};
 };

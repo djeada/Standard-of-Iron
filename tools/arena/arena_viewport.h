@@ -305,6 +305,7 @@ private:
   Game::Map::EnvironmentClock m_environment_clock;
   bool m_rain_enabled = false;
   float m_rain_intensity = 0.5F;
+  Game::Map::WeatherType m_weather_type = Game::Map::WeatherType::Rain;
   Game::Map::WeatherLightingInput m_weather_lighting{};
   QString m_animation_name = QStringLiteral("Idle");
 
