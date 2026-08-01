@@ -15,6 +15,7 @@
 #include "game/systems/gate_service.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/troop_config.h"
@@ -132,6 +133,12 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
       continue;
     }
 
+    if (unit->health <= 0 ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+
+      continue;
+    }
+
     registry.register_building(entity->get_id(),
                                Game::Units::spawn_typeToString(unit->spawn_type),
                                transform->position.x,
@@ -144,6 +151,10 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
   }
 
   Game::Systems::WallNetworkService::refresh_world(*world);
+
+  if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
+    pathfinder->mark_navigation_grid_dirty();
+  }
 }
 
 void GameStateRestorer::restore_environment_from_metadata(

@@ -16,8 +16,10 @@
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
+#include "../defense_formation_service.h"
 #include "../formation_combat_geometry.h"
 #include "../marketplace_system.h"
+#include "../order_service.h"
 #include "../wall_network_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
@@ -769,6 +771,54 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
   }
 }
 
+namespace {
+
+[[nodiscard]] auto
+apply_defense_formation_damage_scaling(const Engine::Core::Entity& target,
+                                       const Engine::Core::Entity* attacker,
+                                       const std::optional<QVector3D>& contact_point,
+                                       int damage) -> int {
+  if (damage <= 0) {
+    return damage;
+  }
+
+  Game::Systems::DefenseFormationDamageContext context{};
+  if (attacker != nullptr) {
+    if (const auto* attacker_unit =
+            attacker->get_component<Engine::Core::UnitComponent>()) {
+      context.is_cavalry_impact = is_mounted_spawn(attacker_unit->spawn_type);
+    }
+    if (const auto* attack = attacker->get_component<Engine::Core::AttackComponent>()) {
+      context.is_missile =
+          attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged;
+    }
+    if (const auto* attacker_transform =
+            attacker->get_component<Engine::Core::TransformComponent>()) {
+      context.attack_origin = QVector3D(attacker_transform->position.x,
+                                        attacker_transform->position.y,
+                                        attacker_transform->position.z);
+    }
+  }
+  if (contact_point.has_value() && attacker == nullptr) {
+    context.attack_origin = *contact_point;
+  }
+
+  float multiplier =
+      Game::Systems::DefenseFormationService::damage_multiplier(target, context);
+  if (attacker != nullptr) {
+    multiplier *=
+        Game::Systems::DefenseFormationService::attack_output_multiplier(*attacker);
+  }
+
+  if (multiplier >= 0.999F && multiplier <= 1.001F) {
+    return damage;
+  }
+  return std::max(
+      1, static_cast<int>(std::lround(static_cast<float>(damage) * multiplier)));
+}
+
+} // namespace
+
 DamageApplicationResult
 apply_unit_damage(Engine::Core::World* world,
                   Engine::Core::Entity* target,
@@ -801,8 +851,12 @@ apply_unit_damage(Engine::Core::World* world,
   }
 
   bool const structure = target->has_component<Engine::Core::BuildingComponent>();
-  int const effective_damage =
+  int const raw_damage =
       structure ? resolve_structure_damage(attacker, damage) : damage;
+  int const effective_damage = structure
+                                   ? raw_damage
+                                   : apply_defense_formation_damage_scaling(
+                                         *target, attacker, contact_point, raw_damage);
   result.previous_health = unit->health;
   result.new_health = result.previous_health;
   if (effective_damage <= 0 || result.previous_health <= 0) {
@@ -911,6 +965,8 @@ apply_unit_damage(Engine::Core::World* world,
     if (auto* movement = target->get_component<Engine::Core::MovementComponent>()) {
       movement->stop();
     }
+
+    Game::Systems::OrderService::exit_hold_mode(target);
 
     auto* attack = target->get_component<Engine::Core::AttackComponent>();
     if (attack != nullptr) {

@@ -2,6 +2,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "defense_formation_service.h"
 
 namespace Game::Systems {
 
@@ -21,6 +22,11 @@ auto should_clear_auxiliary_orders(MoveOrderKind kind) -> bool {
 
 auto should_exit_hold_mode(MoveOrderKind kind) -> bool {
   return kind != MoveOrderKind::RecoveryMove;
+}
+
+auto should_break_defense_formation(MoveOrderKind kind) -> bool {
+  return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
+         kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove;
 }
 
 auto should_disable_guard_mode(MoveOrderKind kind) -> bool {
@@ -133,6 +139,7 @@ void OrderService::set_guard_mode_active(Engine::Core::Entity* entity, bool acti
 
   guard_mode->active = active;
   if (!active) {
+    DefenseFormationService::begin_break(entity);
     guard_mode->returning_to_guard_position = false;
     guard_mode->guarded_entity_id = 0;
     guard_mode->has_guard_target = false;
@@ -174,6 +181,10 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
     exit_hold_mode(entity);
   }
 
+  if (should_break_defense_formation(kind)) {
+    DefenseFormationService::begin_break(entity);
+  }
+
   if (should_disable_guard_mode(kind)) {
     auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
     if ((guard_mode != nullptr) && guard_mode->active &&
@@ -198,6 +209,7 @@ void OrderService::prepare_for_attack(Engine::Core::Entity* entity) {
     return;
   }
 
+  DefenseFormationService::begin_break(entity);
   clear_player_order_intent(entity);
   clear_civilian_delivery(entity);
   clear_patrol(entity);
@@ -211,6 +223,7 @@ void OrderService::apply_stop(Engine::Core::Entity* entity) {
     return;
   }
 
+  DefenseFormationService::begin_break(entity);
   reset_movement(entity);
   clear_attack_target(entity);
   clear_player_order_intent(entity);

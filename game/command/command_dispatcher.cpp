@@ -8,6 +8,7 @@
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
 #include "../systems/gate_service.h"
+#include "../systems/defense_formation_service.h"
 #include "../systems/order_service.h"
 #include "../systems/production_service.h"
 #include "../systems/troop_profile_service.h"
@@ -159,11 +160,18 @@ void apply_guard(World& world, const SetGuard& guard) {
       guard_mode->has_guard_target = true;
     }
 
-    if (auto* hold_mode = entity.get_component<Engine::Core::HoldModeComponent>()) {
-      hold_mode->active = false;
-    }
+    Game::Systems::OrderService::exit_hold_mode(&entity);
     Game::Systems::OrderService::clear_patrol(&entity);
   });
+
+  if (guard.active) {
+    Game::Systems::DefenseFormationService::begin(
+        world, guard.units, guard.anchor, guard.has_anchor);
+  } else {
+    for_each_subject(world, guard.units, [](Entity& entity) {
+      Game::Systems::DefenseFormationService::begin_break(&entity);
+    });
+  }
 }
 
 void apply_run_mode(World& world, const SetRunMode& run) {

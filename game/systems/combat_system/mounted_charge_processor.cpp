@@ -11,6 +11,7 @@
 #include "../../units/spawn_type.h"
 #include "../combat_actions/body_impact.h"
 #include "../combat_actions/combat_action_events.h"
+#include "../defense_formation_service.h"
 
 namespace Game::Systems::Combat {
 
@@ -275,6 +276,9 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
 
     if (!charge->intent_requested || speed < charge->min_start_speed ||
         contact.target_id == 0U) {
+      continue;
+    }
+    if (Game::Systems::DefenseFormationService::blocks_charge(*entity)) {
       continue;
     }
     (void)start_charge_action(*entity, *charge, *definition, contact.target_id, speed);

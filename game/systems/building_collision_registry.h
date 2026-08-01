@@ -12,6 +12,10 @@ using EntityID = std::uint64_t;
 
 namespace Game::Systems {
 
+
+inline constexpr float k_default_building_grid_padding = 1.0F;
+inline constexpr float k_wall_segment_grid_padding = 0.0F;
+
 struct BuildingFootprint {
   float center_x;
   float center_z;
@@ -20,16 +24,24 @@ struct BuildingFootprint {
   int owner_id;
   Engine::Core::EntityID entity_id;
 
+  float grid_padding{k_default_building_grid_padding};
   bool blocks_navigation{true};
 
   BuildingFootprint(
-      float x, float z, float w, float d, int owner, Engine::Core::EntityID id)
+      float x,
+      float z,
+      float w,
+      float d,
+      int owner,
+      Engine::Core::EntityID id,
+      float padding = k_default_building_grid_padding)
       : center_x(x)
       , center_z(z)
       , width(w)
       , depth(d)
       , owner_id(owner)
-      , entity_id(id) {}
+      , entity_id(id)
+      , grid_padding(padding) {}
 };
 
 struct NavigationPassage {
@@ -57,6 +69,8 @@ public:
   };
 
   static auto get_building_size(const std::string& building_type) -> BuildingSize;
+
+  static auto get_building_grid_padding(const std::string& building_type) -> float;
 
   void register_building(Engine::Core::EntityID entity_id,
                          const std::string& building_type,
@@ -119,13 +133,18 @@ public:
     return m_navigation_passages;
   }
 
-  static constexpr float k_default_grid_padding = 1.0F;
+  static constexpr float k_default_grid_padding = k_default_building_grid_padding;
   static void set_grid_padding(float padding);
   static auto get_grid_padding() -> float;
 
   void clear();
 
 private:
+  void release_authored_obstacles_within(float center_x,
+                                         float center_z,
+                                         float width,
+                                         float depth);
+
   std::vector<BuildingFootprint> m_buildings;
 
   std::vector<BuildingFootprint> m_authored_obstacles;

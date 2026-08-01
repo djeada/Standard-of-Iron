@@ -99,6 +99,10 @@ auto resolve_humanoid_playback_phase(const HumanoidPlaybackPhaseInputs& inputs) 
     if (settled_hold || settled_guard) {
       return normalize_clip_phase(inputs.gait_cycle_phase, true);
     }
+
+    if (inputs.is_in_hold_mode || inputs.is_exiting_hold) {
+      return normalize_clip_phase(inputs.gait_cycle_phase, true);
+    }
     return humanoid_hold_phase(hold_phase_inputs(inputs));
   }
   if (inputs.state == StateId::RidingCharge && inputs.is_mounted &&

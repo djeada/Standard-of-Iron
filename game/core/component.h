@@ -182,7 +182,14 @@ public:
     vz = 0.0F;
     precise_arrival = false;
     structure_approach_target_id = 0;
+    has_requested_goal = false;
   }
+
+  [[nodiscard]] auto get_has_requested_goal() const -> bool {
+    return has_requested_goal;
+  }
+  [[nodiscard]] auto get_requested_goal_x() const -> float { return requested_goal_x; }
+  [[nodiscard]] auto get_requested_goal_z() const -> float { return requested_goal_z; }
 
   [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
 
@@ -211,6 +218,7 @@ public:
     goal_y = z;
     target_x = x;
     target_y = z;
+    has_requested_goal = false;
   }
 
   void engage_manual_move(float x, float z) {
@@ -219,6 +227,7 @@ public:
     target_y = z;
     goal_x = x;
     goal_y = z;
+    has_requested_goal = false;
   }
 
   void set_manual_velocity(float new_vx, float new_vz) {
@@ -247,6 +256,9 @@ private:
   float vx{0.0F}, vz{0.0F};
   std::vector<std::pair<float, float>> path;
   std::size_t path_index{0};
+
+  bool has_requested_goal{false};
+  float requested_goal_x{0.0F}, requested_goal_z{0.0F};
 
   bool stuck_ref_valid{false};
   float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
@@ -1238,6 +1250,38 @@ public:
   float stand_up_duration;
   float kneel_entry_progress{0.0F};
   float kneel_duration;
+};
+
+enum class DefenseFormationState : std::uint8_t {
+  Normal = 0,
+  Forming = 1,
+  Formed = 2,
+  Breaking = 3
+};
+
+class DefenseFormationComponent : public Component {
+public:
+  DefenseFormationComponent() = default;
+
+  [[nodiscard]] auto is_engaged() const -> bool {
+    return state == DefenseFormationState::Forming ||
+           state == DefenseFormationState::Formed;
+  }
+
+  [[nodiscard]] auto is_formed() const -> bool {
+    return state == DefenseFormationState::Formed;
+  }
+
+  DefenseFormationState state{DefenseFormationState::Normal};
+  std::uint64_t formation_id{0};
+  int slot_index{-1};
+  int rank{0};
+  int file{0};
+  float slot_x{0.0F};
+  float slot_z{0.0F};
+  float facing_degrees{0.0F};
+  float state_time{0.0F};
+  float cohesion{1.0F};
 };
 
 class GuardModeComponent : public Component {

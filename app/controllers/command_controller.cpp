@@ -573,10 +573,7 @@ auto CommandController::on_guard_click(qreal sx,
     guard_mode->returning_to_guard_position = false;
     guard_mode->has_guard_target = true;
 
-    auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->active = false;
-    }
+    Game::Systems::OrderService::exit_hold_mode(entity);
 
     Game::Systems::OrderService::clear_patrol(entity);
     Game::Systems::OrderService::reset_movement(entity);
@@ -694,10 +691,7 @@ auto CommandController::on_formation_command() -> CommandResult {
       }
       formation_mode->active = true;
 
-      auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-      if ((hold_mode != nullptr) && hold_mode->active) {
-        hold_mode->active = false;
-      }
+      Game::Systems::OrderService::exit_hold_mode(entity);
 
       auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
       if ((guard_mode != nullptr) && guard_mode->active) {
