@@ -149,9 +149,11 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
   pose.body_frames.shoulder_r = AF{
       pose.shoulder_r, m.right_axis, shoulder_up, shoulder_fwd_r, m.upper_arm_r, 0.0F};
 
-  auto compute_hand =
-      [&](const QVector3D& elbow, const QVector3D& hand, float right_sign) -> AF {
-    QVector3D up = hand - elbow;
+  auto compute_hand = [&](const QVector3D& elbow,
+                          const QVector3D& hand,
+                          float right_sign,
+                          const QVector3D& grip_axis) -> AF {
+    QVector3D up = grip_axis.lengthSquared() > 1e-8F ? grip_axis : (hand - elbow);
     if (up.lengthSquared() > 1e-8F) {
       up.normalize();
     } else {
@@ -165,14 +167,27 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
     }
     return AF{hand, m.right_axis * right_sign, up, fwd, m.hand_r, 0.0F};
   };
-  pose.body_frames.hand_l = compute_hand(pose.elbow_l, pose.hand_l, -1.0F);
-  pose.body_frames.hand_r = compute_hand(pose.elbow_r, pose.hand_r, 1.0F);
+  pose.body_frames.hand_l =
+      compute_hand(pose.elbow_l, pose.hand_l, -1.0F, pose.grip_axis_l);
+  pose.body_frames.hand_r =
+      compute_hand(pose.elbow_r, pose.hand_r, 1.0F, pose.grip_axis_r);
 
-  auto compute_hand_bone_frame = [&](const QVector3D& hand) -> AF {
-    return AF{hand, m.right_axis, m.up_axis, m.forward_axis, m.hand_r, 0.0F};
+  auto compute_hand_bone_frame = [&](const QVector3D& hand,
+                                     const QVector3D& grip_axis) -> AF {
+    if (grip_axis.lengthSquared() <= 1e-8F) {
+      return AF{hand, m.right_axis, m.up_axis, m.forward_axis, m.hand_r, 0.0F};
+    }
+    QVector3D up = grip_axis.normalized();
+    QVector3D fwd = QVector3D::crossProduct(m.right_axis, up);
+    if (fwd.lengthSquared() < 1e-8F) {
+      fwd = m.forward_axis;
+    } else {
+      fwd.normalize();
+    }
+    return AF{hand, m.right_axis, up, fwd, m.hand_r, 0.0F};
   };
-  AF const hand_bone_l = compute_hand_bone_frame(pose.hand_l);
-  AF const hand_bone_r = compute_hand_bone_frame(pose.hand_r);
+  AF const hand_bone_l = compute_hand_bone_frame(pose.hand_l, pose.grip_axis_l);
+  AF const hand_bone_r = compute_hand_bone_frame(pose.hand_r, pose.grip_axis_r);
   pose.body_frames.shield_l = Render::Humanoid::socket_attachment_frame(
       pose.body_frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
   pose.body_frames.grip_l = Render::Humanoid::socket_attachment_frame(

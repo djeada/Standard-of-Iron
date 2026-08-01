@@ -64,7 +64,7 @@ private:
   BowRenderConfig m_base;
 };
 
-inline constexpr std::size_t k_bow_role_count = 2;
+inline constexpr std::size_t k_bow_role_count = 5;
 
 auto bow_fill_role_colors(const HumanoidPalette& palette,
                           QVector3D* out,
@@ -72,6 +72,6 @@ auto bow_fill_role_colors(const HumanoidPalette& palette,
 
 auto bow_make_static_attachments(const BowRenderConfig& config,
                                  std::uint8_t base_role_byte)
-    -> std::array<Render::Creature::StaticAttachmentSpec, 2>;
+    -> std::array<Render::Creature::StaticAttachmentSpec, 3>;
 
 } // namespace Render::GL

@@ -118,6 +118,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"ElephantPanicComponent", AuthoritativeSerialized, "Panic timer."},
     {"ElephantStompImpactComponent", AuthoritativeSerialized, "Pending stomp impact."},
     {"FirePatchComponent", AuthoritativeSerialized, "Burning ground."},
+    {"StructureFireComponent",
+     AuthoritativeSerialized,
+     "Ignition progress and burn timers for a structure set alight by "
+     "incendiary damage."},
     {"CivilianDeliveryComponent", AuthoritativeSerialized, "Delivery assignment."},
     {"BuilderProductionComponent", AuthoritativeSerialized, "Construction queue."},
     {"WallConstructionSiteComponent", AuthoritativeSerialized, "Unbuilt wall segment."},

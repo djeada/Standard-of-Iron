@@ -1292,7 +1292,9 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
   if (is_rpg_sword_clip(clip) || clip.attack_type == BakerAttackType::Spear ||
       clip.attack_type == BakerAttackType::SpearFromHold ||
-      clip.hold_type == BakerHoldType::Spear ||
+      clip.attack_type == BakerAttackType::Bow ||
+      clip.attack_type == BakerAttackType::BowFromHold ||
+      clip.hold_type == BakerHoldType::Spear || clip.hold_type == BakerHoldType::Bow ||
       clip.riding_type == BakerRidingType::SwordStrike ||
       clip.riding_type == BakerRidingType::SpearThrust) {
     Render::Humanoid::rebuild_humanoid_frames(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);

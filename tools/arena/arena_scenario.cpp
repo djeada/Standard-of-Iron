@@ -23,8 +23,10 @@
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/combat_system/structure_combat.h"
+#include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/units/unit.h"
@@ -176,6 +178,14 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("StructureDamageCueObserved");
   case ArenaExpectationKind::StructureFacadeContactObserved:
     return QStringLiteral("StructureFacadeContactObserved");
+  case ArenaExpectationKind::StructureFireObserved:
+    return QStringLiteral("StructureFireObserved");
+  case ArenaExpectationKind::NoStructureFireObserved:
+    return QStringLiteral("NoStructureFireObserved");
+  case ArenaExpectationKind::FlamingProjectileObserved:
+    return QStringLiteral("FlamingProjectileObserved");
+  case ArenaExpectationKind::NoFlamingProjectileObserved:
+    return QStringLiteral("NoFlamingProjectileObserved");
   case ArenaExpectationKind::AttackRecoveryObserved:
     return QStringLiteral("AttackRecoveryObserved");
   case ArenaExpectationKind::NoActiveCombatAtEnd:
@@ -609,6 +619,9 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> melee_locks_after_charge;
   QHash<QString, bool> paired_visible_attacks;
   QHash<QString, bool> projectile_flights;
+  QHash<QString, bool> flaming_projectile_flights;
+  QHash<QString, bool> plain_projectile_flights;
+  QHash<QString, bool> structure_fires;
   QHash<QString, bool> projectile_contacts;
   QHash<QString, bool> projectile_impacts;
   QSet<std::uint64_t> observed_projectile_impacts;
@@ -1277,6 +1290,11 @@ struct ArenaScenarioRunner::Impl {
                                            projectile->get_target_id());
       if (!key.isEmpty()) {
         projectile_flights[key] = true;
+        if (Game::Systems::is_incendiary_projectile_kind(projectile->get_kind())) {
+          flaming_projectile_flights[key] = true;
+        } else {
+          plain_projectile_flights[key] = true;
+        }
       }
     }
     for (auto const& impact : system->impacts()) {
@@ -1371,6 +1389,9 @@ struct ArenaScenarioRunner::Impl {
             entity->get_component<Engine::Core::StructureDamagePresentationComponent>();
         structure_damage != nullptr && !structure_damage->impacts.empty()) {
       structure_damage_cues[group] = true;
+    }
+    if (Game::Systems::Combat::structure_fire_intensity(*entity) > 0.0F) {
+      structure_fires[group] = true;
     }
     for (auto const& expectation : scenario.expectations) {
       if (expectation.kind != ArenaExpectationKind::StructureFacadeContactObserved ||
@@ -2406,6 +2427,43 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::StructureFireObserved:
+        if (!structure_fires.value(expectation.group, false)) {
+          add_issue(QStringLiteral("structure_fire_not_observed"),
+                    QStringLiteral("%1 never caught fire").arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::NoStructureFireObserved:
+        if (structure_fires.value(expectation.group, false)) {
+          add_issue(QStringLiteral("unexpected_structure_fire"),
+                    QStringLiteral("%1 burned without taking incendiary damage")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::FlamingProjectileObserved: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (!flaming_projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("flaming_projectile_not_observed"),
+                    QStringLiteral("%1 never sent flaming shot at %2")
+                        .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NoFlamingProjectileObserved: {
+        auto const key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        if (flaming_projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("unexpected_flaming_projectile"),
+                    QStringLiteral("%1 sent flaming shot at %2")
+                        .arg(expectation.group, expectation.target_group));
+        } else if (!plain_projectile_flights.value(key, false)) {
+          add_issue(QStringLiteral("projectile_flight_not_observed"),
+                    QStringLiteral("%1 never sent a shot at %2")
+                        .arg(expectation.group, expectation.target_group));
+        }
+        break;
+      }
       case ArenaExpectationKind::StructureFacadeContactObserved: {
         auto const key =
             projectile_pair_key(expectation.group, expectation.target_group);
