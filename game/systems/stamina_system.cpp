@@ -61,6 +61,9 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
         if (!stamina->has_stamina()) {
           stamina->is_running = false;
         }
+      } else {
+
+        stamina->regenerate(delta_time);
       }
     } else {
       stamina->is_running = false;

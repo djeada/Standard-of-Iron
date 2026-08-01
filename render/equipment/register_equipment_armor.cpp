@@ -37,7 +37,8 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig scipio = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.075F, 0.055F, 0.065F};
+
+    cfg.primary_color = {0.46F, 0.060F, 0.085F};
     cfg.trim_color = {0.94F, 0.62F, 0.15F};
     cfg.length_scale = 1.02F;
     cfg.width_scale = 0.96F;
@@ -79,7 +80,8 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig hannibal = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.025F, 0.028F, 0.035F};
+
+    cfg.primary_color = {0.175F, 0.185F, 0.235F};
     cfg.trim_color = {0.74F, 0.44F, 0.10F};
     cfg.length_scale = 1.30F;
     cfg.width_scale = 1.00F;

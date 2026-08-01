@@ -387,8 +387,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::RpgBlockContactObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(
         expectation(Expect::RpgDodgeWindowObserved, QStringLiteral("rpg_commander")));
-    s.expectations.push_back(
-        expectation(Expect::RpgHealthUnchanged, QStringLiteral("rpg_commander")));
+    {
+
+      auto health_unchanged =
+          expectation(Expect::RpgHealthUnchanged, QStringLiteral("rpg_commander"));
+      health_unchanged.end_seconds = 2.60F;
+      s.expectations.push_back(health_unchanged);
+    }
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }
