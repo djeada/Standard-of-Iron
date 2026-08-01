@@ -104,13 +104,15 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidHoldAndAttack) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext anim{};
   anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
 
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
+  EXPECT_FALSE(batch.requests()[0].full_body_blend.active());
 }
 
-TEST(CreatureRenderBatch, HoldEntryUsesKneelProgressForRequestPhase) {
+TEST(CreatureRenderBatch, HoldEntryBlendsTheKneelOverTheStandingClip) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Humanoid, 4U, 0.0F);
 
@@ -122,11 +124,15 @@ TEST(CreatureRenderBatch, HoldEntryUsesKneelProgressForRequestPhase) {
 
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
-  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
-  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.5F);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Idle);
+
+  const auto& layer = batch.requests()[0].full_body_blend;
+  ASSERT_TRUE(layer.active());
+  EXPECT_EQ(layer.state, AnimationStateId::Hold);
+  EXPECT_FLOAT_EQ(layer.weight, 0.5F);
 }
 
-TEST(CreatureRenderBatch, HoldExitUsesReverseStandUpProgressForRequestPhase) {
+TEST(CreatureRenderBatch, HoldExitUnwindsTheKneelBlendInsteadOfCutting) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Humanoid, 5U, 0.0F);
 
@@ -138,9 +144,21 @@ TEST(CreatureRenderBatch, HoldExitUsesReverseStandUpProgressForRequestPhase) {
 
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
-  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Idle);
 
-  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.84375F);
+  const auto& layer = batch.requests()[0].full_body_blend;
+  ASSERT_TRUE(layer.active());
+  EXPECT_EQ(layer.state, AnimationStateId::Hold);
+  EXPECT_FLOAT_EQ(layer.weight, 0.84375F);
+
+  CreatureRenderBatch later;
+  Render::GL::HumanoidAnimationContext late_anim{};
+  late_anim.inputs.is_exiting_hold = true;
+  late_anim.inputs.hold_exit_progress = 0.75F;
+  later.add_humanoid(
+      make_output(CreatureKind::Humanoid, 6U, 0.0F), pose, variant, late_anim);
+  ASSERT_EQ(later.requests().size(), 1U);
+  EXPECT_LT(later.requests()[0].full_body_blend.weight, layer.weight);
 }
 
 TEST(CreatureRenderBatch, FullHoldLoopsSettledHoldClip) {

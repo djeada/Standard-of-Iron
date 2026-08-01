@@ -40,6 +40,16 @@ auto BuildingCollisionRegistry::get_building_size(const std::string& building_ty
   return {2.0F, 2.0F};
 }
 
+auto BuildingCollisionRegistry::get_building_grid_padding(
+    const std::string& building_type) -> float {
+
+  if (building_type == "wall_segment") {
+    return k_wall_segment_grid_padding;
+  }
+
+  return s_grid_padding;
+}
+
 void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_id,
                                                   const std::string& building_type,
                                                   float center_x,
@@ -53,8 +63,13 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   }
 
   BuildingSize const size = get_building_size(building_type);
-  BuildingFootprint const footprint(
-      center_x, center_z, size.width, size.depth, owner_id, entity_id);
+  BuildingFootprint const footprint(center_x,
+                                    center_z,
+                                    size.width,
+                                    size.depth,
+                                    owner_id,
+                                    entity_id,
+                                    get_building_grid_padding(building_type));
 
   m_buildings.push_back(footprint);
   m_entity_to_index[entity_id] = m_buildings.size() - 1;
@@ -87,10 +102,28 @@ void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entit
   m_buildings.pop_back();
   m_entity_to_index.erase(entity_id);
 
+  release_authored_obstacles_within(center_x, center_z, width, depth);
+
   if (auto* pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(center_x, center_z, width, depth);
+
+    pf->mark_obstruction_released();
   }
+}
+
+void BuildingCollisionRegistry::release_authored_obstacles_within(float center_x,
+                                                                  float center_z,
+                                                                  float width,
+                                                                  float depth) {
+
+  float const half_width = width / 2.0F;
+  float const half_depth = depth / 2.0F;
+
+  std::erase_if(m_authored_obstacles, [&](const BuildingFootprint& obstacle) {
+    return std::fabs(obstacle.center_x - center_x) <= half_width &&
+           std::fabs(obstacle.center_z - center_z) <= half_depth;
+  });
 }
 
 void BuildingCollisionRegistry::update_building_position(
@@ -224,7 +257,7 @@ auto BuildingCollisionRegistry::get_occupied_grid_cells(
   float const half_width = footprint.width / 2.0F;
   float const half_depth = footprint.depth / 2.0F;
 
-  float const padding = s_grid_padding;
+  float const padding = footprint.grid_padding;
   int const min_grid_x = static_cast<int>(
       std::floor((footprint.center_x - half_width - padding) / grid_cell_size));
   int const max_grid_x = static_cast<int>(
@@ -246,6 +279,12 @@ auto BuildingCollisionRegistry::get_occupied_grid_cells(
 void BuildingCollisionRegistry::clear() {
   m_buildings.clear();
   m_entity_to_index.clear();
+  m_authored_obstacles.clear();
+
+  if (auto* pf = CommandService::get_pathfinder()) {
+    pf->mark_navigation_grid_dirty();
+    pf->mark_obstruction_released();
+  }
 }
 
 void BuildingCollisionRegistry::set_grid_padding(float padding) {

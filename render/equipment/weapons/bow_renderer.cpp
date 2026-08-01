@@ -288,7 +288,7 @@ void BowRenderer::submit(const BowRenderConfig& m_config,
                                : hold_transition_amount(anim.inputs);
   QVector3D bow_up = up;
   if (hold_blend > 1e-4F) {
-    QVector3D const hold_axis(0.0F, 0.62F, 0.78F);
+    QVector3D const hold_axis(0.0F, 0.90F, 0.44F);
     bow_up = up * (1.0F - hold_blend) + hold_axis * hold_blend;
     bow_up.normalize();
   }

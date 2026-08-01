@@ -2098,6 +2098,201 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s = definition(
+        QString::fromLatin1(k_testudo_missile_defense_id),
+        QStringLiteral("Testudo Missile Defense"),
+        QStringLiteral("Roman swordsmen answer a guard order by forming the testudo "
+                       "while Carthaginian archers shoot into their shield face."),
+        16.0F,
+        {13.0F, 28.0F, 55.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.groups = {group(QStringLiteral("legion"),
+                      Troop::Swordsman,
+                      1,
+                      6,
+                      {-3.0F, 0.0F, -3.0F},
+                      6,
+                      {2.4F, 0.0F, 0.0F}),
+                group(QStringLiteral("archers"),
+                      Troop::Archer,
+                      2,
+                      4,
+                      {-2.4F, 0.0F, 3.0F},
+                      6,
+                      {2.4F, 0.0F, 0.0F})};
+    s.steps = {
+        at(0.5F, Command::Guard, QStringLiteral("legion"), QStringLiteral("archers")),
+        at(3.5F, Command::Attack, QStringLiteral("archers"), QStringLiteral("legion"))};
+    s.steps[1].chase = false;
+    add_visual_stability(s, {QStringLiteral("legion"), QStringLiteral("archers")});
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("legion")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("legion")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_shield_wall_cavalry_impact_id),
+        QStringLiteral("Shield Wall Cavalry Impact"),
+        QStringLiteral("Carthaginian citizen infantry hold a shield wall on a guard "
+                       "order and receive a Roman cavalry charge on the shield face."),
+        16.0F,
+        {12.0F, 26.0F, 55.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.groups = {group(QStringLiteral("wall"),
+                      Troop::Swordsman,
+                      2,
+                      5,
+                      {-4.8F, 0.0F, -2.0F},
+                      6,
+                      {2.4F, 0.0F, 0.0F}),
+                group(QStringLiteral("cavalry"),
+                      Troop::MountedKnight,
+                      1,
+                      3,
+                      {-2.4F, 0.0F, 12.0F},
+                      4,
+                      {2.6F, 0.0F, 0.0F})};
+    s.steps = {
+        at(0.5F, Command::Guard, QStringLiteral("wall"), QStringLiteral("cavalry")),
+        at(3.5F, Command::Charge, QStringLiteral("cavalry"), QStringLiteral("wall"))};
+    add_visual_stability(s, {QStringLiteral("wall"), QStringLiteral("cavalry")});
+    s.expectations.push_back(expectation(Expect::GroupExists, QStringLiteral("wall")));
+    s.expectations.push_back(
+        expectation(Expect::AttackHasVisibleContact, QStringLiteral("cavalry")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_hold_stance_review_id),
+        QStringLiteral("Hold Stance Review"),
+        QStringLiteral("Side-on close review of the kneeling hold stance. A spearman "
+                       "braces its point down the approach lane, an archer keeps the "
+                       "bow ready, and a swordsman proves the stance stays limited to "
+                       "archers and spearmen."),
+        9.0F,
+        {6.4F, 18.0F, 90.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.4F);
+    s.groups = {
+        group(QStringLiteral("spear"), Troop::Spearman, 1, 1, {-2.2F, 0.0F, -1.2F}, 1),
+        group(QStringLiteral("archer"), Troop::Archer, 1, 1, {0.0F, 0.0F, -1.2F}, 1),
+        group(QStringLiteral("sword"), Troop::Swordsman, 1, 1, {2.2F, 0.0F, -1.2F}, 1),
+        group(QStringLiteral("threat"),
+              Troop::Civilian,
+              2,
+              3,
+              {-2.2F, 0.0F, 2.0F},
+              1,
+              {2.2F, 0.0F, 0.0F})};
+    s.groups[3].health_override = 5000;
+    s.groups[3].max_health_override = 5000;
+    s.steps = {at(2.0F, Command::Hold, QStringLiteral("spear")),
+               at(2.0F, Command::Hold, QStringLiteral("archer")),
+               at(2.0F, Command::Hold, QStringLiteral("sword"))};
+    add_visual_stability(
+        s,
+        {QStringLiteral("spear"), QStringLiteral("archer"), QStringLiteral("sword")});
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("threat")));
+    s.expectations.push_back(expectation(
+        Expect::HoldPoseMaintained, QStringLiteral("spear"), {}, 0.0F, 4.5F));
+    s.expectations.push_back(expectation(
+        Expect::HoldPoseMaintained, QStringLiteral("archer"), {}, 0.0F, 4.5F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_hold_toggle_cycle_id),
+        QStringLiteral("Hold Toggle Cycle"),
+        QStringLiteral("Archers and spearmen enter and leave the hold stance three "
+                       "times in a row, including re-entry while they are still "
+                       "standing up, so the kneel blend can be reviewed for pops."),
+        11.0F,
+        {7.2F, 26.0F, 90.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.groups = {
+        group(QStringLiteral("spear"), Troop::Spearman, 1, 1, {0.0F, 0.0F, -1.6F}, 1),
+        group(QStringLiteral("archer"), Troop::Archer, 1, 1, {0.0F, 0.0F, 1.6F}, 1)};
+    const float toggle_times[] = {0.4F, 2.4F, 5.0F, 7.0F, 7.4F, 9.4F};
+    bool enable = true;
+    for (float time : toggle_times) {
+      for (auto const& name : {QStringLiteral("spear"), QStringLiteral("archer")}) {
+        auto step = at(time, Command::Hold, name);
+        step.enabled = enable;
+        s.steps.push_back(std::move(step));
+      }
+      enable = !enable;
+    }
+    add_visual_stability(s, {QStringLiteral("spear"), QStringLiteral("archer")});
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_hold_transition_interrupts_id),
+        QStringLiteral("Hold Transition Interrupts"),
+        QStringLiteral("Every interruption of the hold stance in one run: a move "
+                       "order during the kneel, an attack order during the kneel, a "
+                       "melee push against the kneeling line, and a death while the "
+                       "stance is still held."),
+        14.0F,
+        {12.0F, 32.0F, 60.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 1.0F);
+    s.groups = {
+        group(QStringLiteral("spear"), Troop::Spearman, 1, 1, {-2.4F, 0.0F, -1.0F}, 1),
+        group(QStringLiteral("archer"), Troop::Archer, 1, 1, {2.4F, 0.0F, -1.0F}, 1),
+        group(QStringLiteral("doomed"), Troop::Archer, 1, 1, {0.0F, 0.0F, -1.0F}, 1),
+        group(QStringLiteral("enemy"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 8.0F}, 4)};
+    s.groups[2].health_override = 30;
+
+    s.steps = {
+        at(0.3F, Command::Hold, QStringLiteral("spear")),
+        at(0.3F, Command::Hold, QStringLiteral("archer")),
+        at(0.3F, Command::Hold, QStringLiteral("doomed")),
+
+        at(1.0F, Command::Move, QStringLiteral("spear")),
+
+        at(3.0F, Command::Hold, QStringLiteral("spear")),
+        at(3.8F,
+           Command::AttackMove,
+           QStringLiteral("archer"),
+           QStringLiteral("enemy")),
+
+        at(5.0F, Command::Hold, QStringLiteral("archer")),
+        at(5.4F, Command::AttackMove, QStringLiteral("enemy"), QStringLiteral("spear")),
+        at(8.0F,
+           Command::ApplyDamage,
+           QStringLiteral("doomed"),
+           QStringLiteral("enemy"))};
+    s.steps[3].destination = QVector3D(-2.4F, 0.0F, -5.0F);
+    s.steps.back().value = 400;
+
+    add_visual_stability(
+        s,
+        {QStringLiteral("spear"), QStringLiteral("archer"), QStringLiteral("enemy")});
+    s.expectations.push_back(
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("doomed")));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s =
         definition(QString::fromLatin1(k_lod_switch_id),
                    QStringLiteral("LOD Switch"),

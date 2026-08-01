@@ -652,6 +652,21 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["formation_mode"] = formation_obj;
   }
 
+  if (const auto* defense = entity->get_component<DefenseFormationComponent>()) {
+    QJsonObject defense_obj;
+    defense_obj["state"] = static_cast<int>(defense->state);
+    defense_obj["formation_id"] = static_cast<qint64>(defense->formation_id);
+    defense_obj["slot_index"] = defense->slot_index;
+    defense_obj["rank"] = defense->rank;
+    defense_obj["file"] = defense->file;
+    defense_obj["slot_x"] = static_cast<double>(defense->slot_x);
+    defense_obj["slot_z"] = static_cast<double>(defense->slot_z);
+    defense_obj["facing_degrees"] = static_cast<double>(defense->facing_degrees);
+    defense_obj["state_time"] = static_cast<double>(defense->state_time);
+    defense_obj["cohesion"] = static_cast<double>(defense->cohesion);
+    entity_obj["defense_formation"] = defense_obj;
+  }
+
   if (const auto* stamina = entity->get_component<StaminaComponent>()) {
     QJsonObject stamina_obj;
     stamina_obj["stamina"] = static_cast<double>(stamina->stamina);
@@ -1405,6 +1420,29 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(formation_obj["stable_slot_x"].toDouble(0.0));
     formation->stable_slot_z =
         static_cast<float>(formation_obj["stable_slot_z"].toDouble(0.0));
+  }
+
+  if (json.contains("defense_formation")) {
+    const auto defense_obj = json["defense_formation"].toObject();
+    auto* defense = entity->add_component<DefenseFormationComponent>();
+    int const raw_state =
+        defense_obj["state"].toInt(static_cast<int>(DefenseFormationState::Normal));
+    defense->state =
+        raw_state >= static_cast<int>(DefenseFormationState::Normal) &&
+                raw_state <= static_cast<int>(DefenseFormationState::Breaking)
+            ? static_cast<DefenseFormationState>(raw_state)
+            : DefenseFormationState::Normal;
+    defense->formation_id = static_cast<std::uint64_t>(
+        defense_obj["formation_id"].toVariant().toULongLong());
+    defense->slot_index = defense_obj["slot_index"].toInt(-1);
+    defense->rank = defense_obj["rank"].toInt(0);
+    defense->file = defense_obj["file"].toInt(0);
+    defense->slot_x = static_cast<float>(defense_obj["slot_x"].toDouble(0.0));
+    defense->slot_z = static_cast<float>(defense_obj["slot_z"].toDouble(0.0));
+    defense->facing_degrees =
+        static_cast<float>(defense_obj["facing_degrees"].toDouble(0.0));
+    defense->state_time = static_cast<float>(defense_obj["state_time"].toDouble(0.0));
+    defense->cohesion = static_cast<float>(defense_obj["cohesion"].toDouble(1.0));
   }
 
   if (json.contains("stamina")) {

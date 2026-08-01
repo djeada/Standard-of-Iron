@@ -691,8 +691,8 @@ TEST(StatelessWeaponRenderers, BowHoldTiltsUpperLimbForward) {
 
   ASSERT_FALSE(batch.archetypes.empty());
   QVector3D const bow_up = batch.archetypes.front().world.column(1).toVector3D();
-  EXPECT_GT(bow_up.z(), 0.45F);
-  EXPECT_GT(bow_up.y(), 0.45F);
+  EXPECT_GT(bow_up.z(), 0.30F);
+  EXPECT_GT(bow_up.y(), 0.80F);
 }
 
 TEST(StatelessWeaponRenderers, BowAttackDoesNotDropPersistentHoldAngle) {
@@ -710,8 +710,8 @@ TEST(StatelessWeaponRenderers, BowAttackDoesNotDropPersistentHoldAngle) {
 
   ASSERT_FALSE(batch.archetypes.empty());
   QVector3D const bow_up = batch.archetypes.front().world.column(1).toVector3D();
-  EXPECT_GT(bow_up.z(), 0.45F);
-  EXPECT_GT(bow_up.y(), 0.45F);
+  EXPECT_GT(bow_up.z(), 0.30F);
+  EXPECT_GT(bow_up.y(), 0.80F);
 }
 
 TEST(StatelessWeaponRenderers, BowUsesHandSocketInsteadOfCarryGripFrame) {

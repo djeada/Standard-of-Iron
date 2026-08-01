@@ -203,6 +203,10 @@ void MovementSystem::assign_navigation_target(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     const QVector3D& requested_target) {
+  movement.requested_goal_x = requested_target.x();
+  movement.requested_goal_z = requested_target.z();
+  movement.has_requested_goal = true;
+
   QVector3D const approach_delta =
       requested_target -
       QVector3D(transform.position.x, requested_target.y(), transform.position.z);

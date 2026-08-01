@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <cstdint>
 #include <vector>
 
 #include "../core/component.h"
@@ -67,6 +68,12 @@ private:
 
   void
   move_unit(Engine::Core::Entity* entity, Engine::Core::World* world, float delta_time);
+
+  void
+  repath_after_obstruction_release(Engine::Core::World& world,
+                                   const std::vector<Engine::Core::Entity*>& movers);
+
+  std::uint64_t m_obstruction_revision{0};
 };
 
 } // namespace Game::Systems
