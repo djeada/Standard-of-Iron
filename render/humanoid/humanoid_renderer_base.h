@@ -125,9 +125,9 @@ protected:
       Render::Creature::CreatureLOD lod,
       Render::Creature::Pipeline::CreaturePreparationResult& out) const;
 
-  void render_procedural(const DrawContext& ctx,
-                         const AnimationInputs& anim,
-                         ISubmitter& out) const;
+  void prepare_and_submit(const DrawContext& ctx,
+                          const AnimationInputs& anim,
+                          ISubmitter& out) const;
 };
 
 } // namespace Render::GL

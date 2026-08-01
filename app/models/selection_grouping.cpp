@@ -14,6 +14,7 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
 
   std::vector<double> health_sums;
   std::vector<double> stamina_sums;
+  std::vector<int> stamina_counts;
 
   for (const QVariant& entry : units) {
     const QVariantMap unit = entry.toMap();
@@ -29,8 +30,10 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
 
     const double health =
         std::clamp(unit.value(QStringLiteral("health_ratio")).toDouble(), 0.0, 1.0);
+    const bool can_run = unit.value(QStringLiteral("can_run")).toBool();
+    const QVariant stamina_value = unit.value(QStringLiteral("stamina_ratio"));
     const double stamina =
-        std::clamp(unit.value(QStringLiteral("stamina_ratio")).toDouble(), 0.0, 1.0);
+        stamina_value.isValid() ? std::clamp(stamina_value.toDouble(), 0.0, 1.0) : 1.0;
 
     auto match = std::find_if(
         groups.begin(), groups.end(), [&type_key](const SelectionGroup& group) {
@@ -44,13 +47,18 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
       groups.push_back(group);
       health_sums.push_back(0.0);
       stamina_sums.push_back(0.0);
+      stamina_counts.push_back(0);
       match = std::prev(groups.end());
     }
 
     const auto offset = static_cast<std::size_t>(std::distance(groups.begin(), match));
     match->count += 1;
     health_sums[offset] += health;
-    stamina_sums[offset] += stamina;
+    if (can_run) {
+      match->can_run = true;
+      stamina_sums[offset] += stamina;
+      stamina_counts[offset] += 1;
+    }
 
     if (health < 1.0) {
       match->wounded_count += 1;
@@ -61,8 +69,8 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
     groups[i].health = groups[i].count > 0
                            ? health_sums[i] / static_cast<double>(groups[i].count)
                            : 0.0;
-    groups[i].stamina = groups[i].count > 0
-                            ? stamina_sums[i] / static_cast<double>(groups[i].count)
+    groups[i].stamina = stamina_counts[i] > 0
+                            ? stamina_sums[i] / static_cast<double>(stamina_counts[i])
                             : 1.0;
   }
   return groups;
@@ -81,6 +89,7 @@ auto selection_groups_to_variant(const std::vector<SelectionGroup>& groups)
     entry[QStringLiteral("woundedCount")] = group.wounded_count;
     entry[QStringLiteral("health")] = group.health;
     entry[QStringLiteral("stamina")] = group.stamina;
+    entry[QStringLiteral("canRun")] = group.can_run;
     result.append(entry);
   }
   return result;

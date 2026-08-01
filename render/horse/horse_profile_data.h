@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "dimensions.h"
+
 namespace Render::GL {
 
 namespace HorseDimensionRange {
@@ -43,8 +45,9 @@ constexpr float k_seat_forward_offset_min = 0.010F;
 constexpr float k_seat_forward_offset_max = 0.035F;
 constexpr float k_stirrup_out_scale_min = 0.75F;
 constexpr float k_stirrup_out_scale_max = 0.88F;
-constexpr float k_stirrup_drop_min = 0.28F;
-constexpr float k_stirrup_drop_max = 0.32F;
+
+constexpr float k_stirrup_leg_fraction_min = 0.44F;
+constexpr float k_stirrup_leg_fraction_max = 0.47F;
 
 constexpr float k_idle_bob_amplitude_min = 0.004F;
 constexpr float k_idle_bob_amplitude_max = 0.007F;
@@ -57,7 +60,8 @@ constexpr float k_leg_segment_ratio_lower = 0.12F;
 constexpr float k_shoulder_barrel_offset_scale = 0.05F;
 constexpr float k_shoulder_barrel_offset_base = 0.05F;
 constexpr float k_saddle_height_body_scale = 0.55F;
-constexpr float k_overall_scale = 0.80F;
+
+constexpr float k_overall_scale = 0.80F * k_horse_scale;
 
 constexpr uint32_t k_salt_body_length = 0x12U;
 constexpr uint32_t k_salt_body_width = 0x34U;

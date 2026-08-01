@@ -157,17 +157,17 @@ void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const
       Render::Creature::Pipeline::resolve_humanoid_animation_state(ctx).inputs;
 
   if (ctx.template_prewarm) {
-    render_procedural(
+    prepare_and_submit(
         Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx), anim, out);
     return;
   }
 
-  render_procedural(ctx, anim, out);
+  prepare_and_submit(ctx, anim, out);
 }
 
-void HumanoidRendererBase::render_procedural(const DrawContext& ctx,
-                                             const AnimationInputs& anim,
-                                             ISubmitter& out) const {
+void HumanoidRendererBase::prepare_and_submit(const DrawContext& ctx,
+                                              const AnimationInputs& anim,
+                                              ISubmitter& out) const {
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(
       *this, ctx, anim, humanoid_current_frame(), prep);

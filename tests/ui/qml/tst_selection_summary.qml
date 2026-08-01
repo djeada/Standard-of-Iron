@@ -20,7 +20,9 @@ TestCase {
                     "nation": specs[i].nation || "roman_republic",
                     "count": specs[i].count,
                     "woundedCount": specs[i].wounded || 0,
-                    "health": specs[i].health === undefined ? 1 : specs[i].health
+                    "health": specs[i].health === undefined ? 1 : specs[i].health,
+                    "stamina": specs[i].stamina === undefined ? 1 : specs[i].stamina,
+                    "canRun": specs[i].canRun === undefined ? true : specs[i].canRun
                 });
         }
         return groups;
@@ -125,6 +127,146 @@ TestCase {
         verify(healthy !== hurt);
         verify(hurt !== critical);
         verify(healthy !== critical);
+        summary.destroy();
+    }
+
+    function test_single_unit_health_bar_reads_health_not_stamina() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "swordsman",
+                        "count": 1,
+                        "health": 0.5,
+                        "stamina": 0.2
+                    }]));
+        var healthBar = findChild(summary, "selectionHealthBar");
+        var staminaBar = findChild(summary, "selectionStaminaBar");
+        verify(healthBar !== null, "single-unit view should expose a health bar");
+        verify(staminaBar !== null, "single-unit view should expose a stamina bar");
+        compare(findChild(summary, "selectionHealthLabel").text, "HEALTH");
+        compare(findChild(summary, "selectionStaminaLabel").text, "STAMINA");
+        fuzzyCompare(healthBar.value, 0.5, 0.001, "health bar must show health, not stamina");
+        compare(healthBar.fillColor.toString(), summary.healthColor(0.5).toString());
+        fuzzyCompare(staminaBar.value, 0.2, 0.001, "stamina bar must show stamina");
+        verify(healthBar.height > staminaBar.height, "health bar should be the primary, taller bar");
+        summary.destroy();
+    }
+
+    function test_stamina_is_omitted_for_units_without_run_stamina() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "catapult",
+                        "count": 1,
+                        "health": 0.65,
+                        "stamina": 0.1,
+                        "canRun": false
+                    }]));
+        var healthBar = findChild(summary, "selectionHealthBar");
+        var staminaBar = findChild(summary, "selectionStaminaBar");
+        var staminaSection = findChild(summary, "selectionStaminaSection");
+        fuzzyCompare(healthBar.value, 0.65, 0.001);
+        verify(staminaBar !== null);
+        verify(staminaSection !== null);
+        verify(!staminaSection.visible, "units that cannot run should not show an irrelevant stamina meter");
+        compare(findChild(summary, "selectionHealthLabel").text, "HEALTH");
+        summary.destroy();
+    }
+
+    function test_stamina_changes_do_not_touch_the_health_bar() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "swordsman",
+                        "count": 1,
+                        "health": 0.75,
+                        "stamina": 0.9
+                    }]));
+        var healthBar = findChild(summary, "selectionHealthBar");
+        var before = healthBar.value;
+        summary.groups = makeGroups([{
+                    "typeKey": "swordsman",
+                    "count": 1,
+                    "health": 0.75,
+                    "stamina": 0.1
+                }]);
+        compare(healthBar.value, before, "movement-driven stamina changes must not move the health bar");
+        compare(healthBar.fillColor.toString(), summary.healthColor(0.75).toString());
+        summary.groups = makeGroups([{
+                    "typeKey": "swordsman",
+                    "count": 1,
+                    "health": 0.1,
+                    "stamina": 0.1
+                }]);
+        verify(healthBar.value < before, "real damage should lower the health bar");
+        compare(healthBar.fillColor.toString(), summary.healthColor(0.1).toString());
+        summary.destroy();
+    }
+
+    function test_roster_group_health_bars_read_health_not_stamina() {
+        var summary = makeSummary(60, makeGroups([{
+                        "typeKey": "spearman",
+                        "count": 40,
+                        "health": 0.9,
+                        "stamina": 0.1
+                    }, {
+                        "typeKey": "archer",
+                        "count": 20,
+                        "health": 0.4,
+                        "stamina": 0.9
+                    }]));
+        verify(summary.army);
+        var spearBar = findChild(summary, "selectionGroupHealthBar_spearman");
+        var archerBar = findChild(summary, "selectionGroupHealthBar_archer");
+        verify(spearBar !== null, "roster should expose a health bar per group");
+        verify(archerBar !== null);
+        fuzzyCompare(spearBar.value, 0.9, 0.001, "group health bar must read health, not stamina");
+        fuzzyCompare(archerBar.value, 0.4, 0.001);
+        summary.groups = makeGroups([{
+                    "typeKey": "spearman",
+                    "count": 40,
+                    "health": 0.9,
+                    "stamina": 0.9
+                }, {
+                    "typeKey": "archer",
+                    "count": 20,
+                    "health": 0.4,
+                    "stamina": 0.1
+                }]);
+        spearBar = findChild(summary, "selectionGroupHealthBar_spearman");
+        archerBar = findChild(summary, "selectionGroupHealthBar_archer");
+        fuzzyCompare(spearBar.value, 0.9, 0.001, "stamina changes while marching must not move roster health bars");
+        fuzzyCompare(archerBar.value, 0.4, 0.001);
+        summary.destroy();
+    }
+
+    function test_full_health_unit_shows_a_full_health_bar() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "swordsman",
+                        "count": 1,
+                        "health": 1,
+                        "stamina": 0.3
+                    }]));
+        var healthBar = findChild(summary, "selectionHealthBar");
+        fuzzyCompare(healthBar.value, 1, 0.001, "a healthy unit must show a full health bar");
+        compare(healthBar.fillColor.toString(), summary.healthColor(1).toString());
+        var staminaBar = findChild(summary, "selectionStaminaBar");
+        fuzzyCompare(staminaBar.value, 0.3, 0.001, "fatigued but healthy: stamina may drop while health stays full");
+        summary.destroy();
+    }
+
+    function test_casualties_lower_the_group_health_bar_only() {
+        var summary = makeSummary(60, makeGroups([{
+                        "typeKey": "spearman",
+                        "count": 40,
+                        "health": 0.9,
+                        "stamina": 0.1
+                    }]));
+        var spearBar = findChild(summary, "selectionGroupHealthBar_spearman");
+        fuzzyCompare(spearBar.value, 0.9, 0.001);
+        summary.groups = makeGroups([{
+                    "typeKey": "spearman",
+                    "count": 39,
+                    "health": 0.6,
+                    "stamina": 0.1
+                }]);
+        spearBar = findChild(summary, "selectionGroupHealthBar_spearman");
+        verify(spearBar !== null);
+        fuzzyCompare(spearBar.value, 0.6, 0.001, "losing soldiers must lower the group health bar");
         summary.destroy();
     }
 
