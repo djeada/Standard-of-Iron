@@ -138,6 +138,7 @@ add_executable(
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
     render/body_frames_test.cpp
+    render/grip_axis_test.cpp
     render/equipment_registry_test.cpp
     render/equipment_loadout_catalog_test.cpp
     render/helmet_renderers_test.cpp
