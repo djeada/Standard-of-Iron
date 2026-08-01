@@ -565,6 +565,57 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_escort_crowd_id),
+        QStringLiteral("RPG Escort Crowd"),
+        QStringLiteral(
+            "Behind-head commander standing inside his own escort, with a rank of "
+            "friendly spearmen between him and the lens. The chase camera must stay "
+            "readable: bodies that crowd the gap in front of the lens are dropped "
+            "rather than filling the frame or shoving the camera into first person."),
+        3.6F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+
+    auto escort_rear = group(
+        QStringLiteral("escort_rear"), Troop::Spearman, 1, 1, {0.0F, 0.0F, -1.7F}, 4);
+    escort_rear.facing_degrees = 0.0F;
+
+    auto escort_flank = group(
+        QStringLiteral("escort_flank"), Troop::Swordsman, 1, 1, {2.4F, 0.0F, 0.2F}, 2);
+    escort_flank.facing_degrees = 0.0F;
+    auto enemy = group(
+        QStringLiteral("enemy_line"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 3.2F}, 3);
+    enemy.health_override = enemy.max_health_override = 500;
+    s.groups = {commander, escort_rear, escort_flank, enemy};
+    s.steps = {
+        at(0.20F,
+           Command::Attack,
+           QStringLiteral("enemy_line"),
+           QStringLiteral("rpg_commander")),
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_line")});
+    s.expectations.push_back(
+        expectation(Expect::GroupIsRendered, QStringLiteral("escort_flank")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_commander_identity_lineup_id),
         QStringLiteral("Commander Identity Lineup"),
         QStringLiteral("Displays all six commanders without bodyguards or supporting "
@@ -3122,6 +3173,158 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                0.0F,
                                3.0F);
     reached.position = pass.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_road_junction_showcase_id),
+        QStringLiteral("Roads: Junction Showcase"),
+        QStringLiteral("A crossroads, a T-junction, a Y-branch, a sharp bend, and two "
+                       "closely spaced side turnings in one view, so junction geometry "
+                       "can be judged for stacking, seams, and notches."),
+        16.0F,
+        {34.0F, 55.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    const auto road =
+        [](QVector3D start, QVector3D end, float width, const char* style) {
+          return Game::Map::RoadSegment{start, end, width, QString::fromLatin1(style)};
+        };
+
+    s.roads.push_back(road({-16.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 4.0F, "default"));
+    s.roads.push_back(road({0.0F, 0.0F, 0.0F}, {16.0F, 0.0F, 0.0F}, 4.0F, "default"));
+    s.roads.push_back(road({0.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 0.0F}, 4.0F, "default"));
+    s.roads.push_back(road({0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 14.0F}, 4.0F, "default"));
+
+    s.roads.push_back(road({9.0F, 0.0F, 0.0F}, {13.0F, 0.0F, 9.0F}, 3.2F, "default"));
+    s.roads.push_back(road({9.0F, 0.0F, 0.0F}, {15.0F, 0.0F, -7.0F}, 3.2F, "default"));
+
+    s.roads.push_back(road({-16.0F, 0.0F, 10.0F}, {-8.0F, 0.0F, 10.0F}, 3.6F, "stone"));
+    s.roads.push_back(road({-8.0F, 0.0F, 10.0F}, {-6.0F, 0.0F, 16.0F}, 3.6F, "stone"));
+    s.roads.push_back(road({-12.0F, 0.0F, 10.0F}, {-12.0F, 0.0F, 5.0F}, 2.8F, "rough"));
+    s.roads.push_back(road({-9.5F, 0.0F, 10.0F}, {-9.5F, 0.0F, 5.5F}, 2.8F, "rough"));
+    s.groups = {group(QStringLiteral("column"),
+                      Troop::Swordsman,
+                      1,
+                      2,
+                      {-1.5F, 0.0F, -11.0F},
+                      6,
+                      {3.0F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("column"));
+    move.destination = {0.0F, 0.0F, 11.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("column")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("column")));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("column"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.0F);
+    reached.position = move.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_road_slope_showcase_id),
+        QStringLiteral("Roads: Slope Showcase"),
+        QStringLiteral(
+            "One road climbs a rise head-on while a second traverses it "
+            "across the fall line and the two cross on the flank, so "
+            "terrain-following and slope junctions can be reviewed together."),
+        11.0F,
+        {34.0F, 50.0F, 22.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.elevation_patches.push_back({{0.0F, 0.0F, 0.0F}, 12.0F, 5.0F});
+    const auto road =
+        [](QVector3D start, QVector3D end, float width, const char* style) {
+          return Game::Map::RoadSegment{start, end, width, QString::fromLatin1(style)};
+        };
+    s.roads.push_back(road({0.0F, 0.0F, -16.0F}, {0.0F, 0.0F, -6.0F}, 4.0F, "stone"));
+    s.roads.push_back(road({0.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 6.0F}, 4.0F, "stone"));
+    s.roads.push_back(road({0.0F, 0.0F, 6.0F}, {0.0F, 0.0F, 16.0F}, 4.0F, "stone"));
+    s.roads.push_back(road({-16.0F, 0.0F, 6.0F}, {0.0F, 0.0F, 6.0F}, 3.6F, "default"));
+    s.roads.push_back(road({0.0F, 0.0F, 6.0F}, {16.0F, 0.0F, 6.0F}, 3.6F, "default"));
+    s.groups = {group(QStringLiteral("climbers"),
+                      Troop::Spearman,
+                      1,
+                      2,
+                      {-1.5F, 0.0F, -13.0F},
+                      6,
+                      {3.0F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("climbers"));
+    move.destination = {0.0F, 0.0F, 0.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("climbers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("climbers")));
+    s.expectations.push_back(expectation(
+        Expect::ElevationGainObserved, QStringLiteral("climbers"), {}, 3.0F));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("climbers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.0F);
+    reached.position = move.destination;
+    s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_road_bridge_approach_id),
+        QStringLiteral("Roads: Bridge Approach"),
+        QStringLiteral(
+            "A road runs onto a bridge deck from both banks while the river "
+            "keeps flowing underneath, which is the case where the deck used "
+            "to sit on filled ground and the approaches stopped short."),
+        17.0F,
+        {30.0F, 46.0F, 16.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.rivers.push_back(
+        Game::Map::RiverSegment{{-28.0F, 0.0F, 0.0F}, {28.0F, 0.0F, 0.0F}, 6.5F});
+    s.bridges.push_back(
+        Game::Map::Bridge{{0.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 6.0F}, 6.0F, 0.7F});
+    s.roads.push_back(Game::Map::RoadSegment{
+        {0.0F, 0.0F, -18.0F}, {0.0F, 0.0F, -6.0F}, 4.0F, QStringLiteral("default")});
+    s.roads.push_back(Game::Map::RoadSegment{
+        {0.0F, 0.0F, 6.0F}, {0.0F, 0.0F, 18.0F}, 4.0F, QStringLiteral("default")});
+    s.groups = {group(QStringLiteral("crossers"),
+                      Troop::Swordsman,
+                      1,
+                      2,
+                      {-1.5F, 0.0F, -12.0F},
+                      6,
+                      {3.0F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("crossers"));
+    move.destination = {0.0F, 0.0F, 12.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("crossers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("crossers")));
+    s.expectations.push_back(
+        expectation(Expect::BridgeTraversalObserved, QStringLiteral("crossers")));
+    auto reached = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("crossers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               3.0F);
+    reached.position = move.destination;
     s.expectations.push_back(reached);
     result.push_back(std::move(s));
   }

@@ -371,6 +371,7 @@ private:
   std::vector<Game::Map::RiverSegment> m_arena_rivers;
   std::vector<Game::Map::Lake> m_arena_lakes;
   std::vector<Game::Map::Bridge> m_arena_bridges;
+  std::vector<Game::Map::RoadSegment> m_arena_roads;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
   std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =

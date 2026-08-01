@@ -529,7 +529,9 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   float const bridge_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
   float const half_width = bridge_width * 0.5F;
 
-  const float visual_length = length;
+  float const abutment_reach = Game::Map::bridge_abutment_reach(bridge_width);
+  const float visual_length = length + abutment_reach * 2.0F;
+  QVector3D const visual_start = bridge.start - dir * abutment_reach;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);
   float const end_fade_length =
       std::min(std::clamp(bridge_width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
@@ -575,9 +577,9 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   for (int i = 0; i <= length_segments; ++i) {
     float const mesh_t = static_cast<float>(i) / static_cast<float>(length_segments);
     float const span_distance = visual_length * mesh_t;
-    const float authored_distance = span_distance;
-    const float authored_t = authored_distance / length;
-    QVector3D const center_pos = bridge.start + dir * span_distance;
+    const float authored_distance = span_distance - abutment_reach;
+    const float authored_t = std::clamp(authored_distance / length, 0.0F, 1.0F);
+    QVector3D const center_pos = visual_start + dir * span_distance;
 
     float const start_blend =
         smoothstep01(span_distance / std::max(end_fade_length, 0.001F));
@@ -591,23 +593,24 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     float const stone_noise =
         std::sin(center_pos.x() * 3.0F) * std::cos(center_pos.z() * 2.5F) * 0.02F;
 
-    float const bottom_half_width = std::max(
-        half_width - side_bevel * (0.55F + 0.45F * profile_blend), half_width * 0.68F);
+    float const ring_half_width = half_width * (1.0F + 0.12F * (1.0F - profile_blend));
+    float const bottom_half_width =
+        std::max(ring_half_width - side_bevel * (0.55F + 0.45F * profile_blend),
+                 ring_half_width * 0.68F);
+
     float const ring_thickness =
-        mixf(deck_thickness * 0.72F, deck_thickness, profile_blend);
-    float const ring_parapet_height = parapet_height * (0.60F + 0.40F * profile_blend);
+        mixf(deck_thickness * 1.35F, deck_thickness * 0.55F, arch_curve);
+    float const ring_parapet_height = parapet_height * profile_blend;
     float const ring_parapet_offset =
-        std::max(half_width - parapet_half_width * 0.45F, half_width * 0.72F);
+        std::max(ring_half_width - parapet_half_width * 0.45F, ring_half_width * 0.72F);
 
     float const deck_y = deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
-    float const underside_y =
-        deck_y - ring_thickness -
-        arch_curve * Game::Map::bridge_effective_height(bridge) * 0.60F;
+    float const underside_y = deck_y - ring_thickness;
     float const rail_top_y = deck_y + ring_parapet_height;
 
-    QVector3D top_left = center_pos + perpendicular * (-half_width);
+    QVector3D top_left = center_pos + perpendicular * (-ring_half_width);
     top_left.setY(deck_y);
-    QVector3D top_right = center_pos + perpendicular * half_width;
+    QVector3D top_right = center_pos + perpendicular * ring_half_width;
     top_right.setY(deck_y);
 
     QVector3D bottom_left = center_pos + perpendicular * (-bottom_half_width);

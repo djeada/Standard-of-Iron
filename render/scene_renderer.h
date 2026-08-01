@@ -117,6 +117,13 @@ public:
   [[nodiscard]] auto world_render_mode() const -> WorldRenderMode {
     return m_world_render_mode;
   }
+
+  void set_rpg_camera_focus(Engine::Core::EntityID entity_id) {
+    m_rpg_camera_focus_id = entity_id;
+  }
+  [[nodiscard]] auto rpg_camera_focus() const -> Engine::Core::EntityID {
+    return m_rpg_camera_focus_id;
+  }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto
@@ -439,6 +446,7 @@ private:
   std::atomic<bool> m_paused{false};
   float m_alpha_override = 1.0F;
   WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
+  Engine::Core::EntityID m_rpg_camera_focus_id = 0;
   std::shared_ptr<Engine::Core::World> m_render_world_snapshot;
 
   std::mutex m_world_mutex;

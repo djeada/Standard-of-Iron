@@ -124,6 +124,7 @@ add_executable(
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/linear_feature_geometry_test.cpp
+    render/road_network_geometry_test.cpp
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
     render/dead_tree_mesh_test.cpp

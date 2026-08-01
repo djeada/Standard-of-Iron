@@ -323,6 +323,29 @@ physical contact damage, show hit reactions, remain visually stable, and stay
 inside the frame budget. Their fixed midpoint camera keeps both silhouettes at
 the same depth for direct weapon and motion comparison.
 
+## Commander RPG contracts
+
+Four behind-head scenes cover commander (FPV) control:
+
+- `rpg_melee_contact` validates exact in-range soldier highlighting, authored blade
+  contact, hit reactions, and visible incoming weapon damage.
+- `rpg_defense_contact` is a frontal sword block followed by a timed dodge; health
+  must stay unchanged while the block contact and dodge window remain visible.
+- `rpg_projectile_block` requires an authored arrow to arrive at the guard, publish
+  a block contact, and leave RPG health unchanged.
+- `rpg_escort_crowd` puts the commander inside his own escort with a rank of
+  friendly spearmen between him and the lens. It is the contract for chase-camera
+  readability: the renderer drops bodies that crowd the gap in front of the lens
+  instead of letting them fill the frame or shoving the camera into first person.
+  `escort_flank` stands beside the commander and must still render, which is what
+  keeps the cull from being over-broad; `escort_rear` stays alive in the trace
+  while it is deliberately not drawn.
+
+```sh
+build/bin/arena_app --batch --scenario rpg_escort_crowd \
+  --fps 30 --capture-interval 0.4 --clean-capture --artifact-dir artifacts/rpg
+```
+
 ## Pathfinding showcase contracts
 
 - `path_bridge_crossing` uses production river, bank, bridge rendering, and
@@ -341,6 +364,28 @@ the same depth for direct weapon and motion comparison.
 The path scenes suppress incidental scatter and use a fixed feature-centered
 camera so the route, obstacle, and formation motion remain readable in batch
 captures.
+
+## Road and bridge surface contracts
+
+Three scenes exist to review the road network surface itself. They declare authored
+`roads` (and, for the bridge scene, a river and a bridge) and drive a short infantry
+column through them so the capture also proves the surface stays navigable:
+
+- `road_junction_showcase` puts a crossroads, a T-junction, a Y-branch, a sharp bend,
+  and two side turnings only a road-width apart in one frame. Junction geometry is
+  built as a single merged surface, so the capture should show no doubled texture, no
+  dark seam where roads meet, and no polygon spiking past a corner.
+- `road_slope_showcase` runs one road straight up a rise and a second across the fall
+  line, crossing on the flank. Use it to check that the surface stays on top of the
+  terrain and that the crossing still reads as one continuous junction on a slope.
+- `road_bridge_approach` runs a road onto a bridge deck from both banks. The river must
+  stay continuous underneath the span, the deck must land on bank at both ends, and the
+  approach must rise onto the deck instead of stopping short of it.
+
+```bash
+build/bin/arena_app --batch --scenario road_junction_showcase \
+  --fps 30 --clean-capture --artifact-dir artifacts/roads
+```
 
 ## Gate contracts
 

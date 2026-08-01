@@ -1522,7 +1522,7 @@ void ArenaViewport::regenerate_terrain() {
                                                                 heights,
                                                                 terrain_types,
                                                                 runtime_rivers,
-                                                                {},
+                                                                m_arena_roads,
                                                                 runtime_bridges,
                                                                 biome,
                                                                 m_world_props,
@@ -2339,11 +2339,12 @@ void ArenaViewport::reset_arena() {
   clear_undead_zones();
   clear_units();
   const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
-                                  !m_arena_bridges.empty() ||
+                                  !m_arena_bridges.empty() || !m_arena_roads.empty() ||
                                   !m_arena_elevation_patches.empty();
   m_arena_rivers.clear();
   m_arena_lakes.clear();
   m_arena_bridges.clear();
+  m_arena_roads.clear();
   m_arena_elevation_patches.clear();
   clear_world_props();
   if (had_custom_terrain && m_world_props.empty()) {
@@ -3029,9 +3030,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_arena_rivers = definition->rivers;
   m_arena_lakes = definition->lakes;
   m_arena_bridges = definition->bridges;
+  m_arena_roads = definition->roads;
   m_arena_elevation_patches = definition->elevation_patches;
   if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
-      !m_arena_elevation_patches.empty()) {
+      !m_arena_roads.empty() || !m_arena_elevation_patches.empty()) {
     reconfigure_terrain_from_state();
   }
   auto& owners = Game::Systems::OwnerRegistry::instance();
@@ -3363,7 +3365,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   m_rpg_commander_id = entity_id;
   m_rpg_commander_controller->reset();
   m_rpg_commander_controller->set_view_yaw(transform->rotation.y);
-  m_rpg_commander_controller->set_view_pitch(-4.0F);
+  m_rpg_commander_controller->set_view_pitch(k_commander_rest_view_pitch_degrees);
   commander->fpv_controlled = true;
   commander->posture = 0.0F;
   commander->punish_window_remaining = 0.0F;
@@ -3393,6 +3395,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   }
   if (m_renderer != nullptr) {
     m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+    m_renderer->set_rpg_camera_focus(entity_id);
   }
   if (m_rpg_telegraphs != nullptr) {
     m_rpg_telegraphs->clear();
@@ -3440,6 +3443,7 @@ void ArenaViewport::clear_rpg_scenario_state() {
   }
   if (m_renderer != nullptr) {
     m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rts);
+    m_renderer->set_rpg_camera_focus(0);
   }
 }
 

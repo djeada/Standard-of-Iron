@@ -656,6 +656,29 @@ void Renderer::render_world(Engine::Core::World* world) {
     camera_height = m_camera->get_position().y();
   }
 
+  constexpr float k_rpg_lens_gap_slack = 0.35F;
+  bool rpg_lens_cull_enabled = false;
+  QVector3D rpg_lens_eye;
+  float rpg_lens_cull_distance_sq = 0.0F;
+  if (m_world_render_mode == WorldRenderMode::Rpg && m_rpg_camera_focus_id != 0 &&
+      m_camera != nullptr) {
+    if (auto* focus = world->get_entity(m_rpg_camera_focus_id)) {
+      if (auto const* focus_transform =
+              focus->get_component<Engine::Core::TransformComponent>()) {
+        rpg_lens_eye = m_camera->get_position();
+        const QVector3D focus_pos(focus_transform->position.x,
+                                  focus_transform->position.y,
+                                  focus_transform->position.z);
+        const float focus_distance = (focus_pos - rpg_lens_eye).length();
+        const float cull_distance = focus_distance - k_rpg_lens_gap_slack;
+        if (cull_distance > 0.0F) {
+          rpg_lens_cull_enabled = true;
+          rpg_lens_cull_distance_sq = cull_distance * cull_distance;
+        }
+      }
+    }
+  }
+
   ++m_frame_counter;
 
   int visible_unit_count = 0;
@@ -753,6 +776,11 @@ void Renderer::render_world(Engine::Core::World* world) {
       }
 
       if (!entry.in_frustum || !entry.fog_visible) {
+        continue;
+      }
+
+      if (rpg_lens_cull_enabled && entity_id != m_rpg_camera_focus_id &&
+          (unit_pos - rpg_lens_eye).lengthSquared() < rpg_lens_cull_distance_sq) {
         continue;
       }
       ++visible_unit_count;

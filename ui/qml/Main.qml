@@ -15,6 +15,9 @@ ApplicationWindow {
 
     property bool suppress_modals: false
 
+    property bool capture_view_ready: false
+    property bool capture_view_settled: false
+
     function show_view(name) {
         mainWindow.suppress_modals = true;
         if (typeof game !== 'undefined' && game.clear_error)
@@ -27,9 +30,18 @@ ApplicationWindow {
         load_game_panel.visible = (name === "load");
         save_game_panel.visible = (name === "save");
         objectivesPanel.visible = (name === "briefing");
-        if (name === "hud") {
+        if (name === "hud" || name === "rpg") {
             mainWindow.game_started = true;
             mainWindow.menu_visible = false;
+        }
+        if (name === "rpg") {
+            mainWindow.game_paused = false;
+            gameViewItem.set_paused(false);
+            if (typeof game !== 'undefined' && game.game_mode !== "rpg" && game.toggle_commander_control_mode)
+                game.toggle_commander_control_mode();
+            mainWindow.capture_view_ready = typeof game !== 'undefined' && game.game_mode === "rpg";
+        } else {
+            mainWindow.capture_view_ready = true;
         }
         mainWindow.sync_audio_context();
     }
@@ -577,6 +589,8 @@ ApplicationWindow {
 
     Connections {
         function onCampaign_mission_changed() {
+            if (mainWindow.suppress_modals)
+                return;
             if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && !game.is_loading) {
                 mainWindow.game_paused = true;
                 gameViewItem.set_paused(true);
