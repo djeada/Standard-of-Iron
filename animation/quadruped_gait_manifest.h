@@ -148,4 +148,32 @@ quadruped_body_sway(bool is_moving,
     const QuadrupedMotionConfig& motion = {},
     const QuadrupedSwayConfig& sway = {}) noexcept -> QuadrupedMotionSample;
 
+struct QuadrupedCadenceInputs {
+
+  float ground_speed{0.0F};
+
+  float reference_speed{1.0F};
+  float authored_cycle_time{1.0F};
+  float authored_stride_swing{0.0F};
+
+  float stance_fraction{0.45F};
+
+  float stride_to_local{1.0F};
+
+  float min_cycle_scale{0.70F};
+  float max_cycle_scale{2.00F};
+
+  float max_stride_scale{3.00F};
+};
+
+struct QuadrupedCadence {
+  float cycle_time{1.0F};
+  float stride_swing{0.0F};
+
+  float ground_tracking{0.0F};
+};
+
+[[nodiscard]] auto resolve_quadruped_cadence(
+    const QuadrupedCadenceInputs& inputs) noexcept -> QuadrupedCadence;
+
 } // namespace Animation

@@ -11,6 +11,10 @@ namespace Render::Creature {
 struct HorseAnimationStateComponent;
 }
 
+namespace Engine::Core {
+class Entity;
+} // namespace Engine::Core
+
 namespace Render::GL {
 
 struct AnimationInputs;
@@ -68,11 +72,15 @@ auto compute_rein_handle(const MountedAttachmentFrame& mount,
 auto movement_animation_for_horse_gait(GaitType gait) noexcept
     -> Render::Creature::MovementAnimationState;
 
-auto evaluate_horse_motion(const HorseProfile& profile,
-                           const AnimationInputs& anim,
-                           const HumanoidAnimationContext& rider_ctx,
-                           Render::Creature::HorseAnimationStateComponent* io_state =
-                               nullptr) -> HorseMotionSample;
+[[nodiscard]] auto
+mount_model_scale(const Engine::Core::Entity* entity) noexcept -> float;
+
+auto evaluate_horse_motion(
+    const HorseProfile& profile,
+    const AnimationInputs& anim,
+    const HumanoidAnimationContext& rider_ctx,
+    Render::Creature::HorseAnimationStateComponent* io_state = nullptr,
+    float model_scale = 1.0F) -> HorseMotionSample;
 void apply_mount_vertical_offset(MountedAttachmentFrame& frame, float bob);
 [[nodiscard]] auto
 apply_authored_horse_mount_pose(const HorseMotionSample& motion,

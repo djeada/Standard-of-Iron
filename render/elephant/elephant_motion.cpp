@@ -12,6 +12,7 @@
 #include "../creature/movement_animation.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "animation/elephant_gait_manifest.h"
+#include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
 #include "dimensions.h"
 #include "elephant_source_asset.h"
@@ -150,16 +151,33 @@ auto compute_howdah_frame(const ElephantProfile& profile) -> HowdahAttachmentFra
   return frame;
 }
 
-auto evaluate_elephant_motion(const ElephantProfile& profile,
-                              const AnimationInputs& anim,
-                              Render::Creature::ElephantAnimationStateComponent*
-                                  io_state) -> ElephantMotionSample {
+auto evaluate_elephant_motion(
+    const ElephantProfile& profile,
+    const AnimationInputs& anim,
+    Render::Creature::ElephantAnimationStateComponent* io_state,
+    float model_scale) -> ElephantMotionSample {
   Render::Creature::ElephantAnimationStateComponent fallback_state{};
   Render::Creature::ElephantAnimationStateComponent& state =
       io_state != nullptr ? *io_state : fallback_state;
   ElephantMotionSample sample{};
-  const ElephantGait& g = profile.gait;
+  ElephantGait g = profile.gait;
   const ElephantDimensions& d = profile.dims;
+
+  {
+    constexpr float k_elephant_stance_fraction = 0.50F;
+    const float scale = std::max(model_scale, 0.05F);
+    auto const cadence = Animation::resolve_quadruped_cadence({
+        .ground_speed = anim.visual_movement.speed_hint / scale,
+        .reference_speed = Animation::k_elephant_reference_speed / scale,
+        .authored_cycle_time = g.cycle_time,
+        .authored_stride_swing = g.stride_swing,
+        .stance_fraction = k_elephant_stance_fraction,
+
+        .stride_to_local = d.body_length * 0.28F,
+        .max_stride_scale = 1.0F,
+    });
+    g.cycle_time = cadence.cycle_time;
+  }
   sample.gait = g;
 
   Render::Creature::MovementAnimationState const movement_animation =

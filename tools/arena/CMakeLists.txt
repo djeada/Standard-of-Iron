@@ -32,6 +32,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
         arena_viewport.cpp
         terrain_panel.cpp
         prop_panel.cpp
+        promo_spec.cpp
+        promo_runner.cpp
+        video_encoder.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
@@ -48,6 +51,9 @@ else()
         arena_viewport.cpp
         terrain_panel.cpp
         prop_panel.cpp
+        promo_spec.cpp
+        promo_runner.cpp
+        video_encoder.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp

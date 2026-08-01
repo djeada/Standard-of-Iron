@@ -19,6 +19,7 @@ Usage:
     python scripts/format.py --files game/foo.cpp ui/qml/Hud.qml
     python scripts/format.py --all --lint
     python scripts/format.py --all --lint --fix
+    python scripts/format.py --all --lint --fix --unsafe-fixes
     python scripts/format.py --doctor
     python scripts/format.py --bootstrap
 """
@@ -278,6 +279,7 @@ class Tool:
     path_filter: Callable[[str], bool] | None = None
     check_cmd: Callable[[str, list[str]], list[str]] | None = None
     fix_cmd: Callable[[str, list[str]], list[str]] | None = None
+    unsafe_fix_args: tuple[str, ...] = ()
     custom_check: Callable[[str, list[str]], list[str]] | None = None
     builtin_check: Callable[[list[str]], list[str]] | None = None
     needs_compile_db: bool = False
@@ -556,6 +558,7 @@ def build_tools() -> list[Tool]:
             batch=256,
             check_cmd=lambda exe, files: [exe, "check", *files],
             fix_cmd=lambda exe, files: [exe, "check", "--fix", *files],
+            unsafe_fix_args=("--unsafe-fixes",),
         ),
         Tool(
             name="shellcheck",
@@ -659,7 +662,14 @@ def _compile_db_args(build_dir: str) -> list[str] | None:
 
 
 def run_tool(
-    tool: Tool, files: list[str], *, fix: bool, jobs: int, build_dir: str, deep: bool
+    tool: Tool,
+    files: list[str],
+    *,
+    fix: bool,
+    unsafe_fixes: bool,
+    jobs: int,
+    build_dir: str,
+    deep: bool,
 ) -> Outcome:
     if not files:
         return Outcome(tool.name, "skipped", 0, "no matching files", tool.advisory)
@@ -723,6 +733,12 @@ def run_tool(
         futures = []
         for batch in batches:
             cmd = builder(exe, batch)
+            if fix and unsafe_fixes and tool.unsafe_fix_args:
+                cmd = [
+                    *cmd[: -len(batch)],
+                    *tool.unsafe_fix_args,
+                    *cmd[-len(batch) :],
+                ]
             if prefix:
                 cmd = [cmd[0], *prefix, *cmd[1:]]
             futures.append(pool.submit(_run, cmd))
@@ -761,6 +777,7 @@ def execute(
     grouped: dict[str, list[str]],
     *,
     fix: bool,
+    unsafe_fixes: bool,
     jobs: int,
     build_dir: str,
     strict: bool,
@@ -772,7 +789,15 @@ def execute(
     for tool in tools:
         files = tool.select(grouped)
         outcomes.append(
-            run_tool(tool, files, fix=fix, jobs=jobs, build_dir=build_dir, deep=deep)
+            run_tool(
+                tool,
+                files,
+                fix=fix,
+                unsafe_fixes=unsafe_fixes,
+                jobs=jobs,
+                build_dir=build_dir,
+                deep=deep,
+            )
         )
 
     report(outcomes, verbose=verbose)
@@ -986,6 +1011,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         "--check", action="store_true", help="verify only, never write (default)"
     )
     mode.add_argument("--fix", action="store_true", help="apply changes in place")
+    mode.add_argument(
+        "--unsafe-fixes",
+        action="store_true",
+        help="enable Ruff's unsafe autofixes (requires --lint --fix)",
+    )
 
     action = parser.add_argument_group("action")
     action.add_argument(
@@ -1038,6 +1068,8 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 
     if args.check and args.fix:
         parser.error("--check and --fix are mutually exclusive")
+    if args.unsafe_fixes and (not args.lint or not args.fix):
+        parser.error("--unsafe-fixes requires --lint --fix")
 
     selectors = [
         bool(args.all),
@@ -1117,6 +1149,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         selected,
         grouped,
         fix=fix,
+        unsafe_fixes=args.unsafe_fixes,
         jobs=args.jobs,
         build_dir=args.build_dir,
         strict=args.strict,
