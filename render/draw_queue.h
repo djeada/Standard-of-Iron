@@ -69,10 +69,26 @@ struct FogInstanceData {
   float alpha = 1.0F;
 };
 
+struct VisibilityMaskResources {
+  Texture* texture = nullptr;
+  QVector2D size{0.0F, 0.0F};
+  float tile_size = 1.0F;
+  float explored_alpha = 0.6F;
+  bool enabled = false;
+};
+
+struct FogMaskResources {
+  Texture* texture = nullptr;
+  QVector2D size{0.0F, 0.0F};
+  float tile_size = 1.0F;
+  bool enabled = false;
+};
+
 struct FogBatchCmd {
   const FogInstanceData* instances = nullptr;
   Buffer* instance_buffer = nullptr;
   std::size_t count = 0;
+  FogMaskResources mask{};
   CommandPriority priority{CommandPriority::Low};
 };
 
@@ -113,6 +129,7 @@ struct TerrainScatterCmd {
   IronOreBatchParams iron_ore{};
   MagicShrineBatchParams magic_shrine{};
 
+  VisibilityMaskResources visibility{};
   CommandPriority priority{CommandPriority::Low};
 };
 
@@ -133,13 +150,7 @@ struct TerrainSurfaceCmd {
     bool enabled = false;
   };
 
-  struct VisibilityResources {
-    Texture* texture = nullptr;
-    QVector2D size{0.0F, 0.0F};
-    float tile_size = 1.0F;
-    float explored_alpha = 0.6F;
-    bool enabled = false;
-  };
+  using VisibilityResources = VisibilityMaskResources;
 
   Mesh* mesh = nullptr;
   const Material* material = nullptr;

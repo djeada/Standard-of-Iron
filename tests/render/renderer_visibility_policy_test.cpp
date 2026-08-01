@@ -107,6 +107,58 @@ TEST(RendererVisibilityPolicyTest, BoundsRemainVisibleWhenCenterCrossesFogCell) 
       QVector3D(2.0F, 0.0F, 0.0F), 0.4F, Render::GL::SubmissionFogMode::VisibleOnly));
 }
 
+TEST(RendererVisibilityPolicyTest, AnchorExtentHidesFormationsStandingInFog) {
+  Game::Map::VisibilityService::Snapshot snapshot;
+  snapshot.initialized = true;
+  snapshot.width = 16;
+  snapshot.height = 16;
+  snapshot.tile_size = 1.0F;
+  snapshot.half_width = 7.5F;
+  snapshot.half_height = 7.5F;
+  snapshot.cells.assign(16U * 16U,
+                        static_cast<std::uint8_t>(Game::Map::VisibilityState::Unseen));
+
+  snapshot.cells[8U * 16U + 8U] =
+      static_cast<std::uint8_t>(Game::Map::VisibilityState::Visible);
+
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, &snapshot);
+
+  const QVector3D in_fog(5.0F, 0.0F, 0.0F);
+  EXPECT_TRUE(
+      policy.accepts_sphere(in_fog, 5.0F, Render::GL::SubmissionFogMode::VisibleOnly));
+  EXPECT_FALSE(policy.accepts_sphere(in_fog,
+                                     5.0F,
+                                     Render::GL::SubmissionFogMode::VisibleOnly,
+                                     Render::GL::FogExtent::Anchor));
+
+  const QVector3D watched(0.0F, 0.0F, 0.0F);
+  EXPECT_TRUE(policy.accepts_sphere(watched,
+                                    5.0F,
+                                    Render::GL::SubmissionFogMode::VisibleOnly,
+                                    Render::GL::FogExtent::Anchor));
+}
+
+TEST(RendererVisibilityPolicyTest, AnchorExtentLeavesRememberedSceneryAlone) {
+  Game::Map::VisibilityService::Snapshot snapshot;
+  snapshot.initialized = true;
+  snapshot.width = 8;
+  snapshot.height = 8;
+  snapshot.tile_size = 1.0F;
+  snapshot.half_width = 3.5F;
+  snapshot.half_height = 3.5F;
+  snapshot.cells.assign(
+      64U, static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored));
+
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, &snapshot);
+
+  EXPECT_TRUE(policy.accepts_sphere(QVector3D(0.0F, 0.0F, 0.0F),
+                                    3.0F,
+                                    Render::GL::SubmissionFogMode::Revealed,
+                                    Render::GL::FogExtent::Anchor));
+}
+
 TEST(RendererVisibilityPolicyTest, FrustumBroadPhaseHasStableEdgeGuardBand) {
   Render::GL::Camera camera;
   camera.set_perspective(60.0F, 1.0F, 0.1F, 100.0F);

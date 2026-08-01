@@ -46,6 +46,10 @@ public:
   struct FogUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle mask_tex{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle mask_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle mask_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_mask{GL::Shader::InvalidUniform};
   };
 
   struct CylinderInstanceGpu {

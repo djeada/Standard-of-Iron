@@ -334,7 +334,7 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   RendererBootstrap::initialize_world_systems(*m_world);
   Game::Map::VisibilityService::instance().initialize(
       k_terrain_width, k_terrain_height, k_terrain_tile_size);
-  Game::Map::VisibilityService::instance().reveal_all();
+  apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get());
   configure_runtime();
   regenerate_terrain();
@@ -498,6 +498,7 @@ void ArenaViewport::paintGL() {
     return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
   });
   update_active_scenario(simulation_dt);
+  update_fog_of_war(simulation_dt);
   Arena::ArenaRenderedFrameTimings timings;
   timings.simulation_ms = elapsed_phase_ms();
 
@@ -523,6 +524,9 @@ void ArenaViewport::paintGL() {
          !m_scenario_runner->definition().suppress_terrain_scatter);
     terrain_options.include_environment = !m_terrain_review_mode;
     m_terrain_scene->submit(*m_renderer, m_renderer->resources(), terrain_options);
+  }
+  if (m_fog_of_war_enabled && m_fog != nullptr) {
+    m_fog->submit(*m_renderer, m_renderer->resources());
   }
   timings.terrain_submit_ms = elapsed_phase_ms();
   m_renderer->render_world(m_world.get());
@@ -2303,6 +2307,68 @@ void ArenaViewport::reset_arena() {
   }
 }
 
+void ArenaViewport::apply_initial_visibility() {
+  auto& visibility = Game::Map::VisibilityService::instance();
+  if (!m_fog_of_war_enabled) {
+    visibility.reveal_all();
+    return;
+  }
+
+  visibility.compute_immediate(*m_world, k_local_owner_id);
+  if (m_fog != nullptr) {
+    m_fog->set_enabled(true);
+    const auto snapshot = visibility.snapshot();
+    m_fog->update_mask(
+        snapshot.width, snapshot.height, snapshot.tile_size, snapshot.cells);
+  }
+}
+
+void ArenaViewport::set_fog_of_war_enabled(bool enabled) {
+  if (m_fog_of_war_enabled == enabled) {
+    return;
+  }
+  m_fog_of_war_enabled = enabled;
+  m_visibility_accumulator = 0.0F;
+
+  auto& visibility = Game::Map::VisibilityService::instance();
+  if (!enabled) {
+    if (m_fog != nullptr) {
+      m_fog->set_enabled(false);
+      m_fog->update_mask(0, 0, 1.0F, {});
+    }
+    apply_initial_visibility();
+    update();
+    return;
+  }
+
+  visibility.initialize(
+      visibility.get_width(), visibility.get_height(), visibility.get_tile_size());
+  apply_initial_visibility();
+  update();
+}
+
+void ArenaViewport::update_fog_of_war(float dt) {
+  if (!m_fog_of_war_enabled || m_fog == nullptr) {
+    return;
+  }
+  auto& visibility = Game::Map::VisibilityService::instance();
+  if (!visibility.is_initialized()) {
+    return;
+  }
+
+  const float interval =
+      Game::GameConfig::instance().gameplay().visibility_update_interval;
+  m_visibility_accumulator += dt;
+  if (m_visibility_accumulator >= interval) {
+    m_visibility_accumulator = 0.0F;
+    visibility.update(*m_world, k_local_owner_id);
+  }
+
+  const auto snapshot = visibility.snapshot();
+  m_fog->update_mask(
+      snapshot.width, snapshot.height, snapshot.tile_size, snapshot.cells);
+}
+
 void ArenaViewport::set_batch_fixed_step(float seconds) {
   m_batch_fixed_step = std::max(0.0F, seconds);
 
@@ -2408,7 +2474,7 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
       m_terrain_review_definition->grid.width,
       m_terrain_review_definition->grid.height,
       m_terrain_review_definition->grid.tile_size);
-  Game::Map::VisibilityService::instance().reveal_all();
+  apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get());
   Game::Systems::CommandService::initialize(m_terrain_review_definition->grid.width,
                                             m_terrain_review_definition->grid.height);

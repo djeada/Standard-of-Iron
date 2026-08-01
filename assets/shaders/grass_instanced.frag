@@ -1,6 +1,8 @@
 #version 330 core
+#include "visibility_mask.glsl"
 
 in vec3 v_color;
+in vec3 v_world_pos;
 in float v_alpha;
 in float v_edge;
 in float v_edge_softness;
@@ -13,5 +15,6 @@ void main() {
   float alpha = v_alpha * edge;
   if (alpha <= 0.02)
     discard;
-  frag_color = vec4(v_color, alpha);
+  vec3 color = apply_visibility_memory(v_color, v_world_pos.xz);
+  frag_color = vec4(color, alpha);
 }

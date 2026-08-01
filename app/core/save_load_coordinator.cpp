@@ -23,6 +23,7 @@
 #include "game/units/factory.h"
 #include "game_state_restorer.h"
 #include "utils/resource_utils.h"
+#include "visibility_coordinator.h"
 
 namespace App::Core {
 
@@ -153,6 +154,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
       context.runtime_snapshot.local_owner_id,
       context.scene.minimap_manager,
       context.scene.visibility_coordinator);
+
+  Game::Systems::GameStateSerializer::restore_visibility_from_metadata(metadata);
+  if (context.scene.visibility_coordinator != nullptr) {
+    context.scene.visibility_coordinator->publish_current_frame(true);
+  }
 
   auto unit_registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*unit_registry);

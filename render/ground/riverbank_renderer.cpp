@@ -36,8 +36,6 @@ void ShorelineRenderer::configure(
   m_lakes = lakes;
   m_tile_size = height_map.get_tile_size();
   m_biome_settings = biome_settings;
-  m_visibility_texture.reset();
-  m_cached_visibility_version = 0;
   m_visibility_width = 0;
   m_visibility_height = 0;
   build_meshes(height_map);
@@ -79,89 +77,14 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   const bool use_visibility = renderer.static_world_visibility_filter_enabled();
   const auto* visibility_snapshot =
       use_visibility ? renderer.submission_visibility().snapshot() : nullptr;
-  auto* gl_context = QOpenGLContext::currentContext();
-  auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
-
-  Texture* visibility_tex = nullptr;
-  QVector2D visibility_size(0.0F, 0.0F);
-
-  if (visibility_snapshot != nullptr) {
-    if (gl_functions == nullptr) {
-      qWarning()
-          << "ShorelineRenderer: no current OpenGL context for visibility upload";
-    } else {
-      const int vis_w = visibility_snapshot->width;
-      const int vis_h = visibility_snapshot->height;
-      bool const size_changed =
-          (vis_w != m_visibility_width) || (vis_h != m_visibility_height);
-
-      if (!m_visibility_texture || size_changed) {
-        m_visibility_texture = std::make_unique<Texture>();
-        m_visibility_texture->create_empty(vis_w, vis_h, Texture::Format::RGBA);
-        m_visibility_texture->set_filter(Texture::Filter::Nearest,
-                                         Texture::Filter::Nearest);
-        m_visibility_texture->set_wrap(Texture::Wrap::ClampToEdge,
-                                       Texture::Wrap::ClampToEdge);
-        m_visibility_width = vis_w;
-        m_visibility_height = vis_h;
-        m_cached_visibility_version = 0;
-      }
-
-      if (visibility_snapshot->version != m_cached_visibility_version || size_changed) {
-        const auto& cells = visibility_snapshot->cells;
-        std::vector<unsigned char> texels(static_cast<std::size_t>(vis_w * vis_h * 4),
-                                          0U);
-
-        for (int z = 0; z < vis_h; ++z) {
-          for (int x = 0; x < vis_w; ++x) {
-            int const idx = z * vis_w + x;
-            unsigned char val = 0U;
-            switch (static_cast<Game::Map::VisibilityState>(cells[idx])) {
-            case Game::Map::VisibilityState::Visible:
-              val = 255U;
-              break;
-            case Game::Map::VisibilityState::Explored:
-              val = 128U;
-              break;
-            case Game::Map::VisibilityState::Unseen:
-            default:
-              val = 0U;
-              break;
-            }
-            texels[static_cast<std::size_t>(idx * 4)] = val;
-            texels[static_cast<std::size_t>(idx * 4 + 3)] = 255;
-          }
-        }
-
-        m_visibility_texture->bind();
-        gl_functions->glTexSubImage2D(GL_TEXTURE_2D,
-                                      0,
-                                      0,
-                                      0,
-                                      vis_w,
-                                      vis_h,
-                                      GL_RGBA,
-                                      GL_UNSIGNED_BYTE,
-                                      texels.data());
-        visibility_tex = m_visibility_texture.get();
-        m_cached_visibility_version = visibility_snapshot->version;
-      } else {
-        visibility_tex = m_visibility_texture.get();
-      }
-
-      visibility_size = QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
-    }
-  }
-
   QMatrix4x4 model;
   model.setToIdentity();
 
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
-  visibility_resources.texture = visibility_tex;
-  visibility_resources.size = visibility_size;
-  visibility_resources.tile_size = m_tile_size;
-  visibility_resources.explored_alpha = m_explored_dim_factor;
-  visibility_resources.enabled = use_visibility && visibility_tex != nullptr;
+  if (visibility_snapshot != nullptr) {
+    visibility_resources = renderer.visibility_mask();
+    visibility_resources.explored_alpha = m_explored_dim_factor;
+  }
 
   const auto surface = Game::Map::make_surface_profile(m_biome_settings);
   const auto climate = Game::Map::make_climate_profile(m_biome_settings);

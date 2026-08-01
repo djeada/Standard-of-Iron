@@ -17,6 +17,11 @@ enum class SubmissionFogMode : std::uint8_t {
   Revealed,
 };
 
+enum class FogExtent : std::uint8_t {
+  Footprint,
+  Anchor,
+};
+
 struct SubmissionVisibilityResult {
   bool in_frustum = true;
   bool fog_visible = true;
@@ -39,20 +44,22 @@ public:
   [[nodiscard]] auto
   accepts_sphere(const QVector3D& center,
                  float radius,
-                 SubmissionFogMode fog_mode = SubmissionFogMode::Ignore) const -> bool {
-    return evaluate_sphere(center, radius, fog_mode).accepted();
+                 SubmissionFogMode fog_mode = SubmissionFogMode::Ignore,
+                 FogExtent fog_extent = FogExtent::Footprint) const -> bool {
+    return evaluate_sphere(center, radius, fog_mode, fog_extent).accepted();
   }
 
-  [[nodiscard]] auto
-  evaluate_sphere(const QVector3D& center,
-                  float radius,
-                  SubmissionFogMode fog_mode = SubmissionFogMode::Ignore) const
-      -> SubmissionVisibilityResult {
+  [[nodiscard]] auto evaluate_sphere(
+      const QVector3D& center,
+      float radius,
+      SubmissionFogMode fog_mode = SubmissionFogMode::Ignore,
+      FogExtent fog_extent = FogExtent::Footprint) const -> SubmissionVisibilityResult {
     SubmissionVisibilityResult result;
     result.in_frustum =
         m_camera == nullptr ||
         m_camera->is_in_frustum(center, std::max(radius, 0.1F) + k_frustum_guard_band);
-    result.fog_visible = accepts_fog_sphere(center, radius, fog_mode);
+    result.fog_visible = accepts_fog_sphere(
+        center, fog_extent == FogExtent::Anchor ? 0.0F : radius, fog_mode);
     return result;
   }
 

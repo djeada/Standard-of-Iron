@@ -8,7 +8,6 @@
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
 #include "../terrain_scene_types.h"
-#include "visibility_texture_helper.h"
 
 namespace Render::GL {
 class Mesh;
@@ -40,7 +39,6 @@ private:
     QVector3D visibility_end;
   };
   std::vector<SurfaceMesh> m_meshes;
-  Ground::VisibilityTextureHelper m_vis_helper;
 };
 
 } // namespace Render::GL

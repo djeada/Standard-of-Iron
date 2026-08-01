@@ -418,6 +418,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         assets/shaders/include/environment_lighting.glsl
         assets/shaders/include/local_lighting.glsl
         assets/shaders/include/directional_shadows.glsl
+        assets/shaders/include/visibility_mask.glsl
         assets/shaders/directional_shadow_depth.vert
         assets/shaders/directional_shadow_rigged.vert
         assets/shaders/directional_shadow_depth.frag
