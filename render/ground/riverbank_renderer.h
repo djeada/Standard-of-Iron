@@ -39,8 +39,6 @@ private:
   std::vector<std::vector<QVector3D>> m_visibility_samples;
   std::vector<WaterSurfaceKind> m_water_kinds;
 
-  std::unique_ptr<Texture> m_visibility_texture;
-  std::uint64_t m_cached_visibility_version = 0;
   int m_visibility_width = 0;
   int m_visibility_height = 0;
   float m_explored_dim_factor = 0.6F;

@@ -7,7 +7,6 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
-#include "visibility_texture_helper.h"
 
 namespace Render::GL {
 class Mesh;
@@ -31,7 +30,6 @@ private:
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
-  Ground::VisibilityTextureHelper m_vis_helper;
 };
 
 } // namespace Render::GL

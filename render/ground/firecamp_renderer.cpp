@@ -73,6 +73,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   params.glow_strength = m_firecamp_state.params.glow_strength *
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
   TerrainScatterCmd cmd;
+  cmd.visibility = renderer.visibility_mask();
   cmd.species = TerrainScatterCmd::Species::FireCamp;
   cmd.firecamp = params;
   Scatter::submit_visible_chunks(renderer, m_firecamp_state, cmd);

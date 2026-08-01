@@ -605,6 +605,53 @@ if (u_materialId == 4) {  // Shield
 
 The shader directory is intentionally small and pipeline-owned. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) preloads shared backend programs and keeps them around so we don't recompile every frame.
 
+## Fog of war: three states, one mask
+
+The player sees the battlefield in three states, and all of them are driven by a
+single low-resolution mask rather than by geometry.
+
+`VisibilityService` owns the truth: one byte per terrain tile, `Unseen`,
+`Explored` or `Visible`, recomputed on a worker thread at the interval in
+`GameConfig::gameplay().visibility_update_interval` (not per frame). Once per
+frame `Renderer::visibility_mask()` turns the current snapshot into an RGBA
+texture, one texel per tile: red is "under live sight now", green is "seen at
+some point". Both channels pass through a 3x3 tent kernel and the texture is
+sampled with linear filtering, which is what turns the tile grid into a
+feathered edge instead of a staircase.
+
+Everything that belongs to the permanent map -- terrain chunks, roads, rivers,
+riverbanks, and the scattered props -- includes
+[`visibility_mask.glsl`](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/include/visibility_mask.glsl)
+and calls `apply_visibility_memory()`. That one call discards fragments the
+player has never seen and, on ground that is explored but not currently
+watched, replaces the lit colour with a drained, cooled, dimmed version of
+itself. Remembered terrain is therefore the real terrain rendered from memory,
+props included -- not a grey sheet laid over it.
+
+Only never-seen ground gets a fog layer. `FogRenderer` submits one instanced
+batch of chunk-sized quads covering the unexplored regions and hands the
+shader its own mask, so cost scales with the unexplored area in chunks rather
+than with map size or unit count. Newly revealed tiles dissolve rather than
+pop, and the layer subtracts live sight from its own opacity: soldiers stand
+above the fog plane, so fog creeping past the sight edge would show them
+apparently standing in it.
+
+Two rules keep hidden activity hidden. Enemy units, enemy construction
+previews and combat effects are gated with `FogExtent::Anchor`, which asks
+about the tile the thing stands on rather than its whole bounding sphere -- the
+footprint rule would render an entire formation whose flank merely clipped the
+sight edge. Animated scatter (campfires) stays `ScatterMemoryMode::VisibleOnly`
+so nothing keeps playing where nobody is looking, while static props use
+`Remembered`.
+
+Per-update cost stays small because the mask is uploaded by dirty rectangle:
+the helper compares against the previous grid, grows a box by the blur's reach,
+and re-encodes only that slice. On a 650x650 map a typical update costs about
+0.1 ms of comparison and a microsecond of encoding, against ~2.6 ms for a
+whole-grid encode. `arena_app --fog-of-war` runs the real thing in the Arena,
+and the `fog_of_war_recon` scenario walks a patrol out and back so all three
+states appear in one frame.
+
 ## Common problems and how to fix them
 
 When nothing renders at all and you're just seeing a black screen, walk through this checklist:

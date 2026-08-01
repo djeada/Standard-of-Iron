@@ -203,7 +203,7 @@ void Renderer::healer_aura(const QVector3D& position,
                            float intensity,
                            float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->healer_aura(
@@ -216,7 +216,7 @@ void Renderer::combat_dust(const QVector3D& position,
                            float intensity,
                            float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->combat_dust(
@@ -229,7 +229,7 @@ void Renderer::building_flame(const QVector3D& position,
                               float intensity,
                               float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->building_flame(
@@ -242,7 +242,7 @@ void Renderer::burning_flame(const QVector3D& position,
                              float intensity,
                              float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->burning_flame(
@@ -255,7 +255,7 @@ void Renderer::fireball(const QVector3D& position,
                         float intensity,
                         float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->fireball(
@@ -269,7 +269,7 @@ void Renderer::blood_pool(const QVector3D& position,
                           float aspect_ratio,
                           float seed) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->blood_pool(
@@ -282,7 +282,7 @@ void Renderer::stone_impact(const QVector3D& position,
                             float intensity,
                             float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->stone_impact(
@@ -295,7 +295,7 @@ void Renderer::metal_spark(const QVector3D& position,
                            float intensity,
                            float time) {
   if (!m_submission_visibility.accepts_sphere(
-          position, radius, SubmissionFogMode::VisibleOnly)) {
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->metal_spark(

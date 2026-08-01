@@ -86,10 +86,16 @@ void sync_direct_state(DirectRendererState<Instance, Params>& state) {
                                                &state.last_sync_stats);
 }
 
+enum class ScatterMemoryMode : std::uint8_t {
+  VisibleOnly,
+  Remembered
+};
+
 template <typename Instance, typename Params, typename PositionAccessor>
 auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
                          PositionAccessor position_accessor,
-                         const Game::Map::VisibilityService::Snapshot* snapshot)
+                         const Game::Map::VisibilityService::Snapshot* snapshot,
+                         ScatterMemoryMode memory_mode = ScatterMemoryMode::VisibleOnly)
     -> std::uint32_t {
   state.last_sync_stats = {};
   if (state.instances.empty()) {
@@ -130,10 +136,16 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
 
   for (const auto& instance : state.instances) {
     const auto position = position_accessor(instance);
-    if (snapshot != nullptr &&
-        Game::Map::classify_world_visibility(*snapshot, position.x(), position.z()) !=
-            Game::Map::RenderVisibilityState::Visible) {
-      continue;
+    if (snapshot != nullptr) {
+      const auto state_at_instance =
+          Game::Map::classify_world_visibility(*snapshot, position.x(), position.z());
+      const bool accepted =
+          memory_mode == ScatterMemoryMode::Remembered
+              ? state_at_instance != Game::Map::RenderVisibilityState::Hidden
+              : state_at_instance == Game::Map::RenderVisibilityState::Visible;
+      if (!accepted) {
+        continue;
+      }
     }
     state.visible_instances.push_back(instance);
     const auto chunk_x =
@@ -178,12 +190,14 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
 
 template <typename Instance, typename Params, typename PositionAccessor>
 auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
-                         PositionAccessor position_accessor) -> std::uint32_t {
+                         PositionAccessor position_accessor,
+                         ScatterMemoryMode memory_mode = ScatterMemoryMode::VisibleOnly)
+    -> std::uint32_t {
   auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility =
       visibility_filter_enabled_for_current_thread() && visibility.is_initialized();
   const auto snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
-  return sync_filtered_state(state, position_accessor, snapshot.get());
+  return sync_filtered_state(state, position_accessor, snapshot.get(), memory_mode);
 }
 
 } // namespace Render::Ground::Scatter

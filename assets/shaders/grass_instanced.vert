@@ -19,6 +19,7 @@ uniform vec3 u_camera_pos;
 uniform float u_ambient_boost;
 
 out vec3 v_color;
+out vec3 v_world_pos;
 out float v_alpha;
 out float v_edge;
 out float v_edge_softness;
@@ -121,5 +122,6 @@ void main() {
 
   v_edge_softness = clamp(1.0 / max(width_px * widen, 0.35), 0.04, 1.0);
 
+  v_world_pos = world_pos;
   gl_Position = u_view_proj * vec4(world_pos, 1.0);
 }

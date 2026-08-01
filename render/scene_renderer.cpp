@@ -56,6 +56,7 @@
 #include "gl/primitives.h"
 #include "gl/resources.h"
 #include "graphics_settings.h"
+#include "ground/visibility_texture_helper.h"
 #include "horse/dimensions.h"
 #include "horse/horse_renderer_base.h"
 #include "humanoid/cache_control.h"
@@ -144,6 +145,22 @@ auto Renderer::non_local_unit_visibility_filter_enabled() const -> bool {
 
 auto Renderer::static_world_visibility_filter_enabled() const -> bool {
   return visibility_mode_config().filter_static_world;
+}
+
+auto Renderer::visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources& {
+  if (!static_world_visibility_filter_enabled() ||
+      m_frame_visibility_snapshot == nullptr ||
+      !m_frame_visibility_snapshot->initialized) {
+    m_visibility_mask_resources = {};
+    return m_visibility_mask_resources;
+  }
+  if (!m_visibility_mask_helper) {
+    m_visibility_mask_helper = std::make_unique<Ground::VisibilityTextureHelper>();
+  }
+
+  m_visibility_mask_resources = m_visibility_mask_helper->update(
+      *m_frame_visibility_snapshot, m_frame_visibility_snapshot->tile_size);
+  return m_visibility_mask_resources;
 }
 
 auto Renderer::initialize() -> bool {
@@ -459,23 +476,29 @@ void Renderer::cylinder(const QVector3D& start,
   }
 }
 
-void Renderer::fog_batch(const FogInstanceData* instances, std::size_t count) {
+void Renderer::fog_batch(const FogInstanceData* instances,
+                         std::size_t count,
+                         const FogMaskResources& mask) {
   if ((instances == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
   cmd.instances = instances;
   cmd.count = count;
+  cmd.mask = mask;
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::fog_batch(Buffer* instance_buffer, std::size_t count) {
+void Renderer::fog_batch(Buffer* instance_buffer,
+                         std::size_t count,
+                         const FogMaskResources& mask) {
   if ((instance_buffer == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
   cmd.instance_buffer = instance_buffer;
   cmd.count = count;
+  cmd.mask = mask;
   m_active_queue->submit(std::move(cmd));
 }
 

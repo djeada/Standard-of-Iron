@@ -9,7 +9,9 @@
 
 #include "../draw_queue.h"
 #include "../gl/buffer.h"
+#include "../gl/texture.h"
 #include "../i_render_pass.h"
+#include "visibility_mask_encoder.h"
 
 namespace Render::GL {
 class Renderer;
@@ -34,34 +36,45 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  void advance_reveal(float dt_seconds);
+
+  [[nodiscard]] auto patch_count() const -> std::size_t { return m_instances.size(); }
+  [[nodiscard]] auto fog_amount_at(int grid_x, int grid_z) const -> float;
+  [[nodiscard]] auto is_settled() const -> bool { return m_settled; }
+
 private:
-  void build_chunks();
-  void build_transition_chunks(const std::vector<std::uint8_t>& previous_cells,
-                               const std::vector<std::uint8_t>& next_cells,
-                               float now);
+  void rebuild_patches();
+  void upload_mask(Renderer& renderer);
   void upload_instances();
+  void clear_state();
 
   using FogInstance = FogInstanceData;
-
-  struct FogTransition {
-    FogInstance instance;
-    float start_time = 0.0F;
-    float duration = 0.28F;
-  };
 
   bool m_enabled = true;
   bool m_soft_reveal_enabled = false;
   int m_width = 0;
   int m_height = 0;
   float m_tile_size = 1.0F;
-  float m_half_width = 0.0F;
-  float m_half_height = 0.0F;
-  std::vector<std::uint8_t> m_cells;
+
+  std::vector<float> m_fog_amount;
+  std::vector<float> m_target_fog;
+
+  std::vector<float> m_seen_amount;
+  bool m_settled = true;
+  bool m_patches_dirty = false;
+
+  Ground::MaskRegion m_mask_dirty;
+  Ground::MaskRegion m_fade_region;
+  float m_last_time = -1.0F;
+
   std::vector<FogInstance> m_instances;
-  std::vector<FogTransition> m_transitions;
-  std::vector<FogInstance> m_submit_instances;
   std::unique_ptr<Buffer> m_instance_buffer;
   bool m_instances_dirty = false;
+
+  std::unique_ptr<Texture> m_mask_texture;
+  std::vector<unsigned char> m_mask_texels;
+  int m_mask_texture_width = 0;
+  int m_mask_texture_height = 0;
 };
 
 } // namespace Render::GL

@@ -45,7 +45,8 @@ void TentRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       [](const TentInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; },
       renderer.static_world_visibility_filter_enabled()
           ? renderer.submission_visibility().snapshot()
-          : nullptr);
+          : nullptr,
+      Scatter::ScatterMemoryMode::Remembered);
   if (visible_count == 0) {
     return;
   }
@@ -53,6 +54,7 @@ void TentRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   m_state.params.time = renderer.get_animation_time();
 
   TerrainScatterCmd cmd;
+  cmd.visibility = renderer.visibility_mask();
   cmd.species = TerrainScatterCmd::Species::Tent;
   cmd.tent = m_state.params;
   Scatter::submit_visible_chunks(renderer, m_state, cmd);

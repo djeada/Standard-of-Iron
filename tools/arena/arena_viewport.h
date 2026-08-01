@@ -172,6 +172,9 @@ public slots:
   auto enter_rpg_interactive_control(Engine::Core::EntityID entity_id = 0) -> bool;
   void exit_rpg_interactive_control();
 
+  void set_fog_of_war_enabled(bool enabled);
+  [[nodiscard]] auto fog_of_war_enabled() const -> bool { return m_fog_of_war_enabled; }
+
   void set_batch_fixed_step(float seconds);
   void set_scenario_duration_override(float seconds);
   [[nodiscard]] auto active_scenario_finished() const -> bool;
@@ -262,6 +265,8 @@ private:
       -> Game::Units::TroopType;
   auto find_unit_handle(Engine::Core::EntityID entity_id) const -> Game::Units::Unit*;
   void reconfigure_terrain_from_state();
+  void apply_initial_visibility();
+  void update_fog_of_war(float dt);
   auto spawn_single_building(int owner_id,
                              Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type,
@@ -364,6 +369,8 @@ private:
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
   bool m_force_full_creature_lod = true;
+  bool m_fog_of_war_enabled = false;
+  float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
   bool m_clean_capture = false;

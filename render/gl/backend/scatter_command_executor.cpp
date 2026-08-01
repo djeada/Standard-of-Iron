@@ -59,6 +59,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = m_terrain_pipeline->m_grass_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*m_terrain_pipeline->m_grass_shader, deco_cmd_.visibility);
 
       if (m_terrain_pipeline->m_grass_uniforms.view_proj != Shader::InvalidUniform) {
         m_terrain_pipeline->m_grass_shader->set_uniform(
@@ -171,6 +172,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = stone_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*stone_shader, deco_cmd_.visibility);
 
       if (m_vegetation_pipeline->m_stone_uniforms.view_proj != Shader::InvalidUniform) {
         stone_shader->set_uniform(m_vegetation_pipeline->m_stone_uniforms.view_proj,
@@ -246,6 +248,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = plant_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*plant_shader, deco_cmd_.visibility);
 
       if (m_vegetation_pipeline->m_plant_uniforms.view_proj != Shader::InvalidUniform) {
         plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.view_proj,
@@ -344,6 +347,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = pine_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*pine_shader, deco_cmd_.visibility);
 
       if (m_vegetation_pipeline->m_pine_uniforms.view_proj != Shader::InvalidUniform) {
         pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.view_proj,
@@ -441,6 +445,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = olive_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*olive_shader, deco_cmd_.visibility);
 
       if (m_vegetation_pipeline->m_olive_uniforms.view_proj != Shader::InvalidUniform) {
         olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.view_proj,
@@ -720,6 +725,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         m_last_bound_shader = prop_shader;
         m_last_bound_texture = nullptr;
       }
+      bind_visibility_mask(*prop_shader, deco_cmd_.visibility);
 
       if (prop_uniforms->view_proj != Shader::InvalidUniform) {
         prop_shader->set_uniform(prop_uniforms->view_proj, view_proj);

@@ -678,7 +678,8 @@ void Renderer::render_world(Engine::Core::World* world) {
       const auto visibility_result = m_submission_visibility.evaluate_sphere(
           unit_pos,
           cull_radius,
-          filter_enemy ? SubmissionFogMode::VisibleOnly : SubmissionFogMode::Ignore);
+          filter_enemy ? SubmissionFogMode::VisibleOnly : SubmissionFogMode::Ignore,
+          FogExtent::Anchor);
       entry.in_frustum = visibility_result.in_frustum;
       entry.fog_visible = visibility_result.fog_visible;
 
@@ -1179,11 +1180,11 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
 
     const bool filter_preview = preview_owner != m_local_owner_id && visibility_enabled;
     const QVector3D preview_position(preview_x, transform->position.y, preview_z);
-    if (!m_submission_visibility.accepts_sphere(preview_position,
-                                                5.0F,
-                                                filter_preview
-                                                    ? SubmissionFogMode::VisibleOnly
-                                                    : SubmissionFogMode::Ignore)) {
+    if (!m_submission_visibility.accepts_sphere(
+            preview_position,
+            5.0F,
+            filter_preview ? SubmissionFogMode::VisibleOnly : SubmissionFogMode::Ignore,
+            FogExtent::Anchor)) {
       return;
     }
 

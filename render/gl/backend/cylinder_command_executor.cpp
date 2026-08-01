@@ -95,6 +95,29 @@ void Backend::execute_cylinder_commands(const PreparedBatch& prepared,
         fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.time,
                                 m_animation_time);
       }
+      const auto& mask = batch.mask;
+      const bool has_mask = mask.enabled && (mask.texture != nullptr);
+      if (m_cylinder_pipeline->m_fog_uniforms.has_mask != Shader::InvalidUniform) {
+        fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.has_mask,
+                                has_mask ? 1 : 0);
+      }
+      if (has_mask) {
+        if (m_cylinder_pipeline->m_fog_uniforms.mask_size != Shader::InvalidUniform) {
+          fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.mask_size,
+                                  mask.size);
+        }
+        if (m_cylinder_pipeline->m_fog_uniforms.mask_tile_size !=
+            Shader::InvalidUniform) {
+          fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.mask_tile_size,
+                                  mask.tile_size);
+        }
+        mask.texture->bind(TextureUnit::terrain_visibility);
+        m_last_bound_texture = mask.texture;
+        if (m_cylinder_pipeline->m_fog_uniforms.mask_tex != Shader::InvalidUniform) {
+          fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.mask_tex,
+                                  TextureUnit::terrain_visibility);
+        }
+      }
       if (batch.instance_buffer != nullptr) {
         m_cylinder_pipeline->bind_fog_instance_buffer(batch.instance_buffer);
       } else {
