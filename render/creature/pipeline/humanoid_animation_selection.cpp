@@ -351,6 +351,42 @@ auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
   return true;
 }
 
+auto apply_hold_stance_crossfade(HumanoidAnimationSelection& selection,
+                                 const Render::GL::HumanoidAnimationContext& anim,
+                                 const UnitVisualSpec& spec,
+                                 std::uint32_t seed,
+                                 const Render::GL::HumanoidVariant* variant) noexcept
+    -> bool {
+  if (!anim.inputs.is_in_hold_mode && !anim.inputs.is_exiting_hold) {
+    return false;
+  }
+  if (selection.state != Render::Creature::AnimationStateId::Hold) {
+    return false;
+  }
+
+  float const blend =
+      std::clamp(Render::GL::hold_transition_amount(anim.inputs), 0.0F, 1.0F);
+  if (blend >= 0.999F) {
+    return false;
+  }
+
+  HumanoidAnimationSelection const kneeling = selection;
+
+  Render::GL::HumanoidAnimationContext standing = anim;
+  standing.inputs.is_in_hold_mode = false;
+  standing.inputs.is_exiting_hold = false;
+  standing.inputs.hold_entry_progress = 0.0F;
+  standing.inputs.hold_exit_progress = 0.0F;
+  selection = build_selection_for_pose(
+      spec, standing, Render::Creature::resolve_pose(standing.inputs), seed, variant);
+
+  if (blend > 0.001F && kneeling.clip_id.has_value()) {
+    selection.full_body_blend = playback_layer_from_selection(
+        kneeling, blend, Render::Creature::PlaybackLayerMode::FullBodyBlend);
+  }
+  return true;
+}
+
 } // namespace
 
 auto resolve_humanoid_animation_selection(
@@ -362,6 +398,10 @@ auto resolve_humanoid_animation_selection(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
 
   if (apply_ambient_idle_crossfade(selection, anim, spec, seed, variant)) {
+    return selection;
+  }
+
+  if (apply_hold_stance_crossfade(selection, anim, spec, seed, variant)) {
     return selection;
   }
 

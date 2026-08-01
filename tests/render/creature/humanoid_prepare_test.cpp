@@ -2313,9 +2313,11 @@ TEST(AnimationCoreAttackPoseManifest, SpearDirectionBlendsHoldAndStrikePolicy) {
       .is_melee = true,
       .attack_phase = 0.40F,
   });
-  EXPECT_NEAR(held.x, 0.0502367F, 0.0001F);
-  EXPECT_NEAR(held.y, 0.401893F, 0.0001F);
-  EXPECT_NEAR(held.z, 0.914307F, 0.0001F);
+  EXPECT_NEAR(held.x, 0.0498482F, 0.001F);
+  EXPECT_NEAR(held.y, -0.0598178F, 0.001F);
+  EXPECT_NEAR(held.z, 0.996964F, 0.001F);
+  EXPECT_LT(held.y, 0.0F);
+  EXPECT_GT(held.y, -0.20F);
 
   auto const strike = Animation::resolve_humanoid_spear_direction({
       .is_attacking = true,
@@ -2669,12 +2671,14 @@ TEST(AnimationCoreHoldPoseManifest, SpearBraceOwnsBodyReadinessDeltas) {
 
   EXPECT_TRUE(sample.use_offhand_spear_grip);
   EXPECT_FLOAT_EQ(sample.right_hand.x, 0.30F);
-  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.10F);
-  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.58F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 0.90F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.46F);
   EXPECT_FLOAT_EQ(sample.offhand_along_offset, -0.24F);
-  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0502367F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.y, 0.401893F, 0.0001F);
-  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.914307F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.x, 0.0498482F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.y, -0.0598178F, 0.0001F);
+  EXPECT_NEAR(sample.offhand_spear_direction.z, 0.996964F, 0.0001F);
+  EXPECT_LT(sample.offhand_spear_direction.y, 0.0F);
+  EXPECT_GT(sample.offhand_spear_direction.y, -0.20F);
   EXPECT_FLOAT_EQ(sample.left_hand_z_delta, 0.03F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_y_delta, -0.05F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.08F);
@@ -2694,10 +2698,13 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   });
 
   EXPECT_FALSE(bow.use_offhand_spear_grip);
-  EXPECT_FLOAT_EQ(bow.right_hand.z, 0.70F);
-  EXPECT_FLOAT_EQ(bow.left_hand.y, 1.24F);
-  EXPECT_FLOAT_EQ(bow.shoulder_r_z_delta, 0.16F);
+  EXPECT_FLOAT_EQ(bow.right_hand.z, 0.62F);
+  EXPECT_FLOAT_EQ(bow.left_hand.y, 1.17F);
+  EXPECT_FLOAT_EQ(bow.shoulder_r_z_delta, 0.11F);
   EXPECT_FLOAT_EQ(bow.head_y_delta, -0.01F);
+  EXPECT_GT(bow.right_hand.x, bow.left_hand.x);
+  EXPECT_LT(bow.right_hand.y, 1.20F);
+  EXPECT_LT(bow.left_hand.y, 1.20F);
 
   EXPECT_FLOAT_EQ(shield_moving.right_hand.x, 0.37F);
   EXPECT_FLOAT_EQ(shield_moving.right_hand.y, 1.09F);

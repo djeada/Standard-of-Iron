@@ -46,6 +46,10 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
                                            : Pathfinding::CellValue::Blocked;
 }
 
+auto occupied_cell_to_grid(int cell, float grid_offset) -> int {
+  return static_cast<int>(std::lround((static_cast<float>(cell) + 0.5F) - grid_offset));
+}
+
 } // namespace
 
 Pathfinding::NavigationGrid::NavigationGrid(int width, int height) {
@@ -225,6 +229,14 @@ void Pathfinding::mark_building_region_dirty(float center_x,
   mark_region_dirty(min_x, max_x, min_z, max_z);
 }
 
+void Pathfinding::mark_obstruction_released() {
+  m_obstruction_revision.fetch_add(1, std::memory_order_acq_rel);
+}
+
+auto Pathfinding::obstruction_revision() const -> std::uint64_t {
+  return m_obstruction_revision.load(std::memory_order_acquire);
+}
+
 void Pathfinding::process_dirty_regions() {
   std::vector<DirtyRegion> regions_to_process;
 
@@ -257,9 +269,8 @@ void Pathfinding::process_dirty_regions() {
         auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
             building, m_grid_cell_size);
         for (const auto& cell : cells) {
-          int const grid_x = static_cast<int>(std::round(cell.first - m_grid_offset_x));
-          int const grid_z =
-              static_cast<int>(std::round(cell.second - m_grid_offset_z));
+          int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
+          int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
 
           if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
             m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
@@ -311,8 +322,8 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
     auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
         building, m_grid_cell_size);
     for (const auto& cell : cells) {
-      int const grid_x = static_cast<int>(std::round(cell.first - m_grid_offset_x));
-      int const grid_z = static_cast<int>(std::round(cell.second - m_grid_offset_z));
+      int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
+      int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
 
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
           grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
