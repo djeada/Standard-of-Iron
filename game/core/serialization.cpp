@@ -633,7 +633,21 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     site_obj["nation_id"] = static_cast<int>(site->nation_id);
     site_obj["build_time"] = static_cast<double>(site->build_time);
     site_obj["progress"] = static_cast<double>(site->progress);
+    site_obj["product_type"] =
+        QString::fromStdString(Game::Units::spawn_typeToString(site->product_type));
     entity_obj["wall_construction_site"] = site_obj;
+  }
+
+  if (const auto* gate = entity->get_component<GateComponent>()) {
+    QJsonObject gate_obj;
+    gate_obj["state"] = static_cast<int>(gate->state);
+    gate_obj["manual_mode"] = static_cast<int>(gate->manual_mode);
+    gate_obj["open_amount"] = static_cast<double>(gate->open_amount);
+    gate_obj["open_speed"] = static_cast<double>(gate->open_speed);
+    gate_obj["trigger_radius"] = static_cast<double>(gate->trigger_radius);
+    gate_obj["hold_open_seconds"] = static_cast<double>(gate->hold_open_seconds);
+    gate_obj["hold_timer"] = static_cast<double>(gate->hold_timer);
+    entity_obj["gate"] = gate_obj;
   }
 
   if (const auto* formation = entity->get_component<FormationModeComponent>()) {
@@ -1401,6 +1415,26 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<int>(Game::Systems::NationID::RomanRepublic)));
     site->build_time = static_cast<float>(site_obj["build_time"].toDouble(0.0));
     site->progress = static_cast<float>(site_obj["progress"].toDouble(0.0));
+    if (auto product = Game::Units::spawn_typeFromString(
+            site_obj["product_type"].toString("wall_segment").toStdString())) {
+      site->product_type = *product;
+    }
+  }
+
+  if (json.contains("gate")) {
+    const auto gate_obj = json["gate"].toObject();
+    auto* gate = entity->add_component<GateComponent>();
+    gate->state = static_cast<GateComponent::State>(
+        gate_obj["state"].toInt(static_cast<int>(GateComponent::State::Closed)));
+    gate->manual_mode =
+        static_cast<GateComponent::ManualMode>(gate_obj["manual_mode"].toInt(
+            static_cast<int>(GateComponent::ManualMode::Automatic)));
+    gate->open_amount = static_cast<float>(gate_obj["open_amount"].toDouble(0.0));
+    gate->open_speed = static_cast<float>(gate_obj["open_speed"].toDouble(1.6));
+    gate->trigger_radius = static_cast<float>(gate_obj["trigger_radius"].toDouble(4.0));
+    gate->hold_open_seconds =
+        static_cast<float>(gate_obj["hold_open_seconds"].toDouble(1.25));
+    gate->hold_timer = static_cast<float>(gate_obj["hold_timer"].toDouble(0.0));
   }
 
   if (json.contains("formation_mode")) {

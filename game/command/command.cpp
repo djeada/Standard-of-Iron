@@ -36,6 +36,8 @@ auto payload_name(const Payload& payload) -> const char* {
           return "patrol";
         } else if constexpr (std::is_same_v<T, SetRallyPoint>) {
           return "set-rally-point";
+        } else if constexpr (std::is_same_v<T, SetGateMode>) {
+          return "set-gate-mode";
         } else {
           return "produce";
         }

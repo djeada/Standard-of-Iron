@@ -137,6 +137,7 @@ private:
   [[nodiscard]] auto pending_construction_owner_id() const -> int;
   [[nodiscard]] auto pending_construction_nation_id() const -> Game::Systems::NationID;
   [[nodiscard]] auto is_wall_construction_mode() const -> bool;
+  [[nodiscard]] auto is_gate_construction_mode() const -> bool;
 
   Engine::Core::World* m_world;
   Game::Systems::PickingService* m_picking_service;

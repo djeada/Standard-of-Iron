@@ -94,6 +94,7 @@ add_executable(
     systems/elephant_special_processor_test.cpp
     systems/siege_special_processor_test.cpp
     systems/wall_system_test.cpp
+    systems/gate_system_test.cpp
     systems/battle_movement_refactor_test.cpp
     systems/battlefield_capture_test.cpp
     render/pose_controller_test.cpp
@@ -268,6 +269,7 @@ gtest_discover_tests(
 add_executable(
     headless_simulation_tests
     headless/headless_simulation_test.cpp
+    headless/gate_traversal_test.cpp
     headless/headless_main.cpp
 )
 target_link_libraries(

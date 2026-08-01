@@ -212,6 +212,18 @@ RowLayout {
                     game.begin_commander_flag_rally();
             }
         }, {
+            "id": "gate",
+            "label": qsTr("Gate"),
+            "hotkey": "G",
+            "hint": qsTr("Cycle the selected gates: automatic, held open, held shut."),
+            "unavailable": qsTr("Select one of your gates to control it"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.on_gate_command) {
+                    game.on_gate_command();
+                    bottomRoot.update_action_states();
+                }
+            }
+        }, {
             "id": "aura",
             "label": qsTr("Aura"),
             "hotkey": "E",

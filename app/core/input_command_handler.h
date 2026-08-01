@@ -61,6 +61,7 @@ public:
   void on_attack_click(qreal sx, qreal sy, const ViewportState& viewport);
   void on_stop_command();
   void on_hold_command();
+  void on_gate_command();
   void on_guard_command();
   void on_formation_command();
   void on_run_command();

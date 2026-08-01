@@ -1,0 +1,56 @@
+#pragma once
+
+#include <QVector3D>
+
+#include <cstdint>
+#include <vector>
+
+#include "../core/component.h"
+
+namespace Engine::Core {
+class Entity;
+class World;
+using EntityID = std::uint64_t;
+} // namespace Engine::Core
+
+namespace Game::Systems {
+
+struct GateBlocker {
+  float min_x{0.0F};
+  float max_x{0.0F};
+  float min_z{0.0F};
+  float max_z{0.0F};
+  int owner_id{0};
+  Engine::Core::EntityID entity_id{0};
+
+  [[nodiscard]] auto contains(float world_x, float world_z) const -> bool {
+    return world_x >= min_x && world_x <= max_x && world_z >= min_z && world_z <= max_z;
+  }
+};
+
+class GateService {
+public:
+  using ManualMode = Engine::Core::GateComponent::ManualMode;
+
+  static void mark_gate_footprint_navigable(Engine::Core::EntityID entity_id);
+
+  [[nodiscard]] static auto is_gate(const Engine::Core::Entity& entity) -> bool;
+
+  [[nodiscard]] static auto serves_owner(int gate_owner_id, int unit_owner_id) -> bool;
+
+  [[nodiscard]] static auto
+  gate_at(Engine::Core::World& world,
+          Engine::Core::EntityID entity_id) -> Engine::Core::Entity*;
+
+  static void refresh_blockers(Engine::Core::World& world);
+  static void clear_blockers();
+  [[nodiscard]] static auto blockers() -> const std::vector<GateBlocker>&;
+
+  [[nodiscard]] static auto blocks_move(const QVector3D& current,
+                                        const QVector3D& target) -> bool;
+
+  static auto set_manual_mode(Engine::Core::Entity& gate, ManualMode mode) -> bool;
+  static auto cycle_manual_mode(Engine::Core::Entity& gate) -> ManualMode;
+};
+
+} // namespace Game::Systems

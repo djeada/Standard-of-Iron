@@ -37,7 +37,8 @@ enum class SpawnType : std::uint8_t {
   DefenseTower,
   Home,
   WallSegment,
-  Marketplace
+  Marketplace,
+  WallGate
 };
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
@@ -94,6 +95,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("wall_segment");
   case SpawnType::Marketplace:
     return QStringLiteral("marketplace");
+  case SpawnType::WallGate:
+    return QStringLiteral("wall_gate");
   }
   return QStringLiteral("archer");
 }
@@ -212,6 +215,10 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     out = SpawnType::Marketplace;
     return true;
   }
+  if (lowered == QStringLiteral("wall_gate")) {
+    out = SpawnType::WallGate;
+    return true;
+  }
   return false;
 }
 
@@ -297,19 +304,24 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "marketplace") {
     return SpawnType::Marketplace;
   }
+  if (str == "wall_gate") {
+    return SpawnType::WallGate;
+  }
   return std::nullopt;
-}
-
-inline auto is_troop_spawn(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
-         type != SpawnType::Home && type != SpawnType::WallSegment &&
-         type != SpawnType::Marketplace;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks || type == SpawnType::DefenseTower ||
          type == SpawnType::Home || type == SpawnType::WallSegment ||
-         type == SpawnType::Marketplace;
+         type == SpawnType::Marketplace || type == SpawnType::WallGate;
+}
+
+inline auto is_troop_spawn(SpawnType type) -> bool {
+  return !is_building_spawn(type);
+}
+
+inline auto is_wall_network_spawn(SpawnType type) -> bool {
+  return type == SpawnType::WallSegment || type == SpawnType::WallGate;
 }
 
 [[nodiscard]] inline auto is_cavalry(SpawnType type) noexcept -> bool {
@@ -319,15 +331,11 @@ inline auto is_building_spawn(SpawnType type) -> bool {
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
-         type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
-         type != SpawnType::Home && type != SpawnType::WallSegment &&
-         type != SpawnType::Marketplace;
+         !is_building_spawn(type);
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
-         type != SpawnType::Home && type != SpawnType::WallSegment &&
-         type != SpawnType::Marketplace;
+  return !is_building_spawn(type);
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
@@ -335,9 +343,7 @@ inline auto can_use_hold_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
-         type != SpawnType::Home && type != SpawnType::WallSegment &&
-         type != SpawnType::Marketplace;
+  return !is_building_spawn(type);
 }
 
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
@@ -368,6 +374,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Home:
   case SpawnType::WallSegment:
   case SpawnType::Marketplace:
+  case SpawnType::WallGate:
     return false;
   }
   return false;
@@ -426,6 +433,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::WallSegment:
     return std::nullopt;
   case SpawnType::Marketplace:
+    return std::nullopt;
+  case SpawnType::WallGate:
     return std::nullopt;
   }
   return std::nullopt;

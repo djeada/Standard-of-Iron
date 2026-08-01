@@ -37,6 +37,12 @@ auto construction_cost_info(std::string_view item_type) -> ConstructionCostInfo 
                             WallNetworkService::k_wall_segment_wood_cost);
     return info;
   }
+  if (item_type == "wall_gate") {
+    info.resource_costs.set(ResourceType::Wood,
+                            WallNetworkService::k_wall_gate_wood_cost);
+    info.resource_costs.set(ResourceType::Stone, 20);
+    return info;
+  }
   if (item_type == "marketplace") {
     info.resource_costs.set(ResourceType::Wood, 60);
     info.resource_costs.set(ResourceType::Stone, 40);

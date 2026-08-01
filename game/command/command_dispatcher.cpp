@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
+#include "../systems/gate_service.h"
 #include "../systems/defense_formation_service.h"
 #include "../systems/order_service.h"
 #include "../systems/production_service.h"
@@ -69,6 +70,12 @@ void apply_stop(World& world, const Stop& stop) {
             entity.get_component<Engine::Core::FormationModeComponent>()) {
       formation->active = false;
     }
+  });
+}
+
+void apply_gate_mode(World& world, const SetGateMode& order) {
+  for_each_subject(world, order.units, [&order](Entity& entity) {
+    Game::Systems::GateService::set_manual_mode(entity, order.mode);
   });
 }
 
@@ -247,6 +254,8 @@ void dispatch(World& world, const Command& command) {
         } else if constexpr (std::is_same_v<T, SetRallyPoint>) {
           Game::Systems::ProductionService::set_rally_point(
               world, payload.building, payload.position.x(), payload.position.z());
+        } else if constexpr (std::is_same_v<T, SetGateMode>) {
+          apply_gate_mode(world, payload);
         } else if constexpr (std::is_same_v<T, Produce>) {
           Game::Systems::ProductionService::start_production(
               world, payload.building, payload.product);
