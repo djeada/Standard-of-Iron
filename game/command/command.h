@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 
+#include "../core/component.h"
 #include "../core/entity.h"
 #include "../systems/order_service.h"
 #include "../units/troop_type.h"
@@ -68,6 +69,12 @@ struct SetRallyPoint {
   QVector3D position;
 };
 
+struct SetGateMode {
+  std::vector<Engine::Core::EntityID> units;
+  Engine::Core::GateComponent::ManualMode mode{
+      Engine::Core::GateComponent::ManualMode::Automatic};
+};
+
 struct Produce {
   Engine::Core::EntityID building = Engine::Core::NULL_ENTITY;
   Game::Units::TroopType product = Game::Units::TroopType::Archer;
@@ -81,6 +88,7 @@ using Payload = std::variant<Move,
                              SetRunMode,
                              Patrol,
                              SetRallyPoint,
+                             SetGateMode,
                              Produce>;
 
 struct Command {

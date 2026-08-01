@@ -2785,6 +2785,16 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   auto& owners = Game::Systems::OwnerRegistry::instance();
   auto& nations = Game::Systems::NationRegistry::instance();
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  for (auto const& owner_team : definition->owner_teams) {
+    if (owners.get_owner_type(owner_team.owner_id) ==
+        Game::Systems::OwnerType::Neutral) {
+      owners.register_owner_with_id(
+          owner_team.owner_id,
+          Game::Systems::OwnerType::AI,
+          QStringLiteral("Arena Ally %1").arg(owner_team.owner_id).toStdString());
+    }
+    owners.set_owner_team(owner_team.owner_id, owner_team.team_id);
+  }
   bool has_scenario_ai = false;
   for (auto const& group : definition->groups) {
     nations.set_player_nation(group.owner_id, group.nation_id);

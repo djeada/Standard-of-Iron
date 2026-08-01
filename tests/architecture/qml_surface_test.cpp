@@ -33,7 +33,7 @@ auto count_occurrences(const fs::path& file, const std::string& needle) -> int {
   return count;
 }
 
-constexpr int k_max_invokables = 132;
+constexpr int k_max_invokables = 129;
 constexpr int k_max_properties = 46;
 
 constexpr const char* k_guidance =

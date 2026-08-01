@@ -12,8 +12,8 @@ using EntityID = std::uint64_t;
 
 namespace Game::Systems {
 
-inline constexpr float k_default_building_grid_padding = 1.0F;
 
+inline constexpr float k_default_building_grid_padding = 1.0F;
 inline constexpr float k_wall_segment_grid_padding = 0.0F;
 
 struct BuildingFootprint {
@@ -24,15 +24,17 @@ struct BuildingFootprint {
   int owner_id;
   Engine::Core::EntityID entity_id;
 
-  float grid_padding;
+  float grid_padding{k_default_building_grid_padding};
+  bool blocks_navigation{true};
 
-  BuildingFootprint(float x,
-                    float z,
-                    float w,
-                    float d,
-                    int owner,
-                    Engine::Core::EntityID id,
-                    float padding = k_default_building_grid_padding)
+  BuildingFootprint(
+      float x,
+      float z,
+      float w,
+      float d,
+      int owner,
+      Engine::Core::EntityID id,
+      float padding = k_default_building_grid_padding)
       : center_x(x)
       , center_z(z)
       , width(w)
@@ -40,6 +42,13 @@ struct BuildingFootprint {
       , owner_id(owner)
       , entity_id(id)
       , grid_padding(padding) {}
+};
+
+struct NavigationPassage {
+  float center_x{0.0F};
+  float center_z{0.0F};
+  float width{2.0F};
+  float depth{2.0F};
 };
 
 class BuildingCollisionRegistry {
@@ -85,6 +94,12 @@ public:
 
   void update_building_owner(Engine::Core::EntityID entity_id, int owner_id);
 
+  void set_building_navigation_blocking(Engine::Core::EntityID entity_id,
+                                        bool blocks_navigation);
+
+  [[nodiscard]] auto
+  find_building(Engine::Core::EntityID entity_id) const -> const BuildingFootprint*;
+
   [[nodiscard]] auto
   get_all_buildings() const -> const std::vector<BuildingFootprint>& {
     return m_buildings;
@@ -103,6 +118,21 @@ public:
                                                     float grid_cell_size = 1.0F)
       -> std::vector<std::pair<int, int>>;
 
+  [[nodiscard]] static auto
+  get_rect_grid_cells(float center_x,
+                      float center_z,
+                      float width,
+                      float depth,
+                      float padding,
+                      float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
+
+  void set_navigation_passages(std::vector<NavigationPassage> passages);
+
+  [[nodiscard]] auto
+  navigation_passages() const -> const std::vector<NavigationPassage>& {
+    return m_navigation_passages;
+  }
+
   static constexpr float k_default_grid_padding = k_default_building_grid_padding;
   static void set_grid_padding(float padding);
   static auto get_grid_padding() -> float;
@@ -118,6 +148,7 @@ private:
   std::vector<BuildingFootprint> m_buildings;
 
   std::vector<BuildingFootprint> m_authored_obstacles;
+  std::vector<NavigationPassage> m_navigation_passages;
   std::map<Engine::Core::EntityID, size_t> m_entity_to_index;
 
   static const std::map<std::string, BuildingSize> s_building_sizes;

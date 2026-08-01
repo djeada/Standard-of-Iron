@@ -5,6 +5,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
 
@@ -23,6 +24,7 @@ enum class ActionId {
   Formation,
   Run,
   Rally,
+  Gate,
   Aura,
   Unknown
 };
@@ -50,6 +52,7 @@ constexpr ActionId k_all_actions[] = {ActionId::Attack,
                                       ActionId::Formation,
                                       ActionId::Run,
                                       ActionId::Rally,
+                                      ActionId::Gate,
                                       ActionId::Aura};
 
 auto action_to_string(ActionId action) -> QString {
@@ -78,6 +81,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("run");
   case ActionId::Rally:
     return QStringLiteral("rally");
+  case ActionId::Gate:
+    return QStringLiteral("gate");
   case ActionId::Aura:
     return QStringLiteral("aura");
   case ActionId::Unknown:
@@ -122,6 +127,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   }
   if (action_id == QStringLiteral("rally")) {
     return ActionId::Rally;
+  }
+  if (action_id == QStringLiteral("gate")) {
+    return ActionId::Gate;
   }
   if (action_id == QStringLiteral("aura")) {
     return ActionId::Aura;
@@ -175,6 +183,12 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::Rally:
   case ActionId::Aura:
     return entity.get_component<Engine::Core::CommanderComponent>() != nullptr;
+  case ActionId::Gate:
+
+    return entity.get_component<Engine::Core::GateComponent>() != nullptr &&
+           unit != nullptr &&
+           unit->owner_id ==
+               Game::Systems::OwnerRegistry::instance().get_local_player_id();
   case ActionId::Unknown:
     break;
   }
@@ -210,6 +224,11 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
   case ActionId::Aura: {
     const auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
     return commander != nullptr && commander->aura_ability_active;
+  }
+  case ActionId::Gate: {
+    const auto* gate = entity.get_component<Engine::Core::GateComponent>();
+    return gate != nullptr &&
+           gate->manual_mode != Engine::Core::GateComponent::ManualMode::Automatic;
   }
   case ActionId::Heal:
   case ActionId::Stop:
@@ -397,6 +416,7 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canCollect")] = get_status(context, ActionId::Collect).enabled;
   result[QStringLiteral("canDeliver")] = get_status(context, ActionId::Deliver).enabled;
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
+  result[QStringLiteral("canGate")] = get_status(context, ActionId::Gate).enabled;
   result[QStringLiteral("canAura")] = get_status(context, ActionId::Aura).enabled;
   return result;
 }

@@ -204,6 +204,12 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("GroupDestroyed");
   case ArenaExpectationKind::GroupReachedDestination:
     return QStringLiteral("GroupReachedDestination");
+  case ArenaExpectationKind::GroupHeldOutsideDestination:
+    return QStringLiteral("GroupHeldOutsideDestination");
+  case ArenaExpectationKind::GateOpenedObserved:
+    return QStringLiteral("GateOpenedObserved");
+  case ArenaExpectationKind::GateRemainedClosed:
+    return QStringLiteral("GateRemainedClosed");
   case ArenaExpectationKind::BridgeTraversalObserved:
     return QStringLiteral("BridgeTraversalObserved");
   case ArenaExpectationKind::BridgeCenterlineAligned:
@@ -605,6 +611,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> structure_facade_contacts;
   QHash<QString, float> minimum_formation_surface_gap;
   QHash<QString, bool> bridge_traversal_seen;
+  QHash<QString, bool> gate_seen;
+  QHash<QString, bool> gate_opened_seen;
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
@@ -1291,6 +1299,12 @@ struct ArenaScenarioRunner::Impl {
                            : nullptr;
     if (transform == nullptr || unit == nullptr) {
       return;
+    }
+    if (auto const* gate = entity->get_component<Engine::Core::GateComponent>()) {
+      gate_seen[group] = true;
+      if (gate->open_amount >= Engine::Core::GateComponent::k_passable_open_amount) {
+        gate_opened_seen[group] = true;
+      }
     }
     if (auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
         rpg != nullptr && rpg->active) {
@@ -2586,6 +2600,50 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::GroupHeldOutsideDestination: {
+        QVector3D centroid;
+        int living = 0;
+        for (auto entity_id : ids(expectation.group)) {
+          auto* entity = world.get_entity(entity_id);
+          auto const* transform =
+              entity != nullptr
+                  ? entity->get_component<Engine::Core::TransformComponent>()
+                  : nullptr;
+          if (transform != nullptr && entity_alive(entity_id)) {
+            centroid += vector_from_transform(*transform);
+            ++living;
+          }
+        }
+        float const tolerance =
+            expectation.distance > 0.0F ? expectation.distance : 2.5F;
+        QVector3D const destination = world_origin + expectation.position;
+        if (living > 0 && horizontal_distance(centroid / static_cast<float>(living),
+                                              destination) <= tolerance) {
+          add_issue(QStringLiteral("group_passed_barrier"),
+                    QStringLiteral("%1 reached a destination it should have been "
+                                   "held out of")
+                        .arg(expectation.group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::GateOpenedObserved:
+        if (!gate_opened_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("gate_never_opened"),
+                    QStringLiteral("%1 never opened far enough to walk through")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::GateRemainedClosed:
+        if (!gate_seen.value(expectation.group, false)) {
+          add_issue(
+              QStringLiteral("gate_not_observed"),
+              QStringLiteral("%1 was never sampled as a gate").arg(expectation.group));
+        } else if (gate_opened_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("gate_opened_for_enemy"),
+                    QStringLiteral("%1 opened while only hostile units were near it")
+                        .arg(expectation.group));
+        }
+        break;
       case ArenaExpectationKind::BridgeTraversalObserved:
         if (!bridge_traversal_seen.value(expectation.group, false)) {
           add_issue(QStringLiteral("bridge_not_traversed"),

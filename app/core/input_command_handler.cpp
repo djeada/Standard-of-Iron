@@ -366,6 +366,20 @@ void InputCommandHandler::on_hold_command() {
   }
 }
 
+void InputCommandHandler::on_gate_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (m_command_controller == nullptr) {
+    return;
+  }
+
+  auto result = m_command_controller->on_gate_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 void InputCommandHandler::on_guard_command() {
   if (m_is_spectator_mode) {
     return;

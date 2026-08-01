@@ -223,6 +223,7 @@ public:
   Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_stop_command();
   Q_INVOKABLE void on_hold_command();
+  Q_INVOKABLE void on_gate_command();
   Q_INVOKABLE void on_guard_command();
   Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE void on_run_command();
@@ -230,10 +231,11 @@ public:
   Q_INVOKABLE void on_build_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_civilian_delivery_click(qreal sx, qreal sy);
-  Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
-  Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
-  Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
-  Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
+
+  [[nodiscard]] bool any_selected_in_hold_mode() const;
+  [[nodiscard]] bool any_selected_in_guard_mode() const;
+  [[nodiscard]] bool any_selected_in_formation_mode() const;
+  [[nodiscard]] bool any_selected_in_run_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
   Q_INVOKABLE [[nodiscard]] QString pending_builder_construction_type() const;
@@ -693,6 +695,7 @@ signals:
   void minimap_image_changed();
   void save_slots_changed();
   void hold_mode_changed(bool active);
+  void gate_mode_changed(const QString& mode);
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);
   void run_mode_changed(bool active);
