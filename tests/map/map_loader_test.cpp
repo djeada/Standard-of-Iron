@@ -560,6 +560,61 @@ TEST(MapLoaderTest, ReusingDefinitionCannotRetainPreviousEnvironment) {
   EXPECT_EQ(map.environment.time_mode, Game::Map::TimeMode::Locked);
 }
 
+namespace {
+
+auto load_weather(const QJsonObject& rain) -> Game::Map::RainSettings {
+  QTemporaryFile temp_file;
+  EXPECT_TRUE(temp_file.open());
+  const QJsonObject root{
+      {"name", "Weather Test"},
+      {"grid", QJsonObject{{"width", 16}, {"height", 16}, {"tile_size", 1.0}}},
+      {"rain", rain}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  EXPECT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+  return map.rain;
+}
+
+} // namespace
+
+TEST(MapLoaderTest, ReadsNamedPrecipitationIntensities) {
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", "light"}}).intensity,
+                  Game::Map::k_weather_intensity_light);
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", "Medium"}}).intensity,
+                  Game::Map::k_weather_intensity_medium);
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", "HEAVY"}}).intensity,
+                  Game::Map::k_weather_intensity_heavy);
+}
+
+TEST(MapLoaderTest, NumericPrecipitationIntensityStillLoadsAndIsClamped) {
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", 0.42}}).intensity,
+                  0.42F);
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", 4.0}}).intensity,
+                  1.0F);
+  EXPECT_FLOAT_EQ(load_weather({{"enabled", true}, {"intensity", -1.0}}).intensity,
+                  0.0F);
+}
+
+TEST(MapLoaderTest, UnknownIntensityWordKeepsTheDefault) {
+  const auto settings = load_weather({{"enabled", true}, {"intensity", "torrential"}});
+  EXPECT_FLOAT_EQ(settings.intensity, Game::Map::RainSettings{}.intensity);
+}
+
+TEST(MapLoaderTest, ReadsWindDirectionAndStrength) {
+  const auto settings = load_weather({{"enabled", true},
+                                      {"type", "snow"},
+                                      {"wind_strength", 0.65},
+                                      {"wind_direction", 330.0}});
+  EXPECT_EQ(settings.type, Game::Map::WeatherType::Snow);
+  EXPECT_FLOAT_EQ(settings.wind_strength, 0.65F);
+  EXPECT_FLOAT_EQ(settings.wind_direction_deg, 330.0F);
+}
+
 TEST(MapLoaderTest, FailedLoadClearsPreviouslyLoadedDefinition) {
   Game::Map::MapDefinition map;
   map.name = QStringLiteral("Previous map");

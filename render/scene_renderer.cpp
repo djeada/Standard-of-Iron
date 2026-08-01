@@ -505,16 +505,11 @@ void Renderer::fog_batch(Buffer* instance_buffer,
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::rain_batch(Buffer* instance_buffer,
-                          std::size_t instance_count,
-                          const RainBatchParams& params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+void Renderer::rain_batch(const RainBatchParams& params) {
+  if (m_active_queue == nullptr || params.density <= 0.0F) {
     return;
   }
   RainBatchCmd cmd;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
   cmd.params = params;
   cmd.params.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));

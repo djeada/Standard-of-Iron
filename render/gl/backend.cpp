@@ -850,19 +850,20 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     const auto& submitted_lights = queue.local_lights();
     candidates.insert(
         candidates.end(), submitted_lights.begin(), submitted_lights.end());
-    const auto selected = Render::select_local_lights(candidates, cam.get_position());
+    const auto selected =
+        m_local_light_fader.update(candidates, cam.get_position(), m_animation_time);
     std::array<float, (Render::k_max_local_lights * 8) + 4> packed{};
     std::size_t active_count = 0;
-    for (std::size_t i = 0; i < selected.size(); ++i) {
-      const auto& light = selected[i];
+    for (const auto& light : selected) {
       if (light.intensity <= 0.0F || light.radius <= 0.0F) {
         continue;
       }
-      packed[(i * 4) + 0] = light.position.x();
-      packed[(i * 4) + 1] = light.position.y();
-      packed[(i * 4) + 2] = light.position.z();
-      packed[(i * 4) + 3] = light.radius;
-      const std::size_t color_offset = (Render::k_max_local_lights * 4) + (i * 4);
+      packed[(active_count * 4) + 0] = light.position.x();
+      packed[(active_count * 4) + 1] = light.position.y();
+      packed[(active_count * 4) + 2] = light.position.z();
+      packed[(active_count * 4) + 3] = light.radius;
+      const std::size_t color_offset =
+          (Render::k_max_local_lights * 4) + (active_count * 4);
       packed[color_offset + 0] = light.color.x();
       packed[color_offset + 1] = light.color.y();
       packed[color_offset + 2] = light.color.z();

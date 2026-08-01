@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../map/map_definition.h"
+#include "rain_manager.h"
 #include "resource_types.h"
 
 namespace Engine::Core {
@@ -35,6 +36,7 @@ struct LevelSnapshot {
   float tile_size = 1.0F;
   bool is_spectator_mode = false;
   Game::Map::RainSettings rain;
+  RainRuntimeState weather_runtime;
   std::uint32_t biome_seed = 0;
   Game::Map::EnvironmentLightingState lighting;
   Game::Map::EnvironmentDefinition environment;

@@ -96,6 +96,20 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   environment_obj["transition_elapsed"] = level.environment_clock.transition_elapsed;
   metadata["environment"] = environment_obj;
 
+  QJsonObject weather_obj;
+  weather_obj["enabled"] = level.rain.enabled;
+  weather_obj["type"] = level.rain.type == Game::Map::WeatherType::Snow
+                            ? QStringLiteral("snow")
+                            : QStringLiteral("rain");
+  weather_obj["state"] =
+      QString::fromLatin1(rain_state_name(level.weather_runtime.state));
+  weather_obj["cycle_time"] = level.weather_runtime.cycle_time;
+  weather_obj["state_time"] = level.weather_runtime.state_time;
+  weather_obj["intensity"] = level.weather_runtime.intensity;
+  weather_obj["wind_strength"] = level.rain.wind_strength;
+  weather_obj["wind_direction"] = level.rain.wind_direction_deg;
+  metadata["weather"] = weather_obj;
+
   metadata["game_max_troops_per_player"] =
       Game::GameConfig::instance().get_max_troops_per_player();
 
@@ -363,6 +377,28 @@ void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadat
         static_cast<float>(environment.value("transition_elapsed").toDouble(0.0)),
         0.0F,
         level.environment_clock.transition_duration);
+  }
+
+  if (metadata.value("weather").isObject()) {
+    const QJsonObject weather = metadata.value("weather").toObject();
+    level.rain.enabled = weather.value("enabled").toBool(level.rain.enabled);
+    level.rain.type =
+        weather.value("type").toString().trimmed().toLower() == QStringLiteral("snow")
+            ? Game::Map::WeatherType::Snow
+            : Game::Map::WeatherType::Rain;
+    level.rain.wind_strength = std::max(
+        0.0F,
+        static_cast<float>(
+            weather.value("wind_strength").toDouble(level.rain.wind_strength)));
+    level.rain.wind_direction_deg = static_cast<float>(
+        weather.value("wind_direction").toDouble(level.rain.wind_direction_deg));
+    level.weather_runtime.state = parse_rain_state(weather.value("state").toString());
+    level.weather_runtime.cycle_time =
+        std::max(0.0F, static_cast<float>(weather.value("cycle_time").toDouble(0.0)));
+    level.weather_runtime.state_time =
+        std::max(0.0F, static_cast<float>(weather.value("state_time").toDouble(0.0)));
+    level.weather_runtime.intensity = std::clamp(
+        static_cast<float>(weather.value("intensity").toDouble(0.0)), 0.0F, 1.0F);
   }
 
   int max_troops = metadata.value("max_troops_per_player")

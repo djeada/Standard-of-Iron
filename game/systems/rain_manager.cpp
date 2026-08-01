@@ -4,6 +4,34 @@
 
 namespace Game::Systems {
 
+auto parse_rain_state(const QString& value) noexcept -> RainState {
+  const QString normalized = value.trimmed().toLower();
+  if (normalized == QStringLiteral("fading_in")) {
+    return RainState::FadingIn;
+  }
+  if (normalized == QStringLiteral("active")) {
+    return RainState::Active;
+  }
+  if (normalized == QStringLiteral("fading_out")) {
+    return RainState::FadingOut;
+  }
+  return RainState::Clear;
+}
+
+auto rain_state_name(RainState state) noexcept -> const char* {
+  switch (state) {
+  case RainState::Clear:
+    return "clear";
+  case RainState::FadingIn:
+    return "fading_in";
+  case RainState::Active:
+    return "active";
+  case RainState::FadingOut:
+    return "fading_out";
+  }
+  return "clear";
+}
+
 RainManager::RainManager() = default;
 
 void RainManager::configure(const Game::Map::RainSettings& settings,
@@ -24,6 +52,25 @@ void RainManager::reset() {
     m_cycle_time = static_cast<float>(m_seed % cycle_ms) / 1000.0F;
   } else {
     m_cycle_time = 0.0F;
+  }
+}
+
+auto RainManager::snapshot() const noexcept -> RainRuntimeState {
+  return {.state = m_state,
+          .cycle_time = m_cycle_time,
+          .state_time = m_state_time,
+          .intensity = m_current_intensity};
+}
+
+void RainManager::restore(const RainRuntimeState& state) noexcept {
+  const float cycle_duration = std::max(0.001F, m_settings.cycle_duration);
+  m_state = state.state;
+  m_cycle_time = std::clamp(state.cycle_time, 0.0F, cycle_duration);
+  m_state_time = std::max(0.0F, state.state_time);
+  m_current_intensity = std::clamp(state.intensity, 0.0F, 1.0F);
+  if (!m_settings.enabled) {
+    m_state = RainState::Clear;
+    m_current_intensity = 0.0F;
   }
 }
 

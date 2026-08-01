@@ -79,11 +79,12 @@
   "rain": {
     "enabled": true,
     "type": "snow",
+    "intensity": "medium",
     "cycle_duration": 420.0,
     "active_duration": 115.0,
-    "intensity": 0.62,
     "fade_duration": 8.0,
-    "wind_strength": 0.32
+    "wind_strength": 0.32,
+    "wind_direction": 70.0
   },
   "terrain": [
     {

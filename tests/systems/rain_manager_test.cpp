@@ -272,3 +272,67 @@ TEST_F(RainManagerTest, WindStrengthCanBeConfigured) {
 
   EXPECT_FLOAT_EQ(rain_manager->get_wind_strength(), 0.5F);
 }
+
+TEST_F(RainManagerTest, WindDirectionIsCarriedFromTheMapDefinition) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.wind_direction_deg = 270.0F;
+
+  rain_manager->configure(settings, 12345);
+
+  EXPECT_FLOAT_EQ(rain_manager->get_wind_direction_deg(), 270.0F);
+
+  const QVector3D wind = weather_wind_vector(270.0F);
+  EXPECT_NEAR(wind.x(), -1.0F, 1e-5F);
+  EXPECT_NEAR(wind.y(), 0.0F, 1e-5F);
+  EXPECT_NEAR(wind.z(), 0.0F, 1e-5F);
+}
+
+TEST_F(RainManagerTest, SnapshotAndRestoreResumeAnInterruptedCycle) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.cycle_duration = 100.0F;
+  settings.active_duration = 30.0F;
+  settings.intensity = 1.0F;
+  settings.fade_duration = 5.0F;
+
+  rain_manager->configure(settings, 0);
+  rain_manager->update(2.5F);
+  ASSERT_EQ(rain_manager->get_state(), RainState::FadingIn);
+  const RainRuntimeState saved = rain_manager->snapshot();
+  const float saved_intensity = rain_manager->get_intensity();
+
+  RainManager reloaded;
+  reloaded.configure(settings, 0);
+  EXPECT_EQ(reloaded.get_state(), RainState::Clear);
+
+  reloaded.restore(saved);
+
+  EXPECT_EQ(reloaded.get_state(), RainState::FadingIn);
+  EXPECT_FLOAT_EQ(reloaded.get_cycle_time(), rain_manager->get_cycle_time());
+  EXPECT_FLOAT_EQ(reloaded.get_intensity(), saved_intensity);
+}
+
+TEST_F(RainManagerTest, RestoreOnAClearMapCannotResurrectWeather) {
+  RainSettings settings;
+  settings.enabled = false;
+
+  rain_manager->configure(settings, 0);
+  rain_manager->restore({.state = RainState::Active,
+                         .cycle_time = 10.0F,
+                         .state_time = 4.0F,
+                         .intensity = 0.9F});
+
+  EXPECT_EQ(rain_manager->get_state(), RainState::Clear);
+  EXPECT_FLOAT_EQ(rain_manager->get_intensity(), 0.0F);
+}
+
+TEST_F(RainManagerTest, RainStateNamesRoundTrip) {
+  for (const RainState state : {RainState::Clear,
+                                RainState::FadingIn,
+                                RainState::Active,
+                                RainState::FadingOut}) {
+    EXPECT_EQ(parse_rain_state(QString::fromLatin1(rain_state_name(state))), state);
+  }
+  EXPECT_EQ(parse_rain_state(QStringLiteral("nonsense")), RainState::Clear);
+}
