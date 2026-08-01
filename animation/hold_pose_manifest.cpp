@@ -34,7 +34,7 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.right_hand = {
         0.30F, shoulder_y - 0.30F - 0.006F * hold_cycle, 0.46F + 0.014F * hold_cycle};
     sample.use_offhand_spear_grip = true;
-    sample.offhand_spear_direction = {0.0498482F, -0.0598178F, 0.9969639F};
+    sample.offhand_spear_direction = {0.0453777F, 0.4174751F, 0.9075546F};
     sample.offhand_along_offset = -0.24F;
     sample.offhand_y_drop = 0.045F;
     sample.offhand_lateral_offset = -0.04F;

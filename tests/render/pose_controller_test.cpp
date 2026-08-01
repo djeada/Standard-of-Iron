@@ -577,7 +577,7 @@ TEST_F(HumanoidPoseControllerTest, SwordAndShieldCarryMovesForwardWhileMoving) {
   EXPECT_LT(moving_pose.hand_l.y(), idle_pose.hand_l.y());
 }
 
-TEST_F(HumanoidPoseControllerTest, BraceSpearForHoldPointsTheHeadDownTheApproach) {
+TEST_F(HumanoidPoseControllerTest, BraceSpearForHoldAnglesTheHeadUpTheApproach) {
   anim_ctx.inputs.is_in_hold_mode = true;
   anim_ctx.inputs.hold_entry_progress = 1.0F;
   HumanoidPoseController controller(pose, anim_ctx);
@@ -595,8 +595,8 @@ TEST_F(HumanoidPoseControllerTest, BraceSpearForHoldPointsTheHeadDownTheApproach
   EXPECT_GT(pose.hand_l.y(), HumanProportions::WAIST_Y);
   EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.18F);
 
-  EXPECT_LT(resolve_spear_direction(anim_ctx.inputs).y(), 0.0F);
-  EXPECT_GT(resolve_spear_direction(anim_ctx.inputs).y(), -0.20F);
+  EXPECT_GT(resolve_spear_direction(anim_ctx.inputs).y(), 0.30F);
+  EXPECT_LT(resolve_spear_direction(anim_ctx.inputs).y(), 0.55F);
 }
 
 TEST_F(HumanoidPoseControllerTest, HoldSpearIdleMovesSpearOutsideBodyWithTwoHands) {
@@ -1036,7 +1036,7 @@ TEST_F(HumanoidPoseControllerTest, SpearDirectionBlendsDuringHoldEntry) {
   EXPECT_LT(partial_hold_dir.y(), standing_dir.y());
   EXPECT_GT(partial_hold_dir.y(), full_hold_dir.y());
   EXPECT_GT(standing_dir.y(), 0.0F);
-  EXPECT_LT(full_hold_dir.y(), 0.0F);
+  EXPECT_GT(full_hold_dir.y(), 0.30F);
   EXPECT_GT(partial_hold_dir.z(), standing_dir.z());
 }
 
