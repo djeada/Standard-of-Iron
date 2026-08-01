@@ -1299,91 +1299,49 @@ void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
 }
 
 void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
-  constexpr float k_bridge_sink_min = 0.25F;
-  constexpr float k_bridge_sink_max = 0.65F;
-  constexpr float k_bridge_entry_margin_tiles = 1.0F;
+  constexpr float k_bridge_water_clearance = 0.10F;
 
   m_bridges.clear();
   m_bridges.reserve(bridges.size());
 
-  const float grid_half_width = m_width * 0.5F - 0.5F;
-  const float grid_half_height = m_height * 0.5F - 0.5F;
+  auto spanned_water_level = [this](const Bridge& bridge) -> std::optional<float> {
+    std::optional<float> level;
+    const auto raise = [&level](float candidate) {
+      level = level.has_value() ? std::max(*level, candidate) : candidate;
+    };
+    for (const auto& river : m_river_segments) {
+      if (bridge_required_half_length_for_river(bridge, river).has_value()) {
+        raise(std::max(river.start.y(), river.end.y()));
+      }
+    }
+    const QVector3D midpoint = (bridge.start + bridge.end) * 0.5F;
+    for (const auto& lake : m_lakes) {
+      if (point_in_lake(lake, midpoint.x(), midpoint.z())) {
+        raise(lake.center.y());
+      }
+    }
+    return level;
+  };
 
   for (const auto& bridge : bridges) {
     Bridge adjusted = bridge;
     adjusted.width = std::max(adjusted.width, k_min_bridge_width);
-    const float sink_amount =
-        std::clamp(adjusted.width * 0.25F, k_bridge_sink_min, k_bridge_sink_max);
     adjusted.height = bridge_effective_height(adjusted);
-    float const start_ground = get_height_at(bridge.start.x(), bridge.start.z());
-    float const end_ground = get_height_at(bridge.end.x(), bridge.end.z());
-    adjusted.start.setY(std::max(bridge.start.y(), start_ground - sink_amount));
-    adjusted.end.setY(std::max(bridge.end.y(), end_ground - sink_amount));
 
-    QVector3D dir = adjusted.end - adjusted.start;
-    float const length = dir.length();
-    if (length < 0.01F) {
+    float abutment_floor = std::numeric_limits<float>::lowest();
+    if (auto const water = spanned_water_level(bridge); water.has_value()) {
+      abutment_floor = *water + k_bridge_water_clearance - k_bridge_deck_visual_lift;
+    }
+    adjusted.start.setY(
+        std::max(get_height_at(bridge.start.x(), bridge.start.z()), abutment_floor));
+    adjusted.end.setY(
+        std::max(get_height_at(bridge.end.x(), bridge.end.z()), abutment_floor));
+
+    if ((adjusted.end - adjusted.start).length() < 0.01F) {
       continue;
     }
 
     m_bridges.push_back(adjusted);
-    const Bridge& stored_bridge = m_bridges.back();
-
-    dir.normalize();
-    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-    float const bridge_half_width =
-        stored_bridge.width * 0.5F / std::max(m_tile_size, 0.0001F);
-
-    float const entry_margin = m_tile_size * k_bridge_entry_margin_tiles;
-    float const extended_length = length + (entry_margin * 2.0F);
-    int const steps = static_cast<int>(std::ceil(extended_length / m_tile_size)) + 1;
-
-    for (int i = 0; i < steps; ++i) {
-      float const t =
-          static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
-      float const along = -entry_margin + extended_length * t;
-      float const t_curve = std::clamp(along / std::max(length, 0.01F), 0.0F, 1.0F);
-      QVector3D const center_pos = stored_bridge.start + dir * along;
-
-      float const visual_deck_height = bridge_deck_world_y(stored_bridge, t_curve);
-
-      float const relief_deck_height = visual_deck_height - k_bridge_deck_visual_lift;
-      float const terrain_height = get_height_at(center_pos.x(), center_pos.z());
-      float const deck_height =
-          std::max(relief_deck_height - sink_amount, terrain_height - sink_amount);
-
-      float const grid_center_x = (center_pos.x() / m_tile_size) + grid_half_width;
-      float const grid_center_z = (center_pos.z() / m_tile_size) + grid_half_height;
-
-      int const min_x =
-          std::max(0, static_cast<int>(std::floor(grid_center_x - bridge_half_width)));
-      int const max_x = std::min(
-          m_width - 1, static_cast<int>(std::ceil(grid_center_x + bridge_half_width)));
-      int const min_z =
-          std::max(0, static_cast<int>(std::floor(grid_center_z - bridge_half_width)));
-      int const max_z = std::min(
-          m_height - 1, static_cast<int>(std::ceil(grid_center_z + bridge_half_width)));
-
-      for (int z = min_z; z <= max_z; ++z) {
-        for (int x = min_x; x <= max_x; ++x) {
-          float const dx = static_cast<float>(x) - grid_center_x;
-          float const dz = static_cast<float>(z) - grid_center_z;
-
-          float const dist_along_perp =
-              std::abs(dx * perpendicular.x() + dz * perpendicular.z());
-
-          if (dist_along_perp <= bridge_half_width) {
-            int const idx = indexAt(x, z);
-
-            if (m_terrain_types[idx] == TerrainType::River) {
-              m_terrain_types[idx] = TerrainType::Flat;
-
-              m_heights[idx] = deck_height;
-            }
-          }
-        }
-      }
-    }
   }
 
   precompute_bridge_data();
