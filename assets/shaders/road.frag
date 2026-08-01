@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "visibility_mask.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -10,11 +11,6 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform float u_alpha;
 uniform int u_surface_kind;
-uniform sampler2D u_visibility_tex;
-uniform vec2 u_visibility_size;
-uniform float u_visibility_tile_size;
-uniform float u_explored_alpha;
-uniform int u_has_visibility;
 
 out vec4 frag_color;
 
@@ -206,20 +202,7 @@ void main() {
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.85), grime);
 
-  float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
-    float tile_size = max(u_visibility_tile_size, 0.0001);
-    vec2 grid = vec2(v_world_pos.x / tile_size, v_world_pos.z / tile_size);
-    grid += (u_visibility_size * 0.5) - vec2(0.5);
-    vec2 vis_uv = (grid + vec2(0.5)) / u_visibility_size;
-    float vis_sample = texture(u_visibility_tex, vis_uv).r;
-    if (vis_sample < 0.25) {
-      discard;
-    } else if (vis_sample < 0.75) {
-      visibility_factor = u_explored_alpha;
-    }
-  }
-  lit_color *= visibility_factor;
+  lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
 
   lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);

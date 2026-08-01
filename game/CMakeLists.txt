@@ -154,6 +154,7 @@ add_library(
     map/terrain_service.cpp
     map/terrain_topology_audit.cpp
     map/visibility_service.cpp
+    map/explored_mask_codec.cpp
     map/map_catalog.cpp
     visuals/building_asset_key.cpp
     visuals/visual_catalog.cpp

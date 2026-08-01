@@ -58,7 +58,6 @@ void RoadRenderer::configure(const std::vector<Game::Map::RoadSegment>& road_seg
   m_road_segments = road_segments;
   m_height_map = &height_map;
   m_tile_size = height_map.get_tile_size();
-  m_vis_helper.reset();
   build_meshes();
 }
 
@@ -113,7 +112,7 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   TerrainSurfaceCmd::VisibilityResources vis_res;
   if (vis_snapshot != nullptr) {
-    vis_res = m_vis_helper.update(*vis_snapshot, m_tile_size);
+    vis_res = renderer.visibility_mask();
   }
 
   QMatrix4x4 model;

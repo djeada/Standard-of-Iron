@@ -48,6 +48,10 @@ namespace Render::GL {
 class EntityRendererRegistry;
 }
 
+namespace Render::Ground {
+class VisibilityTextureHelper;
+}
+
 namespace Game::Systems {
 class ArrowSystem;
 }
@@ -111,6 +115,8 @@ public:
   submission_visibility() const noexcept -> const SubmissionVisibilityPolicy& {
     return m_submission_visibility;
   }
+
+  [[nodiscard]] auto visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources&;
 
   void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
@@ -334,8 +340,12 @@ public:
   void lock_world_for_modification() { m_world_mutex.lock(); }
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
-  void fog_batch(const FogInstanceData* instances, std::size_t count);
-  void fog_batch(Buffer* instance_buffer, std::size_t count);
+  void fog_batch(const FogInstanceData* instances,
+                 std::size_t count,
+                 const FogMaskResources& mask = {});
+  void fog_batch(Buffer* instance_buffer,
+                 std::size_t count,
+                 const FogMaskResources& mask = {});
   void rain_batch(Buffer* instance_buffer,
                   std::size_t instance_count,
                   const RainBatchParams& params);
@@ -425,6 +435,8 @@ private:
 
   QMatrix4x4 m_view_proj;
   Game::Map::VisibilityService::SnapshotPtr m_frame_visibility_snapshot;
+  std::unique_ptr<Ground::VisibilityTextureHelper> m_visibility_mask_helper;
+  TerrainSurfaceCmd::VisibilityResources m_visibility_mask_resources{};
   SubmissionVisibilityPolicy m_submission_visibility;
   Shader* m_current_shader = nullptr;
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};

@@ -58,4 +58,24 @@ fog_range_for_camera(const Camera& camera) -> std::pair<float, float> {
           std::max(near_fog_end, orbit_distance * k_fog_end_zoom_scale)};
 }
 
+inline void
+bind_visibility_mask(Shader& shader,
+                     const TerrainSurfaceCmd::VisibilityResources& visibility) {
+  const bool has_mask = visibility.enabled && visibility.texture != nullptr;
+  shader.set_uniform(shader.optional_uniform_handle("u_has_visibility"),
+                     has_mask ? 1 : 0);
+  if (!has_mask) {
+    return;
+  }
+  shader.set_uniform(shader.optional_uniform_handle("u_visibility_size"),
+                     visibility.size);
+  shader.set_uniform(shader.optional_uniform_handle("u_visibility_tile_size"),
+                     visibility.tile_size);
+  shader.set_uniform(shader.optional_uniform_handle("u_explored_alpha"),
+                     visibility.explored_alpha);
+  visibility.texture->bind(TextureUnit::terrain_visibility);
+  shader.set_uniform(shader.optional_uniform_handle("u_visibility_tex"),
+                     TextureUnit::terrain_visibility);
+}
+
 } // namespace Render::GL

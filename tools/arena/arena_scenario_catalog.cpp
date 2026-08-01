@@ -2839,6 +2839,49 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+
+    auto s = definition(
+        QString::fromLatin1(k_fog_of_war_recon_id),
+        QStringLiteral("Fog of War Recon"),
+        QStringLiteral(
+            "A patrol crosses the map and returns. Exercises exploration, loss "
+            "of sight over ground already walked, and enemies that appear and "
+            "vanish with the patrol's vision."),
+        34.0F,
+        {58.0F, 58.0F, 30.0F});
+    s.groups = {
+        group(
+            QStringLiteral("patrol"), Troop::Swordsman, 1, 2, {-16.0F, 0.0F, 14.0F}, 8),
+        group(QStringLiteral("camp_guards"),
+              Troop::Spearman,
+              2,
+              2,
+              {16.0F, 0.0F, -14.0F},
+              8)};
+
+    s.steps = {at(0.5F, Command::FormationMove, QStringLiteral("patrol")),
+               at(6.0F, Command::FormationMove, QStringLiteral("patrol")),
+               at(12.0F, Command::FormationMove, QStringLiteral("patrol")),
+               at(18.0F, Command::FormationMove, QStringLiteral("patrol")),
+               at(24.0F, Command::FormationMove, QStringLiteral("patrol")),
+               at(29.0F, Command::FormationMove, QStringLiteral("patrol"))};
+    s.steps[0].destination = {-9.0F, 0.0F, 8.0F};
+    s.steps[1].destination = {-2.0F, 0.0F, 1.0F};
+    s.steps[2].destination = {6.0F, 0.0F, -5.0F};
+    s.steps[3].destination = {12.0F, 0.0F, -10.0F};
+    s.steps[4].destination = {2.0F, 0.0F, -1.0F};
+    s.steps[5].destination = {-11.0F, 0.0F, 9.0F};
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("patrol")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("camp_guards")));
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("patrol")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.5F));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s =
         definition(QString::fromLatin1(k_sustained_battle_id),
                    QStringLiteral("Sustained Battle"),

@@ -76,6 +76,10 @@ public:
 
   void reveal_all();
 
+  auto restore_explored(const std::vector<std::uint8_t>& explored,
+                        int width,
+                        int height) -> bool;
+
   ~VisibilityService();
 
 private:

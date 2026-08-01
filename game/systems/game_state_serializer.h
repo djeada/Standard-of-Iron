@@ -77,6 +77,8 @@ public:
                                           LevelSnapshot& level);
 
   static void restore_player_nations_from_metadata(const QJsonObject& metadata);
+
+  static void restore_visibility_from_metadata(const QJsonObject& metadata);
 };
 
 } // namespace Game::Systems

@@ -1,93 +1,60 @@
 #include "fog_renderer.h"
 
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QVector2D>
+#include <QtGui/qopengl.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <utility>
 #include <vector>
 
+#include "../../game/map/visibility_service.h"
 #include "../scene_renderer.h"
+#include "visibility_mask_encoder.h"
 
 namespace Render::GL {
 
 namespace {
 
 constexpr int k_chunk_cells = 14;
-constexpr float k_size_pad_tiles = 2.2F;
 constexpr float k_fog_y = 0.14F;
-constexpr float k_soft_reveal_duration = 0.30F;
+constexpr float k_fog_alpha = 1.0F;
+constexpr float k_reveal_seconds = 0.22F;
+constexpr float k_soft_reveal_seconds = 0.55F;
 
-struct StateAgg {
-  int count = 0;
-  int min_x = 0;
-  int max_x = 0;
-  int min_z = 0;
-  int max_z = 0;
-};
+constexpr float k_fog_epsilon = 0.004F;
 
-void reset_agg(StateAgg& agg) {
-  agg.count = 0;
-  agg.min_x = agg.max_x = agg.min_z = agg.max_z = 0;
-}
+const QVector3D k_fog_color{0.07F, 0.09F, 0.13F};
 
-void accumulate(StateAgg& agg, int x, int z) {
-  if (agg.count == 0) {
-    agg.min_x = agg.max_x = x;
-    agg.min_z = agg.max_z = z;
-  } else {
-    agg.min_x = std::min(agg.min_x, x);
-    agg.max_x = std::max(agg.max_x, x);
-    agg.min_z = std::min(agg.min_z, z);
-    agg.max_z = std::max(agg.max_z, z);
-  }
-  ++agg.count;
-}
-
-auto make_patch(const StateAgg& agg,
-                int chunk_area,
-                std::uint8_t state,
-                int width,
-                int height,
-                float tile_size) -> FogInstanceData {
-  FogInstanceData inst;
-  if (agg.count == 0 || chunk_area <= 0) {
-    return inst;
-  }
-
-  const float half_width = static_cast<float>(width) * 0.5F - 0.5F;
-  const float half_height = static_cast<float>(height) * 0.5F - 0.5F;
-  const float coverage = static_cast<float>(agg.count) / static_cast<float>(chunk_area);
-  const float center_x =
-      (static_cast<float>(agg.min_x + agg.max_x) * 0.5F - half_width) * tile_size;
-  const float center_z =
-      (static_cast<float>(agg.min_z + agg.max_z) * 0.5F - half_height) * tile_size;
-  const int span_x = agg.max_x - agg.min_x + 1;
-  const int span_z = agg.max_z - agg.min_z + 1;
-  const float span_tiles =
-      static_cast<float>(std::max(span_x, span_z)) + k_size_pad_tiles;
-
-  inst.center = QVector3D(center_x, k_fog_y, center_z);
-  inst.size = span_tiles * tile_size;
-  if (state == 0U) {
-    inst.color = QVector3D(0.08F, 0.10F, 0.15F);
-    inst.alpha = 0.52F + 0.34F * std::sqrt(std::max(coverage, 0.0F));
-  } else {
-    inst.color = QVector3D(0.24F, 0.24F, 0.22F);
-    inst.alpha = 0.22F + 0.20F * std::sqrt(std::max(coverage, 0.0F));
-  }
-  return inst;
+auto chunk_count(int cells) -> int {
+  return (std::max(0, cells) + k_chunk_cells - 1) / k_chunk_cells;
 }
 
 } // namespace
 
 void FogRenderer::set_soft_reveal_enabled(bool enabled) {
-  if (m_soft_reveal_enabled == enabled) {
-    return;
-  }
   m_soft_reveal_enabled = enabled;
-  m_transitions.clear();
-  m_submit_instances.clear();
+}
+
+void FogRenderer::clear_state() {
+  m_fog_amount.clear();
+  m_target_fog.clear();
+  m_seen_amount.clear();
+  m_instances.clear();
+  m_mask_texels.clear();
+  m_instance_buffer.reset();
+  m_mask_texture.reset();
+  m_mask_texture_width = 0;
+  m_mask_texture_height = 0;
+  m_instances_dirty = false;
+  m_patches_dirty = false;
+  m_mask_dirty = {};
+  m_fade_region = {};
+  m_settled = true;
+  m_last_time = -1.0F;
 }
 
 void FogRenderer::update_mask(int width,
@@ -97,87 +64,275 @@ void FogRenderer::update_mask(int width,
   const int new_width = std::max(0, width);
   const int new_height = std::max(0, height);
   const float new_tile_size = std::max(0.0001F, tile_size);
+  const auto cell_count =
+      static_cast<std::size_t>(new_width) * static_cast<std::size_t>(new_height);
+
   const bool geometry_changed = (new_width != m_width) || (new_height != m_height) ||
                                 (new_tile_size != m_tile_size);
 
   m_width = new_width;
   m_height = new_height;
   m_tile_size = new_tile_size;
-  m_half_width = m_width * 0.5F - 0.5F;
-  m_half_height = m_height * 0.5F - 0.5F;
-  if (m_width <= 0 || m_height <= 0) {
-    m_cells.clear();
-    m_instances.clear();
-    m_transitions.clear();
-    m_submit_instances.clear();
+
+  if (cell_count == 0 || cells.size() != cell_count) {
+    clear_state();
+    return;
+  }
+
+  if (geometry_changed || m_target_fog.size() != cell_count) {
+    m_target_fog.assign(cell_count, 1.0F);
+    m_fog_amount.assign(cell_count, 1.0F);
+    m_seen_amount.assign(cell_count, 0.0F);
     m_instance_buffer.reset();
-    m_instances_dirty = false;
-    return;
+    m_mask_texture.reset();
+    m_mask_texture_width = 0;
+    m_mask_texture_height = 0;
+    m_last_time = -1.0F;
   }
-  if (!geometry_changed && m_cells == cells) {
-    return;
+
+  bool targets_changed = false;
+  for (std::size_t idx = 0; idx < cell_count; ++idx) {
+    const auto state = static_cast<Game::Map::VisibilityState>(cells[idx]);
+    const float target = state == Game::Map::VisibilityState::Unseen ? 1.0F : 0.0F;
+    const float seen = state == Game::Map::VisibilityState::Visible ? 1.0F : 0.0F;
+    const bool target_moved = m_target_fog[idx] != target;
+    const bool seen_moved = m_seen_amount[idx] != seen;
+    if (!target_moved && !seen_moved) {
+      continue;
+    }
+    const int x = static_cast<int>(idx % static_cast<std::size_t>(m_width));
+    const int z = static_cast<int>(idx / static_cast<std::size_t>(m_width));
+    if (target_moved) {
+      m_target_fog[idx] = target;
+      targets_changed = true;
+      m_fade_region.include(x, z, m_width, m_height);
+    }
+    if (seen_moved) {
+      m_seen_amount[idx] = seen;
+    }
+    m_mask_dirty.include(x, z, m_width, m_height);
   }
-  const std::vector<std::uint8_t> previous_cells = m_cells;
-  m_cells = cells;
+
   if (geometry_changed) {
-    m_transitions.clear();
-  } else if (m_soft_reveal_enabled) {
-    build_transition_chunks(previous_cells, m_cells, 0.0F);
+
+    m_fog_amount = m_target_fog;
+    m_settled = true;
+    m_patches_dirty = true;
+    m_mask_dirty = Ground::MaskRegion::whole(m_width, m_height);
+    m_fade_region = {};
+    rebuild_patches();
+    return;
   }
-  build_chunks();
+
+  if (targets_changed) {
+    m_settled = false;
+    m_patches_dirty = true;
+    rebuild_patches();
+  }
+}
+
+void FogRenderer::advance_reveal(float dt_seconds) {
+  if (m_settled || m_fog_amount.size() != m_target_fog.size()) {
+    return;
+  }
+
+  const float duration =
+      m_soft_reveal_enabled ? k_soft_reveal_seconds : k_reveal_seconds;
+  const float step = std::clamp(dt_seconds / duration, 0.0F, 1.0F);
+
+  const Ground::MaskRegion region = m_fade_region;
+  Ground::MaskRegion still_fading;
+  for (int row = 0; row < region.height; ++row) {
+    const int z = region.z + row;
+    for (int column = 0; column < region.width; ++column) {
+      const int x = region.x + column;
+      const auto idx = static_cast<std::size_t>(z) * static_cast<std::size_t>(m_width) +
+                       static_cast<std::size_t>(x);
+      const float target = m_target_fog[idx];
+      float& current = m_fog_amount[idx];
+      if (current == target) {
+        continue;
+      }
+      const float delta = target - current;
+      if (std::abs(delta) <= k_fog_epsilon || step >= 1.0F) {
+        current = target;
+      } else {
+        current += delta * step;
+        still_fading.include(x, z, m_width, m_height);
+      }
+      m_mask_dirty.include(x, z, m_width, m_height);
+    }
+  }
+
+  m_fade_region = still_fading;
+  m_settled = still_fading.is_empty();
+
+  if (m_settled) {
+    m_patches_dirty = true;
+    rebuild_patches();
+  }
+}
+
+auto FogRenderer::fog_amount_at(int grid_x, int grid_z) const -> float {
+  if (grid_x < 0 || grid_z < 0 || grid_x >= m_width || grid_z >= m_height) {
+    return 1.0F;
+  }
+  const auto idx =
+      static_cast<std::size_t>(grid_z) * static_cast<std::size_t>(m_width) +
+      static_cast<std::size_t>(grid_x);
+  if (idx >= m_fog_amount.size()) {
+    return 1.0F;
+  }
+  return m_fog_amount[idx];
+}
+
+void FogRenderer::rebuild_patches() {
+  m_instances.clear();
+  m_patches_dirty = false;
+  if (m_width <= 0 || m_height <= 0) {
+    return;
+  }
+
+  const int chunks_x = chunk_count(m_width);
+  const int chunks_z = chunk_count(m_height);
+  m_instances.reserve(static_cast<std::size_t>(chunks_x) *
+                      static_cast<std::size_t>(chunks_z));
+
+  const float half_width = static_cast<float>(m_width) * 0.5F - 0.5F;
+  const float half_height = static_cast<float>(m_height) * 0.5F - 0.5F;
+  const float chunk_span = static_cast<float>(k_chunk_cells) * m_tile_size;
+
+  for (int chunk_z = 0; chunk_z < chunks_z; ++chunk_z) {
+    for (int chunk_x = 0; chunk_x < chunks_x; ++chunk_x) {
+      const int start_x = chunk_x * k_chunk_cells;
+      const int start_z = chunk_z * k_chunk_cells;
+      const int end_x = std::min(start_x + k_chunk_cells, m_width);
+      const int end_z = std::min(start_z + k_chunk_cells, m_height);
+
+      bool has_fog = false;
+      for (int z = std::max(0, start_z - 1);
+           z < std::min(m_height, end_z + 1) && !has_fog;
+           ++z) {
+        for (int x = std::max(0, start_x - 1); x < std::min(m_width, end_x + 1); ++x) {
+          if (m_fog_amount[static_cast<std::size_t>(z) *
+                               static_cast<std::size_t>(m_width) +
+                           static_cast<std::size_t>(x)] > k_fog_epsilon) {
+            has_fog = true;
+            break;
+          }
+        }
+      }
+      if (!has_fog) {
+        continue;
+      }
+
+      const float center_cell_x =
+          static_cast<float>(start_x) + static_cast<float>(k_chunk_cells - 1) * 0.5F;
+      const float center_cell_z =
+          static_cast<float>(start_z) + static_cast<float>(k_chunk_cells - 1) * 0.5F;
+
+      FogInstance inst;
+      inst.center = QVector3D((center_cell_x - half_width) * m_tile_size,
+                              k_fog_y,
+                              (center_cell_z - half_height) * m_tile_size);
+      inst.size = chunk_span;
+      inst.color = k_fog_color;
+      inst.alpha = k_fog_alpha;
+      m_instances.push_back(inst);
+    }
+  }
+
   m_instances_dirty = true;
 }
 
+void FogRenderer::upload_mask(Renderer& renderer) {
+  (void)renderer;
+  if (m_width <= 0 || m_height <= 0 || m_fog_amount.empty()) {
+    return;
+  }
+
+  auto* gl_context = QOpenGLContext::currentContext();
+  auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
+  if (gl_functions == nullptr) {
+    return;
+  }
+
+  const bool size_changed =
+      (m_mask_texture_width != m_width) || (m_mask_texture_height != m_height);
+  if (!m_mask_texture || size_changed) {
+    m_mask_texture = std::make_unique<Texture>();
+    m_mask_texture->create_empty(m_width, m_height, Texture::Format::RGBA);
+    m_mask_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
+    m_mask_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
+    m_mask_texture_width = m_width;
+    m_mask_texture_height = m_height;
+    m_mask_dirty = Ground::MaskRegion::whole(m_width, m_height);
+  }
+
+  if (m_mask_dirty.is_empty()) {
+    return;
+  }
+
+  Ground::encode_fog_mask_region(
+      m_fog_amount, m_seen_amount, m_width, m_height, m_mask_dirty, m_mask_texels);
+  if (m_mask_texels.empty()) {
+    return;
+  }
+
+  m_mask_texture->bind();
+  gl_functions->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  gl_functions->glTexSubImage2D(GL_TEXTURE_2D,
+                                0,
+                                m_mask_dirty.x,
+                                m_mask_dirty.z,
+                                m_mask_dirty.width,
+                                m_mask_dirty.height,
+                                GL_RGBA,
+                                GL_UNSIGNED_BYTE,
+                                m_mask_texels.data());
+  m_mask_dirty = {};
+}
+
 void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  if (!m_enabled) {
-    return;
-  }
-  if (m_width <= 0 || m_height <= 0) {
-    return;
-  }
-  if (static_cast<int>(m_cells.size()) != m_width * m_height) {
-    return;
-  }
-
   (void)resources;
+  if (!m_enabled || m_width <= 0 || m_height <= 0) {
+    return;
+  }
+  if (m_fog_amount.size() !=
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height)) {
+    return;
+  }
 
-  if (m_soft_reveal_enabled && !m_transitions.empty()) {
-    const float now = renderer.get_animation_time();
-    m_submit_instances = m_instances;
-    auto out = m_transitions.begin();
-    for (auto transition : m_transitions) {
-      if (transition.start_time <= 0.0F) {
-        transition.start_time = now;
-      }
-      const float t =
-          std::clamp((now - transition.start_time) / transition.duration, 0.0F, 1.0F);
-      const float fade = (1.0F - t) * (1.0F - t);
-      if (fade > 0.002F) {
-        FogInstance inst = transition.instance;
-        inst.alpha *= fade;
-        m_submit_instances.push_back(inst);
-        *out++ = transition;
-      }
-    }
-    m_transitions.erase(out, m_transitions.end());
-    if (!m_submit_instances.empty()) {
-      if (!m_instance_buffer) {
-        m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      m_instance_buffer->set_data(m_submit_instances, Buffer::Usage::Dynamic);
-      m_instances_dirty = true;
-      renderer.fog_batch(m_instance_buffer.get(), m_submit_instances.size());
-    }
+  const float now = renderer.get_animation_time();
+  if (m_last_time >= 0.0F && now > m_last_time) {
+    advance_reveal(now - m_last_time);
+  }
+  m_last_time = now;
+
+  if (m_patches_dirty) {
+    rebuild_patches();
+  }
+  if (m_instances.empty()) {
+    return;
+  }
+
+  upload_mask(renderer);
+  if (m_mask_texture == nullptr) {
     return;
   }
 
   upload_instances();
-  if (!m_instances.empty()) {
-    if (m_instance_buffer) {
-      renderer.fog_batch(m_instance_buffer.get(), m_instances.size());
-    } else {
-      renderer.fog_batch(m_instances.data(), m_instances.size());
-    }
+
+  FogMaskResources mask;
+  mask.texture = m_mask_texture.get();
+  mask.size = QVector2D(static_cast<float>(m_width), static_cast<float>(m_height));
+  mask.tile_size = m_tile_size;
+  mask.enabled = true;
+
+  if (m_instance_buffer) {
+    renderer.fog_batch(m_instance_buffer.get(), m_instances.size(), mask);
+  } else {
+    renderer.fog_batch(m_instances.data(), m_instances.size(), mask);
   }
 }
 
@@ -192,104 +347,8 @@ void FogRenderer::upload_instances() {
     m_instances_dirty = true;
   }
   if (m_instances_dirty) {
-    m_instance_buffer->set_data(m_instances, Buffer::Usage::Static);
+    m_instance_buffer->set_data(m_instances, Buffer::Usage::Dynamic);
     m_instances_dirty = false;
-  }
-}
-
-void FogRenderer::build_chunks() {
-  m_instances.clear();
-
-  if (m_width <= 0 || m_height <= 0) {
-    return;
-  }
-  if (static_cast<int>(m_cells.size()) != m_width * m_height) {
-    return;
-  }
-
-  m_instances.reserve(((static_cast<std::size_t>(m_width + k_chunk_cells - 1) /
-                        static_cast<std::size_t>(k_chunk_cells)) *
-                       (static_cast<std::size_t>(m_height + k_chunk_cells - 1) /
-                        static_cast<std::size_t>(k_chunk_cells))) *
-                      2U);
-
-  auto emit_patch = [&](const StateAgg& agg, int chunk_area, std::uint8_t state) {
-    if (agg.count == 0 || chunk_area <= 0) {
-      return;
-    }
-    m_instances.push_back(
-        make_patch(agg, chunk_area, state, m_width, m_height, m_tile_size));
-  };
-
-  for (int chunk_z = 0; chunk_z < m_height; chunk_z += k_chunk_cells) {
-    for (int chunk_x = 0; chunk_x < m_width; chunk_x += k_chunk_cells) {
-      StateAgg states[2];
-      reset_agg(states[0]);
-      reset_agg(states[1]);
-
-      const int end_z = std::min(chunk_z + k_chunk_cells, m_height);
-      const int end_x = std::min(chunk_x + k_chunk_cells, m_width);
-      const int chunk_area = (end_z - chunk_z) * (end_x - chunk_x);
-
-      for (int z = chunk_z; z < end_z; ++z) {
-        for (int x = chunk_x; x < end_x; ++x) {
-          const std::uint8_t state = m_cells[z * m_width + x];
-          if (state < 2U) {
-            accumulate(states[state], x, z);
-          }
-        }
-      }
-
-      emit_patch(states[0], chunk_area, 0U);
-      emit_patch(states[1], chunk_area, 1U);
-    }
-  }
-}
-
-void FogRenderer::build_transition_chunks(
-    const std::vector<std::uint8_t>& previous_cells,
-    const std::vector<std::uint8_t>& next_cells,
-    float now) {
-  if (previous_cells.size() != next_cells.size()) {
-    return;
-  }
-  if (static_cast<int>(next_cells.size()) != m_width * m_height) {
-    return;
-  }
-
-  for (int chunk_z = 0; chunk_z < m_height; chunk_z += k_chunk_cells) {
-    for (int chunk_x = 0; chunk_x < m_width; chunk_x += k_chunk_cells) {
-      StateAgg states[2];
-      reset_agg(states[0]);
-      reset_agg(states[1]);
-
-      const int end_z = std::min(chunk_z + k_chunk_cells, m_height);
-      const int end_x = std::min(chunk_x + k_chunk_cells, m_width);
-      const int chunk_area = (end_z - chunk_z) * (end_x - chunk_x);
-
-      for (int z = chunk_z; z < end_z; ++z) {
-        for (int x = chunk_x; x < end_x; ++x) {
-          const int idx = z * m_width + x;
-          const std::uint8_t previous = previous_cells[idx];
-          const std::uint8_t next = next_cells[idx];
-          if (previous < 2U && next == 2U) {
-            accumulate(states[previous], x, z);
-          }
-        }
-      }
-
-      for (std::uint8_t state = 0U; state < 2U; ++state) {
-        if (states[state].count == 0) {
-          continue;
-        }
-        FogTransition transition;
-        transition.instance = make_patch(
-            states[state], chunk_area, state, m_width, m_height, m_tile_size);
-        transition.start_time = now;
-        transition.duration = k_soft_reveal_duration;
-        m_transitions.push_back(transition);
-      }
-    }
   }
 }
 

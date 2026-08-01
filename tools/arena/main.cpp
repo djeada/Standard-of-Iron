@@ -280,6 +280,11 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("prewarm")},
       QStringLiteral("Prewarm unit templates after the scenario loads and then "
                      "forbid render-time baking, matching the campaign path."));
+  QCommandLineOption const fog_of_war_option(
+      QStringList{QStringLiteral("fog-of-war")},
+      QStringLiteral("Run the match's fog of war instead of revealing the whole "
+                     "arena, so reviews can check remembered terrain and the "
+                     "fog over unexplored ground."));
   QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
                                        QStringLiteral("List scenario ids and exit."));
   parser.addOptions({batch_option,
@@ -301,6 +306,7 @@ auto main(int argc, char** argv) -> int {
                      prewarm_option,
                      promo_distance_option,
                      promo_tilt_option,
+                     fog_of_war_option,
                      list_option});
   parser.process(app);
 
@@ -354,6 +360,7 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
+  window.viewport()->set_fog_of_war_enabled(parser.isSet(fog_of_war_option));
 
   if (!parser.isSet(batch_option)) {
     if (parser.isSet(campaign_terrain_option)) {

@@ -100,7 +100,8 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       },
       renderer.static_world_visibility_filter_enabled()
           ? renderer.submission_visibility().snapshot()
-          : nullptr);
+          : nullptr,
+      Scatter::ScatterMemoryMode::Remembered);
   if (visible_count == 0) {
     return;
   }
@@ -108,6 +109,7 @@ void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   GrassBatchParams params = m_grass_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
+  cmd.visibility = renderer.visibility_mask();
   cmd.species = TerrainScatterCmd::Species::Grass;
   cmd.grass = params;
 

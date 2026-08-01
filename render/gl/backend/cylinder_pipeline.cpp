@@ -68,6 +68,11 @@ void CylinderPipeline::cache_uniforms() {
   if (m_fog_shader != nullptr) {
     m_fog_uniforms.view_proj = m_fog_shader->optional_uniform_handle("u_view_proj");
     m_fog_uniforms.time = m_fog_shader->optional_uniform_handle("u_time");
+    m_fog_uniforms.mask_tex = m_fog_shader->optional_uniform_handle("u_fog_mask_tex");
+    m_fog_uniforms.mask_size = m_fog_shader->optional_uniform_handle("u_fog_mask_size");
+    m_fog_uniforms.mask_tile_size =
+        m_fog_shader->optional_uniform_handle("u_fog_mask_tile_size");
+    m_fog_uniforms.has_mask = m_fog_shader->optional_uniform_handle("u_has_fog_mask");
   }
 }
 

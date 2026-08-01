@@ -79,13 +79,16 @@ protected:
         [](const Instance& instance) -> const QVector4D& { return instance.pos_scale; },
         renderer.static_world_visibility_filter_enabled()
             ? renderer.submission_visibility().snapshot()
-            : nullptr);
+            : nullptr,
+
+        Render::Ground::Scatter::ScatterMemoryMode::Remembered);
     if (visible_count == 0) {
       return;
     }
 
     TerrainScatterCmd cmd;
     cmd.species = species;
+    cmd.visibility = renderer.visibility_mask();
     if constexpr (CopyTimeToParams) {
       Params params = m_state.params;
       params.time = renderer.get_animation_time();
