@@ -311,9 +311,7 @@ void evaluate_phase_and_bob(Render::Creature::HorseAnimationStateComponent& stat
 
   if (is_moving) {
     float const cycle_time = std::max(resolved.cycle_time, 0.0001F);
-    if (rider_ctx.gait.cycle_time > 0.0001F) {
-      out_phase = Quadruped::wrap_phase(rider_ctx.gait.cycle_phase);
-    } else if (state.locomotion_phase_valid) {
+    if (state.locomotion_phase_valid) {
       float const elapsed = std::max(anim.time - state.locomotion_phase_time, 0.0F);
       out_phase = Quadruped::wrap_phase(state.locomotion_phase + elapsed / cycle_time);
     } else {

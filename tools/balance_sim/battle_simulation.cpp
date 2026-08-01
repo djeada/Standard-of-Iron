@@ -412,6 +412,7 @@ auto run_battle(const Fixture& fixture,
   Game::Systems::CommandService::initialize(fixture.grid_width, fixture.grid_height);
 
   Engine::Core::World world;
+  world.set_presentation_enabled(false);
   world.add_system(std::make_unique<Game::Systems::ArrowSystem>());
   world.add_system(std::make_unique<Game::Systems::CombatStatusEffectSystem>());
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());

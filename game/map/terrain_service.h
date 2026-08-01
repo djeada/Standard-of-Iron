@@ -97,6 +97,9 @@ public:
   [[nodiscard]] auto world_props_revision() const -> std::uint64_t {
     return m_world_props_revision;
   }
+  [[nodiscard]] auto navigation_topology_revision() const -> std::uint64_t {
+    return m_navigation_topology_revision;
+  }
   [[nodiscard]] auto authored_world_props() const -> const std::vector<WorldProp>& {
     return m_authored_world_props;
   }
@@ -194,6 +197,7 @@ private:
   void sync_world_prop_identity_state();
   void bump_world_props_revision();
   void bump_authored_world_props_revision();
+  void bump_navigation_topology_revision();
 
   std::unique_ptr<TerrainHeightMap> m_height_map;
   TerrainField m_terrain_field;
@@ -226,6 +230,7 @@ private:
   std::uint64_t m_next_world_prop_id{1};
   std::uint64_t m_authored_world_props_revision{0};
   std::uint64_t m_world_props_revision{0};
+  std::uint64_t m_navigation_topology_revision{0};
 };
 
 } // namespace Game::Map

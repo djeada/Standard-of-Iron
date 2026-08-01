@@ -126,6 +126,64 @@ auto align_bridge_waypoint(const QVector3D& waypoint,
   return {aligned->x(), waypoint.y(), aligned->z()};
 }
 
+struct PreparedMove {
+  Engine::Core::Entity* entity{nullptr};
+  Engine::Core::TransformComponent* transform{nullptr};
+  Engine::Core::MovementComponent* movement{nullptr};
+  float previous_vx{0.0F};
+  float previous_vz{0.0F};
+  bool preserve_velocity{false};
+};
+
+auto prepare_move(Engine::Core::World& world,
+                  Engine::Core::EntityID unit_id,
+                  const CommandService::MoveOptions& options) -> PreparedMove {
+  auto* entity = world.get_entity(unit_id);
+  if (entity == nullptr) {
+    return {};
+  }
+
+  auto* attack = entity->get_component<Engine::Core::AttackComponent>();
+  if (attack != nullptr && attack->in_melee_lock &&
+      CombatRules::participates_in_rts_melee_lock(entity)) {
+    auto* locked_target = world.get_entity(attack->melee_lock_target_id);
+    auto const* locked_unit =
+        locked_target != nullptr
+            ? locked_target->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    bool const opponent_alive =
+        locked_unit != nullptr && locked_unit->health > 0 &&
+        !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
+    if (opponent_alive) {
+      return {};
+    }
+    CombatRules::clear_rts_melee_lock(entity);
+  }
+
+  OrderService::prepare_for_move(entity, options.kind, options.preserve_formation_mode);
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return {};
+  }
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  if (movement == nullptr) {
+    movement = entity->add_component<Engine::Core::MovementComponent>();
+  }
+  if (movement == nullptr) {
+    return {};
+  }
+
+  PreparedMove result;
+  result.entity = entity;
+  result.transform = transform;
+  result.movement = movement;
+  result.previous_vx = movement->get_vx();
+  result.previous_vz = movement->get_vz();
+  result.preserve_velocity =
+      options.kind == MoveOrderKind::AttackChase && movement->get_has_target();
+  return result;
+}
+
 } // namespace
 
 void MovementSystem::assign_direct_target(Engine::Core::MovementComponent& movement,
@@ -345,52 +403,21 @@ void MovementSystem::issue_move(Engine::Core::World& world,
                                 Engine::Core::EntityID unit_id,
                                 const QVector3D& target,
                                 const MoveOptions& options) {
-  auto* e = world.get_entity(unit_id);
-  if (e == nullptr) {
+  PreparedMove const prepared = prepare_move(world, unit_id, options);
+  if (auto* system = world.get_system<MovementSystem>()) {
+    system->cancel_pending_path_request(unit_id);
+  }
+  if (prepared.movement == nullptr || prepared.transform == nullptr) {
     return;
   }
-
-  auto* atk = e->get_component<Engine::Core::AttackComponent>();
-  if ((atk != nullptr) && atk->in_melee_lock &&
-      CombatRules::participates_in_rts_melee_lock(e)) {
-    auto* locked_target = world.get_entity(atk->melee_lock_target_id);
-    auto const* locked_unit =
-        locked_target != nullptr
-            ? locked_target->get_component<Engine::Core::UnitComponent>()
-            : nullptr;
-    bool const locked_opponent_alive =
-        locked_unit != nullptr && locked_unit->health > 0 &&
-        !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
-    if (locked_opponent_alive) {
-      return;
-    }
-    CombatRules::clear_rts_melee_lock(e);
-  }
-
-  OrderService::prepare_for_move(e, options.kind, options.preserve_formation_mode);
-
-  auto* transform = e->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  auto* mv = e->get_component<Engine::Core::MovementComponent>();
-  if (mv == nullptr) {
-    mv = e->add_component<Engine::Core::MovementComponent>();
-  }
-  if (mv == nullptr) {
-    return;
-  }
-
-  bool const continuous_attack_chase =
-      options.kind == MoveOrderKind::AttackChase && mv->get_has_target();
-  float const previous_vx = mv->get_vx();
-  float const previous_vz = mv->get_vz();
-  mv->precise_arrival = options.kind == MoveOrderKind::AttackChase;
-  assign_navigation_target(CommandService::get_pathfinder(), *transform, *mv, target);
-  if (continuous_attack_chase && mv->get_has_target()) {
-    mv->vx = previous_vx;
-    mv->vz = previous_vz;
+  prepared.movement->precise_arrival = options.kind == MoveOrderKind::AttackChase;
+  assign_navigation_target(CommandService::get_pathfinder(),
+                           *prepared.transform,
+                           *prepared.movement,
+                           target);
+  if (prepared.preserve_velocity && prepared.movement->get_has_target()) {
+    prepared.movement->vx = prepared.previous_vx;
+    prepared.movement->vz = prepared.previous_vz;
   }
 }
 
@@ -407,9 +434,135 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
   if (units.size() != targets.size()) {
     return;
   }
+  if (units.empty()) {
+    return;
+  }
 
-  for (std::size_t i = 0; i < units.size(); ++i) {
-    issue_move(world, units[i], targets[i], options);
+  std::vector<PreparedMove> prepared;
+  prepared.reserve(units.size());
+  auto* movement_system = world.get_system<MovementSystem>();
+  for (Engine::Core::EntityID const unit_id : units) {
+    if (movement_system != nullptr) {
+      movement_system->cancel_pending_path_request(unit_id);
+    }
+    prepared.push_back(prepare_move(world, unit_id, options));
+    if (prepared.back().movement != nullptr) {
+      prepared.back().movement->precise_arrival =
+          options.kind == MoveOrderKind::AttackChase;
+    }
+  }
+
+  auto* pathfinder = CommandService::get_pathfinder();
+  auto const leader_it =
+      std::find_if(prepared.begin(), prepared.end(), [](PreparedMove const& move) {
+        return move.transform != nullptr && move.movement != nullptr;
+      });
+  if (pathfinder == nullptr || leader_it == prepared.end() || units.size() < 2U) {
+    for (std::size_t i = 0; i < prepared.size(); ++i) {
+      if (prepared[i].transform != nullptr && prepared[i].movement != nullptr) {
+        assign_navigation_target(
+            pathfinder, *prepared[i].transform, *prepared[i].movement, targets[i]);
+      }
+    }
+    return;
+  }
+
+  std::size_t const leader_index =
+      static_cast<std::size_t>(std::distance(prepared.begin(), leader_it));
+  QVector3D const leader_start(
+      leader_it->transform->position.x, 0.0F, leader_it->transform->position.z);
+  QVector3D const leader_target = targets[leader_index];
+  Point const leader_start_cell =
+      CommandService::world_to_grid(leader_start.x(), leader_start.z());
+  Point const leader_target_cell =
+      CommandService::world_to_grid(leader_target.x(), leader_target.z());
+  bool const leader_direct = leader_start_cell == leader_target_cell ||
+                             (is_direct_path_walkable(leader_start, leader_target) &&
+                              !segment_traverses_bridge(leader_start, leader_target));
+  std::vector<Point> corridor;
+  if (!leader_direct) {
+    corridor = pathfinder->find_path(leader_start_cell, leader_target_cell);
+  }
+
+  constexpr int k_shared_corridor_region_radius = 16;
+  std::size_t synchronous_fallbacks = 0;
+  for (std::size_t i = 0; i < prepared.size(); ++i) {
+    auto& move = prepared[i];
+    if (move.transform == nullptr || move.movement == nullptr) {
+      continue;
+    }
+
+    bool assigned = false;
+    if (corridor.size() > 1U) {
+      Point const start = CommandService::world_to_grid(move.transform->position.x,
+                                                        move.transform->position.z);
+      Point const target =
+          CommandService::world_to_grid(targets[i].x(), targets[i].z());
+      bool const same_regions =
+          std::abs(start.x - leader_start_cell.x) <= k_shared_corridor_region_radius &&
+          std::abs(start.y - leader_start_cell.y) <= k_shared_corridor_region_radius &&
+          std::abs(target.x - leader_target_cell.x) <=
+              k_shared_corridor_region_radius &&
+          std::abs(target.y - leader_target_cell.y) <= k_shared_corridor_region_radius;
+      QVector3D const corridor_exit =
+          pathfinder->path_waypoint_world_position(corridor.back());
+      std::size_t const entry_index =
+          should_include_resolved_start_waypoint(start) ? 0U : 1U;
+      QVector3D const corridor_entry =
+          pathfinder->path_waypoint_world_position(corridor[entry_index]);
+      QVector3D const current(
+          move.transform->position.x, 0.0F, move.transform->position.z);
+      if (same_regions &&
+          pathfinder->is_world_segment_walkable(current, corridor_entry) &&
+          pathfinder->is_world_segment_walkable(corridor_exit, targets[i])) {
+        assigned =
+            assign_path_to_movement(*pathfinder,
+                                    corridor,
+                                    *move.transform,
+                                    *move.movement,
+                                    should_include_resolved_start_waypoint(start));
+        if (assigned) {
+          QVector3D const resolved_target = resolve_walkable_direct_target(targets[i]);
+          if (std::hypot(resolved_target.x() - corridor_exit.x(),
+                         resolved_target.z() - corridor_exit.z()) > 0.01F) {
+            move.movement->path.emplace_back(resolved_target.x(), resolved_target.z());
+          }
+          move.movement->goal_x = resolved_target.x();
+          move.movement->goal_y = resolved_target.z();
+        }
+      }
+    }
+    if (!assigned) {
+      QVector3D const current(
+          move.transform->position.x, 0.0F, move.transform->position.z);
+      Point const start = CommandService::world_to_grid(current.x(), current.z());
+      Point const target =
+          CommandService::world_to_grid(targets[i].x(), targets[i].z());
+      bool const direct =
+          start == target || (is_direct_path_walkable(current, targets[i]) &&
+                              !segment_traverses_bridge(current, targets[i]));
+      if (direct || movement_system == nullptr ||
+          synchronous_fallbacks < k_path_requests_per_tick) {
+        assign_navigation_target(
+            pathfinder, *move.transform, *move.movement, targets[i]);
+        synchronous_fallbacks += direct ? 0U : 1U;
+      } else if (movement_system != nullptr &&
+                 movement_system->enqueue_pending_path_request(
+                     move.entity->get_id(),
+                     targets[i],
+                     options.kind == MoveOrderKind::AttackChase,
+                     pathfinder->navigation_revision())) {
+        move.movement->stop();
+        move.movement->set_rest_position(targets[i].x(), targets[i].z());
+      } else if (corridor.size() > 1U) {
+        assigned = assign_path_to_movement(
+            *pathfinder, corridor, *move.transform, *move.movement, false);
+      }
+    }
+    if (move.preserve_velocity && move.movement->get_has_target()) {
+      move.movement->vx = move.previous_vx;
+      move.movement->vz = move.previous_vz;
+    }
   }
 }
 
@@ -421,6 +574,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
 void MovementSystem::issue_move_units(Engine::Core::World& world,
                                       const std::vector<MoveIntent>& intents,
                                       const MoveOptions& options) {
+
   for (const auto& intent : intents) {
     issue_move(world, intent.unit_id, intent.target, options);
   }

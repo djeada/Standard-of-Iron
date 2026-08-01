@@ -46,14 +46,15 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
 
   m_diagnostics = {};
 
-  auto attackers = world->get_entities_with<Engine::Core::AttackComponent>();
-  std::sort(attackers.begin(), attackers.end(), [](auto* lhs, auto* rhs) {
+  world->resolve_entities_into(world->entities_with<Engine::Core::AttackComponent>(),
+                               m_query_scratch);
+  std::sort(m_query_scratch.begin(), m_query_scratch.end(), [](auto* lhs, auto* rhs) {
     return lhs->get_id() < rhs->get_id();
   });
 
   std::unordered_map<Engine::Core::EntityID, SlotOccupancy> target_slots;
 
-  for (auto* attacker : attackers) {
+  for (auto* attacker : m_query_scratch) {
     auto* atk = attacker->get_component<Engine::Core::AttackComponent>();
     if (atk == nullptr || !atk->in_melee_lock) {
       continue;

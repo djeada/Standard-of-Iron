@@ -219,6 +219,7 @@ struct ArenaScenarioDefinition {
   bool suppress_spawn_anchor{false};
   bool suppress_ui_overlays{false};
   bool force_full_creature_lod{true};
+  bool require_rigged_instancing{false};
   bool collect_animation_diagnostics{true};
   bool rpg_mode{false};
   QString rpg_commander_group;
@@ -259,6 +260,18 @@ struct ArenaScenarioReport {
   float elapsed_seconds{0.0F};
   std::uint64_t rendered_frames{0};
   std::uint64_t rendered_soldier_samples{0};
+  std::uint64_t frame_time_samples{0};
+  double frame_budget_ms{0.0};
+  double frame_time_p50_ms{0.0};
+  double frame_time_p95_ms{0.0};
+  double frame_time_max_ms{0.0};
+  std::uint64_t peak_visible_soldiers{0};
+  std::uint64_t peak_draw_commands{0};
+  std::uint64_t peak_rigged_commands{0};
+  std::uint64_t peak_rigged_instanced_instances{0};
+  std::uint64_t peak_rigged_single_draws{0};
+  std::uint64_t peak_shadow_rigged_instanced_instances{0};
+  std::uint64_t peak_shadow_rigged_single_draws{0};
   std::vector<ArenaScenarioIssue> issues;
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
@@ -316,6 +329,11 @@ struct ArenaRenderedFrameTimings {
   double layout_generation_ms{0.0};
   std::uint64_t visible_soldiers{0};
   std::uint64_t draw_calls{0};
+  std::uint64_t rigged_commands{0};
+  std::uint64_t rigged_instanced_instances{0};
+  std::uint64_t rigged_single_draws{0};
+  std::uint64_t shadow_rigged_instanced_instances{0};
+  std::uint64_t shadow_rigged_single_draws{0};
 };
 
 class ArenaScenarioRunner {

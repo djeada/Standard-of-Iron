@@ -1,10 +1,12 @@
 #include "formation_contact_processor.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -22,6 +24,158 @@ using FrontMap = std::unordered_map<Engine::Core::EntityID,
 constexpr float k_target_switch_hysteresis = 0.35F;
 
 constexpr float k_max_reposition_speed = 1.8F;
+
+struct PairEvaluation {
+  std::uint64_t signature{0};
+  FormationCombat::ContactGeometry geometry;
+  bool in_contact{false};
+  std::vector<Engine::Core::FormationEngagementPair> outgoing_pairs;
+  std::vector<Engine::Core::FormationEngagementPair> incoming_pairs;
+};
+
+thread_local std::unordered_map<std::uint64_t, PairEvaluation> g_pair_cache;
+
+void signature_combine(std::uint64_t& seed, std::uint64_t value) {
+  seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+}
+
+auto pair_signature(const Engine::Core::Entity& attacker,
+                    const Engine::Core::Entity& target) -> std::uint64_t {
+  std::uint64_t signature = 0xcbf29ce484222325ULL;
+  for (auto const* entity : {&attacker, &target}) {
+    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform != nullptr) {
+      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->position.x));
+      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->position.z));
+      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->rotation.y));
+      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->scale.x));
+      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->scale.z));
+    }
+    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr) {
+      signature_combine(signature, static_cast<std::uint64_t>(unit->health));
+      signature_combine(signature, static_cast<std::uint64_t>(unit->max_health));
+      signature_combine(signature, static_cast<std::uint64_t>(unit->spawn_type));
+      signature_combine(signature, static_cast<std::uint64_t>(unit->nation_id));
+      signature_combine(
+          signature,
+          static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+    }
+    auto const* contact =
+        entity->get_component<Engine::Core::FormationContactComponent>();
+    signature_combine(signature, contact != nullptr && contact->in_contact ? 1U : 0U);
+    auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
+    signature_combine(signature, attack != nullptr && attack->in_melee_lock ? 1U : 0U);
+    if (auto const* roster =
+            entity
+                ->get_component<Engine::Core::FormationRosterPresentationComponent>()) {
+      signature_combine(signature, roster->revision);
+      for (std::uint8_t const alive : roster->alive) {
+        signature_combine(signature, alive);
+      }
+    }
+    if (auto const* casualties =
+            entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>()) {
+      for (auto const& casualty : casualties->entries) {
+        signature_combine(signature, casualty.slot_index);
+        signature_combine(signature, casualty.has_local_anchor ? 1U : 0U);
+        signature_combine(signature, std::bit_cast<std::uint32_t>(casualty.local_x));
+        signature_combine(signature, std::bit_cast<std::uint32_t>(casualty.local_z));
+      }
+    }
+  }
+  return signature;
+}
+
+auto pair_cache_key(Engine::Core::EntityID attacker,
+                    Engine::Core::EntityID target) -> std::uint64_t {
+  std::uint64_t key = attacker;
+  signature_combine(key, target);
+  return key;
+}
+
+auto broad_phase_geometry(const Engine::Core::Entity& attacker,
+                          const Engine::Core::Entity& target)
+    -> std::optional<FormationCombat::ContactGeometry> {
+  auto const* attacker_transform =
+      attacker.get_component<Engine::Core::TransformComponent>();
+  auto const* target_transform =
+      target.get_component<Engine::Core::TransformComponent>();
+  if (attacker_transform == nullptr || target_transform == nullptr) {
+    return std::nullopt;
+  }
+  auto const* attacker_contact =
+      attacker.get_component<Engine::Core::FormationContactComponent>();
+  auto const* target_contact =
+      target.get_component<Engine::Core::FormationContactComponent>();
+  if ((attacker_contact != nullptr && attacker_contact->in_contact) ||
+      (target_contact != nullptr && target_contact->in_contact)) {
+    return std::nullopt;
+  }
+
+  float const dx = target_transform->position.x - attacker_transform->position.x;
+  float const dz = target_transform->position.z - attacker_transform->position.z;
+  float const center_distance = std::hypot(dx, dz);
+  auto extent = [](const Engine::Core::Entity& entity,
+                   const Engine::Core::TransformComponent& transform) {
+    float const body =
+        std::max(std::abs(transform.scale.x), std::abs(transform.scale.z)) *
+        (entity.has_component<Engine::Core::ElephantComponent>() ? 1.2F : 0.5F);
+    return FormationCombat::formation_turn_radius(entity) + std::max(0.05F, body);
+  };
+  float const attacker_extent = extent(attacker, *attacker_transform);
+  float const target_extent = extent(target, *target_transform);
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  float const melee_reach = attack != nullptr ? attack->melee_range : 1.5F;
+  constexpr float k_detailed_contact_margin = 2.0F;
+  if (center_distance <=
+      attacker_extent + target_extent + melee_reach + k_detailed_contact_margin) {
+    return std::nullopt;
+  }
+
+  FormationCombat::ContactGeometry geometry;
+  geometry.center_distance = center_distance;
+  geometry.surface_gap = center_distance - attacker_extent - target_extent;
+  geometry.contact_center_distance = attacker_extent + target_extent;
+  geometry.engagement_center_distance = 0.0F;
+  geometry.uses_formation_slots = true;
+  geometry.formation_overlap_required =
+      FormationCombat::has_formation_slots(attacker) &&
+      FormationCombat::has_formation_slots(target);
+  return geometry;
+}
+
+auto evaluate_pair(Engine::Core::Entity& attacker,
+                   Engine::Core::Entity& target) -> const PairEvaluation& {
+  std::uint64_t const key = pair_cache_key(attacker.get_id(), target.get_id());
+  std::uint64_t const signature = pair_signature(attacker, target);
+  auto cached = g_pair_cache.find(key);
+  if (cached != g_pair_cache.end() && cached->second.signature == signature) {
+    return cached->second;
+  }
+  if (g_pair_cache.size() > 4096U) {
+    g_pair_cache.clear();
+  }
+
+  PairEvaluation evaluation;
+  evaluation.signature = signature;
+  if (auto const broad_phase = broad_phase_geometry(attacker, target)) {
+    evaluation.geometry = *broad_phase;
+    return g_pair_cache.insert_or_assign(key, std::move(evaluation)).first->second;
+  }
+
+  auto context = FormationCombat::resolve_contact_context(attacker, target);
+  evaluation.geometry = context.geometry;
+  evaluation.in_contact =
+      FormationCombat::contact_is_active(attacker, target, evaluation.geometry);
+  if (evaluation.in_contact) {
+    evaluation.outgoing_pairs = FormationCombat::engagement_pairs(
+        attacker, target, context.attacker_layout, context.target_layout);
+    evaluation.incoming_pairs = FormationCombat::engagement_pairs(
+        target, attacker, context.target_layout, context.attacker_layout);
+  }
+  return g_pair_cache.insert_or_assign(key, std::move(evaluation)).first->second;
+}
 
 auto mix_hash(std::uint32_t value) noexcept -> std::uint32_t {
   value ^= value >> 16U;
@@ -85,27 +239,21 @@ auto build_fronts(Engine::Core::World& world) -> FrontMap {
       continue;
     }
 
-    auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
-    bool const in_contact =
-        FormationCombat::contact_is_active(*attacker, *target, geometry);
-    auto outgoing_pairs = in_contact
-                              ? FormationCombat::engagement_pairs(*attacker, *target)
-                              : std::vector<Engine::Core::FormationEngagementPair>{};
-    auto incoming_pairs = in_contact
-                              ? FormationCombat::engagement_pairs(*target, *attacker)
-                              : std::vector<Engine::Core::FormationEngagementPair>{};
+    auto const& evaluation = evaluate_pair(*attacker, *target);
+    auto const& geometry = evaluation.geometry;
+    bool const in_contact = evaluation.in_contact;
 
     result[attacker->get_id()].push_back(
         {.opponent_id = target->get_id(),
          .surface_gap = geometry.surface_gap,
          .in_contact = in_contact,
          .outgoing = true,
-         .engagement_pairs = std::move(outgoing_pairs)});
+         .engagement_pairs = evaluation.outgoing_pairs});
     result[target->get_id()].push_back({.opponent_id = attacker->get_id(),
                                         .surface_gap = geometry.surface_gap,
                                         .in_contact = in_contact,
                                         .outgoing = false,
-                                        .engagement_pairs = std::move(incoming_pairs)});
+                                        .engagement_pairs = evaluation.incoming_pairs});
   }
 
   for (auto& [_, fronts] : result) {

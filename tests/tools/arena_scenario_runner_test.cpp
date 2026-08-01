@@ -716,6 +716,56 @@ TEST(ArenaScenarioRunnerTest, WritesStructuredReportAndRenderedTraceLocally) {
   EXPECT_TRUE(QFile::exists(directory.filePath(QStringLiteral("trace.jsonl"))));
 }
 
+TEST(ArenaScenarioRunnerTest, FrameBudgetReportsMeasuredPercentilesAndFps) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaExpectation budget;
+  budget.kind = Arena::ArenaExpectationKind::FrameBudget;
+  budget.threshold = 9.99F;
+  scenario.expectations = {budget};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  for (double const frame_ms : {4.0, 5.0, 6.0, 7.0, 8.0}) {
+    Arena::ArenaRenderedFrameTimings timings;
+    timings.total_ms = frame_ms;
+    timings.visible_soldiers = 24U;
+    timings.draw_calls = 12U;
+    runner.observe_rendered_frame(timings);
+  }
+  runner.update(1.0F);
+
+  auto const& report = runner.report();
+  ASSERT_TRUE(report.passed()) << report.summary().toStdString();
+  EXPECT_EQ(report.frame_time_samples, 5U);
+  EXPECT_DOUBLE_EQ(report.frame_budget_ms, 9.99F);
+  EXPECT_DOUBLE_EQ(report.frame_time_p50_ms, 6.0);
+  EXPECT_DOUBLE_EQ(report.frame_time_p95_ms, 8.0);
+  EXPECT_DOUBLE_EQ(report.frame_time_max_ms, 8.0);
+  EXPECT_EQ(report.peak_visible_soldiers, 24U);
+  EXPECT_EQ(report.peak_draw_commands, 12U);
+  EXPECT_TRUE(report.summary().contains(QStringLiteral("125.0 FPS")));
+  EXPECT_TRUE(report.summary().contains(QStringLiteral("peak rigged 0 commands/0 "
+                                                       "instanced instances")));
+}
+
+TEST(ArenaScenarioRunnerTest, FrameBudgetRejectsAnEmptyTroopRender) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaExpectation budget;
+  budget.kind = Arena::ArenaExpectationKind::FrameBudget;
+  budget.threshold = 9.99F;
+  scenario.expectations = {budget};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  runner.observe_rendered_frame(1.0);
+  runner.update(1.0F);
+
+  EXPECT_TRUE(contains_code(runner.report(),
+                            QStringLiteral("performance_scene_rendered_no_creatures")));
+}
+
 TEST(CombatAnimationDiagnosticsTest, NormalAttackCadenceIsNotPoseChurn) {
   auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
   diagnostics.set_enabled(true);

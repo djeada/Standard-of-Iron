@@ -1,10 +1,15 @@
 #pragma once
 
+#include <array>
+#include <atomic>
 #include <cstddef>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <typeindex>
+#include <utility>
 #include <vector>
 
 #include "entity.h"
@@ -43,6 +48,29 @@ public:
   void add_system(std::unique_ptr<System> system);
   void update(float delta_time);
 
+  void set_presentation_enabled(bool enabled) noexcept {
+    m_presentation_enabled = enabled;
+  }
+  [[nodiscard]] auto presentation_enabled() const noexcept -> bool {
+    return m_presentation_enabled;
+  }
+  void request_render_snapshots(bool enabled = true) noexcept {
+    m_render_snapshots_requested.store(enabled, std::memory_order_release);
+  }
+  [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
+  [[nodiscard]] auto is_render_snapshot() const noexcept -> bool {
+    return m_is_render_snapshot;
+  }
+  [[nodiscard]] auto render_unit_ids() const -> std::span<const EntityID> {
+    return m_render_unit_ids;
+  }
+  [[nodiscard]] auto render_building_ids() const -> std::span<const EntityID> {
+    return m_render_building_ids;
+  }
+  [[nodiscard]] auto render_other_ids() const -> std::span<const EntityID> {
+    return m_render_other_ids;
+  }
+
   auto systems() -> std::vector<std::unique_ptr<System>>& { return m_systems; }
 
   template <typename T>
@@ -58,6 +86,47 @@ public:
   template <typename T>
   auto get_entities_with() -> std::vector<Entity*> {
     return collect_entities_with(component_type_id<T>());
+  }
+
+  template <typename T>
+  [[nodiscard]] auto entities_with() const -> std::span<const EntityID> {
+    return entities_with(component_type_id<T>());
+  }
+
+  [[nodiscard]] auto
+  entities_with(ComponentTypeId type_id) const -> std::span<const EntityID>;
+
+  void resolve_entities_into(std::span<const EntityID> ids,
+                             std::vector<Entity*>& output) const;
+
+  template <typename... Components, typename Fn>
+  void each(Fn&& fn) {
+    static_assert(sizeof...(Components) > 0);
+    const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+    const std::array<ComponentTypeId, sizeof...(Components)> type_ids{
+        component_type_id<Components>()...};
+
+    ComponentTypeId smallest_type = 0;
+    std::size_t smallest_size = std::numeric_limits<std::size_t>::max();
+    for (const ComponentTypeId type_id : type_ids) {
+      if (type_id >= m_component_sets.size()) {
+        return;
+      }
+      const ComponentSet& candidate = m_component_sets[type_id];
+      if (candidate.dense.size() < smallest_size) {
+        smallest_type = type_id;
+        smallest_size = candidate.dense.size();
+      }
+    }
+
+    std::span<const EntityID> const ids = m_component_sets[smallest_type].dense;
+    for (const EntityID id : ids) {
+      Entity* entity = resolve(id);
+      if (entity != nullptr &&
+          ((entity->get_component<Components>() != nullptr) && ...)) {
+        std::invoke(std::forward<Fn>(fn), id, *entity->get_component<Components>()...);
+      }
+    }
   }
 
   auto get_units_owned_by(int owner_id) const -> std::vector<Entity*>;
@@ -91,6 +160,8 @@ public:
   void remove_world_cleared_observer(ObserverHandle handle);
 
 private:
+  World(bool presentation_enabled, bool render_snapshot);
+
   struct ComponentSet {
     static constexpr std::uint32_t k_absent = 0xFFFFFFFFU;
 
@@ -120,6 +191,7 @@ private:
 
   [[nodiscard]] auto resolve(EntityID entity_id) const -> Entity*;
   void detach_from_all_component_sets(EntityID entity_id);
+  void publish_render_snapshot();
 
   std::vector<EntitySlot> m_slots;
   std::vector<std::uint32_t> m_free_slots;
@@ -140,6 +212,18 @@ private:
   std::vector<ObserverEntry<ComponentObserverCallback>> m_component_observers;
   std::vector<ObserverEntry<EntityDestroyedCallback>> m_entity_destroyed_observers;
   std::vector<ObserverEntry<WorldClearedCallback>> m_world_cleared_observers;
+
+  bool m_presentation_enabled{true};
+  bool m_is_render_snapshot{false};
+  std::atomic<bool> m_render_snapshots_requested{false};
+  std::shared_ptr<World> m_render_snapshot;
+  std::array<std::shared_ptr<World>, 2> m_render_snapshot_buffers;
+  std::size_t m_next_render_snapshot_buffer{0};
+  std::vector<EntityID> m_render_unit_ids;
+  std::vector<EntityID> m_render_building_ids;
+  std::vector<EntityID> m_render_other_ids;
+  std::vector<std::uint64_t> m_render_entity_signatures;
+  std::uint64_t m_render_publish_revision{0};
 };
 
 } // namespace Engine::Core

@@ -297,6 +297,28 @@ TEST_F(PathfindingTest, BridgeDeckIsWalkableAndCrossesRiver) {
   EXPECT_TRUE(used_bridge_cell);
 }
 
+TEST_F(PathfindingTest, TerrainClearRebuildsStaleTopologyCells) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-10.0F, -10.0F);
+  pathfinding.update_navigation_grid();
+  ASSERT_FALSE(pathfinding.is_walkable(10, 10));
+
+  terrain.clear();
+  pathfinding.update_navigation_grid();
+
+  EXPECT_TRUE(pathfinding.is_walkable(10, 10));
+}
+
 TEST_F(PathfindingTest, BridgeDeckRemainsWalkableWhenResourceMarkerOverlapsIt) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;

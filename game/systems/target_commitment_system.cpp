@@ -44,9 +44,10 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
 
   m_diagnostics = {};
 
-  auto entities = world->get_entities_with<Engine::Core::AttackComponent>();
+  world->resolve_entities_into(world->entities_with<Engine::Core::AttackComponent>(),
+                               m_query_scratch);
 
-  for (auto* entity : entities) {
+  for (auto* entity : m_query_scratch) {
     auto* atk = entity->get_component<Engine::Core::AttackComponent>();
     if (atk == nullptr) {
       continue;

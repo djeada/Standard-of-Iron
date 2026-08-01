@@ -32,6 +32,7 @@
 #include "../game/visuals/team_colors.h"
 #include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
+#include "creature/animation_state_components.h"
 #include "creature/archetype_registry.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
@@ -58,6 +59,7 @@
 #include "horse/horse_renderer_base.h"
 #include "humanoid/cache_control.h"
 #include "humanoid/humanoid_renderer_base.h"
+#include "humanoid/pose_cache_components.h"
 #include "humanoid/render_stats.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
@@ -81,6 +83,41 @@
 namespace Render::GL {
 
 namespace {
+template <typename ComponentType>
+void transfer_render_component(Engine::Core::Entity& previous,
+                               Engine::Core::Entity& current) {
+  if (auto const* state = previous.get_component<ComponentType>()) {
+    if (auto* current_state = current.get_component<ComponentType>()) {
+      *current_state = *state;
+    } else {
+      current.add_component<ComponentType>(*state);
+    }
+  }
+}
+
+void transfer_render_runtime_state(Engine::Core::World& previous,
+                                   Engine::Core::World& current) {
+  for (Engine::Core::EntityID const id : current.render_unit_ids()) {
+    auto* previous_entity = previous.get_entity(id);
+    auto* current_entity = current.get_entity(id);
+    if (previous_entity == nullptr || current_entity == nullptr) {
+      continue;
+    }
+    transfer_render_component<Render::Creature::HumanoidAnimationStateComponent>(
+        *previous_entity, *current_entity);
+    transfer_render_component<Render::Creature::HorseAnimationStateComponent>(
+        *previous_entity, *current_entity);
+    transfer_render_component<Render::Creature::ElephantAnimationStateComponent>(
+        *previous_entity, *current_entity);
+    transfer_render_component<Render::Creature::HorseAnatomyComponent>(*previous_entity,
+                                                                       *current_entity);
+    transfer_render_component<Render::Creature::ElephantAnatomyComponent>(
+        *previous_entity, *current_entity);
+    transfer_render_component<Render::Humanoid::HumanoidLayoutCacheComponent>(
+        *previous_entity, *current_entity);
+  }
+}
+
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
@@ -566,11 +603,27 @@ void Renderer::render_world(Engine::Core::World* world) {
     return;
   }
 
+  Engine::Core::World* const simulation_world = world;
+  if (m_cached_world != nullptr && m_cached_world != simulation_world) {
+    m_render_world_snapshot.reset();
+  }
+  simulation_world->request_render_snapshots();
+  std::shared_ptr<Engine::Core::World> render_snapshot =
+      simulation_world->acquire_render_snapshot();
+  if (render_snapshot != nullptr) {
+    if (m_render_world_snapshot != nullptr &&
+        m_render_world_snapshot.get() != render_snapshot.get()) {
+      transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
+    }
+    m_render_world_snapshot = render_snapshot;
+    world = render_snapshot.get();
+  }
+
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
-  if (!m_render_registry.is_attached_to(world)) {
-    m_cached_world = world;
-    m_render_registry.attach(world);
+  if (!m_render_registry.is_attached_to(simulation_world)) {
+    m_cached_world = simulation_world;
+    m_render_registry.attach(simulation_world);
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     log_render_first_use_once(
         "render-registry-attach",
@@ -580,9 +633,18 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   auto& vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.is_initialized();
-  const auto& unit_ids = m_render_registry.unit_ids();
-  const auto& building_ids = m_render_registry.building_ids();
-  const auto& other_ids = m_render_registry.other_ids();
+  std::span<const Engine::Core::EntityID> const unit_ids =
+      render_snapshot != nullptr
+          ? world->render_unit_ids()
+          : std::span<const Engine::Core::EntityID>(m_render_registry.unit_ids());
+  std::span<const Engine::Core::EntityID> const building_ids =
+      render_snapshot != nullptr
+          ? world->render_building_ids()
+          : std::span<const Engine::Core::EntityID>(m_render_registry.building_ids());
+  std::span<const Engine::Core::EntityID> const other_ids =
+      render_snapshot != nullptr
+          ? world->render_other_ids()
+          : std::span<const Engine::Core::EntityID>(m_render_registry.other_ids());
 
   const auto& gfx_settings = Render::GraphicsSettings::instance();
   const auto& batch_config = gfx_settings.batching_config();
@@ -852,12 +914,12 @@ void Renderer::render_world(Engine::Core::World* world) {
     }
 
     bool const should_update_temporal =
-        battle_optimizer.should_render_unit(entry.entity_id,
-                                            entry.motion,
-                                            entry.selected,
-                                            entry.hovered,
-                                            entry.combat_active,
-                                            entry.distance_sq);
+        full_creature_detail || battle_optimizer.should_render_unit(entry.entity_id,
+                                                                    entry.motion,
+                                                                    entry.selected,
+                                                                    entry.hovered,
+                                                                    entry.combat_active,
+                                                                    entry.distance_sq);
 
     if (entry.cache == nullptr) {
       continue;
@@ -888,15 +950,15 @@ void Renderer::render_world(Engine::Core::World* world) {
 
         ctx.selected = entry.selected;
         ctx.hovered = entry.hovered;
-        bool should_update_animation = true;
-        if (should_update_temporal) {
+        bool should_update_animation = full_creature_detail;
+        if (!full_creature_detail && should_update_temporal) {
           should_update_animation =
               battle_optimizer.should_update_animation(entry.entity_id,
                                                        entry.distance_sq,
                                                        entry.selected,
                                                        entry.combat_active,
                                                        entry.motion);
-        } else {
+        } else if (!full_creature_detail) {
           should_update_animation = false;
         }
 
@@ -933,8 +995,7 @@ void Renderer::render_world(Engine::Core::World* world) {
         lod_in.force_batching = batch_config.force_batching;
         lod_in.never_batch = batch_config.never_batch;
 
-        const bool batching_available =
-            !full_creature_detail && !entry.combat_active && batching_ratio > 0.0F;
+        const bool batching_available = !full_creature_detail && batching_ratio > 0.0F;
         const auto tier = full_creature_detail ? Render::Pipeline::LodTier::Full
                                                : Render::Pipeline::select_lod(lod_in);
 

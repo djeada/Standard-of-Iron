@@ -447,11 +447,23 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
 
 auto ArenaScenarioReport::summary() const -> QString {
   if (passed()) {
-    return QStringLiteral("PASS %1: %2 frames, %3 rendered soldier samples, %4 s")
-        .arg(scenario_id)
-        .arg(rendered_frames)
-        .arg(rendered_soldier_samples)
-        .arg(elapsed_seconds, 0, 'f', 2);
+    QString result = QStringLiteral("PASS %1: %2 frames, %3 s")
+                         .arg(scenario_id)
+                         .arg(rendered_frames)
+                         .arg(elapsed_seconds, 0, 'f', 2);
+    if (frame_time_samples > 0U && frame_time_p95_ms > 0.0) {
+      result += QStringLiteral(", peak %1 visible soldiers, frame p50/p95/max "
+                               "%2/%3/%4 ms (%5 FPS at p95), peak rigged "
+                               "%6 commands/%7 instanced instances")
+                    .arg(peak_visible_soldiers)
+                    .arg(frame_time_p50_ms, 0, 'f', 2)
+                    .arg(frame_time_p95_ms, 0, 'f', 2)
+                    .arg(frame_time_max_ms, 0, 'f', 2)
+                    .arg(1000.0 / frame_time_p95_ms, 0, 'f', 1)
+                    .arg(peak_rigged_commands)
+                    .arg(peak_rigged_instanced_instances);
+    }
+    return result;
   }
   return QStringLiteral("FAIL %1: %2 issue(s); first: %3")
       .arg(scenario_id)
@@ -2725,6 +2737,13 @@ struct ArenaScenarioRunner::Impl {
       case ArenaExpectationKind::FrameBudget: {
         std::vector<double> samples;
         samples.reserve(trace.size());
+        std::uint64_t peak_visible_soldiers = 0U;
+        std::uint64_t peak_draw_commands = 0U;
+        std::uint64_t peak_rigged_commands = 0U;
+        std::uint64_t peak_rigged_instanced_instances = 0U;
+        std::uint64_t peak_rigged_single_draws = 0U;
+        std::uint64_t peak_shadow_rigged_instanced_instances = 0U;
+        std::uint64_t peak_shadow_rigged_single_draws = 0U;
         for (auto const& frame : trace) {
           bool const after_start =
               frame.time_seconds + 1.0e-5F >= expectation.start_seconds;
@@ -2733,6 +2752,22 @@ struct ArenaScenarioRunner::Impl {
               frame.time_seconds <= expectation.end_seconds + 1.0e-5F;
           if (after_start && before_end) {
             samples.push_back(frame.frame_time_ms);
+            peak_visible_soldiers =
+                std::max(peak_visible_soldiers, frame.timings.visible_soldiers);
+            peak_draw_commands = std::max(peak_draw_commands, frame.timings.draw_calls);
+            peak_rigged_commands =
+                std::max(peak_rigged_commands, frame.timings.rigged_commands);
+            peak_rigged_instanced_instances =
+                std::max(peak_rigged_instanced_instances,
+                         frame.timings.rigged_instanced_instances);
+            peak_rigged_single_draws =
+                std::max(peak_rigged_single_draws, frame.timings.rigged_single_draws);
+            peak_shadow_rigged_instanced_instances =
+                std::max(peak_shadow_rigged_instanced_instances,
+                         frame.timings.shadow_rigged_instanced_instances);
+            peak_shadow_rigged_single_draws =
+                std::max(peak_shadow_rigged_single_draws,
+                         frame.timings.shadow_rigged_single_draws);
           }
         }
         if (samples.empty()) {
@@ -2743,8 +2778,42 @@ struct ArenaScenarioRunner::Impl {
                                                            : k_default_frame_budget_ms;
         std::size_t const p95_index = std::min<std::size_t>(
             samples.size() - 1U, ((samples.size() * 95U) + 99U) / 100U - 1U);
+        std::size_t const p50_index = std::min<std::size_t>(
+            samples.size() - 1U, ((samples.size() * 50U) + 99U) / 100U - 1U);
+        double const p50 = samples[p50_index];
         double const p95 = samples[p95_index];
         double const maximum = samples.back();
+
+        report.frame_time_samples = samples.size();
+        report.frame_budget_ms = budget;
+        report.frame_time_p50_ms = p50;
+        report.frame_time_p95_ms = p95;
+        report.frame_time_max_ms = maximum;
+        report.peak_visible_soldiers = peak_visible_soldiers;
+        report.peak_draw_commands = peak_draw_commands;
+        report.peak_rigged_commands = peak_rigged_commands;
+        report.peak_rigged_instanced_instances = peak_rigged_instanced_instances;
+        report.peak_rigged_single_draws = peak_rigged_single_draws;
+        report.peak_shadow_rigged_instanced_instances =
+            peak_shadow_rigged_instanced_instances;
+        report.peak_shadow_rigged_single_draws = peak_shadow_rigged_single_draws;
+
+        bool const contains_troop_groups = std::any_of(
+            scenario.groups.begin(), scenario.groups.end(), [](auto const& group) {
+              return !group.spawn_type.has_value();
+            });
+        if (contains_troop_groups && peak_visible_soldiers == 0U &&
+            peak_rigged_commands == 0U) {
+          add_issue(
+              QStringLiteral("performance_scene_rendered_no_creatures"),
+              QStringLiteral("performance sampling observed no visible creatures"));
+        }
+        if (scenario.require_rigged_instancing &&
+            peak_rigged_instanced_instances == 0U) {
+          add_issue(QStringLiteral("performance_rigged_instancing_unused"),
+                    QStringLiteral("performance sampling observed no instanced "
+                                   "rigged creature playback"));
+        }
 
         if (p95 > budget || maximum > budget * 10.0) {
           add_issue(QStringLiteral("frame_budget_exceeded"),
@@ -3087,6 +3156,36 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                        static_cast<qint64>(m_impl->report.rendered_frames));
   report_object.insert(QStringLiteral("rendered_soldier_samples"),
                        static_cast<qint64>(m_impl->report.rendered_soldier_samples));
+  if (m_impl->report.frame_time_samples > 0U) {
+    double const p95_fps = m_impl->report.frame_time_p95_ms > 0.0
+                               ? 1000.0 / m_impl->report.frame_time_p95_ms
+                               : 0.0;
+    report_object.insert(
+        QStringLiteral("performance"),
+        QJsonObject{
+            {QStringLiteral("sample_count"),
+             static_cast<qint64>(m_impl->report.frame_time_samples)},
+            {QStringLiteral("budget_ms"), m_impl->report.frame_budget_ms},
+            {QStringLiteral("p50_ms"), m_impl->report.frame_time_p50_ms},
+            {QStringLiteral("p95_ms"), m_impl->report.frame_time_p95_ms},
+            {QStringLiteral("max_ms"), m_impl->report.frame_time_max_ms},
+            {QStringLiteral("p95_fps"), p95_fps},
+            {QStringLiteral("peak_visible_soldiers"),
+             static_cast<qint64>(m_impl->report.peak_visible_soldiers)},
+            {QStringLiteral("peak_draw_commands"),
+             static_cast<qint64>(m_impl->report.peak_draw_commands)},
+            {QStringLiteral("peak_rigged_commands"),
+             static_cast<qint64>(m_impl->report.peak_rigged_commands)},
+            {QStringLiteral("peak_rigged_instanced_instances"),
+             static_cast<qint64>(m_impl->report.peak_rigged_instanced_instances)},
+            {QStringLiteral("peak_rigged_single_draws"),
+             static_cast<qint64>(m_impl->report.peak_rigged_single_draws)},
+            {QStringLiteral("peak_shadow_rigged_instanced_instances"),
+             static_cast<qint64>(
+                 m_impl->report.peak_shadow_rigged_instanced_instances)},
+            {QStringLiteral("peak_shadow_rigged_single_draws"),
+             static_cast<qint64>(m_impl->report.peak_shadow_rigged_single_draws)}});
+  }
   QJsonArray issues;
   for (auto const& issue : m_impl->report.issues) {
     issues.append(
@@ -3259,6 +3358,18 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
         {QStringLiteral("visible_soldiers"),
          static_cast<qint64>(frame.timings.visible_soldiers)},
         {QStringLiteral("draw_calls"), static_cast<qint64>(frame.timings.draw_calls)},
+        {QStringLiteral("rigged_playback"),
+         QJsonObject{
+             {QStringLiteral("commands"),
+              static_cast<qint64>(frame.timings.rigged_commands)},
+             {QStringLiteral("instanced_instances"),
+              static_cast<qint64>(frame.timings.rigged_instanced_instances)},
+             {QStringLiteral("single_draws"),
+              static_cast<qint64>(frame.timings.rigged_single_draws)},
+             {QStringLiteral("shadow_instanced_instances"),
+              static_cast<qint64>(frame.timings.shadow_rigged_instanced_instances)},
+             {QStringLiteral("shadow_single_draws"),
+              static_cast<qint64>(frame.timings.shadow_rigged_single_draws)}}},
         {QStringLiteral("units"), units},
         {QStringLiteral("soldiers"), soldiers}};
     trace_file.write(QJsonDocument(line).toJson(QJsonDocument::Compact));

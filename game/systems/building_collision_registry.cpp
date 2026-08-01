@@ -51,6 +51,39 @@ auto BuildingCollisionRegistry::get_building_grid_padding(
   return s_grid_padding;
 }
 
+auto BuildingCollisionRegistry::bucket_coord(float coordinate) -> int {
+  return static_cast<int>(std::floor(coordinate / k_spatial_bucket_size));
+}
+
+auto BuildingCollisionRegistry::bucket_key(int bucket_x, int bucket_z) -> std::int64_t {
+  auto const high = static_cast<std::uint64_t>(static_cast<std::uint32_t>(bucket_x));
+  auto const low = static_cast<std::uint32_t>(bucket_z);
+  return static_cast<std::int64_t>((high << 32U) | low);
+}
+
+void BuildingCollisionRegistry::add_to_spatial_index(
+    const BuildingFootprint& footprint) {
+  int const bucket_x = bucket_coord(footprint.center_x);
+  int const bucket_z = bucket_coord(footprint.center_z);
+  m_spatial_buckets[bucket_key(bucket_x, bucket_z)].push_back(footprint.entity_id);
+  m_max_half_extent =
+      std::max(m_max_half_extent, std::max(footprint.width, footprint.depth) * 0.5F);
+}
+
+void BuildingCollisionRegistry::remove_from_spatial_index(
+    const BuildingFootprint& footprint) {
+  auto const key =
+      bucket_key(bucket_coord(footprint.center_x), bucket_coord(footprint.center_z));
+  auto bucket = m_spatial_buckets.find(key);
+  if (bucket == m_spatial_buckets.end()) {
+    return;
+  }
+  std::erase(bucket->second, footprint.entity_id);
+  if (bucket->second.empty()) {
+    m_spatial_buckets.erase(bucket);
+  }
+}
+
 void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_id,
                                                   const std::string& building_type,
                                                   float center_x,
@@ -74,6 +107,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
 
   m_buildings.push_back(footprint);
   m_entity_to_index[entity_id] = m_buildings.size() - 1;
+  add_to_spatial_index(m_buildings.back());
 
   if (auto* pf = CommandService::get_pathfinder()) {
 
@@ -88,6 +122,8 @@ void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entit
   }
 
   size_t const index = it->second;
+
+  remove_from_spatial_index(m_buildings[index]);
 
   float const center_x = m_buildings[index].center_x;
   float const center_z = m_buildings[index].center_z;
@@ -141,8 +177,10 @@ void BuildingCollisionRegistry::update_building_position(
   float const width = m_buildings[index].width;
   float const depth = m_buildings[index].depth;
 
+  remove_from_spatial_index(m_buildings[index]);
   m_buildings[index].center_x = center_x;
   m_buildings[index].center_z = center_z;
+  add_to_spatial_index(m_buildings[index]);
 
   if (auto* pf = CommandService::get_pathfinder()) {
 
@@ -287,27 +325,14 @@ auto BuildingCollisionRegistry::get_rect_grid_cells(float center_x,
   float const half_width = width / 2.0F;
   float const half_depth = depth / 2.0F;
 
-float const padding = footprint.grid_padding;
-
-int const min_grid_x = static_cast<int>(
-    std::floor(
-        (footprint.center_x - half_width - padding) /
-        grid_cell_size));
-
-int const max_grid_x = static_cast<int>(
-    std::ceil(
-        (footprint.center_x + half_width + padding) /
-        grid_cell_size));
-
-int const min_grid_z = static_cast<int>(
-    std::floor(
-        (footprint.center_z - half_depth - padding) /
-        grid_cell_size));
-
-int const max_grid_z = static_cast<int>(
-    std::ceil(
-        (footprint.center_z + half_depth + padding) /
-        grid_cell_size));
+  int const min_grid_x =
+      static_cast<int>(std::floor((center_x - half_width - padding) / grid_cell_size));
+  int const max_grid_x =
+      static_cast<int>(std::ceil((center_x + half_width + padding) / grid_cell_size));
+  int const min_grid_z =
+      static_cast<int>(std::floor((center_z - half_depth - padding) / grid_cell_size));
+  int const max_grid_z =
+      static_cast<int>(std::ceil((center_z + half_depth + padding) / grid_cell_size));
 
   for (int gx = min_grid_x; gx < max_grid_x; ++gx) {
     for (int gz = min_grid_z; gz < max_grid_z; ++gz) {
@@ -325,7 +350,7 @@ auto BuildingCollisionRegistry::get_occupied_grid_cells(
                              footprint.center_z,
                              footprint.width,
                              footprint.depth,
-                             s_grid_padding,
+                             footprint.grid_padding,
                              grid_cell_size);
 }
 
@@ -368,6 +393,8 @@ void BuildingCollisionRegistry::clear() {
   m_entity_to_index.clear();
   m_navigation_passages.clear();
   m_authored_obstacles.clear();
+  m_spatial_buckets.clear();
+  m_max_half_extent = 0.0F;
 
   if (auto* pf = CommandService::get_pathfinder()) {
     pf->mark_navigation_grid_dirty();
