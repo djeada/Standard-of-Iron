@@ -127,7 +127,7 @@ the same `TerrainService` and renderer passes used by the game.
 
 ```bash
 QT_QPA_PLATFORM=offscreen \
-  build/bin/standard_of_iron_tests \
+  build/bin/tools_tests \
   --gtest_filter='ArenaScenario*'
 ```
 

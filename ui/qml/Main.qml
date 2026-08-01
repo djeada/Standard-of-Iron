@@ -468,27 +468,27 @@ ApplicationWindow {
                     else
                         game.set_hover_at_screen(-1, -1);
                 }
-                if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_mouse_move) {
+                if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_mouse_move) {
                     if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
-                        game.on_formation_mouse_move(mouse.x, mouse.y);
+                        game.placement.on_formation_mouse_move(mouse.x, mouse.y);
                 }
-                if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_mouse_move) {
+                if (typeof game !== 'undefined' && game.placement.is_placing_construction && game.placement.on_construction_mouse_move) {
                     if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
-                        game.on_construction_mouse_move(mouse.x, mouse.y);
+                        game.placement.on_construction_mouse_move(mouse.x, mouse.y);
                 }
             }
             onWheel: function (w) {
-                if (typeof game !== 'undefined' && game.construction_preview_rotatable && game.construction_preview_rotatable()) {
+                if (typeof game !== 'undefined' && game.placement.construction_preview_rotatable && game.placement.construction_preview_rotatable()) {
                     var constructionDy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
-                    if (constructionDy !== 0 && game.on_construction_scroll)
-                        game.on_construction_scroll(constructionDy);
+                    if (constructionDy !== 0 && game.placement.on_construction_scroll)
+                        game.placement.on_construction_scroll(constructionDy);
                     w.accepted = true;
                     return;
                 }
-                if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_scroll) {
+                if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_scroll) {
                     var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
                     if (dy !== 0)
-                        game.on_formation_scroll(dy);
+                        game.placement.on_formation_scroll(dy);
                     w.accepted = true;
                     return;
                 }

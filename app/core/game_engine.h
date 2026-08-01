@@ -25,6 +25,7 @@
 #include "../models/selected_units_model.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
+#include "../viewmodels/placement_view_model.h"
 #include "ambient_state_manager.h"
 #include "app_scene_context.h"
 #include "camera_controller.h"
@@ -116,7 +117,7 @@ class AudioSystemProxy;
 class QQuickWindow;
 class LoadingProgressTracker;
 
-class GameEngine : public QObject {
+class GameEngine : public QObject, private App::ViewModels::PlacementHost {
   Q_OBJECT
 public:
   explicit GameEngine(QObject* parent = nullptr);
@@ -166,24 +167,6 @@ public:
       float loading_progress READ loading_progress NOTIFY loading_progress_changed)
   Q_PROPERTY(
       QString loading_stage_text READ loading_stage_text NOTIFY loading_stage_changed)
-  Q_PROPERTY(bool is_placing_formation READ is_placing_formation NOTIFY
-                 placing_formation_changed)
-  Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
-                 placing_construction_changed)
-  Q_PROPERTY(QString pending_builder_construction_type READ
-                 pending_builder_construction_type NOTIFY placing_construction_changed)
-  Q_PROPERTY(bool construction_preview_active READ construction_preview_active NOTIFY
-                 construction_preview_active_changed)
-  Q_PROPERTY(bool construction_preview_valid READ construction_preview_valid NOTIFY
-                 construction_preview_valid_changed)
-  Q_PROPERTY(
-      int construction_preview_segment_count READ construction_preview_segment_count
-          NOTIFY construction_preview_summary_changed)
-  Q_PROPERTY(int construction_preview_valid_segment_count READ
-                 construction_preview_valid_segment_count NOTIFY
-                     construction_preview_summary_changed)
-  Q_PROPERTY(int construction_preview_total_cost READ construction_preview_total_cost
-                 NOTIFY construction_preview_summary_changed)
   Q_PROPERTY(
       bool is_campaign_mission READ is_campaign_mission NOTIFY campaign_mission_changed)
 
@@ -205,6 +188,7 @@ public:
       QString save_progress_slot READ save_progress_slot NOTIFY save_progress_changed)
 
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
+  Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -225,7 +209,6 @@ public:
   Q_INVOKABLE void on_hold_command();
   Q_INVOKABLE void on_gate_command();
   Q_INVOKABLE void on_guard_command();
-  Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE void on_run_command();
   Q_INVOKABLE void on_heal_command();
   Q_INVOKABLE void on_build_command();
@@ -234,27 +217,7 @@ public:
 
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
-  [[nodiscard]] bool any_selected_in_formation_mode() const;
   [[nodiscard]] bool any_selected_in_run_mode() const;
-  Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
-  Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
-  Q_INVOKABLE [[nodiscard]] QString pending_builder_construction_type() const;
-  Q_INVOKABLE [[nodiscard]] bool construction_preview_active() const;
-  Q_INVOKABLE [[nodiscard]] bool construction_preview_valid() const;
-  Q_INVOKABLE [[nodiscard]] bool construction_preview_rotatable() const;
-  Q_INVOKABLE [[nodiscard]] int construction_preview_segment_count() const;
-  Q_INVOKABLE [[nodiscard]] int construction_preview_valid_segment_count() const;
-  Q_INVOKABLE [[nodiscard]] int construction_preview_total_cost() const;
-  Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
-  Q_INVOKABLE void on_formation_scroll(float delta);
-  Q_INVOKABLE void on_formation_confirm();
-  Q_INVOKABLE void on_formation_cancel();
-  Q_INVOKABLE void on_construction_mouse_move(qreal sx, qreal sy);
-  Q_INVOKABLE void on_construction_pointer_pressed(qreal sx, qreal sy);
-  Q_INVOKABLE void on_construction_pointer_released(qreal sx, qreal sy);
-  Q_INVOKABLE void on_construction_scroll(float delta);
-  Q_INVOKABLE void on_construction_confirm();
-  Q_INVOKABLE void on_construction_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
   Q_INVOKABLE void toggle_commander_control_mode();
   Q_INVOKABLE void commander_key_down(int key, int modifiers = 0);
@@ -314,7 +277,6 @@ public:
   [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
   [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
   [[nodiscard]] QString cursor_mode() const;
-  void set_cursor_mode(CursorMode mode);
   void set_cursor_mode(const QString& mode);
   [[nodiscard]] qreal global_cursor_x() const;
   [[nodiscard]] qreal global_cursor_y() const;
@@ -340,10 +302,6 @@ public:
 
   Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString& type) const;
   Q_INVOKABLE void recruit_near_selected(const QString& unit_type);
-  Q_INVOKABLE void start_building_placement(const QString& building_type);
-  Q_INVOKABLE void place_building_at_screen(qreal sx, qreal sy);
-  Q_INVOKABLE void cancel_building_placement();
-  Q_INVOKABLE [[nodiscard]] QString pending_building_type() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_home_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
@@ -353,11 +311,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
   Q_INVOKABLE QVariantList pop_rpg_damage_events();
   Q_INVOKABLE QVariantMap rpg_project_world(float x, float y, float z) const;
-  Q_INVOKABLE void start_builder_construction(const QString& item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString& unit_type, const QString& nation_id) const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap
-  get_construction_info(const QString& item_type) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_hud_action_states() const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
   Q_INVOKABLE [[nodiscard]] QString
@@ -385,6 +340,7 @@ public:
   Q_INVOKABLE void cancel_active_save();
   Q_INVOKABLE void load_game_from_slot(const QString& slot_name);
   [[nodiscard]] QObject* save_slots_view_model() const;
+  [[nodiscard]] QObject* placement_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
   [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
@@ -425,7 +381,7 @@ public:
   [[nodiscard]] bool consume_screenshot_request();
   void submit_frame_image(const QImage& image);
 
-  void ensure_initialized();
+  void ensure_initialized() override;
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   void update(float dt);
   void render(int pixel_width, int pixel_height);
@@ -503,7 +459,6 @@ private:
   };
   bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
-  [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const;
   [[nodiscard]] Engine::Core::Entity* find_local_commander() const;
   void request_enter_commander_control_mode();
   void request_exit_commander_control_mode();
@@ -566,6 +521,16 @@ private:
   void seed_barracks_rally_preview_from_selection();
 
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
+  std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
+
+  [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
+  [[nodiscard]] const ViewportState& viewport() const override { return m_viewport; }
+  [[nodiscard]] int local_owner_id() const override { return m_runtime.local_owner_id; }
+  void set_cursor_mode(CursorMode mode) override;
+  [[nodiscard]] InputCommandHandler* input_handler() const override;
+  [[nodiscard]] App::Controllers::CommandController*
+  command_controller() const override;
+  [[nodiscard]] ProductionManager* production_manager() const override;
 
   std::unique_ptr<Game::Session::SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
@@ -703,11 +668,6 @@ signals:
   void is_loading_changed();
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
-  void placing_formation_changed();
-  void placing_construction_changed();
-  void construction_preview_active_changed();
-  void construction_preview_valid_changed();
-  void construction_preview_summary_changed();
   void campaign_mission_changed();
   void civilian_delivery_available_changed();
   void control_mode_changed();

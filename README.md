@@ -152,15 +152,15 @@ make run-map-pipeline map_pipeline_rebuild=1
 ### Running Tests
 
 ```bash
-# Execute the full test suite
+# Execute the full test suite (five binaries, split by link surface)
 make test
 
-# Build the test binary only (useful for IDE integration)
-cd build && make standard_of_iron_tests
+# Build the test binaries only (useful for IDE integration)
+cd build && make soi_test_binaries
 
 # Filter to specific test suites
-./build/bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
-./build/bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
+./build/bin/simulation_tests --gtest_filter=SerializationTest.*
+./build/bin/persistence_tests --gtest_filter=SaveStorageTest.*
 ```
 
 See [tests/README.md](https://github.com/djeada/Standard-of-Iron/blob/main/tests/README.md) for additional testing documentation.
@@ -495,7 +495,7 @@ The engine is moving from a single hardcoded nation toward a scalable multi-fact
 - Multiple _map files_ are playable with distinct layouts and objectives.
 - A _resource economy_ with gathering, spending, and marketplace trade.
 - _Campaign progression_ with mission unlocking and per-slot save metadata.
-- A _simulation kernel_ (`game_sim`) that builds and runs with no renderer linked, exercised by `bin/headless_simulation_tests`.
+- A _simulation kernel_ (`game_sim`) that builds and runs with no renderer linked, exercised by `bin/simulation_tests`, which links that kernel and nothing else.
 - A _session context_ that owns all per-match state, so two matches can run in one process and tests get isolation.
 - A _canonical command pipeline_: player, AI and scripted orders share one validation pass, one queue and one execution point per tick.
 - A _fixed-tick simulation clock_ and a seeded deterministic RNG, both persisted in saves.
@@ -504,7 +504,7 @@ The engine is moving from a single hardcoded nation toward a scalable multi-fact
 **In progress:**
 
 - Migrating gameplay call sites from the ambient `instance()` accessors to explicit `SessionContext&` parameters.
-- Moving `GameEngine`'s QML surface onto focused view models; the save-slot browser has moved, placement and campaign are next.
+- Moving `GameEngine`'s QML surface onto focused view models; the save-slot browser and placement have moved, campaign and camera control are next.
 
 **Planned:**
 

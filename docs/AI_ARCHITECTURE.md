@@ -430,7 +430,7 @@ Current AI test coverage includes:
 For repo validation, the reliable test binary is:
 
 ```bash
-./build/bin/standard_of_iron_tests --gtest_color=no --gtest_brief=1
+./build/bin/simulation_tests --gtest_color=no --gtest_brief=1
 ```
 
 ## What is already strong
