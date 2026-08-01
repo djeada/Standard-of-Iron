@@ -1,0 +1,14 @@
+{
+  "id": "carthage.cavalry_wedge",
+  "shape": "wedge",
+  "lateral_spacing_scale": 1.22,
+  "depth_spacing_scale": 1.02,
+  "wedge_slope": 0.3,
+  "rank_stagger": 0.62,
+  "rank_echelon": 0.34,
+  "rear_depth_bias": 0.08,
+  "lateral_jitter": 0.22,
+  "depth_jitter": 0.18,
+  "facing_jitter_degrees": 13.0,
+  "min_separation_scale": 0.46
+}

@@ -7,22 +7,14 @@
 #include <utility>
 #include <vector>
 
-#include "../../formation_system.h"
 #include "../../nation_registry.h"
+#include "../ai_formation.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace Game::Systems::AI {
 
 namespace {
-
-auto get_formation_type_for_player(int player_id) -> FormationType {
-  const Nation* nation = NationRegistry::instance().get_nation_for_player(player_id);
-  if (nation != nullptr) {
-    return nation->formation_type;
-  }
-  return FormationType::Roman;
-}
 
 auto select_visible_harass_target(const AISnapshot& snapshot,
                                   float reference_x,
@@ -153,13 +145,15 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
 
   if (visible_target != nullptr) {
     if (visible_target->is_building) {
-      FormationType formation_type = get_formation_type_for_player(context.player_id);
       QVector3D const attack_center(visible_target->pos_x, 0.0F, visible_target->pos_z);
-      auto formation_positions = FormationSystem::instance().get_formation_positions(
-          formation_type,
-          static_cast<int>(claimed_units.size()),
-          attack_center,
-          std::max(1.5F, context.strategy_config.attack_formation_spacing * 0.8F));
+      AIFormationRequest formation_request;
+      formation_request.player_id = context.player_id;
+      formation_request.anchor = attack_center;
+      formation_request.spacing =
+          std::max(1.5F, context.strategy_config.attack_formation_spacing * 0.8F);
+      formation_request.intent = Game::Formation::ArmyFormationIntent::Assault;
+      auto formation_positions =
+          plan_ai_formation(formation_request, claimed_units, snapshot);
 
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -200,7 +194,6 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  FormationType formation_type = get_formation_type_for_player(context.player_id);
   const float dx = objective->pos_x - group_center_x;
   const float dz = objective->pos_z - group_center_z;
   const float dist = std::sqrt(std::max(0.0F, dx * dx + dz * dz));
@@ -213,11 +206,13 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
   }
 
   QVector3D const move_center(target_center_x, 0.0F, target_center_z);
-  auto formation_positions = FormationSystem::instance().get_formation_positions(
-      formation_type,
-      static_cast<int>(claimed_units.size()),
-      move_center,
-      std::max(1.4F, context.strategy_config.gather_spacing));
+  AIFormationRequest formation_request;
+  formation_request.player_id = context.player_id;
+  formation_request.anchor = move_center;
+  formation_request.spacing = std::max(1.4F, context.strategy_config.gather_spacing);
+  formation_request.intent = Game::Formation::ArmyFormationIntent::Line;
+  auto formation_positions =
+      plan_ai_formation(formation_request, claimed_units, snapshot);
 
   std::vector<float> target_x;
   std::vector<float> target_y;

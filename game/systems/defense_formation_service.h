@@ -11,6 +11,7 @@
 namespace Engine::Core {
 class Entity;
 class World;
+using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace Game::Systems {

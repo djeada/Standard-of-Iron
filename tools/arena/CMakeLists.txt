@@ -3,6 +3,7 @@ add_library(
     STATIC
     arena_scenario.cpp
     arena_scenario_catalog.cpp
+    arena_formation_scenarios.cpp
     terrain_alignment.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
@@ -32,6 +33,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         arena_viewport.cpp
         terrain_panel.cpp
         prop_panel.cpp
+        arena_formation_scenarios.cpp
         promo_spec.cpp
         promo_runner.cpp
         video_encoder.cpp
@@ -51,6 +53,7 @@ else()
         arena_viewport.cpp
         terrain_panel.cpp
         prop_panel.cpp
+        arena_formation_scenarios.cpp
         promo_spec.cpp
         promo_runner.cpp
         video_encoder.cpp

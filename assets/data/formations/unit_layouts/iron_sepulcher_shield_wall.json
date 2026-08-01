@@ -1,0 +1,11 @@
+{
+  "id": "iron_sepulcher.shield_wall",
+  "shape": "shell",
+  "lateral_spacing_scale": 0.7,
+  "depth_spacing_scale": 0.74,
+  "front_rank_tightening": 0.12,
+  "lateral_jitter": 0.006,
+  "depth_jitter": 0.006,
+  "facing_jitter_degrees": 0.4,
+  "min_separation_scale": 0.84
+}

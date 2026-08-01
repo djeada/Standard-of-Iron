@@ -12,6 +12,8 @@
 
 #include "../../game/map/campaign_loader.h"
 #include "../../game/map/mission_loader.h"
+#include "game/formation/formation_data_loader.h"
+#include "game/units/troop_catalog_loader.h"
 
 namespace {
 
@@ -363,6 +365,28 @@ void printResults(const ValidationResult& result, const QString& file_name) {
 
 } // namespace
 
+auto validateFormationContent(const QString& assets_dir) -> bool {
+  const QString root = QDir(assets_dir).filePath(QStringLiteral("data/formations"));
+  if (!QDir(root).exists()) {
+    std::cout << "\nNo data/formations directory found (this is OK)" << '\n';
+    return true;
+  }
+
+  std::cout << "\nValidating formation content" << '\n';
+  std::cout << "----------------------------------------" << '\n';
+
+  Game::Units::TroopCatalogLoader::load_default_catalog();
+  Game::Formation::FormationDataLoader::reset_to_builtin_defaults();
+  const auto report = Game::Formation::FormationDataLoader::load_all(root);
+
+  for (const auto& issue : report.issues) {
+    std::cout << (issue.fatal ? "  ERROR   " : "  WARNING ") << issue.file.toStdString()
+              << ": " << issue.message.toStdString() << '\n';
+  }
+  std::cout << "  " << report.summary().toStdString() << '\n';
+  return !report.has_errors();
+}
+
 auto main(int argc, char* argv[]) -> int {
   QCoreApplication const app(argc, argv);
 
@@ -444,6 +468,10 @@ auto main(int argc, char* argv[]) -> int {
     }
   } else {
     std::cout << "\nNo campaigns directory found (this is OK)" << '\n';
+  }
+
+  if (!validateFormationContent(assets_dir)) {
+    all_valid = false;
   }
 
   std::cout << "\n========================================" << '\n';

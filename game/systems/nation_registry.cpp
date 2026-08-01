@@ -8,8 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include "../formation/formation_data_loader.h"
 #include "../session/session_context.h"
-#include "systems/formation_system.h"
 #include "systems/nation_loader.h"
 #include "systems/troop_profile_service.h"
 #include "units/troop_catalog.h"
@@ -177,7 +177,9 @@ void NationRegistry::initialize_defaults() {
   }
 
   clear();
+  Game::Formation::FormationDataLoader::reset_to_builtin_defaults();
   Game::Units::TroopCatalogLoader::load_default_catalog();
+  Game::Formation::FormationDataLoader::load_all();
 
   auto nations = NationLoader::load_default_nations();
   if (nations.empty()) {
@@ -185,7 +187,7 @@ void NationRegistry::initialize_defaults() {
     roman.id = NationID::RomanRepublic;
     roman.display_name = "Roman Republic";
     roman.primary_building = Game::Units::BuildingType::Barracks;
-    roman.formation_type = FormationType::Roman;
+    roman.doctrine = "rome";
 
     auto append_troop = [&roman](Game::Units::TroopType type) {
       TroopType troop_entry;

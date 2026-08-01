@@ -70,7 +70,7 @@ TEST(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   roman_profile.individuals_per_unit = 26;
   roman_profile.max_units_per_row = 7;
   roman_profile.visuals.formation_spacing = 1.05F;
-  roman_profile.formation_type = Game::Systems::FormationType::Roman;
+  roman_profile.doctrine = "rome";
   auto const roman_definition =
       Game::Systems::FormationCombat::resolve_definition(roman, roman_profile);
 
@@ -78,16 +78,16 @@ TEST(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   carthaginian.nation_id = Game::Systems::NationID::Carthage;
   Game::Systems::TroopProfile carthage_profile = roman_profile;
   carthage_profile.individuals_per_unit = 28;
-  carthage_profile.formation_type = Game::Systems::FormationType::Carthage;
+  carthage_profile.doctrine = "carthage";
   auto const carthage_definition = Game::Systems::FormationCombat::resolve_definition(
       carthaginian, carthage_profile);
 
   EXPECT_EQ(roman_definition.total_count, 26);
   EXPECT_EQ(roman_definition.max_per_row, 7);
-  EXPECT_EQ(roman_definition.type, Game::Systems::FormationType::Roman);
+  EXPECT_EQ(roman_definition.doctrine, "rome");
   EXPECT_EQ(carthage_definition.total_count, 28);
   EXPECT_EQ(carthage_definition.max_per_row, 7);
-  EXPECT_EQ(carthage_definition.type, Game::Systems::FormationType::Carthage);
+  EXPECT_EQ(carthage_definition.doctrine, "carthage");
 }
 
 TEST(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {

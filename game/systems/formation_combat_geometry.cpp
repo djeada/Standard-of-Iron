@@ -8,9 +8,9 @@
 #include <unordered_map>
 
 #include "../core/component.h"
+#include "../formation/unit_layout_resolver.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
-#include "formation_system.h"
 #include "troop_profile_service.h"
 
 namespace Game::Systems::FormationCombat {
@@ -31,11 +31,16 @@ auto is_mounted(Game::Units::SpawnType spawn_type) noexcept -> bool {
          spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
 }
 
-auto formation_category(const Engine::Core::UnitComponent& unit) noexcept
-    -> FormationUnitCategory {
-
-  return is_mounted(unit.spawn_type) ? FormationUnitCategory::Cavalry
-                                     : FormationUnitCategory::Infantry;
+auto resolve_layout_id(const Engine::Core::UnitComponent& unit,
+                       const Game::Formation::FormationDoctrineId& doctrine,
+                       Game::Formation::UnitLayoutState state) noexcept
+    -> Game::Formation::UnitLayoutId {
+  auto const troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+  if (!troop_type.has_value()) {
+    return Game::Formation::UnitLayoutLibrary::instance().resolve(
+        doctrine, "close_order_infantry");
+  }
+  return Game::Formation::select_unit_layout(doctrine, *troop_type, state);
 }
 
 auto world_slot(const Engine::Core::TransformComponent& transform,
@@ -204,7 +209,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit)
       Game::Units::TroopConfig::instance().get_max_units_per_row(unit.spawn_type);
   definition.spacing =
       Game::Units::TroopConfig::instance().get_formation_spacing(unit.spawn_type);
-  definition.category = formation_category(unit);
+  definition.doctrine = Game::Formation::default_doctrine_for_nation(unit.nation_id);
+  definition.layout =
+      resolve_layout_id(unit, definition.doctrine, definition.layout_state);
 
   if (auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
       unit.uses_nation_formation_profile && troop_type) {
@@ -229,8 +236,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit,
   definition.total_count = profile.individuals_per_unit;
   definition.max_per_row = profile.max_units_per_row;
   definition.spacing = profile.visuals.formation_spacing;
-  definition.type = profile.formation_type;
-  definition.category = formation_category(unit);
+  definition.doctrine = profile.doctrine;
+  definition.layout =
+      resolve_layout_id(unit, definition.doctrine, definition.layout_state);
   if (unit.render_individuals_per_unit_override > 0) {
     definition.total_count = unit.render_individuals_per_unit_override;
   }
@@ -321,16 +329,16 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
       [&](int stable_idx, int layout_idx, int layout_rows, int layout_cols) {
         int const row = layout_rows - 1 - layout_idx / layout_cols;
         int const col = layout_idx % layout_cols;
-        auto const offset =
-            FormationSystem::instance().get_local_offset(definition.type,
-                                                         definition.category,
-                                                         layout_idx,
-                                                         row,
-                                                         col,
-                                                         layout_rows,
-                                                         layout_cols,
-                                                         result.spacing,
-                                                         result.seed);
+        Game::Formation::UnitLayoutQuery query;
+        query.layout = definition.layout;
+        query.index = layout_idx;
+        query.row = row;
+        query.col = col;
+        query.rows = layout_rows;
+        query.cols = layout_cols;
+        query.spacing = result.spacing;
+        query.seed = result.seed;
+        auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
         auto const [world_x, world_z] =
             world_slot(resolved_transform, offset.offset_x, offset.offset_z);
         return SoldierSlot{static_cast<std::uint16_t>(stable_idx),

@@ -1,0 +1,16 @@
+{
+  "id": "rome.close_order_infantry",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.02,
+  "depth_spacing_scale": 1.24,
+  "rank_stagger": 0.0,
+  "rank_echelon": 0.0,
+  "rank_arc": 0.0,
+  "front_rank_tightening": 0.1,
+  "rear_rank_loosening": 0.0,
+  "lateral_jitter": 0.02,
+  "depth_jitter": 0.015,
+  "rear_jitter_gain": 0.4,
+  "facing_jitter_degrees": 0.8,
+  "min_separation_scale": 0.66
+}

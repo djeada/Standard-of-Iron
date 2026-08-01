@@ -505,10 +505,52 @@ void InputCommandHandler::on_formation_mouse_move(qreal sx,
   }
 
   QVector3D hit;
+  if (!Game::Systems::PickingService::screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+    return;
+  }
+
+  if (m_command_controller->is_dragging_formation()) {
+    m_command_controller->update_formation_drag(hit);
+    return;
+  }
+  m_command_controller->update_formation_placement(hit);
+}
+
+void InputCommandHandler::on_formation_drag_begin(qreal sx,
+                                                  qreal sy,
+                                                  const ViewportState& viewport) {
+  if ((m_command_controller == nullptr) || (m_camera == nullptr) ||
+      (m_picking_service == nullptr)) {
+    return;
+  }
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  QVector3D hit;
   if (Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-    m_command_controller->update_formation_placement(hit);
+    m_command_controller->begin_formation_drag(hit);
   }
+}
+
+void InputCommandHandler::on_formation_drag_update(qreal sx,
+                                                   qreal sy,
+                                                   const ViewportState& viewport) {
+  on_formation_mouse_move(sx, sy, viewport);
+}
+
+void InputCommandHandler::on_formation_drag_end() {
+  if (m_command_controller == nullptr) {
+    return;
+  }
+  m_command_controller->end_formation_drag();
+}
+
+auto InputCommandHandler::is_dragging_formation() const -> bool {
+  return m_command_controller != nullptr &&
+         m_command_controller->is_dragging_formation();
 }
 
 void InputCommandHandler::on_formation_scroll(float delta) {

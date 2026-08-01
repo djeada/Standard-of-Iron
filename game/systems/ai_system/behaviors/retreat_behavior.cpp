@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "../../formation_planner.h"
+#include "../../../formation/army_formation_service.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
@@ -70,7 +70,7 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
 
   retreat_pos.setX(retreat_pos.x() - 8.0F);
 
-  auto retreat_targets = FormationPlanner::spread_formation(
+  auto retreat_targets = Game::Formation::ArmyFormationService::spread(
       static_cast<int>(retreating_units.size()), retreat_pos, 2.0F);
 
   std::vector<Engine::Core::EntityID> unit_ids;

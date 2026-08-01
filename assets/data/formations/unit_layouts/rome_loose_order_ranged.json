@@ -1,0 +1,13 @@
+{
+  "id": "rome.loose_order_ranged",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.02,
+  "depth_spacing_scale": 1.36,
+  "rank_stagger": 0.0,
+  "rank_arc": 0.0,
+  "lateral_jitter": 0.06,
+  "depth_jitter": 0.05,
+  "rear_jitter_gain": 0.4,
+  "facing_jitter_degrees": 2.5,
+  "min_separation_scale": 0.6
+}

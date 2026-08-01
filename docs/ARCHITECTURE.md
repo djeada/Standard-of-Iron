@@ -45,6 +45,13 @@ enforced three ways:
 `Qt::Gui` is present for the value types (`QVector3D`, `QImage`). It brings in no
 windowing or GL usage of our own.
 
+`game/formation/` holds the two formation layers. They are deliberately
+separate: `UnitLayoutSystem` owns soldier offsets inside a single troop entity
+and is the only thing the renderer reads, while `ArmyFormationPlanner` and
+`ArmyFormationRegistry` own multi-unit deployment and are the only things
+player commands and AI reach for. See
+[docs/FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md).
+
 ### `game_view` — camera-facing gameplay services
 
 Picking, the camera services, the minimap layers, the selection controller and

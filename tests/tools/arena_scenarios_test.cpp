@@ -542,6 +542,96 @@ auto has_expectation(const Arena::ArenaScenarioDefinition& scenario,
 
 } // namespace
 
+TEST(ArenaScenariosTest, FormationScenariosCoverBothLayers) {
+  const QString unit_layout_ids[] = {QStringLiteral("unit_layout_role_lineup"),
+                                     QStringLiteral("unit_layout_faction_comparison"),
+                                     QStringLiteral("unit_layout_size_range"),
+                                     QStringLiteral("unit_layout_move_and_rotate"),
+                                     QStringLiteral("unit_layout_casualty_reflow"),
+                                     QStringLiteral("unit_layout_slope_adaptation"),
+                                     QStringLiteral("unit_layout_defensive_transition"),
+                                     QStringLiteral("unit_layout_disruption_recovery"),
+                                     QStringLiteral("unit_layout_large_army_cost")};
+  const QString army_formation_ids[] = {
+      QStringLiteral("army_formation_rome_default"),
+      QStringLiteral("army_formation_carthage_default"),
+      QStringLiteral("army_formation_rome_vs_carthage"),
+      QStringLiteral("army_formation_sepulcher_shrine_defence"),
+      QStringLiteral("army_formation_mixed_contingents"),
+      QStringLiteral("army_formation_narrow_gate"),
+      QStringLiteral("army_formation_around_buildings"),
+      QStringLiteral("army_formation_member_losses"),
+      QStringLiteral("army_formation_maintain_advance"),
+      QStringLiteral("army_formation_siege_escort")};
+
+  for (const auto& id : unit_layout_ids) {
+    auto const* scenario = Arena::Scenarios::find_definition(id);
+    ASSERT_NE(scenario, nullptr) << id.toStdString();
+    EXPECT_FALSE(scenario->groups.empty()) << id.toStdString();
+    EXPECT_FALSE(scenario->expectations.empty()) << id.toStdString();
+  }
+  for (const auto& id : army_formation_ids) {
+    auto const* scenario = Arena::Scenarios::find_definition(id);
+    ASSERT_NE(scenario, nullptr) << id.toStdString();
+    EXPECT_FALSE(scenario->groups.empty()) << id.toStdString();
+    EXPECT_FALSE(scenario->expectations.empty()) << id.toStdString();
+  }
+}
+
+TEST(ArenaScenariosTest, FormationTerrainScenariosCarryExecutableContracts) {
+  auto const* crossing = Arena::Scenarios::find_definition(
+      QStringLiteral("army_formation_bridge_crossing"));
+  ASSERT_NE(crossing, nullptr);
+  EXPECT_FALSE(crossing->rivers.empty());
+  EXPECT_FALSE(crossing->bridges.empty());
+  EXPECT_TRUE(has_expectation(*crossing,
+                              Arena::ArenaExpectationKind::BridgeTraversalObserved,
+                              QStringLiteral("vanguard")));
+  EXPECT_TRUE(has_expectation(*crossing,
+                              Arena::ArenaExpectationKind::GroupReachedDestination,
+                              QStringLiteral("vanguard")));
+
+  auto const* hill = Arena::Scenarios::find_definition(
+      QStringLiteral("army_formation_hill_deployment"));
+  ASSERT_NE(hill, nullptr);
+  EXPECT_FALSE(hill->elevation_patches.empty());
+  EXPECT_TRUE(has_expectation(*hill,
+                              Arena::ArenaExpectationKind::ElevationGainObserved,
+                              QStringLiteral("climbers")));
+
+  auto const* course = Arena::Scenarios::find_definition(
+      QStringLiteral("army_formation_obstacle_course"));
+  ASSERT_NE(course, nullptr);
+  EXPECT_FALSE(course->rivers.empty());
+  EXPECT_FALSE(course->bridges.empty());
+  EXPECT_FALSE(course->elevation_patches.empty());
+  EXPECT_TRUE(
+      std::any_of(course->groups.begin(), course->groups.end(), [](auto const& group) {
+        return group.spawn_type == Game::Units::SpawnType::WallSegment;
+      }));
+  EXPECT_TRUE(
+      std::any_of(course->groups.begin(), course->groups.end(), [](auto const& group) {
+        return group.spawn_type == Game::Units::SpawnType::Barracks;
+      }));
+}
+
+TEST(ArenaScenariosTest, ArmyFormationScenariosIssueFormationMoves) {
+  for (const auto& option : Arena::Scenarios::options()) {
+    if (!option.id.startsWith(QStringLiteral("army_formation_"))) {
+      continue;
+    }
+    auto const* scenario = Arena::Scenarios::find_definition(option.id);
+    ASSERT_NE(scenario, nullptr) << option.id.toStdString();
+    EXPECT_TRUE(std::any_of(scenario->steps.begin(),
+                            scenario->steps.end(),
+                            [](auto const& step) {
+                              return step.command ==
+                                     Arena::ScenarioCommandKind::FormationMove;
+                            }))
+        << option.id.toStdString() << " never issues a FormationMove";
+  }
+}
+
 TEST(ArenaScenariosTest, FlamingSiegeScenarioSeparatesFireFromMeleeDamage) {
   auto const* scenario = Arena::Scenarios::find_definition(
       QString::fromLatin1(Arena::Scenarios::k_structure_flaming_siege_id));

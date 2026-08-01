@@ -1,5 +1,4 @@
 #include "quiver_renderer.h"
-#include "render/math/creature_math_utils.h"
 
 #include <array>
 #include <cmath>
@@ -16,6 +15,7 @@
 #include "../oriented_archetype_utils.h"
 #include "arrow_archetype_utils.h"
 #include "math/math_utils.h"
+#include "render/math/creature_math_utils.h"
 
 namespace Render::GL {
 
