@@ -1184,6 +1184,23 @@ public:
   float fire_bonus_multiplier{1.0F};
 };
 
+class StructureFireComponent : public Component {
+public:
+  StructureFireComponent() = default;
+
+  float ignition_progress{0.0F};
+  float ignition_threshold{1.0F};
+  float duration{0.0F};
+  float remaining_duration{0.0F};
+  float ignition_elapsed{0.0F};
+  float tick_interval{0.75F};
+  float tick_accumulator{0.0F};
+  int damage_per_tick{0};
+  EntityID attacker_id{0};
+
+  [[nodiscard]] auto is_burning() const -> bool { return remaining_duration > 0.0F; }
+};
+
 enum class DeathSequenceProfile : std::uint8_t {
   Infantry = 0,
   MountedRider = 1,
@@ -1360,6 +1377,9 @@ public:
   float target_locked_y{0.0F};
   float target_locked_z{0.0F};
   bool target_position_locked{false};
+
+  Game::Systems::ProjectileKind loaded_projectile_kind{
+      Game::Systems::ProjectileKind::Stone};
 
   [[nodiscard]] auto get_loading_progress() const -> float {
     if (loading_duration <= 0.0F) {

@@ -61,7 +61,8 @@ public:
                    int damage = 0,
                    Engine::Core::EntityID attacker_id = 0,
                    Engine::Core::EntityID target_id = 0,
-                   std::optional<QVector3D> target_origin_at_launch = std::nullopt);
+                   std::optional<QVector3D> target_origin_at_launch = std::nullopt,
+                   ProjectileKind kind = ProjectileKind::Stone);
 
   [[nodiscard]] auto projectiles() const -> const std::vector<ProjectilePtr>& {
     return m_projectiles;

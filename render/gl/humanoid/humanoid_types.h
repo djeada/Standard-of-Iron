@@ -168,6 +168,8 @@ struct HumanoidPose {
   QVector3D elbow_l, elbow_r;
   QVector3D hand_l, hand_r;
 
+  QVector3D grip_axis_l, grip_axis_r;
+
   QVector3D pelvis_pos;
   QVector3D knee_l, knee_r;
 

@@ -159,7 +159,8 @@ auto resolve_humanoid_kneel_pose(const HumanoidKneelPoseInputs& inputs) noexcept
   float const kneel_offset = eased_depth * 0.40F;
   float const pelvis_y = inputs.waist_y - kneel_offset;
   float const stance_narrow = 0.11F;
-  float const left_knee_y = inputs.ground_y + 0.07F * eased_depth;
+  float const left_knee_y =
+      inputs.ground_y + std::max(0.07F * eased_depth, inputs.knee_radius);
   float const left_knee_z = -0.06F * eased_depth;
   float const right_knee_y = pelvis_y - 0.12F;
   float const right_foot_z = 0.28F * eased_depth;
@@ -170,7 +171,7 @@ auto resolve_humanoid_kneel_pose(const HumanoidKneelPoseInputs& inputs) noexcept
   sample.pelvis = {0.0F, pelvis_y, 0.0F};
   sample.knee_l = {-stance_narrow, left_knee_y, left_knee_z};
   sample.foot_l = {-stance_narrow - 0.025F,
-                   inputs.ground_y,
+                   inputs.ground_y + inputs.foot_y_offset,
                    left_knee_z - inputs.lower_leg_len * 0.93F * eased_depth};
   sample.knee_r = {stance_narrow, right_knee_y, right_foot_z - 0.05F};
   sample.foot_r = {stance_narrow, inputs.ground_y + inputs.foot_y_offset, right_foot_z};

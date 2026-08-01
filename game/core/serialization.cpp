@@ -494,6 +494,27 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["fire_patch"] = fire_patch_obj;
   }
 
+  if (const auto* structure_fire = entity->get_component<StructureFireComponent>()) {
+    QJsonObject structure_fire_obj;
+    structure_fire_obj["ignition_progress"] =
+        static_cast<double>(structure_fire->ignition_progress);
+    structure_fire_obj["ignition_threshold"] =
+        static_cast<double>(structure_fire->ignition_threshold);
+    structure_fire_obj["duration"] = static_cast<double>(structure_fire->duration);
+    structure_fire_obj["remaining_duration"] =
+        static_cast<double>(structure_fire->remaining_duration);
+    structure_fire_obj["ignition_elapsed"] =
+        static_cast<double>(structure_fire->ignition_elapsed);
+    structure_fire_obj["tick_interval"] =
+        static_cast<double>(structure_fire->tick_interval);
+    structure_fire_obj["tick_accumulator"] =
+        static_cast<double>(structure_fire->tick_accumulator);
+    structure_fire_obj["damage_per_tick"] = structure_fire->damage_per_tick;
+    structure_fire_obj["attacker_id"] =
+        static_cast<qint64>(structure_fire->attacker_id);
+    entity_obj["structure_fire"] = structure_fire_obj;
+  }
+
   if (const auto* commander_guard = entity->get_component<CommanderGuardComponent>()) {
     QJsonObject guard_obj;
     guard_obj["active"] = commander_guard->active;
@@ -516,6 +537,8 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     catapult_obj["target_locked_y"] = static_cast<double>(catapult->target_locked_y);
     catapult_obj["target_locked_z"] = static_cast<double>(catapult->target_locked_z);
     catapult_obj["target_position_locked"] = catapult->target_position_locked;
+    catapult_obj["loaded_projectile_kind"] =
+        static_cast<int>(catapult->loaded_projectile_kind);
     entity_obj["catapult_loading"] = catapult_obj;
   }
 
@@ -1231,6 +1254,34 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
             fire_patch->fire_bonus_multiplier));
   }
 
+  if (json.contains("structure_fire")) {
+    const auto structure_fire_obj = json["structure_fire"].toObject();
+    auto* structure_fire = entity->add_component<StructureFireComponent>();
+    structure_fire->ignition_progress =
+        static_cast<float>(structure_fire_obj["ignition_progress"].toDouble(
+            structure_fire->ignition_progress));
+    structure_fire->ignition_threshold =
+        static_cast<float>(structure_fire_obj["ignition_threshold"].toDouble(
+            structure_fire->ignition_threshold));
+    structure_fire->duration = static_cast<float>(
+        structure_fire_obj["duration"].toDouble(structure_fire->duration));
+    structure_fire->remaining_duration =
+        static_cast<float>(structure_fire_obj["remaining_duration"].toDouble(
+            structure_fire->remaining_duration));
+    structure_fire->ignition_elapsed =
+        static_cast<float>(structure_fire_obj["ignition_elapsed"].toDouble(
+            structure_fire->ignition_elapsed));
+    structure_fire->tick_interval = static_cast<float>(
+        structure_fire_obj["tick_interval"].toDouble(structure_fire->tick_interval));
+    structure_fire->tick_accumulator =
+        static_cast<float>(structure_fire_obj["tick_accumulator"].toDouble(
+            structure_fire->tick_accumulator));
+    structure_fire->damage_per_tick =
+        structure_fire_obj["damage_per_tick"].toInt(structure_fire->damage_per_tick);
+    structure_fire->attacker_id = static_cast<EntityID>(
+        structure_fire_obj["attacker_id"].toVariant().toULongLong());
+  }
+
   if (json.contains("commander_guard")) {
     const auto guard_obj = json["commander_guard"].toObject();
     auto* commander_guard = entity->add_component<CommanderGuardComponent>();
@@ -1265,6 +1316,9 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(catapult_obj["target_locked_z"].toDouble(0.0));
     catapult->target_position_locked =
         catapult_obj["target_position_locked"].toBool(false);
+    catapult->loaded_projectile_kind = static_cast<Game::Systems::ProjectileKind>(
+        catapult_obj["loaded_projectile_kind"].toInt(
+            static_cast<int>(Game::Systems::ProjectileKind::Stone)));
   }
 
   if (json.contains("elephant")) {

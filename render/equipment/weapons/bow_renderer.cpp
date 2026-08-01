@@ -35,18 +35,28 @@ using Render::Geom::clamp_f;
 
 namespace {
 constexpr QVector3D k_dark_bow_color(0.05F, 0.035F, 0.02F);
-constexpr float k_bow_length_scale = 1.35F;
-constexpr float k_bow_thickness_scale = 1.3F;
-constexpr float k_bow_depth_scale = 1.8F;
-constexpr float k_bow_curve_boost = 2.2F;
-constexpr float k_bow_vertical_control_factor = 0.18F;
-constexpr float k_bow_depth_control_factor = 0.8F;
+constexpr float k_bow_length_scale = 1.05F;
+constexpr float k_bow_thickness_scale = 1.0F;
+constexpr float k_bow_depth_scale = 1.0F;
+constexpr float k_bow_curve_boost = 1.0F;
 constexpr float k_bow_grip_side_offset = 0.0F;
-constexpr float k_bow_string_draw_setback = 0.18F;
+constexpr float k_bow_brace_scale = 0.6F;
+constexpr float k_bow_brace_min = 0.10F;
+constexpr float k_bow_brace_max = 0.20F;
+constexpr float k_nocked_arrow_length = 0.78F;
+constexpr float k_nocked_arrow_shaft_radius = 0.011F;
+constexpr float k_nocked_arrow_head_radius = 0.024F;
+constexpr float k_nocked_arrow_head_length = 0.075F;
+constexpr float k_nocked_arrow_fletching_radius = 0.026F;
+constexpr float k_nocked_arrow_fletching_length = 0.055F;
+constexpr float k_nocked_arrow_rest_height = 0.03F;
 
 enum BowPaletteSlot : std::uint8_t {
   k_bow_body_slot = 0U,
   k_bow_string_slot = 1U,
+  k_bow_arrow_shaft_role = 2U,
+  k_bow_arrow_head_role = 3U,
+  k_bow_arrow_fletching_role = 4U,
 };
 
 struct BowResolvedGeometry {
@@ -58,6 +68,13 @@ struct BowResolvedGeometry {
   float string_setback{0.0F};
   float attack_string_radius{0.0F};
   float max_draw_depth{0.0F};
+};
+
+struct BowPlane {
+  QVector3D top_end;
+  QVector3D bot_end;
+  QVector3D control;
+  QVector3D string_center;
 };
 
 struct BowBodyKey {
@@ -95,10 +112,28 @@ auto resolve_bow_geometry(const BowRenderConfig& config) -> BowResolvedGeometry 
   geometry.half_height = (config.bow_top_y - config.bow_bot_y) * 0.5F *
                          config.bow_height_scale * k_bow_length_scale;
   geometry.curve_factor = config.bow_curve_factor * k_bow_curve_boost;
-  geometry.string_setback = k_bow_string_draw_setback;
+  geometry.string_setback =
+      std::clamp(geometry.depth * geometry.curve_factor * k_bow_brace_scale,
+                 k_bow_brace_min,
+                 k_bow_brace_max);
   geometry.attack_string_radius = geometry.string_radius * 0.5625F;
   geometry.max_draw_depth = std::max(0.35F, geometry.depth * 1.2F);
   return geometry;
+}
+
+auto resolve_bow_plane(const BowRenderConfig& config,
+                       const BowResolvedGeometry& geometry) -> BowPlane {
+  float const plane_x = config.bow_x + k_bow_grip_side_offset;
+  float const grip_z = config.bow_forward_offset;
+  float const brace = geometry.string_setback;
+
+  BowPlane plane;
+  plane.top_end = QVector3D(plane_x, geometry.half_height, grip_z - brace);
+  plane.bot_end = QVector3D(plane_x, -geometry.half_height, grip_z - brace);
+
+  plane.control = QVector3D(plane_x, 0.0F, grip_z + brace);
+  plane.string_center = QVector3D(plane_x, 0.0F, grip_z - brace);
+  return plane;
 }
 
 auto bow_body_archetype(const BowRenderConfig& config) -> const RenderArchetype& {
@@ -126,14 +161,10 @@ auto bow_body_archetype(const BowRenderConfig& config) -> const RenderArchetype&
     }
   }
 
-  float const bow_plane_x = config.bow_x + k_bow_grip_side_offset;
-  float const bow_plane_z = config.bow_forward_offset;
-  QVector3D const top_end(bow_plane_x, geometry.half_height, bow_plane_z);
-  QVector3D const bot_end(bow_plane_x, -geometry.half_height, bow_plane_z);
-  QVector3D const ctrl(bow_plane_x,
-                       geometry.half_height * k_bow_vertical_control_factor,
-                       bow_plane_z + geometry.depth * k_bow_depth_control_factor *
-                                         geometry.curve_factor);
+  BowPlane const plane = resolve_bow_plane(config, geometry);
+  QVector3D const top_end = plane.top_end;
+  QVector3D const bot_end = plane.bot_end;
+  QVector3D const ctrl = plane.control;
 
   auto q_bezier =
       [](const QVector3D& a, const QVector3D& c, const QVector3D& b, float t) {
@@ -161,13 +192,15 @@ auto bow_body_archetype(const BowRenderConfig& config) -> const RenderArchetype&
     prev = cur;
   }
 
-  add_generated_equipment_primitive(builder,
-                                    generated_cylinder(QVector3D(0.0F, -0.05F, 0.0F),
-                                                       QVector3D(0.0F, 0.05F, 0.0F),
-                                                       geometry.rod_radius * 1.45F,
-                                                       k_bow_body_slot,
-                                                       1.0F,
-                                                       config.material_id));
+  QVector3D const grip_center(plane.top_end.x(), 0.0F, config.bow_forward_offset);
+  add_generated_equipment_primitive(
+      builder,
+      generated_cylinder(grip_center - QVector3D(0.0F, 0.07F, 0.0F),
+                         grip_center + QVector3D(0.0F, 0.07F, 0.0F),
+                         geometry.rod_radius * 1.45F,
+                         k_bow_body_slot,
+                         1.0F,
+                         config.material_id));
 
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
@@ -198,11 +231,10 @@ auto bow_string_archetype(const BowRenderConfig& config) -> const RenderArchetyp
     }
   }
 
-  float const bow_plane_x = config.bow_x + k_bow_grip_side_offset;
-  float const bow_plane_z = config.bow_forward_offset;
-  QVector3D const top_end(bow_plane_x, geometry.half_height, bow_plane_z);
-  QVector3D const bot_end(bow_plane_x, -geometry.half_height, bow_plane_z);
-  QVector3D const nock_rest(bow_plane_x, 0.0F, bow_plane_z - geometry.string_setback);
+  BowPlane const plane = resolve_bow_plane(config, geometry);
+  QVector3D const top_end = plane.top_end;
+  QVector3D const bot_end = plane.bot_end;
+  QVector3D const nock_rest = plane.string_center;
 
   RenderArchetypeBuilder builder{
       "bow_string_" + std::to_string(key.rod_radius_key) + "_" +
@@ -226,6 +258,68 @@ auto bow_string_archetype(const BowRenderConfig& config) -> const RenderArchetyp
                                                        k_bow_string_slot,
                                                        1.0F,
                                                        config.material_id));
+
+  cache.push_back({key, std::move(builder).build()});
+  return cache.back().archetype;
+}
+
+auto nocked_arrow_archetype(const BowRenderConfig& config) -> const RenderArchetype& {
+  struct CachedArchetype {
+    BowBodyKey key;
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  BowResolvedGeometry const geometry = resolve_bow_geometry(config);
+  BowBodyKey const key{
+      quantize_bow_value(k_nocked_arrow_length),
+      quantize_bow_value(geometry.string_setback),
+      quantize_bow_value(config.bow_x),
+      quantize_bow_value(config.bow_forward_offset),
+      0,
+      0,
+      0,
+      0,
+      config.material_id,
+  };
+  for (const auto& entry : cache) {
+    if (entry.key == key) {
+      return entry.archetype;
+    }
+  }
+
+  BowPlane const plane = resolve_bow_plane(config, geometry);
+  QVector3D const nock =
+      plane.string_center + QVector3D(0.0F, k_nocked_arrow_rest_height, 0.0F);
+  QVector3D const along(0.0F, 0.0F, 1.0F);
+  QVector3D const tip = nock + along * k_nocked_arrow_length;
+  QVector3D const head_base = tip - along * k_nocked_arrow_head_length;
+  QVector3D const fletching_end = nock + along * k_nocked_arrow_fletching_length;
+
+  RenderArchetypeBuilder builder{
+      "bow_nocked_arrow_" + std::to_string(key.rod_radius_key) + "_" +
+      std::to_string(key.bow_depth_key) + "_" + std::to_string(key.material_id)};
+  add_generated_equipment_primitive(builder,
+                                    generated_cylinder(nock,
+                                                       head_base,
+                                                       k_nocked_arrow_shaft_radius,
+                                                       k_arrow_shaft_slot,
+                                                       1.0F,
+                                                       config.material_id));
+  add_generated_equipment_primitive(builder,
+                                    generated_cone(head_base,
+                                                   tip,
+                                                   k_nocked_arrow_head_radius,
+                                                   k_arrow_head_slot,
+                                                   1.0F,
+                                                   config.material_id));
+  add_generated_equipment_primitive(builder,
+                                    generated_cone(fletching_end,
+                                                   nock,
+                                                   k_nocked_arrow_fletching_radius,
+                                                   k_arrow_fletching_slot,
+                                                   1.0F,
+                                                   config.material_id));
 
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
@@ -315,8 +409,8 @@ void BowRenderer::submit(const BowRenderConfig& m_config,
 
   QVector3D const string_plane_center =
       bow_base - bow_forward * geometry.string_setback;
-  QVector3D const top_end = bow_base + bow_up * geometry.half_height;
-  QVector3D const bot_end = bow_base - bow_up * geometry.half_height;
+  QVector3D const top_end = string_plane_center + bow_up * geometry.half_height;
+  QVector3D const bot_end = string_plane_center - bow_up * geometry.half_height;
 
   QVector3D nock = string_plane_center;
   auto const nock_from_string_hand = [&](const QVector3D& string_hand) {
@@ -430,7 +524,7 @@ void BowRenderer::submit(const BowRenderConfig& m_config,
   }
 }
 
-auto bow_fill_role_colors(const HumanoidPalette&,
+auto bow_fill_role_colors(const HumanoidPalette& palette,
                           QVector3D* out,
                           std::size_t max) -> std::uint32_t {
   if (max < k_bow_role_count) {
@@ -439,12 +533,15 @@ auto bow_fill_role_colors(const HumanoidPalette&,
   constexpr BowRenderConfig cfg{};
   out[k_bow_body_slot] = k_dark_bow_color;
   out[k_bow_string_slot] = cfg.string_color;
+  out[k_bow_arrow_shaft_role] = palette.wood;
+  out[k_bow_arrow_head_role] = cfg.metal_color;
+  out[k_bow_arrow_fletching_role] = cfg.fletching_color;
   return k_bow_role_count;
 }
 
 auto bow_make_static_attachments(const BowRenderConfig& config,
                                  std::uint8_t base_role_byte)
-    -> std::array<Render::Creature::StaticAttachmentSpec, 2> {
+    -> std::array<Render::Creature::StaticAttachmentSpec, 3> {
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandR;
   QMatrix4x4 const bind_bone =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
@@ -493,7 +590,21 @@ auto bow_make_static_attachments(const BowRenderConfig& config,
   string_spec.palette_role_remap[k_bow_string_slot] =
       static_cast<std::uint8_t>(base_role_byte + 1U);
 
-  return {body_spec, string_spec};
+  auto arrow_spec = Render::Equipment::build_socket_static_attachment({
+      .archetype = &nocked_arrow_archetype(config),
+      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
+      .bind_bone_transform = bind_bone,
+      .bind_socket_transform = bind_socket,
+      .mesh_from_socket = mesh_from_socket,
+  });
+  arrow_spec.palette_role_remap[k_arrow_shaft_slot] =
+      static_cast<std::uint8_t>(base_role_byte + k_bow_arrow_shaft_role);
+  arrow_spec.palette_role_remap[k_arrow_head_slot] =
+      static_cast<std::uint8_t>(base_role_byte + k_bow_arrow_head_role);
+  arrow_spec.palette_role_remap[k_arrow_fletching_slot] =
+      static_cast<std::uint8_t>(base_role_byte + k_bow_arrow_fletching_role);
+
+  return {body_spec, string_spec, arrow_spec};
 }
 
 } // namespace Render::GL

@@ -1417,6 +1417,38 @@ TEST_F(SerializationTest, BurningStatusComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->fire_bonus_multiplier, 1.8F);
 }
 
+TEST_F(SerializationTest, StructureFireComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* fire = original_entity->add_component<StructureFireComponent>();
+  fire->ignition_progress = 140.0F;
+  fire->ignition_threshold = 160.0F;
+  fire->duration = 7.0F;
+  fire->remaining_duration = 4.25F;
+  fire->ignition_elapsed = 2.75F;
+  fire->tick_interval = 0.75F;
+  fire->tick_accumulator = 0.4F;
+  fire->damage_per_tick = 8;
+  fire->attacker_id = 77;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<StructureFireComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->ignition_progress, 140.0F);
+  EXPECT_FLOAT_EQ(deserialized->ignition_threshold, 160.0F);
+  EXPECT_FLOAT_EQ(deserialized->duration, 7.0F);
+  EXPECT_FLOAT_EQ(deserialized->remaining_duration, 4.25F);
+  EXPECT_FLOAT_EQ(deserialized->ignition_elapsed, 2.75F);
+  EXPECT_FLOAT_EQ(deserialized->tick_interval, 0.75F);
+  EXPECT_FLOAT_EQ(deserialized->tick_accumulator, 0.4F);
+  EXPECT_EQ(deserialized->damage_per_tick, 8);
+  EXPECT_EQ(deserialized->attacker_id, 77U);
+  EXPECT_TRUE(deserialized->is_burning());
+}
+
 TEST_F(SerializationTest, SpecialAttackComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   auto* special_attack = original_entity->add_component<SpecialAttackComponent>();
@@ -1537,6 +1569,7 @@ TEST_F(SerializationTest, CatapultLoadingComponentRoundTrip) {
   catapult->target_locked_y = 75.0F;
   catapult->target_locked_z = 250.0F;
   catapult->target_position_locked = false;
+  catapult->loaded_projectile_kind = Game::Systems::ProjectileKind::FlamingStone;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -1555,6 +1588,8 @@ TEST_F(SerializationTest, CatapultLoadingComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->target_locked_y, 75.0F);
   EXPECT_FLOAT_EQ(deserialized->target_locked_z, 250.0F);
   EXPECT_FALSE(deserialized->target_position_locked);
+  EXPECT_EQ(deserialized->loaded_projectile_kind,
+            Game::Systems::ProjectileKind::FlamingStone);
 }
 
 TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {

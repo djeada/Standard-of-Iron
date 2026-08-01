@@ -596,6 +596,7 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
   copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<FirePatchComponent>(source, destination);
+  copy_snapshot_component<StructureFireComponent>(source, destination);
   copy_snapshot_component<ElephantComponent>(source, destination);
   copy_snapshot_component<ElephantStompImpactComponent>(source, destination);
   copy_snapshot_component<CatapultLoadingComponent>(source, destination);
@@ -651,6 +652,7 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
                          entity.has_component<RpgContactPresentationComponent>() ||
                          entity.has_component<BloodStainComponent>() ||
                          entity.has_component<FirePatchComponent>() ||
+                         entity.has_component<StructureFireComponent>() ||
                          entity.has_component<ElephantStompImpactComponent>() ||
                          entity.has_component<CatapultLoadingComponent>();
   return !moving && !active_creature && !active_combat && !transient;

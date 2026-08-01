@@ -8,6 +8,7 @@
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/siege_special_processor.h"
 #include "systems/owner_registry.h"
+#include "systems/projectile_kind.h"
 #include "systems/projectile_system.h"
 #include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
@@ -66,6 +67,53 @@ protected:
     atk->max_height_difference = height_diff;
     atk->time_since_last = 999.0F;
     return tower;
+  }
+
+  auto make_catapult(float x, float z, int owner_id) -> Entity* {
+    auto* catapult = world->create_entity();
+    catapult->add_component<TransformComponent>(x, 0.0F, z);
+    auto* unit = catapult->add_component<UnitComponent>(420, 420, 1.0F, 20.0F);
+    unit->owner_id = owner_id;
+    unit->spawn_type = Game::Units::SpawnType::Catapult;
+    auto* atk = catapult->add_component<AttackComponent>(20.0F, 150, 4.5F);
+    atk->can_ranged = true;
+    atk->can_melee = false;
+    atk->preferred_mode = AttackComponent::CombatMode::Ranged;
+    atk->current_mode = AttackComponent::CombatMode::Ranged;
+    atk->time_since_last = 999.0F;
+    return catapult;
+  }
+
+  auto make_building(float x, float z, int owner_id) -> Entity* {
+    auto* building = world->create_entity();
+    building->add_component<TransformComponent>(x, 0.0F, z);
+    auto* unit = building->add_component<UnitComponent>(3000, 3000, 0.0F, 20.0F);
+    unit->owner_id = owner_id;
+    unit->spawn_type = Game::Units::SpawnType::Barracks;
+    building->add_component<BuildingComponent>();
+    return building;
+  }
+
+  void aim_at(Entity& siege, Entity& target) {
+    auto* attack_target = siege.get_component<AttackTargetComponent>();
+    if (attack_target == nullptr) {
+      attack_target = siege.add_component<AttackTargetComponent>();
+    }
+    attack_target->target_id = target.get_id();
+  }
+
+  [[nodiscard]] auto loaded_kind(Entity& siege) const -> ProjectileKind {
+    auto const* loading = siege.get_component<CatapultLoadingComponent>();
+    return loading != nullptr ? loading->loaded_projectile_kind : ProjectileKind::Arrow;
+  }
+
+  void run_until_shot_leaves(Entity& siege, float max_seconds = 6.0F) {
+    for (float elapsed = 0.0F; elapsed < max_seconds; elapsed += 0.1F) {
+      update(0.1F);
+      if (!world->get_system<ProjectileSystem>()->projectiles().empty()) {
+        return;
+      }
+    }
   }
 
   auto make_enemy(float x, float y, float z, int owner_id) -> Entity* {
@@ -347,4 +395,116 @@ TEST_F(SiegeSpecialProcessorTest, SquadAlertSkipsAllyUnderManualMoveOrder) {
   auto* defender_target = defender->get_component<AttackTargetComponent>();
   ASSERT_NE(defender_target, nullptr);
   EXPECT_EQ(defender_target->target_id, attacker->get_id());
+}
+
+TEST_F(SiegeSpecialProcessorTest, CatapultLoadsFlamingShotAgainstStructures) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  aim_at(*catapult, *barracks);
+
+  update(0.1F);
+
+  EXPECT_EQ(loaded_kind(*catapult), ProjectileKind::FlamingStone);
+}
+
+TEST_F(SiegeSpecialProcessorTest, CatapultLoadsPlainShotAgainstSoldiers) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* infantry = make_enemy(0.0F, 0.0F, 12.0F, 2);
+  aim_at(*catapult, *infantry);
+
+  update(0.1F);
+
+  EXPECT_EQ(loaded_kind(*catapult), ProjectileKind::Stone);
+}
+
+TEST_F(SiegeSpecialProcessorTest, RetargetingFromStructureToSoldierSwapsAmmunition) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  auto* infantry = make_enemy(4.0F, 0.0F, 10.0F, 2);
+  aim_at(*catapult, *barracks);
+  update(0.1F);
+  ASSERT_EQ(loaded_kind(*catapult), ProjectileKind::FlamingStone);
+
+  aim_at(*catapult, *infantry);
+  update(0.1F);
+
+  EXPECT_EQ(loaded_kind(*catapult), ProjectileKind::Stone);
+  auto const* loading = catapult->get_component<CatapultLoadingComponent>();
+  ASSERT_NE(loading, nullptr);
+  EXPECT_EQ(loading->target_id, infantry->get_id());
+}
+
+TEST_F(SiegeSpecialProcessorTest, RetargetingFromSoldierToStructureSwapsAmmunition) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* infantry = make_enemy(4.0F, 0.0F, 10.0F, 2);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  aim_at(*catapult, *infantry);
+  update(0.1F);
+  ASSERT_EQ(loaded_kind(*catapult), ProjectileKind::Stone);
+
+  aim_at(*catapult, *barracks);
+  update(0.1F);
+
+  EXPECT_EQ(loaded_kind(*catapult), ProjectileKind::FlamingStone);
+}
+
+TEST_F(SiegeSpecialProcessorTest, RetargetingKeepsTheReloadProgressAlreadyEarned) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  auto* infantry = make_enemy(4.0F, 0.0F, 10.0F, 2);
+  aim_at(*catapult, *barracks);
+  for (int step = 0; step < 8; ++step) {
+    update(0.1F);
+  }
+  auto const* loading = catapult->get_component<CatapultLoadingComponent>();
+  ASSERT_NE(loading, nullptr);
+  float const progress_before = loading->loading_time;
+  ASSERT_GT(progress_before, 0.0F);
+
+  aim_at(*catapult, *infantry);
+  update(0.1F);
+
+  EXPECT_GE(loading->loading_time, progress_before);
+}
+
+TEST_F(SiegeSpecialProcessorTest, CatapultFiresTheAmmunitionItLoaded) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  aim_at(*catapult, *barracks);
+
+  run_until_shot_leaves(*catapult);
+
+  auto const& projectiles = world->get_system<ProjectileSystem>()->projectiles();
+  ASSERT_EQ(projectiles.size(), 1U);
+  EXPECT_EQ(projectiles.front()->get_kind(), ProjectileKind::FlamingStone);
+}
+
+TEST_F(SiegeSpecialProcessorTest, ShotInFlightKeepsTheKindItLaunchedWith) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* barracks = make_building(0.0F, 12.0F, 2);
+  auto* infantry = make_enemy(4.0F, 0.0F, 10.0F, 2);
+  aim_at(*catapult, *barracks);
+  run_until_shot_leaves(*catapult);
+  auto* projectile_system = world->get_system<ProjectileSystem>();
+  ASSERT_EQ(projectile_system->projectiles().size(), 1U);
+
+  aim_at(*catapult, *infantry);
+  update(0.1F);
+  projectile_system->update(world.get(), 0.05F);
+
+  ASSERT_FALSE(projectile_system->projectiles().empty());
+  EXPECT_EQ(projectile_system->projectiles().front()->get_kind(),
+            ProjectileKind::FlamingStone);
+}
+
+TEST_F(SiegeSpecialProcessorTest, CatapultStonesAgainstSoldiersStayPlain) {
+  auto* catapult = make_catapult(0.0F, 0.0F, 1);
+  auto* infantry = make_enemy(0.0F, 0.0F, 12.0F, 2);
+  aim_at(*catapult, *infantry);
+
+  run_until_shot_leaves(*catapult);
+
+  auto const& projectiles = world->get_system<ProjectileSystem>()->projectiles();
+  ASSERT_EQ(projectiles.size(), 1U);
+  EXPECT_EQ(projectiles.front()->get_kind(), ProjectileKind::Stone);
 }

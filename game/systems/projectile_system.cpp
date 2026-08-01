@@ -70,6 +70,8 @@ auto target_escaped_impact(const Engine::Core::Entity* target,
     return 1.10F;
   case ProjectileKind::Stone:
     return 1.25F;
+  case ProjectileKind::FlamingStone:
+    return 1.45F;
   case ProjectileKind::CursedArrow:
     return 0.80F;
   case ProjectileKind::Arrow:
@@ -165,7 +167,8 @@ void ProjectileSystem::spawn_stone(const QVector3D& start,
                                    int damage,
                                    Engine::Core::EntityID attacker_id,
                                    Engine::Core::EntityID target_id,
-                                   std::optional<QVector3D> target_origin_at_launch) {
+                                   std::optional<QVector3D> target_origin_at_launch,
+                                   ProjectileKind kind) {
   QVector3D const delta = end - start;
   float const dist = delta.length();
 
@@ -188,7 +191,8 @@ void ProjectileSystem::spawn_stone(const QVector3D& start,
                                         damage,
                                         attacker_id,
                                         target_id,
-                                        target_origin_at_launch.value_or(end)));
+                                        target_origin_at_launch.value_or(end),
+                                        kind));
 }
 
 void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {

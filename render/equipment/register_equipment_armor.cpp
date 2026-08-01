@@ -253,9 +253,9 @@ auto build_roman_greaves_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {
       Render::GL::roman_greaves_make_static_attachment(
-          humanoid_foot_l_bone(), base_role_byte, humanoid_shin_bind_matrix(true)),
+          humanoid_knee_l_bone(), base_role_byte, humanoid_shin_bind_matrix(true)),
       Render::GL::roman_greaves_make_static_attachment(
-          humanoid_foot_r_bone(), base_role_byte, humanoid_shin_bind_matrix(false)),
+          humanoid_knee_r_bone(), base_role_byte, humanoid_shin_bind_matrix(false)),
   };
 }
 
