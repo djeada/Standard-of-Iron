@@ -77,7 +77,10 @@ add_executable(
     systems/home_manpower_system_test.cpp
     systems/civilian_delivery_system_test.cpp
     systems/building_collision_test.cpp
+    systems/building_obstruction_lifecycle_test.cpp
     systems/combat_mode_test.cpp
+    systems/hold_mode_test.cpp
+    systems/defense_formation_test.cpp
     systems/rpg_engagement_system_test.cpp
     systems/command_service_test.cpp
     systems/commander_system_test.cpp

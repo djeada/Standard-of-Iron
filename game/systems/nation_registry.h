@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -43,6 +44,40 @@ struct NationTroopVariant {
   std::vector<std::string> abilities;
 };
 
+struct DefenseFormationProfile {
+  std::string id;
+  std::string display_name;
+  std::vector<Game::Units::TroopType> eligible_troops;
+
+  int min_units = 3;
+  int max_units_per_rank = 4;
+  float rank_spacing = 1.6F;
+  float file_spacing = 1.4F;
+
+  float form_seconds = 2.5F;
+  float break_seconds = 1.2F;
+
+  float move_speed_multiplier = 0.35F;
+  float turn_speed_multiplier = 0.45F;
+  bool allows_charge = false;
+
+  float frontal_missile_multiplier = 0.2F;
+  float frontal_melee_multiplier = 0.7F;
+  float flank_multiplier = 1.2F;
+  float rear_multiplier = 1.5F;
+  float cavalry_impact_multiplier = 1.0F;
+  float attack_output_multiplier = 0.55F;
+
+  float frontal_arc_degrees = 100.0F;
+  float cohesion_radius = 3.2F;
+  float min_cohesion_ratio = 0.6F;
+
+  [[nodiscard]] auto is_eligible_troop(Game::Units::TroopType unit_type) const -> bool {
+    return std::find(eligible_troops.begin(), eligible_troops.end(), unit_type) !=
+           eligible_troops.end();
+  }
+};
+
 struct TroopType {
   Game::Units::TroopType unit_type;
   std::string display_name;
@@ -60,6 +95,7 @@ struct Nation {
   std::optional<Game::Units::BuildingType> primary_building =
       Game::Units::BuildingType::Barracks;
   FormationType formation_type = FormationType::Roman;
+  std::optional<DefenseFormationProfile> defense_formation;
   bool playable = true;
   bool has_economy = true;
   std::string ai_profile = "standard";

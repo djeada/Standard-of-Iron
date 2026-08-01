@@ -140,6 +140,72 @@ parse_formation_type(const QString& value) -> std::optional<FormationType> {
   return std::nullopt;
 }
 
+[[nodiscard]] auto parse_defense_formation(const QJsonObject& obj)
+    -> std::optional<Game::Systems::DefenseFormationProfile> {
+  if (obj.isEmpty()) {
+    return std::nullopt;
+  }
+
+  Game::Systems::DefenseFormationProfile profile{};
+  profile.id = read_string(obj, "id", QStringLiteral("shield_wall")).toStdString();
+  profile.display_name =
+      read_string(obj, "display_name", QString::fromStdString(profile.id))
+          .toStdString();
+
+  for (const auto& troop : ensure_array(obj.value("eligible_troops"))) {
+    const auto parsed =
+        Game::Units::try_parse_troop_type(troop.toString().toStdString());
+    if (parsed.has_value()) {
+      profile.eligible_troops.push_back(*parsed);
+    }
+  }
+  if (profile.eligible_troops.empty()) {
+    return std::nullopt;
+  }
+
+  profile.min_units = read_int_opt(obj, "min_units").value_or(profile.min_units);
+  profile.max_units_per_rank =
+      read_int_opt(obj, "max_units_per_rank").value_or(profile.max_units_per_rank);
+  profile.rank_spacing =
+      read_float_opt(obj, "rank_spacing").value_or(profile.rank_spacing);
+  profile.file_spacing =
+      read_float_opt(obj, "file_spacing").value_or(profile.file_spacing);
+  profile.form_seconds =
+      read_float_opt(obj, "form_seconds").value_or(profile.form_seconds);
+  profile.break_seconds =
+      read_float_opt(obj, "break_seconds").value_or(profile.break_seconds);
+  profile.move_speed_multiplier = read_float_opt(obj, "move_speed_multiplier")
+                                      .value_or(profile.move_speed_multiplier);
+  profile.turn_speed_multiplier = read_float_opt(obj, "turn_speed_multiplier")
+                                      .value_or(profile.turn_speed_multiplier);
+  profile.allows_charge =
+      read_bool_opt(obj, "allows_charge").value_or(profile.allows_charge);
+
+  const QJsonObject damage = ensure_object(obj.value("damage_multipliers"));
+  profile.frontal_missile_multiplier =
+      read_float_opt(damage, "frontal_missile")
+          .value_or(profile.frontal_missile_multiplier);
+  profile.frontal_melee_multiplier = read_float_opt(damage, "frontal_melee")
+                                         .value_or(profile.frontal_melee_multiplier);
+  profile.flank_multiplier =
+      read_float_opt(damage, "flank").value_or(profile.flank_multiplier);
+  profile.rear_multiplier =
+      read_float_opt(damage, "rear").value_or(profile.rear_multiplier);
+  profile.cavalry_impact_multiplier = read_float_opt(damage, "cavalry_impact")
+                                          .value_or(profile.cavalry_impact_multiplier);
+
+  profile.attack_output_multiplier = read_float_opt(obj, "attack_output_multiplier")
+                                         .value_or(profile.attack_output_multiplier);
+  profile.frontal_arc_degrees =
+      read_float_opt(obj, "frontal_arc_degrees").value_or(profile.frontal_arc_degrees);
+  profile.cohesion_radius =
+      read_float_opt(obj, "cohesion_radius").value_or(profile.cohesion_radius);
+  profile.min_cohesion_ratio =
+      read_float_opt(obj, "min_cohesion_ratio").value_or(profile.min_cohesion_ratio);
+
+  return profile;
+}
+
 [[nodiscard]] auto logger() -> QLoggingCategory& {
   static QLoggingCategory category("NationLoader");
   return category;
@@ -420,6 +486,8 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
   if (auto formation = parse_formation_type(root.value("formation_type").toString())) {
     nation.formation_type = *formation;
   }
+  nation.defense_formation =
+      parse_defense_formation(ensure_object(root.value("defense_formation")));
   nation.playable = read_bool(root, "playable", nation.playable);
   nation.has_economy = read_bool(root, "has_economy", nation.has_economy);
   nation.ai_profile =

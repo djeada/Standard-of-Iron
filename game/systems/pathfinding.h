@@ -97,6 +97,10 @@ public:
   void
   mark_building_region_dirty(float center_x, float center_z, float width, float depth);
 
+  void mark_obstruction_released();
+
+  [[nodiscard]] auto obstruction_revision() const -> std::uint64_t;
+
   auto find_path(const Point& start, const Point& end) -> std::vector<Point>;
 
   static auto find_nearest_walkable_point(const Point& point,
@@ -170,6 +174,7 @@ private:
   std::vector<DirtyRegion> m_dirty_regions;
   bool m_full_update_required{true};
   std::atomic<std::uint64_t> m_applied_world_props_revision{0};
+  std::atomic<std::uint64_t> m_obstruction_revision{0};
 };
 
 } // namespace Game::Systems

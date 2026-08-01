@@ -4,7 +4,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <numbers>
+#include <vector>
 
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
@@ -13,6 +15,7 @@
 #include "combat_system/structure_combat.h"
 #include "command_service.h"
 #include "core/component.h"
+#include "defense_formation_service.h"
 #include "formation_combat_geometry.h"
 #include "order_service.h"
 #include "pathfinding.h"
@@ -75,6 +78,14 @@ auto max_navigation_speed(const Engine::Core::UnitComponent& unit,
     speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
   }
   return speed;
+}
+
+auto formation_navigation_speed(const Engine::Core::Entity& entity,
+                                const Engine::Core::UnitComponent& unit,
+                                const Engine::Core::StaminaComponent* stamina)
+    -> float {
+  return max_navigation_speed(unit, stamina) *
+         DefenseFormationService::move_speed_multiplier(entity);
 }
 
 auto melee_turn_speed_degrees(const Engine::Core::UnitComponent& unit) -> float {
@@ -183,9 +194,10 @@ void finalize_orientation(Engine::Core::Entity* entity,
       movement->get_vx() * movement->get_vx() + movement->get_vz() * movement->get_vz();
   auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
   float const turn_speed =
-      unit != nullptr
-          ? formation_turn_speed_degrees(*entity, *unit, desired_yaw_turn_speed_degrees)
-          : desired_yaw_turn_speed_degrees;
+      (unit != nullptr ? formation_turn_speed_degrees(
+                             *entity, *unit, desired_yaw_turn_speed_degrees)
+                       : desired_yaw_turn_speed_degrees) *
+      DefenseFormationService::turn_speed_multiplier(*entity);
   if (speed2 > 1e-5F) {
     float const target_yaw = std::atan2(movement->get_vx(), movement->get_vz()) *
                              180.0F / std::numbers::pi_v<float>;
@@ -212,8 +224,52 @@ void finalize_orientation(Engine::Core::Entity* entity,
 void MovementSystem::update(Engine::Core::World* world, float delta_time) {
   auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
 
+  if (auto* pathfinder = CommandService::get_pathfinder()) {
+    std::uint64_t const revision = pathfinder->obstruction_revision();
+    if (revision != m_obstruction_revision) {
+      m_obstruction_revision = revision;
+
+      pathfinder->update_navigation_grid();
+      repath_after_obstruction_release(*world, entities);
+    }
+  }
+
   for (auto* entity : entities) {
     move_unit(entity, world, delta_time);
+  }
+}
+
+void MovementSystem::repath_after_obstruction_release(
+    Engine::Core::World& world, const std::vector<Engine::Core::Entity*>& movers) {
+  for (auto* entity : movers) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->health <= 0) {
+      continue;
+    }
+
+    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    if (movement == nullptr || !movement->get_has_target()) {
+      continue;
+    }
+
+    QVector3D const goal =
+        movement->get_has_requested_goal()
+            ? QVector3D(movement->get_requested_goal_x(),
+                        0.0F,
+                        movement->get_requested_goal_z())
+            : QVector3D(movement->get_goal_x(), 0.0F, movement->get_goal_y());
+
+    if (!retarget_unit(world, entity->get_id(), goal)) {
+      continue;
+    }
+
+    movement->stuck_ref_valid = false;
+    movement->stuck_timer = 0.0F;
   }
 }
 
@@ -386,7 +442,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   bool const destination_allowed = is_point_allowed(final_goal, *entity, world);
 
   auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-  const float max_speed = max_navigation_speed(*unit, stamina);
+  const float max_speed = formation_navigation_speed(*entity, *unit, stamina);
   const float accel = max_speed * 4.0F;
   const float damping = 6.0F;
 

@@ -59,7 +59,7 @@ namespace {
 }
 
 [[nodiscard]] auto spear_braced_direction() noexcept -> PoseVec3 {
-  return normalize({0.05F, 0.40F, 0.91F});
+  return normalize({0.05F, -0.06F, 1.0F});
 }
 
 [[nodiscard]] auto

@@ -17,6 +17,7 @@
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
+#include "../systems/building_collision_registry.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
 #include "../systems/owner_registry.h"
@@ -145,12 +146,15 @@ void apply_authored_unit_behavior(Engine::Core::Entity& entity,
       guard->has_guard_target = true;
     }
   } else if (behavior == AuthoredUnitBehavior::Hold) {
-    auto* hold = entity.get_component<Engine::Core::HoldModeComponent>();
-    if (hold == nullptr) {
-      hold = entity.add_component<Engine::Core::HoldModeComponent>();
-    }
-    if (hold != nullptr) {
-      hold->active = true;
+    const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && Game::Units::can_use_hold_mode(unit->spawn_type)) {
+      auto* hold = entity.get_component<Engine::Core::HoldModeComponent>();
+      if (hold == nullptr) {
+        hold = entity.add_component<Engine::Core::HoldModeComponent>();
+      }
+      if (hold != nullptr) {
+        hold->active = true;
+      }
     }
   } else if (behavior == AuthoredUnitBehavior::Patrol) {
     std::vector<std::pair<float, float>> waypoints;
@@ -433,6 +437,11 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
                               runtime_grid_to_world(segment.z, def.grid.height));
       spawn_map_unit(sp, world, visuals);
     }
+  }
+
+  if (s_registry) {
+
+    Game::Systems::BuildingCollisionRegistry::instance().clear_authored_obstacles();
   }
 
   return rt;

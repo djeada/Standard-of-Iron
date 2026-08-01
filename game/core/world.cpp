@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../../animation/action_manifest.h"
+#include "../systems/building_collision_registry.h"
 #include "../systems/owner_registry.h"
 #include "../systems/troop_count_registry.h"
 #include "component.h"
@@ -718,6 +719,12 @@ void World::destroy_entity(EntityID entity_id) {
   if (index != 0 && index < m_slots.size()) {
     auto& slot = m_slots[index];
     if (slot.entity != nullptr && slot.generation == Handle::generation_of(entity_id)) {
+      if (slot.entity->has_component<BuildingComponent>()) {
+
+        Game::Systems::BuildingCollisionRegistry::instance().unregister_building(
+            entity_id);
+      }
+
       detach_from_all_component_sets(entity_id);
       slot.entity.reset();
 
