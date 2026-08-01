@@ -145,11 +145,13 @@ add_executable(
     render/humanoid/skeleton_test.cpp
     render/humanoid/humanoid_spec_test.cpp
     render/horse/mounted_seat_frame_test.cpp
+    render/horse/mounted_rider_seat_test.cpp
     render/horse/horse_spec_test.cpp
     render/horse/horse_anatomy_test.cpp
     render/elephant/elephant_spec_test.cpp
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
+    render/creature/species_manifest_parity_test.cpp
     render/creature/part_graph_test.cpp
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
@@ -170,6 +172,7 @@ add_executable(
     render/selection_ring_mesh_test.cpp
     render/arrow_cloud_render_test.cpp
     render/orientation_arrow_mesh_test.cpp
+    render/creature/rigged_mesh_asset_test.cpp
     render/creature/snapshot_mesh_asset_test.cpp
     render/creature/snapshot_mesh_cache_test.cpp
     render/creature/static_attachment_bake_test.cpp

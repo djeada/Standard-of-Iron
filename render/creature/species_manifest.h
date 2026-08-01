@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+#include <QVector3D>
 
 #include <array>
 #include <cstdint>
@@ -9,6 +10,7 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "part_graph.h"
 #include "quadruped/mesh_graph.h"
 #include "spec.h"
@@ -22,11 +24,32 @@ struct BakeClipDescriptor {
   bool loops{false};
 };
 
+// An attachment point carried through to the baked animation table, so that
+// equipment can be positioned from prebaked data instead of being re-derived
+// from a pose at draw time.
+struct BakeSocketDescriptor {
+  std::string_view name{};
+  std::uint32_t anchor_bone{0U};
+  QVector3D local_offset{};
+};
+
 using BindPaletteProviderFn = std::span<const QMatrix4x4> (*)() noexcept;
 using CreatureSpecProviderFn = const CreatureSpec& (*)() noexcept;
-using BakeClipPaletteFn = void (*)(std::size_t clip_index,
-                                   std::uint32_t frame_index,
-                                   std::vector<QMatrix4x4>& out_palettes);
+
+// Produces one frame of a clip. Palettes are always required; a species with no
+// sockets is passed a null socket sink. Palettes and sockets come from the same
+// call because they are derived from the same pose - computing them separately
+// would both double the work and let them drift apart.
+using BakeClipFrameFn = void (*)(std::size_t clip_index,
+                                 std::uint32_t frame_index,
+                                 std::vector<QMatrix4x4>& out_palettes,
+                                 std::vector<QMatrix4x4>* out_socket_transforms);
+
+// Fills in authored timing markers for a clip. Species that leave this null get
+// the generic markers looked up from the clip name.
+using BakeClipMarkersFn = void (*)(std::size_t clip_index,
+                                   std::string_view clip_name,
+                                   Animation::ClipMarkers& out);
 
 struct WholeMeshLodManifest {
   std::string_view primitive_name{};
@@ -51,9 +74,11 @@ struct SpeciesManifest {
   WholeMeshLodManifest lod_minimal{};
 
   std::span<const BakeClipDescriptor> clips{};
+  std::span<const BakeSocketDescriptor> sockets{};
   BindPaletteProviderFn bind_palette{nullptr};
   CreatureSpecProviderFn creature_spec{nullptr};
-  BakeClipPaletteFn bake_clip_palette{nullptr};
+  BakeClipFrameFn bake_clip_frame{nullptr};
+  BakeClipMarkersFn clip_markers{nullptr};
 };
 
 struct CompiledWholeMeshLod {

@@ -82,6 +82,7 @@ assets/campaign_map/*
 # Generated creature animation and snapshot assets
 assets/creatures/*.bpat
 assets/creatures/*.bpsm
+assets/creatures/*.bprm
 
 # Local virtualenvs
 venv/

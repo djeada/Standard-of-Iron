@@ -502,15 +502,15 @@ TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
       });
   ASSERT_NE(idle_it, manifest.clips.end());
   ASSERT_NE(fight_it, manifest.clips.end());
-  ASSERT_NE(manifest.bake_clip_palette, nullptr);
+  ASSERT_NE(manifest.bake_clip_frame, nullptr);
 
   std::vector<QMatrix4x4> idle;
   std::vector<QMatrix4x4> fight;
   constexpr std::uint32_t frame = 6U;
-  manifest.bake_clip_palette(
-      static_cast<std::size_t>(idle_it - manifest.clips.begin()), frame, idle);
-  manifest.bake_clip_palette(
-      static_cast<std::size_t>(fight_it - manifest.clips.begin()), frame, fight);
+  manifest.bake_clip_frame(
+      static_cast<std::size_t>(idle_it - manifest.clips.begin()), frame, idle, nullptr);
+  manifest.bake_clip_frame(
+      static_cast<std::size_t>(fight_it - manifest.clips.begin()), frame, fight, nullptr);
   ASSERT_EQ(idle.size(), Render::Elephant::k_elephant_bone_count);
   ASSERT_EQ(fight.size(), Render::Elephant::k_elephant_bone_count);
 

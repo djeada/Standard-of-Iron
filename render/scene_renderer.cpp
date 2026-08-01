@@ -37,6 +37,7 @@
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
+#include "creature/rigged_mesh_registry.h"
 #include "creature/snapshot_mesh_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
@@ -185,6 +186,8 @@ auto Renderer::initialize() -> bool {
                       Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
   (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
+      "assets/creatures");
+  (void)Render::Creature::Rigged::RiggedMeshRegistry::instance().load_all(
       "assets/creatures");
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   log_render_first_use_once(

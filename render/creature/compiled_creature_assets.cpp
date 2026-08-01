@@ -21,6 +21,7 @@
 
 #include "../elephant/attachment_frames.h"
 #include "../elephant/elephant_source_asset.h"
+#include "../elephant/elephant_spec.h"
 #include "../horse/horse_source_asset.h"
 #include "../horse/horse_spec.h"
 #include "animation/rig/horse_attachment_frames.h"
@@ -91,19 +92,26 @@ constexpr std::array<std::string_view, k_horse_source_bone_count> k_bone_names{{
     "FF.R",
 }};
 
-constexpr std::array<std::string_view, 8> k_mesh_names{{
-    "horse.production.coat",
-    "horse.production.coat_dark",
-    "horse.production.coat_light",
-    "horse.production.hooves",
-    "horse.production.hair",
-    "horse.production.muzzle",
-    "horse.production.eye_white",
-    "horse.production.eye_black",
-}};
+// Each authored material maps to one mesh node and one colour role. The
+// binding is keyed by the material's exported name rather than its slot number
+// so that a re-export which reorders or drops a material slot fails loudly
+// instead of silently painting tusks with the eye role.
+struct MaterialBinding {
+  std::string_view exported_name;
+  std::string_view node_name;
+  std::uint8_t role;
+};
 
-constexpr std::array<std::uint8_t, 8> k_material_roles{
-    {1U, 2U, 3U, 4U, 5U, 7U, 3U, 8U}};
+constexpr std::array<MaterialBinding, 8> k_horse_materials{{
+    {"horse_production_material_0", "horse.production.coat", 1U},
+    {"horse_production_material_1", "horse.production.coat_dark", 2U},
+    {"horse_production_material_2", "horse.production.coat_light", 3U},
+    {"horse_production_material_3", "horse.production.hooves", 4U},
+    {"horse_production_material_4", "horse.production.hair", 5U},
+    {"horse_production_material_5", "horse.production.muzzle", 7U},
+    {"horse_production_material_6", "horse.production.eye_white", 3U},
+    {"horse_production_material_7", "horse.production.eye_black", 8U},
+}};
 
 constexpr std::array<std::string_view, Render::Elephant::k_elephant_source_bone_count>
     k_elephant_bone_names{{
@@ -140,18 +148,23 @@ constexpr std::array<std::string_view, Render::Elephant::k_elephant_source_bone_
         "Bone.019",
         "Bone.020",
     }};
-constexpr std::array<std::string_view, 3> k_elephant_mesh_names{
-    {"elephant.production.skin",
+constexpr std::array<MaterialBinding, 3> k_elephant_materials{{
+    {"elephant_production_material_0",
+     "elephant.production.skin",
+     Render::Elephant::k_elephant_role_skin},
+    {"elephant_production_material_1",
      "elephant.production.tusks",
-     "elephant.production.eyes"}};
-constexpr std::array<std::uint8_t, 3> k_elephant_material_roles{{1U, 6U, 7U}};
+     Render::Elephant::k_elephant_role_tusk},
+    {"elephant_production_material_2",
+     "elephant.production.eyes",
+     Render::Elephant::k_elephant_role_eye},
+}};
 
 struct SourceConfig {
   std::string_view resource_path;
   std::string_view relative_path;
   std::span<const std::string_view> bone_names;
-  std::span<const std::string_view> mesh_names;
-  std::span<const std::uint8_t> material_roles;
+  std::span<const MaterialBinding> materials;
   std::size_t expected_vertices;
   std::size_t expected_triangles;
   std::size_t expected_clips;
@@ -166,8 +179,7 @@ constexpr SourceConfig k_horse_config{
     k_resource_path,
     k_relative_path,
     k_bone_names,
-    k_mesh_names,
-    k_material_roles,
+    k_horse_materials,
     4400U,
     2182U,
     13U,
@@ -180,16 +192,15 @@ constexpr SourceConfig k_elephant_config{
     ":/assets/creatures/elephant/elephant.cmesh",
     "assets/creatures/elephant/elephant.cmesh",
     k_elephant_bone_names,
-    k_elephant_mesh_names,
-    k_elephant_material_roles,
-    1464U,
-    760U,
+    k_elephant_materials,
+    1474U,
+    772U,
     5U,
     Render::Elephant::k_elephant_mesh_scale_x,
     Render::Elephant::k_elephant_mesh_scale_y,
     Render::Elephant::k_elephant_mesh_scale_z,
     Render::Elephant::k_elephant_mesh_ground_y,
-    "c48fb1cd29fec1e7ed24d7a8092c0a616bda4685f3dcf0db80fd612d602c7377"};
+    "34b00dea1c0f3fdafef08231d73c7c28b3310d341b08058432354da002721ccf"};
 
 struct NodePose {
   QVector3D translation;
@@ -573,11 +584,13 @@ auto parse_source(SourceConfig const& config) -> SourceAsset {
   }
   QJsonArray const primitives =
       meshes[0].toObject().value(QStringLiteral("primitives")).toArray();
-  if (primitives.size() != static_cast<int>(config.mesh_names.size())) {
+  if (primitives.size() != static_cast<int>(config.materials.size())) {
     result.status.error = "compiled creature package material primitive count changed";
     return result;
   }
-  result.mesh_nodes.reserve(config.mesh_names.size());
+  QJsonArray const materials =
+      result.document.value(QStringLiteral("materials")).toArray();
+  result.mesh_nodes.reserve(config.materials.size());
   for (int primitive_index = 0; primitive_index < primitives.size();
        ++primitive_index) {
     QJsonObject const primitive = primitives[primitive_index].toObject();
@@ -656,15 +669,33 @@ auto parse_source(SourceConfig const& config) -> SourceAsset {
     }
     result.status.vertex_count += mesh.vertices.size();
     result.status.triangle_count += mesh.indices.size() / 3U;
-    std::size_t const material = static_cast<std::size_t>(
-        primitive.value(QStringLiteral("material")).toInt(primitive_index));
-    if (material >= config.material_roles.size()) {
+    int const material_index =
+        primitive.value(QStringLiteral("material")).toInt(-1);
+    if (material_index < 0 || material_index >= materials.size()) {
       result.status.error = "compiled creature package material index is out of range";
       return result;
     }
-    result.mesh_nodes.push_back({config.mesh_names[material],
+    QString const material_name = materials[material_index]
+                                      .toObject()
+                                      .value(QStringLiteral("name"))
+                                      .toString();
+    auto const binding =
+        std::find_if(config.materials.begin(),
+                     config.materials.end(),
+                     [&](MaterialBinding const& candidate) {
+                       return material_name == QLatin1String(
+                                                   candidate.exported_name.data(),
+                                                   static_cast<qsizetype>(
+                                                       candidate.exported_name.size()));
+                     });
+    if (binding == config.materials.end()) {
+      result.status.error = "compiled creature package uses an unknown material: " +
+                            material_name.toStdString();
+      return result;
+    }
+    result.mesh_nodes.push_back({binding->node_name,
                                  0U,
-                                 config.material_roles[material],
+                                 binding->role,
                                  Render::Creature::k_lod_all,
                                  6,
                                  std::move(mesh)});

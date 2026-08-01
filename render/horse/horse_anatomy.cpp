@@ -42,6 +42,18 @@ auto make_horse_anatomy(const Render::GL::HorseDimensions& dims) noexcept
   result.seat = {0.0F, 2.18F, -0.21F};
   result.body_length *= k_horse_length_scale;
   result.head_length *= k_horse_length_scale;
+
+  // These landmarks are authored against the unscaled mesh, and everything that
+  // rides the horse - saddle, stirrups, reins, the rider's seat - is placed
+  // from them. They have to follow the shared horse scale or the rider is left
+  // sitting in the air above a smaller animal.
+  auto const scale = Render::GL::k_horse_scale;
+  result.body_width *= scale;
+  result.body_height *= scale;
+  result.body_length *= scale;
+  result.head_width *= scale;
+  result.head_height *= scale;
+  result.head_length *= scale;
   for (QVector3D* point : {&result.barrel_center,
                            &result.withers,
                            &result.back_center,
@@ -57,6 +69,7 @@ auto make_horse_anatomy(const Render::GL::HorseDimensions& dims) noexcept
                            &result.saddle_center,
                            &result.seat}) {
     point->setZ(point->z() * k_horse_length_scale);
+    *point *= scale;
   }
   result.withers_height = result.withers.y();
   (void)dims;

@@ -72,10 +72,6 @@ auto adjust_world_to_palette_contact(const QMatrix4x4& world_from_unit,
   return adjusted;
 }
 
-auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
-  return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
-}
-
 void report_submit_cache_miss(std::string_view path,
                               const CreatureRenderAssetHandle& handle,
                               CreatureLOD lod,
@@ -820,9 +816,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
   const auto key = make_snapshot_key(
       handle, archetype, variant, state, clip_id, clip_variant, frame_in_clip);
 
-  if (!handle.has_static_attachments &&
-      asset->snapshot_mesh_species_id != 0xFFFFFFFFU &&
-      (asset->snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
+  if (!handle.has_static_attachments && has_prebaked_snapshot_mesh(*asset, lod)) {
     const auto* mesh_blob =
         Render::Creature::Snapshot::SnapshotMeshRegistry::instance().blob(
             asset->snapshot_mesh_species_id, lod);

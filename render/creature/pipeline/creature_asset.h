@@ -49,6 +49,8 @@ inline constexpr CreatureAssetId k_skeleton_humanoid_asset = 5;
 inline constexpr CreatureAssetId k_caster_humanoid_asset = 6;
 inline constexpr CreatureAssetId k_stave_caster_humanoid_asset = 7;
 
+inline constexpr std::uint32_t k_no_snapshot_mesh_species = 0xFFFFFFFFu;
+
 struct CreatureAsset {
   CreatureAssetId id{k_invalid_creature_asset};
   std::string_view debug_name{};
@@ -60,10 +62,25 @@ struct CreatureAsset {
   std::uint8_t max_bones{0};
   BindPaletteFn bind_palette{nullptr};
   FillRoleColorsFn fill_role_colors{nullptr};
-  std::uint32_t snapshot_mesh_species_id{0xFFFFFFFFu};
+  std::uint32_t snapshot_mesh_species_id{k_no_snapshot_mesh_species};
   std::uint8_t snapshot_mesh_lod_mask{0};
   const CreatureVisualDefinition* visual_definition{nullptr};
 };
+
+[[nodiscard]] inline constexpr auto
+creature_lod_bit(Render::Creature::CreatureLOD lod) noexcept -> std::uint8_t {
+  return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
+}
+
+// Whether this species ships a prebaked snapshot mesh for the given LOD. Asking
+// the asset keeps the answer in one place instead of a species list that every
+// new prebaked creature has to be remembered into.
+[[nodiscard]] inline constexpr auto
+has_prebaked_snapshot_mesh(const CreatureAsset& asset,
+                           Render::Creature::CreatureLOD lod) noexcept -> bool {
+  return asset.snapshot_mesh_species_id != k_no_snapshot_mesh_species &&
+         (asset.snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U;
+}
 
 struct CreatureClipPlaybackDesc {
   std::uint16_t clip_id{0xFFFFu};

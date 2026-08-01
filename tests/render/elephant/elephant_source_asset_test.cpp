@@ -8,6 +8,8 @@
 #include <vector>
 
 #include "render/creature/skeleton.h"
+#include "render/creature/species_manifest.h"
+#include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_motion.h"
 #include "render/elephant/elephant_profile_data.h"
 #include "render/elephant/elephant_source_asset.h"
@@ -20,8 +22,8 @@ using Render::Creature::Quadruped::CustomMeshNode;
 TEST(ElephantSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
   auto const& status = Render::Elephant::elephant_source_asset_status();
   ASSERT_TRUE(status.loaded) << status.error;
-  EXPECT_EQ(status.vertex_count, 1464U);
-  EXPECT_EQ(status.triangle_count, 760U);
+  EXPECT_EQ(status.vertex_count, 1474U);
+  EXPECT_EQ(status.triangle_count, 772U);
   EXPECT_EQ(status.clip_count, 5U);
   EXPECT_EQ(Render::Elephant::elephant_source_bind_palette().size(), 32U);
   EXPECT_TRUE(
@@ -44,8 +46,54 @@ TEST(ElephantSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
       EXPECT_NEAR(weight_sum, 1.0F, 1.0e-5F);
     }
   }
-  EXPECT_EQ(vertices, 1464U);
-  EXPECT_EQ(triangles, 760U);
+  EXPECT_EQ(vertices, 1474U);
+  EXPECT_EQ(triangles, 772U);
+}
+
+// The production package used to ship a single eye, which the manifest patched
+// up by mirroring at load time. That repair also caught the tail tuft, which
+// shares the eye material, and duplicated it. The asset now carries both eyes,
+// so nothing downstream needs to mirror anything.
+TEST(ElephantSourceAssetTest, ProductionMeshCarriesBothEyes) {
+  auto const bind = Render::Elephant::elephant_source_bind_palette();
+  bool found_eyes = false;
+  for (auto const& node : Render::Elephant::elephant_source_mesh_nodes()) {
+    if (node.debug_name != "elephant.production.eyes") {
+      continue;
+    }
+    found_eyes = true;
+    auto const& mesh = std::get<CustomMeshNode>(node.data);
+    QMatrix4x4 const root = bind[static_cast<std::size_t>(node.anchor_bone)];
+
+    bool left = false;
+    bool right = false;
+    for (auto const& vertex : mesh.vertices) {
+      QVector3D const rest = root.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+      // The tail tuft shares this material, so only look at the head end.
+      if (rest.z() <= 0.0F) {
+        continue;
+      }
+      left = left || rest.x() < -0.05F;
+      right = right || rest.x() > 0.05F;
+    }
+    EXPECT_TRUE(left) << "elephant is missing its left eye";
+    EXPECT_TRUE(right) << "elephant is missing its right eye";
+  }
+  EXPECT_TRUE(found_eyes);
+}
+
+TEST(ElephantSourceAssetTest, ManifestRendersTheSourceMeshUnmodified) {
+  auto const source = Render::Elephant::elephant_source_mesh_nodes();
+  for (auto const& lod : {Render::Elephant::elephant_manifest().lod_full,
+                          Render::Elephant::elephant_manifest().lod_minimal}) {
+    ASSERT_EQ(lod.mesh_nodes.size(), source.size());
+    for (std::size_t index = 0U; index < source.size(); ++index) {
+      EXPECT_EQ(lod.mesh_nodes[index].debug_name, source[index].debug_name);
+      EXPECT_EQ(std::get<CustomMeshNode>(lod.mesh_nodes[index].data).indices.size(),
+                std::get<CustomMeshNode>(source[index].data).indices.size());
+    }
+  }
 }
 
 TEST(ElephantSourceAssetTest, ProductionBoundsUseWidenedHalfSizeAndShortenedLength) {
