@@ -116,7 +116,7 @@ the point at which every supported platform must actually ship.
 - `quality` - formatting, linting, quality markers and the static content
   validators. No compiler, fails in about a minute.
 - `test` - Linux configure and build of the test targets only
-  (`standard_of_iron_tests`, `content_validator`), then unit tests, content
+  (`soi_test_binaries`, `content_validator`), then unit tests, content
   validation, the validator integration tests, and advisory clang-tidy over
   the changed files. The game binary, map editor, arena and preview tools are
   not built here.

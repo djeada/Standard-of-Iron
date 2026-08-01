@@ -80,7 +80,7 @@ jobs:
       - name: Unit tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ./build/bin/standard_of_iron_tests
+        run: bash scripts/run-tests.sh build
 
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py

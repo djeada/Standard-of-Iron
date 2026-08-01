@@ -89,12 +89,12 @@ jobs:
       - name: Build test targets
         run: |
           cmake --build build --parallel \
-            --target standard_of_iron_tests content_validator
+            --target soi_test_binaries content_validator
 
       - name: Unit tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ./build/bin/standard_of_iron_tests --gtest_brief=1
+        run: bash scripts/run-tests.sh build --gtest_brief=1
 
       - name: Content validation
         run: ./build/bin/content_validator assets

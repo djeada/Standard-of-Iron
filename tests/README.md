@@ -1,222 +1,96 @@
-# Standard of Iron - Test Suite
+# Standard of Iron — test suite
 
-This directory contains unit and integration tests for the Standard of Iron project using Google Test.
+Around 2,700 GoogleTest cases across five binaries, plus a QtQuickTest suite for
+the QML design system. The split is not organisational tidiness: each binary
+links a different slice of the project, so the boundary it sits behind is
+enforced by the link step rather than by review.
 
-## Structure
+## The binaries
 
-```
-tests/
-├── core/              # Core engine tests
-│   └── serialization_test.cpp  # Entity/World serialization tests
-├── db/                # Database tests
-│   └── save_storage_test.cpp   # SQLite save/load tests
-└── CMakeLists.txt     # Test build configuration
-```
+| Binary                    | Links                                                 | Covers                                                                                                                                                                           |
+| ------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `simulation_tests`        | `engine_core`, `game_sim`                             | The simulation kernel: session, command pipeline, ECS, systems (combat, movement, AI, pathfinding, production, formations), map and mission loading, and the architecture guards |
+| `persistence_tests`       | `engine_core`, `game_sim`                             | The snapshot contract, the save format, the save database and mission progress                                                                                                   |
+| `render_tests`            | `+ render_gl`                                         | The renderer, the creature/equipment pipeline, the software rasteriser                                                                                                           |
+| `app_tests`               | `+ app_core`, `ui_shell`                              | View models, controllers, the widget shell, and the gameplay services that need a camera or the application around them                                                          |
+| `tools_tests`             | `+ map_editor_core`, `arena_*`, `balance_sim_harness` | The map editor document model, the arena harness and the balance runner                                                                                                          |
+| `design_system_qml_tests` | `ui_shell`                                            | The QML design system, driven by QtQuickTest. Skipped when Qt QuickTest is not installed                                                                                         |
 
-## Running Tests
+Two rules keep the split meaningful:
 
-### Build and Run All Tests
+- **A test binary links production targets.** It never re-lists a production
+  `.cpp` in its own source list — a separately compiled copy can pass while the
+  object the game ships is broken.
+- **No test is quarantined.** Nothing is excluded from the default run. A test
+  that cannot build or cannot pass is fixed or deleted with an issue.
 
-```bash
-make test
-```
+`simulation_tests` is the one to watch. It links the kernel and nothing else, so
+a gameplay file that starts needing a camera, the renderer or `app/` breaks its
+link step. `tests/architecture/layering_test.cpp` says the same thing about
+includes, and `documentation_accuracy_test.cpp` checks that the README and
+`docs/ARCHITECTURE.md` still describe the code that exists.
 
-### Run Tests Directly
-
-```bash
-cd build
-./bin/standard_of_iron_tests
-```
-
-### Run Specific Tests
-
-```bash
-# Run only serialization tests
-./bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
-
-# Run only database tests
-./bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
-
-# Run a specific test case
-./bin/standard_of_iron_tests --gtest_filter=SerializationTest.EntitySerializationBasic
-```
-
-### Verbose Output
+## Running them
 
 ```bash
-./bin/standard_of_iron_tests --gtest_color=yes
+make test              # configure, build the test binaries, run all of them
+make test-only         # run them without rebuilding
 ```
 
-## Test Categories
+`make test` shells out to `scripts/run-tests.sh`, which the CI workflows also
+call — so there is one answer to "what does running the tests mean" rather than
+one per workflow.
 
-### Core Serialization Tests (`core/serialization_test.cpp`)
-
-Tests for JSON serialization and deserialization of game objects:
-
-- **Entity serialization**: Basic entity save/load
-- **Component serialization**: All component types fully tested
-    - TransformComponent (position, rotation, scale)
-    - RenderableComponent (mesh, texture, visibility, color)
-    - UnitComponent (health, speed, vision, nation)
-    - MovementComponent (targets, paths, velocity)
-    - AttackComponent (range, damage, combat modes)
-    - AttackTargetComponent (target tracking, chase behavior)
-    - PatrolComponent (waypoints, patrol state)
-    - ProductionComponent (build queues, rally points)
-    - BuildingComponent (building marker)
-    - AIControlledComponent (AI flag)
-    - CaptureComponent (capture progress, player state)
-- **Round-trip testing**: Serialize→Deserialize→Verify data integrity for all components
-- **Complete entity**: Test entity with all components attached
-- **Edge cases**: Missing fields, malformed JSON, default values
-- **File I/O**: Save to file and load from file
-
-### Database Integration Tests (`db/save_storage_test.cpp`)
-
-Tests for SQLite-based save game storage:
-
-- **Initialization**: In-memory database setup
-- **Save/Load**: Store and retrieve save slots
-- **Schema management**: Database schema creation and validation
-- **Error handling**: Non-existent slots, constraint violations
-- **Complex data**: Large saves, complex metadata, special characters
-- **CRUD operations**: List, delete, and overwrite slots
-
-## Adding New Tests
-
-### 1. Create a New Test File
-
-```cpp
-#include <gtest/gtest.h>
-// Include necessary headers
-
-class MyFeatureTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // Setup code
-    }
-
-    void TearDown() override {
-        // Cleanup code
-    }
-};
-
-TEST_F(MyFeatureTest, TestCase) {
-    // Test code
-    EXPECT_EQ(expected, actual);
-}
-```
-
-### 2. Add to CMakeLists.txt
-
-```cmake
-add_executable(standard_of_iron_tests
-    core/serialization_test.cpp
-    db/save_storage_test.cpp
-    your_category/your_test.cpp  # Add your test here
-)
-```
-
-### 3. Rebuild and Run
+Directly:
 
 ```bash
-make test
+./build/bin/simulation_tests
+./build/bin/render_tests --gtest_filter=CarthageArmorBoundsTest.*
+bash scripts/run-tests.sh build --gtest_brief=1
 ```
 
-## Test Conventions
-
-### Naming
-
-- Test suite names should match the class/feature being tested
-- Test case names should describe what is being tested
-- Use descriptive names: `TEST_F(SerializationTest, EntityDeserializationRoundTrip)`
-
-### Assertions
-
-- Use `EXPECT_*` for non-fatal assertions (test continues)
-- Use `ASSERT_*` for fatal assertions (test stops)
-- Common assertions:
-    - `EXPECT_EQ(a, b)` - equality
-    - `EXPECT_TRUE(condition)` - boolean true
-    - `EXPECT_FLOAT_EQ(a, b)` - floating-point equality
-    - `EXPECT_NE(a, b)` - not equal
-
-### Test Organization
-
-- Group related tests in the same test fixture
-- Use descriptive test names
-- Test one thing per test case
-- Keep tests independent
-
-## Dependencies
-
-The test suite uses:
-
-- **Google Test** (v1.14.0) - Testing framework
-- **Qt6/Qt5** - Core, Gui, SQL modules
-- **engine_core** - Core game engine library
-- **game_systems** - Game systems library
-
-## Continuous Integration
-
-Tests are automatically run in CI when:
-
-- Pull requests are created
-- Code is pushed to main branch
-- Release builds are created
-
-## Coverage
-
-Current test coverage focuses on:
-
-- ✅ **Complete entity and component serialization** (all 11 serializable components)
-    - TransformComponent, RenderableComponent, UnitComponent
-    - MovementComponent, AttackComponent, AttackTargetComponent
-    - PatrolComponent, ProductionComponent, BuildingComponent
-    - AIControlledComponent, CaptureComponent
-- ✅ World serialization (multi-entity persistence)
-- ✅ SQLite save/load operations (in-memory testing)
-- ✅ Database CRUD operations (create, read, update, delete)
-- ✅ Error handling and edge cases (missing fields, malformed JSON)
-- ✅ Round-trip testing for data integrity (all components)
-
-Future coverage should include:
-
-- [ ] Terrain serialization
-- [ ] AI system testing
-- [ ] Combat system testing
-- [ ] Pathfinding tests
-- [ ] Production system tests
-
-## Troubleshooting
-
-### Tests Not Found
-
-If tests aren't being discovered:
+Anything that opens a window needs `QT_QPA_PLATFORM=offscreen`;
+`scripts/run-tests.sh` sets it. `TEST_ARGS` forwards GoogleTest flags through
+the Makefile:
 
 ```bash
-rm -rf build
-make configure
-make build
+make test-only TEST_ARGS="--gtest_filter=SaveLoadServiceTest.*"
 ```
 
-### Database Lock Errors
+Two focused binaries exist alongside the five: `horse_model_tests` and
+`elephant_model_tests` build one contract file each, so they stay runnable when
+an unrelated translation unit in the render suite has interface drift.
 
-Tests use in-memory databases (`:memory:`), so file locks shouldn't occur. If they do:
+## Adding a test
 
-- Check for orphaned test processes
-- Restart your terminal
+1. Put the file under the directory matching what it exercises (`systems/`,
+   `render/`, `map/`, `db/`, …).
+2. Add it to the source list of the binary whose link surface it needs, in
+   `tests/CMakeLists.txt`. If a kernel test needs the renderer in order to
+   compile, that dependency is the finding — fix it rather than moving the test
+   up a tier.
+3. `make test`.
 
-### Qt-related Errors
+Fixtures should leave nothing behind. A `SessionContext` plus `ScopedSession`
+gives a test its own world, terrain, ownership, economy and clock; anything
+reached through a registry `instance()` resolves through that session, so tests
+no longer leak into each other through globals. A signal connection made to a
+process-wide singleton must be bound to a context object that dies with the
+test, or it will outlive the stack it captured.
 
-Ensure Qt development packages are installed:
+## Conventions
 
-```bash
-make install  # Installs dependencies
-```
+- `EXPECT_*` continues on failure, `ASSERT_*` stops. Use `ASSERT_*` when the
+  rest of the test would crash or assert nothing.
+- Name the case after the behaviour, not the method:
+  `HeavyArmorHangsBelowTheLightOneButStaysOffTheGround`.
+- Prefer relationships and frame-relative bounds over tuned constants, so a test
+  keeps meaning when the thing it measures is re-authored.
+- One behaviour per case; keep cases independent of ordering.
 
-## References
+## CI
 
-- [Google Test Documentation](https://google.github.io/googletest/)
-- [Google Test Primer](https://google.github.io/googletest/primer.html)
-- [Google Test Advanced Guide](https://google.github.io/googletest/advanced.html)
+`.github/workflows/pr.yml` builds `soi_test_binaries` and runs
+`scripts/run-tests.sh`; the three platform build workflows run the same script
+after their build. A suite missing from the build directory is an error there,
+not a skip.

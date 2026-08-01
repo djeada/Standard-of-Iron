@@ -290,6 +290,7 @@ add_library(
     STATIC
     app/controllers/action_vfx.cpp
     app/viewmodels/save_slots_view_model.cpp
+    app/viewmodels/placement_view_model.cpp
     app/controllers/command_controller.cpp
     app/core/ambient_state_manager.cpp
     app/core/audio_coordinator.cpp
