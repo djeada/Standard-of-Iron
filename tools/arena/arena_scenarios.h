@@ -133,6 +133,16 @@ inline constexpr char k_lighting_shadow_quality_medium_id[] =
 inline constexpr char k_lighting_shadow_quality_high_id[] =
     "lighting_shadow_quality_high";
 
+inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
+inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";
+inline constexpr char k_weather_rain_heavy_id[] = "weather_rain_heavy";
+inline constexpr char k_weather_snow_light_id[] = "weather_snow_light";
+inline constexpr char k_weather_snow_medium_id[] = "weather_snow_medium";
+inline constexpr char k_weather_snow_heavy_id[] = "weather_snow_heavy";
+inline constexpr char k_weather_snow_crosswind_id[] = "weather_snow_crosswind";
+inline constexpr char k_weather_rain_budget_low_id[] = "weather_rain_budget_low";
+inline constexpr char k_weather_rain_budget_ultra_id[] = "weather_rain_budget_ultra";
+
 struct ScenarioOption {
   QString id;
   QString label;

@@ -107,6 +107,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
       scene.rain->set_intensity(scene.rain_manager->get_intensity());
       scene.rain->set_weather_type(scene.rain_manager->get_weather_type());
       scene.rain->set_wind_strength(scene.rain_manager->get_wind_strength());
+      scene.rain->set_wind_direction_deg(scene.rain_manager->get_wind_direction_deg());
       if (scene.active_camera != nullptr) {
         scene.rain->set_camera_position(scene.active_camera->get_position());
       }

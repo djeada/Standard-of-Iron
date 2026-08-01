@@ -10,6 +10,7 @@
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
 #include "../../../game/units/spawn_type.h"
+#include "../../contact_shadow.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
 #include "../../gl/humanoid/animation/animation_inputs.h"
@@ -29,17 +30,21 @@ constexpr float k_shadow_size_horse = 0.38F;
 constexpr float k_shadow_size_elephant = 0.55F;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.32F;
-const QVector3D k_shadow_light_dir(0.65F, 0.50F, 0.40F);
+constexpr float k_shadow_min_visible_alpha = 0.004F;
 
-const QVector3D k_shadow_light_dir_normalized = k_shadow_light_dir.normalized();
-const QVector2D k_shadow_dir_xz_normalized = []() {
-  QVector2D v(k_shadow_light_dir_normalized.x(), k_shadow_light_dir_normalized.z());
-  if (v.lengthSquared() < 1e-6F) {
-    return QVector2D(0.0F, 1.0F);
-  }
-  v.normalize();
-  return v;
-}();
+auto resolve_contact_shadow_placement(const Render::GL::DrawContext& ctx,
+                                      float camera_distance)
+    -> Render::ContactShadowPlacement {
+  const auto& graphics = Render::GraphicsSettings::instance();
+  const auto& directional = graphics.directional_shadows();
+  const Render::ContactShadowInputs inputs{
+      .camera_distance = camera_distance,
+      .fade_distance = graphics.shadow_max_distance(),
+      .directional_shadows_enabled = directional.enabled,
+      .directional_distance = directional.distance};
+  const auto& environment = ctx.backend->environment_lighting();
+  return Render::contact_shadow_placement(environment, inputs);
+}
 
 auto admits_contact_shadow(const Render::GL::DrawContext& ctx,
                            Render::Creature::CreatureLOD lod,
@@ -134,8 +139,11 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
     return state;
   }
 
+  const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
+  const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
+
   auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized() ||
+  if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
       !admits_contact_shadow(ctx,
                              inputs.lod,
                              inputs.camera_distance,
@@ -182,13 +190,12 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
                                                     0.0F,
                                                     inputs.soldier_world_pos.y());
 
-  QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
-  QVector2D dir_for_use = shadow_dir;
+  QVector2D dir_for_use = placement.direction;
   if (dir_for_use.lengthSquared() < 1e-6F) {
     dir_for_use = QVector2D(0.0F, 1.0F);
   }
 
-  float const shadow_offset = shadow_depth * 1.25F;
+  float const shadow_offset = shadow_depth * 1.25F * placement.offset_scale;
   QVector2D const offset_2d = dir_for_use * shadow_offset;
   float const light_yaw_deg =
       qRadiansToDegrees(std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
@@ -200,7 +207,7 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
   state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
   state.model.scale(shadow_width, shadow_depth, 1.0F);
   state.light_dir = dir_for_use;
-  state.alpha = k_shadow_base_alpha;
+  state.alpha = shadow_alpha;
   state.pass = graph.pass_intent;
   state.enabled = true;
   return state;
@@ -227,8 +234,11 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
     return state;
   }
 
+  const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
+  const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
+
   auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized() ||
+  if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
       !admits_contact_shadow(ctx,
                              inputs.lod,
                              inputs.camera_distance,
@@ -255,13 +265,12 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
           : terrain_service.resolve_surface_world_y(
                 inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
 
-  QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
-  QVector2D dir_for_use = shadow_dir;
+  QVector2D dir_for_use = placement.direction;
   if (dir_for_use.lengthSquared() < 1e-6F) {
     dir_for_use = QVector2D(0.0F, 1.0F);
   }
 
-  float const shadow_offset = shadow_depth * 1.25F;
+  float const shadow_offset = shadow_depth * 1.25F * placement.offset_scale;
   QVector2D const offset_2d = dir_for_use * shadow_offset;
   float const light_yaw_deg =
       qRadiansToDegrees(std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
@@ -273,7 +282,7 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
   state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
   state.model.scale(shadow_width, shadow_depth, 1.0F);
   state.light_dir = dir_for_use;
-  state.alpha = k_shadow_base_alpha;
+  state.alpha = shadow_alpha;
   state.pass = graph.pass_intent;
   state.enabled = true;
   return state;

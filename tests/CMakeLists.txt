@@ -54,6 +54,7 @@ add_executable(
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
     map/map_catalog_test.cpp
+    map/map_weather_coverage_test.cpp
     map/iron_sepulcher_skirmish_test.cpp
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
@@ -126,6 +127,8 @@ add_executable(
     architecture/qml_surface_test.cpp
     architecture/documentation_accuracy_test.cpp
     render/local_lighting_test.cpp
+    render/contact_shadow_test.cpp
+    render/weather_particle_budget_test.cpp
     render/graphics_lighting_settings_test.cpp
     render/scatter_composition_test.cpp
     render/scatter_runtime_test.cpp

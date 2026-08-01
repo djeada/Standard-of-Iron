@@ -3116,6 +3116,7 @@ void GameEngine::configure_rain_system() {
   m_rain->configure(world_width, world_height, m_level.biome_seed, m_level.rain.type);
   m_rain->set_enabled(m_level.rain.enabled);
   m_rain->set_wind_strength(m_level.rain.wind_strength);
+  m_rain->set_wind_direction_deg(m_level.rain.wind_direction_deg);
 
   const float initial_intensity =
       m_rain_manager ? m_rain_manager->get_intensity()
@@ -3305,6 +3306,9 @@ void GameEngine::begin_save(const QString& slot_name,
     level_snapshot.environment = m_environment_clock->definition();
     level_snapshot.environment_clock = m_environment_clock->snapshot();
   }
+  if (m_rain_manager) {
+    level_snapshot.weather_runtime = m_rain_manager->snapshot();
+  }
   std::optional<Game::Mission::MissionContext> mission_context;
   if (m_campaign_manager) {
     mission_context = m_campaign_manager->current_mission_context();
@@ -3427,6 +3431,15 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     m_environment_clock->restore(m_level.environment, m_level.environment_clock);
     if (m_renderer) {
       m_renderer->set_environment_lighting(m_environment_clock->lighting());
+    }
+  }
+
+  if (m_rain_manager) {
+
+    configure_rain_system();
+    m_rain_manager->restore(m_level.weather_runtime);
+    if (m_rain) {
+      m_rain->set_intensity(m_rain_manager->get_intensity());
     }
   }
 

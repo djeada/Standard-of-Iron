@@ -27,6 +27,8 @@ constexpr float k_snow_color_r = 1.0F;
 constexpr float k_snow_color_g = 1.0F;
 constexpr float k_snow_color_b = 1.0F;
 
+constexpr int k_rank_attrib_location = 3;
+
 void clear_gl_errors() {
 #ifndef NDEBUG
   while (glGetError() != GL_NO_ERROR) {
@@ -126,6 +128,7 @@ void RainPipeline::cache_uniforms() {
   m_uniforms.wind = m_rain_shader->uniform_handle("u_wind");
   m_uniforms.weather_type = m_rain_shader->uniform_handle("u_weather_type");
   m_uniforms.wind_strength = m_rain_shader->uniform_handle("u_wind_strength");
+  m_uniforms.density = m_rain_shader->uniform_handle("u_density");
 }
 
 auto RainPipeline::is_initialized() const -> bool {
@@ -156,6 +159,7 @@ struct RainVertex {
   float position[3];
   float offset[3];
   float alpha;
+  float rank;
 };
 
 auto RainPipeline::create_rain_geometry() -> bool {
@@ -172,6 +176,9 @@ auto RainPipeline::create_rain_geometry() -> bool {
   for (std::size_t i = 0; i < m_rain_drops.size(); ++i) {
     const auto& drop = m_rain_drops[i];
 
+    const float rank = static_cast<float>(i) /
+                       static_cast<float>(std::max<std::size_t>(1, k_max_drops));
+
     RainVertex top;
     top.position[0] = drop.position.x();
     top.position[1] = drop.position.y();
@@ -180,6 +187,7 @@ auto RainPipeline::create_rain_geometry() -> bool {
     top.offset[1] = 0.0F;
     top.offset[2] = drop.speed;
     top.alpha = drop.alpha;
+    top.rank = rank;
     vertices.push_back(top);
 
     RainVertex bottom;
@@ -190,6 +198,7 @@ auto RainPipeline::create_rain_geometry() -> bool {
     bottom.offset[1] = -drop.length;
     bottom.offset[2] = drop.speed;
     bottom.alpha = drop.alpha * 0.3F;
+    bottom.rank = rank;
     vertices.push_back(bottom);
 
     auto base = static_cast<unsigned int>(i * 2);
@@ -257,6 +266,14 @@ auto RainPipeline::create_rain_geometry() -> bool {
                         sizeof(RainVertex),
                         reinterpret_cast<void*>(offsetof(RainVertex, alpha)));
 
+  glEnableVertexAttribArray(k_rank_attrib_location);
+  glVertexAttribPointer(k_rank_attrib_location,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(RainVertex),
+                        reinterpret_cast<void*>(offsetof(RainVertex, rank)));
+
   glBindVertexArray(0);
 
   if (!check_gl_error("vertex attributes")) {
@@ -312,13 +329,21 @@ void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
   m_rain_shader->set_uniform(m_uniforms.weather_type,
                              static_cast<int>(params.weather_type));
   m_rain_shader->set_uniform(m_uniforms.wind_strength, params.wind_strength);
+  m_rain_shader->set_uniform(m_uniforms.density, params.density);
+
+  const float density = std::clamp(params.density, 0.0F, 1.0F);
+  const auto budgeted_drops =
+      static_cast<GLsizei>(std::ceil(static_cast<float>(k_max_drops) * density));
 
   if (params.weather_type == Game::Map::WeatherType::Snow) {
 
-    glDrawElements(GL_POINTS, m_index_count / 2, GL_UNSIGNED_INT, nullptr);
+    const GLsizei points = std::clamp(budgeted_drops, GLsizei{0}, m_index_count / 2);
+    glDrawElements(GL_POINTS, points, GL_UNSIGNED_INT, nullptr);
   } else {
 
-    glDrawElements(GL_LINES, m_index_count, GL_UNSIGNED_INT, nullptr);
+    const GLsizei line_indices =
+        std::clamp(budgeted_drops * 2, GLsizei{0}, m_index_count);
+    glDrawElements(GL_LINES, line_indices, GL_UNSIGNED_INT, nullptr);
   }
 
   glBindVertexArray(0);

@@ -4,7 +4,9 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <numbers>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -303,6 +305,10 @@ enum class WeatherType {
   Snow
 };
 
+inline constexpr float k_weather_intensity_light = 0.3F;
+inline constexpr float k_weather_intensity_medium = 0.6F;
+inline constexpr float k_weather_intensity_heavy = 0.9F;
+
 struct RainSettings {
   bool enabled = false;
   WeatherType type = WeatherType::Rain;
@@ -311,7 +317,46 @@ struct RainSettings {
   float intensity = 0.5F;
   float fade_duration = 5.0F;
   float wind_strength = 0.0F;
+
+  float wind_direction_deg = 45.0F;
 };
+
+[[nodiscard]] inline auto parse_weather_intensity(const QString& value,
+                                                  float fallback) -> float {
+  const QString normalized = value.trimmed().toLower();
+  if (normalized == QStringLiteral("light")) {
+    return k_weather_intensity_light;
+  }
+  if (normalized == QStringLiteral("medium")) {
+    return k_weather_intensity_medium;
+  }
+  if (normalized == QStringLiteral("heavy")) {
+    return k_weather_intensity_heavy;
+  }
+  bool parsed = false;
+  const float numeric = normalized.toFloat(&parsed);
+  return parsed ? std::clamp(numeric, 0.0F, 1.0F) : fallback;
+}
+
+[[nodiscard]] inline auto weather_intensity_name(float intensity) -> const char* {
+  const float midpoint_light_medium =
+      (k_weather_intensity_light + k_weather_intensity_medium) * 0.5F;
+  const float midpoint_medium_heavy =
+      (k_weather_intensity_medium + k_weather_intensity_heavy) * 0.5F;
+  if (intensity < midpoint_light_medium) {
+    return "light";
+  }
+  if (intensity < midpoint_medium_heavy) {
+    return "medium";
+  }
+  return "heavy";
+}
+
+[[nodiscard]] inline auto
+weather_wind_vector(float wind_direction_deg) noexcept -> QVector3D {
+  const float radians = wind_direction_deg * std::numbers::pi_v<float> / 180.0F;
+  return {std::sin(radians), 0.0F, std::cos(radians)};
+}
 
 struct FogZone {
   float x = 0.0F;

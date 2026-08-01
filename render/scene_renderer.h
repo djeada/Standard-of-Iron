@@ -214,6 +214,9 @@ public:
     m_rigged_mesh_cache.clear();
     m_snapshot_mesh_cache.clear();
     m_animation_time_cache.clear();
+    if (m_gl_backend != nullptr) {
+      m_gl_backend->reset_local_lights();
+    }
   }
 
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
@@ -346,9 +349,7 @@ public:
   void fog_batch(Buffer* instance_buffer,
                  std::size_t count,
                  const FogMaskResources& mask = {});
-  void rain_batch(Buffer* instance_buffer,
-                  std::size_t instance_count,
-                  const RainBatchParams& params);
+  void rain_batch(const RainBatchParams& params);
 
   void render_construction_previews_public(Engine::Core::World* world,
                                            const Game::Map::VisibilityService* vis,

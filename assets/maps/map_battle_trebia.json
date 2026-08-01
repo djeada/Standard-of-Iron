@@ -3539,10 +3539,12 @@
   "rain": {
     "enabled": true,
     "type": "snow",
-    "intensity": 0.72,
+    "intensity": "medium",
     "cycle_duration": 300.0,
     "active_duration": 120.0,
-    "fade_duration": 8.0
+    "fade_duration": 8.0,
+    "wind_strength": 0.45,
+    "wind_direction": 15.0
   },
   "undead_zones": [
     {
