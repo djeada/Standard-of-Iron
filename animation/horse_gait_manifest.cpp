@@ -142,4 +142,27 @@ auto horse_bob_scale_for_gait(HorseGaitType gait) noexcept -> float {
   return 0.30F;
 }
 
+auto horse_reference_speed_for_gait(HorseGaitType gait) noexcept -> float {
+  switch (gait) {
+  case HorseGaitType::Idle:
+    return 0.0F;
+  case HorseGaitType::Walk:
+    return 1.8F;
+  case HorseGaitType::Trot:
+    return 4.2F;
+  case HorseGaitType::Canter:
+    return 6.7F;
+  case HorseGaitType::Gallop:
+    return 9.5F;
+  }
+  return 0.0F;
+}
+
+auto horse_stance_fraction_for_cycle(float cycle_time) noexcept -> float {
+  if (cycle_time > 0.9F) {
+    return 0.60F;
+  }
+  return cycle_time > 0.5F ? 0.44F : 0.34F;
+}
+
 } // namespace Animation

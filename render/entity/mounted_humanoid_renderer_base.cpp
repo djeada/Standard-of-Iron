@@ -191,7 +191,8 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
       anim,
       anim_ctx,
       Engine::Core::get_or_add_component<
-          Render::Creature::HorseAnimationStateComponent>(ctx.entity));
+          Render::Creature::HorseAnimationStateComponent>(ctx.entity),
+      mount_model_scale(ctx.entity));
   (void)apply_authored_horse_mount_pose(motion, mount);
 }
 

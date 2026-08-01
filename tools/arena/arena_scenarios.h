@@ -145,6 +145,10 @@ inline constexpr char k_lighting_shadow_quality_medium_id[] =
 inline constexpr char k_lighting_shadow_quality_high_id[] =
     "lighting_shadow_quality_high";
 
+inline constexpr char k_promo_last_stand_id[] = "promo_last_stand";
+inline constexpr char k_promo_night_of_the_dead_id[] = "promo_night_of_the_dead";
+inline constexpr char k_promo_storm_charge_id[] = "promo_storm_charge";
+
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";
 inline constexpr char k_weather_rain_heavy_id[] = "weather_rain_heavy";

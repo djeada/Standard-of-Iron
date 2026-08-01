@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -67,6 +68,8 @@ class QWheelEvent;
 class QPainter;
 class QPointF;
 class QFocusEvent;
+class QImage;
+class QOpenGLFramebufferObject;
 class CommanderControlController;
 
 class ArenaViewport : public QOpenGLWidget {
@@ -177,6 +180,27 @@ public slots:
 
   void set_batch_fixed_step(float seconds);
   void set_scenario_duration_override(float seconds);
+
+public:
+  void set_promo_mode(bool enabled);
+  void set_capture_resolution(int width, int height);
+  void set_capture_sink(std::function<void(const QImage&)> sink);
+  void set_capture_active(bool active);
+  void set_frame_hook(std::function<void(float)> hook);
+  void set_cinematic_view(const QVector3D& target,
+                          float distance,
+                          float pitch_degrees,
+                          float yaw_degrees,
+                          float fov_degrees,
+                          float roll_degrees);
+  void clear_cinematic_view();
+
+  [[nodiscard]] auto scenario_elapsed_seconds() const -> float;
+  [[nodiscard]] auto
+  scenario_group_center(const QString& group) const -> std::optional<QVector3D>;
+  [[nodiscard]] auto scenario_center_of_mass() const -> std::optional<QVector3D>;
+
+public slots:
   [[nodiscard]] auto active_scenario_finished() const -> bool;
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
@@ -293,6 +317,9 @@ private:
   void apply_attack_scrub_override();
   void set_force_full_creature_lod(bool enabled);
   void sample_frame_continuity();
+  [[nodiscard]] auto ensure_capture_target() -> bool;
+  void apply_cinematic_view();
+  void present_capture_preview();
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -375,6 +402,20 @@ private:
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
   bool m_clean_capture = false;
+  bool m_promo_mode = false;
+  std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;
+  std::function<void(const QImage&)> m_capture_sink;
+  std::function<void(float)> m_frame_hook;
+  int m_capture_width = 0;
+  int m_capture_height = 0;
+  bool m_capture_active = false;
+  bool m_cinematic_view_valid = false;
+  QVector3D m_cinematic_target;
+  float m_cinematic_distance = 16.0F;
+  float m_cinematic_pitch = 18.0F;
+  float m_cinematic_yaw = 40.0F;
+  float m_cinematic_fov = 40.0F;
+  float m_cinematic_roll = 0.0F;
   float m_capture_orbit_speed = 0.0F;
   float m_capture_orbit_yaw = 0.0F;
   bool m_capture_orbit_ready = false;

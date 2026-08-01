@@ -99,11 +99,19 @@ public:
   }
   [[nodiscard]] auto
   order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
+    if (m_cinematic_mode) {
+      return false;
+    }
     return m_debug_reveal_non_local_order_markers ||
            (!m_order_marker_spectator_mode && owner_id == m_local_owner_id);
   }
   void set_force_full_creature_lod(bool enabled) {
     m_force_full_creature_lod = enabled;
+  }
+
+  void set_cinematic_mode(bool enabled) { m_cinematic_mode = enabled; }
+  [[nodiscard]] auto cinematic_mode() const noexcept -> bool {
+    return m_cinematic_mode;
   }
   void set_world_render_mode(WorldRenderMode mode);
   [[nodiscard]] auto world_render_mode() const -> WorldRenderMode {
@@ -397,7 +405,7 @@ private:
     uint32_t last_frame = 0;
   };
 
-  auto resolve_animation_time(uint32_t entity_id,
+  auto resolve_animation_time(Engine::Core::EntityID entity_id,
                               bool update,
                               float current_time,
                               uint32_t frame) -> float;
@@ -438,6 +446,7 @@ private:
   bool m_order_marker_spectator_mode = false;
   bool m_debug_reveal_non_local_order_markers = false;
   bool m_force_full_creature_lod = false;
+  bool m_cinematic_mode = false;
 
   QMatrix4x4 m_view_proj;
   Game::Map::VisibilityService::SnapshotPtr m_frame_visibility_snapshot;
@@ -449,7 +458,8 @@ private:
   float m_ambient_strength{0.30F};
   EnvironmentLightingState m_environment_lighting{};
 
-  std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
+  std::unordered_map<Engine::Core::EntityID, AnimationTimeCacheEntry>
+      m_animation_time_cache;
   UnitRenderCache m_unit_render_cache;
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;

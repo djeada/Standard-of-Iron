@@ -1,0 +1,212 @@
+{
+  "id": "night_of_the_dead",
+  "title": "NIGHT OF THE DEAD",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 1,
+  "shots": [
+    {
+      "name": "shrine_reveal",
+      "scenario": "promo_night_of_the_dead",
+      "start": 1.4,
+      "duration": 2.2,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 6.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 16,
+          "pitch": 6,
+          "yaw": 205,
+          "fov": 42,
+          "height": 2.2
+        },
+        {
+          "time": 2.2,
+          "distance": 10,
+          "pitch": 9,
+          "yaw": 196,
+          "fov": 42,
+          "height": 2.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SOME GROUND IS NOT EMPTY"
+    },
+    {
+      "name": "column_march",
+      "scenario": "promo_night_of_the_dead",
+      "start": 4.2,
+      "duration": 1.6,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_column",
+        "smoothing": 0.35
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 11,
+          "pitch": 8,
+          "yaw": 118,
+          "fov": 48,
+          "height": 1.5,
+          "roll": -3
+        },
+        {
+          "time": 1.6,
+          "distance": 9,
+          "pitch": 11,
+          "yaw": 136,
+          "fov": 48,
+          "height": 1.5,
+          "roll": 2,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "awakening",
+      "scenario": "promo_night_of_the_dead",
+      "start": 7.6,
+      "duration": 1.4,
+      "slow_motion": 2.0,
+      "shake": 0.03,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 5.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 7,
+          "yaw": 168,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 1.4,
+          "distance": 9,
+          "pitch": 10,
+          "yaw": 178,
+          "fov": 50,
+          "height": 1.8,
+          "ease": "out"
+        }
+      ],
+      "caption": "THE SHRINE WAKES"
+    },
+    {
+      "name": "first_contact",
+      "scenario": "promo_night_of_the_dead",
+      "start": 11.0,
+      "duration": 1.2,
+      "slow_motion": 2.2,
+      "shake": 0.05,
+      "focus": {
+        "mode": "group",
+        "group": "roman_column",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.0,
+          "pitch": 12,
+          "yaw": 96,
+          "fov": 52,
+          "height": 1.5
+        },
+        {
+          "time": 1.2,
+          "distance": 6.6,
+          "pitch": 15,
+          "yaw": 84,
+          "fov": 52,
+          "height": 1.5,
+          "ease": "linear"
+        }
+      ],
+      "caption": "IRON AGAINST BONE"
+    },
+    {
+      "name": "grave_light",
+      "scenario": "promo_night_of_the_dead",
+      "start": 14.0,
+      "duration": 1.1,
+      "slow_motion": 2.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 4.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 7.0,
+          "pitch": 5,
+          "yaw": 22,
+          "fov": 50,
+          "height": 2.0,
+          "roll": 3
+        },
+        {
+          "time": 1.1,
+          "distance": 6.0,
+          "pitch": 8,
+          "yaw": 6,
+          "fov": 50,
+          "height": 2.2,
+          "roll": -3,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "haze_crane",
+      "scenario": "promo_night_of_the_dead",
+      "start": 17.5,
+      "duration": 2.8,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 3.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14,
+          "pitch": 12,
+          "yaw": 214,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.8,
+          "distance": 28,
+          "pitch": 32,
+          "yaw": 238,
+          "fov": 44,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ],
+  "subtitle": "STANDARD OF IRON",
+  "grade": {
+    "contrast": 1.2,
+    "saturation": 1.08,
+    "brightness": 0.02,
+    "gamma": 1.03,
+    "grain": 7,
+    "vignette": 0.34
+  },
+  "music": "assets/audio/music/combat/combat_battlefield_escalation.ogg",
+  "music_start": 30.0
+}

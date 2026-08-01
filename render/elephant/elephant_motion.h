@@ -52,10 +52,11 @@ constexpr float k_foot_settle_duration = 0.10F;
 
 auto compute_howdah_frame(const ElephantProfile& profile) -> HowdahAttachmentFrame;
 
-auto evaluate_elephant_motion(const ElephantProfile& profile,
-                              const AnimationInputs& anim,
-                              Render::Creature::ElephantAnimationStateComponent*
-                                  io_state = nullptr) -> ElephantMotionSample;
+auto evaluate_elephant_motion(
+    const ElephantProfile& profile,
+    const AnimationInputs& anim,
+    Render::Creature::ElephantAnimationStateComponent* io_state = nullptr,
+    float model_scale = 1.0F) -> ElephantMotionSample;
 
 auto build_elephant_pose_motion(const ElephantMotionSample& motion,
                                 const AnimationInputs& anim)

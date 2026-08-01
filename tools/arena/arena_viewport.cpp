@@ -6,10 +6,14 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QGuiApplication>
+#include <QImage>
 #include <QKeyEvent>
 #include <QMap>
+#include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QOpenGLContext>
+#include <QOpenGLExtraFunctions>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QPainter>
 #include <QPen>
@@ -369,6 +373,7 @@ ArenaViewport::~ArenaViewport() {
 
   if (context() != nullptr) {
     makeCurrent();
+    m_capture_target.reset();
     m_terrain_scene.reset();
     m_scatter.reset();
     m_features.reset();
@@ -490,6 +495,11 @@ void ArenaViewport::paintGL() {
                            m_capture_orbit_view.yaw + m_capture_orbit_yaw);
   }
 
+  if (m_frame_hook) {
+    m_frame_hook(scenario_elapsed_seconds());
+  }
+  apply_cinematic_view();
+
   if (!m_paused) {
     update_rpg_scenario_controller(simulation_dt);
     m_world->update(simulation_dt);
@@ -500,10 +510,16 @@ void ArenaViewport::paintGL() {
   });
   update_active_scenario(simulation_dt);
   update_fog_of_war(simulation_dt);
+  apply_cinematic_view();
   Arena::ArenaRenderedFrameTimings timings;
   timings.simulation_ms = elapsed_phase_ms();
 
-  if (width() > 0 && height() > 0) {
+  bool const capture_frame =
+      m_capture_active && static_cast<bool>(m_capture_sink) && ensure_capture_target();
+  if (capture_frame) {
+    m_capture_target->bind();
+    m_renderer->set_viewport(m_capture_width, m_capture_height);
+  } else if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
   }
   Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
@@ -589,7 +605,7 @@ void ArenaViewport::paintGL() {
   timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;
 
   bool const suppress_ui_overlays =
-      m_clean_capture || m_terrain_review_mode ||
+      m_clean_capture || m_terrain_review_mode || m_promo_mode || capture_frame ||
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
@@ -625,6 +641,19 @@ void ArenaViewport::paintGL() {
     }
   }
   timings.overlays_ms = elapsed_phase_ms();
+
+  if (capture_frame) {
+    QImage const captured = m_capture_target->toImage();
+    m_capture_target->release();
+    if (context() != nullptr) {
+      context()->functions()->glBindFramebuffer(GL_FRAMEBUFFER,
+                                                defaultFramebufferObject());
+    }
+    if (!captured.isNull()) {
+      m_capture_sink(captured);
+    }
+    present_capture_preview();
+  }
 
   if (m_scenario_runner != nullptr && sampled_frame) {
     timings.total_ms =
@@ -1649,7 +1678,16 @@ auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingSta
     weather.rain = active;
     weather.snow = 0.0F;
   }
-  return Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
+  auto lighting =
+      Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
+
+  if (m_environment_definition.fog_density_override >= 0.0F) {
+    lighting.fog_density = m_environment_definition.fog_density_override;
+  }
+  if (m_environment_definition.exposure_override >= 0.0F) {
+    lighting.exposure = m_environment_definition.exposure_override;
+  }
+  return lighting.sanitized();
 }
 
 auto ArenaViewport::lighting_summary() const -> QString {
@@ -2394,11 +2432,217 @@ void ArenaViewport::set_batch_fixed_step(float seconds) {
   m_batch_fixed_step = std::max(0.0F, seconds);
 
   m_frame_timer.setTimerType(Qt::PreciseTimer);
+
   int const interval_ms =
-      m_batch_fixed_step > 0.0F
-          ? std::max(1, static_cast<int>(std::lround(m_batch_fixed_step * 1000.0F)))
-          : k_interactive_frame_interval_ms;
+      m_promo_mode
+          ? 0
+          : (m_batch_fixed_step > 0.0F
+                 ? std::max(1,
+                            static_cast<int>(std::lround(m_batch_fixed_step * 1000.0F)))
+                 : k_interactive_frame_interval_ms);
   m_frame_timer.setInterval(interval_ms);
+}
+
+void ArenaViewport::set_promo_mode(bool enabled) {
+  m_promo_mode = enabled;
+  if (m_renderer != nullptr) {
+    m_renderer->set_cinematic_mode(enabled);
+  }
+  if (enabled) {
+    m_clean_capture = true;
+    m_controls_overlay_visible = false;
+    if (auto* selection = selection_system()) {
+      selection->clear_selection();
+    }
+
+    if (m_camera != nullptr) {
+      m_camera->clear_map_bounds();
+    }
+  }
+  set_batch_fixed_step(m_batch_fixed_step);
+}
+
+void ArenaViewport::set_capture_resolution(int width, int height) {
+  if (width == m_capture_width && height == m_capture_height) {
+    return;
+  }
+  m_capture_width = std::max(0, width);
+  m_capture_height = std::max(0, height);
+  if (m_capture_target != nullptr && context() != nullptr && context()->isValid()) {
+    makeCurrent();
+    m_capture_target.reset();
+    doneCurrent();
+  } else {
+    m_capture_target.reset();
+  }
+}
+
+void ArenaViewport::set_capture_sink(std::function<void(const QImage&)> sink) {
+  m_capture_sink = std::move(sink);
+}
+
+void ArenaViewport::set_capture_active(bool active) {
+  m_capture_active = active;
+}
+
+void ArenaViewport::set_frame_hook(std::function<void(float)> hook) {
+  m_frame_hook = std::move(hook);
+}
+
+void ArenaViewport::set_cinematic_view(const QVector3D& target,
+                                       float distance,
+                                       float pitch_degrees,
+                                       float yaw_degrees,
+                                       float fov_degrees,
+                                       float roll_degrees) {
+  m_cinematic_target = target;
+  m_cinematic_distance = std::max(0.2F, distance);
+  m_cinematic_pitch = std::clamp(pitch_degrees, -89.0F, 89.0F);
+  m_cinematic_yaw = yaw_degrees;
+  m_cinematic_fov = std::clamp(fov_degrees, 5.0F, 120.0F);
+  m_cinematic_roll = roll_degrees;
+  m_cinematic_view_valid = true;
+}
+
+void ArenaViewport::clear_cinematic_view() {
+  m_cinematic_view_valid = false;
+}
+
+void ArenaViewport::apply_cinematic_view() {
+  if (!m_cinematic_view_valid || m_camera == nullptr) {
+    return;
+  }
+  float const pitch = qDegreesToRadians(m_cinematic_pitch);
+  float const yaw = qDegreesToRadians(m_cinematic_yaw);
+  float const horizontal = m_cinematic_distance * std::cos(pitch);
+  QVector3D const offset(std::sin(yaw) * horizontal,
+                         m_cinematic_distance * std::sin(pitch),
+                         std::cos(yaw) * horizontal);
+  QVector3D const position = m_cinematic_target + offset;
+
+  QVector3D up(0.0F, 1.0F, 0.0F);
+  if (std::abs(m_cinematic_roll) > 0.01F) {
+    QVector3D const forward = (m_cinematic_target - position).normalized();
+    QMatrix4x4 tilt;
+    tilt.rotate(m_cinematic_roll, forward);
+    up = tilt.map(up);
+  }
+
+  m_camera->look_at(position, m_cinematic_target, up);
+  m_camera->set_perspective(m_cinematic_fov,
+                            m_camera->get_aspect(),
+                            m_camera->get_near(),
+                            m_camera->get_far());
+}
+
+auto ArenaViewport::ensure_capture_target() -> bool {
+  if (m_capture_width <= 0 || m_capture_height <= 0) {
+    return false;
+  }
+  if (m_capture_target != nullptr && m_capture_target->width() == m_capture_width &&
+      m_capture_target->height() == m_capture_height) {
+    return true;
+  }
+
+  QOpenGLFramebufferObjectFormat format;
+  format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+  format.setInternalTextureFormat(GL_RGBA8);
+  format.setSamples(4);
+  m_capture_target = std::make_unique<QOpenGLFramebufferObject>(
+      m_capture_width, m_capture_height, format);
+  if (!m_capture_target->isValid()) {
+    format.setSamples(0);
+    m_capture_target = std::make_unique<QOpenGLFramebufferObject>(
+        m_capture_width, m_capture_height, format);
+  }
+  if (!m_capture_target->isValid()) {
+    qWarning() << "ArenaViewport: could not create a" << m_capture_width << "x"
+               << m_capture_height << "capture target";
+    m_capture_target.reset();
+    return false;
+  }
+  return true;
+}
+
+void ArenaViewport::present_capture_preview() {
+  if (m_capture_target == nullptr || context() == nullptr) {
+    return;
+  }
+  auto* gl = context()->extraFunctions();
+  if (gl == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  float const capture_aspect =
+      static_cast<float>(m_capture_width) / static_cast<float>(m_capture_height);
+  float const widget_aspect =
+      static_cast<float>(width()) / static_cast<float>(height());
+  int fit_width = width();
+  int fit_height = height();
+  if (capture_aspect < widget_aspect) {
+    fit_width =
+        static_cast<int>(std::lround(static_cast<float>(height()) * capture_aspect));
+  } else {
+    fit_height =
+        static_cast<int>(std::lround(static_cast<float>(width()) / capture_aspect));
+  }
+  int const offset_x = (width() - fit_width) / 2;
+  int const offset_y = (height() - fit_height) / 2;
+
+  gl->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultFramebufferObject());
+  gl->glViewport(0, 0, width(), height());
+  gl->glDisable(GL_SCISSOR_TEST);
+  gl->glClearColor(0.02F, 0.02F, 0.03F, 1.0F);
+  gl->glClear(GL_COLOR_BUFFER_BIT);
+  gl->glBindFramebuffer(GL_READ_FRAMEBUFFER, m_capture_target->handle());
+  gl->glBlitFramebuffer(0,
+                        0,
+                        m_capture_width,
+                        m_capture_height,
+                        offset_x,
+                        offset_y,
+                        offset_x + fit_width,
+                        offset_y + fit_height,
+                        GL_COLOR_BUFFER_BIT,
+                        GL_LINEAR);
+  gl->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+}
+
+auto ArenaViewport::scenario_elapsed_seconds() const -> float {
+  return m_scenario_runner != nullptr ? m_scenario_runner->elapsed_seconds() : 0.0F;
+}
+
+auto ArenaViewport::scenario_group_center(const QString& group) const
+    -> std::optional<QVector3D> {
+  if (m_scenario_runner == nullptr || m_world == nullptr) {
+    return std::nullopt;
+  }
+  auto const& entities = m_scenario_runner->group_entities(group);
+  if (entities.empty()) {
+    return std::nullopt;
+  }
+  bool any_alive = false;
+  for (Engine::Core::EntityID const entity_id : entities) {
+    if (m_world->get_entity(entity_id) != nullptr) {
+      any_alive = true;
+      break;
+    }
+  }
+  if (!any_alive) {
+    return std::nullopt;
+  }
+  return scenario_center(m_world.get(), entities);
+}
+
+auto ArenaViewport::scenario_center_of_mass() const -> std::optional<QVector3D> {
+  if (m_scenario_runner == nullptr || m_world == nullptr) {
+    return std::nullopt;
+  }
+  auto const entities = m_scenario_runner->all_entities();
+  if (entities.empty()) {
+    return std::nullopt;
+  }
+  return scenario_center(m_world.get(), entities);
 }
 
 void ArenaViewport::set_scenario_duration_override(float seconds) {
@@ -2972,7 +3216,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     }
   }
 
-  if (definition->select_spawned_units) {
+  if (definition->select_spawned_units && !m_promo_mode) {
     select_spawned_entities(m_scenario_runner->all_entities());
   } else if (auto* selection = selection_system()) {
     selection->clear_selection();

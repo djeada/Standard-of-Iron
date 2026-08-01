@@ -154,4 +154,37 @@ auto resolve_quadruped_cycle_motion(const QuadrupedDimensions& dims,
   return sample;
 }
 
+auto resolve_quadruped_cadence(const QuadrupedCadenceInputs& inputs) noexcept
+    -> QuadrupedCadence {
+  QuadrupedCadence cadence{
+      .cycle_time = std::max(inputs.authored_cycle_time, 0.0001F),
+      .stride_swing = std::max(inputs.authored_stride_swing, 0.0F),
+      .ground_tracking = 0.0F,
+  };
+
+  const float reference = std::max(inputs.reference_speed, 0.0001F);
+  const float speed = std::max(inputs.ground_speed, 0.0F);
+  if (speed <= 0.01F) {
+    return cadence;
+  }
+
+  const float cycle_scale =
+      std::clamp(reference / speed, inputs.min_cycle_scale, inputs.max_cycle_scale);
+  cadence.cycle_time = std::max(inputs.authored_cycle_time * cycle_scale, 0.0001F);
+
+  const float stance = std::clamp(inputs.stance_fraction, 0.05F, 0.95F);
+  const float stride_to_local = std::max(inputs.stride_to_local, 0.0001F);
+  const float ground_per_stance = speed * stance * cadence.cycle_time;
+  const float matched_stride = ground_per_stance / stride_to_local;
+  const float ceiling =
+      std::max(inputs.authored_stride_swing, 0.0001F) * inputs.max_stride_scale;
+  cadence.stride_swing =
+      std::clamp(matched_stride, inputs.authored_stride_swing, ceiling);
+
+  const float tracked = cadence.stride_swing * stride_to_local;
+  cadence.ground_tracking =
+      ground_per_stance > 0.0001F ? tracked / ground_per_stance : 0.0F;
+  return cadence;
+}
+
 } // namespace Animation

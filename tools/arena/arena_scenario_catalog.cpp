@@ -5683,6 +5683,279 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
 
+  {
+    auto s = definition(
+        QString::fromLatin1(k_promo_last_stand_id),
+        QStringLiteral("Promo: The Last Stand"),
+        QStringLiteral("Golden-hour capture scene. A Roman shield line holds a "
+                       "ridge against a Carthaginian horde while a cavalry wing "
+                       "sweeps the archers behind it."),
+        26.0F,
+        {26.0F, 22.0F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.collect_animation_diagnostics = false;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.environment.start_time = 18.15F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.environment.exposure_override = 1.0F;
+
+    s.environment.fog_density_override = 0.020F;
+    s.groups = {
+        group(QStringLiteral("roman_line"),
+              Troop::Swordsman,
+              1,
+              8,
+              {-9.1F, 0.0F, -7.0F},
+              12),
+        group(QStringLiteral("roman_spears"),
+              Troop::Spearman,
+              1,
+              6,
+              {-6.5F, 0.0F, -10.5F},
+              12),
+        group(QStringLiteral("roman_archers"),
+              Troop::Archer,
+              1,
+              4,
+              {-3.9F, 0.0F, -14.5F},
+              8),
+        group(QStringLiteral("roman_consul"),
+              Troop::RomanVeteranConsul,
+              1,
+              1,
+              {0.0F, 0.0F, -12.0F},
+              1),
+        group(QStringLiteral("punic_horde"),
+              Troop::Swordsman,
+              2,
+              10,
+              {-11.7F, 0.0F, 8.0F},
+              12),
+        group(QStringLiteral("punic_spears"),
+              Troop::Spearman,
+              2,
+              8,
+              {-9.1F, 0.0F, 12.0F},
+              12),
+        group(QStringLiteral("punic_cavalry"),
+              Troop::MountedKnight,
+              2,
+              6,
+              {16.0F, 0.0F, 6.0F},
+              6),
+    };
+    s.resource_patches = {
+        {QStringLiteral("pine"), 5, {-24.0F, 0.0F, -6.0F}, {3.0F, 0.0F, 2.0F}, 1.2F},
+        {QStringLiteral("pine"), 4, {20.0F, 0.0F, -14.0F}, {3.0F, 0.0F, 2.0F}, 1.1F}};
+    s.steps = {
+        at(0.3F, Command::Hold, QStringLiteral("roman_line")),
+        at(0.3F, Command::Hold, QStringLiteral("roman_spears")),
+        at(0.4F,
+           Command::AttackMove,
+           QStringLiteral("punic_horde"),
+           QStringLiteral("roman_line")),
+        at(0.4F,
+           Command::AttackMove,
+           QStringLiteral("punic_spears"),
+           QStringLiteral("roman_spears")),
+        at(0.8F,
+           Command::Attack,
+           QStringLiteral("roman_archers"),
+           QStringLiteral("punic_horde")),
+        at(5.5F,
+           Command::Charge,
+           QStringLiteral("punic_cavalry"),
+           QStringLiteral("roman_archers")),
+        at(9.0F,
+           Command::AttackMove,
+           QStringLiteral("roman_line"),
+           QStringLiteral("punic_horde")),
+        at(9.0F,
+           Command::AttackMove,
+           QStringLiteral("roman_consul"),
+           QStringLiteral("punic_horde")),
+    };
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("roman_line")),
+        expectation(Expect::GroupExists, QStringLiteral("punic_horde")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_line")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("punic_horde")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("punic_cavalry")),
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_horde")),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_promo_night_of_the_dead_id),
+        QStringLiteral("Promo: Night of the Dead"),
+        QStringLiteral("Night capture scene under the Iron Sepulcher profile. A "
+                       "Roman column walks a cursed shrine awake and the risen "
+                       "garrison closes on it from the haze."),
+        30.0F,
+        {24.0F, 24.0F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.collect_animation_diagnostics = false;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.environment.start_time = 21.4F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
+
+    s.environment.exposure_override = 1.45F;
+    s.environment.fog_density_override = 0.010F;
+    s.resource_patches = {{QStringLiteral("magic_shrine"),
+                           1,
+                           {0.0F, 0.0F, 6.0F},
+                           {0.0F, 0.0F, 0.0F},
+                           1.2F},
+                          {QStringLiteral("cursed_tree"),
+                           4,
+                           {-13.0F, 0.0F, 4.0F},
+                           {4.0F, 0.0F, 3.0F},
+                           1.2F},
+                          {QStringLiteral("cursed_tree"),
+                           3,
+                           {11.0F, 0.0F, 8.0F},
+                           {4.0F, 0.0F, 3.0F},
+                           1.2F}};
+    s.undead_zones = {
+        undead_zone(QStringLiteral("shrine_garrison"),
+                    Game::Map::WorldProp::Type::MagicShrine,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    9.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 6},
+                                  {Game::Units::SpawnType::SkeletonArcher, 3},
+                                  {Game::Units::SpawnType::GravePriest, 1}}),
+                     undead_wave(QStringLiteral("after_clear"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 4}})})};
+    s.groups = {group(QStringLiteral("roman_column"),
+                      Troop::Swordsman,
+                      1,
+                      6,
+                      {-6.5F, 0.0F, -16.0F},
+                      10),
+                group(QStringLiteral("roman_flank"),
+                      Troop::Spearman,
+                      1,
+                      4,
+                      {-3.9F, 0.0F, -20.0F},
+                      10)};
+    s.steps = {at(1.2F, Command::FormationMove, QStringLiteral("roman_column")),
+               at(4.0F, Command::FormationMove, QStringLiteral("roman_flank"))};
+    s.steps[0].destination = QVector3D(0.0F, 0.0F, 0.0F);
+    s.steps[1].destination = QVector3D(0.0F, 0.0F, -4.0F);
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("roman_column")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_column")),
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("roman_column")),
+        zone_expectation(Expect::UndeadZoneDormantBefore,
+                         QStringLiteral("shrine_garrison"),
+                         0.0F,
+                         1.5F),
+        zone_expectation(
+            Expect::UndeadZoneAwakened, QStringLiteral("shrine_garrison"), 6.0F),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_promo_storm_charge_id),
+        QStringLiteral("Promo: Storm Charge"),
+        QStringLiteral("Storm capture scene. Roman cavalry charges a braced "
+                       "Carthaginian spear wall through driving rain while both "
+                       "infantry lines close behind them."),
+        24.0F,
+        {22.0F, 20.0F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.collect_animation_diagnostics = false;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.environment.start_time = 16.2F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.environment.exposure_override = 1.0F;
+    s.weather.rain = 0.85F;
+    s.weather.storm = 0.65F;
+    s.precipitation.enabled = true;
+    s.precipitation.type = Game::Map::WeatherType::Rain;
+    s.precipitation.intensity = 0.85F;
+    s.precipitation.wind_strength = 0.55F;
+    s.precipitation.wind_direction_deg = 205.0F;
+    s.groups = {
+        group(QStringLiteral("roman_cavalry"),
+              Troop::MountedKnight,
+              1,
+              8,
+              {-9.1F, 0.0F, -18.0F},
+              6),
+        group(QStringLiteral("roman_foot"),
+              Troop::Swordsman,
+              1,
+              7,
+              {-7.8F, 0.0F, -24.0F},
+              12),
+        group(QStringLiteral("punic_wall"),
+              Troop::Spearman,
+              2,
+              9,
+              {-10.4F, 0.0F, 6.0F},
+              12),
+        group(QStringLiteral("punic_support"),
+              Troop::Swordsman,
+              2,
+              6,
+              {-6.5F, 0.0F, 10.5F},
+              12),
+        group(QStringLiteral("punic_archers"),
+              Troop::Archer,
+              2,
+              4,
+              {-3.9F, 0.0F, 14.5F},
+              8),
+    };
+    s.steps = {
+        at(0.3F, Command::Hold, QStringLiteral("punic_wall")),
+        at(0.8F,
+           Command::Attack,
+           QStringLiteral("punic_archers"),
+           QStringLiteral("roman_cavalry")),
+        at(1.5F,
+           Command::Charge,
+           QStringLiteral("roman_cavalry"),
+           QStringLiteral("punic_wall")),
+        at(3.0F,
+           Command::AttackMove,
+           QStringLiteral("roman_foot"),
+           QStringLiteral("punic_wall")),
+        at(8.0F,
+           Command::AttackMove,
+           QStringLiteral("punic_support"),
+           QStringLiteral("roman_foot")),
+    };
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("punic_wall")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_cavalry")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("punic_wall")),
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_wall")),
+    };
+    result.push_back(std::move(s));
+  }
+
   return result;
 }
 

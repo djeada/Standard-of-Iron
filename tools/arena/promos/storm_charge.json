@@ -1,0 +1,214 @@
+{
+  "id": "storm_charge",
+  "title": "STORM CHARGE",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 1,
+  "shots": [
+    {
+      "name": "braced_wall",
+      "scenario": "promo_storm_charge",
+      "start": 1.2,
+      "duration": 1.8,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group",
+        "group": "punic_wall",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14,
+          "pitch": 9,
+          "yaw": 8,
+          "fov": 45,
+          "height": 1.7
+        },
+        {
+          "time": 1.8,
+          "distance": 10,
+          "pitch": 12,
+          "yaw": 352,
+          "fov": 45,
+          "height": 1.6,
+          "ease": "out"
+        }
+      ],
+      "caption": "SPEARS SET"
+    },
+    {
+      "name": "charge_track",
+      "scenario": "promo_storm_charge",
+      "start": 3.4,
+      "duration": 1.5,
+      "slow_motion": 1.5,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group",
+        "group": "roman_cavalry",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 8,
+          "yaw": 96,
+          "fov": 50,
+          "height": 1.5,
+          "roll": -4
+        },
+        {
+          "time": 1.5,
+          "distance": 9.5,
+          "pitch": 11,
+          "yaw": 78,
+          "fov": 50,
+          "height": 1.6,
+          "roll": 4,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THEY CHARGE ANYWAY"
+    },
+    {
+      "name": "arrow_sky",
+      "scenario": "promo_storm_charge",
+      "start": 5.0,
+      "duration": 1.2,
+      "slow_motion": 2.0,
+      "focus": {
+        "mode": "group",
+        "group": "punic_archers",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 11,
+          "pitch": 6,
+          "yaw": 200,
+          "fov": 52,
+          "height": 2.0
+        },
+        {
+          "time": 1.2,
+          "distance": 9,
+          "pitch": 4,
+          "yaw": 210,
+          "fov": 52,
+          "height": 2.4,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "impact",
+      "scenario": "promo_storm_charge",
+      "start": 6.6,
+      "duration": 1.1,
+      "slow_motion": 2.5,
+      "shake": 0.07,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_cavalry",
+        "second_group": "punic_wall",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.5,
+          "pitch": 13,
+          "yaw": 98,
+          "fov": 52,
+          "height": 1.5
+        },
+        {
+          "time": 1.1,
+          "distance": 8.5,
+          "pitch": 16,
+          "yaw": 112,
+          "fov": 52,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "caption": "IMPACT"
+    },
+    {
+      "name": "foot_melee",
+      "scenario": "promo_storm_charge",
+      "start": 9.6,
+      "duration": 1.6,
+      "slow_motion": 1.5,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_foot",
+        "second_group": "punic_wall",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13,
+          "pitch": 16,
+          "yaw": 244,
+          "fov": 48,
+          "height": 1.4
+        },
+        {
+          "time": 1.6,
+          "distance": 10.5,
+          "pitch": 19,
+          "yaw": 226,
+          "fov": 48,
+          "height": 1.4,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "storm_crane",
+      "scenario": "promo_storm_charge",
+      "start": 13.0,
+      "duration": 2.8,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 17,
+          "pitch": 15,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.4
+        },
+        {
+          "time": 2.8,
+          "distance": 34,
+          "pitch": 34,
+          "yaw": 176,
+          "fov": 44,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ],
+  "subtitle": "STANDARD OF IRON",
+  "grade": {
+    "contrast": 1.16,
+    "saturation": 0.94,
+    "gamma": 0.98,
+    "grain": 6
+  },
+  "music": "assets/audio/music/combat/combat_cavalry_flank_fast.ogg",
+  "music_start": 18.0
+}

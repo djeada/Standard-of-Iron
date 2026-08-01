@@ -20,6 +20,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
         unit_panel.cpp
         building_panel.cpp
         prop_panel.cpp
+        promo_spec.cpp
+        promo_runner.cpp
+        video_encoder.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
@@ -38,6 +41,9 @@ else()
         unit_panel.cpp
         building_panel.cpp
         prop_panel.cpp
+        promo_spec.cpp
+        promo_runner.cpp
+        video_encoder.cpp
         ../../app/core/renderer_bootstrap.cpp
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp

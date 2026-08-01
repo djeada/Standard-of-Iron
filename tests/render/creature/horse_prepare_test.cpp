@@ -631,3 +631,54 @@ TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
 }
 
 } // namespace
+
+TEST(HorsePrepare, MeasuredCavalrySpeedSelectsTheGaitItActuallyTravelsAt) {
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
+      23U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  Render::Creature::HorseAnimationStateComponent state{};
+  state.current_gait = Render::GL::GaitType::TROT;
+  state.target_gait = Render::GL::GaitType::TROT;
+  state.gait_transition_progress = 1.0F;
+
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  rider_ctx.gait.state = Render::GL::HumanoidMotionState::Run;
+  rider_ctx.gait.speed = 4.0F;
+  rider_ctx.gait.normalized_speed = 1.0F;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 2.0F;
+  anim.movement_state = Render::Creature::MovementAnimationState::Run;
+
+  auto const sample =
+      Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
+
+  EXPECT_EQ(sample.gait_type, Render::GL::GaitType::TROT);
+}
+
+TEST(HorsePrepare, MountCadenceFollowsTheGroundSpeedItIsGiven) {
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
+      29U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  auto sample_at = [&profile](float speed) {
+    Render::Creature::HorseAnimationStateComponent state{};
+    state.current_gait = Render::GL::GaitType::WALK;
+    state.target_gait = Render::GL::GaitType::WALK;
+    state.gait_transition_progress = 1.0F;
+
+    Render::GL::HumanoidAnimationContext rider_ctx{};
+    rider_ctx.gait.state = Render::GL::HumanoidMotionState::Walk;
+    rider_ctx.gait.speed = speed;
+    rider_ctx.gait.normalized_speed = 0.5F;
+
+    Render::GL::AnimationInputs anim{};
+    anim.time = 1.0F;
+    anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+    return Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
+  };
+
+  auto const reference = sample_at(1.8F);
+  auto const halved = sample_at(0.9F);
+
+  EXPECT_GT(halved.gait.cycle_time, reference.gait.cycle_time * 1.5F);
+}

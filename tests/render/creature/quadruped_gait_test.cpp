@@ -153,3 +153,79 @@ TEST(QuadrupedGaitTest, SwingTargetMovesFeetForwardAlongLegSide) {
 }
 
 } // namespace
+
+TEST(QuadrupedCadenceTest, CadenceStretchesWhenTheBodyMovesSlowerThanAuthored) {
+  const Animation::QuadrupedCadenceInputs inputs{
+      .ground_speed = 2.1F,
+      .reference_speed = 4.2F,
+      .authored_cycle_time = 0.55F,
+      .authored_stride_swing = 0.62F,
+      .stance_fraction = 0.44F,
+      .stride_to_local = 0.56F,
+  };
+
+  const auto cadence = Animation::resolve_quadruped_cadence(inputs);
+
+  EXPECT_NEAR(cadence.cycle_time, 1.10F, 1.0e-3F);
+}
+
+TEST(QuadrupedCadenceTest, CadenceCompressesWhenTheBodyOutrunsTheAuthoredGait) {
+  const Animation::QuadrupedCadenceInputs inputs{
+      .ground_speed = 8.4F,
+      .reference_speed = 4.2F,
+      .authored_cycle_time = 0.55F,
+      .authored_stride_swing = 0.62F,
+      .stance_fraction = 0.44F,
+      .stride_to_local = 0.56F,
+  };
+
+  const auto cadence = Animation::resolve_quadruped_cadence(inputs);
+
+  EXPECT_NEAR(cadence.cycle_time, 0.55F * 0.55F, 1.0e-3F);
+}
+
+TEST(QuadrupedCadenceTest, StanceSweepTracksTheGroundDistanceItCovers) {
+  const Animation::QuadrupedCadenceInputs inputs{
+      .ground_speed = 4.2F,
+      .reference_speed = 4.2F,
+      .authored_cycle_time = 0.55F,
+      .authored_stride_swing = 0.62F,
+      .stance_fraction = 0.44F,
+      .stride_to_local = 0.56F,
+      .max_stride_scale = 6.0F,
+  };
+
+  const auto cadence = Animation::resolve_quadruped_cadence(inputs);
+
+  EXPECT_NEAR(cadence.ground_tracking, 1.0F, 1.0e-3F);
+  EXPECT_GT(cadence.stride_swing, inputs.authored_stride_swing);
+}
+
+TEST(QuadrupedCadenceTest, StrideNeverShrinksBelowTheAuthoredSweep) {
+  const Animation::QuadrupedCadenceInputs inputs{
+      .ground_speed = 0.4F,
+      .reference_speed = 4.2F,
+      .authored_cycle_time = 0.55F,
+      .authored_stride_swing = 0.62F,
+      .stance_fraction = 0.44F,
+      .stride_to_local = 0.56F,
+  };
+
+  const auto cadence = Animation::resolve_quadruped_cadence(inputs);
+
+  EXPECT_GE(cadence.stride_swing, inputs.authored_stride_swing);
+}
+
+TEST(QuadrupedCadenceTest, StandingStillKeepsTheAuthoredGait) {
+  const Animation::QuadrupedCadenceInputs inputs{
+      .ground_speed = 0.0F,
+      .reference_speed = 4.2F,
+      .authored_cycle_time = 0.55F,
+      .authored_stride_swing = 0.62F,
+  };
+
+  const auto cadence = Animation::resolve_quadruped_cadence(inputs);
+
+  EXPECT_FLOAT_EQ(cadence.cycle_time, inputs.authored_cycle_time);
+  EXPECT_FLOAT_EQ(cadence.stride_swing, inputs.authored_stride_swing);
+}

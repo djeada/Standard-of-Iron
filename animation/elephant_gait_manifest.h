@@ -7,6 +7,8 @@
 
 namespace Animation {
 
+inline constexpr float k_elephant_reference_speed = 2.2F;
+
 struct ElephantLegGaitState {
   PoseVec3 planted_foot{};
   PoseVec3 swing_start{};

@@ -418,7 +418,7 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
                                       Engine::Core::UnitComponent* unit_comp,
                                       bool selected,
                                       bool hovered) {
-  if ((!selected && !hovered) || (transform == nullptr)) {
+  if ((!selected && !hovered) || (transform == nullptr) || m_cinematic_mode) {
     return;
   }
 
@@ -503,7 +503,7 @@ void Renderer::enqueue_mode_indicator(Engine::Core::EntityID entity_id,
                                       bool has_guard_mode,
                                       bool has_hold_mode,
                                       bool has_patrol) {
-  if (transform == nullptr) {
+  if (transform == nullptr || m_cinematic_mode) {
     return;
   }
 
@@ -669,7 +669,7 @@ void Renderer::render_world(Engine::Core::World* world) {
   building_entries.reserve(building_ids.size());
   other_entries.reserve(other_ids.size());
 
-  for (std::uint32_t const entity_id : unit_ids) {
+  for (Engine::Core::EntityID const entity_id : unit_ids) {
 
     Engine::Core::Entity* entity = world->get_entity(entity_id);
     if (entity == nullptr) {
@@ -783,7 +783,7 @@ void Renderer::render_world(Engine::Core::World* world) {
                      return lhs.entity_id < rhs.entity_id;
                    });
 
-  auto collect_non_unit_entry = [&](std::uint32_t entity_id,
+  auto collect_non_unit_entry = [&](Engine::Core::EntityID entity_id,
                                     std::vector<RenderEntry>& dest,
                                     float cull_radius) {
     Engine::Core::Entity* entity = world->get_entity(entity_id);
@@ -839,11 +839,11 @@ void Renderer::render_world(Engine::Core::World* world) {
     dest.push_back(std::move(entry));
   };
 
-  for (std::uint32_t const entity_id : building_ids) {
+  for (Engine::Core::EntityID const entity_id : building_ids) {
     collect_non_unit_entry(entity_id, building_entries, 8.0F);
   }
 
-  for (std::uint32_t const entity_id : other_ids) {
+  for (Engine::Core::EntityID const entity_id : other_ids) {
     collect_non_unit_entry(entity_id, other_entries, 3.0F);
   }
 
