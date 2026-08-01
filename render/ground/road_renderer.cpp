@@ -19,8 +19,8 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "game/map/scatter/ground_utils.h"
-#include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
+#include "road_network_geometry.h"
 
 namespace Render::GL {
 
@@ -62,47 +62,25 @@ void RoadRenderer::configure(const std::vector<Game::Map::RoadSegment>& road_seg
 }
 
 void RoadRenderer::build_meshes() {
-  m_meshes.clear();
+  m_surfaces.clear();
 
-  if (m_road_segments.empty()) {
+  if (m_road_segments.empty() || m_height_map == nullptr) {
     return;
   }
 
-  Ground::LinearFeatureRibbonSettings settings;
-  settings.sample_step = 0.5F;
-  settings.min_length_steps = 8;
-  settings.cross_section_segments = 4;
-  settings.edge_noise_frequencies = {0.18F, 0.55F, 1.35F};
-  settings.edge_noise_weights = {0.62F, 0.28F, 0.10F};
-  settings.width_variation_scale = 0.09F;
-  settings.meander_frequency = 0.0F;
-  settings.meander_length_scale = 0.1F;
-  settings.meander_amplitude = 0.0F;
-  settings.y_offset = Game::Map::k_road_surface_y_offset;
-  settings.sample_terrain_envelope = false;
+  Ground::RoadNetworkSettings settings;
   settings.height_map = m_height_map;
+  settings.bridges = &m_height_map->get_bridges();
+  settings.tile_size = m_tile_size;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
 
-  std::vector<Ground::LinearFeatureRibbonSegment> segments;
-  segments.reserve(m_road_segments.size());
-  for (const auto& segment : m_road_segments) {
-    QVector3D direction = segment.end - segment.start;
-    direction.setY(0.0F);
-    if (direction.lengthSquared() > 0.0001F) {
-      direction.normalize();
-    }
-    const float join_overlap = segment.width * 0.45F;
-    segments.push_back({segment.start - direction * join_overlap,
-                        segment.end + direction * join_overlap,
-                        segment.width});
-  }
-
-  m_meshes = Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
+  m_surfaces = Ground::build_road_network_surfaces(m_road_segments, settings);
 }
 
 void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
-  if (m_road_segments.empty() || m_meshes.empty()) {
+  if (m_surfaces.empty()) {
     return;
   }
 
@@ -117,14 +95,8 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   QMatrix4x4 model;
   model.setToIdentity();
-  std::size_t mesh_index = 0;
-  for (const auto& segment : m_road_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto* mesh = m_meshes[mesh_index].get();
-    ++mesh_index;
+  for (const auto& surface : m_surfaces) {
+    auto* mesh = surface.mesh.get();
     if (mesh == nullptr) {
       continue;
     }
@@ -132,8 +104,10 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     const auto fog_mode = renderer.static_world_visibility_filter_enabled()
                               ? SubmissionFogMode::Revealed
                               : SubmissionFogMode::Ignore;
-    if (!renderer.submission_visibility().accepts_segment(
-            segment.start, segment.end, segment.width, fog_mode)) {
+    if (!renderer.submission_visibility().accepts_segment(surface.visibility_start,
+                                                          surface.visibility_end,
+                                                          surface.visibility_width,
+                                                          fog_mode)) {
       continue;
     }
 
@@ -141,9 +115,10 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       Ground::LinearFeatureVisibilityOptions vis_opts;
       vis_opts.sample_count =
           Ground::recommended_linear_feature_visibility_sample_count(
-              (segment.end - segment.start).length(), m_tile_size);
+              (surface.visibility_end - surface.visibility_start).length(),
+              m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot, segment.start, segment.end, vis_opts);
+          vis_snapshot, surface.visibility_start, surface.visibility_end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }
@@ -153,8 +128,8 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.mesh = mesh;
     cmd.kind = LinearFeatureKind::Road;
     cmd.model = model;
-    cmd.color = road_color_for_style(segment.style);
-    cmd.road_surface_kind = road_surface_for_style(segment.style);
+    cmd.color = road_color_for_style(surface.style);
+    cmd.road_surface_kind = road_surface_for_style(surface.style);
 
     cmd.alpha = 0.995F;
     cmd.visibility = vis_res;

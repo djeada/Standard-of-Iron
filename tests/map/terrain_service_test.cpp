@@ -665,7 +665,12 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
       9, 9, 1.0F, heights, terrain_types, {}, roads, bridges, {});
 
   auto const sample = terrain.sample_surface_height(0.0F, 0.0F);
-  float const bridge_surface_y = Game::Map::bridge_deck_world_y(bridges.front(), 0.5F);
+
+  const auto* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+  ASSERT_FALSE(height_map->get_bridges().empty());
+  float const bridge_surface_y =
+      Game::Map::bridge_deck_world_y(height_map->get_bridges().front(), 0.5F);
 
   EXPECT_NEAR(sample.world_y, bridge_surface_y, 0.0001F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Bridge);

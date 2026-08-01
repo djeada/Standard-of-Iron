@@ -749,6 +749,10 @@ struct Bridge {
   return river.width * 0.5F / sin_angle;
 }
 
+[[nodiscard]] inline auto bridge_abutment_reach(float bridge_width) -> float {
+  return std::max(bridge_width * 0.30F, 1.2F);
+}
+
 inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
                                              const std::vector<RiverSegment>& rivers) {
   for (const RiverSegment& river : rivers) {
@@ -769,8 +773,13 @@ inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
     QVector3D const diff = river.start - bridge.start;
     float const t = xz_cross(diff, river_vec) / cross;
     QVector3D const crossing = bridge.start + dir * (t * bridge_len);
-    bridge.start = crossing - dir * *required_half;
-    bridge.end = crossing + dir * *required_half;
+
+    float const authored_start_reach =
+        QVector3D::dotProduct(crossing - bridge.start, dir);
+    float const authored_end_reach = QVector3D::dotProduct(bridge.end - crossing, dir);
+
+    bridge.start = crossing - dir * std::max(*required_half, authored_start_reach);
+    bridge.end = crossing + dir * std::max(*required_half, authored_end_reach);
     return;
   }
 }
@@ -788,19 +797,18 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
 
 inline constexpr float k_min_bridge_deck_rise = 0.72F;
 
-inline constexpr float k_bridge_deck_visual_lift = 0.33F;
+inline constexpr float k_bridge_deck_visual_lift = 0.12F;
 
 [[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
-  return std::max(bridge.height, k_min_bridge_deck_rise);
+  return std::max({bridge.height, k_min_bridge_deck_rise, bridge.width * 0.14F});
 }
 
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
   float const clamped_t = std::clamp(t, 0.0F, 1.0F);
   float const base_y =
       bridge.start.y() * (1.0F - clamped_t) + bridge.end.y() * clamped_t;
-  float const effective_height = bridge_effective_height(bridge);
-  float const arch_height = effective_height * bridge_arch_curve(clamped_t) * 0.8F;
-  return base_y + effective_height + arch_height * 0.3F + k_bridge_deck_visual_lift;
+  return base_y + k_bridge_deck_visual_lift +
+         bridge_effective_height(bridge) * bridge_arch_curve(clamped_t);
 }
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,

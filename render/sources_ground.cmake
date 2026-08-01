@@ -11,6 +11,7 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_submission.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/river_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_network_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/olive_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_renderer.cpp

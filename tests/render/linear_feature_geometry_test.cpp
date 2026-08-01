@@ -300,8 +300,10 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
     }
   }
 
-  EXPECT_NEAR(min_x, bridge.start.x(), 0.0001F);
-  EXPECT_NEAR(max_x, bridge.end.x(), 0.0001F);
+  const float abutment = Game::Map::bridge_abutment_reach(
+      std::max(bridge.width, Game::Map::k_min_bridge_width));
+  EXPECT_NEAR(min_x, bridge.start.x() - abutment, 0.0001F);
+  EXPECT_NEAR(max_x, bridge.end.x() + abutment, 0.0001F);
   ASSERT_TRUE(found_start_band);
   ASSERT_TRUE(found_mid_band);
   EXPECT_GT(start_width, bridge.width * 0.95F);
