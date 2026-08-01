@@ -519,9 +519,11 @@ void submit_baked_mesh(const BakedRiggedMeshCpu& baked,
     if (ia >= positions.size() || ib >= positions.size() || ic >= positions.size()) {
       continue;
     }
+
     std::uint8_t const role = baked.vertices[ia].color_role;
-    QVector3D const color =
-        role < role_colors.size() ? role_colors[role] : QVector3D(0.8F, 0.8F, 0.8F);
+    QVector3D const color = (role > 0U && role <= role_colors.size())
+                                ? role_colors[role - 1U]
+                                : QVector3D(0.8F, 0.8F, 0.8F);
     rasterizer.submit(
         ColoredTriangle{positions[ia], positions[ib], positions[ic], color, 1.0F});
   }

@@ -19,6 +19,7 @@
 #include "../gl/primitives.h"
 #include "../humanoid/humanoid_renderer_base.h"
 #include "../submitter.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "horse_renderer_base.h"
 #include "horse_spec.h"
 #include "math/creature_math_utils.h"
@@ -146,8 +147,6 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
                                               k_salt_stirrup_out,
                                               k_stirrup_out_scale_min,
                                               k_stirrup_out_scale_max);
-  d.stirrup_drop =
-      rand_between(seed, k_salt_stirrup_drop, k_stirrup_drop_min, k_stirrup_drop_max);
 
   d.idle_bob_amplitude = rand_between(
       seed, k_salt_idle_bob, k_idle_bob_amplitude_min, k_idle_bob_amplitude_max);
@@ -166,6 +165,12 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
                     d.saddle_thickness;
 
   scale_horse_dimensions(d, k_overall_scale);
+
+  d.stirrup_drop = (HumanProportions::UPPER_LEG_LEN + HumanProportions::LOWER_LEG_LEN) *
+                   rand_between(seed,
+                                k_salt_stirrup_drop,
+                                k_stirrup_leg_fraction_min,
+                                k_stirrup_leg_fraction_max);
 
   return d;
 }

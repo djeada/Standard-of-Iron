@@ -28,6 +28,9 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/skeleton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_full_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/rigged_mesh_asset.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/rigged_mesh_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_asset.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/skeleton.cpp

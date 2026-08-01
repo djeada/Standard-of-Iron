@@ -14,6 +14,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
 #include "bone_palette_arena.h"
+#include "creature/rigged_mesh_registry.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
 
@@ -191,7 +192,15 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     ++m_frame_stats.hits;
     return &it->second;
   }
-  if (Render::Creature::runtime_bake_forbidden()) {
+  RiggedMeshEntry entry;
+
+  const Render::Creature::Rigged::RiggedMeshBlob* prebaked =
+      attachments.empty()
+          ? Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(
+                skin_species_id, lod)
+          : nullptr;
+
+  if (prebaked == nullptr && Render::Creature::runtime_bake_forbidden()) {
 
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
@@ -205,14 +214,20 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     return nullptr;
   }
 
-  RiggedMeshEntry entry;
+  if (prebaked != nullptr) {
+    auto const vertices = prebaked->vertices_view();
+    auto const indices = prebaked->indices_view();
+    entry.mesh = std::make_unique<RiggedMesh>(
+        std::vector<RiggedVertex>(vertices.begin(), vertices.end()),
+        std::vector<std::uint32_t>(indices.begin(), indices.end()));
+  } else {
+    Render::Creature::BakeInput input{};
+    input.graph = &Render::Creature::part_graph_for(spec, lod);
+    input.bind_pose = rest_palette;
+    input.attachments = attachments;
 
-  Render::Creature::BakeInput input{};
-  input.graph = &Render::Creature::part_graph_for(spec, lod);
-  input.bind_pose = rest_palette;
-  input.attachments = attachments;
-
-  entry.mesh = Render::Creature::bake_rigged_mesh(input);
+    entry.mesh = Render::Creature::bake_rigged_mesh(input);
+  }
 
   entry.inverse_bind.reserve(rest_palette.size());
   for (const auto& m : rest_palette) {
