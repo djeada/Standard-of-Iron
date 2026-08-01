@@ -1,0 +1,12 @@
+{
+  "id": "iron_sepulcher.burial_guard_block",
+  "shape": "ranks",
+  "lateral_spacing_scale": 0.74,
+  "depth_spacing_scale": 0.7,
+  "front_rank_tightening": 0.18,
+  "rear_depth_bias": -0.08,
+  "lateral_jitter": 0.015,
+  "depth_jitter": 0.012,
+  "facing_jitter_degrees": 0.8,
+  "min_separation_scale": 0.78
+}

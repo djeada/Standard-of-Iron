@@ -85,6 +85,7 @@ add_library(
     systems/ai_system/ai_reasoner.cpp
     systems/ai_system/ai_executor.cpp
     systems/ai_system/ai_worker.cpp
+    systems/ai_system/ai_formation.cpp
     systems/ai_system/ai_tactical.cpp
     systems/ai_system/ai_strategy.cpp
     systems/ai_system/behaviors/production_behavior.cpp
@@ -140,8 +141,18 @@ add_library(
     systems/nation_registry.cpp
     systems/nation_loader.cpp
     systems/defense_formation_service.cpp
-    systems/formation_system.cpp
     systems/formation_combat_geometry.cpp
+    formation/formation_roles.cpp
+    formation/army_formation_types.cpp
+    formation/troop_role_registry.cpp
+    formation/formation_doctrine.cpp
+    formation/unit_layout.cpp
+    formation/unit_layout_resolver.cpp
+    formation/army_formation_planner.cpp
+    formation/army_formation_registry.cpp
+    formation/army_formation_service.cpp
+    formation/formation_data_loader.cpp
+    formation/unit_layout_state_system.cpp
     systems/troop_profile_service.cpp
     systems/rain_manager.cpp
     systems/stamina_system.cpp

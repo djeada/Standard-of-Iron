@@ -4,6 +4,8 @@
 
 #include "../command/command_system.h"
 #include "../core/world.h"
+#include "../formation/army_formation_registry.h"
+#include "../formation/unit_layout_state_system.h"
 #include "ai_system.h"
 #include "arrow_system.h"
 #include "capture_system.h"
@@ -42,6 +44,8 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<PatrolSystem>());
   world.add_system(std::make_unique<GuardSystem>());
   world.add_system(std::make_unique<DefenseFormationSystem>());
+  world.add_system(std::make_unique<Game::Formation::ArmyFormationRuntime>());
+  world.add_system(std::make_unique<Game::Formation::UnitLayoutStateSystem>());
   world.add_system(std::make_unique<CombatSystem>());
   world.add_system(std::make_unique<CommanderSystem>());
   world.add_system(std::make_unique<HealingBeamSystem>());

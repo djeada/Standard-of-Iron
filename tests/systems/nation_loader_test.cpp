@@ -238,7 +238,7 @@ TEST(NationLoader, IronSepulcherMetadataLoadsAsNonPlayableRoster) {
   ASSERT_NE(it, nations.end());
 
   EXPECT_EQ(it->display_name, "The Iron Sepulcher");
-  EXPECT_EQ(it->formation_type, Game::Systems::FormationType::Barbarian);
+  EXPECT_EQ(it->doctrine, "iron_sepulcher");
   EXPECT_FALSE(it->primary_building.has_value());
   EXPECT_FALSE(it->playable);
   EXPECT_FALSE(it->has_economy);

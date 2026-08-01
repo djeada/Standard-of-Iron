@@ -2,10 +2,15 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
+#include <QVariantMap>
 #include <QVector3D>
 
 #include <cstdint>
 #include <vector>
+
+#include "../../game/formation/army_formation_planner.h"
+#include "../../game/formation/army_formation_types.h"
 
 namespace Engine::Core {
 class World;
@@ -92,6 +97,48 @@ public:
     return m_formation_placement_angle;
   }
 
+  Q_INVOKABLE void set_formation_intent(const QString& intent_id);
+  Q_INVOKABLE [[nodiscard]] QString formation_intent() const;
+  Q_INVOKABLE [[nodiscard]] QStringList available_formation_intents() const;
+  Q_INVOKABLE [[nodiscard]] QString
+  formation_intent_display_name(const QString& intent_id) const;
+  Q_INVOKABLE [[nodiscard]] QString
+  formation_intent_unavailable_reason(const QString& intent_id) const;
+  Q_INVOKABLE [[nodiscard]] QString formation_doctrine() const;
+  Q_INVOKABLE [[nodiscard]] QString formation_doctrine_display_name() const;
+
+  void begin_formation_drag(const QVector3D& start);
+  void update_formation_drag(const QVector3D& current);
+  void end_formation_drag();
+  [[nodiscard]] bool is_dragging_formation() const { return m_formation_drag_active; }
+  [[nodiscard]] QVector3D formation_drag_start() const {
+    return m_formation_drag_start;
+  }
+  Q_INVOKABLE void adjust_formation_depth(float wheel_delta);
+  Q_INVOKABLE void mirror_formation_flank();
+  Q_INVOKABLE void set_formation_preserve_order(bool preserve);
+  Q_INVOKABLE void set_formation_tight_spacing(bool tight);
+
+  Q_INVOKABLE void set_formation_frontage_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_depth_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_spacing_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_flank_preference(const QString& preference);
+  Q_INVOKABLE void set_formation_ranged_placement(const QString& placement);
+  Q_INVOKABLE void set_formation_reserve_rows(int rows);
+  Q_INVOKABLE void set_formation_movement_policy(const QString& policy);
+  Q_INVOKABLE void set_formation_mixed_policy(const QString& policy);
+  Q_INVOKABLE void set_formation_doctrine_override(const QString& doctrine);
+  Q_INVOKABLE [[nodiscard]] QVariantMap formation_options() const;
+  Q_INVOKABLE void reset_formation_options();
+
+  [[nodiscard]] auto
+  formation_preview() const -> const Game::Formation::ArmyFormationPlan& {
+    return m_formation_preview;
+  }
+  [[nodiscard]] QString formation_preview_warning() const;
+  [[nodiscard]] float formation_frontage() const { return m_formation_frontage; }
+  void refresh_formation_preview();
+
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
@@ -110,6 +157,8 @@ signals:
   void formation_placement_started();
   void formation_placement_updated(QVector3D position, float angle);
   void formation_placement_ended();
+  void formation_placement_rejected(const QString& reason);
+  void formation_preview_changed();
 
 private:
   Engine::Core::World* m_world;
@@ -124,6 +173,18 @@ private:
   QVector3D m_formation_placement_position;
   float m_formation_placement_angle = 0.0F;
   std::vector<Engine::Core::EntityID> m_formation_units;
+
+  Game::Formation::ArmyFormationIntent m_formation_intent =
+      Game::Formation::ArmyFormationIntent::FactionDefault;
+  Game::Formation::ArmyFormationOptions m_formation_options;
+  float m_formation_frontage = 0.0F;
+
+  bool m_formation_drag_active = false;
+  QVector3D m_formation_drag_start;
+  Game::Formation::ArmyFormationPlan m_formation_preview;
+  Game::Formation::FormationDoctrineId m_formation_doctrine_override;
+
+  void apply_formation_option_change();
 
   static void reset_movement(Engine::Core::Entity* entity);
 };

@@ -59,4 +59,52 @@ void render_formation_arrow(Renderer* renderer,
   renderer->mesh(arrow_mesh, arrow_xform, body_color, nullptr, 0.88F * fa);
 }
 
+void render_formation_slot_preview(Renderer* renderer,
+                                   ResourceManager* resources,
+                                   const FormationPlacementInfo& placement) {
+  if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
+    return;
+  }
+  if (placement.fade_alpha <= 0.0F || placement.slot_markers.empty()) {
+    return;
+  }
+
+  Mesh* const disc = Render::Geom::SelectionDisc::get();
+  if (disc == nullptr) {
+    return;
+  }
+
+  float const fa = std::clamp(placement.fade_alpha, 0.0F, 1.0F);
+  QVector3D const valid_color =
+      placement.accent_color.value_or(QVector3D(0.72F, 1.00F, 1.00F));
+  QVector3D const adjusted_color(1.00F, 0.78F, 0.24F);
+  QVector3D const blocked_color(0.95F, 0.22F, 0.20F);
+
+  Mesh* const arrow_mesh = get_orientation_arrow();
+
+  for (const auto& marker : placement.slot_markers) {
+    QVector3D const color = marker.blocked    ? blocked_color
+                            : marker.adjusted ? adjusted_color
+                                              : valid_color;
+    float const alpha = (marker.blocked ? 0.55F : 0.34F) * fa;
+
+    QMatrix4x4 xform;
+    xform.translate(
+        marker.position.x(), marker.position.y() + 0.03F, marker.position.z());
+    xform.rotate(marker.facing_degrees + 180.0F, 0.0F, 1.0F, 0.0F);
+    xform.scale(marker.radius, 1.0F, marker.radius);
+    renderer->mesh(disc, xform, color, nullptr, alpha);
+
+    if (arrow_mesh == nullptr || marker.blocked) {
+      continue;
+    }
+    QMatrix4x4 facing_xform;
+    facing_xform.translate(
+        marker.position.x(), marker.position.y() + 0.06F, marker.position.z());
+    facing_xform.rotate(marker.facing_degrees + 180.0F, 0.0F, 1.0F, 0.0F);
+    facing_xform.scale(marker.radius * 0.45F, 0.18F, marker.radius * 0.45F);
+    renderer->mesh(arrow_mesh, facing_xform, color, nullptr, 0.5F * fa);
+  }
+}
+
 } // namespace Render::GL

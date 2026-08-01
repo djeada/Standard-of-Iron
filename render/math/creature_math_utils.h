@@ -28,11 +28,6 @@ inline auto hash01(uint32_t x) -> float {
   return (x & k_hash_mask_24bit) / k_hash_divisor;
 }
 
-// A creature's randomised identity -- proportions, stride jitter, gait phase
-// offset -- must be stable for the lifetime of the unit. Deriving it from the
-// entity pointer is not: the renderer walks double-buffered world snapshots, so
-// the same unit has a different address on alternate frames and its whole
-// visual identity flickers at frame rate.
 inline auto stable_entity_seed(std::uint64_t entity_id) -> std::uint32_t {
   auto mixed = entity_id * 0x9E3779B97F4A7C15ULL;
   mixed ^= mixed >> 29U;

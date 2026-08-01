@@ -18,7 +18,7 @@
 
 namespace {
 
-using Game::Systems::FormationType;
+using Game::Formation::FormationDoctrineId;
 using Game::Systems::Nation;
 using Game::Systems::NationLoader;
 using Game::Systems::NationTroopVariant;
@@ -126,16 +126,21 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
 }
 
 [[nodiscard]] auto
-parse_formation_type(const QString& value) -> std::optional<FormationType> {
-  const QString lowered = value.trimmed().toLower();
-  if (lowered == QStringLiteral("roman")) {
-    return FormationType::Roman;
+parse_doctrine_id(const QJsonObject& obj) -> std::optional<FormationDoctrineId> {
+  const QString explicit_doctrine = obj.value("doctrine").toString().trimmed();
+  if (!explicit_doctrine.isEmpty()) {
+    return explicit_doctrine.toLower().toStdString();
   }
-  if (lowered == QStringLiteral("barbarian")) {
-    return FormationType::Barbarian;
+
+  const QString legacy = obj.value("formation_type").toString().trimmed().toLower();
+  if (legacy == QStringLiteral("roman")) {
+    return FormationDoctrineId{"rome"};
   }
-  if (lowered == QStringLiteral("carthage")) {
-    return FormationType::Carthage;
+  if (legacy == QStringLiteral("carthage")) {
+    return FormationDoctrineId{"carthage"};
+  }
+  if (legacy == QStringLiteral("barbarian")) {
+    return FormationDoctrineId{"neutral"};
   }
   return std::nullopt;
 }
@@ -352,9 +357,8 @@ auto nation_loader_logger() -> QLoggingCategory& {
     has_variant = true;
   }
 
-  if (auto formation_override =
-          parse_formation_type(obj.value("formation_type").toString())) {
-    variant.formation_type = formation_override;
+  if (auto doctrine_override = parse_doctrine_id(obj)) {
+    variant.doctrine = doctrine_override;
     has_variant = true;
   }
   variant.abilities = read_string_array(obj, "abilities");
@@ -483,8 +487,8 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
     nation.primary_building =
         parsed_building.value_or(Game::Units::BuildingType::Barracks);
   }
-  if (auto formation = parse_formation_type(root.value("formation_type").toString())) {
-    nation.formation_type = *formation;
+  if (auto doctrine = parse_doctrine_id(root)) {
+    nation.doctrine = *doctrine;
   }
   nation.defense_formation =
       parse_defense_formation(ensure_object(root.value("defense_formation")));

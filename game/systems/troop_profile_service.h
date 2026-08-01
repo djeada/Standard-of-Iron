@@ -17,7 +17,7 @@ struct TroopProfile {
   std::vector<std::string> abilities;
   int individuals_per_unit = 1;
   int max_units_per_row = 1;
-  FormationType formation_type = FormationType::Roman;
+  Game::Formation::FormationDoctrineId doctrine{"rome"};
 
   [[nodiscard]] auto has_ability(const std::string& ability_id) const -> bool;
 };

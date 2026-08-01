@@ -1,0 +1,10 @@
+{
+  "id": "iron_sepulcher.loose_order_ranged",
+  "shape": "ranks",
+  "lateral_spacing_scale": 0.98,
+  "depth_spacing_scale": 1.06,
+  "rank_stagger": 0.18,
+  "lateral_jitter": 0.04,
+  "depth_jitter": 0.03,
+  "facing_jitter_degrees": 2.0
+}

@@ -7,8 +7,8 @@
 #include <utility>
 #include <vector>
 
-#include "../../formation_system.h"
 #include "../../nation_registry.h"
+#include "../ai_formation.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -16,14 +16,6 @@
 namespace Game::Systems::AI {
 
 namespace {
-auto get_formation_type_for_player(int player_id) -> FormationType {
-  const Nation* nation = NationRegistry::instance().get_nation_for_player(player_id);
-  if (nation != nullptr) {
-    return nation->formation_type;
-  }
-  return FormationType::Roman;
-}
-
 constexpr float k_gathering_advance_aggression_threshold = 0.70F;
 
 auto can_advance_from_gathering(const AIContext& context, int ready_units) -> bool {
@@ -146,14 +138,13 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
         unit_ids.push_back(unit->id);
       }
 
-      FormationType formation_type = get_formation_type_for_player(context.player_id);
-
       QVector3D const scout_center(scout_x, 0.0F, scout_z);
-      auto formation_positions = FormationSystem::instance().get_formation_positions(
-          formation_type,
-          static_cast<int>(ready_units.size()),
-          scout_center,
-          context.strategy_config.attack_formation_spacing);
+      AIFormationRequest formation_request;
+      formation_request.player_id = context.player_id;
+      formation_request.anchor = scout_center;
+      formation_request.spacing = context.strategy_config.attack_formation_spacing;
+      formation_request.intent = select_ai_intent(snapshot, context, false, false);
+      auto formation_positions = plan_ai_formation(formation_request, ready_units);
 
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -258,16 +249,13 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
             unit_ids.push_back(unit->id);
           }
 
-          FormationType formation_type =
-              get_formation_type_for_player(context.player_id);
-
           QVector3D const attack_center(attack_pos_x, 0.0F, attack_pos_z);
-          auto formation_positions =
-              FormationSystem::instance().get_formation_positions(
-                  formation_type,
-                  static_cast<int>(ready_units.size()),
-                  attack_center,
-                  context.strategy_config.attack_formation_spacing);
+          AIFormationRequest formation_request;
+          formation_request.player_id = context.player_id;
+          formation_request.anchor = attack_center;
+          formation_request.spacing = context.strategy_config.attack_formation_spacing;
+          formation_request.intent = select_ai_intent(snapshot, context, false, false);
+          auto formation_positions = plan_ai_formation(formation_request, ready_units);
 
           std::vector<float> target_x;
           std::vector<float> target_y;
@@ -367,15 +355,15 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  FormationType formation_type = get_formation_type_for_player(context.player_id);
-
   if (target_snapshot->is_building) {
     QVector3D const attack_center(target_snapshot->pos_x, 0.0F, target_snapshot->pos_z);
-    auto formation_positions = FormationSystem::instance().get_formation_positions(
-        formation_type,
-        static_cast<int>(claimed_units.size()),
-        attack_center,
-        context.strategy_config.attack_formation_spacing);
+    AIFormationRequest formation_request;
+    formation_request.player_id = context.player_id;
+    formation_request.anchor = attack_center;
+    formation_request.spacing = context.strategy_config.attack_formation_spacing;
+    formation_request.intent = select_ai_intent(snapshot, context, false, true);
+    auto formation_positions =
+        plan_ai_formation(formation_request, claimed_units, snapshot);
 
     std::vector<float> target_x;
     std::vector<float> target_y;

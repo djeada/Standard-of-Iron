@@ -1,0 +1,11 @@
+{
+  "id": "iron_sepulcher.dense_advance",
+  "shape": "ranks",
+  "lateral_spacing_scale": 0.72,
+  "depth_spacing_scale": 0.72,
+  "front_rank_tightening": 0.22,
+  "lateral_jitter": 0.012,
+  "depth_jitter": 0.01,
+  "facing_jitter_degrees": 0.6,
+  "min_separation_scale": 0.8
+}

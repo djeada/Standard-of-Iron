@@ -1,0 +1,15 @@
+{
+  "id": "carthage.loose_order_ranged",
+  "shape": "loose_order",
+  "lateral_spacing_scale": 1.86,
+  "depth_spacing_scale": 1.02,
+  "rank_stagger": 0.58,
+  "rank_echelon": 0.34,
+  "rank_arc": 0.4,
+  "rear_rank_loosening": 0.26,
+  "lateral_jitter": 0.3,
+  "depth_jitter": 0.26,
+  "rear_jitter_gain": 0.9,
+  "facing_jitter_degrees": 18.0,
+  "min_separation_scale": 0.42
+}

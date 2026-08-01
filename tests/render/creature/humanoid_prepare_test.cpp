@@ -67,7 +67,6 @@
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/cache_control.h"
-#include "render/humanoid/formation_calculator.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/pose_cache_components.h"
@@ -75,6 +74,7 @@
 #include "render/humanoid/prepare.h"
 #include "render/humanoid/render_stats.h"
 #include "render/humanoid/skeleton.h"
+#include "render/humanoid/unit_layout_spacing.h"
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
@@ -1401,17 +1401,23 @@ TEST(HumanoidPrepare, BuiltInBuildersVisibleIdleGeometryTouchesTerrain) {
 }
 
 TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
-  using Render::GL::FormationCalculatorFactory;
-  auto const* calculator = FormationCalculatorFactory::get_calculator(
-      FormationCalculatorFactory::Nation::Roman,
-      FormationCalculatorFactory::UnitCategory::BuilderConstruction);
-  ASSERT_NE(calculator, nullptr);
+  auto const layout =
+      Game::Formation::UnitLayoutLibrary::instance().resolve("rome", "work_party");
+  ASSERT_NE(layout, Game::Formation::k_invalid_layout);
 
   float const spacing = 2.0F;
   constexpr int total = 8;
   for (int idx = 0; idx < total; ++idx) {
-    auto const offset =
-        calculator->calculate_offset(idx, 0, idx, 1, total, spacing, 0x12345678U);
+    Game::Formation::UnitLayoutQuery query;
+    query.layout = layout;
+    query.index = idx;
+    query.row = 0;
+    query.col = idx;
+    query.rows = 1;
+    query.cols = total;
+    query.spacing = spacing;
+    query.seed = 0x12345678U;
+    auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
     float const yaw_rad = offset.yaw_offset * (std::numbers::pi_v<float> / 180.0F);
     float const world_x = offset.offset_x;
     float const world_z = offset.offset_z;
@@ -1464,8 +1470,9 @@ TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) 
       entity.get_component<Render::Humanoid::HumanoidLayoutCacheComponent>();
   ASSERT_NE(cache, nullptr);
   ASSERT_EQ(cache->soldiers.size(), 4U);
-  EXPECT_EQ(cache->category,
-            Render::GL::FormationCalculatorFactory::UnitCategory::BuilderConstruction);
+  EXPECT_EQ(
+      cache->unit_layout,
+      Game::Formation::UnitLayoutLibrary::instance().resolve("rome", "work_party"));
   for (auto const& soldier : cache->soldiers) {
     EXPECT_LT(std::abs(soldier.offset_x), 10.0F);
     EXPECT_LT(std::abs(soldier.offset_z), 10.0F);
@@ -7777,51 +7784,58 @@ TEST(HumanoidPrepare, LaunchedChargeCasualtyTravelsAndTumblesInSubmittedWorld) {
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>(75, 100, 0.0F, 0.0F);
-  ASSERT_NE(unit, nullptr);
-  unit->spawn_type = Game::Units::SpawnType::Spearman;
-  unit->nation_id = Game::Systems::NationID::Carthage;
-  unit->render_individuals_per_unit_override = 4;
+  auto casualty_origin = [&owner, &ctx](bool launched) {
+    Engine::Core::Entity entity(1);
+    auto* unit = entity.add_component<Engine::Core::UnitComponent>(75, 100, 0.0F, 0.0F);
+    unit->spawn_type = Game::Units::SpawnType::Spearman;
+    unit->nation_id = Game::Systems::NationID::Carthage;
+    unit->render_individuals_per_unit_override = 4;
 
-  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-  ASSERT_NE(transform, nullptr);
-  transform->scale = {1.0F, 1.0F, 1.0F};
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+    transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto* casualties =
-      entity.add_component<Engine::Core::SoldierCasualtyAnimationComponent>();
-  ASSERT_NE(casualties, nullptr);
-  casualties->entries.push_back({
-      .slot_index = 0U,
-      .profile = Engine::Core::DeathSequenceProfile::Infantry,
-      .state = Engine::Core::DeathSequenceState::Dying,
-      .state_time = 0.45F,
-      .state_duration = 1.0F,
-      .dead_hold_duration = 0.8F,
-      .sequence_variant = 0U,
-      .launched = true,
-      .launch_velocity_x = 7.0F,
-      .launch_velocity_y = 8.0F,
-      .launch_velocity_z = 2.0F,
-      .launch_pitch_speed = 250.0F,
-      .launch_roll_speed = -110.0F,
-  });
-  ctx.entity = &entity;
+    auto* casualties =
+        entity.add_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+    casualties->entries.push_back({
+        .slot_index = 0U,
+        .profile = Engine::Core::DeathSequenceProfile::Infantry,
+        .state = Engine::Core::DeathSequenceState::Dying,
+        .state_time = 0.45F,
+        .state_duration = 1.0F,
+        .dead_hold_duration = 0.8F,
+        .sequence_variant = 0U,
+        .launched = launched,
+        .launch_velocity_x = launched ? 7.0F : 0.0F,
+        .launch_velocity_y = launched ? 8.0F : 0.0F,
+        .launch_velocity_z = launched ? 2.0F : 0.0F,
+        .launch_pitch_speed = launched ? 250.0F : 0.0F,
+        .launch_roll_speed = launched ? -110.0F : 0.0F,
+    });
+    ctx.entity = &entity;
 
-  Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+    Render::Humanoid::HumanoidPreparation prep;
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
 
-  auto const casualty =
-      std::find_if(prep.bodies.requests().begin(),
-                   prep.bodies.requests().end(),
-                   [](auto const& request) { return request.instance_index == 0U; });
-  ASSERT_NE(casualty, prep.bodies.requests().end());
-  QVector3D const origin = casualty->world.map(QVector3D{});
-  QVector3D const up = casualty->world.mapVector(QVector3D(0.0F, 1.0F, 0.0F));
-  EXPECT_GT(std::hypot(origin.x(), origin.z()), 0.75F);
-  EXPECT_GT(origin.y(), 1.0F);
-  EXPECT_LT(std::abs(QVector3D::dotProduct(up.normalized(), QVector3D(0, 1, 0))), 0.8F);
+    auto const casualty =
+        std::find_if(prep.bodies.requests().begin(),
+                     prep.bodies.requests().end(),
+                     [](auto const& request) { return request.instance_index == 0U; });
+    EXPECT_NE(casualty, prep.bodies.requests().end());
+    return std::make_pair(casualty->world.map(QVector3D{}),
+                          casualty->world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)));
+  };
+
+  auto const [resting_origin, resting_up] = casualty_origin(false);
+  auto const [launched_origin, launched_up] = casualty_origin(true);
+
+  float const travelled = std::hypot(launched_origin.x() - resting_origin.x(),
+                                     launched_origin.z() - resting_origin.z());
+  EXPECT_GT(travelled, 0.75F);
+  EXPECT_GT(launched_origin.y(), 1.0F);
+  EXPECT_LT(
+      std::abs(QVector3D::dotProduct(launched_up.normalized(), QVector3D(0, 1, 0))),
+      0.8F);
 }
 
 TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
@@ -7977,13 +7991,9 @@ TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
 }
 
 TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
-  using Render::GL::FormationCalculatorFactory;
-  auto const* calculator = FormationCalculatorFactory::get_calculator(
-      FormationCalculatorFactory::Nation::Roman,
-      FormationCalculatorFactory::UnitCategory::Infantry);
-  ASSERT_NE(calculator, nullptr);
-
   Render::Humanoid::SoldierLayoutInputs inputs{};
+  inputs.unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
+      "rome", "close_order_infantry");
   inputs.idx = 3;
   inputs.row = 1;
   inputs.col = 1;
@@ -7995,8 +8005,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   inputs.melee_attack = true;
   inputs.animation_time = 2.5F;
 
-  auto const first = Render::Humanoid::build_soldier_layout(*calculator, inputs);
-  auto const second = Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const first = Render::Humanoid::build_soldier_layout(inputs);
+  auto const second = Render::Humanoid::build_soldier_layout(inputs);
 
   EXPECT_FLOAT_EQ(first.offset_x, second.offset_x);
   EXPECT_FLOAT_EQ(first.offset_z, second.offset_z);
@@ -8007,13 +8017,9 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
 }
 
 TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
-  using Render::GL::FormationCalculatorFactory;
-  auto const* calculator = FormationCalculatorFactory::get_calculator(
-      FormationCalculatorFactory::Nation::Roman,
-      FormationCalculatorFactory::UnitCategory::Infantry);
-  ASSERT_NE(calculator, nullptr);
-
   Render::Humanoid::SoldierLayoutInputs inputs{};
+  inputs.unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
+      "rome", "close_order_infantry");
   inputs.idx = 0;
   inputs.row = 0;
   inputs.col = 0;
@@ -8025,7 +8031,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   inputs.melee_attack = false;
   inputs.animation_time = 0.0F;
 
-  auto const layout = Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const layout = Render::Humanoid::build_soldier_layout(inputs);
 
   EXPECT_FLOAT_EQ(layout.offset_x, 0.0F);
   EXPECT_FLOAT_EQ(layout.offset_z, 0.0F);
@@ -8035,28 +8041,32 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   EXPECT_EQ(layout.inst_seed, inputs.seed);
 }
 
-TEST(HumanoidPrepare, CavalryFormationStaggersRowsAndAlternatesRankYaw) {
-  using Render::GL::FormationCalculatorFactory;
-  auto const* calculator = FormationCalculatorFactory::get_calculator(
-      FormationCalculatorFactory::Nation::Roman,
-      FormationCalculatorFactory::UnitCategory::Cavalry);
-  ASSERT_NE(calculator, nullptr);
+TEST(HumanoidPrepare, CavalryWedgeNarrowsTowardTheFrontRank) {
+  auto const layout =
+      Game::Formation::UnitLayoutLibrary::instance().resolve("rome", "cavalry_wedge");
+  ASSERT_NE(layout, Game::Formation::k_invalid_layout);
 
   float const spacing = Render::GL::cavalry_formation_spacing(0.95F);
+  auto sample = [&](int index, int row, int col) {
+    Game::Formation::UnitLayoutQuery query;
+    query.layout = layout;
+    query.index = index;
+    query.row = row;
+    query.col = col;
+    query.rows = 3;
+    query.cols = 3;
+    query.spacing = spacing;
+    query.seed = 0x12345678U;
+    return Game::Formation::UnitLayoutSystem::instance().offset(query);
+  };
 
-  auto const rear_left =
-      calculator->calculate_offset(0, 0, 0, 3, 3, spacing, 0x12345678U);
-  auto const middle_left =
-      calculator->calculate_offset(3, 1, 0, 3, 3, spacing, 0x12345678U);
-  auto const front_left =
-      calculator->calculate_offset(6, 2, 0, 3, 3, spacing, 0x12345678U);
+  auto const rear_left = sample(0, 0, 0);
+  auto const middle_left = sample(3, 1, 0);
+  auto const front_left = sample(6, 2, 0);
 
-  EXPECT_GT(middle_left.offset_x, rear_left.offset_x + spacing * 0.25F);
-  EXPECT_GT(middle_left.offset_z - rear_left.offset_z, spacing * 1.10F);
-  EXPECT_GT(front_left.offset_z - middle_left.offset_z, spacing * 1.10F);
-  EXPECT_FLOAT_EQ(front_left.yaw_offset, 0.0F);
-  EXPECT_FLOAT_EQ(middle_left.yaw_offset, -5.0F);
-  EXPECT_FLOAT_EQ(rear_left.yaw_offset, 5.0F);
+  EXPECT_GT(middle_left.offset_z - rear_left.offset_z, spacing * 0.5F);
+  EXPECT_GT(front_left.offset_z - middle_left.offset_z, spacing * 0.5F);
+  EXPECT_LT(std::abs(front_left.offset_x), std::abs(rear_left.offset_x));
 }
 
 TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {

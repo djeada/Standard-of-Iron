@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QPointF>
 #include <QString>
+#include <QStringList>
 #include <QVariantMap>
 
 #include "../models/cursor_mode.h"
@@ -44,6 +45,10 @@ class PlacementViewModel : public QObject {
 
   Q_PROPERTY(bool is_placing_formation READ is_placing_formation NOTIFY
                  placing_formation_changed)
+  Q_PROPERTY(QVariantMap formation_options READ formation_options NOTIFY
+                 formation_options_changed)
+  Q_PROPERTY(QStringList available_formation_intents READ available_formation_intents
+                 NOTIFY formation_options_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
                  placing_construction_changed)
   Q_PROPERTY(QString pending_builder_construction_type READ
@@ -73,6 +78,33 @@ public:
   Q_INVOKABLE void on_formation_scroll(float delta);
   Q_INVOKABLE void on_formation_confirm();
   Q_INVOKABLE void on_formation_cancel();
+  Q_INVOKABLE void on_formation_drag_begin(qreal sx, qreal sy);
+  Q_INVOKABLE void on_formation_drag_update(qreal sx, qreal sy);
+  Q_INVOKABLE void on_formation_drag_end();
+  Q_INVOKABLE [[nodiscard]] bool is_dragging_formation() const;
+
+  Q_INVOKABLE void set_formation_intent(const QString& intent_id);
+  Q_INVOKABLE [[nodiscard]] QString formation_intent() const;
+  Q_INVOKABLE [[nodiscard]] QStringList available_formation_intents() const;
+  Q_INVOKABLE [[nodiscard]] QString
+  formation_intent_display_name(const QString& intent_id) const;
+  Q_INVOKABLE [[nodiscard]] QString
+  formation_intent_unavailable_reason(const QString& intent_id) const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap formation_options() const;
+  Q_INVOKABLE void reset_formation_options();
+  Q_INVOKABLE void set_formation_frontage_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_depth_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_spacing_preset(const QString& preset);
+  Q_INVOKABLE void set_formation_flank_preference(const QString& preference);
+  Q_INVOKABLE void set_formation_ranged_placement(const QString& placement);
+  Q_INVOKABLE void set_formation_reserve_rows(int rows);
+  Q_INVOKABLE void set_formation_movement_policy(const QString& policy);
+  Q_INVOKABLE void set_formation_mixed_policy(const QString& policy);
+  Q_INVOKABLE void set_formation_doctrine_override(const QString& doctrine);
+  Q_INVOKABLE void mirror_formation_flank();
+  Q_INVOKABLE void set_formation_preserve_order(bool preserve);
+  Q_INVOKABLE void set_formation_tight_spacing(bool tight);
+  Q_INVOKABLE void adjust_formation_depth(float wheel_delta);
 
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
   Q_INVOKABLE [[nodiscard]] QString pending_builder_construction_type() const;
@@ -100,6 +132,7 @@ public:
 
 signals:
   void placing_formation_changed();
+  void formation_options_changed();
   void placing_construction_changed();
   void construction_preview_active_changed();
   void construction_preview_valid_changed();

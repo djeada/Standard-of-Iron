@@ -675,7 +675,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   Game::Systems::Nation roman{};
   roman.id = NationID::RomanRepublic;
   roman.display_name = "Roman Republic";
-  roman.formation_type = Game::Systems::FormationType::Roman;
+  roman.doctrine = "rome";
   nation_registry.register_nation(std::move(roman));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -733,7 +733,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   Game::Systems::Nation roman{};
   roman.id = NationID::RomanRepublic;
   roman.display_name = "Roman Republic";
-  roman.formation_type = Game::Systems::FormationType::Roman;
+  roman.doctrine = "rome";
   nation_registry.register_nation(std::move(roman));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -798,7 +798,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
   carthage.display_name = "Carthage";
-  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  carthage.doctrine = "carthage";
   nation_registry.register_nation(std::move(carthage));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -863,7 +863,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
   carthage.display_name = "Carthage";
-  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  carthage.doctrine = "carthage";
   nation_registry.register_nation(std::move(carthage));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -929,7 +929,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
   Game::Systems::Nation roman{};
   roman.id = NationID::RomanRepublic;
   roman.display_name = "Roman Republic";
-  roman.formation_type = Game::Systems::FormationType::Roman;
+  roman.doctrine = "rome";
   nation_registry.register_nation(std::move(roman));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -1001,7 +1001,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
   carthage.display_name = "Carthage";
-  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  carthage.doctrine = "carthage";
   nation_registry.register_nation(std::move(carthage));
   Game::Systems::TroopProfileService::instance().clear();
 
@@ -1068,7 +1068,7 @@ TEST(TemplatePrewarmRegression,
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
   carthage.display_name = "Carthage";
-  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  carthage.doctrine = "carthage";
   nation_registry.register_nation(std::move(carthage));
   Game::Systems::TroopProfileService::instance().clear();
 

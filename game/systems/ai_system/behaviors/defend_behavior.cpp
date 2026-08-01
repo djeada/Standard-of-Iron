@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "../../formation_system.h"
 #include "../../nation_registry.h"
+#include "../ai_formation.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -286,16 +286,13 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  const Nation* nation =
-      NationRegistry::instance().get_nation_for_player(context.player_id);
-  FormationType formation_type = FormationType::Roman;
-  if (nation != nullptr) {
-    formation_type = nation->formation_type;
-  }
-
   QVector3D const defend_pos(defend_pos_x, defend_pos_y, defend_pos_z);
-  auto targets = FormationSystem::instance().get_formation_positions(
-      formation_type, static_cast<int>(unclaimed_defenders.size()), defend_pos, 3.0F);
+  AIFormationRequest formation_request;
+  formation_request.player_id = context.player_id;
+  formation_request.anchor = defend_pos;
+  formation_request.spacing = 3.0F;
+  formation_request.intent = Game::Formation::ArmyFormationIntent::Defensive;
+  auto targets = plan_ai_formation(formation_request, unclaimed_defenders);
 
   std::vector<Engine::Core::EntityID> units_to_move;
   std::vector<float> target_x;

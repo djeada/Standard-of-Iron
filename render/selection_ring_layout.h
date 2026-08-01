@@ -10,7 +10,7 @@
 
 #include "../game/core/component.h"
 #include "../game/units/spawn_type.h"
-#include "humanoid/formation_calculator.h"
+#include "humanoid/unit_layout_spacing.h"
 
 namespace Render::GL {
 
