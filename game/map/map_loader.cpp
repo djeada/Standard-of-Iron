@@ -1063,6 +1063,7 @@ auto read_structures(const QJsonArray& arr,
     entry.player_id = obj.value("player_id").toInt(0);
     entry.team_id = obj.value(TEAM_ID).toInt(0);
     entry.max_population = obj.value(MAX_POPULATION).toInt(100);
+    entry.rotation = float(obj.value(ROTATION).toDouble(0.0));
     entry.nation = obj.value("nation").toString();
 
     if (entry.type == Game::Units::SpawnType::WallSegment) {
