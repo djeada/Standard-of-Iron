@@ -182,8 +182,7 @@ void main() {
                    ao * environment_exposure();
   lit_color += environment_primary_color() * spec * 0.14;
 
-  float grime = (1.0 - cavity) * 0.25 *
-                (0.8 + 0.2 * soi_noise_3d41e6(macro_uv * 5.0));
+  float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * soi_noise_3d41e6(macro_uv * 5.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.9), grime);
 

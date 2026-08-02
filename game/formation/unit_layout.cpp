@@ -64,32 +64,64 @@ auto centered(int value, int count) -> float {
   return static_cast<float>(value) - (static_cast<float>(count) - 1.0F) * 0.5F;
 }
 
-auto normalized_file(int col, int cols) -> float {
-  if (cols <= 1) {
-    return 0.0F;
+constexpr int k_max_wedge_ranks = 16;
+
+auto wedge_rank_sizes(int count,
+                      float growth,
+                      std::array<int, k_max_wedge_ranks>& sizes) -> int {
+  float const step = std::max(0.5F, growth);
+  int ranks = static_cast<int>(
+      std::lround(std::sqrt(2.0F * static_cast<float>(std::max(1, count)) / step)));
+  ranks = std::clamp(ranks, 1, std::min(count, k_max_wedge_ranks));
+
+  float weight_sum = 0.0F;
+  for (int r = 0; r < ranks; ++r) {
+    weight_sum += 1.0F + step * static_cast<float>(r);
   }
-  return centered(col, cols) / ((static_cast<float>(cols) - 1.0F) * 0.5F);
+
+  int assigned = 0;
+  for (int r = 0; r < ranks; ++r) {
+    float const weight = 1.0F + step * static_cast<float>(r);
+    sizes[static_cast<std::size_t>(r)] =
+        std::max(1, static_cast<int>(static_cast<float>(count) * weight / weight_sum));
+    assigned += sizes[static_cast<std::size_t>(r)];
+  }
+  for (int r = ranks - 1; assigned < count; r = (r == 0 ? ranks - 1 : r - 1)) {
+    ++sizes[static_cast<std::size_t>(r)];
+    ++assigned;
+  }
+  for (int r = ranks - 1; assigned > count; r = (r == 0 ? ranks - 1 : r - 1)) {
+    if (sizes[static_cast<std::size_t>(r)] > 1) {
+      --sizes[static_cast<std::size_t>(r)];
+      --assigned;
+    }
+  }
+  return ranks;
 }
 
-struct GridPosition {
-  int index{0};
-  int row{0};
-  int col{0};
-  int rows{1};
-  int cols{1};
-};
+auto wedge_slot_for(int index, int count, float growth) -> RankSlot {
+  std::array<int, k_max_wedge_ranks> sizes{};
+  int const ranks = wedge_rank_sizes(count, growth, sizes);
 
-auto reflow_to_files(const UnitLayoutQuery& query, int files) -> GridPosition {
-  GridPosition grid;
-  grid.index = query.index;
-  int const total = std::max(1, query.rows * query.cols);
-  files = std::clamp(files, 1, std::max(1, total));
-  grid.cols = files;
-  grid.rows = std::max(1, (total + files - 1) / files);
-  int const linear = std::clamp(query.index, 0, total - 1);
-  grid.col = linear % files;
-  grid.row = grid.rows - 1 - (linear / files);
-  return grid;
+  RankSlot slot;
+  slot.rows = ranks;
+  slot.cols = *std::max_element(sizes.begin(), sizes.begin() + ranks);
+
+  int consumed = 0;
+  for (int r = 0; r < ranks; ++r) {
+    int const size = sizes[static_cast<std::size_t>(r)];
+    if (index < consumed + size) {
+      slot.row = ranks - 1 - r;
+      slot.col = index - consumed;
+      slot.rank_cols = size;
+      return slot;
+    }
+    consumed += size;
+  }
+  slot.row = 0;
+  slot.col = 0;
+  slot.rank_cols = sizes[static_cast<std::size_t>(ranks - 1)];
+  return slot;
 }
 
 auto style_for_state(UnitLayoutStyle style, UnitLayoutState state) -> UnitLayoutStyle {
@@ -377,17 +409,17 @@ void register_generic_styles(std::vector<UnitLayoutStyle>& out) {
 void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
   {
     auto style = make_style("rome.close_order_infantry", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.02F;
-    style.depth_spacing_scale = 1.24F;
-    style.rank_stagger = 0.0F;
+    style.lateral_spacing_scale = 1.00F;
+    style.depth_spacing_scale = 1.20F;
+    style.rank_stagger = 0.50F;
     style.rank_echelon = 0.0F;
     style.rank_arc = 0.0F;
-    style.front_rank_tightening = 0.10F;
+    style.front_rank_tightening = 0.06F;
     style.rear_rank_loosening = 0.0F;
-    style.lateral_jitter = 0.020F;
-    style.depth_jitter = 0.015F;
+    style.lateral_jitter = 0.022F;
+    style.depth_jitter = 0.018F;
     style.rear_jitter_gain = 0.4F;
-    style.facing_jitter_degrees = 0.8F;
+    style.facing_jitter_degrees = 0.9F;
     style.min_separation_scale = 0.66F;
     out.push_back(style);
   }
@@ -404,11 +436,11 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
   }
   {
     auto style = make_style("rome.spear_ranks", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.02F;
-    style.depth_spacing_scale = 1.30F;
-    style.weapon_clearance = 0.0F;
-    style.rank_stagger = 0.0F;
-    style.front_rank_tightening = 0.10F;
+    style.lateral_spacing_scale = 1.00F;
+    style.depth_spacing_scale = 1.32F;
+    style.weapon_clearance = 0.04F;
+    style.rank_stagger = 0.50F;
+    style.front_rank_tightening = 0.08F;
     style.lateral_jitter = 0.018F;
     style.depth_jitter = 0.014F;
     style.facing_jitter_degrees = 0.7F;
@@ -417,8 +449,8 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
   }
   {
     auto style = make_style("rome.spear_brace", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 0.94F;
-    style.depth_spacing_scale = 1.78F;
+    style.lateral_spacing_scale = 0.92F;
+    style.depth_spacing_scale = 1.70F;
     style.weapon_clearance = 0.06F;
     style.rank_stagger = 0.0F;
     style.front_rank_tightening = 0.16F;
@@ -429,16 +461,19 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
     out.push_back(style);
   }
   {
-    auto style = make_style("rome.loose_order_ranged", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.02F;
-    style.depth_spacing_scale = 1.36F;
-    style.rank_stagger = 0.0F;
+    auto style = make_style("rome.loose_order_ranged", UnitLayoutShape::LooseOrder);
+    style.lateral_spacing_scale = 1.16F;
+    style.depth_spacing_scale = 1.30F;
+    style.rank_stagger = 0.50F;
     style.rank_arc = 0.0F;
-    style.lateral_jitter = 0.06F;
-    style.depth_jitter = 0.05F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.34F;
+    style.group_depth_stagger = 0.12F;
+    style.lateral_jitter = 0.085F;
+    style.depth_jitter = 0.07F;
     style.rear_jitter_gain = 0.4F;
-    style.facing_jitter_degrees = 2.5F;
-    style.min_separation_scale = 0.60F;
+    style.facing_jitter_degrees = 4.0F;
+    style.min_separation_scale = 0.56F;
     out.push_back(style);
   }
   {
@@ -454,15 +489,41 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
   }
   {
     auto style = make_style("rome.cavalry_wedge", UnitLayoutShape::Wedge);
-    style.lateral_spacing_scale = 0.70F;
-    style.depth_spacing_scale = 1.34F;
-    style.wedge_slope = 0.58F;
+    style.lateral_spacing_scale = 1.18F;
+    style.depth_spacing_scale = 1.38F;
+    style.wedge_growth = 2.0F;
+    style.wedge_slope = 0.22F;
     style.rank_stagger = 0.0F;
-    style.rear_depth_bias = 0.20F;
-    style.lateral_jitter = 0.020F;
-    style.depth_jitter = 0.018F;
-    style.facing_jitter_degrees = 1.2F;
-    style.min_separation_scale = 0.66F;
+    style.rear_depth_bias = 0.0F;
+    style.lateral_jitter = 0.030F;
+    style.depth_jitter = 0.026F;
+    style.facing_jitter_degrees = 1.5F;
+    style.min_separation_scale = 0.62F;
+    out.push_back(style);
+  }
+  {
+    auto style = make_style("rome.cavalry_line", UnitLayoutShape::Ranks);
+    style.lateral_spacing_scale = 1.24F;
+    style.depth_spacing_scale = 1.46F;
+    style.rank_stagger = 0.50F;
+    style.front_rank_tightening = 0.06F;
+    style.lateral_jitter = 0.03F;
+    style.depth_jitter = 0.025F;
+    style.facing_jitter_degrees = 1.4F;
+    style.min_separation_scale = 0.62F;
+    out.push_back(style);
+  }
+  {
+    auto style = make_style("rome.cavalry_loose", UnitLayoutShape::LooseOrder);
+    style.lateral_spacing_scale = 1.40F;
+    style.depth_spacing_scale = 1.50F;
+    style.rank_stagger = 0.50F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.30F;
+    style.lateral_jitter = 0.10F;
+    style.depth_jitter = 0.09F;
+    style.facing_jitter_degrees = 5.0F;
+    style.min_separation_scale = 0.55F;
     out.push_back(style);
   }
   {
@@ -481,112 +542,158 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
 void register_carthage_styles(std::vector<UnitLayoutStyle>& out) {
   {
     auto style = make_style("carthage.close_order_infantry", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.62F;
-    style.depth_spacing_scale = 0.86F;
-    style.rank_stagger = 0.45F;
-    style.rank_echelon = 0.30F;
-    style.rank_arc = 0.42F;
-    style.rear_rank_loosening = 0.22F;
-    style.lateral_jitter = 0.18F;
-    style.depth_jitter = 0.15F;
-    style.rear_jitter_gain = 0.9F;
-    style.facing_jitter_degrees = 11.0F;
-    style.min_separation_scale = 0.46F;
+    style.lateral_spacing_scale = 1.04F;
+    style.depth_spacing_scale = 1.16F;
+    style.rank_stagger = 0.26F;
+    style.rank_echelon = 0.0F;
+    style.rank_arc = 0.45F;
+    style.rear_rank_loosening = 0.14F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.52F;
+    style.group_depth_stagger = 0.22F;
+    style.lateral_jitter = 0.09F;
+    style.depth_jitter = 0.08F;
+    style.rear_jitter_gain = 0.7F;
+    style.facing_jitter_degrees = 6.5F;
+    style.min_separation_scale = 0.55F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.shield_wall", UnitLayoutShape::Arc);
-    style.lateral_spacing_scale = 1.42F;
-    style.depth_spacing_scale = 0.80F;
-    style.rank_stagger = 0.50F;
-    style.rank_echelon = 0.18F;
-    style.rank_arc = 0.55F;
+    style.lateral_spacing_scale = 0.96F;
+    style.depth_spacing_scale = 0.88F;
+    style.rank_stagger = 0.20F;
+    style.rank_echelon = 0.0F;
+    style.rank_arc = 0.40F;
     style.front_rank_tightening = 0.10F;
-    style.lateral_jitter = 0.09F;
-    style.depth_jitter = 0.08F;
-    style.facing_jitter_degrees = 6.0F;
-    style.min_separation_scale = 0.52F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.26F;
+    style.group_depth_stagger = 0.10F;
+    style.lateral_jitter = 0.045F;
+    style.depth_jitter = 0.04F;
+    style.facing_jitter_degrees = 3.0F;
+    style.min_separation_scale = 0.62F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.spear_ranks", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.54F;
-    style.depth_spacing_scale = 1.12F;
+    style.lateral_spacing_scale = 1.02F;
+    style.depth_spacing_scale = 1.24F;
     style.weapon_clearance = 0.03F;
-    style.rank_stagger = 0.52F;
-    style.rank_echelon = 0.26F;
-    style.rank_arc = 0.34F;
-    style.lateral_jitter = 0.15F;
-    style.depth_jitter = 0.12F;
-    style.facing_jitter_degrees = 9.0F;
-    style.min_separation_scale = 0.48F;
+    style.rank_stagger = 0.30F;
+    style.rank_echelon = 0.0F;
+    style.rank_arc = 0.38F;
+    style.file_grouping = 4.0F;
+    style.group_gap = 0.46F;
+    style.group_depth_stagger = 0.24F;
+    style.lateral_jitter = 0.08F;
+    style.depth_jitter = 0.07F;
+    style.facing_jitter_degrees = 6.0F;
+    style.min_separation_scale = 0.56F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.spear_brace", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 1.36F;
-    style.depth_spacing_scale = 1.38F;
+    style.lateral_spacing_scale = 0.98F;
+    style.depth_spacing_scale = 1.52F;
     style.weapon_clearance = 0.05F;
-    style.rank_stagger = 0.44F;
-    style.rank_echelon = 0.14F;
-    style.rank_arc = 0.28F;
-    style.lateral_jitter = 0.08F;
-    style.depth_jitter = 0.07F;
-    style.facing_jitter_degrees = 5.0F;
-    style.min_separation_scale = 0.52F;
+    style.rank_stagger = 0.18F;
+    style.rank_echelon = 0.0F;
+    style.rank_arc = 0.22F;
+    style.file_grouping = 4.0F;
+    style.group_gap = 0.30F;
+    style.lateral_jitter = 0.05F;
+    style.depth_jitter = 0.045F;
+    style.facing_jitter_degrees = 3.0F;
+    style.min_separation_scale = 0.60F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.loose_order_ranged", UnitLayoutShape::LooseOrder);
-    style.lateral_spacing_scale = 1.86F;
-    style.depth_spacing_scale = 1.02F;
-    style.rank_stagger = 0.58F;
-    style.rank_echelon = 0.34F;
-    style.rank_arc = 0.40F;
-    style.rear_rank_loosening = 0.26F;
-    style.lateral_jitter = 0.30F;
-    style.depth_jitter = 0.26F;
-    style.rear_jitter_gain = 0.9F;
-    style.facing_jitter_degrees = 18.0F;
-    style.min_separation_scale = 0.42F;
+    style.lateral_spacing_scale = 1.30F;
+    style.depth_spacing_scale = 1.22F;
+    style.rank_stagger = 0.34F;
+    style.rank_echelon = 0.0F;
+    style.rank_arc = 0.26F;
+    style.rear_rank_loosening = 0.16F;
+    style.file_grouping = 3.0F;
+    style.group_gap = 0.66F;
+    style.group_depth_stagger = 0.45F;
+    style.lateral_jitter = 0.19F;
+    style.depth_jitter = 0.16F;
+    style.rear_jitter_gain = 0.8F;
+    style.facing_jitter_degrees = 13.0F;
+    style.min_separation_scale = 0.50F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.marching_column", UnitLayoutShape::Column);
-    style.column_files = 2.0F;
-    style.lateral_spacing_scale = 1.55F;
-    style.depth_spacing_scale = 0.94F;
-    style.rank_stagger = 0.48F;
-    style.lateral_jitter = 0.20F;
-    style.depth_jitter = 0.18F;
-    style.facing_jitter_degrees = 10.0F;
-    style.min_separation_scale = 0.46F;
+    style.column_files = 3.0F;
+    style.lateral_spacing_scale = 1.12F;
+    style.depth_spacing_scale = 1.08F;
+    style.rank_stagger = 0.30F;
+    style.lateral_jitter = 0.11F;
+    style.depth_jitter = 0.10F;
+    style.facing_jitter_degrees = 6.0F;
+    style.min_separation_scale = 0.54F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.cavalry_wedge", UnitLayoutShape::Wedge);
-    style.lateral_spacing_scale = 1.22F;
-    style.depth_spacing_scale = 1.02F;
-    style.wedge_slope = 0.30F;
-    style.rank_stagger = 0.62F;
-    style.rank_echelon = 0.34F;
-    style.rear_depth_bias = 0.08F;
+    style.lateral_spacing_scale = 1.46F;
+    style.depth_spacing_scale = 1.16F;
+    style.wedge_growth = 2.0F;
+    style.wedge_slope = 0.10F;
+    style.rank_stagger = 0.0F;
+    style.rank_echelon = 0.0F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.48F;
+    style.group_depth_stagger = 0.40F;
+    style.lateral_jitter = 0.15F;
+    style.depth_jitter = 0.13F;
+    style.facing_jitter_degrees = 11.0F;
+    style.min_separation_scale = 0.50F;
+    out.push_back(style);
+  }
+  {
+    auto style = make_style("carthage.cavalry_line", UnitLayoutShape::Ranks);
+    style.lateral_spacing_scale = 1.34F;
+    style.depth_spacing_scale = 1.30F;
+    style.rank_stagger = 0.26F;
+    style.rank_arc = 0.30F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.42F;
+    style.group_depth_stagger = 0.28F;
+    style.lateral_jitter = 0.12F;
+    style.depth_jitter = 0.10F;
+    style.facing_jitter_degrees = 8.0F;
+    style.min_separation_scale = 0.52F;
+    out.push_back(style);
+  }
+  {
+    auto style = make_style("carthage.cavalry_loose", UnitLayoutShape::LooseOrder);
+    style.lateral_spacing_scale = 1.52F;
+    style.depth_spacing_scale = 1.34F;
+    style.rank_stagger = 0.36F;
+    style.file_grouping = 2.0F;
+    style.group_gap = 0.60F;
+    style.group_depth_stagger = 0.50F;
     style.lateral_jitter = 0.22F;
-    style.depth_jitter = 0.18F;
-    style.facing_jitter_degrees = 13.0F;
-    style.min_separation_scale = 0.46F;
+    style.depth_jitter = 0.20F;
+    style.facing_jitter_degrees = 16.0F;
+    style.min_separation_scale = 0.48F;
     out.push_back(style);
   }
   {
     auto style = make_style("carthage.beast_spread", UnitLayoutShape::Ranks);
-    style.lateral_spacing_scale = 2.45F;
-    style.depth_spacing_scale = 1.36F;
-    style.rank_stagger = 0.55F;
-    style.rank_echelon = 0.28F;
+    style.lateral_spacing_scale = 2.10F;
+    style.depth_spacing_scale = 1.60F;
+    style.rank_stagger = 0.40F;
+    style.rank_echelon = 0.0F;
     style.rank_arc = 0.30F;
-    style.lateral_jitter = 0.18F;
-    style.depth_jitter = 0.15F;
-    style.facing_jitter_degrees = 12.0F;
+    style.lateral_jitter = 0.10F;
+    style.depth_jitter = 0.09F;
+    style.facing_jitter_degrees = 6.0F;
     style.min_separation_scale = 0.78F;
     out.push_back(style);
   }
@@ -833,6 +940,32 @@ auto UnitLayoutLibrary::names() const -> std::vector<std::string> {
   return out;
 }
 
+auto rank_slot_for(int index, int count, int max_per_row) -> RankSlot {
+  RankSlot slot;
+  int const total = std::max(1, count);
+  int const files = std::clamp(max_per_row, 1, total);
+  slot.rows = (total + files - 1) / files;
+  int const base = total / slot.rows;
+  int const wide_ranks = total % slot.rows;
+  slot.cols = base + (wide_ranks > 0 ? 1 : 0);
+
+  int const clamped = std::clamp(index, 0, total - 1);
+  int const wide_span = wide_ranks * (base + 1);
+  int rank = 0;
+  if (clamped < wide_span) {
+    rank = clamped / (base + 1);
+    slot.col = clamped % (base + 1);
+    slot.rank_cols = base + 1;
+  } else {
+    int const rest = clamped - wide_span;
+    rank = wide_ranks + rest / std::max(1, base);
+    slot.col = rest % std::max(1, base);
+    slot.rank_cols = std::max(1, base);
+  }
+  slot.row = slot.rows - 1 - std::min(rank, slot.rows - 1);
+  return slot;
+}
+
 auto UnitLayoutSystem::instance() -> UnitLayoutSystem& {
   static UnitLayoutSystem system;
   return system;
@@ -846,19 +979,27 @@ auto UnitLayoutSystem::rows_for(int count, int max_per_row) -> int {
 auto UnitLayoutSystem::offset(const UnitLayoutQuery& query) const -> SoldierOffset {
   const auto& style = UnitLayoutLibrary::instance().style(query.layout);
 
-  int const total = std::max(1, query.rows * query.cols);
+  int const total =
+      std::max(1,
+               query.count > 0 ? query.count
+                               : std::max(1, query.rows) * std::max(1, query.cols));
   float const formed = std::clamp(query.formed_ratio, 0.0F, 1.0F);
   float const loosen = 1.0F + (1.0F - formed) * 0.35F;
   float const jitter_gain = 1.0F + (1.0F - formed) * 2.0F;
 
-  GridPosition grid{query.index,
-                    std::max(0, query.row),
-                    std::max(0, query.col),
-                    std::max(1, query.rows),
-                    std::max(1, query.cols)};
-
-  if (style.shape == UnitLayoutShape::Column) {
-    grid = reflow_to_files(query, static_cast<int>(std::lround(style.column_files)));
+  RankSlot grid;
+  switch (style.shape) {
+  case UnitLayoutShape::Column:
+    grid = rank_slot_for(
+        query.index, total, static_cast<int>(std::lround(style.column_files)));
+    break;
+  case UnitLayoutShape::Wedge:
+    grid = wedge_slot_for(
+        std::clamp(query.index, 0, total - 1), total, style.wedge_growth);
+    break;
+  default:
+    grid = rank_slot_for(query.index, total, std::max(1, query.cols));
+    break;
   }
 
   if (total <= 1) {
@@ -885,32 +1026,40 @@ auto UnitLayoutSystem::offset(const UnitLayoutQuery& query) const -> SoldierOffs
   float const rear_t = grid.rows > 1 ? static_cast<float>(rank_from_front) /
                                            static_cast<float>(grid.rows - 1)
                                      : 0.0F;
-  float const file_u = normalized_file(grid.col, grid.cols);
+  float const half_span = std::max(0.5F, (static_cast<float>(grid.cols) - 1.0F) * 0.5F);
+  float const file_position = centered(grid.col, grid.rank_cols);
+  float const file_u = std::clamp(file_position / half_span, -1.0F, 1.0F);
 
   float lateral_scale = 1.0F - style.front_rank_tightening * (1.0F - rear_t) +
                         style.rear_rank_loosening * rear_t;
   lateral_scale = std::max(0.25F, lateral_scale);
 
-  float lateral = centered(grid.col, grid.cols) * lateral_step * lateral_scale;
+  float lateral = file_position * lateral_step * lateral_scale;
   float depth = centered(grid.row, grid.rows) * depth_step;
 
-  if ((grid.row % 2) == 1) {
-    lateral += lateral_step * style.rank_stagger;
+  int const grouping = static_cast<int>(std::lround(style.file_grouping));
+  if (grouping > 1 && grid.rank_cols > grouping) {
+    int const groups = (grid.rank_cols + grouping - 1) / grouping;
+    float const group_u = centered(grid.col / grouping, groups);
+    lateral += group_u * lateral_step * style.group_gap;
+    depth += signed_unit(query.seed, grid.col / grouping + rank_from_front * 31, 6) *
+             depth_step * style.group_depth_stagger;
   }
+
+  float const stagger_parity = (rank_from_front % 2) == 0 ? -0.5F : 0.5F;
+  lateral += lateral_step * style.rank_stagger * stagger_parity;
   lateral += lateral_step * style.rank_echelon * static_cast<float>(rank_from_front);
   depth -= depth_step * style.rear_depth_bias * static_cast<float>(rank_from_front);
   depth += depth_step * style.rank_arc * (1.0F - (file_u * file_u));
 
   switch (style.shape) {
   case UnitLayoutShape::Wedge: {
-    float const tip_pull = 1.0F - (0.45F * (1.0F - rear_t));
-    lateral *= tip_pull;
     depth += depth_step * style.wedge_slope * (1.0F - std::abs(file_u));
     break;
   }
   case UnitLayoutShape::Shell: {
     bool const outer = grid.row == 0 || grid.row == grid.rows - 1 || grid.col == 0 ||
-                       grid.col == grid.cols - 1;
+                       grid.col == grid.rank_cols - 1;
     if (outer) {
       lateral *= 1.06F;
       depth *= 1.04F;
@@ -973,13 +1122,15 @@ auto UnitLayoutSystem::compute(UnitLayoutId layout,
 
   out.reserve(static_cast<std::size_t>(safe_count));
   for (int index = 0; index < safe_count; ++index) {
+    auto const slot = rank_slot_for(index, safe_count, cols);
     UnitLayoutQuery query;
     query.layout = layout;
     query.index = index;
-    query.row = rows - 1 - (index / cols);
-    query.col = index % cols;
+    query.row = slot.row;
+    query.col = slot.col;
     query.rows = rows;
     query.cols = cols;
+    query.count = safe_count;
     query.spacing = spacing;
     query.seed = seed;
     query.formed_ratio = formed_ratio;
