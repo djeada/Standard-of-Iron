@@ -251,7 +251,7 @@ auto main(int argc, char** argv) -> int {
   QCommandLineOption const environment_time_option(
       QStringList{QStringLiteral("time")},
       QStringLiteral("Exact decimal environment hour (0-24); overrides "
-                     "--time-of-day."),
+                     "--time-of-day and any hour a scenario locks."),
       QStringLiteral("hour"));
   QCommandLineOption const lighting_profile_option(
       QStringList{QStringLiteral("lighting-profile")},
@@ -341,6 +341,7 @@ auto main(int argc, char** argv) -> int {
   }
 
   const bool time_of_day_forced = parser.isSet(time_of_day_option);
+  const bool environment_hour_forced = parser.isSet(environment_time_option);
   const auto forced_time_of_day = *parsed_time_of_day;
   float environment_hour = Game::Map::hour_for_time_of_day(*parsed_time_of_day);
   if (parser.isSet(environment_time_option)) {
@@ -367,7 +368,13 @@ auto main(int argc, char** argv) -> int {
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
   window.viewport()->set_lighting_profile(lighting_profile);
-  window.viewport()->set_environment_time(environment_hour);
+  // An explicit --time is a deliberate instruction and outranks a scenario
+  // that pins its own hour; --time-of-day stays a default the scenario wins.
+  if (environment_hour_forced) {
+    window.viewport()->set_environment_hour_override(environment_hour);
+  } else {
+    window.viewport()->set_environment_time(environment_hour);
+  }
   window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
   window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
   window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
@@ -695,6 +702,7 @@ auto main(int argc, char** argv) -> int {
                  duration,
                  capture_interval,
                  environment_hour,
+                 environment_hour_forced,
                  lighting_profile]() {
     if (state->next_index >= state->scenarios.size()) {
       qInfo().noquote()
@@ -734,8 +742,9 @@ auto main(int argc, char** argv) -> int {
         QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
     if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
       auto const* scenario = Arena::Scenarios::find_definition(id);
-      const float effective_hour =
-          scenario != nullptr ? scenario->environment.start_time : environment_hour;
+      const float effective_hour = (scenario != nullptr && !environment_hour_forced)
+                                       ? scenario->environment.start_time
+                                       : environment_hour;
       const QString effective_profile = scenario != nullptr
                                             ? scenario->environment.lighting_profile
                                             : lighting_profile;

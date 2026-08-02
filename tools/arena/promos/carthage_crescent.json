@@ -1,0 +1,195 @@
+{
+  "id": "carthage_crescent",
+  "title": "THE CRESCENT",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.4
+  },
+  "shots": [
+    {
+      "name": "host",
+      "scenario": "promo_carthage_crescent",
+      "start": 11.0,
+      "duration": 3.6,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 40,
+          "pitch": 22,
+          "yaw": 8,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 3.6,
+          "distance": 34,
+          "pitch": 18,
+          "yaw": 350,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "CARTHAGE FORMS ITS BOW"
+    },
+    {
+      "name": "bow",
+      "scenario": "promo_carthage_crescent",
+      "start": 15.2,
+      "duration": 3.4,
+      "focus": {
+        "mode": "group",
+        "group": "libyan_spears",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 8,
+          "yaw": 100,
+          "fov": 46,
+          "height": 1.9
+        },
+        {
+          "time": 3.4,
+          "distance": 25,
+          "pitch": 10,
+          "yaw": 78,
+          "fov": 46,
+          "height": 1.8,
+          "ease": "linear"
+        }
+      ],
+      "caption": "ELEPHANTS ANCHOR THE CENTRE",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "wing",
+      "scenario": "promo_carthage_crescent",
+      "start": 10.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "numidian_left",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 12,
+          "yaw": 100,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 24,
+          "pitch": 14,
+          "yaw": 84,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THE WINGS RIDE WIDE",
+      "transition": {
+        "type": "whip",
+        "duration": 0.2
+      }
+    },
+    {
+      "name": "elephants",
+      "scenario": "promo_carthage_crescent",
+      "start": 22.0,
+      "duration": 3.0,
+      "slow_motion": 1.5,
+      "focus": {
+        "mode": "group",
+        "group": "war_elephants",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 7,
+          "yaw": 200,
+          "fov": 48,
+          "height": 2.4
+        },
+        {
+          "time": 3.0,
+          "distance": 16,
+          "pitch": 10,
+          "yaw": 214,
+          "fov": 48,
+          "height": 2.4,
+          "ease": "out"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.45
+      }
+    },
+    {
+      "name": "encircle",
+      "scenario": "promo_carthage_crescent",
+      "start": 38.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 32,
+          "pitch": 20,
+          "yaw": 6,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 7.0,
+          "distance": 46,
+          "pitch": 38,
+          "yaw": 0,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AND THE HORNS CLOSE",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    }
+  ],
+  "grade": {
+    "contrast": 1.13,
+    "saturation": 1.18,
+    "brightness": 0.07,
+    "gamma": 1.1,
+    "grain": 3,
+    "vignette": 0.09,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/combat/combat_attack_order_carthage_cavalry.ogg",
+  "music_start": 8.0
+}

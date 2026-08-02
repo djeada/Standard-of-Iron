@@ -336,6 +336,11 @@ add_executable(
     tools/hill_projection_model_test.cpp
     tools/map_editor_commander_preview_test.cpp
     tools/arena_scenarios_test.cpp
+    tools/arena_promo_spec_test.cpp
+    # The promo spec ships only inside arena_app, which needs a GL context to
+    # link. Compiling the translation unit here keeps the camera and capture
+    # scheduling rules under test without one.
+    ${CMAKE_SOURCE_DIR}/tools/arena/promo_spec.cpp
     tools/arena_scenario_runner_test.cpp
     tools/arena_frame_continuity_test.cpp
     tools/arena_panel_population_test.cpp

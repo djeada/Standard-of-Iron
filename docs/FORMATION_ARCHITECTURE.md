@@ -357,3 +357,13 @@ visual side and need a real GPU context; `tests/tools/arena_scenarios_test.cpp`
 asserts headlessly that each one exists, spawns groups, carries expectations,
 issues a `FormationMove`, and — for the terrain fixtures — actually declares the
 rivers, bridges, elevation patches, walls and buildings it claims to test.
+
+## Showing it off
+
+The three `promo_` formation scenarios are army-scale versions of the same
+material, authored for video rather than for acceptance: one faction, several
+hundred soldiers, and a scripted cycle through the intents. They drive the
+planner through `ScenarioCommandKind::FormArmy` — `FormationMove` only
+translates a shape that already exists — and the same test file asserts that
+they field an army, name real groups, and show at least three intents. See
+[PROMO_CAPTURE.md](PROMO_CAPTURE.md).

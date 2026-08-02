@@ -784,3 +784,45 @@ TEST(ArenaScenariosTest, RampartsCloseWithGatesAndCornerTowers) {
     }
   }
 }
+
+// The formation promo scenarios are the footage source for the formation
+// showcase reels. What makes them different from the acceptance scenarios is
+// exactly what a careless edit would undo: they drive the army formation layer
+// rather than translating an existing block, they field a whole army, and they
+// need flat ground wide enough for that army to manoeuvre on.
+TEST(ArenaScenariosTest, FormationPromoScenariosDriveTheArmyFormationLayer) {
+  using Intent = Game::Formation::ArmyFormationIntent;
+  for (auto const* id :
+       {"promo_rome_iron_line", "promo_carthage_crescent", "promo_rome_hill_drill"}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+
+    EXPECT_GT(scenario->arena_floor_half_extent, 30.0F)
+        << id << " manoeuvres an army and needs more than a duelling floor";
+
+    std::set<QString> group_names;
+    int soldiers = 0;
+    for (auto const& group : scenario->groups) {
+      group_names.insert(group.name);
+      soldiers += group.count * std::max(1, group.individuals_per_unit);
+    }
+    EXPECT_GE(soldiers, 300) << id << " does not field an army";
+
+    std::set<Intent> intents;
+    for (auto const& step : scenario->steps) {
+      if (step.command != Arena::ScenarioCommandKind::FormArmy) {
+        continue;
+      }
+      intents.insert(step.formation.intent);
+      EXPECT_FALSE(step.formation.groups.isEmpty())
+          << id << " step " << step.name.toStdString() << " forms nobody";
+      for (auto const& member : step.formation.groups) {
+        EXPECT_TRUE(group_names.contains(member))
+            << id << " forms unknown group " << member.toStdString();
+      }
+    }
+    EXPECT_GE(intents.size(), 3U)
+        << id << " shows too little of the formation vocabulary";
+  }
+}
