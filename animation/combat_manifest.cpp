@@ -282,10 +282,6 @@ auto build_resolved_state(const CombatPersistentState& persistent,
   resolved.attack_family =
       persistent.active ? persistent.locked_family : raw.attack_family;
 
-  // An authored action carries its own timeline and can restart at will when a
-  // player chains one swing into the next. The transaction machine exists to
-  // give self-driving soldiers a plausible cadence, and its phase only ever
-  // moves forward, so the authored timeline overrides it outright.
   if (raw.has_authored_action_phase) {
     resolved.authoritative = true;
     resolved.active = true;

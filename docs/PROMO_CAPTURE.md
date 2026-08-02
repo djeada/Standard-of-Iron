@@ -41,15 +41,15 @@ you really want the long way round.
 ## Transitions
 
 `promo-edit.py` joins the clips. Each shot's `transition` describes the cut
-*into* it, so the first shot's is ignored; the spec-level `transition` is the
+_into_ it, so the first shot's is ignored; the spec-level `transition` is the
 default for every join.
 
 ```json
 {
-  "transition": {"type": "dissolve", "duration": 0.35},
-  "shots": [
-    {"name": "deploy", "transition": {"type": "dip", "duration": 0.5}}
-  ]
+    "transition": { "type": "dissolve", "duration": 0.35 },
+    "shots": [
+        { "name": "deploy", "transition": { "type": "dip", "duration": 0.5 } }
+    ]
 }
 ```
 

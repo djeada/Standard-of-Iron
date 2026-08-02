@@ -203,12 +203,6 @@ TEST(ElephantSourceAssetTest, HowdahSocketFollowsAuthoredBackBone) {
   }
 }
 
-// The rig ships no locomotion clip, so the walk and run are synthesised by
-// swinging the leg subtrees. Swinging them too far is what broke the animal on
-// screen: opposite legs are half a cycle apart, so the pair ends up twice the
-// amplitude apart, the elephant does the splits, and the tops of the thighs
-// swing out through the flank. These bounds are what "still looks like an
-// elephant" means in numbers.
 TEST(ElephantSourceAssetTest, SynthesisedGaitKeepsTheLegsUnderTheBody) {
   auto const bind = Render::Elephant::elephant_source_bind_palette();
   ASSERT_EQ(bind.size(), 32U);
@@ -248,11 +242,9 @@ TEST(ElephantSourceAssetTest, SynthesisedGaitKeepsTheLegsUnderTheBody) {
       }
     }
 
-    // A pair of legs never opens wider than half a leg, and no foot strays more
-    // than a third of one from where it stands at rest.
     EXPECT_LT(widest_pair, leg_length * 0.5F) << clip << " is doing the splits";
     EXPECT_LT(furthest_foot, leg_length * 0.34F) << clip << " over-strides";
-    // ...and it does move. A gait clamped to nothing would pass the bounds above.
+
     EXPECT_GT(furthest_foot, leg_length * 0.04F) << clip << " does not animate";
   }
 }

@@ -86,8 +86,6 @@ auto CombatActionService::request_attack(
   auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
   bool const player_driven = commander != nullptr && commander->fpv_controlled;
 
-  // A player-driven commander cancels recovery straight into the next swing so
-  // held attacks chain as a combo instead of waiting out the full action.
   bool const cancels_into_next_action =
       player_driven && active_action != nullptr && active_action->cancel_window_active;
 
@@ -96,10 +94,6 @@ auto CombatActionService::request_attack(
     if (active_action->cancel_window_active) {
       active_action->input_buffered = true;
 
-      // The presentation buffer replays the action that is already running. A
-      // player-driven commander must not take that path: he re-requests the
-      // attack every frame the button is held, and the request picks the next
-      // step of the combo instead of repeating the current swing.
       if (combat_state != nullptr && !player_driven) {
         combat_state->input_buffered = true;
       }

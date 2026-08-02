@@ -949,9 +949,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     };
     add_visual_stability(s, {QStringLiteral("rpg_commander")});
 
-    // Reaching the facade proves the commander is genuinely pressed against
-    // the wall; still covering ground while pinned there proves he slides along
-    // it instead of stopping with the stick pushed forward.
     s.expectations.push_back(expectation(Expect::RpgApproachWithin,
                                          QStringLiteral("rpg_commander"),
                                          QStringLiteral("slide_home"),
@@ -1011,9 +1008,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     };
     add_visual_stability(
         s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
-    // A light swing chains in roughly 0.6 s and the combo finisher in about
-    // 1.0 s; the bound sits above both and far below a swing the player has to
-    // wait out.
+
     s.expectations.push_back(expectation(Expect::RpgSwingCadenceWithin,
                                          QStringLiteral("rpg_commander"),
                                          {},
