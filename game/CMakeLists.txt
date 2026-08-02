@@ -17,6 +17,21 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui animation_core
 )
 
+# Accessibility settings the simulation and the renderer have to honour.
+#
+# It is its own target because both ends of the stack need it and neither may
+# depend on the other: the simulation assigns owner colours from it and the
+# renderer picks ring shapes from it, while the UI preferences push the
+# player's choices into it. A leaf with no dependencies of its own is the only
+# thing both can safely share.
+add_library(
+    accessibility_runtime
+    STATIC
+    accessibility/team_identity.cpp
+    accessibility/motion_settings.cpp
+)
+target_include_directories(accessibility_runtime PUBLIC ..)
+
 # The simulation kernel.
 #
 # Everything a match needs to run with nothing on screen: the ECS systems, the
@@ -214,6 +229,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
         animation_core
+        accessibility_runtime
 )
 
 # Presentation-facing gameplay services.

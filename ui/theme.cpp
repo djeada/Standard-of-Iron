@@ -16,6 +16,15 @@ Theme* Theme::m_instance = nullptr;
 
 Theme::Theme(QObject* parent)
     : QObject(parent) {
+  connect(UiPreferences::instance(),
+          &UiPreferences::ui_scale_changed,
+          this,
+          &Theme::metrics_changed);
+}
+
+auto Theme::scaled(int base) -> int {
+  const double scale = UiPreferences::instance()->ui_scale();
+  return std::max(1, static_cast<int>(std::lround(base * scale)));
 }
 
 auto Theme::instance() -> Theme* {

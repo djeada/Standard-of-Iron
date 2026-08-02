@@ -41,8 +41,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
-        ../../ui/theme.cpp
-        ../../ui/preferences.cpp
         ../../ui/widget_shell.cpp
     )
 else()
@@ -61,8 +59,6 @@ else()
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
-        ../../ui/theme.cpp
-        ../../ui/preferences.cpp
         ../../ui/widget_shell.cpp
     )
 endif()
@@ -72,6 +68,7 @@ target_include_directories(arena_app PRIVATE "${CMAKE_SOURCE_DIR}")
 target_link_libraries(
     arena_app
     PRIVATE
+        ui_shell
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets

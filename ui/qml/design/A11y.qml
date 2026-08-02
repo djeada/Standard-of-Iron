@@ -13,6 +13,13 @@ QtObject {
 
     readonly property bool alwaysShowFocus: Core.UiPreferences.alwaysShowFocus
 
+    readonly property bool teamPatterns: Core.UiPreferences.effectiveTeamPatterns
+    readonly property bool edgeScrollEnabled: Core.UiPreferences.edgeScrollEnabled
+    readonly property real edgeScrollSensitivity: Core.UiPreferences.edgeScrollSensitivity
+    readonly property real cameraMotionScale: Core.UiPreferences.cameraMotionScale
+    readonly property bool damageNumbers: Core.UiPreferences.damageNumbers
+    readonly property real screenEffectIntensity: Core.UiPreferences.screenEffectIntensity
+
     readonly property bool colorVisionAdjusted: colorVisionMode !== "none"
 
     readonly property bool redGreenImpaired: colorVisionMode === "protanopia" || colorVisionMode === "deuteranopia"

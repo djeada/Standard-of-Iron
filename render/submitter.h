@@ -61,6 +61,15 @@ public:
                               float alpha_inner,
                               float alpha_outer,
                               const QVector3D& color) = 0;
+
+  virtual void selection_ring_styled(const QMatrix4x4& model,
+                                     float alpha_inner,
+                                     float alpha_outer,
+                                     const QVector3D& color,
+                                     Game::Accessibility::TeamPattern pattern) {
+    Q_UNUSED(pattern)
+    selection_ring(model, alpha_inner, alpha_outer, color);
+  }
   virtual void grid(const QMatrix4x4& model,
                     const QVector3D& color,
                     float cell_size,
@@ -240,6 +249,22 @@ public:
     cmd.alpha_inner = alpha_inner;
     cmd.alpha_outer = alpha_outer;
     cmd.color = color;
+    m_queue->submit(std::move(cmd));
+  }
+  void selection_ring_styled(const QMatrix4x4& model,
+                             float alpha_inner,
+                             float alpha_outer,
+                             const QVector3D& color,
+                             Game::Accessibility::TeamPattern pattern) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    SelectionRingCmd cmd;
+    cmd.model = model;
+    cmd.alpha_inner = alpha_inner;
+    cmd.alpha_outer = alpha_outer;
+    cmd.color = color;
+    cmd.pattern = pattern;
     m_queue->submit(std::move(cmd));
   }
   void grid(const QMatrix4x4& model,
@@ -443,6 +468,17 @@ public:
     }
   }
 
+  void selection_ring_styled(const QMatrix4x4& model,
+                             float alpha_inner,
+                             float alpha_outer,
+                             const QVector3D& color,
+                             Game::Accessibility::TeamPattern pattern) override {
+    if (m_fallback != nullptr) {
+      m_fallback->selection_ring_styled(
+          model, alpha_inner, alpha_outer, color, pattern);
+    }
+  }
+
   void grid(const QMatrix4x4& model,
             const QVector3D& color,
             float cell_size,
@@ -575,6 +611,13 @@ public:
                       float alpha_outer,
                       const QVector3D& color) override {
     m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
+  }
+  void selection_ring_styled(const QMatrix4x4& model,
+                             float alpha_inner,
+                             float alpha_outer,
+                             const QVector3D& color,
+                             Game::Accessibility::TeamPattern pattern) override {
+    m_inner.selection_ring_styled(model, alpha_inner, alpha_outer, color, pattern);
   }
   void grid(const QMatrix4x4& model,
             const QVector3D& color,

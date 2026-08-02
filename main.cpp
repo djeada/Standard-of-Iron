@@ -142,6 +142,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
+#include "ui/input_bindings.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
@@ -786,9 +787,14 @@ auto main(int argc, char* argv[]) -> int {
   qmlRegisterSingletonType<UiPreferences>(
       "StandardOfIron", 1, 0, "UiPreferences", &UiPreferences::create);
 
+  qmlRegisterSingletonType<InputBindings>(
+      "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
+
   qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
   qmlRegisterSingletonType<UiPreferences>(
       "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
+  qmlRegisterSingletonType<InputBindings>(
+      "StandardOfIron.Core", 1, 0, "InputBindings", &InputBindings::create);
 
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
                            "StandardOfIron",

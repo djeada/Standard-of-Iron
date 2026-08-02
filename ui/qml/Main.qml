@@ -457,10 +457,8 @@ ApplicationWindow {
     Item {
         id: edge_scroll_overlay
 
-        property real horz_threshold: 12
-        property real horz_max_speed: 0.15
-        property real vert_threshold: 10
-        property real vert_max_speed: 0.01
+        property real horz_threshold: 12 * Design.A11y.edgeScrollSensitivity
+        property real vert_threshold: 10 * Design.A11y.edgeScrollSensitivity
         property real x_pos: -1
         property real y_pos: -1
         property int vertical_shift: 6
@@ -560,6 +558,8 @@ ApplicationWindow {
                 }
                 if (game.set_hover_at_screen)
                     game.set_hover_at_screen(x, y);
+                if (!Design.A11y.edgeScrollEnabled)
+                    return;
                 const th = edge_scroll_overlay.horz_threshold;
                 const tv = edge_scroll_overlay.vert_threshold;
                 const clamp = function clamp(v, lo, hi) {
@@ -581,10 +581,9 @@ ApplicationWindow {
                 const curveV = function curveV(a) {
                     return a * a * a;
                 };
-                const rawDx = (curveH(ir) - curveH(il)) * edge_scroll_overlay.horz_max_speed;
-                const rawDz = (curveV(iu) - curveV(id)) * edge_scroll_overlay.vert_max_speed;
-                const dx = rawDx / edge_scroll_overlay.horz_max_speed;
-                const dz = rawDz / edge_scroll_overlay.vert_max_speed;
+                const sensitivity = Design.A11y.edgeScrollSensitivity;
+                const dx = (curveH(ir) - curveH(il)) * sensitivity;
+                const dz = (curveV(iu) - curveV(id)) * sensitivity;
                 if (dx !== 0 || dz !== 0)
                     game.camera_move(dx, dz);
             }

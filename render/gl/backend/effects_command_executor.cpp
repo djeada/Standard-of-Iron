@@ -72,11 +72,6 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     break;
   }
   case SelectionRingCmdIndex: {
-    Mesh* ring = Render::Geom::SelectionRing::get();
-    if (ring == nullptr) {
-      break;
-    }
-
     DepthMaskScope const depth_mask(false);
     DepthTestScope const depth_test(true);
     PolygonOffsetScope const poly(-1.0F, -1.0F);
@@ -101,21 +96,40 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
         ring_shader->set_uniform(ut_handle, false);
       }
 
-      m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
-      for (std::size_t j = i; j < batch_end; ++j) {
-        const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
-        QMatrix4x4 m = sc.model;
-        m.scale(1.08F, 1.0F, 1.08F);
-        m_mesh_instancing_pipeline->accumulate(m, sc.color, sc.alpha_outer);
-      }
-      m_mesh_instancing_pipeline->flush();
+      for (std::size_t run = i; run < batch_end;) {
+        const auto pattern =
+            std::get<SelectionRingCmdIndex>(queue.get_sorted(run)).pattern;
+        std::size_t run_end = run + 1;
+        while (run_end < batch_end &&
+               std::get<SelectionRingCmdIndex>(queue.get_sorted(run_end)).pattern ==
+                   pattern) {
+          ++run_end;
+        }
 
-      m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
-      for (std::size_t j = i; j < batch_end; ++j) {
-        const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
-        m_mesh_instancing_pipeline->accumulate(sc.model, sc.color, sc.alpha_inner);
+        Mesh* ring = Render::Geom::SelectionRing::get(pattern);
+        if (ring == nullptr) {
+          run = run_end;
+          continue;
+        }
+
+        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
+        for (std::size_t j = run; j < run_end; ++j) {
+          const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+          QMatrix4x4 m = sc.model;
+          m.scale(1.08F, 1.0F, 1.08F);
+          m_mesh_instancing_pipeline->accumulate(m, sc.color, sc.alpha_outer);
+        }
+        m_mesh_instancing_pipeline->flush();
+
+        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
+        for (std::size_t j = run; j < run_end; ++j) {
+          const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+          m_mesh_instancing_pipeline->accumulate(sc.model, sc.color, sc.alpha_inner);
+        }
+        m_mesh_instancing_pipeline->flush();
+
+        run = run_end;
       }
-      m_mesh_instancing_pipeline->flush();
     } else {
       if (m_last_bound_shader != m_effects_pipeline->m_basic_shader) {
         m_effects_pipeline->m_basic_shader->use();
@@ -130,6 +144,10 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
 
       for (std::size_t j = i; j < batch_end; ++j) {
         const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+        Mesh* ring = Render::Geom::SelectionRing::get(sc.pattern);
+        if (ring == nullptr) {
+          continue;
+        }
         m_effects_pipeline->m_basic_shader->set_uniform(
             m_effects_pipeline->m_basic_uniforms.color, sc.color);
 
