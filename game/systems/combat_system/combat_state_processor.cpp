@@ -163,6 +163,20 @@ auto base_phase_duration(CS state) noexcept -> float {
   }
 }
 
+// The authored action owns the commander's swing timeline. The presentation
+// phase machine mirrors it so the visual phases and the gameplay events can
+// never drift apart.
+auto running_authored_action(const Engine::Core::Entity& unit) noexcept
+    -> const Game::Systems::CombatActions::CombatActionDefinition* {
+  auto const* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr || action->combat_action_id == 0U) {
+    return nullptr;
+  }
+  return Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+}
+
 auto commander_phase_scale(const Engine::Core::Entity& unit,
                            const Engine::Core::CombatStateComponent& combat_state,
                            CS state) noexcept -> float {
@@ -211,6 +225,10 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
                               CS state) noexcept -> float {
   auto const* commander = unit.get_component<Engine::Core::CommanderComponent>();
   if (commander != nullptr && commander->fpv_controlled) {
+
+    if (auto const* definition = running_authored_action(unit); definition != nullptr) {
+      return Game::Systems::CombatActions::authored_phase_duration(*definition, state);
+    }
     return base_phase_duration(state) *
            commander_phase_scale(unit, combat_state, state);
   }

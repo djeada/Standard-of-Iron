@@ -118,6 +118,10 @@ auto raw_attack_phase_hint(const CombatRawInputs& raw,
     return 0.0F;
   }
 
+  if (raw.has_authored_action_phase) {
+    return std::clamp(raw.authored_action_phase, 0.0F, 0.995F);
+  }
+
   if (raw.combat_phase != CombatPhase::Idle) {
     auto const window = attack_phase_window(
         raw.combat_phase, raw.amplified_attack, raw.finisher_attack);
@@ -277,6 +281,25 @@ auto build_resolved_state(const CombatPersistentState& persistent,
       persistent.active ? persistent.source_target_id : raw.attack_target_id;
   resolved.attack_family =
       persistent.active ? persistent.locked_family : raw.attack_family;
+
+  // An authored action carries its own timeline and can restart at will when a
+  // player chains one swing into the next. The transaction machine exists to
+  // give self-driving soldiers a plausible cadence, and its phase only ever
+  // moves forward, so the authored timeline overrides it outright.
+  if (raw.has_authored_action_phase) {
+    resolved.authoritative = true;
+    resolved.active = true;
+    resolved.prioritize_action_over_locomotion = true;
+    resolved.attack_phase = std::clamp(raw.authored_action_phase, 0.0F, 0.995F);
+    resolved.phase = transaction_phase_from_attack_phase(resolved.attack_phase);
+    resolved.phase_progress = transaction_phase_progress_from_attack_phase(
+        resolved.attack_phase, resolved.phase);
+    resolved.exit_blend_progress = 0.0F;
+    resolved.is_melee = raw.is_melee;
+    resolved.attack_family = raw.attack_family;
+    resolved.finisher_attack = raw.finisher_attack;
+    resolved.attack_variant = raw.attack_variant;
+  }
   return resolved;
 }
 

@@ -333,6 +333,49 @@ tests/systems/
 
 Avoid creating a new top-level `System` for combat damage unless the behavior is genuinely outside the combat simulation. Separate damage systems tend to develop inconsistent targeting, validation, and damage rules.
 
+## Authored Combat Actions
+
+Every commander swing is an _authored action_: one entry in
+
+```text
+game/systems/combat_actions/combat_action_definition.cpp
+```
+
+that owns a normalized timeline (`duration_seconds` plus event markers for
+wind-up, weapon trace, recovery, and exit). The action is the single source of
+truth for that swing. Three consumers read the same timeline, and none of them
+may derive a second one:
+
+- **Gameplay** advances the action in `process_authored_combat_action` and
+  applies damage inside the weapon-trace window.
+- **The presentation phase machine** (`CombatStateComponent`) takes its per-phase
+  durations from `authored_phase_duration()`, so `Advance`, `WindUp`, `Strike`,
+  `Impact`, `Recover`, and `Reposition` line up with the authored markers
+  exactly instead of running on their own clock.
+- **The renderer** plays the action's clip at the action's own normalized time.
+  `CombatRawInputs::has_authored_action_phase` makes the visual transaction
+  machine defer to that timeline; without it the phase would be re-derived from
+  the generic attack windows, which never reach the authored contact pose and
+  cannot rewind when a player chains one swing into the next.
+
+Retuning a swing therefore means editing its definition and nothing else.
+
+### Player Commitment
+
+Timing constants encode how much control the player has:
+
+- Contact lands roughly a quarter of a second after the click for a light slash,
+  and later for the heavier actions, so weight reads as weight rather than lag.
+- Once `RecoveryStart` fires, `CombatActionService::request_attack` cancels a
+  player-driven commander's current action straight into the next one, so a held
+  attack chains as a combo with the correct variant progression.
+- A `LightFlinch` never takes a swing away from the player: the blow is shown as
+  recoil layered over the swing. Anything heavier cancels the action in the
+  simulation, and the renderer follows.
+
+`rpg_combo_cadence` in the arena catalog is the regression contract for all of
+this.
+
 ## Known Boundaries
 
 ### RPG Commander Combat

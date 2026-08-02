@@ -68,6 +68,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   SetFullCreatureLod,
   TriggerCommanderAura,
   RpgPrimaryAttack,
+  RpgAttackHold,
   RpgGuard,
   RpgDodge,
   RpgMove,
@@ -223,6 +224,8 @@ enum class ArenaExpectationKind : std::uint8_t {
   RpgRunObserved,
   RpgLocomotionAnimationMatched,
   RpgStrikeAnimationMatched,
+  RpgSwingCadenceWithin,
+  RpgTravelObserved,
   RpgApproachWithin,
   UndeadZoneDormantBefore,
   UndeadZoneAwakened,
@@ -358,6 +361,7 @@ struct ArenaScenarioHost {
   std::function<void(bool)> set_force_full_creature_lod;
   std::function<void(Engine::Core::EntityID)> configure_rpg_commander;
   std::function<bool(Engine::Core::EntityID)> rpg_primary_attack;
+  std::function<void(Engine::Core::EntityID, bool)> set_rpg_attack_held;
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_guard;
   std::function<void(Engine::Core::EntityID, const QVector3D&)> request_rpg_dodge;
 

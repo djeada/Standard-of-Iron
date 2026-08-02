@@ -454,6 +454,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         }
       }
     }
+
+    // A player-driven authored swing owns the body for its whole duration. An
+    // incoming blow shakes it through recoil instead of replacing the swing
+    // with a flinch pose; a blow heavy enough to matter cancels the action in
+    // the simulation, which clears the swing here as well.
+    bool const authored_swing_owns_body =
+        soldier_render_anim.has_authored_action_phase &&
+        soldier_render_anim.is_attacking;
+    bool const swing_recoil_active =
+        authored_swing_owns_body && soldier_render_anim.is_hit_reacting;
+    if (swing_recoil_active) {
+      soldier_render_anim.is_hit_reacting = false;
+    }
+
     if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F &&
         soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
       auto const visual_spec = owner.visual_spec();
@@ -557,7 +571,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     auto const hit_reaction_transform =
         Animation::resolve_humanoid_hit_reaction_transform({
-            .active = soldier_render_anim.is_hit_reacting,
+            .active = soldier_render_anim.is_hit_reacting || swing_recoil_active,
             .intensity = soldier_render_anim.hit_reaction_intensity,
             .recoil_x = soldier_render_anim.hit_recoil_x,
             .recoil_z = soldier_render_anim.hit_recoil_z,
@@ -744,6 +758,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             ? true
             : unit_attack_target_alive;
     raw_combat.attack_family = soldier_render_anim.attack_family;
+    raw_combat.authored_action_phase = soldier_render_anim.authored_action_phase;
+    raw_combat.has_authored_action_phase =
+        soldier_render_anim.has_authored_action_phase;
 
     auto combat_resolution = Render::Creature::resolve_combat_visual_state(
         previous_combat_visual, raw_combat, lane_resolution.profile);

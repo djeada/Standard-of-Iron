@@ -906,6 +906,134 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_obstacle_slide_id),
+        QStringLiteral("RPG Obstacle Slide"),
+        QStringLiteral(
+            "Behind-head commander walks diagonally into a house facade and keeps "
+            "going. Direct control has to behave like a body against a wall: the "
+            "blocked axis is dropped and the commander slides along the facade "
+            "instead of stopping dead in front of it with the stick still pushed."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-2.0F, 0.0F, -6.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto home = building(QStringLiteral("slide_home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {0.0F, 0.0F, 0.0F});
+    home.health_override = home.max_health_override = 4000;
+    s.groups = {commander, home};
+
+    auto move = [](float time, QVector3D axes, std::optional<float> yaw = {}) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      step.rpg_view_yaw_degrees = yaw;
+      return step;
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, 30.0F),
+        move(8.20F, {0.0F, 0.0F, 0.0F}),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    // Reaching the facade proves the commander is genuinely pressed against
+    // the wall; still covering ground while pinned there proves he slides along
+    // it instead of stopping with the stick pushed forward.
+    s.expectations.push_back(expectation(Expect::RpgApproachWithin,
+                                         QStringLiteral("rpg_commander"),
+                                         QStringLiteral("slide_home"),
+                                         0.0F,
+                                         0.0F,
+                                         1.90F));
+    auto slide = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 1.50F, 2.30F);
+    slide.end_seconds = 4.00F;
+    s.expectations.push_back(slide);
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_combo_cadence_id),
+        QStringLiteral("RPG Combo Cadence"),
+        QStringLiteral(
+            "Behind-head commander holds the attack input against a six-soldier "
+            "formation. Every swing has to chain out of the previous one inside "
+            "its cancel window, so a held attack reads as a combo rather than as "
+            "one committed animation the player waits out."),
+        7.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -1.8F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto enemy = group(QStringLiteral("enemy_formation"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 0.5F},
+                       6);
+    enemy.health_override = enemy.max_health_override = 4000;
+    s.groups = {commander, enemy};
+
+    auto hold_attack = [](float time, bool held) {
+      auto step = at(time, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
+      step.enabled = held;
+      return step;
+    };
+    s.steps = {
+        hold_attack(0.40F, true),
+        hold_attack(5.60F, false),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
+    // A light swing chains in roughly 0.6 s and the combo finisher in about
+    // 1.0 s; the bound sits above both and far below a swing the player has to
+    // wait out.
+    s.expectations.push_back(expectation(Expect::RpgSwingCadenceWithin,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.10F,
+                                         0.0F,
+                                         5.0F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgDamageContactObserved,
+                                         QStringLiteral("enemy_formation")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_formation")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_commander_identity_lineup_id),
         QStringLiteral("Commander Identity Lineup"),
         QStringLiteral("Displays all six commanders without bodyguards or supporting "

@@ -1,5 +1,6 @@
 #include "combat_action_definition.h"
 
+#include <algorithm>
 #include <array>
 
 namespace Game::Systems::CombatActions {
@@ -121,7 +122,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 8.0F,
                    .guard_pressure = 12.0F},
         .hit_shape = {.reach = 1.8F, .radius = 0.42F},
-        .duration_seconds = 2.35F,
+        .duration_seconds = 0.72F,
         .events = k_rpg_slash_events,
     },
     {
@@ -134,7 +135,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 8.0F,
                    .guard_pressure = 12.0F},
         .hit_shape = {.reach = 1.8F, .radius = 0.42F},
-        .duration_seconds = 2.35F,
+        .duration_seconds = 0.72F,
         .events = k_rpg_slash_events,
     },
     {
@@ -147,7 +148,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 12.0F,
                    .guard_pressure = 16.0F},
         .hit_shape = {.reach = 1.9F, .radius = 0.36F},
-        .duration_seconds = 2.65F,
+        .duration_seconds = 0.88F,
         .events = k_rpg_overhead_events,
     },
     {
@@ -160,7 +161,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 10.0F,
                    .guard_pressure = 14.0F},
         .hit_shape = {.reach = 2.05F, .radius = 0.28F},
-        .duration_seconds = 1.90F,
+        .duration_seconds = 0.60F,
         .events = k_rpg_thrust_events,
     },
     {
@@ -173,7 +174,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 18.0F,
                    .guard_pressure = 30.0F},
         .hit_shape = {.reach = 2.0F, .radius = 0.48F},
-        .duration_seconds = 3.40F,
+        .duration_seconds = 1.15F,
         .events = k_rpg_finisher_events,
         .max_targets = 2,
     },
@@ -186,7 +187,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 14.0F,
                    .guard_pressure = 18.0F},
         .hit_shape = {.reach = 2.75F, .radius = 0.16F},
-        .duration_seconds = 1.95F,
+        .duration_seconds = 0.64F,
         .events = k_rpg_spear_thrust_events,
     },
     {
@@ -198,7 +199,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 10.0F,
                    .guard_pressure = 14.0F},
         .hit_shape = {.reach = 2.35F, .radius = 0.34F},
-        .duration_seconds = 2.35F,
+        .duration_seconds = 0.82F,
         .events = k_rpg_spear_sweep_events,
         .max_targets = 2,
     },
@@ -211,7 +212,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 4.0F,
                    .guard_pressure = 6.0F},
         .hit_shape = {.reach = 12.0F, .radius = 0.10F},
-        .duration_seconds = 2.10F,
+        .duration_seconds = 1.05F,
         .events = k_rpg_bow_shot_events,
         .requires_projectile_release = true,
     },
@@ -225,7 +226,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 14.0F,
                    .guard_pressure = 20.0F},
         .hit_shape = {.reach = 2.25F, .radius = 0.50F},
-        .duration_seconds = 1.65F,
+        .duration_seconds = 0.95F,
         .rider_clip_id = Animation::k_humanoid_riding_sword_strike_clip,
         .events = k_mounted_sword_slash_events,
         .max_targets = 2,
@@ -239,7 +240,7 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
                    .posture_damage = 18.0F,
                    .guard_pressure = 24.0F},
         .hit_shape = {.reach = 3.15F, .radius = 0.20F},
-        .duration_seconds = 1.70F,
+        .duration_seconds = 0.90F,
         .rider_clip_id = Animation::k_humanoid_riding_spear_thrust_clip,
         .events = k_mounted_spear_thrust_events,
         .max_targets = 2,
@@ -312,6 +313,65 @@ auto find_combat_action_definition(CombatActionId id) -> const CombatActionDefin
     }
   }
   return nullptr;
+}
+
+auto action_event_normalized_time(const CombatActionDefinition& definition,
+                                  CombatActionEventType type,
+                                  float fallback) -> float {
+  for (auto const& event : definition.events) {
+    if (event.type == type) {
+      return event.normalized_time;
+    }
+  }
+  return fallback;
+}
+
+auto authored_phase_duration(const CombatActionDefinition& definition,
+                             Engine::Core::CombatAnimationState state) -> float {
+  if (definition.duration_seconds <= 0.0F || definition.events.empty()) {
+    return 0.0F;
+  }
+
+  float const windup = action_event_normalized_time(
+      definition, CombatActionEventType::WindupStart, 0.08F);
+  float const active = action_event_normalized_time(
+      definition, CombatActionEventType::ActiveStart, 0.35F);
+  float const strike = action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceStart, active);
+  float const strike_end = action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceEnd, strike);
+  float const recovery = action_event_normalized_time(
+      definition, CombatActionEventType::RecoveryStart, 0.75F);
+  float const exit_safe =
+      action_event_normalized_time(definition, CombatActionEventType::ExitSafe, 0.92F);
+
+  float span = 0.0F;
+  switch (state) {
+  case Engine::Core::CombatAnimationState::Advance:
+    span = windup;
+    break;
+  case Engine::Core::CombatAnimationState::WindUp:
+    span = strike - windup;
+    break;
+  case Engine::Core::CombatAnimationState::Strike:
+    span = strike_end - strike;
+    break;
+  case Engine::Core::CombatAnimationState::Impact:
+    span = recovery - strike_end;
+    break;
+  case Engine::Core::CombatAnimationState::Recover:
+    span = exit_safe - recovery;
+    break;
+  case Engine::Core::CombatAnimationState::Reposition:
+    span = 1.0F - exit_safe;
+    break;
+  case Engine::Core::CombatAnimationState::Idle:
+  default:
+    return 0.0F;
+  }
+
+  constexpr float k_min_phase_span = 0.01F;
+  return std::max(span, k_min_phase_span) * definition.duration_seconds;
 }
 
 } // namespace Game::Systems::CombatActions
