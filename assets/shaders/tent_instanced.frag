@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -11,10 +12,6 @@ in vec3 v_local_pos;
 in vec3 v_local_normal;
 
 out vec4 frag_color;
-
-float hash12(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
 
 float band(float value, float center, float half_width, float feather) {
   return 1.0 - smoothstep(half_width, half_width + feather, abs(value - center));
@@ -51,7 +48,8 @@ void main() {
   float ridge_seam =
       band(v_local_pos.x, 0.0, 0.018, 0.020) * smoothstep(0.44, 0.72, v_local_pos.y);
   float seam = max(panel_seam * 0.55, ridge_seam);
-  float dye_mottle = hash12(floor(v_world_pos.xz * 3.0) + floor(v_local_pos.xy * 9.0));
+  float dye_mottle =
+      soi_hash12_9f6e8e(floor(v_world_pos.xz * 3.0) + floor(v_local_pos.xy * 9.0));
 
   vec3 canvas = v_color * mix(0.78, 1.16, weave * 0.40 + dye_mottle * 0.60);
   canvas = mix(canvas, canvas * vec3(0.62, 0.58, 0.52), seam * 0.60);
@@ -59,13 +57,14 @@ void main() {
       smoothstep(0.50, 0.88, v_local_pos.y) * smoothstep(0.18, 0.76, v_local_normal.y);
   canvas = mix(canvas, canvas + vec3(0.16, 0.13, 0.09), sun_bleach * 0.25);
   float base_dirt = (1.0 - smoothstep(0.03, 0.30, v_local_pos.y)) *
-                    (0.55 + hash12(v_world_pos.xz * 1.7) * 0.45);
+                    (0.55 + soi_hash12_9f6e8e(v_world_pos.xz * 1.7) * 0.45);
   canvas = mix(canvas, vec3(0.25, 0.19, 0.13), base_dirt * 0.48);
 
   float grain = 0.5 + 0.5 * sin(v_local_pos.y * 34.0 + v_local_pos.x * 9.0);
   vec3 timber = mix(vec3(0.20, 0.105, 0.045), vec3(0.48, 0.29, 0.10), grain);
-  vec3 iron =
-      mix(vec3(0.10, 0.11, 0.12), vec3(0.28, 0.25, 0.21), hash12(v_world_pos.xz * 7.0));
+  vec3 iron = mix(vec3(0.10, 0.11, 0.12),
+                  vec3(0.28, 0.25, 0.21),
+                  soi_hash12_9f6e8e(v_world_pos.xz * 7.0));
   vec3 albedo = mix(canvas, timber, wood_mask);
   albedo = mix(albedo, iron, iron_mask);
 

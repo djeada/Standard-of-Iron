@@ -554,7 +554,18 @@ Nation renderers that need per-variant animation (builders with different tools,
 
 Here's a memory problem: if 5000 soldiers each need unique 4K textures for their rust, dirt, and wear patterns, that's around 80 gigabytes of VRAM. Obviously impossible. So instead we generate all that detail procedurally in the shader.
 
-The shaders in [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) use hash functions and noise for pipeline-owned effects such as terrain, water, vegetation, particles, banners, and shared rigged bodies. A typical procedural fragment block looks like this:
+The shaders in [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) use hash functions and noise for pipeline-owned effects such as terrain, water, vegetation, particles, banners, and shared rigged bodies.
+
+Those helpers live in `assets/shaders/include/noise.glsl` and are named after the algorithm
+they implement, not the role they play: `soi_hash_82bbee`, `soi_hash_f8bd2f` and so on, with
+the suffix being a hash of the body. That looks odd until you know the history — the same
+name meant two different functions in different shaders (`hash12` was a sine-dot hash in the
+prop shaders and a p3-fract hash in `grid`/`combat_dust`), so consolidating under the plain
+names would have silently restyled half of them. The suffix makes "same name, same maths" an
+invariant. Prefer an existing entry over adding a fourth spelling of the same hash. The
+include resolver in `shader.cpp` guards against double inclusion, so including it is free.
+
+A typical procedural fragment block looks like this:
 
 ```glsl
 // Hash function - turns any position into a pseudo-random number
@@ -733,6 +744,56 @@ The optimizer can be configured via `BattleRenderConfig`:
 - `animation_skip_frames`: How many frames to skip for distant animations (default: 2)
 
 See [battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for the implementation.
+
+### Creature parts are a bake-time description, not a runtime one
+
+`k_full_parts` in `humanoid_spec.cpp` (and the horse/elephant equivalents) is a list of
+primitives — pectoral, elbow, calf, hand — but **none of it is submitted per frame**.
+`tools/bpat_baker` runs as a build step, walks the part graph through
+`render/rigged_mesh_bake.cpp`, and writes one skinned mesh per species/LOD to
+`assets/creatures/<species>_<lod>.bprm`. Those files are gitignored build artifacts; they
+regenerate whenever `render_gl` changes, so editing a part spec is enough to change what
+ships.
+
+At runtime `RiggedMeshRegistry::load_all()` loads the blobs and every creature is drawn
+through a single `ISubmitter::rigged()` command. `submit_part_graph()` in
+`render/creature/part_graph.cpp` — the per-part submission path — has no production
+caller; it exists for the bake, for tooling and for tests.
+
+The one exception is `RiggedMeshCache::get_or_bake_prehashed()`: a creature carrying
+**bake attachments** (healer staves and robe overlays, for example) cannot use the shared
+prebaked blob, so its mesh is baked on first use and cached by attachment hash. The
+`--prewarm` flag does that up front and then sets `runtime_bake_forbidden()`, which turns
+any later bake into a reported violation. `arena_app --batch --scenario performance_30v30
+--prewarm` passing clean is the check that nothing bakes during rendering.
+
+Practical consequence: adding detail to a part spec costs baked vertices and bake time,
+not draw calls. It does **not** put per-part draws in the frame.
+
+`render/creature/primitive_geometry.{h,cpp}` is the single source of truth for turning a
+`PrimitiveInstance` into a unit mesh plus a model matrix. Both the bake and
+`submit_part_graph()` call it, so a new `PrimitiveShape` is wired up in exactly one place;
+the two used to carry separate copies of the same switch and could drift apart.
+
+Every unit primitive obeys one convention: **radius 1, height 1, centred on the origin**,
+because `Geom::cylinder_between(a, b, r)` scales x/z by the caller's radius verbatim and y
+by the head-to-tail span. `capsule_between()` and `cone_from_to()` are deliberately the
+same transform under names that document which primitive is being placed. Breaking the
+convention is silent — the capsule mesh was authored at radius 0.25 and drew the whole
+minimal-LOD humanoid body four times too thin for as long as it existed.
+`tests/render/unit_primitive_convention_test.cpp` now measures every unit mesh and fails
+if one drifts.
+
+### Profiling stage timings
+
+`FrameProfile` is compiled out unless `SOI_RUNTIME_TRACING` is on, so a default Release
+build reports 0.000 ms for `animation_sampling`, `humanoid_preparation`, `bpat_playback`
+and `layout_generation` in the Arena trace. Configure a second build directory with
+`-DSOI_RUNTIME_TRACING=ON` before drawing any conclusion from those numbers.
+
+The Arena's `render_execute` bucket is sampled straight after `Renderer::end_frame()`, so
+it covers queue sort plus backend execution — it is not animation playback. It was called
+`playback` for a while, which sent at least one investigation in the wrong direction.
 
 ## The full journey
 

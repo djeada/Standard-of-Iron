@@ -88,11 +88,19 @@ void StatueRenderer::generate_instances(
                                  static_cast<int>(prop.z),
                                  m_biome_settings.seed ^ 0x1D7B4E63U);
 
-    QVector3D const marble(1.34F, 1.30F, 1.21F);
-    QVector3D const weathered_bronze(0.82F, 0.98F, 0.84F);
-    float const bronze_mix = remap(rand_01(state), 0.0F, 0.26F);
-    QVector3D color = marble * (1.0F - bronze_mix) + weathered_bronze * bronze_mix;
-    color *= remap(rand_01(state), 0.94F, 1.06F);
+    QVector3D const pentelic_marble(0.955F, 0.940F, 0.900F);
+    QVector3D const travertine(0.905F, 0.845F, 0.735F);
+    QVector3D const grey_limestone(0.790F, 0.795F, 0.780F);
+
+    float const quarry = rand_01(state);
+    QVector3D color =
+        quarry < 0.55F
+            ? pentelic_marble
+            : (quarry < 0.82F ? pentelic_marble * 0.45F + travertine * 0.55F
+                              : pentelic_marble * 0.35F + grey_limestone * 0.65F);
+    float const weathering = remap(rand_01(state), 0.0F, 0.14F);
+    color *= 1.0F - weathering;
+    color *= remap(rand_01(state), 0.96F, 1.04F);
 
     StatueInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),

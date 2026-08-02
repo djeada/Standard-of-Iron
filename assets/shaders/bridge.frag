@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -22,25 +23,10 @@ mat2 rot(float a) {
   return mat2(c, -s, s, c);
 }
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
   for (int i = 0; i < 5; ++i) {
-    v += a * noise(p);
+    v += a * soi_noise_3d41e6(p);
     p *= 2.0;
     a *= 0.5;
   }
@@ -136,21 +122,21 @@ void main() {
   float mortar_mask = 1.0 - stone_mask;
 
   vec2 cell = floor(uv);
-  float cell_rnd = hash(cell);
+  float cell_rnd = soi_hash_82bbee(cell);
   vec2 local = fract(uv);
   vec2 uv_var = (rot(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + cell;
 
   float var_low = (fbm(macro_uv) - 0.5) * 0.20;
   float var_mid = (cell_rnd - 0.5) * 0.30;
-  float grain = (noise(uv_var * 9.0) - 0.5) * 0.08;
+  float grain = (soi_noise_3d41e6(uv_var * 9.0) - 0.5) * 0.08;
 
-  float cell_hue = hash(cell + vec2(37.0, -19.0)) - 0.5;
+  float cell_hue = soi_hash_82bbee(cell + vec2(37.0, -19.0)) - 0.5;
   vec3 stone_tint = vec3(1.0 + cell_hue * 0.10, 1.0, 1.0 - cell_hue * 0.09);
 
   vec3 stone_color = u_color * stone_tint * (1.0 + var_low + var_mid + grain);
   vec3 mortar_color = u_color * 0.80;
 
-  float crack = smoothstep(0.02, 0.0, abs(noise(uv * 2.4) - 0.5)) * 0.22;
+  float crack = smoothstep(0.02, 0.0, abs(soi_noise_3d41e6(uv * 2.4) - 0.5)) * 0.22;
   stone_color *= (1.0 - crack * stone_mask);
 
   float cavity = smoothstep(0.0, 0.10, edge_metric);
@@ -196,7 +182,8 @@ void main() {
                    ao * environment_exposure();
   lit_color += environment_primary_color() * spec * 0.14;
 
-  float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(macro_uv * 5.0));
+  float grime = (1.0 - cavity) * 0.25 *
+                (0.8 + 0.2 * soi_noise_3d41e6(macro_uv * 5.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.9), grime);
 

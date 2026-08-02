@@ -171,34 +171,71 @@ constexpr float k_upper_arm_half = HP::UPPER_ARM_LEN * 0.5F;
 constexpr float k_fore_arm_half = HP::FORE_ARM_LEN * 0.5F;
 
 constexpr auto
-make_full_upper_arm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
+make_limb_segment(std::string_view name,
+                  HumanoidBone segment_bone,
+                  float from_along,
+                  float to_along,
+                  float head_radius,
+                  float tail_radius,
+                  std::uint8_t role) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
-  p.debug_name =
-      left ? "humanoid_full_upper_arm_l_top" : "humanoid_full_upper_arm_r_top";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  auto const b = bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::TaperedCylinder;
+  auto const b = bone(segment_bone);
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
-  p.params.radius = HP::UPPER_ARM_R * 1.14F;
-  p.color_role = Cloth;
+  p.params.head_offset = QVector3D(0.0F, from_along, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, to_along, 0.0F);
+  p.params.radius = head_radius;
+  p.params.tail_radius = tail_radius;
+  p.color_role = role;
   p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
 constexpr auto
-make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
+make_limb_end_segment(std::string_view name,
+                      HumanoidBone segment_bone,
+                      HumanoidBone joint_bone,
+                      float from_along,
+                      float head_radius,
+                      float tail_radius,
+                      std::uint8_t role) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
-  p.debug_name =
-      left ? "humanoid_full_upper_arm_l_bot" : "humanoid_full_upper_arm_r_bot";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  p.params.anchor_bone = bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
-  p.params.head_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
-  p.params.tail_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.radius = HP::UPPER_ARM_R * 0.86F;
-  p.color_role = Cloth;
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::TaperedCylinder;
+  p.params.anchor_bone = bone(segment_bone);
+  p.params.tail_bone = bone(joint_bone);
+  p.params.head_offset = QVector3D(0.0F, from_along, 0.0F);
+  p.params.radius = head_radius;
+  p.params.tail_radius = tail_radius;
+  p.color_role = role;
   p.lod_mask = Creature::k_lod_full;
   return p;
+}
+
+constexpr auto
+make_full_upper_arm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
+  return make_limb_segment(left ? "humanoid_full_upper_arm_l_top"
+                                : "humanoid_full_upper_arm_r_top",
+                           left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
+                           0.0F,
+                           k_upper_arm_half,
+                           HP::UPPER_ARM_R * 1.18F,
+                           HP::UPPER_ARM_R * 1.00F,
+                           Cloth);
+}
+
+constexpr auto
+make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
+  return make_limb_end_segment(left ? "humanoid_full_upper_arm_l_bot"
+                                    : "humanoid_full_upper_arm_r_bot",
+                               left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
+                               left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
+                               k_upper_arm_half,
+                               HP::UPPER_ARM_R * 1.00F,
+                               HP::UPPER_ARM_R * 0.86F,
+                               Cloth);
 }
 
 constexpr auto make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstance {
@@ -206,7 +243,7 @@ constexpr auto make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstanc
   p.debug_name = left ? "humanoid_full_elbow_l" : "humanoid_full_elbow_r";
   p.shape = Creature::PrimitiveShape::Sphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.radius = HP::UPPER_ARM_R * 0.88F;
+  p.params.radius = HP::UPPER_ARM_R * 0.90F;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -214,32 +251,26 @@ constexpr auto make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstanc
 
 constexpr auto
 make_full_forearm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
-
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_forearm_l_top" : "humanoid_full_forearm_r_top";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  auto const b = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.anchor_bone = b;
-  p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, k_fore_arm_half, 0.0F);
-  p.params.radius = HP::FORE_ARM_R * 1.28F;
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_segment(left ? "humanoid_full_forearm_l_top"
+                                : "humanoid_full_forearm_r_top",
+                           left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
+                           0.0F,
+                           HP::FORE_ARM_LEN * 0.28F,
+                           HP::FORE_ARM_R * 1.10F,
+                           HP::FORE_ARM_R * 1.22F,
+                           Skin);
 }
 
 constexpr auto
 make_full_forearm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_forearm_l_bot" : "humanoid_full_forearm_r_bot";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  p.params.anchor_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.head_offset = QVector3D(0.0F, k_fore_arm_half, 0.0F);
-  p.params.tail_bone = bone(left ? HumanoidBone::HandL : HumanoidBone::HandR);
-  p.params.radius = HP::FORE_ARM_R * 0.86F;
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_end_segment(left ? "humanoid_full_forearm_l_bot"
+                                    : "humanoid_full_forearm_r_bot",
+                               left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
+                               left ? HumanoidBone::HandL : HumanoidBone::HandR,
+                               HP::FORE_ARM_LEN * 0.28F,
+                               HP::FORE_ARM_R * 1.22F,
+                               HP::FORE_ARM_R * 0.80F,
+                               Skin);
 }
 
 constexpr auto make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance {
@@ -329,32 +360,26 @@ constexpr float k_lower_leg_half = HP::LOWER_LEG_LEN * 0.5F;
 
 constexpr auto
 make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
-
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_thigh_l_top" : "humanoid_full_thigh_r_top";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  auto const b = bone(left ? HumanoidBone::HipL : HumanoidBone::HipR);
-  p.params.anchor_bone = b;
-  p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
-  p.params.radius = HP::UPPER_LEG_R * 1.34F;
-  p.color_role = ClothDark;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_segment(left ? "humanoid_full_thigh_l_top"
+                                : "humanoid_full_thigh_r_top",
+                           left ? HumanoidBone::HipL : HumanoidBone::HipR,
+                           0.0F,
+                           k_upper_leg_half,
+                           HP::UPPER_LEG_R * 1.34F,
+                           HP::UPPER_LEG_R * 1.12F,
+                           ClothDark);
 }
 
 constexpr auto
 make_full_thigh_distal(bool left) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_thigh_l_bot" : "humanoid_full_thigh_r_bot";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  p.params.anchor_bone = bone(left ? HumanoidBone::HipL : HumanoidBone::HipR);
-  p.params.head_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
-  p.params.tail_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.radius = HP::UPPER_LEG_R * 0.94F;
-  p.color_role = ClothDark;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_end_segment(left ? "humanoid_full_thigh_l_bot"
+                                    : "humanoid_full_thigh_r_bot",
+                               left ? HumanoidBone::HipL : HumanoidBone::HipR,
+                               left ? HumanoidBone::KneeL : HumanoidBone::KneeR,
+                               k_upper_leg_half,
+                               HP::UPPER_LEG_R * 1.12F,
+                               HP::UPPER_LEG_R * 0.96F,
+                               ClothDark);
 }
 
 constexpr auto make_full_knee(bool left) noexcept -> Creature::PrimitiveInstance {
@@ -362,7 +387,7 @@ constexpr auto make_full_knee(bool left) noexcept -> Creature::PrimitiveInstance
   p.debug_name = left ? "humanoid_full_knee_l" : "humanoid_full_knee_r";
   p.shape = Creature::PrimitiveShape::Sphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.radius = HP::LOWER_LEG_R * 1.18F;
+  p.params.radius = HP::LOWER_LEG_R * 1.50F;
   p.color_role = Leather;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -370,33 +395,26 @@ constexpr auto make_full_knee(bool left) noexcept -> Creature::PrimitiveInstance
 
 constexpr auto
 make_full_calf_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
-
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_calf_l_top" : "humanoid_full_calf_r_top";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  auto const b = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.anchor_bone = b;
-  p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, k_lower_leg_half, 0.0F);
-  p.params.radius = HP::LOWER_LEG_R * 1.48F;
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_segment(left ? "humanoid_full_calf_l_top"
+                                : "humanoid_full_calf_r_top",
+                           left ? HumanoidBone::KneeL : HumanoidBone::KneeR,
+                           0.0F,
+                           HP::LOWER_LEG_LEN * 0.30F,
+                           HP::LOWER_LEG_R * 1.30F,
+                           HP::LOWER_LEG_R * 1.46F,
+                           Skin);
 }
 
 constexpr auto
 make_full_calf_distal(bool left) noexcept -> Creature::PrimitiveInstance {
-
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_calf_l_bot" : "humanoid_full_calf_r_bot";
-  p.shape = Creature::PrimitiveShape::Cylinder;
-  p.params.anchor_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.head_offset = QVector3D(0.0F, k_lower_leg_half, 0.0F);
-  p.params.tail_bone = bone(left ? HumanoidBone::FootL : HumanoidBone::FootR);
-  p.params.radius = HP::LOWER_LEG_R * 0.88F;
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
+  return make_limb_end_segment(left ? "humanoid_full_calf_l_bot"
+                                    : "humanoid_full_calf_r_bot",
+                               left ? HumanoidBone::KneeL : HumanoidBone::KneeR,
+                               left ? HumanoidBone::FootL : HumanoidBone::FootR,
+                               HP::LOWER_LEG_LEN * 0.30F,
+                               HP::LOWER_LEG_R * 1.46F,
+                               HP::LOWER_LEG_R * 0.78F,
+                               Skin);
 }
 
 constexpr auto make_full_ankle(bool left) noexcept -> Creature::PrimitiveInstance {
@@ -404,7 +422,7 @@ constexpr auto make_full_ankle(bool left) noexcept -> Creature::PrimitiveInstanc
   p.debug_name = left ? "humanoid_full_ankle_l" : "humanoid_full_ankle_r";
   p.shape = Creature::PrimitiveShape::Sphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::FootL : HumanoidBone::FootR);
-  p.params.radius = HP::LOWER_LEG_R * 0.74F;
+  p.params.radius = HP::LOWER_LEG_R * 0.80F;
   p.color_role = Leather;
   p.lod_mask = Creature::k_lod_full;
   return p;

@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 in vec2 v_tex_coord;
 in vec3 v_world_pos;
@@ -11,32 +12,16 @@ uniform float u_time;
 
 out vec4 frag_color;
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
 void main() {
   vec2 flow_a = vec2(u_time * 0.018, -u_time * 0.031);
   vec2 flow_b = vec2(-u_time * 0.024, u_time * 0.013);
 
-  float low_freq = noise(v_world_pos.xz * 0.045 + flow_a + v_tex_coord.yy * 0.9);
-  float mid_freq =
-      noise(v_world_pos.xz * 0.090 + flow_b + vec2(v_tex_coord.x, v_tex_coord.y * 1.4));
-  float vertical_ripples =
-      noise(vec2(v_world_pos.y * 0.18 + u_time * 0.06, v_world_pos.x * 0.05));
+  float low_freq =
+      soi_noise_3d41e6(v_world_pos.xz * 0.045 + flow_a + v_tex_coord.yy * 0.9);
+  float mid_freq = soi_noise_3d41e6(v_world_pos.xz * 0.090 + flow_b +
+                                    vec2(v_tex_coord.x, v_tex_coord.y * 1.4));
+  float vertical_ripples = soi_noise_3d41e6(
+      vec2(v_world_pos.y * 0.18 + u_time * 0.06, v_world_pos.x * 0.05));
 
   float density_field = low_freq * 0.55 + mid_freq * 0.35 + vertical_ripples * 0.10;
 
