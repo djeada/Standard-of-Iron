@@ -8,6 +8,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/util/asset_text.h"
 
 namespace App::Core {
 
@@ -106,7 +107,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       input.controlled_commander_id, stamina_ratio, is_running, can_run);
 
   if (!commander->display_name.empty()) {
-    name = QString::fromStdString(commander->display_name);
+    name =
+        Game::Util::tr_asset(Game::Util::k_commanders_context, commander->display_name);
   }
 
   result["has_commander"] = true;
@@ -277,7 +279,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
         QString lnation;
         if (input.get_unit_info(locked_id, lname, lhp, lmax, lb, la, lnation)) {
           if (locked_cmd != nullptr && !locked_cmd->display_name.empty()) {
-            lname = QString::fromStdString(locked_cmd->display_name);
+            lname = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                         locked_cmd->display_name);
           }
           result["locked_target_name"] = lname;
           result["locked_target_hp"] = lhp;

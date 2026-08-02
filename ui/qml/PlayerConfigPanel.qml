@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -169,7 +170,10 @@ Item {
                 return players_model.count < current_map_data.player_ids.length;
             }
             hoverEnabled: true
-            onClicked: root.add_cpu_clicked()
+            onClicked: {
+                Design.UiSound.activate();
+                root.add_cpu_clicked();
+            }
 
             anchors {
                 bottom: parent.bottom

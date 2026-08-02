@@ -22,6 +22,9 @@ Dialog {
     closePolicy: Popup.CloseOnEscape
     implicitWidth: Design.Metrics.space24 * 20
 
+    onOpened: Design.UiSound.panelOpen()
+    onClosed: Design.UiSound.panelClose()
+
     background: Rectangle {
         color: Design.Theme.backgroundRaised
         radius: Design.Metrics.radiusLarge

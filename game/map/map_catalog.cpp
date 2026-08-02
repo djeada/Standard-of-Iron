@@ -29,6 +29,7 @@
 #include <algorithm>
 
 #include "campaign_loader.h"
+#include "game/util/asset_text.h"
 #include "json_keys.h"
 #include "mission_loader.h"
 #include "utils/resource_utils.h"
@@ -194,8 +195,8 @@ auto MapCatalog::available_maps() -> QVariantList {
       }
     }
     QVariantMap entry;
-    entry[NAME] = name;
-    entry[DESCRIPTION] = desc;
+    entry[NAME] = Util::tr_asset(Util::k_maps_context, name);
+    entry[DESCRIPTION] = Util::tr_asset(Util::k_maps_context, desc);
     entry["path"] = path;
     entry["playerCount"] = player_ids.size();
     entry["soloPlayable"] = solo_playable;
@@ -348,8 +349,8 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   }
 
   QVariantMap entry;
-  entry[NAME] = name;
-  entry[DESCRIPTION] = desc;
+  entry[NAME] = Util::tr_asset(Util::k_maps_context, name);
+  entry[DESCRIPTION] = Util::tr_asset(Util::k_maps_context, desc);
   entry["path"] = resolved_path;
   entry["playerCount"] = player_ids.size();
   entry["soloPlayable"] = solo_playable;

@@ -22,6 +22,19 @@ Button {
     ToolTip.visible: !enabled && hovered && disabledReason.length > 0
     ToolTip.delay: Design.Metrics.tooltipDelay
 
+    Connections {
+        function onClicked() {
+            Design.UiSound.activate();
+        }
+
+        function onHoveredChanged() {
+            if (control.hovered && control.enabled)
+                Design.UiSound.hover();
+        }
+
+        target: control
+    }
+
     contentItem: Text {
         text: control.text
         color: !control.enabled ? Design.Theme.textDisabled : control.destructive ? Design.Theme.danger : Design.Theme.textPrimary

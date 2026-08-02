@@ -265,7 +265,7 @@ endif()
 # only mean something with a camera or the application around them.
 add_executable(
     app_tests
-    ${CMAKE_SOURCE_DIR}/translations.qrc
+    ${SOI_TRANSLATIONS_QRC}
     core/audio_system_test.cpp
     core/audio_cues_test.cpp
     db/save_preview_test.cpp
@@ -276,6 +276,7 @@ add_executable(
     core/input_command_handler_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
+    core/mission_events_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
     core/rts_action_model_test.cpp

@@ -27,4 +27,6 @@ public:
                                 const QMap<QString, QString>& tags) -> QStringList;
   static auto find_first_resource_id(AudioCategory category,
                                      const QMap<QString, QString>& tags) -> QString;
+
+  static auto missing_asset_ids() -> QStringList;
 };

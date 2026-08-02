@@ -7,7 +7,13 @@ TabBar {
 
     property var tabs: []
 
-    onCurrentIndexChanged: Design.UiSound.tabSwitch()
+    Connections {
+        function onCurrentIndexChanged() {
+            Design.UiSound.tabSwitch();
+        }
+
+        target: root
+    }
 
     background: Rectangle {
         color: Design.Theme.backgroundRaised

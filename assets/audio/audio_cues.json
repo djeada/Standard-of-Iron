@@ -7,9 +7,10 @@
       "volume": 1.0,
       "priority": 4,
       "cooldown_ms": 60,
-      "placeholder": true,
       "resources": [
-        "ui.hover.soft"
+        "ui.hover.soft",
+        "ui.hover.soft_v2",
+        "ui.hover.soft_v3"
       ],
       "wanted": "Very short, dry felt/parchment brush. Under 80 ms, no pitch content."
     },
@@ -20,9 +21,10 @@
       "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 40,
-      "placeholder": true,
       "resources": [
-        "ui.click.primary"
+        "ui.click.primary",
+        "ui.click.primary_v2",
+        "ui.click.primary_v3"
       ],
       "wanted": "Firm wood-on-leather confirm tap with a small low-mid body."
     },
@@ -33,7 +35,10 @@
       "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 40,
-      "resources": [],
+      "resources": [
+        "ui.back.synth",
+        "ui.back.synth_v2"
+      ],
       "wanted": "Descending two-tone cancel blip, softer and darker than ui.click."
     },
     {
@@ -43,7 +48,10 @@
       "volume": 0.9,
       "priority": 4,
       "cooldown_ms": 60,
-      "resources": [],
+      "resources": [
+        "ui.tab_switch.synth",
+        "ui.tab_switch.synth_v2"
+      ],
       "wanted": "Short parchment slide, slightly brighter than ui.click."
     },
     {
@@ -53,7 +61,9 @@
       "volume": 0.9,
       "priority": 4,
       "cooldown_ms": 80,
-      "resources": [],
+      "resources": [
+        "ui.panel_open.synth"
+      ],
       "wanted": "Leather scroll unrolling, ~250 ms, rising."
     },
     {
@@ -63,7 +73,9 @@
       "volume": 0.9,
       "priority": 4,
       "cooldown_ms": 80,
-      "resources": [],
+      "resources": [
+        "ui.panel_close.synth"
+      ],
       "wanted": "Leather scroll rolling shut, ~250 ms, falling. Pairs with ui.panel_open."
     },
     {
@@ -73,7 +85,10 @@
       "volume": 0.9,
       "priority": 4,
       "cooldown_ms": 40,
-      "resources": [],
+      "resources": [
+        "ui.toggle.synth",
+        "ui.toggle.synth_v2"
+      ],
       "wanted": "Small bronze latch click, two variants for on and off would be ideal."
     },
     {
@@ -83,11 +98,64 @@
       "volume": 0.85,
       "priority": 6,
       "cooldown_ms": 400,
-      "placeholder": true,
       "resources": [
-        "sfx.alert.low_resources_click"
+        "ui.error.synth",
+        "ui.error.synth_v2"
       ],
       "wanted": "Dull, muted double thud. Must not read as a normal click."
+    },
+    {
+      "id": "ui.notification",
+      "description": "A HUD notification or toast is pushed onto the queue.",
+      "category": "sfx",
+      "volume": 0.75,
+      "priority": 5,
+      "cooldown_ms": 400,
+      "resources": [
+        "ui.notification.synth"
+      ],
+      "wanted": "Soft parchment-and-quill flourish, ~300 ms. Must not compete with the mission voice line it usually follows."
+    },
+    {
+      "id": "ui.select_unit",
+      "description": "A single friendly unit or building is selected.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 4,
+      "cooldown_ms": 80,
+      "resources": [
+        "ui.select_unit.synth",
+        "ui.select_unit.synth_v2",
+        "ui.select_unit.synth_v3"
+      ],
+      "wanted": "Single short kit tap: one shield knock, dry and close. Under 150 ms."
+    },
+    {
+      "id": "ui.select_group",
+      "description": "A band of units is selected by drag box, double click or select-all.",
+      "category": "sfx",
+      "volume": 0.75,
+      "priority": 4,
+      "cooldown_ms": 120,
+      "resources": [
+        "ui.select_group.synth",
+        "ui.select_group.synth_v2",
+        "ui.select_group.synth_v3"
+      ],
+      "wanted": "Small group of shields and mail settling at once, ~300 ms. Reads as more than one man, same family as ui.select_unit."
+    },
+    {
+      "id": "ui.deselect",
+      "description": "The selection is cleared by clicking empty ground.",
+      "category": "sfx",
+      "volume": 0.55,
+      "priority": 3,
+      "cooldown_ms": 120,
+      "resources": [
+        "ui.deselect.synth",
+        "ui.deselect.synth_v2"
+      ],
+      "wanted": "Very short soft cloth release, quieter and duller than ui.select_unit."
     },
     {
       "id": "order.move",
@@ -96,7 +164,11 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.move",
+        "sfx.order.move_v2",
+        "sfx.order.move_v3"
+      ],
       "wanted": "Short kit shuffle: leather, mail rustle, a single boot scuff."
     },
     {
@@ -106,7 +178,9 @@
       "volume": 0.85,
       "priority": 6,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.attack"
+      ],
       "wanted": "Sharp single horn stab, dry and close, no reverb tail."
     },
     {
@@ -116,7 +190,9 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.patrol"
+      ],
       "wanted": "Two-note horn phrase, calmer than order.attack."
     },
     {
@@ -126,7 +202,10 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.stop",
+        "sfx.order.stop_v2"
+      ],
       "wanted": "Single muted drum hit, abrupt cut."
     },
     {
@@ -136,7 +215,10 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.hold",
+        "sfx.order.hold_v2"
+      ],
       "wanted": "Shields planting into dirt, one short thud."
     },
     {
@@ -146,7 +228,10 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.guard",
+        "sfx.order.guard_v2"
+      ],
       "wanted": "Spear butt tapped twice on hard ground."
     },
     {
@@ -156,7 +241,10 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.run",
+        "sfx.order.run_v2"
+      ],
       "wanted": "Quick kit rattle plus a short breath, suggesting a change of pace."
     },
     {
@@ -166,7 +254,10 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.formation",
+        "sfx.order.formation_v2"
+      ],
       "wanted": "Light standard pole shift, cloth snap."
     },
     {
@@ -176,7 +267,9 @@
       "volume": 0.85,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.formation_placed"
+      ],
       "wanted": "Standard driven into the ground, single decisive thud."
     },
     {
@@ -186,7 +279,9 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.gate_mode"
+      ],
       "wanted": "Short iron bolt slide."
     },
     {
@@ -196,8 +291,35 @@
       "volume": 0.8,
       "priority": 5,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.order.rally_set"
+      ],
       "wanted": "Small banner flap plus a peg driven into soil."
+    },
+    {
+      "id": "build.placement_begin",
+      "description": "Building placement mode is entered and the ghost appears.",
+      "category": "sfx",
+      "volume": 0.8,
+      "priority": 5,
+      "cooldown_ms": 200,
+      "resources": [
+        "sfx.build.placement_begin"
+      ],
+      "wanted": "Surveyor's rope and chalk: a light cord snap plus a stake tap, ~400 ms."
+    },
+    {
+      "id": "build.placement_confirmed",
+      "description": "A construction site is committed at the chosen spot.",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 6,
+      "cooldown_ms": 250,
+      "resources": [
+        "sfx.build.placement_confirmed",
+        "sfx.build.placement_confirmed_v2"
+      ],
+      "wanted": "Decisive corner stake driven in, one hammer blow. Pairs with build.placement_rejected as the positive answer."
     },
     {
       "id": "build.placement_rejected",
@@ -206,9 +328,9 @@
       "volume": 0.85,
       "priority": 6,
       "cooldown_ms": 400,
-      "placeholder": true,
       "resources": [
-        "sfx.alert.low_resources_click"
+        "sfx.build.placement_rejected",
+        "sfx.build.placement_rejected_v2"
       ],
       "wanted": "Dry refusal thunk, shared family with ui.error but shorter."
     },
@@ -219,7 +341,9 @@
       "volume": 0.8,
       "priority": 4,
       "cooldown_ms": 500,
-      "resources": [],
+      "resources": [
+        "sfx.build.construction_started"
+      ],
       "wanted": "Mallet on stake, saw start, brief crowd of work sounds. ~1 s."
     },
     {
@@ -229,7 +353,9 @@
       "volume": 0.9,
       "priority": 7,
       "cooldown_ms": 500,
-      "resources": [],
+      "resources": [
+        "sfx.build.construction_complete"
+      ],
       "wanted": "Timber settling into place plus a two-second warm confirmation phrase."
     },
     {
@@ -239,7 +365,10 @@
       "volume": 0.75,
       "priority": 4,
       "cooldown_ms": 200,
-      "resources": [],
+      "resources": [
+        "sfx.build.unit_queued",
+        "sfx.build.unit_queued_v2"
+      ],
       "wanted": "Wax tablet stylus scratch, very short."
     },
     {
@@ -249,7 +378,9 @@
       "volume": 0.75,
       "priority": 4,
       "cooldown_ms": 400,
-      "resources": [],
+      "resources": [
+        "sfx.build.unit_ready"
+      ],
       "wanted": "Single low barracks bell. Must sit under the unit voice line that plays with it."
     },
     {
@@ -259,7 +390,9 @@
       "volume": 0.95,
       "priority": 8,
       "cooldown_ms": 600,
-      "resources": [],
+      "resources": [
+        "sfx.build.building_destroyed"
+      ],
       "wanted": "Timber and masonry collapse with a rubble tail, ~2.5 s."
     },
     {
@@ -269,7 +402,9 @@
       "volume": 0.85,
       "priority": 5,
       "cooldown_ms": 500,
-      "resources": [],
+      "resources": [
+        "sfx.build.gate_open"
+      ],
       "wanted": "Heavy wooden gate on iron hinges, opening, ~1.5 s."
     },
     {
@@ -279,14 +414,16 @@
       "volume": 0.85,
       "priority": 5,
       "cooldown_ms": 500,
-      "resources": [],
+      "resources": [
+        "sfx.build.gate_close"
+      ],
       "wanted": "Gate shutting plus bar drop. Pairs with build.gate_open."
     },
     {
       "id": "alert.low_resources",
       "description": "An action failed for lack of resources or manpower.",
       "category": "sfx",
-      "volume": 0.85,
+      "volume": 0.3,
       "priority": 7,
       "cooldown_ms": 800,
       "resources": [
@@ -297,7 +434,7 @@
       "id": "alert.population_limit",
       "description": "Troop limit reached, production refused.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 0.38,
       "priority": 8,
       "cooldown_ms": 1200,
       "resources": [
@@ -308,7 +445,7 @@
       "id": "alert.base_under_attack",
       "description": "A building owned by the local player is taking damage.",
       "category": "sfx",
-      "volume": 0.85,
+      "volume": 0.38,
       "priority": 7,
       "cooldown_ms": 1500,
       "resources": [
@@ -319,7 +456,7 @@
       "id": "alert.reinforcements",
       "description": "The local player captures a barrack and gains reinforcements.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 0.42,
       "priority": 8,
       "cooldown_ms": 3000,
       "resources": [
@@ -331,7 +468,7 @@
       "id": "alert.enemy_reinforcements",
       "description": "The enemy captures a barrack the local player held.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 0.42,
       "priority": 8,
       "cooldown_ms": 3000,
       "resources": [
@@ -345,7 +482,9 @@
       "volume": 0.9,
       "priority": 8,
       "cooldown_ms": 1000,
-      "resources": [],
+      "resources": [
+        "sfx.alert.objective_complete"
+      ],
       "wanted": "Short rising three-note brass figure, confident, ~1.5 s."
     },
     {
@@ -355,14 +494,28 @@
       "volume": 0.9,
       "priority": 8,
       "cooldown_ms": 1000,
-      "resources": [],
+      "resources": [
+        "sfx.alert.objective_failed"
+      ],
       "wanted": "Short falling brass figure, dark. Mirrors alert.objective_complete."
+    },
+    {
+      "id": "alert.unit_lost",
+      "description": "A troop belonging to the local player dies.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 6,
+      "cooldown_ms": 2500,
+      "resources": [
+        "sfx.alert.unit_lost"
+      ],
+      "wanted": "Low mournful drum tap or a single dull bell. Rate limited, so it must survive being heard often."
     },
     {
       "id": "combat.hit.sword",
       "description": "Sword or gladius lands on a shield or body.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.55,
       "priority": 3,
       "cooldown_ms": 90,
       "resources": [
@@ -374,7 +527,7 @@
       "id": "combat.hit.spear",
       "description": "Spear or javelin lands.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.55,
       "priority": 3,
       "cooldown_ms": 100,
       "resources": [
@@ -386,7 +539,7 @@
       "id": "combat.hit.arrow",
       "description": "Arrow lands on a shield, armour or dirt.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.5,
       "priority": 3,
       "cooldown_ms": 120,
       "resources": [
@@ -400,7 +553,7 @@
       "id": "combat.hit.cavalry",
       "description": "Mounted attack connects.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.55,
       "priority": 3,
       "cooldown_ms": 220,
       "resources": [
@@ -413,7 +566,7 @@
       "id": "combat.hit.elephant",
       "description": "War elephant attack connects.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.55,
       "priority": 3,
       "cooldown_ms": 260,
       "resources": [
@@ -425,7 +578,7 @@
       "id": "combat.hit.siege",
       "description": "Catapult or ballista shot connects.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.5,
       "priority": 3,
       "cooldown_ms": 250,
       "resources": [
@@ -437,7 +590,7 @@
       "id": "combat.hit.generic",
       "description": "Fallback impact for unit types with no dedicated family.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.5,
       "priority": 3,
       "cooldown_ms": 140,
       "resources": [
@@ -449,7 +602,7 @@
       "id": "combat.death",
       "description": "A troop dies.",
       "category": "sfx",
-      "volume": 0.75,
+      "volume": 0.45,
       "priority": 6,
       "cooldown_ms": 160,
       "resources": [
@@ -464,9 +617,10 @@
       "volume": 0.55,
       "priority": 2,
       "cooldown_ms": 110,
-      "placeholder": true,
       "resources": [
-        "sfx.combat.archers_shooting_close"
+        "sfx.combat.arrow_launch",
+        "sfx.combat.arrow_launch_v2",
+        "sfx.combat.arrow_launch_v3"
       ],
       "wanted": "A single dry bow release, isolated. The current clip is a group recording."
     },
@@ -474,7 +628,7 @@
       "id": "combat.arrow_flyby",
       "description": "A projectile lands close enough to read as an arrow passing.",
       "category": "sfx",
-      "volume": 0.6,
+      "volume": 0.4,
       "priority": 2,
       "cooldown_ms": 900,
       "resources": [
@@ -485,7 +639,7 @@
       "id": "combat.arrow_volley",
       "description": "A mass of arrows crosses overhead.",
       "category": "sfx",
-      "volume": 0.7,
+      "volume": 0.45,
       "priority": 4,
       "cooldown_ms": 2500,
       "resources": [
@@ -501,7 +655,9 @@
       "volume": 0.85,
       "priority": 5,
       "cooldown_ms": 300,
-      "resources": [],
+      "resources": [
+        "sfx.combat.siege_launch"
+      ],
       "wanted": "Torsion release: rope creak, wooden arm slam against the stop, ~1 s."
     },
     {
@@ -511,7 +667,9 @@
       "volume": 0.9,
       "priority": 5,
       "cooldown_ms": 300,
-      "resources": [],
+      "resources": [
+        "sfx.combat.siege_impact"
+      ],
       "wanted": "Stone striking earth or timber with a debris tail, ~1.5 s."
     },
     {
@@ -521,9 +679,8 @@
       "volume": 0.9,
       "priority": 6,
       "cooldown_ms": 4000,
-      "placeholder": true,
       "resources": [
-        "sfx.combat.roman_war_horns_orders"
+        "sfx.combat.charge"
       ],
       "wanted": "A dedicated charge roar layered with running feet, faction-neutral."
     },
@@ -534,14 +691,172 @@
       "volume": 0.6,
       "priority": 3,
       "cooldown_ms": 500,
-      "resources": [],
+      "resources": [
+        "sfx.combat.heal"
+      ],
       "wanted": "Warm, quiet, non-magical: water poured, cloth binding, a soft exhale."
+    },
+    {
+      "id": "combat.guard_raise",
+      "description": "The controlled commander raises their shield.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 4,
+      "cooldown_ms": 180,
+      "resources": [
+        "sfx.combat.guard_raise",
+        "sfx.combat.guard_raise_v2"
+      ],
+      "wanted": "Shield swung up into guard: leather strap creak plus a short arm-brace thump."
+    },
+    {
+      "id": "combat.block",
+      "description": "An incoming attack is stopped on the commander's raised shield.",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 6,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.combat.block",
+        "sfx.combat.block_v2",
+        "sfx.combat.block_v3"
+      ],
+      "wanted": "Blade on shield boss, heavy and damped, no ring-out. Distinct from combat.hit.sword, which lands on flesh."
+    },
+    {
+      "id": "combat.perfect_guard",
+      "description": "An attack is parried inside the perfect-guard window.",
+      "category": "sfx",
+      "volume": 0.95,
+      "priority": 7,
+      "cooldown_ms": 120,
+      "resources": [
+        "sfx.combat.perfect_guard",
+        "sfx.combat.perfect_guard_v2"
+      ],
+      "wanted": "Bright metallic parry ting with a fast tail. Must read as clearly better than combat.block within 100 ms."
+    },
+    {
+      "id": "combat.guard_break",
+      "description": "The commander's guard is broken by posture damage.",
+      "category": "sfx",
+      "volume": 0.95,
+      "priority": 7,
+      "cooldown_ms": 400,
+      "resources": [
+        "sfx.combat.guard_break"
+      ],
+      "wanted": "Shield knocked wide: a wooden crack plus a stumbling scrape and a strained breath, ~800 ms."
+    },
+    {
+      "id": "combat.dodge",
+      "description": "The commander dodge-rolls.",
+      "category": "sfx",
+      "volume": 0.75,
+      "priority": 5,
+      "cooldown_ms": 200,
+      "resources": [
+        "sfx.combat.dodge",
+        "sfx.combat.dodge_v2",
+        "sfx.combat.dodge_v3"
+      ],
+      "wanted": "Body roll on dirt with a fast cloth whoosh and a short exhale, ~500 ms."
+    },
+    {
+      "id": "combat.jump",
+      "description": "The commander jumps.",
+      "category": "sfx",
+      "volume": 0.6,
+      "priority": 4,
+      "cooldown_ms": 250,
+      "resources": [
+        "sfx.combat.jump",
+        "sfx.combat.jump_v2"
+      ],
+      "wanted": "Short effort grunt plus a kit rattle on the push off. Under 400 ms."
+    },
+    {
+      "id": "combat.land",
+      "description": "The commander lands after a jump.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 4,
+      "cooldown_ms": 250,
+      "resources": [
+        "sfx.combat.land",
+        "sfx.combat.land_v2",
+        "sfx.combat.land_v3"
+      ],
+      "wanted": "Boots and armour landing on packed earth, one thud with a small gravel tail."
+    },
+    {
+      "id": "combat.shield_bash",
+      "description": "The commander's shield bash ability connects.",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 6,
+      "cooldown_ms": 300,
+      "resources": [
+        "sfx.combat.shield_bash",
+        "sfx.combat.shield_bash_v2"
+      ],
+      "wanted": "Shield boss driven into a body: a blunt impact with a low thump, no metal ring."
+    },
+    {
+      "id": "combat.vanguard_rush",
+      "description": "The commander's vanguard rush ability fires.",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 6,
+      "cooldown_ms": 300,
+      "resources": [
+        "sfx.combat.vanguard_rush"
+      ],
+      "wanted": "Explosive lunge: a hard boot push, a cloth whoosh and a war shout, ~1 s."
+    },
+    {
+      "id": "combat.second_wind",
+      "description": "The commander's second wind ability restores posture and stamina.",
+      "category": "sfx",
+      "volume": 0.8,
+      "priority": 6,
+      "cooldown_ms": 300,
+      "resources": [
+        "sfx.combat.second_wind"
+      ],
+      "wanted": "Deep recovering breath with a warm low swell under it, ~1.2 s. Non-magical."
+    },
+    {
+      "id": "combat.ability_refused",
+      "description": "A commander ability is pressed while on cooldown or otherwise unavailable.",
+      "category": "sfx",
+      "volume": 0.5,
+      "priority": 4,
+      "cooldown_ms": 350,
+      "resources": [
+        "sfx.combat.ability_refused",
+        "sfx.combat.ability_refused_v2"
+      ],
+      "wanted": "Very short dull click, felt rather than heard. Quieter cousin of ui.error so spamming a key never becomes painful."
+    },
+    {
+      "id": "combat.lock_on",
+      "description": "The commander cycles the lock-on target.",
+      "category": "sfx",
+      "volume": 0.6,
+      "priority": 4,
+      "cooldown_ms": 150,
+      "resources": [
+        "sfx.combat.lock_on",
+        "sfx.combat.lock_on_v2"
+      ],
+      "wanted": "Tight focus tick: a single dry wood-block hit with a hint of pitch rise."
     },
     {
       "id": "state.victory",
       "description": "The local player wins the mission.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 0.55,
       "priority": 7,
       "cooldown_ms": 2000,
       "resources": [
@@ -552,12 +867,96 @@
       "id": "state.defeat",
       "description": "The local player loses the mission.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 0.55,
       "priority": 7,
       "cooldown_ms": 2000,
       "resources": [
         "sfx.combat.army_retreat_panic"
       ]
+    },
+    {
+      "id": "state.pause",
+      "description": "The battle is paused.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 6,
+      "cooldown_ms": 200,
+      "resources": [
+        "sfx.state.pause"
+      ],
+      "wanted": "Sound of the world holding its breath: a short damped drum stop, falling."
+    },
+    {
+      "id": "state.resume",
+      "description": "The battle resumes after a pause.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 6,
+      "cooldown_ms": 200,
+      "resources": [
+        "sfx.state.resume"
+      ],
+      "wanted": "Rising counterpart to state.pause, a single soft drum pickup."
+    },
+    {
+      "id": "state.speed_change",
+      "description": "The player changes the game speed.",
+      "category": "sfx",
+      "volume": 0.6,
+      "priority": 4,
+      "cooldown_ms": 150,
+      "resources": [
+        "sfx.state.speed_change"
+      ],
+      "wanted": "Mechanical notch: a small ratchet or hourglass tick. One clip is enough for every speed step."
+    },
+    {
+      "id": "state.save_complete",
+      "description": "A save finishes writing.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 5,
+      "cooldown_ms": 500,
+      "resources": [
+        "sfx.state.save_complete"
+      ],
+      "wanted": "Wax seal pressed onto a scroll: a short soft press with a paper settle."
+    },
+    {
+      "id": "state.load_complete",
+      "description": "A saved battle finishes loading and play resumes.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 5,
+      "cooldown_ms": 500,
+      "resources": [
+        "sfx.state.load_complete"
+      ],
+      "wanted": "Scroll unrolled and set down, ~700 ms. Sits under whatever music starts with the mission."
+    },
+    {
+      "id": "state.commander_enter",
+      "description": "The player takes direct control of their commander.",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 7,
+      "cooldown_ms": 400,
+      "resources": [
+        "sfx.state.commander_enter"
+      ],
+      "wanted": "Perspective drop: helmet visor closing plus a breath moving close to the mic, ~900 ms."
+    },
+    {
+      "id": "state.commander_exit",
+      "description": "The player leaves direct commander control and returns to the field view.",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 7,
+      "cooldown_ms": 400,
+      "resources": [
+        "sfx.state.commander_exit"
+      ],
+      "wanted": "Reverse of state.commander_enter: visor lifting, breath pulling back to distance."
     }
   ]
 }

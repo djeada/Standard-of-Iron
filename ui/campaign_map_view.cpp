@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+#include "../game/util/asset_text.h"
 #include "../utils/resource_utils.h"
 #include "campaign_map_render_utils.h"
 
@@ -1457,7 +1458,7 @@ void main() {
       }
 
       ProvinceLabel label;
-      label.text = name;
+      label.text = Game::Util::tr_asset(Game::Util::k_campaign_map_context, name);
       label.position = QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
                                  static_cast<float>(label_uv.at(1).toDouble()));
 
@@ -2579,7 +2580,9 @@ QVariantMap CampaignMapView::province_info_at_screen(float x, float y) {
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
       if (point_in_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2])) {
         info.insert(QStringLiteral("id"), province.id);
-        info.insert(QStringLiteral("name"), province.name);
+        info.insert(
+            QStringLiteral("name"),
+            Game::Util::tr_asset(Game::Util::k_campaign_map_context, province.name));
         info.insert(QStringLiteral("owner"), province.owner);
         return info;
       }

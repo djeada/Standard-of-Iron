@@ -88,6 +88,20 @@ auto has_punish_opening(Engine::Core::Entity* target) -> bool {
   return false;
 }
 
+auto is_player_controlled_commander(Engine::Core::Entity* entity) -> bool {
+  auto const* commander =
+      entity != nullptr ? entity->get_component<Engine::Core::CommanderComponent>()
+                        : nullptr;
+  return commander != nullptr && commander->fpv_controlled;
+}
+
+void play_guard_cue(Engine::Core::Entity* target, const char* cue_id) {
+  if (!is_player_controlled_commander(target)) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(cue_id));
+}
+
 auto resolve_perfect_guard(Engine::Core::World* world,
                            Engine::Core::Entity* target,
                            Engine::Core::EntityID attacker_id) -> bool {
@@ -286,6 +300,7 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
   if (resolve_perfect_guard(world, commander, attacker_id)) {
     result.perfect_guarded = true;
     result.blocked = true;
+    play_guard_cue(commander, "combat.perfect_guard");
     return result;
   }
 
@@ -293,6 +308,11 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
       resolve_commander_guard(world, commander, raw_damage, attacker_id, profile);
   result.blocked = guard.blocked;
   result.guard_broken = guard.guard_broken;
+  if (result.guard_broken) {
+    play_guard_cue(commander, "combat.guard_break");
+  } else if (result.blocked) {
+    play_guard_cue(commander, "combat.block");
+  }
 
   auto const rpg_result =
       resolve_rpg_damage(world, commander, guard.damage, attacker_id);

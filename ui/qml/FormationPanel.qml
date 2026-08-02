@@ -1,8 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
-import "design" as Design
-import "design/controls" as Controls
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: formationPanel
@@ -121,7 +120,7 @@ Item {
                 Repeater {
                     model: formationPanel.intents
 
-                    Controls.IronButton {
+                    Design.IronButton {
                         readonly property string blocked_reason: formationPanel.intent_blocked_reason(modelData)
 
                         ToolTip.delay: Design.Metrics.tooltipDelay
@@ -162,11 +161,11 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            Controls.IronDivider {
+            Design.IronDivider {
                 Layout.fillWidth: true
             }
 
-            Controls.IronButton {
+            Design.IronButton {
                 Layout.fillWidth: true
                 text: formationPanel.advanced_expanded ? qsTr("Hide advanced options") : qsTr("Advanced options")
 
@@ -188,7 +187,7 @@ Item {
                     text: qsTr("Frontage")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Narrow"), qsTr("Balanced"), qsTr("Wide")]
 
@@ -205,7 +204,7 @@ Item {
                     text: qsTr("Depth")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Shallow"), qsTr("Balanced"), qsTr("Deep")]
 
@@ -222,7 +221,7 @@ Item {
                     text: qsTr("Spacing")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Tight"), qsTr("Normal"), qsTr("Loose")]
 
@@ -239,7 +238,7 @@ Item {
                     text: qsTr("Cavalry")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Balanced"), qsTr("Left"), qsTr("Split"), qsTr("Right")]
 
@@ -256,7 +255,7 @@ Item {
                     text: qsTr("Ranged")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Rear"), qsTr("Front"), qsTr("Skirmish")]
 
@@ -273,7 +272,7 @@ Item {
                     text: qsTr("Reserve")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Automatic"), qsTr("None"), qsTr("One row"), qsTr("Two rows")]
 
@@ -290,7 +289,7 @@ Item {
                     text: qsTr("Movement")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Reform at destination"), qsTr("Maintain formation")]
 
@@ -307,7 +306,7 @@ Item {
                     text: qsTr("Mixed armies")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Majority doctrine"), qsTr("By role"), qsTr("Separate contingents"), qsTr("Commander")]
 
@@ -324,7 +323,7 @@ Item {
                     text: qsTr("Doctrine")
                 }
 
-                Controls.IronDropdown {
+                Design.IronDropdown {
                     Layout.fillWidth: true
                     model: [qsTr("Automatic"), qsTr("Rome"), qsTr("Carthage"), qsTr("Iron Sepulcher")]
 
@@ -334,7 +333,7 @@ Item {
                     }
                 }
 
-                Controls.IronButton {
+                Design.IronButton {
                     Layout.columnSpan: 2
                     Layout.fillWidth: true
                     text: qsTr("Reset to faction default")

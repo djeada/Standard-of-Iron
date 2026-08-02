@@ -39,6 +39,7 @@ add_library(
     command/command_system.cpp
     command/command_validator.cpp
     save/snapshot_contract.cpp
+    util/asset_text.cpp
     util/json_vec_utils.cpp
     session/session_context.cpp
     session/simulation_clock.cpp

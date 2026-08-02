@@ -1,5 +1,7 @@
 #include "army_formation_planner.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -738,7 +740,10 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
   plan.intent = request.intent;
 
   if (members.empty()) {
-    plan.rejection_reason = "No units eligible for formation placement.";
+    plan.rejection_reason =
+        QCoreApplication::translate("Formation",
+                                    "No units eligible for formation placement.")
+            .toStdString();
     return plan;
   }
 
@@ -755,7 +760,10 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
 
   const auto* tmpl = doctrine.resolve_template(request.intent);
   if (tmpl == nullptr) {
-    plan.rejection_reason = "This doctrine has no template for the chosen formation.";
+    plan.rejection_reason =
+        QCoreApplication::translate(
+            "Formation", "This doctrine has no template for the chosen formation.")
+            .toStdString();
     return plan;
   }
 
@@ -856,7 +864,10 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
   }
 
   if (plan.blocked_count == static_cast<int>(plan.slot_list.size())) {
-    plan.rejection_reason = "No part of this formation fits on the chosen ground.";
+    plan.rejection_reason =
+        QCoreApplication::translate(
+            "Formation", "No part of this formation fits on the chosen ground.")
+            .toStdString();
     return plan;
   }
 

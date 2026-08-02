@@ -572,8 +572,15 @@ Item {
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: list.currentIndex = index
+                                onClicked: {
+                                    Design.UiSound.activate();
+                                    list.currentIndex = index;
+                                }
                                 onDoubleClicked: accept_selection()
+                                onContainsMouseChanged: {
+                                    if (containsMouse)
+                                        Design.UiSound.hover();
+                                }
                             }
 
                             Rectangle {
@@ -1101,7 +1108,10 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: toggle_player_enabled(index)
+                                        onClicked: {
+                                            Design.UiSound.toggle();
+                                            toggle_player_enabled(index);
+                                        }
                                     }
 
                                     Behavior on color  {
@@ -1177,7 +1187,10 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cycle_player_color(index)
+                                            onClicked: {
+                                                Design.UiSound.toggle();
+                                                cycle_player_color(index);
+                                            }
                                         }
 
                                         Rectangle {
@@ -1240,7 +1253,10 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cycle_player_nation(index)
+                                            onClicked: {
+                                                Design.UiSound.toggle();
+                                                cycle_player_nation(index);
+                                            }
                                         }
 
                                         Behavior on color  {
@@ -1304,7 +1320,10 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cycle_player_commander(index)
+                                            onClicked: {
+                                                Design.UiSound.toggle();
+                                                cycle_player_commander(index);
+                                            }
                                         }
 
                                         Behavior on color  {
@@ -1364,7 +1383,10 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cycle_player_team(index)
+                                            onClicked: {
+                                                Design.UiSound.toggle();
+                                                cycle_player_team(index);
+                                            }
                                         }
 
                                         Behavior on color  {
@@ -1412,7 +1434,10 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: remove_player(index)
+                                            onClicked: {
+                                                Design.UiSound.toggle();
+                                                remove_player(index);
+                                            }
                                         }
 
                                         Behavior on color  {
@@ -1459,7 +1484,10 @@ Item {
                     Button {
                         text: qsTr("+ Add CPU")
                         enabled: players_model.count < player_ids_for_map(selected_map_data).length
-                        onClicked: add_cpu()
+                        onClicked: {
+                            Design.UiSound.activate();
+                            add_cpu();
+                        }
                         hoverEnabled: true
                         implicitHeight: 38
                         implicitWidth: 120
@@ -1607,6 +1635,7 @@ Item {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
+                                        Design.UiSound.activate();
                                         if (typeof game !== 'undefined')
                                             game.selected_player_id = Number(modelData);
                                         initialize_players(selected_map_data);
@@ -1689,7 +1718,10 @@ Item {
 
             Button {
                 text: qsTr("Back")
-                onClicked: root.cancelled()
+                onClicked: {
+                    Design.UiSound.back();
+                    root.cancelled();
+                }
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 120
@@ -1761,7 +1793,10 @@ Item {
             Button {
                 text: qsTr("Play")
                 enabled: list.currentIndex >= 0 && list.count > 0 && players_model.count > 0 && validation_error === ""
-                onClicked: accept_selection()
+                onClicked: {
+                    Design.UiSound.activate();
+                    accept_selection();
+                }
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 130

@@ -41,4 +41,8 @@ QtObject {
     function warning() {
         cue("ui.error");
     }
+
+    function notification() {
+        cue("ui.notification");
+    }
 }

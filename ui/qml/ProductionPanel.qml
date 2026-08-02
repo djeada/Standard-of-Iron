@@ -629,8 +629,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("archer");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -751,8 +759,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("swordsman");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -873,8 +889,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("spearman");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -995,12 +1019,20 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("horse_swordsman");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Mounted Knight").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 10).toFixed(0)) : horseKnightCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || qsTr("Mounted Knight")).arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 10).toFixed(0)) : horseKnightCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1117,12 +1149,20 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("horse_archer");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Archer").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseArcherCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || qsTr("Horse Archer")).arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseArcherCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1239,12 +1279,20 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("horse_spearman");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Spearman").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseSpearmanCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || qsTr("Horse Spearman")).arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseSpearmanCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1361,8 +1409,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("healer");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1483,8 +1539,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("builder");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1606,12 +1670,20 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.recruit_unit("elephant");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || "War Elephant").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 20).toFixed(0)) : elephantCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || qsTr("War Elephant")).arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 20).toFixed(0)) : elephantCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1777,8 +1849,16 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                if (parent.is_enabled)
+                                if (parent.is_enabled) {
+                                    Design.UiSound.activate();
                                     productionPanel.recruit_unit("civilian");
+                                } else {
+                                    Design.UiSound.warning();
+                                }
+                            }
+                            onContainsMouseChanged: {
+                                if (containsMouse && parent.is_enabled)
+                                    Design.UiSound.hover();
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
@@ -1827,7 +1907,10 @@ Rectangle {
                         text: rallyContent.placing_barracks_rally ? Design.Icons.rally + " " + qsTr("Click Map to Set Rally") : Design.Icons.rally + " " + qsTr("Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         enabled: rallyContent.prod.has_barracks
-                        onClicked: productionPanel.rally_mode_toggled()
+                        onClicked: {
+                            Design.UiSound.activate();
+                            productionPanel.rally_mode_toggled();
+                        }
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Set where newly recruited units will gather.\nRight-click to cancel.")
                         ToolTip.delay: 500
@@ -2110,8 +2193,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("catapult");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2242,8 +2333,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("ballista");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2374,8 +2473,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("defense_tower");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2506,8 +2613,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("home");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2638,8 +2753,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("wall_segment");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2770,8 +2893,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("wall_gate");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2902,8 +3033,16 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.is_enabled)
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("marketplace");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -3069,7 +3208,10 @@ Rectangle {
                                         Layout.preferredWidth: 110
                                         text: qsTr("Buy %1 (%2g)").arg(trade_quantity).arg(buy_price)
                                         enabled: productionPanel.can_buy_trade_resource(marketplaceContent.market_state, resource_key)
-                                        onClicked: productionPanel.game_instance.marketplace_buy_resource(resource_key)
+                                        onClicked: {
+                                            Design.UiSound.activate();
+                                            productionPanel.game_instance.marketplace_buy_resource(resource_key);
+                                        }
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Spend %1 gold to buy %2 %3").arg(buy_price).arg(trade_quantity).arg(modelData.label.toLowerCase())
                                     }
@@ -3078,7 +3220,10 @@ Rectangle {
                                         Layout.preferredWidth: 110
                                         text: qsTr("Sell %1 (+%2g)").arg(trade_quantity).arg(sell_price)
                                         enabled: productionPanel.can_sell_trade_resource(marketplaceContent.market_state, resource_key)
-                                        onClicked: productionPanel.game_instance.marketplace_sell_resource(resource_key)
+                                        onClicked: {
+                                            Design.UiSound.activate();
+                                            productionPanel.game_instance.marketplace_sell_resource(resource_key);
+                                        }
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Sell %1 %2 for %3 gold").arg(trade_quantity).arg(modelData.label.toLowerCase()).arg(sell_price)
                                     }

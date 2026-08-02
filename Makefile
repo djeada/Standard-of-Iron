@@ -76,6 +76,8 @@ help:
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
 	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
+	@echo "  $(GREEN)translations$(RESET)  - Refresh .ts/.qm catalogues and translator CSVs"
+	@echo "  $(GREEN)translations-check$(RESET) - Fail when assets gained untranslated player text"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
@@ -335,6 +337,17 @@ test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@bash scripts/run-tests.sh $(BUILD_DIR) --gtest_brief=1 $(TEST_ARGS)
 
+# Re-render the synthesised cue sounds and re-register them. The recipes in
+# tools/audio_synth are the source of truth for these files, so edit a recipe
+# and run this rather than hand-editing an .ogg. Needs ffmpeg with libvorbis.
+.PHONY: audio-assets
+audio-assets:
+	@echo "$(BOLD)$(BLUE)Synthesising cue sounds...$(RESET)"
+	@$(PYTHON) tools/audio_synth/synthesize_cues.py
+	@$(PYTHON) tools/audio_synth/register_cues.py
+	@$(MAKE) --no-print-directory audio-report
+	@echo "$(GREEN)✓ Cue sounds rendered and registered$(RESET)"
+
 # Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
 # assets on disk. Run it any time you want the current list of missing sounds.
 .PHONY: audio-report
@@ -458,31 +471,41 @@ format-strip-comments: strip-comments
 
 # ---- Translations ----
 # lupdate rescans every qsTr()/tr()/QT_TR_NOOP in the UI and engine sources and
-# rewrites the .ts catalogues; lrelease compiles them into the .qm files that
-# translations.qrc embeds. `-locations none` keeps the diffs free of the line
+# rewrites the .ts catalogues. `-locations none` keeps the diffs free of the line
 # numbers that churn on every unrelated edit.
+#
+# Compiling .ts to .qm is not done here: CMake runs lrelease into the build tree
+# on every build, so the embedded catalogue can never lag the .ts it came from.
 .PHONY: translations translations-check
 
 LUPDATE ?= $(shell command -v lupdate 2>/dev/null || echo /usr/lib/qt6/bin/lupdate)
-LRELEASE ?= $(shell command -v lrelease 2>/dev/null || echo /usr/lib/qt6/bin/lrelease)
 TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_pt_br.ts
-TS_SOURCE_DIRS := ui app game scene render
+TS_SOURCE_DIRS := ui app game scene render main.cpp
+# lupdate only parses code, so player-visible text authored in assets/ (mission
+# briefings, objective lines, map and unit names) is mirrored into a generated
+# stub it can read. Without this the catalogues silently miss a few hundred
+# strings and the coverage gate below still reports success.
+TS_ASSET_STUB := translations/asset_strings_generated.cpp
 
-## Rescan sources for translatable strings and recompile the .qm catalogues.
+## Rescan sources for translatable strings and refresh the .ts catalogues.
 translations:
+	@echo "$(BOLD)$(BLUE)Extracting player-visible strings from assets...$(RESET)"
+	@$(PYTHON) scripts/extract-asset-strings.py
 	@echo "$(BOLD)$(BLUE)Updating translation catalogues...$(RESET)"
-	@$(LUPDATE) $(TS_SOURCE_DIRS) -no-obsolete -locations none -ts $(TS_FILES)
-	@for ts in $(TS_FILES); do $(LRELEASE) $$ts -qm $${ts%.ts}.qm; done
-	@echo "$(GREEN)✓ Translations updated$(RESET)"
+	@$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) -no-obsolete -locations none -ts $(TS_FILES)
+	@$(PYTHON) scripts/seed-source-translations.py
+	@bash scripts/ts2csv.sh > /dev/null
+	@echo "$(GREEN)✓ Catalogues and translator CSVs updated (.qm build on next compile)$(RESET)"
 
 ## Fail if any UI string is missing from the catalogues or left untranslated.
 ## Rescans into a scratch copy so it never rewrites the tracked catalogues.
 translations-check:
 	@echo "$(BOLD)$(BLUE)Checking translation coverage...$(RESET)"
+	@$(PYTHON) scripts/extract-asset-strings.py --check
 	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
 	cp $(TS_FILES) "$$tmp/" && \
 	probe=""; for ts in $(TS_FILES); do probe="$$probe $$tmp/$$(basename $$ts)"; done && \
-	$(LUPDATE) $(TS_SOURCE_DIRS) -no-obsolete -locations none -ts $$probe >/dev/null && \
+	$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) -no-obsolete -locations none -ts $$probe >/dev/null && \
 	for ts in $(TS_FILES); do \
 		if ! diff -q "$$ts" "$$tmp/$$(basename $$ts)" >/dev/null; then \
 			echo "$(RED)$$ts is stale. Run 'make translations'.$(RESET)"; \
