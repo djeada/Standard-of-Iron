@@ -34,6 +34,16 @@ struct PendingMissionWave {
   std::vector<Engine::Core::EntityID> spawned_entity_ids;
 };
 
+struct PendingMissionEvent {
+  float trigger_time = 0.0F;
+  QString text;
+  bool fired = false;
+};
+
+[[nodiscard]] auto
+build_pending_mission_events(const Game::Mission::MissionDefinition& mission)
+    -> std::vector<PendingMissionEvent>;
+
 struct MissionSetupApplyContext {
   Engine::Core::World& world;
   CampaignManager& campaign;

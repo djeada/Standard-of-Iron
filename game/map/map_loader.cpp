@@ -1182,7 +1182,7 @@ auto MapLoader::load_from_json_file(const QString& path,
     return false;
   }
 
-  out_map.name = root.value(NAME).toString("Unnamed Map");
+  out_map.name = root.value(NAME).toString(QT_TRANSLATE_NOOP("Maps", "Unnamed Map"));
 
   if (root.contains(COORD_SYSTEM)) {
     const QString coord_system =

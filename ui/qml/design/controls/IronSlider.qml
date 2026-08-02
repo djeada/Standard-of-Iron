@@ -14,6 +14,14 @@ Slider {
     Accessible.name: accessibleName
     Accessible.description: Math.round(control.position * 100) + "%"
 
+    Connections {
+        function onPressedChanged() {
+            Design.UiSound.toggle();
+        }
+
+        target: control
+    }
+
     background: Rectangle {
         x: control.leftPadding
         y: control.topPadding + control.availableHeight / 2 - height / 2

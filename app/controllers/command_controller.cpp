@@ -1,5 +1,6 @@
 #include "command_controller.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QPointF>
 #include <qglobal.h>
@@ -28,6 +29,7 @@
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
 #include "../../game/systems/troop_profile_service.h"
+#include "../../game/util/asset_text.h"
 #include "../core/rts_action_model.h"
 #include "../utils/movement_utils.h"
 #include "game/audio/audio_cues.h"
@@ -1146,7 +1148,7 @@ auto CommandController::formation_intent_unavailable_reason(
     const QString& intent_id) const -> QString {
   auto parsed = Game::Formation::try_parse_intent(intent_id);
   if (!parsed || m_world == nullptr || m_formation_units.empty()) {
-    return QStringLiteral("No units selected.");
+    return QCoreApplication::translate("Formation", "No units selected.");
   }
   return QString::fromStdString(Game::Formation::ArmyFormationService::availability(
       *m_world, m_formation_units, *parsed, m_formation_doctrine_override));
@@ -1165,9 +1167,10 @@ auto CommandController::formation_doctrine() const -> QString {
 }
 
 auto CommandController::formation_doctrine_display_name() const -> QString {
-  return QString::fromStdString(Game::Formation::DoctrineRegistry::instance()
-                                    .get_or_neutral(formation_doctrine().toStdString())
-                                    .display_name);
+  return Game::Util::tr_asset(Game::Util::k_formations_context,
+                              Game::Formation::DoctrineRegistry::instance()
+                                  .get_or_neutral(formation_doctrine().toStdString())
+                                  .display_name);
 }
 
 void CommandController::begin_formation_drag(const QVector3D& start) {

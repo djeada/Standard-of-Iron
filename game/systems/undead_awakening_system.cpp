@@ -1,5 +1,6 @@
 #include "undead_awakening_system.h"
 
+#include <QCoreApplication>
 #include <QJsonObject>
 #include <QVector3D>
 #include <qjsonarray.h>
@@ -202,10 +203,13 @@ void UndeadAwakeningSystem::ensure_zone_owner_registered(
     const RuntimeZone& zone) const {
   auto& owners = Game::Systems::OwnerRegistry::instance();
   if (owners.get_owner_type(zone.definition.owner_id) == OwnerType::Neutral) {
+
     owners.register_owner_with_id(
         zone.definition.owner_id,
         OwnerType::AI,
-        QStringLiteral("Iron Sepulcher %1").arg(zone.definition.id).toStdString());
+        QCoreApplication::translate("UndeadAwakeningSystem", "Iron Sepulcher %1")
+            .arg(zone.definition.id)
+            .toStdString());
   }
   owners.set_owner_team(zone.definition.owner_id,
                         zone.definition.team_id > 0 ? zone.definition.team_id
@@ -425,10 +429,12 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
     zone.announced_defeat = true;
     Engine::Core::EventManager::instance().publish(
         Engine::Core::MissionAnnouncementEvent(
-            captured
-                ? QStringLiteral("The shrine answers to you now. Its dead fall still.")
-                : QStringLiteral(
-                      "The shrine is broken. Every risen guardian crumbles.")));
+            captured ? QCoreApplication::translate(
+                           "UndeadAwakeningSystem",
+                           "The shrine answers to you now. Its dead fall still.")
+                     : QCoreApplication::translate(
+                           "UndeadAwakeningSystem",
+                           "The shrine is broken. Every risen guardian crumbles.")));
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AudioCueEvent("alert.objective_complete"));
   }
@@ -504,13 +510,18 @@ void UndeadAwakeningSystem::announce_wave(const RuntimeZone& zone) const {
   int const wave_number = zone.next_wave_index;
   int const wave_total = static_cast<int>(zone.definition.waves.size());
   QString const progress =
-      QStringLiteral("Wave %1/%2").arg(wave_number).arg(wave_total);
+      QCoreApplication::translate("UndeadAwakeningSystem", "Wave %1/%2")
+          .arg(wave_number)
+          .arg(wave_total);
 
-  QString const text =
-      wave_number <= 1
-          ? QStringLiteral("The Iron Sepulcher wakes. %1 rises to meet you.")
-                .arg(progress)
-          : QStringLiteral("%1 claws out of the ground.").arg(progress);
+  QString const text = wave_number <= 1
+                           ? QCoreApplication::translate(
+                                 "UndeadAwakeningSystem",
+                                 "The Iron Sepulcher wakes. %1 rises to meet you.")
+                                 .arg(progress)
+                           : QCoreApplication::translate("UndeadAwakeningSystem",
+                                                         "%1 claws out of the ground.")
+                                 .arg(progress);
   Engine::Core::EventManager::instance().publish(
       Engine::Core::MissionAnnouncementEvent(text));
 }
@@ -545,7 +556,8 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
         zone.next_wave_index >= static_cast<int>(zone.definition.waves.size())) {
       zone.announced_defeat = true;
       Engine::Core::EventManager::instance().publish(
-          Engine::Core::MissionAnnouncementEvent(QStringLiteral(
+          Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
+              "UndeadAwakeningSystem",
               "The risen guardians are put down. The ground is quiet.")));
       Engine::Core::EventManager::instance().publish(
           Engine::Core::AudioCueEvent("alert.objective_complete"));

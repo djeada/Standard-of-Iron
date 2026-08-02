@@ -101,8 +101,8 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   Game::Systems::SaveRequest request;
   request.slot_name = context.slot;
   request.title = context.title;
-  request.map_name =
-      context.map_name.isEmpty() ? QStringLiteral("Unknown Map") : context.map_name;
+
+  request.map_name = context.map_name;
   request.map_path = context.level.map_path;
   if (context.mission_context.has_value()) {
     request.mode = context.mission_context->mode;

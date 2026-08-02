@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 RowLayout {
     id: bottomRoot
@@ -548,6 +549,7 @@ RowLayout {
                             onClicked: {
                                 if (typeof game === 'undefined')
                                     return;
+                                Design.UiSound.activate();
                                 if (bottomRoot.status_value("rally_placing", false)) {
                                     if (game.cancel_commander_flag_rally)
                                         game.cancel_commander_flag_rally();
@@ -582,8 +584,10 @@ RowLayout {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.")
                             onClicked: {
-                                if (typeof game !== 'undefined' && game.commander_trigger_aura)
+                                if (typeof game !== 'undefined' && game.commander_trigger_aura) {
+                                    Design.UiSound.activate();
                                     game.commander_trigger_aura();
+                                }
                             }
 
                             background: Rectangle {

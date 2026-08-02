@@ -1,5 +1,7 @@
 #include "wall_network_service.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -574,7 +576,10 @@ auto WallNetworkService::validate_wall_segment_placement(
                            position.z,
                            include_construction_sites,
                            ignore_entity_id)) {
-    return {.valid = false, .failure_reason = "Blocked by an existing wall."};
+    return {.valid = false,
+            .failure_reason = QCoreApplication::translate(
+                                  "WallNetworkService", "Blocked by an existing wall.")
+                                  .toStdString()};
   }
 
   const auto world_position =
@@ -584,7 +589,10 @@ auto WallNetworkService::validate_wall_segment_placement(
                                    world,
                                    "wall_segment",
                                    ignore_entity_id)) {
-    return {.valid = false, .failure_reason = "Cannot build there."};
+    return {.valid = false,
+            .failure_reason =
+                QCoreApplication::translate("WallNetworkService", "Cannot build there.")
+                    .toStdString()};
   }
 
   return {.valid = true};
