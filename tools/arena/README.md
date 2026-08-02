@@ -17,6 +17,15 @@ build-debug/bin/arena_app --scenario roman_fortification_showcase
 build-debug/bin/arena_app --scenario carthage_fortification_showcase
 build-debug/bin/arena_app --scenario rival_economies
 build-debug/bin/arena_app --scenario water_showcase
+
+# Inhabited settlements, camps and the economy around them
+build-debug/bin/arena_app --scenario village_harvest_cycle
+build-debug/bin/arena_app --scenario colony_founding
+build-debug/bin/arena_app --scenario village_raid
+build-debug/bin/arena_app --scenario frontier_outpost
+build-debug/bin/arena_app --scenario riverside_mill_town
+build-debug/bin/arena_app --scenario quarry_camp
+build-debug/bin/arena_app --scenario trade_road_convoy
 ```
 
 This loads the named catalog scenario directly and runs it at real wall-clock
@@ -214,10 +223,41 @@ Settlement scenes use the production building factory and nation renderers, so
 changes to homes, markets, barracks, walls, and towers appear exactly as they do
 in-game.
 
-- `roman_marching_camp` uses an axial castrum composition: central principia,
-  barracks street, ordered housing, perimeter walls, and watchtowers.
-- `carthage_trade_town` uses dense Punic courtyard housing around a market,
-  with a fortified mercantile quarter and warm brick-and-cedar materials.
+- `roman_marching_camp` is a full castrum on its own street grid: the via
+  praetoria runs from the porta praetoria to the principia, the via principalis
+  crosses it between the flanking gates, an intervallum lane rings the inside of
+  the rampart, barrack blocks fill the northern half and the officers' houses
+  and contubernia the southern one. Gates on all four sides, towers on the
+  corners, and townspeople working the streets throughout.
+- `carthage_trade_town` is an oblong Punic town: a bazaar street lined with
+  stalls and carts runs its whole width, courtyard housing crowds the lanes off
+  it, and the mercenary quarter holds the eastern end.
+- `village_harvest_cycle` is an unwalled hamlet working its land, with
+  woodcutters and quarriers on the tree line, the boulder field and the ore seam.
+- `colony_founding` puts a colony under construction beside a finished village so
+  both states of a settlement can be judged in one view.
+- `village_raid` attacks an inhabited village while its people are still out in
+  the street and the watch turns out of the barracks.
+- `frontier_outpost` is a camp rather than a town: a watchtower over a palisade
+  spur, the tent line, the cook fire, the carts and the section that mans it.
+- `riverside_mill_town` straddles a river joined by one bridge, with a carrying
+  party proving the crossing.
+- `quarry_camp` is a pure extraction camp on broken ground.
+- `trade_road_convoy` links two allied market towns along one paved road and
+  walks a carrying party the full length of it.
+
+A settlement paves its streets one way: mixing road styles inside one settlement
+is a contract violation, enforced by `EachSettlementLaysItsStreetsInOneStyle`.
+
+Settlements that spawn `settlement_resident` civilians must also require those
+civilians to be _seen_ moving. Residents run the settlement life system's errand
+loop -- they walk between the hearth, the settlement's buildings and the props of
+daily life, linger there and move on -- and
+`InhabitedSettlementsProveTheirDailyLife` fails any inhabited settlement that
+does not assert `MovementAnimationObserved` on its residents, so a town that
+quietly stops living is a test failure rather than a thing someone has to notice
+in a screenshot.
+
 - `rival_economies` gives Roman and Carthaginian AI builders equivalent starter
   settlements with finite stockpiles plus authored olive groves, stone, and iron.
   Builders must harvest missing materials and then complete construction. Roman
@@ -388,6 +428,20 @@ build/bin/arena_app --batch --scenario road_junction_showcase \
 ```
 
 ## Gate contracts
+
+A gate is a gatehouse three wall cells long: a solid pier on either side that
+continues the wall, and a clear opening in the middle wide enough to march a war
+elephant through. `GateComponent::k_structure_half_span` and
+`k_passage_half_width` are the single source of that geometry -- the collision
+footprint, the navigation passage carved through it, the movement blockers and
+the rendered leaves all measure themselves against those two numbers, so the
+thing units are allowed to walk through and the thing the player sees can never
+drift apart. Wall runs therefore stop two cells clear of a gate rather than one.
+
+The leaves only count as passable at the very end of the swing, and the gate
+opens faster than it closes and holds after the last body clears, so a column
+never has to stop for its own gate and the leaves never shut on someone
+mid-crossing.
 
 Five scenes cover the wall gate, each cutting one gate into a palisade running
 east-west through the origin:

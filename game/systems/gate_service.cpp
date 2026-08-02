@@ -16,8 +16,6 @@ using Engine::Core::PendingRemovalComponent;
 using Engine::Core::TransformComponent;
 using Engine::Core::UnitComponent;
 
-constexpr float k_gate_half_extent = 1.0F;
-
 auto blocker_storage() -> std::vector<GateBlocker>& {
   static std::vector<GateBlocker> storage;
   return storage;
@@ -25,9 +23,34 @@ auto blocker_storage() -> std::vector<GateBlocker>& {
 
 } // namespace
 
+auto GateService::structure_extent(float rotation_y) -> GateExtent {
+  const bool spans_x = GateComponent::spans_x_axis(rotation_y);
+  return {.half_x = spans_x ? GateComponent::k_structure_half_span
+                            : GateComponent::k_cross_half_extent,
+          .half_z = spans_x ? GateComponent::k_cross_half_extent
+                            : GateComponent::k_structure_half_span};
+}
+
+auto GateService::passage_extent(float rotation_y) -> GateExtent {
+  const bool spans_x = GateComponent::spans_x_axis(rotation_y);
+  return {.half_x = spans_x ? GateComponent::k_passage_half_width
+                            : GateComponent::k_cross_half_extent,
+          .half_z = spans_x ? GateComponent::k_cross_half_extent
+                            : GateComponent::k_passage_half_width};
+}
+
 void GateService::mark_gate_footprint_navigable(Engine::Core::EntityID entity_id) {
   BuildingCollisionRegistry::instance().set_building_navigation_blocking(entity_id,
                                                                          false);
+}
+
+void GateService::sync_gate_footprint(Engine::Core::EntityID entity_id,
+                                      float rotation_y) {
+  const auto extent = structure_extent(rotation_y);
+  BuildingCollisionRegistry::instance().resize_building(
+      entity_id,
+      BuildingCollisionRegistry::BuildingSize{.width = extent.half_x * 2.0F,
+                                              .depth = extent.half_z * 2.0F});
 }
 
 auto GateService::is_gate(const Engine::Core::Entity& entity) -> bool {
@@ -70,11 +93,13 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
       continue;
     }
 
+    const auto extent = passage_extent(transform->rotation.y);
+
     storage.push_back(GateBlocker{
-        .min_x = transform->position.x - k_gate_half_extent,
-        .max_x = transform->position.x + k_gate_half_extent,
-        .min_z = transform->position.z - k_gate_half_extent,
-        .max_z = transform->position.z + k_gate_half_extent,
+        .min_x = transform->position.x - extent.half_x,
+        .max_x = transform->position.x + extent.half_x,
+        .min_z = transform->position.z - extent.half_z,
+        .max_z = transform->position.z + extent.half_z,
         .owner_id = unit->owner_id,
         .entity_id = entity->get_id(),
     });

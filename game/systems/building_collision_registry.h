@@ -77,6 +77,15 @@ public:
                          float center_z,
                          int owner_id);
 
+  void register_building(Engine::Core::EntityID entity_id,
+                         const std::string& building_type,
+                         float center_x,
+                         float center_z,
+                         int owner_id,
+                         BuildingSize size);
+
+  void resize_building(Engine::Core::EntityID entity_id, BuildingSize size);
+
   void unregister_building(Engine::Core::EntityID entity_id);
 
   void set_authored_obstacles(std::vector<BuildingFootprint> obstacles);
