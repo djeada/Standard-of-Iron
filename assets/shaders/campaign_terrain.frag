@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 in vec2 v_uv;
 in vec3 v_normal;
@@ -27,38 +28,6 @@ uniform vec3 u_mountain_tint;
 uniform float u_elevation_scale;
 
 out vec4 frag_color;
-
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
-}
-
-float value_noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-
-  vec2 u = f * f * (3.0 - 2.0 * f);
-
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-
-float fbm(vec2 p, int octaves) {
-  float value = 0.0;
-  float amplitude = 0.5;
-  float frequency = 1.0;
-
-  for (int i = 0; i < octaves; i++) {
-    value += amplitude * value_noise(p * frequency);
-    amplitude *= 0.5;
-    frequency *= 2.0;
-  }
-
-  return value;
-}
 
 float compute_ao(vec3 normal) {
 
@@ -94,8 +63,8 @@ vec3 get_elevation_tint(float height) {
 
 float get_parchment_pattern(vec2 uv) {
 
-  float n1 = fbm(uv * 8.0, 3);
-  float n2 = fbm(uv * 20.0 + vec2(100.0), 2);
+  float n1 = soi_fbm_d6cc9d(uv * 8.0, 3);
+  float n2 = soi_fbm_d6cc9d(uv * 20.0 + vec2(100.0), 2);
 
   float pattern = n1 * 0.6 + n2 * 0.4;
 

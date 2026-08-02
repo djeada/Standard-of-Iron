@@ -85,6 +85,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("Move");
   case ScenarioCommandKind::FormationMove:
     return QStringLiteral("FormationMove");
+  case ScenarioCommandKind::Run:
+    return QStringLiteral("Run");
   case ScenarioCommandKind::FormArmy:
     return QStringLiteral("FormArmy");
   case ScenarioCommandKind::Charge:
@@ -1107,6 +1109,21 @@ struct ArenaScenarioRunner::Impl {
       auto plan = Game::Systems::CommandService::plan_ground_move(
           world, group_ids, world_origin + step.destination, true);
       Game::Systems::CommandService::issue_ground_move(world, group_ids, plan);
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::Run: {
+      auto const& group_ids = ids(step.group);
+      auto plan = Game::Systems::CommandService::plan_ground_move(
+          world, group_ids, world_origin + step.destination, true);
+      Game::Systems::CommandService::issue_ground_move(world, group_ids, plan);
+      for (auto entity_id : group_ids) {
+        if (host.find_unit) {
+          if (auto* unit = host.find_unit(entity_id)) {
+            unit->set_run_mode(step.enabled);
+          }
+        }
+      }
       arm_response(step.group, command_name(step.command));
       break;
     }
@@ -3865,7 +3882,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
              {QStringLiteral("terrain_submit"), frame.timings.terrain_submit_ms},
              {QStringLiteral("world_submit"), frame.timings.world_submit_ms},
              {QStringLiteral("effects_submit"), frame.timings.effects_submit_ms},
-             {QStringLiteral("playback"), frame.timings.playback_ms},
+             {QStringLiteral("render_execute"), frame.timings.render_execute_ms},
              {QStringLiteral("overlays"), frame.timings.overlays_ms},
              {QStringLiteral("humanoid_preparation"),
               frame.timings.humanoid_preparation_ms},

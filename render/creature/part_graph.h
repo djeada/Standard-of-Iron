@@ -31,6 +31,8 @@ enum class PrimitiveShape : std::uint8_t {
   OrientedCylinder,
 
   OrientedSphere,
+
+  TaperedCylinder,
 };
 
 enum class MeshSkinning : std::uint8_t {
@@ -71,6 +73,7 @@ struct PrimitiveParams {
   QVector3D tail_offset{};
 
   float radius{1.0F};
+  float tail_radius{0.0F};
 
   float depth_radius{0.0F};
   QVector3D half_extents{1.0F, 1.0F, 1.0F};

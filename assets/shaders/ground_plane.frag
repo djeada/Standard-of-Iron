@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 in vec3 v_world_pos;
 in vec3 v_normal;
 in vec2 v_uv;
@@ -39,20 +40,10 @@ uniform vec3 u_camera_pos;
 uniform float u_fog_start;
 uniform float u_fog_end;
 
-float hash21(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
-float noise21(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  float a = hash21(i), b = hash21(i + vec2(1, 0)), c = hash21(i + vec2(0, 1)),
-        d = hash21(i + vec2(1, 1));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
   for (int i = 0; i < 3; ++i) {
-    v += noise21(p) * a;
+    v += soi_noise21_cdf702(p) * a;
     p = p * 2.07 + 13.17;
     a *= 0.5;
   }
@@ -98,7 +89,7 @@ void main() {
       fbm(wuv * max(u_macro_noise_scale * 0.20, 0.0035) + vec2(15.7, -31.4));
   float gravel_noise =
       fbm(wuv * max(u_detail_noise_scale * 3.2, 0.18) + vec2(5.2, 17.3));
-  float pebble_noise = noise21(wuv * max(u_detail_noise_scale * 14.0, 0.9));
+  float pebble_noise = soi_noise21_cdf702(wuv * max(u_detail_noise_scale * 14.0, 0.9));
   float moisture_var = smoothstep(0.28, 0.72, patch_noise);
   float lush = smoothstep(0.18, 0.82, macro);
   lush = mix(lush, moisture_var, 0.34);
@@ -116,7 +107,7 @@ void main() {
   vec3 grass_col = mix(lush_grass, u_grass_dry, dryness);
   grass_col = mix(grass_col, u_grass_secondary, lowland * 0.16);
   float sw = max(0.01, 1.0 / max(u_soil_blend_sharpness, 1e-3));
-  float s_n = (noise21(wuv * 4.0 + 9.7) - 0.5) * sw * 0.85;
+  float s_n = (soi_noise21_cdf702(wuv * 4.0 + 9.7) - 0.5) * sw * 0.85;
   float soil_base = u_soil_blend_height + lowland * 0.08 - rise * 0.04;
   float soil_mix =
       1.0 - smoothstep(soil_base - sw + s_n, soil_base + sw + s_n, v_world_pos.y);
@@ -156,8 +147,8 @@ void main() {
   base_col = mix(base_col, rock_col, gravel_mask * 0.65);
 
   if (u_crack_intensity > 0.01) {
-    float crack_noise1 = noise21(wuv * 8.0);
-    float crack_noise2 = noise21(wuv * 16.0 + vec2(42.0, 17.0));
+    float crack_noise1 = soi_noise21_cdf702(wuv * 8.0);
+    float crack_noise2 = soi_noise21_cdf702(wuv * 16.0 + vec2(42.0, 17.0));
     float crack_pattern =
         smoothstep(0.45, 0.50, crack_noise1) * smoothstep(0.40, 0.55, crack_noise2);
     crack_pattern *= (1.0 - lowland * 0.7) * (0.4 + 0.6 * dryness);
@@ -238,9 +229,9 @@ void main() {
   vec3 n_micro =
       normalize(mix(n, micro_perturb, clamp(u_micro_normal_weight, 0.0, 1.0)));
   float jitter_amp = max(0.01, u_albedo_jitter) * (0.65 + u_soil_roughness * 0.6);
-  float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
+  float jitter = (soi_hash21_8b0317(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
   jitter *= mix(1.0, 0.62, tactical);
-  float speckle = step(0.74, noise21(wuv * 23.0 + vec2(2.0, 5.0)));
+  float speckle = step(0.74, soi_noise21_cdf702(wuv * 23.0 + vec2(2.0, 5.0)));
   speckle = mix(speckle, 0.35, tactical);
   float patch_brightness = (broad_breakup - 0.5) * 0.13 +
                            (broad_breakup2 - 0.5) * 0.10 + (patch_noise - 0.5) * 0.06 +

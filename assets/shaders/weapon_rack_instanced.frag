@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -11,10 +12,6 @@ in vec3 v_local_pos;
 in vec3 v_local_normal;
 
 out vec4 frag_color;
-
-float hash12(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
 
 float band(float value, float center, float half_width, float feather) {
   return 1.0 - smoothstep(half_width, half_width + feather, abs(value - center));
@@ -81,12 +78,15 @@ void main() {
 
   float wood_grain =
       0.5 + 0.5 * sin(v_local_pos.y * 29.0 + v_local_pos.x * 8.0 + v_local_pos.z * 5.0);
-  float wood_mottle = hash12(floor(v_local_pos.xy * 13.0) + v_world_pos.xz * 0.2);
+  float wood_mottle =
+      soi_hash12_9f6e8e(floor(v_local_pos.xy * 13.0) + v_world_pos.xz * 0.2);
   vec3 dark_oak = v_color * vec3(0.58, 0.54, 0.48);
   vec3 warm_oak = v_color * vec3(1.34, 1.13, 0.78);
   vec3 timber = mix(dark_oak, warm_oak, wood_grain * 0.68 + wood_mottle * 0.32);
   float nick = smoothstep(
-      0.88, 0.97, hash12(floor(v_local_pos.zy * 24.0) + floor(v_local_pos.xy * 7.0)));
+      0.88,
+      0.97,
+      soi_hash12_9f6e8e(floor(v_local_pos.zy * 24.0) + floor(v_local_pos.xy * 7.0)));
   timber *= mix(1.0, 0.64, nick * 0.38);
 
   vec3 yew = mix(vec3(0.38, 0.17, 0.065), vec3(0.74, 0.38, 0.11), wood_grain);
@@ -94,8 +94,9 @@ void main() {
   vec3 leather = mix(vec3(0.24, 0.055, 0.025), vec3(0.58, 0.17, 0.055), wood_mottle);
   float wrap_lines = band(fract(v_local_pos.y * 22.0), 0.5, 0.12, 0.06);
   leather *= mix(0.70, 1.10, wrap_lines);
-  vec3 brass = mix(
-      vec3(0.42, 0.22, 0.045), vec3(0.82, 0.58, 0.17), hash12(v_world_pos.xz * 9.0));
+  vec3 brass = mix(vec3(0.42, 0.22, 0.045),
+                   vec3(0.82, 0.58, 0.17),
+                   soi_hash12_9f6e8e(v_world_pos.xz * 9.0));
 
   float blade_length = max(sword_a_t, sword_b_t);
   float steel_variation = 0.5 + 0.5 * sin(v_local_pos.y * 47.0 + v_local_pos.x * 9.0);
@@ -105,8 +106,8 @@ void main() {
       mix(steel_dark, steel_bright, steel_variation * 0.36 + blade_facet * 0.64);
   float edge = smoothstep(0.58, 0.94, blade_facet) * blade_length;
   steel = mix(steel, vec3(0.90, 0.93, 0.91), edge * 0.48);
-  float rust =
-      smoothstep(0.88, 0.97, hash12(floor(v_local_pos.xy * 19.0) + vec2(4.0, 9.0)));
+  float rust = smoothstep(
+      0.88, 0.97, soi_hash12_9f6e8e(floor(v_local_pos.xy * 19.0) + vec2(4.0, 9.0)));
   steel = mix(steel, vec3(0.48, 0.16, 0.045), rust * 0.22);
 
   vec3 albedo = mix(timber, yew, bow_mask);

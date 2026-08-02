@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -49,16 +50,12 @@ uniform vec3 u_camera_pos;
 uniform float u_fog_start;
 uniform float u_fog_end;
 
-float hash21(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
-
 float noise21(vec2 p) {
   vec2 i = floor(p), f = fract(p);
-  float a = hash21(i);
-  float b = hash21(i + vec2(1.0, 0.0));
-  float c = hash21(i + vec2(0.0, 1.0));
-  float d = hash21(i + vec2(1.0, 1.0));
+  float a = soi_hash21_8b0317(i);
+  float b = soi_hash21_8b0317(i + vec2(1.0, 0.0));
+  float c = soi_hash21_8b0317(i + vec2(0.0, 1.0));
+  float d = soi_hash21_8b0317(i + vec2(1.0, 1.0));
   vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }

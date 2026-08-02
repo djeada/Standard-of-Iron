@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 
 in vec3 v_normal_ws;
 in vec2 v_tex;
@@ -34,10 +35,6 @@ const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
 
-float hash13(vec3 p) {
-  return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
-}
-
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
   return smoothstep(k_readable_zoom_near, k_readable_zoom_far, view_distance);
@@ -68,7 +65,7 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
   }
   if (horse_hoof) {
     vec3 hoof_pos = abs(pos_local) * vec3(11.0, 6.0, 13.0);
-    float horn = hash13(floor(hoof_pos) + 5.0);
+    float horn = soi_hash13_a1b3c9(floor(hoof_pos) + 5.0);
     float band = 0.5 + 0.5 * sin(pos_local.y * 24.0 + pos_local.z * 7.0);
     vec3 hoof = base * (0.92 + horn * 0.06);
     hoof += vec3(0.01) * band * 0.14;
@@ -76,15 +73,17 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
   }
   if (horse_material) {
     vec3 coat_pos = abs(pos_local);
-    float macro = hash13(floor(coat_pos * vec3(5.0, 9.0, 7.0)) + 7.0);
-    float micro = hash13(floor(coat_pos.yzx * vec3(21.0, 17.0, 23.0)) + 13.0);
+    float macro = soi_hash13_a1b3c9(floor(coat_pos * vec3(5.0, 9.0, 7.0)) + 7.0);
+    float micro =
+        soi_hash13_a1b3c9(floor(coat_pos.yzx * vec3(21.0, 17.0, 23.0)) + 13.0);
     float streak =
         0.5 + 0.5 * sin(pos_local.z * 34.0 + pos_local.y * 18.0 + macro * 6.2831);
     float dorsal = clamp(pos_local.y * 0.9 + 0.55, 0.0, 1.0);
     vec3 fur = base;
     if (horse_hair) {
       float strand = 0.70 + 0.30 * streak;
-      float stray = hash13(floor(coat_pos.zxy * vec3(31.0, 19.0, 27.0)) + 31.0);
+      float stray =
+          soi_hash13_a1b3c9(floor(coat_pos.zxy * vec3(31.0, 19.0, 27.0)) + 31.0);
       fur *= 0.90 + strand * 0.16;
       fur = mix(fur, fur * vec3(0.80, 0.74, 0.68), stray * 0.10);
       fur = mix(fur, min(fur * 1.10, vec3(1.0)), dorsal * 0.10);
@@ -108,9 +107,9 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
 
   vec3 abs_pos = abs(pos_local);
   vec3 mask_p = abs_pos * (2.8 + float(material_id & 3)) + vec3(seed * 13.0);
-  float macro = hash13(floor(mask_p * 2.0) + 3.0);
-  float blotch = hash13(floor(mask_p * 3.0));
-  float micro = hash13(floor(mask_p * 9.0) + 17.0);
+  float macro = soi_hash13_a1b3c9(floor(mask_p * 2.0) + 3.0);
+  float blotch = soi_hash13_a1b3c9(floor(mask_p * 3.0));
+  float micro = soi_hash13_a1b3c9(floor(mask_p * 9.0) + 17.0);
   float streak = 0.5 + 0.5 * sin(mask_p.y * 8.0 + seed * 19.0 + mask_p.z * 6.0);
   float edge_mask =
       smoothstep(0.18, 0.95, max(abs_pos.x, max(abs_pos.y * 0.75, abs_pos.z)));
@@ -118,9 +117,12 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
       smoothstep(0.18, 0.88, macro * 0.45 + blotch * 0.30 + streak * 0.25);
   float wear_mask =
       max(edge_mask * 0.75, smoothstep(0.34, 0.86, blotch * 0.55 + micro * 0.45));
-  float fade_mask = smoothstep(0.28, 0.82, hash13(floor(mask_p.yzx * 4.0) + 29.0));
-  float blood_mask = smoothstep(0.66, 0.94, hash13(floor(mask_p.yzx * 5.0) + 23.0));
-  float shade_variation = 0.78 + 0.42 * hash13(floor(mask_p.zxy * 3.0) + 41.0);
+  float fade_mask =
+      smoothstep(0.28, 0.82, soi_hash13_a1b3c9(floor(mask_p.yzx * 4.0) + 29.0));
+  float blood_mask =
+      smoothstep(0.66, 0.94, soi_hash13_a1b3c9(floor(mask_p.yzx * 5.0) + 23.0));
+  float shade_variation =
+      0.78 + 0.42 * soi_hash13_a1b3c9(floor(mask_p.zxy * 3.0) + 41.0);
 
   float max_component = max(base.r, max(base.g, base.b));
   float min_component = min(base.r, min(base.g, base.b));
@@ -161,7 +163,8 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
              min(worn * 1.22, vec3(1.0)),
              wear_amount * micro * edge_mask * metal_like * 0.14);
   if (color_role == 2) {
-    float bruise_mask = smoothstep(0.74, 0.96, hash13(floor(mask_p * 6.0) + 59.0));
+    float bruise_mask =
+        smoothstep(0.74, 0.96, soi_hash13_a1b3c9(floor(mask_p * 6.0) + 59.0));
     worn = mix(worn, worn * vec3(0.82, 0.68, 0.68), wear_amount * bruise_mask * 0.22);
   }
   worn =
