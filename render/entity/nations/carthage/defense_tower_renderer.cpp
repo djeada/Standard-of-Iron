@@ -100,6 +100,16 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       c.stone_light);
 
   if (!destroyed) {
+    add_embrasures(
+        [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
+          desc.add_box(
+              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+        },
+        damaged ? 0.90F : 1.02F,
+        (destroyed ? 0.68F : 0.78F) * 0.98F,
+        QVector3D(0.05F, 0.18F, 0.05F),
+        c.brick_dark * 0.5F);
+
     desc.add_box(QVector3D(0.0F, damaged ? 1.04F : 1.22F, 0.0F),
                  QVector3D(damaged ? 0.76F : 0.82F, 0.04F, damaged ? 0.76F : 0.82F),
                  c.stone_dark,
@@ -189,30 +199,51 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
                  c.wood);
 
-    const int merlon_count = damaged ? 5 : 10;
-    for (int i = 0; i < merlon_count; ++i) {
-      const float angle =
-          static_cast<float>(i) * (6.28318F / static_cast<float>(merlon_count));
-      const float ox = std::sin(angle) * (damaged ? 0.78F : 0.88F);
-      const float oz = std::cos(angle) * (damaged ? 0.78F : 0.88F);
-      desc.add_box(QVector3D(ox, damaged ? 2.08F : 2.28F, oz),
-                   QVector3D(0.12F, damaged ? 0.16F : 0.20F, 0.12F),
-                   c.brick,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+    const float parapet_half = damaged ? 0.78F : 0.88F;
+    const float merlon_y = damaged ? 2.08F : 2.28F;
+    auto add_part = [&desc](const QVector3D& centre,
+                            const QVector3D& half,
+                            const QVector3D& col) {
+      desc.add_box(centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+    };
 
-      if (i % 2 == 0 && !damaged) {
-        desc.add_box(QVector3D(ox, 2.50F, oz),
-                     QVector3D(0.08F, 0.06F, 0.08F),
-                     c.brick_dark,
+    add_square_parapet(add_part,
+                       merlon_y,
+                       parapet_half,
+                       damaged ? 3 : 4,
+                       QVector3D(0.12F, damaged ? 0.16F : 0.20F, 0.12F),
+                       c.brick,
+                       23);
+
+    if (!damaged) {
+
+      for (const float ox : {-parapet_half, parapet_half}) {
+        for (const float oz : {-parapet_half, parapet_half}) {
+          add_part(
+              QVector3D(ox, 2.50F, oz), QVector3D(0.08F, 0.06F, 0.08F), c.brick_dark);
+        }
+      }
+    }
+
+    const float canopy_y = roof_y + (damaged ? 0.22F : 0.30F);
+    const float post_half = parapet_half - 0.12F;
+    for (const float px : {-post_half, post_half}) {
+      for (const float pz : {-post_half, post_half}) {
+        desc.add_box(QVector3D(px, (merlon_y + canopy_y) * 0.5F, pz),
+                     QVector3D(0.055F, (canopy_y - merlon_y) * 0.5F, 0.055F),
+                     c.wood_dark,
                      BuildingStateMask::All,
                      BuildingLODMask::Full);
       }
     }
-
-    desc.add_box(QVector3D(0.0F, roof_y, 0.0F),
-                 QVector3D(damaged ? 0.92F : 1.04F, 0.03F, damaged ? 0.92F : 1.04F),
+    desc.add_box(QVector3D(0.0F, canopy_y, 0.0F),
+                 QVector3D(damaged ? 0.70F : 0.80F, 0.03F, damaged ? 0.70F : 0.80F),
                  c.tile_red);
+    desc.add_box(QVector3D(0.0F, canopy_y + 0.05F, 0.0F),
+                 QVector3D(damaged ? 0.48F : 0.56F, 0.03F, damaged ? 0.48F : 0.56F),
+                 c.tile_red,
+                 BuildingStateMask::All,
+                 BuildingLODMask::Full);
   }
 
   if (damaged) {

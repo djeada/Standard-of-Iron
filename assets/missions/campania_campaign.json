@@ -17,72 +17,40 @@
       {
         "type": "marketplace",
         "position": {
-          "x": 255.88,
-          "z": 246.57
+          "x": 322,
+          "z": 238
         },
         "max_population": 220
       },
       {
         "type": "home",
         "position": {
-          "x": 234.94,
-          "z": 258.2
+          "x": 301,
+          "z": 250
         },
         "max_population": 220
       },
       {
         "type": "home",
         "position": {
-          "x": 276.81,
-          "z": 258.2
+          "x": 343,
+          "z": 250
         },
         "max_population": 220
       },
       {
         "type": "home",
         "position": {
-          "x": 234.94,
-          "z": 279.14
+          "x": 301,
+          "z": 271
         },
         "max_population": 220
       },
       {
         "type": "home",
         "position": {
-          "x": 276.81,
-          "z": 279.14
-        },
-        "max_population": 220
-      },
-      {
-        "type": "defense_tower",
-        "position": {
-          "x": 218.66,
-          "z": 218.66
-        },
-        "max_population": 220
-      },
-      {
-        "type": "defense_tower",
-        "position": {
-          "x": 293.1,
-          "z": 218.66
-        },
-        "max_population": 220
-      },
-      {
-        "type": "defense_tower",
-        "position": {
-          "x": 218.66,
-          "z": 297.75
-        },
-        "max_population": 220
-      },
-      {
-        "type": "defense_tower",
-        "position": {
-          "x": 293.1,
-          "z": 297.75
+          "x": 343,
+          "z": 271
         },
         "max_population": 220
       }
@@ -114,26 +82,26 @@
         {
           "type": "marketplace",
           "position": {
-            "x": 255.88,
-            "z": 472.21
+            "x": 120,
+            "z": 78
           },
-          "max_population": 240
+          "max_population": 160
         },
         {
           "type": "home",
           "position": {
-            "x": 234.94,
-            "z": 476.86
+            "x": 96,
+            "z": 80
           },
-          "max_population": 240
+          "max_population": 160
         },
         {
           "type": "home",
           "position": {
-            "x": 276.81,
-            "z": 476.86
+            "x": 140,
+            "z": 72
           },
-          "max_population": 240
+          "max_population": 160
         }
       ],
       "waves": [
@@ -154,8 +122,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 476.86
+            "x": 128,
+            "z": 96
           }
         },
         {
@@ -179,8 +147,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 476.86
+            "x": 128,
+            "z": 96
           }
         },
         {
@@ -204,8 +172,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 476.86
+            "x": 128,
+            "z": 96
           }
         }
       ],
@@ -229,26 +197,26 @@
         {
           "type": "marketplace",
           "position": {
-            "x": 255.88,
-            "z": 39.54
+            "x": 392,
+            "z": 546
           },
-          "max_population": 220
+          "max_population": 160
         },
         {
           "type": "home",
           "position": {
-            "x": 234.94,
-            "z": 34.89
+            "x": 372,
+            "z": 548
           },
-          "max_population": 220
+          "max_population": 160
         },
         {
           "type": "home",
           "position": {
-            "x": 276.81,
-            "z": 34.89
+            "x": 412,
+            "z": 548
           },
-          "max_population": 220
+          "max_population": 160
         }
       ],
       "waves": [
@@ -269,8 +237,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 34.89
+            "x": 392,
+            "z": 500
           }
         },
         {
@@ -294,8 +262,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 34.89
+            "x": 392,
+            "z": 500
           }
         },
         {
@@ -319,8 +287,8 @@
             }
           ],
           "entry_point": {
-            "x": 255.88,
-            "z": 34.89
+            "x": 392,
+            "z": 500
           }
         }
       ],
@@ -344,26 +312,25 @@
         {
           "type": "home",
           "position": {
-            "x": 581.54,
-            "z": 241.92
+            "x": 582,
+            "z": 284
           },
-          "max_population": 200
+          "max_population": 160
         },
         {
           "type": "home",
           "position": {
-            "x": 581.54,
-            "z": 279.14
+            "x": 582,
+            "z": 318
           },
-          "max_population": 200
+          "max_population": 160
         },
         {
           "type": "defense_tower",
           "position": {
-            "x": 572.24,
-            "z": 260.53
-          },
-          "max_population": 200
+            "x": 552,
+            "z": 300
+          }
         }
       ],
       "waves": [
@@ -380,8 +347,8 @@
             }
           ],
           "entry_point": {
-            "x": 600.15,
-            "z": 260.53
+            "x": 600,
+            "z": 300
           }
         },
         {
@@ -401,8 +368,8 @@
             }
           ],
           "entry_point": {
-            "x": 600.15,
-            "z": 260.53
+            "x": 600,
+            "z": 300
           }
         },
         {
@@ -422,8 +389,8 @@
             }
           ],
           "entry_point": {
-            "x": 600.15,
-            "z": 260.53
+            "x": 600,
+            "z": 300
           }
         }
       ],

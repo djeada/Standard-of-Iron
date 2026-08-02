@@ -53,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 500.94,
-            "z": 218.9
+            "x": 556,
+            "z": 372
           }
         },
         {
@@ -70,8 +70,8 @@
             }
           ],
           "entry_point": {
-            "x": 425.8,
-            "z": 109.45
+            "x": 520,
+            "z": 420
           }
         }
       ],
@@ -106,8 +106,8 @@
             }
           ],
           "entry_point": {
-            "x": 706.33,
-            "z": 131.34
+            "x": 700,
+            "z": 232
           }
         },
         {
@@ -127,8 +127,8 @@
             }
           ],
           "entry_point": {
-            "x": 706.33,
-            "z": 131.34
+            "x": 676,
+            "z": 252
           }
         }
       ],
@@ -171,8 +171,8 @@
             }
           ],
           "entry_point": {
-            "x": 716.34,
-            "z": 576.45
+            "x": 548,
+            "z": 596
           }
         }
       ],
@@ -207,8 +207,8 @@
             }
           ],
           "entry_point": {
-            "x": 596.12,
-            "z": 153.23
+            "x": 448,
+            "z": 216
           }
         },
         {
@@ -224,8 +224,8 @@
             }
           ],
           "entry_point": {
-            "x": 596.12,
-            "z": 153.23
+            "x": 472,
+            "z": 240
           }
         }
       ],
@@ -253,7 +253,7 @@
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls \u2014 and the wings fold inward."
+      "description": "Your command falls — and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -261,7 +261,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls \u2014 and every line collapses behind him."
+      "description": "The commander falls — and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -299,7 +299,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Iron bells answer beneath the western flank. The Sepulcher is advancing on Carthage as well as Rome."
+          "text": "Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome."
         }
       ]
     },
@@ -311,7 +311,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Numidian cavalry is entering from the southeastern flank."
+          "text": "Masinissa's Numidian horse is entering from the north-eastern road."
         }
       ]
     },
@@ -335,7 +335,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Rear guard deployment detected in the north. This is the final phase."
+          "text": "Rear guard deployment detected across the southern wadi. This is the final phase."
         }
       ]
     }

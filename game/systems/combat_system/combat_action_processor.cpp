@@ -294,6 +294,29 @@ void process_authored_combat_action(
   }
   auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
       action->combat_action_id);
+
+  // A light flinch never takes a swing away from the player; anything heavier
+  // does, and does it in the simulation so the animation can honestly show it.
+  if (auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+      commander != nullptr && commander->fpv_controlled && action->action_running) {
+    auto const* stagger = entity.get_component<Engine::Core::StaggerComponent>();
+    if (stagger != nullptr && stagger->tier != Engine::Core::StaggerTier::LightFlinch) {
+      action->action_running = false;
+      action->action_completed = true;
+      action->action_active = false;
+      action->weapon_trace_active = false;
+      action->cancel_window_active = false;
+      action->phase = Engine::Core::RpgCommanderActionPhase::None;
+      if (presentation_state != nullptr) {
+        presentation_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+        presentation_state->state_time = 0.0F;
+        presentation_state->state_duration = 0.0F;
+        presentation_state->input_buffered = false;
+      }
+      return;
+    }
+  }
+
   if (is_rts_attack_action(action_id)) {
     auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
     auto const* target = entity.get_component<Engine::Core::AttackTargetComponent>();

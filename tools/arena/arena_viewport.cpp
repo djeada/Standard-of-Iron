@@ -98,6 +98,7 @@ constexpr int k_all_owners_filter = 0;
 constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
+constexpr float k_default_floor_extent = 18.0F;
 constexpr int k_selection_drag_threshold = 6;
 constexpr int k_interactive_frame_interval_ms = 8;
 
@@ -1463,20 +1464,31 @@ void ArenaViewport::regenerate_terrain() {
 
   float const arena_floor_height =
       std::min(safe_scale * 0.18F, std::max(0.0F, max_height * 0.25F));
-  constexpr float k_arena_half_width = 18.0F;
-  constexpr float k_arena_half_depth = 18.0F;
+  float const arena_half_extent =
+      std::clamp(m_arena_floor_half_extent, 4.0F, half_width - 2.0F);
+  // Ease the flat floor into the surrounding noise instead of stepping out of
+  // it. A hard edge turns the mountains into a wall standing right on the
+  // touchline, which a camera at eye level inside the field cannot avoid.
+  float const taper = std::min(12.0F, half_width - arena_half_extent);
   for (int z = 0; z < k_terrain_height; ++z) {
     for (int x = 0; x < k_terrain_width; ++x) {
       float const world_x = (static_cast<float>(x) - half_width) * k_terrain_tile_size;
       float const world_z = (static_cast<float>(z) - half_height) * k_terrain_tile_size;
-      if (std::abs(world_x) > k_arena_half_width ||
-          std::abs(world_z) > k_arena_half_depth) {
+      float const edge = std::max(std::abs(world_x), std::abs(world_z));
+      if (edge > arena_half_extent + taper) {
         continue;
       }
 
+      float blend = 0.0F;
+      if (taper > 0.0F && edge > arena_half_extent) {
+        blend = std::clamp((edge - arena_half_extent) / taper, 0.0F, 1.0F);
+        blend = blend * blend * (3.0F - (2.0F * blend));
+      }
       auto const index = static_cast<size_t>(z * k_terrain_width + x);
-      heights[index] = arena_floor_height;
-      terrain_types[index] = Game::Map::TerrainType::Flat;
+      heights[index] = std::lerp(arena_floor_height, heights[index], blend);
+      if (blend < 0.5F) {
+        terrain_types[index] = Game::Map::TerrainType::Flat;
+      }
     }
   }
 
@@ -1612,6 +1624,11 @@ void ArenaViewport::set_environment_time(float hour) {
   }
   emit lighting_changed(lighting_summary());
   update();
+}
+
+void ArenaViewport::set_environment_hour_override(float hour) {
+  m_environment_hour_override = Game::Map::normalize_hour(hour);
+  set_environment_time(*m_environment_hour_override);
 }
 
 void ArenaViewport::set_lighting_profile(const QString& profile) {
@@ -2346,12 +2363,14 @@ void ArenaViewport::reset_arena() {
   clear_units();
   const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
                                   !m_arena_bridges.empty() || !m_arena_roads.empty() ||
-                                  !m_arena_elevation_patches.empty();
+                                  !m_arena_elevation_patches.empty() ||
+                                  m_arena_floor_half_extent != k_default_floor_extent;
   m_arena_rivers.clear();
   m_arena_lakes.clear();
   m_arena_bridges.clear();
   m_arena_roads.clear();
   m_arena_elevation_patches.clear();
+  m_arena_floor_half_extent = k_default_floor_extent;
   clear_world_props();
   if (had_custom_terrain && m_world_props.empty()) {
     reconfigure_terrain_from_state();
@@ -3016,8 +3035,12 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   Render::GraphicsSettings::instance().set_quality(definition->graphics_quality);
   m_environment_definition = definition->environment;
   m_environment_hour = definition->environment.start_time;
+  if (m_environment_hour_override.has_value()) {
+    m_environment_hour = *m_environment_hour_override;
+    m_environment_definition.start_time = m_environment_hour;
+  }
   m_lighting_profile = definition->environment.lighting_profile;
-  m_environment_clock.reset(definition->environment);
+  m_environment_clock.reset(m_environment_definition);
   m_rain_enabled = definition->weather.rain > 0.0F ||
                    definition->weather.storm > 0.0F || definition->weather.snow > 0.0F;
   m_rain_intensity = std::max(
@@ -3038,8 +3061,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_arena_bridges = definition->bridges;
   m_arena_roads = definition->roads;
   m_arena_elevation_patches = definition->elevation_patches;
+  m_arena_floor_half_extent = definition->arena_floor_half_extent;
   if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
-      !m_arena_roads.empty() || !m_arena_elevation_patches.empty()) {
+      !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
+      m_arena_floor_half_extent != k_default_floor_extent) {
     reconfigure_terrain_from_state();
   }
   auto& owners = Game::Systems::OwnerRegistry::instance();
@@ -3157,6 +3182,16 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
            entity_id == m_rpg_commander_id &&
            m_rpg_commander_controller->primary_action(
                *m_world, entity_id, k_local_owner_id);
+  };
+  host.set_rpg_attack_held = [this](Engine::Core::EntityID entity_id, bool held) {
+    if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
+      return;
+    }
+    if (held) {
+      m_rpg_commander_controller->primary_action_down();
+    } else {
+      m_rpg_commander_controller->primary_action_up();
+    }
   };
   host.set_rpg_guard = [this](Engine::Core::EntityID entity_id, bool enabled) {
     if (m_world == nullptr || m_rpg_commander_controller == nullptr ||

@@ -870,10 +870,27 @@ void rotate_elephant_subtree(std::span<QMatrix4x4> palette,
   }
 }
 
-auto sample_elephant_locomotion(SourceAsset const& asset,
-                                float phase,
-                                bool fast,
-                                std::span<QMatrix4x4> out) noexcept -> bool {
+// Synthesise a walk from the bind pose by swinging the leg subtrees.
+//
+// The production rig ships no locomotion clip, so the gait is built here.
+// Two things keep it from tearing the animal apart, and both were learned the
+// hard way:
+//
+//   * The hip sits inside the barrel, so a big swing carries the top of the
+//     thigh out through the flank and leaves a hole. Opposite legs are half a
+//     cycle apart, so whatever the amplitude is, the two front legs end up
+//     twice that far apart -- which is how a 25 degree swing put the elephant
+//     into the splits. An elephant's real walk is stiff and shallow; keep it
+//     that way.
+//   * The shin has to counter-rotate against the thigh. Rotating both the same
+//     way compounds at the foot and turns the leg into a straight stilt raking
+//     out from under the body.
+constexpr float k_elephant_shin_counter_rotation = 0.55F;
+
+auto synthesise_elephant_locomotion(SourceAsset const& asset,
+                                    float phase,
+                                    bool fast,
+                                    std::span<QMatrix4x4> out) noexcept -> bool {
   if (!asset.status.loaded || out.size() < asset.bind_palette.size()) {
     return false;
   }
@@ -881,15 +898,21 @@ auto sample_elephant_locomotion(SourceAsset const& asset,
   constexpr std::array<std::size_t, 4> upper{{9U, 12U, 15U, 18U}};
   constexpr std::array<std::size_t, 4> lower{{10U, 13U, 16U, 19U}};
 
+  // Lateral-sequence walk: rear left, front left, rear right, front right.
   constexpr std::array<float, 4> offset{{0.25F, 0.75F, 0.0F, 0.50F}};
-  float const stride_degrees = fast ? 25.0F : 16.0F;
-  float const knee_degrees = fast ? 24.0F : 15.0F;
+  float const stride_degrees = fast ? 13.0F : 10.5F;
+  float const knee_degrees = fast ? 10.0F : 8.0F;
   float const two_pi = 6.2831853071795864769F;
   for (std::size_t leg = 0U; leg < upper.size(); ++leg) {
     float const wave = std::sin((phase + offset[leg]) * two_pi);
-    rotate_elephant_subtree(out, asset.bone_defs, upper[leg], wave * stride_degrees);
-    rotate_elephant_subtree(
-        out, asset.bone_defs, lower[leg], std::max(wave, 0.0F) * knee_degrees);
+    float const thigh = wave * stride_degrees;
+    // Fold the shin back under the body by most of the thigh's swing, then add
+    // the lift that carries the foot forward through the swing half of the
+    // cycle.
+    float const shin = (-thigh * k_elephant_shin_counter_rotation) +
+                       (std::max(wave, 0.0F) * knee_degrees);
+    rotate_elephant_subtree(out, asset.bone_defs, upper[leg], thigh);
+    rotate_elephant_subtree(out, asset.bone_defs, lower[leg], shin);
   }
   float const bob = std::sin(phase * two_pi * 2.0F) * (fast ? 0.0225F : 0.0125F);
   float const sway = std::sin(phase * two_pi) * (fast ? 1.8F : 1.0F);
@@ -905,6 +928,20 @@ auto sample_elephant_locomotion(SourceAsset const& asset,
   rotate_elephant_subtree(
       out, asset.bone_defs, 4U, std::sin((phase + 0.18F) * two_pi) * 7.0F);
   return true;
+}
+
+// The elephant asset carries Angry, Eating, GettingUp, Idle and Sitting, and
+// no locomotion. Take an authored clip the moment one is added; synthesise
+// until then.
+auto sample_elephant_locomotion(SourceAsset const& asset,
+                                float phase,
+                                bool fast,
+                                std::span<QMatrix4x4> out) noexcept -> bool {
+  const std::string_view authored = fast ? "Run" : "Walk";
+  if (sample_source_clip(asset, k_elephant_config, authored, phase, out)) {
+    return true;
+  }
+  return synthesise_elephant_locomotion(asset, phase, fast, out);
 }
 
 } // namespace

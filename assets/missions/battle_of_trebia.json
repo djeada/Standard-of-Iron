@@ -53,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 139.57,
-            "z": 24.84
+            "x": 256,
+            "z": 262
           }
         },
         {
@@ -74,8 +74,8 @@
             }
           ],
           "entry_point": {
-            "x": 162.83,
-            "z": 37.26
+            "x": 481,
+            "z": 268
           }
         },
         {
@@ -95,8 +95,8 @@
             }
           ],
           "entry_point": {
-            "x": 139.57,
-            "z": 24.84
+            "x": 256,
+            "z": 262
           }
         }
       ],
@@ -131,8 +131,8 @@
             }
           ],
           "entry_point": {
-            "x": 581.54,
-            "z": 86.95
+            "x": 118,
+            "z": 100
           }
         },
         {
@@ -152,8 +152,8 @@
             }
           ],
           "entry_point": {
-            "x": 581.54,
-            "z": 86.95
+            "x": 118,
+            "z": 100
           }
         },
         {
@@ -169,8 +169,8 @@
             }
           ],
           "entry_point": {
-            "x": 581.54,
-            "z": 86.95
+            "x": 118,
+            "z": 100
           }
         }
       ],
@@ -196,7 +196,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls \u2014 and every line collapses behind him."
+      "description": "The commander falls — and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",

@@ -41,6 +41,8 @@ struct CombatVisualRawInputs {
   bool attack_target_alive{false};
   Engine::Core::CombatAttackFamily attack_family{
       Engine::Core::CombatAttackFamily::None};
+  float authored_action_phase{0.0F};
+  bool has_authored_action_phase{false};
 };
 
 using SoldierCombatLaneState = Animation::SoldierCombatLaneState;

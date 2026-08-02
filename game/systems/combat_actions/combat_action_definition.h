@@ -94,4 +94,16 @@ all_combat_action_definitions() -> std::span<const CombatActionDefinition>;
 [[nodiscard]] auto
 find_combat_action_definition(CombatActionId id) -> const CombatActionDefinition*;
 
+[[nodiscard]] auto
+action_event_normalized_time(const CombatActionDefinition& definition,
+                             CombatActionEventType type,
+                             float fallback) -> float;
+
+// Seconds the presentation phase machine should spend in `state` so that it
+// stays frame-accurate with the authored action timeline. Returns 0 when the
+// definition does not cover the state.
+[[nodiscard]] auto
+authored_phase_duration(const CombatActionDefinition& definition,
+                        Engine::Core::CombatAnimationState state) -> float;
+
 } // namespace Game::Systems::CombatActions

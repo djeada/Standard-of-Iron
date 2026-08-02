@@ -395,9 +395,22 @@ Four behind-head scenes cover commander (FPV) control:
   reach the facade itself. `RpgApproachWithin` fails when he cannot close to the
   declared distance of the structure.
 
-Both scenes are driven by the `RpgMove` scenario command, which sets the
-behind-head controller's own movement axes (and optionally its view yaw) instead
-of issuing an RTS order, so they exercise the same input path a player uses.
+- `rpg_obstacle_slide` walks the commander diagonally into a house facade and
+  keeps the input pushed. Direct control has to behave like a body against a
+  wall, so `RpgApproachWithin` proves he really is pressed against the facade and
+  `RpgTravelObserved` proves he keeps covering ground along it instead of
+  stopping dead in front of it.
+- `rpg_combo_cadence` holds the attack input against a formation. Every swing has
+  to chain out of the previous one inside its cancel window, so
+  `RpgSwingCadenceWithin` fails both a swing count that is too low and any gap
+  between swings that is too long. `RpgStrikeAnimationMatched` additionally fails
+  the run if the renderer ever drops the swing — for a flinch, or for anything
+  else — while the simulation is still committed to it.
+
+These scenes are driven by the `RpgMove` and `RpgAttackHold` scenario commands,
+which set the behind-head controller's own movement axes, view yaw, and attack
+button instead of issuing RTS orders, so they exercise the same input path a
+player uses.
 
 ```sh
 build/bin/arena_app --batch --scenario rpg_escort_crowd \
