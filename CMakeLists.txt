@@ -401,6 +401,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RpgTargetBar.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgDamageNumbers.qml
+            ui/qml/FormationPanel.qml
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml
