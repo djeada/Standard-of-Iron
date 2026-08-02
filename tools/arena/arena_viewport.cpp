@@ -3164,6 +3164,23 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_rpg_commander_controller->release_guard(*m_world, entity_id, k_local_owner_id);
     }
   };
+  host.set_rpg_move_input =
+      [this](Engine::Core::EntityID entity_id, const QVector3D& axes, bool run) {
+        if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
+          return;
+        }
+        auto& input = m_rpg_commander_controller->input();
+        input.right = axes.x() > 0.5F;
+        input.left = axes.x() < -0.5F;
+        input.forward = axes.z() > 0.5F;
+        input.backward = axes.z() < -0.5F;
+        input.run = run;
+      };
+  host.set_rpg_view_yaw = [this](Engine::Core::EntityID entity_id, float yaw_degrees) {
+    if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
+      m_rpg_commander_controller->set_view_yaw(yaw_degrees);
+    }
+  };
   host.request_rpg_dodge = [this](Engine::Core::EntityID entity_id,
                                   const QVector3D& world_direction) {
     if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {

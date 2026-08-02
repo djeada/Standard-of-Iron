@@ -23,6 +23,7 @@
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/systems/stamina_system.h"
 #include "scene/camera.h"
 
 namespace {
@@ -114,17 +115,94 @@ auto has_clear_building_los(const QVector3D& start,
   return first_building_intersection_fraction(start, end, ignore_entity_id) >= 1.0F;
 }
 
+constexpr float k_commander_body_radius = 0.34F;
+
+auto structure_blocks_commander_body(float x, float z) -> bool {
+  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto blocked_by = [x, z](const Game::Systems::BuildingFootprint& footprint) {
+    if (!footprint.blocks_navigation) {
+      return false;
+    }
+    float const half_width = footprint.width * 0.5F;
+    float const half_depth = footprint.depth * 0.5F;
+    float const closest_x =
+        std::clamp(x, footprint.center_x - half_width, footprint.center_x + half_width);
+    float const closest_z =
+        std::clamp(z, footprint.center_z - half_depth, footprint.center_z + half_depth);
+    float const dx = x - closest_x;
+    float const dz = z - closest_z;
+    return ((dx * dx) + (dz * dz)) < k_commander_body_radius * k_commander_body_radius;
+  };
+  for (auto const& building : registry.get_all_buildings()) {
+    if (blocked_by(building)) {
+      return true;
+    }
+  }
+  for (auto const& obstacle : registry.authored_obstacles()) {
+    if (blocked_by(obstacle)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
+                                   int grid_x,
+                                   int grid_z) -> bool {
+
+  constexpr float k_cell_slack = 1.0F;
+  float const cell_x = static_cast<float>(grid_x) + pathfinder.get_grid_offset_x();
+  float const cell_z = static_cast<float>(grid_z) + pathfinder.get_grid_offset_z();
+  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto covers = [cell_x, cell_z](const Game::Systems::BuildingFootprint& footprint) {
+    if (!footprint.blocks_navigation) {
+      return false;
+    }
+    float const half_width =
+        (footprint.width * 0.5F) + footprint.grid_padding + k_cell_slack;
+    float const half_depth =
+        (footprint.depth * 0.5F) + footprint.grid_padding + k_cell_slack;
+    return std::abs(cell_x - footprint.center_x) <= half_width &&
+           std::abs(cell_z - footprint.center_z) <= half_depth;
+  };
+  for (auto const& building : registry.get_all_buildings()) {
+    if (covers(building)) {
+      return true;
+    }
+  }
+  for (auto const& obstacle : registry.authored_obstacles()) {
+    if (covers(obstacle)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto is_walkable_at(float x, float z) -> bool {
   if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
     const auto grid = Game::Systems::CommandService::world_to_grid(x, z);
-    return pathfinder->is_walkable(grid.x, grid.y);
+    const auto cell = pathfinder->cell_value(grid.x, grid.y);
+
+    if (cell != Game::Systems::Pathfinding::CellValue::Walkable) {
+      if (cell != Game::Systems::Pathfinding::CellValue::Blocked) {
+        return false;
+      }
+      if (!pathfinder->is_terrain_walkable(grid.x, grid.y)) {
+        return false;
+      }
+      if (!structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
+        return false;
+      }
+    }
+    return !structure_blocks_commander_body(x, z);
   }
   auto& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized()) {
-    return terrain.is_walkable(static_cast<int>(std::round(x)),
-                               static_cast<int>(std::round(z)));
+  if (terrain.is_initialized() &&
+      !terrain.is_walkable(static_cast<int>(std::round(x)),
+                           static_cast<int>(std::round(z)))) {
+    return false;
   }
-  return true;
+  return !structure_blocks_commander_body(x, z);
 }
 
 auto resolve_reachable_ground_position(const QVector3D& start,
@@ -151,8 +229,6 @@ auto resolve_reachable_ground_position(const QVector3D& start,
   }
   return best;
 }
-
-constexpr float k_commander_body_radius = 0.34F;
 
 constexpr float k_body_separation_scan_range = 3.0F;
 
@@ -1487,10 +1563,9 @@ auto CommanderControlController::update(Engine::Core::World& world,
       move.normalize();
       float speed = std::max(0.1F, unit->speed);
 
-      auto const* stamina = commander->get_component<Engine::Core::StaminaComponent>();
-      bool const running =
-          m_input.run && (stamina == nullptr || stamina->is_running ||
-                          (!stamina->is_running && stamina->can_start_running()));
+      auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
+      bool const running = m_input.run && stamina != nullptr &&
+                           (stamina->is_running || stamina->can_start_running());
       if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
       }

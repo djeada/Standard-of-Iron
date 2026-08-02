@@ -592,6 +592,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_formation")));
     s.expectations.push_back(
         expectation(Expect::RpgDamageContactObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
     s.expectations.push_back(
         expectation(Expect::RpgHealthReduced, QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
@@ -777,6 +779,127 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_line")});
     s.expectations.push_back(
         expectation(Expect::GroupIsRendered, QStringLiteral("escort_flank")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_locomotion_id),
+        QStringLiteral("RPG Locomotion"),
+        QStringLiteral(
+            "Behind-head commander walks forward, breaks into a run, backs up, "
+            "strafes, then halts on open ground without ever turning. The rendered "
+            "locomotion has to follow the simulated one frame for frame, with no "
+            "root teleporting and no idle pose while the body is still travelling."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -6.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    s.groups = {commander};
+
+    auto move = [](float time, QVector3D axes, bool run) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = run ? 1 : 0;
+      return step;
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, false),
+        move(2.20F, {0.0F, 0.0F, 1.0F}, true),
+
+        move(4.40F, {0.0F, 0.0F, -1.0F}, false),
+        move(6.20F, {1.0F, 0.0F, 0.0F}, false),
+        move(8.00F, {0.0F, 0.0F, 0.0F}, false),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    s.expectations.push_back(
+        expectation(Expect::RpgWalkObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::RpgRunObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_close_quarters_id),
+        QStringLiteral("RPG Close Quarters"),
+        QStringLiteral(
+            "Behind-head commander walks straight into a house wall, backs off, and "
+            "closes on it again from the flank. The RTS navigation grid keeps whole "
+            "formations a pad away from every structure; a person-sized commander "
+            "has to reach the facade itself, so this is the close-quarters "
+            "clearance contract."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -5.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto home = building(QStringLiteral("close_home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {0.0F, 0.0F, 0.0F});
+    home.health_override = home.max_health_override = 4000;
+    s.groups = {commander, home};
+
+    auto move =
+        [](float time, QVector3D axes, bool run, std::optional<float> yaw = {}) {
+          auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+          step.destination = axes;
+          step.value = run ? 1 : 0;
+          step.rpg_view_yaw_degrees = yaw;
+          return step;
+        };
+    s.steps = {
+
+        move(0.30F, {0.0F, 0.0F, 1.0F}, false, 0.0F),
+        move(2.40F, {0.0F, 0.0F, 0.0F}, false),
+
+        move(2.70F, {0.0F, 0.0F, 1.0F}, false, 180.0F),
+        move(4.20F, {0.0F, 0.0F, 0.0F}, false),
+
+        move(4.50F, {0.0F, 0.0F, 1.0F}, false, 90.0F),
+        move(6.30F, {0.0F, 0.0F, 0.0F}, false),
+
+        move(6.60F, {0.0F, 0.0F, 1.0F}, false, 0.0F),
+        move(8.60F, {0.0F, 0.0F, 0.0F}, false),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    s.expectations.push_back(expectation(Expect::RpgApproachWithin,
+                                         QStringLiteral("rpg_commander"),
+                                         QStringLiteral("close_home"),
+                                         0.0F,
+                                         0.0F,
+                                         1.90F));
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

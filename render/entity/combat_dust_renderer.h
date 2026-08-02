@@ -52,6 +52,8 @@ struct TelegraphEntry {
   float last_pos_x{0.0F};
   float last_pos_z{0.0F};
   float base_y{0.0F};
+  std::uint16_t soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   Engine::Core::CombatAnimationState prev_state{
       Engine::Core::CombatAnimationState::Idle};
 };

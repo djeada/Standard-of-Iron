@@ -33,8 +33,10 @@ struct HumanoidLocomotionPersistentState {
   float filtered_speed{0.0F};
   float filtered_acceleration{0.0F};
   float filtered_turn{0.0F};
+  float filtered_travel_alignment{1.0F};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
+  bool reverse_gait{false};
   HumanoidMotionState state{HumanoidMotionState::Idle};
 };
 
@@ -64,6 +66,9 @@ struct HumanoidLocomotionSample {
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
   float turn_amount{0.0F};
+
+  float travel_alignment{1.0F};
+  bool reverse_gait{false};
   float acceleration{0.0F};
   bool write_persistent_state{false};
   HumanoidLocomotionPersistentState persistent{};
@@ -153,6 +158,8 @@ struct HumanoidLocomotionPoseInputs {
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
   float turn_amount{0.0F};
+
+  float travel_alignment{1.0F};
   float acceleration{0.0F};
   float walk_speed_multiplier{1.0F};
   float stance_width{1.0F};

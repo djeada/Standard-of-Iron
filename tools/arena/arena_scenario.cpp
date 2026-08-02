@@ -118,6 +118,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgGuard");
   case ScenarioCommandKind::RpgDodge:
     return QStringLiteral("RpgDodge");
+  case ScenarioCommandKind::RpgMove:
+    return QStringLiteral("RpgMove");
   }
   return QStringLiteral("Unknown");
 }
@@ -252,6 +254,16 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("RpgHealthReduced");
   case ArenaExpectationKind::RpgHealthUnchanged:
     return QStringLiteral("RpgHealthUnchanged");
+  case ArenaExpectationKind::RpgWalkObserved:
+    return QStringLiteral("RpgWalkObserved");
+  case ArenaExpectationKind::RpgRunObserved:
+    return QStringLiteral("RpgRunObserved");
+  case ArenaExpectationKind::RpgLocomotionAnimationMatched:
+    return QStringLiteral("RpgLocomotionAnimationMatched");
+  case ArenaExpectationKind::RpgStrikeAnimationMatched:
+    return QStringLiteral("RpgStrikeAnimationMatched");
+  case ArenaExpectationKind::RpgApproachWithin:
+    return QStringLiteral("RpgApproachWithin");
   case ArenaExpectationKind::UndeadZoneDormantBefore:
     return QStringLiteral("UndeadZoneDormantBefore");
   case ArenaExpectationKind::UndeadZoneAwakened:
@@ -554,6 +566,7 @@ struct ArenaScenarioRunner::Impl {
     bool rpg_dodge_invincible{false};
     Engine::Core::EntityID rpg_aim_target_id{0};
     int rpg_aim_soldier_slot{-1};
+    int rpg_action_phase{0};
   };
 
   struct TraceSoldier {
@@ -654,6 +667,12 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> rpg_dodge_window_seen;
   QHash<QString, int> initial_rpg_health_by_group;
   QHash<QString, int> minimum_rpg_health_by_group;
+  QHash<QString, bool> rpg_walk_seen;
+  QHash<QString, bool> rpg_run_seen;
+  QHash<QString, QString> rpg_locomotion_mismatch;
+  QHash<QString, QString> rpg_strike_mismatch;
+  QHash<QString, float> rpg_strike_mismatch_since;
+  QHash<QString, float> minimum_group_pair_distance;
   QHash<int, int> completed_construction_by_owner;
   QHash<int, int> completed_harvest_by_owner;
   QSet<Engine::Core::EntityID> latched_builder_completions;
@@ -1160,6 +1179,20 @@ struct ArenaScenarioRunner::Impl {
         host.request_rpg_dodge(entity_id, step.destination);
       }
       break;
+    case ScenarioCommandKind::RpgMove:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.set_rpg_move_input) {
+          add_issue(QStringLiteral("rpg_move_unavailable"),
+                    QStringLiteral("%1 has no RPG move host callback").arg(step.group),
+                    entity_id);
+          continue;
+        }
+        if (step.rpg_view_yaw_degrees.has_value() && host.set_rpg_view_yaw) {
+          host.set_rpg_view_yaw(entity_id, *step.rpg_view_yaw_degrees);
+        }
+        host.set_rpg_move_input(entity_id, step.destination, step.value != 0);
+      }
+      break;
     }
   }
 
@@ -1565,6 +1598,11 @@ struct ArenaScenarioRunner::Impl {
              return -1;
            }
            return static_cast<int>(targets->aim_candidate_soldier_slot);
+         }(),
+         [&]() {
+           auto const* action =
+               entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+           return action != nullptr ? static_cast<int>(action->phase) : 0;
          }()});
 
     auto& previous = entity_states[entity_id];
@@ -1820,6 +1858,119 @@ struct ArenaScenarioRunner::Impl {
         observation.sampled = true;
         observation.midpoint_distance = midpoint_distance;
         observation.lateral_offset = lateral;
+      }
+    }
+  }
+
+  void observe_rpg_locomotion_presentation(const TraceFrame& frame) {
+    if (scenario.rpg_commander_group.isEmpty()) {
+      return;
+    }
+    const QString& group = scenario.rpg_commander_group;
+    for (auto const& unit : frame.units) {
+      if (unit.group != group) {
+        continue;
+      }
+      if (unit.motion == QStringLiteral("walk")) {
+        rpg_walk_seen[group] = true;
+      } else if (unit.motion == QStringLiteral("run")) {
+        rpg_run_seen[group] = true;
+      }
+      for (auto const& soldier : frame.soldiers) {
+        if (soldier.entity_id != unit.entity_id || soldier.culled) {
+          continue;
+        }
+
+        constexpr float k_strike_sync_grace_seconds = 0.05F;
+        const bool striking =
+            unit.rpg_action_phase ==
+            static_cast<int>(Engine::Core::RpgCommanderActionPhase::Strike);
+        const bool strike_visual = soldier.visual == QStringLiteral("Attack") ||
+                                   soldier.visual == QStringLiteral("HitReaction") ||
+                                   soldier.visual == QStringLiteral("Dying") ||
+                                   soldier.visual == QStringLiteral("Dead");
+        if (!striking || strike_visual) {
+          rpg_strike_mismatch_since.remove(group);
+        } else {
+          if (!rpg_strike_mismatch_since.contains(group)) {
+            rpg_strike_mismatch_since[group] = frame.time_seconds;
+          }
+          float const lagged =
+              frame.time_seconds - rpg_strike_mismatch_since.value(group);
+          if (lagged > k_strike_sync_grace_seconds &&
+              !rpg_strike_mismatch.contains(group)) {
+            rpg_strike_mismatch[group] =
+                QStringLiteral("simulation resolved a strike for %1 s while the "
+                               "renderer still showed %2 at %3 s")
+                    .arg(lagged, 0, 'f', 3)
+                    .arg(soldier.visual)
+                    .arg(frame.time_seconds, 0, 'f', 2);
+          }
+        }
+
+        const bool visual_moving = soldier.visual == QStringLiteral("Walk") ||
+                                   soldier.visual == QStringLiteral("Run");
+        const bool visual_running = soldier.visual == QStringLiteral("Run");
+        const bool combat_visual = soldier.visual == QStringLiteral("Attack") ||
+                                   soldier.visual == QStringLiteral("HitReaction") ||
+                                   soldier.visual == QStringLiteral("Dying") ||
+                                   soldier.visual == QStringLiteral("Dead");
+        if (combat_visual || rpg_locomotion_mismatch.contains(group)) {
+          continue;
+        }
+        if (unit.motion == QStringLiteral("run") && !visual_running) {
+          rpg_locomotion_mismatch[group] =
+              QStringLiteral(
+                  "simulation reported run at %1 s while the renderer showed "
+                  "%2")
+                  .arg(frame.time_seconds, 0, 'f', 2)
+                  .arg(soldier.visual);
+        } else if (unit.motion == QStringLiteral("walk") && !visual_moving) {
+          rpg_locomotion_mismatch[group] =
+              QStringLiteral(
+                  "simulation reported walk at %1 s while the renderer showed "
+                  "%2")
+                  .arg(frame.time_seconds, 0, 'f', 2)
+                  .arg(soldier.visual);
+        } else if (unit.motion == QStringLiteral("idle") && visual_moving) {
+          rpg_locomotion_mismatch[group] =
+              QStringLiteral(
+                  "simulation reported idle at %1 s while the renderer showed "
+                  "%2")
+                  .arg(frame.time_seconds, 0, 'f', 2)
+                  .arg(soldier.visual);
+        }
+      }
+    }
+  }
+
+  void observe_group_pair_proximity(const TraceFrame& frame) {
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind != ArenaExpectationKind::RpgApproachWithin) {
+        continue;
+      }
+      float closest = std::numeric_limits<float>::infinity();
+      for (auto const& unit : frame.units) {
+        if (unit.group != expectation.group) {
+          continue;
+        }
+        for (auto const& other : frame.units) {
+          if (other.group != expectation.target_group) {
+            continue;
+          }
+          closest =
+              std::min(closest, horizontal_distance(unit.position, other.position));
+        }
+      }
+      if (!std::isfinite(closest)) {
+        continue;
+      }
+      const QString key =
+          projectile_pair_key(expectation.group, expectation.target_group);
+      auto const existing = minimum_group_pair_distance.constFind(key);
+      if (existing == minimum_group_pair_distance.cend() ||
+          closest < existing.value()) {
+        minimum_group_pair_distance[key] = closest;
       }
     }
   }
@@ -2963,6 +3114,54 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::RpgWalkObserved:
+        if (!rpg_walk_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_walk_not_observed"),
+                    QStringLiteral("%1 never entered a walking locomotion state")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgRunObserved:
+        if (!rpg_run_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("rpg_run_not_observed"),
+                    QStringLiteral("%1 never entered a running locomotion state")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::RpgLocomotionAnimationMatched:
+        if (auto const mismatch = rpg_locomotion_mismatch.constFind(expectation.group);
+            mismatch != rpg_locomotion_mismatch.cend()) {
+          add_issue(QStringLiteral("rpg_locomotion_desynchronized"),
+                    QStringLiteral("%1 %2").arg(expectation.group, mismatch.value()));
+        }
+        break;
+      case ArenaExpectationKind::RpgStrikeAnimationMatched:
+        if (auto const mismatch = rpg_strike_mismatch.constFind(expectation.group);
+            mismatch != rpg_strike_mismatch.cend()) {
+          add_issue(QStringLiteral("rpg_strike_desynchronized"),
+                    QStringLiteral("%1 %2").arg(expectation.group, mismatch.value()));
+        }
+        break;
+      case ArenaExpectationKind::RpgApproachWithin: {
+        float const required =
+            expectation.distance > 0.0F ? expectation.distance : 1.0F;
+        const QString key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        auto const closest = minimum_group_pair_distance.constFind(key);
+        if (closest == minimum_group_pair_distance.cend()) {
+          add_issue(QStringLiteral("rpg_approach_not_sampled"),
+                    QStringLiteral("%1 and %2 were never sampled together")
+                        .arg(expectation.group, expectation.target_group));
+        } else if (closest.value() > required) {
+          add_issue(QStringLiteral("rpg_approach_blocked"),
+                    QStringLiteral("%1 closed to %2 m of %3 but had to reach %4 m")
+                        .arg(expectation.group)
+                        .arg(closest.value(), 0, 'f', 2)
+                        .arg(expectation.target_group)
+                        .arg(required, 0, 'f', 2));
+        }
+        break;
+      }
       case ArenaExpectationKind::UndeadZoneDormantBefore: {
         auto const state = undead_zone_state(expectation.zone_id);
         float const window = std::max(expectation.end_seconds, expectation.threshold);
@@ -3142,6 +3341,8 @@ void ArenaScenarioRunner::observe_rendered_frame(
     }
     m_impl->observe_bridge_centerline_alignment(group.name);
   }
+  m_impl->observe_rpg_locomotion_presentation(frame);
+  m_impl->observe_group_pair_proximity(frame);
   m_impl->trace.push_back(std::move(frame));
 }
 
@@ -3371,7 +3572,8 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("rpg_dodge_invincible"), unit.rpg_dodge_invincible},
           {QStringLiteral("rpg_aim_target_id"),
            static_cast<qint64>(unit.rpg_aim_target_id)},
-          {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot}});
+          {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot},
+          {QStringLiteral("rpg_action_phase"), unit.rpg_action_phase}});
     }
     QJsonArray soldiers;
     for (auto const& soldier : frame.soldiers) {
