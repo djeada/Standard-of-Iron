@@ -13,6 +13,7 @@ Item {
     property bool construction_preview_active: typeof game !== 'undefined' && game.placement.construction_preview_active
     property bool construction_preview_valid: typeof game !== 'undefined' && game.placement.construction_preview_valid
     property var pressed_keys: ({})
+    property var pan_axis: ({})
 
     onConstruction_preview_activeChanged: {
         if (constructionCursor)
@@ -62,12 +63,38 @@ Item {
         return state && state.enabled === true;
     }
 
-    function begin_pan_key(e) {
-        if (!e.isAutoRepeat && !pressed_keys[e.key]) {
-            pressed_keys[e.key] = true;
-            renderArea.key_pan_count += 1;
-            mainWindow.edge_scroll_disabled = true;
+    function input_context() {
+        return is_commander_mode() ? "commander" : "rts";
+    }
+
+    function begin_pan_action(actionId, e) {
+        if (e.isAutoRepeat || pan_axis[actionId])
+            return;
+        pan_axis[actionId] = true;
+        pressed_keys[e.key] = actionId;
+        renderArea.key_pan_count += 1;
+        mainWindow.edge_scroll_disabled = true;
+    }
+
+    function end_pan_action(actionId) {
+        if (!pan_axis[actionId])
+            return;
+        delete pan_axis[actionId];
+        renderArea.key_pan_count = Math.max(0, renderArea.key_pan_count - 1);
+        if (!any_pan_held()) {
+            if (keyPanTimer.running)
+                keyPanTimer.stop();
+            if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
+                mainWindow.edge_scroll_disabled = false;
         }
+    }
+
+    function any_pan_held() {
+        for (var held in pan_axis) {
+            if (pan_axis[held])
+                return true;
+        }
+        return false;
     }
 
     function ensure_pan_timer_running() {
@@ -105,6 +132,7 @@ Item {
 
     function reset_rts_pan_keys() {
         pressed_keys = ({});
+        pan_axis = ({});
         if (keyPanTimer.running)
             keyPanTimer.stop();
         if (typeof renderArea !== 'undefined')
@@ -125,94 +153,188 @@ Item {
         game.placement.set_formation_intent(intent_id);
     }
 
-    function handle_commander_key_pressed(event) {
-        switch (event.key) {
-        case Qt.Key_Escape:
-            if (game_view.is_rally_placement()) {
+    function perform_global_action(actionId, event) {
+        switch (actionId) {
+        case "global.toggle_control_mode":
+            reset_rts_pan_keys();
+            if (game.toggle_commander_control_mode)
+                game.toggle_commander_control_mode();
+            return true;
+        case "global.menu":
+            if (game.placement.is_placing_construction && game.placement.on_construction_cancel)
+                game.placement.on_construction_cancel();
+            else if (game.placement.is_placing_formation && game.placement.on_formation_cancel)
+                game.placement.on_formation_cancel();
+            else if (game_view.is_rally_placement())
                 game_view.cancel_rally_placement();
-            } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
+            else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible)
                 mainWindow.menu_visible = true;
-            }
-            event.accepted = true;
-            return;
-        case Qt.Key_Space:
-            if (game.commander_dodge)
-                game.commander_dodge();
-            event.accepted = true;
-            return;
-        case Qt.Key_Alt:
-        case Qt.Key_AltGr:
-            if (!event.isAutoRepeat && game.commander_jump)
-                game.commander_jump();
-            event.accepted = true;
-            return;
-        case Qt.Key_Tab:
-            if (game.commander_cycle_lock_on)
-                game.commander_cycle_lock_on();
-            event.accepted = true;
-            return;
-        case Qt.Key_1:
-            if (!event.isAutoRepeat && game.commander_vanguard_rush)
-                game.commander_vanguard_rush();
-            event.accepted = true;
-            return;
-        case Qt.Key_2:
-            if (!event.isAutoRepeat && game.commander_second_wind)
-                game.commander_second_wind();
-            event.accepted = true;
-            return;
-        case Qt.Key_3:
-            if (!event.isAutoRepeat && game.commander_trigger_aura)
-                game.commander_trigger_aura();
-            event.accepted = true;
-            return;
-        case Qt.Key_F:
-            if (!event.isAutoRepeat && game.commander_special_action)
-                game.commander_special_action();
-            event.accepted = true;
-            return;
-        case Qt.Key_R:
-            if (!event.isAutoRepeat && game.commander_trigger_rally)
-                game.commander_trigger_rally();
-            event.accepted = true;
-            return;
-        case Qt.Key_C:
-            if (!event.isAutoRepeat && game.commander_toggle_camera_mode)
-                game.commander_toggle_camera_mode();
-            event.accepted = true;
-            return;
-        case Qt.Key_W:
-        case Qt.Key_A:
-        case Qt.Key_S:
-        case Qt.Key_D:
-        case Qt.Key_Q:
-        case Qt.Key_E:
-        case Qt.Key_Shift:
-            if (game.commander_key_down)
-                game.commander_key_down(event.key, event.modifiers);
-            event.accepted = true;
-            return;
+            return true;
+        case "global.quicksave":
+            if (game.quicksave)
+                game.quicksave();
+            return true;
+        case "global.quickload":
+            if (game.saves.has_save_slot && game.saves.has_save_slot("quicksave"))
+                game.load_game_from_slot("quicksave");
+            return true;
         }
+        return false;
     }
 
-    function handle_commander_key_released(event) {
-        switch (event.key) {
-        case Qt.Key_Alt:
-        case Qt.Key_AltGr:
-            event.accepted = true;
-            return;
-        case Qt.Key_W:
-        case Qt.Key_A:
-        case Qt.Key_S:
-        case Qt.Key_D:
-        case Qt.Key_Q:
-        case Qt.Key_E:
-        case Qt.Key_Shift:
-            if (game.commander_key_up)
-                game.commander_key_up(event.key, event.modifiers);
-            event.accepted = true;
-            return;
+    function perform_rts_action(actionId, event) {
+        var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
+        var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
+        var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+        switch (actionId) {
+        case "rts.pause":
+            if (typeof mainWindow === 'undefined')
+                return false;
+            mainWindow.game_paused = !mainWindow.game_paused;
+            game_view.set_paused(mainWindow.game_paused);
+            return true;
+        case "rts.order_stop":
+            if (!game.has_units_selected)
+                return false;
+            if (game.on_stop_command)
+                game.on_stop_command();
+            return true;
+        case "rts.order_attack":
+            if (!game.has_units_selected || !action_enabled("attack"))
+                return false;
+            game.cursor_mode = "attack";
+            return true;
+        case "rts.order_move":
+            if (!game.has_units_selected)
+                return false;
+            game.cursor_mode = "normal";
+            return true;
+        case "rts.order_patrol":
+            if (!game.has_units_selected || !action_enabled("patrol"))
+                return false;
+            game.cursor_mode = "patrol";
+            return true;
+        case "rts.order_guard":
+            if (!game.has_units_selected || !action_enabled("guard"))
+                return false;
+            game.cursor_mode = "guard";
+            return true;
+        case "rts.order_hold":
+            if (!game.has_units_selected || !game.on_hold_command)
+                return false;
+            game.on_hold_command();
+            return true;
+        case "rts.camera_pan_up":
+            begin_pan_action(actionId, event);
+            game.camera_move(0, inputStep);
+            ensure_pan_timer_running();
+            return true;
+        case "rts.camera_pan_down":
+            begin_pan_action(actionId, event);
+            game.camera_move(0, -inputStep);
+            ensure_pan_timer_running();
+            return true;
+        case "rts.camera_pan_left":
+            begin_pan_action(actionId, event);
+            game.camera_move(-inputStep, 0);
+            ensure_pan_timer_running();
+            return true;
+        case "rts.camera_pan_right":
+            begin_pan_action(actionId, event);
+            game.camera_move(inputStep, 0);
+            ensure_pan_timer_running();
+            return true;
+        case "rts.camera_yaw_left":
+            game.camera_yaw(-yawStep);
+            return true;
+        case "rts.camera_yaw_right":
+            game.camera_yaw(yawStep);
+            return true;
+        case "rts.camera_orbit_left":
+            game.camera_orbit_direction(1, shiftHeld);
+            return true;
+        case "rts.camera_orbit_right":
+            game.camera_orbit_direction(-1, shiftHeld);
+            return true;
+        case "rts.commander_rally":
+            if (!action_enabled("rally") || !game.begin_commander_flag_rally)
+                return false;
+            game.begin_commander_flag_rally();
+            return true;
+        case "rts.select_all_troops":
+            if (!game.select_all_troops)
+                return false;
+            game.select_all_troops();
+            return true;
         }
+        return false;
+    }
+
+    function perform_commander_action(actionId, event) {
+        var canonical = InputBindings.canonical_key_for(actionId);
+        if (canonical !== 0 && game.commander_key_down) {
+            switch (actionId) {
+            case "commander.move_forward":
+            case "commander.move_back":
+            case "commander.strafe_left":
+            case "commander.strafe_right":
+            case "commander.turn_left":
+            case "commander.turn_right":
+            case "commander.sprint":
+                pressed_keys[event.key] = actionId;
+                game.commander_key_down(canonical, event.modifiers);
+                return true;
+            }
+        }
+        if (event.isAutoRepeat && actionId !== "commander.dodge")
+            return true;
+        switch (actionId) {
+        case "commander.dodge":
+            if (game.commander_dodge)
+                game.commander_dodge();
+            return true;
+        case "commander.jump":
+            if (game.commander_jump)
+                game.commander_jump();
+            return true;
+        case "commander.cycle_lock_on":
+            if (game.commander_cycle_lock_on)
+                game.commander_cycle_lock_on();
+            return true;
+        case "commander.ability_vanguard_rush":
+            if (game.commander_vanguard_rush)
+                game.commander_vanguard_rush();
+            return true;
+        case "commander.ability_second_wind":
+            if (game.commander_second_wind)
+                game.commander_second_wind();
+            return true;
+        case "commander.ability_aura":
+            if (game.commander_trigger_aura)
+                game.commander_trigger_aura();
+            return true;
+        case "commander.special_action":
+            if (game.commander_special_action)
+                game.commander_special_action();
+            return true;
+        case "commander.rally":
+            if (game.commander_trigger_rally)
+                game.commander_trigger_rally();
+            return true;
+        case "commander.toggle_camera_mode":
+            if (game.commander_toggle_camera_mode)
+                game.commander_toggle_camera_mode();
+            return true;
+        }
+        return false;
+    }
+
+    function dispatch_key_action(actionId, event) {
+        if (actionId.indexOf("global.") === 0)
+            return perform_global_action(actionId, event);
+        if (is_commander_mode())
+            return perform_commander_action(actionId, event);
+        return perform_rts_action(actionId, event);
     }
 
     objectName: "GameView"
@@ -220,167 +342,35 @@ Item {
     Keys.onPressed: function (event) {
         if (typeof game === 'undefined')
             return;
-        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            reset_rts_pan_keys();
-            if (game.toggle_commander_control_mode)
-                game.toggle_commander_control_mode();
-            event.accepted = true;
-            return;
-        }
-        if (is_commander_mode()) {
-            handle_commander_key_pressed(event);
-            return;
-        }
         if (game.placement.is_placing_formation && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
             game_view.select_formation_intent_slot(event.key - Qt.Key_1);
             event.accepted = true;
             return;
         }
-        var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
-        var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
-        var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
-        switch (event.key) {
-        case Qt.Key_Escape:
-            if (typeof game !== 'undefined' && game.placement.is_placing_construction && game.placement.on_construction_cancel) {
-                game.placement.on_construction_cancel();
+        var candidates = InputBindings.actions_for_key(event.key, event.modifiers, input_context());
+        for (var i = 0; i < candidates.length; ++i) {
+            if (dispatch_key_action(candidates[i], event)) {
                 event.accepted = true;
-            } else if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_cancel) {
-                game.placement.on_formation_cancel();
-                event.accepted = true;
-            } else if (game_view.is_rally_placement()) {
-                game_view.cancel_rally_placement();
-                event.accepted = true;
-            } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
-                mainWindow.menu_visible = true;
-                event.accepted = true;
+                return;
             }
-            break;
-        case Qt.Key_Space:
-            if (typeof mainWindow !== 'undefined') {
-                mainWindow.game_paused = !mainWindow.game_paused;
-                game_view.set_paused(mainWindow.game_paused);
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_S:
-            if (game.has_units_selected) {
-                if (game.on_stop_command)
-                    game.on_stop_command();
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_A:
-            if (game.has_units_selected && action_enabled("attack")) {
-                game.cursor_mode = "attack";
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_M:
-            if (game.has_units_selected) {
-                game.cursor_mode = "normal";
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_Up:
-            begin_pan_key(event);
-            game.camera_move(0, inputStep);
-            ensure_pan_timer_running();
-            event.accepted = true;
-            break;
-        case Qt.Key_Down:
-            begin_pan_key(event);
-            game.camera_move(0, -inputStep);
-            ensure_pan_timer_running();
-            event.accepted = true;
-            break;
-        case Qt.Key_Left:
-            begin_pan_key(event);
-            game.camera_move(-inputStep, 0);
-            ensure_pan_timer_running();
-            event.accepted = true;
-            break;
-        case Qt.Key_Right:
-            begin_pan_key(event);
-            game.camera_move(inputStep, 0);
-            ensure_pan_timer_running();
-            event.accepted = true;
-            break;
-        case Qt.Key_Q:
-            game.camera_yaw(-yawStep);
-            event.accepted = true;
-            break;
-        case Qt.Key_E:
-            game.camera_yaw(yawStep);
-            event.accepted = true;
-            break;
-        case Qt.Key_R:
-            if (action_enabled("rally") && game.begin_commander_flag_rally) {
-                game.begin_commander_flag_rally();
-                event.accepted = true;
-            } else {
-                game.camera_orbit_direction(1, shiftHeld);
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_F:
-            game.camera_orbit_direction(-1, shiftHeld);
-            event.accepted = true;
-            break;
-        case Qt.Key_X:
-            if (game.select_all_troops)
-                game.select_all_troops();
-            event.accepted = true;
-            break;
-        case Qt.Key_P:
-            if (game.has_units_selected && action_enabled("patrol")) {
-                game.cursor_mode = "patrol";
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_G:
-            if (game.has_units_selected && action_enabled("guard")) {
-                game.cursor_mode = "guard";
-                event.accepted = true;
-            }
-            break;
-        case Qt.Key_H:
-            if (game.has_units_selected && game.on_hold_command) {
-                game.on_hold_command();
-                event.accepted = true;
-            }
-            break;
         }
     }
     Keys.onReleased: function (event) {
         if (typeof game === 'undefined')
             return;
-        if (is_commander_mode()) {
-            handle_commander_key_released(event);
+        var actionId = pressed_keys[event.key];
+        if (actionId === undefined)
+            return;
+        delete pressed_keys[event.key];
+        if (actionId.indexOf("rts.camera_pan_") === 0) {
+            end_pan_action(actionId);
+            event.accepted = true;
             return;
         }
-        var movementKeys = [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
-        if (movementKeys.indexOf(event.key) !== -1) {
-            if (pressed_keys[event.key]) {
-                pressed_keys[event.key] = false;
-                renderArea.key_pan_count = Math.max(0, renderArea.key_pan_count - 1);
-            }
-            var anyHeld = false;
-            for (var k in pressed_keys) {
-                if (pressed_keys[k]) {
-                    anyHeld = true;
-                    break;
-                }
-            }
-            if (!anyHeld) {
-                if (keyPanTimer.running)
-                    keyPanTimer.stop();
-                if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
-                    mainWindow.edge_scroll_disabled = false;
-            }
-        }
-        if (event.key === Qt.Key_Shift) {
-            if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
-                mainWindow.edge_scroll_disabled = false;
+        var canonical = InputBindings.canonical_key_for(actionId);
+        if (canonical !== 0 && game.commander_key_up) {
+            game.commander_key_up(canonical, event.modifiers);
+            event.accepted = true;
         }
     }
 
@@ -1078,13 +1068,13 @@ Item {
             var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
             var dx = 0;
             var dz = 0;
-            if (pressed_keys[Qt.Key_Up])
+            if (game_view.pan_axis["rts.camera_pan_up"])
                 dz += step;
-            if (pressed_keys[Qt.Key_Down])
+            if (game_view.pan_axis["rts.camera_pan_down"])
                 dz -= step;
-            if (pressed_keys[Qt.Key_Left])
+            if (game_view.pan_axis["rts.camera_pan_left"])
                 dx -= step;
-            if (pressed_keys[Qt.Key_Right])
+            if (game_view.pan_axis["rts.camera_pan_right"])
                 dx += step;
             if (dx !== 0 || dz !== 0)
                 game.camera_move(dx, dz);

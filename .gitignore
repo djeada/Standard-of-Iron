@@ -1,6 +1,6 @@
 .lightpad
 .copilot-tmp
-perf*
+/perf*
 *~
 .venv
 # C++ objects and libs
@@ -64,9 +64,10 @@ compile_commands.json
 
 *_qmlcache.qrc
 
-# Build directories
-build/
-build-*/
+# Build directories. Anchored to the repo root: an unanchored pattern also
+# matches asset directories that happen to be called "build".
+/build/
+/build-*/
 # Note: dist/ contains deployment configs and is tracked
 dist/mesh/
 _codeql_build_dir/
@@ -95,6 +96,7 @@ __pycache__/
 tools/assets/
 assets/campaing_map/
 tools/map_pipeline/assets/
+tools/map_pipeline/build/
 actionlint
 .codex
 

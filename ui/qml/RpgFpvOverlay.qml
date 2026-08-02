@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 2.15
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -187,16 +188,16 @@ Item {
         }
 
         SequentialAnimation on opacity  {
-            running: Number(root.status_value("health_ratio", 1.0)) < 0.30 && Number(root.status_value("health_ratio", 1.0)) > 0.0
+            running: Design.A11y.screenEffectIntensity > 0.0 && Number(root.status_value("health_ratio", 1.0)) < 0.30 && Number(root.status_value("health_ratio", 1.0)) > 0.0
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.0
-                to: 0.55
+                to: 0.55 * Design.A11y.screenEffectIntensity
                 duration: 600
                 easing.type: Easing.InOutSine
             }
             NumberAnimation {
-                from: 0.55
+                from: 0.55 * Design.A11y.screenEffectIntensity
                 to: 0.0
                 duration: 600
                 easing.type: Easing.InOutSine
@@ -208,8 +209,8 @@ Item {
         id: guardGlow
         anchors.fill: parent
         color: "transparent"
-        visible: root.status_value("guard_active", false) === true
-        opacity: visible ? 0.45 : 0.0
+        visible: root.status_value("guard_active", false) === true && Design.A11y.screenEffectIntensity > 0.0
+        opacity: visible ? 0.45 * Design.A11y.screenEffectIntensity : 0.0
 
         Rectangle {
             anchors.fill: parent
@@ -1014,7 +1015,7 @@ Item {
         var hasLockedTarget = root.status_value("focus_marker_locked", false) === true;
         if (_prevHealth >= 0.0 && hp < _prevHealth) {
             var damage_severity = Math.min(1.0, (_prevHealth - hp) * 3.0);
-            damageVignette.opacity = damage_severity * 0.8;
+            damageVignette.opacity = damage_severity * 0.8 * Design.A11y.screenEffectIntensity;
             damageDecay.restart();
         }
         if (attacking && !_prevAttacking) {

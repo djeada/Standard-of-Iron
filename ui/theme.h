@@ -75,11 +75,11 @@ class Theme : public QObject {
   Q_PROPERTY(QColor success READ success CONSTANT)
   Q_PROPERTY(QColor selection READ selection CONSTANT)
 
-  Q_PROPERTY(int spacingTiny READ spacingTiny CONSTANT)
-  Q_PROPERTY(int spacingSmall READ spacingSmall CONSTANT)
-  Q_PROPERTY(int spacingMedium READ spacingMedium CONSTANT)
-  Q_PROPERTY(int spacingLarge READ spacingLarge CONSTANT)
-  Q_PROPERTY(int spacingXLarge READ spacingXLarge CONSTANT)
+  Q_PROPERTY(int spacingTiny READ spacingTiny NOTIFY metrics_changed)
+  Q_PROPERTY(int spacingSmall READ spacingSmall NOTIFY metrics_changed)
+  Q_PROPERTY(int spacingMedium READ spacingMedium NOTIFY metrics_changed)
+  Q_PROPERTY(int spacingLarge READ spacingLarge NOTIFY metrics_changed)
+  Q_PROPERTY(int spacingXLarge READ spacingXLarge NOTIFY metrics_changed)
 
   Q_PROPERTY(int radiusSmall READ radiusSmall CONSTANT)
   Q_PROPERTY(int radiusMedium READ radiusMedium CONSTANT)
@@ -90,12 +90,12 @@ class Theme : public QObject {
   Q_PROPERTY(int animNormal READ animNormal CONSTANT)
   Q_PROPERTY(int animSlow READ animSlow CONSTANT)
 
-  Q_PROPERTY(int fontSizeTiny READ fontSizeTiny CONSTANT)
-  Q_PROPERTY(int fontSizeSmall READ fontSizeSmall CONSTANT)
-  Q_PROPERTY(int fontSizeMedium READ fontSizeMedium CONSTANT)
-  Q_PROPERTY(int fontSizeLarge READ fontSizeLarge CONSTANT)
-  Q_PROPERTY(int fontSizeTitle READ fontSizeTitle CONSTANT)
-  Q_PROPERTY(int fontSizeHero READ fontSizeHero CONSTANT)
+  Q_PROPERTY(int fontSizeTiny READ fontSizeTiny NOTIFY metrics_changed)
+  Q_PROPERTY(int fontSizeSmall READ fontSizeSmall NOTIFY metrics_changed)
+  Q_PROPERTY(int fontSizeMedium READ fontSizeMedium NOTIFY metrics_changed)
+  Q_PROPERTY(int fontSizeLarge READ fontSizeLarge NOTIFY metrics_changed)
+  Q_PROPERTY(int fontSizeTitle READ fontSizeTitle NOTIFY metrics_changed)
+  Q_PROPERTY(int fontSizeHero READ fontSizeHero NOTIFY metrics_changed)
 
   Q_PROPERTY(QVariantList playerColors READ playerColors CONSTANT)
   Q_PROPERTY(QVariantList teamIcons READ teamIcons CONSTANT)
@@ -173,11 +173,13 @@ public:
   [[nodiscard]] static auto success() -> QColor { return successText(); }
   [[nodiscard]] static auto selection() -> QColor { return selectedBr(); }
 
-  [[nodiscard]] static auto spacingTiny() -> int { return 4; }
-  [[nodiscard]] static auto spacingSmall() -> int { return 8; }
-  [[nodiscard]] static auto spacingMedium() -> int { return 12; }
-  [[nodiscard]] static auto spacingLarge() -> int { return 16; }
-  [[nodiscard]] static auto spacingXLarge() -> int { return 20; }
+  [[nodiscard]] static auto scaled(int base) -> int;
+
+  [[nodiscard]] static auto spacingTiny() -> int { return scaled(4); }
+  [[nodiscard]] static auto spacingSmall() -> int { return scaled(8); }
+  [[nodiscard]] static auto spacingMedium() -> int { return scaled(12); }
+  [[nodiscard]] static auto spacingLarge() -> int { return scaled(16); }
+  [[nodiscard]] static auto spacingXLarge() -> int { return scaled(20); }
 
   [[nodiscard]] static auto radiusSmall() -> int { return 4; }
   [[nodiscard]] static auto radiusMedium() -> int { return 6; }
@@ -188,12 +190,12 @@ public:
   [[nodiscard]] static auto animNormal() -> int { return 160; }
   [[nodiscard]] static auto animSlow() -> int { return 200; }
 
-  [[nodiscard]] static auto fontSizeTiny() -> int { return 11; }
-  [[nodiscard]] static auto fontSizeSmall() -> int { return 12; }
-  [[nodiscard]] static auto fontSizeMedium() -> int { return 14; }
-  [[nodiscard]] static auto fontSizeLarge() -> int { return 16; }
-  [[nodiscard]] static auto fontSizeTitle() -> int { return 18; }
-  [[nodiscard]] static auto fontSizeHero() -> int { return 28; }
+  [[nodiscard]] static auto fontSizeTiny() -> int { return scaled(11); }
+  [[nodiscard]] static auto fontSizeSmall() -> int { return scaled(12); }
+  [[nodiscard]] static auto fontSizeMedium() -> int { return scaled(14); }
+  [[nodiscard]] static auto fontSizeLarge() -> int { return scaled(16); }
+  [[nodiscard]] static auto fontSizeTitle() -> int { return scaled(18); }
+  [[nodiscard]] static auto fontSizeHero() -> int { return scaled(28); }
 
   [[nodiscard]] static auto playerColors() -> QVariantList;
   [[nodiscard]] static auto teamIcons() -> QVariantList;
@@ -202,6 +204,9 @@ public:
   [[nodiscard]] static auto nationEmblems() -> QVariantMap;
 
   [[nodiscard]] static auto widgetStyleSheet() -> QString;
+
+signals:
+  void metrics_changed();
 
 private:
   explicit Theme(QObject* parent = nullptr);

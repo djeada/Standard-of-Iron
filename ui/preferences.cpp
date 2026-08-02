@@ -9,6 +9,8 @@
 #include <limits>
 
 #include "../app/core/user_settings.h"
+#include "../game/accessibility/motion_settings.h"
+#include "../game/accessibility/team_identity.h"
 
 namespace UserSettings = App::Core::UserSettings;
 
@@ -34,7 +36,19 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_reduced_motion(UserSettings::load_ui_reduced_motion())
     , m_high_contrast(UserSettings::load_ui_high_contrast())
     , m_color_vision_mode(UserSettings::load_ui_color_vision_mode())
-    , m_always_show_focus(UserSettings::load_ui_always_show_focus()) {
+    , m_always_show_focus(UserSettings::load_ui_always_show_focus())
+    , m_team_patterns(UserSettings::load_ui_team_patterns())
+    , m_edge_scroll_enabled(UserSettings::load_ui_edge_scroll_enabled())
+    , m_edge_scroll_sensitivity(UserSettings::load_ui_edge_scroll_sensitivity())
+    , m_camera_motion_scale(UserSettings::load_ui_camera_motion_scale())
+    , m_damage_numbers(UserSettings::load_ui_damage_numbers())
+    , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity()) {
+
+  Game::Accessibility::TeamIdentity::set_palette_variant_from_mode(
+      m_color_vision_mode.toStdString());
+  Game::Accessibility::TeamIdentity::set_patterns_enabled(effective_team_patterns());
+  Game::Accessibility::MotionSettings::set_camera_motion_scale(
+      static_cast<float>(m_camera_motion_scale));
 }
 
 auto UiPreferences::instance() -> UiPreferences* {
@@ -66,6 +80,18 @@ auto UiPreferences::min_ui_scale() -> qreal {
 
 auto UiPreferences::max_ui_scale() -> qreal {
   return UserSettings::kMaxUiScale;
+}
+
+auto UiPreferences::min_edge_scroll_sensitivity() -> qreal {
+  return UserSettings::kMinEdgeScrollSensitivity;
+}
+
+auto UiPreferences::max_edge_scroll_sensitivity() -> qreal {
+  return UserSettings::kMaxEdgeScrollSensitivity;
+}
+
+auto UiPreferences::effective_team_patterns() const -> bool {
+  return m_team_patterns || m_color_vision_mode != QLatin1String("none");
 }
 
 void UiPreferences::set_ui_scale(qreal scale) {
@@ -113,9 +139,16 @@ void UiPreferences::set_color_vision_mode(const QString& mode) {
     return;
   }
 
+  const bool patterns_were_effective = effective_team_patterns();
   m_color_vision_mode = normalized;
   UserSettings::save_ui_color_vision_mode(normalized);
+  Game::Accessibility::TeamIdentity::set_palette_variant_from_mode(
+      normalized.toStdString());
   emit color_vision_mode_changed();
+  if (patterns_were_effective != effective_team_patterns()) {
+    Game::Accessibility::TeamIdentity::set_patterns_enabled(effective_team_patterns());
+    emit team_patterns_changed();
+  }
 }
 
 void UiPreferences::set_always_show_focus(bool enabled) {
@@ -128,10 +161,99 @@ void UiPreferences::set_always_show_focus(bool enabled) {
   emit always_show_focus_changed();
 }
 
+void UiPreferences::set_team_patterns(bool enabled) {
+  if (enabled == m_team_patterns) {
+    return;
+  }
+
+  const bool was_effective = effective_team_patterns();
+  m_team_patterns = enabled;
+  UserSettings::save_ui_team_patterns(enabled);
+  if (was_effective != effective_team_patterns()) {
+    Game::Accessibility::TeamIdentity::set_patterns_enabled(effective_team_patterns());
+    emit team_patterns_changed();
+  }
+}
+
+void UiPreferences::set_edge_scroll_enabled(bool enabled) {
+  if (enabled == m_edge_scroll_enabled) {
+    return;
+  }
+
+  m_edge_scroll_enabled = enabled;
+  UserSettings::save_ui_edge_scroll_enabled(enabled);
+  emit edge_scroll_enabled_changed();
+}
+
+void UiPreferences::set_edge_scroll_sensitivity(qreal sensitivity) {
+  if (!is_finite_scale(sensitivity)) {
+    return;
+  }
+
+  const qreal clamped = std::clamp<qreal>(sensitivity,
+                                          UserSettings::kMinEdgeScrollSensitivity,
+                                          UserSettings::kMaxEdgeScrollSensitivity);
+  if (qFuzzyCompare(clamped, m_edge_scroll_sensitivity)) {
+    return;
+  }
+
+  m_edge_scroll_sensitivity = clamped;
+  UserSettings::save_ui_edge_scroll_sensitivity(clamped);
+  emit edge_scroll_sensitivity_changed();
+}
+
+void UiPreferences::set_camera_motion_scale(qreal scale) {
+  if (!is_finite_scale(scale)) {
+    return;
+  }
+
+  const qreal clamped = std::clamp<qreal>(scale, 0.0, 1.0);
+  if (qFuzzyCompare(clamped, m_camera_motion_scale)) {
+    return;
+  }
+
+  m_camera_motion_scale = clamped;
+  UserSettings::save_ui_camera_motion_scale(clamped);
+  Game::Accessibility::MotionSettings::set_camera_motion_scale(
+      static_cast<float>(clamped));
+  emit camera_motion_scale_changed();
+}
+
+void UiPreferences::set_damage_numbers(bool enabled) {
+  if (enabled == m_damage_numbers) {
+    return;
+  }
+
+  m_damage_numbers = enabled;
+  UserSettings::save_ui_damage_numbers(enabled);
+  emit damage_numbers_changed();
+}
+
+void UiPreferences::set_screen_effect_intensity(qreal intensity) {
+  if (!is_finite_scale(intensity)) {
+    return;
+  }
+
+  const qreal clamped = std::clamp<qreal>(intensity, 0.0, 1.0);
+  if (qFuzzyCompare(clamped, m_screen_effect_intensity)) {
+    return;
+  }
+
+  m_screen_effect_intensity = clamped;
+  UserSettings::save_ui_screen_effect_intensity(clamped);
+  emit screen_effect_intensity_changed();
+}
+
 void UiPreferences::reset_to_defaults() {
   set_ui_scale(UserSettings::kDefaultUiScale);
   set_reduced_motion(false);
   set_high_contrast(false);
   set_color_vision_mode(QStringLiteral("none"));
   set_always_show_focus(false);
+  set_team_patterns(false);
+  set_edge_scroll_enabled(true);
+  set_edge_scroll_sensitivity(UserSettings::kDefaultEdgeScrollSensitivity);
+  set_camera_motion_scale(UserSettings::kDefaultCameraMotionScale);
+  set_damage_numbers(true);
+  set_screen_effect_intensity(UserSettings::kDefaultScreenEffectIntensity);
 }

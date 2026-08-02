@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import StandardOfIron 1.0
 
 Item {
     id: root
@@ -7,6 +8,8 @@ Item {
     property var gameView
     property var mainWindowRef
     property bool active: false
+
+    property var held_keys: ({})
 
     signal inputCaptured
 
@@ -28,102 +31,132 @@ Item {
             root.commanderInput.primary_action_up();
         if (root.commanderInput.secondary_action_up)
             root.commanderInput.secondary_action_up();
+        root.held_keys = ({});
+    }
+
+    function is_locomotion(actionId) {
+        switch (actionId) {
+        case "commander.move_forward":
+        case "commander.move_back":
+        case "commander.strafe_left":
+        case "commander.strafe_right":
+        case "commander.turn_left":
+        case "commander.turn_right":
+        case "commander.sprint":
+            return true;
+        }
+        return false;
+    }
+
+    function perform_action(actionId, event) {
+        if (actionId === "global.menu") {
+            if (typeof root.mainWindowRef !== 'undefined' && !root.mainWindowRef.menu_visible)
+                root.mainWindowRef.menu_visible = true;
+            return true;
+        }
+        if (actionId === "global.toggle_control_mode") {
+            if (root.commanderInput !== null && root.commanderInput.toggle_mode)
+                root.commanderInput.toggle_mode();
+            return true;
+        }
+        if (root.commanderInput === null)
+            return false;
+        if (is_locomotion(actionId)) {
+            var canonical = InputBindings.canonical_key_for(actionId);
+            if (canonical !== 0 && root.commanderInput.key_down) {
+                root.held_keys[event.key] = actionId;
+                root.commanderInput.key_down(canonical, event.modifiers);
+                return true;
+            }
+            return false;
+        }
+        if (event.isAutoRepeat)
+            return true;
+        switch (actionId) {
+        case "commander.dodge":
+            if (root.commanderInput.dodge)
+                root.commanderInput.dodge();
+            return true;
+        case "commander.jump":
+            if (root.commanderInput.jump)
+                root.commanderInput.jump();
+            return true;
+        case "commander.cycle_lock_on":
+            if (root.commanderInput.cycle_lock_on)
+                root.commanderInput.cycle_lock_on();
+            return true;
+        case "commander.ability_vanguard_rush":
+            if (root.commanderInput.vanguard_rush)
+                root.commanderInput.vanguard_rush();
+            return true;
+        case "commander.ability_second_wind":
+            if (root.commanderInput.second_wind)
+                root.commanderInput.second_wind();
+            return true;
+        case "commander.ability_aura":
+            if (root.commanderInput.trigger_aura)
+                root.commanderInput.trigger_aura();
+            return true;
+        case "commander.special_action":
+            if (root.commanderInput.special_action)
+                root.commanderInput.special_action();
+            return true;
+        case "commander.rally":
+            if (root.commanderInput.trigger_rally)
+                root.commanderInput.trigger_rally();
+            return true;
+        case "commander.toggle_camera_mode":
+            if (root.commanderInput.toggle_camera_mode)
+                root.commanderInput.toggle_camera_mode();
+            return true;
+        }
+        return false;
     }
 
     function handle_key_pressed(event) {
         if (!root.active)
             return;
-        switch (event.key) {
-        case Qt.Key_Escape:
-            if (typeof root.mainWindowRef !== 'undefined' && !root.mainWindowRef.menu_visible)
-                root.mainWindowRef.menu_visible = true;
-            event.accepted = true;
-            return;
-        case Qt.Key_Space:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.dodge)
-                root.commanderInput.dodge();
-            event.accepted = true;
-            return;
-        case Qt.Key_Alt:
-        case Qt.Key_AltGr:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.jump)
-                root.commanderInput.jump();
-            event.accepted = true;
-            return;
-        case Qt.Key_Tab:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.cycle_lock_on)
-                root.commanderInput.cycle_lock_on();
-            event.accepted = true;
-            return;
-        case Qt.Key_1:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.vanguard_rush)
-                root.commanderInput.vanguard_rush();
-            event.accepted = true;
-            return;
-        case Qt.Key_2:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.second_wind)
-                root.commanderInput.second_wind();
-            event.accepted = true;
-            return;
-        case Qt.Key_3:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.trigger_aura)
-                root.commanderInput.trigger_aura();
-            event.accepted = true;
-            return;
-        case Qt.Key_F:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.special_action)
-                root.commanderInput.special_action();
-            event.accepted = true;
-            return;
-        case Qt.Key_C:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.toggle_camera_mode)
-                root.commanderInput.toggle_camera_mode();
-            event.accepted = true;
-            return;
-        case Qt.Key_Return:
-        case Qt.Key_Enter:
-            if (root.commanderInput !== null && root.commanderInput.toggle_mode)
-                root.commanderInput.toggle_mode();
-            event.accepted = true;
-            return;
-        case Qt.Key_R:
-            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.trigger_rally)
-                root.commanderInput.trigger_rally();
-            event.accepted = true;
-            return;
-        case Qt.Key_W:
-        case Qt.Key_A:
-        case Qt.Key_S:
-        case Qt.Key_D:
-        case Qt.Key_Q:
-        case Qt.Key_E:
-        case Qt.Key_Shift:
-            if (root.commanderInput !== null && root.commanderInput.key_down)
-                root.commanderInput.key_down(event.key, event.modifiers);
-            event.accepted = true;
-            return;
+        var candidates = InputBindings.actions_for_key(event.key, event.modifiers, "commander");
+        for (var i = 0; i < candidates.length; ++i) {
+            if (root.perform_action(candidates[i], event)) {
+                event.accepted = true;
+                return;
+            }
         }
     }
 
     function handle_key_released(event) {
         if (!root.active)
             return;
-        switch (event.key) {
-        case Qt.Key_Alt:
-        case Qt.Key_AltGr:
-            event.accepted = true;
+        var actionId = root.held_keys[event.key];
+        if (actionId === undefined)
             return;
-        case Qt.Key_W:
-        case Qt.Key_A:
-        case Qt.Key_S:
-        case Qt.Key_D:
-        case Qt.Key_Q:
-        case Qt.Key_E:
-        case Qt.Key_Shift:
-            if (root.commanderInput !== null && root.commanderInput.key_up)
-                root.commanderInput.key_up(event.key, event.modifiers);
-            event.accepted = true;
+        delete root.held_keys[event.key];
+        var canonical = InputBindings.canonical_key_for(actionId);
+        if (canonical !== 0 && root.commanderInput !== null && root.commanderInput.key_up)
+            root.commanderInput.key_up(canonical, event.modifiers);
+        event.accepted = true;
+    }
+
+    function handle_mouse(button, modifiers, pressed) {
+        if (root.commanderInput === null)
             return;
+        var candidates = InputBindings.actions_for_mouse(button, modifiers, "commander");
+        for (var i = 0; i < candidates.length; ++i) {
+            if (candidates[i] === "commander.primary_action") {
+                if (pressed && root.commanderInput.primary_action_down)
+                    root.commanderInput.primary_action_down();
+                else if (!pressed && root.commanderInput.primary_action_up)
+                    root.commanderInput.primary_action_up();
+                return;
+            }
+            if (candidates[i] === "commander.secondary_action") {
+                if (pressed && root.commanderInput.secondary_action_down)
+                    root.commanderInput.secondary_action_down();
+                else if (!pressed && root.commanderInput.secondary_action_up)
+                    root.commanderInput.secondary_action_up();
+                return;
+            }
         }
     }
 
@@ -147,7 +180,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: Qt.BlankCursor
         enabled: root.active
         hoverEnabled: true
@@ -167,17 +200,11 @@ Item {
             if (typeof root.gameView !== 'undefined')
                 root.gameView.forceActiveFocus();
             root.inputCaptured();
-            if (mouse.button === Qt.LeftButton && root.commanderInput !== null && root.commanderInput.primary_action_down)
-                root.commanderInput.primary_action_down();
-            if (mouse.button === Qt.RightButton && root.commanderInput !== null && root.commanderInput.secondary_action_down)
-                root.commanderInput.secondary_action_down();
+            root.handle_mouse(mouse.button, mouse.modifiers, true);
             mouse.accepted = true;
         }
         onReleased: function (mouse) {
-            if (mouse.button === Qt.LeftButton && root.commanderInput !== null && root.commanderInput.primary_action_up)
-                root.commanderInput.primary_action_up();
-            if (mouse.button === Qt.RightButton && root.commanderInput !== null && root.commanderInput.secondary_action_up)
-                root.commanderInput.secondary_action_up();
+            root.handle_mouse(mouse.button, mouse.modifiers, false);
             mouse.accepted = true;
         }
         onCanceled: root.release_actions()
