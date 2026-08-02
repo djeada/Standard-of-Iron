@@ -215,8 +215,10 @@ namespace {
       .filtered_speed = component.filtered_speed,
       .filtered_acceleration = component.filtered_acceleration,
       .filtered_turn = component.filtered_turn,
+      .filtered_travel_alignment = component.filtered_travel_alignment,
       .locomotion_blend = component.locomotion_blend,
       .run_blend = component.run_blend,
+      .reverse_gait = component.reverse_gait,
       .state = component.locomotion_state,
   };
 }
@@ -232,6 +234,8 @@ void write_persistent_locomotion_to_component(
   component.filtered_speed = persistent.filtered_speed;
   component.filtered_acceleration = persistent.filtered_acceleration;
   component.filtered_turn = persistent.filtered_turn;
+  component.filtered_travel_alignment = persistent.filtered_travel_alignment;
+  component.reverse_gait = persistent.reverse_gait;
   component.locomotion_blend = persistent.locomotion_blend;
   component.run_blend = persistent.run_blend;
   component.locomotion_state = persistent.state;
@@ -280,6 +284,8 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
   state.gait.locomotion_blend = sample.locomotion_blend;
   state.gait.run_blend = sample.run_blend;
   state.gait.turn_amount = sample.turn_amount;
+  state.gait.travel_alignment = sample.travel_alignment;
+  state.gait.reverse_gait = sample.reverse_gait;
   state.gait.acceleration = sample.acceleration;
 
   if (sample.write_persistent_state && inputs.persistent_state != nullptr) {

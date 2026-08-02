@@ -287,6 +287,9 @@ struct HumanoidGaitDescriptor {
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
   float turn_amount{0.0F};
+
+  float travel_alignment{1.0F};
+  bool reverse_gait{false};
   float acceleration{0.0F};
 
   auto is_stationary() const -> bool { return speed <= 0.01F; }

@@ -67,6 +67,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   RpgPrimaryAttack,
   RpgGuard,
   RpgDodge,
+  RpgMove,
 };
 
 struct ArenaScenarioGroup {
@@ -121,6 +122,8 @@ struct ArenaScenarioStep {
   float camera_distance{14.0F};
   float camera_angle{45.0F};
   float camera_yaw{30.0F};
+
+  std::optional<float> rpg_view_yaw_degrees;
 };
 
 enum class ArenaExpectationKind : std::uint8_t {
@@ -188,6 +191,11 @@ enum class ArenaExpectationKind : std::uint8_t {
   RpgDodgeWindowObserved,
   RpgHealthReduced,
   RpgHealthUnchanged,
+  RpgWalkObserved,
+  RpgRunObserved,
+  RpgLocomotionAnimationMatched,
+  RpgStrikeAnimationMatched,
+  RpgApproachWithin,
   UndeadZoneDormantBefore,
   UndeadZoneAwakened,
   UndeadZoneCleared,
@@ -318,6 +326,10 @@ struct ArenaScenarioHost {
   std::function<bool(Engine::Core::EntityID)> rpg_primary_attack;
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_guard;
   std::function<void(Engine::Core::EntityID, const QVector3D&)> request_rpg_dodge;
+
+  std::function<void(Engine::Core::EntityID, const QVector3D&, bool)>
+      set_rpg_move_input;
+  std::function<void(Engine::Core::EntityID, float)> set_rpg_view_yaw;
 };
 
 struct ArenaRenderedFrameTimings {

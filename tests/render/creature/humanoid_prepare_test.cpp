@@ -3641,6 +3641,121 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPhaseOverrideOwnsBowReadyIdle) {
           .active);
 }
 
+namespace {
+
+auto step_locomotion(Animation::HumanoidLocomotionInputs inputs,
+                     float entity_forward_x,
+                     float entity_forward_z,
+                     float direction_x,
+                     float direction_z,
+                     int frames,
+                     float delta_time) -> Animation::HumanoidLocomotionSample {
+  inputs.entity_forward_x = entity_forward_x;
+  inputs.entity_forward_z = entity_forward_z;
+  inputs.locomotion_direction_x = direction_x;
+  inputs.locomotion_direction_z = direction_z;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+
+  Animation::HumanoidLocomotionSample sample{};
+  for (int frame = 0; frame < frames; ++frame) {
+    inputs.sample_time += delta_time;
+    sample = Animation::resolve_humanoid_locomotion_sample(inputs);
+    inputs.previous = sample.persistent;
+  }
+  return sample;
+}
+
+auto walking_inputs() -> Animation::HumanoidLocomotionInputs {
+  Animation::HumanoidLocomotionInputs inputs{};
+  inputs.movement_state = Animation::MovementState::Walk;
+  inputs.motion_state = Animation::HumanoidMotionState::Walk;
+  inputs.speed = 2.2F;
+  inputs.sample_time = 0.0F;
+  return inputs;
+}
+
+} // namespace
+
+TEST(AnimationCoreLocomotionManifest, WalkingForwardRunsTheStepCycleForward) {
+  auto const sample =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 0.0F, 1.0F, 40, 1.0F / 60.0F);
+
+  EXPECT_FALSE(sample.reverse_gait);
+  EXPECT_NEAR(sample.travel_alignment, 1.0F, 0.05F);
+}
+
+TEST(AnimationCoreLocomotionManifest, BackingUpReversesTheStepCycle) {
+  auto const sample =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 0.0F, -1.0F, 40, 1.0F / 60.0F);
+
+  EXPECT_TRUE(sample.reverse_gait);
+  EXPECT_NEAR(sample.travel_alignment, -1.0F, 0.05F);
+
+  auto inputs = walking_inputs();
+  inputs.entity_forward_x = 0.0F;
+  inputs.entity_forward_z = 1.0F;
+  inputs.locomotion_direction_x = 0.0F;
+  inputs.locomotion_direction_z = -1.0F;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.previous = sample.persistent;
+  inputs.sample_time = sample.persistent.last_sample_time + (1.0F / 60.0F);
+
+  auto const next = Animation::resolve_humanoid_locomotion_sample(inputs);
+  float delta = next.cycle_phase - sample.cycle_phase;
+  if (delta > 0.5F) {
+    delta -= 1.0F;
+  } else if (delta < -0.5F) {
+    delta += 1.0F;
+  }
+  EXPECT_LT(delta, 0.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest, StrafingKeepsTheForwardStepCycle) {
+  auto const sample =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 1.0F, 0.0F, 40, 1.0F / 60.0F);
+
+  EXPECT_FALSE(sample.reverse_gait);
+  EXPECT_NEAR(sample.travel_alignment, 0.0F, 0.10F);
+}
+
+TEST(AnimationCoreLocomotionManifest, ReverseGaitHoldsThroughASidewaysDrift) {
+  auto backing =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 0.0F, -1.0F, 40, 1.0F / 60.0F);
+  ASSERT_TRUE(backing.reverse_gait);
+
+  auto inputs = walking_inputs();
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.previous = backing.persistent;
+  inputs.sample_time = backing.persistent.last_sample_time;
+  inputs.entity_forward_x = 0.0F;
+  inputs.entity_forward_z = 1.0F;
+
+  auto const drifting =
+      step_locomotion(inputs, 0.0F, 1.0F, 0.7F, -0.7F, 20, 1.0F / 60.0F);
+  EXPECT_TRUE(drifting.reverse_gait);
+}
+
+TEST(AnimationCoreLocomotionManifest, BackwardStepsAreShorterThanForwardSteps) {
+  Animation::HumanoidLocomotionPoseInputs pose{};
+  pose.state = Animation::HumanoidMotionState::Walk;
+  pose.normalized_speed = 1.0F;
+  pose.cycle_phase = 0.25F;
+  pose.stride_distance = 1.4F;
+  pose.locomotion_blend = 1.0F;
+  pose.travel_alignment = 1.0F;
+
+  auto const forward = Animation::resolve_humanoid_locomotion_pose(pose);
+  pose.travel_alignment = -1.0F;
+  auto const backward = Animation::resolve_humanoid_locomotion_pose(pose);
+
+  ASSERT_TRUE(forward.active);
+  ASSERT_TRUE(backward.active);
+  EXPECT_LT(std::abs(backward.foot_l.z), std::abs(forward.foot_l.z));
+}
+
 TEST(AnimationCoreLocomotionManifest, RunSampleIsDeterministic) {
   Animation::HumanoidLocomotionInputs inputs{};
   inputs.movement_state = Animation::MovementState::Run;
