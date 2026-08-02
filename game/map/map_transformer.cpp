@@ -407,6 +407,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
     if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
       sp.position = point->position;
+
+      sp.rotation_y = structure.rotation;
       spawn_map_unit(sp, world, visuals);
       continue;
     }

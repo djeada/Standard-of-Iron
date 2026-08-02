@@ -56,6 +56,53 @@ void add_merlon_strip_z(AddBox&& add_box,
 }
 
 template <typename AddBox>
+void add_square_parapet(AddBox&& add_box,
+                        float y,
+                        float half_extent,
+                        int per_side,
+                        const QVector3D& merlon_half,
+                        const QVector3D& color,
+                        int seed = 0) {
+
+  const int steps = std::max(per_side, 2);
+  const float span = half_extent * 2.0F;
+  const float spacing = span / static_cast<float>(steps - 1);
+  int index = seed;
+  for (int i = 0; i < steps; ++i) {
+    const float along = -half_extent + spacing * static_cast<float>(i);
+    add_box(QVector3D(along, y, -half_extent), merlon_half, weathered(color, index++));
+    add_box(QVector3D(along, y, half_extent), merlon_half, weathered(color, index++));
+  }
+
+  for (int i = 1; i < steps - 1; ++i) {
+    const float along = -half_extent + spacing * static_cast<float>(i);
+    add_box(QVector3D(-half_extent, y, along), merlon_half, weathered(color, index++));
+    add_box(QVector3D(half_extent, y, along), merlon_half, weathered(color, index++));
+  }
+}
+
+template <typename AddBox>
+void add_embrasures(AddBox&& add_box,
+                    float y,
+                    float face_offset,
+                    const QVector3D& slit_half,
+                    const QVector3D& color) {
+
+  add_box(QVector3D(0.0F, y, face_offset),
+          QVector3D(slit_half.x(), slit_half.y(), slit_half.z()),
+          color);
+  add_box(QVector3D(0.0F, y, -face_offset),
+          QVector3D(slit_half.x(), slit_half.y(), slit_half.z()),
+          color);
+  add_box(QVector3D(face_offset, y, 0.0F),
+          QVector3D(slit_half.z(), slit_half.y(), slit_half.x()),
+          color);
+  add_box(QVector3D(-face_offset, y, 0.0F),
+          QVector3D(slit_half.z(), slit_half.y(), slit_half.x()),
+          color);
+}
+
+template <typename AddBox>
 void add_tile_rows_z(AddBox&& add_box,
                      float y,
                      float start_z,
