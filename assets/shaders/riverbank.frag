@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 out vec4 frag_color;
@@ -40,27 +41,6 @@ vec3 saturate(vec3 value) {
   return clamp(value, vec3(0.0), vec3(1.0));
 }
 
-float hash21(vec2 point) {
-  point = fract(point * vec2(123.34, 456.21));
-  point += dot(point, point + 45.32);
-
-  return fract(point.x * point.y);
-}
-
-float value_noise(vec2 point) {
-  vec2 cell = floor(point);
-  vec2 local = fract(point);
-
-  local = local * local * local * (local * (local * 6.0 - 15.0) + 10.0);
-
-  float a = hash21(cell);
-  float b = hash21(cell + vec2(1.0, 0.0));
-  float c = hash21(cell + vec2(0.0, 1.0));
-  float d = hash21(cell + vec2(1.0, 1.0));
-
-  return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
-}
-
 float fbm(vec2 point) {
   float result = 0.0;
   float amplitude = 0.52;
@@ -68,7 +48,7 @@ float fbm(vec2 point) {
   const mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
 
   for (int octave = 0; octave < 5; ++octave) {
-    result += value_noise(point) * amplitude;
+    result += soi_value_noise_e2c097(point) * amplitude;
 
     point = octave_rotation * point * 2.03 + vec2(7.1, -3.8);
 
@@ -90,7 +70,8 @@ vec2 cellular_distances(vec2 point) {
   for (int y = -1; y <= 1; ++y) {
     for (int x = -1; x <= 1; ++x) {
       vec2 offset = vec2(float(x), float(y));
-      vec2 site = offset + vec2(hash21(cell + offset), hash21(cell + offset + 19.7));
+      vec2 site = offset + vec2(soi_hash21_d64971(cell + offset),
+                                soi_hash21_d64971(cell + offset + 19.7));
       float distance_to_site = length(site - local);
       if (distance_to_site < nearest) {
         second = nearest;
@@ -166,7 +147,7 @@ void main() {
 
   float macro = fbm(world_uv * 0.42 + vec2(11.0, -7.0));
   float detail = fbm(world_uv * 1.65 + vec2(-3.0, 17.0));
-  float grain = value_noise(world_uv * 8.5 + vec2(29.0));
+  float grain = soi_value_noise_e2c097(world_uv * 8.5 + vec2(29.0));
   float deposit_field = fbm(world_uv * 0.78 + vec2(-24.0, 31.0));
   float edge_macro = fbm(world_uv * 0.48 + vec2(37.0, -11.0));
   float edge_detail = fbm(world_uv * 2.15 + slow_wash + vec2(-9.0, 24.0));

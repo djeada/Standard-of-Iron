@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_normal;
@@ -17,10 +18,6 @@ out vec4 frag_color;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
-
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
 
 void main() {
 
@@ -38,11 +35,13 @@ void main() {
   float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.55, sun_color, lit_t);
 
-  float needle_noise = hash(vec2(v_tex_coord.x * 28.0 + v_needle_seed * 7.1,
-                                 v_tex_coord.y * 24.0 + v_needle_seed * 5.3));
+  float needle_noise =
+      soi_hash_15a407(vec2(v_tex_coord.x * 28.0 + v_needle_seed * 7.1,
+                           v_tex_coord.y * 24.0 + v_needle_seed * 5.3));
 
-  float needle_streak = hash(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
-                                  floor(v_tex_coord.y * 6.0 + v_needle_seed * 2.0)));
+  float needle_streak =
+      soi_hash_15a407(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
+                           floor(v_tex_coord.y * 6.0 + v_needle_seed * 2.0)));
 
   vec3 needle_deep = vec3(0.09, 0.17, 0.13);
   vec3 needle_mid = vec3(0.15, 0.25, 0.18);
@@ -63,8 +62,8 @@ void main() {
   needle_color = mix(needle_color, needle_color * vec3(1.10, 1.05, 1.08), tip_blend);
 
   float bark_stripe = sin(v_tex_coord.y * 45.0 + v_bark_seed * TWO_PI) * 0.1 + 0.9;
-  float bark_noise = hash(vec2(v_tex_coord.x * 18.0 + v_bark_seed * 4.3,
-                               v_tex_coord.y * 10.0 + v_bark_seed * 7.7));
+  float bark_noise = soi_hash_15a407(vec2(v_tex_coord.x * 18.0 + v_bark_seed * 4.3,
+                                          v_tex_coord.y * 10.0 + v_bark_seed * 7.7));
 
   vec3 trunk_base = vec3(0.28, 0.23, 0.18) * bark_stripe;
   vec3 trunk_color = trunk_base * (0.85 + bark_noise * 0.35);

@@ -1,5 +1,6 @@
 #version 330 core
 #include "environment_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 out vec4 frag_color;
@@ -29,29 +30,12 @@ mat2 rotate2d(float angle) {
   return mat2(c, -s, s, c);
 }
 
-float hash21(vec2 point) {
-  point = fract(point * vec2(123.34, 456.21));
-  point += dot(point, point + 45.32);
-  return fract(point.x * point.y);
-}
-
-float value_noise(vec2 point) {
-  vec2 cell = floor(point);
-  vec2 local = fract(point);
-  local = local * local * local * (local * (local * 6.0 - 15.0) + 10.0);
-  float a = hash21(cell);
-  float b = hash21(cell + vec2(1.0, 0.0));
-  float c = hash21(cell + vec2(0.0, 1.0));
-  float d = hash21(cell + vec2(1.0, 1.0));
-  return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
-}
-
 float fbm(vec2 point) {
   float result = 0.0;
   float amplitude = 0.52;
   mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
   for (int octave = 0; octave < 4; ++octave) {
-    result += value_noise(point) * amplitude;
+    result += soi_value_noise_e2c097(point) * amplitude;
     point = octave_rotation * point * 2.03 + vec2(7.1, -3.8);
     amplitude *= 0.48;
   }

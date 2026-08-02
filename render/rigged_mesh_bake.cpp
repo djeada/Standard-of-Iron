@@ -9,6 +9,7 @@
 #include <cmath>
 
 #include "creature/part_graph.h"
+#include "creature/primitive_geometry.h"
 #include "creature/skeleton.h"
 #include "elephant/elephant_spec.h"
 #include "geom/parts.h"
@@ -40,49 +41,12 @@ struct LegChain {
   QVector3D foot_pos;
 };
 
-auto bone_world_offset(const QMatrix4x4& bone,
-                       const QVector3D& local_offset) -> QVector3D {
-  if (local_offset.isNull()) {
-    return bone.column(3).toVector3D();
-  }
-  QVector3D const origin = bone.column(3).toVector3D();
-  QVector3D const x = bone.column(0).toVector3D();
-  QVector3D const y = bone.column(1).toVector3D();
-  QVector3D const z = bone.column(2).toVector3D();
-  return origin + x * local_offset.x() + y * local_offset.y() + z * local_offset.z();
-}
-
-auto box_model(const QMatrix4x4& bone,
-               const QVector3D& local_offset,
-               const QVector3D& half_extents) -> QMatrix4x4 {
-  QMatrix4x4 m = bone;
-  QVector3D const world_origin = bone_world_offset(bone, local_offset);
-  m.setColumn(3, QVector4D(world_origin, 1.0F));
-  QMatrix4x4 scale;
-  scale.scale(
-      half_extents.x() * 2.0F, half_extents.y() * 2.0F, half_extents.z() * 2.0F);
-  return m * scale;
-}
-
-auto mesh_model(const QMatrix4x4& bone,
-                const QVector3D& local_offset,
-                const QVector3D& half_extents) -> QMatrix4x4 {
-  QMatrix4x4 m = bone;
-  QVector3D const world_origin = bone_world_offset(bone, local_offset);
-  m.setColumn(3, QVector4D(world_origin, 1.0F));
-  if (half_extents == QVector3D(1.0F, 1.0F, 1.0F)) {
-    return m;
-  }
-  QMatrix4x4 scale;
-  scale.scale(half_extents.x(), half_extents.y(), half_extents.z());
-  return m * scale;
-}
-
 auto is_two_bone_blend(PrimitiveShape shape) -> bool {
   switch (shape) {
   case PrimitiveShape::Cylinder:
   case PrimitiveShape::Capsule:
   case PrimitiveShape::OrientedCylinder:
+  case PrimitiveShape::TaperedCylinder:
   case PrimitiveShape::BoneSpanMesh:
     return true;
   default:
@@ -337,141 +301,6 @@ auto resolve_mesh_blend(const PrimitiveInstance& prim,
   }
 }
 
-auto resolve_unit_mesh(const PrimitiveInstance& prim) -> Mesh* {
-  if (prim.custom_mesh != nullptr) {
-    return prim.custom_mesh;
-  }
-
-  switch (prim.shape) {
-  case PrimitiveShape::Sphere:
-  case PrimitiveShape::OrientedSphere:
-    return Render::GL::get_unit_sphere();
-  case PrimitiveShape::Cylinder:
-  case PrimitiveShape::OrientedCylinder:
-    return Render::GL::get_unit_cylinder();
-  case PrimitiveShape::Capsule:
-    return Render::GL::get_unit_capsule();
-  case PrimitiveShape::Cone:
-    return Render::GL::get_unit_cone();
-  case PrimitiveShape::Box:
-    return Render::GL::get_unit_cube();
-  case PrimitiveShape::Mesh:
-    return prim.custom_mesh;
-  case PrimitiveShape::BoneSpanMesh:
-    return prim.custom_mesh;
-  case PrimitiveShape::None:
-  default:
-    return nullptr;
-  }
-}
-
-auto compute_unit_model(const PrimitiveInstance& prim,
-                        std::span<const BoneWorldMatrix> bind_pose,
-                        QMatrix4x4& out_model) -> bool {
-  BoneIndex const anchor = prim.params.anchor_bone;
-  BoneIndex const tail = prim.params.tail_bone;
-  if (anchor == k_invalid_bone || anchor >= bind_pose.size()) {
-    return false;
-  }
-  bool const needs_tail =
-      (prim.shape == PrimitiveShape::Cylinder ||
-       prim.shape == PrimitiveShape::Capsule || prim.shape == PrimitiveShape::Cone ||
-       prim.shape == PrimitiveShape::OrientedCylinder);
-  if (needs_tail && (tail == k_invalid_bone || tail >= bind_pose.size())) {
-    return false;
-  }
-
-  QMatrix4x4 const& anchor_m = bind_pose[anchor];
-  QVector3D const head_world = bone_world_offset(anchor_m, prim.params.head_offset);
-
-  switch (prim.shape) {
-  case PrimitiveShape::Sphere:
-    out_model = Render::Geom::sphere_at(head_world, prim.params.radius);
-    return true;
-
-  case PrimitiveShape::Cylinder: {
-    QVector3D const tail_world =
-        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model =
-        Render::Geom::cylinder_between(head_world, tail_world, prim.params.radius);
-    return true;
-  }
-
-  case PrimitiveShape::Capsule: {
-    QVector3D const tail_world =
-        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model =
-        Render::Geom::capsule_between(head_world, tail_world, prim.params.radius);
-    return true;
-  }
-
-  case PrimitiveShape::Cone: {
-    QVector3D const tail_world =
-        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model = Render::Geom::cone_from_to(head_world, tail_world, prim.params.radius);
-    return true;
-  }
-
-  case PrimitiveShape::Box:
-    out_model = box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
-    return true;
-
-  case PrimitiveShape::OrientedCylinder: {
-    QVector3D const tail_world =
-        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    QVector3D const right_ref = anchor_m.column(0).toVector3D();
-    float const r_right = prim.params.radius;
-    float const r_forward = (prim.params.depth_radius > 0.0F) ? prim.params.depth_radius
-                                                              : prim.params.radius;
-    out_model = Render::Geom::oriented_cylinder(
-        head_world, tail_world, right_ref, r_right, r_forward);
-    return true;
-  }
-
-  case PrimitiveShape::OrientedSphere: {
-    QVector3D const x = anchor_m.column(0).toVector3D();
-    QVector3D const y = anchor_m.column(1).toVector3D();
-    QVector3D const z = anchor_m.column(2).toVector3D();
-    QVector3D const sx = x * (prim.params.half_extents.x() * 2.0F);
-    QVector3D const sy = y * (prim.params.half_extents.y() * 2.0F);
-    QVector3D const sz = z * (prim.params.half_extents.z() * 2.0F);
-    QMatrix4x4 m;
-    m.setColumn(0, QVector4D(sx, 0.0F));
-    m.setColumn(1, QVector4D(sy, 0.0F));
-    m.setColumn(2, QVector4D(sz, 0.0F));
-    m.setColumn(3, QVector4D(head_world, 1.0F));
-    out_model = m;
-    return true;
-  }
-
-  case PrimitiveShape::Mesh:
-    if (prim.custom_mesh == nullptr) {
-      return false;
-    }
-    out_model = mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
-    return true;
-
-  case PrimitiveShape::BoneSpanMesh: {
-    if (prim.custom_mesh == nullptr) {
-      return false;
-    }
-    QVector3D const tail_world =
-        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    QVector3D const right_ref = anchor_m.column(0).toVector3D();
-    float const r_right = prim.params.radius;
-    float const r_forward = (prim.params.depth_radius > 0.0F) ? prim.params.depth_radius
-                                                              : prim.params.radius;
-    out_model = Render::Geom::oriented_cylinder(
-        head_world, tail_world, right_ref, r_right, r_forward);
-    return true;
-  }
-
-  case PrimitiveShape::None:
-  default:
-    return false;
-  }
-}
-
 auto transform_normal(const QMatrix4x4& m, const QVector3D& n) -> QVector3D {
   QVector3D const mapped = m.mapVector(n);
   float const len_sq =
@@ -618,12 +447,25 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
       if (prim.shape == PrimitiveShape::None) {
         continue;
       }
-      Mesh* unit_mesh = resolve_unit_mesh(prim);
+      Mesh* unit_mesh = Render::Creature::primitive_unit_mesh(prim);
       if (unit_mesh == nullptr) {
         continue;
       }
+      BoneIndex const anchor = prim.params.anchor_bone;
+      BoneIndex const tail = prim.params.tail_bone;
+      if (anchor == k_invalid_bone || anchor >= in.bind_pose.size()) {
+        continue;
+      }
+      bool const needs_tail = primitive_needs_tail(prim.shape);
+      if (needs_tail && (tail == k_invalid_bone || tail >= in.bind_pose.size())) {
+        continue;
+      }
+      QMatrix4x4 const& anchor_m = in.bind_pose[anchor];
+      QMatrix4x4 const& tail_m = (tail != k_invalid_bone && tail < in.bind_pose.size())
+                                     ? in.bind_pose[tail]
+                                     : anchor_m;
       QMatrix4x4 unit_model;
-      if (!compute_unit_model(prim, in.bind_pose, unit_model)) {
+      if (!primitive_unit_model(prim, anchor_m, tail_m, unit_model)) {
         continue;
       }
       append_primitive_vertices(prim, *unit_mesh, unit_model, in.bind_pose, out);

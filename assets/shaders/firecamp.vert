@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec2 a_tex_coord;
 
@@ -18,23 +19,6 @@ out vec2 tex_coord;
 out float intensity_val;
 out float flame_phase;
 out float flame_height;
-
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
-
-float noise(vec2 p) {
-  vec2 cell = floor(p);
-  vec2 local = fract(p);
-  vec2 smooth_local = local * local * (3.0 - 2.0 * local);
-
-  float a = hash(cell);
-  float b = hash(cell + vec2(1.0, 0.0));
-  float c = hash(cell + vec2(0.0, 1.0));
-  float d = hash(cell + vec2(1.0, 1.0));
-
-  return mix(mix(a, b, smooth_local.x), mix(c, d, smooth_local.x), smooth_local.y);
-}
 
 void main() {
   vec3 camp_pos = i_pos_intensity.xyz;
@@ -67,9 +51,11 @@ void main() {
   float tip_bias = pow(height_t, 1.35);
   float pulse = 0.94 + 0.12 * sin(u_time * (u_flicker_speed * 0.62) + phase * 1.7) +
                 0.05 * sin(u_time * (u_flicker_speed * 1.8) + phase * 2.8);
-  float curl_noise = noise(vec2(centered_x * 1.6 + phase * 0.12,
-                                height_t * 3.7 - u_time * (u_flicker_speed * 0.34)));
-  float gust_noise = noise(vec2(phase * 0.21, u_time * 0.22 + plane_id * 1.73));
+  float curl_noise =
+      soi_noise_95f501(vec2(centered_x * 1.6 + phase * 0.12,
+                            height_t * 3.7 - u_time * (u_flicker_speed * 0.34)));
+  float gust_noise =
+      soi_noise_95f501(vec2(phase * 0.21, u_time * 0.22 + plane_id * 1.73));
 
   float width_base = clamp(radius * 0.18 * intensity_scale, 0.55, 0.95);
   float width_scale = mix(width_base * pulse,

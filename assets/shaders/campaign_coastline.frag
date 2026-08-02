@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 in vec2 v_uv;
 in float v_distance;
@@ -15,29 +16,12 @@ uniform float u_ink_variation;
 
 out vec4 frag_color;
 
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
-}
-
-float value_noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-
 float fbm(vec2 p, int octaves) {
   float value = 0.0;
   float amplitude = 0.5;
 
   for (int i = 0; i < octaves; i++) {
-    value += amplitude * value_noise(p);
+    value += amplitude * soi_value_noise_6c4de2(p);
     amplitude *= 0.5;
     p *= 2.0;
   }
@@ -80,7 +64,7 @@ void main() {
 
   color = mix(color, u_inner_color, inner_mask * edge_fade);
 
-  float ink_texture = 0.95 + value_noise(v_world_uv * 200.0) * 0.05;
+  float ink_texture = 0.95 + soi_value_noise_6c4de2(v_world_uv * 200.0) * 0.05;
   color.a *= ink_texture;
 
   frag_color = color;

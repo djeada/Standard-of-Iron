@@ -102,6 +102,19 @@ rather than picking up the ruins shader's heavy lichen and rain-streak terms; a 
 shader also needs registering in `render/gl/shader.cpp`, `render/gl/shader_cache.h`,
 `assets.qrc` and the shader list in `tests/render/shader_source_test.cpp`.
 
+`statue_instanced.frag` splits the prop at `v_local_pos.y == 1.175`: below that is
+pedestal stone, above it is the figure, which gets whiter albedo, more subsurface wrap
+and a tighter specular. The inscription panel is shaded, not modelled — the panel region
+is derived from `min(abs(x), abs(z))` (the coordinate that varies across whichever face
+is being shaded) plus a height band, and the recess is sold with a mitred chamfer that
+lightens the bottom edge and darkens the top. An earlier version modelled the panel frame
+as proud boxes; at game distance their lit top faces aliased into a dashed line of white
+dots, which is the failure mode to avoid for any thin proud detail on a prop.
+
+Marble needs a much flatter value range than the other stone props. Albedo stays below 1
+(clipping to paper white is what made the first pass look like plastic), direct light is
+wrapped rather than Lambertian, and a soft highlight shoulder runs after the shadow term.
+
 ## Mesh helpers and face normals
 
 `append_oriented_box()` and `append_barrel_yaxis()` in `vegetation_pipeline.cpp` emit
@@ -116,6 +129,14 @@ preferred for new geometry:
   is flipped to point away from the beam centre.
 - `append_prop_taper(cx, y0, cz, r0, r1, height, segs)` — a capped truncated cone,
   useful for limbs, barrels, columns and sacks.
+- `append_prop_slab(y0, y1, half_bottom, half_top)` — a square truncated pyramid centred
+  on the origin. Its side normals are tilted by the batter, so a stack of slabs reads as
+  real architectural mouldings rather than a stack of cubes.
+- `append_prop_frustum(cx, y0, cz, rx0, rz0, rx1, rz1, height, segs)` — an elliptical
+  truncated cone about Y. Elliptical cross sections are what let a torso be deeper across
+  the shoulders than front to back.
+- `append_prop_limb(a, b, r0, r1, segs)` — a capped tapered cylinder on an arbitrary
+  axis, for arms, legs and cloth folds that are not axis aligned.
 
 The existing helpers were left alone on purpose: ruins, the magic shrine, iron ore and
 the dead tree were all authored against their current (dark) appearance, and correcting

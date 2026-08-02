@@ -4861,6 +4861,70 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s =
+        definition(QString::fromLatin1(k_humanoid_gait_review_id),
+                   QStringLiteral("Humanoid Gait Review"),
+                   QStringLiteral("One archer, swordsman, and spearman cross a close "
+                                  "side-on camera at a walk and then at a run, so "
+                                  "silhouette, joint continuity, and both gait cycles "
+                                  "can be read frame by frame."),
+                   16.0F,
+                   {7.5F, 9.0F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 0.95F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.force_full_creature_lod = true;
+    s.groups = {
+        group(
+            QStringLiteral("gait_archer"), Troop::Archer, 1, 1, {-6.0F, 0.0F, 2.4F}, 1),
+        group(QStringLiteral("gait_sword"),
+              Troop::Swordsman,
+              1,
+              1,
+              {-6.0F, 0.0F, 0.0F},
+              1),
+        group(QStringLiteral("gait_spear"),
+              Troop::Spearman,
+              1,
+              1,
+              {-6.0F, 0.0F, -2.4F},
+              1)};
+
+    auto walk = [](float time, const QString& name, float to_x, float z) {
+      auto step = at(time, Command::FormationMove, name);
+      step.destination = {to_x, 0.0F, z};
+      return step;
+    };
+    auto sprint = [](float time, const QString& name, float to_x, float z) {
+      auto step = at(time, Command::Run, name);
+      step.destination = {to_x, 0.0F, z};
+      step.enabled = true;
+      return step;
+    };
+
+    s.steps = {walk(0.5F, QStringLiteral("gait_archer"), 6.0F, 2.4F),
+               walk(0.5F, QStringLiteral("gait_sword"), 6.0F, 0.0F),
+               walk(0.5F, QStringLiteral("gait_spear"), 6.0F, -2.4F),
+               sprint(8.5F, QStringLiteral("gait_archer"), -6.0F, 2.4F),
+               sprint(8.5F, QStringLiteral("gait_sword"), -6.0F, 0.0F),
+               sprint(8.5F, QStringLiteral("gait_spear"), -6.0F, -2.4F)};
+
+    add_visual_stability(s,
+                         {QStringLiteral("gait_archer"),
+                          QStringLiteral("gait_sword"),
+                          QStringLiteral("gait_spear")});
+    for (auto const& name : {QStringLiteral("gait_archer"),
+                             QStringLiteral("gait_sword"),
+                             QStringLiteral("gait_spear")}) {
+      s.expectations.push_back(expectation(Expect::NoLimbOverextension, name));
+      s.expectations.push_back(expectation(Expect::MovementAnimationObserved, name));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(
         QString::fromLatin1(k_world_prop_lineup_id),
         QStringLiteral("World Prop Lineup"),

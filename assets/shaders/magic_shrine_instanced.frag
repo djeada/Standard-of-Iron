@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -16,42 +17,11 @@ uniform float u_magic_strength;
 
 out vec4 frag_color;
 
-float hash13(vec3 p) {
-  p = fract(p * 0.1031);
-  p += dot(p, p.yzx + 33.33);
-  return fract((p.x + p.y) * p.z);
-}
-
-float noise3(vec3 p) {
-  vec3 i = floor(p);
-  vec3 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-
-  float n000 = hash13(i + vec3(0.0, 0.0, 0.0));
-  float n100 = hash13(i + vec3(1.0, 0.0, 0.0));
-  float n010 = hash13(i + vec3(0.0, 1.0, 0.0));
-  float n110 = hash13(i + vec3(1.0, 1.0, 0.0));
-  float n001 = hash13(i + vec3(0.0, 0.0, 1.0));
-  float n101 = hash13(i + vec3(1.0, 0.0, 1.0));
-  float n011 = hash13(i + vec3(0.0, 1.0, 1.0));
-  float n111 = hash13(i + vec3(1.0, 1.0, 1.0));
-
-  float nx00 = mix(n000, n100, f.x);
-  float nx10 = mix(n010, n110, f.x);
-  float nx01 = mix(n001, n101, f.x);
-  float nx11 = mix(n011, n111, f.x);
-
-  float nxy0 = mix(nx00, nx10, f.y);
-  float nxy1 = mix(nx01, nx11, f.y);
-
-  return mix(nxy0, nxy1, f.z);
-}
-
 float fbm(vec3 p) {
   float v = 0.0;
   float a = 0.5;
   for (int i = 0; i < 4; i++) {
-    v += noise3(p) * a;
+    v += soi_noise3(p) * a;
     p = p * 2.03 + vec3(17.13, 7.91, 11.47);
     a *= 0.5;
   }
@@ -104,7 +74,7 @@ void main() {
   float rune_line_x = 1.0 - smoothstep(0.0, 0.09, abs(rune_frac.x - 0.5));
   float rune_line_y = 1.0 - smoothstep(0.0, 0.09, abs(rune_frac.y - 0.5));
   float rune_diag = 1.0 - smoothstep(0.0, 0.07, abs((rune_frac.x + rune_frac.y) - 1.0));
-  float rune_selector = hash13(vec3(rune_cell, v_seed * 11.0));
+  float rune_selector = soi_hash13_1c8396(vec3(rune_cell, v_seed * 11.0));
   float rune = max(max(rune_line_x, rune_line_y) * step(0.46, rune_selector),
                    rune_diag * step(0.78, rune_selector));
 

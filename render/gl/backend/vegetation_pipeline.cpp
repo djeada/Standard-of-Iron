@@ -1536,6 +1536,180 @@ static void append_prop_beam(std::vector<std::pair<QVector3D, QVector3D>>& verts
   face(4, 7, 6, 5);
 }
 
+static void append_prop_slab(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                             std::vector<uint16_t>& idx,
+                             float y0,
+                             float y1,
+                             float half_bottom,
+                             float half_top) {
+  const float dy = std::max(y1 - y0, 1.0e-4F);
+  const float batter = half_bottom - half_top;
+
+  const QVector3D nx = QVector3D(dy, batter, 0.0F).normalized();
+  const QVector3D nz = QVector3D(0.0F, batter, dy).normalized();
+
+  append_quad(verts,
+              idx,
+              {half_bottom, y0, -half_bottom},
+              {half_bottom, y0, half_bottom},
+              {half_top, y1, half_top},
+              {half_top, y1, -half_top},
+              nx);
+  append_quad(verts,
+              idx,
+              {-half_bottom, y0, half_bottom},
+              {-half_bottom, y0, -half_bottom},
+              {-half_top, y1, -half_top},
+              {-half_top, y1, half_top},
+              {-nx.x(), nx.y(), nx.z()});
+  append_quad(verts,
+              idx,
+              {-half_bottom, y0, half_bottom},
+              {half_bottom, y0, half_bottom},
+              {half_top, y1, half_top},
+              {-half_top, y1, half_top},
+              nz);
+  append_quad(verts,
+              idx,
+              {half_bottom, y0, -half_bottom},
+              {-half_bottom, y0, -half_bottom},
+              {-half_top, y1, -half_top},
+              {half_top, y1, -half_top},
+              {nz.x(), nz.y(), -nz.z()});
+  append_quad(verts,
+              idx,
+              {-half_top, y1, -half_top},
+              {-half_top, y1, half_top},
+              {half_top, y1, half_top},
+              {half_top, y1, -half_top},
+              {0.0F, 1.0F, 0.0F});
+  append_quad(verts,
+              idx,
+              {-half_bottom, y0, half_bottom},
+              {-half_bottom, y0, -half_bottom},
+              {half_bottom, y0, -half_bottom},
+              {half_bottom, y0, half_bottom},
+              {0.0F, -1.0F, 0.0F});
+}
+
+static void append_prop_frustum(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                                std::vector<uint16_t>& idx,
+                                float cx,
+                                float y0,
+                                float cz,
+                                float rx0,
+                                float rz0,
+                                float rx1,
+                                float rz1,
+                                float height,
+                                int segs) {
+  using F = std::pair<QVector3D, QVector3D>;
+  constexpr float k_tau = 6.28318530F;
+  const float y1 = y0 + height;
+  const float dx = (rx1 - rx0) / std::max(height, 1.0e-4F);
+  const float dz = (rz1 - rz0) / std::max(height, 1.0e-4F);
+
+  auto ring_normal = [&](float angle) {
+    const float cs = std::cos(angle);
+    const float sn = std::sin(angle);
+    QVector3D n(rz0 * cs, -(rz0 * dx * cs * cs + rx0 * dz * sn * sn), rx0 * sn);
+    if (n.lengthSquared() < 1.0e-10F) {
+      return QVector3D(cs, 0.0F, sn);
+    }
+    return n.normalized();
+  };
+
+  for (int i = 0; i < segs; ++i) {
+    const float a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    const float a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    append_quad(verts,
+                idx,
+                {cx + rx0 * std::cos(a0), y0, cz + rz0 * std::sin(a0)},
+                {cx + rx0 * std::cos(a1), y0, cz + rz0 * std::sin(a1)},
+                {cx + rx1 * std::cos(a1), y1, cz + rz1 * std::sin(a1)},
+                {cx + rx1 * std::cos(a0), y1, cz + rz1 * std::sin(a0)},
+                ring_normal((a0 + a1) * 0.5F));
+  }
+
+  const QVector3D up(0.0F, 1.0F, 0.0F);
+  const QVector3D down(0.0F, -1.0F, 0.0F);
+  for (int i = 0; i < segs; ++i) {
+    const float a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    const float a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    auto top = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{{cx, y1, cz}, up},
+                  F{{cx + rx1 * std::cos(a0), y1, cz + rz1 * std::sin(a0)}, up},
+                  F{{cx + rx1 * std::cos(a1), y1, cz + rz1 * std::sin(a1)}, up}});
+    idx.insert(idx.end(), {top, uint16_t(top + 1), uint16_t(top + 2)});
+
+    auto bottom = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{{cx, y0, cz}, down},
+                  F{{cx + rx0 * std::cos(a1), y0, cz + rz0 * std::sin(a1)}, down},
+                  F{{cx + rx0 * std::cos(a0), y0, cz + rz0 * std::sin(a0)}, down}});
+    idx.insert(idx.end(), {bottom, uint16_t(bottom + 1), uint16_t(bottom + 2)});
+  }
+}
+
+static void append_prop_limb(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                             std::vector<uint16_t>& idx,
+                             const QVector3D& a,
+                             const QVector3D& b,
+                             float r0,
+                             float r1,
+                             int segs) {
+  using F = std::pair<QVector3D, QVector3D>;
+  constexpr float k_tau = 6.28318530F;
+
+  QVector3D axis = b - a;
+  const float length = axis.length();
+  if (length < 1.0e-6F) {
+    return;
+  }
+  axis /= length;
+
+  const QVector3D reference = std::abs(axis.y()) < 0.9F ? QVector3D(0.0F, 1.0F, 0.0F)
+                                                        : QVector3D(1.0F, 0.0F, 0.0F);
+  QVector3D u = QVector3D::crossProduct(reference, axis);
+  if (u.lengthSquared() < 1.0e-8F) {
+    u = {1.0F, 0.0F, 0.0F};
+  } else {
+    u.normalize();
+  }
+  const QVector3D w = QVector3D::crossProduct(axis, u).normalized();
+  const float slope = (r0 - r1) / length;
+
+  auto radial = [&](float angle) {
+    return u * std::cos(angle) + w * std::sin(angle);
+  };
+
+  for (int i = 0; i < segs; ++i) {
+    const float a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    const float a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    const QVector3D d0 = radial(a0);
+    const QVector3D d1 = radial(a1);
+    const QVector3D n = (radial((a0 + a1) * 0.5F) + axis * slope).normalized();
+    append_quad(verts, idx, a + d0 * r0, a + d1 * r0, b + d1 * r1, b + d0 * r1, n);
+  }
+
+  for (int i = 0; i < segs; ++i) {
+    const float a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    const float a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    auto cap_b = static_cast<uint16_t>(verts.size());
+    verts.insert(
+        verts.end(),
+        {F{b, axis}, F{b + radial(a0) * r1, axis}, F{b + radial(a1) * r1, axis}});
+    idx.insert(idx.end(), {cap_b, uint16_t(cap_b + 1), uint16_t(cap_b + 2)});
+
+    auto cap_a = static_cast<uint16_t>(verts.size());
+    verts.insert(
+        verts.end(),
+        {F{a, -axis}, F{a + radial(a1) * r0, -axis}, F{a + radial(a0) * r0, -axis}});
+    idx.insert(idx.end(), {cap_a, uint16_t(cap_a + 1), uint16_t(cap_a + 2)});
+  }
+}
+
 static void append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
                               std::vector<uint16_t>& idx,
                               float cx,
@@ -2589,178 +2763,367 @@ void VegetationPipeline::initialize_statue_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.52F, -0.02F, -0.52F}, {0.52F, 0.09F, 0.52F});
-  append_box(verts, idx, {-0.46F, 0.09F, -0.46F}, {0.46F, 0.15F, 0.46F});
-  append_box(verts, idx, {-0.40F, 0.15F, -0.40F}, {0.40F, 0.22F, 0.40F});
+  constexpr float k_plinth_top = 1.175F;
+  constexpr int k_limb_segs = 9;
+  constexpr int k_body_segs = 12;
 
-  append_box(verts, idx, {-0.30F, 0.22F, -0.30F}, {0.30F, 0.96F, 0.30F});
+  append_prop_slab(verts, idx, -0.030F, 0.070F, 0.545F, 0.536F);
+  append_prop_slab(verts, idx, 0.070F, 0.140F, 0.478F, 0.470F);
+  append_prop_slab(verts, idx, 0.140F, 0.208F, 0.412F, 0.404F);
 
-  for (int face = 0; face < 4; ++face) {
-    bool const along_x = face < 2;
-    float const sign = (face % 2 == 0) ? 1.0F : -1.0F;
-    float const lo = std::min(sign * 0.298F, sign * 0.310F);
-    float const hi = std::max(sign * 0.298F, sign * 0.310F);
+  append_prop_slab(verts, idx, 0.208F, 0.266F, 0.362F, 0.358F);
+  append_prop_slab(verts, idx, 0.266F, 0.316F, 0.358F, 0.320F);
+  append_prop_slab(verts, idx, 0.316F, 0.348F, 0.320F, 0.306F);
 
-    auto plate = [&](float a0, float a1, float y0, float y1) {
-      if (along_x) {
-        append_box(verts, idx, {lo, y0, a0}, {hi, y1, a1});
-      } else {
-        append_box(verts, idx, {a0, y0, lo}, {a1, y1, hi});
-      }
-    };
+  append_prop_slab(verts, idx, 0.348F, 0.920F, 0.304F, 0.290F);
 
-    plate(-0.200F, 0.200F, 0.400F, 0.424F);
-    plate(-0.200F, 0.200F, 0.790F, 0.814F);
-    plate(-0.204F, -0.180F, 0.400F, 0.814F);
-    plate(0.180F, 0.204F, 0.400F, 0.814F);
-    for (int line = 0; line < 3; ++line) {
-      float const y = 0.482F + 0.098F * static_cast<float>(line);
-      plate(-0.152F, 0.152F, y, y + 0.026F);
-    }
-  }
+  append_prop_slab(verts, idx, 0.920F, 0.954F, 0.290F, 0.320F);
+  append_prop_slab(verts, idx, 0.954F, 0.998F, 0.320F, 0.362F);
+  append_prop_slab(verts, idx, 0.998F, 1.030F, 0.362F, 0.356F);
+  append_prop_slab(verts, idx, 1.030F, 1.066F, 0.356F, 0.312F);
 
-  append_box(verts, idx, {-0.345F, 0.96F, -0.345F}, {0.345F, 1.02F, 0.345F});
-  append_box(verts, idx, {-0.385F, 1.02F, -0.385F}, {0.385F, 1.085F, 0.385F});
-  append_box(verts, idx, {-0.325F, 1.085F, -0.325F}, {0.325F, 1.145F, 0.325F});
-  append_box(verts, idx, {-0.265F, 1.145F, -0.235F}, {0.265F, 1.20F, 0.235F});
+  append_prop_slab(verts, idx, 1.066F, 1.122F, 0.292F, 0.286F);
+  append_prop_slab(verts, idx, 1.122F, k_plinth_top, 0.266F, 0.260F);
 
-  append_box(verts, idx, {-0.150F, 1.20F, 0.012F}, {0.040F, 1.262F, 0.132F});
-  append_box(verts, idx, {-0.158F, 1.246F, 0.030F}, {-0.058F, 1.282F, 0.114F});
-  append_box(verts, idx, {0.010F, 1.20F, -0.172F}, {0.190F, 1.252F, -0.056F});
-  append_box(verts, idx, {0.062F, 1.238F, -0.156F}, {0.162F, 1.278F, -0.072F});
-
-  append_prop_taper(verts, idx, -0.048F, 1.256F, 0.070F, 0.050F, 0.074F, 0.250F, 9);
-  append_prop_taper(verts, idx, -0.042F, 1.500F, 0.074F, 0.072F, 0.092F, 0.330F, 9);
   append_prop_beam(
-      verts, idx, {0.100F, 1.246F, -0.112F}, {0.044F, 1.500F, -0.106F}, 0.052F, 0.056F);
+      verts, idx, {-0.055F, 1.202F, 0.086F}, {0.128F, 1.202F, 0.100F}, 0.050F, 0.027F);
   append_prop_beam(verts,
                    idx,
-                   {0.044F, 1.500F, -0.106F},
-                   {-0.012F, 1.830F, -0.092F},
-                   0.072F,
-                   0.076F);
+                   {-0.140F, 1.200F, -0.088F},
+                   {0.030F, 1.200F, -0.160F},
+                   0.048F,
+                   0.025F);
 
-  append_prop_taper(verts, idx, -0.020F, 1.780F, 0.0F, 0.160F, 0.150F, 0.140F, 12);
-  append_prop_taper(verts, idx, -0.016F, 1.920F, 0.0F, 0.150F, 0.143F, 0.140F, 12);
-  append_prop_taper(verts, idx, -0.014F, 2.060F, 0.0F, 0.150F, 0.170F, 0.170F, 12);
-  append_prop_taper(verts, idx, -0.012F, 2.230F, 0.0F, 0.170F, 0.142F, 0.096F, 12);
+  append_prop_limb(verts,
+                   idx,
+                   {0.014F, 1.229F, 0.092F},
+                   {0.010F, 1.370F, 0.096F},
+                   0.044F,
+                   0.068F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.010F, 1.370F, 0.096F},
+                   {0.016F, 1.545F, 0.086F},
+                   0.068F,
+                   0.057F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.016F, 1.512F, 0.086F},
+                   {0.016F, 1.578F, 0.086F},
+                   0.062F,
+                   0.060F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.016F, 1.545F, 0.086F},
+                   {0.004F, 1.850F, 0.098F},
+                   0.062F,
+                   0.098F,
+                   k_limb_segs);
 
-  append_prop_taper(verts, idx, -0.022F, 1.700F, 0.0F, 0.172F, 0.164F, 0.090F, 12);
-  append_prop_taper(verts, idx, -0.024F, 1.628F, 0.0F, 0.180F, 0.172F, 0.074F, 12);
+  append_prop_limb(verts,
+                   idx,
+                   {-0.056F, 1.226F, -0.124F},
+                   {-0.020F, 1.372F, -0.110F},
+                   0.042F,
+                   0.064F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {-0.020F, 1.372F, -0.110F},
+                   {0.046F, 1.522F, -0.096F},
+                   0.064F,
+                   0.054F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.044F, 1.492F, -0.096F},
+                   {0.048F, 1.556F, -0.095F},
+                   0.058F,
+                   0.056F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.046F, 1.522F, -0.096F},
+                   {0.002F, 1.846F, -0.100F},
+                   0.058F,
+                   0.094F,
+                   k_limb_segs);
 
-  for (int fold = 0; fold < 9; ++fold) {
-    float const angle = -1.40F + 0.35F * static_cast<float>(fold);
+  append_prop_frustum(verts,
+                      idx,
+                      0.0F,
+                      1.796F,
+                      0.0F,
+                      0.108F,
+                      0.150F,
+                      0.100F,
+                      0.138F,
+                      0.154F,
+                      k_body_segs);
+
+  append_prop_frustum(verts,
+                      idx,
+                      0.002F,
+                      1.828F,
+                      0.0F,
+                      0.128F,
+                      0.168F,
+                      0.116F,
+                      0.154F,
+                      0.078F,
+                      k_body_segs);
+  for (int strip = 0; strip < 11; ++strip) {
+    float const angle = 6.28318530F * (static_cast<float>(strip) + 0.5F) / 11.0F;
     float const cs = std::cos(angle);
     float const sn = std::sin(angle);
-    float const top = 2.010F - 0.048F * std::fabs(static_cast<float>(fold) - 4.0F);
+    float const drop = 0.074F + 0.026F * std::cos(angle * 2.0F);
+    append_prop_limb(verts,
+                     idx,
+                     {0.002F + 0.122F * cs, 1.842F, 0.160F * sn},
+                     {0.002F + 0.132F * cs, 1.842F - drop, 0.174F * sn},
+                     0.032F,
+                     0.026F,
+                     6);
+  }
+
+  append_prop_frustum(verts,
+                      idx,
+                      0.004F,
+                      1.902F,
+                      0.0F,
+                      0.126F,
+                      0.164F,
+                      0.100F,
+                      0.130F,
+                      0.052F,
+                      k_body_segs);
+  append_prop_frustum(verts,
+                      idx,
+                      0.004F,
+                      1.938F,
+                      0.0F,
+                      0.100F,
+                      0.130F,
+                      0.120F,
+                      0.158F,
+                      0.150F,
+                      k_body_segs);
+  append_prop_frustum(verts,
+                      idx,
+                      0.004F,
+                      2.088F,
+                      0.0F,
+                      0.120F,
+                      0.158F,
+                      0.110F,
+                      0.170F,
+                      0.126F,
+                      k_body_segs);
+
+  append_prop_limb(verts,
+                   idx,
+                   {0.086F, 2.108F, 0.062F},
+                   {0.104F, 2.176F, 0.055F},
+                   0.058F,
+                   0.044F,
+                   8);
+  append_prop_limb(verts,
+                   idx,
+                   {0.086F, 2.108F, -0.062F},
+                   {0.104F, 2.176F, -0.055F},
+                   0.058F,
+                   0.044F,
+                   8);
+
+  append_prop_limb(verts,
+                   idx,
+                   {0.004F, 2.150F, 0.148F},
+                   {0.000F, 2.226F, 0.140F},
+                   0.072F,
+                   0.062F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.004F, 2.150F, -0.148F},
+                   {0.000F, 2.226F, -0.140F},
+                   0.072F,
+                   0.062F,
+                   k_limb_segs);
+
+  append_prop_frustum(
+      verts, idx, 0.012F, 2.196F, 0.0F, 0.054F, 0.060F, 0.048F, 0.052F, 0.078F, 10);
+
+  append_prop_frustum(verts,
+                      idx,
+                      0.014F,
+                      2.274F,
+                      0.0F,
+                      0.050F,
+                      0.052F,
+                      0.068F,
+                      0.070F,
+                      0.062F,
+                      k_body_segs);
+  append_prop_frustum(verts,
+                      idx,
+                      0.012F,
+                      2.336F,
+                      0.0F,
+                      0.068F,
+                      0.070F,
+                      0.070F,
+                      0.072F,
+                      0.058F,
+                      k_body_segs);
+  append_prop_frustum(verts,
+                      idx,
+                      0.006F,
+                      2.394F,
+                      0.0F,
+                      0.070F,
+                      0.072F,
+                      0.030F,
+                      0.032F,
+                      0.068F,
+                      k_body_segs);
+  append_prop_limb(
+      verts, idx, {0.068F, 2.374F, 0.0F}, {0.092F, 2.352F, 0.0F}, 0.020F, 0.012F, 6);
+  append_prop_frustum(
+      verts, idx, -0.020F, 2.372F, 0.0F, 0.070F, 0.074F, 0.040F, 0.044F, 0.078F, 10);
+
+  for (int leaf = 0; leaf < 13; ++leaf) {
+    float const angle = 6.28318530F * static_cast<float>(leaf) / 13.0F;
+    float const next = 6.28318530F * static_cast<float>(leaf + 1) / 13.0F;
+    append_prop_limb(verts,
+                     idx,
+                     {0.008F + 0.076F * std::cos(angle),
+                      2.404F + 0.010F * std::sin(angle * 3.0F),
+                      0.079F * std::sin(angle)},
+                     {0.008F + 0.076F * std::cos(next),
+                      2.404F + 0.010F * std::sin(next * 3.0F),
+                      0.079F * std::sin(next)},
+                     0.019F,
+                     0.016F,
+                     6);
+  }
+
+  append_prop_limb(verts,
+                   idx,
+                   {0.000F, 2.196F, -0.150F},
+                   {0.052F, 2.108F, -0.286F},
+                   0.062F,
+                   0.048F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.052F, 2.108F, -0.286F},
+                   {0.128F, 2.318F, -0.318F},
+                   0.050F,
+                   0.034F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.128F, 2.318F, -0.318F},
+                   {0.156F, 2.392F, -0.322F},
+                   0.036F,
+                   0.030F,
+                   8);
+  append_prop_beam(
+      verts, idx, {0.150F, 2.376F, -0.321F}, {0.172F, 2.452F, -0.324F}, 0.036F, 0.014F);
+
+  append_prop_limb(verts,
+                   idx,
+                   {0.000F, 2.196F, 0.152F},
+                   {-0.022F, 1.972F, 0.196F},
+                   0.062F,
+                   0.046F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {-0.022F, 1.972F, 0.196F},
+                   {0.038F, 1.812F, 0.206F},
+                   0.046F,
+                   0.034F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {0.038F, 1.812F, 0.206F},
+                   {0.062F, 1.766F, 0.210F},
+                   0.036F,
+                   0.028F,
+                   8);
+
+  append_prop_limb(verts,
+                   idx,
+                   {0.052F, k_plinth_top, 0.216F},
+                   {0.046F, 2.482F, 0.212F},
+                   0.026F,
+                   0.022F,
+                   8);
+  append_prop_limb(verts,
+                   idx,
+                   {0.046F, 2.482F, 0.212F},
+                   {0.045F, 2.516F, 0.212F},
+                   0.032F,
+                   0.026F,
+                   8);
+  append_prop_limb(verts,
+                   idx,
+                   {0.045F, 2.512F, 0.212F},
+                   {0.044F, 2.616F, 0.212F},
+                   0.036F,
+                   0.003F,
+                   8);
+
+  append_prop_limb(verts,
+                   idx,
+                   {-0.030F, 2.246F, 0.118F},
+                   {-0.086F, 2.062F, 0.186F},
+                   0.078F,
+                   0.086F,
+                   k_limb_segs);
+  append_prop_limb(verts,
+                   idx,
+                   {-0.070F, 2.090F, 0.180F},
+                   {0.060F, 1.928F, 0.020F},
+                   0.068F,
+                   0.058F,
+                   8);
+  append_prop_limb(verts,
+                   idx,
+                   {0.060F, 1.928F, 0.020F},
+                   {0.020F, 1.876F, -0.150F},
+                   0.058F,
+                   0.062F,
+                   8);
+  append_prop_limb(verts,
+                   idx,
+                   {0.020F, 1.876F, -0.150F},
+                   {-0.120F, 1.860F, -0.060F},
+                   0.062F,
+                   0.070F,
+                   8);
+
+  append_prop_beam(
+      verts, idx, {-0.128F, 2.180F, 0.030F}, {-0.176F, 1.520F, 0.010F}, 0.150F, 0.030F);
+  for (int fold = 0; fold < 5; ++fold) {
+    float const t = (static_cast<float>(fold) - 2.0F) * 0.5F;
+    float const z = t * 0.115F;
+    float const belly = 0.012F * (1.0F - std::fabs(t));
+    float const bottom =
+        1.502F + 0.064F * std::fabs(t) + 0.030F * static_cast<float>(fold % 2);
     append_prop_beam(verts,
                      idx,
-                     {-0.016F + cs * 0.150F, top, sn * 0.150F},
-                     {-0.022F + cs * 0.182F, 1.652F, sn * 0.182F},
-                     0.030F,
+                     {-0.150F - belly, 2.150F, z + 0.028F},
+                     {-0.196F - belly, bottom, z + 0.018F},
+                     0.034F,
                      0.024F);
   }
-  for (int fold = 0; fold < 5; ++fold) {
-    float const angle = 1.90F + 0.36F * static_cast<float>(fold);
-    float const cs = std::cos(angle);
-    float const sn = std::sin(angle);
-    append_prop_beam(verts,
-                     idx,
-                     {-0.016F + cs * 0.152F, 2.180F, sn * 0.152F},
-                     {-0.022F + cs * 0.178F, 1.700F, sn * 0.178F},
-                     0.028F,
-                     0.022F);
-  }
-
-  append_prop_beam(verts,
-                   idx,
-                   {-0.128F, 2.286F, -0.130F},
-                   {-0.058F, 1.980F, 0.146F},
-                   0.070F,
-                   0.028F);
   append_prop_beam(
-      verts, idx, {-0.058F, 1.980F, 0.146F}, {-0.020F, 1.836F, 0.128F}, 0.058F, 0.026F);
-
-  append_prop_taper(verts, idx, -0.012F, 2.316F, 0.0F, 0.058F, 0.053F, 0.072F, 9);
-  append_prop_taper(verts, idx, -0.012F, 2.380F, 0.0F, 0.076F, 0.092F, 0.108F, 10);
-  append_prop_taper(verts, idx, -0.012F, 2.488F, 0.0F, 0.092F, 0.062F, 0.070F, 10);
-  append_box(verts, idx, {-0.096F, 2.400F, -0.050F}, {-0.052F, 2.470F, 0.050F});
-  append_box(verts, idx, {-0.104F, 2.438F, -0.017F}, {-0.070F, 2.468F, 0.017F});
-  append_box(verts, idx, {-0.090F, 2.382F, -0.060F}, {-0.040F, 2.408F, 0.060F});
-  for (int curl = 0; curl < 9; ++curl) {
-    float const angle = 6.28318530F * static_cast<float>(curl) / 9.0F;
-    float const cs = std::cos(angle);
-    float const sn = std::sin(angle);
-    append_prop_beam(verts,
-                     idx,
-                     {-0.012F + cs * 0.070F, 2.492F, sn * 0.070F},
-                     {-0.012F + cs * 0.088F, 2.462F, sn * 0.088F},
-                     0.022F,
-                     0.018F);
-  }
-
-  append_prop_beam(
-      verts, idx, {-0.058F, 2.272F, 0.142F}, {-0.136F, 2.086F, 0.208F}, 0.054F, 0.057F);
-  append_prop_beam(
-      verts, idx, {-0.136F, 2.086F, 0.208F}, {-0.276F, 2.232F, 0.186F}, 0.044F, 0.047F);
-  append_prop_taper(verts, idx, -0.298F, 2.216F, 0.182F, 0.038F, 0.031F, 0.058F, 8);
-
-  append_prop_beam(verts,
-                   idx,
-                   {-0.038F, 2.276F, -0.148F},
-                   {0.006F, 2.010F, -0.200F},
-                   0.057F,
-                   0.059F);
-  append_prop_beam(verts,
-                   idx,
-                   {0.006F, 2.010F, -0.200F},
-                   {-0.104F, 1.892F, -0.196F},
-                   0.046F,
-                   0.048F);
-  append_prop_taper(verts, idx, -0.128F, 1.860F, -0.194F, 0.040F, 0.035F, 0.058F, 8);
-
-  append_prop_beam(verts,
-                   idx,
-                   {-0.088F, 2.262F, -0.176F},
-                   {-0.150F, 1.900F, -0.224F},
-                   0.084F,
-                   0.026F);
-  append_prop_beam(verts,
-                   idx,
-                   {-0.150F, 1.900F, -0.224F},
-                   {-0.106F, 1.560F, -0.236F},
-                   0.076F,
-                   0.024F);
-  append_prop_beam(verts,
-                   idx,
-                   {-0.106F, 1.560F, -0.236F},
-                   {-0.062F, 1.226F, -0.222F},
-                   0.064F,
-                   0.022F);
-  for (int fold = 0; fold < 3; ++fold) {
-    float const z = -0.250F - 0.014F * static_cast<float>(fold);
-    append_prop_beam(verts,
-                     idx,
-                     {-0.132F, 2.060F, z},
-                     {-0.096F, 1.480F + 0.070F * static_cast<float>(fold), z},
-                     0.024F,
-                     0.020F);
-  }
-
-  append_prop_beam(
-      verts, idx, {0.128F, 2.286F, 0.0F}, {0.146F, 1.720F, 0.0F}, 0.158F, 0.028F);
-  for (int fold = 0; fold < 4; ++fold) {
-    float const z = -0.120F + 0.080F * static_cast<float>(fold);
-    append_prop_beam(verts,
-                     idx,
-                     {0.162F, 2.240F, z},
-                     {0.170F, 1.720F - 0.030F * static_cast<float>(fold % 2), z},
-                     0.024F,
-                     0.022F);
-  }
-
-  append_box(verts, idx, {-0.420F, 0.22F, -0.340F}, {-0.310F, 0.360F, -0.190F});
-  append_box(verts, idx, {-0.402F, 0.360F, -0.322F}, {-0.328F, 0.414F, -0.208F});
+      verts, idx, {-0.176F, 1.700F, 0.140F}, {-0.128F, 1.436F, 0.226F}, 0.075F, 0.026F);
 
   upload_prop_mesh_impl(verts,
                         idx,

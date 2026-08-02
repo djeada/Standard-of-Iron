@@ -356,13 +356,37 @@ TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
   ASSERT_NE(ankle, nullptr);
   ASSERT_NE(foot, nullptr);
 
+  auto const distal_radius = [](const Render::Creature::PrimitiveInstance* prim) {
+    return prim->params.tail_radius > 0.0F ? prim->params.tail_radius
+                                           : prim->params.radius;
+  };
+
   EXPECT_EQ(foot->shape, Render::Creature::PrimitiveShape::OrientedSphere);
-  EXPECT_GT(upper_arm_top->params.radius, upper_arm_bot->params.radius);
-  EXPECT_GT(forearm_top->params.radius, forearm_bot->params.radius);
-  EXPECT_GT(upper_arm_bot->params.radius, forearm_bot->params.radius);
-  EXPECT_GT(thigh_top->params.radius, thigh_bot->params.radius);
-  EXPECT_GT(calf_top->params.radius, calf_bot->params.radius);
-  EXPECT_GT(thigh_bot->params.radius, calf_bot->params.radius);
+
+  for (auto const* segment : {upper_arm_top,
+                              upper_arm_bot,
+                              forearm_top,
+                              forearm_bot,
+                              thigh_top,
+                              thigh_bot,
+                              calf_top,
+                              calf_bot}) {
+    EXPECT_EQ(segment->shape, Render::Creature::PrimitiveShape::TaperedCylinder);
+    EXPECT_GT(segment->params.tail_radius, 0.0F);
+  }
+
+  EXPECT_GT(upper_arm_top->params.radius, distal_radius(upper_arm_bot));
+  EXPECT_GT(forearm_top->params.radius, distal_radius(forearm_bot));
+  EXPECT_GT(thigh_top->params.radius, distal_radius(thigh_bot));
+  EXPECT_GT(calf_top->params.radius, distal_radius(calf_bot));
+
+  EXPECT_FLOAT_EQ(distal_radius(upper_arm_top), upper_arm_bot->params.radius);
+  EXPECT_FLOAT_EQ(distal_radius(forearm_top), forearm_bot->params.radius);
+  EXPECT_FLOAT_EQ(distal_radius(thigh_top), thigh_bot->params.radius);
+  EXPECT_FLOAT_EQ(distal_radius(calf_top), calf_bot->params.radius);
+
+  EXPECT_GT(distal_radius(upper_arm_bot), distal_radius(forearm_bot));
+  EXPECT_GT(distal_radius(thigh_bot), distal_radius(calf_bot));
   EXPECT_GT(knee->params.radius, ankle->params.radius);
   EXPECT_GT(foot->params.half_extents.z(), foot->params.half_extents.x());
 }

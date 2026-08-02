@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -20,19 +21,14 @@ uniform vec3 u_camera_pos;
 
 out vec4 frag_color;
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
 float noise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x),
-             f.y);
+  return mix(
+      mix(soi_hash_82bbee(i), soi_hash_82bbee(i + vec2(1.0, 0.0)), f.x),
+      mix(soi_hash_82bbee(i + vec2(0.0, 1.0)), soi_hash_82bbee(i + vec2(1.0)), f.x),
+      f.y);
 }
 
 float fbm(vec2 p) {
@@ -68,7 +64,8 @@ void main() {
   float rectangular_edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
   float tail_edge_distance = max(tail_limit - uv.x, 0.0);
   float free_hem = min(rectangular_edge, tail_edge_distance);
-  float fray_noise = hash(floor(uv * vec2(210.0, 170.0)) + vec2(v_banner_seed * 31.0));
+  float fray_noise =
+      soi_hash_82bbee(floor(uv * vec2(210.0, 170.0)) + vec2(v_banner_seed * 31.0));
   float fray_zone = 1.0 - smoothstep(0.006, 0.026, free_hem);
   if (uv.x > 0.70 && fray_zone * step(0.84, fray_noise) > 0.5)
     discard;

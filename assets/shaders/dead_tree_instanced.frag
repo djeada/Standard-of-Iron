@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -12,19 +13,15 @@ in vec3 v_local_normal;
 
 out vec4 frag_color;
 
-float hash12(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
 float noise21(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
 
-  float a = hash12(i);
-  float b = hash12(i + vec2(1.0, 0.0));
-  float c = hash12(i + vec2(0.0, 1.0));
-  float d = hash12(i + vec2(1.0, 1.0));
+  float a = soi_hash12_9f6e8e(i);
+  float b = soi_hash12_9f6e8e(i + vec2(1.0, 0.0));
+  float c = soi_hash12_9f6e8e(i + vec2(0.0, 1.0));
+  float d = soi_hash12_9f6e8e(i + vec2(1.0, 1.0));
 
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }

@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -15,32 +16,15 @@ uniform bool u_use_texture;
 
 out vec4 frag_color;
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
 float wood_grain(vec2 p) {
-  float grain = sin(p.y * 30.0 + noise(p * 5.0) * 3.0) * 0.5 + 0.5;
-  float fine_grain = noise(p * 50.0) * 0.2;
+  float grain = sin(p.y * 30.0 + soi_noise_3d41e6(p * 5.0) * 3.0) * 0.5 + 0.5;
+  float fine_grain = soi_noise_3d41e6(p * 50.0) * 0.2;
   return grain * 0.15 + fine_grain;
 }
 
 float metal_surface(vec2 p) {
-  float scratches = noise(p * 80.0) * 0.1;
-  float polish = noise(p * 20.0) * 0.05;
+  float scratches = soi_noise_3d41e6(p * 80.0) * 0.1;
+  float polish = soi_noise_3d41e6(p * 20.0) * 0.05;
   return scratches + polish;
 }
 
@@ -62,7 +46,7 @@ void main() {
 
   if (is_wood) {
     float grain = wood_grain(v_world_pos.xz);
-    float knots = step(0.92, noise(uv * 3.0)) * 0.15;
+    float knots = step(0.92, soi_noise_3d41e6(uv * 3.0)) * 0.15;
 
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float wood_sheen = pow(1.0 - view_angle, 6.0) * 0.08;
@@ -77,7 +61,7 @@ void main() {
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
     float metal_sheen = pow(1.0 - view_angle, 4.0) * 0.18;
 
-    float patina = noise(uv * 8.0) * 0.08;
+    float patina = soi_noise_3d41e6(uv * 8.0) * 0.08;
 
     color *= 1.0 + surface - patina;
     color += vec3(metal_sheen);
@@ -86,14 +70,14 @@ void main() {
   else if (is_rope) {
 
     float twist = sin(v_world_pos.y * 40.0 + v_world_pos.x * 10.0) * 0.08;
-    float fiber = noise(uv * 60.0) * 0.12;
+    float fiber = soi_noise_3d41e6(uv * 60.0) * 0.12;
 
     color *= 1.0 + twist + fiber - 0.05;
   }
 
   else if (is_leather) {
-    float grain = noise(uv * 20.0) * 0.15;
-    float crease = noise(uv * 8.0) * 0.10;
+    float grain = soi_noise_3d41e6(uv * 20.0) * 0.15;
+    float crease = soi_noise_3d41e6(uv * 8.0) * 0.10;
 
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float leather_sheen = pow(1.0 - view_angle, 5.0) * 0.10;
@@ -103,7 +87,7 @@ void main() {
   }
 
   else {
-    float detail = noise(uv * 15.0) * 0.08;
+    float detail = soi_noise_3d41e6(uv * 15.0) * 0.08;
     color *= 1.0 + detail - 0.04;
   }
 
