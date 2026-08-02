@@ -25,21 +25,21 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageMarketPalette {
-  QVector3D sandstone{0.65F, 0.49F, 0.30F};
-  QVector3D sandstone_light{0.78F, 0.63F, 0.42F};
-  QVector3D sandstone_dark{0.36F, 0.27F, 0.18F};
-  QVector3D mortar{0.43F, 0.35F, 0.25F};
-  QVector3D wood_dark{0.13F, 0.072F, 0.032F};
-  QVector3D wood_medium{0.31F, 0.17F, 0.068F};
-  QVector3D wood_light{0.47F, 0.29F, 0.12F};
-  QVector3D cloth_oxblood{0.34F, 0.040F, 0.024F};
-  QVector3D cloth_oxblood_faded{0.49F, 0.085F, 0.045F};
+  QVector3D sandstone{0.82F, 0.70F, 0.52F};
+  QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
+  QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
+  QVector3D mortar{0.63F, 0.55F, 0.42F};
+  QVector3D wood_dark{0.25F, 0.16F, 0.08F};
+  QVector3D wood_medium{0.45F, 0.29F, 0.14F};
+  QVector3D wood_light{0.60F, 0.42F, 0.21F};
+  QVector3D cloth_oxblood{0.47F, 0.10F, 0.08F};
+  QVector3D cloth_oxblood_faded{0.64F, 0.17F, 0.13F};
   QVector3D cloth_gold{0.66F, 0.38F, 0.085F};
   QVector3D indigo{0.10F, 0.12F, 0.30F};
-  QVector3D brick{0.48F, 0.22F, 0.095F};
-  QVector3D brick_dark{0.24F, 0.075F, 0.028F};
-  QVector3D stone_light{0.66F, 0.52F, 0.34F};
-  QVector3D tile_red{0.36F, 0.085F, 0.032F};
+  QVector3D brick{0.64F, 0.36F, 0.19F};
+  QVector3D brick_dark{0.42F, 0.18F, 0.10F};
+  QVector3D stone_light{0.86F, 0.76F, 0.60F};
+  QVector3D tile_red{0.58F, 0.21F, 0.11F};
   QVector3D ceramic{0.61F, 0.28F, 0.085F};
   QVector3D bronze{0.48F, 0.27F, 0.075F};
   QVector3D rope{0.51F, 0.38F, 0.20F};

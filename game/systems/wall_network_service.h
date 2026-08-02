@@ -65,6 +65,11 @@ public:
   static auto compute_connection_mask(const OccupancySet& occupancy,
                                       int grid_x,
                                       int grid_z) -> std::uint8_t;
+
+  static auto compute_connection_mask(const OccupancySet& occupancy,
+                                      int grid_x,
+                                      int grid_z,
+                                      const OccupancySet& ignored) -> std::uint8_t;
   static auto validate_wall_segment_placement(
       Engine::Core::World& world,
       const WallGridPosition& position,

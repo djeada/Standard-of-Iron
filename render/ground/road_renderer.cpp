@@ -29,12 +29,12 @@ namespace {
 auto road_color_for_style(const QString& authored_style) -> QVector3D {
   const QString style = authored_style.trimmed().toLower();
   if (style == QStringLiteral("rough")) {
-    return {0.34F, 0.29F, 0.22F};
+    return {0.47F, 0.41F, 0.31F};
   }
   if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
-    return {0.48F, 0.47F, 0.44F};
+    return {0.50F, 0.49F, 0.46F};
   }
-  return {0.42F, 0.34F, 0.22F};
+  return {0.52F, 0.44F, 0.30F};
 }
 
 auto road_surface_for_style(const QString& authored_style) -> RoadSurfaceKind {

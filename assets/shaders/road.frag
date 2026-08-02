@@ -147,13 +147,17 @@ void main() {
     h = (medium - 0.5) * 0.035 * stone_mask - mortar_mask * 0.045;
     material_roughness = 0.82;
   } else if (u_surface_kind == 1) {
-    vec3 dry_earth = u_color * 0.95;
-    vec3 compressed_earth = u_color * 0.76;
+    vec3 dry_earth = u_color * 1.02;
+    vec3 compressed_earth = u_color * 0.78;
     float compacted = clamp(ruts * 0.48 + center_wear * 0.10, 0.0, 1.0);
     base_color = mix(dry_earth, compressed_earth, compacted);
-    base_color *= 0.88 + broad * 0.14 + medium * 0.08;
-    h = (medium - 0.5) * 0.050 - ruts * 0.042;
-    ao = 0.90 - ruts * 0.11 - (1.0 - medium) * 0.07;
+
+    vec2 gravel_cells = worley_f(uv * 3.1 + vec2(-11.0, 6.0));
+    float gravel = smoothstep(0.035, 0.16, gravel_cells.y - gravel_cells.x);
+    base_color = mix(base_color, base_color * 1.17, gravel * 0.55);
+    base_color *= 0.90 + broad * 0.13 + medium * 0.08;
+    h = (medium - 0.5) * 0.050 - ruts * 0.042 + gravel * 0.018;
+    ao = 0.92 - ruts * 0.11 - (1.0 - medium) * 0.06;
     material_roughness = 0.97;
   } else {
 

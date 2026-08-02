@@ -3113,6 +3113,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         unit->health = std::min(group.health_override, std::max(1, unit->max_health));
       }
     }
+    if (group.settlement_resident && entity != nullptr && transform != nullptr) {
+      auto* resident =
+          entity->add_component<Engine::Core::SettlementResidentComponent>();
+      resident->hearth_x = transform->position.x;
+      resident->hearth_z = transform->position.z;
+      resident->hearth_assigned = true;
+      resident->roam_radius = group.settlement_roam_radius;
+    }
     return entity_id;
   };
   host.find_unit = [this](Engine::Core::EntityID entity_id) {

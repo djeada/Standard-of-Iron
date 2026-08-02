@@ -83,6 +83,8 @@ struct ArenaScenarioGroup {
   bool ai_controlled{false};
   bool spawn_at_start{true};
   bool render_rider{true};
+  bool settlement_resident{false};
+  float settlement_roam_radius{16.0F};
   int health_override{0};
   int max_health_override{0};
 
