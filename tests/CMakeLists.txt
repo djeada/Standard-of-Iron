@@ -69,6 +69,7 @@ add_executable(
     map/hill_crown_geometry_test.cpp
     map/terrain_footprint_test.cpp
     map/mission_victory_rules_test.cpp
+    map/wave_archetype_catalog_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
@@ -283,6 +284,7 @@ add_executable(
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/mission_events_test.cpp
+    core/mission_wave_director_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
     core/rts_action_model_test.cpp

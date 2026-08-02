@@ -389,6 +389,7 @@ add_library(
     app/controllers/action_vfx.cpp
     app/viewmodels/save_slots_view_model.cpp
     app/viewmodels/placement_view_model.cpp
+    app/viewmodels/wave_view_model.cpp
     app/controllers/command_controller.cpp
     app/core/ambient_state_manager.cpp
     app/core/audio_coordinator.cpp
@@ -412,7 +413,7 @@ add_library(
     app/core/mission_commander_setup.cpp
     app/core/mission_definition_view.cpp
     app/core/mission_setup_coordinator.cpp
-    app/core/mission_wave_tracker.cpp
+    app/core/mission_wave_director.cpp
     app/core/production_manager.cpp
     app/core/renderer_bootstrap.cpp
     app/core/rts_action_model.cpp
@@ -505,6 +506,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/StyledComboBox.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
+            ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
             ui/qml/RpgTargetBar.qml
