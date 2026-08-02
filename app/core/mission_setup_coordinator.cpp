@@ -946,4 +946,39 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
   return effects;
 }
 
+auto build_pending_mission_events(const Game::Mission::MissionDefinition& mission)
+    -> std::vector<PendingMissionEvent> {
+  std::vector<PendingMissionEvent> events;
+
+  for (const auto& game_event : mission.events) {
+    if (game_event.trigger.type != QLatin1String("timer") ||
+        !game_event.trigger.time.has_value()) {
+      qWarning() << "Mission" << mission.id << "uses unsupported event trigger"
+                 << game_event.trigger.type << "- skipping";
+      continue;
+    }
+
+    for (const auto& action : game_event.actions) {
+      if (action.type != QLatin1String("show_message")) {
+        qWarning() << "Mission" << mission.id << "uses unsupported event action"
+                   << action.type << "- skipping";
+        continue;
+      }
+      if (!action.text.has_value() || action.text->isEmpty()) {
+        continue;
+      }
+      events.push_back({.trigger_time = *game_event.trigger.time,
+                        .text = *action.text,
+                        .fired = false});
+    }
+  }
+
+  std::stable_sort(events.begin(),
+                   events.end(),
+                   [](const PendingMissionEvent& a, const PendingMissionEvent& b) {
+                     return a.trigger_time < b.trigger_time;
+                   });
+  return events;
+}
+
 } // namespace App::Core

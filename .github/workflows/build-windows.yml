@@ -516,6 +516,12 @@ jobs:
             if (($output -join "`n") -notmatch "SOI_RENDERER_SELF_TEST: PASS") {
               Write-Error "The executable exited without presenting a gameplay OpenGL frame"
             }
+            # Music and ambience are read from assets\ rather than embedded in the
+            # binary, so a package that loses that directory renders fine and is
+            # simply mute. The self-test reports on it; fail the release here.
+            if (($output -join "`n") -notmatch "SOI_AUDIO_SELF_TEST: PASS") {
+              Write-Error "The packaged game cannot reach all of its audio assets"
+            }
           } finally {
             Pop-Location
           }

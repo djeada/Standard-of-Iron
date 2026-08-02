@@ -1,6 +1,7 @@
 #include "save_format.h"
 
 #include <QBuffer>
+#include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDataStream>
 #include <QIODevice>
@@ -97,12 +98,16 @@ auto pack(const QByteArray& raw, Compression compression) -> Payload {
 
 auto verify_blob(const Payload& payload, QString* out_error) -> bool {
   if (payload.blob_checksum.isEmpty()) {
-    return make_error(out_error, QStringLiteral("Save payload has no checksum"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Save payload has no checksum"));
   }
   if (checksum_of(payload.blob) != payload.blob_checksum) {
-    return make_error(out_error,
-                      QStringLiteral("Save payload is corrupted (stored checksum "
-                                     "mismatch)"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile",
+                                    "Save payload is corrupted (stored checksum "
+                                    "mismatch)"));
   }
   return true;
 }
@@ -116,26 +121,32 @@ auto unpack(const Payload& payload, QByteArray& out_raw, QString* out_error) -> 
   if (payload.compression == Compression::Zlib) {
     raw = qUncompress(payload.blob);
     if (raw.isEmpty() && payload.raw_size != 0) {
-      return make_error(out_error,
-                        QStringLiteral("Save payload is corrupted (decompression "
-                                       "failed)"));
+      return make_error(
+          out_error,
+          QCoreApplication::translate("SaveFile",
+                                      "Save payload is corrupted (decompression "
+                                      "failed)"));
     }
   } else {
     raw = payload.blob;
   }
 
   if (raw.size() != payload.raw_size) {
-    return make_error(out_error,
-                      QStringLiteral("Save payload is corrupted (expected %1 bytes, "
-                                     "got %2)")
-                          .arg(payload.raw_size)
-                          .arg(raw.size()));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile",
+                                    "Save payload is corrupted (expected %1 bytes, "
+                                    "got %2)")
+            .arg(payload.raw_size)
+            .arg(raw.size()));
   }
 
   if (checksum_of(raw) != payload.raw_checksum) {
-    return make_error(out_error,
-                      QStringLiteral("Save payload is corrupted (content checksum "
-                                     "mismatch)"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile",
+                                    "Save payload is corrupted (content checksum "
+                                    "mismatch)"));
   }
 
   out_raw = raw;
@@ -223,10 +234,14 @@ auto encode_package(const Record& record) -> QByteArray {
 
 auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) -> bool {
   if (bytes.size() < k_magic_size + 8) {
-    return make_error(out_error, QStringLiteral("Not a Standard of Iron save file"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Not a Standard of Iron save file"));
   }
   if (std::memcmp(bytes.constData(), k_magic, k_magic_size) != 0) {
-    return make_error(out_error, QStringLiteral("Not a Standard of Iron save file"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Not a Standard of Iron save file"));
   }
 
   QDataStream stream(bytes);
@@ -240,28 +255,34 @@ auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) ->
 
   if (format_version != static_cast<quint32>(k_format_version)) {
     return make_error(out_error,
-                      QStringLiteral("Unsupported save file version %1 (expected %2)")
+                      QCoreApplication::translate(
+                          "SaveFile", "Unsupported save file version %1 (expected %2)")
                           .arg(format_version)
                           .arg(k_format_version));
   }
 
   if (header_size == 0 || header_size > k_max_package_blob ||
       static_cast<qint64>(header_size) > bytes.size() - k_magic_size - 8) {
-    return make_error(out_error, QStringLiteral("Save file header is truncated"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Save file header is truncated"));
   }
 
   QByteArray header_bytes(static_cast<int>(header_size), Qt::Uninitialized);
   if (stream.readRawData(header_bytes.data(), static_cast<int>(header_size)) !=
       static_cast<int>(header_size)) {
-    return make_error(out_error, QStringLiteral("Save file header is truncated"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Save file header is truncated"));
   }
 
   QJsonParseError parse_error{};
   const QJsonDocument header_doc = QJsonDocument::fromJson(header_bytes, &parse_error);
   if (parse_error.error != QJsonParseError::NoError || !header_doc.isObject()) {
-    return make_error(out_error,
-                      QStringLiteral("Save file header is corrupted: %1")
-                          .arg(parse_error.errorString()));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Save file header is corrupted: %1")
+            .arg(parse_error.errorString()));
   }
   const QJsonObject header = header_doc.object();
 
@@ -287,7 +308,8 @@ auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) ->
   if (!compression_from_string(header.value(QStringLiteral("compression")).toString(),
                                record.world.compression)) {
     return make_error(out_error,
-                      QStringLiteral("Save file uses an unknown compression format"));
+                      QCoreApplication::translate(
+                          "SaveFile", "Save file uses an unknown compression format"));
   }
   record.world.raw_size =
       static_cast<qint64>(header.value(QStringLiteral("world_raw_size")).toDouble(0.0));
@@ -303,12 +325,15 @@ auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) ->
   if (blob_size < 0 || screenshot_size < 0 || blob_size > k_max_package_blob ||
       screenshot_size > k_max_package_blob) {
     return make_error(out_error,
-                      QStringLiteral("Save file declares implausible sizes"));
+                      QCoreApplication::translate(
+                          "SaveFile", "Save file declares implausible sizes"));
   }
 
   const qint64 body_offset = k_magic_size + 8 + static_cast<qint64>(header_size);
   if (bytes.size() - body_offset != blob_size + screenshot_size) {
-    return make_error(out_error, QStringLiteral("Save file body is truncated"));
+    return make_error(
+        out_error,
+        QCoreApplication::translate("SaveFile", "Save file body is truncated"));
   }
 
   record.world.blob =
@@ -325,7 +350,8 @@ auto decode_package(const QByteArray& bytes, Record& out, QString* out_error) ->
   if (!screenshot_checksum.isEmpty() &&
       checksum_of(record.screenshot) != screenshot_checksum) {
     return make_error(out_error,
-                      QStringLiteral("Save file preview image is corrupted"));
+                      QCoreApplication::translate(
+                          "SaveFile", "Save file preview image is corrupted"));
   }
 
   out = record;

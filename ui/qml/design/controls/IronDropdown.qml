@@ -22,6 +22,31 @@ ComboBox {
     Accessible.name: accessibleName
     Accessible.description: enabled ? displayText : disabledReason
 
+    Connections {
+        function onActivated(index) {
+            Design.UiSound.activate();
+        }
+
+        function onHoveredChanged() {
+            if (control.hovered && control.enabled)
+                Design.UiSound.hover();
+        }
+
+        target: control
+    }
+
+    Connections {
+        function onOpened() {
+            Design.UiSound.panelOpen();
+        }
+
+        function onClosed() {
+            Design.UiSound.panelClose();
+        }
+
+        target: control.popup
+    }
+
     contentItem: Text {
         text: control.displayText
         color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled

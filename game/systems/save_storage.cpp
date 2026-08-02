@@ -15,6 +15,7 @@
 
 #include "../map/campaign_definition.h"
 #include "../map/campaign_loader.h"
+#include "../util/asset_text.h"
 
 namespace Game::Systems {
 
@@ -58,9 +59,10 @@ public:
 
   auto begin(QString* out_error) -> bool {
     if (!m_database.transaction()) {
-      return fail(out_error,
-                  QStringLiteral("Failed to begin transaction"),
-                  m_database.lastError());
+      return fail(
+          out_error,
+          QCoreApplication::translate("SaveStorage", "Failed to begin transaction"),
+          m_database.lastError());
     }
     m_active = true;
     return true;
@@ -72,9 +74,10 @@ public:
     }
 
     if (!m_database.commit()) {
-      const bool result = fail(out_error,
-                               QStringLiteral("Failed to commit transaction"),
-                               m_database.lastError());
+      const bool result = fail(
+          out_error,
+          QCoreApplication::translate("SaveStorage", "Failed to commit transaction"),
+          m_database.lastError());
       rollback();
       return result;
     }
@@ -164,8 +167,12 @@ auto build_campaign_entry(const Game::Campaign::CampaignDefinition& campaign,
                           const QVariantList& missions_progress) -> QVariantMap {
   QVariantMap campaign_map;
   campaign_map.insert(QStringLiteral("id"), campaign.id);
-  campaign_map.insert(QStringLiteral("title"), campaign.title);
-  campaign_map.insert(QStringLiteral("description"), campaign.description);
+  campaign_map.insert(
+      QStringLiteral("title"),
+      Game::Util::tr_asset(Game::Util::k_campaigns_context, campaign.title));
+  campaign_map.insert(
+      QStringLiteral("description"),
+      Game::Util::tr_asset(Game::Util::k_campaigns_context, campaign.description));
   campaign_map.insert(QStringLiteral("unlocked"), true);
 
   bool all_completed = true;
@@ -175,10 +182,14 @@ auto build_campaign_entry(const Game::Campaign::CampaignDefinition& campaign,
     mission_map.insert(QStringLiteral("mission_id"), mission.mission_id);
     mission_map.insert(QStringLiteral("order_index"), mission.order_index);
     if (mission.intro_text.has_value()) {
-      mission_map.insert(QStringLiteral("intro_text"), *mission.intro_text);
+      mission_map.insert(
+          QStringLiteral("intro_text"),
+          Game::Util::tr_asset(Game::Util::k_campaigns_context, *mission.intro_text));
     }
     if (mission.outro_text.has_value()) {
-      mission_map.insert(QStringLiteral("outro_text"), *mission.outro_text);
+      mission_map.insert(
+          QStringLiteral("outro_text"),
+          Game::Util::tr_asset(Game::Util::k_campaigns_context, *mission.outro_text));
     }
     if (mission.difficulty_modifier.has_value()) {
       mission_map.insert(QStringLiteral("difficulty_modifier"),
@@ -254,9 +265,10 @@ auto SaveStorage::open(QString* out_error) const -> bool {
   }
 
   if (!m_database.open()) {
-    return fail(out_error,
-                QStringLiteral("Failed to open save database"),
-                m_database.lastError());
+    return fail(
+        out_error,
+        QCoreApplication::translate("SaveStorage", "Failed to open save database"),
+        m_database.lastError());
   }
 
   QSqlQuery pragma(m_database);
@@ -271,9 +283,10 @@ auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
     QSqlQuery version_query(m_database);
     if (!version_query.exec(QStringLiteral("PRAGMA user_version")) ||
         !version_query.next()) {
-      return fail(out_error,
-                  QStringLiteral("Failed to read schema version"),
-                  version_query.lastError());
+      return fail(
+          out_error,
+          QCoreApplication::translate("SaveStorage", "Failed to read schema version"),
+          version_query.lastError());
     }
     version = version_query.value(0).toInt();
 
@@ -304,7 +317,7 @@ auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
   if (!set_version.exec(
           QStringLiteral("PRAGMA user_version = %1").arg(Save::k_schema_version))) {
     fail(out_error,
-         QStringLiteral("Failed to record schema version"),
+         QCoreApplication::translate("SaveStorage", "Failed to record schema version"),
          set_version.lastError());
     transaction.rollback();
     return false;
@@ -325,7 +338,8 @@ auto SaveStorage::drop_schema(QString* out_error) const -> bool {
     QSqlQuery query(m_database);
     if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS %1").arg(table))) {
       return fail(out_error,
-                  QStringLiteral("Failed to drop table %1").arg(table),
+                  QCoreApplication::translate("SaveStorage", "Failed to drop table %1")
+                      .arg(table),
                   query.lastError());
     }
   }
@@ -387,7 +401,9 @@ auto SaveStorage::create_schema(QString* out_error) const -> bool {
     QSqlQuery query(m_database);
     if (!query.exec(statement)) {
       return fail(
-          out_error, QStringLiteral("Failed to create save schema"), query.lastError());
+          out_error,
+          QCoreApplication::translate("SaveStorage", "Failed to create save schema"),
+          query.lastError());
     }
   }
 
@@ -443,7 +459,9 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
           "world_state = excluded.world_state, "
           "screenshot = excluded.screenshot"))) {
     return fail(
-        out_error, QStringLiteral("Failed to prepare save query"), query.lastError());
+        out_error,
+        QCoreApplication::translate("SaveStorage", "Failed to prepare save query"),
+        query.lastError());
   }
 
   const QString timestamp = record.updated_at.isEmpty() ? now_iso() : record.updated_at;
@@ -476,7 +494,9 @@ auto SaveStorage::write_slot(const Save::Record& record, QString* out_error) -> 
   query.bindValue(QStringLiteral(":screenshot"), record.screenshot);
 
   if (!query.exec()) {
-    fail(out_error, QStringLiteral("Failed to persist save slot"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to persist save slot"),
+         query.lastError());
     transaction.rollback();
     return false;
   }
@@ -501,13 +521,16 @@ auto SaveStorage::read_slot(const QString& slot_name,
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
-    return fail(
-        out_error, QStringLiteral("Failed to read save slot"), query.lastError());
+    return fail(out_error,
+                QCoreApplication::translate("SaveStorage", "Failed to read save slot"),
+                query.lastError());
   }
 
   if (!query.next()) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' not found").arg(slot_name);
+      *out_error =
+          QCoreApplication::translate("SaveStorage", "Save slot '%1' not found")
+              .arg(slot_name);
     }
     return false;
   }
@@ -515,9 +538,11 @@ auto SaveStorage::read_slot(const QString& slot_name,
   const int format_version = query.value(18).toInt();
   if (format_version != Save::k_format_version) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' uses unsupported format version %2")
-                       .arg(slot_name)
-                       .arg(format_version);
+      *out_error =
+          QCoreApplication::translate(
+              "SaveStorage", "Save slot '%1' uses unsupported format version %2")
+              .arg(slot_name)
+              .arg(format_version);
     }
     return false;
   }
@@ -541,8 +566,10 @@ auto SaveStorage::read_slot(const QString& slot_name,
   if (!Save::compression_from_string(query.value(11).toString(),
                                      record.world.compression)) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' uses an unknown compression format")
-                       .arg(slot_name);
+      *out_error =
+          QCoreApplication::translate(
+              "SaveStorage", "Save slot '%1' uses an unknown compression format")
+              .arg(slot_name);
     }
     return false;
   }
@@ -579,8 +606,9 @@ auto SaveStorage::list_slots(QString* out_error) const -> QVariantList {
           "difficulty, kind, play_time_seconds, updated_at, world_raw_size, "
           "length(world_state), metadata, screenshot "
           "FROM saves ORDER BY datetime(updated_at) DESC"))) {
-    fail(
-        out_error, QStringLiteral("Failed to enumerate save slots"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to enumerate save slots"),
+         query.lastError());
     return result;
   }
 
@@ -626,8 +654,9 @@ auto SaveStorage::slot_names_by_kind(Save::SlotKind kind,
   query.bindValue(QStringLiteral(":kind"), Save::slot_kind_to_string(kind));
 
   if (!query.exec()) {
-    fail(
-        out_error, QStringLiteral("Failed to enumerate save slots"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to enumerate save slots"),
+         query.lastError());
     return result;
   }
 
@@ -650,7 +679,9 @@ auto SaveStorage::slot_exists(const QString& slot_name,
 
   if (!query.exec()) {
     return fail(
-        out_error, QStringLiteral("Failed to look up save slot"), query.lastError());
+        out_error,
+        QCoreApplication::translate("SaveStorage", "Failed to look up save slot"),
+        query.lastError());
   }
   return query.next();
 }
@@ -674,14 +705,18 @@ auto SaveStorage::update_screenshot(const QString& slot_name,
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
-    fail(out_error, QStringLiteral("Failed to store save preview"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to store save preview"),
+         query.lastError());
     transaction.rollback();
     return false;
   }
 
   if (query.numRowsAffected() == 0) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' not found").arg(slot_name);
+      *out_error =
+          QCoreApplication::translate("SaveStorage", "Save slot '%1' not found")
+              .arg(slot_name);
     }
     transaction.rollback();
     return false;
@@ -705,14 +740,18 @@ auto SaveStorage::delete_slot(const QString& slot_name, QString* out_error) -> b
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
-    fail(out_error, QStringLiteral("Failed to delete save slot"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to delete save slot"),
+         query.lastError());
     transaction.rollback();
     return false;
   }
 
   if (query.numRowsAffected() == 0) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' not found").arg(slot_name);
+      *out_error =
+          QCoreApplication::translate("SaveStorage", "Save slot '%1' not found")
+              .arg(slot_name);
     }
     transaction.rollback();
     return false;
@@ -766,7 +805,7 @@ auto SaveStorage::get_campaign_progress(const QString& campaign_id,
 
   if (!query.exec()) {
     fail(out_error,
-         QStringLiteral("Failed to get campaign progress"),
+         QCoreApplication::translate("SaveStorage", "Failed to get campaign progress"),
          query.lastError());
     return result;
   }
@@ -803,7 +842,8 @@ auto SaveStorage::mark_campaign_completed(const QString& campaign_id,
 
   if (!query.exec()) {
     fail(out_error,
-         QStringLiteral("Failed to mark campaign as completed"),
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to mark campaign as completed"),
          query.lastError());
     transaction.rollback();
     return false;
@@ -846,7 +886,8 @@ auto SaveStorage::save_mission_result(const QString& mission_id,
           "completed_at = excluded.completed_at, "
           "updated_at = excluded.updated_at"))) {
     return fail(out_error,
-                QStringLiteral("Failed to prepare mission result insert"),
+                QCoreApplication::translate("SaveStorage",
+                                            "Failed to prepare mission result insert"),
                 query.lastError());
   }
 
@@ -862,7 +903,9 @@ auto SaveStorage::save_mission_result(const QString& mission_id,
   query.bindValue(QStringLiteral(":updated_at"), timestamp);
 
   if (!query.exec()) {
-    fail(out_error, QStringLiteral("Failed to save mission result"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to save mission result"),
+         query.lastError());
     transaction.rollback();
     return false;
   }
@@ -885,8 +928,9 @@ auto SaveStorage::get_mission_progress(const QString& mission_id,
   query.bindValue(QStringLiteral(":mission_id"), mission_id);
 
   if (!query.exec()) {
-    fail(
-        out_error, QStringLiteral("Failed to get mission progress"), query.lastError());
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to get mission progress"),
+         query.lastError());
     return result;
   }
 
@@ -919,7 +963,8 @@ auto SaveStorage::get_campaign_mission_progress(
 
   if (!query.exec()) {
     fail(out_error,
-         QStringLiteral("Failed to get campaign mission progress"),
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to get campaign mission progress"),
          query.lastError());
     return result;
   }
@@ -963,7 +1008,8 @@ auto SaveStorage::ensure_campaign_missions_in_db(
 
     if (!query.exec()) {
       fail(out_error,
-           QStringLiteral("Failed to register campaign mission"),
+           QCoreApplication::translate("SaveStorage",
+                                       "Failed to register campaign mission"),
            query.lastError());
       transaction.rollback();
       return false;
@@ -996,7 +1042,8 @@ auto SaveStorage::unlock_next_mission(const QString& campaign_id,
 
   if (!update_query.exec()) {
     fail(out_error,
-         QStringLiteral("Failed to mark mission as completed"),
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to mark mission as completed"),
          update_query.lastError());
     transaction.rollback();
     return false;
@@ -1011,7 +1058,8 @@ auto SaveStorage::unlock_next_mission(const QString& campaign_id,
 
   if (!order_query.exec() || !order_query.next()) {
     fail(out_error,
-         QStringLiteral("Failed to find completed mission order"),
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to find completed mission order"),
          order_query.lastError());
     transaction.rollback();
     return false;
@@ -1028,7 +1076,7 @@ auto SaveStorage::unlock_next_mission(const QString& campaign_id,
 
   if (!unlock_query.exec()) {
     fail(out_error,
-         QStringLiteral("Failed to unlock next mission"),
+         QCoreApplication::translate("SaveStorage", "Failed to unlock next mission"),
          unlock_query.lastError());
     transaction.rollback();
     return false;
@@ -1036,8 +1084,10 @@ auto SaveStorage::unlock_next_mission(const QString& campaign_id,
 
   if (unlock_query.numRowsAffected() == 0) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral(
-                       "No next mission found to unlock (completed mission order: %1)")
+      *out_error = QCoreApplication::translate(
+                       "SaveStorage",
+                       "No next mission found to unlock (completed mission "
+                       "order: %1)")
                        .arg(completed_order);
     }
     transaction.rollback();

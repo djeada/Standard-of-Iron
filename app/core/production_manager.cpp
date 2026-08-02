@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "app/core/input_command_handler.h"
+#include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
@@ -32,6 +33,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
+#include "game/util/asset_text.h"
 #include "game/visuals/team_colors.h"
 #include "scene/camera.h"
 
@@ -897,6 +899,7 @@ void ProductionManager::start_building_placement(const QString& building_type,
   m_wall_drag_anchor_set = false;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
+  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_begin);
   emit placing_construction_changed();
 }
 
@@ -1326,6 +1329,7 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
     clear_builder_preview_sites();
     set_construction_preview_active(false);
     set_construction_preview_valid(false);
+    Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_begin);
     emit placing_construction_changed();
     return;
   }
@@ -1356,6 +1360,7 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
 
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
+  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_begin);
   emit placing_construction_changed();
 }
 
@@ -1973,6 +1978,7 @@ void ProductionManager::confirm_wall_construction_plan() {
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
+  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_confirmed);
   emit placing_construction_changed();
 }
 
@@ -2056,6 +2062,7 @@ void ProductionManager::confirm_direct_building_placement() {
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
+  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_confirmed);
   emit placing_construction_changed();
 }
 
@@ -2278,22 +2285,30 @@ auto ProductionManager::get_unit_production_info(
         resource_amounts_to_variant_map(profile.production.resource_costs);
     info["build_time"] = static_cast<double>(profile.production.build_time);
     info["individuals_per_unit"] = profile.individuals_per_unit;
-    info["display_name"] = QString::fromStdString(profile.display_name);
+    info["display_name"] =
+        Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
     if (const auto* commander = Game::Units::commander_definition(*troop_type_opt)) {
       info["is_commander"] = true;
-      info["strategic_identity"] =
-          QString::fromStdString(commander->strategic_identity);
-      info["recruitment_effect"] =
-          QString::fromStdString(commander->recruitment_effect);
-      info["battlefield_role"] = QString::fromStdString(commander->battlefield_role);
-      info["strengths"] = QString::fromStdString(commander->strengths);
-      info["weaknesses"] = QString::fromStdString(commander->weaknesses);
-      info["passive_aura"] = QString::fromStdString(commander->passive_aura);
+      info["strategic_identity"] = Game::Util::tr_asset(
+          Game::Util::k_commanders_context, commander->strategic_identity);
+      info["recruitment_effect"] = Game::Util::tr_asset(
+          Game::Util::k_commanders_context, commander->recruitment_effect);
+      info["battlefield_role"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                      commander->battlefield_role);
+      info["strengths"] =
+          Game::Util::tr_asset(Game::Util::k_commanders_context, commander->strengths);
+      info["weaknesses"] =
+          Game::Util::tr_asset(Game::Util::k_commanders_context, commander->weaknesses);
+      info["passive_aura"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                  commander->passive_aura);
       info["bonus_type"] = QString::fromStdString(commander->bonus_type);
-      info["bonus_summary"] = QString::fromStdString(commander->bonus_summary);
+      info["bonus_summary"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                   commander->bonus_summary);
       info["aura_bonus_value"] = static_cast<double>(commander->aura_bonus_value);
-      info["rally_ability"] = QString::fromStdString(commander->rally_ability);
-      info["death_consequence"] = QString::fromStdString(commander->death_consequence);
+      info["rally_ability"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                   commander->rally_ability);
+      info["death_consequence"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                       commander->death_consequence);
       info["visual_requirements"] =
           QString::fromStdString(commander->visual_requirements);
       info["bodyguard_count"] = commander->bodyguard_count;

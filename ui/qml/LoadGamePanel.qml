@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -190,9 +191,9 @@ Item {
                                 for (var i = 0; i < entries.length; i++) {
                                     append({
                                             "slot_name": entries[i].slot_name,
-                                            "title": entries[i].title || entries[i].slot_name || "Untitled Save",
+                                            "title": entries[i].title || entries[i].slot_name || qsTr("Untitled Save"),
                                             "timestamp": entries[i].timestamp,
-                                            "map_name": entries[i].map_name || "Unknown Map",
+                                            "map_name": entries[i].map_name || qsTr("Unknown Map"),
                                             "mode": entries[i].mode || "",
                                             "kind": entries[i].kind || "manual",
                                             "playTime": root.format_play_time(entries[i].play_time_seconds),
@@ -235,11 +236,16 @@ Item {
                                 hoverEnabled: true
                                 enabled: !model.isEmpty
                                 onClicked: {
+                                    Design.UiSound.activate();
                                     loadListView.selected_index = index;
                                 }
                                 onDoubleClicked: {
                                     if (!model.isEmpty)
                                         root.load_requested(model.slot_name);
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse)
+                                        Design.UiSound.hover();
                                 }
                             }
 

@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include <QSettings>
 #include <QTemporaryDir>
 
@@ -54,6 +55,25 @@ TEST_F(SettingsPersistenceTest, LanguageSelectionIsLoadedFromSavedPreferences) {
   LanguageManager language_manager;
 
   EXPECT_EQ(language_manager.current_language(), QStringLiteral("de"));
+}
+
+TEST_F(SettingsPersistenceTest, CompiledCatalogueIsEmbeddedAndTranslates) {
+  LanguageManager language_manager;
+  language_manager.set_language(QStringLiteral("de"));
+  ASSERT_EQ(language_manager.current_language(), QStringLiteral("de"));
+
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QStringLiteral("Kriegselefant"));
+
+  language_manager.set_language(QStringLiteral("pt_br"));
+  ASSERT_EQ(language_manager.current_language(), QStringLiteral("pt_br"));
+
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QString::fromUtf8("Elefante de guerra"));
+
+  language_manager.set_language(QStringLiteral("en"));
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QStringLiteral("War Elephant"));
 }
 
 TEST_F(SettingsPersistenceTest, LanguageChangesArePersisted) {

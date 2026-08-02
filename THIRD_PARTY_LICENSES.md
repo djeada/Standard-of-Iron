@@ -62,3 +62,30 @@ otool -L standard_of_iron | grep Qt
 ```
 
 All commands should show Qt libraries as external dependencies, confirming dynamic linking.
+
+## Audio Assets
+
+### Synthesised cue sounds
+
+The 60 sound effects listed with `"source": "synth"` in
+`assets/audio/audio_manifest.json` are generated from the recipes in
+`tools/audio_synth/` by `make audio-assets`. They are original work produced by
+this repository's own code: nothing is sampled, and no third-party recording or
+library is involved. No attribution or licence obligation attaches to them.
+
+Covers the `ui.*`, `order.*`, `state.*` families in full, plus the build,
+alert and commander-combat cues. See `tools/audio_synth/README.md`.
+
+### Music, ambience, voices and the remaining effects
+
+**Provenance not yet recorded.** The music, ambience and voice tracks, and the
+combat and alert recordings that predate the synthesised set, are not covered
+by this file. Whoever sourced them should record here, per asset or per batch:
+the origin, the licence, and whether commercial use and redistribution are
+granted. If any of it came from a generative audio service, note the service
+and the plan the output was produced under, since commercial rights usually
+depend on the tier.
+
+This matters before shipping: `assets/audio/music`, `assets/audio/ambience`,
+`assets/audio/voices` and part of `assets/audio/sfx` are redistributed inside
+the binary via `assets.qrc`.

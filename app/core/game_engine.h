@@ -269,10 +269,8 @@ public:
   Q_INVOKABLE void start_loading_maps();
   Q_INVOKABLE void set_audio_frontend_context(const QString& context);
 
-  Q_INVOKABLE void set_paused(bool paused) { m_runtime.paused = paused; }
-  Q_INVOKABLE void set_game_speed(float speed) {
-    m_runtime.time_scale = std::max(0.0F, speed);
-  }
+  Q_INVOKABLE void set_paused(bool paused);
+  Q_INVOKABLE void set_game_speed(float speed);
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
   [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
   [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
@@ -422,6 +420,7 @@ private:
     float minimap_unit_update_accumulator = 0.0F;
   };
   using PendingMissionWave = App::Core::PendingMissionWave;
+  using PendingMissionEvent = App::Core::PendingMissionEvent;
   using MissionWaveTracker = App::Core::MissionWaveTracker;
   enum class PlayerControlMode {
     Rts,
@@ -507,6 +506,7 @@ private:
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
+  void update_mission_events();
   void apply_game_mode_render_policy();
   void update_loading_overlay();
   void update_cursor_position();
@@ -614,6 +614,7 @@ private:
   QTimer m_autosave_timer;
   float m_campaign_mission_elapsed = 0.0F;
   std::vector<PendingMissionWave> m_pending_mission_waves;
+  std::vector<PendingMissionEvent> m_pending_mission_events;
   MissionWaveTracker m_mission_wave_tracker;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;

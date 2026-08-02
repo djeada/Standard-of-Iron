@@ -60,39 +60,39 @@ float LoadingProgressTracker::progress() const {
 QString LoadingProgressTracker::stage_name(LoadingStage stage) const {
   switch (stage) {
   case LoadingStage::NOT_STARTED:
-    return "Not Started";
+    return tr("Not Started");
   case LoadingStage::INITIALIZING:
-    return "Initializing...";
+    return tr("Initializing...");
   case LoadingStage::LOADING_MAP_DATA:
-    return "Loading Map Data...";
+    return tr("Loading Map Data...");
   case LoadingStage::LOADING_TERRAIN:
-    return "Loading Terrain...";
+    return tr("Loading Terrain...");
   case LoadingStage::LOADING_BIOME:
-    return "Loading Biome...";
+    return tr("Loading Biome...");
   case LoadingStage::LOADING_WATER_FEATURES:
-    return "Loading Water Features...";
+    return tr("Loading Water Features...");
   case LoadingStage::LOADING_ROADS:
-    return "Loading Roads...";
+    return tr("Loading Roads...");
   case LoadingStage::LOADING_ENVIRONMENT:
-    return "Loading Environment...";
+    return tr("Loading Environment...");
   case LoadingStage::LOADING_FOG:
-    return "Loading Fog...";
+    return tr("Loading Fog...");
   case LoadingStage::LOADING_ENTITIES:
-    return "Loading Units & Buildings...";
+    return tr("Loading Units & Buildings...");
   case LoadingStage::LOADING_AUDIO:
-    return "Loading Audio...";
+    return tr("Loading Audio...");
   case LoadingStage::GENERATING_MINIMAP:
-    return "Generating Minimap...";
+    return tr("Generating Minimap...");
   case LoadingStage::INITIALIZING_SYSTEMS:
-    return "Initializing Game Systems...";
+    return tr("Initializing Game Systems...");
   case LoadingStage::FINALIZING:
-    return "Finalizing...";
+    return tr("Finalizing...");
   case LoadingStage::COMPLETED:
-    return "Complete";
+    return tr("Complete");
   case LoadingStage::FAILED:
-    return "Failed";
+    return tr("Failed");
   default:
-    return "Unknown";
+    return tr("Unknown");
   }
 }
 

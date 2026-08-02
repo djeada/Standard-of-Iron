@@ -12,13 +12,21 @@ CheckBox {
     implicitHeight: Math.max(Design.Metrics.controlHeight, Design.Metrics.minTouchTarget)
     hoverEnabled: true
     spacing: Design.Metrics.space8
-    onToggled: Design.UiSound.toggle()
-    onHoveredChanged: {
-        if (hovered)
-            Design.UiSound.hover();
-    }
     Accessible.name: accessibleName
     Accessible.description: description
+
+    Connections {
+        function onToggled() {
+            Design.UiSound.toggle();
+        }
+
+        function onHoveredChanged() {
+            if (control.hovered && control.enabled)
+                Design.UiSound.hover();
+        }
+
+        target: control
+    }
 
     indicator: Rectangle {
         x: 0

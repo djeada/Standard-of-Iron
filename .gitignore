@@ -37,9 +37,10 @@ Makefile*
 # The Qt Creator patterns above are name-based, so they would otherwise swallow
 # CI files such as .github/workflows/build-linux.yml.
 !.github/workflows/*
+# Compiled translation catalogues. CMake builds these from translations/*.ts
+# with lrelease on every build, so committing them only invites a .qm that has
+# drifted from the .ts it claims to be.
 *.qm
-# Exception: keep translation files
-!translations/*.qm
 *.prl
 
 # Qt unit tests
