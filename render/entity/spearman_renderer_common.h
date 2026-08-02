@@ -69,10 +69,6 @@ struct SpearmanRendererRegistration {
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_spear_asset};
 
-  // The Carthaginian beard variants are baked with the line spearman's own
-  // equipment, helmet included, and the variant table overrides whatever the
-  // loadout resolved. A commander sharing this renderer has to opt out or he
-  // silently wears the rank and file's helmet instead of his own.
   bool use_beard_archetypes{true};
 };
 

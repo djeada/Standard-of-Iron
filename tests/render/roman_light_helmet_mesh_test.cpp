@@ -178,8 +178,6 @@ TEST(RomanLightHelmetMesh, FillRoleColorsPreservesWarmBronzeAndCrimsonCrest) {
 
   ASSERT_EQ(count, Render::GL::k_roman_light_helmet_role_count);
 
-  // Roman helmets are cast bronze, not cold steel: the shell has to stay warm
-  // so the whole Roman line reads as one metal.
   EXPECT_GT(colors[0].x(), colors[0].z());
   EXPECT_LT(colors[1].x(), colors[0].x());
   EXPECT_LT(colors[1].y(), colors[0].y());

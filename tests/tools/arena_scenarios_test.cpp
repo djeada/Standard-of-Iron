@@ -785,11 +785,6 @@ TEST(ArenaScenariosTest, RampartsCloseWithGatesAndCornerTowers) {
   }
 }
 
-// The formation promo scenarios are the footage source for the formation
-// showcase reels. What makes them different from the acceptance scenarios is
-// exactly what a careless edit would undo: they drive the army formation layer
-// rather than translating an existing block, they field a whole army, and they
-// need flat ground wide enough for that army to manoeuvre on.
 TEST(ArenaScenariosTest, FormationPromoScenariosDriveTheArmyFormationLayer) {
   using Intent = Game::Formation::ArmyFormationIntent;
   for (auto const* id :

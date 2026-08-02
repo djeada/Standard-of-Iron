@@ -99,10 +99,6 @@ auto ease_value(Ease ease, float t) -> float {
   return clamped * clamped * (3.0F - (2.0F * clamped));
 }
 
-// Yaw is an angle, so a key at 352 sitting after one at 8 means "sixteen
-// degrees back", not "344 degrees the other way around the battle". Blend along
-// the shorter arc; an author who really wants the long orbit says so by putting
-// a key in the middle of it.
 auto lerp_yaw(float from, float to, float blend) -> float {
   float delta = std::fmod(to - from, 360.0F);
   if (delta > 180.0F) {

@@ -433,8 +433,7 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
                   field + QStringLiteral(".trigger.target_group"),
                   true);
     }
-    // A FormArmy step folds several groups into one army; a typo in that list
-    // would silently deploy a smaller army rather than fail.
+
     for (int member = 0; member < step.formation.groups.size(); ++member) {
       check_group(step.formation.groups.at(member),
                   field + QStringLiteral(".formation.groups[%1]").arg(member),
@@ -992,11 +991,6 @@ struct ArenaScenarioRunner::Impl {
     }
   }
 
-  // Deploy one or more groups as a single doctrine-planned army, the same way
-  // `CommandController::confirm_formation_placement` does for a player drag:
-  // commit the plan so the registry owns the group, write each unit's slot back
-  // onto its formation mode so the runtime can measure cohesion against it, and
-  // then move everyone to the slot the planner chose.
   void form_army(const ArenaScenarioStep& step) {
     std::vector<Engine::Core::EntityID> members;
     QStringList sources = step.formation.groups;
@@ -2031,9 +2025,6 @@ struct ArenaScenarioRunner::Impl {
             unit.rpg_action_phase ==
             static_cast<int>(Engine::Core::RpgCommanderActionPhase::Strike);
 
-        // An authored swing owns the body until the simulation ends it. A
-        // flinch pose here means the renderer dropped a swing the player is
-        // still committed to.
         const bool strike_visual = soldier.visual == QStringLiteral("Attack") ||
                                    soldier.visual == QStringLiteral("Dying") ||
                                    soldier.visual == QStringLiteral("Dead");
@@ -2106,9 +2097,6 @@ struct ArenaScenarioRunner::Impl {
       int const previous_phase = rpg_action_phase_previous.value(group, 0);
       float const previous_time = rpg_action_time_previous.value(group, 1.0F);
 
-      // Chaining a swing out of the previous one restarts the authored
-      // timeline without ever leaving the striking phase, so a rewound action
-      // time is what marks a new swing.
       if (unit.rpg_action_phase == striking &&
           (previous_phase != striking ||
            unit.rpg_action_normalized_time < previous_time)) {

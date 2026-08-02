@@ -26,13 +26,6 @@ enum CommanderHelmetPaletteSlot : std::uint8_t {
 
 using Primitive = GeneratedEquipmentPrimitive;
 
-// Lays a tapering mass of overlapping lobes along a spine. Bare cones read as
-// toothpicks and rows of thin cylinders read as a comb, so every crest, plume
-// and tail on these helmets is built this way instead. The spine is resampled by
-// arc length against the thinnest part of the mass, because lobes spaced further
-// apart than their own diameter read as a string of beads. `lateral_scale` below
-// one squashes the mass into a blade, and the first lobe is meant to sit inside
-// the shell so the crest never appears to hover over the helmet.
 void add_lobed_mass(std::vector<Primitive>& primitives,
                     std::span<const QVector3D> spine,
                     float root_radius,
@@ -49,8 +42,7 @@ void add_lobed_mass(std::vector<Primitive>& primitives,
   if (total <= 1.0e-4F) {
     return;
   }
-  // Step along the spine by a fraction of the *local* radius. A fixed step
-  // leaves the thin end beaded while the fat end is over-sampled.
+
   std::vector<float> stops;
   stops.reserve(32U);
   for (float travelled = 0.0F; travelled < total && stops.size() < 26U;) {
@@ -79,16 +71,8 @@ void add_lobed_mass(std::vector<Primitive>& primitives,
   }
 }
 
-// Punic commander bowl. Deliberately a different shape language from the Roman
-// one below: a taller shell drawn up to a conical finial, a scalloped brow, and
-// cheek pieces that close to a point instead of a rounded jawline. Sized off the
-// same skull -- cranium half-extents 1.25 / 1.53 / 1.38 about y = -0.13, nose
-// tip at z = 1.53, chin at y = -1.23.
 void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
-  // Tiered conical shell. A single cone over a dome left the silhouette reading
-  // as a plain egg with a spike, because the cone is already needle-thin by the
-  // time it clears the dome; stacking narrowing tiers gives the drawn-up Punic
-  // profile instead, and keeps it clearly apart from the Roman round bowl.
+
   primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.30F, -0.06F),
                                            QVector3D(1.46F, 1.16F, 1.56F),
                                            k_metal_slot,
@@ -133,7 +117,6 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
                                             2));
   }
 
-  // Nasal bar, carried clear of the nose it guards.
   primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.06F, 1.60F),
                                           QVector3D(0.0F, -0.80F, 1.44F),
                                           face_guard ? 0.16F : 0.09F,
@@ -141,7 +124,6 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
                                           1.0F,
                                           2));
 
-  // Neck guard as stepped plates, broader than the Roman flare.
   primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.40F, -1.30F),
                                            QVector3D(1.26F, 0.24F, 0.48F),
                                            k_metal_slot,
@@ -190,9 +172,6 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
   }
 }
 
-// Roman commander bowl. Same Roman language as the line's montefortino, sized
-// off the same skull: snug bowl, projecting brow peak with embossed brows,
-// hinged cheek plates down to the jaw, and a neck guard flaring off the nape.
 void add_roman_base_helmet(std::vector<Primitive>& primitives) {
   primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.40F, -0.06F),
                                            QVector3D(1.48F, 1.34F, 1.60F),
@@ -235,7 +214,6 @@ void add_roman_base_helmet(std::vector<Primitive>& primitives) {
                                              2));
   }
 
-  // Nasal bar, carried clear of the nose it guards.
   primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.10F, 1.62F),
                                           QVector3D(0.0F, -0.74F, 1.46F),
                                           0.13F,
@@ -243,8 +221,6 @@ void add_roman_base_helmet(std::vector<Primitive>& primitives) {
                                           1.0F,
                                           2));
 
-  // Neck guard built as stepped plates: a cone's base cap reads as an upturned
-  // bowl stuck to the back of the head.
   primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.42F, -1.32F),
                                            QVector3D(1.24F, 0.23F, 0.46F),
                                            k_metal_slot,
@@ -299,8 +275,7 @@ void add_fabius_crest(std::vector<Primitive>& primitives) {
                                      k_accent_slot,
                                      1.0F,
                                      2));
-  // Fore-and-aft brush. Separate strands read as a comb at close range, so the
-  // crest is nine overlapping lobes whose undersides sit inside the bowl.
+
   primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.386F, 1.35F),
                                            QVector3D(0.20F, 0.62F, 0.52F),
                                            k_plume_slot,
@@ -376,8 +351,7 @@ void add_scipio_crest(std::vector<Primitive>& primitives) {
                                      k_accent_slot,
                                      1.0F,
                                      2));
-  // The centurion's transverse crest, built as a solid blade across the bowl
-  // rather than a row of upright strands.
+
   primitives.push_back(generated_ellipsoid(QVector3D(-1.40F, 1.163F, -0.04F),
                                            QVector3D(0.44F, 0.62F, 0.19F),
                                            k_plume_slot,
@@ -441,8 +415,7 @@ void add_scipio_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_marcellus_crest(std::vector<Primitive>& primitives) {
-  // Twin upright plumes flanking a swept rear tail. The plumes were bare cones
-  // and read as devil horns; as lobed masses they read as hair.
+
   primitives.push_back(generated_box(QVector3D(0.0F, 1.48F, -0.10F),
                                      QVector3D(0.76F, 0.26F, 0.34F),
                                      k_accent_slot,
@@ -478,8 +451,7 @@ void add_marcellus_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_hanno_crest(std::vector<Primitive>& primitives) {
-  // Punic trident: three plumes off one socket, the centre one tallest. Bare
-  // cones here read as toothpicks stuck in an egg.
+
   primitives.push_back(generated_box(QVector3D(0.0F, 1.62F, -0.08F),
                                      QVector3D(0.82F, 0.26F, 0.30F),
                                      k_accent_slot,
@@ -508,7 +480,6 @@ void add_hanno_crest(std::vector<Primitive>& primitives) {
     add_lobed_mass(primitives, wing, 0.48F, 0.22F, k_accent_slot, 0.42F);
   }
 
-  // Rosette diadem across the brow rather than a wire through the skull.
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
     primitives.push_back(generated_sphere(
@@ -527,8 +498,7 @@ void add_hanno_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
-  // A single horsehair tail thrown back off the crown. The old chain of
-  // narrowing cylinders read as bent wire.
+
   primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, 0.10F),
                                      QVector3D(0.24F, 0.28F, 0.62F),
                                      k_accent_slot,
@@ -559,8 +529,7 @@ void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_hannibal_crest(std::vector<Primitive>& primitives) {
-  // Twin swept ridges rather than the old rank of upright strands, which read
-  // as a comb. Each ridge is a blade: lobes squashed on x and thrown backwards.
+
   primitives.push_back(generated_box(QVector3D(0.0F, 1.64F, -0.08F),
                                      QVector3D(0.30F, 0.26F, 1.24F),
                                      k_accent_slot,

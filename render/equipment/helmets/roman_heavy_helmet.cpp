@@ -34,19 +34,11 @@ auto roman_heavy_palette(const HumanoidPalette& palette) -> std::array<QVector3D
 } // namespace
 
 auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
-  // Imperial Gallic galea. Authored in head-frame units with +Z out of the face
-  // and the skull roughly one unit in radius, so every offset below is read as a
-  // fraction of the wearer's head. The Roman read comes from four features that
-  // have to survive at gameplay distance: a snug rounded bowl, a brow peak with
-  // embossed eyebrows over the eyes, hinged cheek plates that taper to the jaw,
-  // and a neck guard flaring back and down from the nape.
+
   static const RenderArchetype archetype = [] {
     constexpr int k_total = 37;
     std::array<GeneratedEquipmentPrimitive, k_total> primitives{};
 
-    // Bowl. The skull it has to clear is 1.25 units in half-width, 1.53 tall and
-    // 1.38 deep about y = -0.13, and the nose runs out to z = 1.53, so these
-    // radii are the smallest that cover the cranium without swallowing the face.
     primitives[0] = generated_ellipsoid(QVector3D(0.0F, 0.38F, -0.06F),
                                         QVector3D(1.50F, 1.36F, 1.62F),
                                         k_steel_slot,
@@ -58,8 +50,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                         1.0F,
                                         2);
 
-    // Brow peak, elliptical so the shelf tapers off at the temples, and held
-    // shallow enough that the wearer's nose still comes out under it.
     primitives[2] = generated_ellipsoid(QVector3D(0.0F, -0.28F, 1.14F),
                                         QVector3D(1.16F, 0.13F, 0.38F),
                                         k_steel_light_slot,
@@ -76,7 +66,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                         1.0F,
                                         2);
 
-    // Rim reinforce sweeping back from the peak to the cheek hinges.
     primitives[5] = generated_cylinder(QVector3D(-0.78F, -0.30F, 1.20F),
                                        QVector3D(-1.20F, -0.44F, 0.30F),
                                        0.11F,
@@ -90,8 +79,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                        1.0F,
                                        2);
 
-    // Embossed brass eyebrows: the decoration that names the Imperial Gallic
-    // pattern and the clearest Roman tell on a front-on head.
     primitives[7] = generated_ellipsoid(QVector3D(-0.34F, 0.46F, 1.44F),
                                         QVector3D(0.36F, 0.12F, 0.20F),
                                         k_brass_slot,
@@ -113,10 +100,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                          1.0F,
                                          2);
 
-    // Neck guard: three flattened plates stepping back and down off the nape,
-    // plus a brass rim. This is what reads Roman in profile at any distance, but
-    // it has to be built as plates -- a cone's base cap reads as an upturned
-    // bowl stuck to the back of the head.
     primitives[11] = generated_ellipsoid(QVector3D(0.0F, -0.44F, -1.34F),
                                          QVector3D(1.26F, 0.23F, 0.46F),
                                          k_steel_slot,
@@ -138,8 +121,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
                                          1.0F,
                                          2);
 
-    // Cheek guards: outward-facing discs hinged at the temple that draw in
-    // toward the chin and hang to the jawline.
     for (int side = 0; side < 2; ++side) {
       float const s = (side == 0) ? -1.0F : 1.0F;
       int const base = 15 + (side * 3);
@@ -172,10 +153,6 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype& {
     primitives[24] =
         generated_sphere(QVector3D(1.28F, -0.76F, 0.50F), 0.13F, k_brass_slot, 1.0F, 2);
 
-    // Crest: a fore-and-aft horsehair brush on a brass holder. Nine segments
-    // whose undersides all sit inside the bowl, so the blade arches with the
-    // dome instead of standing off it as a fin, plus the hair falling past the
-    // brow and the nape.
     primitives[25] = generated_box(QVector3D(0.0F, 1.50F, -0.10F),
                                    QVector3D(0.14F, 0.30F, 1.10F),
                                    k_brass_slot,

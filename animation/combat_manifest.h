@@ -201,9 +201,6 @@ struct CombatRawInputs {
   bool attack_target_alive{false};
   CombatAttackFamily attack_family{CombatAttackFamily::None};
 
-  // An authored combat action owns its own normalized timeline. When it does,
-  // the visual phase must follow that timeline exactly instead of being
-  // re-derived from the generic phase windows.
   float authored_action_phase{0.0F};
   bool has_authored_action_phase{false};
 };

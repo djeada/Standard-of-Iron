@@ -18,30 +18,19 @@ enum PaletteSlot : std::uint8_t {
   k_crest = 3U,
 };
 
-// Republican legionary Montefortino, the helmet every Roman foot soldier in the
-// game wears. Authored in head-frame units against the skull it has to sit on:
-// the cranium is 1.25 units in half-width, 1.53 tall and 1.38 deep about
-// y = -0.13, the nose runs out to z = 1.53 and the chin sits at y = -1.23.
-// The Roman read is carried by five things, in the order they survive distance:
-// the fore-and-aft crimson crest, the flared neck guard, the hinged cheek
-// plates, the brow peak, and the cast top knob that names the type.
 auto montefortino() -> const RenderArchetype& {
   static const RenderArchetype value = [] {
     std::array<GeneratedEquipmentPrimitive, 35> const parts{{
-        // Bowl and crown.
+
         generated_ellipsoid(
             {0.0F, 0.34F, -0.06F}, {1.46F, 1.34F, 1.58F}, k_metal, 1.0F, 2),
         generated_ellipsoid(
             {0.0F, 0.86F, -0.08F}, {1.10F, 0.84F, 1.18F}, k_metal, 1.0F, 2),
 
-        // Cast top knob, kept low and pushed to the brow end of the crest
-        // holder so the crest can seat straight onto the bowl.
         generated_cylinder(
             {0.0F, 1.48F, -0.08F}, {0.0F, 1.72F, -0.08F}, 0.22F, k_dark, 1.0F, 2),
         generated_sphere({0.0F, 1.34F, 1.34F}, 0.20F, k_metal, 1.0F, 2),
 
-        // Brow peak, elliptical so the shelf tapers off at the temples and
-        // shallow enough that the wearer's nose still comes out under it.
         generated_ellipsoid(
             {0.0F, -0.28F, 1.10F}, {1.12F, 0.13F, 0.36F}, k_metal, 1.0F, 2),
         generated_ellipsoid(
@@ -49,15 +38,11 @@ auto montefortino() -> const RenderArchetype& {
         generated_ellipsoid(
             {0.70F, -0.30F, 1.24F}, {0.42F, 0.09F, 0.18F}, k_dark, 1.0F, 2),
 
-        // Rim reinforce sweeping back from the peak to the cheek hinges.
         generated_cylinder(
             {-0.76F, -0.30F, 1.16F}, {-1.18F, -0.46F, 0.28F}, 0.11F, k_dark, 1.0F, 2),
         generated_cylinder(
             {0.76F, -0.30F, 1.16F}, {1.18F, -0.46F, 0.28F}, 0.11F, k_dark, 1.0F, 2),
 
-        // Neck guard: three flattened plates stepping back and down off the
-        // nape, plus a rolled rim. A cone was tried here first and its base cap
-        // read as an upturned bowl stuck to the back of the head.
         generated_ellipsoid(
             {0.0F, -0.40F, -1.30F}, {1.22F, 0.22F, 0.44F}, k_metal, 1.0F, 2),
         generated_ellipsoid(
@@ -67,8 +52,6 @@ auto montefortino() -> const RenderArchetype& {
         generated_ellipsoid(
             {0.0F, -1.10F, -1.80F}, {1.00F, 0.11F, 0.26F}, k_dark, 1.0F, 2),
 
-        // Cheek guards: outward-facing discs hinged at the temple that draw in
-        // toward the chin and hang to the jawline.
         generated_cylinder(
             {-1.14F, -0.34F, 0.34F}, {-1.32F, -0.39F, 0.29F}, 0.60F, k_metal, 1.0F, 2),
         generated_cylinder(
@@ -85,7 +68,6 @@ auto montefortino() -> const RenderArchetype& {
         generated_sphere({-1.36F, -0.22F, 0.28F}, 0.15F, k_dark, 1.0F, 2),
         generated_sphere({1.36F, -0.22F, 0.28F}, 0.15F, k_dark, 1.0F, 2),
 
-        // Leather ties knotted under the chin.
         generated_cylinder({-0.80F, -1.46F, 0.54F},
                            {-0.30F, -1.74F, 0.40F},
                            0.09F,
@@ -95,14 +77,8 @@ auto montefortino() -> const RenderArchetype& {
         generated_cylinder(
             {0.80F, -1.46F, 0.54F}, {0.30F, -1.74F, 0.40F}, 0.09F, k_leather, 1.0F, 0),
 
-        // Crest: a solid fore-and-aft blade on its holder. Individual horsehair
-        // strands vanish past a few metres, so the crest is authored as mass.
-        // Crest holder, buried in the crown.
         generated_box({0.0F, 1.40F, -0.06F}, {0.13F, 0.30F, 1.05F}, k_dark, 1.0F, 2),
 
-        // Crest: five segments whose undersides all sit inside the bowl, so the
-        // blade arches with the dome instead of hovering over it, plus the
-        // horsehair falling past the brow and the nape.
         generated_ellipsoid(
             {0.00F, 1.377F, 1.30F}, {0.18F, 0.62F, 0.52F}, k_crest, 1.0F, 0),
         generated_ellipsoid(
@@ -131,10 +107,6 @@ auto montefortino() -> const RenderArchetype& {
   return value;
 }
 
-// Boeotian cavalry helmet: open faced, and defined by the wide brim that lifts
-// clear of the eyes at the front and droops over the neck at the back. The brim
-// is one tilted disc -- axis 11 degrees off vertical -- which lifts it above the
-// nose instead of slicing through it.
 auto boeotian() -> const RenderArchetype& {
   static const RenderArchetype value = [] {
     std::array<GeneratedEquipmentPrimitive, 31> const parts{{
@@ -163,7 +135,6 @@ auto boeotian() -> const RenderArchetype& {
         generated_ellipsoid(
             {0.0F, -1.08F, -1.66F}, {0.86F, 0.10F, 0.22F}, k_dark, 1.0F, 2),
 
-        // Short ear flaps only -- the Boeotian leaves the face open.
         generated_cylinder(
             {-1.30F, -0.60F, 0.18F}, {-1.44F, -0.64F, 0.14F}, 0.36F, k_dark, 1.0F, 2),
         generated_cylinder(
