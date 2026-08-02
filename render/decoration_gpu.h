@@ -218,6 +218,42 @@ struct RuinsBatchParams {
   float time = 0.0F;
 };
 
+struct AbandonedHomeInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct AbandonedHomeBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
+struct StatueInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct StatueBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
 struct DeadTreeInstanceGpu {
   QVector4D pos_scale;
   QVector4D color_rot;

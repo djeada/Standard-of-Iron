@@ -256,9 +256,13 @@ auto main(int argc, char** argv) -> int {
   Render::GL::ResourceManager resources;
 
   const std::vector<std::string> types = {
-      "home", "barracks", "defense_tower", "marketplace", "wall"};
-  const std::vector<std::string> keys = {
-      "home", "barracks", "defense_tower", "marketplace", "wall_segment_straight"};
+      "home", "barracks", "defense_tower", "marketplace", "temple", "wall"};
+  const std::vector<std::string> keys = {"home",
+                                         "barracks",
+                                         "defense_tower",
+                                         "marketplace",
+                                         "temple",
+                                         "wall_segment_straight"};
   const std::vector<std::string> nations = {"roman", "carthage"};
   const QVector3D team_color(0.30F, 0.55F, 0.95F);
   const QVector3D iso_dir(0.82F, 0.62F, 0.78F);

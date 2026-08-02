@@ -10,6 +10,7 @@
 
 #include <GL/gl.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -54,6 +55,7 @@ auto VegetationPipeline::initialize() -> bool {
   m_iron_ore_shader = m_shader_cache->get(QStringLiteral("iron_ore_instanced"));
 
   m_magic_shrine_shader = m_shader_cache->get(QStringLiteral("magic_shrine_instanced"));
+  m_statue_shader = m_shader_cache->get(QStringLiteral("statue_instanced"));
 
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
@@ -91,6 +93,9 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_magic_shrine_shader == nullptr) {
     qWarning() << "VegetationPipeline: magic_shrine_instanced shader missing";
   }
+  if (m_statue_shader == nullptr) {
+    qWarning() << "VegetationPipeline: statue_instanced shader missing";
+  }
 
   initialize_stone_pipeline();
   initialize_plant_pipeline();
@@ -104,6 +109,8 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_dead_tree_pipeline();
   initialize_iron_ore_pipeline();
   initialize_magic_shrine_pipeline();
+  initialize_abandoned_home_pipeline();
+  initialize_statue_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -123,6 +130,8 @@ void VegetationPipeline::shutdown() {
   shutdown_dead_tree_pipeline();
   shutdown_iron_ore_pipeline();
   shutdown_magic_shrine_pipeline();
+  shutdown_abandoned_home_pipeline();
+  shutdown_statue_pipeline();
   m_initialized = false;
 }
 
@@ -196,6 +205,7 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
   cache_prop_uniforms(m_iron_ore_uniforms, m_iron_ore_shader);
   cache_prop_uniforms(m_magic_shrine_uniforms, m_magic_shrine_shader);
+  cache_prop_uniforms(m_statue_uniforms, m_statue_shader);
 }
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -1411,6 +1421,121 @@ static void append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>>& ve
   face(b0, b3, b2, b1);
 }
 
+static void append_prop_taper(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                              std::vector<uint16_t>& idx,
+                              float cx,
+                              float y0,
+                              float cz,
+                              float r0,
+                              float r1,
+                              float height,
+                              int segs) {
+  using F = std::pair<QVector3D, QVector3D>;
+  constexpr float k_tau = 6.28318530F;
+  const float y1 = y0 + height;
+  const float slope = (r0 - r1) / std::max(height, 1.0e-4F);
+
+  for (int i = 0; i < segs; ++i) {
+    float const a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    float const a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    float const amid = (a0 + a1) * 0.5F;
+    QVector3D normal(std::cos(amid), slope, std::sin(amid));
+    normal.normalize();
+    append_quad(verts,
+                idx,
+                {cx + r0 * std::cos(a0), y0, cz + r0 * std::sin(a0)},
+                {cx + r0 * std::cos(a1), y0, cz + r0 * std::sin(a1)},
+                {cx + r1 * std::cos(a1), y1, cz + r1 * std::sin(a1)},
+                {cx + r1 * std::cos(a0), y1, cz + r1 * std::sin(a0)},
+                normal);
+  }
+
+  QVector3D const up(0.0F, 1.0F, 0.0F);
+  QVector3D const down(0.0F, -1.0F, 0.0F);
+  for (int i = 0; i < segs; ++i) {
+    float const a0 = k_tau * static_cast<float>(i) / static_cast<float>(segs);
+    float const a1 = k_tau * static_cast<float>(i + 1) / static_cast<float>(segs);
+    auto top = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{{cx, y1, cz}, up},
+                  F{{cx + r1 * std::cos(a0), y1, cz + r1 * std::sin(a0)}, up},
+                  F{{cx + r1 * std::cos(a1), y1, cz + r1 * std::sin(a1)}, up}});
+    idx.insert(idx.end(), {top, uint16_t(top + 1), uint16_t(top + 2)});
+
+    auto bottom = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(),
+                 {F{{cx, y0, cz}, down},
+                  F{{cx + r0 * std::cos(a1), y0, cz + r0 * std::sin(a1)}, down},
+                  F{{cx + r0 * std::cos(a0), y0, cz + r0 * std::sin(a0)}, down}});
+    idx.insert(idx.end(), {bottom, uint16_t(bottom + 1), uint16_t(bottom + 2)});
+  }
+}
+
+static void append_prop_beam(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                             std::vector<uint16_t>& idx,
+                             const QVector3D& a,
+                             const QVector3D& b,
+                             float half_width,
+                             float half_depth) {
+  QVector3D dir = b - a;
+  if (dir.lengthSquared() < 1.0e-8F) {
+    dir = {0.0F, 1.0F, 0.0F};
+  } else {
+    dir.normalize();
+  }
+  const QVector3D reference = std::abs(dir.y()) < 0.9F ? QVector3D(0.0F, 1.0F, 0.0F)
+                                                       : QVector3D(1.0F, 0.0F, 0.0F);
+  QVector3D side = QVector3D::crossProduct(reference, dir);
+  if (side.lengthSquared() < 1.0e-8F) {
+    side = {1.0F, 0.0F, 0.0F};
+  } else {
+    side.normalize();
+  }
+  QVector3D depth = QVector3D::crossProduct(dir, side);
+  if (depth.lengthSquared() < 1.0e-8F) {
+    depth = {0.0F, 0.0F, 1.0F};
+  } else {
+    depth.normalize();
+  }
+  side *= half_width;
+  depth *= half_depth;
+
+  const QVector3D center = (a + b) * 0.5F;
+  const std::array<QVector3D, 8> corner{a - side - depth,
+                                        a + side - depth,
+                                        a + side + depth,
+                                        a - side + depth,
+                                        b - side - depth,
+                                        b + side - depth,
+                                        b + side + depth,
+                                        b - side + depth};
+
+  auto face = [&](int i0, int i1, int i2, int i3) {
+    const QVector3D& p0 = corner[i0];
+    const QVector3D& p1 = corner[i1];
+    const QVector3D& p2 = corner[i2];
+    const QVector3D& p3 = corner[i3];
+    QVector3D normal = QVector3D::crossProduct(p1 - p0, p3 - p0);
+    if (normal.lengthSquared() > 1.0e-8F) {
+      normal.normalize();
+    } else {
+      normal = {0.0F, 1.0F, 0.0F};
+    }
+    const QVector3D face_center = (p0 + p1 + p2 + p3) * 0.25F;
+    if (QVector3D::dotProduct(normal, face_center - center) < 0.0F) {
+      normal = -normal;
+    }
+    append_quad(verts, idx, p0, p1, p2, p3, normal);
+  };
+
+  face(0, 4, 5, 1);
+  face(3, 2, 6, 7);
+  face(1, 5, 6, 2);
+  face(0, 3, 7, 4);
+  face(0, 1, 2, 3);
+  face(4, 7, 6, 5);
+}
+
 static void append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
                               std::vector<uint16_t>& idx,
                               float cx,
@@ -1525,12 +1650,12 @@ append_spoked_wheel_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
   float const spoke_half_width = std::max(0.016F, r * 0.070F);
   for (int i = 0; i < spokes; ++i) {
     float const angle = k_tau * static_cast<float>(i) / static_cast<float>(spokes);
-    append_oriented_box(verts,
-                        idx,
-                        ring_point(cx, hub_r * 0.85F, angle),
-                        ring_point(cx, rim_inner + 0.008F, angle),
-                        spoke_half_width,
-                        spoke_half_thickness);
+    append_prop_beam(verts,
+                     idx,
+                     ring_point(cx, hub_r * 0.85F, angle),
+                     ring_point(cx, rim_inner + 0.008F, angle),
+                     spoke_half_width,
+                     spoke_half_thickness);
   }
 }
 
@@ -1607,7 +1732,7 @@ static void append_barrel_yaxis(std::vector<std::pair<QVector3D, QVector3D>>& ve
       } else {
         n = {0.0F, 1.0F, 0.0F};
       }
-      append_quad(verts, idx, lower_a, lower_b, upper_b, upper_a, -n);
+      append_quad(verts, idx, lower_a, lower_b, upper_b, upper_a, n);
     }
   }
 
@@ -1770,86 +1895,173 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  constexpr int k_wheel_sides = 18;
-  constexpr float k_front_wheel_r = 0.22F;
-  constexpr float k_rear_wheel_r = 0.28F;
-  constexpr float k_front_wheel_t = 0.06F;
-  constexpr float k_rear_wheel_t = 0.08F;
+  constexpr int k_wheel_sides = 20;
+  constexpr float k_front_wheel_r = 0.26F;
+  constexpr float k_rear_wheel_r = 0.34F;
+  constexpr float k_front_wheel_t = 0.070F;
+  constexpr float k_rear_wheel_t = 0.090F;
 
-  append_box(verts, idx, {-0.56F, 0.34F, -0.72F}, {-0.42F, 0.42F, 0.54F});
-  append_box(verts, idx, {0.42F, 0.34F, -0.72F}, {0.56F, 0.42F, 0.54F});
-  append_box(verts, idx, {-0.54F, 0.30F, -0.56F}, {0.54F, 0.38F, -0.42F});
-  append_box(verts, idx, {-0.58F, 0.32F, 0.32F}, {0.58F, 0.40F, 0.50F});
-
-  constexpr int k_front_spokes = 6;
-  constexpr int k_rear_spokes = 8;
+  append_box(verts, idx, {-0.58F, 0.36F, -0.60F}, {-0.44F, 0.45F, 0.56F});
+  append_box(verts, idx, {0.44F, 0.36F, -0.60F}, {0.58F, 0.45F, 0.56F});
+  append_box(verts, idx, {-0.56F, 0.30F, -0.58F}, {0.56F, 0.39F, -0.42F});
+  append_box(verts, idx, {-0.60F, 0.34F, 0.34F}, {0.60F, 0.43F, 0.52F});
 
   append_spoked_wheel_xaxis(verts,
                             idx,
-                            -0.76F,
-                            0.24F,
-                            -0.48F,
+                            -0.78F,
+                            0.26F,
+                            -0.50F,
                             k_front_wheel_r,
                             k_front_wheel_t,
                             k_wheel_sides,
-                            k_front_spokes);
+                            8);
   append_spoked_wheel_xaxis(verts,
                             idx,
-                            0.76F,
-                            0.24F,
-                            -0.48F,
+                            0.78F,
+                            0.26F,
+                            -0.50F,
                             k_front_wheel_r,
                             k_front_wheel_t,
                             k_wheel_sides,
-                            k_front_spokes);
+                            8);
   append_spoked_wheel_xaxis(verts,
                             idx,
-                            -0.80F,
-                            0.30F,
-                            0.42F,
+                            -0.82F,
+                            0.34F,
+                            0.44F,
                             k_rear_wheel_r,
                             k_rear_wheel_t,
                             k_wheel_sides,
-                            k_rear_spokes);
+                            10);
   append_spoked_wheel_xaxis(verts,
                             idx,
-                            0.80F,
-                            0.30F,
-                            0.42F,
+                            0.82F,
+                            0.34F,
+                            0.44F,
                             k_rear_wheel_r,
                             k_rear_wheel_t,
                             k_wheel_sides,
-                            k_rear_spokes);
-  append_box(verts, idx, {-0.82F, 0.21F, -0.53F}, {-0.72F, 0.29F, -0.43F});
-  append_box(verts, idx, {0.72F, 0.21F, -0.53F}, {0.82F, 0.29F, -0.43F});
-  append_box(verts, idx, {-0.85F, 0.26F, 0.36F}, {-0.75F, 0.34F, 0.48F});
-  append_box(verts, idx, {0.75F, 0.26F, 0.36F}, {0.85F, 0.34F, 0.48F});
+                            10);
 
-  append_box(verts, idx, {-0.54F, 0.42F, -0.52F}, {0.54F, 0.50F, 0.50F});
-  append_box(verts, idx, {-0.62F, 0.42F, -0.56F}, {-0.50F, 0.84F, 0.56F});
-  append_box(verts, idx, {0.50F, 0.42F, -0.56F}, {0.62F, 0.84F, 0.56F});
-  append_box(verts, idx, {-0.54F, 0.42F, -0.60F}, {0.54F, 0.80F, -0.46F});
-  append_box(verts, idx, {-0.54F, 0.42F, 0.44F}, {0.54F, 0.70F, 0.58F});
-  append_box(verts, idx, {-0.56F, 0.78F, -0.56F}, {-0.48F, 0.94F, -0.48F});
-  append_box(verts, idx, {0.48F, 0.78F, -0.56F}, {0.56F, 0.94F, -0.48F});
-  append_box(verts, idx, {-0.56F, 0.78F, 0.48F}, {-0.48F, 0.90F, 0.56F});
-  append_box(verts, idx, {0.48F, 0.78F, 0.48F}, {0.56F, 0.90F, 0.56F});
-  append_box(verts, idx, {-0.30F, 0.50F, -0.52F}, {0.30F, 0.64F, -0.34F});
+  append_box(verts, idx, {-0.86F, 0.225F, -0.555F}, {-0.72F, 0.295F, -0.445F});
+  append_box(verts, idx, {0.72F, 0.225F, -0.555F}, {0.86F, 0.295F, -0.445F});
+  append_box(verts, idx, {-0.90F, 0.30F, 0.385F}, {-0.75F, 0.38F, 0.495F});
+  append_box(verts, idx, {0.75F, 0.30F, 0.385F}, {0.90F, 0.38F, 0.495F});
 
-  append_box(verts, idx, {-0.18F, 0.30F, -0.70F}, {-0.08F, 0.38F, -1.40F});
-  append_box(verts, idx, {0.08F, 0.30F, -0.70F}, {0.18F, 0.38F, -1.40F});
-  append_box(verts, idx, {-0.20F, 0.28F, -1.28F}, {0.20F, 0.36F, -1.20F});
-  append_box(verts, idx, {-0.34F, 0.29F, -1.44F}, {0.34F, 0.37F, -1.36F});
-  append_box(verts, idx, {-0.26F, 0.22F, -1.42F}, {-0.16F, 0.30F, -1.38F});
-  append_box(verts, idx, {0.16F, 0.22F, -1.42F}, {0.26F, 0.30F, -1.38F});
+  append_box(verts, idx, {-0.56F, 0.45F, -0.56F}, {0.56F, 0.54F, 0.54F});
+  for (int plank = 0; plank < 6; ++plank) {
+    float const z = -0.545F + 0.180F * static_cast<float>(plank);
+    append_box(verts, idx, {-0.545F, 0.540F, z}, {0.545F, 0.556F, z + 0.150F});
+  }
 
-  append_barrel_yaxis(verts, idx, -0.18F, 0.50F, -0.02F, 0.155F, 0.44F, 12);
-  append_barrel_yaxis(verts, idx, 0.20F, 0.50F, 0.08F, 0.145F, 0.40F, 12);
-  append_box(verts, idx, {-0.40F, 0.50F, 0.14F}, {-0.04F, 0.78F, 0.42F});
-  append_box(verts, idx, {-0.42F, 0.78F, 0.12F}, {-0.02F, 0.82F, 0.44F});
-  append_box(verts, idx, {0.00F, 0.50F, -0.30F}, {0.36F, 0.72F, -0.02F});
-  append_box(verts, idx, {-0.02F, 0.72F, -0.32F}, {0.38F, 0.76F, 0.00F});
-  append_box(verts, idx, {-0.16F, 0.86F, -0.10F}, {0.22F, 1.00F, 0.18F});
+  append_box(verts, idx, {-0.64F, 0.45F, -0.60F}, {-0.52F, 0.94F, 0.58F});
+  append_box(verts, idx, {0.52F, 0.45F, -0.60F}, {0.64F, 0.94F, 0.58F});
+  append_box(verts, idx, {-0.56F, 0.45F, -0.64F}, {0.56F, 0.88F, -0.52F});
+  append_box(verts, idx, {-0.56F, 0.45F, 0.48F}, {0.56F, 0.78F, 0.60F});
+  append_box(verts, idx, {-0.66F, 0.88F, -0.62F}, {-0.50F, 0.98F, 0.60F});
+  append_box(verts, idx, {0.50F, 0.88F, -0.62F}, {0.66F, 0.98F, 0.60F});
+  for (float const side : {-1.0F, 1.0F}) {
+    for (float const z : {-0.54F, -0.06F, 0.42F}) {
+      append_box(verts,
+                 idx,
+                 {side * 0.58F - 0.055F, 0.45F, z - 0.045F},
+                 {side * 0.58F + 0.055F, 1.02F, z + 0.045F});
+    }
+  }
+
+  append_box(verts, idx, {-0.20F, 0.32F, -0.62F}, {-0.09F, 0.41F, -1.34F});
+  append_box(verts, idx, {0.09F, 0.32F, -0.62F}, {0.20F, 0.41F, -1.34F});
+  append_box(verts, idx, {-0.22F, 0.30F, -1.24F}, {0.22F, 0.39F, -1.14F});
+  append_box(verts, idx, {-0.46F, 0.31F, -1.40F}, {0.46F, 0.40F, -1.30F});
+  append_box(verts, idx, {-0.50F, 0.36F, -1.42F}, {-0.36F, 0.46F, -1.28F});
+  append_box(verts, idx, {0.36F, 0.36F, -1.42F}, {0.50F, 0.46F, -1.28F});
+  append_prop_beam(
+      verts, idx, {-0.16F, 0.40F, -1.30F}, {-0.16F, 0.56F, -1.06F}, 0.030F, 0.028F);
+  append_prop_beam(
+      verts, idx, {0.16F, 0.40F, -1.30F}, {0.16F, 0.56F, -1.06F}, 0.030F, 0.028F);
+
+  auto add_barrel = [&](float cx, float cz, float r, float height) {
+    float const y0 = 0.556F;
+    append_prop_taper(verts, idx, cx, y0, cz, r * 0.86F, r, height * 0.34F, 12);
+    append_prop_taper(
+        verts, idx, cx, y0 + height * 0.34F, cz, r, r, height * 0.32F, 12);
+    append_prop_taper(
+        verts, idx, cx, y0 + height * 0.66F, cz, r, r * 0.86F, height * 0.34F, 12);
+    for (float const t : {0.10F, 0.50F, 0.90F}) {
+      float const hoop_r = r * (t > 0.05F && t < 0.95F ? 1.045F : 0.90F);
+      append_prop_taper(
+          verts, idx, cx, y0 + height * t, cz, hoop_r, hoop_r, height * 0.055F, 12);
+    }
+    append_prop_taper(
+        verts, idx, cx, y0 + height, cz, r * 0.86F, r * 0.80F, 0.020F, 12);
+  };
+
+  add_barrel(-0.28F, -0.14F, 0.185F, 0.62F);
+  add_barrel(0.22F, 0.06F, 0.170F, 0.56F);
+
+  auto add_sack = [&](float cx, float cy, float cz, float r, float height) {
+    append_prop_taper(verts, idx, cx, cy, cz, r * 0.80F, r, height * 0.42F, 10);
+    append_prop_taper(
+        verts, idx, cx, cy + height * 0.42F, cz, r, r * 0.62F, height * 0.44F, 10);
+    append_prop_taper(verts,
+                      idx,
+                      cx,
+                      cy + height * 0.86F,
+                      cz,
+                      r * 0.62F,
+                      r * 0.30F,
+                      height * 0.14F,
+                      10);
+    append_prop_beam(verts,
+                     idx,
+                     {cx - r * 0.34F, cy + height * 1.02F, cz},
+                     {cx + r * 0.34F, cy + height * 1.06F, cz},
+                     0.030F,
+                     0.026F);
+  };
+
+  add_sack(-0.24F, 0.556F, 0.36F, 0.185F, 0.40F);
+  add_sack(0.20F, 0.556F, 0.44F, 0.165F, 0.34F);
+  add_sack(0.30F, 0.556F, -0.36F, 0.150F, 0.30F);
+
+  append_prop_taper(verts, idx, -0.06F, 0.556F, -0.42F, 0.075F, 0.135F, 0.20F, 10);
+  append_prop_taper(verts, idx, -0.06F, 0.756F, -0.42F, 0.135F, 0.060F, 0.24F, 10);
+  append_prop_taper(verts, idx, -0.06F, 0.996F, -0.42F, 0.052F, 0.072F, 0.10F, 10);
+  for (float const side : {-1.0F, 1.0F}) {
+    append_prop_beam(verts,
+                     idx,
+                     {-0.06F + side * 0.052F, 1.030F, -0.42F},
+                     {-0.06F + side * 0.130F, 0.900F, -0.42F},
+                     0.020F,
+                     0.020F);
+  }
+
+  append_prop_beam(
+      verts, idx, {-0.50F, 1.010F, 0.10F}, {0.50F, 1.010F, 0.10F}, 0.090F, 0.085F);
+  for (int lash = 0; lash < 3; ++lash) {
+    float const x = -0.32F + 0.32F * static_cast<float>(lash);
+    append_prop_beam(
+        verts, idx, {x, 1.108F, 0.10F}, {x, 0.912F, 0.10F}, 0.020F, 0.092F);
+  }
+
+  for (int hoop = 0; hoop < 2; ++hoop) {
+    float const z = 0.10F + 0.34F * static_cast<float>(hoop);
+    constexpr int k_arc = 5;
+    for (int seg = 0; seg < k_arc; ++seg) {
+      float const a0 =
+          3.14159265F * static_cast<float>(seg) / static_cast<float>(k_arc);
+      float const a1 =
+          3.14159265F * static_cast<float>(seg + 1) / static_cast<float>(k_arc);
+      append_prop_beam(verts,
+                       idx,
+                       {-std::cos(a0) * 0.58F, 0.96F + std::sin(a0) * 0.40F, z},
+                       {-std::cos(a1) * 0.58F, 0.96F + std::sin(a1) * 0.40F, z},
+                       0.030F,
+                       0.032F);
+    }
+  }
+  append_prop_beam(
+      verts, idx, {0.0F, 1.352F, 0.06F}, {0.0F, 1.352F, 0.48F}, 0.034F, 0.030F);
 
   upload_prop_mesh_impl(verts,
                         idx,
@@ -2006,9 +2218,9 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   append_box(verts, idx, {-0.86F, 0.34F, -0.10F}, {0.86F, 0.48F, 0.08F});
   append_box(verts, idx, {-0.84F, 0.96F, -0.12F}, {0.84F, 1.10F, 0.06F});
   append_box(verts, idx, {-0.74F, 1.28F, -0.10F}, {0.74F, 1.40F, 0.04F});
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.70F, 0.16F, -0.08F}, {-0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {0.70F, 0.16F, -0.08F}, {0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
 
   for (float const x : {-0.58F, -0.30F, 0.00F, 0.30F, 0.58F}) {
@@ -2016,34 +2228,34 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
     append_box(verts, idx, {x - 0.045F, 1.10F, 0.06F}, {x + 0.045F, 1.22F, 0.20F});
   }
 
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.64F, 0.05F, 0.17F}, {-0.50F, 1.72F, 0.09F}, 0.032F, 0.034F);
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.515F, 1.54F, 0.099F}, {-0.503F, 1.68F, 0.092F}, 0.046F, 0.047F);
   append_leaf_blade(-0.485F, 1.62F, 0.09F, 0.115F, 0.42F, 0.035F);
   append_box(verts, idx, {-0.675F, 0.00F, 0.13F}, {-0.595F, 0.12F, 0.21F});
 
   append_box(verts, idx, {-0.335F, 0.02F, 0.12F}, {-0.210F, 0.15F, 0.24F});
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.280F, 0.12F, 0.17F}, {-0.235F, 0.38F, 0.12F}, 0.044F, 0.034F);
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.525F, 0.34F, 0.13F}, {0.030F, 0.41F, 0.13F}, 0.042F, 0.048F);
   append_sword_blade(
       {-0.250F, 0.42F, 0.12F}, {-0.335F, 1.82F, 0.07F}, 0.080F, 0.018F, 0.030F);
   append_blade_tip(-0.345F, 1.72F, 0.07F, 0.070F, 0.24F, 0.026F);
 
   append_box(verts, idx, {0.030F, 0.03F, 0.14F}, {0.140F, 0.14F, 0.25F});
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {0.085F, 0.12F, 0.18F}, {0.080F, 0.34F, 0.13F}, 0.036F, 0.030F);
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {-0.075F, 0.30F, 0.14F}, {0.285F, 0.37F, 0.14F}, 0.038F, 0.044F);
   append_sword_blade(
       {0.085F, 0.38F, 0.13F}, {0.180F, 1.56F, 0.08F}, 0.065F, 0.015F, 0.026F);
   append_blade_tip(0.185F, 1.46F, 0.08F, 0.058F, 0.22F, 0.024F);
 
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F}, 0.030F, 0.032F);
-  append_oriented_box(
+  append_prop_beam(
       verts, idx, {0.665F, 1.52F, 0.089F}, {0.677F, 1.66F, 0.082F}, 0.044F, 0.045F);
   append_leaf_blade(0.690F, 1.60F, 0.08F, 0.105F, 0.40F, 0.033F);
   append_box(verts, idx, {0.505F, 0.00F, 0.12F}, {0.585F, 0.12F, 0.20F});
@@ -2065,16 +2277,86 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
         {0.22F, 1.94F, -0.19F},
     };
     for (int i = 0; i < 6; ++i) {
-      append_oriented_box(verts,
-                          idx,
-                          {pts[i].x, pts[i].y, pts[i].z},
-                          {pts[i + 1].x, pts[i + 1].y, pts[i + 1].z},
-                          0.026F,
-                          k_depth);
+      append_prop_beam(verts,
+                       idx,
+                       {pts[i].x, pts[i].y, pts[i].z},
+                       {pts[i + 1].x, pts[i + 1].y, pts[i + 1].z},
+                       0.026F,
+                       k_depth);
     }
-    append_oriented_box(
+    append_prop_beam(
         verts, idx, {0.225F, 0.10F, -0.20F}, {0.205F, 1.88F, -0.19F}, 0.006F, 0.006F);
     append_box(verts, idx, {0.520F, 0.86F, -0.29F}, {0.625F, 1.12F, -0.16F});
+  }
+
+  append_box(verts, idx, {-0.70F, 0.48F, -0.115F}, {0.70F, 0.94F, -0.055F});
+  for (int plank = 0; plank < 4; ++plank) {
+    float const y = 0.495F + 0.112F * static_cast<float>(plank);
+    append_box(verts, idx, {-0.705F, y, -0.125F}, {0.705F, y + 0.016F, -0.108F});
+  }
+  append_box(verts, idx, {-0.72F, 0.46F, -0.130F}, {-0.66F, 0.96F, -0.050F});
+  append_box(verts, idx, {0.66F, 0.46F, -0.130F}, {0.72F, 0.96F, -0.050F});
+
+  auto add_scutum = [&](float cx, float lean_x, float front_z, float back_z) {
+    const QVector3D foot(cx, 0.020F, front_z);
+    const QVector3D crown(cx + lean_x, 0.980F, back_z);
+    append_prop_beam(verts, idx, foot, crown, 0.230F, 0.032F);
+    append_prop_beam(verts,
+                     idx,
+                     {cx - 0.238F, 0.055F, front_z - 0.030F},
+                     {cx + lean_x - 0.238F, 0.945F, back_z - 0.030F},
+                     0.052F,
+                     0.028F);
+    append_prop_beam(verts,
+                     idx,
+                     {cx + 0.238F, 0.055F, front_z - 0.030F},
+                     {cx + lean_x + 0.238F, 0.945F, back_z - 0.030F},
+                     0.052F,
+                     0.028F);
+    append_prop_beam(verts,
+                     idx,
+                     {cx - 0.245F, 0.060F, front_z + 0.004F},
+                     {cx + 0.245F, 0.060F, front_z + 0.004F},
+                     0.026F,
+                     0.040F);
+    append_prop_beam(verts,
+                     idx,
+                     {cx + lean_x - 0.245F, 0.940F, back_z + 0.004F},
+                     {cx + lean_x + 0.245F, 0.940F, back_z + 0.004F},
+                     0.026F,
+                     0.040F);
+    const QVector3D boss = foot * 0.5F + crown * 0.5F;
+    append_prop_taper(verts,
+                      idx,
+                      boss.x() - 0.005F,
+                      boss.y() - 0.052F,
+                      boss.z() + 0.030F,
+                      0.082F,
+                      0.062F,
+                      0.045F,
+                      10);
+    append_prop_beam(verts,
+                     idx,
+                     {boss.x() - 0.150F, boss.y() + 0.006F, boss.z() + 0.036F},
+                     {boss.x() + 0.150F, boss.y() + 0.006F, boss.z() + 0.036F},
+                     0.020F,
+                     0.022F);
+  };
+
+  add_scutum(-0.905F, 0.075F, 0.360F, 0.190F);
+  add_scutum(0.930F, -0.070F, 0.330F, 0.165F);
+
+  append_prop_taper(verts, idx, 0.315F, 0.020F, 0.400F, 0.135F, 0.115F, 0.360F, 10);
+  append_prop_taper(verts, idx, 0.315F, 0.380F, 0.400F, 0.115F, 0.128F, 0.030F, 10);
+  for (int shaft = 0; shaft < 4; ++shaft) {
+    float const angle = 1.20F + 0.34F * static_cast<float>(shaft);
+    append_prop_beam(
+        verts,
+        idx,
+        {0.315F + std::cos(angle) * 0.055F, 0.395F, 0.400F + std::sin(angle) * 0.055F},
+        {0.315F + std::cos(angle) * 0.155F, 1.150F, 0.400F + std::sin(angle) * 0.155F},
+        0.019F,
+        0.019F);
   }
 
   upload_prop_mesh_impl(verts,
@@ -2201,6 +2483,306 @@ void VegetationPipeline::shutdown_ruins_pipeline() {
                             m_ruins_index_buffer,
                             m_ruins_vertex_count,
                             m_ruins_index_count);
+}
+
+void VegetationPipeline::initialize_abandoned_home_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_abandoned_home_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  append_box(verts, idx, {-0.98F, -0.02F, -0.82F}, {0.98F, 0.07F, 0.82F});
+  append_box(verts, idx, {-0.90F, 0.07F, -0.74F}, {0.90F, 0.14F, 0.74F});
+
+  append_box(verts, idx, {-0.88F, 0.12F, -0.72F}, {-0.70F, 1.16F, 0.72F});
+  append_box(verts, idx, {-0.90F, 1.16F, -0.72F}, {-0.68F, 1.26F, 0.16F});
+  append_box(verts, idx, {-0.88F, 1.16F, 0.34F}, {-0.70F, 1.21F, 0.72F});
+
+  append_box(verts, idx, {-0.88F, 0.12F, 0.56F}, {0.86F, 1.14F, 0.72F});
+  append_box(verts, idx, {-0.30F, 1.14F, 0.56F}, {0.36F, 1.30F, 0.72F});
+  append_box(verts, idx, {0.06F, 0.52F, 0.545F}, {0.44F, 0.86F, 0.735F});
+  append_box(verts, idx, {0.10F, 0.56F, 0.535F}, {0.40F, 0.82F, 0.745F});
+
+  append_box(verts, idx, {-0.88F, 0.12F, -0.72F}, {-0.30F, 0.96F, -0.56F});
+  append_box(verts, idx, {-0.88F, 0.96F, -0.72F}, {-0.56F, 1.20F, -0.56F});
+  append_box(verts, idx, {0.06F, 0.12F, -0.72F}, {0.50F, 0.88F, -0.56F});
+  append_box(verts, idx, {-0.30F, 0.80F, -0.72F}, {0.06F, 0.96F, -0.56F});
+  append_box(verts, idx, {-0.32F, 0.94F, -0.74F}, {0.10F, 1.02F, -0.54F});
+  append_box(verts, idx, {0.50F, 0.12F, -0.72F}, {0.86F, 0.44F, -0.56F});
+
+  append_box(verts, idx, {0.70F, 0.12F, -0.56F}, {0.86F, 0.92F, 0.30F});
+  append_box(verts, idx, {0.70F, 0.92F, -0.30F}, {0.86F, 1.06F, 0.30F});
+
+  for (int course = 0; course < 5; ++course) {
+    float const y = 0.24F + 0.20F * static_cast<float>(course);
+    append_box(verts, idx, {-0.885F, y, 0.58F}, {0.80F, y + 0.022F, 0.585F});
+    append_box(verts, idx, {-0.895F, y, -0.70F}, {-0.885F, y + 0.022F, 0.70F});
+  }
+
+  append_box(verts, idx, {-0.16F, 0.12F, -0.60F}, {0.10F, 0.16F, -0.44F});
+
+  for (int course = 0; course < 5; ++course) {
+    float const step = static_cast<float>(course);
+    float const z0 = -0.76F + 0.148F * step;
+    float const y0 = 1.06F + 0.092F * step;
+    append_box(verts, idx, {-0.58F, y0, z0}, {0.88F, y0 + 0.092F, z0 + 0.148F});
+  }
+  append_box(verts, idx, {-0.60F, 1.52F, -0.06F}, {0.90F, 1.63F, 0.08F});
+  append_box(verts, idx, {-0.62F, 1.44F, -0.80F}, {-0.52F, 1.60F, 0.10F});
+
+  append_oriented_box(
+      verts, idx, {-0.24F, 1.54F, 0.05F}, {-0.10F, 1.20F, 0.44F}, 0.055F, 0.048F);
+  append_oriented_box(
+      verts, idx, {0.30F, 1.54F, 0.05F}, {0.24F, 1.30F, 0.34F}, 0.052F, 0.046F);
+  append_oriented_box(
+      verts, idx, {0.66F, 1.53F, 0.05F}, {0.72F, 1.10F, 0.56F}, 0.052F, 0.046F);
+  append_oriented_box(
+      verts, idx, {0.02F, 1.55F, 0.04F}, {0.10F, 0.62F, 0.30F}, 0.048F, 0.042F);
+
+  append_box(verts, idx, {0.42F, 0.14F, 0.08F}, {0.70F, 1.42F, 0.36F});
+  append_box(verts, idx, {0.38F, 1.42F, 0.04F}, {0.74F, 1.56F, 0.40F});
+  append_box(verts, idx, {0.44F, 1.56F, 0.10F}, {0.68F, 1.62F, 0.34F});
+
+  append_box(verts, idx, {-0.34F, 0.12F, -0.14F}, {0.04F, 0.24F, 0.24F});
+  append_box(verts, idx, {-0.30F, 0.24F, -0.08F}, {-0.04F, 0.32F, 0.16F});
+  append_box(verts, idx, {0.16F, 0.12F, 0.02F}, {0.44F, 0.20F, 0.32F});
+  append_box(verts, idx, {-0.62F, 0.12F, 0.10F}, {-0.38F, 0.19F, 0.40F});
+  append_box(verts, idx, {0.26F, 0.11F, -0.46F}, {0.54F, 0.18F, -0.22F});
+
+  append_box(verts, idx, {0.92F, 0.06F, -0.78F}, {1.16F, 0.16F, -0.48F});
+  append_box(verts, idx, {0.96F, 0.06F, 0.34F}, {1.14F, 0.13F, 0.60F});
+  append_box(verts, idx, {-1.14F, 0.06F, 0.38F}, {-0.92F, 0.15F, 0.64F});
+  append_box(verts, idx, {-1.10F, 0.05F, -0.62F}, {-0.94F, 0.11F, -0.42F});
+
+  append_oriented_box(
+      verts, idx, {-0.24F, 0.14F, -0.62F}, {-0.02F, 0.74F, -0.40F}, 0.13F, 0.030F);
+
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_abandoned_home_vao,
+                        m_abandoned_home_vertex_buffer,
+                        m_abandoned_home_index_buffer,
+                        m_abandoned_home_vertex_count,
+                        m_abandoned_home_index_count);
+}
+
+void VegetationPipeline::shutdown_abandoned_home_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_abandoned_home_vao = m_abandoned_home_vertex_buffer =
+        m_abandoned_home_index_buffer = 0;
+    m_abandoned_home_vertex_count = m_abandoned_home_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_abandoned_home_vao,
+                            m_abandoned_home_vertex_buffer,
+                            m_abandoned_home_index_buffer,
+                            m_abandoned_home_vertex_count,
+                            m_abandoned_home_index_count);
+}
+
+void VegetationPipeline::initialize_statue_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_statue_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  append_box(verts, idx, {-0.52F, -0.02F, -0.52F}, {0.52F, 0.09F, 0.52F});
+  append_box(verts, idx, {-0.46F, 0.09F, -0.46F}, {0.46F, 0.15F, 0.46F});
+  append_box(verts, idx, {-0.40F, 0.15F, -0.40F}, {0.40F, 0.22F, 0.40F});
+
+  append_box(verts, idx, {-0.30F, 0.22F, -0.30F}, {0.30F, 0.96F, 0.30F});
+
+  for (int face = 0; face < 4; ++face) {
+    bool const along_x = face < 2;
+    float const sign = (face % 2 == 0) ? 1.0F : -1.0F;
+    float const lo = std::min(sign * 0.298F, sign * 0.310F);
+    float const hi = std::max(sign * 0.298F, sign * 0.310F);
+
+    auto plate = [&](float a0, float a1, float y0, float y1) {
+      if (along_x) {
+        append_box(verts, idx, {lo, y0, a0}, {hi, y1, a1});
+      } else {
+        append_box(verts, idx, {a0, y0, lo}, {a1, y1, hi});
+      }
+    };
+
+    plate(-0.200F, 0.200F, 0.400F, 0.424F);
+    plate(-0.200F, 0.200F, 0.790F, 0.814F);
+    plate(-0.204F, -0.180F, 0.400F, 0.814F);
+    plate(0.180F, 0.204F, 0.400F, 0.814F);
+    for (int line = 0; line < 3; ++line) {
+      float const y = 0.482F + 0.098F * static_cast<float>(line);
+      plate(-0.152F, 0.152F, y, y + 0.026F);
+    }
+  }
+
+  append_box(verts, idx, {-0.345F, 0.96F, -0.345F}, {0.345F, 1.02F, 0.345F});
+  append_box(verts, idx, {-0.385F, 1.02F, -0.385F}, {0.385F, 1.085F, 0.385F});
+  append_box(verts, idx, {-0.325F, 1.085F, -0.325F}, {0.325F, 1.145F, 0.325F});
+  append_box(verts, idx, {-0.265F, 1.145F, -0.235F}, {0.265F, 1.20F, 0.235F});
+
+  append_box(verts, idx, {-0.150F, 1.20F, 0.012F}, {0.040F, 1.262F, 0.132F});
+  append_box(verts, idx, {-0.158F, 1.246F, 0.030F}, {-0.058F, 1.282F, 0.114F});
+  append_box(verts, idx, {0.010F, 1.20F, -0.172F}, {0.190F, 1.252F, -0.056F});
+  append_box(verts, idx, {0.062F, 1.238F, -0.156F}, {0.162F, 1.278F, -0.072F});
+
+  append_prop_taper(verts, idx, -0.048F, 1.256F, 0.070F, 0.050F, 0.074F, 0.250F, 9);
+  append_prop_taper(verts, idx, -0.042F, 1.500F, 0.074F, 0.072F, 0.092F, 0.330F, 9);
+  append_prop_beam(
+      verts, idx, {0.100F, 1.246F, -0.112F}, {0.044F, 1.500F, -0.106F}, 0.052F, 0.056F);
+  append_prop_beam(verts,
+                   idx,
+                   {0.044F, 1.500F, -0.106F},
+                   {-0.012F, 1.830F, -0.092F},
+                   0.072F,
+                   0.076F);
+
+  append_prop_taper(verts, idx, -0.020F, 1.780F, 0.0F, 0.160F, 0.150F, 0.140F, 12);
+  append_prop_taper(verts, idx, -0.016F, 1.920F, 0.0F, 0.150F, 0.143F, 0.140F, 12);
+  append_prop_taper(verts, idx, -0.014F, 2.060F, 0.0F, 0.150F, 0.170F, 0.170F, 12);
+  append_prop_taper(verts, idx, -0.012F, 2.230F, 0.0F, 0.170F, 0.142F, 0.096F, 12);
+
+  append_prop_taper(verts, idx, -0.022F, 1.700F, 0.0F, 0.172F, 0.164F, 0.090F, 12);
+  append_prop_taper(verts, idx, -0.024F, 1.628F, 0.0F, 0.180F, 0.172F, 0.074F, 12);
+
+  for (int fold = 0; fold < 9; ++fold) {
+    float const angle = -1.40F + 0.35F * static_cast<float>(fold);
+    float const cs = std::cos(angle);
+    float const sn = std::sin(angle);
+    float const top = 2.010F - 0.048F * std::fabs(static_cast<float>(fold) - 4.0F);
+    append_prop_beam(verts,
+                     idx,
+                     {-0.016F + cs * 0.150F, top, sn * 0.150F},
+                     {-0.022F + cs * 0.182F, 1.652F, sn * 0.182F},
+                     0.030F,
+                     0.024F);
+  }
+  for (int fold = 0; fold < 5; ++fold) {
+    float const angle = 1.90F + 0.36F * static_cast<float>(fold);
+    float const cs = std::cos(angle);
+    float const sn = std::sin(angle);
+    append_prop_beam(verts,
+                     idx,
+                     {-0.016F + cs * 0.152F, 2.180F, sn * 0.152F},
+                     {-0.022F + cs * 0.178F, 1.700F, sn * 0.178F},
+                     0.028F,
+                     0.022F);
+  }
+
+  append_prop_beam(verts,
+                   idx,
+                   {-0.128F, 2.286F, -0.130F},
+                   {-0.058F, 1.980F, 0.146F},
+                   0.070F,
+                   0.028F);
+  append_prop_beam(
+      verts, idx, {-0.058F, 1.980F, 0.146F}, {-0.020F, 1.836F, 0.128F}, 0.058F, 0.026F);
+
+  append_prop_taper(verts, idx, -0.012F, 2.316F, 0.0F, 0.058F, 0.053F, 0.072F, 9);
+  append_prop_taper(verts, idx, -0.012F, 2.380F, 0.0F, 0.076F, 0.092F, 0.108F, 10);
+  append_prop_taper(verts, idx, -0.012F, 2.488F, 0.0F, 0.092F, 0.062F, 0.070F, 10);
+  append_box(verts, idx, {-0.096F, 2.400F, -0.050F}, {-0.052F, 2.470F, 0.050F});
+  append_box(verts, idx, {-0.104F, 2.438F, -0.017F}, {-0.070F, 2.468F, 0.017F});
+  append_box(verts, idx, {-0.090F, 2.382F, -0.060F}, {-0.040F, 2.408F, 0.060F});
+  for (int curl = 0; curl < 9; ++curl) {
+    float const angle = 6.28318530F * static_cast<float>(curl) / 9.0F;
+    float const cs = std::cos(angle);
+    float const sn = std::sin(angle);
+    append_prop_beam(verts,
+                     idx,
+                     {-0.012F + cs * 0.070F, 2.492F, sn * 0.070F},
+                     {-0.012F + cs * 0.088F, 2.462F, sn * 0.088F},
+                     0.022F,
+                     0.018F);
+  }
+
+  append_prop_beam(
+      verts, idx, {-0.058F, 2.272F, 0.142F}, {-0.136F, 2.086F, 0.208F}, 0.054F, 0.057F);
+  append_prop_beam(
+      verts, idx, {-0.136F, 2.086F, 0.208F}, {-0.276F, 2.232F, 0.186F}, 0.044F, 0.047F);
+  append_prop_taper(verts, idx, -0.298F, 2.216F, 0.182F, 0.038F, 0.031F, 0.058F, 8);
+
+  append_prop_beam(verts,
+                   idx,
+                   {-0.038F, 2.276F, -0.148F},
+                   {0.006F, 2.010F, -0.200F},
+                   0.057F,
+                   0.059F);
+  append_prop_beam(verts,
+                   idx,
+                   {0.006F, 2.010F, -0.200F},
+                   {-0.104F, 1.892F, -0.196F},
+                   0.046F,
+                   0.048F);
+  append_prop_taper(verts, idx, -0.128F, 1.860F, -0.194F, 0.040F, 0.035F, 0.058F, 8);
+
+  append_prop_beam(verts,
+                   idx,
+                   {-0.088F, 2.262F, -0.176F},
+                   {-0.150F, 1.900F, -0.224F},
+                   0.084F,
+                   0.026F);
+  append_prop_beam(verts,
+                   idx,
+                   {-0.150F, 1.900F, -0.224F},
+                   {-0.106F, 1.560F, -0.236F},
+                   0.076F,
+                   0.024F);
+  append_prop_beam(verts,
+                   idx,
+                   {-0.106F, 1.560F, -0.236F},
+                   {-0.062F, 1.226F, -0.222F},
+                   0.064F,
+                   0.022F);
+  for (int fold = 0; fold < 3; ++fold) {
+    float const z = -0.250F - 0.014F * static_cast<float>(fold);
+    append_prop_beam(verts,
+                     idx,
+                     {-0.132F, 2.060F, z},
+                     {-0.096F, 1.480F + 0.070F * static_cast<float>(fold), z},
+                     0.024F,
+                     0.020F);
+  }
+
+  append_prop_beam(
+      verts, idx, {0.128F, 2.286F, 0.0F}, {0.146F, 1.720F, 0.0F}, 0.158F, 0.028F);
+  for (int fold = 0; fold < 4; ++fold) {
+    float const z = -0.120F + 0.080F * static_cast<float>(fold);
+    append_prop_beam(verts,
+                     idx,
+                     {0.162F, 2.240F, z},
+                     {0.170F, 1.720F - 0.030F * static_cast<float>(fold % 2), z},
+                     0.024F,
+                     0.022F);
+  }
+
+  append_box(verts, idx, {-0.420F, 0.22F, -0.340F}, {-0.310F, 0.360F, -0.190F});
+  append_box(verts, idx, {-0.402F, 0.360F, -0.322F}, {-0.328F, 0.414F, -0.208F});
+
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_statue_vao,
+                        m_statue_vertex_buffer,
+                        m_statue_index_buffer,
+                        m_statue_vertex_count,
+                        m_statue_index_count);
+}
+
+void VegetationPipeline::shutdown_statue_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_statue_vao = m_statue_vertex_buffer = m_statue_index_buffer = 0;
+    m_statue_vertex_count = m_statue_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_statue_vao,
+                            m_statue_vertex_buffer,
+                            m_statue_index_buffer,
+                            m_statue_vertex_count,
+                            m_statue_index_count);
 }
 
 void VegetationPipeline::initialize_dead_tree_pipeline() {

@@ -84,7 +84,9 @@ struct WorldProp {
     OliveTree,
     Plant,
     IronOre,
-    MagicShrine
+    MagicShrine,
+    AbandonedHome,
+    Statue
   };
 
   std::uint64_t id = 0;
@@ -143,6 +145,11 @@ is_structural_undead_anchor(WorldProp::Type anchor_type) -> bool {
   return anchor_type == WorldProp::Type::MagicShrine;
 }
 
+[[nodiscard]] constexpr auto
+is_settlement_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::AbandonedHome || type == WorldProp::Type::Statue;
+}
+
 [[nodiscard]] inline auto zone_has_structural_anchor(const UndeadZone& zone) -> bool {
   return zone.anchor_is_structure.value_or(
       is_structural_undead_anchor(zone.anchor_type));
@@ -193,6 +200,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("iron_ore");
   case WorldProp::Type::MagicShrine:
     return QLatin1String("magic_shrine");
+  case WorldProp::Type::AbandonedHome:
+    return QLatin1String("abandoned_home");
+  case WorldProp::Type::Statue:
+    return QLatin1String("statue");
   }
   Q_UNREACHABLE();
 }
@@ -247,6 +258,14 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::MagicShrine;
     return true;
   }
+  if (value == QLatin1String("abandoned_home")) {
+    out = WorldProp::Type::AbandonedHome;
+    return true;
+  }
+  if (value == QLatin1String("statue")) {
+    out = WorldProp::Type::Statue;
+    return true;
+  }
   return false;
 }
 
@@ -276,6 +295,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 1.10F;
   case WorldProp::Type::MagicShrine:
     return 1.80F;
+  case WorldProp::Type::AbandonedHome:
+    return 1.90F;
+  case WorldProp::Type::Statue:
+    return 1.05F;
   }
   return 1.0F;
 }

@@ -108,7 +108,9 @@ struct TerrainScatterCmd {
     Ruins,
     DeadTree,
     IronOre,
-    MagicShrine
+    MagicShrine,
+    AbandonedHome,
+    Statue
   };
 
   Species species = Species::Grass;
@@ -129,6 +131,8 @@ struct TerrainScatterCmd {
   DeadTreeBatchParams dead_tree{};
   IronOreBatchParams iron_ore{};
   MagicShrineBatchParams magic_shrine{};
+  AbandonedHomeBatchParams abandoned_home{};
+  StatueBatchParams statue{};
 
   VisibilityMaskResources visibility{};
   CommandPriority priority{CommandPriority::Low};

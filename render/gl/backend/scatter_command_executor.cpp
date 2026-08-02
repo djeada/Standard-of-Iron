@@ -642,7 +642,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
     case TerrainScatterCmd::Species::Ruins:
     case TerrainScatterCmd::Species::DeadTree:
     case TerrainScatterCmd::Species::IronOre:
-    case TerrainScatterCmd::Species::MagicShrine: {
+    case TerrainScatterCmd::Species::MagicShrine:
+    case TerrainScatterCmd::Species::AbandonedHome:
+    case TerrainScatterCmd::Species::Statue: {
       if (!m_vegetation_pipeline) {
         break;
       }
@@ -702,6 +704,20 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         prop_idx_count = m_vegetation_pipeline->m_magic_shrine_index_count;
         prop_uniforms = &m_vegetation_pipeline->m_magic_shrine_uniforms;
         prop_light_dir = deco_cmd_.magic_shrine.light_direction;
+        break;
+      case TerrainScatterCmd::Species::AbandonedHome:
+        prop_shader = m_vegetation_pipeline->ruins_shader();
+        prop_vao = m_vegetation_pipeline->m_abandoned_home_vao;
+        prop_idx_count = m_vegetation_pipeline->m_abandoned_home_index_count;
+        prop_uniforms = &m_vegetation_pipeline->m_ruins_uniforms;
+        prop_light_dir = deco_cmd_.abandoned_home.light_direction;
+        break;
+      case TerrainScatterCmd::Species::Statue:
+        prop_shader = m_vegetation_pipeline->statue_shader();
+        prop_vao = m_vegetation_pipeline->m_statue_vao;
+        prop_idx_count = m_vegetation_pipeline->m_statue_index_count;
+        prop_uniforms = &m_vegetation_pipeline->m_statue_uniforms;
+        prop_light_dir = deco_cmd_.statue.light_direction;
         break;
       default:
         break;

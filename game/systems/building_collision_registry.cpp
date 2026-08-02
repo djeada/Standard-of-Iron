@@ -19,6 +19,7 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
         {"barracks", {4.F, 4.F}},
         {"home", {3.F, 3.F}},
         {"marketplace", {3.F, 3.F}},
+        {"temple", {3.F, 3.F}},
         {"wall_segment", {2.0F, 2.0F}},
         {"wall_gate", {2.0F, 2.0F}},
 

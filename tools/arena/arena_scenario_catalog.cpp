@@ -4764,7 +4764,100 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         {QStringLiteral("plant"), 1, {1.5F, 0.0F, 3.0F}, {}, 1.0F},
         {QStringLiteral("pine_tree"), 1, {4.5F, 0.0F, 3.0F}, {}, 1.0F},
         {QStringLiteral("olive_tree"), 1, {7.5F, 0.0F, 3.0F}, {}, 1.0F},
+        {QStringLiteral("abandoned_home"), 1, {-4.5F, 0.0F, 9.0F}, {}, 1.0F},
+        {QStringLiteral("statue"), 1, {1.5F, 0.0F, 9.0F}, {}, 1.0F},
     };
+    result.push_back(std::move(s));
+  }
+
+  for (const auto& fixture : std::array{
+           std::tuple{
+               k_sanctuary_precinct_day_id, "Sanctuary Precinct: Day", 11.0F, 0.0F},
+           std::tuple{
+               k_sanctuary_precinct_night_id, "Sanctuary Precinct: Night", 0.75F, 0.0F},
+           std::tuple{k_sanctuary_precinct_storm_id,
+                      "Sanctuary Precinct: Storm",
+                      15.0F,
+                      Game::Map::k_weather_intensity_heavy}}) {
+    auto s = definition(
+        QString::fromLatin1(std::get<0>(fixture)),
+        QString::fromLatin1(std::get<1>(fixture)),
+        QStringLiteral("A sacred quarter shared by both nations: Roman and Punic "
+                       "temples face each other across a paved way lined with "
+                       "commemorative statues, with derelict homes and ruins "
+                       "crowding the edge of the precinct."),
+        14.0F,
+        {40.0F, 52.0F, 26.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.environment.start_time = std::get<2>(fixture);
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.weather.rain = std::get<3>(fixture);
+    s.weather.storm = std::get<3>(fixture) * 0.6F;
+
+    s.roads = {
+        street({-18.0F, 0.0F, 0.0F}, {18.0F, 0.0F, 0.0F}, 4.2F, "stone"),
+        street({0.0F, 0.0F, -12.0F}, {0.0F, 0.0F, 12.0F}, 3.0F, "stone"),
+    };
+
+    s.groups = {
+        building(QStringLiteral("precinct_roman_temple"),
+                 Game::Units::SpawnType::Temple,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-11.0F, 0.0F, -6.5F}),
+        building(QStringLiteral("precinct_punic_temple"),
+                 Game::Units::SpawnType::Temple,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {11.0F, 0.0F, 6.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("precinct_roman_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 2,
+                 {-13.0F, 0.0F, 7.0F},
+                 {6.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("precinct_punic_home"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 2,
+                 {7.0F, 0.0F, -7.0F},
+                 {6.0F, 0.0F, 0.0F},
+                 180.0F),
+        residents(QStringLiteral("precinct_pilgrims"),
+                  Nation::RomanRepublic,
+                  1,
+                  5,
+                  {-2.0F, 0.0F, 1.5F},
+                  {3.0F, 0.0F, 0.0F},
+                  12.0F),
+    };
+
+    s.resource_patches = {
+        patch("statue", 4, {-7.5F, 0.0F, -2.4F}, {5.0F, 0.0F, 0.0F}, 1.0F),
+        patch("statue", 4, {-7.5F, 0.0F, 2.4F}, {5.0F, 0.0F, 0.0F}, 1.0F),
+        patch("abandoned_home", 2, {-16.0F, 0.0F, -11.0F}, {7.0F, 0.0F, 0.0F}, 1.0F),
+        patch("abandoned_home", 2, {9.0F, 0.0F, 12.0F}, {7.0F, 0.0F, 0.0F}, 0.9F),
+        patch("ruins", 1, {16.0F, 0.0F, -12.0F}, {}, 0.85F),
+        patch("olive_tree", 4, {-18.0F, 0.0F, 4.0F}, {0.0F, 0.0F, 4.5F}, 1.05F),
+        patch("plant", 6, {14.0F, 0.0F, -4.0F}, {0.0F, 0.0F, 3.0F}, 0.9F),
+    };
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("precinct_roman_temple"),
+                               QStringLiteral("precinct_punic_temple"),
+                               QStringLiteral("precinct_roman_home"),
+                               QStringLiteral("precinct_punic_home")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("precinct_pilgrims")));
     result.push_back(std::move(s));
   }
 
@@ -4836,18 +4929,32 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                  {9.0F, 0.0F, 2.5F},
                  {},
                  180.0F),
+        building(QStringLiteral("showcase_roman_temple"),
+                 Game::Units::SpawnType::Temple,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {15.0F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_punic_temple"),
+                 Game::Units::SpawnType::Temple,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {15.0F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
         building(QStringLiteral("showcase_roman_wall"),
                  Game::Units::SpawnType::WallSegment,
                  Nation::RomanRepublic,
                  1,
-                 9,
+                 13,
                  {-10.0F, 0.0F, -8.0F},
                  {2.0F, 0.0F, 0.0F}),
         building(QStringLiteral("showcase_punic_wall"),
                  Game::Units::SpawnType::WallSegment,
                  Nation::Carthage,
                  2,
-                 9,
+                 13,
                  {-10.0F, 0.0F, 6.0F},
                  {2.0F, 0.0F, 0.0F}),
     };
@@ -4857,6 +4964,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         {QStringLiteral("dead_tree"), 1, {0.0F, 0.0F, 10.5F}, {}, 0.90F},
         {QStringLiteral("iron_ore"), 1, {4.0F, 0.0F, 10.5F}, {}, 0.90F},
         {QStringLiteral("weapon_rack"), 1, {8.0F, 0.0F, 10.5F}, {}, 0.85F},
+        {QStringLiteral("abandoned_home"), 1, {12.5F, 0.0F, 10.5F}, {}, 0.85F},
+        {QStringLiteral("statue"), 2, {15.0F, 0.0F, -1.2F}, {0.0F, 0.0F, 2.6F}, 0.95F},
     };
     add_settlement_acceptance(s,
                               {QStringLiteral("showcase_roman_market"),
@@ -4867,6 +4976,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                QStringLiteral("showcase_punic_barracks"),
                                QStringLiteral("showcase_punic_home"),
                                QStringLiteral("showcase_punic_tower"),
+                               QStringLiteral("showcase_roman_temple"),
+                               QStringLiteral("showcase_punic_temple"),
                                QStringLiteral("showcase_roman_wall"),
                                QStringLiteral("showcase_punic_wall")});
     result.push_back(std::move(s));

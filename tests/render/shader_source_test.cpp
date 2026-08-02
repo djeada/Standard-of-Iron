@@ -176,6 +176,7 @@ TEST(ShaderSource, EveryWorldLightingVariantUsesSharedEnvironmentBlock) {
       "dead_tree_instanced.frag",
       "iron_ore_instanced.frag",
       "magic_shrine_instanced.frag",
+      "statue_instanced.frag",
       "primitive_instanced.frag",
       "cylinder_instanced.frag",
       "banner.frag",
