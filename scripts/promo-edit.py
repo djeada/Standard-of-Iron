@@ -2,9 +2,10 @@
 """Cut, grade and caption the clips ``arena_app --promo-spec`` recorded.
 
 The arena records one clip per authored shot plus a ``shots.json`` manifest.
-This script turns that raw footage into a finished vertical short in a single
-ffmpeg pass -- concatenate, grade, caption, title card, fade -- so the footage
-is only re-encoded once.
+This script turns that raw footage into a finished short in a single ffmpeg
+pass -- join, grade, caption, title card, fade -- so the footage is only
+re-encoded once. The frame is whatever the spec asked the arena to record;
+vertical suits a battle, landscape suits a battle line.
 
 Everything the edit needs lives in the same promo spec the arena consumed. The
 arena ignores keys it does not know, so the editorial fields sit next to the
@@ -14,10 +15,19 @@ camera work they belong to::
       "title": "THE LAST STAND",
       "subtitle": "STANDARD OF IRON",
       "grade": {"contrast": 1.12, "saturation": 1.14},
+      "transition": {"type": "dissolve", "duration": 0.35},
       "shots": [
-        {"name": "collision", "caption": "HOLD THE LINE", ...}
+        {"name": "collision", "caption": "HOLD THE LINE",
+         "transition": {"type": "dip", "duration": 0.5}, ...}
       ]
     }
+
+A shot's ``transition`` describes how the cut *into* it is played, so the first
+shot's is ignored. The spec-level ``transition`` is the default for every join;
+``{"type": "cut"}`` on a shot restores a hard cut for that one join. See
+``TRANSITIONS`` for the vocabulary. Joined shots overlap, so the finished cut is
+shorter than the sum of its clips and caption timing is measured on the blended
+timeline rather than on raw clip lengths.
 
 Typical use::
 
@@ -43,6 +53,31 @@ CAPTION_Y_FRACTION = 0.70
 TITLE_Y_FRACTION = 0.42
 CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
+OPENING_FADE = 0.6
+
+# Editorial names for the xfade transitions worth reaching for in a battle reel.
+# The value is the ffmpeg transition; ``None`` means a hard cut, which xfade
+# cannot express and which is therefore handled by concatenation instead.
+TRANSITIONS = {
+    "cut": None,
+    "dissolve": "fade",
+    "dip": "fadeblack",
+    "flash": "fadewhite",
+    "whip": "hblur",
+    "smear": "smoothleft",
+    "smear_right": "smoothright",
+    "push": "slideleft",
+    "push_right": "slideright",
+    "zoom": "zoomin",
+    "radial": "radial",
+    "grain": "pixelize",
+    "iris": "circleopen",
+    "wipe": "wipeleft",
+    "bleach": "fadegrays",
+}
+
+DEFAULT_TRANSITION = "dissolve"
+DEFAULT_TRANSITION_SECONDS = 0.35
 
 FONT_CANDIDATES = (
     "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
@@ -138,6 +173,125 @@ def build_grade(grade: dict) -> str:
     return ",".join(stages)
 
 
+class Join:
+    """How one shot is played into the next."""
+
+    __slots__ = ("kind", "transition", "seconds")
+
+    def __init__(self, kind: str, transition: str | None, seconds: float) -> None:
+        self.kind = kind
+        self.transition = transition
+        self.seconds = seconds if transition else 0.0
+
+    @property
+    def blended(self) -> bool:
+        return self.transition is not None and self.seconds > 0.0
+
+
+HARD_CUT = Join("cut", None, 0.0)
+
+
+def read_transition(config, kind: str, seconds: float) -> tuple[str, float]:
+    """Read a spec's ``transition`` value over a kind/duration pair.
+
+    Accepts a bare name (``"dip"``), a full object, or nothing at all, so a reel
+    that wants one dissolve everywhere only writes the spec-level default. Kind
+    and duration stay separate all the way down: a spec whose default is a hard
+    cut must still hand its authored duration to the one shot that asks for a
+    dissolve.
+    """
+    if isinstance(config, str):
+        kind = config
+    elif isinstance(config, dict):
+        kind = str(config.get("type", kind))
+        seconds = float(config.get("duration", seconds))
+    elif config is not None:
+        fail(f"a transition must be a name or an object, not {type(config).__name__}")
+
+    kind = kind.strip().lower()
+    if kind not in TRANSITIONS:
+        known = ", ".join(sorted(TRANSITIONS))
+        fail(f"unknown transition '{kind}'; known transitions are {known}")
+    if seconds < 0:
+        fail(f"transition '{kind}' has a negative duration")
+    return kind, seconds
+
+
+def resolve_join(config, default_kind: str, default_seconds: float) -> Join:
+    kind, seconds = read_transition(config, default_kind, default_seconds)
+    return Join(kind, TRANSITIONS[kind], seconds)
+
+
+def plan_timeline(
+    lengths: list[float], joins: list[Join]
+) -> tuple[list[tuple[float, float]], float]:
+    """Place every shot on the finished timeline.
+
+    A blended join overlaps its two shots, so each transition pulls the rest of
+    the reel earlier by its own duration. An overlap is clamped against both
+    neighbours' *unshared* footage: two dissolves either side of a short shot
+    must not consume the same frames twice, or the second xfade would be asked
+    for an offset that lies before the first one finished.
+    """
+    spans: list[tuple[float, float]] = []
+    cursor = 0.0
+    previous_overlap = 0.0
+    for index, length in enumerate(lengths):
+        join = joins[index]
+        overlap = 0.0
+        if index > 0 and join.blended:
+            headroom = min(lengths[index - 1] - previous_overlap, length)
+            overlap = min(join.seconds, max(0.0, headroom * 0.9))
+            if overlap <= 0.0:
+                join.seconds = 0.0
+                join.transition = None
+            else:
+                join.seconds = overlap
+        cursor = max(0.0, cursor - overlap)
+        spans.append((cursor, cursor + length))
+        cursor += length
+        previous_overlap = overlap
+    return spans, cursor
+
+
+def build_join_graph(
+    lengths: list[float], joins: list[Join], spans: list[tuple[float, float]]
+) -> tuple[list[str], str]:
+    """Join the clips into one stream, blending where a transition asks for it.
+
+    xfade has no zero-length form, so runs of hard cuts are concatenated into a
+    single segment first and only the blended joins become xfades.
+    """
+    segments: list[list[int]] = [[0]]
+    for index in range(1, len(lengths)):
+        if joins[index].blended:
+            segments.append([index])
+        else:
+            segments[-1].append(index)
+
+    chain: list[str] = []
+    labels: list[str] = []
+    for position, members in enumerate(segments):
+        if len(members) == 1:
+            labels.append(f"{members[0]}:v")
+            continue
+        sources = "".join(f"[{index}:v]" for index in members)
+        chain.append(f"{sources}concat=n={len(members)}:v=1:a=0[seg{position}]")
+        labels.append(f"seg{position}")
+
+    stage = labels[0]
+    for position in range(1, len(segments)):
+        join = joins[segments[position][0]]
+        offset = spans[segments[position][0]][0]
+        chain.append(
+            f"[{stage}][{labels[position]}]"
+            f"xfade=transition={join.transition}:duration={join.seconds:.3f}"
+            f":offset={offset:.3f}[join{position}]"
+        )
+        stage = f"join{position}"
+    return chain, stage
+
+
 def build_drum_bed(seconds: float, tempo: float) -> str:
     """A procedural war-drum bed.
 
@@ -185,6 +339,16 @@ def main() -> int:
         help="seconds into the track to start (default: the spec's value)",
     )
     parser.add_argument("--tempo", type=float, default=104.0, help="drum bed tempo")
+    parser.add_argument(
+        "--transition",
+        choices=tuple(sorted(TRANSITIONS)),
+        help="override every join the spec asks for (use 'cut' for hard cuts)",
+    )
+    parser.add_argument(
+        "--transition-duration",
+        type=float,
+        help="override every transition's length in seconds",
+    )
     args = parser.parse_args()
 
     if shutil.which("ffmpeg") is None:
@@ -204,50 +368,83 @@ def main() -> int:
         fail("the capture manifest contains no shots")
 
     captions = {shot.get("name"): shot.get("caption") for shot in spec.get("shots", [])}
+    authored = {shot.get("name"): shot for shot in spec.get("shots", [])}
     font = resolve_font(args.font)
     output = args.out or args.clips.with_suffix(".mp4")
     output.parent.mkdir(parents=True, exist_ok=True)
 
+    default_kind, default_seconds = read_transition(
+        spec.get("transition"), DEFAULT_TRANSITION, DEFAULT_TRANSITION_SECONDS
+    )
+
     inputs: list[str] = []
-    concat_labels = ""
-    timeline: list[tuple[str, float, float]] = []
-    cursor = 0.0
+    names: list[str] = []
+    lengths: list[float] = []
+    joins: list[Join] = []
     for index, shot in enumerate(shots):
         clip = args.clips / shot["clip"]
         if not clip.is_file():
             fail(f"missing clip {clip}")
         inputs += ["-i", str(clip)]
-        concat_labels += f"[{index}:v]"
         length = float(shot.get("clip_seconds") or 0.0)
         if length <= 0:
             fail(f"clip {clip.name} reports no duration")
-        timeline.append((shot.get("name", ""), cursor, cursor + length))
-        cursor += length
+        name = shot.get("name", "")
+        names.append(name)
+        lengths.append(length)
+        if index == 0:
+            joins.append(HARD_CUT)
+            continue
+        authored_join = (
+            args.transition
+            if args.transition
+            else authored.get(name, {}).get("transition")
+        )
+        join = resolve_join(authored_join, default_kind, default_seconds)
+        if args.transition_duration is not None:
+            join.seconds = args.transition_duration
+        joins.append(join)
 
-    total = cursor
+    spans, total = plan_timeline(lengths, joins)
     width = int(manifest.get("width", 1080))
     height = int(manifest.get("height", 1920))
 
-    chain = [
-        f"{concat_labels}concat=n={len(shots)}:v=1:a=0[cat]",
-        f"[cat]{build_grade(spec.get('grade', {}))}[graded]",
-    ]
+    chain, joined = build_join_graph(lengths, joins, spans)
+    chain.append(f"[{joined}]{build_grade(spec.get('grade', {}))}[graded]")
 
+    timeline = [
+        (names[index], spans[index][0], spans[index][1]) for index in range(len(names))
+    ]
     stage = "graded"
     if not args.no_captions:
-        caption_size = max(46, int(width * 0.075))
-        title_size = max(60, int(width * 0.105))
-        subtitle_size = max(30, int(width * 0.040))
+        # Type is sized off the shorter edge. Scaling it by width makes a
+        # landscape title so tall that it lands on top of the last caption.
+        type_base = min(width, height)
+        caption_size = max(46, int(type_base * 0.075))
+        title_size = max(60, int(type_base * 0.105))
+        subtitle_size = max(30, int(type_base * 0.040))
         caption_y = f"h*{CAPTION_Y_FRACTION}"
         safe_width = int(width * 0.88)
+        card_start = max(0.0, total - END_CARD_SECONDS)
+        has_card = bool(spec.get("title") or spec.get("subtitle"))
         step = 0
-        for name, start, end in timeline:
+        for index, (name, start, end) in enumerate(timeline):
             caption = captions.get(name)
             if not caption:
                 continue
 
-            visible_start = start + 0.15
-            visible_end = max(visible_start + 0.6, end - 0.15)
+            # Hold the caption clear of the blend either side of it, so it is
+            # never half-dissolved into the neighbouring shot.
+            leading = max(0.15, joins[index].seconds)
+            trailing = 0.15
+            if index + 1 < len(joins):
+                trailing = max(trailing, joins[index + 1].seconds)
+            visible_start = start + leading
+            visible_end = max(visible_start + 0.6, end - trailing)
+            # The end card owns the frame once it starts; a caption still up
+            # underneath it reads as two overlapping titles.
+            if has_card and visible_start < card_start:
+                visible_end = min(visible_end, card_start - CAPTION_FADE)
             chain.append(
                 f"[{stage}]"
                 + drawtext(
@@ -263,7 +460,6 @@ def main() -> int:
             stage = f"cap{step}"
             step += 1
 
-        card_start = max(0.0, total - END_CARD_SECONDS)
         title = spec.get("title")
         if title:
             chain.append(
@@ -296,7 +492,10 @@ def main() -> int:
             )
             stage = "sub"
 
-    chain.append(f"[{stage}]fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]")
+    chain.append(
+        f"[{stage}]fade=t=in:st=0:d={OPENING_FADE:.2f},"
+        f"fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]"
+    )
 
     command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *inputs]
     filter_complex = ";".join(chain)
@@ -355,9 +554,16 @@ def main() -> int:
         str(output),
     ]
 
+    blended = [join for join in joins[1:] if join.blended]
+    joined_note = (
+        f"{len(blended)} blended join(s): "
+        + ", ".join(f"{join.kind} {join.seconds:.2f}s" for join in blended)
+        if blended
+        else "hard cuts throughout"
+    )
     print(
         f"promo-edit: cutting {len(shots)} shot(s), {total:.2f}s, "
-        f"{width}x{height} -> {output}"
+        f"{width}x{height} -> {output}\npromo-edit: {joined_note}"
     )
     result = subprocess.run(command, check=False)
     if result.returncode != 0:

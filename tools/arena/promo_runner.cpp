@@ -29,7 +29,7 @@ namespace Arena::Promo {
 namespace {
 
 constexpr float k_scenario_tail_seconds = 2.0F;
-constexpr int k_shot_watchdog_ms = 900'000;
+constexpr int k_pass_watchdog_ms = 1'800'000;
 
 struct ShotResult {
   QString name;
@@ -46,7 +46,9 @@ public:
   Recorder(ArenaViewport& viewport, const Spec& spec, RunOptions options)
       : m_viewport(viewport)
       , m_spec(spec)
-      , m_options(std::move(options)) {}
+      , m_options(std::move(options))
+      , m_passes(plan_passes(spec))
+      , m_results(spec.shots.size()) {}
 
   auto start(QString* error) -> bool {
     if (!VideoEncoder::ffmpeg_available()) {
@@ -69,34 +71,91 @@ public:
                                       m_spec.height * m_spec.supersample);
     m_viewport.set_capture_sink([this](const QImage& frame) { on_frame(frame); });
     m_viewport.set_frame_hook([this](float scenario_time) { on_tick(scenario_time); });
-    QTimer::singleShot(250, [this]() { begin_next_shot(); });
+    QTimer::singleShot(250, [this]() { begin_next_pass(); });
     return true;
   }
 
   [[nodiscard]] auto failed() const noexcept -> bool { return m_failed; }
 
 private:
-  void begin_next_shot() {
-    if (m_shot_index >= m_spec.shots.size()) {
+  [[nodiscard]] auto current_shot() const -> const Shot& {
+    return m_spec.shots[m_passes[m_pass_index].shots[m_slot_index]];
+  }
+
+  [[nodiscard]] auto current_shot_index() const -> std::size_t {
+    return m_passes[m_pass_index].shots[m_slot_index];
+  }
+
+  void begin_next_pass() {
+    if (m_pass_index >= m_passes.size()) {
       finish_run();
       return;
     }
-
-    const Shot& shot = m_spec.shots[m_shot_index];
-    if (Arena::Scenarios::find_definition(shot.scenario) == nullptr) {
-      qCritical().noquote() << QStringLiteral("Promo shot '%1' names unknown scenario "
-                                              "'%2'")
-                                   .arg(shot.name, shot.scenario);
+    const CapturePass& pass = m_passes[m_pass_index];
+    if (Arena::Scenarios::find_definition(pass.scenario) == nullptr) {
+      qCritical().noquote() << QStringLiteral("Promo pass names unknown scenario '%1'")
+                                   .arg(pass.scenario);
       m_failed = true;
-      ++m_shot_index;
-      QTimer::singleShot(0, [this]() { begin_next_shot(); });
+      ++m_pass_index;
+      QTimer::singleShot(0, [this]() { begin_next_pass(); });
       return;
     }
 
-    m_clip_path = QDir(m_options.output_directory)
-                      .filePath(QStringLiteral("%1_%2.mp4")
-                                    .arg(m_shot_index + 1U, 2, 10, QLatin1Char('0'))
-                                    .arg(shot.name));
+    float last_end = 0.0F;
+    for (std::size_t index : pass.shots) {
+      const Shot& shot = m_spec.shots[index];
+      last_end = std::max(last_end, shot.start_seconds + shot.duration_seconds);
+    }
+
+    m_slot_index = 0;
+    m_pass_active = true;
+    m_viewport.set_terrain_seed(pass.seed);
+    m_viewport.set_batch_fixed_step(idle_step());
+    m_viewport.set_scenario_duration_override(last_end + k_scenario_tail_seconds);
+    m_viewport.set_capture_active(false);
+    m_viewport.clear_cinematic_view();
+    m_viewport.load_scenario(pass.scenario);
+
+    qInfo().noquote() << QStringLiteral("Promo pass %1/%2: %3, %4 shot(s) across "
+                                        "%5 s of scenario")
+                             .arg(m_pass_index + 1U)
+                             .arg(m_passes.size())
+                             .arg(pass.scenario)
+                             .arg(pass.shots.size())
+                             .arg(QString::number(last_end, 'f', 1));
+
+    const std::size_t guarded_pass = m_pass_index;
+    QTimer::singleShot(k_pass_watchdog_ms, [this, guarded_pass]() {
+      if (m_pass_active && m_pass_index == guarded_pass) {
+        qCritical().noquote() << QStringLiteral("Promo pass over scenario '%1' "
+                                                "exceeded its watchdog")
+                                     .arg(m_passes[guarded_pass].scenario);
+        m_failed = true;
+        end_shot();
+        end_pass();
+      }
+    });
+    begin_shot();
+  }
+
+  [[nodiscard]] auto idle_step() const -> float {
+    return 1.0F / static_cast<float>(m_spec.fps);
+  }
+
+  void begin_shot() {
+    if (!m_pass_active) {
+      return;
+    }
+    if (m_slot_index >= m_passes[m_pass_index].shots.size()) {
+      end_pass();
+      return;
+    }
+    const Shot& shot = current_shot();
+    m_clip_path =
+        QDir(m_options.output_directory)
+            .filePath(QStringLiteral("%1_%2.mp4")
+                          .arg(current_shot_index() + 1U, 2, 10, QLatin1Char('0'))
+                          .arg(shot.name));
     QString encoder_error;
     m_encoder = std::make_unique<VideoEncoder>();
     if (!m_encoder->open(
@@ -105,8 +164,8 @@ private:
           << QStringLiteral("Promo shot '%1': %2").arg(shot.name, encoder_error);
       m_failed = true;
       m_encoder.reset();
-      ++m_shot_index;
-      QTimer::singleShot(0, [this]() { begin_next_shot(); });
+      ++m_slot_index;
+      begin_shot();
       return;
     }
 
@@ -120,42 +179,25 @@ private:
     m_logged_framing = false;
     m_shot_active = true;
     m_last_frame.reset();
+    m_viewport.set_batch_fixed_step(idle_step());
 
-    m_viewport.set_terrain_seed(shot.seed);
-    m_viewport.set_batch_fixed_step(m_step_seconds);
-    m_viewport.set_scenario_duration_override(
-        shot.start_seconds + shot.duration_seconds + k_scenario_tail_seconds);
-    m_viewport.set_capture_active(false);
-    m_viewport.clear_cinematic_view();
-    m_viewport.load_scenario(shot.scenario);
-
-    qInfo().noquote() << QStringLiteral("Recording promo shot %1/%2: %3 (%4, %5 "
-                                        "frames at %6x%7)")
-                             .arg(m_shot_index + 1U)
-                             .arg(m_spec.shots.size())
-                             .arg(shot.name, shot.scenario)
+    qInfo().noquote() << QStringLiteral("  shot %1: %2 (%3 frames at %4x%5, from "
+                                        "%6 s)")
+                             .arg(current_shot_index() + 1U)
+                             .arg(shot.name)
                              .arg(m_target_frames)
                              .arg(m_spec.width)
-                             .arg(m_spec.height);
-
-    const std::size_t guarded_shot = m_shot_index;
-    QTimer::singleShot(k_shot_watchdog_ms, [this, guarded_shot]() {
-      if (m_shot_active && m_shot_index == guarded_shot) {
-        qCritical().noquote() << QStringLiteral("Promo shot '%1' exceeded its watchdog")
-                                     .arg(m_spec.shots[guarded_shot].name);
-        m_failed = true;
-        end_shot();
-      }
-    });
+                             .arg(m_spec.height)
+                             .arg(QString::number(shot.start_seconds, 'f', 1));
   }
 
   // Runs once per rendered frame, before the frame is drawn: this is where the
   // authored camera is resolved against the live battle.
   void on_tick(float scenario_time) {
-    if (!m_shot_active || m_shot_index >= m_spec.shots.size()) {
+    if (!m_shot_active) {
       return;
     }
-    const Shot& shot = m_spec.shots[m_shot_index];
+    const Shot& shot = current_shot();
     const float shot_time = std::max(0.0F, scenario_time - shot.start_seconds);
 
     const QVector3D focus = resolve_focus(shot);
@@ -169,6 +211,11 @@ private:
 
     const bool recording =
         scenario_time >= shot.start_seconds && m_frames_written < m_target_frames;
+    if (recording && m_frames_written == 0) {
+      // Only slow the simulation down once the shot is actually running, so
+      // the run-up to a slow-motion shot costs the same as any other.
+      m_viewport.set_batch_fixed_step(m_step_seconds);
+    }
     m_viewport.set_capture_active(recording);
 
     // Report the framing that the first recorded frame actually used. Authoring
@@ -195,6 +242,7 @@ private:
 
     if (!recording && m_frames_written >= m_target_frames) {
       end_shot();
+      advance_within_pass();
       return;
     }
     // A scenario that resolves early (everyone dead) can never deliver the rest
@@ -206,6 +254,7 @@ private:
                                   .arg(m_frames_written)
                                   .arg(m_target_frames);
       end_shot();
+      end_pass();
     }
   }
 
@@ -223,6 +272,7 @@ private:
       qCritical().noquote() << QStringLiteral("Promo encode failed: %1").arg(error);
       m_failed = true;
       end_shot();
+      end_pass();
       return;
     }
     ++m_frames_written;
@@ -277,8 +327,10 @@ private:
     }
     m_shot_active = false;
     m_viewport.set_capture_active(false);
+    m_viewport.set_batch_fixed_step(idle_step());
 
-    const Shot& shot = m_spec.shots[m_shot_index];
+    const std::size_t shot_index = current_shot_index();
+    const Shot& shot = m_spec.shots[shot_index];
     QString error;
     if (m_encoder != nullptr && !m_encoder->close(&error)) {
       qCritical().noquote()
@@ -299,19 +351,30 @@ private:
       result.poster_path =
           QDir(m_options.output_directory)
               .filePath(QStringLiteral("%1_%2.png")
-                            .arg(m_shot_index + 1U, 2, 10, QLatin1Char('0'))
+                            .arg(shot_index + 1U, 2, 10, QLatin1Char('0'))
                             .arg(shot.name));
       m_last_frame->save(result.poster_path);
     }
-    m_results.push_back(result);
+    m_results[shot_index] = result;
 
     qInfo().noquote() << QStringLiteral("  wrote %1 (%2 frames, %3 s)")
                              .arg(QFileInfo(m_clip_path).fileName())
                              .arg(m_frames_written)
                              .arg(QString::number(result.clip_duration, 'f', 2));
+  }
 
-    ++m_shot_index;
-    QTimer::singleShot(0, [this]() { begin_next_shot(); });
+  void advance_within_pass() {
+    ++m_slot_index;
+    begin_shot();
+  }
+
+  void end_pass() {
+    if (!m_pass_active) {
+      return;
+    }
+    m_pass_active = false;
+    ++m_pass_index;
+    QTimer::singleShot(0, [this]() { begin_next_pass(); });
   }
 
   void finish_run() {
@@ -319,14 +382,24 @@ private:
     m_viewport.set_frame_hook(nullptr);
     write_manifest();
     qInfo().noquote() << QStringLiteral("Promo capture complete: %1 shot(s) in %2")
-                             .arg(m_results.size())
+                             .arg(recorded_count())
                              .arg(QDir(m_options.output_directory).absolutePath());
     QApplication::exit(m_failed ? 1 : 0);
+  }
+
+  [[nodiscard]] auto recorded_count() const -> std::size_t {
+    return static_cast<std::size_t>(
+        std::count_if(m_results.begin(), m_results.end(), [](const ShotResult& result) {
+          return result.frames > 0;
+        }));
   }
 
   void write_manifest() {
     QJsonArray shots;
     for (const ShotResult& result : m_results) {
+      if (result.frames <= 0) {
+        continue;
+      }
       shots.append(QJsonObject{
           {QStringLiteral("name"), result.name},
           {QStringLiteral("scenario"), result.scenario},
@@ -353,15 +426,18 @@ private:
   ArenaViewport& m_viewport;
   const Spec& m_spec;
   RunOptions m_options;
+  std::vector<CapturePass> m_passes;
   std::unique_ptr<VideoEncoder> m_encoder;
   std::vector<ShotResult> m_results;
   std::optional<QImage> m_last_frame;
   QString m_clip_path;
   QVector3D m_smoothed_focus;
-  std::size_t m_shot_index{0};
+  std::size_t m_pass_index{0};
+  std::size_t m_slot_index{0};
   int m_target_frames{0};
   int m_frames_written{0};
   float m_step_seconds{1.0F / 60.0F};
+  bool m_pass_active{false};
   bool m_shot_active{false};
   bool m_focus_valid{false};
   bool m_logged_framing{false};

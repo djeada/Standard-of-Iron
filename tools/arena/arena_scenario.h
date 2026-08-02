@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QVector3D>
 
 #include <cstdint>
@@ -10,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/formation/army_formation_types.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
@@ -50,6 +52,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   Stand,
   Move,
   FormationMove,
+  FormArmy,
   Charge,
   Attack,
   AttackMove,
@@ -111,6 +114,28 @@ struct ArenaScenarioElevationPatch {
   float height{3.0F};
 };
 
+// A `FormArmy` step's payload: the army-formation layer's own request, told in
+// scenario terms. `FormationMove` only translates whatever shape a group is
+// already standing in; this asks the doctrine planner where every unit belongs
+// and walks them there, which is the behaviour a formation showcase is about.
+struct ArenaScenarioFormationOrder {
+  // Every named group is folded into one army, so a scenario can deploy its
+  // infantry, cavalry and ranged as a single doctrine plan rather than three
+  // unrelated blocks. Empty means "the step's own group".
+  QStringList groups;
+  Game::Formation::ArmyFormationIntent intent{
+      Game::Formation::ArmyFormationIntent::FactionDefault};
+
+  // Empty derives the doctrine from the members' nations.
+  QString doctrine;
+  Game::Formation::ArmyFormationOptions options;
+
+  QVector3D anchor;
+  float facing_degrees{0.0F};
+  float frontage{0.0F};
+  float spacing{0.0F};
+};
+
 struct ArenaScenarioStep {
   QString name;
   ScenarioTrigger trigger;
@@ -126,6 +151,7 @@ struct ArenaScenarioStep {
   float camera_yaw{30.0F};
 
   std::optional<float> rpg_view_yaw_degrees;
+  ArenaScenarioFormationOrder formation;
 };
 
 enum class ArenaExpectationKind : std::uint8_t {
@@ -226,6 +252,12 @@ struct ArenaScenarioDefinition {
   QString label;
   QString description;
   float duration_seconds{12.0F};
+
+  // Half-width of the flat field the arena levels out of its mountain noise.
+  // The default is sized for a duel; an army manoeuvring in formation needs
+  // ground that a whole battle line can march across, and outside this square
+  // the terrain is rough enough to break the shapes up.
+  float arena_floor_half_extent{18.0F};
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;
   bool suppress_terrain_scatter{false};
