@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <utility>
@@ -21,8 +22,10 @@
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
+#include "game/map/wave_archetype_catalog.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/factory.h"
@@ -70,7 +73,144 @@ auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bo
          behavior == Game::Mission::UnitBehavior::Patrol;
 }
 
+void assign_wave_phases(std::vector<PendingMissionWave>& waves, std::size_t begin) {
+  std::vector<int> authored;
+  std::vector<float> derived_times;
+  for (std::size_t i = begin; i < waves.size(); ++i) {
+    const auto& wave = waves[i];
+    if (wave.authored_phase.has_value()) {
+      const int phase = std::max(1, *wave.authored_phase);
+      if (std::find(authored.begin(), authored.end(), phase) == authored.end()) {
+        authored.push_back(phase);
+      }
+      continue;
+    }
+    const float trigger_time = wave.trigger_time;
+    const auto duplicate = std::find_if(
+        derived_times.begin(), derived_times.end(), [trigger_time](float existing) {
+          return std::abs(existing - trigger_time) < 0.01F;
+        });
+    if (duplicate == derived_times.end()) {
+      derived_times.push_back(trigger_time);
+    }
+  }
+  std::sort(authored.begin(), authored.end());
+  std::sort(derived_times.begin(), derived_times.end());
+
+  const int phase_count =
+      std::max(1, static_cast<int>(authored.size() + derived_times.size()));
+  const auto derived_offset = static_cast<int>(authored.size());
+
+  for (std::size_t i = begin; i < waves.size(); ++i) {
+    auto& wave = waves[i];
+    if (wave.authored_phase.has_value()) {
+      const int phase = std::max(1, *wave.authored_phase);
+      const auto slot = std::find(authored.begin(), authored.end(), phase);
+      wave.phase_index = static_cast<int>(std::distance(authored.begin(), slot)) + 1;
+    } else {
+      const auto slot = std::find_if(
+          derived_times.begin(), derived_times.end(), [&wave](float trigger_time) {
+            return std::abs(trigger_time - wave.trigger_time) < 0.01F;
+          });
+      wave.phase_index =
+          slot == derived_times.end()
+              ? phase_count
+              : derived_offset +
+                    static_cast<int>(std::distance(derived_times.begin(), slot)) + 1;
+    }
+    wave.phase_count = phase_count;
+  }
+
+  for (std::size_t i = begin; i < waves.size(); ++i) {
+    waves[i].final_wave = waves[i].phase_index == phase_count;
+  }
+}
+
 } // namespace
+
+auto wave_unit_total(const PendingMissionWave& wave) -> int {
+  int total = 0;
+  for (const auto& comp : wave.composition) {
+    total += std::max(1, comp.count);
+  }
+  return total;
+}
+
+namespace {
+
+auto wave_display_name(const PendingMissionWave& wave) -> QString {
+  if (!wave.label.isEmpty()) {
+    return wave.label;
+  }
+  QString name = wave.ai_id;
+  name.replace('_', ' ');
+  if (name.isEmpty()) {
+    return QCoreApplication::translate("MissionSetupCoordinator", "Enemy");
+  }
+  return name;
+}
+
+auto wave_direction(const PendingMissionWave& wave) -> QString {
+  return classify_wave_direction(wave.entry_world_position -
+                                 wave.defense_reference_world_position);
+}
+
+void order_wave_advance(Engine::Core::World& world,
+                        const PendingMissionWave& wave,
+                        const std::vector<Engine::Core::EntityID>& units) {
+  if (units.empty()) {
+    return;
+  }
+
+  constexpr float k_approach_fraction = 0.85F;
+  constexpr float k_min_advance_distance = 4.0F;
+
+  const QVector3D from = wave.entry_world_position;
+  const QVector3D to = wave.defense_reference_world_position;
+  const QVector3D offset = to - from;
+  if (offset.length() < k_min_advance_distance) {
+    return;
+  }
+
+  const QVector3D target = Game::Systems::CommandService::snap_to_walkable_ground(
+      from + (offset * k_approach_fraction));
+
+  const auto plan =
+      Game::Systems::CommandService::plan_ground_move(world, units, target);
+  if (plan.positions.size() != units.size()) {
+    return;
+  }
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Systems::CommandService::move_units(world, units, plan.positions, options);
+}
+
+} // namespace
+
+auto wave_incoming_announcement(const PendingMissionWave& wave) -> QString {
+  return QCoreApplication::translate(
+             "MissionSetupCoordinator",
+             "Wave %1/%2 forming to the %3: %4, roughly %5 troops. Brace.")
+      .arg(wave.phase_index)
+      .arg(wave.phase_count)
+      .arg(wave_direction(wave), wave_display_name(wave))
+      .arg(wave_unit_total(wave));
+}
+
+auto wave_cleared_announcement(const PendingMissionWave& wave) -> QString {
+  return QCoreApplication::translate("MissionSetupCoordinator",
+                                     "Wave %1/%2 broken. The line holds.")
+      .arg(wave.phase_index)
+      .arg(wave.phase_count);
+}
+
+auto all_waves_cleared_announcement(const PendingMissionWave& wave) -> QString {
+  return QCoreApplication::translate(
+             "MissionSetupCoordinator",
+             "All %1 assault phases broken. Nothing else is coming.")
+      .arg(wave.phase_count);
+}
 
 auto MissionSetupCoordinator::apply_mission_setup(
     const MissionSetupApplyContext& ctx) const -> MissionSetupEffects {
@@ -507,7 +647,6 @@ auto MissionSetupCoordinator::apply_mission_setup(
     defense_reference_world_position /= static_cast<float>(local_force_anchor_count);
   }
 
-  const std::size_t mission_wave_begin = ctx.pending_waves.size();
   int ai_owner_id = 2;
   int default_team_id = 1;
   for (const auto& ai_setup : mission.ai_setups) {
@@ -543,51 +682,18 @@ auto MissionSetupCoordinator::apply_mission_setup(
     spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_buildings);
 
-    for (const auto& wave : ai_setup.waves) {
-      PendingMissionWave pending_wave;
-      pending_wave.owner_id = ai_owner_id;
-      pending_wave.nation_id = ai_nation_id;
-      pending_wave.ai_id = ai_setup.id;
-      pending_wave.trigger_time = std::max(0.0F, wave.timing);
-      pending_wave.entry_world_position = mission_position_to_world(wave.entry_point);
-      pending_wave.defense_reference_world_position = defense_reference_world_position;
-      pending_wave.composition = wave.composition;
-      ctx.pending_waves.push_back(std::move(pending_wave));
-    }
-
     ai_owner_id++;
   }
 
-  std::vector<float> assault_phase_times;
-  assault_phase_times.reserve(ctx.pending_waves.size() - mission_wave_begin);
-  for (std::size_t i = mission_wave_begin; i < ctx.pending_waves.size(); ++i) {
-    const float trigger_time = ctx.pending_waves[i].trigger_time;
-    const auto duplicate =
-        std::find_if(assault_phase_times.begin(),
-                     assault_phase_times.end(),
-                     [trigger_time](float existing) {
-                       return std::abs(existing - trigger_time) < 0.01F;
-                     });
-    if (duplicate == assault_phase_times.end()) {
-      assault_phase_times.push_back(trigger_time);
-    }
-  }
-  std::sort(assault_phase_times.begin(), assault_phase_times.end());
-  const int assault_phase_count =
-      std::max(1, static_cast<int>(assault_phase_times.size()));
-  for (std::size_t i = mission_wave_begin; i < ctx.pending_waves.size(); ++i) {
-    auto& pending_wave = ctx.pending_waves[i];
-    const auto phase = std::find_if(
-        assault_phase_times.begin(),
-        assault_phase_times.end(),
-        [&pending_wave](float trigger_time) {
-          return std::abs(trigger_time - pending_wave.trigger_time) < 0.01F;
-        });
-    pending_wave.phase_index =
-        phase == assault_phase_times.end()
-            ? 1
-            : static_cast<int>(std::distance(assault_phase_times.begin(), phase)) + 1;
-    pending_wave.phase_count = assault_phase_count;
+  {
+    auto built = build_pending_mission_waves(
+        {.mission = mission,
+         .mission_difficulty = ctx.campaign.current_mission_context().difficulty,
+         .level = ctx.level,
+         .defense_reference_world_position = defense_reference_world_position});
+    ctx.pending_waves.insert(ctx.pending_waves.end(),
+                             std::make_move_iterator(built.begin()),
+                             std::make_move_iterator(built.end()));
   }
 
   auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
@@ -863,8 +969,11 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
   }
   const float spacing = std::max(0.5F, ctx.level.tile_size * 1.2F);
   const int composition_count = static_cast<int>(wave.composition.size());
+  const std::vector<QVector3D> entry_positions = wave.entry_positions();
+  const auto entry_count = static_cast<int>(entry_positions.size());
   constexpr float k_group_radius_multiplier = 3.0F;
   constexpr float k_two_pi = 6.28318530718F;
+  constexpr float k_elite_health_multiplier = 1.6F;
 
   int spawned_units = 0;
 
@@ -880,9 +989,11 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
     const int grid = static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
     const float angle = (k_two_pi * static_cast<float>(comp_index)) /
                         static_cast<float>(composition_count);
+    const QVector3D entry = entry_positions[static_cast<std::size_t>(
+        entry_count > 0 ? comp_index % entry_count : 0)];
     const QVector3D group_center =
-        wave.entry_world_position + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) *
-                                        (spacing * k_group_radius_multiplier);
+        entry + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) *
+                    (spacing * k_group_radius_multiplier);
 
     for (int i = 0; i < count; ++i) {
       const int row = i / grid;
@@ -917,6 +1028,14 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
           renderable->color[1] = team_color.y();
           renderable->color[2] = team_color.z();
         }
+        if (comp.elite) {
+          auto* unit_component = entity->get_component<Engine::Core::UnitComponent>();
+          if (unit_component != nullptr) {
+            unit_component->max_health = static_cast<int>(
+                std::lround(unit_component->max_health * k_elite_health_multiplier));
+            unit_component->health = unit_component->max_health;
+          }
+        }
       }
       spawned_units++;
     }
@@ -926,24 +1045,122 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
     qInfo() << "Mission wave spawned for AI" << wave.ai_id << "(" << wave.owner_id
             << "):" << spawned_units << "units at t=" << ctx.campaign_mission_elapsed;
 
-    QString wave_name = wave.ai_id;
-    wave_name.replace('_', ' ');
-    if (wave_name.isEmpty()) {
-      wave_name = QCoreApplication::translate("MissionSetupCoordinator", "Enemy");
-    }
+    order_wave_advance(ctx.world, wave, effects.spawned_entity_ids);
 
-    const QString direction = classify_wave_direction(
-        wave.entry_world_position - wave.defense_reference_world_position);
     const QString announcement =
         QCoreApplication::translate("MissionSetupCoordinator",
                                     "Assault phase %1/%2: %3 from the %4 (%5 units)")
             .arg(wave.phase_index)
             .arg(wave.phase_count)
-            .arg(wave_name, direction)
+            .arg(wave_display_name(wave), wave_direction(wave))
             .arg(spawned_units);
     effects.mission_announcements.append(announcement);
   }
   return effects;
+}
+
+auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
+    -> std::vector<PendingMissionWave> {
+  std::vector<PendingMissionWave> waves;
+
+  Game::Map::MapDefinition map_def;
+  QString map_error;
+  bool map_loaded = false;
+  if (!ctx.level.map_path.isEmpty()) {
+    const QString resolved_map_path =
+        Utils::Resources::resolve_resource_path(ctx.level.map_path);
+    map_loaded = Game::Map::MapLoader::load_from_json_file(
+        resolved_map_path, map_def, &map_error);
+    if (!map_loaded) {
+      qWarning() << "Mission wave build: failed to load map definition for"
+                 << ctx.level.map_path << "-" << map_error;
+    }
+  }
+
+  auto to_world = [&](const Game::Mission::Position& pos) {
+    float world_x = pos.x;
+    float world_z = pos.z;
+    if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
+      const float tile = std::max(0.0001F, map_def.grid.tile_size);
+      world_x = (pos.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
+      world_z = (pos.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
+    } else if (!map_loaded) {
+      const float tile = std::max(0.0001F, ctx.level.tile_size);
+      world_x = (pos.x - (ctx.level.grid_width * 0.5F - 0.5F)) * tile;
+      world_z = (pos.z - (ctx.level.grid_height * 0.5F - 0.5F)) * tile;
+    }
+    return QVector3D(world_x, 0.0F, world_z);
+  };
+
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto resolve_nation = [&nation_registry](const QString& nation_str) {
+    const auto parsed = Game::Systems::nation_id_from_string(nation_str.toStdString());
+    return parsed.value_or(nation_registry.default_nation_id());
+  };
+
+  const float mission_strength_multiplier =
+      Game::Mission::difficulty_strength_multiplier(ctx.mission_difficulty);
+
+  int ai_owner_id = 2;
+  for (const auto& ai_setup : ctx.mission.ai_setups) {
+    const float ai_strength_multiplier =
+        mission_strength_multiplier *
+        Game::Mission::difficulty_strength_multiplier(ai_setup.difficulty);
+    const auto ai_nation_id = resolve_nation(ai_setup.nation);
+
+    int wave_ordinal = 0;
+    for (const auto& wave : ai_setup.waves) {
+      PendingMissionWave pending_wave;
+      pending_wave.owner_id = ai_owner_id;
+      pending_wave.nation_id = ai_nation_id;
+      pending_wave.ai_id = ai_setup.id;
+      pending_wave.label = wave.label;
+      pending_wave.trigger_time = std::max(0.0F, wave.timing);
+      pending_wave.trigger = wave.trigger;
+      pending_wave.grace_seconds = std::max(0.0F, wave.grace_seconds);
+      pending_wave.warning_seconds = std::max(0.0F, wave.warning_seconds);
+      pending_wave.authored_phase = wave.phase;
+      pending_wave.defense_reference_world_position =
+          ctx.defense_reference_world_position;
+      pending_wave.clear_reward = wave.clear_reward;
+
+      for (const auto& entry_point : wave.resolved_entry_points()) {
+        pending_wave.entry_world_positions.push_back(to_world(entry_point));
+      }
+      pending_wave.entry_world_position =
+          pending_wave.entry_world_positions.empty()
+              ? QVector3D(0.0F, 0.0F, 0.0F)
+              : pending_wave.entry_world_positions.front();
+
+      const float escalation = 1.0F + (std::max(0.0F, ai_setup.wave_escalation) *
+                                       static_cast<float>(wave_ordinal));
+      const float strength =
+          std::max(0.1F, wave.strength) * ai_strength_multiplier * escalation;
+
+      std::vector<Game::Mission::WaveComposition> composition = wave.composition;
+      if (!wave.archetype.isEmpty()) {
+        auto expanded = Game::Mission::WaveArchetypeCatalog::instance().expand(
+            wave.archetype, 1.0F);
+        if (expanded.empty()) {
+          qWarning() << "Mission wave for AI" << ai_setup.id
+                     << "names unknown archetype" << wave.archetype;
+        }
+        composition.insert(composition.end(),
+                           std::make_move_iterator(expanded.begin()),
+                           std::make_move_iterator(expanded.end()));
+      }
+      pending_wave.composition =
+          Game::Mission::scale_wave_composition(composition, strength);
+
+      waves.push_back(std::move(pending_wave));
+      wave_ordinal++;
+    }
+
+    ai_owner_id++;
+  }
+
+  assign_wave_phases(waves, 0);
+  return waves;
 }
 
 auto build_pending_mission_events(const Game::Mission::MissionDefinition& mission)

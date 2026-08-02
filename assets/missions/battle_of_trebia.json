@@ -55,10 +55,13 @@
           "entry_point": {
             "x": 256,
             "z": 262
-          }
+          },
+          "phase": 1,
+          "label": "Sempronius’ first crossing",
+          "warning_seconds": 18.0
         },
         {
-          "timing": 300.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -76,10 +79,19 @@
           "entry_point": {
             "x": 481,
             "z": 268
+          },
+          "phase": 2,
+          "label": "The second crossing",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 35.0,
+          "warning_seconds": 18.0,
+          "clear_reward": {
+            "gold": 150,
+            "food": 100
           }
         },
         {
-          "timing": 480.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -92,12 +104,37 @@
             {
               "type": "archer",
               "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 4,
+              "elite": true,
+              "title": "Triarii of the last line"
             }
           ],
           "entry_point": {
             "x": 256,
             "z": 262
-          }
+          },
+          "phase": 3,
+          "label": "The last of the legions",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "warning_seconds": 18.0,
+          "clear_reward": {
+            "gold": 250,
+            "food": 150
+          },
+          "entry_points": [
+            {
+              "x": 256,
+              "z": 262
+            },
+            {
+              "x": 481,
+              "z": 268
+            }
+          ]
         }
       ],
       "commander_troop": "roman_field_commander"
@@ -133,10 +170,13 @@
           "entry_point": {
             "x": 118,
             "z": 100
-          }
+          },
+          "phase": 1,
+          "label": "The western reserve",
+          "warning_seconds": 18.0
         },
         {
-          "timing": 300.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "swordsman",
@@ -154,10 +194,14 @@
           "entry_point": {
             "x": 118,
             "z": 100
-          }
+          },
+          "phase": 2,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 35.0,
+          "warning_seconds": 18.0
         },
         {
-          "timing": 480.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "horse_swordsman",
@@ -171,7 +215,11 @@
           "entry_point": {
             "x": 118,
             "z": 100
-          }
+          },
+          "phase": 3,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "warning_seconds": 18.0
         }
       ],
       "commander_troop": "roman_legion_organizer"

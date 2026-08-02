@@ -58,12 +58,38 @@ struct AIPersonality {
 struct WaveComposition {
   QString type;
   int count = 1;
+  bool elite = false;
+  QString title;
 };
+
+enum class WaveTriggerMode {
+  Time,
+  AfterPreviousCleared
+};
+
+inline constexpr float k_default_wave_grace_seconds = 25.0F;
+inline constexpr float k_default_wave_warning_seconds = 15.0F;
 
 struct Wave {
   float timing = 0.0F;
   std::vector<WaveComposition> composition;
   Position entry_point;
+  std::vector<Position> entry_points;
+  WaveTriggerMode trigger = WaveTriggerMode::Time;
+  float grace_seconds = k_default_wave_grace_seconds;
+  float warning_seconds = k_default_wave_warning_seconds;
+  std::optional<int> phase;
+  QString archetype;
+  float strength = 1.0F;
+  QString label;
+  Resources clear_reward;
+
+  [[nodiscard]] auto resolved_entry_points() const -> std::vector<Position> {
+    if (!entry_points.empty()) {
+      return entry_points;
+    }
+    return {entry_point};
+  }
 };
 
 struct AISetup {
@@ -76,6 +102,7 @@ struct AISetup {
   std::optional<int> team_id;
   std::optional<QString> strategy;
   AIPersonality personality;
+  float wave_escalation = 0.0F;
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
   std::vector<Wave> waves;

@@ -22,15 +22,26 @@ Item {
     }
 
     property string primaryObjective: ""
+    property bool primaryObjectiveCountsWaves: false
+
+    readonly property string primaryObjectiveText: {
+        if (primaryObjective === "")
+            return "";
+        if (!primaryObjectiveCountsWaves || !game_ready() || !game.waves || !game.waves.active)
+            return primaryObjective;
+        return primaryObjective + qsTr(" (%1/%2)").arg(game.waves.cleared_phases).arg(game.waves.total_phases);
+    }
 
     function refresh_primary_objective() {
         if (!game_ready() || !game.get_current_mission_objectives) {
             primaryObjective = "";
+            primaryObjectiveCountsWaves = false;
             return;
         }
         var objectives = game.get_current_mission_objectives();
         var conditions = objectives && objectives.victory_conditions ? objectives.victory_conditions : [];
         primaryObjective = conditions.length > 0 ? (conditions[0].description || "") : "";
+        primaryObjectiveCountsWaves = conditions.length > 0 && conditions[0].type === "survive_waves";
     }
 
     Component.onCompleted: refresh_primary_objective()
@@ -196,7 +207,7 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: topRoot.primaryObjective
+                        text: topRoot.primaryObjectiveText
                         color: Design.Theme.textSecondary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.label
@@ -342,6 +353,59 @@ Item {
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.caption
                 font.weight: Design.Typography.medium
+            }
+
+            Repeater {
+                id: waveAlerts
+
+                model: (topRoot.game_ready() && game.waves) ? game.waves.alerts : []
+
+                delegate: Item {
+                    required property var modelData
+
+                    readonly property real paintedW: minimapImage.paintedWidth
+                    readonly property real paintedH: minimapImage.paintedHeight
+
+                    visible: paintedW > 0 && paintedH > 0
+                    x: ((minimapImage.width - paintedW) / 2) + (modelData.nx || 0) * paintedW
+                    y: ((minimapImage.height - paintedH) / 2) + (modelData.ny || 0) * paintedH
+                    z: 10
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Design.Metrics.space8
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: Design.Metrics.borderThin
+                        border.color: Design.Theme.danger
+
+                        SequentialAnimation on scale  {
+                            running: !Design.A11y.reducedMotion
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                from: 0.7
+                                to: 2.2
+                                duration: 900
+                                easing.type: Easing.OutQuad
+                            }
+
+                            NumberAnimation {
+                                to: 0.7
+                                duration: 0
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Design.Metrics.space4
+                        height: width
+                        radius: width / 2
+                        color: Design.Theme.danger
+                    }
+                }
             }
 
             MouseArea {

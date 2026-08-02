@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <algorithm>
 #include <iostream>
 #include <set>
 
@@ -48,13 +49,18 @@ auto countMissionAuthoredEnemyBarracks(const Game::Mission::MissionDefinition& m
 }
 
 auto countWavePhases(const Game::Mission::MissionDefinition& mission) -> int {
+  std::set<int> authored_phases;
   std::set<float> trigger_times;
   for (const auto& ai_setup : mission.ai_setups) {
     for (const auto& wave : ai_setup.waves) {
-      trigger_times.insert(wave.timing);
+      if (wave.phase.has_value()) {
+        authored_phases.insert(std::max(1, *wave.phase));
+      } else {
+        trigger_times.insert(wave.timing);
+      }
     }
   }
-  return static_cast<int>(trigger_times.size());
+  return static_cast<int>(authored_phases.size() + trigger_times.size());
 }
 
 void validateAgainstMap(const QString& file_path,

@@ -174,6 +174,7 @@ add_library(
     systems/stamina_system.cpp
     map/map_loader.cpp
     map/mission_loader.cpp
+    map/wave_archetype_catalog.cpp
     map/mission_victory_rules.cpp
     map/campaign_loader.cpp
     map/procedural_tree_generation.cpp

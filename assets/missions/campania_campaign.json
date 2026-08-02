@@ -124,10 +124,13 @@
           "entry_point": {
             "x": 128,
             "z": 96
-          }
+          },
+          "phase": 1,
+          "warning_seconds": 20.0,
+          "label": "The northern consular legion"
         },
         {
-          "timing": 600.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -149,10 +152,20 @@
           "entry_point": {
             "x": 128,
             "z": 96
+          },
+          "phase": 2,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The northern consular legion",
+          "clear_reward": {
+            "gold": 200,
+            "food": 150,
+            "wood": 100
           }
         },
         {
-          "timing": 1020.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -169,15 +182,42 @@
             {
               "type": "catapult",
               "count": 1
+            },
+            {
+              "type": "swordsman",
+              "count": 4,
+              "elite": true,
+              "title": "Consular guard"
             }
           ],
           "entry_point": {
             "x": 128,
             "z": 96
-          }
+          },
+          "phase": 3,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The northern consular legion",
+          "clear_reward": {
+            "gold": 350,
+            "food": 200,
+            "wood": 150
+          },
+          "entry_points": [
+            {
+              "x": 128,
+              "z": 96
+            },
+            {
+              "x": 392,
+              "z": 500
+            }
+          ]
         }
       ],
-      "commander_troop": "roman_legion_organizer"
+      "commander_troop": "roman_legion_organizer",
+      "wave_escalation": 0.12
     },
     {
       "id": "southern_allied_legion",
@@ -239,10 +279,13 @@
           "entry_point": {
             "x": 392,
             "z": 500
-          }
+          },
+          "phase": 1,
+          "warning_seconds": 20.0,
+          "label": "The allied wing"
         },
         {
-          "timing": 600.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -264,10 +307,15 @@
           "entry_point": {
             "x": 392,
             "z": 500
-          }
+          },
+          "phase": 2,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The allied wing"
         },
         {
-          "timing": 1020.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "spearman",
@@ -289,10 +337,16 @@
           "entry_point": {
             "x": 392,
             "z": 500
-          }
+          },
+          "phase": 3,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The allied wing"
         }
       ],
-      "commander_troop": "roman_veteran_consul"
+      "commander_troop": "roman_veteran_consul",
+      "wave_escalation": 0.12
     },
     {
       "id": "eastern_siege_column",
@@ -349,10 +403,13 @@
           "entry_point": {
             "x": 600,
             "z": 300
-          }
+          },
+          "phase": 1,
+          "warning_seconds": 20.0,
+          "label": "The siege column"
         },
         {
-          "timing": 600.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "swordsman",
@@ -370,10 +427,15 @@
           "entry_point": {
             "x": 600,
             "z": 300
-          }
+          },
+          "phase": 2,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The siege column"
         },
         {
-          "timing": 1020.0,
+          "timing": 0.0,
           "composition": [
             {
               "type": "swordsman",
@@ -391,10 +453,16 @@
           "entry_point": {
             "x": 600,
             "z": 300
-          }
+          },
+          "phase": 3,
+          "warning_seconds": 20.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 45.0,
+          "label": "The siege column"
         }
       ],
-      "commander_troop": "roman_field_commander"
+      "commander_troop": "roman_field_commander",
+      "wave_escalation": 0.12
     }
   ],
   "victory_conditions": [

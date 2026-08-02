@@ -296,6 +296,7 @@ GameEngine::GameEngine(QObject* parent)
   App::ViewModels::PlacementHost& placement_host = *this;
   m_placement_view_model =
       std::make_unique<App::ViewModels::PlacementViewModel>(placement_host, this);
+  m_wave_view_model = std::make_unique<App::ViewModels::WaveViewModel>(this);
 
   m_session = std::make_unique<Game::Session::SessionContext>();
   m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
@@ -2941,13 +2942,14 @@ void GameEngine::apply_mission_setup() {
                                                        m_runtime.local_owner_id,
                                                        m_pending_mission_waves,
                                                        m_entity_cache});
-  m_mission_wave_tracker.bind(&m_pending_mission_waves, m_world);
+  m_mission_wave_director.bind(&m_pending_mission_waves, m_world);
+  m_mission_wave_director.set_elapsed(m_campaign_mission_elapsed);
   if (m_campaign_manager->current_mission_definition().has_value()) {
     m_pending_mission_events = App::Core::build_pending_mission_events(
         *m_campaign_manager->current_mission_definition());
   }
   if (m_victory_service) {
-    m_victory_service->set_mission_wave_query(&m_mission_wave_tracker);
+    m_victory_service->set_mission_wave_query(&m_mission_wave_director);
   }
   if (effects.selected_player_changed) {
     emit selected_player_id_changed();
@@ -3053,7 +3055,10 @@ void GameEngine::reset_mission_runtime_state() {
   m_runtime.minimap_unit_update_accumulator = 0.0F;
   m_pending_mission_waves.clear();
   m_pending_mission_events.clear();
-  m_mission_wave_tracker.bind(nullptr, nullptr);
+  m_mission_wave_director.reset();
+  if (m_wave_view_model) {
+    m_wave_view_model->clear();
+  }
   Game::Systems::PlayerResourceRegistry::instance().clear();
   Game::Systems::MarketplaceSystem::instance().clear();
   sync_selected_player_state();
@@ -3082,10 +3087,6 @@ void GameEngine::update_mission_waves(float dt) {
       !m_runtime.victory_state.isEmpty()) {
     return;
   }
-  if (!m_campaign_manager ||
-      !m_campaign_manager->current_mission_context().is_campaign()) {
-    return;
-  }
 
   m_campaign_mission_elapsed += dt;
   update_mission_events();
@@ -3094,24 +3095,127 @@ void GameEngine::update_mission_waves(float dt) {
     return;
   }
 
+  m_mission_wave_director.set_elapsed(m_campaign_mission_elapsed);
+  const auto effects = m_mission_wave_director.advance();
+
   bool spawned_any = false;
-  for (auto& wave : m_pending_mission_waves) {
-    if (wave.spawned || m_campaign_mission_elapsed < wave.trigger_time) {
-      continue;
-    }
-    const auto effects = m_mission_setup->spawn_wave(
-        {*m_world, m_level, m_campaign_mission_elapsed}, wave);
-    for (const auto& announcement : effects.mission_announcements) {
+  for (const auto index : effects.waves_to_spawn) {
+    const auto spawn_effects =
+        m_mission_setup->spawn_wave({*m_world, m_level, m_campaign_mission_elapsed},
+                                    m_pending_mission_waves[index]);
+    for (const auto& announcement : spawn_effects.mission_announcements) {
       emit mission_announcement(announcement);
     }
-    wave.spawned_entity_ids = effects.spawned_entity_ids;
-    wave.spawned = true;
+    m_mission_wave_director.note_spawned(index, spawn_effects.spawned_entity_ids);
     spawned_any = true;
   }
 
+  for (const auto& announcement : effects.announcements) {
+    emit mission_announcement(announcement);
+  }
+  for (const auto& cue : effects.audio_cues) {
+    Game::Audio::play_cue(cue.toStdString());
+  }
+
+  if (!effects.reward.empty()) {
+    auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+    for (const auto type : Game::Systems::k_all_resource_types) {
+      const int amount = effects.reward.get(type);
+      if (amount > 0) {
+        resources.add(m_runtime.local_owner_id, type, amount);
+      }
+    }
+    sync_selected_player_state();
+  }
+
+  if (effects.status_changed || spawned_any) {
+    publish_wave_status();
+  }
   if (spawned_any) {
     emit owner_info_changed();
   }
+}
+
+void GameEngine::restore_mission_waves(const QJsonObject& wave_state) {
+  m_pending_mission_waves.clear();
+  m_mission_wave_director.reset();
+
+  if (!m_world || !m_campaign_manager ||
+      !m_campaign_manager->current_mission_definition().has_value()) {
+    return;
+  }
+
+  const auto& mission = *m_campaign_manager->current_mission_definition();
+
+  QVector3D defense_reference{0.0F, 0.0F, 0.0F};
+  int anchor_count = 0;
+  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr ||
+        unit->owner_id != m_runtime.local_owner_id || unit->health <= 0) {
+      continue;
+    }
+    defense_reference +=
+        QVector3D(transform->position.x, transform->position.y, transform->position.z);
+    anchor_count++;
+  }
+  if (anchor_count > 0) {
+    defense_reference /= static_cast<float>(anchor_count);
+  }
+
+  m_pending_mission_waves = App::Core::build_pending_mission_waves(
+      {.mission = mission,
+       .mission_difficulty = m_campaign_manager->current_mission_context().difficulty,
+       .level = m_level,
+       .defense_reference_world_position = defense_reference});
+
+  m_pending_mission_events = App::Core::build_pending_mission_events(mission);
+
+  m_mission_wave_director.bind(&m_pending_mission_waves, m_world);
+  m_mission_wave_director.restore(wave_state);
+  m_campaign_mission_elapsed = m_mission_wave_director.elapsed();
+  for (auto& event : m_pending_mission_events) {
+    event.fired = m_campaign_mission_elapsed >= event.trigger_time;
+  }
+
+  if (m_victory_service) {
+    m_victory_service->set_mission_wave_query(&m_mission_wave_director);
+  }
+  publish_wave_status();
+}
+
+void GameEngine::publish_wave_status() {
+  if (!m_wave_view_model) {
+    return;
+  }
+
+  QVariantMap status = m_mission_wave_director.status();
+  QVariantList alerts = status.value("alerts").toList();
+  if (!alerts.isEmpty() && m_minimap_manager && m_minimap_manager->has_minimap()) {
+    const float world_width = m_minimap_manager->get_world_width();
+    const float world_height = m_minimap_manager->get_world_height();
+    QVariantList normalized;
+    for (const auto& value : alerts) {
+      QVariantMap alert = value.toMap();
+      const auto [nx, ny] =
+          Game::Map::Minimap::world_to_pixel(alert.value("x").toFloat(),
+                                             alert.value("z").toFloat(),
+                                             world_width,
+                                             world_height,
+                                             1.0F,
+                                             1.0F);
+      alert["nx"] = std::clamp(nx, 0.0F, 1.0F);
+      alert["ny"] = std::clamp(ny, 0.0F, 1.0F);
+      normalized.append(alert);
+    }
+    status["alerts"] = normalized;
+  }
+
+  m_wave_view_model->set_status(status);
 }
 
 void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_configs) {
@@ -3237,7 +3341,8 @@ void GameEngine::begin_save(const QString& slot_name,
            .mission_context = std::move(mission_context),
            .kind = kind,
            .play_time_seconds = m_campaign_mission_elapsed,
-           .autosave_retention = autosave_retention});
+           .autosave_retention = autosave_retention,
+           .mission_wave_state = m_mission_wave_director.serialize()});
   if (!effects.queued) {
     set_error(effects.error);
     return;
@@ -3323,9 +3428,10 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
            .entity_cache = m_entity_cache,
            .audio_coordinator = m_audio_coordinator.get(),
            .victory_service = m_victory_service.get(),
-           .emit_troop_count_changed =
-               [this]() {
-                 emit troop_count_changed();
+           .emit_troop_count_changed = [this]() { emit troop_count_changed(); },
+           .restore_mission_waves =
+               [this](const QJsonObject& wave_state) {
+                 restore_mission_waves(wave_state);
                }});
   if (!effects.success) {
     set_error(effects.error);
@@ -3714,6 +3820,10 @@ auto GameEngine::save_slots_view_model() const -> QObject* {
 
 auto GameEngine::placement_view_model() const -> QObject* {
   return m_placement_view_model.get();
+}
+
+auto GameEngine::wave_view_model() const -> QObject* {
+  return m_wave_view_model.get();
 }
 
 auto GameEngine::input_handler() const -> InputCommandHandler* {

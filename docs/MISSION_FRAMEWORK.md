@@ -135,14 +135,117 @@ Defines AI opponents with personality and behavior:
 | `nation`             | Yes      | Nation used for roster resolution                                   |
 | `faction`            | Yes      | Faction metadata for mission/UI use                                 |
 | `color`              | Yes      | Player color                                                        |
-| `difficulty`         | No       | Execution tuning; omitted falls back to normal behavior             |
+| `difficulty`         | No       | Execution tuning, and a wave-size multiplier; omitted means normal  |
 | `strategy`           | No       | Base strategic preset; omitted falls back to `balanced`             |
 | `team_id`            | No       | Allies AIs with the same team and prevents them fighting each other |
 | `commander_troop`    | No       | Explicit commander troop override                                   |
 | `personality`        | No       | Fine-tunes aggression / defense / harassment on top of the strategy |
 | `starting_units`     | No       | Spawns the AI with units at mission start                           |
 | `starting_buildings` | No       | Spawns the AI with structures at mission start                      |
-| `waves`              | No       | Timed reinforcements layered on top of the regular AI               |
+| `wave_escalation`    | No       | Per-wave growth in wave size for this AI; `0.12` is +12% each wave  |
+| `waves`              | No       | Reinforcement waves layered on top of the regular AI                |
+
+### Waves
+
+A wave is a scripted reinforcement drop for one AI setup. Waves are grouped into
+**assault phases**; the HUD, the `survive_waves` victory condition and the wave
+announcements all count phases, not individual wave entries.
+
+#### Wave fields
+
+| Field             | Required | Meaning                                                                        |
+| ----------------- | -------- | ------------------------------------------------------------------------------ |
+| `timing`          | Yes\*    | Seconds from mission start. Ignored when `trigger` is `after_previous_cleared` |
+| `trigger`         | No       | `time` (default) or `after_previous_cleared`                                   |
+| `grace_seconds`   | No       | Breather after the previous wave of this AI clears, before this one lands      |
+| `warning_seconds` | No       | How far ahead of the wave the telegraph fires (default 15)                     |
+| `phase`           | No       | Explicit assault phase; omitted phases are derived from matching `timing`s     |
+| `composition`     | No       | Explicit unit list                                                             |
+| `archetype`       | No       | Named template appended to `composition` (see below)                           |
+| `strength`        | No       | Multiplies every unit count in this wave (default 1.0)                         |
+| `entry_point`     | No       | Where the wave arrives                                                         |
+| `entry_points`    | No       | Several arrival points; composition groups are dealt round-robin between them  |
+| `label`           | No       | Name used in announcements instead of the AI id                                |
+| `clear_reward`    | No       | Resources paid to the player once this wave's phase is broken                  |
+
+\* `timing` is required for `time`-triggered waves, which is the default.
+
+#### Timed versus state-driven waves
+
+A `time` wave lands at `timing`, whatever the player is doing. That suits set-piece
+battles where the historical schedule is the point.
+
+An `after_previous_cleared` wave waits until the previous wave _from the same AI_ is
+broken, then counts down `grace_seconds`. Its `timing` is not consulted at all. This
+is what a defence mission wants: clearing a wave quickly buys the player a real
+breather and then pulls the next assault forward, rather than leaving them idle
+against a wall clock.
+
+A wave counts as broken when every unit it spawned is dead, has routed, or when at
+least 90% of it is dead. Routed survivors are deliberately ignored — a single
+fleeing horseman must not be able to stall a `survive_waves` objective forever.
+
+```json
+"waves": [
+  {
+    "timing": 120.0,
+    "phase": 1,
+    "label": "The first crossing",
+    "composition": [
+      {"type": "swordsman", "count": 8},
+      {"type": "archer", "count": 4}
+    ],
+    "entry_point": {"x": 190, "z": 190}
+  },
+  {
+    "trigger": "after_previous_cleared",
+    "grace_seconds": 35.0,
+    "phase": 2,
+    "archetype": "assault",
+    "strength": 1.2,
+    "clear_reward": {"gold": 150, "food": 100},
+    "entry_points": [{"x": 190, "z": 190}, {"x": 120, "z": 210}]
+  }
+]
+```
+
+#### Wave archetypes
+
+`archetype` expands a named template into the wave's composition, on top of anything
+in `composition`. The built-in set lives in `game/map/wave_archetype_catalog.cpp`:
+
+- `probe` — a light column that tests the line
+- `assault` — a balanced spear/sword/archer push
+- `cavalry_flank` — mounted, meant to arrive off-axis
+- `skirmish_screen` — ranged and mobile
+- `siege_column` — a catapult with an infantry escort
+- `elite_guard` — the heaviest set, with elite swordsmen
+
+Dropping a JSON file at `assets/data/waves/archetypes.json` overrides archetypes by
+id and adds new ones. There is no such file in the repository: the built-ins are the
+only source of truth unless a project deliberately adds one.
+
+#### Wave size scaling
+
+Final unit counts are `count` × `strength` × mission difficulty × AI `difficulty` ×
+escalation, rounded, never below 1 per entry. Escalation is
+`1 + wave_escalation × wave_index`, so the third wave of an AI with
+`"wave_escalation": 0.12` arrives 24% heavier than its first.
+
+A composition entry marked `"elite": true` spawns with 1.6× health, which is how a
+named guard or boss unit is authored onto a final wave.
+
+#### What the player sees
+
+- A persistent HUD tracker: current phase, phases cleared, and a countdown to the
+  next wave.
+- A telegraph `warning_seconds` before the wave lands: an announcement naming the
+  direction and rough size, an audio cue, and a pulsing marker on the minimap at the
+  entry point.
+- An announcement and a cue when a phase is broken, plus any `clear_reward`.
+
+Wave state — the clock, which waves have spawned, and which have been broken — is
+written into the save under `mission_waves` and restored with it.
 
 #### Supported strategy values
 
@@ -321,10 +424,11 @@ past the others. The content validator warns about this.
 
 #### survive_waves
 
-Counts _assault phases_, not individual wave entries. Waves that share a `timing` across
-different `ai_setups` form one phase, and a phase counts as survived once every unit it spawned
-is dead. Authoring `wave_count` higher than the number of distinct wave timings makes the
-mission unwinnable; the validator rejects that.
+Counts _assault phases_, not individual wave entries. A phase is either an explicit `phase`
+number or, when none is authored, the set of waves that share a `timing` across different
+`ai_setups`. A phase counts as survived once every wave in it is broken — across all AI setups,
+not just one. Authoring `wave_count` higher than the number of phases makes the mission
+unwinnable; the validator rejects that.
 
 ```json
 {
