@@ -47,11 +47,12 @@ void BridgeRenderer::build_meshes() {
 
 void BridgeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
+
   Ground::submit_linear_feature_segments(renderer,
                                          m_bridges,
                                          m_meshes,
                                          LinearFeatureKind::Bridge,
-                                         QVector3D(0.36F, 0.33F, 0.29F));
+                                         QVector3D(0.58F, 0.55F, 0.50F));
 }
 
 } // namespace Render::GL

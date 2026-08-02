@@ -679,6 +679,44 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
               0.0001F);
 }
 
+TEST_F(TerrainServiceTest, EveryPointTheBridgeMaskClaimsResolvesToDeckHeight) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 33;
+  map_def.grid.height = 33;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -14.0F), QVector3D(0.0F, 0.0F, 14.0F), 6.0F});
+  map_def.bridges.push_back({QVector3D(-7.0F, 0.0F, 0.0F),
+                             QVector3D(7.0F, 0.0F, 0.0F),
+                             Game::Map::k_min_bridge_width,
+                             0.6F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  const auto* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+  ASSERT_FALSE(height_map->get_bridges().empty());
+
+  const float river_surface_y = 0.0F;
+  int claimed = 0;
+
+  for (float z = -8.0F; z <= 8.0F; z += 0.25F) {
+    for (float x = -14.0F; x <= 14.0F; x += 0.25F) {
+      if (!terrain.is_on_bridge(x, z)) {
+        continue;
+      }
+      ++claimed;
+      const auto sample = terrain.sample_surface_height(x, z);
+      EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Bridge)
+          << "at (" << x << ", " << z << ')';
+      EXPECT_GT(sample.world_y, river_surface_y) << "at (" << x << ", " << z << ')';
+    }
+  }
+
+  EXPECT_GT(claimed, 0);
+}
+
 TEST_F(TerrainServiceTest, BridgeWalkabilityRespectsBridgeWidthWhenTileSizeExceedsOne) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 9;

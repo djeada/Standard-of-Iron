@@ -351,6 +351,69 @@ TEST(ShaderSource, TerrainGroundShadesFromInterpolatedNormals) {
   EXPECT_NE(flat.find("relief_octave("), std::string::npos);
 }
 
+TEST(ShaderSource, TerrainGroundOccludesHollowsFromTheHeightField) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("float terrain_sky_openness(vec2 uv, float center_height)"),
+            std::string::npos);
+  EXPECT_NE(flat.find("const float k_openness_radii[3]"), std::string::npos);
+  EXPECT_NE(flat.find("inversesqrt(highest_tangent * highest_tangent + 1.0)"),
+            std::string::npos);
+
+  EXPECT_NE(flat.find("float sheltered_ground = smoothstep(0.35, 0.92, sky_openness);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("float terrain_cavity = 1.0 - sheltered_ground;"),
+            std::string::npos);
+  EXPECT_NE(flat.find("ambient_occlusion *= mix(1.0, sheltered_ground"),
+            std::string::npos);
+
+  EXPECT_NE(flat.find("terrain_cavity * 0.20 - slope * 0.24"), std::string::npos);
+  EXPECT_NE(flat.find("terrain_cavity * 0.14"), std::string::npos);
+  EXPECT_NE(flat.find("wind_deposit *= 0.92 + terrain_cavity"), std::string::npos);
+}
+
+TEST(ShaderSource, TerrainGroundCarriesDetailAtTheBattleCameraScale) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("const float k_mosaic_frequency = 0.24;"), std::string::npos);
+  EXPECT_NE(flat.find("const float k_fleck_frequency = 1.15;"), std::string::npos);
+  EXPECT_NE(flat.find("float mosaic_fade = band_limit(coord_footprint"),
+            std::string::npos);
+  EXPECT_NE(flat.find("float fleck_fade = band_limit(coord_footprint"),
+            std::string::npos);
+  EXPECT_NE(flat.find("mix(grass_color, u_grass_dry, mosaic_dry"), std::string::npos);
+  EXPECT_NE(flat.find("mix(grass_color, deep_sward, mosaic_lush"), std::string::npos);
+  EXPECT_NE(flat.find("soil_mix = max(soil_mix, ground_scuff"), std::string::npos);
+}
+
+TEST(ShaderSource, TerrainGroundErodesAlongTheFallLine) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto flat = collapse_whitespace(frag);
+
+  EXPECT_NE(flat.find("vec2 flow_down = normal.xz;"), std::string::npos);
+  EXPECT_NE(flat.find("vec2 flow_across = vec2(-flow_down.y, flow_down.x);"),
+            std::string::npos);
+  EXPECT_NE(flat.find("const float k_rill_elongation"), std::string::npos);
+  EXPECT_NE(flat.find("float rill_incision ="), std::string::npos);
+  EXPECT_NE(flat.find("soil_mix = max(soil_mix, rill_incision"), std::string::npos);
+  EXPECT_NE(flat.find("relief_gradient += rill_gradient * rill_strength"),
+            std::string::npos);
+
+  EXPECT_NE(flat.find("float micro_rise = dot(relief_gradient, sun_ground_dir)"),
+            std::string::npos);
+  EXPECT_NE(flat.find("float micro_shadow = smoothstep(sun_tangent"),
+            std::string::npos);
+  EXPECT_NE(flat.find("ndl * direct_occlusion * 0.76"), std::string::npos);
+}
+
 TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "road.frag");
