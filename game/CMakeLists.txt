@@ -233,6 +233,26 @@ target_link_libraries(
         accessibility_runtime
 )
 
+# The kernel and the simulation are mutually dependent, and the link line has
+# to say so.
+#
+# core/world.cpp calls the owner, building-collision and troop-count registries;
+# core/serialization.cpp calls terrain, the terrain service and the formation
+# registry. All of those live in game_sim, so libengine_core.a genuinely needs
+# libgame_sim.a as well as the other way round.
+#
+# Without this, resolution depends on which archive happens to pull world.cpp.o
+# first. A binary that links "engine_core game_sim" and only reaches world.cpp.o
+# through game_sim picks it up on the repeat pass, after game_sim has already
+# gone by, and every registry call is left undefined -- which is why
+# persistence_tests failed under Ninja/Debug while Make/Release linked. CMake
+# resolves declared static-library cycles by repeating both archives.
+#
+# This is a statement of the current fact, not an endorsement: the kernel should
+# not be reaching into the simulation. Pulling those calls behind hooks the
+# simulation installs would let this line go away.
+target_link_libraries(engine_core PUBLIC game_sim)
+
 # Presentation-facing gameplay services.
 #
 # These need a camera to do their job -- unprojecting a click, framing the

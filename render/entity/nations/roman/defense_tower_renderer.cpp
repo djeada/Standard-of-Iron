@@ -59,10 +59,10 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   const bool damaged = state == BuildingState::Damaged;
   const bool destroyed = state == BuildingState::Destroyed;
   const float shaft_top = destroyed ? 1.56F : (damaged ? 2.04F : 2.30F);
-  const float shaft_radius = destroyed ? 0.52F : (damaged ? 0.58F : 0.62F);
-  const float belt_radius = damaged ? 0.58F : 0.62F;
-  const float platform_radius = damaged ? 0.72F : 0.82F;
-  const float battlement_radius = damaged ? 0.60F : 0.72F;
+  const float shaft_radius = destroyed ? 0.76F : (damaged ? 0.84F : 0.90F);
+  const float belt_radius = (damaged ? 0.86F : 0.93F);
+  const float platform_radius = damaged ? 0.96F : 1.06F;
+  const float battlement_radius = damaged ? 0.88F : 0.98F;
   const float battlement_half_extent = damaged ? 0.13F : 0.15F;
   const float deck_y = destroyed ? 0.0F : shaft_top + 0.12F;
   const float battlement_y = destroyed ? 0.0F : shaft_top + (damaged ? 0.28F : 0.34F);
@@ -90,9 +90,14 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.44F, 0.0F), QVector3D(0.94F, 0.12F, 0.94F), c.sandstone_light);
 
+  const float shaft_mid = 0.52F + (shaft_top - 0.52F) * 0.55F;
   desc.add_cylinder(QVector3D(0.0F, 0.52F, 0.0F),
-                    QVector3D(0.0F, shaft_top, 0.0F),
+                    QVector3D(0.0F, shaft_mid, 0.0F),
                     shaft_radius,
+                    c.limestone);
+  desc.add_cylinder(QVector3D(0.0F, shaft_mid - 0.02F, 0.0F),
+                    QVector3D(0.0F, shaft_top, 0.0F),
+                    shaft_radius * 0.92F,
                     c.limestone);
 
   if (!destroyed) {
@@ -105,6 +110,25 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                       QVector3D(0.0F, damaged ? 1.62F : 1.86F, 0.0F),
                       belt_radius * 0.98F,
                       c.limestone_shade);
+
+    add_embrasures(
+        [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
+          desc.add_box(
+              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+        },
+        damaged ? 1.02F : 1.14F,
+        shaft_radius * 0.94F,
+        QVector3D(0.045F, 0.17F, 0.05F),
+        c.limestone_dark * 0.55F);
+    add_embrasures(
+        [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
+          desc.add_box(
+              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+        },
+        damaged ? 1.64F : 1.94F,
+        shaft_radius * 0.90F,
+        QVector3D(0.04F, 0.13F, 0.05F),
+        c.limestone_dark * 0.55F);
   }
 
   const std::array<int, 4> corner_indices =
@@ -114,8 +138,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       continue;
     }
     const float angle = static_cast<float>(index) * 1.57F + 0.785F;
-    const float ox = std::sin(angle) * 0.50F;
-    const float oz = std::cos(angle) * 0.50F;
+    const float ox = std::sin(angle) * (shaft_radius - 0.04F);
+    const float oz = std::cos(angle) * (shaft_radius - 0.04F);
     const float column_top = destroyed ? 0.0F : shaft_top - 0.15F;
 
     desc.add_cylinder(
@@ -147,8 +171,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     for (int i = 0; i < spoke_count; ++i) {
       const float angle =
           static_cast<float>(i) * (damaged ? std::numbers::pi_v<float> : 1.57F);
-      const float ox = std::sin(angle) * 0.60F;
-      const float oz = std::cos(angle) * 0.60F;
+      const float ox = std::sin(angle) * (shaft_radius + 0.06F);
+      const float oz = std::cos(angle) * (shaft_radius + 0.06F);
       desc.add_box(QVector3D(ox, damaged ? 1.00F : 1.24F, oz),
                    QVector3D(0.04F, damaged ? 0.18F : 0.24F, 0.04F),
                    c.sandstone_dark,
@@ -158,34 +182,46 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
     desc.add_cylinder(QVector3D(0.0F, shaft_top + 0.02F, 0.0F),
                       QVector3D(0.0F, shaft_top + 0.08F, 0.0F),
-                      damaged ? 0.62F : 0.66F,
+                      damaged ? 0.90F : 0.96F,
                       c.limestone);
-    desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
-                 QVector3D(platform_radius, 0.05F, platform_radius),
-                 c.cedar);
 
-    const int merlon_count = damaged ? 5 : 10;
-    for (int i = 0; i < merlon_count; ++i) {
+    const int corbel_count = damaged ? 8 : 12;
+    for (int i = 0; i < corbel_count; ++i) {
       const float angle =
-          static_cast<float>(i) * (6.28318F / static_cast<float>(merlon_count));
-      const float ox = std::sin(angle) * battlement_radius;
-      const float oz = std::cos(angle) * battlement_radius;
-      desc.add_box(QVector3D(ox, battlement_y, oz),
-                   QVector3D(battlement_half_extent,
-                             damaged ? 0.20F : 0.24F,
-                             battlement_half_extent),
-                   c.terracotta,
+          static_cast<float>(i) * (6.28318F / static_cast<float>(corbel_count));
+      desc.add_box(QVector3D(std::sin(angle) * (platform_radius - 0.10F),
+                             deck_y - 0.09F,
+                             std::cos(angle) * (platform_radius - 0.10F)),
+                   QVector3D(0.07F, 0.05F, 0.07F),
+                   c.limestone_shade,
                    BuildingStateMask::All,
                    BuildingLODMask::Full);
     }
 
+    desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
+                 QVector3D(platform_radius, 0.05F, platform_radius),
+                 c.cedar);
+
+    add_square_parapet(
+        [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
+          desc.add_box(
+              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+        },
+        battlement_y,
+        battlement_radius,
+        damaged ? 3 : 4,
+        QVector3D(
+            battlement_half_extent, damaged ? 0.20F : 0.24F, battlement_half_extent),
+        c.terracotta,
+        11);
+
     desc.add_box(QVector3D(0.0F, battlement_y + 0.14F, 0.0F),
-                 QVector3D(damaged ? 0.74F : 0.88F, 0.04F, damaged ? 0.74F : 0.88F),
+                 QVector3D(damaged ? 0.98F : 1.10F, 0.04F, damaged ? 0.98F : 1.10F),
                  c.limestone);
 
     if (!damaged) {
-      for (float const x : {-0.78F, 0.78F}) {
-        for (float const z : {-0.78F, 0.78F}) {
+      for (float const x : {-1.02F, 1.02F}) {
+        for (float const z : {-1.02F, 1.02F}) {
           desc.add_box(QVector3D(x, battlement_y + 0.22F, z),
                        QVector3D(0.07F, 0.08F, 0.07F),
                        c.blue_accent,

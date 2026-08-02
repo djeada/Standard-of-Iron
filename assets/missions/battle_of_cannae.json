@@ -53,8 +53,8 @@
             }
           ],
           "entry_point": {
-            "x": 336.44,
-            "z": 195.68
+            "x": 486,
+            "z": 330
           }
         },
         {
@@ -70,8 +70,8 @@
             }
           ],
           "entry_point": {
-            "x": 325.59,
-            "z": 130.45
+            "x": 452,
+            "z": 296
           }
         }
       ],
@@ -110,8 +110,8 @@
             }
           ],
           "entry_point": {
-            "x": 594.74,
-            "z": 136.97
+            "x": 420,
+            "z": 132
           }
         },
         {
@@ -131,8 +131,8 @@
             }
           ],
           "entry_point": {
-            "x": 594.74,
-            "z": 136.97
+            "x": 452,
+            "z": 152
           }
         }
       ],
@@ -167,8 +167,8 @@
             }
           ],
           "entry_point": {
-            "x": 486.21,
-            "z": 417.45
+            "x": 400,
+            "z": 448
           }
         },
         {
@@ -184,8 +184,8 @@
             }
           ],
           "entry_point": {
-            "x": 486.21,
-            "z": 417.45
+            "x": 376,
+            "z": 430
           }
         }
       ],
@@ -206,7 +206,7 @@
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls \u2014 and the wings fold inward."
+      "description": "Your command falls — and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -214,7 +214,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls \u2014 and every line collapses behind him."
+      "description": "The commander falls — and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",

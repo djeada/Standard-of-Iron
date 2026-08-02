@@ -227,15 +227,26 @@ auto structure_schema(const QString& sub_type) -> JsonSchema {
       "slot in the mission.");
 
   schema.fields = {
-      required_field(
-          "type",
-          "string",
-          "Building kind.",
-          sub_type.isEmpty() ? QStringLiteral("barracks") : sub_type,
-          {"barracks", "village", "defense_tower", "home", "marketplace", "temple"}),
+      required_field("type",
+                     "string",
+                     "Building kind.",
+                     sub_type.isEmpty() ? QStringLiteral("barracks") : sub_type,
+                     {"barracks",
+                      "village",
+                      "defense_tower",
+                      "home",
+                      "marketplace",
+                      "temple",
+                      "wall_gate"}),
       grid_x_field(),
       grid_z_field(),
       optional_field("player_id", "integer", "0", "Owning player; 0 is neutral.", 0),
+      optional_field("rotation",
+                     "number",
+                     "0",
+                     "Yaw in degrees. A wall gate must face along the wall it "
+                     "closes: 0 spans x, 90 spans z.",
+                     0),
       optional_field("max_population",
                      "integer",
                      "100",

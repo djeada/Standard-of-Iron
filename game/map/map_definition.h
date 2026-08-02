@@ -68,6 +68,7 @@ struct StructureEntry {
   int player_id = 0;
   int team_id = 0;
   int max_population = 100;
+  float rotation = 0.0F;
   QString nation;
 };
 
