@@ -73,11 +73,17 @@ public:
                          const QVector3D& destination,
                          float facing);
 
+  static void refresh_cohesion(Engine::Core::World& world, ArmyFormation& formation);
+
+  [[nodiscard]] static auto
+  damage_taken_multiplier(const Engine::Core::Entity& entity) -> float;
+
 private:
   void advance_maintained_groups(Engine::Core::World& world, float delta_time);
 
   float m_replan_accumulator{0.0F};
   float m_advance_accumulator{0.0F};
+  float m_cohesion_accumulator{0.0F};
 };
 
 } // namespace Game::Formation

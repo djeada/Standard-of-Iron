@@ -73,6 +73,8 @@ add_executable(
     systems/patrol_system_test.cpp
     formation/unit_layout_test.cpp
     formation/army_formation_planner_test.cpp
+    formation/formation_planner_cache_test.cpp
+    formation/formation_cohesion_test.cpp
     formation/army_formation_registry_test.cpp
     formation/formation_data_loader_test.cpp
     formation/formation_movement_test.cpp

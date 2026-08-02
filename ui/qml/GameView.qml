@@ -113,6 +113,18 @@ Item {
             mainWindow.edge_scroll_disabled = false;
     }
 
+    function select_formation_intent_slot(slot_index) {
+        if (typeof game === 'undefined' || !game.placement.set_formation_intent)
+            return;
+        var available = game.placement.available_formation_intents;
+        if (slot_index < 0 || slot_index >= available.length)
+            return;
+        var intent_id = available[slot_index];
+        if (game.placement.formation_intent_unavailable_reason && game.placement.formation_intent_unavailable_reason(intent_id).length > 0)
+            return;
+        game.placement.set_formation_intent(intent_id);
+    }
+
     function handle_commander_key_pressed(event) {
         switch (event.key) {
         case Qt.Key_Escape:
@@ -217,6 +229,11 @@ Item {
         }
         if (is_commander_mode()) {
             handle_commander_key_pressed(event);
+            return;
+        }
+        if (game.placement.is_placing_formation && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
+            game_view.select_formation_intent_slot(event.key - Qt.Key_1);
+            event.accepted = true;
             return;
         }
         var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
