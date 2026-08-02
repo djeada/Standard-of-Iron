@@ -138,6 +138,34 @@ auto try_parse_mixed_policy(const QString& value)
   return k_mixed.parse(value);
 }
 
+auto phase_to_string(FormationPhase phase) -> const char* {
+  switch (phase) {
+  case FormationPhase::Forming:
+    return "forming";
+  case FormationPhase::Formed:
+    return "formed";
+  case FormationPhase::Disrupted:
+    return "disrupted";
+  case FormationPhase::Breaking:
+    return "breaking";
+  }
+  return "forming";
+}
+
+auto phase_display_name(FormationPhase phase) -> QString {
+  switch (phase) {
+  case FormationPhase::Forming:
+    return QCoreApplication::translate("Formation", "Forming up");
+  case FormationPhase::Formed:
+    return QCoreApplication::translate("Formation", "Formed");
+  case FormationPhase::Disrupted:
+    return QCoreApplication::translate("Formation", "Disrupted");
+  case FormationPhase::Breaking:
+    return QCoreApplication::translate("Formation", "Breaking");
+  }
+  return QCoreApplication::translate("Formation", "Forming up");
+}
+
 auto ArmyFormation::find_slot(int slot_id) const -> const FormationSlot* {
   auto it = std::find_if(slot_list.begin(),
                          slot_list.end(),

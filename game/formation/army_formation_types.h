@@ -91,6 +91,9 @@ try_parse_ranged_placement(const QString& value) -> std::optional<RangedPlacemen
 [[nodiscard]] auto
 try_parse_mixed_policy(const QString& value) -> std::optional<MixedDoctrinePolicy>;
 
+[[nodiscard]] auto phase_to_string(FormationPhase phase) -> const char*;
+[[nodiscard]] auto phase_display_name(FormationPhase phase) -> QString;
+
 struct FormationSlot {
   int id{k_invalid_slot};
   ArmyRole role{ArmyRole::Centre};
@@ -147,6 +150,8 @@ struct ArmyFormation {
   ArmyFormationOptions options;
   FormationPhase phase{FormationPhase::Forming};
 
+  float cohesion{1.0F};
+
   std::vector<EntityID> members;
   std::vector<FormationSlot> slot_list;
 
@@ -159,6 +164,10 @@ struct ArmyFormation {
 
   [[nodiscard]] auto maintains_formation() const -> bool {
     return options.movement_policy == MovementPolicy::MaintainFormation;
+  }
+
+  [[nodiscard]] auto is_formed() const -> bool {
+    return phase == FormationPhase::Formed;
   }
 
   [[nodiscard]] auto find_slot(int slot_id) const -> const FormationSlot*;
