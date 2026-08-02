@@ -103,11 +103,11 @@ Item {
         let enabledCount = enabled_player_count();
         let soloPlayable = map_is_solo_playable(selected_map_data);
         if (enabledCount < 1)
-            validation_error = "Need at least 1 enabled player to start";
+            validation_error = qsTr("Need at least 1 enabled player to start");
         else if (enabledCount < 2 && !soloPlayable)
-            validation_error = "Need at least 2 enabled players to start";
+            validation_error = qsTr("Need at least 2 enabled players to start");
         else if (enabledCount >= 2 && !has_minimum_distinct_teams())
-            validation_error = "At least two teams must be selected to start a match";
+            validation_error = qsTr("At least two teams must be selected to start a match");
         else
             validation_error = "";
     }
@@ -1165,7 +1165,7 @@ Item {
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: model.colorName || "Color"
+                                            text: model.colorName || qsTr("Color")
                                             color: model.colorHex || Theme.textMain
                                             font.pixelSize: 13
                                             font.bold: true
@@ -1544,16 +1544,16 @@ Item {
                     }
 
                     Text {
-                        text: "Available Player Slots: " + (function () {
-                                return player_ids_for_map(selected_map_data).length;
-                            })()
+                        text: qsTr("Available Player Slots: %1").arg((function () {
+                                    return player_ids_for_map(selected_map_data).length;
+                                })())
                         color: Theme.textMain
                         font.pixelSize: 14
                         font.bold: true
                     }
 
                     Text {
-                        text: "Select your player ID:"
+                        text: qsTr("Select your player ID:")
                         color: Theme.textSubLite
                         font.pixelSize: 12
                     }
@@ -1587,7 +1587,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "ID " + modelData
+                                    text: qsTr("ID %1").arg(modelData)
                                     color: {
                                         var pid = modelData;
                                         if (typeof game === 'undefined')
@@ -1629,8 +1629,8 @@ Item {
                                     others.push(Number(ids[i]));
                             }
                             if (others.length === 0)
-                                return "All other slots will be CPU-controlled";
-                            return "CPU will control: ID " + others.join(", ID ");
+                                return qsTr("All other slots will be CPU-controlled");
+                            return qsTr("CPU will control: ID %1").arg(others.join(qsTr(", ID ")));
                         }
                         color: Theme.textSubLite
                         font.pixelSize: 11

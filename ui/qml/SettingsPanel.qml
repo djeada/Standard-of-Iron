@@ -745,7 +745,7 @@ Item {
                             }
 
                             Label {
-                                text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>LGPL v3 License</a> | <a href='https://www.qt.io'>Qt Website</a>"
+                                text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>" + qsTr("LGPL v3 License") + "</a> | <a href='https://www.qt.io'>" + qsTr("Qt Website") + "</a>"
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 textFormat: Text.RichText

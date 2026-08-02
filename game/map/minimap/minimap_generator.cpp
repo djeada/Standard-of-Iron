@@ -814,10 +814,15 @@ void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map
     return;
   }
 
+  const bool landmarks_only = m_config.structure_bake == StructureBake::LandmarksOnly;
+
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
   for (const auto& structure : map_def.structures) {
+    if (landmarks_only) {
+      break;
+    }
     const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry);
     if (line == nullptr) {
       continue;
@@ -841,6 +846,9 @@ void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map
   for (const auto& structure : map_def.structures) {
     const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry);
     if (point == nullptr) {
+      continue;
+    }
+    if (landmarks_only && structure.type != Game::Units::SpawnType::Barracks) {
       continue;
     }
     const auto [px, py] =

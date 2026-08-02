@@ -182,16 +182,6 @@ public:
   }
 };
 
-class UnitMovedEvent : public Event {
-public:
-  UnitMovedEvent(EntityID unit_id, float x, float y)
-      : unit_id(unit_id)
-      , x(x)
-      , y(y) {}
-  EntityID unit_id;
-  float x, y;
-};
-
 class UnitDiedEvent : public Event {
 public:
   UnitDiedEvent(EntityID unit_id,
@@ -294,6 +284,18 @@ public:
   float volume;
   bool loop;
   int priority;
+};
+
+class AudioCueEvent : public Event {
+public:
+  explicit AudioCueEvent(std::string cue_id, float volume_scale = 1.0F)
+      : cue_id(std::move(cue_id))
+      , volume_scale(volume_scale) {}
+  std::string cue_id;
+  float volume_scale;
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "AUDIO_CUE";
+  }
 };
 
 class MissionAnnouncementEvent : public Event {

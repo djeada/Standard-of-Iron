@@ -710,7 +710,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "HP " + Number(root.status_value("health", 0)) + "/" + Number(root.status_value("max_health", 100))
+                    text: qsTr("HP %1/%2").arg(Number(root.status_value("health", 0))).arg(Number(root.status_value("max_health", 100)))
                     color: "#ffffff"
                     font.pixelSize: root.scaled(12)
                     font.bold: true
@@ -772,7 +772,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "STM " + Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0) + "%"
+                    text: qsTr("STM %1%").arg(Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0))
                     color: "#cff7ffff"
                     font.pixelSize: root.scaled(12)
                     font.bold: true
@@ -887,7 +887,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: "POSTURE"
+            text: qsTr("POSTURE")
             color: "#99ffffff"
             font.pixelSize: root.scaled(8)
             font.bold: true
@@ -954,19 +954,19 @@ Item {
 
         Repeater {
             model: [{
-                    "name": "BASH",
+                    "name": qsTr("BASH"),
                     "key": "F",
                     "cdKey": "shield_bash_cooldown_remaining",
                     "totalKey": "shield_bash_cooldown",
                     "readyKey": "shield_bash_ready"
                 }, {
-                    "name": "RUSH",
+                    "name": qsTr("RUSH"),
                     "key": "1",
                     "cdKey": "vanguard_rush_cooldown_remaining",
                     "totalKey": "vanguard_rush_cooldown",
                     "readyKey": "vanguard_rush_ready"
                 }, {
-                    "name": "WIND",
+                    "name": qsTr("WIND"),
                     "key": "2",
                     "cdKey": "second_wind_cooldown_remaining",
                     "totalKey": "second_wind_cooldown",

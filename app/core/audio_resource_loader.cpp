@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/audio/audio_cues.h"
 #include "utils/resource_utils.h"
 
 namespace {
@@ -66,12 +67,13 @@ auto resolve_audio_root() -> QString {
   return {};
 }
 
-auto resolve_manifest_path(const QString& audio_root) -> QString {
+auto resolve_audio_data_path(const QString& audio_root,
+                             const QString& file_name) -> QString {
   QStringList candidates;
   if (!audio_root.isEmpty()) {
-    candidates.push_back(audio_root + "audio_manifest.json");
+    candidates.push_back(audio_root + file_name);
   }
-  candidates.push_back(QStringLiteral(":/assets/audio/audio_manifest.json"));
+  candidates.push_back(QStringLiteral(":/assets/audio/") + file_name);
 
   for (const QString& candidate : candidates) {
     const QString resolved = Utils::Resources::resolve_resource_path(candidate);
@@ -80,6 +82,20 @@ auto resolve_manifest_path(const QString& audio_root) -> QString {
     }
   }
   return {};
+}
+
+auto read_audio_json(const QString& path, const char* what) -> QJsonDocument {
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open" << what << ':' << path;
+    return {};
+  }
+
+  const QJsonDocument document = QJsonDocument::fromJson(file.readAll());
+  if (document.isNull()) {
+    qWarning() << "Failed to parse" << what << ':' << path;
+  }
+  return document;
 }
 
 auto normalize(const QString& value) -> QString {
@@ -175,21 +191,15 @@ void cache_manifest_locked() {
   }
 
   const QString audio_root = resolve_audio_root();
-  const QString manifest_path = resolve_manifest_path(audio_root);
+  const QString manifest_path =
+      resolve_audio_data_path(audio_root, QStringLiteral("audio_manifest.json"));
   if (manifest_path.isEmpty()) {
     qWarning() << "Audio manifest not found";
     return;
   }
 
-  QFile manifest_file(manifest_path);
-  if (!manifest_file.open(QIODevice::ReadOnly)) {
-    qWarning() << "Failed to open audio manifest:" << manifest_path;
-    return;
-  }
-
-  const QJsonDocument document = QJsonDocument::fromJson(manifest_file.readAll());
+  const QJsonDocument document = read_audio_json(manifest_path, "audio manifest");
   if (document.isNull()) {
-    qWarning() << "Failed to parse audio manifest:" << manifest_path;
     return;
   }
 
@@ -362,6 +372,91 @@ auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_i
     return false;
   }
   return load_cached_entry(AudioSystem::get_instance(), *entry);
+}
+
+auto AudioResourceLoader::has_manifest_entry(const QString& resource_id) -> bool {
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  return find_cached_entry_locked(resource_id) != nullptr;
+}
+
+void AudioResourceLoader::load_audio_cues() {
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  cache_manifest_locked();
+
+  const QString cues_path =
+      resolve_audio_data_path(resolve_audio_root(), QStringLiteral("audio_cues.json"));
+  if (cues_path.isEmpty()) {
+    qWarning() << "Audio cue catalog not found";
+    return;
+  }
+
+  const QJsonDocument document = read_audio_json(cues_path, "audio cue catalog");
+  if (document.isNull()) {
+    return;
+  }
+
+  const QJsonArray cues =
+      document.isArray() ? document.array()
+                         : document.object().value(QStringLiteral("cues")).toArray();
+  if (cues.isEmpty()) {
+    qWarning() << "Audio cue catalog contains no cues:" << cues_path;
+    return;
+  }
+
+  auto& cue_registry = Game::Audio::CueRegistry::instance();
+  cue_registry.clear();
+
+  int bound_count = 0;
+  int silent_count = 0;
+  for (const QJsonValue& value : cues) {
+    if (!value.isObject()) {
+      continue;
+    }
+
+    const QJsonObject cue_object = value.toObject();
+    const QString cue_id = cue_object.value(QStringLiteral("id")).toString().trimmed();
+    if (cue_id.isEmpty()) {
+      qWarning() << "Audio cue entry missing id";
+      continue;
+    }
+
+    Game::Audio::CueBinding binding;
+    binding.category =
+        parse_category(cue_object.value(QStringLiteral("category")).toString());
+    binding.volume = std::max(0.0F,
+                              float(cue_object.value(QStringLiteral("volume"))
+                                        .toDouble(AudioConstants::DEFAULT_VOLUME)));
+    binding.priority = cue_object.value(QStringLiteral("priority"))
+                           .toInt(AudioConstants::DEFAULT_PRIORITY);
+    binding.cooldown_ms =
+        std::max(0, cue_object.value(QStringLiteral("cooldown_ms")).toInt(0));
+    binding.loop = cue_object.value(QStringLiteral("loop")).toBool(false);
+
+    const QJsonArray resources =
+        cue_object.value(QStringLiteral("resources")).toArray();
+    for (const QJsonValue& resource_value : resources) {
+      const QString resource_id = resource_value.toString().trimmed();
+      if (resource_id.isEmpty()) {
+        continue;
+      }
+      if (find_cached_entry_locked(resource_id) == nullptr) {
+        qWarning() << "Audio cue" << cue_id << "references unknown resource"
+                   << resource_id;
+        continue;
+      }
+      binding.resource_ids.push_back(resource_id.toStdString());
+    }
+
+    if (binding.resource_ids.empty()) {
+      ++silent_count;
+    } else {
+      ++bound_count;
+    }
+    cue_registry.bind(cue_id.toStdString(), std::move(binding));
+  }
+
+  qInfo() << "Audio cues:" << bound_count << "bound," << silent_count
+          << "awaiting assets (" << cues_path << ')';
 }
 
 auto AudioResourceLoader::find_first_resource_id(

@@ -429,6 +429,8 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
                 ? QStringLiteral("The shrine answers to you now. Its dead fall still.")
                 : QStringLiteral(
                       "The shrine is broken. Every risen guardian crumbles.")));
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent("alert.objective_complete"));
   }
 }
 
@@ -457,7 +459,7 @@ void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world, RuntimeZone&
   zone.announced_awakening = true;
   zone.current_wave_elapsed = 0.0F;
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioTriggerEvent("combat_hit_generic", 0.8F, false, 4));
+      Engine::Core::AudioCueEvent("combat.hit.generic", 0.8F));
 
   try_spawn_next_wave(world, zone);
 }
@@ -545,6 +547,8 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
       Engine::Core::EventManager::instance().publish(
           Engine::Core::MissionAnnouncementEvent(QStringLiteral(
               "The risen guardians are put down. The ground is quiet.")));
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent("alert.objective_complete"));
     }
   }
 

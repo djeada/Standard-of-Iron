@@ -1,7 +1,5 @@
 #include "mounted_humanoid_renderer_base.h"
 
-#include "render/math/creature_math_utils.h"
-
 #include <QVector3D>
 
 #include <algorithm>
@@ -28,6 +26,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
 #include "mounted_knight_pose.h"
+#include "render/math/creature_math_utils.h"
 #include "scene/camera.h"
 
 namespace Render::GL {
@@ -143,8 +142,7 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
 
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
-    horse_seed =
-        Render::Creature::stable_entity_seed(ctx.entity->get_id());
+    horse_seed = Render::Creature::stable_entity_seed(ctx.entity->get_id());
   }
 
   HorseDimensions const dims = get_scaled_horse_dimensions(horse_seed);

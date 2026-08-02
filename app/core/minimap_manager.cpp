@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
-#include <unordered_set>
 
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -48,7 +47,10 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   Game::Map::Minimap::MinimapOrientation::instance().set_yaw_degrees(
       map_def.camera.yaw_deg);
 
-  Game::Map::Minimap::MinimapGenerator generator;
+  Game::Map::Minimap::MinimapGenerator::Config config;
+  config.structure_bake =
+      Game::Map::Minimap::MinimapGenerator::StructureBake::LandmarksOnly;
+  Game::Map::Minimap::MinimapGenerator generator(config);
   m_minimap_base_image = generator.generate(map_def);
   if (!m_minimap_base_image.isNull() &&
       m_minimap_base_image.format() != QImage::Format_ARGB32) {
@@ -74,7 +76,8 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
     m_unit_layer->init(m_minimap_base_image.width(),
                        m_minimap_base_image.height(),
                        m_world_width,
-                       m_world_height);
+                       m_world_height,
+                       m_tile_size);
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     qDebug() << "MinimapManager: Initialized unit layer for world" << m_world_width
              << "x" << m_world_height;
@@ -89,6 +92,7 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
 
     m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
     m_last_unit_hash = 0;
+    m_camera_viewport_valid = false;
     m_viewport_composite_dirty = true;
     mark_dirty();
   } else {
@@ -141,42 +145,45 @@ void MinimapManager::update_units(Engine::Core::World* world,
     return;
   }
 
-  std::vector<Game::Map::Minimap::UnitMarker> markers;
+  auto& markers = m_marker_scratch;
+  markers.clear();
 
-  constexpr size_t EXPECTED_MAX_UNITS = 128;
-  markers.reserve(EXPECTED_MAX_UNITS);
-
-  std::unordered_set<Engine::Core::EntityID> selected_ids;
+  auto& selected_ids = m_selected_scratch;
+  selected_ids.clear();
   if (selection_system != nullptr) {
     const auto& sel = selection_system->get_selected_units();
-    selected_ids.insert(sel.begin(), sel.end());
+    selected_ids.assign(sel.begin(), sel.end());
+    std::sort(selected_ids.begin(), selected_ids.end());
   }
 
   std::uint64_t unit_hash = hash_combine(0, static_cast<std::uint64_t>(local_owner_id));
 
   {
     const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
-    world->for_each_entity([&](Engine::Core::Entity& entity) {
-      const auto entity_id = entity.get_id();
-      const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
-      if (unit == nullptr) {
-        return;
+    const auto unit_ids = world->entities_with<Engine::Core::UnitComponent>();
+    markers.reserve(unit_ids.size());
+
+    for (const Engine::Core::EntityID entity_id : unit_ids) {
+      auto* entity = world->get_entity(entity_id);
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit == nullptr || unit->health <= 0) {
+        continue;
       }
 
-      if (unit->health <= 0) {
-        return;
-      }
-
-      const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
       if (transform == nullptr) {
-        return;
+        continue;
       }
 
       Game::Map::Minimap::UnitMarker marker;
       marker.world_x = transform->position.x;
       marker.world_z = transform->position.z;
       marker.owner_id = unit->owner_id;
-      marker.is_selected = selected_ids.contains(entity_id);
+      marker.is_selected =
+          std::binary_search(selected_ids.begin(), selected_ids.end(), entity_id);
       marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
 
       markers.push_back(marker);
@@ -187,7 +194,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
       unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(marker.owner_id));
       unit_hash = hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
       unit_hash = hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
-    });
+    }
   }
   unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
 
@@ -204,11 +211,15 @@ void MinimapManager::update_units(Engine::Core::World* world,
     auto& visibility_service = Game::Map::VisibilityService::instance();
     Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
 
+    Game::Map::VisibilityService::SnapshotPtr visibility_snapshot;
     if (visibility_service.is_initialized()) {
-      auto visibility_snapshot = visibility_service.snapshot_ptr();
-      visibility_check = [visibility_snapshot](float world_x, float world_z) -> bool {
-        return Game::Map::should_render_non_local_unit(
-            *visibility_snapshot, world_x, world_z);
+      visibility_snapshot = visibility_service.snapshot_ptr();
+    }
+    if (visibility_snapshot != nullptr) {
+
+      const auto* snapshot = visibility_snapshot.get();
+      visibility_check = [snapshot](float world_x, float world_z) -> bool {
+        return Game::Map::should_render_non_local_unit(*snapshot, world_x, world_z);
       };
     }
 
@@ -216,10 +227,11 @@ void MinimapManager::update_units(Engine::Core::World* world,
 
     m_minimap_units_image = m_minimap_fog_image;
     const QImage& unit_overlay = m_unit_layer->get_image();
-    if (!unit_overlay.isNull()) {
+    const QRect& overlay_rect = m_unit_layer->content_rect();
+    if (!unit_overlay.isNull() && !overlay_rect.isEmpty()) {
       QPainter painter(&m_minimap_units_image);
       painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-      painter.drawImage(0, 0, unit_overlay);
+      painter.drawImage(overlay_rect, unit_overlay, overlay_rect);
     }
     m_minimap_image = m_minimap_units_image;
     m_viewport_composite_dirty = true;
@@ -250,7 +262,8 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   const float camera_z = target.z() / m_tile_size;
 
   constexpr float EPSILON = 0.01F;
-  const bool camera_changed = std::abs(camera_x - m_last_camera_x) > EPSILON ||
+  const bool camera_changed = !m_camera_viewport_valid ||
+                              std::abs(camera_x - m_last_camera_x) > EPSILON ||
                               std::abs(camera_z - m_last_camera_z) > EPSILON ||
                               std::abs(viewport_width - m_last_viewport_w) > EPSILON ||
                               std::abs(viewport_height - m_last_viewport_h) > EPSILON;
@@ -263,6 +276,7 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
     m_last_camera_z = camera_z;
     m_last_viewport_w = viewport_width;
     m_last_viewport_h = viewport_height;
+    m_camera_viewport_valid = true;
     m_camera_viewport_layer->update(
         camera_x, camera_z, viewport_width, viewport_height);
   }
@@ -270,10 +284,11 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   m_minimap_image = m_minimap_units_image;
 
   const QImage& viewport_overlay = m_camera_viewport_layer->get_image();
-  if (!viewport_overlay.isNull()) {
+  const QRect& overlay_rect = m_camera_viewport_layer->content_rect();
+  if (!viewport_overlay.isNull() && !overlay_rect.isEmpty()) {
     QPainter painter(&m_minimap_image);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.drawImage(0, 0, viewport_overlay);
+    painter.drawImage(overlay_rect, viewport_overlay, overlay_rect);
   }
   m_viewport_composite_dirty = false;
   mark_dirty();

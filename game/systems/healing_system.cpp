@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
 #include "healing_colors.h"
@@ -104,6 +105,8 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
         target_unit->health =
             std::min(target_unit->health + healer_comp->healing_amount,
                      HealingRules::maximum_recoverable_health(*target));
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent("combat.heal"));
 
         healer_comp->healing_target_x = target_transform->position.x;
         healer_comp->healing_target_z = target_transform->position.z;

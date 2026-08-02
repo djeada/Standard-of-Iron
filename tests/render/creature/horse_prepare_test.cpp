@@ -532,10 +532,6 @@ TEST(HorsePrepare, MountOwnsItsLocomotionClockInsteadOfFollowingRiderLegPhase) {
   auto const second =
       Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
 
-  // The mount's cadence is derived from its own ground speed, so the advance is
-  // asserted as a rate bound rather than against the authored cycle constant.
-  // What matters here is that the rider's leg phase jumping most of a cycle does
-  // not drag the mount's phase with it.
   float const advance = phase_distance(first.phase, second.phase);
   EXPECT_GT(advance, 0.0F);
   EXPECT_LT(advance, 0.03F);
@@ -679,8 +675,6 @@ TEST(HorsePrepare, MountCadenceFollowsTheGroundSpeedItIsGiven) {
     return Render::GL::evaluate_horse_motion(profile, anim, rider_ctx, &state);
   };
 
-  // Both speeds sit inside the cadence clamp, so the cycle stretches in
-  // proportion to how much slower the body is travelling.
   auto const at_band_top = sample_at(3.0F);
   auto const two_thirds = sample_at(2.0F);
 

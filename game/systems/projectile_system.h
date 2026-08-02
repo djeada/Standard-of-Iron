@@ -81,11 +81,14 @@ private:
                                     Projectile* projectile) -> ImpactResolution;
   void publish_impact(const Projectile& projectile, const ImpactResolution& resolution);
 
+  static constexpr int k_volley_arrow_threshold = 4;
+
   std::vector<ProjectilePtr> m_projectiles;
   std::vector<ProjectileImpactEvent> m_impacts;
   ArrowConfig m_arrow_config;
   std::uint32_t m_arrow_spawn_sequence{0};
   std::uint64_t m_impact_sequence{0};
+  int m_arrows_launched_this_tick{0};
 };
 
 } // namespace Game::Systems

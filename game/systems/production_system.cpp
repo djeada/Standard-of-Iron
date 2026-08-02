@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../game_config.h"
@@ -338,6 +339,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           if (unit && prod->rally_set) {
             unit->move_to(prod->rally_x, prod->rally_z);
           }
+          if (unit) {
+            Engine::Core::EventManager::instance().publish(
+                Engine::Core::AudioCueEvent("build.unit_ready"));
+          }
         }
 
         prod->produced_count += capacity_increment;
@@ -401,6 +406,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           builder_prod->bypass_movement_active = false;
+          Engine::Core::EventManager::instance().publish(
+              Engine::Core::AudioCueEvent("build.construction_started"));
 
           transform->position.x = builder_prod->construction_site_x;
           transform->position.z = builder_prod->construction_site_z;
@@ -586,6 +593,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
       builder_prod->construction_complete = true;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent("build.construction_complete"));
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->construction_site_entity_id = 0;

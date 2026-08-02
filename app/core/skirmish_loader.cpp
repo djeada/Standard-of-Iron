@@ -260,8 +260,10 @@ auto SkirmishLoader::start(const QString& map_path,
   }
 
   if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
-    result.error_message = "Invalid team configuration: At least two teams must "
-                           "be selected to start a match.";
+    result.error_message =
+        QCoreApplication::translate("SkirmishLoader",
+                                    "Invalid team configuration: At least two teams "
+                                    "must be selected to start a match.");
     m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     qWarning() << "SkirmishLoader: " << result.error_message;

@@ -75,6 +75,7 @@
 #include "commander_status_builder.h"
 #include "core/system.h"
 #include "frame_ui_coordinator.h"
+#include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
@@ -190,13 +191,13 @@ auto marketplace_trade_resource_from_key(QStringView key)
 
 auto marketplace_trade_resource_label(QStringView key) -> QString {
   if (key == QLatin1String("wood")) {
-    return QStringLiteral("wood");
+    return QCoreApplication::translate("GameEngine", "wood");
   }
   if (key == QLatin1String("stone")) {
-    return QStringLiteral("stone");
+    return QCoreApplication::translate("GameEngine", "stone");
   }
   if (key == QLatin1String("iron")) {
-    return QStringLiteral("iron");
+    return QCoreApplication::translate("GameEngine", "iron");
   }
   return key.toString();
 }
@@ -366,6 +367,7 @@ GameEngine::GameEngine(QObject* parent)
   if (AudioSystem::get_instance().initialize()) {
     qInfo() << "AudioSystem initialized successfully";
     AudioResourceLoader::load_audio_resources();
+    AudioResourceLoader::load_audio_cues();
   } else {
     qWarning() << "Failed to initialize AudioSystem";
   }
@@ -410,6 +412,7 @@ GameEngine::GameEngine(QObject* parent)
           &ProductionManager::construction_placement_rejected,
           this,
           [this](const QString& reason) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_rejected);
             if (!reason.isEmpty()) {
               set_error(reason);
             }
@@ -465,6 +468,7 @@ GameEngine::GameEngine(QObject* parent)
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::attack_target_selected,
           [this]() {
+            Game::Audio::play_cue(Game::Audio::Cue::k_order_attack);
             if (auto* sel_sys = m_world->get_system<Game::Systems::SelectionSystem>()) {
               const auto& sel = sel_sys->get_selected_units();
               if (!sel.empty()) {
@@ -490,40 +494,57 @@ GameEngine::GameEngine(QObject* parent)
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::troop_limit_reached,
           [this]() {
-            AudioSystem::get_instance().play_sound(
-                "population_limit_horn", 0.9F, false, 8, AudioCategory::SFX);
-            set_error("Maximum troop limit reached. Cannot produce more units.");
+            Game::Audio::play_cue(Game::Audio::Cue::k_alert_population_limit);
+            set_error(tr("Maximum troop limit reached. Cannot produce more units."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_manpower,
           [this]() {
-            AudioSystem::get_instance().play_sound(
-                "low_resources_click", 0.85F, false, 7, AudioCategory::SFX);
-            set_error("Not enough manpower. Build homes or wait for families.");
+            Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
+            set_error(tr("Not enough manpower. Build homes or wait for families."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_resources,
           [this](const QString& message) {
-            AudioSystem::get_instance().play_sound(
-                "low_resources_click", 0.85F, false, 7, AudioCategory::SFX);
+            Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
             set_error(message);
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::hold_mode_changed,
           this,
-          &GameEngine::hold_mode_changed);
+          [this](bool active) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_order_hold);
+            emit hold_mode_changed(active);
+          });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::gate_mode_changed,
           this,
-          &GameEngine::gate_mode_changed);
+          [this](const QString& mode) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_order_gate_mode);
+            emit gate_mode_changed(mode);
+          });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::guard_mode_changed,
           this,
-          &GameEngine::guard_mode_changed);
+          [this](bool active) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_order_guard);
+            emit guard_mode_changed(active);
+          });
+  connect(m_command_controller.get(),
+          &App::Controllers::CommandController::run_mode_changed,
+          this,
+          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_run); });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::formation_mode_changed,
           this,
-          &GameEngine::formation_mode_changed);
+          [this](bool active) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_order_formation);
+            emit formation_mode_changed(active);
+          });
+  connect(m_command_controller.get(),
+          &App::Controllers::CommandController::formation_placement_ended,
+          this,
+          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_formation_placed); });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::formation_placement_started,
           m_placement_view_model.get(),
@@ -2353,25 +2374,25 @@ bool GameEngine::marketplace_buy_resource(const QString& resource_key) {
 
   QVariantMap const market_state = get_selected_marketplace_state();
   if (!market_state.value("has_marketplace").toBool()) {
-    set_error(QStringLiteral("Select your marketplace to trade."));
+    set_error(tr("Select your marketplace to trade."));
     return false;
   }
 
   auto const resource_type = marketplace_trade_resource_from_key(resource_key);
   if (!resource_type.has_value()) {
-    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    set_error(tr("Marketplace can trade only wood, stone, or iron."));
     return false;
   }
 
   auto& marketplace = Game::Systems::MarketplaceSystem::instance();
   if (!marketplace.can_buy(m_runtime.local_owner_id, *resource_type)) {
-    set_error(QStringLiteral("Not enough gold to buy %1.")
+    set_error(tr("Not enough gold to buy %1.")
                   .arg(marketplace_trade_resource_label(resource_key)));
     return false;
   }
 
   if (!marketplace.buy_resource(m_runtime.local_owner_id, *resource_type)) {
-    set_error(QStringLiteral("Cannot buy %1 right now.")
+    set_error(tr("Cannot buy %1 right now.")
                   .arg(marketplace_trade_resource_label(resource_key)));
     return false;
   }
@@ -2386,25 +2407,25 @@ bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
 
   QVariantMap const market_state = get_selected_marketplace_state();
   if (!market_state.value("has_marketplace").toBool()) {
-    set_error(QStringLiteral("Select your marketplace to trade."));
+    set_error(tr("Select your marketplace to trade."));
     return false;
   }
 
   auto const resource_type = marketplace_trade_resource_from_key(resource_key);
   if (!resource_type.has_value()) {
-    set_error(QStringLiteral("Marketplace can trade only wood, stone, or iron."));
+    set_error(tr("Marketplace can trade only wood, stone, or iron."));
     return false;
   }
 
   auto& marketplace = Game::Systems::MarketplaceSystem::instance();
   if (!marketplace.can_sell(m_runtime.local_owner_id, *resource_type)) {
-    set_error(QStringLiteral("Not enough %1 to sell.")
+    set_error(tr("Not enough %1 to sell.")
                   .arg(marketplace_trade_resource_label(resource_key)));
     return false;
   }
 
   if (!marketplace.sell_resource(m_runtime.local_owner_id, *resource_type)) {
-    set_error(QStringLiteral("Cannot sell %1 right now.")
+    set_error(tr("Cannot sell %1 right now.")
                   .arg(marketplace_trade_resource_label(resource_key)));
     return false;
   }
@@ -2625,7 +2646,7 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   clear_error();
 
   if (!m_campaign_manager) {
-    set_error("Campaign manager not initialized");
+    set_error(tr("Campaign manager not initialized"));
     return;
   }
 
@@ -2634,7 +2655,7 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   m_campaign_manager->start_campaign_mission(mission_path, m_selected_player_id);
 
   if (!m_campaign_manager->current_mission_definition().has_value()) {
-    set_error("Failed to load mission");
+    set_error(tr("Failed to load mission"));
     return;
   }
 
@@ -2646,14 +2667,14 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
 void GameEngine::start_mission_file(const QString& file_path) {
   clear_error();
   if (!m_campaign_manager) {
-    set_error("Campaign manager not initialized");
+    set_error(tr("Campaign manager not initialized"));
     return;
   }
 
   QString error;
   if (!m_campaign_manager->start_mission_file(
           file_path, m_selected_player_id, &error)) {
-    set_error(QStringLiteral("Failed to load mission preview: %1").arg(error));
+    set_error(tr("Failed to load mission preview: %1").arg(error));
     return;
   }
 
@@ -2740,7 +2761,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
-    set_error("Cannot start skirmish: renderer not initialized");
+    set_error(tr("Cannot start skirmish: renderer not initialized"));
     return;
   }
 
@@ -2757,7 +2778,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   QTimer::singleShot(50, this, [this, map_path, player_configs]() {
     if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
-      set_error("Cannot start skirmish: renderer not initialized");
+      set_error(tr("Cannot start skirmish: renderer not initialized"));
       m_runtime.loading = false;
       emit is_loading_changed();
       return;
@@ -2915,6 +2936,9 @@ void GameEngine::configure_mission_victory_conditions() {
   m_victory_service->set_victory_callback([this](const QString& state) {
     if (m_runtime.victory_state != state) {
       m_audio_coordinator->ensure_result_audio_ready(state, m_runtime.local_owner_id);
+      if (state == "defeat") {
+        Game::Audio::play_cue(Game::Audio::Cue::k_alert_objective_failed);
+      }
       m_runtime.victory_state = state;
       emit victory_state_changed();
 
@@ -3200,7 +3224,7 @@ void GameEngine::cancel_active_save() {
 
 void GameEngine::load_game_from_slot(const QString& slot_name) {
   if ((m_save_load_service == nullptr) || !m_world) {
-    set_error("Load: not initialized");
+    set_error(tr("Load: not initialized"));
     return;
   }
 

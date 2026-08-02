@@ -123,13 +123,27 @@ void MusicPlayer::register_track(const std::string& track_id,
   }
   m_tracks[track_id] = fi.absoluteFilePath();
 
+  if (m_backend != nullptr &&
+      !m_backend->predecode(QString::fromStdString(track_id), fi.absoluteFilePath())) {
+    qWarning() << "MusicPlayer: predecode failed for" << fi.absoluteFilePath();
+    m_tracks.erase(track_id);
+  }
+}
+
+void MusicPlayer::unregister_track(const std::string& track_id) {
+  if ((QCoreApplication::instance() != nullptr) &&
+      QThread::currentThread() != QCoreApplication::instance()->thread()) {
+    QMetaObject::invokeMethod(
+        this, [this, track_id]() { unregister_track(track_id); }, Qt::QueuedConnection);
+    return;
+  }
+  ensure_on_gui_thread("MusicPlayer::unregister_track");
+
+  if (m_tracks.erase(track_id) == 0) {
+    return;
+  }
   if (m_backend != nullptr) {
-    if (!m_backend->predecode(QString::fromStdString(track_id),
-                              fi.absoluteFilePath())) {
-      qWarning() << "MusicPlayer: predecode failed for" << fi.absoluteFilePath();
-    } else {
-      qDebug() << "MusicPlayer: predecoded" << fi.absoluteFilePath();
-    }
+    m_backend->unload(QString::fromStdString(track_id));
   }
 }
 

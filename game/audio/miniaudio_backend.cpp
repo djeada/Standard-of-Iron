@@ -396,10 +396,13 @@ auto MiniaudioBackend::initialize(int device_rate, int, int music_channels) -> b
 }
 
 void MiniaudioBackend::shutdown() {
-  QMutexLocker const locker(&m_mutex);
+
   stop_device();
+
+  QMutexLocker const locker(&m_mutex);
   m_tracks.clear();
   m_channels.clear();
+  m_sound_effects.clear();
 }
 
 void MiniaudioBackend::stop_device() {
@@ -474,26 +477,41 @@ auto MiniaudioBackend::predecode(const QString& id, const QString& path) -> bool
   return true;
 }
 
+void MiniaudioBackend::unload(const QString& id) {
+  QMutexLocker const locker(&m_mutex);
+
+  auto it = m_tracks.find(id);
+  if (it == m_tracks.end()) {
+    return;
+  }
+
+  const DecodedTrack* const track = &it.value();
+  for (auto& ch : m_channels) {
+    if (ch.track == track) {
+      ch = Channel{};
+    }
+  }
+  for (auto& sfx : m_sound_effects) {
+    if (sfx.track == track) {
+      sfx = SoundEffect{};
+    }
+  }
+  m_tracks.erase(it);
+}
+
 void MiniaudioBackend::play(
     int channel, const QString& id, float volume, bool loop, int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
 
-  QMutexLocker locker(&m_mutex);
+  QMutexLocker const locker(&m_mutex);
   if (channel < 0 || channel >= m_channels.size()) {
     return;
   }
   auto it = m_tracks.find(id);
   if (it == m_tracks.end()) {
-    locker.unlock();
-
-    predecode(id, id);
-    locker.relock();
-    it = m_tracks.find(id);
-    if (it == m_tracks.end()) {
-      qWarning() << "MiniaudioBackend: unknown track" << id;
-      return;
-    }
+    qWarning() << "MiniaudioBackend: track not predecoded:" << id;
+    return;
   }
 
   auto& ch = m_channels[channel];
@@ -774,10 +792,10 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
   }
 
   for (unsigned i = 0; i < samples; ++i) {
-    if (output[i] > MAX_VOLUME) {
-      output[i] = MAX_VOLUME;
-    } else if (output[i] < -MAX_VOLUME) {
-      output[i] = -MAX_VOLUME;
+    if (output[i] > MAX_OUTPUT_SAMPLE) {
+      output[i] = MAX_OUTPUT_SAMPLE;
+    } else if (output[i] < -MAX_OUTPUT_SAMPLE) {
+      output[i] = -MAX_OUTPUT_SAMPLE;
     }
   }
 }

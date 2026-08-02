@@ -117,7 +117,7 @@ Item {
                     Text {
                         id: staggerLabel
                         anchors.centerIn: parent
-                        text: root.target_guard_broken ? "BROKEN" : "STAGGERED"
+                        text: root.target_guard_broken ? qsTr("BROKEN") : qsTr("STAGGERED")
                         color: "#ffffff"
                         font.pixelSize: 9
                         font.bold: true

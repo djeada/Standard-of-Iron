@@ -66,13 +66,6 @@ TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
   }
 }
 
-// A creature's randomised identity must be a function of the unit, not of where
-// that unit's components happen to live. The renderer walks double-buffered
-// world snapshots, so one unit has two addresses and alternates between them
-// frame by frame: a pointer-derived seed regenerates the creature as a
-// different individual every frame, and its gait phase offset, stride jitter
-// and proportions flicker at frame rate. On a galloping horse that reads as
-// impossibly fast leg motion.
 TEST(SceneWalkEntityHandleTest, CreatureSeedsDeriveFromTheUnitNotItsAddress) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
@@ -82,8 +75,7 @@ TEST(SceneWalkEntityHandleTest, CreatureSeedsDeriveFromTheUnitNotItsAddress) {
                                "render/equipment/weapons/quiver_renderer.cpp"}) {
     const auto source = read_text(root / relative);
     ASSERT_FALSE(source.empty()) << relative;
-    EXPECT_EQ(source.find("reinterpret_cast<uintptr_t>(ctx.entity)"),
-              std::string::npos)
+    EXPECT_EQ(source.find("reinterpret_cast<uintptr_t>(ctx.entity)"), std::string::npos)
         << relative << " seeds a creature from its entity address";
     EXPECT_EQ(source.find("reinterpret_cast<std::uintptr_t>(ctx.entity)"),
               std::string::npos)
@@ -96,8 +88,7 @@ TEST(SceneWalkEntityHandleTest, StableEntitySeedIsAFunctionOfTheHandleAlone) {
             Render::Creature::stable_entity_seed(42U));
   EXPECT_NE(Render::Creature::stable_entity_seed(42U),
             Render::Creature::stable_entity_seed(43U));
-  // Recycled handles differ only in their generation word; they must still land
-  // on different individuals.
+
   EXPECT_NE(Render::Creature::stable_entity_seed(1U),
             Render::Creature::stable_entity_seed((1ULL << 32U) | 1ULL));
 }

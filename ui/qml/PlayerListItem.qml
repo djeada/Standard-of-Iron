@@ -50,7 +50,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: player_data.colorName || "Color"
+                text: player_data.colorName || qsTr("Color")
                 color: "white"
                 font.pixelSize: 11
                 font.bold: true
@@ -77,7 +77,7 @@ Rectangle {
 
             ToolTip {
                 visible: colorMouseArea.containsMouse
-                text: "Click to change color"
+                text: qsTr("Click to change color")
                 delay: 500
             }
         }
@@ -132,7 +132,7 @@ Rectangle {
 
             ToolTip {
                 visible: teamMouseArea.containsMouse
-                text: "Click to change team"
+                text: qsTr("Click to change team")
                 delay: 500
             }
         }
@@ -205,7 +205,7 @@ Rectangle {
 
             ToolTip {
                 visible: removeMouseArea.containsMouse
-                text: "Remove player"
+                text: qsTr("Remove player")
                 delay: 300
             }
 

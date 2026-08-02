@@ -10,6 +10,7 @@
 #include "../models/cursor_mode.h"
 #include "../models/hover_tracker.h"
 #include "../utils/movement_utils.h"
+#include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/picking_service.h"
@@ -91,6 +92,7 @@ void InputCommandHandler::on_right_click(qreal sx,
                                            viewport.width,
                                            viewport.height,
                                            local_owner_id);
+  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
   if (m_command_controller != nullptr) {
     m_command_controller->disable_run_mode_for_selected();
   }
@@ -113,6 +115,7 @@ void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
   }
 
   App::Utils::submit_ground_move(*m_world, selected, world_target, local_owner_id);
+  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx,
@@ -164,6 +167,7 @@ void InputCommandHandler::on_right_double_click(qreal sx,
                                            viewport.width,
                                            viewport.height,
                                            local_owner_id);
+  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
   if (m_command_controller != nullptr) {
     m_command_controller->enable_run_mode_for_selected();
   }

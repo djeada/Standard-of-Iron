@@ -28,6 +28,7 @@
 #include "../../game/systems/troop_profile_service.h"
 #include "../core/rts_action_model.h"
 #include "../utils/movement_utils.h"
+#include "game/audio/audio_cues.h"
 #include "game/game_config.h"
 #include "scene/camera.h"
 #include "units/spawn_type.h"
@@ -143,6 +144,7 @@ auto CommandController::on_stop_command() -> CommandResult {
   }
 
   submit(m_world, Game::Command::Stop{.units = {selected.begin(), selected.end()}});
+  Game::Audio::play_cue(Game::Audio::Cue::k_order_stop);
 
   if (had_hold_mode) {
     emit hold_mode_changed(false);
@@ -322,6 +324,7 @@ auto CommandController::on_patrol_click(qreal sx,
          Game::Command::Patrol{.units = {patrol_units.begin(), patrol_units.end()},
                                .first_waypoint = m_patrol_first_waypoint,
                                .second_waypoint = second_waypoint});
+  Game::Audio::play_cue(Game::Audio::Cue::k_order_patrol);
 
   clear_patrol_first_waypoint();
   result.input_consumed = true;
@@ -356,6 +359,7 @@ auto CommandController::set_rally_at_screen(qreal sx,
         Game::Command::Source::LocalPlayer,
         local_owner_id,
         Game::Command::SetRallyPoint{.building = barracks, .position = hit});
+    Game::Audio::play_cue(Game::Audio::Cue::k_order_rally_set);
   }
 
   result.input_consumed = true;
@@ -387,7 +391,7 @@ void CommandController::recruit_near_selected(const QString& unit_type,
     emit insufficient_manpower();
   } else if (result == Game::Systems::ProductionResult::InsufficientResources) {
     emit insufficient_resources(
-        QStringLiteral("Not enough wood, stone, or iron to recruit this unit."));
+        tr("Not enough wood, stone, or iron to recruit this unit."));
   }
 }
 
@@ -1044,6 +1048,7 @@ void CommandController::enable_run_mode_for_selected() {
          Game::Command::SetRunMode{.units = {selected.begin(), selected.end()},
                                    .active = true});
 
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_charge);
   emit run_mode_changed(true);
 }
 
