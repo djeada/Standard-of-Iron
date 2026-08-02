@@ -64,9 +64,14 @@ struct UnitLayoutStyle {
   float facing_jitter_degrees{0.0F};
 
   float wedge_slope{0.0F};
+  float wedge_growth{2.0F};
   float cluster_pull{0.0F};
   float cluster_size{4.0F};
   float radius_scale{2.8F};
+
+  float file_grouping{0.0F};
+  float group_gap{0.0F};
+  float group_depth_stagger{0.0F};
 
   float weapon_clearance{0.0F};
   float min_separation_scale{0.55F};
@@ -94,10 +99,21 @@ struct UnitLayoutQuery {
   int col{0};
   int rows{1};
   int cols{1};
+  int count{0};
   float spacing{1.0F};
   std::uint32_t seed{0U};
   float formed_ratio{1.0F};
 };
+
+struct RankSlot {
+  int row{0};
+  int col{0};
+  int rows{1};
+  int cols{1};
+  int rank_cols{1};
+};
+
+[[nodiscard]] auto rank_slot_for(int index, int count, int max_per_row) -> RankSlot;
 
 class UnitLayoutLibrary {
 public:

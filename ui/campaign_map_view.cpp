@@ -14,6 +14,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QTextStream>
 #include <QVariantMap>
 #include <QVector2D>
 #include <QVector3D>
@@ -28,10 +29,23 @@
 #include <vector>
 
 #include "../game/util/asset_text.h"
+#include "../render/gl/shader.h"
 #include "../utils/resource_utils.h"
 #include "campaign_map_render_utils.h"
 
 namespace {
+
+auto load_shader_source(const QString& resource_path, QString* out_source) -> bool {
+  const QString resolved = Utils::Resources::resolve_resource_path(resource_path);
+  QFile file(resolved);
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    qWarning() << "CampaignMapRenderer: Failed to open shader" << resolved;
+    return false;
+  }
+  QTextStream stream(&file);
+  *out_source = Render::GL::Shader::preprocess_source(stream.readAll());
+  return true;
+}
 
 auto build_mvp_matrix(float width,
                       float height,
@@ -589,19 +603,26 @@ void main() {
   }
 
   void init_terrain_shader() {
-    const QString vert_path = Utils::Resources::resolve_resource_path(
-        QStringLiteral(":/assets/shaders/campaign_terrain.vert"));
-    const QString frag_path = Utils::Resources::resolve_resource_path(
-        QStringLiteral(":/assets/shaders/campaign_terrain.frag"));
+    const QString vert_path = QStringLiteral(":/assets/shaders/campaign_terrain.vert");
+    const QString frag_path = QStringLiteral(":/assets/shaders/campaign_terrain.frag");
 
-    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Vertex, vert_path)) {
+    QString vert_source;
+    QString frag_source;
+    if (!load_shader_source(vert_path, &vert_source) ||
+        !load_shader_source(frag_path, &frag_source)) {
+      m_terrain_program.removeAllShaders();
+      return;
+    }
+
+    if (!m_terrain_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
+                                                   vert_source)) {
       qWarning() << "CampaignMapRenderer: Failed to compile terrain vertex"
                  << vert_path;
       m_terrain_program.removeAllShaders();
       return;
     }
-    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                                   frag_path)) {
+    if (!m_terrain_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                                   frag_source)) {
       qWarning() << "CampaignMapRenderer: Failed to compile terrain fragment"
                  << frag_path;
       m_terrain_program.removeAllShaders();
