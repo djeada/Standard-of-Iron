@@ -414,6 +414,34 @@ TEST(ShaderSource, TerrainGroundErodesAlongTheFallLine) {
   EXPECT_NE(flat.find("ndl * direct_occlusion * 0.76"), std::string::npos);
 }
 
+TEST(ShaderSource, NoCallerCompilesAShaderFileWithoutResolvingIncludes) {
+  const auto root = find_repo_root();
+  std::vector<std::string> offenders;
+
+  for (const auto* subdir : {"app", "game", "render", "tools", "ui", "utils"}) {
+    const auto directory = root / subdir;
+    if (!std::filesystem::exists(directory)) {
+      continue;
+    }
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(directory)) {
+      if (!entry.is_regular_file()) {
+        continue;
+      }
+      const auto extension = entry.path().extension().string();
+      if (extension != ".cpp" && extension != ".h") {
+        continue;
+      }
+      if (read_text(entry.path()).find("addShaderFromSourceFile") !=
+          std::string::npos) {
+        offenders.push_back(
+            std::filesystem::relative(entry.path(), root).generic_string());
+      }
+    }
+  }
+
+  ASSERT_TRUE(offenders.empty()) << offenders.front();
+}
+
 TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "road.frag");
