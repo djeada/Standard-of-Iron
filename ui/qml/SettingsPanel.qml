@@ -81,8 +81,8 @@ Item {
     Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.6, 700)
-        height: Math.min(parent.height * 0.8, 600)
+        width: Math.min(parent.width * 0.9, Design.A11y.scaled(700))
+        height: Math.min(parent.height * 0.9, Design.A11y.scaled(600))
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         color: Theme.panelBase
@@ -383,6 +383,83 @@ Item {
                         spacing: Theme.spacingMedium
 
                         Label {
+                            text: qsTr("Controls")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Edge scrolling")
+                                description: qsTr("Pans the camera when the cursor reaches the edge of the screen")
+                                checked: UiPreferences.edgeScrollEnabled
+                                onToggled: UiPreferences.edgeScrollEnabled = checked
+                            }
+
+                            Label {
+                                text: qsTr("Edge scroll speed:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                                enabled: UiPreferences.edgeScrollEnabled
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+                                enabled: UiPreferences.edgeScrollEnabled
+
+                                Design.IronSlider {
+                                    id: edge_scroll_slider
+
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minEdgeScrollSensitivity
+                                    to: UiPreferences.maxEdgeScrollSensitivity
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.edgeScrollSensitivity
+                                    onMoved: UiPreferences.edgeScrollSensitivity = value
+                                }
+
+                                Label {
+                                    text: Math.round(edge_scroll_slider.value * 100) + "%"
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 56
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+                        }
+
+                        ControlsBindingList {
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
                             text: qsTr("Autosave")
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeLarge
@@ -586,6 +663,95 @@ Item {
                                 description: qsTr("Keeps the focus outline visible even after clicking")
                                 checked: UiPreferences.alwaysShowFocus
                                 onToggled: UiPreferences.alwaysShowFocus = checked
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Team ring patterns")
+                                description: UiPreferences.colorVisionMode !== "none" ? qsTr("On automatically while a colour vision mode is selected") : qsTr("Marks each side with its own selection ring shape as well as its colour")
+                                checked: UiPreferences.effectiveTeamPatterns
+                                enabled: UiPreferences.colorVisionMode === "none"
+                                onToggled: UiPreferences.teamPatterns = checked
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Damage numbers")
+                                description: qsTr("Shows the damage dealt above each hit while leading the commander")
+                                checked: UiPreferences.damageNumbers
+                                onToggled: UiPreferences.damageNumbers = checked
+                            }
+
+                            Label {
+                                text: qsTr("Screen effects:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: screen_effect_slider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 1
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.screenEffectIntensity
+                                    onMoved: UiPreferences.screenEffectIntensity = value
+                                }
+
+                                Label {
+                                    text: screen_effect_slider.value <= 0 ? qsTr("Off") : Math.round(screen_effect_slider.value * 100) + "%"
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 56
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Camera motion:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: camera_motion_slider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 1
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.cameraMotionScale
+                                    onMoved: UiPreferences.cameraMotionScale = value
+                                }
+
+                                Label {
+                                    text: camera_motion_slider.value <= 0 ? qsTr("Off") : Math.round(camera_motion_slider.value * 100) + "%"
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.preferredWidth: 56
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                opacity: 0.7
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
                             }
 
                             Label {

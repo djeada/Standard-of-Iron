@@ -259,6 +259,13 @@ Rendering is organized into sequential passes for clearer profiling and targeted
 
 ## Controls
 
+Every command below is rebindable, and the defaults are what the tables show.
+Settings → Controls lists the full catalog and refuses a chord another command
+already holds without telling you what it would break first. Accessibility
+options — interface scale, colour-vision-safe team palettes, selection-ring
+patterns, edge-scroll and camera-motion controls — are described in
+[docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+
 ### Camera
 
 | Input                | Action                                              |
@@ -299,11 +306,13 @@ Rendering is organized into sequential passes for clearer profiling and targeted
 
 ### Game Controls
 
-| Input        | Action                                           |
-| ------------ | ------------------------------------------------ |
-| Space        | Pause or resume the game                         |
-| ESC          | Cancel the current command mode or open the menu |
-| Speed slider | Adjust simulation speed from 0.5× to 2×          |
+| Input        | Action                                                       |
+| ------------ | ------------------------------------------------------------ |
+| Space        | Pause or resume the game                                     |
+| ESC          | Cancel the current command mode or open the menu             |
+| Enter        | Switch between commanding the army and leading the commander |
+| F5 / F9      | Quick save and quick load                                    |
+| Speed slider | Adjust simulation speed from 0.5× to 2×                      |
 
 ## Data Configuration
 

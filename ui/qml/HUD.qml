@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: hud
@@ -198,7 +199,8 @@ Item {
         id: rpgDamageNumbers
         anchors.fill: parent
         engine: typeof game !== 'undefined' ? game : null
-        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
+
+        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && Design.A11y.damageNumbers
     }
 
     HUDVictory {

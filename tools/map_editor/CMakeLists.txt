@@ -36,8 +36,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
         mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
-        ../../ui/theme.cpp
-        ../../ui/preferences.cpp
         ../../ui/widget_shell.cpp
     )
 else()
@@ -55,8 +53,6 @@ else()
         mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
-        ../../ui/theme.cpp
-        ../../ui/preferences.cpp
         ../../ui/widget_shell.cpp
     )
 endif()
@@ -64,6 +60,7 @@ endif()
 target_link_libraries(
     map_editor
     PRIVATE
+        ui_shell
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Qml

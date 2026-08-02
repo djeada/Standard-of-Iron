@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../accessibility/team_identity.h"
+
 namespace Game::Systems {
 
 enum class OwnerType {
@@ -26,6 +28,8 @@ struct OwnerInfo {
   std::string name;
   int team_id = 0;
   std::array<float, 3> color = Defaults::k_default_owner_color;
+
+  bool color_is_default = true;
 };
 
 class OwnerRegistry {
@@ -73,6 +77,8 @@ public:
 
   void set_owner_color(int owner_id, float r, float g, float b);
   auto get_owner_color(int owner_id) const -> std::array<float, 3>;
+
+  auto get_owner_pattern(int owner_id) const -> Game::Accessibility::TeamPattern;
 
   auto to_json() const -> QJsonObject;
   void from_json(const QJsonObject& json);

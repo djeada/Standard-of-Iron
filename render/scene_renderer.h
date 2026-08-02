@@ -270,6 +270,12 @@ public:
                       float alpha_outer,
                       const QVector3D& color) override;
 
+  void selection_ring_styled(const QMatrix4x4& model,
+                             float alpha_inner,
+                             float alpha_outer,
+                             const QVector3D& color,
+                             Game::Accessibility::TeamPattern pattern) override;
+
   void grid(const QMatrix4x4& model,
             const QVector3D& color,
             float cell_size,

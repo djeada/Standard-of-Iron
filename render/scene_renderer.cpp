@@ -581,11 +581,21 @@ void Renderer::selection_ring(const QMatrix4x4& model,
                               float alpha_inner,
                               float alpha_outer,
                               const QVector3D& color) {
+  selection_ring_styled(
+      model, alpha_inner, alpha_outer, color, Game::Accessibility::TeamPattern::Solid);
+}
+
+void Renderer::selection_ring_styled(const QMatrix4x4& model,
+                                     float alpha_inner,
+                                     float alpha_outer,
+                                     const QVector3D& color,
+                                     Game::Accessibility::TeamPattern pattern) {
   SelectionRingCmd cmd;
   cmd.model = model;
   cmd.alpha_inner = alpha_inner;
   cmd.alpha_outer = alpha_outer;
   cmd.color = color;
+  cmd.pattern = pattern;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }

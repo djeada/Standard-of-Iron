@@ -112,9 +112,12 @@ TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
 
   EXPECT_TRUE(contains(source, "Keys.onPressed: function(event)") ||
               contains(source, "Keys.onPressed: function (event)"));
-  EXPECT_TRUE(contains(source, "function handle_commander_key_pressed(event)"));
+  EXPECT_TRUE(contains(source, "function perform_commander_action(actionId, event)"));
   EXPECT_TRUE(contains(source, "function is_commander_mode()"));
-  EXPECT_TRUE(contains(source, "game.commander_key_down(event.key, event.modifiers)"));
+  EXPECT_TRUE(contains(source, "function input_context()"));
+
+  EXPECT_TRUE(contains(source, "game.commander_key_down(canonical, event.modifiers)"));
+  EXPECT_TRUE(contains(source, "InputBindings.canonical_key_for(actionId)"));
   EXPECT_TRUE(contains(source, "game.toggle_commander_control_mode()"));
   EXPECT_TRUE(contains(source, "function onControl_mode_changed()"));
   EXPECT_TRUE(contains(source, "game_view.forceActiveFocus();"));
@@ -189,7 +192,7 @@ TEST(CommanderControlRegressionTest, CommanderRallyKeyIsWiredThroughAdapter) {
   ASSERT_FALSE(adapter_source.empty());
   ASSERT_FALSE(engine_header.empty());
 
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_R:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.rally\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_rally()"));
   EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_rally();"));
   EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_rally();"));
@@ -205,7 +208,7 @@ TEST(CommanderControlRegressionTest, CommanderAuraKeyIsWiredThroughAdapter) {
       read_text(root / "app" / "core" / "commander_input_adapter.cpp");
   const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
 
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_3:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.ability_aura\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_aura()"));
   EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_aura();"));
   EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_aura();"));
@@ -614,9 +617,9 @@ TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {
   ASSERT_FALSE(controller_header.empty());
   ASSERT_FALSE(controller_source.empty());
 
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_Alt:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.jump\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.jump()"));
-  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_Alt:"));
+  EXPECT_TRUE(contains(game_view_source, "case \"commander.jump\":"));
   EXPECT_TRUE(contains(game_view_source, "game.commander_jump()"));
   EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void jump();"));
   EXPECT_TRUE(contains(adapter_source, "m_engine->commander_jump();"));
@@ -650,9 +653,9 @@ TEST(CommanderControlRegressionTest, CommanderCameraToggleIsWiredThroughAdapter)
   ASSERT_FALSE(controller_header.empty());
   ASSERT_FALSE(controller_source.empty());
 
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_C:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.toggle_camera_mode\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.toggle_camera_mode()"));
-  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_C:"));
+  EXPECT_TRUE(contains(game_view_source, "case \"commander.toggle_camera_mode\":"));
   EXPECT_TRUE(contains(game_view_source, "game.commander_toggle_camera_mode()"));
   EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void toggle_camera_mode();"));
   EXPECT_TRUE(contains(adapter_source, "m_engine->commander_toggle_camera_mode();"));
@@ -688,13 +691,13 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
   ASSERT_FALSE(engine_source.empty());
   ASSERT_FALSE(controller_header.empty());
 
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_1:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.ability_vanguard_rush\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.vanguard_rush()"));
-  EXPECT_TRUE(contains(layer_source, "case Qt.Key_2:"));
+  EXPECT_TRUE(contains(layer_source, "case \"commander.ability_second_wind\":"));
   EXPECT_TRUE(contains(layer_source, "root.commanderInput.second_wind()"));
-  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_1:"));
+  EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_vanguard_rush\":"));
   EXPECT_TRUE(contains(game_view_source, "game.commander_vanguard_rush()"));
-  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_2:"));
+  EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_second_wind\":"));
   EXPECT_TRUE(contains(game_view_source, "game.commander_second_wind()"));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"2\""));
