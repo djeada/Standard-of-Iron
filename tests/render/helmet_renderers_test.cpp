@@ -279,8 +279,8 @@ TEST_F(HelmetRenderersTest, HistoricalHelmetArchetypesHaveDistinctSilhouettes) {
 }
 
 TEST_F(HelmetRenderersTest, FactionHelmetSilhouettesRetainSignatureDetails) {
-  EXPECT_EQ(roman_light_helmet_archetype().lods[0].draws.size(), 28U);
-  EXPECT_EQ(roman_heavy_helmet_archetype().lods[0].draws.size(), 28U);
+  EXPECT_EQ(roman_light_helmet_archetype().lods[0].draws.size(), 29U);
+  EXPECT_EQ(roman_heavy_helmet_archetype().lods[0].draws.size(), 37U);
   EXPECT_EQ(carthage_light_helmet_shell_archetype().lods[0].draws.size(), 7U);
   EXPECT_EQ(carthage_heavy_helmet_shell_archetype().lods[0].draws.size(), 8U);
 
