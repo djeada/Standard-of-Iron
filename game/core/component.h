@@ -1108,7 +1108,11 @@ public:
     ForcedClosed
   };
 
-  static constexpr float k_passable_open_amount = 0.75F;
+  static constexpr float k_structure_half_span = 3.0F;
+  static constexpr float k_passage_half_width = 1.9F;
+  static constexpr float k_cross_half_extent = 1.0F;
+
+  static constexpr float k_passable_open_amount = 0.94F;
   static constexpr float k_blocking_open_amount = 0.25F;
 
   GateComponent() = default;
@@ -1117,9 +1121,10 @@ public:
   ManualMode manual_mode{ManualMode::Automatic};
 
   float open_amount{0.0F};
-  float open_speed{1.6F};
-  float trigger_radius{4.0F};
-  float hold_open_seconds{1.25F};
+  float open_speed{2.4F};
+  float close_speed{2.0F};
+  float trigger_radius{5.0F};
+  float hold_open_seconds{2.5F};
   float hold_timer{0.0F};
 
   [[nodiscard]] auto is_passable() const -> bool {
@@ -1128,6 +1133,14 @@ public:
 
   [[nodiscard]] auto blocks_movement() const -> bool {
     return open_amount < k_passable_open_amount;
+  }
+
+  [[nodiscard]] static auto spans_x_axis(float rotation_y) -> bool {
+    float angle = std::fmod(rotation_y, 180.0F);
+    if (angle < 0.0F) {
+      angle += 180.0F;
+    }
+    return angle < 45.0F || angle >= 135.0F;
   }
 };
 
@@ -1557,6 +1570,31 @@ public:
   CivilianDeliveryComponent() = default;
 
   EntityID target_barracks_id{0};
+};
+
+enum class SettlementErrand : std::uint8_t {
+  Settling = 0,
+  WalkingTo = 1,
+  Working = 2,
+};
+
+class SettlementResidentComponent : public Component {
+public:
+  SettlementResidentComponent() = default;
+
+  float hearth_x{0.0F};
+  float hearth_z{0.0F};
+  float roam_radius{16.0F};
+  bool hearth_assigned{false};
+
+  SettlementErrand errand{SettlementErrand::Settling};
+  EntityID focus_id{0};
+  float errand_x{0.0F};
+  float errand_z{0.0F};
+  float errand_remaining{0.0F};
+  float planned_dwell{3.0F};
+  float think_cooldown{0.0F};
+  std::uint32_t rng_state{0U};
 };
 
 class MovementIntentComponent : public Component {

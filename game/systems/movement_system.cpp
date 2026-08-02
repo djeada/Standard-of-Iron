@@ -455,9 +455,11 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     float const dz = builder_prod->bypass_target_z - transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    constexpr float k_bypass_arrival_dist_sq = 0.25F;
+    float const dist = std::sqrt(std::max(dist_sq, 0.0001F));
+    float const bypass_step =
+        std::max(max_navigation_speed(*unit, nullptr) * delta_time, 0.01F);
 
-    if (dist_sq < k_bypass_arrival_dist_sq) {
+    if (dist <= bypass_step) {
 
       transform->position.x = builder_prod->bypass_target_x;
       transform->position.z = builder_prod->bypass_target_z;
@@ -469,7 +471,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       OrderService::clear_player_order_intent(entity);
     } else {
 
-      float const dist = std::sqrt(std::max(dist_sq, 0.0001F));
       float const nx = dx / dist;
       float const nz = dz / dist;
       float const base_speed = max_navigation_speed(*unit, nullptr);

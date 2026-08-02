@@ -123,6 +123,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      "Ignition progress and burn timers for a structure set alight by "
      "incendiary damage."},
     {"CivilianDeliveryComponent", AuthoritativeSerialized, "Delivery assignment."},
+    {"SettlementResidentComponent",
+     AuthoritativeSerialized,
+     "Which settlement a villager belongs to and the errand they are on; "
+     "recomputing it would teleport the town's daily life back to its start."},
     {"BuilderProductionComponent", AuthoritativeSerialized, "Construction queue."},
     {"WallConstructionSiteComponent", AuthoritativeSerialized, "Unbuilt wall segment."},
     {"WallSegmentComponent", AuthoritativeSerialized, "Built wall segment."},

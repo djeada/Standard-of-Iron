@@ -152,6 +152,171 @@ auto nation_group(QString name,
   return result;
 }
 
+auto street(QVector3D start,
+            QVector3D end,
+            float width,
+            const char* style = "default") -> Game::Map::RoadSegment {
+  return Game::Map::RoadSegment{start, end, width, QString::fromLatin1(style)};
+}
+
+auto patch(const char* prop_type,
+           int count,
+           QVector3D origin,
+           QVector3D spacing = {2.5F, 0.0F, 0.0F},
+           float scale = 1.0F) -> ArenaScenarioResourcePatch {
+  return {QString::fromLatin1(prop_type), count, origin, spacing, scale};
+}
+
+auto residents(QString name,
+               Nation nation,
+               int owner,
+               int count,
+               QVector3D origin,
+               QVector3D spacing,
+               float roam_radius) -> ArenaScenarioGroup {
+  auto result = nation_group(
+      std::move(name), Troop::Civilian, nation, owner, count, origin, 1, spacing);
+  result.settlement_resident = true;
+  result.settlement_roam_radius = roam_radius;
+  return result;
+}
+
+struct RampartPlan {
+  float extent_x{18.0F};
+  float extent_z{18.0F};
+  float gate_offset_x{0.0F};
+  float gate_offset_z{0.0F};
+};
+
+void add_rampart(ArenaScenarioDefinition& scenario,
+                 const QString& prefix,
+                 Nation nation,
+                 int owner,
+                 const RampartPlan& plan) {
+  auto const name = [&](const char* suffix) {
+    return prefix + QString::fromLatin1(suffix);
+  };
+  auto const run =
+      [&](const char* suffix, float first, float last, bool along_x, float fixed) {
+        int const count = static_cast<int>((last - first) / 2.0F) + 1;
+        float const center = (first + last) * 0.5F;
+        scenario.groups.push_back(building(
+            name(suffix),
+            Game::Units::SpawnType::WallSegment,
+            nation,
+            owner,
+            count,
+            along_x ? QVector3D(center, 0.0F, fixed) : QVector3D(fixed, 0.0F, center),
+            along_x ? QVector3D(2.0F, 0.0F, 0.0F) : QVector3D(0.0F, 0.0F, 2.0F),
+            along_x ? 0.0F : 90.0F));
+      };
+
+  constexpr float k_gate_clearance = 4.0F;
+
+  for (float const sign : {-1.0F, 1.0F}) {
+    bool const north = sign < 0.0F;
+    run(north ? "_wall_nw" : "_wall_ne",
+        north ? -plan.extent_x + 2.0F : plan.gate_offset_x + k_gate_clearance,
+        north ? plan.gate_offset_x - k_gate_clearance : plan.extent_x - 2.0F,
+        true,
+        -plan.extent_z);
+    run(north ? "_wall_sw" : "_wall_se",
+        north ? -plan.extent_x + 2.0F : plan.gate_offset_x + k_gate_clearance,
+        north ? plan.gate_offset_x - k_gate_clearance : plan.extent_x - 2.0F,
+        true,
+        plan.extent_z);
+    run(north ? "_wall_wn" : "_wall_en",
+        -plan.extent_z + 2.0F,
+        plan.gate_offset_z - k_gate_clearance,
+        false,
+        sign * plan.extent_x);
+    run(north ? "_wall_ws" : "_wall_es",
+        plan.gate_offset_z + k_gate_clearance,
+        plan.extent_z - 2.0F,
+        false,
+        sign * plan.extent_x);
+  }
+
+  scenario.groups.push_back(building(name("_gate_north"),
+                                     Game::Units::SpawnType::WallGate,
+                                     nation,
+                                     owner,
+                                     1,
+                                     {plan.gate_offset_x, 0.0F, -plan.extent_z}));
+  scenario.groups.push_back(building(name("_gate_south"),
+                                     Game::Units::SpawnType::WallGate,
+                                     nation,
+                                     owner,
+                                     1,
+                                     {plan.gate_offset_x, 0.0F, plan.extent_z}));
+  scenario.groups.push_back(building(name("_gate_west"),
+                                     Game::Units::SpawnType::WallGate,
+                                     nation,
+                                     owner,
+                                     1,
+                                     {-plan.extent_x, 0.0F, plan.gate_offset_z},
+                                     {},
+                                     90.0F));
+  scenario.groups.push_back(building(name("_gate_east"),
+                                     Game::Units::SpawnType::WallGate,
+                                     nation,
+                                     owner,
+                                     1,
+                                     {plan.extent_x, 0.0F, plan.gate_offset_z},
+                                     {},
+                                     90.0F));
+
+  struct Corner {
+    const char* suffix;
+    float x;
+    float z;
+  };
+  for (auto const& corner : {Corner{"_tower_nw", -plan.extent_x, -plan.extent_z},
+                             Corner{"_tower_ne", plan.extent_x, -plan.extent_z},
+                             Corner{"_tower_sw", -plan.extent_x, plan.extent_z},
+                             Corner{"_tower_se", plan.extent_x, plan.extent_z}}) {
+    scenario.groups.push_back(building(name(corner.suffix),
+                                       Game::Units::SpawnType::DefenseTower,
+                                       nation,
+                                       owner,
+                                       1,
+                                       {corner.x, 0.0F, corner.z}));
+  }
+}
+
+auto rampart_groups(const QString& prefix) -> std::vector<QString> {
+  std::vector<QString> names;
+  for (auto const* suffix : {"_wall_nw",
+                             "_wall_ne",
+                             "_wall_sw",
+                             "_wall_se",
+                             "_wall_wn",
+                             "_wall_en",
+                             "_wall_ws",
+                             "_wall_es",
+                             "_gate_north",
+                             "_gate_south",
+                             "_gate_west",
+                             "_gate_east",
+                             "_tower_nw",
+                             "_tower_ne",
+                             "_tower_sw",
+                             "_tower_se"}) {
+    names.push_back(prefix + QString::fromLatin1(suffix));
+  }
+  return names;
+}
+
+void require_groups_exist(ArenaScenarioDefinition& scenario,
+                          const std::vector<QString>& groups) {
+  for (auto const& name : groups) {
+    ArenaExpectation exists;
+    exists.kind = Expect::GroupExists;
+    exists.group = name;
+    scenario.expectations.push_back(std::move(exists));
+  }
+}
+
 auto undead_wave(QString trigger, std::vector<Game::Map::UndeadWaveUnitSpawn> units)
     -> Game::Map::UndeadWave {
   Game::Map::UndeadWave wave;
@@ -3502,14 +3667,14 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          Nation::RomanRepublic,
                                          gate_owner,
                                          4,
-                                         {-5.0F, 0.0F, 0.0F},
+                                         {-7.0F, 0.0F, 0.0F},
                                          {2.0F, 0.0F, 0.0F}));
       scenario.groups.push_back(building(QStringLiteral("east_wall"),
                                          Game::Units::SpawnType::WallSegment,
                                          Nation::RomanRepublic,
                                          gate_owner,
                                          4,
-                                         {5.0F, 0.0F, 0.0F},
+                                         {7.0F, 0.0F, 0.0F},
                                          {2.0F, 0.0F, 0.0F}));
     };
 
@@ -4135,119 +4300,150 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto s = definition(
         QString::fromLatin1(k_roman_marching_camp_id),
         QStringLiteral("Roman Marching Camp"),
-        QStringLiteral("Ordered castrum: principia, barracks street, housing and "
-                       "defensive perimeter."),
-        18.0F,
-        {38.0F, 58.0F, 34.0F});
-    s.resource_patches = {
-        {QStringLiteral("tent"), 4, {-7.5F, 0.0F, -3.5F}, {5.0F, 0.0F, 0.0F}, 0.9F},
-        {QStringLiteral("weapon_rack"),
-         2,
-         {-3.0F, 0.0F, 3.5F},
-         {6.0F, 0.0F, 0.0F},
-         1.0F},
-        {QStringLiteral("supply_cart"),
-         2,
-         {-8.5F, 0.0F, 9.5F},
-         {17.0F, 0.0F, 0.0F},
-         0.9F},
-        {QStringLiteral("fire_camp"), 1, {0.0F, 0.0F, 4.0F}, {}, 0.85F},
+        QStringLiteral("A full castrum laid out on its own street grid: the via "
+                       "praetoria runs from the north gate to the principia, the "
+                       "via principalis crosses it between the flanking gates, "
+                       "barrack blocks fill the northern half, officers' houses "
+                       "and contubernia the southern one, and the camp's people "
+                       "keep working the streets between them."),
+        30.0F,
+        {52.0F, 58.0F, 28.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 11.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.roads = {
+        street({0.0F, 0.0F, -18.0F}, {0.0F, 0.0F, -4.0F}, 3.8F, "stone"),
+        street({-18.0F, 0.0F, -4.0F}, {18.0F, 0.0F, -4.0F}, 4.4F, "stone"),
+        street({0.0F, 0.0F, 5.0F}, {0.0F, 0.0F, 18.0F}, 3.8F, "stone"),
+        street({-15.0F, 0.0F, 11.5F}, {15.0F, 0.0F, 11.5F}, 3.0F, "stone"),
+        street({-15.0F, 0.0F, -15.0F}, {15.0F, 0.0F, -15.0F}, 2.4F, "stone"),
+        street({-15.0F, 0.0F, 15.0F}, {15.0F, 0.0F, 15.0F}, 2.4F, "stone"),
+        street({-15.0F, 0.0F, -15.0F}, {-15.0F, 0.0F, 15.0F}, 2.4F, "stone"),
+        street({15.0F, 0.0F, -15.0F}, {15.0F, 0.0F, 15.0F}, 2.4F, "stone"),
     };
+
+    s.resource_patches = {
+        patch("tent", 4, {-14.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 4.0F}, 0.8F),
+        patch("tent", 4, {14.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 4.0F}, 0.8F),
+        patch("weapon_rack", 2, {-3.4F, 0.0F, -13.0F}, {0.0F, 0.0F, 4.0F}, 1.0F),
+        patch("weapon_rack", 2, {3.4F, 0.0F, -13.0F}, {0.0F, 0.0F, 4.0F}, 1.0F),
+        patch("fire_camp", 2, {-4.5F, 0.0F, 4.5F}, {9.0F, 0.0F, 0.0F}, 0.85F),
+        patch("fire_camp", 1, {0.0F, 0.0F, -16.5F}, {}, 0.8F),
+        patch("supply_cart", 3, {-12.0F, 0.0F, 14.5F}, {4.0F, 0.0F, 0.0F}, 0.95F),
+        patch("supply_cart", 2, {9.0F, 0.0F, 14.5F}, {4.0F, 0.0F, 0.0F}, 0.95F),
+        patch("plant", 5, {-16.8F, 0.0F, -6.0F}, {0.0F, 0.0F, 4.0F}, 0.9F),
+        patch("plant", 5, {16.8F, 0.0F, -6.0F}, {0.0F, 0.0F, 4.0F}, 0.9F),
+        patch("olive_tree", 4, {-26.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
+        patch("olive_tree", 4, {26.0F, 0.0F, 4.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
+    };
+
     s.groups = {
-        building(QStringLiteral("roman_principia"),
+        building(QStringLiteral("castrum_principia"),
                  Game::Units::SpawnType::Marketplace,
                  Nation::RomanRepublic,
                  1,
                  1,
-                 {0.0F, 0.0F, 0.0F}),
-        building(QStringLiteral("roman_barracks"),
-                 Game::Units::SpawnType::Barracks,
-                 Nation::RomanRepublic,
-                 1,
-                 2,
-                 {0.0F, 0.0F, -7.0F},
-                 {8.0F, 0.0F, 0.0F}),
-        building(QStringLiteral("roman_houses"),
+                 {0.0F, 0.0F, 1.0F}),
+        building(QStringLiteral("castrum_praetorium"),
                  Game::Units::SpawnType::Home,
                  Nation::RomanRepublic,
                  1,
-                 4,
-                 {0.0F, 0.0F, 7.0F},
-                 {4.8F, 0.0F, 0.0F}),
-        building(QStringLiteral("roman_north_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::RomanRepublic,
                  1,
-                 11,
-                 {0.0F, 0.0F, -12.0F},
-                 {2.0F, 0.0F, 0.0F}),
-        building(QStringLiteral("roman_south_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::RomanRepublic,
-                 1,
-                 11,
-                 {0.0F, 0.0F, 12.0F},
-                 {2.0F, 0.0F, 0.0F}),
-        building(QStringLiteral("roman_west_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::RomanRepublic,
-                 1,
-                 11,
-                 {-12.0F, 0.0F, 0.0F},
-                 {0.0F, 0.0F, 2.0F},
-                 90.0F),
-        building(QStringLiteral("roman_east_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::RomanRepublic,
-                 1,
-                 11,
-                 {12.0F, 0.0F, 0.0F},
-                 {0.0F, 0.0F, 2.0F},
-                 90.0F),
-        building(QStringLiteral("roman_tower_nw"),
-                 Game::Units::SpawnType::DefenseTower,
+                 {7.0F, 0.0F, 0.5F}),
+        building(QStringLiteral("castrum_quaestorium"),
+                 Game::Units::SpawnType::Home,
                  Nation::RomanRepublic,
                  1,
                  1,
-                 {-12.0F, 0.0F, -12.0F}),
-        building(QStringLiteral("roman_tower_ne"),
-                 Game::Units::SpawnType::DefenseTower,
+                 {-7.0F, 0.0F, 0.5F}),
+        building(QStringLiteral("castrum_barracks_west"),
+                 Game::Units::SpawnType::Barracks,
                  Nation::RomanRepublic,
                  1,
                  1,
-                 {12.0F, 0.0F, -12.0F}),
-        building(QStringLiteral("roman_tower_sw"),
-                 Game::Units::SpawnType::DefenseTower,
+                 {-7.5F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("castrum_barracks_east"),
+                 Game::Units::SpawnType::Barracks,
                  Nation::RomanRepublic,
                  1,
                  1,
-                 {-12.0F, 0.0F, 12.0F}),
-        building(QStringLiteral("roman_tower_se"),
-                 Game::Units::SpawnType::DefenseTower,
+                 {7.5F, 0.0F, -10.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("castrum_contubernia_west"),
+                 Game::Units::SpawnType::Home,
                  Nation::RomanRepublic,
                  1,
+                 2,
+                 {-10.0F, 0.0F, 7.0F},
+                 {5.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("castrum_contubernia_east"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
                  1,
-                 {12.0F, 0.0F, 12.0F}),
-        group(QStringLiteral("roman_builders"),
+                 2,
+                 {10.0F, 0.0F, 7.0F},
+                 {5.0F, 0.0F, 0.0F}),
+        residents(QStringLiteral("castrum_street_life"),
+                  Nation::RomanRepublic,
+                  1,
+                  5,
+                  {0.0F, 0.0F, -4.0F},
+                  {4.0F, 0.0F, 0.0F},
+                  16.0F),
+        residents(QStringLiteral("castrum_quintana_crowd"),
+                  Nation::RomanRepublic,
+                  1,
+                  4,
+                  {0.0F, 0.0F, 11.5F},
+                  {5.0F, 0.0F, 0.0F},
+                  13.0F),
+        group(QStringLiteral("castrum_works"),
               Troop::Builder,
               1,
               2,
-              {-3.0F, 0.0F, 3.0F},
-              1),
+              {-11.0F, 0.0F, 2.0F},
+              1,
+              {3.0F, 0.0F, 0.0F}),
+        group(QStringLiteral("castrum_gate_watch"),
+              Troop::Spearman,
+              1,
+              2,
+              {0.0F, 0.0F, -15.5F},
+              4,
+              {5.0F, 0.0F, 0.0F}),
     };
+    add_rampart(s,
+                QStringLiteral("castrum"),
+                Nation::RomanRepublic,
+                1,
+                {.extent_x = 18.0F, .extent_z = 18.0F, .gate_offset_z = -4.0F});
+
+    s.steps = {at(0.2F, Command::Hold, QStringLiteral("castrum_gate_watch"))};
+
     add_settlement_acceptance(s,
-                              {QStringLiteral("roman_principia"),
-                               QStringLiteral("roman_barracks"),
-                               QStringLiteral("roman_houses"),
-                               QStringLiteral("roman_north_wall"),
-                               QStringLiteral("roman_south_wall"),
-                               QStringLiteral("roman_west_wall"),
-                               QStringLiteral("roman_east_wall"),
-                               QStringLiteral("roman_tower_nw"),
-                               QStringLiteral("roman_tower_ne"),
-                               QStringLiteral("roman_tower_sw"),
-                               QStringLiteral("roman_tower_se")});
-    add_visual_stability(s, {QStringLiteral("roman_builders")});
+                              {QStringLiteral("castrum_principia"),
+                               QStringLiteral("castrum_praetorium"),
+                               QStringLiteral("castrum_quaestorium"),
+                               QStringLiteral("castrum_barracks_west"),
+                               QStringLiteral("castrum_barracks_east"),
+                               QStringLiteral("castrum_contubernia_west"),
+                               QStringLiteral("castrum_contubernia_east")});
+    require_groups_exist(s, rampart_groups(QStringLiteral("castrum")));
+    add_visual_stability(s,
+                         {QStringLiteral("castrum_street_life"),
+                          QStringLiteral("castrum_quintana_crowd"),
+                          QStringLiteral("castrum_works")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("castrum_street_life")));
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("castrum_quintana_crowd")));
     result.push_back(std::move(s));
   }
 
@@ -4255,135 +4451,159 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto s = definition(
         QString::fromLatin1(k_carthage_trade_town_id),
         QStringLiteral("Carthaginian Trade Town"),
-        QStringLiteral("Dense Punic courtyard town organized around a market and "
-                       "fortified mercantile quarter."),
-        18.0F,
-        {38.0F, 58.0F, 326.0F});
-    s.resource_patches = {
-        {QStringLiteral("supply_cart"),
-         3,
-         {-7.0F, 0.0F, 2.5F},
-         {7.0F, 0.0F, 0.0F},
-         0.9F},
-        {QStringLiteral("tent"), 3, {-7.0F, 0.0F, -2.5F}, {7.0F, 0.0F, 0.0F}, 0.8F},
-        {QStringLiteral("olive_tree"),
-         4,
-         {-9.0F, 0.0F, 10.5F},
-         {6.0F, 0.0F, 0.0F},
-         0.8F},
+        QStringLiteral("A dense Punic town inside an oblong wall: a bazaar street "
+                       "lined with stalls and carts runs the whole width of the "
+                       "town, courtyard houses crowd the lanes off it, the "
+                       "mercenary quarter holds the eastern end, and the "
+                       "townspeople trade and move between them all day."),
+        30.0F,
+        {56.0F, 58.0F, 322.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 13.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.roads = {
+        street({-20.0F, 0.0F, 0.0F}, {20.0F, 0.0F, 0.0F}, 4.2F, "stone"),
+        street({-6.0F, 0.0F, -14.0F}, {-6.0F, 0.0F, 14.0F}, 3.2F, "stone"),
+        street({9.0F, 0.0F, -14.0F}, {9.0F, 0.0F, 14.0F}, 2.8F, "stone"),
+        street({-18.0F, 0.0F, -10.0F}, {18.0F, 0.0F, -10.0F}, 2.8F, "stone"),
+        street({-18.0F, 0.0F, 9.5F}, {18.0F, 0.0F, 9.5F}, 2.8F, "stone"),
+        street({-18.0F, 0.0F, -12.5F}, {-11.0F, 0.0F, -6.5F}, 2.2F, "stone"),
+        street({12.0F, 0.0F, 4.5F}, {18.0F, 0.0F, 11.5F}, 2.2F, "stone"),
     };
+
+    s.resource_patches = {
+        patch("tent", 4, {-16.0F, 0.0F, -1.6F}, {4.0F, 0.0F, 0.0F}, 0.8F),
+        patch("supply_cart", 4, {2.0F, 0.0F, -1.4F}, {3.2F, 0.0F, 0.0F}, 0.95F),
+        patch("supply_cart", 2, {-2.0F, 0.0F, 1.8F}, {4.0F, 0.0F, 0.0F}, 0.9F),
+        patch("weapon_rack", 2, {12.5F, 0.0F, -12.0F}, {4.0F, 0.0F, 0.0F}, 1.0F),
+        patch("fire_camp", 1, {-12.0F, 0.0F, 12.0F}, {}, 0.85F),
+        patch("fire_camp", 1, {12.0F, 0.0F, 12.0F}, {}, 0.85F),
+        patch("olive_tree", 3, {4.0F, 0.0F, 12.2F}, {5.0F, 0.0F, 0.0F}, 1.0F),
+        patch("plant", 5, {-18.6F, 0.0F, -6.0F}, {0.0F, 0.0F, 3.6F}, 0.9F),
+        patch("plant", 5, {18.6F, 0.0F, -9.0F}, {0.0F, 0.0F, 3.6F}, 0.9F),
+        patch("olive_tree", 5, {-28.0F, 0.0F, -4.0F}, {0.0F, 0.0F, 5.0F}, 1.15F),
+        patch("olive_tree", 5, {28.0F, 0.0F, 2.0F}, {0.0F, 0.0F, 5.0F}, 1.15F),
+    };
+
     s.groups = {
         building(QStringLiteral("punic_market"),
                  Game::Units::SpawnType::Marketplace,
                  Nation::Carthage,
                  2,
                  1,
-                 {0.0F, 0.0F, 0.0F},
+                 {-1.0F, 0.0F, -5.5F},
                  {},
+                 180.0F),
+        building(QStringLiteral("punic_exchange"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {3.0F, 0.0F, 5.5F}),
+        building(QStringLiteral("punic_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {14.5F, 0.0F, -5.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("punic_houses_northwest"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 2,
+                 {-14.5F, 0.0F, -5.5F},
+                 {5.0F, 0.0F, 0.0F},
                  180.0F),
         building(QStringLiteral("punic_houses_north"),
                  Game::Units::SpawnType::Home,
                  Nation::Carthage,
                  2,
-                 5,
-                 {0.0F, 0.0F, -7.0F},
-                 {4.2F, 0.0F, 0.0F},
+                 1,
+                 {3.5F, 0.0F, -5.5F},
+                 {},
                  180.0F),
+        building(QStringLiteral("punic_houses_southwest"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 2,
+                 {-14.5F, 0.0F, 5.5F},
+                 {5.0F, 0.0F, 0.0F}),
         building(QStringLiteral("punic_houses_south"),
                  Game::Units::SpawnType::Home,
                  Nation::Carthage,
                  2,
-                 5,
-                 {0.0F, 0.0F, 7.0F},
-                 {4.2F, 0.0F, 0.0F}),
-        building(QStringLiteral("punic_barracks"),
-                 Game::Units::SpawnType::Barracks,
-                 Nation::Carthage,
-                 2,
-                 2,
-                 {0.0F, 0.0F, 12.0F},
-                 {9.0F, 0.0F, 0.0F},
-                 180.0F),
-        building(QStringLiteral("punic_north_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::Carthage,
-                 2,
-                 11,
-                 {0.0F, 0.0F, -14.0F},
-                 {2.0F, 0.0F, 0.0F},
-                 180.0F),
-        building(QStringLiteral("punic_south_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::Carthage,
-                 2,
-                 11,
-                 {0.0F, 0.0F, 14.0F},
-                 {2.0F, 0.0F, 0.0F}),
-        building(QStringLiteral("punic_west_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::Carthage,
-                 2,
-                 13,
-                 {-12.0F, 0.0F, 0.0F},
-                 {0.0F, 0.0F, 2.0F},
-                 90.0F),
-        building(QStringLiteral("punic_east_wall"),
-                 Game::Units::SpawnType::WallSegment,
-                 Nation::Carthage,
-                 2,
-                 13,
-                 {12.0F, 0.0F, 0.0F},
-                 {0.0F, 0.0F, 2.0F},
-                 90.0F),
-        building(QStringLiteral("punic_tower_nw"),
-                 Game::Units::SpawnType::DefenseTower,
+                 1,
+                 {-2.5F, 0.0F, 5.5F}),
+        building(QStringLiteral("punic_houses_southeast"),
+                 Game::Units::SpawnType::Home,
                  Nation::Carthage,
                  2,
                  1,
-                 {-12.0F, 0.0F, -14.0F},
-                 {},
-                 180.0F),
-        building(QStringLiteral("punic_tower_ne"),
-                 Game::Units::SpawnType::DefenseTower,
-                 Nation::Carthage,
-                 2,
-                 1,
-                 {12.0F, 0.0F, -14.0F},
-                 {},
-                 180.0F),
-        building(QStringLiteral("punic_tower_sw"),
-                 Game::Units::SpawnType::DefenseTower,
-                 Nation::Carthage,
-                 2,
-                 1,
-                 {-12.0F, 0.0F, 14.0F}),
-        building(QStringLiteral("punic_tower_se"),
-                 Game::Units::SpawnType::DefenseTower,
-                 Nation::Carthage,
-                 2,
-                 1,
-                 {12.0F, 0.0F, 14.0F}),
-        group(QStringLiteral("punic_builders"),
-              Troop::Builder,
-              2,
-              2,
-              {3.0F, 0.0F, 3.0F},
-              1),
+                 {14.5F, 0.0F, 5.0F}),
+        residents(QStringLiteral("punic_bazaar_crowd"),
+                  Nation::Carthage,
+                  2,
+                  6,
+                  {0.0F, 0.0F, 0.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  18.0F),
+        residents(QStringLiteral("punic_lane_life"),
+                  Nation::Carthage,
+                  2,
+                  4,
+                  {0.0F, 0.0F, 9.5F},
+                  {5.0F, 0.0F, 0.0F},
+                  15.0F),
+        nation_group(QStringLiteral("punic_works"),
+                     Troop::Builder,
+                     Nation::Carthage,
+                     2,
+                     2,
+                     {-16.0F, 0.0F, 12.0F},
+                     1,
+                     {3.0F, 0.0F, 0.0F}),
+        nation_group(QStringLiteral("punic_gate_watch"),
+                     Troop::Spearman,
+                     Nation::Carthage,
+                     2,
+                     2,
+                     {-6.0F, 0.0F, -12.0F},
+                     4,
+                     {5.0F, 0.0F, 0.0F}),
     };
+    add_rampart(s,
+                QStringLiteral("punic"),
+                Nation::Carthage,
+                2,
+                {.extent_x = 20.0F, .extent_z = 14.0F, .gate_offset_x = -6.0F});
+
+    s.steps = {at(0.2F, Command::Hold, QStringLiteral("punic_gate_watch"))};
+
     add_settlement_acceptance(s,
                               {QStringLiteral("punic_market"),
-                               QStringLiteral("punic_houses_north"),
-                               QStringLiteral("punic_houses_south"),
+                               QStringLiteral("punic_exchange"),
                                QStringLiteral("punic_barracks"),
-                               QStringLiteral("punic_north_wall"),
-                               QStringLiteral("punic_south_wall"),
-                               QStringLiteral("punic_west_wall"),
-                               QStringLiteral("punic_east_wall"),
-                               QStringLiteral("punic_tower_nw"),
-                               QStringLiteral("punic_tower_ne"),
-                               QStringLiteral("punic_tower_sw"),
-                               QStringLiteral("punic_tower_se")});
-    add_visual_stability(s, {QStringLiteral("punic_builders")});
+                               QStringLiteral("punic_houses_northwest"),
+                               QStringLiteral("punic_houses_north"),
+                               QStringLiteral("punic_houses_southwest"),
+                               QStringLiteral("punic_houses_south"),
+                               QStringLiteral("punic_houses_southeast")});
+    require_groups_exist(s, rampart_groups(QStringLiteral("punic")));
+    add_visual_stability(s,
+                         {QStringLiteral("punic_bazaar_crowd"),
+                          QStringLiteral("punic_lane_life"),
+                          QStringLiteral("punic_works")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("punic_bazaar_crowd")));
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("punic_lane_life")));
     result.push_back(std::move(s));
   }
 
@@ -4922,6 +5142,746 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("roman_economy_builders")));
     s.expectations.push_back(expectation(Expect::OwnerHarvestsResource,
                                          QStringLiteral("punic_economy_builders")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_village_harvest_cycle_id),
+        QStringLiteral("Village Harvest Cycle"),
+        QStringLiteral("An open Roman hamlet working its land: the lane runs past "
+                       "the market and the houses, woodcutters and quarriers work "
+                       "the tree line, the boulder field and the ore seam, and the "
+                       "villagers go about the day between them."),
+        80.0F,
+        {50.0F, 58.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 12.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.roads = {
+        street({-26.0F, 0.0F, 0.0F}, {26.0F, 0.0F, 0.0F}, 3.4F, "default"),
+        street({0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 15.0F}, 2.8F, "default"),
+        street({-12.0F, 0.0F, 0.0F}, {-17.0F, 0.0F, -11.0F}, 2.4F, "default"),
+    };
+
+    s.resource_patches = {
+        patch("olive_tree", 6, {-24.0F, 0.0F, -12.0F}, {0.0F, 0.0F, 4.5F}, 1.15F),
+        patch("pine_tree", 4, {-28.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 5.0F}, 1.0F),
+        patch("boulder", 5, {-18.0F, 0.0F, -16.0F}, {3.0F, 0.0F, 0.0F}, 1.15F),
+        patch("iron_ore", 4, {17.0F, 0.0F, 11.0F}, {3.0F, 0.0F, 0.0F}, 1.0F),
+        patch("fire_camp", 1, {-2.5F, 0.0F, 9.5F}, {}, 0.85F),
+        patch("supply_cart", 3, {4.0F, 0.0F, -3.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("tent", 2, {-13.0F, 0.0F, 9.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("plant", 6, {-9.0F, 0.0F, 13.5F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    auto harvesters = group(QStringLiteral("village_harvesters"),
+                            Troop::Builder,
+                            2,
+                            3,
+                            {-4.0F, 0.0F, 6.0F},
+                            1,
+                            {3.2F, 0.0F, 0.0F});
+    harvesters.nation_id = Nation::RomanRepublic;
+    harvesters.ai_controlled = true;
+
+    s.groups = {
+        building(QStringLiteral("village_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {0.0F, 0.0F, -5.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("village_houses_west"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 3,
+                 {-8.0F, 0.0F, 5.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("village_houses_east"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 2,
+                 {8.6F, 0.0F, 5.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("village_granary"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {-8.0F, 0.0F, -6.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("village_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {13.0F, 0.0F, -7.0F},
+                 {},
+                 180.0F),
+        residents(QStringLiteral("village_folk"),
+                  Nation::RomanRepublic,
+                  2,
+                  5,
+                  {0.0F, 0.0F, 0.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  15.0F),
+        harvesters,
+    };
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("village_market"),
+                               QStringLiteral("village_houses_west"),
+                               QStringLiteral("village_houses_east"),
+                               QStringLiteral("village_granary"),
+                               QStringLiteral("village_barracks")});
+    add_visual_stability(
+        s, {QStringLiteral("village_folk"), QStringLiteral("village_harvesters")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("village_folk")));
+    s.expectations.push_back(expectation(
+        Expect::OwnerHarvestsResource, QStringLiteral("village_harvesters"), {}, 2.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_colony_founding_id),
+        QStringLiteral("Colony Founding"),
+        QStringLiteral("A Carthaginian colony breaks ground on the far side of the "
+                       "lane from a finished Roman village, so a settlement under "
+                       "construction and a settlement in full daily use can be "
+                       "judged against each other in one view."),
+        85.0F,
+        {54.0F, 60.0F, 24.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 12.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 3}};
+
+    s.roads = {
+        street({-30.0F, 0.0F, 0.0F}, {30.0F, 0.0F, 0.0F}, 3.6F, "stone"),
+        street({-16.0F, 0.0F, 0.0F}, {-16.0F, 0.0F, -13.0F}, 2.8F, "stone"),
+        street({14.0F, 0.0F, 0.0F}, {14.0F, 0.0F, 12.0F}, 2.8F, "stone"),
+    };
+
+    s.resource_patches = {
+        patch("olive_tree", 5, {26.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 5.0F}, 1.15F),
+        patch("boulder", 5, {18.0F, 0.0F, 16.0F}, {3.0F, 0.0F, 0.0F}, 1.1F),
+        patch("iron_ore", 3, {26.0F, 0.0F, 6.0F}, {3.0F, 0.0F, 0.0F}, 1.0F),
+        patch("tent", 3, {10.0F, 0.0F, 8.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("supply_cart", 3, {6.0F, 0.0F, 4.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("fire_camp", 1, {12.0F, 0.0F, 4.5F}, {}, 0.85F),
+        patch("weapon_rack", 1, {-12.0F, 0.0F, -8.0F}, {}, 1.0F),
+        patch("plant", 6, {-24.0F, 0.0F, 6.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    auto colonists = group(QStringLiteral("colony_builders"),
+                           Troop::Builder,
+                           3,
+                           3,
+                           {14.0F, 0.0F, 7.0F},
+                           1,
+                           {3.2F, 0.0F, 0.0F});
+    colonists.nation_id = Nation::Carthage;
+    colonists.ai_controlled = true;
+
+    auto colony_home = building(QStringLiteral("colony_first_home"),
+                                Game::Units::SpawnType::Home,
+                                Nation::Carthage,
+                                3,
+                                1,
+                                {19.0F, 0.0F, 6.0F});
+    colony_home.ai_controlled = true;
+
+    s.groups = {
+        building(QStringLiteral("old_village_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-16.0F, 0.0F, -6.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("old_village_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {-16.0F, 0.0F, 6.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("old_village_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-26.0F, 0.0F, -7.0F},
+                 {},
+                 180.0F),
+        residents(QStringLiteral("old_village_folk"),
+                  Nation::RomanRepublic,
+                  1,
+                  4,
+                  {-16.0F, 0.0F, 0.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  13.0F),
+        colony_home,
+        colonists,
+    };
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("old_village_market"),
+                               QStringLiteral("old_village_houses"),
+                               QStringLiteral("old_village_barracks"),
+                               QStringLiteral("colony_first_home")});
+    add_visual_stability(
+        s, {QStringLiteral("old_village_folk"), QStringLiteral("colony_builders")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("old_village_folk")));
+    s.expectations.push_back(expectation(Expect::OwnerCompletesConstruction,
+                                         QStringLiteral("colony_builders"),
+                                         {},
+                                         1.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_village_raid_id),
+        QStringLiteral("Raid on the Village"),
+        QStringLiteral("Carthaginian raiders come over the fields at an inhabited "
+                       "Roman village while its people are still in the street and "
+                       "the watch turns out of the barracks to meet them."),
+        36.0F,
+        {40.0F, 55.0F, 22.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 15.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+
+    s.roads = {
+        street({-22.0F, 0.0F, 2.0F}, {22.0F, 0.0F, 2.0F}, 3.2F, "default"),
+        street({-4.0F, 0.0F, 2.0F}, {-4.0F, 0.0F, -12.0F}, 2.6F, "default"),
+    };
+
+    s.resource_patches = {
+        patch("fire_camp", 1, {2.0F, 0.0F, -2.0F}, {}, 0.9F),
+        patch("supply_cart", 2, {6.0F, 0.0F, 5.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("tent", 2, {-14.0F, 0.0F, 6.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("olive_tree", 5, {-22.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 4.5F}, 1.1F),
+        patch("plant", 6, {8.0F, 0.0F, -8.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    s.groups = {
+        building(QStringLiteral("raid_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-4.0F, 0.0F, -5.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("raid_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {2.0F, 0.0F, 7.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("raid_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-13.0F, 0.0F, -4.0F},
+                 {},
+                 180.0F),
+        residents(QStringLiteral("raid_villagers"),
+                  Nation::RomanRepublic,
+                  1,
+                  5,
+                  {0.0F, 0.0F, 2.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  12.0F),
+        group(QStringLiteral("raid_watch"),
+              Troop::Swordsman,
+              1,
+              2,
+              {-13.0F, 0.0F, 1.0F},
+              6,
+              {4.0F, 0.0F, 0.0F}),
+        nation_group(QStringLiteral("raiders"),
+                     Troop::Spearman,
+                     Nation::Carthage,
+                     2,
+                     2,
+                     {14.0F, 0.0F, -14.0F},
+                     6,
+                     {4.5F, 0.0F, 0.0F}),
+        nation_group(QStringLiteral("raider_horse"),
+                     Troop::MountedKnight,
+                     Nation::Carthage,
+                     2,
+                     1,
+                     {20.0F, 0.0F, -10.0F},
+                     4),
+    };
+
+    s.steps = {
+        at(1.0F,
+           Command::AttackMove,
+           QStringLiteral("raiders"),
+           QStringLiteral("raid_watch")),
+        at(2.5F,
+           Command::Charge,
+           QStringLiteral("raider_horse"),
+           QStringLiteral("raid_watch")),
+        at(4.0F,
+           Command::AttackMove,
+           QStringLiteral("raid_watch"),
+           QStringLiteral("raiders")),
+    };
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("raid_market"),
+                               QStringLiteral("raid_houses"),
+                               QStringLiteral("raid_barracks")});
+    add_visual_stability(s, {QStringLiteral("raid_villagers")});
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("raiders")));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("raid_watch")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("raiders")));
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("raid_villagers")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_frontier_outpost_id),
+        QStringLiteral("Frontier Watch Outpost"),
+        QStringLiteral("A small forward camp rather than a town: a watchtower over "
+                       "a short palisade spur, a tent line, the cook fire, the "
+                       "supply carts, and the section that mans it."),
+        26.0F,
+        {32.0F, 54.0F, 26.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 11.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.roads = {
+        street({-18.0F, 0.0F, 8.0F}, {18.0F, 0.0F, 8.0F}, 3.0F, "rough"),
+        street({0.0F, 0.0F, 8.0F}, {0.0F, 0.0F, -2.0F}, 2.4F, "rough"),
+    };
+
+    s.resource_patches = {
+        patch("tent", 4, {-9.0F, 0.0F, 2.0F}, {4.5F, 0.0F, 0.0F}, 0.85F),
+        patch("fire_camp", 1, {0.0F, 0.0F, 4.5F}, {}, 0.95F),
+        patch("weapon_rack", 2, {-6.0F, 0.0F, -2.5F}, {4.0F, 0.0F, 0.0F}, 1.0F),
+        patch("supply_cart", 2, {6.0F, 0.0F, 5.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("pine_tree", 5, {-20.0F, 0.0F, -10.0F}, {0.0F, 0.0F, 4.5F}, 1.05F),
+        patch("pine_tree", 4, {18.0F, 0.0F, -8.0F}, {0.0F, 0.0F, 4.5F}, 1.05F),
+        patch("boulder", 3, {13.0F, 0.0F, -4.0F}, {3.0F, 0.0F, 0.0F}, 1.1F),
+    };
+
+    s.groups = {
+        building(QStringLiteral("outpost_tower"),
+                 Game::Units::SpawnType::DefenseTower,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {0.0F, 0.0F, -6.0F}),
+        building(QStringLiteral("outpost_palisade_west"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 5,
+                 {-6.0F, 0.0F, -6.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("outpost_palisade_east"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 5,
+                 {6.0F, 0.0F, -6.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("outpost_quarters"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {8.0F, 0.0F, 0.0F}),
+        residents(QStringLiteral("outpost_servants"),
+                  Nation::RomanRepublic,
+                  1,
+                  2,
+                  {2.0F, 0.0F, 6.0F},
+                  {3.5F, 0.0F, 0.0F},
+                  9.0F),
+        group(QStringLiteral("outpost_watch"),
+              Troop::Spearman,
+              1,
+              2,
+              {-3.0F, 0.0F, -3.0F},
+              5,
+              {6.0F, 0.0F, 0.0F}),
+        group(QStringLiteral("outpost_archers"),
+              Troop::Archer,
+              1,
+              1,
+              {4.0F, 0.0F, -3.5F},
+              4),
+    };
+
+    s.steps = {at(0.2F, Command::Hold, QStringLiteral("outpost_watch")),
+               at(0.2F, Command::Hold, QStringLiteral("outpost_archers"))};
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("outpost_tower"),
+                               QStringLiteral("outpost_palisade_west"),
+                               QStringLiteral("outpost_palisade_east"),
+                               QStringLiteral("outpost_quarters")});
+    add_visual_stability(s, {QStringLiteral("outpost_servants")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("outpost_servants")));
+    s.expectations.push_back(
+        expectation(Expect::GroupIsRendered, QStringLiteral("outpost_watch")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_riverside_mill_town_id),
+        QStringLiteral("Riverside Mill Town"),
+        QStringLiteral("A town built on both banks of a river and stitched together "
+                       "by one bridge: the road crosses it, the houses face it, and "
+                       "the townspeople use it while a carrying party makes the "
+                       "crossing under scrutiny."),
+        34.0F,
+        {46.0F, 56.0F, 16.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 12.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.rivers.push_back(
+        Game::Map::RiverSegment{{-30.0F, 0.0F, 0.0F}, {30.0F, 0.0F, 0.0F}, 6.0F});
+    s.bridges.push_back(
+        Game::Map::Bridge{{0.0F, 0.0F, -5.5F}, {0.0F, 0.0F, 5.5F}, 4.5F, 0.45F});
+
+    s.roads = {
+        street({0.0F, 0.0F, -18.0F}, {0.0F, 0.0F, -5.5F}, 3.6F, "stone"),
+        street({0.0F, 0.0F, 5.5F}, {0.0F, 0.0F, 18.0F}, 3.6F, "stone"),
+        street({-18.0F, 0.0F, -9.0F}, {18.0F, 0.0F, -9.0F}, 3.0F, "stone"),
+        street({-18.0F, 0.0F, 9.0F}, {18.0F, 0.0F, 9.0F}, 3.0F, "stone"),
+    };
+
+    s.resource_patches = {
+        patch("olive_tree", 4, {-22.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
+        patch("olive_tree", 4, {22.0F, 0.0F, 4.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
+        patch("supply_cart", 3, {-8.0F, 0.0F, -12.5F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("fire_camp", 1, {6.0F, 0.0F, 12.0F}, {}, 0.85F),
+        patch("tent", 2, {8.0F, 0.0F, -12.5F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("plant", 6, {-14.0F, 0.0F, 5.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+        patch("plant", 6, {8.0F, 0.0F, -5.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    s.groups = {
+        building(QStringLiteral("mill_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-6.0F, 0.0F, -13.5F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("mill_north_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {7.5F, 0.0F, -16.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("mill_south_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {-9.0F, 0.0F, 14.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("mill_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {12.0F, 0.0F, 14.0F},
+                 {},
+                 180.0F),
+        residents(QStringLiteral("mill_north_folk"),
+                  Nation::RomanRepublic,
+                  1,
+                  3,
+                  {-4.0F, 0.0F, -9.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  11.0F),
+        residents(QStringLiteral("mill_south_folk"),
+                  Nation::RomanRepublic,
+                  1,
+                  3,
+                  {4.0F, 0.0F, 9.0F},
+                  {4.5F, 0.0F, 0.0F},
+                  11.0F),
+        group(QStringLiteral("mill_carriers"),
+              Troop::Civilian,
+              1,
+              2,
+              {-1.5F, 0.0F, -12.0F},
+              1,
+              {3.0F, 0.0F, 0.0F}),
+    };
+
+    auto crossing = at(1.5F, Command::FormationMove, QStringLiteral("mill_carriers"));
+    crossing.destination = {0.0F, 0.0F, 12.0F};
+    s.steps = {crossing};
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("mill_market"),
+                               QStringLiteral("mill_north_houses"),
+                               QStringLiteral("mill_south_houses"),
+                               QStringLiteral("mill_barracks")});
+    add_visual_stability(s,
+                         {QStringLiteral("mill_north_folk"),
+                          QStringLiteral("mill_south_folk"),
+                          QStringLiteral("mill_carriers")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("mill_north_folk")));
+    s.expectations.push_back(
+        expectation(Expect::BridgeTraversalObserved, QStringLiteral("mill_carriers")));
+    auto landed = expectation(Expect::GroupReachedDestination,
+                              QStringLiteral("mill_carriers"),
+                              {},
+                              0.0F,
+                              0.0F,
+                              4.0F);
+    landed.position = crossing.destination;
+    s.expectations.push_back(landed);
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_quarry_camp_id),
+        QStringLiteral("Hill Quarry Camp"),
+        QStringLiteral("A pure extraction camp on broken ground: quarriers work a "
+                       "boulder field and an ore seam on the ridge while the depot, "
+                       "the carts and the tent line below take the yield."),
+        80.0F,
+        {46.0F, 56.0F, 34.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 13.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.elevation_patches = {{{-2.0F, 0.0F, -16.0F}, 16.0F, 3.4F}};
+
+    s.roads = {
+        street({-16.0F, 0.0F, 8.0F}, {18.0F, 0.0F, 8.0F}, 3.2F, "rough"),
+        street({-2.0F, 0.0F, 8.0F}, {-2.0F, 0.0F, -8.0F}, 2.8F, "rough"),
+    };
+
+    s.resource_patches = {
+        patch("boulder", 6, {-14.0F, 0.0F, -14.0F}, {3.4F, 0.0F, 0.0F}, 1.25F),
+        patch("iron_ore", 5, {4.0F, 0.0F, -17.0F}, {3.2F, 0.0F, 0.0F}, 1.1F),
+        patch("boulder", 4, {10.0F, 0.0F, -10.0F}, {3.0F, 0.0F, 0.0F}, 1.1F),
+        patch("tent", 3, {-12.0F, 0.0F, 11.0F}, {4.5F, 0.0F, 0.0F}, 0.85F),
+        patch("fire_camp", 1, {-2.0F, 0.0F, 11.5F}, {}, 0.9F),
+        patch("supply_cart", 4, {2.0F, 0.0F, 11.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("dead_tree", 3, {16.0F, 0.0F, -14.0F}, {4.0F, 0.0F, 0.0F}, 1.0F),
+        patch("pine_tree", 4, {-22.0F, 0.0F, -4.0F}, {0.0F, 0.0F, 4.5F}, 1.05F),
+    };
+
+    auto quarriers = group(QStringLiteral("quarry_crew"),
+                           Troop::Builder,
+                           2,
+                           4,
+                           {-3.0F, 0.0F, 4.0F},
+                           1,
+                           {3.2F, 0.0F, 0.0F});
+    quarriers.nation_id = Nation::Carthage;
+    quarriers.ai_controlled = true;
+
+    s.groups = {
+        building(QStringLiteral("quarry_depot"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-8.0F, 0.0F, 4.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("quarry_quarters"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 2,
+                 2,
+                 {8.0F, 0.0F, 4.0F},
+                 {5.2F, 0.0F, 0.0F},
+                 180.0F),
+        residents(QStringLiteral("quarry_camp_life"),
+                  Nation::Carthage,
+                  2,
+                  3,
+                  {2.0F, 0.0F, 8.0F},
+                  {4.0F, 0.0F, 0.0F},
+                  12.0F),
+        quarriers,
+    };
+
+    add_settlement_acceptance(
+        s, {QStringLiteral("quarry_depot"), QStringLiteral("quarry_quarters")});
+    add_visual_stability(
+        s, {QStringLiteral("quarry_camp_life"), QStringLiteral("quarry_crew")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("quarry_camp_life")));
+    s.expectations.push_back(expectation(
+        Expect::OwnerHarvestsResource, QStringLiteral("quarry_crew"), {}, 2.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_trade_road_convoy_id),
+        QStringLiteral("Trade Road Convoy"),
+        QStringLiteral("Two allied market towns at either end of one paved road, "
+                       "with a carrying party walking the whole length of it past "
+                       "the milestones while both towns keep working."),
+        44.0F,
+        {58.0F, 58.0F, 8.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 11.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
+
+    s.roads = {
+        street({-30.0F, 0.0F, 0.0F}, {30.0F, 0.0F, 0.0F}, 4.0F, "stone"),
+        street({-24.0F, 0.0F, 0.0F}, {-24.0F, 0.0F, -10.0F}, 2.8F, "stone"),
+        street({24.0F, 0.0F, 0.0F}, {24.0F, 0.0F, 10.0F}, 2.8F, "stone"),
+    };
+
+    s.resource_patches = {
+        patch("supply_cart", 3, {-20.0F, 0.0F, 3.5F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("supply_cart", 3, {12.0F, 0.0F, -3.5F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("tent", 2, {-4.0F, 0.0F, 4.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("fire_camp", 1, {0.0F, 0.0F, -4.0F}, {}, 0.85F),
+        patch("olive_tree", 4, {-14.0F, 0.0F, -12.0F}, {5.0F, 0.0F, 0.0F}, 1.1F),
+        patch("olive_tree", 4, {6.0F, 0.0F, 11.0F}, {5.0F, 0.0F, 0.0F}, 1.1F),
+        patch("plant", 8, {-10.0F, 0.0F, 3.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    s.groups = {
+        building(QStringLiteral("west_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-24.0F, 0.0F, -6.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("west_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 2,
+                 {-26.0F, 0.0F, 6.0F},
+                 {5.2F, 0.0F, 0.0F}),
+        building(QStringLiteral("east_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::Carthage,
+                 3,
+                 1,
+                 {24.0F, 0.0F, 6.0F}),
+        building(QStringLiteral("east_houses"),
+                 Game::Units::SpawnType::Home,
+                 Nation::Carthage,
+                 3,
+                 2,
+                 {26.0F, 0.0F, -6.0F},
+                 {5.2F, 0.0F, 0.0F},
+                 180.0F),
+        residents(QStringLiteral("west_town_folk"),
+                  Nation::RomanRepublic,
+                  1,
+                  3,
+                  {-24.0F, 0.0F, 0.0F},
+                  {4.0F, 0.0F, 0.0F},
+                  11.0F),
+        residents(QStringLiteral("east_town_folk"),
+                  Nation::Carthage,
+                  3,
+                  3,
+                  {24.0F, 0.0F, 0.0F},
+                  {4.0F, 0.0F, 0.0F},
+                  11.0F),
+        group(QStringLiteral("convoy"),
+              Troop::Civilian,
+              1,
+              3,
+              {-18.0F, 0.0F, 0.0F},
+              1,
+              {2.6F, 0.0F, 0.0F}),
+    };
+
+    auto haul = at(1.0F, Command::FormationMove, QStringLiteral("convoy"));
+    haul.destination = {18.0F, 0.0F, 0.0F};
+    s.steps = {haul};
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("west_market"),
+                               QStringLiteral("west_houses"),
+                               QStringLiteral("east_market"),
+                               QStringLiteral("east_houses")});
+    add_visual_stability(s,
+                         {QStringLiteral("west_town_folk"),
+                          QStringLiteral("east_town_folk"),
+                          QStringLiteral("convoy")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("convoy")));
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("west_town_folk")));
+    auto arrived = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("convoy"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               4.0F);
+    arrived.position = haul.destination;
+    s.expectations.push_back(arrived);
     result.push_back(std::move(s));
   }
 

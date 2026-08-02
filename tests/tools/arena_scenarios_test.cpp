@@ -597,3 +597,100 @@ TEST(ArenaScenariosTest, RetargetScenarioChecksBothAmmunitionTypes) {
   ASSERT_NE(retarget, scenario->steps.end());
   EXPECT_GT(retarget->trigger.time_seconds, 0.0F);
 }
+
+TEST(ArenaScenariosTest, ListsEverySettlementAndEconomyScenario) {
+  for (auto const* settlement_id : {Arena::Scenarios::k_village_harvest_cycle_id,
+                                    Arena::Scenarios::k_colony_founding_id,
+                                    Arena::Scenarios::k_village_raid_id,
+                                    Arena::Scenarios::k_frontier_outpost_id,
+                                    Arena::Scenarios::k_riverside_mill_town_id,
+                                    Arena::Scenarios::k_quarry_camp_id,
+                                    Arena::Scenarios::k_trade_road_convoy_id}) {
+    EXPECT_NE(Arena::Scenarios::find_definition(QString::fromLatin1(settlement_id)),
+              nullptr)
+        << settlement_id;
+  }
+}
+
+TEST(ArenaScenariosTest, EachSettlementLaysItsStreetsInOneStyle) {
+
+  for (const auto& scenario : Arena::Scenarios::definitions()) {
+
+    const bool is_settlement =
+        std::any_of(scenario.groups.begin(), scenario.groups.end(), [](auto const& g) {
+          return g.spawn_type.has_value() &&
+                 Game::Units::is_building_spawn(*g.spawn_type);
+        });
+    if (!is_settlement) {
+      continue;
+    }
+
+    std::set<std::string> styles;
+    for (const auto& road : scenario.roads) {
+      styles.insert(road.style.trimmed().toLower().toStdString());
+    }
+    EXPECT_LE(styles.size(), 1U)
+        << scenario.id.toStdString()
+        << " mixes road styles; a settlement paves its streets one way";
+  }
+}
+
+TEST(ArenaScenariosTest, InhabitedSettlementsProveTheirDailyLife) {
+
+  for (const auto& scenario : Arena::Scenarios::definitions()) {
+    std::set<QString> resident_groups;
+    for (const auto& group : scenario.groups) {
+      if (group.settlement_resident) {
+        resident_groups.insert(group.name);
+        EXPECT_GT(group.settlement_roam_radius, 0.0F)
+            << scenario.id.toStdString() << "/" << group.name.toStdString();
+      }
+    }
+    if (resident_groups.empty()) {
+      continue;
+    }
+
+    const bool asserts_movement = std::any_of(
+        scenario.expectations.begin(),
+        scenario.expectations.end(),
+        [&](const auto& item) {
+          return item.kind == Arena::ArenaExpectationKind::MovementAnimationObserved &&
+                 resident_groups.contains(item.group);
+        });
+    EXPECT_TRUE(asserts_movement)
+        << scenario.id.toStdString()
+        << " spawns settlement residents but never requires them to be seen "
+           "going about the settlement";
+  }
+}
+
+TEST(ArenaScenariosTest, RampartsCloseWithGatesAndCornerTowers) {
+  struct WalledSettlement {
+    const char* id;
+    const char* prefix;
+  };
+  for (auto const& walled :
+       {WalledSettlement{Arena::Scenarios::k_roman_marching_camp_id, "castrum"},
+        WalledSettlement{Arena::Scenarios::k_carthage_trade_town_id, "punic"}}) {
+    auto const* scenario =
+        Arena::Scenarios::find_definition(QString::fromLatin1(walled.id));
+    ASSERT_NE(scenario, nullptr) << walled.id;
+
+    std::set<QString> names;
+    for (const auto& group : scenario->groups) {
+      names.insert(group.name);
+    }
+    const QString prefix = QString::fromLatin1(walled.prefix);
+    for (auto const* suffix : {"_gate_north",
+                               "_gate_south",
+                               "_gate_west",
+                               "_gate_east",
+                               "_tower_nw",
+                               "_tower_ne",
+                               "_tower_sw",
+                               "_tower_se"}) {
+      EXPECT_TRUE(names.contains(prefix + QString::fromLatin1(suffix)))
+          << walled.id << " is missing " << suffix;
+    }
+  }
+}

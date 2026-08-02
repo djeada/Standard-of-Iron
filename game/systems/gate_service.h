@@ -32,7 +32,18 @@ class GateService {
 public:
   using ManualMode = Engine::Core::GateComponent::ManualMode;
 
+  struct GateExtent {
+    float half_x{0.0F};
+    float half_z{0.0F};
+  };
+
+  [[nodiscard]] static auto structure_extent(float rotation_y) -> GateExtent;
+
+  [[nodiscard]] static auto passage_extent(float rotation_y) -> GateExtent;
+
   static void mark_gate_footprint_navigable(Engine::Core::EntityID entity_id);
+
+  static void sync_gate_footprint(Engine::Core::EntityID entity_id, float rotation_y);
 
   [[nodiscard]] static auto is_gate(const Engine::Core::Entity& entity) -> bool;
 

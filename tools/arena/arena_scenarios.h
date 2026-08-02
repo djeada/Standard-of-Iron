@@ -115,6 +115,13 @@ inline constexpr char k_roman_fortification_showcase_id[] =
 inline constexpr char k_carthage_fortification_showcase_id[] =
     "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
+inline constexpr char k_village_harvest_cycle_id[] = "village_harvest_cycle";
+inline constexpr char k_colony_founding_id[] = "colony_founding";
+inline constexpr char k_village_raid_id[] = "village_raid";
+inline constexpr char k_frontier_outpost_id[] = "frontier_outpost";
+inline constexpr char k_riverside_mill_town_id[] = "riverside_mill_town";
+inline constexpr char k_quarry_camp_id[] = "quarry_camp";
+inline constexpr char k_trade_road_convoy_id[] = "trade_road_convoy";
 inline constexpr char k_sepulcher_roster_lineup_id[] = "sepulcher_roster_lineup";
 inline constexpr char k_sepulcher_spell_fx_showcase_id[] =
     "sepulcher_spell_fx_showcase";

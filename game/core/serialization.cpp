@@ -744,6 +744,23 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["civilian_delivery"] = delivery_obj;
   }
 
+  if (const auto* resident = entity->get_component<SettlementResidentComponent>()) {
+    QJsonObject resident_obj;
+    resident_obj["hearth_x"] = static_cast<double>(resident->hearth_x);
+    resident_obj["hearth_z"] = static_cast<double>(resident->hearth_z);
+    resident_obj["roam_radius"] = static_cast<double>(resident->roam_radius);
+    resident_obj["hearth_assigned"] = resident->hearth_assigned;
+    resident_obj["errand"] = static_cast<int>(resident->errand);
+    resident_obj["focus_id"] = static_cast<qint64>(resident->focus_id);
+    resident_obj["errand_x"] = static_cast<double>(resident->errand_x);
+    resident_obj["errand_z"] = static_cast<double>(resident->errand_z);
+    resident_obj["errand_remaining"] = static_cast<double>(resident->errand_remaining);
+    resident_obj["planned_dwell"] = static_cast<double>(resident->planned_dwell);
+    resident_obj["think_cooldown"] = static_cast<double>(resident->think_cooldown);
+    resident_obj["rng_state"] = static_cast<qint64>(resident->rng_state);
+    entity_obj["settlement_resident"] = resident_obj;
+  }
+
   return entity_obj;
 }
 
@@ -1578,6 +1595,29 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     auto* delivery = entity->add_component<CivilianDeliveryComponent>();
     delivery->target_barracks_id = static_cast<EntityID>(
         delivery_obj["target_barracks_id"].toVariant().toULongLong());
+  }
+
+  if (json.contains("settlement_resident")) {
+    const auto resident_obj = json["settlement_resident"].toObject();
+    auto* resident = entity->add_component<SettlementResidentComponent>();
+    resident->hearth_x = static_cast<float>(resident_obj["hearth_x"].toDouble(0.0));
+    resident->hearth_z = static_cast<float>(resident_obj["hearth_z"].toDouble(0.0));
+    resident->roam_radius =
+        static_cast<float>(resident_obj["roam_radius"].toDouble(16.0));
+    resident->hearth_assigned = resident_obj["hearth_assigned"].toBool(false);
+    resident->errand = static_cast<SettlementErrand>(resident_obj["errand"].toInt(0));
+    resident->focus_id =
+        static_cast<EntityID>(resident_obj["focus_id"].toVariant().toULongLong());
+    resident->errand_x = static_cast<float>(resident_obj["errand_x"].toDouble(0.0));
+    resident->errand_z = static_cast<float>(resident_obj["errand_z"].toDouble(0.0));
+    resident->errand_remaining =
+        static_cast<float>(resident_obj["errand_remaining"].toDouble(0.0));
+    resident->planned_dwell =
+        static_cast<float>(resident_obj["planned_dwell"].toDouble(3.0));
+    resident->think_cooldown =
+        static_cast<float>(resident_obj["think_cooldown"].toDouble(0.0));
+    resident->rng_state =
+        static_cast<std::uint32_t>(resident_obj["rng_state"].toVariant().toULongLong());
   }
 }
 

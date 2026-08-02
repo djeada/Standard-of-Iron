@@ -356,7 +356,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
-  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 4.0F;
+  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
   auto builder_entities =

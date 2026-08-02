@@ -15,11 +15,13 @@
 namespace Render::GL {
 namespace {
 
-constexpr float k_jamb_offset = 0.86F;
-constexpr float k_jamb_depth = 0.24F;
-constexpr float k_leaf_thickness = 0.065F;
+constexpr float k_jamb_offset = Engine::Core::GateComponent::k_passage_half_width;
+constexpr float k_structure_half_span =
+    Engine::Core::GateComponent::k_structure_half_span;
+constexpr float k_jamb_depth = 0.30F;
+constexpr float k_leaf_thickness = 0.075F;
 constexpr float k_leaf_swing_degrees = 100.0F;
-constexpr float k_leaf_height_ratio = 0.78F;
+constexpr float k_leaf_height_ratio = 0.82F;
 constexpr float k_detail_distance_sq = 900.0F;
 
 auto leaf_height(const WallGeometry& geometry) -> float {
@@ -55,6 +57,49 @@ void add_jamb(BuildingArchetypeDesc& desc,
   }
 }
 
+void add_piers(BuildingArchetypeDesc& desc,
+               const WallPalette& palette,
+               const WallGeometry& geometry) {
+  constexpr int k_stakes_per_pier = 5;
+  const float pier_inner = k_jamb_offset + 0.16F;
+  const float pier_outer = k_structure_half_span;
+  const float span = pier_outer - pier_inner;
+  const float spacing = span / static_cast<float>(k_stakes_per_pier);
+  const float stake_radius = geometry.post_radius * 0.82F;
+
+  for (const float side : {-1.0F, 1.0F}) {
+    for (int i = 0; i < k_stakes_per_pier; ++i) {
+      const float x = side * (pier_inner + (spacing * (static_cast<float>(i) + 0.5F)));
+      const float height = geometry.stake_height * (i % 2 == 0 ? 1.0F : 0.94F);
+      desc.add_cylinder(QVector3D(x, 0.0F, 0.0F),
+                        QVector3D(x, height, 0.0F),
+                        stake_radius,
+                        (i % 2 == 0) ? palette.wood_mid : palette.wood_light);
+      desc.add_cone(QVector3D(x, height - 0.01F, 0.0F),
+                    QVector3D(x, height + geometry.tip_height, 0.0F),
+                    stake_radius * 1.02F,
+                    palette.wood_dark,
+                    BuildingStateMask::All,
+                    BuildingLODMask::Full);
+    }
+
+    const float mid = side * (pier_inner + (span * 0.5F));
+    for (const float rail : {geometry.lower_rail_y, geometry.upper_rail_y}) {
+      desc.add_box(QVector3D(mid, rail, 0.0F),
+                   QVector3D(span * 0.5F, 0.05F, stake_radius * 1.25F),
+                   geometry.metal_bands ? palette.masonry_accent : palette.rope,
+                   BuildingStateMask::All,
+                   BuildingLODMask::Full);
+    }
+
+    if (geometry.earthwork_base) {
+      desc.add_box(QVector3D(mid, geometry.berm_height * 0.5F, 0.0F),
+                   QVector3D(span * 0.5F, geometry.berm_height * 0.5F, 0.34F),
+                   palette.earth_light);
+    }
+  }
+}
+
 } // namespace
 
 auto build_wall_gate_archetype(std::string_view name_prefix,
@@ -82,21 +127,23 @@ auto build_wall_gate_archetype(std::string_view name_prefix,
   const float lintel_y = lintel_height(geometry);
   for (const float depth : {-k_jamb_depth, k_jamb_depth}) {
     desc.add_box(QVector3D(0.0F, lintel_y, depth),
-                 QVector3D(k_jamb_offset + 0.14F, 0.085F, 0.07F),
+                 QVector3D(k_jamb_offset + 0.18F, 0.095F, 0.08F),
                  palette.wood_dark);
   }
 
-  desc.add_box(QVector3D(0.0F, lintel_y + 0.24F, 0.0F),
-               QVector3D(k_jamb_offset + 0.20F, 0.075F, k_jamb_depth + 0.12F),
+  desc.add_box(QVector3D(0.0F, lintel_y + 0.26F, 0.0F),
+               QVector3D(k_jamb_offset + 0.26F, 0.085F, k_jamb_depth + 0.14F),
                palette.wood_light);
 
-  for (int i = -1; i <= 1; ++i) {
-    desc.add_box(QVector3D(static_cast<float>(i) * 0.52F, lintel_y + 0.38F, 0.0F),
-                 QVector3D(0.20F, 0.055F, k_jamb_depth + 0.06F),
+  for (int i = -2; i <= 2; ++i) {
+    desc.add_box(QVector3D(static_cast<float>(i) * 0.74F, lintel_y + 0.40F, 0.0F),
+                 QVector3D(0.22F, 0.06F, k_jamb_depth + 0.07F),
                  (i % 2 == 0) ? palette.wood_mid : palette.wood_light,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
+
+  add_piers(desc, palette, geometry);
 
   return build_building_archetype(desc, BuildingState::Normal);
 }
