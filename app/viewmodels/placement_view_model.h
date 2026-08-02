@@ -49,6 +49,8 @@ class PlacementViewModel : public QObject {
                  formation_options_changed)
   Q_PROPERTY(QStringList available_formation_intents READ available_formation_intents
                  NOTIFY formation_options_changed)
+  Q_PROPERTY(QVariantMap selected_formation_status READ selected_formation_status NOTIFY
+                 formation_options_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
                  placing_construction_changed)
   Q_PROPERTY(QString pending_builder_construction_type READ
@@ -91,6 +93,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QString
   formation_intent_unavailable_reason(const QString& intent_id) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap formation_options() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap selected_formation_status() const;
   Q_INVOKABLE void reset_formation_options();
   Q_INVOKABLE void set_formation_frontage_preset(const QString& preset);
   Q_INVOKABLE void set_formation_depth_preset(const QString& preset);

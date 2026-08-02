@@ -162,8 +162,37 @@ and hashing their ids together.
 `needs_replan`, and replans on a fixed interval rather than every frame.
 
 The registry serialises to `world["army_formations"]`, so a formation survives
-save/load with its doctrine, intent, anchor, options and slot assignment
-intact.
+save/load with its doctrine, intent, anchor, options, cohesion and slot
+assignment intact.
+
+### Cohesion is measured, not assumed
+
+`ArmyFormation::phase` used to be set from the last order — a group was
+`Formed` because a move had finished, not because anyone checked where the
+units were standing. `ArmyFormationRuntime::refresh_cohesion` now measures it
+every 0.35 s: `cohesion` is the fraction of placeable, occupied slots whose
+occupant is within `1.35 × spacing` of the slot it was assigned. That fraction
+picks the phase — `Formed` at 0.8 and above, `Disrupted` at 0.45 and below,
+`Forming` in between.
+
+The measurement is what makes the phase worth having, because the phase feeds
+combat. `ArmyFormationRuntime::damage_taken_multiplier` is applied in
+`damage_application.cpp` next to the defensive-formation multiplier:
+
+- **Formed** — damage taken scales from 1.0 at cohesion 0.8 down to 0.88 at
+  cohesion 1.0, so closing the last gaps in a line is worth something.
+- **Disrupted** — damage taken is 1.08.
+- **Forming**, or no formation at all — 1.0.
+
+The band is deliberately narrow. Holding a line should reward good play without
+deciding the fight on its own, and the multiplier composes with everything else
+in the damage pipeline rather than short-circuiting it.
+
+`formation_cohesion_test.cpp` covers this end to end, including the two wiring
+claims that are easy to get wrong: that the runtime's own `update()` performs
+the measurement without being asked, and that `apply_unit_damage` — the
+function combat actually calls — really does deal less damage to a formed line
+than to a disrupted one.
 
 ### Terrain fitting
 
@@ -176,6 +205,37 @@ This is the fix for the old behaviour, where every unwalkable slot resolved to
 the same `resolved_center` and several units stacked on one tile. Slots come
 back tagged `Valid`, `Adjusted` (nudged) or `Blocked` (no room), and the
 placement preview colours them accordingly before the player commits.
+
+### Planning is split so dragging is cheap
+
+`ArmyFormationPlanner::plan` is two halves, and callers that move only the
+anchor can skip the first:
+
+- `build_layout` — slot offsets in formation-local space. A pure function of
+  the members, the doctrine template and the options. It carries a
+  `signature` hashing exactly those inputs.
+- `place` — rotation, terrain fitting and slot status. This is the half that
+  depends on the anchor and the facing.
+
+`plan()` is still `place(build_layout(...))` and returns exactly what it always
+did; `formation_planner_cache_test.cpp` asserts that equivalence slot by slot,
+and that the signature moves for every input the layout reads while staying put
+for the anchor and the facing.
+
+`CommandController` uses the split during placement: it collects members once
+per session, rebuilds the layout only when the signature changes, and skips the
+refresh entirely when the anchor has moved less than 0.05 world units and the
+facing less than 0.25°. Before this, every mouse-move event ran a full replan.
+
+Slot fitting itself was quadratic — `SlotTerrainFitter` linearly scanned every
+already-claimed position for each of up to 72 candidate points per slot.
+Claimed positions now live in a hash grid keyed on the minimum separation, so a
+free-space query only touches the nine cells that could hold a conflict.
+Measured on this machine, per-plan cost went from 28.1 µs to 16.3 µs at 20
+units, 251 µs to 115 µs at 80, and 464 µs to 191 µs at 160 — the advantage
+grows with army size, which is what a quadratic-to-linear change should look
+like. `NoTwoSlotsLandOnTopOfEachOther` guards the separation floor the grid has
+to keep enforcing.
 
 ### Movement policies
 
@@ -209,6 +269,42 @@ level; soldiers are offsets inside a unit, not agents.
 The preview is planned with `ArmyFormationPlanner::plan` and rendered as unit
 footprints, never as individual soldiers.
 
+### The panel reports state, not just accepts input
+
+Every advanced control is a two-way binding. `formation_options()` returns a
+`*_index` for each dropdown derived from the live options, so reopening the
+panel, hitting **Reset to faction default**, or changing depth with the wheel
+all move the controls the player is looking at. Before this the dropdowns were
+write-only: they always rendered their first entry no matter what the group was
+actually set to, and the three whose display order did not match the enum
+reported a different value than the one in force. The dropdown order now
+follows the enum so the index is the value.
+
+`FormationPanel` also shows the plan as numbers while the preview is on the
+ground — ranks × files, frontage and depth in metres, and placed-of-total slots
+coloured by whether anything is blocked — plus a separate line for slots that
+were merely nudged, which is not a warning and should not read as one.
+
+Ranks and files come from `ArmyFormationPlan::depth_bands`, which buckets every
+slot in the plan by local depth. The per-slot `rank` and `file` fields restart
+at zero for each line rule, so reading the maximum of those would report the
+deepest single line rather than the depth of the whole block — a three-line
+template would have claimed to be two ranks deep. Banding the finished plan is
+what makes a Column read as deeper and narrower than a Line, which is the
+assertion `RankAndFileCountsDescribeTheWholeBlock` makes. Number
+keys 1–9 pick the nth intent the doctrine currently offers, matching the button
+order; the binding lives in `GameView`'s key handler with the rest of the
+hotkeys rather than the panel stealing focus.
+
+`FormationStatusBadge` is the piece that outlives placement. Selecting units
+that belong to a committed group shows the intent, the doctrine, the phase and
+a cohesion bar, so the player can tell a line that formed up from one that came
+apart without re-entering placement mode. It samples cohesion on a timer
+because the simulation measures it on its own cadence rather than pushing a
+signal. Phase is carried by both colour and text, which
+`tst_formation_status_badge.qml` locks in along with the fallback for an
+unknown phase.
+
 ## AI
 
 `Game::Systems::AI::plan_ai_formation` builds `ArmyFormationMember`s from AI
@@ -240,14 +336,17 @@ See `assets/data/formations/README.md` for the file schemas.
 
 ## Tests
 
-| File                                                    | Covers                                                                                               |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `tests/formation/unit_layout_test.cpp`                  | determinism, faction distinctness, min separation, role and stance layouts, low counts               |
-| `tests/formation/army_formation_planner_test.cpp`       | role placement, doctrine resolution, mixed-army policies, intent availability, terrain fitting       |
-| `tests/formation/army_formation_registry_test.cpp`      | group lifecycle, membership, slot retention, save/load                                               |
-| `tests/formation/formation_movement_test.cpp`           | both movement policies, speed multiplier, no slot stacking                                           |
-| `tests/formation/formation_data_loader_test.cpp`        | overlay semantics, every validation failure mode, and that the shipped data keeps the factions apart |
-| `tests/formation/formation_terrain_navigation_test.cpp` | slots against rivers, bridges, hills, walls and buildings; reachability; no stacking                 |
+| File                                                    | Covers                                                                                                |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `tests/formation/unit_layout_test.cpp`                  | determinism, faction distinctness, min separation, role and stance layouts, low counts                |
+| `tests/formation/army_formation_planner_test.cpp`       | role placement, doctrine resolution, mixed-army policies, intent availability, terrain fitting        |
+| `tests/formation/army_formation_registry_test.cpp`      | group lifecycle, membership, slot retention, save/load                                                |
+| `tests/formation/formation_movement_test.cpp`           | both movement policies, speed multiplier, no slot stacking                                            |
+| `tests/formation/formation_data_loader_test.cpp`        | overlay semantics, every validation failure mode, and that the shipped data keeps the factions apart  |
+| `tests/formation/formation_terrain_navigation_test.cpp` | slots against rivers, bridges, hills, walls and buildings; reachability; no stacking                  |
+| `tests/formation/formation_cohesion_test.cpp`           | measured cohesion, phase thresholds, the damage multiplier through `apply_unit_damage`, save/load     |
+| `tests/formation/formation_planner_cache_test.cpp`      | layout/place equivalence, layout signature, slot separation under the hash grid, per-plan cost report |
+| `tests/ui/qml/tst_formation_status_badge.qml`           | the persistent badge: phase labels, distinct phase colours, unknown-phase fallback                    |
 
 These are headless and run in `simulation_tests`. The terrain suite is a real
 test rather than a tautology: disabling `resolve_terrain` makes four of its

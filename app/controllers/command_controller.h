@@ -131,6 +131,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap formation_options() const;
   Q_INVOKABLE void reset_formation_options();
 
+  Q_INVOKABLE [[nodiscard]] QVariantMap selected_formation_status() const;
+
   [[nodiscard]] auto
   formation_preview() const -> const Game::Formation::ArmyFormationPlan& {
     return m_formation_preview;
@@ -184,7 +186,15 @@ private:
   Game::Formation::ArmyFormationPlan m_formation_preview;
   Game::Formation::FormationDoctrineId m_formation_doctrine_override;
 
+  std::vector<Game::Formation::ArmyFormationMember> m_formation_members;
+  Game::Formation::ArmyFormationLayout m_formation_layout;
+  bool m_formation_layout_valid = false;
+  bool m_formation_preview_dirty = true;
+  QVector3D m_formation_previewed_anchor;
+  float m_formation_previewed_facing = 0.0F;
+
   void apply_formation_option_change();
+  void invalidate_formation_layout();
 
   static void reset_movement(Engine::Core::Entity* entity);
 };

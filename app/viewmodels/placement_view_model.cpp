@@ -133,6 +133,11 @@ auto PlacementViewModel::formation_intent_unavailable_reason(
                              : commands->formation_intent_unavailable_reason(intent_id);
 }
 
+auto PlacementViewModel::selected_formation_status() const -> QVariantMap {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QVariantMap() : commands->selected_formation_status();
+}
+
 auto PlacementViewModel::formation_options() const -> QVariantMap {
   auto* commands = m_host.command_controller();
   return commands == nullptr ? QVariantMap() : commands->formation_options();

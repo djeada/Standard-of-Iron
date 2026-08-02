@@ -12,6 +12,7 @@
 #include "../../core/component.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
+#include "../../formation/army_formation_registry.h"
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
@@ -805,6 +806,7 @@ apply_defense_formation_damage_scaling(const Engine::Core::Entity& target,
 
   float multiplier =
       Game::Systems::DefenseFormationService::damage_multiplier(target, context);
+  multiplier *= Game::Formation::ArmyFormationRuntime::damage_taken_multiplier(target);
   if (attacker != nullptr) {
     multiplier *=
         Game::Systems::DefenseFormationService::attack_output_multiplier(*attacker);
