@@ -117,6 +117,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("TriggerCommanderAura");
   case ScenarioCommandKind::RpgPrimaryAttack:
     return QStringLiteral("RpgPrimaryAttack");
+  case ScenarioCommandKind::RpgAttackHold:
+    return QStringLiteral("RpgAttackHold");
   case ScenarioCommandKind::RpgGuard:
     return QStringLiteral("RpgGuard");
   case ScenarioCommandKind::RpgDodge:
@@ -265,6 +267,10 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("RpgLocomotionAnimationMatched");
   case ArenaExpectationKind::RpgStrikeAnimationMatched:
     return QStringLiteral("RpgStrikeAnimationMatched");
+  case ArenaExpectationKind::RpgSwingCadenceWithin:
+    return QStringLiteral("RpgSwingCadenceWithin");
+  case ArenaExpectationKind::RpgTravelObserved:
+    return QStringLiteral("RpgTravelObserved");
   case ArenaExpectationKind::RpgApproachWithin:
     return QStringLiteral("RpgApproachWithin");
   case ArenaExpectationKind::UndeadZoneDormantBefore:
@@ -582,6 +588,7 @@ struct ArenaScenarioRunner::Impl {
     Engine::Core::EntityID rpg_aim_target_id{0};
     int rpg_aim_soldier_slot{-1};
     int rpg_action_phase{0};
+    float rpg_action_normalized_time{0.0F};
   };
 
   struct TraceSoldier {
@@ -609,6 +616,13 @@ struct ArenaScenarioRunner::Impl {
     ArenaRenderedFrameTimings timings;
     std::vector<TraceUnit> units;
     std::vector<TraceSoldier> soldiers;
+  };
+
+  struct TravelObservation {
+    bool has_start{false};
+    bool has_end{false};
+    QVector3D start;
+    QVector3D end;
   };
 
   struct BridgeAlignmentObservation {
@@ -687,6 +701,10 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, QString> rpg_locomotion_mismatch;
   QHash<QString, QString> rpg_strike_mismatch;
   QHash<QString, float> rpg_strike_mismatch_since;
+  QHash<QString, int> rpg_action_phase_previous;
+  QHash<QString, float> rpg_action_time_previous;
+  QHash<QString, std::vector<float>> rpg_swing_starts;
+  QHash<QString, TravelObservation> rpg_travel_observations;
   QHash<QString, float> minimum_group_pair_distance;
   QHash<int, int> completed_construction_by_owner;
   QHash<int, int> completed_harvest_by_owner;
@@ -1267,6 +1285,18 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       break;
+    case ScenarioCommandKind::RpgAttackHold:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.set_rpg_attack_held) {
+          add_issue(
+              QStringLiteral("rpg_attack_hold_unavailable"),
+              QStringLiteral("%1 has no RPG attack-hold host callback").arg(step.group),
+              entity_id);
+          continue;
+        }
+        host.set_rpg_attack_held(entity_id, step.enabled);
+      }
+      break;
     case ScenarioCommandKind::RpgGuard:
       for (auto entity_id : ids(step.group)) {
         if (!host.set_rpg_guard) {
@@ -1713,6 +1743,11 @@ struct ArenaScenarioRunner::Impl {
            auto const* action =
                entity->get_component<Engine::Core::RpgCommanderActionComponent>();
            return action != nullptr ? static_cast<int>(action->phase) : 0;
+         }(),
+         [&]() {
+           auto const* action =
+               entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+           return action != nullptr ? action->normalized_action_time : 0.0F;
          }()});
 
     auto& previous = entity_states[entity_id];
@@ -1995,8 +2030,11 @@ struct ArenaScenarioRunner::Impl {
         const bool striking =
             unit.rpg_action_phase ==
             static_cast<int>(Engine::Core::RpgCommanderActionPhase::Strike);
+
+        // An authored swing owns the body until the simulation ends it. A
+        // flinch pose here means the renderer dropped a swing the player is
+        // still committed to.
         const bool strike_visual = soldier.visual == QStringLiteral("Attack") ||
-                                   soldier.visual == QStringLiteral("HitReaction") ||
                                    soldier.visual == QStringLiteral("Dying") ||
                                    soldier.visual == QStringLiteral("Dead");
         if (!striking || strike_visual) {
@@ -2049,6 +2087,62 @@ struct ArenaScenarioRunner::Impl {
                   "%2")
                   .arg(frame.time_seconds, 0, 'f', 2)
                   .arg(soldier.visual);
+        }
+      }
+    }
+  }
+
+  void observe_rpg_swing_cadence(const TraceFrame& frame) {
+    if (scenario.rpg_commander_group.isEmpty()) {
+      return;
+    }
+    const QString& group = scenario.rpg_commander_group;
+    for (auto const& unit : frame.units) {
+      if (unit.group != group) {
+        continue;
+      }
+      int const striking =
+          static_cast<int>(Engine::Core::RpgCommanderActionPhase::Strike);
+      int const previous_phase = rpg_action_phase_previous.value(group, 0);
+      float const previous_time = rpg_action_time_previous.value(group, 1.0F);
+
+      // Chaining a swing out of the previous one restarts the authored
+      // timeline without ever leaving the striking phase, so a rewound action
+      // time is what marks a new swing.
+      if (unit.rpg_action_phase == striking &&
+          (previous_phase != striking ||
+           unit.rpg_action_normalized_time < previous_time)) {
+        rpg_swing_starts[group].push_back(frame.time_seconds);
+      }
+      rpg_action_phase_previous[group] = unit.rpg_action_phase;
+      rpg_action_time_previous[group] = unit.rpg_action_normalized_time;
+    }
+  }
+
+  static auto travel_key(const ArenaExpectation& expectation) -> QString {
+    return QStringLiteral("%1|%2|%3")
+        .arg(expectation.group)
+        .arg(expectation.start_seconds)
+        .arg(expectation.end_seconds);
+  }
+
+  void observe_rpg_travel(const TraceFrame& frame) {
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind != ArenaExpectationKind::RpgTravelObserved) {
+        continue;
+      }
+      for (auto const& unit : frame.units) {
+        if (unit.group != expectation.group) {
+          continue;
+        }
+        auto& observation = rpg_travel_observations[travel_key(expectation)];
+        if (!observation.has_start && frame.time_seconds >= expectation.start_seconds) {
+          observation.has_start = true;
+          observation.start = unit.position;
+        }
+        if (observation.has_start && frame.time_seconds <= expectation.end_seconds) {
+          observation.has_end = true;
+          observation.end = unit.position;
         }
       }
     }
@@ -3252,6 +3346,58 @@ struct ArenaScenarioRunner::Impl {
                     QStringLiteral("%1 %2").arg(expectation.group, mismatch.value()));
         }
         break;
+      case ArenaExpectationKind::RpgSwingCadenceWithin: {
+        auto const& starts = rpg_swing_starts[expectation.group];
+        int const required_swings =
+            std::max(2, static_cast<int>(std::lround(expectation.distance)));
+        float const allowed_gap =
+            expectation.threshold > 0.0F ? expectation.threshold : 1.0F;
+        if (static_cast<int>(starts.size()) < required_swings) {
+          add_issue(QStringLiteral("rpg_swing_cadence_too_few"),
+                    QStringLiteral("%1 started %2 swings while holding the attack "
+                                   "input but needed %3")
+                        .arg(expectation.group)
+                        .arg(starts.size())
+                        .arg(required_swings));
+          break;
+        }
+        for (std::size_t i = 1; i < starts.size(); ++i) {
+          float const gap = starts[i] - starts[i - 1U];
+          if (gap > allowed_gap) {
+            add_issue(QStringLiteral("rpg_swing_cadence_too_slow"),
+                      QStringLiteral("%1 waited %2 s between swings at %3 s but the "
+                                     "held attack has to chain within %4 s")
+                          .arg(expectation.group)
+                          .arg(gap, 0, 'f', 2)
+                          .arg(starts[i], 0, 'f', 2)
+                          .arg(allowed_gap, 0, 'f', 2));
+            break;
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::RpgTravelObserved: {
+        auto const observation = rpg_travel_observations.value(travel_key(expectation));
+        float const required = std::max(expectation.threshold, 0.0F);
+        if (!observation.has_start || !observation.has_end) {
+          add_issue(QStringLiteral("rpg_travel_not_sampled"),
+                    QStringLiteral("%1 was never sampled across its travel window")
+                        .arg(expectation.group));
+          break;
+        }
+        float const travelled = horizontal_distance(observation.start, observation.end);
+        if (travelled < required) {
+          add_issue(QStringLiteral("rpg_travel_blocked"),
+                    QStringLiteral("%1 travelled %2 m between %3 s and %4 s but had "
+                                   "to cover %5 m")
+                        .arg(expectation.group)
+                        .arg(travelled, 0, 'f', 2)
+                        .arg(expectation.start_seconds, 0, 'f', 2)
+                        .arg(expectation.end_seconds, 0, 'f', 2)
+                        .arg(required, 0, 'f', 2));
+        }
+        break;
+      }
       case ArenaExpectationKind::RpgApproachWithin: {
         float const required =
             expectation.distance > 0.0F ? expectation.distance : 1.0F;
@@ -3452,6 +3598,8 @@ void ArenaScenarioRunner::observe_rendered_frame(
     m_impl->observe_bridge_centerline_alignment(group.name);
   }
   m_impl->observe_rpg_locomotion_presentation(frame);
+  m_impl->observe_rpg_swing_cadence(frame);
+  m_impl->observe_rpg_travel(frame);
   m_impl->observe_group_pair_proximity(frame);
   m_impl->trace.push_back(std::move(frame));
 }
@@ -3683,7 +3831,8 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("rpg_aim_target_id"),
            static_cast<qint64>(unit.rpg_aim_target_id)},
           {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot},
-          {QStringLiteral("rpg_action_phase"), unit.rpg_action_phase}});
+          {QStringLiteral("rpg_action_phase"), unit.rpg_action_phase},
+          {QStringLiteral("rpg_action_time"), unit.rpg_action_normalized_time}});
     }
     QJsonArray soldiers;
     for (auto const& soldier : frame.soldiers) {

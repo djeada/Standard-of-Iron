@@ -3070,6 +3070,16 @@ auto start_authored_action_at(Entity* entity,
   return action;
 }
 
+// Authored-action tests step the simulation in fractions of the action's own
+// timeline so they keep testing the same event window when a swing is retuned.
+auto action_seconds(Game::Systems::CombatActions::CombatActionId id,
+                    float normalized_delta) -> float {
+  auto const* definition =
+      Game::Systems::CombatActions::find_combat_action_definition(id);
+  return definition != nullptr ? normalized_delta * definition->duration_seconds
+                               : normalized_delta;
+}
+
 auto make_enemy_soldier(World& world, float x, float z) -> Entity* {
   auto* enemy = world.create_entity();
   enemy->add_component<TransformComponent>(x, 0.0F, z);
@@ -3161,7 +3171,10 @@ TEST_F(CombatModeTest, CommanderStrikeAdvancesAuthoredActionEvents) {
       0.36F);
   ASSERT_NE(action, nullptr);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                     0.026F));
 
   EXPECT_TRUE(action->action_active);
   EXPECT_TRUE(action->weapon_trace_active);
@@ -3170,7 +3183,10 @@ TEST_F(CombatModeTest, CommanderStrikeAdvancesAuthoredActionEvents) {
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart));
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.55F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                     0.234F));
 
   EXPECT_FALSE(action->action_active);
   EXPECT_FALSE(action->weapon_trace_active);
@@ -4971,14 +4987,20 @@ TEST_F(CombatModeTest, CommanderActionSwordTraceDealsDamageWhenBladeTouches) {
       0.33F);
   ASSERT_NE(action, nullptr);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                     0.026F));
 
   EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 100);
   EXPECT_FALSE(combat_state->damage_dealt_this_swing);
   EXPECT_EQ(action->last_hit_target_id, 0U);
   EXPECT_EQ(action->hit_target_count, 0U);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.18F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                     0.077F));
 
   EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 90);
   EXPECT_TRUE(combat_state->damage_dealt_this_swing);
@@ -5003,7 +5025,10 @@ TEST_F(CombatModeTest, CommanderBladeContactSelectsExactFormationSoldier) {
   ASSERT_NE(action, nullptr);
   action->active_target_id = formation->get_id();
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.24F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+                     0.102F));
 
   EXPECT_LT(formation_unit->health, 100);
   EXPECT_EQ(action->last_hit_target_id, formation->get_id());
@@ -5182,7 +5207,10 @@ TEST_F(CombatModeTest, MountedSpearActionTraceDealsDamageDuringActiveWindow) {
       0.24F);
   ASSERT_NE(action, nullptr);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.06F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::MountedSpearThrust,
+                     0.036F));
 
   EXPECT_EQ(enemy->get_component<UnitComponent>()->health, 78);
   EXPECT_TRUE(combat_state->damage_dealt_this_swing);
@@ -5244,12 +5272,16 @@ TEST_F(CombatModeTest, CommanderBowActionReleasesProjectileAtAuthoredEvent) {
   auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
   ASSERT_NE(projectile_system, nullptr);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.12F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgBowShot, 0.057F));
 
   EXPECT_TRUE(projectile_system->projectiles().empty());
   EXPECT_FALSE(combat_state->damage_dealt_this_swing);
 
-  Game::Systems::Combat::process_combat_state(world.get(), 0.08F);
+  Game::Systems::Combat::process_combat_state(
+      world.get(),
+      action_seconds(Game::Systems::CombatActions::CombatActionId::RpgBowShot, 0.039F));
 
   ASSERT_EQ(projectile_system->projectiles().size(), 1U);
   auto const& projectile = projectile_system->projectiles().front();

@@ -83,10 +83,24 @@ auto CombatActionService::request_attack(
   auto* combat_state = attacker->get_component<Engine::Core::CombatStateComponent>();
   auto* active_action =
       attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
-  if (active_action != nullptr && active_action->action_running) {
+  auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  bool const player_driven = commander != nullptr && commander->fpv_controlled;
+
+  // A player-driven commander cancels recovery straight into the next swing so
+  // held attacks chain as a combo instead of waiting out the full action.
+  bool const cancels_into_next_action =
+      player_driven && active_action != nullptr && active_action->cancel_window_active;
+
+  if (active_action != nullptr && active_action->action_running &&
+      !cancels_into_next_action) {
     if (active_action->cancel_window_active) {
       active_action->input_buffered = true;
-      if (combat_state != nullptr) {
+
+      // The presentation buffer replays the action that is already running. A
+      // player-driven commander must not take that path: he re-requests the
+      // attack every frame the button is held, and the request picks the next
+      // step of the combo instead of repeating the current swing.
+      if (combat_state != nullptr && !player_driven) {
         combat_state->input_buffered = true;
       }
       result.buffered = true;
@@ -94,7 +108,7 @@ auto CombatActionService::request_attack(
     result.accepted = true;
     return result;
   }
-  if (combat_state != nullptr &&
+  if (combat_state != nullptr && !cancels_into_next_action &&
       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
     result.accepted = true;
     return result;
@@ -113,7 +127,6 @@ auto CombatActionService::request_attack(
     combat_state = attacker->add_component<Engine::Core::CombatStateComponent>();
   }
 
-  auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
   bool const finisher_attack = commander != nullptr && commander->combo_step >= 3;
 
   Engine::Core::CombatAttackFamily attack_family =
@@ -158,8 +171,11 @@ auto CombatActionService::request_attack(
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
-        Engine::Core::CombatStateComponent::k_advance_duration *
-        (finisher_attack ? 1.70F : 1.35F);
+        definition != nullptr
+            ? authored_phase_duration(*definition,
+                                      Engine::Core::CombatAnimationState::Advance)
+            : Engine::Core::CombatStateComponent::k_advance_duration *
+                  (finisher_attack ? 1.70F : 1.35F);
     combat_state->attack_family = attack_family;
     combat_state->finisher_attack = finisher_attack;
 
