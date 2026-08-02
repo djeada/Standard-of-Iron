@@ -352,10 +352,12 @@ class SpearmanRenderer final : public HumanoidRendererBase {
 public:
   SpearmanRenderer(const SpearmanRendererProfile& profile,
                    std::string_view renderer_key,
-                   Render::Creature::Pipeline::CreatureAssetId creature_asset_id)
+                   Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
+                   bool use_beard_archetypes)
       : m_profile(profile)
       , m_renderer_key(renderer_key)
-      , m_creature_asset_id(creature_asset_id) {}
+      , m_creature_asset_id(creature_asset_id)
+      , m_use_beard_archetypes(use_beard_archetypes) {}
 
   auto get_proportion_scaling() const -> QVector3D override {
     return m_profile.proportion_profile.as_vector();
@@ -403,7 +405,7 @@ public:
         m_renderer_key,
         Render::Creature::ArchetypeRegistry::k_humanoid_base,
         std::span<const EquipmentHandle>(handles.data(), m_profile.loadout_slot_count));
-    if (m_profile.use_carthage_beard_archetypes) {
+    if (m_profile.use_carthage_beard_archetypes && m_use_beard_archetypes) {
       spec.animation_manifest.variant_table = &spearman_variant_table();
     }
     m_visual_spec_cache = spec;
@@ -428,6 +430,7 @@ private:
   const SpearmanRendererProfile& m_profile;
   std::string_view m_renderer_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
+  bool m_use_beard_archetypes{true};
 
   void apply_palette_overrides(const SpearmanStyleConfig& style,
                                const QVector3D& team_tint,
@@ -520,8 +523,11 @@ void register_spearman_renderer_profile(
   }
 
   for (const auto& renderer : renderers) {
-    auto renderer_instance = std::make_shared<SpearmanRenderer>(
-        profile, renderer.renderer_key, renderer.creature_asset_id);
+    auto renderer_instance =
+        std::make_shared<SpearmanRenderer>(profile,
+                                           renderer.renderer_key,
+                                           renderer.creature_asset_id,
+                                           renderer.use_beard_archetypes);
     registry.register_renderer(
         std::string(renderer.renderer_key),
         [renderer_instance](const DrawContext& ctx, ISubmitter& out) {

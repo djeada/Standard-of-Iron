@@ -1,6 +1,10 @@
 #include "commander_helmets.h"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstdint>
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -22,57 +26,336 @@ enum CommanderHelmetPaletteSlot : std::uint8_t {
 
 using Primitive = GeneratedEquipmentPrimitive;
 
+// Lays a tapering mass of overlapping lobes along a spine. Bare cones read as
+// toothpicks and rows of thin cylinders read as a comb, so every crest, plume
+// and tail on these helmets is built this way instead. The spine is resampled by
+// arc length against the thinnest part of the mass, because lobes spaced further
+// apart than their own diameter read as a string of beads. `lateral_scale` below
+// one squashes the mass into a blade, and the first lobe is meant to sit inside
+// the shell so the crest never appears to hover over the helmet.
+void add_lobed_mass(std::vector<Primitive>& primitives,
+                    std::span<const QVector3D> spine,
+                    float root_radius,
+                    float tip_radius,
+                    std::uint8_t slot,
+                    float lateral_scale = 1.0F) {
+  if (spine.size() < 2U) {
+    return;
+  }
+  float total = 0.0F;
+  for (std::size_t i = 1U; i < spine.size(); ++i) {
+    total += (spine[i] - spine[i - 1U]).length();
+  }
+  if (total <= 1.0e-4F) {
+    return;
+  }
+  // Step along the spine by a fraction of the *local* radius. A fixed step
+  // leaves the thin end beaded while the fat end is over-sampled.
+  std::vector<float> stops;
+  stops.reserve(32U);
+  for (float travelled = 0.0F; travelled < total && stops.size() < 26U;) {
+    float const t = travelled / total;
+    stops.push_back(t);
+    travelled +=
+        std::max(0.03F, 0.42F * (root_radius + ((tip_radius - root_radius) * t)));
+  }
+  stops.push_back(1.0F);
+  for (float const t : stops) {
+    float remaining = t * total;
+    QVector3D point = spine.back();
+    for (std::size_t k = 1U; k < spine.size(); ++k) {
+      float const segment = (spine[k] - spine[k - 1U]).length();
+      if (remaining <= segment || k + 1U == spine.size()) {
+        float const u =
+            segment > 1.0e-4F ? std::clamp(remaining / segment, 0.0F, 1.0F) : 0.0F;
+        point = spine[k - 1U] + ((spine[k] - spine[k - 1U]) * u);
+        break;
+      }
+      remaining -= segment;
+    }
+    float const r = root_radius + ((tip_radius - root_radius) * t);
+    primitives.push_back(
+        generated_ellipsoid(point, QVector3D(r * lateral_scale, r, r), slot, 1.0F, 0));
+  }
+}
+
+// Punic commander bowl. Deliberately a different shape language from the Roman
+// one below: a taller shell drawn up to a conical finial, a scalloped brow, and
+// cheek pieces that close to a point instead of a rounded jawline. Sized off the
+// same skull -- cranium half-extents 1.25 / 1.53 / 1.38 about y = -0.13, nose
+// tip at z = 1.53, chin at y = -1.23.
 void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.48F, -0.06F),
-                                           QVector3D(1.42F, 1.20F, 1.48F),
+  // Tiered conical shell. A single cone over a dome left the silhouette reading
+  // as a plain egg with a spike, because the cone is already needle-thin by the
+  // time it clears the dome; stacking narrowing tiers gives the drawn-up Punic
+  // profile instead, and keeps it clearly apart from the Roman round bowl.
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.30F, -0.06F),
+                                           QVector3D(1.46F, 1.16F, 1.56F),
                                            k_metal_slot,
                                            1.0F,
                                            2));
-  primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.34F, -0.02F),
-                                          QVector3D(0.0F, -0.16F, -0.02F),
-                                          1.43F,
-                                          k_dark_slot,
-                                          1.0F,
-                                          2));
-  primitives.push_back(generated_cylinder(QVector3D(0.0F, 0.28F, 1.18F),
-                                          QVector3D(0.0F, -0.56F, 1.06F),
-                                          face_guard ? 0.13F : 0.075F,
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.86F, -0.08F),
+                                           QVector3D(1.18F, 0.98F, 1.26F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.42F, -0.10F),
+                                           QVector3D(0.82F, 0.74F, 0.88F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.90F, -0.12F),
+                                           QVector3D(0.46F, 0.48F, 0.50F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(
+      generated_sphere(QVector3D(0.0F, 2.24F, -0.14F), 0.22F, k_accent_slot, 1.0F, 2));
+
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.22F, 1.16F),
+                                           QVector3D(1.10F, 0.12F, 0.36F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_cylinder(QVector3D(-0.52F, -0.24F, 1.22F),
+                                          QVector3D(0.52F, -0.24F, 1.22F),
+                                          0.12F,
                                           k_accent_slot,
                                           1.0F,
                                           2));
-  primitives.push_back(generated_cylinder(QVector3D(-1.20F, 0.06F, 0.20F),
-                                          QVector3D(-0.96F, -0.72F, 0.36F),
-                                          0.20F,
-                                          k_dark_slot,
-                                          1.0F,
-                                          2));
-  primitives.push_back(generated_cylinder(QVector3D(1.20F, 0.06F, 0.20F),
-                                          QVector3D(0.96F, -0.72F, 0.36F),
-                                          0.20F,
-                                          k_dark_slot,
-                                          1.0F,
-                                          2));
-  primitives.push_back(generated_cylinder(QVector3D(-0.92F, 0.78F, 0.88F),
-                                          QVector3D(0.92F, 0.78F, 0.88F),
-                                          0.075F,
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    primitives.push_back(generated_cylinder(QVector3D(s * 0.52F, -0.24F, 1.22F),
+                                            QVector3D(s * 1.16F, -0.40F, 0.34F),
+                                            0.11F,
+                                            k_accent_slot,
+                                            1.0F,
+                                            2));
+  }
+
+  // Nasal bar, carried clear of the nose it guards.
+  primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.06F, 1.60F),
+                                          QVector3D(0.0F, -0.80F, 1.44F),
+                                          face_guard ? 0.16F : 0.09F,
                                           k_accent_slot,
                                           1.0F,
                                           2));
+
+  // Neck guard as stepped plates, broader than the Roman flare.
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.40F, -1.30F),
+                                           QVector3D(1.26F, 0.24F, 0.48F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.70F, -1.58F),
+                                           QVector3D(1.30F, 0.22F, 0.46F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.98F, -1.78F),
+                                           QVector3D(1.20F, 0.20F, 0.42F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -1.16F, -1.84F),
+                                           QVector3D(1.06F, 0.12F, 0.28F),
+                                           k_accent_slot,
+                                           1.0F,
+                                           2));
+
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    primitives.push_back(generated_cylinder(QVector3D(s * 1.14F, -0.30F, 0.32F),
+                                            QVector3D(s * 1.32F, -0.35F, 0.27F),
+                                            0.60F,
+                                            k_metal_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_cylinder(QVector3D(s * 1.02F, -0.92F, 0.48F),
+                                            QVector3D(s * 1.20F, -0.97F, 0.43F),
+                                            0.46F,
+                                            k_metal_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_cone(QVector3D(s * 0.94F, -1.18F, 0.56F),
+                                        QVector3D(s * 0.70F, -1.88F, 0.62F),
+                                        0.30F,
+                                        k_metal_slot,
+                                        1.0F,
+                                        2));
+    primitives.push_back(generated_sphere(
+        QVector3D(s * 1.36F, -0.18F, 0.26F), 0.16F, k_accent_slot, 1.0F, 2));
+    primitives.push_back(generated_sphere(
+        QVector3D(s * 1.24F, -0.74F, 0.46F), 0.12F, k_dark_slot, 1.0F, 2));
+  }
+}
+
+// Roman commander bowl. Same Roman language as the line's montefortino, sized
+// off the same skull: snug bowl, projecting brow peak with embossed brows,
+// hinged cheek plates down to the jaw, and a neck guard flaring off the nape.
+void add_roman_base_helmet(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.40F, -0.06F),
+                                           QVector3D(1.48F, 1.34F, 1.60F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.88F, -0.08F),
+                                           QVector3D(1.14F, 0.90F, 1.24F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.26F, 1.14F),
+                                           QVector3D(1.14F, 0.13F, 0.38F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.72F, -0.28F, 1.28F),
+                                             QVector3D(0.42F, 0.09F, 0.19F),
+                                             k_accent_slot,
+                                             1.0F,
+                                             2));
+    primitives.push_back(generated_cylinder(QVector3D(s * 0.78F, -0.28F, 1.20F),
+                                            QVector3D(s * 1.20F, -0.44F, 0.30F),
+                                            0.11F,
+                                            k_accent_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.32F, 0.46F, 1.42F),
+                                             QVector3D(0.34F, 0.11F, 0.19F),
+                                             k_accent_slot,
+                                             1.0F,
+                                             2));
+    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.84F, 0.32F, 1.22F),
+                                             QVector3D(0.30F, 0.10F, 0.18F),
+                                             k_accent_slot,
+                                             1.0F,
+                                             2));
+  }
+
+  // Nasal bar, carried clear of the nose it guards.
+  primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.10F, 1.62F),
+                                          QVector3D(0.0F, -0.74F, 1.46F),
+                                          0.13F,
+                                          k_accent_slot,
+                                          1.0F,
+                                          2));
+
+  // Neck guard built as stepped plates: a cone's base cap reads as an upturned
+  // bowl stuck to the back of the head.
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.42F, -1.32F),
+                                           QVector3D(1.24F, 0.23F, 0.46F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.70F, -1.58F),
+                                           QVector3D(1.26F, 0.21F, 0.44F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.96F, -1.76F),
+                                           QVector3D(1.16F, 0.19F, 0.40F),
+                                           k_metal_slot,
+                                           1.0F,
+                                           2));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -1.12F, -1.82F),
+                                           QVector3D(1.02F, 0.12F, 0.28F),
+                                           k_accent_slot,
+                                           1.0F,
+                                           2));
+
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    primitives.push_back(generated_cylinder(QVector3D(s * 1.14F, -0.32F, 0.34F),
+                                            QVector3D(s * 1.32F, -0.37F, 0.29F),
+                                            0.62F,
+                                            k_metal_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_cylinder(QVector3D(s * 1.00F, -0.94F, 0.50F),
+                                            QVector3D(s * 1.18F, -0.99F, 0.45F),
+                                            0.48F,
+                                            k_metal_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_cylinder(QVector3D(s * 0.78F, -1.40F, 0.60F),
+                                            QVector3D(s * 0.94F, -1.45F, 0.55F),
+                                            0.29F,
+                                            k_metal_slot,
+                                            1.0F,
+                                            2));
+    primitives.push_back(generated_sphere(
+        QVector3D(s * 1.38F, -0.20F, 0.28F), 0.15F, k_dark_slot, 1.0F, 2));
+    primitives.push_back(generated_sphere(
+        QVector3D(s * 1.26F, -0.76F, 0.48F), 0.12F, k_dark_slot, 1.0F, 2));
+  }
 }
 
 void add_fabius_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.70F, -0.05F),
-                                     QVector3D(0.16F, 0.22F, 1.25F),
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, -0.05F),
+                                     QVector3D(0.15F, 0.30F, 1.15F),
                                      k_accent_slot,
                                      1.0F,
                                      2));
-  for (int i = 0; i < 9; ++i) {
-    float const t = static_cast<float>(i) / 8.0F;
-    QVector3D const root(0.0F, 1.82F, 0.82F - t * 1.70F);
-    float const crown = 0.84F - 0.22F * t;
-    QVector3D const tip(0.0F, 1.82F + crown, 0.78F - t * 1.92F);
-    primitives.push_back(generated_cylinder(root, tip, 0.075F, k_plume_slot, 1.0F, 0));
-  }
+  // Fore-and-aft brush. Separate strands read as a comb at close range, so the
+  // crest is nine overlapping lobes whose undersides sit inside the bowl.
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.386F, 1.35F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.832F, 1.00F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.082F, 0.65F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.217F, 0.30F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.260F, -0.05F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.215F, -0.40F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.077F, -0.75F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.828F, -1.10F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.391F, -1.45F),
+                                           QVector3D(0.20F, 0.62F, 0.52F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.06F, 1.64F),
+                                           QVector3D(0.19F, 0.52F, 0.36F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.86F, -1.86F),
+                                           QVector3D(0.18F, 0.58F, 0.40F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
   primitives.push_back(generated_cone(QVector3D(-0.94F, 0.96F, -0.18F),
                                       QVector3D(-1.54F, 1.36F, -0.42F),
                                       0.16F,
@@ -88,23 +371,58 @@ void add_fabius_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_scipio_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_cylinder(QVector3D(-1.54F, 1.62F, -0.02F),
-                                          QVector3D(1.54F, 1.62F, -0.02F),
-                                          0.10F,
-                                          k_accent_slot,
-                                          1.0F,
-                                          2));
-  for (int i = 0; i < 11; ++i) {
-    float const t = static_cast<float>(i) / 10.0F;
-    float const x = -1.48F + t * 2.96F;
-    float const lift = 0.82F - 0.20F * (2.0F * t - 1.0F) * (2.0F * t - 1.0F);
-    primitives.push_back(generated_cylinder(QVector3D(x, 1.68F, -0.02F),
-                                            QVector3D(x * 1.08F, 1.68F + lift, -0.20F),
-                                            0.080F,
-                                            k_plume_slot,
-                                            1.0F,
-                                            0));
-  }
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.50F, -0.04F),
+                                     QVector3D(1.30F, 0.28F, 0.13F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  // The centurion's transverse crest, built as a solid blade across the bowl
+  // rather than a row of upright strands.
+  primitives.push_back(generated_ellipsoid(QVector3D(-1.40F, 1.163F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(-1.05F, 1.757F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(-0.70F, 2.053F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(-0.35F, 2.210F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.00F, 2.260F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.35F, 2.210F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(0.70F, 2.053F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(1.05F, 1.757F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
+  primitives.push_back(generated_ellipsoid(QVector3D(1.40F, 1.163F, -0.04F),
+                                           QVector3D(0.44F, 0.62F, 0.19F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           0));
   for (int side : {-1, 1}) {
     float const s = static_cast<float>(side);
     primitives.push_back(generated_cylinder(QVector3D(s * 0.22F, 0.92F, 1.02F),
@@ -123,71 +441,109 @@ void add_scipio_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_marcellus_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_cone(QVector3D(-0.70F, 1.26F, -0.05F),
-                                      QVector3D(-0.92F, 2.66F, -0.24F),
-                                      0.34F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(0.70F, 1.26F, -0.05F),
-                                      QVector3D(0.92F, 2.66F, -0.24F),
-                                      0.34F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(-0.62F, 1.36F, -0.02F),
-                                      QVector3D(-0.80F, 2.38F, -0.18F),
-                                      0.20F,
-                                      k_plume_slot,
-                                      1.0F,
-                                      0));
-  primitives.push_back(generated_cone(QVector3D(0.62F, 1.36F, -0.02F),
-                                      QVector3D(0.80F, 2.38F, -0.18F),
-                                      0.20F,
-                                      k_plume_slot,
-                                      1.0F,
-                                      0));
-  primitives.push_back(generated_cone(QVector3D(0.0F, 1.46F, -0.32F),
-                                      QVector3D(0.0F, 2.30F, -1.24F),
-                                      0.24F,
-                                      k_accent_slot,
-                                      1.0F,
-                                      2));
-}
-
-void add_hanno_crest(std::vector<Primitive>& primitives) {
-  for (int i = -1; i <= 1; ++i) {
-    float const x = static_cast<float>(i) * 0.62F;
-    float const height = i == 0 ? 3.10F : 2.62F;
-    primitives.push_back(generated_cone(QVector3D(x, 1.30F, -0.05F),
-                                        QVector3D(x * 1.16F, height, -0.16F),
-                                        i == 0 ? 0.28F : 0.23F,
-                                        i == 0 ? k_accent_slot : k_dark_slot,
+  // Twin upright plumes flanking a swept rear tail. The plumes were bare cones
+  // and read as devil horns; as lobed masses they read as hair.
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.48F, -0.10F),
+                                     QVector3D(0.76F, 0.26F, 0.34F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    std::array<QVector3D, 6> const plume{{
+        {s * 0.62F, 1.32F, -0.04F},
+        {s * 0.72F, 1.72F, -0.10F},
+        {s * 0.82F, 2.10F, -0.16F},
+        {s * 0.92F, 2.44F, -0.22F},
+        {s * 0.98F, 2.60F, -0.26F},
+        {s * 1.04F, 2.78F, -0.30F},
+    }};
+    add_lobed_mass(primitives, plume, 0.56F, 0.26F, k_plume_slot, 0.40F);
+    primitives.push_back(generated_cone(QVector3D(s * 0.60F, 1.10F, -0.02F),
+                                        QVector3D(s * 0.66F, 1.62F, -0.08F),
+                                        0.30F,
+                                        k_dark_slot,
                                         1.0F,
                                         2));
   }
-  primitives.push_back(
-      generated_sphere(QVector3D(-1.48F, 0.42F, 0.0F), 0.28F, k_accent_slot, 1.0F, 2));
-  primitives.push_back(
-      generated_sphere(QVector3D(1.48F, 0.42F, 0.0F), 0.28F, k_accent_slot, 1.0F, 2));
-  primitives.push_back(generated_cylinder(QVector3D(-1.48F, 0.42F, -0.12F),
-                                          QVector3D(1.48F, 0.42F, -0.12F),
-                                          0.075F,
-                                          k_plume_slot,
-                                          1.0F,
-                                          2));
+  std::array<QVector3D, 6> const tail{{
+      {0.0F, 1.66F, -0.34F},
+      {0.0F, 1.68F, -0.86F},
+      {0.0F, 1.54F, -1.34F},
+      {0.0F, 1.28F, -1.74F},
+      {0.0F, 0.96F, -2.04F},
+      {0.0F, 0.62F, -2.24F},
+  }};
+  add_lobed_mass(primitives, tail, 0.42F, 0.20F, k_accent_slot, 0.45F);
+}
+
+void add_hanno_crest(std::vector<Primitive>& primitives) {
+  // Punic trident: three plumes off one socket, the centre one tallest. Bare
+  // cones here read as toothpicks stuck in an egg.
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.62F, -0.08F),
+                                     QVector3D(0.82F, 0.26F, 0.30F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  std::array<QVector3D, 7> const centre{{
+      {0.0F, 1.42F, -0.06F},
+      {0.0F, 1.78F, -0.09F},
+      {0.0F, 2.14F, -0.12F},
+      {0.0F, 2.48F, -0.15F},
+      {0.0F, 2.78F, -0.18F},
+      {0.0F, 2.94F, -0.21F},
+      {0.0F, 3.10F, -0.24F},
+  }};
+  add_lobed_mass(primitives, centre, 0.58F, 0.26F, k_plume_slot, 0.42F);
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    std::array<QVector3D, 6> const wing{{
+        {s * 0.56F, 1.34F, -0.06F},
+        {s * 0.68F, 1.68F, -0.10F},
+        {s * 0.80F, 2.00F, -0.14F},
+        {s * 0.92F, 2.28F, -0.18F},
+        {s * 1.02F, 2.50F, -0.22F},
+        {s * 1.10F, 2.68F, -0.26F},
+    }};
+    add_lobed_mass(primitives, wing, 0.48F, 0.22F, k_accent_slot, 0.42F);
+  }
+
+  // Rosette diadem across the brow rather than a wire through the skull.
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    primitives.push_back(generated_sphere(
+        QVector3D(s * 1.32F, 0.16F, 0.44F), 0.24F, k_accent_slot, 1.0F, 2));
+    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.74F, 0.30F, 1.16F),
+                                             QVector3D(0.44F, 0.12F, 0.20F),
+                                             k_plume_slot,
+                                             1.0F,
+                                             2));
+  }
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.36F, 1.42F),
+                                           QVector3D(0.42F, 0.14F, 0.20F),
+                                           k_plume_slot,
+                                           1.0F,
+                                           2));
 }
 
 void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
-  QVector3D last(0.0F, 1.52F, 0.40F);
-  for (int i = 1; i <= 8; ++i) {
-    float const t = static_cast<float>(i) / 8.0F;
-    QVector3D const next(
-        0.20F * t, 1.52F + 1.18F * (1.0F - 0.46F * t), 0.40F - 2.42F * t);
-    primitives.push_back(
-        generated_cylinder(last, next, 0.11F - 0.045F * t, k_plume_slot, 1.0F, 0));
-    last = next;
-  }
+  // A single horsehair tail thrown back off the crown. The old chain of
+  // narrowing cylinders read as bent wire.
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, 0.10F),
+                                     QVector3D(0.24F, 0.28F, 0.62F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  std::array<QVector3D, 7> const tail{{
+      {0.0F, 1.50F, 0.40F},
+      {0.0F, 1.86F, 0.02F},
+      {0.0F, 1.98F, -0.50F},
+      {0.0F, 1.94F, -1.04F},
+      {0.0F, 1.76F, -1.52F},
+      {0.0F, 1.48F, -1.92F},
+      {0.0F, 1.12F, -2.20F},
+  }};
+  add_lobed_mass(primitives, tail, 0.52F, 0.24F, k_plume_slot, 0.45F);
   primitives.push_back(generated_cone(QVector3D(-1.06F, 0.90F, -0.12F),
                                       QVector3D(-1.84F, 1.48F, -0.76F),
                                       0.18F,
@@ -203,20 +559,25 @@ void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_hannibal_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.72F, -0.08F),
-                                     QVector3D(0.22F, 0.20F, 1.34F),
+  // Twin swept ridges rather than the old rank of upright strands, which read
+  // as a comb. Each ridge is a blade: lobes squashed on x and thrown backwards.
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.64F, -0.08F),
+                                     QVector3D(0.30F, 0.26F, 1.24F),
                                      k_accent_slot,
                                      1.0F,
                                      2));
-  for (int row = 0; row < 2; ++row) {
-    for (int i = 0; i < 9; ++i) {
-      float const t = static_cast<float>(i) / 8.0F;
-      float const side = row == 0 ? -0.14F : 0.14F;
-      QVector3D const root(side, 1.82F, 0.88F - t * 1.82F);
-      QVector3D const tip(side * 1.8F, 2.92F - 0.20F * t, 0.78F - t * 2.18F);
-      primitives.push_back(
-          generated_cylinder(root, tip, 0.085F, k_plume_slot, 1.0F, 0));
-    }
+  for (int side = 0; side < 2; ++side) {
+    float const s = (side == 0) ? -1.0F : 1.0F;
+    std::array<QVector3D, 7> const ridge{{
+        {s * 0.20F, 1.36F, 0.76F},
+        {s * 0.21F, 1.96F, 0.40F},
+        {s * 0.23F, 2.22F, -0.14F},
+        {s * 0.26F, 2.26F, -0.70F},
+        {s * 0.30F, 2.06F, -1.20F},
+        {s * 0.34F, 1.74F, -1.62F},
+        {s * 0.38F, 1.32F, -1.96F},
+    }};
+    add_lobed_mass(primitives, ridge, 0.46F, 0.24F, k_plume_slot, 0.46F);
   }
   primitives.push_back(generated_cone(QVector3D(-1.04F, 0.96F, -0.08F),
                                       QVector3D(-1.86F, 1.72F, -0.60F),
@@ -225,15 +586,9 @@ void add_hannibal_crest(std::vector<Primitive>& primitives) {
                                       1.0F,
                                       2));
   primitives.push_back(generated_cone(QVector3D(1.04F, 0.96F, -0.08F),
-                                      QVector3D(1.52F, 1.38F, -0.42F),
-                                      0.19F,
+                                      QVector3D(1.86F, 1.72F, -0.60F),
+                                      0.24F,
                                       k_dark_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(0.0F, 0.74F, 1.20F),
-                                      QVector3D(0.0F, -0.78F, 1.02F),
-                                      0.20F,
-                                      k_accent_slot,
                                       1.0F,
                                       2));
 }
@@ -241,8 +596,15 @@ void add_hannibal_crest(std::vector<Primitive>& primitives) {
 auto build_commander_helmet(CommanderHelmetStyle style,
                             std::string_view debug_name) -> RenderArchetype {
   std::vector<Primitive> primitives;
-  primitives.reserve(40U);
-  add_base_helmet(primitives, style == CommanderHelmetStyle::Hannibal);
+  primitives.reserve(96U);
+  bool const roman = style == CommanderHelmetStyle::Fabius ||
+                     style == CommanderHelmetStyle::Scipio ||
+                     style == CommanderHelmetStyle::Marcellus;
+  if (roman) {
+    add_roman_base_helmet(primitives);
+  } else {
+    add_base_helmet(primitives, style == CommanderHelmetStyle::Hannibal);
+  }
   switch (style) {
   case CommanderHelmetStyle::Fabius:
     add_fabius_crest(primitives);
@@ -271,35 +633,35 @@ auto commander_colors(CommanderHelmetStyle style, const HumanoidPalette& palette
   (void)palette;
   switch (style) {
   case CommanderHelmetStyle::Fabius:
-    return {QVector3D(0.24F, 0.28F, 0.34F),
-            QVector3D(0.08F, 0.09F, 0.11F),
-            QVector3D(0.70F, 0.72F, 0.68F),
-            QVector3D(0.48F, 0.025F, 0.03F)};
+    return {QVector3D(0.34F, 0.38F, 0.45F),
+            QVector3D(0.13F, 0.14F, 0.17F),
+            QVector3D(0.74F, 0.76F, 0.72F),
+            QVector3D(0.62F, 0.05F, 0.05F)};
   case CommanderHelmetStyle::Scipio:
     return {QVector3D(0.54F, 0.32F, 0.08F),
             QVector3D(0.12F, 0.09F, 0.07F),
             QVector3D(1.0F, 0.72F, 0.18F),
             QVector3D(0.82F, 0.055F, 0.04F)};
   case CommanderHelmetStyle::Marcellus:
-    return {QVector3D(0.28F, 0.30F, 0.34F),
-            QVector3D(0.10F, 0.11F, 0.13F),
-            QVector3D(0.64F, 0.08F, 0.06F),
-            QVector3D(0.32F, 0.035F, 0.025F)};
+    return {QVector3D(0.36F, 0.39F, 0.44F),
+            QVector3D(0.18F, 0.19F, 0.22F),
+            QVector3D(0.68F, 0.10F, 0.07F),
+            QVector3D(0.58F, 0.06F, 0.05F)};
   case CommanderHelmetStyle::Hanno:
-    return {QVector3D(0.38F, 0.21F, 0.065F),
-            QVector3D(0.16F, 0.09F, 0.05F),
+    return {QVector3D(0.46F, 0.27F, 0.09F),
+            QVector3D(0.22F, 0.13F, 0.07F),
             QVector3D(0.96F, 0.64F, 0.16F),
-            QVector3D(0.26F, 0.035F, 0.32F)};
+            QVector3D(0.40F, 0.07F, 0.46F)};
   case CommanderHelmetStyle::Hasdrubal:
-    return {QVector3D(0.22F, 0.14F, 0.06F),
-            QVector3D(0.07F, 0.10F, 0.10F),
-            QVector3D(0.20F, 0.58F, 0.54F),
-            QVector3D(0.20F, 0.055F, 0.28F)};
+    return {QVector3D(0.32F, 0.21F, 0.09F),
+            QVector3D(0.12F, 0.16F, 0.16F),
+            QVector3D(0.24F, 0.62F, 0.58F),
+            QVector3D(0.36F, 0.09F, 0.44F)};
   case CommanderHelmetStyle::Hannibal:
-    return {QVector3D(0.15F, 0.11F, 0.065F),
-            QVector3D(0.035F, 0.04F, 0.05F),
+    return {QVector3D(0.26F, 0.20F, 0.12F),
+            QVector3D(0.10F, 0.11F, 0.13F),
             QVector3D(0.86F, 0.56F, 0.12F),
-            QVector3D(0.018F, 0.02F, 0.025F)};
+            QVector3D(0.15F, 0.16F, 0.18F)};
   }
   return {QVector3D(0.25F, 0.27F, 0.30F),
           QVector3D(0.08F, 0.08F, 0.09F),

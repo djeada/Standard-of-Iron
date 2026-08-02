@@ -27,8 +27,11 @@ const SpearmanRendererProfile k_profile{
 };
 
 const std::array<SpearmanRendererRegistration, 2> k_renderers{{
-    {"troops/carthage/spearman"},
-    {"troops/carthage/commanders/hanno_the_great"},
+    {.renderer_key = "troops/carthage/spearman"},
+    // Hanno opts out of the beard variant table: it is baked with the line
+    // spearman's helmet and would override his commander helmet.
+    {.renderer_key = "troops/carthage/commanders/hanno_the_great",
+     .use_beard_archetypes = false},
 }};
 
 } // namespace
