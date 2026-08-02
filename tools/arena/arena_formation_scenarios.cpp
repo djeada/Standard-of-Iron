@@ -1156,14 +1156,333 @@ void add_terrain_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) 
   }
 }
 
+// The capture scenarios behind the formation promo reels. They differ from the
+// acceptance scenarios above in scale and dressing rather than in kind: each is
+// one faction's army large enough to read as an army, put through the army
+// formation layer's own vocabulary -- column, line, defensive, assault,
+// encirclement -- so the finished video shows the system working rather than a
+// battle happening.
+using Intent = Game::Formation::ArmyFormationIntent;
+
+auto form_step(float time,
+               QStringList groups,
+               Intent intent,
+               QVector3D anchor,
+               float facing_degrees,
+               float frontage = 0.0F) -> ArenaScenarioStep {
+  ArenaScenarioStep result;
+  result.name =
+      QStringLiteral("%1_%2").arg(QString::number(time, 'f', 2), groups.value(0));
+  result.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
+  result.command = Command::FormArmy;
+  result.group = groups.value(0);
+  result.formation.groups = std::move(groups);
+  result.formation.intent = intent;
+  result.formation.anchor = anchor;
+  result.formation.facing_degrees = facing_degrees;
+  result.formation.frontage = frontage;
+  return result;
+}
+
+void dress_for_capture(ArenaScenarioDefinition& scenario, float hour) {
+  scenario.suppress_terrain_scatter = false;
+  scenario.select_spawned_units = false;
+  scenario.suppress_spawn_anchor = true;
+  scenario.suppress_ui_overlays = true;
+  scenario.force_full_creature_lod = true;
+  scenario.collect_animation_diagnostics = false;
+  scenario.graphics_quality = Render::GraphicsQuality::Ultra;
+  scenario.arena_floor_half_extent = 40.0F;
+  scenario.environment.start_time = hour;
+  // Locked, because a promo records the same scenario once per shot and the
+  // light has to match across the cut. The exposure and fog the profile picks
+  // for the hour are left alone: overriding them is what turned the earlier
+  // capture scenes into murk.
+  scenario.environment.time_mode = Game::Map::TimeMode::Locked;
+}
+
+void add_formation_promo_scenarios(std::vector<ArenaScenarioDefinition>& out) {
+  {
+    auto s = formation_definition(
+        QStringLiteral("promo_rome_iron_line"),
+        QStringLiteral("Promo: Rome, The Iron Line"),
+        QStringLiteral("A full Roman army marches up in column, deploys into the "
+                       "doctrine battle line, closes into a shield wall, and then "
+                       "advances holding the shape."),
+        46.0F,
+        three_quarter_camera(72.0F));
+    dress_for_capture(s, 10.5F);
+    s.groups = {
+        troop_group(QStringLiteral("first_line"),
+                    Troop::Swordsman,
+                    Nation::RomanRepublic,
+                    1,
+                    9,
+                    {-24.0F, 0.0F, -26.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("second_line"),
+                    Troop::Swordsman,
+                    Nation::RomanRepublic,
+                    1,
+                    9,
+                    {-24.0F, 0.0F, -31.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("spear_screen"),
+                    Troop::Spearman,
+                    Nation::RomanRepublic,
+                    1,
+                    7,
+                    {-18.0F, 0.0F, -36.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("velites"),
+                    Troop::Archer,
+                    Nation::RomanRepublic,
+                    1,
+                    5,
+                    {-12.0F, 0.0F, -30.0F},
+                    12,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("equites"),
+                    Troop::MountedKnight,
+                    Nation::RomanRepublic,
+                    1,
+                    5,
+                    {12.0F, 0.0F, -30.0F},
+                    8,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("consul"),
+                    Troop::RomanVeteranConsul,
+                    Nation::RomanRepublic,
+                    1,
+                    1,
+                    {0.0F, 0.0F, -36.0F},
+                    1),
+    };
+    const QStringList legion{QStringLiteral("first_line"),
+                             QStringLiteral("second_line"),
+                             QStringLiteral("spear_screen"),
+                             QStringLiteral("velites"),
+                             QStringLiteral("equites"),
+                             QStringLiteral("consul")};
+    s.steps = {
+        form_step(1.0F, legion, Intent::Column, {0.0F, 0.0F, -24.0F}, 0.0F, 22.0F),
+        form_step(14.0F, legion, Intent::Line, {0.0F, 0.0F, -6.0F}, 0.0F, 58.0F),
+        form_step(27.0F, legion, Intent::Defensive, {0.0F, 0.0F, -4.0F}, 0.0F, 48.0F),
+    };
+    auto advance =
+        form_step(36.0F, legion, Intent::Assault, {0.0F, 0.0F, 18.0F}, 0.0F, 54.0F);
+    advance.formation.options.movement_policy =
+        Game::Formation::MovementPolicy::MaintainFormation;
+    s.steps.push_back(std::move(advance));
+    s.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("first_line")),
+        expect(Expect::GroupIsRendered, QStringLiteral("equites")),
+        expect(Expect::MovementIsContinuous, QStringLiteral("second_line")),
+        expect(Expect::NoRootTeleport, QStringLiteral("spear_screen")),
+        expect(Expect::NoUnexpectedFallPose, QStringLiteral("first_line")),
+    };
+    out.push_back(std::move(s));
+  }
+
+  {
+    auto s = formation_definition(
+        QStringLiteral("promo_carthage_crescent"),
+        QStringLiteral("Promo: Carthage, The Crescent"),
+        QStringLiteral("A Carthaginian host forms its wide bow, throws the "
+                       "Numidian wings out to either flank, and then closes the "
+                       "horns into an encirclement."),
+        56.0F,
+        three_quarter_camera(78.0F));
+    dress_for_capture(s, 10.2F);
+    s.groups = {
+        troop_group(QStringLiteral("libyan_spears"),
+                    Troop::Spearman,
+                    Nation::Carthage,
+                    1,
+                    9,
+                    {-24.0F, 0.0F, -24.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("iberian_swords"),
+                    Troop::Swordsman,
+                    Nation::Carthage,
+                    1,
+                    7,
+                    {-18.0F, 0.0F, -30.0F},
+                    16,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("balearic_slingers"),
+                    Troop::Archer,
+                    Nation::Carthage,
+                    1,
+                    6,
+                    {-15.0F, 0.0F, -36.0F},
+                    12,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("numidian_left"),
+                    Troop::HorseArcher,
+                    Nation::Carthage,
+                    1,
+                    8,
+                    {-32.0F, 0.0F, -30.0F},
+                    8,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("numidian_right"),
+                    Troop::HorseSpearman,
+                    Nation::Carthage,
+                    1,
+                    8,
+                    {16.0F, 0.0F, -30.0F},
+                    8,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("war_elephants"),
+                    Troop::Elephant,
+                    Nation::Carthage,
+                    1,
+                    6,
+                    {-15.0F, 0.0F, -18.0F},
+                    1,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("elephant_master"),
+                    Troop::CarthageElephantMaster,
+                    Nation::Carthage,
+                    1,
+                    1,
+                    {0.0F, 0.0F, -38.0F},
+                    1),
+    };
+    const QStringList host{QStringLiteral("libyan_spears"),
+                           QStringLiteral("iberian_swords"),
+                           QStringLiteral("balearic_slingers"),
+                           QStringLiteral("war_elephants"),
+                           QStringLiteral("elephant_master")};
+    const QStringList wings{QStringLiteral("numidian_left"),
+                            QStringLiteral("numidian_right")};
+
+    auto bow = form_step(1.0F, host, Intent::Line, {0.0F, 0.0F, -12.0F}, 0.0F, 62.0F);
+    bow.formation.options.ranged_placement = Game::Formation::RangedPlacement::Skirmish;
+    s.steps.push_back(std::move(bow));
+
+    auto left_wing = form_step(4.0F,
+                               {QStringLiteral("numidian_left")},
+                               Intent::Assault,
+                               {-33.0F, 0.0F, -2.0F},
+                               35.0F,
+                               18.0F);
+    left_wing.formation.options.flank_preference =
+        Game::Formation::FlankPreference::StrongLeft;
+    s.steps.push_back(std::move(left_wing));
+
+    auto right_wing = form_step(4.0F,
+                                {QStringLiteral("numidian_right")},
+                                Intent::Assault,
+                                {33.0F, 0.0F, -2.0F},
+                                -35.0F,
+                                18.0F);
+    right_wing.formation.options.flank_preference =
+        Game::Formation::FlankPreference::StrongRight;
+    s.steps.push_back(std::move(right_wing));
+
+    auto centre_holds =
+        form_step(18.0F, host, Intent::Line, {0.0F, 0.0F, 2.0F}, 0.0F, 66.0F);
+    centre_holds.formation.options.frontage_scale = 1.2F;
+    s.steps.push_back(std::move(centre_holds));
+
+    s.steps.push_back(form_step(
+        26.0F, host + wings, Intent::Encirclement, {0.0F, 0.0F, 11.0F}, 0.0F, 58.0F));
+
+    s.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("libyan_spears")),
+        expect(Expect::GroupIsRendered, QStringLiteral("war_elephants")),
+        expect(Expect::GroupIsRendered, QStringLiteral("numidian_left")),
+        expect(Expect::MovementIsContinuous, QStringLiteral("iberian_swords")),
+        expect(Expect::NoRootTeleport, QStringLiteral("libyan_spears")),
+    };
+    out.push_back(std::move(s));
+  }
+
+  {
+    auto s = formation_definition(
+        QStringLiteral("promo_rome_hill_drill"),
+        QStringLiteral("Promo: Rome, Drill On The Ridge"),
+        QStringLiteral("The same legion cycles column, line, defensive and "
+                       "assault across a ridge, so the doctrine shapes and the "
+                       "terrain fitting read from overhead."),
+        52.0F,
+        overhead_camera(92.0F));
+    dress_for_capture(s, 13.0F);
+    ArenaScenarioElevationPatch ridge;
+    ridge.center = QVector3D(0.0F, 0.0F, 4.0F);
+    ridge.radius = 30.0F;
+    ridge.height = 6.0F;
+    s.elevation_patches = {ridge};
+    s.groups = {
+        troop_group(QStringLiteral("cohorts"),
+                    Troop::Swordsman,
+                    Nation::RomanRepublic,
+                    1,
+                    10,
+                    {-27.0F, 0.0F, -26.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("pikes"),
+                    Troop::Spearman,
+                    Nation::RomanRepublic,
+                    1,
+                    7,
+                    {-18.0F, 0.0F, -32.0F},
+                    18,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("bows"),
+                    Troop::Archer,
+                    Nation::RomanRepublic,
+                    1,
+                    6,
+                    {-15.0F, 0.0F, -38.0F},
+                    12,
+                    {6.0F, 0.0F, 0.0F}),
+        troop_group(QStringLiteral("wings"),
+                    Troop::MountedKnight,
+                    Nation::RomanRepublic,
+                    1,
+                    6,
+                    {12.0F, 0.0F, -34.0F},
+                    8,
+                    {6.0F, 0.0F, 0.0F}),
+    };
+    const QStringList legion{QStringLiteral("cohorts"),
+                             QStringLiteral("pikes"),
+                             QStringLiteral("bows"),
+                             QStringLiteral("wings")};
+    s.steps = {
+        form_step(1.0F, legion, Intent::Column, {0.0F, 0.0F, -26.0F}, 0.0F, 16.0F),
+        form_step(13.0F, legion, Intent::Line, {0.0F, 0.0F, 2.0F}, 0.0F, 44.0F),
+        form_step(25.0F, legion, Intent::Defensive, {0.0F, 0.0F, 4.0F}, 0.0F, 32.0F),
+        form_step(35.0F, legion, Intent::Assault, {0.0F, 0.0F, 6.0F}, 0.0F, 40.0F),
+        form_step(45.0F, legion, Intent::Column, {0.0F, 0.0F, 26.0F}, 0.0F, 16.0F),
+    };
+    s.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("cohorts")),
+        expect(Expect::MovementIsContinuous, QStringLiteral("cohorts")),
+        expect(Expect::NoUnexpectedFallPose, QStringLiteral("pikes")),
+        expect(Expect::NoRootTeleport, QStringLiteral("bows")),
+    };
+    out.push_back(std::move(s));
+  }
+}
+
 } // namespace
 
 auto build_formation_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
-  result.reserve(24);
+  result.reserve(28);
   add_unit_layout_scenarios(result);
   add_army_formation_scenarios(result);
   add_terrain_formation_scenarios(result);
+  add_formation_promo_scenarios(result);
   return result;
 }
 

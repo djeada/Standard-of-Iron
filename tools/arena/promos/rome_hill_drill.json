@@ -1,0 +1,185 @@
+{
+  "id": "rome_hill_drill",
+  "title": "DRILL ON THE RIDGE",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dip",
+    "duration": 0.45
+  },
+  "shots": [
+    {
+      "name": "column",
+      "scenario": "promo_rome_hill_drill",
+      "start": 8.0,
+      "duration": 3.4,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 44,
+          "pitch": 56,
+          "yaw": 2,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 3.4,
+          "distance": 38,
+          "pitch": 64,
+          "yaw": 8,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "COLUMN"
+    },
+    {
+      "name": "line",
+      "scenario": "promo_rome_hill_drill",
+      "start": 20.0,
+      "duration": 3.6,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 40,
+          "pitch": 54,
+          "yaw": 6,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 3.6,
+          "distance": 48,
+          "pitch": 62,
+          "yaw": 354,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "LINE"
+    },
+    {
+      "name": "defensive",
+      "scenario": "promo_rome_hill_drill",
+      "start": 31.0,
+      "duration": 3.2,
+      "focus": {
+        "mode": "group",
+        "group": "cohorts",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 40,
+          "pitch": 62,
+          "yaw": 0,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 3.2,
+          "distance": 30,
+          "pitch": 72,
+          "yaw": 6,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "out"
+        }
+      ],
+      "caption": "DEFENSIVE"
+    },
+    {
+      "name": "assault",
+      "scenario": "promo_rome_hill_drill",
+      "start": 40.0,
+      "duration": 3.4,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 36,
+          "pitch": 28,
+          "yaw": 22,
+          "fov": 42,
+          "height": 1.4
+        },
+        {
+          "time": 3.4,
+          "distance": 30,
+          "pitch": 20,
+          "yaw": 40,
+          "fov": 42,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "caption": "ASSAULT",
+      "transition": {
+        "type": "whip",
+        "duration": 0.2
+      }
+    },
+    {
+      "name": "march_off",
+      "scenario": "promo_rome_hill_drill",
+      "start": 48.0,
+      "duration": 4.2,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 36,
+          "pitch": 30,
+          "yaw": 16,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 4.2,
+          "distance": 52,
+          "pitch": 48,
+          "yaw": 0,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE ORDER, ONE SHAPE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.5
+      }
+    }
+  ],
+  "grade": {
+    "contrast": 1.14,
+    "saturation": 1.2,
+    "brightness": 0.09,
+    "gamma": 1.16,
+    "grain": 3,
+    "vignette": 0.08,
+    "sharpen": 0.75
+  },
+  "music": "assets/audio/music/base/base_pre_battle_deployment.ogg",
+  "music_start": 6.0
+}

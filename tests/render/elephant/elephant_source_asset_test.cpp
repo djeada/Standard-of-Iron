@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -199,6 +200,60 @@ TEST(ElephantSourceAssetTest, HowdahSocketFollowsAuthoredBackBone) {
     ASSERT_TRUE(Render::Elephant::elephant_source_sample_clip("Run", phase, pose));
     EXPECT_LT((howdah.seat_position - pose[k_back].map(local)).length(), 1.0e-5F);
     EXPECT_NEAR(howdah.seat_up.length(), 1.0F, 1.0e-5F);
+  }
+}
+
+// The rig ships no locomotion clip, so the walk and run are synthesised by
+// swinging the leg subtrees. Swinging them too far is what broke the animal on
+// screen: opposite legs are half a cycle apart, so the pair ends up twice the
+// amplitude apart, the elephant does the splits, and the tops of the thighs
+// swing out through the flank. These bounds are what "still looks like an
+// elephant" means in numbers.
+TEST(ElephantSourceAssetTest, SynthesisedGaitKeepsTheLegsUnderTheBody) {
+  auto const bind = Render::Elephant::elephant_source_bind_palette();
+  ASSERT_EQ(bind.size(), 32U);
+
+  constexpr std::size_t k_foot_front_left = 11U;
+  constexpr std::size_t k_foot_front_right = 14U;
+  constexpr std::size_t k_foot_rear_left = 17U;
+  constexpr std::size_t k_foot_rear_right = 20U;
+  constexpr std::size_t k_hip_front_left = 9U;
+
+  float const leg_length = (bind[k_hip_front_left].column(3).toVector3D().y() -
+                            bind[k_foot_front_left].column(3).toVector3D().y());
+  ASSERT_GT(leg_length, 0.1F);
+
+  for (auto const* clip : {"Walk", "Run"}) {
+    float widest_pair = 0.0F;
+    float furthest_foot = 0.0F;
+    for (int frame = 0; frame < 64; ++frame) {
+      float const phase = static_cast<float>(frame) / 64.0F;
+      Render::Elephant::BonePalette pose{};
+      ASSERT_TRUE(Render::Elephant::elephant_source_sample_clip(clip, phase, pose))
+          << clip;
+
+      for (auto const pair : {std::pair{k_foot_front_left, k_foot_front_right},
+                              std::pair{k_foot_rear_left, k_foot_rear_right}}) {
+        float const spread = std::abs(pose[pair.first].column(3).toVector3D().z() -
+                                      pose[pair.second].column(3).toVector3D().z());
+        widest_pair = std::max(widest_pair, spread);
+      }
+      for (auto const foot : {k_foot_front_left,
+                              k_foot_front_right,
+                              k_foot_rear_left,
+                              k_foot_rear_right}) {
+        float const travel = std::abs(pose[foot].column(3).toVector3D().z() -
+                                      bind[foot].column(3).toVector3D().z());
+        furthest_foot = std::max(furthest_foot, travel);
+      }
+    }
+
+    // A pair of legs never opens wider than half a leg, and no foot strays more
+    // than a third of one from where it stands at rest.
+    EXPECT_LT(widest_pair, leg_length * 0.5F) << clip << " is doing the splits";
+    EXPECT_LT(furthest_foot, leg_length * 0.34F) << clip << " over-strides";
+    // ...and it does move. A gait clamped to nothing would pass the bounds above.
+    EXPECT_GT(furthest_foot, leg_length * 0.04F) << clip << " does not animate";
   }
 }
 
