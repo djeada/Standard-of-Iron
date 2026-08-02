@@ -1,0 +1,191 @@
+{
+  "id": "rome_iron_line",
+  "title": "THE IRON LINE",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.4
+  },
+  "shots": [
+    {
+      "name": "column",
+      "scenario": "promo_rome_iron_line",
+      "start": 6.0,
+      "duration": 3.2,
+      "focus": {
+        "mode": "group",
+        "group": "first_line",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 11,
+          "yaw": 252,
+          "fov": 42,
+          "height": 2.2
+        },
+        {
+          "time": 3.2,
+          "distance": 25,
+          "pitch": 9,
+          "yaw": 268,
+          "fov": 42,
+          "height": 2.0,
+          "ease": "linear"
+        }
+      ],
+      "caption": "ONE ARMY, ONE COLUMN"
+    },
+    {
+      "name": "deploy",
+      "scenario": "promo_rome_iron_line",
+      "start": 15.5,
+      "duration": 4.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 38,
+          "pitch": 28,
+          "yaw": 4,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 4.0,
+          "distance": 44,
+          "pitch": 40,
+          "yaw": 352,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE LINE FORMS ITSELF",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "front_rank",
+      "scenario": "promo_rome_iron_line",
+      "start": 24.0,
+      "duration": 3.4,
+      "focus": {
+        "mode": "group",
+        "group": "first_line",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 26,
+          "pitch": 7,
+          "yaw": 96,
+          "fov": 46,
+          "height": 1.8
+        },
+        {
+          "time": 3.4,
+          "distance": 22,
+          "pitch": 9,
+          "yaw": 74,
+          "fov": 46,
+          "height": 1.8,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "shield_wall",
+      "scenario": "promo_rome_iron_line",
+      "start": 31.0,
+      "duration": 3.0,
+      "slow_motion": 1.4,
+      "focus": {
+        "mode": "group",
+        "group": "spear_screen",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20,
+          "pitch": 12,
+          "yaw": 186,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 14,
+          "pitch": 15,
+          "yaw": 196,
+          "fov": 48,
+          "height": 1.5,
+          "ease": "out"
+        }
+      ],
+      "caption": "SHIELDS CLOSE",
+      "transition": {
+        "type": "whip",
+        "duration": 0.2
+      }
+    },
+    {
+      "name": "advance",
+      "scenario": "promo_rome_iron_line",
+      "start": 39.0,
+      "duration": 4.6,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 32,
+          "pitch": 22,
+          "yaw": 10,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 4.6,
+          "distance": 50,
+          "pitch": 36,
+          "yaw": 24,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AND ADVANCES IN SHAPE",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.5
+      }
+    }
+  ],
+  "grade": {
+    "contrast": 1.13,
+    "saturation": 1.16,
+    "brightness": 0.07,
+    "gamma": 1.1,
+    "grain": 3,
+    "vignette": 0.09,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/combat/combat_defensive_hold_roman.ogg",
+  "music_start": 12.0
+}

@@ -18,6 +18,7 @@
 #include "game/command/command_dispatcher.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/damage_application.h"
@@ -84,6 +85,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("Move");
   case ScenarioCommandKind::FormationMove:
     return QStringLiteral("FormationMove");
+  case ScenarioCommandKind::FormArmy:
+    return QStringLiteral("FormArmy");
   case ScenarioCommandKind::Charge:
     return QStringLiteral("Charge");
   case ScenarioCommandKind::Attack:
@@ -423,6 +426,18 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
       check_group(step.trigger.target_group,
                   field + QStringLiteral(".trigger.target_group"),
                   true);
+    }
+    // A FormArmy step folds several groups into one army; a typo in that list
+    // would silently deploy a smaller army rather than fail.
+    for (int member = 0; member < step.formation.groups.size(); ++member) {
+      check_group(step.formation.groups.at(member),
+                  field + QStringLiteral(".formation.groups[%1]").arg(member),
+                  true);
+    }
+    if (step.command == ScenarioCommandKind::FormArmy &&
+        step.formation.frontage < 0.0F) {
+      errors.push_back(
+          {field, QStringLiteral("formation frontage cannot be negative")});
     }
   }
 
@@ -959,6 +974,98 @@ struct ArenaScenarioRunner::Impl {
     }
   }
 
+  // Deploy one or more groups as a single doctrine-planned army, the same way
+  // `CommandController::confirm_formation_placement` does for a player drag:
+  // commit the plan so the registry owns the group, write each unit's slot back
+  // onto its formation mode so the runtime can measure cohesion against it, and
+  // then move everyone to the slot the planner chose.
+  void form_army(const ArenaScenarioStep& step) {
+    std::vector<Engine::Core::EntityID> members;
+    QStringList sources = step.formation.groups;
+    if (sources.isEmpty()) {
+      sources.append(step.group);
+    }
+    for (auto const& name : sources) {
+      auto const& group_ids = ids(name);
+      members.insert(members.end(), group_ids.begin(), group_ids.end());
+    }
+    members.erase(
+        std::remove_if(members.begin(),
+                       members.end(),
+                       [&](auto entity_id) { return !entity_alive(entity_id); }),
+        members.end());
+    if (members.empty()) {
+      add_issue(
+          QStringLiteral("formation_members_missing"),
+          QStringLiteral("FormArmy step '%1' resolved no living units").arg(step.name));
+      return;
+    }
+
+    Game::Formation::ArmyFormationRequest request;
+    request.members = members;
+    request.anchor = world_origin + step.formation.anchor;
+    request.facing = step.formation.facing_degrees;
+    request.frontage = step.formation.frontage;
+    request.intent = step.formation.intent;
+    request.options = step.formation.options;
+    if (!step.formation.doctrine.isEmpty()) {
+      request.doctrine = step.formation.doctrine.toStdString();
+      request.options.doctrine_locked = true;
+    }
+    if (step.formation.spacing > 0.0F) {
+      request.spacing = step.formation.spacing;
+    }
+
+    auto const result = Game::Formation::ArmyFormationService::commit(world, request);
+    if (!result.valid) {
+      add_issue(QStringLiteral("formation_rejected"),
+                QStringLiteral("FormArmy step '%1' was rejected: %2")
+                    .arg(step.name, QString::fromStdString(result.rejection_reason)));
+      return;
+    }
+    if (result.positions.size() != members.size()) {
+      add_issue(QStringLiteral("formation_plan_mismatch"),
+                QStringLiteral("FormArmy step '%1' planned %2 slots for %3 units")
+                    .arg(step.name)
+                    .arg(result.positions.size())
+                    .arg(members.size()));
+      return;
+    }
+
+    for (std::size_t i = 0; i < members.size(); ++i) {
+      auto* entity = world.get_entity(members[i]);
+      if (entity == nullptr) {
+        continue;
+      }
+      if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
+        if (i < result.facing_angles.size()) {
+          transform->desired_yaw = result.facing_angles[i];
+          transform->has_desired_yaw = true;
+        }
+      }
+      auto* formation_mode =
+          entity->get_component<Engine::Core::FormationModeComponent>();
+      if (formation_mode != nullptr && i < result.stable_slot_ids.size()) {
+        formation_mode->formation_id = result.group_id;
+        formation_mode->stable_slot_id = result.stable_slot_ids[i];
+        formation_mode->stable_rank = result.stable_ranks[i];
+        formation_mode->stable_file = result.stable_files[i];
+        formation_mode->stable_slot_x = result.positions[i].x();
+        formation_mode->stable_slot_z = result.positions[i].z();
+      }
+    }
+
+    Game::Systems::CommandService::MoveOptions options;
+    options.kind = Game::Systems::MoveOrderKind::FormationMove;
+    options.preserve_formation_mode = result.used_army_formation;
+    Game::Systems::CommandService::move_units(
+        world, members, result.positions, options);
+
+    for (auto const& name : sources) {
+      arm_response(name, command_name(step.command));
+    }
+  }
+
   void execute_step(std::size_t index, const ArenaScenarioStep& step) {
     auto& runtime = steps[index];
     runtime.executed = true;
@@ -985,6 +1092,9 @@ struct ArenaScenarioRunner::Impl {
       arm_response(step.group, command_name(step.command));
       break;
     }
+    case ScenarioCommandKind::FormArmy:
+      form_army(step);
+      break;
     case ScenarioCommandKind::Charge:
       for (auto entity_id : ids(step.group)) {
         if (auto* entity = world.get_entity(entity_id)) {

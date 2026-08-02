@@ -99,6 +99,20 @@ auto ease_value(Ease ease, float t) -> float {
   return clamped * clamped * (3.0F - (2.0F * clamped));
 }
 
+// Yaw is an angle, so a key at 352 sitting after one at 8 means "sixteen
+// degrees back", not "344 degrees the other way around the battle". Blend along
+// the shorter arc; an author who really wants the long orbit says so by putting
+// a key in the middle of it.
+auto lerp_yaw(float from, float to, float blend) -> float {
+  float delta = std::fmod(to - from, 360.0F);
+  if (delta > 180.0F) {
+    delta -= 360.0F;
+  } else if (delta < -180.0F) {
+    delta += 360.0F;
+  }
+  return from + (delta * blend);
+}
+
 auto hash_noise(int seed) -> float {
   auto value = static_cast<std::uint32_t>(seed) * 747796405U + 2891336453U;
   value = ((value >> ((value >> 28U) + 4U)) ^ value) * 277803737U;
@@ -144,7 +158,7 @@ auto evaluate(const std::vector<CameraKey>& keys, float shot_time) -> Pose {
     Pose result;
     result.distance = std::lerp(previous.distance, next.distance, blend);
     result.pitch = std::lerp(previous.pitch, next.pitch, blend);
-    result.yaw = std::lerp(previous.yaw, next.yaw, blend);
+    result.yaw = lerp_yaw(previous.yaw, next.yaw, blend);
     result.fov = std::lerp(previous.fov, next.fov, blend);
     result.roll = std::lerp(previous.roll, next.roll, blend);
     result.height = std::lerp(previous.height, next.height, blend);
@@ -160,6 +174,49 @@ auto shake_offset(int frame_index, float amount) -> QVector3D {
   return {hash_noise(frame_index * 3) * amount,
           hash_noise((frame_index * 3) + 1) * amount * 0.5F,
           hash_noise((frame_index * 3) + 2) * amount};
+}
+
+namespace {
+
+[[nodiscard]] auto windows_overlap(const Shot& lhs, const Shot& rhs) -> bool {
+  const float lhs_end = lhs.start_seconds + lhs.duration_seconds;
+  const float rhs_end = rhs.start_seconds + rhs.duration_seconds;
+  return lhs.start_seconds < rhs_end && rhs.start_seconds < lhs_end;
+}
+
+} // namespace
+
+auto plan_passes(const Spec& spec) -> std::vector<CapturePass> {
+  std::vector<CapturePass> passes;
+  for (std::size_t index = 0; index < spec.shots.size(); ++index) {
+    const Shot& shot = spec.shots[index];
+    CapturePass* home = nullptr;
+    for (CapturePass& pass : passes) {
+      if (pass.scenario != shot.scenario || pass.seed != shot.seed) {
+        continue;
+      }
+      const bool clashes =
+          std::any_of(pass.shots.begin(), pass.shots.end(), [&](std::size_t other) {
+            return windows_overlap(spec.shots[other], shot);
+          });
+      if (!clashes) {
+        home = &pass;
+        break;
+      }
+    }
+    if (home == nullptr) {
+      passes.push_back(CapturePass{shot.scenario, shot.seed, {}});
+      home = &passes.back();
+    }
+    home->shots.push_back(index);
+  }
+  for (CapturePass& pass : passes) {
+    std::stable_sort(
+        pass.shots.begin(), pass.shots.end(), [&](std::size_t lhs, std::size_t rhs) {
+          return spec.shots[lhs].start_seconds < spec.shots[rhs].start_seconds;
+        });
+  }
+  return passes;
 }
 
 auto load(const QString& path, QString* error) -> std::optional<Spec> {

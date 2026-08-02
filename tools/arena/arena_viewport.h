@@ -92,6 +92,11 @@ public slots:
   void set_rain_intensity(float intensity);
   void set_time_of_day(Game::Map::TimeOfDay time_of_day);
   void set_environment_time(float hour);
+
+  // Hold this hour against a scenario that locks its own. Capture scenarios
+  // pin the light so it matches across a promo's shots, which is right for a
+  // recording and wrong while you are still deciding what hour to record at.
+  void set_environment_hour_override(float hour);
   void set_lighting_profile(const QString& profile);
   void set_time_mode(const QString& mode);
   void set_day_length(float seconds);
@@ -327,6 +332,7 @@ private:
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   float m_environment_hour = 13.0F;
+  std::optional<float> m_environment_hour_override;
   QString m_lighting_profile = QStringLiteral("mediterranean_summer");
   Game::Map::EnvironmentDefinition m_environment_definition;
   Game::Map::EnvironmentClock m_environment_clock;
@@ -373,6 +379,7 @@ private:
   std::vector<Game::Map::Bridge> m_arena_bridges;
   std::vector<Game::Map::RoadSegment> m_arena_roads;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
+  float m_arena_floor_half_extent = 18.0F;
   std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;
