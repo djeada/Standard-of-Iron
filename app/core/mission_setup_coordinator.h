@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QVector3D>
 
+#include <optional>
 #include <vector>
 
 #include "entity_cache.h"
@@ -24,14 +25,33 @@ struct PendingMissionWave {
   int owner_id = 0;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   QString ai_id;
+  QString label;
   float trigger_time = 0.0F;
+  Game::Mission::WaveTriggerMode trigger = Game::Mission::WaveTriggerMode::Time;
+  float grace_seconds = Game::Mission::k_default_wave_grace_seconds;
+  float warning_seconds = Game::Mission::k_default_wave_warning_seconds;
+  std::optional<int> authored_phase;
   int phase_index = 1;
   int phase_count = 1;
   QVector3D entry_world_position{0.0F, 0.0F, 0.0F};
+  std::vector<QVector3D> entry_world_positions;
   QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
   std::vector<Game::Mission::WaveComposition> composition;
+  Game::Systems::ResourceAmounts clear_reward;
+  bool final_wave = false;
   bool spawned = false;
+  bool warned = false;
+  bool cleared = false;
+  float ready_at = -1.0F;
+  float cleared_at = -1.0F;
   std::vector<Engine::Core::EntityID> spawned_entity_ids;
+
+  [[nodiscard]] auto entry_positions() const -> std::vector<QVector3D> {
+    if (!entry_world_positions.empty()) {
+      return entry_world_positions;
+    }
+    return {entry_world_position};
+  }
 };
 
 struct PendingMissionEvent {
@@ -43,6 +63,16 @@ struct PendingMissionEvent {
 [[nodiscard]] auto
 build_pending_mission_events(const Game::Mission::MissionDefinition& mission)
     -> std::vector<PendingMissionEvent>;
+
+struct MissionWaveBuildContext {
+  const Game::Mission::MissionDefinition& mission;
+  QString mission_difficulty;
+  const Game::Systems::LevelSnapshot& level;
+  QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
+};
+
+[[nodiscard]] auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
+    -> std::vector<PendingMissionWave>;
 
 struct MissionSetupApplyContext {
   Engine::Core::World& world;
@@ -82,6 +112,16 @@ struct MissionWaveEffects {
   QStringList mission_announcements;
   std::vector<Engine::Core::EntityID> spawned_entity_ids;
 };
+
+[[nodiscard]] auto wave_unit_total(const PendingMissionWave& wave) -> int;
+
+[[nodiscard]] auto
+wave_incoming_announcement(const PendingMissionWave& wave) -> QString;
+
+[[nodiscard]] auto wave_cleared_announcement(const PendingMissionWave& wave) -> QString;
+
+[[nodiscard]] auto
+all_waves_cleared_announcement(const PendingMissionWave& wave) -> QString;
 
 class MissionSetupCoordinator {
 public:

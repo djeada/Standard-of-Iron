@@ -148,6 +148,15 @@ Item {
         }
     }
 
+    WaveTracker {
+        id: waveTracker
+
+        anchors.top: topPanel.bottom
+        anchors.left: parent.left
+        anchors.topMargin: Design.Metrics.space8
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+    }
+
     FormationPanel {
         id: formationPanel
 

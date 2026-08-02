@@ -26,6 +26,7 @@
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../viewmodels/placement_view_model.h"
+#include "../viewmodels/wave_view_model.h"
 #include "ambient_state_manager.h"
 #include "app_scene_context.h"
 #include "camera_controller.h"
@@ -43,7 +44,7 @@
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "mission_setup_coordinator.h"
-#include "mission_wave_tracker.h"
+#include "mission_wave_director.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
 #include "runtime_frame_orchestrator.h"
@@ -189,6 +190,7 @@ public:
 
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
+  Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -339,6 +341,7 @@ public:
   Q_INVOKABLE void load_game_from_slot(const QString& slot_name);
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
+  [[nodiscard]] QObject* wave_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
   [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
@@ -421,7 +424,7 @@ private:
   };
   using PendingMissionWave = App::Core::PendingMissionWave;
   using PendingMissionEvent = App::Core::PendingMissionEvent;
-  using MissionWaveTracker = App::Core::MissionWaveTracker;
+  using MissionWaveDirector = App::Core::MissionWaveDirector;
   enum class PlayerControlMode {
     Rts,
     Commander
@@ -506,6 +509,8 @@ private:
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
+  void publish_wave_status();
+  void restore_mission_waves(const QJsonObject& wave_state);
   void update_mission_events();
   void apply_game_mode_render_policy();
   void update_loading_overlay();
@@ -522,6 +527,7 @@ private:
 
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
+  std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
 
   [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
   [[nodiscard]] const ViewportState& viewport() const override { return m_viewport; }
@@ -615,7 +621,7 @@ private:
   float m_campaign_mission_elapsed = 0.0F;
   std::vector<PendingMissionWave> m_pending_mission_waves;
   std::vector<PendingMissionEvent> m_pending_mission_events;
-  MissionWaveTracker m_mission_wave_tracker;
+  MissionWaveDirector m_mission_wave_director;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>

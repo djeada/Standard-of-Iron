@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QByteArray>
+#include <QJsonObject>
 #include <QString>
 
 #include <functional>
@@ -64,6 +65,7 @@ struct SaveToSlotContext {
   Game::Systems::Save::SlotKind kind = Game::Systems::Save::SlotKind::Manual;
   double play_time_seconds = 0.0;
   int autosave_retention = 0;
+  QJsonObject mission_wave_state;
 };
 
 struct SaveToSlotEffects {
@@ -89,6 +91,7 @@ struct LoadFromSlotContext {
   AudioCoordinator* audio_coordinator = nullptr;
   Game::Systems::VictoryService* victory_service = nullptr;
   std::function<void()> emit_troop_count_changed;
+  std::function<void(const QJsonObject&)> restore_mission_waves;
 };
 
 struct LoadFromSlotEffects {

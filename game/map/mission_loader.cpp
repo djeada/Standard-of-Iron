@@ -97,13 +97,44 @@ auto MissionLoader::parse_wave_composition(const QJsonObject& obj) -> WaveCompos
   WaveComposition comp;
   comp.type = obj["type"].toString();
   comp.count = obj["count"].toInt(1);
+  comp.elite = obj["elite"].toBool(false);
+  comp.title = obj["title"].toString();
   return comp;
+}
+
+auto parse_wave_trigger(const QString& value) -> WaveTriggerMode {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == "after_previous_cleared" || lowered == "after_previous" ||
+      lowered == "on_cleared" || lowered == "cleared") {
+    return WaveTriggerMode::AfterPreviousCleared;
+  }
+  return WaveTriggerMode::Time;
 }
 
 auto MissionLoader::parse_wave(const QJsonObject& obj) -> Wave {
   Wave wave;
   wave.timing = static_cast<float>(obj["timing"].toDouble(0.0));
   wave.entry_point = parse_position(obj["entry_point"].toObject());
+
+  const QJsonArray entry_points = obj["entry_points"].toArray();
+  for (const auto& point_val : entry_points) {
+    wave.entry_points.push_back(parse_position(point_val.toObject()));
+  }
+
+  wave.trigger = parse_wave_trigger(obj["trigger"].toString());
+  wave.grace_seconds =
+      static_cast<float>(obj["grace_seconds"].toDouble(k_default_wave_grace_seconds));
+  wave.warning_seconds = static_cast<float>(
+      obj["warning_seconds"].toDouble(k_default_wave_warning_seconds));
+  if (obj.contains("phase")) {
+    wave.phase = obj["phase"].toInt();
+  }
+  wave.archetype = obj["archetype"].toString().trimmed().toLower();
+  wave.strength = static_cast<float>(obj["strength"].toDouble(1.0));
+  wave.label = obj["label"].toString();
+  if (obj.contains("clear_reward")) {
+    wave.clear_reward = parse_resources(obj["clear_reward"].toObject());
+  }
 
   const QJsonArray composition = obj["composition"].toArray();
   for (const auto& comp_val : composition) {
@@ -135,6 +166,8 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
   if (obj.contains("personality")) {
     setup.personality = parse_ai_personality(obj["personality"].toObject());
   }
+
+  setup.wave_escalation = static_cast<float>(obj["wave_escalation"].toDouble(0.0));
 
   if (obj.contains("starting_units")) {
     const QJsonArray units = obj["starting_units"].toArray();

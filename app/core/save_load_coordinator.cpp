@@ -97,6 +97,9 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
           context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
     metadata["undead_zones"] = undead_system->serialize_state();
   }
+  if (!context.mission_wave_state.isEmpty()) {
+    metadata["mission_waves"] = context.mission_wave_state;
+  }
 
   Game::Systems::SaveRequest request;
   request.slot_name = context.slot;
@@ -196,6 +199,10 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     } else {
       qWarning() << "GameEngine: failed to load undead zone map data:" << map_error;
     }
+  }
+
+  if (context.restore_mission_waves) {
+    context.restore_mission_waves(metadata.value("mission_waves").toObject());
   }
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
