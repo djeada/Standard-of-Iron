@@ -35,6 +35,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/skeleton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/part_graph.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/primitive_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/combat_visual_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/species_manifest.cpp

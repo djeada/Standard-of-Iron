@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_normal;
@@ -20,10 +21,6 @@ out vec4 frag_color;
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
 float hash3(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
 }
@@ -32,10 +29,10 @@ float noise2_d(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
+  float a = soi_hash_15a407(i);
+  float b = soi_hash_15a407(i + vec2(1.0, 0.0));
+  float c = soi_hash_15a407(i + vec2(0.0, 1.0));
+  float d = soi_hash_15a407(i + vec2(1.0, 1.0));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
@@ -48,11 +45,13 @@ vec2 rotate2_d(vec2 p, float angle) {
 float olive_leaf_mask(vec2 p, float seed) {
   vec2 cell = floor(p);
   vec2 local = fract(p) - vec2(0.5);
-  float angle = hash(cell + vec2(seed, seed * 1.7)) * TWO_PI;
+  float angle = soi_hash_15a407(cell + vec2(seed, seed * 1.7)) * TWO_PI;
   vec2 q = rotate2_d(local, angle);
 
-  float half_length = mix(0.34, 0.46, hash(cell + vec2(3.1, 5.7) + vec2(seed)));
-  float half_width = mix(0.08, 0.13, hash(cell + vec2(8.2, 1.4) + vec2(seed * 0.7)));
+  float half_length =
+      mix(0.34, 0.46, soi_hash_15a407(cell + vec2(3.1, 5.7) + vec2(seed)));
+  float half_width =
+      mix(0.08, 0.13, soi_hash_15a407(cell + vec2(8.2, 1.4) + vec2(seed * 0.7)));
 
   q.x /= half_length;
   q.y /= half_width;
@@ -83,7 +82,7 @@ void main() {
                   vec2(v_leaf_seed * 13.7, v_branch_id * 2.3);
   float leaf_mottle_a = noise2_d(leaf_pos);
   float leaf_mottle_b = noise2_d(leaf_pos * 2.1 + vec2(v_bark_seed * 5.0));
-  float leaf_fine = hash(floor(leaf_pos * 3.0 + vec2(v_branch_id * 7.0)));
+  float leaf_fine = soi_hash_15a407(floor(leaf_pos * 3.0 + vec2(v_branch_id * 7.0)));
   float canopy_height = clamp((v_tex_coord.y - 0.52) / 0.58, 0.0, 1.0);
   float canopy_edge = smoothstep(0.10, 0.30, length(v_local_pos_xz));
   float canopy_core = 1.0 - smoothstep(0.16, 0.42, length(v_local_pos_xz));
@@ -132,7 +131,7 @@ void main() {
 
   vec3 bark_color = mix(bark_dark, bark_mid, bark_texture);
   float bark_highlight =
-      smoothstep(0.75, 0.95, hash(vec2(bark_v * 15.0, bark_u * 3.0)));
+      smoothstep(0.75, 0.95, soi_hash_15a407(vec2(bark_v * 15.0, bark_u * 3.0)));
   bark_color = mix(bark_color, bark_light, bark_highlight * 0.30);
   bark_color = mix(bark_color, bark_lichen, smoothstep(0.72, 0.96, bark_knots) * 0.10);
   float basal_lichen = (1.0 - smoothstep(0.04, 0.30, v_local_pos.y)) *

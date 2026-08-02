@@ -154,25 +154,25 @@ struct LocomotionPoseProfile {
                                 const HumanoidLocomotionPoseInputs& inputs) noexcept
     -> LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
-  profile.planted_fraction = 0.62F;
+  profile.planted_fraction = 0.60F;
   profile.stride_length =
-      0.205F * inputs.walk_speed_multiplier * (0.88F + 0.14F * speed_factor);
-  profile.step_height = 0.044F * (0.92F + 0.10F * speed_factor);
-  profile.vertical_bob = 0.005F * speed_factor;
-  profile.hip_sway = 0.020F * inputs.stance_width;
-  profile.shoulder_counter_sway = 0.024F;
-  profile.shoulder_twist = 0.018F;
-  profile.forward_lean = 0.016F + (speed_factor - 1.0F) * 0.010F;
-  profile.lateral_foot_shift = 0.008F;
-  profile.arm_swing = 0.142F * inputs.arm_swing_amplitude;
-  profile.max_arm_displacement = 0.150F;
-  profile.arm_lift_scale = 0.13F;
-  profile.arm_counter_shift = 0.11F;
-  profile.weight_shift = 0.020F;
-  profile.pelvis_drop = 0.0055F;
-  profile.head_stabilization = 0.60F;
-  profile.contact_lift = 0.004F;
-  profile.knee_drive = 0.0065F;
+      0.400F * inputs.walk_speed_multiplier * (0.88F + 0.14F * speed_factor);
+  profile.step_height = 0.070F * (0.92F + 0.10F * speed_factor);
+  profile.vertical_bob = 0.022F * speed_factor;
+  profile.hip_sway = 0.028F * inputs.stance_width;
+  profile.shoulder_counter_sway = 0.032F;
+  profile.shoulder_twist = 0.030F;
+  profile.forward_lean = 0.026F + (speed_factor - 1.0F) * 0.012F;
+  profile.lateral_foot_shift = 0.010F;
+  profile.arm_swing = 0.195F * inputs.arm_swing_amplitude;
+  profile.max_arm_displacement = 0.205F;
+  profile.arm_lift_scale = 0.17F;
+  profile.arm_counter_shift = 0.13F;
+  profile.weight_shift = 0.026F;
+  profile.pelvis_drop = 0.016F;
+  profile.head_stabilization = 0.72F;
+  profile.contact_lift = 0.003F;
+  profile.knee_drive = 0.022F;
   return profile;
 }
 
@@ -180,25 +180,25 @@ struct LocomotionPoseProfile {
                                const HumanoidLocomotionPoseInputs& inputs) noexcept
     -> LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
-  profile.planted_fraction = 0.40F;
+  profile.planted_fraction = 0.36F;
   profile.stride_length =
-      0.292F * inputs.walk_speed_multiplier * (0.90F + 0.14F * speed_factor);
-  profile.step_height = 0.080F * (0.88F + 0.18F * speed_factor);
-  profile.vertical_bob = 0.013F * speed_factor;
-  profile.hip_sway = 0.012F * inputs.stance_width;
-  profile.shoulder_counter_sway = 0.030F;
-  profile.shoulder_twist = 0.032F;
-  profile.forward_lean = 0.082F + (speed_factor - 1.0F) * 0.018F;
-  profile.lateral_foot_shift = 0.009F;
-  profile.arm_swing = 0.212F * inputs.arm_swing_amplitude;
-  profile.max_arm_displacement = 0.216F;
-  profile.arm_lift_scale = 0.185F;
-  profile.arm_counter_shift = 0.13F;
-  profile.weight_shift = 0.010F;
-  profile.pelvis_drop = 0.0035F;
-  profile.head_stabilization = 0.82F;
-  profile.contact_lift = 0.010F;
-  profile.knee_drive = 0.014F;
+      0.580F * inputs.walk_speed_multiplier * (0.90F + 0.14F * speed_factor);
+  profile.step_height = 0.125F * (0.88F + 0.18F * speed_factor);
+  profile.vertical_bob = 0.038F * speed_factor;
+  profile.hip_sway = 0.016F * inputs.stance_width;
+  profile.shoulder_counter_sway = 0.040F;
+  profile.shoulder_twist = 0.050F;
+  profile.forward_lean = 0.108F + (speed_factor - 1.0F) * 0.020F;
+  profile.lateral_foot_shift = 0.011F;
+  profile.arm_swing = 0.290F * inputs.arm_swing_amplitude;
+  profile.max_arm_displacement = 0.300F;
+  profile.arm_lift_scale = 0.245F;
+  profile.arm_counter_shift = 0.16F;
+  profile.weight_shift = 0.014F;
+  profile.pelvis_drop = 0.012F;
+  profile.head_stabilization = 0.88F;
+  profile.contact_lift = 0.016F;
+  profile.knee_drive = 0.038F;
   return profile;
 }
 
