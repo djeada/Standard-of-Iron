@@ -500,83 +500,97 @@ void TerrainHeightMap::build_from_features(
         float const perp_x = -dir_z;
         float const perp_z = dir_x;
 
-        cur_x = float(ex) - dir_x * float(outward_steps);
-        cur_z = float(ez) - dir_z * float(outward_steps);
+        float const ramp_origin_x = float(ex) - dir_x * float(outward_steps);
+        float const ramp_origin_z = float(ez) - dir_z * float(outward_steps);
+        float const ramp_span = float(std::max(1, total_ramp_steps - 1));
 
-        for (int ramp_step = 0; ramp_step < total_ramp_steps; ++ramp_step) {
-          bool const is_outward = ramp_step < outward_steps;
-          int const center_ix = int(std::round(cur_x));
-          int const center_iz = int(std::round(cur_z));
-          if (!in_bounds(center_ix, center_iz)) {
+        float const max_taper = std::max(
+            1.0F,
+            entry_width * std::max(k_entry_base_width_scale, k_entry_top_width_scale) *
+                (1.0F + k_entry_mouth_flare_strength));
+        float const corridor_reach = max_taper + k_width_falloff_padding + 1.0F;
 
-            cur_x += dir_x;
-            cur_z += dir_z;
-            continue;
-          }
+        float const ramp_end_x = ramp_origin_x + dir_x * ramp_span;
+        float const ramp_end_z = ramp_origin_z + dir_z * ramp_span;
+        int const corridor_min_x = std::max(
+            0, int(std::floor(std::min(ramp_origin_x, ramp_end_x) - corridor_reach)));
+        int const corridor_max_x = std::min(
+            m_width - 1,
+            int(std::ceil(std::max(ramp_origin_x, ramp_end_x) + corridor_reach)));
+        int const corridor_min_z = std::max(
+            0, int(std::floor(std::min(ramp_origin_z, ramp_end_z) - corridor_reach)));
+        int const corridor_max_z = std::min(
+            m_height - 1,
+            int(std::ceil(std::max(ramp_origin_z, ramp_end_z) + corridor_reach)));
 
-          const float cell_dx = float(center_ix) - grid_center_x;
-          const float cell_dz = float(center_iz) - grid_center_z;
-          const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
-          const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
-          const float cell_norm_dist = slope_distance(cell_rot_x, cell_rot_z);
+        for (int iz = corridor_min_z; iz <= corridor_max_z; ++iz) {
+          for (int ix = corridor_min_x; ix <= corridor_max_x; ++ix) {
+            float const rel_x = float(ix) - ramp_origin_x;
+            float const rel_z = float(iz) - ramp_origin_z;
 
-          bool const builds_apron = is_outward || cell_norm_dist > 1.0F;
-
-          float const ramp_progress =
-              (total_ramp_steps > 1)
-                  ? std::clamp(
-                        float(ramp_step) / float(total_ramp_steps - 1), 0.0F, 1.0F)
-                  : 1.0F;
-
-          float const delayed_progress =
-              std::clamp((ramp_progress - k_entry_lower_ramp_delay) /
-                             std::max(1e-4F, 1.0F - k_entry_lower_ramp_delay),
-                         0.0F,
-                         1.0F);
-          float const s = smootherstep(delayed_progress);
-          float const mid = 4.0F * ramp_progress * (1.0F - ramp_progress);
-          float const lower_ramp = 1.0F - smooth_range(0.58F, 0.95F, s);
-          float const mouth = 1.0F - smooth_range(0.18F, 0.58F, s);
-
-          float const height_base = std::pow(s, k_hill_ramp_steepness_exponent);
-          float const height_frac = std::clamp(
-              height_base * (1.0F - k_entry_mid_dip_strength * mid), 0.0F, 1.0F);
-
-          float const toe_frac = k_entry_toe_height_fraction * (1.0F - s) * (1.0F - s);
-          float center_ramp_height = hill_height * std::max(height_frac, toe_frac);
-          center_ramp_height *=
-              std::clamp(1.0F - k_entry_mid_depth_strength * mid, 0.0F, 1.0F);
-
-          float const width_scale =
-              (1.0F - s) * k_entry_base_width_scale + s * k_entry_top_width_scale;
-          float tapered_width =
-              std::max(1.0F,
-                       entry_width * width_scale *
-                           (1.0F + k_entry_mouth_flare_strength * mouth));
-
-          if (is_outward && outward_steps > 0) {
-            float const outward_t =
-                float(ramp_step) / float(std::max(1, outward_steps));
-
-            float const outward_width_mul = 0.82F + 0.18F * smootherstep(outward_t);
-            tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
-          }
-
-          int const width_radius =
-              int(std::ceil(tapered_width + k_width_falloff_padding));
-          for (int w = -width_radius; w <= width_radius; ++w) {
-            float const offset_x = cur_x + perp_x * float(w);
-            float const offset_z = cur_z + perp_z * float(w);
-            int const ix = int(std::round(offset_x));
-            int const iz = int(std::round(offset_z));
-
-            if (!in_bounds(ix, iz)) {
+            float const along = rel_x * dir_x + rel_z * dir_z;
+            if (along < -0.5F || along > ramp_span + 0.5F) {
               continue;
+            }
+            float const across = rel_x * perp_x + rel_z * perp_z;
+
+            float const ramp_step = std::clamp(along, 0.0F, ramp_span);
+            bool const is_outward = ramp_step < float(outward_steps);
+
+            float const center_x = ramp_origin_x + dir_x * ramp_step;
+            float const center_z = ramp_origin_z + dir_z * ramp_step;
+            const float cell_dx = center_x - grid_center_x;
+            const float cell_dz = center_z - grid_center_z;
+            const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
+            const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
+            const float cell_norm_dist = slope_distance(cell_rot_x, cell_rot_z);
+
+            bool const builds_apron = is_outward || cell_norm_dist > 1.0F;
+
+            float const ramp_progress =
+                (total_ramp_steps > 1) ? std::clamp(ramp_step / ramp_span, 0.0F, 1.0F)
+                                       : 1.0F;
+
+            float const delayed_progress =
+                std::clamp((ramp_progress - k_entry_lower_ramp_delay) /
+                               std::max(1e-4F, 1.0F - k_entry_lower_ramp_delay),
+                           0.0F,
+                           1.0F);
+            float const s = smootherstep(delayed_progress);
+            float const mid = 4.0F * ramp_progress * (1.0F - ramp_progress);
+            float const lower_ramp = 1.0F - smooth_range(0.58F, 0.95F, s);
+            float const mouth = 1.0F - smooth_range(0.18F, 0.58F, s);
+
+            float const height_base = std::pow(s, k_hill_ramp_steepness_exponent);
+            float const height_frac = std::clamp(
+                height_base * (1.0F - k_entry_mid_dip_strength * mid), 0.0F, 1.0F);
+
+            float const toe_frac =
+                k_entry_toe_height_fraction * (1.0F - s) * (1.0F - s);
+            float center_ramp_height = hill_height * std::max(height_frac, toe_frac);
+            center_ramp_height *=
+                std::clamp(1.0F - k_entry_mid_depth_strength * mid, 0.0F, 1.0F);
+
+            float const width_scale =
+                (1.0F - s) * k_entry_base_width_scale + s * k_entry_top_width_scale;
+            float tapered_width =
+                std::max(1.0F,
+                         entry_width * width_scale *
+                             (1.0F + k_entry_mouth_flare_strength * mouth));
+
+            if (is_outward && outward_steps > 0) {
+              float const outward_t = ramp_step / float(std::max(1, outward_steps));
+
+              float const outward_width_mul = 0.82F + 0.18F * smootherstep(outward_t);
+              tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
             }
 
             float const edge_t = smooth_range(tapered_width * 0.16F,
                                               tapered_width + k_width_falloff_padding,
-                                              std::abs(float(w)));
+                                              std::abs(across));
+            if (edge_t >= 1.0F) {
+              continue;
+            }
 
             int const ramp_idx = indexAt(ix, iz);
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
@@ -624,9 +638,6 @@ void TerrainHeightMap::build_from_features(
               m_heights[ramp_idx] = target_height;
             }
           }
-
-          cur_x += dir_x;
-          cur_z += dir_z;
         }
       }
 
@@ -1326,16 +1337,18 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
   for (const auto& bridge : bridges) {
     Bridge adjusted = bridge;
     adjusted.width = std::max(adjusted.width, k_min_bridge_width);
+
+    fit_bridge_span_to_riverbanks(adjusted, m_river_segments);
     adjusted.height = bridge_effective_height(adjusted);
 
     float abutment_floor = std::numeric_limits<float>::lowest();
-    if (auto const water = spanned_water_level(bridge); water.has_value()) {
+    if (auto const water = spanned_water_level(adjusted); water.has_value()) {
       abutment_floor = *water + k_bridge_water_clearance - k_bridge_deck_visual_lift;
     }
-    adjusted.start.setY(
-        std::max(get_height_at(bridge.start.x(), bridge.start.z()), abutment_floor));
+    adjusted.start.setY(std::max(get_height_at(adjusted.start.x(), adjusted.start.z()),
+                                 abutment_floor));
     adjusted.end.setY(
-        std::max(get_height_at(bridge.end.x(), bridge.end.z()), abutment_floor));
+        std::max(get_height_at(adjusted.end.x(), adjusted.end.z()), abutment_floor));
 
     if ((adjusted.end - adjusted.start).length() < 0.01F) {
       continue;
@@ -1357,7 +1370,6 @@ void TerrainHeightMap::precompute_bridge_data() {
   m_bridge_centers.clear();
   m_bridge_centers.resize(grid_size, QVector3D(0.0F, 0.0F, 0.0F));
 
-  constexpr float k_bridge_entry_margin_tiles = 1.0F;
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
@@ -1411,21 +1423,27 @@ void TerrainHeightMap::precompute_bridge_data() {
           float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (dist_along_perp <= bridge_half_width) {
-            int const idx = indexAt(x, z);
-
-            m_on_bridge[idx] = true;
-
-            float const cell_world_x =
-                (static_cast<float>(x) - grid_half_width) * m_tile_size;
-            float const cell_world_z =
-                (static_cast<float>(z) - grid_half_height) * m_tile_size;
-            QVector3D const cell_point(cell_world_x, 0.0F, cell_world_z);
-            QVector3D const to_cell = cell_point - bridge.start;
-            float const center_along = QVector3D::dotProduct(to_cell, dir);
-            float const clamped_along = std::clamp(center_along, 0.0F, length);
-            m_bridge_centers[idx] = bridge.start + dir * clamped_along;
+          if (dist_along_perp > bridge_half_width) {
+            continue;
           }
+
+          float const cell_world_x =
+              (static_cast<float>(x) - grid_half_width) * m_tile_size;
+          float const cell_world_z =
+              (static_cast<float>(z) - grid_half_height) * m_tile_size;
+          QVector3D const cell_point(cell_world_x, 0.0F, cell_world_z);
+          QVector3D const to_cell = cell_point - bridge.start;
+          float const center_along = QVector3D::dotProduct(to_cell, dir);
+
+          if (center_along < -entry_margin || center_along > length + entry_margin) {
+            continue;
+          }
+
+          int const idx = indexAt(x, z);
+          m_on_bridge[idx] = true;
+
+          float const clamped_along = std::clamp(center_along, 0.0F, length);
+          m_bridge_centers[idx] = bridge.start + dir * clamped_along;
         }
       }
     }
@@ -1472,6 +1490,12 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
 auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
     -> std::optional<float> {
 
+  float const along_margin = m_tile_size * k_bridge_entry_margin_tiles;
+  float const perp_margin = m_tile_size * 0.5F;
+
+  std::optional<float> deck_y;
+  float nearest_perp_dist = std::numeric_limits<float>::max();
+
   for (const auto& bridge : m_bridges) {
     QVector3D dir = bridge.end - bridge.start;
     float const length = dir.length();
@@ -1488,22 +1512,23 @@ auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
 
     float const along = QVector3D::dotProduct(to_query, dir);
 
-    if (along < -0.5F || along > length + 0.5F) {
+    if (along < -along_margin || along > length + along_margin) {
       continue;
     }
 
     float const perp_dist = std::abs(QVector3D::dotProduct(to_query, perpendicular));
 
-    if (perp_dist > bridge_half_width) {
+    if (perp_dist > bridge_half_width + perp_margin || perp_dist >= nearest_perp_dist) {
       continue;
     }
 
     float const t = std::clamp(along / length, 0.0F, 1.0F);
 
-    return bridge_deck_world_y(bridge, t);
+    nearest_perp_dist = perp_dist;
+    deck_y = bridge_deck_world_y(bridge, t);
   }
 
-  return std::nullopt;
+  return deck_y;
 }
 
 auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {

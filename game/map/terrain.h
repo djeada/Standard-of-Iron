@@ -723,7 +723,7 @@ struct Bridge {
   return a.x() * b.z() - a.z() * b.x();
 }
 
-inline constexpr float k_max_oblique_bridge_span = 1.5F;
+inline constexpr float k_max_oblique_bridge_span = 3.0F;
 
 [[nodiscard]] inline auto bridge_required_half_length_for_river(
     const Bridge& bridge, const RiverSegment& river) noexcept -> std::optional<float> {
@@ -754,12 +754,24 @@ inline constexpr float k_max_oblique_bridge_span = 1.5F;
 }
 
 [[nodiscard]] inline auto bridge_abutment_reach(float bridge_width) -> float {
-  return std::clamp(bridge_width * 0.18F, 0.9F, 1.8F);
+  return std::clamp(bridge_width * 0.14F, 0.7F, 1.3F);
 }
 
 [[nodiscard]] inline auto bridge_bank_overhang(float bridge_width,
                                                float river_width) -> float {
   return std::clamp(river_width * 0.30F, 0.6F, bridge_abutment_reach(bridge_width));
+}
+
+inline constexpr float k_river_drawn_edge_scale = 1.30F;
+
+inline constexpr float k_river_drawn_meander_reach = 0.16F;
+
+[[nodiscard]] inline auto bridge_bank_landing(float bridge_width,
+                                              float river_width) -> float {
+  return std::clamp(
+      std::max(bridge_width * 0.12F, river_width * k_river_drawn_meander_reach),
+      0.5F,
+      2.4F);
 }
 
 [[nodiscard]] inline auto closest_point_on_segment(const QVector3D& point,
@@ -802,30 +814,52 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
   }
   QVector3D const dir(bridge_vec.x() / bridge_len, 0.0F, bridge_vec.z() / bridge_len);
 
-  auto apply = [&](const QVector3D& crossing, float required_half, float river_width) {
+  auto span_direction_across = [&dir](const QVector3D& river_vec, float river_len) {
+    if (river_len < 1.0e-4F) {
+      return dir;
+    }
+    QVector3D across(-river_vec.z() / river_len, 0.0F, river_vec.x() / river_len);
+    if (QVector3D::dotProduct(across, dir) < 0.0F) {
+      across = -across;
+    }
+    return across;
+  };
+
+  auto apply = [&](const QVector3D& crossing,
+                   const QVector3D& span_dir,
+                   float required_half,
+                   float river_width) {
     float const authored_start_reach =
-        QVector3D::dotProduct(crossing - bridge.start, dir);
-    float const authored_end_reach = QVector3D::dotProduct(bridge.end - crossing, dir);
+        QVector3D::dotProduct(crossing - bridge.start, span_dir);
+    float const authored_end_reach =
+        QVector3D::dotProduct(bridge.end - crossing, span_dir);
 
-    float const shortest = required_half;
-    float const longest =
-        required_half + bridge_bank_overhang(bridge.width, river_width);
+    float const drawn_water_half = required_half * k_river_drawn_edge_scale;
+    float const shortest =
+        drawn_water_half + bridge_bank_landing(bridge.width, river_width);
+    float const longest = shortest + bridge_bank_overhang(bridge.width, river_width);
 
-    bridge.start = crossing - dir * std::clamp(authored_start_reach, shortest, longest);
-    bridge.end = crossing + dir * std::clamp(authored_end_reach, shortest, longest);
+    bridge.start =
+        crossing - span_dir * std::clamp(authored_start_reach, shortest, longest);
+    bridge.end =
+        crossing + span_dir * std::clamp(authored_end_reach, shortest, longest);
   };
 
   for (const RiverSegment& river : rivers) {
-    auto const required_half = bridge_required_half_length_for_river(bridge, river);
-    if (!required_half.has_value()) {
+    if (!bridge_required_half_length_for_river(bridge, river).has_value()) {
       continue;
     }
 
     QVector3D const river_vec = river.end - river.start;
+    float const river_len = std::hypot(river_vec.x(), river_vec.z());
     float const cross = xz_cross(bridge_vec, river_vec);
     QVector3D const diff = river.start - bridge.start;
     float const t = xz_cross(diff, river_vec) / cross;
-    apply(bridge.start + dir * (t * bridge_len), *required_half, river.width);
+
+    apply(bridge.start + dir * (t * bridge_len),
+          span_direction_across(river_vec, river_len),
+          river.width * 0.5F,
+          river.width);
     return;
   }
 
@@ -855,8 +889,10 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
 
   QVector3D const river_vec = nearest->end - nearest->start;
   float const river_len = std::hypot(river_vec.x(), river_vec.z());
-  apply(
-      nearest_point, bridge_oblique_half_for(dir, *nearest, river_len), nearest->width);
+  apply(nearest_point,
+        span_direction_across(river_vec, river_len),
+        nearest->width * 0.5F,
+        nearest->width);
 }
 
 inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
@@ -890,6 +926,8 @@ inline constexpr float k_bridge_deck_visual_lift = 0.12F;
   return base_y + k_bridge_deck_visual_lift +
          bridge_effective_height(bridge) * bridge_arch_curve(clamped_t);
 }
+
+inline constexpr float k_bridge_entry_margin_tiles = 1.0F;
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,
                                                        float tile_size) -> float {

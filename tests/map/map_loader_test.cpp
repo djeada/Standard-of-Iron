@@ -362,7 +362,25 @@ TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
   EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 0);
 }
 
-TEST(MapLoaderTest, FitsBridgeEndpointsExactlyToRiverbanks) {
+namespace {
+
+struct BridgeSpanBudget {
+  float shortest_half = 0.0F;
+  float longest_half = 0.0F;
+};
+
+auto bridge_span_budget(float bridge_width, float river_width) -> BridgeSpanBudget {
+  const float drawn_water_half =
+      river_width * 0.5F * Game::Map::k_river_drawn_edge_scale;
+  const float shortest =
+      drawn_water_half + Game::Map::bridge_bank_landing(bridge_width, river_width);
+  return {shortest,
+          shortest + Game::Map::bridge_bank_overhang(bridge_width, river_width)};
+}
+
+} // namespace
+
+TEST(MapLoaderTest, LandsBridgeEndpointsOnTheBankPastTheDrawnWaterline) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
@@ -390,8 +408,50 @@ TEST(MapLoaderTest, FitsBridgeEndpointsExactlyToRiverbanks) {
 
   ASSERT_EQ(map_def.bridges.size(), 1U);
   const auto& bridge = map_def.bridges.front();
-  EXPECT_NEAR(bridge.start.x(), -5.0F, 0.0001F);
-  EXPECT_NEAR(bridge.end.x(), 5.0F, 0.0001F);
+
+  const auto budget = bridge_span_budget(bridge.width, 10.0F);
+  EXPECT_GT(budget.shortest_half, 5.0F);
+  EXPECT_NEAR(bridge.start.x(), -budget.shortest_half, 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), budget.shortest_half, 0.0001F);
+}
+
+TEST(MapLoaderTest, SquaresBridgeDecksToTheRiverTheyCross) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Skew Bridge Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"rivers",
+       QJsonArray{QJsonObject{{"start", QJsonArray{0.0, -20.0}},
+                              {"end", QJsonArray{0.0, 20.0}},
+                              {"width", 6.0}}}},
+      {"bridges",
+       QJsonArray{QJsonObject{{"start", QJsonArray{-6.0, -6.0}},
+                              {"end", QJsonArray{6.0, 6.0}},
+                              {"width", 4.0},
+                              {"height", 0.5}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.bridges.size(), 1U);
+  const auto& bridge = map_def.bridges.front();
+
+  EXPECT_NEAR(bridge.start.z(), 0.0F, 0.0001F);
+  EXPECT_NEAR(bridge.end.z(), 0.0F, 0.0001F);
+
+  const auto budget = bridge_span_budget(bridge.width, 6.0F);
+  EXPECT_GE(-bridge.start.x(), budget.shortest_half - 0.0001F);
+  EXPECT_LE(-bridge.start.x(), budget.longest_half + 0.0001F);
+  EXPECT_GE(bridge.end.x(), budget.shortest_half - 0.0001F);
+  EXPECT_LE(bridge.end.x(), budget.longest_half + 0.0001F);
 }
 
 TEST(MapLoaderTest, TrimsOverlongBridgesBackToTheRiverbanks) {
@@ -423,14 +483,13 @@ TEST(MapLoaderTest, TrimsOverlongBridgesBackToTheRiverbanks) {
   ASSERT_EQ(map_def.bridges.size(), 1U);
   const auto& bridge = map_def.bridges.front();
 
-  const float half_river = 2.0F;
-  const float overhang = Game::Map::bridge_abutment_reach(bridge.width);
-  const float longest_half = half_river + overhang;
+  const auto budget = bridge_span_budget(bridge.width, 4.0F);
 
-  EXPECT_GE(bridge.start.x(), -longest_half - 0.0001F);
-  EXPECT_LE(bridge.end.x(), longest_half + 0.0001F);
-  EXPECT_LE(bridge.start.x(), -half_river + 0.0001F);
-  EXPECT_GE(bridge.end.x(), half_river - 0.0001F);
+  EXPECT_NEAR(bridge.start.x(), -budget.longest_half, 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), budget.longest_half, 0.0001F);
+
+  EXPECT_LE(bridge.start.x(), -2.0F);
+  EXPECT_GE(bridge.end.x(), 2.0F);
 }
 
 TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
@@ -446,8 +505,8 @@ TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
                               {"end", QJsonArray{0.0, 20.0}},
                               {"width", 4.0}}}},
       {"bridges",
-       QJsonArray{QJsonObject{{"start", QJsonArray{-2.5, 0.0}},
-                              {"end", QJsonArray{3.0, 0.0}},
+       QJsonArray{QJsonObject{{"start", QJsonArray{-3.8, 0.0}},
+                              {"end", QJsonArray{4.4, 0.0}},
                               {"width", 4.0},
                               {"height", 0.5}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
@@ -462,8 +521,12 @@ TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
   ASSERT_EQ(map_def.bridges.size(), 1U);
   const auto& bridge = map_def.bridges.front();
 
-  EXPECT_NEAR(bridge.start.x(), -2.5F, 0.0001F);
-  EXPECT_NEAR(bridge.end.x(), 3.0F, 0.0001F);
+  const auto budget = bridge_span_budget(bridge.width, 4.0F);
+  ASSERT_GE(3.8F, budget.shortest_half);
+  ASSERT_LE(4.4F, budget.longest_half);
+
+  EXPECT_NEAR(bridge.start.x(), -3.8F, 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), 4.4F, 0.0001F);
 }
 
 TEST(MapLoaderTest, LeavesBridgesThatCrossNoRiverUntouched) {

@@ -59,6 +59,8 @@ add_executable(
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
     map/map_catalog_test.cpp
+    map/map_bridge_coverage_test.cpp
+    map/map_hill_entrance_smoothness_test.cpp
     map/map_weather_coverage_test.cpp
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp

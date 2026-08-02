@@ -624,6 +624,20 @@ if (u_materialId == 4) {  // Shield
 
 The shader directory is intentionally small and pipeline-owned. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) preloads shared backend programs and keeps them around so we don't recompile every frame.
 
+### Ground detail lives in three frequency bands
+
+[`terrain_chunk.frag`](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/terrain_chunk.frag) is the biggest procedural shader in the project, and the thing that makes it read as ground rather than as a painted plane is which _scale_ each layer works at. One world tile is one metre, and `world_coord` is measured in tiles, so a noise frequency of `f` means a feature wavelength of `1/f` metres.
+
+There are three bands and each one has a job:
+
+- **Biome fields**, driven by `u_macro_noise_scale` (~0.03), run from six metres to fifty. They decide where the map is wet, grazed, exposed or stony. At the battle camera you see two or three of these at once, so on their own they read as soft blobs.
+- **The ground mosaic** (`k_mosaic_frequency`, `k_fleck_frequency`) fills roughly 0.3 m to 4.5 m. This is the band the battle camera actually resolves, and it carries the dry/lush patchwork and the small bare scuffs that make the surface look like a material.
+- **Surface grain** (`u_detail_noise_scale` and up) lives below half a metre. It only shows when the camera is close.
+
+Every layer runs through `band_limit(footprint, frequency)`, which fades a frequency out once it approaches one cycle per pixel. That is what keeps the ground from shimmering when the camera pulls back, but it is also a trap: anything authored above roughly one cycle per metre is invisible at normal play distance, so pushing detail _up_ in frequency to make the ground look busier does nothing except cost ALU. If the ground looks flat, the fix is almost always a layer in the middle band, not a finer one.
+
+Shading uses the height texture for more than normals. `terrain_sky_openness()` walks six directions at three radii and keeps the steepest horizon in each, which gives a sky-occlusion term for hollows and cliff feet. Open ground still measures some horizon, so it is remapped through `smoothstep(0.35, 0.92, ...)` before use -- otherwise the whole map would darken slightly rather than just the sheltered parts. That same sheltered term feeds drainage, exposure and snow drift, so hollows are damper, less scoured, and collect more snow.
+
 ## Fog of war: three states, one mask
 
 The player sees the battlefield in three states, and all of them are driven by a

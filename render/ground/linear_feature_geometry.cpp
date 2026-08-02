@@ -157,11 +157,21 @@ auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   settings.edge_noise_frequencies = {0.015F, 0.055F, 0.14F};
   settings.edge_noise_weights = {0.45F, 0.36F, 0.19F};
 
-  settings.width_scale = 1.08F;
-  settings.width_variation_scale = 0.15F;
+  constexpr float k_width_scale = 1.08F;
+  constexpr float k_width_variation_scale = 0.15F;
+  constexpr float k_meander_amplitude = 0.145F;
+
+  static_assert(k_width_scale * (1.0F + k_width_variation_scale) <=
+                    Game::Map::k_river_drawn_edge_scale,
+                "river ribbon draws wider than bridge decks reserve to span");
+  static_assert(k_meander_amplitude <= Game::Map::k_river_drawn_meander_reach,
+                "river ribbon meanders further than bridge landings reserve for");
+
+  settings.width_scale = k_width_scale;
+  settings.width_variation_scale = k_width_variation_scale;
   settings.meander_frequency = 3.6F;
 
-  settings.meander_amplitude = 0.145F;
+  settings.meander_amplitude = k_meander_amplitude;
   settings.y_offset = 0.12F;
   return settings;
 }
@@ -533,8 +543,9 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   const float visual_length = length + abutment_reach * 2.0F;
   QVector3D const visual_start = bridge.start - dir * abutment_reach;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);
+
   float const end_fade_length =
-      std::min(std::clamp(bridge_width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
+      std::min(std::clamp(bridge_width * 0.70F, tile_size * 1.60F, tile_size * 4.00F),
                visual_length * 0.45F);
 
   int length_segments = static_cast<int>(std::ceil(visual_length / segment_step));
@@ -545,9 +556,10 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   std::vector<unsigned int> indices;
 
   constexpr int k_vertices_per_bridge_segment = 20;
-  float const deck_thickness = std::clamp(bridge_width * 0.26F, 0.42F, 0.86F);
-  float const parapet_height = std::clamp(bridge_width * 0.20F, 0.24F, 0.50F);
-  float const parapet_half_width = std::clamp(bridge_width * 0.055F, 0.075F, 0.16F);
+  float const deck_thickness = std::clamp(bridge_width * 0.26F, 0.55F, 1.05F);
+
+  float const parapet_height = std::clamp(bridge_width * 0.13F, 0.55F, 0.92F);
+  float const parapet_half_width = std::clamp(bridge_width * 0.045F, 0.16F, 0.34F);
   float const side_bevel = std::clamp(bridge_width * 0.12F, 0.10F, 0.30F);
 
   auto add_vertex =
@@ -593,14 +605,15 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     float const stone_noise =
         std::sin(center_pos.x() * 3.0F) * std::cos(center_pos.z() * 2.5F) * 0.02F;
 
-    float const ring_half_width = half_width * (1.0F + 0.12F * (1.0F - profile_blend));
+    float const ring_half_width = half_width * (1.0F + 0.22F * (1.0F - profile_blend));
     float const bottom_half_width =
         std::max(ring_half_width - side_bevel * (0.55F + 0.45F * profile_blend),
                  ring_half_width * 0.68F);
 
     float const ring_thickness =
         mixf(deck_thickness * 1.35F, deck_thickness * 0.55F, arch_curve);
-    float const ring_parapet_height = parapet_height * profile_blend;
+
+    float const ring_parapet_height = parapet_height * (0.46F + 0.54F * profile_blend);
     float const ring_parapet_offset =
         std::max(ring_half_width - parapet_half_width * 0.45F, ring_half_width * 0.72F);
 
