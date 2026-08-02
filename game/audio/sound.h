@@ -13,9 +13,12 @@ class Sound : public QObject {
 public:
   static constexpr float DEFAULT_VOLUME = 1.0F;
 
-  explicit Sound(const std::string& file_path, MiniaudioBackend* backend = nullptr);
+  Sound(const std::string& resource_id,
+        const std::string& file_path,
+        MiniaudioBackend* backend = nullptr);
   ~Sound() override;
 
+  [[nodiscard]] auto track_id() const -> const QString& { return m_track_id; }
   [[nodiscard]] auto is_loaded() const -> bool;
   [[nodiscard]] auto is_playing() const -> bool;
   void play(float volume = DEFAULT_VOLUME, bool loop = false);

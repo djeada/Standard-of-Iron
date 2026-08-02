@@ -315,6 +315,10 @@ Item {
 
             property int image_version: 0
 
+            function bump_version() {
+                minimapImage.image_version++;
+            }
+
             anchors.fill: parent
             source: image_version > 0 ? "image://minimap/v" + image_version : ""
             fillMode: Image.PreserveAspectFit
@@ -324,9 +328,7 @@ Item {
 
             Connections {
                 function onMinimap_image_changed() {
-                    Qt.callLater(function () {
-                            minimapImage.image_version++;
-                        });
+                    Qt.callLater(minimapImage.bump_version);
                 }
 
                 target: topRoot.game_ready() ? game : null
@@ -343,23 +345,35 @@ Item {
             }
 
             MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: function (mouse) {
+                id: minimapMouse
+
+                function dispatch(button, x, y) {
                     if (!topRoot.game_ready())
                         return;
-                    var paintedW = parent.paintedWidth;
-                    var paintedH = parent.paintedHeight;
+                    var paintedW = minimapImage.paintedWidth;
+                    var paintedH = minimapImage.paintedHeight;
                     if (paintedW === 0 || paintedH === 0)
                         return;
-                    var imgX = mouse.x - (parent.width - paintedW) / 2;
-                    var imgY = mouse.y - (parent.height - paintedH) / 2;
+                    var imgX = x - (minimapImage.width - paintedW) / 2;
+                    var imgY = y - (minimapImage.height - paintedH) / 2;
                     if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
                         return;
-                    if (mouse.button === Qt.LeftButton)
+                    if (button === Qt.LeftButton)
                         game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
                     else
                         game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
+                }
+
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                hoverEnabled: true
+                cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onPressed: function (mouse) {
+                    minimapMouse.dispatch(mouse.button, mouse.x, mouse.y);
+                }
+                onPositionChanged: function (mouse) {
+                    if (mouse.buttons & Qt.LeftButton)
+                        minimapMouse.dispatch(Qt.LeftButton, mouse.x, mouse.y);
                 }
             }
         }

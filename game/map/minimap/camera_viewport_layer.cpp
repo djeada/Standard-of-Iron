@@ -33,6 +33,7 @@ void CameraViewportLayer::init(int width,
 
   m_image = QImage(width, height, QImage::Format_ARGB32);
   m_image.fill(Qt::transparent);
+  m_content_rect = QRect();
 }
 
 auto CameraViewportLayer::world_to_pixel(float world_x, float world_z) const
@@ -56,13 +57,24 @@ void CameraViewportLayer::update(float camera_x,
     return;
   }
 
-  m_image.fill(Qt::transparent);
+  const QRect previous_content = m_content_rect;
+  m_content_rect = QRect();
 
   if (viewport_width <= 0.0F || viewport_height <= 0.0F) {
+    if (!previous_content.isEmpty()) {
+      QPainter clear_painter(&m_image);
+      clear_painter.setCompositionMode(QPainter::CompositionMode_Source);
+      clear_painter.fillRect(previous_content, Qt::transparent);
+    }
     return;
   }
 
   QPainter painter(&m_image);
+  if (!previous_content.isEmpty()) {
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(previous_content, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  }
   painter.setRenderHint(QPainter::Antialiasing, true);
 
   const auto [px, py] = world_to_pixel(camera_x, camera_z);
@@ -71,6 +83,14 @@ void CameraViewportLayer::update(float camera_x,
   const float pixel_height = viewport_height * m_scale_y;
 
   draw_viewport_rect(painter, px, py, pixel_width, pixel_height);
+
+  const float margin = m_border_width + k_halo_pen_offset + 2.0F;
+  const QRect drawn(
+      QPoint(static_cast<int>(std::floor(px - pixel_width * 0.5F - margin)),
+             static_cast<int>(std::floor(py - pixel_height * 0.5F - margin))),
+      QPoint(static_cast<int>(std::ceil(px + pixel_width * 0.5F + margin)),
+             static_cast<int>(std::ceil(py + pixel_height * 0.5F + margin))));
+  m_content_rect = drawn.intersected(m_image.rect());
 }
 
 void CameraViewportLayer::draw_viewport_rect(QPainter& painter,

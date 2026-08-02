@@ -155,6 +155,7 @@
         <file>assets/audio/ambience/roman_army_camp_02.ogg</file>
         <file>assets/audio/ambience/roman_road.ogg</file>
         <file>assets/audio/ambience/siege_camp.ogg</file>
+        <file>assets/audio/audio_cues.json</file>
         <file>assets/audio/audio_manifest.json</file>
         <file>assets/audio/music/base/base_army_camp_resting.ogg</file>
         <file>assets/audio/music/base/base_barracks_recruitment.ogg</file>

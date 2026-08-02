@@ -489,7 +489,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: productionContent.prod.in_progress ? Math.max(0, productionContent.prod.time_remaining).toFixed(1) + "s" : "Idle"
+                            text: productionContent.prod.in_progress ? qsTr("%1s").arg(Math.max(0, productionContent.prod.time_remaining).toFixed(1)) : qsTr("Idle")
                             color: "#F4E7C8"
                             font.pointSize: 9
                             font.bold: true
@@ -1969,7 +1969,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: builderProductionContent.builder_prod.in_progress ? Math.max(0, builderProductionContent.builder_prod.time_remaining).toFixed(1) + "s" : "Idle"
+                            text: builderProductionContent.builder_prod.in_progress ? qsTr("%1s").arg(Math.max(0, builderProductionContent.builder_prod.time_remaining).toFixed(1)) : qsTr("Idle")
                             color: "#F4E7C8"
                             font.pointSize: 9
                             font.bold: true

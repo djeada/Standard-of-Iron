@@ -14,9 +14,15 @@ namespace Game::Map::Minimap {
 
 class MinimapGenerator {
 public:
+  enum class StructureBake : std::uint8_t {
+    All,
+    LandmarksOnly
+  };
+
   struct Config {
     float pixels_per_tile = 2.0F;
     int max_image_dimension = 512;
+    StructureBake structure_bake = StructureBake::All;
 
     Config() = default;
   };

@@ -1044,7 +1044,7 @@ Item {
 
             anchors.centerIn: parent
             color: Theme.textMain
-            text: game.placement.construction_preview_valid_segment_count + "/" + game.placement.construction_preview_segment_count + " walls  •  " + game.placement.construction_preview_total_cost + " wood"
+            text: qsTr("%1/%2 walls  •  %3 wood").arg(game.placement.construction_preview_valid_segment_count).arg(game.placement.construction_preview_segment_count).arg(game.placement.construction_preview_total_cost)
             font.pixelSize: 14
         }
     }

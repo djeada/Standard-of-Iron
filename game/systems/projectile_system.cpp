@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "arrow_projectile.h"
 #include "combat_system/combat_hit_resolver.h"
@@ -16,6 +17,32 @@ namespace Game::Systems {
 namespace {
 
 constexpr float k_min_progress_for_impact = 1.0F - 1.0e-5F;
+
+auto launch_cue_for_kind(ProjectileKind kind, bool is_ballista_bolt) -> const char* {
+  if (is_ballista_bolt) {
+    return "combat.siege_launch";
+  }
+  switch (kind) {
+  case ProjectileKind::Stone:
+  case ProjectileKind::FlamingStone:
+    return "combat.siege_launch";
+  default:
+    return "combat.arrow_launch";
+  }
+}
+
+auto impact_cue_for_kind(ProjectileKind kind, bool is_ballista_bolt) -> const char* {
+  if (is_ballista_bolt) {
+    return "combat.siege_impact";
+  }
+  switch (kind) {
+  case ProjectileKind::Stone:
+  case ProjectileKind::FlamingStone:
+    return "combat.siege_impact";
+  default:
+    return "combat.arrow_flyby";
+  }
+}
 constexpr float k_projectile_escape_radius = 1.5F;
 
 auto target_escaped_impact(const Engine::Core::Entity* target,
@@ -156,6 +183,13 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                         visual_style,
                                         visual_profile,
                                         target_origin_at_launch.value_or(end)));
+
+  if (!is_ballista_bolt && kind != ProjectileKind::Stone &&
+      kind != ProjectileKind::FlamingStone) {
+    ++m_arrows_launched_this_tick;
+  }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent(launch_cue_for_kind(kind, is_ballista_bolt)));
 }
 
 void ProjectileSystem::spawn_stone(const QVector3D& start,
@@ -193,9 +227,18 @@ void ProjectileSystem::spawn_stone(const QVector3D& start,
                                         target_id,
                                         target_origin_at_launch.value_or(end),
                                         kind));
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent(launch_cue_for_kind(kind, false)));
 }
 
 void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {
+  if (m_arrows_launched_this_tick >= k_volley_arrow_threshold) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent("combat.arrow_volley"));
+  }
+  m_arrows_launched_this_tick = 0;
+
   for (auto& impact : m_impacts) {
     impact.age += std::max(0.0F, delta_time);
   }
@@ -292,6 +335,9 @@ void ProjectileSystem::publish_impact(const Projectile& projectile,
       .attacker_id = projectile.get_attacker_id(),
       .target_id = projectile.get_target_id(),
   });
+
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
+      impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
 }
 
 } // namespace Game::Systems

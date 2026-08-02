@@ -20,7 +20,6 @@ public:
   static constexpr float UNIT_SELECTION_VOLUME = 1.0F;
   static constexpr int UNIT_SELECTION_PRIORITY = 5;
   static constexpr float COMBAT_HIT_VOLUME = 0.6F;
-  static constexpr int COMBAT_HIT_PRIORITY = 3;
 
   AudioEventHandler(Engine::Core::World* world);
   ~AudioEventHandler();
@@ -48,6 +47,7 @@ private:
   void on_building_attacked(const Engine::Core::BuildingAttackedEvent& event);
   void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
   static void on_audio_trigger(const Engine::Core::AudioTriggerEvent& event);
+  static void on_audio_cue(const Engine::Core::AudioCueEvent& event);
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
 
@@ -83,6 +83,7 @@ private:
       m_ambient_changed_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::AudioTriggerEvent>
       m_audio_trigger_sub;
+  Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent> m_audio_cue_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>
       m_music_trigger_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent> m_combat_hit_sub;

@@ -97,7 +97,7 @@ void SaveLoadService::ensure_worker_started() {
 
 auto SaveLoadService::begin_save(const SaveRequest& request) -> quint64 {
   if (request.slot_name.isEmpty()) {
-    set_last_error(QStringLiteral("Cannot save: empty slot name"));
+    set_last_error(tr("Cannot save: empty slot name"));
     return 0;
   }
 
@@ -105,7 +105,7 @@ auto SaveLoadService::begin_save(const SaveRequest& request) -> quint64 {
   {
     const std::lock_guard<std::mutex> lock(m_mutex);
     if (m_stopping) {
-      m_last_error = QStringLiteral("Save service is shutting down");
+      m_last_error = tr("Save service is shutting down");
       return 0;
     }
     job_id = m_next_job_id++;
@@ -278,8 +278,7 @@ void SaveLoadService::run_write_job(SaveStorage& storage, const Job& job) {
       }
     }
   } catch (const std::exception& exception) {
-    error = QStringLiteral("Exception while saving: %1")
-                .arg(QString::fromUtf8(exception.what()));
+    error = tr("Exception while saving: %1").arg(QString::fromUtf8(exception.what()));
     success = false;
   }
 
@@ -305,7 +304,7 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
   qInfo() << "Loading game from slot:" << slot_name;
 
   if (!m_storage) {
-    set_last_error(QStringLiteral("Save storage unavailable"));
+    set_last_error(tr("Save storage unavailable"));
     qWarning() << "SaveLoadService: save storage unavailable";
     return false;
   }
@@ -322,7 +321,7 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
     QByteArray world_bytes;
     if (!Save::unpack(record.world, world_bytes, &error)) {
       const QString message =
-          QStringLiteral("Save slot '%1' is corrupted: %2").arg(slot_name, error);
+          tr("Save slot '%1' is corrupted: %2").arg(slot_name, error);
       set_last_error(message);
       qWarning() << message;
       return false;
@@ -331,7 +330,7 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
     QJsonParseError parse_error{};
     const QJsonDocument doc = QJsonDocument::fromJson(world_bytes, &parse_error);
     if (parse_error.error != QJsonParseError::NoError || !doc.isObject()) {
-      const QString message = QStringLiteral("Save slot '%1' is corrupted: %2")
+      const QString message = tr("Save slot '%1' is corrupted: %2")
                                   .arg(slot_name, parse_error.errorString());
       set_last_error(message);
       qWarning() << message;
@@ -345,7 +344,7 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
     set_last_error({});
     return true;
   } catch (const std::exception& exception) {
-    const QString message = QStringLiteral("Exception while loading save '%1': %2")
+    const QString message = tr("Exception while loading save '%1': %2")
                                 .arg(slot_name, QString::fromUtf8(exception.what()));
     set_last_error(message);
     qWarning() << message;
@@ -357,7 +356,7 @@ auto SaveLoadService::verify_save_slot(const QString& slot_name,
                                        QString* out_error) const -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }
@@ -384,7 +383,7 @@ auto SaveLoadService::slot_exists(const QString& slot_name) const -> bool {
 
 auto SaveLoadService::delete_save_slot(const QString& slot_name) -> bool {
   if (!m_storage) {
-    set_last_error(QStringLiteral("Save storage unavailable"));
+    set_last_error(tr("Save storage unavailable"));
     return false;
   }
 
@@ -453,7 +452,7 @@ auto SaveLoadService::export_slot(const QString& slot_name,
                                   QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }
@@ -473,8 +472,7 @@ auto SaveLoadService::export_slot(const QString& slot_name,
   QSaveFile file(file_path);
   if (!file.open(QIODevice::WriteOnly)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Cannot write '%1': %2").arg(file_path, file.errorString());
+      *out_error = tr("Cannot write '%1': %2").arg(file_path, file.errorString());
     }
     return false;
   }
@@ -482,8 +480,7 @@ auto SaveLoadService::export_slot(const QString& slot_name,
   const QByteArray package = Save::encode_package(record);
   if (file.write(package) != package.size() || !file.commit()) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to write '%1': %2").arg(file_path, file.errorString());
+      *out_error = tr("Failed to write '%1': %2").arg(file_path, file.errorString());
     }
     return false;
   }
@@ -496,7 +493,7 @@ auto SaveLoadService::import_package(const QString& file_path,
                                      QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }
@@ -504,8 +501,7 @@ auto SaveLoadService::import_package(const QString& file_path,
   QFile file(file_path);
   if (!file.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Cannot read '%1': %2").arg(file_path, file.errorString());
+      *out_error = tr("Cannot read '%1': %2").arg(file_path, file.errorString());
     }
     return false;
   }
@@ -559,7 +555,7 @@ auto SaveLoadService::list_exported_packages() const -> QStringList {
 auto SaveLoadService::list_campaigns(QString* out_error) -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return {};
   }
@@ -570,7 +566,7 @@ auto SaveLoadService::get_campaign_progress(const QString& campaign_id,
                                             QString* out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return {};
   }
@@ -581,7 +577,7 @@ auto SaveLoadService::mark_campaign_completed(const QString& campaign_id,
                                               QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }
@@ -598,7 +594,7 @@ auto SaveLoadService::save_mission_result(const QString& mission_id,
                                           QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }
@@ -616,7 +612,7 @@ auto SaveLoadService::get_mission_progress(const QString& mission_id,
                                            QString* out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return {};
   }
@@ -627,7 +623,7 @@ auto SaveLoadService::get_campaign_mission_progress(
     const QString& campaign_id, QString* out_error) const -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return {};
   }
@@ -639,7 +635,7 @@ auto SaveLoadService::unlock_next_campaign_mission(const QString& campaign_id,
                                                    QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save storage unavailable");
+      *out_error = tr("Save storage unavailable");
     }
     return false;
   }

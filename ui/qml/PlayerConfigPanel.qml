@@ -8,7 +8,7 @@ Item {
     property var players_model: null
     property var team_icons: []
     property var current_map_data: null
-    property string map_title: "Select a map"
+    property string map_title: qsTr("Select a map")
     property string map_preview: ""
 
     signal add_cpu_clicked
@@ -89,7 +89,7 @@ Item {
         Text {
             id: playerSectionTitle
 
-            text: "Players (" + (players_model ? players_model.count : 0) + ")"
+            text: qsTr("Players (%1)").arg(players_model ? players_model.count : 0)
             color: colors.textMain
             font.pixelSize: 16
             font.bold: true
@@ -98,7 +98,7 @@ Item {
         Text {
             id: playerSectionHint
 
-            text: "Click color/team to cycle"
+            text: qsTr("Click color/team to cycle")
             color: colors.textSubLite
             font.pixelSize: 11
             font.italic: true
@@ -145,7 +145,7 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Select a map to configure players"
+                        text: qsTr("Select a map to configure players")
                         color: colors.textSub
                         font.pixelSize: 13
                     }
@@ -160,7 +160,7 @@ Item {
         Button {
             id: addCPUBtn
 
-            text: "+ Add CPU"
+            text: qsTr("+ Add CPU")
             enabled: {
                 if (!current_map_data || !current_map_data.player_ids)
                     return false;
@@ -187,7 +187,7 @@ Item {
 
             ToolTip {
                 visible: addHover.containsMouse && enabled
-                text: "Add AI player to the game"
+                text: qsTr("Add AI player to the game")
                 delay: 500
             }
 
@@ -224,8 +224,8 @@ Item {
                     return "";
                 var available = current_map_data.player_ids.length - players_model.count;
                 if (available <= 0)
-                    return "Max players reached";
-                return available + " slot" + (available > 1 ? "s" : "") + " available";
+                    return qsTr("Max players reached");
+                return qsTr("%n slot(s) available", "", available);
             }
             color: colors.textSubLite
             font.pixelSize: 11
@@ -268,7 +268,7 @@ Item {
         Text {
             anchors.centerIn: parent
             visible: !previewImage.visible
-            text: "(map preview)"
+            text: qsTr("(map preview)")
             color: colors.hint
             font.pixelSize: 14
         }

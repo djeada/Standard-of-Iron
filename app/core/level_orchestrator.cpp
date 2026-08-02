@@ -232,24 +232,31 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
           using Phase = Render::GL::Renderer::TemplatePrewarmProgress::Phase;
           switch (progress.phase) {
           case Phase::CollectingProfiles:
-            detail = "Prewarming templates: scanning unit profiles...";
+            detail = QCoreApplication::translate(
+                "LevelOrchestrator", "Prewarming templates: scanning unit profiles...");
             break;
           case Phase::BuildingCoreTemplates:
-            detail = QString("Prewarming templates: %1 / %2")
+            detail = QCoreApplication::translate("LevelOrchestrator",
+                                                 "Prewarming templates: %1 / %2")
                          .arg(progress.completed)
                          .arg(progress.total);
             break;
           case Phase::QueueingExtendedTemplates:
-            detail = QString("Queued deferred template warmup (%1 additional)")
+            detail = QCoreApplication::translate(
+                         "LevelOrchestrator",
+                         "Queued deferred template warmup (%1 additional)")
                          .arg(progress.total);
             break;
           case Phase::Completed:
-            detail = QString("Template warmup complete (%1 core, %2 total)")
-                         .arg(progress.completed)
-                         .arg(progress.total);
+            detail =
+                QCoreApplication::translate(
+                    "LevelOrchestrator", "Template warmup complete (%1 core, %2 total)")
+                    .arg(progress.completed)
+                    .arg(progress.total);
             break;
           case Phase::Cancelled:
-            detail = "Template warmup cancelled";
+            detail = QCoreApplication::translate("LevelOrchestrator",
+                                                 "Template warmup cancelled");
             break;
           }
 

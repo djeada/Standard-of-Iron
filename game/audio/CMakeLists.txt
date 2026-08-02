@@ -2,6 +2,7 @@ add_library(
     audio_system
     STATIC
     audio_system.cpp
+    audio_cues.cpp
     sound.cpp
     music_player.cpp
     miniaudio_backend.cpp

@@ -21,7 +21,7 @@ Item {
     Text {
         id: title
 
-        text: "Maps"
+        text: qsTr("Maps")
         color: colors.textMain
         font.pixelSize: 18
         font.bold: true
@@ -88,7 +88,7 @@ Item {
                 visible: list.count === 0
 
                 Text {
-                    text: "No maps available"
+                    text: qsTr("No maps available")
                     color: colors.textSub
                     font.pixelSize: 14
                     anchors.centerIn: parent

@@ -9,11 +9,13 @@
 
 namespace Game::Map::Minimap {
 
-void UnitLayer::init(int width, int height, float world_width, float world_height) {
+void UnitLayer::init(
+    int width, int height, float world_width, float world_height, float tile_size) {
   m_width = width;
   m_height = height;
   m_world_width = world_width;
   m_world_height = world_height;
+  m_inv_tile_size = 1.0F / std::max(tile_size, Constants::k_min_tile_size);
 
   m_scale_x = static_cast<float>(width - 1) / world_width;
   m_scale_y = static_cast<float>(height - 1) / world_height;
@@ -22,14 +24,18 @@ void UnitLayer::init(int width, int height, float world_width, float world_heigh
 
   m_image = QImage(width, height, QImage::Format_ARGB32);
   m_image.fill(Qt::transparent);
+  m_content_rect = QRect();
 }
 
 auto UnitLayer::world_to_pixel(float world_x,
                                float world_z) const -> std::pair<float, float> {
 
+  const float grid_x = world_x * m_inv_tile_size;
+  const float grid_z = world_z * m_inv_tile_size;
+
   const auto& orient = MinimapOrientation::instance();
-  const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
-  const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
+  const float rotated_x = grid_x * orient.cos_yaw() - grid_z * orient.sin_yaw();
+  const float rotated_z = grid_x * orient.sin_yaw() + grid_z * orient.cos_yaw();
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;
@@ -50,18 +56,43 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
     return;
   }
 
-  m_image.fill(Qt::transparent);
+  const QRect previous_content = m_content_rect;
+  m_content_rect = QRect();
 
   if (markers.empty()) {
+    if (!previous_content.isEmpty()) {
+      QPainter clear_painter(&m_image);
+      clear_painter.setCompositionMode(QPainter::CompositionMode_Source);
+      clear_painter.fillRect(previous_content, Qt::transparent);
+    }
     return;
   }
 
   QPainter painter(&m_image);
+  if (!previous_content.isEmpty()) {
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(previous_content, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  }
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  std::vector<const UnitMarker*> buildings;
-  std::vector<const UnitMarker*> units;
-  std::vector<const UnitMarker*> selected;
+  auto& buildings = m_buildings;
+  auto& units = m_units;
+  auto& selected = m_selected;
+  buildings.clear();
+  units.clear();
+  selected.clear();
+
+  const float cull_margin = std::max(m_unit_radius, m_building_half_size) + 3.0F;
+  const float min_px = -cull_margin;
+  const float min_py = -cull_margin;
+  const float max_px = static_cast<float>(m_width) + cull_margin;
+  const float max_py = static_cast<float>(m_height) + cull_margin;
+
+  float bounds_left = max_px;
+  float bounds_top = max_py;
+  float bounds_right = min_px;
+  float bounds_bottom = min_py;
 
   for (const auto& marker : markers) {
 
@@ -70,6 +101,16 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
         continue;
       }
     }
+
+    const auto [px, py] = world_to_pixel(marker.world_x, marker.world_z);
+    if (px < min_px || px > max_px || py < min_py || py > max_py) {
+      continue;
+    }
+
+    bounds_left = std::min(bounds_left, px - cull_margin);
+    bounds_top = std::min(bounds_top, py - cull_margin);
+    bounds_right = std::max(bounds_right, px + cull_margin);
+    bounds_bottom = std::max(bounds_bottom, py + cull_margin);
 
     if (marker.is_selected) {
       selected.push_back(&marker);
@@ -100,6 +141,14 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
     } else {
       draw_unit_marker(painter, px, py, colors, true);
     }
+  }
+
+  if (bounds_right >= bounds_left && bounds_bottom >= bounds_top) {
+    const QRect drawn(QPoint(static_cast<int>(std::floor(bounds_left)),
+                             static_cast<int>(std::floor(bounds_top))),
+                      QPoint(static_cast<int>(std::ceil(bounds_right)),
+                             static_cast<int>(std::ceil(bounds_bottom))));
+    m_content_rect = drawn.intersected(m_image.rect());
   }
 }
 

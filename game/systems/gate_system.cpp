@@ -6,6 +6,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
 #include "gate_service.h"
@@ -150,7 +151,18 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     const float previous = gate.open_amount;
     gate.open_amount = target_open ? std::min(1.0F, gate.open_amount + step)
                                    : std::max(0.0F, gate.open_amount - step);
+    const GateComponent::State previous_state = gate.state;
     gate.state = derive_state(gate, gate.open_amount >= previous);
+
+    if (gate.state != previous_state) {
+      if (gate.state == GateComponent::State::Opening) {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent("build.gate_open"));
+      } else if (gate.state == GateComponent::State::Closing) {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent("build.gate_close"));
+      }
+    }
   }
 
   GateService::refresh_blockers(*world);
