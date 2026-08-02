@@ -459,6 +459,19 @@ void AudioResourceLoader::load_audio_cues() {
           << "awaiting assets (" << cues_path << ')';
 }
 
+auto AudioResourceLoader::missing_asset_ids() -> QStringList {
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  cache_manifest_locked();
+
+  QStringList missing;
+  for (const auto& entry : manifest_registry().entries) {
+    if (entry.resolved_path.isEmpty() || !QFile::exists(entry.resolved_path)) {
+      missing.push_back(entry.id);
+    }
+  }
+  return missing;
+}
+
 auto AudioResourceLoader::find_first_resource_id(
     AudioCategory category, const QMap<QString, QString>& tags) -> QString {
   const QStringList resource_ids = find_resource_ids(category, tags);

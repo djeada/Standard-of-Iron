@@ -7,6 +7,10 @@
         <source>Not enough wood, stone, or iron to recruit this unit.</source>
         <translation>Not enough wood, stone, or iron to recruit this unit.</translation>
     </message>
+    <message>
+        <source>%1 of %2 positions do not fit on this ground.</source>
+        <translation>%1 of %2 positions do not fit on this ground.</translation>
+    </message>
 </context>
 <context>
     <name>App::Models::GraphicsSettingsProxy</name>
@@ -147,6 +151,65 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>CampaignMap</name>
+    <message>
+        <source>Carthage Core</source>
+        <translation>Carthage Core</translation>
+    </message>
+    <message>
+        <source>Carthaginian Iberia</source>
+        <translation>Carthaginian Iberia</translation>
+    </message>
+    <message>
+        <source>Cisalpine Gaul</source>
+        <translation>Cisalpine Gaul</translation>
+    </message>
+    <message>
+        <source>Corsica</source>
+        <translation>Corsica</translation>
+    </message>
+    <message>
+        <source>Etruria</source>
+        <translation>Etruria</translation>
+    </message>
+    <message>
+        <source>Iberian Interior</source>
+        <translation>Iberian Interior</translation>
+    </message>
+    <message>
+        <source>Illyria</source>
+        <translation>Illyria</translation>
+    </message>
+    <message>
+        <source>Libya</source>
+        <translation>Libya</translation>
+    </message>
+    <message>
+        <source>Numidia</source>
+        <translation>Numidia</translation>
+    </message>
+    <message>
+        <source>Roman Core</source>
+        <translation>Roman Core</translation>
+    </message>
+    <message>
+        <source>Sardinia</source>
+        <translation>Sardinia</translation>
+    </message>
+    <message>
+        <source>Sicily</source>
+        <translation>Sicily</translation>
+    </message>
+    <message>
+        <source>Southern Italy</source>
+        <translation>Southern Italy</translation>
+    </message>
+    <message>
+        <source>Transalpine Gaul</source>
+        <translation>Transalpine Gaul</translation>
+    </message>
+</context>
+<context>
     <name>CampaignMenu</name>
     <message>
         <source>Campaign Missions</source>
@@ -230,6 +293,304 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Campaign Progress:</source>
         <translation>Campaign Progress:</translation>
+    </message>
+</context>
+<context>
+    <name>Campaigns</name>
+    <message>
+        <source>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</source>
+        <translation>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</translation>
+    </message>
+    <message>
+        <source>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</source>
+        <translation>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</translation>
+    </message>
+    <message>
+        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
+        <translation>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</translation>
+    </message>
+    <message>
+        <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</translation>
+    </message>
+    <message>
+        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
+        <translation>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</translation>
+    </message>
+    <message>
+        <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
+        <translation>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</translation>
+    </message>
+    <message>
+        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
+        <translation>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</translation>
+    </message>
+    <message>
+        <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
+        <translation>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</translation>
+    </message>
+    <message>
+        <source>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</source>
+        <translation>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</translation>
+    </message>
+    <message>
+        <source>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</source>
+        <translation>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</translation>
+    </message>
+    <message>
+        <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</translation>
+    </message>
+    <message>
+        <source>The Barcid Road</source>
+        <translation>The Barcid Road</translation>
+    </message>
+    <message>
+        <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
+        <translation>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</translation>
+    </message>
+    <message>
+        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
+        <translation>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</translation>
+    </message>
+    <message>
+        <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
+        <translation>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</translation>
+    </message>
+    <message>
+        <source>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</source>
+        <translation>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</translation>
+    </message>
+    <message>
+        <source>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</source>
+        <translation>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</translation>
+    </message>
+    <message>
+        <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
+        <translation>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</translation>
+    </message>
+</context>
+<context>
+    <name>Commanders</name>
+    <message>
+        <source>Quintus Fabius Maximus</source>
+        <translation>Quintus Fabius Maximus</translation>
+    </message>
+    <message>
+        <source>Rome&apos;s delaying strategist who preserves armies through discipline and staying power.</source>
+        <translation>Rome&apos;s delaying strategist who preserves armies through discipline and staying power.</translation>
+    </message>
+    <message>
+        <source>A campaign and scenario commander; never produced from a barracks.</source>
+        <translation>A campaign and scenario commander; never produced from a barracks.</translation>
+    </message>
+    <message>
+        <source>Heavy spear commander who anchors a disciplined battle line.</source>
+        <translation>Heavy spear commander who anchors a disciplined battle line.</translation>
+    </message>
+    <message>
+        <source>Boosts nearby troop endurance and slows collapse in grind fights.</source>
+        <translation>Boosts nearby troop endurance and slows collapse in grind fights.</translation>
+    </message>
+    <message>
+        <source>Lower offensive pressure and weaker pursuit potential.</source>
+        <translation>Lower offensive pressure and weaker pursuit potential.</translation>
+    </message>
+    <message>
+        <source>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</source>
+        <translation>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</translation>
+    </message>
+    <message>
+        <source>Nearby allied infantry regenerate health while inside the aura.</source>
+        <translation>Nearby allied infantry regenerate health while inside the aura.</translation>
+    </message>
+    <message>
+        <source>Rally of Patience stabilizes wavering lines during attritional combat.</source>
+        <translation>Rally of Patience stabilizes wavering lines during attritional combat.</translation>
+    </message>
+    <message>
+        <source>If killed or wounded, nearby allies lose confidence and the aura shuts off.</source>
+        <translation>If killed or wounded, nearby allies lose confidence and the aura shuts off.</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio</source>
+        <translation>Publius Cornelius Scipio</translation>
+    </message>
+    <message>
+        <source>Aggressive Roman consul focused on decisive strikes and tactical initiative.</source>
+        <translation>Aggressive Roman consul focused on decisive strikes and tactical initiative.</translation>
+    </message>
+    <message>
+        <source>Sword-and-shield infantry commander who leads close behind the main assault line.</source>
+        <translation>Sword-and-shield infantry commander who leads close behind the main assault line.</translation>
+    </message>
+    <message>
+        <source>Improves nearby offensive output and enables sharper counter-pushes.</source>
+        <translation>Improves nearby offensive output and enables sharper counter-pushes.</translation>
+    </message>
+    <message>
+        <source>More vulnerable if isolated away from supporting infantry.</source>
+        <translation>More vulnerable if isolated away from supporting infantry.</translation>
+    </message>
+    <message>
+        <source>Consular Assault boosts nearby legion attack tempo.</source>
+        <translation>Consular Assault boosts nearby legion attack tempo.</translation>
+    </message>
+    <message>
+        <source>Nearby allied troops gain bonus melee and ranged damage in aura range.</source>
+        <translation>Nearby allied troops gain bonus melee and ranged damage in aura range.</translation>
+    </message>
+    <message>
+        <source>Consular Rally rapidly restores morale to wavering assault cohorts.</source>
+        <translation>Consular Rally rapidly restores morale to wavering assault cohorts.</translation>
+    </message>
+    <message>
+        <source>Death of the consul causes a severe morale shock to nearby Romans.</source>
+        <translation>Death of the consul causes a severe morale shock to nearby Romans.</translation>
+    </message>
+    <message>
+        <source>Marcus Claudius Marcellus</source>
+        <translation>Marcus Claudius Marcellus</translation>
+    </message>
+    <message>
+        <source>Roman field commander known for fast shock actions and relentless pressure.</source>
+        <translation>Roman field commander known for fast shock actions and relentless pressure.</translation>
+    </message>
+    <message>
+        <source>Lightly armored bow commander who supports aggressive vanguard action.</source>
+        <translation>Lightly armored bow commander who supports aggressive vanguard action.</translation>
+    </message>
+    <message>
+        <source>Raises maneuver speed for nearby troops, enabling faster local redeployment.</source>
+        <translation>Raises maneuver speed for nearby troops, enabling faster local redeployment.</translation>
+    </message>
+    <message>
+        <source>Lower staying power than other Roman commanders.</source>
+        <translation>Lower staying power than other Roman commanders.</translation>
+    </message>
+    <message>
+        <source>Vanguard Tempo accelerates nearby infantry movement and line repositioning.</source>
+        <translation>Vanguard Tempo accelerates nearby infantry movement and line repositioning.</translation>
+    </message>
+    <message>
+        <source>Nearby allied infantry move faster while in aura range.</source>
+        <translation>Nearby allied infantry move faster while in aura range.</translation>
+    </message>
+    <message>
+        <source>Vanguard Rally snaps wavering attackers back into coherent motion.</source>
+        <translation>Vanguard Rally snaps wavering attackers back into coherent motion.</translation>
+    </message>
+    <message>
+        <source>If Marcellus falls, nearby attackers suffer immediate morale drop.</source>
+        <translation>If Marcellus falls, nearby attackers suffer immediate morale drop.</translation>
+    </message>
+    <message>
+        <source>Hanno the Great</source>
+        <translation>Hanno the Great</translation>
+    </message>
+    <message>
+        <source>Carthaginian political commander who leverages resources and manpower flows.</source>
+        <translation>Carthaginian political commander who leverages resources and manpower flows.</translation>
+    </message>
+    <message>
+        <source>Bronze-spear commander coordinating disciplined mercenary infantry.</source>
+        <translation>Bronze-spear commander coordinating disciplined mercenary infantry.</translation>
+    </message>
+    <message>
+        <source>Accelerates nearby barracks production through logistical oversight.</source>
+        <translation>Accelerates nearby barracks production through logistical oversight.</translation>
+    </message>
+    <message>
+        <source>Mediocre direct combat impact and risky if exposed.</source>
+        <translation>Mediocre direct combat impact and risky if exposed.</translation>
+    </message>
+    <message>
+        <source>Contract Logistics boosts nearby production tempo and reserve buildup.</source>
+        <translation>Contract Logistics boosts nearby production tempo and reserve buildup.</translation>
+    </message>
+    <message>
+        <source>Nearby allied barracks train units faster while in aura range.</source>
+        <translation>Nearby allied barracks train units faster while in aura range.</translation>
+    </message>
+    <message>
+        <source>Treasury Rally restores wavering troops and keeps formations from breaking.</source>
+        <translation>Treasury Rally restores wavering troops and keeps formations from breaking.</translation>
+    </message>
+    <message>
+        <source>Death triggers contract panic, reducing confidence in nearby troops.</source>
+        <translation>Death triggers contract panic, reducing confidence in nearby troops.</translation>
+    </message>
+    <message>
+        <source>Hasdrubal Barca</source>
+        <translation>Hasdrubal Barca</translation>
+    </message>
+    <message>
+        <source>Mobile Carthaginian field commander built around decisive flanking momentum.</source>
+        <translation>Mobile Carthaginian field commander built around decisive flanking momentum.</translation>
+    </message>
+    <message>
+        <source>Fast bow commander built around flanking pressure and withdrawal.</source>
+        <translation>Fast bow commander built around flanking pressure and withdrawal.</translation>
+    </message>
+    <message>
+        <source>Increases nearby unit speed for coordinated flanks and withdrawals.</source>
+        <translation>Increases nearby unit speed for coordinated flanks and withdrawals.</translation>
+    </message>
+    <message>
+        <source>Less resilient in prolonged frontal attrition.</source>
+        <translation>Less resilient in prolonged frontal attrition.</translation>
+    </message>
+    <message>
+        <source>Barcid Maneuver grants nearby troops superior movement control.</source>
+        <translation>Barcid Maneuver grants nearby troops superior movement control.</translation>
+    </message>
+    <message>
+        <source>Nearby allied troops gain movement speed while within aura range.</source>
+        <translation>Nearby allied troops gain movement speed while within aura range.</translation>
+    </message>
+    <message>
+        <source>Flank Rally rapidly restores wavering units preparing to maneuver.</source>
+        <translation>Flank Rally rapidly restores wavering units preparing to maneuver.</translation>
+    </message>
+    <message>
+        <source>Loss of Hasdrubal sharply drops morale among nearby mobile forces.</source>
+        <translation>Loss of Hasdrubal sharply drops morale among nearby mobile forces.</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca</source>
+        <translation>Hannibal Barca</translation>
+    </message>
+    <message>
+        <source>Carthage&apos;s premier battlefield commander from the Hannibal campaign.</source>
+        <translation>Carthage&apos;s premier battlefield commander from the Hannibal campaign.</translation>
+    </message>
+    <message>
+        <source>Elite sword commander with an iconic standard and sacred-band armor.</source>
+        <translation>Elite sword commander with an iconic standard and sacred-band armor.</translation>
+    </message>
+    <message>
+        <source>Delivers a strong nearby attack bonus and elite crisis rally response.</source>
+        <translation>Delivers a strong nearby attack bonus and elite crisis rally response.</translation>
+    </message>
+    <message>
+        <source>High-value target; losing him causes severe local collapse.</source>
+        <translation>High-value target; losing him causes severe local collapse.</translation>
+    </message>
+    <message>
+        <source>Hannibalic Offensive amplifies nearby attack power before decisive engagements.</source>
+        <translation>Hannibalic Offensive amplifies nearby attack power before decisive engagements.</translation>
+    </message>
+    <message>
+        <source>Nearby allied troops gain substantial attack damage in aura range.</source>
+        <translation>Nearby allied troops gain substantial attack damage in aura range.</translation>
+    </message>
+    <message>
+        <source>Supreme Rally restores routing or wavering units to fighting order.</source>
+        <translation>Supreme Rally restores routing or wavering units to fighting order.</translation>
+    </message>
+    <message>
+        <source>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</source>
+        <translation>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</translation>
     </message>
 </context>
 <context>
@@ -436,6 +797,284 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The watch does not sleep</source>
         <translation>The watch does not sleep</translation>
+    </message>
+</context>
+<context>
+    <name>Formation</name>
+    <message>
+        <source>No units selected.</source>
+        <translation>No units selected.</translation>
+    </message>
+    <message>
+        <source>No units eligible for formation placement.</source>
+        <translation>No units eligible for formation placement.</translation>
+    </message>
+    <message>
+        <source>This doctrine has no template for the chosen formation.</source>
+        <translation>This doctrine has no template for the chosen formation.</translation>
+    </message>
+    <message>
+        <source>No part of this formation fits on the chosen ground.</source>
+        <translation>No part of this formation fits on the chosen ground.</translation>
+    </message>
+    <message>
+        <source>Faction Default</source>
+        <translation>Faction Default</translation>
+    </message>
+    <message>
+        <source>Line</source>
+        <translation>Line</translation>
+    </message>
+    <message>
+        <source>Column</source>
+        <translation>Column</translation>
+    </message>
+    <message>
+        <source>Defensive</source>
+        <translation>Defensive</translation>
+    </message>
+    <message>
+        <source>Assault</source>
+        <translation>Assault</translation>
+    </message>
+    <message>
+        <source>Encirclement</source>
+        <translation>Encirclement</translation>
+    </message>
+    <message>
+        <source>Siege Escort</source>
+        <translation>Siege Escort</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>Neutral</translation>
+    </message>
+    <message>
+        <source>Roman Republic</source>
+        <translation>Roman Republic</translation>
+    </message>
+    <message>
+        <source>Requires at least one siege engine in the selection.</source>
+        <translation>Requires at least one siege engine in the selection.</translation>
+    </message>
+    <message>
+        <source>Requires cavalry or mounted troops to close the encirclement.</source>
+        <translation>Requires cavalry or mounted troops to close the encirclement.</translation>
+    </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Carthage</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher</source>
+        <translation>The Iron Sepulcher</translation>
+    </message>
+    <message>
+        <source>%1 has no template for this intent.</source>
+        <translation>%1 has no template for this intent.</translation>
+    </message>
+    <message>
+        <source>The selection lacks the troop types this formation needs.</source>
+        <translation>The selection lacks the troop types this formation needs.</translation>
+    </message>
+    <message>
+        <source>Encirclement needs at least three units.</source>
+        <translation>Encirclement needs at least three units.</translation>
+    </message>
+</context>
+<context>
+    <name>FormationPanel</name>
+    <message>
+        <source>The deployment this faction fights in by default. No setup needed.</source>
+        <translation>The deployment this faction fights in by default. No setup needed.</translation>
+    </message>
+    <message>
+        <source>Widest frontage. Best for meeting an advance head on.</source>
+        <translation>Widest frontage. Best for meeting an advance head on.</translation>
+    </message>
+    <message>
+        <source>Narrow and deep. Best for moving through gates and passes.</source>
+        <translation>Narrow and deep. Best for moving through gates and passes.</translation>
+    </message>
+    <message>
+        <source>Compressed frontage with reserves. Best for holding ground.</source>
+        <translation>Compressed frontage with reserves. Best for holding ground.</translation>
+    </message>
+    <message>
+        <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
+        <translation>Weighted front with skirmishers ahead. Best for breaking a line.</translation>
+    </message>
+    <message>
+        <source>Wide flanks that close around a target. Needs cavalry.</source>
+        <translation>Wide flanks that close around a target. Needs cavalry.</translation>
+    </message>
+    <message>
+        <source>Engines protected behind infantry. Needs a siege engine.</source>
+        <translation>Engines protected behind infantry. Needs a siege engine.</translation>
+    </message>
+    <message>
+        <source>Formation</source>
+        <translation>Formation</translation>
+    </message>
+    <message>
+        <source>Drag to set frontage and facing • Wheel: depth • Alt: strong flank • Shift: keep order • Ctrl: tighter • Esc: cancel</source>
+        <translation>Drag to set frontage and facing • Wheel: depth • Alt: strong flank • Shift: keep order • Ctrl: tighter • Esc: cancel</translation>
+    </message>
+    <message>
+        <source>Hide advanced options</source>
+        <translation>Hide advanced options</translation>
+    </message>
+    <message>
+        <source>Advanced options</source>
+        <translation>Advanced options</translation>
+    </message>
+    <message>
+        <source>Frontage</source>
+        <translation>Frontage</translation>
+    </message>
+    <message>
+        <source>Narrow</source>
+        <translation>Narrow</translation>
+    </message>
+    <message>
+        <source>Balanced</source>
+        <translation>Balanced</translation>
+    </message>
+    <message>
+        <source>Wide</source>
+        <translation>Wide</translation>
+    </message>
+    <message>
+        <source>Depth</source>
+        <translation>Depth</translation>
+    </message>
+    <message>
+        <source>Shallow</source>
+        <translation>Shallow</translation>
+    </message>
+    <message>
+        <source>Deep</source>
+        <translation>Deep</translation>
+    </message>
+    <message>
+        <source>Spacing</source>
+        <translation>Spacing</translation>
+    </message>
+    <message>
+        <source>Tight</source>
+        <translation>Tight</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Loose</source>
+        <translation>Loose</translation>
+    </message>
+    <message>
+        <source>Cavalry</source>
+        <translation>Cavalry</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Left</translation>
+    </message>
+    <message>
+        <source>Split</source>
+        <translation>Split</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Right</translation>
+    </message>
+    <message>
+        <source>Ranged</source>
+        <translation>Ranged</translation>
+    </message>
+    <message>
+        <source>Rear</source>
+        <translation>Rear</translation>
+    </message>
+    <message>
+        <source>Front</source>
+        <translation>Front</translation>
+    </message>
+    <message>
+        <source>Skirmish</source>
+        <translation>Skirmish</translation>
+    </message>
+    <message>
+        <source>Reserve</source>
+        <translation>Reserve</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Automatic</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>None</translation>
+    </message>
+    <message>
+        <source>One row</source>
+        <translation>One row</translation>
+    </message>
+    <message>
+        <source>Two rows</source>
+        <translation>Two rows</translation>
+    </message>
+    <message>
+        <source>Movement</source>
+        <translation>Movement</translation>
+    </message>
+    <message>
+        <source>Reform at destination</source>
+        <translation>Reform at destination</translation>
+    </message>
+    <message>
+        <source>Maintain formation</source>
+        <translation>Maintain formation</translation>
+    </message>
+    <message>
+        <source>Mixed armies</source>
+        <translation>Mixed armies</translation>
+    </message>
+    <message>
+        <source>Majority doctrine</source>
+        <translation>Majority doctrine</translation>
+    </message>
+    <message>
+        <source>By role</source>
+        <translation>By role</translation>
+    </message>
+    <message>
+        <source>Separate contingents</source>
+        <translation>Separate contingents</translation>
+    </message>
+    <message>
+        <source>Commander</source>
+        <translation>Commander</translation>
+    </message>
+    <message>
+        <source>Doctrine</source>
+        <translation>Doctrine</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rome</translation>
+    </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Carthage</translation>
+    </message>
+    <message>
+        <source>Iron Sepulcher</source>
+        <translation>Iron Sepulcher</translation>
+    </message>
+    <message>
+        <source>Reset to faction default</source>
+        <translation>Reset to faction default</translation>
     </message>
 </context>
 <context>
@@ -992,18 +1631,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Chase</translation>
     </message>
     <message>
-        <source>Locked target</source>
-        <translation>Locked target</translation>
-    </message>
-    <message>
-        <source>Locked on %1</source>
-        <translation>Locked on %1</translation>
-    </message>
-    <message>
-        <source>Lead from the front and keep the line stable.</source>
-        <translation>Lead from the front and keep the line stable.</translation>
-    </message>
-    <message>
         <source>State: %1</source>
         <translation>State: %1</translation>
     </message>
@@ -1460,12 +2087,91 @@ This action cannot be undone.</translation>
         <source>No importable save files were found.</source>
         <translation>No importable save files were found.</translation>
     </message>
+    <message>
+        <source>Untitled Save</source>
+        <translation>Untitled Save</translation>
+    </message>
+    <message>
+        <source>Unknown Map</source>
+        <translation>Unknown Map</translation>
+    </message>
 </context>
 <context>
     <name>LoadScreen</name>
     <message>
         <source>Loading...</source>
         <translation>Loading...</translation>
+    </message>
+</context>
+<context>
+    <name>LoadingProgressTracker</name>
+    <message>
+        <source>Not Started</source>
+        <translation>Not Started</translation>
+    </message>
+    <message>
+        <source>Initializing...</source>
+        <translation>Initializing...</translation>
+    </message>
+    <message>
+        <source>Loading Map Data...</source>
+        <translation>Loading Map Data...</translation>
+    </message>
+    <message>
+        <source>Loading Terrain...</source>
+        <translation>Loading Terrain...</translation>
+    </message>
+    <message>
+        <source>Loading Biome...</source>
+        <translation>Loading Biome...</translation>
+    </message>
+    <message>
+        <source>Loading Water Features...</source>
+        <translation>Loading Water Features...</translation>
+    </message>
+    <message>
+        <source>Loading Roads...</source>
+        <translation>Loading Roads...</translation>
+    </message>
+    <message>
+        <source>Loading Environment...</source>
+        <translation>Loading Environment...</translation>
+    </message>
+    <message>
+        <source>Loading Fog...</source>
+        <translation>Loading Fog...</translation>
+    </message>
+    <message>
+        <source>Loading Units &amp; Buildings...</source>
+        <translation>Loading Units &amp; Buildings...</translation>
+    </message>
+    <message>
+        <source>Loading Audio...</source>
+        <translation>Loading Audio...</translation>
+    </message>
+    <message>
+        <source>Generating Minimap...</source>
+        <translation>Generating Minimap...</translation>
+    </message>
+    <message>
+        <source>Initializing Game Systems...</source>
+        <translation>Initializing Game Systems...</translation>
+    </message>
+    <message>
+        <source>Finalizing...</source>
+        <translation>Finalizing...</translation>
+    </message>
+    <message>
+        <source>Complete</source>
+        <translation>Complete</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>Failed</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Unknown</translation>
     </message>
 </context>
 <context>
@@ -1786,6 +2492,85 @@ to see preview</translation>
     </message>
 </context>
 <context>
+    <name>Maps</name>
+    <message>
+        <source>Unnamed Map</source>
+        <translation>Unnamed Map</translation>
+    </message>
+    <message>
+        <source>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</source>
+        <translation>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</translation>
+    </message>
+    <message>
+        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
+        <translation>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</translation>
+    </message>
+    <message>
+        <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
+        <translation>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</translation>
+    </message>
+    <message>
+        <source>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</source>
+        <translation>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</translation>
+    </message>
+    <message>
+        <source>Battle of Cannae</source>
+        <translation>Battle of Cannae</translation>
+    </message>
+    <message>
+        <source>Battle of Lake Trasimene</source>
+        <translation>Battle of Lake Trasimene</translation>
+    </message>
+    <message>
+        <source>Battle of Ticino</source>
+        <translation>Battle of Ticino</translation>
+    </message>
+    <message>
+        <source>Battle of Trebia</source>
+        <translation>Battle of Trebia</translation>
+    </message>
+    <message>
+        <source>Battle of Zama</source>
+        <translation>Battle of Zama</translation>
+    </message>
+    <message>
+        <source>Campania Campaign</source>
+        <translation>Campania Campaign</translation>
+    </message>
+    <message>
+        <source>Crossing the Alps</source>
+        <translation>Crossing the Alps</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhone - Polished Maze Version</source>
+        <translation>Crossing the Rhone - Polished Maze Version</translation>
+    </message>
+    <message>
+        <source>Forest Battlefield</source>
+        <translation>Forest Battlefield</translation>
+    </message>
+    <message>
+        <source>Iron Sepulcher Watch</source>
+        <translation>Iron Sepulcher Watch</translation>
+    </message>
+    <message>
+        <source>Mountain Strongholds</source>
+        <translation>Mountain Strongholds</translation>
+    </message>
+    <message>
+        <source>River Crossroads</source>
+        <translation>River Crossroads</translation>
+    </message>
+    <message>
+        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
+        <translation>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</translation>
+    </message>
+    <message>
+        <source>Spanish Olive Grove</source>
+        <translation>Spanish Olive Grove</translation>
+    </message>
+</context>
+<context>
     <name>MediterraneanMapPanel</name>
     <message>
         <source>Loading map…</source>
@@ -1830,6 +2615,26 @@ to see preview</translation>
     <message>
         <source>Mission Region</source>
         <translation>Mission Region</translation>
+    </message>
+    <message>
+        <source>Rhône</source>
+        <translation>Rhône</translation>
+    </message>
+    <message>
+        <source>N. Italy</source>
+        <translation>N. Italy</translation>
+    </message>
+    <message>
+        <source>Trasimene</source>
+        <translation>Trasimene</translation>
+    </message>
+    <message>
+        <source>Cannae</source>
+        <translation>Cannae</translation>
+    </message>
+    <message>
+        <source>Zama</source>
+        <translation>Zama</translation>
     </message>
 </context>
 <context>
@@ -2051,6 +2856,460 @@ to see preview</translation>
     <message>
         <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
         <translation>Assault phase %1/%2: %3 from the %4 (%5 units)</translation>
+    </message>
+</context>
+<context>
+    <name>Missions</name>
+    <message>
+        <source>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
+        <translation>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</translation>
+    </message>
+    <message>
+        <source>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</source>
+        <translation>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</translation>
+    </message>
+    <message>
+        <source>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</source>
+        <translation>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</translation>
+    </message>
+    <message>
+        <source>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</source>
+        <translation>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</translation>
+    </message>
+    <message>
+        <source>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</source>
+        <translation>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</translation>
+    </message>
+    <message>
+        <source>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</source>
+        <translation>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</translation>
+    </message>
+    <message>
+        <source>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</source>
+        <translation>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</translation>
+    </message>
+    <message>
+        <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
+        <translation>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</translation>
+    </message>
+    <message>
+        <source>A commander alone cannot defend a city quarter.</source>
+        <translation>A commander alone cannot defend a city quarter.</translation>
+    </message>
+    <message>
+        <source>A general alone on a dead field is just the last corpse standing.</source>
+        <translation>A general alone on a dead field is just the last corpse standing.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
+        <translation>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</translation>
+    </message>
+    <message>
+        <source>Battle of Cannae</source>
+        <translation>Battle of Cannae</translation>
+    </message>
+    <message>
+        <source>Battle of Lake Trasimene</source>
+        <translation>Battle of Lake Trasimene</translation>
+    </message>
+    <message>
+        <source>Battle of Ticino</source>
+        <translation>Battle of Ticino</translation>
+    </message>
+    <message>
+        <source>Battle of Trebia</source>
+        <translation>Battle of Trebia</translation>
+    </message>
+    <message>
+        <source>Battle of Zama</source>
+        <translation>Battle of Zama</translation>
+    </message>
+    <message>
+        <source>Between assaults, seize the eastern Roman siege camp.</source>
+        <translation>Between assaults, seize the eastern Roman siege camp.</translation>
+    </message>
+    <message>
+        <source>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</source>
+        <translation>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</translation>
+    </message>
+    <message>
+        <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
+        <translation>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</translation>
+    </message>
+    <message>
+        <source>Break three Roman columns before the survivors find the ford again.</source>
+        <translation>Break three Roman columns before the survivors find the ford again.</translation>
+    </message>
+    <message>
+        <source>Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.</source>
+        <translation>Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.</translation>
+    </message>
+    <message>
+        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
+        <translation>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</translation>
+    </message>
+    <message>
+        <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
+        <translation>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</translation>
+    </message>
+    <message>
+        <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
+        <translation>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</translation>
+    </message>
+    <message>
+        <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
+        <translation>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</translation>
+    </message>
+    <message>
+        <source>Crossing the Alps</source>
+        <translation>Crossing the Alps</translation>
+    </message>
+    <message>
+        <source>Crossing the Rhône</source>
+        <translation>Crossing the Rhône</translation>
+    </message>
+    <message>
+        <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
+        <translation>Crush all three Roman camps and seal the iron tomb shut. No escape.</translation>
+    </message>
+    <message>
+        <source>Crush both Roman breakout columns before they claw through the hillside.</source>
+        <translation>Crush both Roman breakout columns before they claw through the hillside.</translation>
+    </message>
+    <message>
+        <source>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</source>
+        <translation>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</translation>
+    </message>
+    <message>
+        <source>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</source>
+        <translation>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</translation>
+    </message>
+    <message>
+        <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
+        <translation>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</translation>
+    </message>
+    <message>
+        <source>Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.</source>
+        <translation>Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.</translation>
+    </message>
+    <message>
+        <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
+        <translation>Drive the dead from the shrine. Salt the earth where they stood.</translation>
+    </message>
+    <message>
+        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
+        <translation>Endure both waves from the depths. Do not flinch when the ground tears open.</translation>
+    </message>
+    <message>
+        <source>Every soldier lost is counted by the enemy tonight.</source>
+        <translation>Every soldier lost is counted by the enemy tonight.</translation>
+    </message>
+    <message>
+        <source>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</source>
+        <translation>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</translation>
+    </message>
+    <message>
+        <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
+        <translation>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</translation>
+    </message>
+    <message>
+        <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
+        <translation>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</translation>
+    </message>
+    <message>
+        <source>Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.</source>
+        <translation>Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls, and the allied towns abandon the field.</source>
+        <translation>Hannibal falls, and the allied towns abandon the field.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</source>
+        <translation>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
+        <translation>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</translation>
+    </message>
+    <message>
+        <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
+        <translation>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</translation>
+    </message>
+    <message>
+        <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
+        <translation>Hold the ruins. Force the Romans to fight on two grounds at once.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
+        <translation>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</translation>
+    </message>
+    <message>
+        <source>If the central camp falls, the Campanian alliance dies with it.</source>
+        <translation>If the central camp falls, the Campanian alliance dies with it.</translation>
+    </message>
+    <message>
+        <source>Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.</source>
+        <translation>Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.</translation>
+    </message>
+    <message>
+        <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
+        <translation>Investigate the cursed shrine, survive the awakening, and clear the ruins.</translation>
+    </message>
+    <message>
+        <source>Iron Sepulcher Watch</source>
+        <translation>Iron Sepulcher Watch</translation>
+    </message>
+    <message>
+        <source>Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.</source>
+        <translation>Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.</translation>
+    </message>
+    <message>
+        <source>Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.</source>
+        <translation>Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.</translation>
+    </message>
+    <message>
+        <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
+        <translation>Lose the river camp and the cold takes what the Romans couldn&apos;t.</translation>
+    </message>
+    <message>
+        <source>Lose the supply camp and the army starves before it reaches the snow line.</source>
+        <translation>Lose the supply camp and the army starves before it reaches the snow line.</translation>
+    </message>
+    <message>
+        <source>Lose your camp and the tempo dies with it.</source>
+        <translation>Lose your camp and the tempo dies with it.</translation>
+    </message>
+    <message>
+        <source>Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.</source>
+        <translation>Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.</translation>
+    </message>
+    <message>
+        <source>Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.</source>
+        <translation>Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.</translation>
+    </message>
+    <message>
+        <source>No living formation remains to hold the gates.</source>
+        <translation>No living formation remains to hold the gates.</translation>
+    </message>
+    <message>
+        <source>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</source>
+        <translation>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</translation>
+    </message>
+    <message>
+        <source>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</source>
+        <translation>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</translation>
+    </message>
+    <message>
+        <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
+        <translation>Raze every Roman post. Leave Scipio nothing to rally behind.</translation>
+    </message>
+    <message>
+        <source>Seal the road. Let no scout cross the Ticino alive.</source>
+        <translation>Seal the road. Let no scout cross the Ticino alive.</translation>
+    </message>
+    <message>
+        <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
+        <translation>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</translation>
+    </message>
+    <message>
+        <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
+        <translation>Seize both Roman camps. The ambush is not finished until their flags come down.</translation>
+    </message>
+    <message>
+        <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
+        <translation>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</translation>
+    </message>
+    <message>
+        <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
+        <translation>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</translation>
+    </message>
+    <message>
+        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
+        <translation>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</translation>
+    </message>
+    <message>
+        <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
+        <translation>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</translation>
+    </message>
+    <message>
+        <source>The Campanian Vigil</source>
+        <translation>The Campanian Vigil</translation>
+    </message>
+    <message>
+        <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
+        <translation>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</translation>
+    </message>
+    <message>
+        <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
+        <translation>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</translation>
+    </message>
+    <message>
+        <source>The commander falls — and every line collapses behind him.</source>
+        <translation>The commander falls — and every line collapses behind him.</translation>
+    </message>
+    <message>
+        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
+        <translation>The commander falls — the vigil ends. And the dead keep walking.</translation>
+    </message>
+    <message>
+        <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
+        <translation>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</translation>
+    </message>
+    <message>
+        <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
+        <translation>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</translation>
+    </message>
+    <message>
+        <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
+        <translation>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</translation>
+    </message>
+    <message>
+        <source>Your camp falls — the field goes with it.</source>
+        <translation>Your camp falls — the field goes with it.</translation>
+    </message>
+    <message>
+        <source>Your command falls — and the wings fold inward.</source>
+        <translation>Your command falls — and the wings fold inward.</translation>
+    </message>
+    <message>
+        <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
+        <translation>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</translation>
+    </message>
+    <message>
+        <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
+        <translation>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</translation>
+    </message>
+    <message>
+        <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
+        <translation>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</translation>
+    </message>
+    <message>
+        <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
+        <translation>Another Roman wave is flanking from the southeast. Rotate quickly.</translation>
+    </message>
+    <message>
+        <source>Counterattack now. Break them while they are split by the river.</source>
+        <translation>Counterattack now. Break them while they are split by the river.</translation>
+    </message>
+    <message>
+        <source>Final ridge ahead. Break the last camp to open the descent.</source>
+        <translation>Final ridge ahead. Break the last camp to open the descent.</translation>
+    </message>
+    <message>
+        <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
+        <translation>Fix the Roman center in place. Keep both cavalry wings active.</translation>
+    </message>
+    <message>
+        <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
+        <translation>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</translation>
+    </message>
+    <message>
+        <source>Hold discipline. Let the Romans commit at the ford.</source>
+        <translation>Hold discipline. Let the Romans commit at the ford.</translation>
+    </message>
+    <message>
+        <source>Iron bells answer beneath the western flank. The Sepulcher is advancing on Carthage as well as Rome.</source>
+        <translation>Iron bells answer beneath the western flank. The Sepulcher is advancing on Carthage as well as Rome.</translation>
+    </message>
+    <message>
+        <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
+        <translation>Navigate through the maze of hills and valleys. Watch for enemy patrols!</translation>
+    </message>
+    <message>
+        <source>Numidian cavalry is entering from the southeastern flank.</source>
+        <translation>Numidian cavalry is entering from the southeastern flank.</translation>
+    </message>
+    <message>
+        <source>One minute. Spend the reserve; save the camp.</source>
+        <translation>One minute. Spend the reserve; save the camp.</translation>
+    </message>
+    <message>
+        <source>Rear guard deployment detected in the north. This is the final phase.</source>
+        <translation>Rear guard deployment detected in the north. This is the final phase.</translation>
+    </message>
+    <message>
+        <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
+        <translation>Roman cavalry is attempting a breakout from the south. Intercept them.</translation>
+    </message>
+    <message>
+        <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
+        <translation>Roman cavalry screens the field. Punch through before reserves arrive.</translation>
+    </message>
+    <message>
+        <source>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</source>
+        <translation>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</translation>
+    </message>
+    <message>
+        <source>Roman reinforcements are approaching from the eastern road.</source>
+        <translation>Roman reinforcements are approaching from the eastern road.</translation>
+    </message>
+    <message>
+        <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
+        <translation>Roman reserves are entering from the northern camp. Close the pocket faster.</translation>
+    </message>
+    <message>
+        <source>Roman reserves are moving from the western bank.</source>
+        <translation>Roman reserves are moving from the western bank.</translation>
+    </message>
+    <message>
+        <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
+        <translation>Scipio extends the line. Keep your center steady and protect elephants from isolation.</translation>
+    </message>
+    <message>
+        <source>Second pass defenders are reinforcing. Keep the column moving.</source>
+        <translation>Second pass defenders are reinforcing. Keep the column moving.</translation>
+    </message>
+    <message>
+        <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
+        <translation>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</translation>
+    </message>
+    <message>
+        <source>Strike now. Close the western route and split their line.</source>
+        <translation>Strike now. Close the western route and split their line.</translation>
+    </message>
+    <message>
+        <source>Take the first pass quickly before the next ambush line assembles.</source>
+        <translation>Take the first pass quickly before the next ambush line assembles.</translation>
+    </message>
+    <message>
+        <source>The Roman column enters the corridor. Wait for full commitment.</source>
+        <translation>The Roman column enters the corridor. Wait for full commitment.</translation>
+    </message>
+    <message>
+        <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
+        <translation>The Roman villages are heavily defended. Coordinate your attacks!</translation>
+    </message>
+    <message>
+        <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
+        <translation>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</translation>
+    </message>
+    <message>
+        <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
+        <translation>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</translation>
+    </message>
+</context>
+<context>
+    <name>Nations</name>
+    <message>
+        <source>Roman Republic</source>
+        <translation>Roman Republic</translation>
+    </message>
+    <message>
+        <source>Carthaginian Empire</source>
+        <translation>Carthaginian Empire</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher</source>
+        <translation>The Iron Sepulcher</translation>
+    </message>
+    <message>
+        <source>Shield Wall</source>
+        <translation>Shield Wall</translation>
+    </message>
+    <message>
+        <source>Testudo</source>
+        <translation>Testudo</translation>
     </message>
 </context>
 <context>
@@ -2639,6 +3898,22 @@ Build time: %3s</translation>
         <source>Sell %1 %2 for %3 gold</source>
         <translation>Sell %1 %2 for %3 gold</translation>
     </message>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>Mounted Knight</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Horse Archer</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Horse Spearman</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>War Elephant</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -2696,6 +3971,61 @@ Build time: %3s</translation>
     <message>
         <source>STAGGERED</source>
         <translation>STAGGERED</translation>
+    </message>
+</context>
+<context>
+    <name>SaveFile</name>
+    <message>
+        <source>Save payload has no checksum</source>
+        <translation>Save payload has no checksum</translation>
+    </message>
+    <message>
+        <source>Save payload is corrupted (stored checksum mismatch)</source>
+        <translation>Save payload is corrupted (stored checksum mismatch)</translation>
+    </message>
+    <message>
+        <source>Save payload is corrupted (decompression failed)</source>
+        <translation>Save payload is corrupted (decompression failed)</translation>
+    </message>
+    <message>
+        <source>Save payload is corrupted (expected %1 bytes, got %2)</source>
+        <translation>Save payload is corrupted (expected %1 bytes, got %2)</translation>
+    </message>
+    <message>
+        <source>Save payload is corrupted (content checksum mismatch)</source>
+        <translation>Save payload is corrupted (content checksum mismatch)</translation>
+    </message>
+    <message>
+        <source>Not a Standard of Iron save file</source>
+        <translation>Not a Standard of Iron save file</translation>
+    </message>
+    <message>
+        <source>Unsupported save file version %1 (expected %2)</source>
+        <translation>Unsupported save file version %1 (expected %2)</translation>
+    </message>
+    <message>
+        <source>Save file header is truncated</source>
+        <translation>Save file header is truncated</translation>
+    </message>
+    <message>
+        <source>Save file header is corrupted: %1</source>
+        <translation>Save file header is corrupted: %1</translation>
+    </message>
+    <message>
+        <source>Save file uses an unknown compression format</source>
+        <translation>Save file uses an unknown compression format</translation>
+    </message>
+    <message>
+        <source>Save file declares implausible sizes</source>
+        <translation>Save file declares implausible sizes</translation>
+    </message>
+    <message>
+        <source>Save file body is truncated</source>
+        <translation>Save file body is truncated</translation>
+    </message>
+    <message>
+        <source>Save file preview image is corrupted</source>
+        <translation>Save file preview image is corrupted</translation>
     </message>
 </context>
 <context>
@@ -2762,6 +4092,14 @@ Build time: %3s</translation>
         <source>Skirmish</source>
         <translation>Skirmish</translation>
     </message>
+    <message>
+        <source>Untitled Save</source>
+        <translation>Untitled Save</translation>
+    </message>
+    <message>
+        <source>Unknown Map</source>
+        <translation>Unknown Map</translation>
+    </message>
 </context>
 <context>
     <name>SaveProgressOverlay</name>
@@ -2776,6 +4114,121 @@ Build time: %3s</translation>
     <message>
         <source>Cancel</source>
         <translation>Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>SaveStorage</name>
+    <message>
+        <source>Failed to begin transaction</source>
+        <translation>Failed to begin transaction</translation>
+    </message>
+    <message>
+        <source>Failed to commit transaction</source>
+        <translation>Failed to commit transaction</translation>
+    </message>
+    <message>
+        <source>Failed to open save database</source>
+        <translation>Failed to open save database</translation>
+    </message>
+    <message>
+        <source>Failed to read schema version</source>
+        <translation>Failed to read schema version</translation>
+    </message>
+    <message>
+        <source>Failed to record schema version</source>
+        <translation>Failed to record schema version</translation>
+    </message>
+    <message>
+        <source>Failed to drop table %1</source>
+        <translation>Failed to drop table %1</translation>
+    </message>
+    <message>
+        <source>Failed to create save schema</source>
+        <translation>Failed to create save schema</translation>
+    </message>
+    <message>
+        <source>Failed to prepare save query</source>
+        <translation>Failed to prepare save query</translation>
+    </message>
+    <message>
+        <source>Failed to persist save slot</source>
+        <translation>Failed to persist save slot</translation>
+    </message>
+    <message>
+        <source>Failed to read save slot</source>
+        <translation>Failed to read save slot</translation>
+    </message>
+    <message>
+        <source>Save slot &apos;%1&apos; not found</source>
+        <translation>Save slot &apos;%1&apos; not found</translation>
+    </message>
+    <message>
+        <source>Save slot &apos;%1&apos; uses unsupported format version %2</source>
+        <translation>Save slot &apos;%1&apos; uses unsupported format version %2</translation>
+    </message>
+    <message>
+        <source>Save slot &apos;%1&apos; uses an unknown compression format</source>
+        <translation>Save slot &apos;%1&apos; uses an unknown compression format</translation>
+    </message>
+    <message>
+        <source>Failed to enumerate save slots</source>
+        <translation>Failed to enumerate save slots</translation>
+    </message>
+    <message>
+        <source>Failed to look up save slot</source>
+        <translation>Failed to look up save slot</translation>
+    </message>
+    <message>
+        <source>Failed to store save preview</source>
+        <translation>Failed to store save preview</translation>
+    </message>
+    <message>
+        <source>Failed to delete save slot</source>
+        <translation>Failed to delete save slot</translation>
+    </message>
+    <message>
+        <source>Failed to get campaign progress</source>
+        <translation>Failed to get campaign progress</translation>
+    </message>
+    <message>
+        <source>Failed to mark campaign as completed</source>
+        <translation>Failed to mark campaign as completed</translation>
+    </message>
+    <message>
+        <source>Failed to prepare mission result insert</source>
+        <translation>Failed to prepare mission result insert</translation>
+    </message>
+    <message>
+        <source>Failed to save mission result</source>
+        <translation>Failed to save mission result</translation>
+    </message>
+    <message>
+        <source>Failed to get mission progress</source>
+        <translation>Failed to get mission progress</translation>
+    </message>
+    <message>
+        <source>Failed to get campaign mission progress</source>
+        <translation>Failed to get campaign mission progress</translation>
+    </message>
+    <message>
+        <source>Failed to register campaign mission</source>
+        <translation>Failed to register campaign mission</translation>
+    </message>
+    <message>
+        <source>Failed to mark mission as completed</source>
+        <translation>Failed to mark mission as completed</translation>
+    </message>
+    <message>
+        <source>Failed to find completed mission order</source>
+        <translation>Failed to find completed mission order</translation>
+    </message>
+    <message>
+        <source>Failed to unlock next mission</source>
+        <translation>Failed to unlock next mission</translation>
+    </message>
+    <message>
+        <source>No next mission found to unlock (completed mission order: %1)</source>
+        <translation>No next mission found to unlock (completed mission order: %1)</translation>
     </message>
 </context>
 <context>
@@ -2950,6 +4403,203 @@ Build time: %3s</translation>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
         <translation>Invalid team configuration: At least two teams must be selected to start a match.</translation>
+    </message>
+</context>
+<context>
+    <name>UndeadAwakeningSystem</name>
+    <message>
+        <source>Iron Sepulcher %1</source>
+        <translation>Iron Sepulcher %1</translation>
+    </message>
+    <message>
+        <source>The shrine answers to you now. Its dead fall still.</source>
+        <translation>The shrine answers to you now. Its dead fall still.</translation>
+    </message>
+    <message>
+        <source>The shrine is broken. Every risen guardian crumbles.</source>
+        <translation>The shrine is broken. Every risen guardian crumbles.</translation>
+    </message>
+    <message>
+        <source>Wave %1/%2</source>
+        <translation>Wave %1/%2</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher wakes. %1 rises to meet you.</source>
+        <translation>The Iron Sepulcher wakes. %1 rises to meet you.</translation>
+    </message>
+    <message>
+        <source>%1 claws out of the ground.</source>
+        <translation>%1 claws out of the ground.</translation>
+    </message>
+    <message>
+        <source>The risen guardians are put down. The ground is quiet.</source>
+        <translation>The risen guardians are put down. The ground is quiet.</translation>
+    </message>
+</context>
+<context>
+    <name>Units</name>
+    <message>
+        <source>Archer</source>
+        <translation>Archer</translation>
+    </message>
+    <message>
+        <source>Swordsman</source>
+        <translation>Swordsman</translation>
+    </message>
+    <message>
+        <source>Spearman</source>
+        <translation>Spearman</translation>
+    </message>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>Mounted Knight</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Horse Archer</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Horse Spearman</translation>
+    </message>
+    <message>
+        <source>Healer</source>
+        <translation>Healer</translation>
+    </message>
+    <message>
+        <source>Skeleton Swordsman</source>
+        <translation>Skeleton Swordsman</translation>
+    </message>
+    <message>
+        <source>Skeleton Archer</source>
+        <translation>Skeleton Archer</translation>
+    </message>
+    <message>
+        <source>Grave Priest</source>
+        <translation>Grave Priest</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Catapult</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Ballista</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>War Elephant</translation>
+    </message>
+    <message>
+        <source>Quintus Fabius Maximus</source>
+        <translation>Quintus Fabius Maximus</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio</source>
+        <translation>Publius Cornelius Scipio</translation>
+    </message>
+    <message>
+        <source>Marcus Claudius Marcellus</source>
+        <translation>Marcus Claudius Marcellus</translation>
+    </message>
+    <message>
+        <source>Hanno the Great</source>
+        <translation>Hanno the Great</translation>
+    </message>
+    <message>
+        <source>Hasdrubal Barca</source>
+        <translation>Hasdrubal Barca</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca</source>
+        <translation>Hannibal Barca</translation>
+    </message>
+    <message>
+        <source>Builder</source>
+        <translation>Builder</translation>
+    </message>
+    <message>
+        <source>Civilian</source>
+        <translation>Civilian</translation>
+    </message>
+    <message>
+        <source>Unknown Troop</source>
+        <translation>Unknown Troop</translation>
+    </message>
+    <message>
+        <source>African War Elephant</source>
+        <translation>African War Elephant</translation>
+    </message>
+    <message>
+        <source>Auxiliary Archer</source>
+        <translation>Auxiliary Archer</translation>
+    </message>
+    <message>
+        <source>Carthaginian Ballista</source>
+        <translation>Carthaginian Ballista</translation>
+    </message>
+    <message>
+        <source>Carthaginian Catapult</source>
+        <translation>Carthaginian Catapult</translation>
+    </message>
+    <message>
+        <source>Citizen Infantry</source>
+        <translation>Citizen Infantry</translation>
+    </message>
+    <message>
+        <source>Equites</source>
+        <translation>Equites</translation>
+    </message>
+    <message>
+        <source>Faber</source>
+        <translation>Faber</translation>
+    </message>
+    <message>
+        <source>Legionary</source>
+        <translation>Legionary</translation>
+    </message>
+    <message>
+        <source>Liby-Phoenician Spear</source>
+        <translation>Liby-Phoenician Spear</translation>
+    </message>
+    <message>
+        <source>Libyan Archer</source>
+        <translation>Libyan Archer</translation>
+    </message>
+    <message>
+        <source>Medicus</source>
+        <translation>Medicus</translation>
+    </message>
+    <message>
+        <source>Numidian Cavalry</source>
+        <translation>Numidian Cavalry</translation>
+    </message>
+    <message>
+        <source>Onager</source>
+        <translation>Onager</translation>
+    </message>
+    <message>
+        <source>Phoenician Craftsman</source>
+        <translation>Phoenician Craftsman</translation>
+    </message>
+    <message>
+        <source>Sacred Band Healer</source>
+        <translation>Sacred Band Healer</translation>
+    </message>
+    <message>
+        <source>Triarius</source>
+        <translation>Triarius</translation>
+    </message>
+</context>
+<context>
+    <name>WallNetworkService</name>
+    <message>
+        <source>Blocked by an existing wall.</source>
+        <translation>Blocked by an existing wall.</translation>
+    </message>
+    <message>
+        <source>Cannot build there.</source>
+        <translation>Cannot build there.</translation>
     </message>
 </context>
 <context>

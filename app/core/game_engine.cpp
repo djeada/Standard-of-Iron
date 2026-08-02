@@ -133,6 +133,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
+#include "game/util/asset_text.h"
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
 #include "game/visuals/team_colors.h"
@@ -234,11 +235,16 @@ auto build_available_commander_entry(const Game::Units::CommanderDefinition& def
   entry["id"] = QString::fromStdString(definition.id);
   entry["troop"] =
       QString::fromStdString(Game::Units::troop_typeToString(definition.troop_type));
-  entry["display_name"] = QString::fromStdString(definition.display_name);
-  entry["battlefield_role"] = QString::fromStdString(definition.battlefield_role);
-  entry["bonus_summary"] = QString::fromStdString(definition.bonus_summary);
-  entry["passive_aura"] = QString::fromStdString(definition.passive_aura);
-  entry["rally_ability"] = QString::fromStdString(definition.rally_ability);
+  entry["display_name"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.display_name);
+  entry["battlefield_role"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                                   definition.battlefield_role);
+  entry["bonus_summary"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.bonus_summary);
+  entry["passive_aura"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.passive_aura);
+  entry["rally_ability"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.rally_ability);
   entry["is_default"] = is_default;
   return entry;
 }
@@ -1126,10 +1132,12 @@ void GameEngine::request_enter_commander_control_mode() {
                                      0.0F);
   }
   select_controlled_commander();
+  Game::Audio::play_cue(Game::Audio::Cue::k_state_commander_enter);
   emit control_mode_changed();
 }
 
 void GameEngine::request_exit_commander_control_mode() {
+  const bool was_in_commander_mode = m_control_mode == PlayerControlMode::Commander;
   exit_commander_runtime_mode();
   reset_commander_input();
   auto const effects = m_commander_mode->exit_commander_control_mode(
@@ -1148,6 +1156,10 @@ void GameEngine::request_exit_commander_control_mode() {
     }
   }
   restore_rts_selection();
+
+  if (was_in_commander_mode) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_state_commander_exit);
+  }
 
   emit game_mode_changed();
   emit control_mode_changed();
@@ -2311,6 +2323,27 @@ void GameEngine::set_audio_frontend_context(const QString& context) {
   m_audio_coordinator->apply_frontend_music_context(normalized);
 }
 
+void GameEngine::set_paused(bool paused) {
+  if (m_runtime.paused == paused) {
+    return;
+  }
+  m_runtime.paused = paused;
+  if (m_runtime.loading) {
+    return;
+  }
+  Game::Audio::play_cue(paused ? Game::Audio::Cue::k_state_pause
+                               : Game::Audio::Cue::k_state_resume);
+}
+
+void GameEngine::set_game_speed(float speed) {
+  const float clamped = std::max(0.0F, speed);
+  if (qFuzzyCompare(m_runtime.time_scale, clamped)) {
+    return;
+  }
+  m_runtime.time_scale = clamped;
+  Game::Audio::play_cue(Game::Audio::Cue::k_state_speed_change);
+}
+
 auto GameEngine::has_units_selected() const -> bool {
   if (!m_selection_controller) {
     return false;
@@ -2569,7 +2602,9 @@ auto GameEngine::available_nations() const -> QVariantList {
     QVariantMap entry;
     entry.insert(QStringLiteral("id"),
                  QString::fromStdString(Game::Systems::nation_id_to_string(nation.id)));
-    entry.insert(QStringLiteral("name"), QString::fromStdString(nation.display_name));
+    entry.insert(
+        QStringLiteral("name"),
+        Game::Util::tr_asset(Game::Util::k_nations_context, nation.display_name));
     ordered.append(entry);
   }
   std::sort(
@@ -2907,6 +2942,10 @@ void GameEngine::apply_mission_setup() {
                                                        m_pending_mission_waves,
                                                        m_entity_cache});
   m_mission_wave_tracker.bind(&m_pending_mission_waves, m_world);
+  if (m_campaign_manager->current_mission_definition().has_value()) {
+    m_pending_mission_events = App::Core::build_pending_mission_events(
+        *m_campaign_manager->current_mission_definition());
+  }
   if (m_victory_service) {
     m_victory_service->set_mission_wave_query(&m_mission_wave_tracker);
   }
@@ -3013,6 +3052,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
   m_pending_mission_waves.clear();
+  m_pending_mission_events.clear();
   m_mission_wave_tracker.bind(nullptr, nullptr);
   Game::Systems::PlayerResourceRegistry::instance().clear();
   Game::Systems::MarketplaceSystem::instance().clear();
@@ -3023,8 +3063,22 @@ void GameEngine::reset_mission_runtime_state() {
   AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Lazy);
 }
 
+void GameEngine::update_mission_events() {
+  if (m_pending_mission_events.empty()) {
+    return;
+  }
+  for (auto& event : m_pending_mission_events) {
+    if (event.fired || m_campaign_mission_elapsed < event.trigger_time) {
+      continue;
+    }
+    event.fired = true;
+    emit mission_announcement(
+        Game::Util::tr_asset(Game::Util::k_missions_context, event.text));
+  }
+}
+
 void GameEngine::update_mission_waves(float dt) {
-  if (dt <= 0.0F || !m_world || !m_mission_setup || m_pending_mission_waves.empty() ||
+  if (dt <= 0.0F || !m_world || !m_mission_setup ||
       !m_runtime.victory_state.isEmpty()) {
     return;
   }
@@ -3034,6 +3088,11 @@ void GameEngine::update_mission_waves(float dt) {
   }
 
   m_campaign_mission_elapsed += dt;
+  update_mission_events();
+
+  if (m_pending_mission_waves.empty()) {
+    return;
+  }
 
   bool spawned_any = false;
   for (auto& wave : m_pending_mission_waves) {
@@ -3109,6 +3168,9 @@ void GameEngine::connect_save_service_signals() {
             }
             if (!success) {
               set_error(error);
+              Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
+            } else {
+              Game::Audio::play_cue(Game::Audio::Cue::k_state_save_complete);
             }
             emit save_completed(slot_name, success, error);
           });
@@ -3305,6 +3367,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
+  Game::Audio::play_cue(Game::Audio::Cue::k_state_load_complete);
 
   emit minimap_image_changed();
 
@@ -3497,7 +3560,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id,
     if (troop_type_opt.has_value()) {
       auto profile = Game::Systems::TroopProfileService::instance().get_profile(
           u->nation_id, *troop_type_opt);
-      name = QString::fromStdString(profile.display_name);
+      name = Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
     } else {
 
       name = QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));

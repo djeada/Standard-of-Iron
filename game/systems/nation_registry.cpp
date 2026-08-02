@@ -185,7 +185,7 @@ void NationRegistry::initialize_defaults() {
   if (nations.empty()) {
     Nation roman;
     roman.id = NationID::RomanRepublic;
-    roman.display_name = "Roman Republic";
+    roman.display_name = QT_TRANSLATE_NOOP("Nations", "Roman Republic");
     roman.primary_building = Game::Units::BuildingType::Barracks;
     roman.doctrine = "rome";
 

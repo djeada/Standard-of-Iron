@@ -1,5 +1,7 @@
 #include "commander_catalog.h"
 
+#include <QtGlobal>
+
 #include "../core/component.h"
 #include "../core/entity.h"
 
@@ -11,19 +13,36 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::RomanLegionOrganizer,
        NationID::RomanRepublic,
        "roman_legion_organizer",
-       "Quintus Fabius Maximus",
-       "Rome's delaying strategist who preserves armies through discipline and "
-       "staying power.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Heavy spear commander who anchors a disciplined battle line.",
-       "Boosts nearby troop endurance and slows collapse in grind fights.",
-       "Lower offensive pressure and weaker pursuit potential.",
-       "Fabian Endurance keeps nearby cohorts in line for prolonged fighting.",
+       QT_TRANSLATE_NOOP("Commanders", "Quintus Fabius Maximus"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Rome's delaying strategist who preserves armies through discipline and "
+           "staying power."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Heavy spear commander who anchors a disciplined battle line."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Boosts nearby troop endurance and slows collapse in grind fights."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Lower offensive pressure and weaker pursuit potential."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Fabian Endurance keeps nearby cohorts in line for prolonged fighting."),
        "health_regen",
-       "Nearby allied infantry regenerate health while inside the aura.",
-       "Rally of Patience stabilizes wavering lines during attritional combat.",
-       "If killed or wounded, nearby allies lose confidence and the aura shuts "
-       "off.",
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Nearby allied infantry regenerate health while inside the aura."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Rally of Patience stabilizes wavering lines during attritional combat."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "If killed or wounded, nearby allies lose confidence and the aura shuts "
+           "off."),
        "Unique infantry renderer with long crimson cloak, broad scutum guard, "
        "and reinforced cuirass with silver neck guard.",
        0,
@@ -41,19 +60,35 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::RomanVeteranConsul,
        NationID::RomanRepublic,
        "roman_veteran_consul",
-       "Publius Cornelius Scipio",
-       "Aggressive Roman consul focused on decisive strikes and tactical "
-       "initiative.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Sword-and-shield infantry commander who leads close behind the main "
-       "assault line.",
-       "Improves nearby offensive output and enables sharper counter-pushes.",
-       "More vulnerable if isolated away from supporting infantry.",
-       "Consular Assault boosts nearby legion attack tempo.",
+       QT_TRANSLATE_NOOP("Commanders", "Publius Cornelius Scipio"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Aggressive Roman consul focused on decisive strikes and tactical "
+           "initiative."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Sword-and-shield infantry commander who leads close behind the main "
+           "assault line."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Improves nearby offensive output and enables sharper counter-pushes."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "More vulnerable if isolated away from supporting infantry."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Consular Assault boosts nearby legion attack tempo."),
        "attack_boost",
-       "Nearby allied troops gain bonus melee and ranged damage in aura range.",
-       "Consular Rally rapidly restores morale to wavering assault cohorts.",
-       "Death of the consul causes a severe morale shock to nearby Romans.",
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Nearby allied troops gain bonus melee and ranged damage in aura range."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Consular Rally rapidly restores morale to wavering assault cohorts."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Death of the consul causes a severe morale shock to nearby Romans."),
        "Unique infantry renderer with gilded consul helmet, decorated cuirass, "
        "ornate sword, and a black-crimson command cloak.",
        0,
@@ -71,20 +106,35 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::RomanFieldCommander,
        NationID::RomanRepublic,
        "roman_field_commander",
-       "Marcus Claudius Marcellus",
-       "Roman field commander known for fast shock actions and relentless "
-       "pressure.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Lightly armored bow commander who supports aggressive vanguard action.",
-       "Raises maneuver speed for nearby troops, enabling faster local "
-       "redeployment.",
-       "Lower staying power than other Roman commanders.",
-       "Vanguard Tempo accelerates nearby infantry movement and line "
-       "repositioning.",
+       QT_TRANSLATE_NOOP("Commanders", "Marcus Claudius Marcellus"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Roman field commander known for fast shock actions and relentless "
+           "pressure."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Lightly armored bow commander who supports aggressive vanguard action."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Raises maneuver speed for nearby troops, enabling faster local "
+           "redeployment."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Lower staying power than other Roman commanders."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Vanguard Tempo accelerates nearby infantry movement and line "
+                         "repositioning."),
        "speed_boost",
-       "Nearby allied infantry move faster while in aura range.",
-       "Vanguard Rally snaps wavering attackers back into coherent motion.",
-       "If Marcellus falls, nearby attackers suffer immediate morale drop.",
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Nearby allied infantry move faster while in aura range."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Vanguard Rally snaps wavering attackers back into coherent motion."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "If Marcellus falls, nearby attackers suffer immediate morale drop."),
        "Unique infantry renderer with wolf-crest helmet, red commander sash, "
        "lighter armor set, and a predatory war bow.",
        0,
@@ -102,19 +152,36 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::CarthageMercenaryBroker,
        NationID::Carthage,
        "carthage_mercenary_broker",
-       "Hanno the Great",
-       "Carthaginian political commander who leverages resources and manpower "
-       "flows.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Bronze-spear commander coordinating disciplined mercenary infantry.",
-       "Accelerates nearby barracks production through logistical oversight.",
-       "Mediocre direct combat impact and risky if exposed.",
-       "Contract Logistics boosts nearby production tempo and reserve buildup.",
+       QT_TRANSLATE_NOOP("Commanders", "Hanno the Great"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Carthaginian political commander who leverages resources and manpower "
+           "flows."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Bronze-spear commander coordinating disciplined mercenary infantry."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Accelerates nearby barracks production through logistical oversight."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Mediocre direct combat impact and risky if exposed."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Contract Logistics boosts nearby production tempo and reserve buildup."),
        "production_haste",
-       "Nearby allied barracks train units faster while in aura range.",
-       "Treasury Rally restores wavering troops and keeps formations from "
-       "breaking.",
-       "Death triggers contract panic, reducing confidence in nearby troops.",
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Nearby allied barracks train units faster while in aura range."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Treasury Rally restores wavering troops and keeps formations from "
+           "breaking."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Death triggers contract panic, reducing confidence in nearby troops."),
        "Unique infantry renderer with merchant-general armor mix, purple-black "
        "mantle, Iberian shield motifs, and bronze command spear.",
        0,
@@ -132,18 +199,35 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::CarthageCavalryPatron,
        NationID::Carthage,
        "carthage_cavalry_patron",
-       "Hasdrubal Barca",
-       "Mobile Carthaginian field commander built around decisive flanking "
-       "momentum.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Fast bow commander built around flanking pressure and withdrawal.",
-       "Increases nearby unit speed for coordinated flanks and withdrawals.",
-       "Less resilient in prolonged frontal attrition.",
-       "Barcid Maneuver grants nearby troops superior movement control.",
+       QT_TRANSLATE_NOOP("Commanders", "Hasdrubal Barca"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Mobile Carthaginian field commander built around decisive flanking "
+           "momentum."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Fast bow commander built around flanking pressure and withdrawal."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Increases nearby unit speed for coordinated flanks and withdrawals."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "Less resilient in prolonged frontal attrition."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Barcid Maneuver grants nearby troops superior movement control."),
        "speed_boost",
-       "Nearby allied troops gain movement speed while within aura range.",
-       "Flank Rally rapidly restores wavering units preparing to maneuver.",
-       "Loss of Hasdrubal sharply drops morale among nearby mobile forces.",
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Nearby allied troops gain movement speed while within aura range."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Flank Rally rapidly restores wavering units preparing to maneuver."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Loss of Hasdrubal sharply drops morale among nearby mobile forces."),
        "Unique infantry renderer with Numidian-influenced helmet plume, "
        "patterned cloak, recurved bow, and dark bronze armor.",
        0,
@@ -161,19 +245,36 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
       {TroopType::CarthageElephantMaster,
        NationID::Carthage,
        "carthage_elephant_master",
-       "Hannibal Barca",
-       "Carthage's premier battlefield commander from the Hannibal campaign.",
-       "A campaign and scenario commander; never produced from a barracks.",
-       "Elite sword commander with an iconic standard and sacred-band armor.",
-       "Delivers a strong nearby attack bonus and elite crisis rally response.",
-       "High-value target; losing him causes severe local collapse.",
-       "Hannibalic Offensive amplifies nearby attack power before decisive "
-       "engagements.",
+       QT_TRANSLATE_NOOP("Commanders", "Hannibal Barca"),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Carthage's premier battlefield commander from the Hannibal campaign."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "A campaign and scenario commander; never produced from a barracks."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Elite sword commander with an iconic standard and sacred-band armor."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Delivers a strong nearby attack bonus and elite crisis rally response."),
+       QT_TRANSLATE_NOOP("Commanders",
+                         "High-value target; losing him causes severe local collapse."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Hannibalic Offensive amplifies nearby attack power before decisive "
+           "engagements."),
        "attack_boost",
-       "Nearby allied troops gain substantial attack damage in aura range.",
-       "Supreme Rally restores routing or wavering units to fighting order.",
-       "If Hannibal is killed or wounded, nearby allied morale takes a heavy "
-       "shock and aura ends.",
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Nearby allied troops gain substantial attack damage in aura range."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "Supreme Rally restores routing or wavering units to fighting order."),
+       QT_TRANSLATE_NOOP(
+           "Commanders",
+           "If Hannibal is killed or wounded, nearby allied morale takes a heavy "
+           "shock and aura ends."),
        "Unique infantry renderer with black-plumed helmet, lion pelt shoulder, "
        "ornate Iberian falcata, and sacred-band bronze armor accents.",
        0,

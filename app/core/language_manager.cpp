@@ -54,27 +54,19 @@ void LanguageManager::set_language(const QString& language) {
 void LanguageManager::load_language(const QString& language) {
   QCoreApplication::removeTranslator(m_translator);
 
-  const QStringList qm_files{
-      QString(":/StandardOfIron/translations/app_%1.qm").arg(language),
-      QString(":/translations/app_%1.qm").arg(language),
-      QString(":/translations/translations/app_%1.qm").arg(language),
-  };
+  const QString qm_file = QString(":/translations/app_%1.qm").arg(language);
 
-  for (const QString& qm_file : qm_files) {
-    if (!m_translator->load(qm_file)) {
-      continue;
-    }
-
-    QCoreApplication::installTranslator(m_translator);
-    m_current_language = language;
-    App::Core::UserSettings::save_language(language);
-    qInfo() << "Language changed to:" << language;
-    emit language_changed();
+  if (!m_translator->load(qm_file)) {
+    qWarning() << "Failed to load translation catalogue" << qm_file
+               << "- is the build's lrelease step wired up?";
     return;
   }
 
-  qWarning() << "Failed to load translation file for language:" << language
-             << "candidates:" << qm_files;
+  QCoreApplication::installTranslator(m_translator);
+  m_current_language = language;
+  App::Core::UserSettings::save_language(language);
+  qInfo() << "Language changed to:" << language;
+  emit language_changed();
 }
 
 auto LanguageManager::language_display_name(const QString& language) -> QString {

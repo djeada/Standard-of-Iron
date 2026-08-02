@@ -59,6 +59,19 @@ AbstractButton {
     ToolTip.visible: control.hovered && ToolTip.text.length > 0
     ToolTip.delay: Design.Metrics.tooltipDelay
 
+    Connections {
+        function onClicked() {
+            Design.UiSound.activate();
+        }
+
+        function onHoveredChanged() {
+            if (control.hovered)
+                Design.UiSound.hover();
+        }
+
+        target: control
+    }
+
     background: Rectangle {
         radius: Design.Metrics.radiusMedium
         color: !control.enabled ? Design.Theme.surfaceDisabled : control.down ? Qt.darker(Design.Theme.panelLeather, 1.2) : (control.highlighted || control.hovered) ? Design.Theme.panelLeather : Design.Theme.panelIron

@@ -377,7 +377,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.map_orbit_pitch = Math.max(5, root.map_orbit_pitch - 5)
+                    onClicked: {
+                        Design.UiSound.activate();
+                        root.map_orbit_pitch = Math.max(5, root.map_orbit_pitch - 5);
+                    }
                 }
             }
 
@@ -408,7 +411,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.map_orbit_pitch = Math.min(90, root.map_orbit_pitch + 5)
+                    onClicked: {
+                        Design.UiSound.activate();
+                        root.map_orbit_pitch = Math.min(90, root.map_orbit_pitch + 5);
+                    }
                 }
             }
 
@@ -439,7 +445,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.reset_view()
+                    onClicked: {
+                        Design.UiSound.activate();
+                        root.reset_view();
+                    }
                 }
             }
         }
@@ -557,23 +566,23 @@ Rectangle {
             property var mission_region_map: ({
                     "transalpine_gaul": {
                         "uv": [0.28, 0.35],
-                        "name": "Rhône"
+                        "name": qsTr("Rhône")
                     },
                     "cisalpine_gaul": {
                         "uv": [0.42, 0.38],
-                        "name": "N. Italy"
+                        "name": qsTr("N. Italy")
                     },
                     "etruria": {
                         "uv": [0.44, 0.48],
-                        "name": "Trasimene"
+                        "name": qsTr("Trasimene")
                     },
                     "southern_italy": {
                         "uv": [0.5, 0.53],
-                        "name": "Cannae"
+                        "name": qsTr("Cannae")
                     },
                     "carthage_core": {
                         "uv": [0.4, 0.78],
-                        "name": "Zama"
+                        "name": qsTr("Zama")
                     }
                 })
 

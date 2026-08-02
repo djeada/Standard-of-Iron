@@ -470,11 +470,17 @@ Item {
                             }
                         }
                         onClicked: {
-                            if (item_enabled) {
-                                if (typeof game !== "undefined")
-                                    UiAudio.play_click(game.audio_system);
-                                root.trigger_selection(commandItem.index);
+                            if (typeof game === "undefined") {
+                                if (item_enabled)
+                                    root.trigger_selection(commandItem.index);
+                                return;
                             }
+                            if (!item_enabled) {
+                                UiAudio.play_error(game.audio_system);
+                                return;
+                            }
+                            UiAudio.play_click(game.audio_system);
+                            root.trigger_selection(commandItem.index);
                         }
                     }
                 }

@@ -10,6 +10,7 @@
 #include <numbers>
 #include <vector>
 
+#include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -674,6 +675,7 @@ void CommanderControlController::cycle_lock_on_target(
           Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
       targets->aim_candidate_in_range = false;
     }
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
     return;
   }
 
@@ -708,6 +710,7 @@ void CommanderControlController::cycle_lock_on_target(
   m_soft_target_id = m_locked_target_id;
   m_soft_target_slot = m_locked_target_slot;
   m_lock_lost_timer = 0.0F;
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_lock_on);
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
               commander)) {
@@ -1090,6 +1093,7 @@ void CommanderControlController::try_activate_shield_bash(
   constexpr float k_bash_cooldown = 3.0F;
   if (guard == nullptr || !guard->active || m_shield_bash_cooldown > 0.0F ||
       m_jump_timer > 0.0F) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
     return;
   }
 
@@ -1129,6 +1133,7 @@ void CommanderControlController::try_activate_shield_bash(
   }
 
   m_shield_bash_cooldown = k_bash_cooldown;
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_shield_bash);
   if (cmd_comp != nullptr) {
     cmd_comp->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
   }
@@ -1141,8 +1146,12 @@ void CommanderControlController::try_activate_vanguard_rush(
     int local_owner_id) {
   const bool rush_requested = m_input.vanguard_rush_requested;
   m_input.vanguard_rush_requested = false;
-  if (!rush_requested || m_vanguard_rush_cooldown > 0.0F ||
-      m_dodge_state != DodgeState::None || m_jump_timer > 0.0F) {
+  if (!rush_requested) {
+    return;
+  }
+  if (m_vanguard_rush_cooldown > 0.0F || m_dodge_state != DodgeState::None ||
+      m_jump_timer > 0.0F) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
     return;
   }
 
@@ -1175,6 +1184,7 @@ void CommanderControlController::try_activate_vanguard_rush(
     if (Game::Systems::Combat::request_mounted_charge(
             commander, Engine::Core::MountedChargeIntentSource::Player)) {
       m_vanguard_rush_cooldown = k_rush_cooldown;
+      Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
       m_input.primary_action_scan_cooldown = 0.18F;
       if (cmd_comp != nullptr) {
         cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
@@ -1245,6 +1255,7 @@ void CommanderControlController::try_activate_vanguard_rush(
   }
 
   m_vanguard_rush_cooldown = k_rush_cooldown;
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
   if (cmd_comp != nullptr) {
     cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
   }
@@ -1254,8 +1265,12 @@ void CommanderControlController::try_activate_second_wind(
     Engine::Core::Entity& commander) {
   const bool second_wind_requested = m_input.second_wind_requested;
   m_input.second_wind_requested = false;
-  if (!second_wind_requested || m_second_wind_cooldown > 0.0F ||
-      m_dodge_state != DodgeState::None || m_jump_timer > 0.0F) {
+  if (!second_wind_requested) {
+    return;
+  }
+  if (m_second_wind_cooldown > 0.0F || m_dodge_state != DodgeState::None ||
+      m_jump_timer > 0.0F) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
     return;
   }
 
@@ -1287,6 +1302,7 @@ void CommanderControlController::try_activate_second_wind(
   }
 
   m_second_wind_cooldown = k_second_wind_cooldown;
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_second_wind);
   cmd_comp->second_wind_cooldown_remaining = m_second_wind_cooldown;
 }
 
@@ -1401,6 +1417,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
   m_input.jump_requested = false;
   if (should_jump) {
     m_jump_timer = k_jump_duration;
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_jump);
     m_jump_safe_position_valid = true;
     m_jump_last_walkable_position =
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
@@ -1416,6 +1433,9 @@ auto CommanderControlController::update(Engine::Core::World& world,
   float jump_height_offset = 0.0F;
   if (m_jump_timer > 0.0F) {
     m_jump_timer = std::max(0.0F, m_jump_timer - dt);
+    if (m_jump_timer <= 0.0F) {
+      Game::Audio::play_cue(Game::Audio::Cue::k_combat_land);
+    }
     jump_phase = 1.0F - (m_jump_timer / k_jump_duration);
     const float normalized_phase = std::clamp(jump_phase, 0.0F, 1.0F);
     jump_height_offset =
@@ -1480,6 +1500,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
             ? requested_dodge_direction.normalized()
             : ((move.lengthSquared() > 0.0001F) ? move.normalized() : forward);
     m_dodge_state = DodgeState::Rolling;
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_dodge);
     constexpr float k_dodge_roll_duration = 0.22F;
     m_dodge_timer = k_dodge_roll_duration;
     m_dodge_fov_kick = 14.0F;
@@ -1639,6 +1660,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
       guard->active = true;
       if (!m_guard_was_active) {
         guard->perfect_guard_remaining = 0.16F;
+        Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
       }
     } else if (guard != nullptr) {
       guard->active = false;

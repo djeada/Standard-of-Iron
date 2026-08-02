@@ -1,5 +1,7 @@
 #include "army_formation_service.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -134,7 +136,7 @@ auto ArmyFormationService::availability(Engine::Core::World& world,
     -> std::string {
   auto const collected = ArmyFormationPlanner::collect_members(world, members);
   if (collected.empty()) {
-    return "No units selected.";
+    return QCoreApplication::translate("Formation", "No units selected.").toStdString();
   }
   ArmyFormationRequest request;
   request.members = members;
@@ -204,7 +206,8 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   result.slot_status.assign(member_count, SlotStatus::Blocked);
 
   if (member_count == 0) {
-    result.rejection_reason = "No units selected.";
+    result.rejection_reason =
+        QCoreApplication::translate("Formation", "No units selected.").toStdString();
     return result;
   }
 

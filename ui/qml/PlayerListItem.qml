@@ -148,6 +148,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
+
                 text: player_data.factionName || "Standard of Iron"
                 color: colors.textSub
                 font.pixelSize: 11

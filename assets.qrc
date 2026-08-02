@@ -137,55 +137,39 @@
         <file>assets/missions/crossing_the_rhone.json</file>
         <file>assets/missions/iron_sepulcher_watch.json</file>
 
-        <!-- Audio assets -->
-        <file>assets/audio/ambience/alpine_mountain_pass.ogg</file>
-        <file>assets/audio/ambience/battlefield_dry_wind_distant_march_01.ogg</file>
-        <file>assets/audio/ambience/battlefield_dry_wind_distant_march_02.ogg</file>
-        <file>assets/audio/ambience/burning_village_aftermath.ogg</file>
-        <file>assets/audio/ambience/carthage_war_camp_01.ogg</file>
-        <file>assets/audio/ambience/carthage_war_camp_02.ogg</file>
-        <file>assets/audio/ambience/desert_army_march.ogg</file>
-        <file>assets/audio/ambience/forest_ambush.ogg</file>
-        <file>assets/audio/ambience/mediterranean_city_market.ogg</file>
-        <file>assets/audio/ambience/mediterranean_harbor.ogg</file>
-        <file>assets/audio/ambience/mediterranean_plains.ogg</file>
-        <file>assets/audio/ambience/mountain_camp_night.ogg</file>
-        <file>assets/audio/ambience/rainy_battlefield.ogg</file>
-        <file>assets/audio/ambience/river_crossing.ogg</file>
-        <file>assets/audio/ambience/roman_army_camp_01.ogg</file>
-        <file>assets/audio/ambience/roman_army_camp_02.ogg</file>
-        <file>assets/audio/ambience/roman_road.ogg</file>
-        <file>assets/audio/ambience/siege_camp.ogg</file>
+        <!-- Audio assets. Music and ambience are deliberately absent:
+             they are long-form beds, they are always installed on disk
+             beside the binary, and the loader resolves the manifest from
+             disk before falling back here. Embedding them too cost the
+             executable ~10 MB it never read. -->
         <file>assets/audio/audio_cues.json</file>
         <file>assets/audio/audio_manifest.json</file>
-        <file>assets/audio/music/base/base_army_camp_resting.ogg</file>
-        <file>assets/audio/music/base/base_barracks_recruitment.ogg</file>
-        <file>assets/audio/music/base/base_economy_recruitment_loop.ogg</file>
-        <file>assets/audio/music/base/base_management_camp.ogg</file>
-        <file>assets/audio/music/base/base_pre_battle_deployment.ogg</file>
-        <file>assets/audio/music/campaign/campaign_hannibal_march.ogg</file>
-        <file>assets/audio/music/campaign/strategy_command_tent.ogg</file>
-        <file>assets/audio/music/combat/combat_attack_order_carthage_cavalry.ogg</file>
-        <file>assets/audio/music/combat/combat_battlefield_escalation.ogg</file>
-        <file>assets/audio/music/combat/combat_cavalry_flank_fast.ogg</file>
-        <file>assets/audio/music/combat/combat_defensive_hold_roman.ogg</file>
-        <file>assets/audio/music/combat/combat_infantry_clash_loop.ogg</file>
-        <file>assets/audio/music/combat/combat_large_scale_rome_carthage.ogg</file>
-        <file>assets/audio/music/menu/main_theme_ancient_mediterranean_war.ogg</file>
-        <file>assets/audio/music/menu/main_theme_rome_vs_carthage.ogg</file>
-        <file>assets/audio/music/stingers/defeat_tragic_low_brass.ogg</file>
-        <file>assets/audio/music/stingers/mission_failed_distant_horn.ogg</file>
-        <file>assets/audio/music/stingers/retreat_tactical_low_horn.ogg</file>
-        <file>assets/audio/music/stingers/victory_carthage_fanfare.ogg</file>
-        <file>assets/audio/music/stingers/victory_roman_fanfare.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_reinforcements_warning.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_spotted_horn.ogg</file>
         <file>assets/audio/sfx/alerts/low_resources_click.ogg</file>
+        <file>assets/audio/sfx/alerts/objective_complete.ogg</file>
+        <file>assets/audio/sfx/alerts/objective_failed.ogg</file>
         <file>assets/audio/sfx/alerts/population_limit_horn.ogg</file>
         <file>assets/audio/sfx/alerts/reinforcements_arrived.ogg</file>
+        <file>assets/audio/sfx/alerts/unit_lost.ogg</file>
+        <file>assets/audio/sfx/build/building_destroyed.ogg</file>
+        <file>assets/audio/sfx/build/construction_complete.ogg</file>
+        <file>assets/audio/sfx/build/construction_started.ogg</file>
+        <file>assets/audio/sfx/build/gate_close.ogg</file>
+        <file>assets/audio/sfx/build/gate_open.ogg</file>
+        <file>assets/audio/sfx/build/placement_begin.ogg</file>
+        <file>assets/audio/sfx/build/placement_confirmed.ogg</file>
+        <file>assets/audio/sfx/build/placement_confirmed_v2.ogg</file>
+        <file>assets/audio/sfx/build/placement_rejected.ogg</file>
+        <file>assets/audio/sfx/build/placement_rejected_v2.ogg</file>
+        <file>assets/audio/sfx/build/unit_queued.ogg</file>
+        <file>assets/audio/sfx/build/unit_queued_v2.ogg</file>
+        <file>assets/audio/sfx/build/unit_ready_bell.ogg</file>
+        <file>assets/audio/sfx/combat/ability_refused.ogg</file>
+        <file>assets/audio/sfx/combat/ability_refused_v2.ogg</file>
         <file>assets/audio/sfx/combat/aftermath_battlefield.ogg</file>
-        <file>assets/audio/sfx/combat/archers_shooting_close.ogg</file>
         <file>assets/audio/sfx/combat/archer_volley_many.ogg</file>
+        <file>assets/audio/sfx/combat/archers_shooting_close.ogg</file>
         <file>assets/audio/sfx/combat/army_march_dirt_mass.ogg</file>
         <file>assets/audio/sfx/combat/army_retreat_panic.ogg</file>
         <file>assets/audio/sfx/combat/arrows_fast_flybys_lr.ogg</file>
@@ -197,19 +181,98 @@
         <file>assets/audio/sfx/combat/battlefield_crowd_chaos.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_01.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_02.ogg</file>
+        <file>assets/audio/sfx/combat/bow_release_single.ogg</file>
+        <file>assets/audio/sfx/combat/bow_release_single_v2.ogg</file>
+        <file>assets/audio/sfx/combat/bow_release_single_v3.ogg</file>
         <file>assets/audio/sfx/combat/carthage_prepare_battle.ogg</file>
+        <file>assets/audio/sfx/combat/charge_roar.ogg</file>
+        <file>assets/audio/sfx/combat/dodge_roll.ogg</file>
+        <file>assets/audio/sfx/combat/dodge_roll_v2.ogg</file>
+        <file>assets/audio/sfx/combat/dodge_roll_v3.ogg</file>
         <file>assets/audio/sfx/combat/elephant_charge_carthage.ogg</file>
         <file>assets/audio/sfx/combat/elephant_panic.ogg</file>
         <file>assets/audio/sfx/combat/gladius_shield_impacts_close.ogg</file>
+        <file>assets/audio/sfx/combat/guard_break.ogg</file>
+        <file>assets/audio/sfx/combat/guard_raise.ogg</file>
+        <file>assets/audio/sfx/combat/guard_raise_v2.ogg</file>
+        <file>assets/audio/sfx/combat/heal_bind_wound.ogg</file>
         <file>assets/audio/sfx/combat/horse_gallop_close_pass.ogg</file>
         <file>assets/audio/sfx/combat/javelin_throw_whoosh.ogg</file>
+        <file>assets/audio/sfx/combat/jump_effort.ogg</file>
+        <file>assets/audio/sfx/combat/jump_effort_v2.ogg</file>
+        <file>assets/audio/sfx/combat/land_thud.ogg</file>
+        <file>assets/audio/sfx/combat/land_thud_v2.ogg</file>
+        <file>assets/audio/sfx/combat/land_thud_v3.ogg</file>
+        <file>assets/audio/sfx/combat/lock_on_tick.ogg</file>
+        <file>assets/audio/sfx/combat/lock_on_tick_v2.ogg</file>
         <file>assets/audio/sfx/combat/numidian_cavalry_chase.ogg</file>
+        <file>assets/audio/sfx/combat/perfect_guard.ogg</file>
+        <file>assets/audio/sfx/combat/perfect_guard_v2.ogg</file>
         <file>assets/audio/sfx/combat/roman_cavalry_charge.ogg</file>
         <file>assets/audio/sfx/combat/roman_shield_wall_impact.ogg</file>
         <file>assets/audio/sfx/combat/roman_war_horns_orders.ogg</file>
+        <file>assets/audio/sfx/combat/second_wind.ogg</file>
+        <file>assets/audio/sfx/combat/shield_bash.ogg</file>
+        <file>assets/audio/sfx/combat/shield_bash_v2.ogg</file>
+        <file>assets/audio/sfx/combat/shield_block.ogg</file>
+        <file>assets/audio/sfx/combat/shield_block_v2.ogg</file>
+        <file>assets/audio/sfx/combat/shield_block_v3.ogg</file>
+        <file>assets/audio/sfx/combat/siege_impact.ogg</file>
+        <file>assets/audio/sfx/combat/siege_launch.ogg</file>
         <file>assets/audio/sfx/combat/soldiers_victory_cheer.ogg</file>
         <file>assets/audio/sfx/combat/spearmen_formation_advance.ogg</file>
         <file>assets/audio/sfx/combat/troops_death_scream.ogg</file>
+        <file>assets/audio/sfx/combat/vanguard_rush.ogg</file>
+        <file>assets/audio/sfx/orders/attack_horn_stab.ogg</file>
+        <file>assets/audio/sfx/orders/formation_pole_shift.ogg</file>
+        <file>assets/audio/sfx/orders/formation_pole_shift_v2.ogg</file>
+        <file>assets/audio/sfx/orders/formation_standard_planted.ogg</file>
+        <file>assets/audio/sfx/orders/gate_bolt_slide.ogg</file>
+        <file>assets/audio/sfx/orders/guard_spear_taps.ogg</file>
+        <file>assets/audio/sfx/orders/guard_spear_taps_v2.ogg</file>
+        <file>assets/audio/sfx/orders/hold_shields_plant.ogg</file>
+        <file>assets/audio/sfx/orders/hold_shields_plant_v2.ogg</file>
+        <file>assets/audio/sfx/orders/move_kit_shuffle.ogg</file>
+        <file>assets/audio/sfx/orders/move_kit_shuffle_v2.ogg</file>
+        <file>assets/audio/sfx/orders/move_kit_shuffle_v3.ogg</file>
+        <file>assets/audio/sfx/orders/patrol_horn_two_note.ogg</file>
+        <file>assets/audio/sfx/orders/rally_banner_peg.ogg</file>
+        <file>assets/audio/sfx/orders/run_kit_rattle.ogg</file>
+        <file>assets/audio/sfx/orders/run_kit_rattle_v2.ogg</file>
+        <file>assets/audio/sfx/orders/stop_drum.ogg</file>
+        <file>assets/audio/sfx/orders/stop_drum_v2.ogg</file>
+        <file>assets/audio/sfx/state/commander_enter.ogg</file>
+        <file>assets/audio/sfx/state/commander_exit.ogg</file>
+        <file>assets/audio/sfx/state/load_complete.ogg</file>
+        <file>assets/audio/sfx/state/pause.ogg</file>
+        <file>assets/audio/sfx/state/resume.ogg</file>
+        <file>assets/audio/sfx/state/save_complete.ogg</file>
+        <file>assets/audio/sfx/state/speed_notch.ogg</file>
+        <file>assets/audio/sfx/ui/back_cancel.ogg</file>
+        <file>assets/audio/sfx/ui/back_cancel_v2.ogg</file>
+        <file>assets/audio/sfx/ui/click_confirm.ogg</file>
+        <file>assets/audio/sfx/ui/click_confirm_v2.ogg</file>
+        <file>assets/audio/sfx/ui/click_confirm_v3.ogg</file>
+        <file>assets/audio/sfx/ui/deselect.ogg</file>
+        <file>assets/audio/sfx/ui/deselect_v2.ogg</file>
+        <file>assets/audio/sfx/ui/error_thud.ogg</file>
+        <file>assets/audio/sfx/ui/error_thud_v2.ogg</file>
+        <file>assets/audio/sfx/ui/hover_brush.ogg</file>
+        <file>assets/audio/sfx/ui/hover_brush_v2.ogg</file>
+        <file>assets/audio/sfx/ui/hover_brush_v3.ogg</file>
+        <file>assets/audio/sfx/ui/notification.ogg</file>
+        <file>assets/audio/sfx/ui/panel_close.ogg</file>
+        <file>assets/audio/sfx/ui/panel_open.ogg</file>
+        <file>assets/audio/sfx/ui/select_group.ogg</file>
+        <file>assets/audio/sfx/ui/select_group_v2.ogg</file>
+        <file>assets/audio/sfx/ui/select_group_v3.ogg</file>
+        <file>assets/audio/sfx/ui/select_unit.ogg</file>
+        <file>assets/audio/sfx/ui/select_unit_v2.ogg</file>
+        <file>assets/audio/sfx/ui/select_unit_v3.ogg</file>
+        <file>assets/audio/sfx/ui/tab_slide.ogg</file>
+        <file>assets/audio/sfx/ui/tab_slide_v2.ogg</file>
+        <file>assets/audio/sfx/ui/toggle_latch.ogg</file>
+        <file>assets/audio/sfx/ui/toggle_latch_v2.ogg</file>
         <file>assets/audio/voices/carthage/archer.ogg</file>
         <file>assets/audio/voices/carthage/baal_cultist.ogg</file>
         <file>assets/audio/voices/carthage/ballista.ogg</file>
@@ -274,8 +337,6 @@
         <file>assets/visuals/icons/elephant_cartaghe.png</file>
         <file>assets/visuals/icons/builder_rome.png</file>
         <file>assets/visuals/icons/builder_cartaghe.png</file>
-        <file>assets/visuals/icons/defense_tower_rome.png</file>
-        <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
         <file>assets/visuals/icons/wall.png</file>
         <file>assets/visuals/icons/wall_rome.png</file>
         <file>assets/visuals/icons/wall_cartaghe.png</file>

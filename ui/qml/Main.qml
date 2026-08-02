@@ -274,6 +274,9 @@ ApplicationWindow {
             if (visible) {
                 mapSelect.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -288,6 +291,7 @@ ApplicationWindow {
             gameViewItem.forceActiveFocus();
         }
         onCancelled: function () {
+            Design.UiSound.back();
             mapSelect.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -303,6 +307,9 @@ ApplicationWindow {
             if (visible) {
                 campaign_screen.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -318,6 +325,7 @@ ApplicationWindow {
             }
         }
         onCancelled: function () {
+            Design.UiSound.back();
             campaign_screen.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -333,6 +341,9 @@ ApplicationWindow {
             if (visible) {
                 save_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -344,6 +355,7 @@ ApplicationWindow {
             mainWindow.menu_visible = true;
         }
         onCancelled: function () {
+            Design.UiSound.back();
             save_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -359,6 +371,9 @@ ApplicationWindow {
             if (visible) {
                 load_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -374,6 +389,7 @@ ApplicationWindow {
             }
         }
         onCancelled: function () {
+            Design.UiSound.back();
             load_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -610,6 +626,14 @@ ApplicationWindow {
         }
 
         target: game
+    }
+
+    Connections {
+        function onPresented(entry) {
+            Design.UiSound.notification();
+        }
+
+        target: Design.Notifications
     }
 
     Connections {

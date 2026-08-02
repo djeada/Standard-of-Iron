@@ -128,6 +128,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 } // namespace
 #endif
 
+#include "app/core/audio_resource_loader.h"
 #include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
@@ -536,6 +537,17 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "QGuiApplication created successfully";
   const bool renderer_self_test =
       QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
+
+  if (renderer_self_test) {
+    const QStringList missing_audio = AudioResourceLoader::missing_asset_ids();
+    if (!missing_audio.isEmpty()) {
+      qCritical() << "SOI_AUDIO_SELF_TEST: FAIL -" << missing_audio.size()
+                  << "manifest entries have no file on disk, first:"
+                  << missing_audio.first();
+      return 11;
+    }
+    qInfo() << "SOI_AUDIO_SELF_TEST: PASS - every audio manifest entry resolves";
+  }
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 

@@ -125,8 +125,13 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                Design.UiSound.panelOpen();
                                 missionDetailPanel.visible = true;
                                 missionDetailPanel.campaign_data = modelData;
+                            }
+                            onContainsMouseChanged: {
+                                if (containsMouse)
+                                    Design.UiSound.hover();
                             }
                         }
 
@@ -359,7 +364,10 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: missionDetailPanel.visible = false
+            onClicked: {
+                Design.UiSound.back();
+                missionDetailPanel.visible = false;
+            }
         }
 
         Rectangle {
@@ -790,10 +798,14 @@ Item {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (missionDetailPanel.campaign_data && modelData.mission_id)
+                                    if (missionDetailPanel.campaign_data && modelData.mission_id) {
+                                        Design.UiSound.activate();
                                         root.mission_selected(missionDetailPanel.campaign_data.id + "/" + modelData.mission_id);
+                                    }
                                 }
                                 onContainsMouseChanged: {
+                                    if (containsMouse)
+                                        Design.UiSound.hover();
                                     if (containsMouse && modelData.order_index !== undefined)
                                         missionDetailPanel.current_mission_index = modelData.order_index;
                                     else if (!containsMouse)
