@@ -678,7 +678,8 @@ constexpr float k_ring_y_offset = 0.025F;
 
 constexpr QVector3D k_danger_red{1.0F, 0.08F, 0.02F};
 constexpr QVector3D k_warning_orange{1.0F, 0.55F, 0.08F};
-constexpr QVector3D k_stagger_cyan{0.15F, 0.92F, 1.0F};
+
+constexpr QVector3D k_stagger_violet{0.72F, 0.42F, 1.0F};
 constexpr QVector3D k_flash_white{1.0F, 0.85F, 0.45F};
 constexpr QVector3D k_lock_gold{1.0F, 0.82F, 0.10F};
 constexpr QVector3D k_lock_white{1.0F, 1.0F, 0.95F};
@@ -702,6 +703,60 @@ inline void submit_ring(Render::GL::Renderer* renderer,
   model.scale(radius, 1.0F, radius);
   renderer->selection_ring(model, alpha_inner, alpha_outer, color);
 }
+
+enum class BodyRingPriority : std::uint8_t {
+  Stagger = 0,
+  Aim = 1,
+  Lock = 2,
+  Telegraph = 3,
+};
+
+struct BodyRing {
+  Engine::Core::EntityID entity_id{0};
+  std::uint16_t soldier_slot{
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
+  BodyRingPriority priority{BodyRingPriority::Stagger};
+  float x{0.0F};
+  float y{0.0F};
+  float z{0.0F};
+  float radius{0.5F};
+  float alpha_inner{0.0F};
+  float alpha_outer{0.0F};
+  QVector3D color;
+};
+
+class BodyRingSet {
+public:
+  void add(BodyRing ring) {
+    for (auto& existing : m_rings) {
+      if (existing.entity_id != ring.entity_id ||
+          existing.soldier_slot != ring.soldier_slot) {
+        continue;
+      }
+      if (ring.priority > existing.priority) {
+        existing = ring;
+      }
+      return;
+    }
+    m_rings.push_back(ring);
+  }
+
+  void submit(Render::GL::Renderer* renderer) const {
+    for (auto const& ring : m_rings) {
+      submit_ring(renderer,
+                  ring.x,
+                  ring.y,
+                  ring.z,
+                  ring.radius,
+                  ring.alpha_inner,
+                  ring.alpha_outer,
+                  ring.color);
+    }
+  }
+
+private:
+  std::vector<BodyRing> m_rings;
+};
 
 } // namespace
 
@@ -762,10 +817,16 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     const auto cur_state = csc->animation_state;
     auto it = m_cache.find(id);
 
+    std::uint16_t const carrier_slot =
+        visible_attacker.has_value()
+            ? visible_attacker->soldier_slot
+            : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+
     if (cur_state == CombatAnimationState::WindUp) {
       seen.push_back(id);
       if (it == m_cache.end()) {
-        m_cache[id] = TelegraphEntry{ex, ez, ey, CombatAnimationState::WindUp};
+        m_cache[id] =
+            TelegraphEntry{ex, ez, ey, carrier_slot, CombatAnimationState::WindUp};
       } else {
 
         constexpr float k_pos_epsilon = 0.01F;
@@ -775,6 +836,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
           it->second.last_pos_z = ez;
           it->second.base_y = ey;
         }
+        it->second.soldier_slot = carrier_slot;
         it->second.prev_state = CombatAnimationState::WindUp;
       }
     } else if (cur_state == CombatAnimationState::Strike && it != m_cache.end() &&
@@ -803,6 +865,8 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                                         }),
                          m_strike_flashes.end());
 
+  BodyRingSet body_rings;
+
   for (const auto& [id, entry] : m_cache) {
     auto* entity = world->get_entity(id);
     if (entity == nullptr) {
@@ -823,14 +887,16 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     QVector3D const ring_color =
         k_warning_orange * (1.0F - progress) + k_danger_red * progress;
 
-    submit_ring(renderer,
-                entry.last_pos_x,
-                entry.base_y,
-                entry.last_pos_z,
-                ring_r,
-                ring_alpha,
-                ring_alpha * 0.46F,
-                ring_color);
+    body_rings.add({.entity_id = id,
+                    .soldier_slot = entry.soldier_slot,
+                    .priority = BodyRingPriority::Telegraph,
+                    .x = entry.last_pos_x,
+                    .y = entry.base_y,
+                    .z = entry.last_pos_z,
+                    .radius = ring_r,
+                    .alpha_inner = ring_alpha,
+                    .alpha_outer = ring_alpha * 0.46F,
+                    .color = ring_color});
   }
 
   for (auto* entity : world->get_entities_with<StaggerComponent>()) {
@@ -842,8 +908,12 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (tf == nullptr || sc == nullptr) {
       continue;
     }
-    const float ex = tf->position.x;
-    const float ez = tf->position.z;
+
+    auto const carrier =
+        Game::Systems::RpgCombat::resolve_damage_carrier(*entity, commander_id);
+    const float ex = carrier.has_value() ? carrier->position.x() : tf->position.x;
+    const float ey = carrier.has_value() ? carrier->position.y() : tf->position.y;
+    const float ez = carrier.has_value() ? carrier->position.z() : tf->position.z;
     const float dx = ex - cx;
     const float dz = ez - cz;
     if (dx * dx + dz * dz > k_telegraph_range * k_telegraph_range) {
@@ -852,14 +922,21 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
 
     const float fade = std::clamp(sc->remaining / 0.5F, 0.0F, 1.0F);
     const float stagger_alpha = 0.70F * fade * (0.7F + 0.3F * pulse(anim_time, 6.0F));
-    submit_ring(renderer,
-                ex,
-                tf->position.y,
-                ez,
-                0.90F,
-                stagger_alpha,
-                stagger_alpha * 0.40F,
-                k_stagger_cyan);
+    body_rings.add(
+        {.entity_id = entity->get_id(),
+         .soldier_slot =
+             carrier.has_value()
+                 ? carrier->soldier_slot
+                 : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot,
+         .priority = BodyRingPriority::Stagger,
+         .x = ex,
+         .y = ey,
+         .z = ez,
+         .radius = carrier.has_value() ? std::max(0.58F, carrier->body_radius * 1.24F)
+                                       : 0.90F,
+         .alpha_inner = stagger_alpha,
+         .alpha_outer = stagger_alpha * 0.40F,
+         .color = k_stagger_violet});
   }
 
   for (const auto& flash : m_strike_flashes) {
@@ -922,14 +999,17 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
       float const alpha = 0.78F + 0.18F * pulse(anim_time, 4.0F);
       float const radius =
           std::max(0.54F, aim->body_radius * (aim_is_lock ? 1.30F : 1.22F));
-      submit_ring(renderer,
-                  aim->position.x(),
-                  aim->position.y(),
-                  aim->position.z(),
-                  radius,
-                  alpha,
-                  alpha * 0.42F,
-                  aim_is_lock ? k_lock_gold : k_aim_cyan);
+      body_rings.add(
+          {.entity_id = targets->aim_candidate_id,
+           .soldier_slot = targets->aim_candidate_soldier_slot,
+           .priority = aim_is_lock ? BodyRingPriority::Lock : BodyRingPriority::Aim,
+           .x = aim->position.x(),
+           .y = aim->position.y(),
+           .z = aim->position.z(),
+           .radius = radius,
+           .alpha_inner = alpha,
+           .alpha_outer = alpha * 0.42F,
+           .color = aim_is_lock ? k_lock_gold : k_aim_cyan});
     }
   }
 
@@ -938,16 +1018,20 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (lock.has_value()) {
       float const lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);
       float const radius = std::max(0.62F, lock->body_radius * 1.36F);
-      submit_ring(renderer,
-                  lock->position.x(),
-                  lock->position.y(),
-                  lock->position.z(),
-                  radius,
-                  lock_alpha,
-                  lock_alpha * 0.48F,
-                  k_lock_gold);
+      body_rings.add({.entity_id = resolved_lock_id,
+                      .soldier_slot = resolved_lock_slot,
+                      .priority = BodyRingPriority::Lock,
+                      .x = lock->position.x(),
+                      .y = lock->position.y(),
+                      .z = lock->position.z(),
+                      .radius = radius,
+                      .alpha_inner = lock_alpha,
+                      .alpha_outer = lock_alpha * 0.48F,
+                      .color = k_lock_gold});
     }
   }
+
+  body_rings.submit(renderer);
 
   if (targets != nullptr && targets->recent_hit_target_id != 0 &&
       targets->recent_hit_timer > 0.0F) {
