@@ -48,6 +48,8 @@ auto animation_raw_inputs(const CombatVisualRawInputs& raw) noexcept
       .attack_target_id = raw.attack_target_id,
       .attack_target_alive = raw.attack_target_alive,
       .attack_family = animation_attack_family(raw.attack_family),
+      .authored_action_phase = raw.authored_action_phase,
+      .has_authored_action_phase = raw.has_authored_action_phase,
   };
 }
 

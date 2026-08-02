@@ -180,21 +180,66 @@ auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
   return false;
 }
 
+// Scattered trees, boulders and ore veins block their whole navigation cell so
+// that RTS formations keep well clear of them. A person walking between them
+// only has to clear the trunk or the rock itself, so the commander re-tests
+// those cells as a circle around the prop rather than as a square metre of
+// invisible wall.
+constexpr float k_scatter_prop_block_radius = 0.52F;
+
+auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfinder,
+                                        int grid_x,
+                                        int grid_z,
+                                        float x,
+                                        float z) -> bool {
+  using CellValue = Game::Systems::Pathfinding::CellValue;
+
+  float const clearance = k_scatter_prop_block_radius + k_commander_body_radius;
+
+  // The clearance reaches past the sampled cell, so the neighbours have to be
+  // considered as well.
+  for (int offset_z = -1; offset_z <= 1; ++offset_z) {
+    for (int offset_x = -1; offset_x <= 1; ++offset_x) {
+      int const cell_x = grid_x + offset_x;
+      int const cell_z = grid_z + offset_z;
+      auto const cell = pathfinder.cell_value(cell_x, cell_z);
+      if (cell != CellValue::Tree && cell != CellValue::Boulder &&
+          cell != CellValue::IronOre) {
+        continue;
+      }
+      float const dx =
+          x - (static_cast<float>(cell_x) + pathfinder.get_grid_offset_x());
+      float const dz =
+          z - (static_cast<float>(cell_z) + pathfinder.get_grid_offset_z());
+      if (((dx * dx) + (dz * dz)) < clearance * clearance) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 auto is_walkable_at(float x, float z) -> bool {
+  using CellValue = Game::Systems::Pathfinding::CellValue;
+
   if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
     const auto grid = Game::Systems::CommandService::world_to_grid(x, z);
     const auto cell = pathfinder->cell_value(grid.x, grid.y);
 
-    if (cell != Game::Systems::Pathfinding::CellValue::Walkable) {
-      if (cell != Game::Systems::Pathfinding::CellValue::Blocked) {
-        return false;
-      }
+    if (cell != CellValue::Walkable) {
       if (!pathfinder->is_terrain_walkable(grid.x, grid.y)) {
         return false;
       }
-      if (!structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
+      bool const scatter_prop_cell = cell == CellValue::Tree ||
+                                     cell == CellValue::Boulder ||
+                                     cell == CellValue::IronOre;
+      if (!scatter_prop_cell &&
+          !structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
         return false;
       }
+    }
+    if (scatter_prop_blocks_commander_body(*pathfinder, grid.x, grid.y, x, z)) {
+      return false;
     }
     return !structure_blocks_commander_body(x, z);
   }
@@ -205,6 +250,62 @@ auto is_walkable_at(float x, float z) -> bool {
     return false;
   }
   return !structure_blocks_commander_body(x, z);
+}
+
+// The RTS troop speed is tuned for formations crossing a battlefield. A directly
+// controlled body needs a livelier stride, and a clear gap between walking and
+// running so the run reads as a run.
+constexpr float k_fpv_walk_speed_scale = 1.25F;
+
+constexpr float k_fpv_backpedal_speed_scale = 0.72F;
+
+constexpr float k_fpv_strafe_speed_scale = 0.86F;
+
+auto directional_speed_scale(int forward_axis, int right_axis) -> float {
+  if (forward_axis < 0) {
+    return k_fpv_backpedal_speed_scale;
+  }
+  if (forward_axis == 0 && right_axis != 0) {
+    return k_fpv_strafe_speed_scale;
+  }
+  return 1.0F;
+}
+
+// Direct control has to behave like a body, not like a path request: when the
+// desired step is blocked the commander keeps whichever axis is still free and
+// slides along the obstacle instead of stopping dead in front of it.
+struct GroundMove {
+  float x{0.0F};
+  float z{0.0F};
+  bool moved{false};
+};
+
+// An airborne commander clears ground obstacles outright; the landing is
+// validated separately once the jump ends.
+auto airborne_step(float to_x, float to_z) -> GroundMove {
+  return {.x = to_x, .z = to_z, .moved = true};
+}
+
+auto resolve_ground_step(float from_x,
+                         float from_z,
+                         float to_x,
+                         float to_z) -> GroundMove {
+  if (is_walkable_at(to_x, to_z)) {
+    return {.x = to_x, .z = to_z, .moved = true};
+  }
+
+  float const delta_x = to_x - from_x;
+  float const delta_z = to_z - from_z;
+  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && is_walkable_at(to_x, from_z);
+  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && is_walkable_at(from_x, to_z);
+
+  if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
+    return {.x = to_x, .z = from_z, .moved = true};
+  }
+  if (slide_z_free) {
+    return {.x = from_x, .z = to_z, .moved = true};
+  }
+  return {.x = from_x, .z = from_z, .moved = false};
 }
 
 auto resolve_reachable_ground_position(const QVector3D& start,
@@ -310,10 +411,10 @@ void separate_commander_from_bodies(Engine::Core::World& world,
 
   float const target_x = transform.position.x + push.x();
   float const target_z = transform.position.z + push.z();
-  if (is_walkable_at(target_x, target_z)) {
-    transform.position.x = target_x;
-    transform.position.z = target_z;
-  }
+  auto const step = resolve_ground_step(
+      transform.position.x, transform.position.z, target_x, target_z);
+  transform.position.x = step.x;
+  transform.position.z = step.z;
 }
 
 } // namespace
@@ -1535,10 +1636,10 @@ auto CommanderControlController::update(Engine::Core::World& world,
         transform->position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
     const float nz =
         transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
-    if (is_walkable_at(nx, nz)) {
-      transform->position.x = nx;
-      transform->position.z = nz;
-    }
+    auto const step =
+        resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
+    transform->position.x = step.x;
+    transform->position.z = step.z;
     if (movement != nullptr) {
       movement->set_manual_velocity(m_dodge_direction.x() * k_dodge_speed,
                                     m_dodge_direction.z() * k_dodge_speed);
@@ -1566,13 +1667,17 @@ auto CommanderControlController::update(Engine::Core::World& world,
       const float speed = std::max(0.1F, unit->speed) * 0.4F;
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
-      if (is_walkable_at(nx, nz)) {
-        transform->position.x = nx;
-        transform->position.z = nz;
+      auto const step =
+          resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
+      if (step.moved) {
+        float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
+        float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
+        transform->position.x = step.x;
+        transform->position.z = step.z;
         if (movement != nullptr) {
-          movement->set_manual_velocity(move.x() * speed, move.z() * speed);
+          movement->set_manual_velocity(step_vx, step_vz);
         }
-        actual_speed_for_bob = speed;
+        actual_speed_for_bob = std::hypot(step_vx, step_vz);
       } else if (movement != nullptr) {
         movement->set_manual_velocity(0.0F, 0.0F);
       }
@@ -1583,7 +1688,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
     if (move.lengthSquared() > 0.0001F) {
       move.normalize();
-      float speed = std::max(0.1F, unit->speed);
+      float speed = std::max(0.1F, unit->speed) * k_fpv_walk_speed_scale;
 
       auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
       bool const running = m_input.run && stamina != nullptr &&
@@ -1591,16 +1696,23 @@ auto CommanderControlController::update(Engine::Core::World& world,
       if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
       }
+      speed *= directional_speed_scale(forward_axis, right_axis);
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
-      if (jump_active || is_walkable_at(nx, nz)) {
-        transform->position.x = nx;
-        transform->position.z = nz;
-        mark_jump_safe_position(nx, nz);
+      auto const step = jump_active
+                            ? airborne_step(nx, nz)
+                            : resolve_ground_step(
+                                  transform->position.x, transform->position.z, nx, nz);
+      if (step.moved) {
+        float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
+        float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
+        transform->position.x = step.x;
+        transform->position.z = step.z;
+        mark_jump_safe_position(step.x, step.z);
         if (movement != nullptr) {
-          movement->set_manual_velocity(move.x() * speed, move.z() * speed);
+          movement->set_manual_velocity(step_vx, step_vz);
         }
-        actual_speed_for_bob = speed;
+        actual_speed_for_bob = std::hypot(step_vx, step_vz);
         run_for_bob = running;
       } else if (movement != nullptr) {
         movement->set_manual_velocity(0.0F, 0.0F);

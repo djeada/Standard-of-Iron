@@ -73,6 +73,7 @@ struct AnimationInputs {
   bool has_authored_action_clip{false};
   std::uint16_t authored_action_clip{Animation::k_unmapped_clip};
   float authored_action_phase{0.0F};
+  bool has_authored_action_phase{false};
   bool finisher_attack{false};
   float attack_offset{0.0F};
   bool has_attack_offset{false};
