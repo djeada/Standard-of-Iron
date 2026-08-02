@@ -11,6 +11,7 @@
         <file>assets/shaders/include/visibility_mask.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
         <file>assets/shaders/directional_shadow_rigged.vert</file>
+        <file>assets/shaders/directional_shadow_rigged_instanced.vert</file>
         <file>assets/shaders/directional_shadow_depth.frag</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
