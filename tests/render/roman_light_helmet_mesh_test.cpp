@@ -171,13 +171,14 @@ TEST(RomanLightHelmetMesh, ZeroHeadRadiusSkipsSubmit) {
   EXPECT_EQ(draw_count_of(batch), 0);
 }
 
-TEST(RomanLightHelmetMesh, FillRoleColorsPreservesColdSteelAndCrimsonCrest) {
+TEST(RomanLightHelmetMesh, FillRoleColorsPreservesWarmBronzeAndCrimsonCrest) {
   std::array<QVector3D, Render::GL::k_roman_light_helmet_role_count> colors{};
   auto const count = Render::GL::roman_light_helmet_fill_role_colors(
       create_test_palette(), colors.data(), colors.size());
 
   ASSERT_EQ(count, Render::GL::k_roman_light_helmet_role_count);
-  EXPECT_GT(colors[0].z(), colors[0].x());
+
+  EXPECT_GT(colors[0].x(), colors[0].z());
   EXPECT_LT(colors[1].x(), colors[0].x());
   EXPECT_LT(colors[1].y(), colors[0].y());
   EXPECT_LT(colors[1].z(), colors[0].z());
