@@ -30,6 +30,8 @@ enum class ToolType {
   PropOliveTree,
   PropPlant,
   PropIronOre,
+  PropAbandonedHome,
+  PropStatue,
   TroopArcher,
   TroopSwordsman,
   TroopSpearman,
@@ -57,6 +59,7 @@ enum class ToolType {
   DefenseTower,
   Home,
   Marketplace,
+  Temple,
   Wall,
   Eraser
 };

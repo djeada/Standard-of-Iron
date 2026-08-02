@@ -221,6 +221,12 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("iron_ore")) {
     return Game::Map::WorldProp::Type::IronOre;
   }
+  if (normalized == QStringLiteral("abandoned_home")) {
+    return Game::Map::WorldProp::Type::AbandonedHome;
+  }
+  if (normalized == QStringLiteral("statue")) {
+    return Game::Map::WorldProp::Type::Statue;
+  }
   return Game::Map::WorldProp::Type::FireCamp;
 }
 

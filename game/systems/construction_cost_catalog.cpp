@@ -43,6 +43,12 @@ auto construction_cost_info(std::string_view item_type) -> ConstructionCostInfo 
     info.resource_costs.set(ResourceType::Stone, 20);
     return info;
   }
+  if (item_type == "temple") {
+    info.resource_costs.set(ResourceType::Wood, 40);
+    info.resource_costs.set(ResourceType::Stone, 90);
+    info.resource_costs.set(ResourceType::Gold, 30);
+    return info;
+  }
   if (item_type == "marketplace") {
     info.resource_costs.set(ResourceType::Wood, 60);
     info.resource_costs.set(ResourceType::Stone, 40);

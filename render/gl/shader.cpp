@@ -552,7 +552,8 @@ auto classify_shader_for_audit(const QString& name) -> QString {
       QStringLiteral("ruins_instanced"),
       QStringLiteral("dead_tree_instanced"),
       QStringLiteral("iron_ore_instanced"),
-      QStringLiteral("magic_shrine_instanced")};
+      QStringLiteral("magic_shrine_instanced"),
+      QStringLiteral("statue_instanced")};
 
   if (pipeline_owned.contains(name)) {
     return QStringLiteral("pipeline-owned");

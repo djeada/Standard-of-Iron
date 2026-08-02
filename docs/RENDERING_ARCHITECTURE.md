@@ -686,6 +686,8 @@ When specific units don't render but debug shapes do, the renderer probably isn'
 
 Transparent objects rendering as opaque usually means blending got disabled somewhere, or the draw order is wrong so transparent stuff draws before what's behind it. Make sure the queue sorts transparent objects to the back and that the BlendScope RAII wrapper is being used.
 
+When part of a scatter prop shades almost black while the rest of the same mesh looks fine, suspect the face normals rather than the lighting. `append_oriented_box` and `append_barrel_yaxis` in [vegetation_pipeline.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/vegetation_pipeline.cpp) emit inward-facing normals on some faces; prop rendering runs with culling disabled, so the geometry still draws but shades as if it were facing away from every light. Use `append_prop_beam` and `append_prop_taper` for new geometry—they are the same shapes with outward normals. `append_box` and `append_vert_prism` were always correct. The background and the full list of touchpoints for a new prop are in [docs/SETTLEMENT_ASSETS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_ASSETS.md).
+
 ## Battle render optimizations
 
 When more than 15 units are visible on screen, the `BattleRenderOptimizer` kicks in to keep rendering fresh without sacrificing visual quality. This system provides several tricks that work independently of LOD:

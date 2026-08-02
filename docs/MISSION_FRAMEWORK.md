@@ -343,7 +343,9 @@ ore deposit.
 
 Harvestable props are scattered procedurally by biome, so a map with low `plant_density` needs
 explicit `pine_tree` / `boulder` / `iron_ore` entries in its `world_props` before it can carry
-a gather objective. Author comfortably more than the target: contested or unreachable nodes
+a gather objective. Decorative settlement props (`abandoned_home`, `statue`) never yield
+resources but do block the cell they stand on; see
+[SETTLEMENT_ASSETS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_ASSETS.md). Author comfortably more than the target: contested or unreachable nodes
 must not be able to soft-lock the mission.
 
 ```json

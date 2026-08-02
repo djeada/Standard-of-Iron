@@ -482,6 +482,8 @@ void Pathfinding::rebuild_world_prop_index() {
       value = CellValue::Boulder;
     } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
       value = CellValue::IronOre;
+    } else if (Game::Map::is_settlement_world_prop_type(prop.type)) {
+      value = CellValue::Blocked;
     } else {
       continue;
     }

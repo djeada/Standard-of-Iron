@@ -115,6 +115,7 @@ public:
   [[nodiscard]] auto magic_shrine_shader() const -> GL::Shader* {
     return m_magic_shrine_shader;
   }
+  [[nodiscard]] auto statue_shader() const -> GL::Shader* { return m_statue_shader; }
 
   struct PropUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -131,6 +132,7 @@ public:
   PropUniforms m_dead_tree_uniforms;
   PropUniforms m_iron_ore_uniforms;
   PropUniforms m_magic_shrine_uniforms;
+  PropUniforms m_statue_uniforms;
 
   GLuint m_tent_vao{0};
   GLuint m_tent_vertex_buffer{0};
@@ -174,6 +176,18 @@ public:
   GLsizei m_magic_shrine_index_count{0};
   GLsizei m_magic_shrine_vertex_count{0};
 
+  GLuint m_abandoned_home_vao{0};
+  GLuint m_abandoned_home_vertex_buffer{0};
+  GLuint m_abandoned_home_index_buffer{0};
+  GLsizei m_abandoned_home_index_count{0};
+  GLsizei m_abandoned_home_vertex_count{0};
+
+  GLuint m_statue_vao{0};
+  GLuint m_statue_vertex_buffer{0};
+  GLuint m_statue_index_buffer{0};
+  GLsizei m_statue_index_count{0};
+  GLsizei m_statue_vertex_count{0};
+
 private:
   void initialize_stone_pipeline();
   void shutdown_stone_pipeline();
@@ -199,6 +213,10 @@ private:
   void shutdown_iron_ore_pipeline();
   void initialize_magic_shrine_pipeline();
   void shutdown_magic_shrine_pipeline();
+  void initialize_abandoned_home_pipeline();
+  void shutdown_abandoned_home_pipeline();
+  void initialize_statue_pipeline();
+  void shutdown_statue_pipeline();
   void upload_prop_mesh_impl(const std::vector<std::pair<QVector3D, QVector3D>>& verts,
                              const std::vector<uint16_t>& idx,
                              GLuint& vao,
@@ -224,6 +242,7 @@ private:
   GL::Shader* m_dead_tree_shader{nullptr};
   GL::Shader* m_iron_ore_shader{nullptr};
   GL::Shader* m_magic_shrine_shader{nullptr};
+  GL::Shader* m_statue_shader{nullptr};
 };
 
 } // namespace Render::GL::BackendPipelines

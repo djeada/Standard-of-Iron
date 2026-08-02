@@ -32,7 +32,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
 
   const auto& passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 24U);
+  ASSERT_EQ(passes.size(), 26U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -74,10 +74,12 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_NE(passes[17], nullptr);
   EXPECT_NE(passes[18], nullptr);
   EXPECT_NE(passes[19], nullptr);
-  EXPECT_EQ(passes[20], &rain);
-  EXPECT_EQ(passes[21], &fog);
-  EXPECT_EQ(passes[22], &boundary_fog);
-  EXPECT_EQ(passes[23], nullptr);
+  EXPECT_NE(passes[20], nullptr);
+  EXPECT_NE(passes[21], nullptr);
+  EXPECT_EQ(passes[22], &rain);
+  EXPECT_EQ(passes[23], &fog);
+  EXPECT_EQ(passes[24], &boundary_fog);
+  EXPECT_EQ(passes[25], nullptr);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
@@ -135,7 +137,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(feature_chunks[3].geometry_count, 1U);
 
   const auto scatters = proxy.scatter_chunks();
-  ASSERT_EQ(scatters.size(), 14U);
+  ASSERT_EQ(scatters.size(), 16U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -168,6 +170,10 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_TRUE(scatters[12].gpu_ready);
   EXPECT_EQ(scatters[13].species, Render::GL::ScatterSpeciesId::MagicShrine);
   EXPECT_TRUE(scatters[13].gpu_ready);
+  EXPECT_EQ(scatters[14].species, Render::GL::ScatterSpeciesId::AbandonedHome);
+  EXPECT_TRUE(scatters[14].gpu_ready);
+  EXPECT_EQ(scatters[15].species, Render::GL::ScatterSpeciesId::Statue);
+  EXPECT_TRUE(scatters[15].gpu_ready);
   EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 
