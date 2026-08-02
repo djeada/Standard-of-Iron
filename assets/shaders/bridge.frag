@@ -8,7 +8,6 @@ in vec2 v_tex_coord;
 in vec3 v_world_pos;
 
 uniform vec3 u_color;
-uniform sampler2D u_fog_texture;
 
 out vec4 frag_color;
 
@@ -103,42 +102,73 @@ float ggx_specular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
 
 void main() {
 
-  vec2 uv = v_world_pos.xz * 0.6;
+  const float k_setts_per_metre = 2.7;
 
-  vec2 F = worley_f(uv * 1.2);
+  vec3 Ng = normalize(v_normal);
+  vec3 axial = abs(Ng);
+  vec2 surface_pos;
+  vec3 face_normal;
+  vec3 axis_u;
+  vec3 axis_v;
+  if (axial.y >= max(axial.x, axial.z)) {
+    surface_pos = v_world_pos.xz;
+    face_normal = vec3(0.0, Ng.y >= 0.0 ? 1.0 : -1.0, 0.0);
+    axis_u = vec3(1.0, 0.0, 0.0);
+    axis_v = vec3(0.0, 0.0, 1.0);
+  } else if (axial.x >= axial.z) {
+    surface_pos = v_world_pos.zy;
+    face_normal = vec3(Ng.x >= 0.0 ? 1.0 : -1.0, 0.0, 0.0);
+    axis_u = vec3(0.0, 0.0, 1.0);
+    axis_v = vec3(0.0, 1.0, 0.0);
+  } else {
+    surface_pos = v_world_pos.xy;
+    face_normal = vec3(0.0, 0.0, Ng.z >= 0.0 ? 1.0 : -1.0);
+    axis_u = vec3(1.0, 0.0, 0.0);
+    axis_v = vec3(0.0, 1.0, 0.0);
+  }
+
+  vec2 uv = surface_pos * k_setts_per_metre;
+  vec2 macro_uv = surface_pos * 0.45;
+
+  vec2 F = worley_f(uv);
   float edge_metric = F.y - F.x;
-  float stone_mask = smoothstep(0.05, 0.30, edge_metric);
+  float stone_mask = smoothstep(0.030, 0.165, edge_metric);
   float mortar_mask = 1.0 - stone_mask;
 
-  vec2 cell = floor(uv * 1.2);
+  vec2 cell = floor(uv);
   float cell_rnd = hash(cell);
   vec2 local = fract(uv);
-  vec2 uv_var = (rot(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
+  vec2 uv_var = (rot(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + cell;
 
-  float var_low = (fbm(uv * 0.5) - 0.5) * 0.20;
-  float var_mid = (fbm(uv_var * 3.0) - 0.5) * 0.15;
-  float grain = (noise(uv_var * 18.0) - 0.5) * 0.08;
+  float var_low = (fbm(macro_uv) - 0.5) * 0.20;
+  float var_mid = (cell_rnd - 0.5) * 0.30;
+  float grain = (noise(uv_var * 9.0) - 0.5) * 0.08;
 
-  vec3 stone_color = u_color * (1.0 + var_low + var_mid + grain);
-  vec3 mortar_color = u_color * 0.72;
+  float cell_hue = hash(cell + vec2(37.0, -19.0)) - 0.5;
+  vec3 stone_tint = vec3(1.0 + cell_hue * 0.10, 1.0, 1.0 - cell_hue * 0.09);
 
-  float crack = smoothstep(0.02, 0.0, abs(noise(uv * 10.0) - 0.5)) * 0.25;
+  vec3 stone_color = u_color * stone_tint * (1.0 + var_low + var_mid + grain);
+  vec3 mortar_color = u_color * 0.80;
+
+  float crack = smoothstep(0.02, 0.0, abs(noise(uv * 2.4) - 0.5)) * 0.22;
   stone_color *= (1.0 - crack * stone_mask);
 
-  float cavity = smoothstep(0.0, 0.18, edge_metric);
-  float ao = mix(0.55, 1.0, cavity) * (0.92 + 0.08 * fbm(uv * 2.5));
+  float cavity = smoothstep(0.0, 0.10, edge_metric);
+  float ao = mix(0.70, 1.0, cavity) * (0.93 + 0.07 * fbm(macro_uv * 3.0));
 
-  float micro_bump = (fbm(uv_var * 4.0) - 0.5) * 0.06 * stone_mask;
-  float macro_warp = (fbm(uv * 1.2) - 0.5) * 0.03 * stone_mask;
+  float micro_bump = (fbm(uv_var * 2.0) - 0.5) * 0.06 * stone_mask;
+  float macro_warp = (fbm(macro_uv * 2.5) - 0.5) * 0.03 * stone_mask;
   float mortar_dip = -0.06 * mortar_mask;
   float h = micro_bump + macro_warp + mortar_dip;
 
   float sx = dFdx(h);
   float sy = dFdy(h);
   float bump_strength = 14.0;
-  vec3 n_bump = normalize(vec3(-sx * bump_strength, 1.0, -sy * bump_strength));
 
-  vec3 Ng = normalize(v_normal);
+  vec2 slope = vec2(sx, sy) * bump_strength;
+  slope /= 1.0 + length(slope);
+  vec3 n_bump = normalize(face_normal - (axis_u * slope.x + axis_v * slope.y));
+
   vec3 N = normalize(mix(Ng, n_bump, 0.65));
 
   vec3 L = environment_primary_direction();
@@ -147,7 +177,7 @@ void main() {
   float NdotL = max(dot(N, L), 0.0);
   float diffuse = NdotL;
 
-  float steep = saturate(length(vec2(sx, sy)) * bump_strength);
+  float steep = saturate(length(slope));
   float roughness = clamp(mix(0.65, 0.95, steep), 0.02, 1.0);
   float F0 = 0.035;
 
@@ -155,22 +185,22 @@ void main() {
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  vec3 lit_color =
-      base_color *
-      (environment_ambient_light(N) +
-       environment_primary_color() * environment_primary_intensity() * diffuse * 0.58) *
-      ao * environment_exposure();
+  vec3 ambient = environment_ambient_light(N);
+  ambient = max(ambient,
+                mix(environment_ground_bounce_color(), environment_sky_color(), 0.5) *
+                    environment_ambient_intensity() * 0.62);
+
+  vec3 lit_color = base_color *
+                   (ambient + environment_primary_color() *
+                                  environment_primary_intensity() * diffuse * 0.76) *
+                   ao * environment_exposure();
   lit_color += environment_primary_color() * spec * 0.14;
 
-  float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(uv * 7.0));
+  float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(macro_uv * 5.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.9), grime);
 
-  float fog_mask = texture(u_fog_texture, v_tex_coord).r;
-  float fog_amt = 1.0 - fog_mask;
-  lit_color *= mix(1.0, 0.85, fog_amt * 0.5);
-
-  lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
+  lit_color += lit_color * local_lighting(v_world_pos, Ng);
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   frag_color = vec4(lit_color, 1.0);
 }

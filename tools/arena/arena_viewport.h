@@ -93,9 +93,6 @@ public slots:
   void set_time_of_day(Game::Map::TimeOfDay time_of_day);
   void set_environment_time(float hour);
 
-  // Hold this hour against a scenario that locks its own. Capture scenarios
-  // pin the light so it matches across a promo's shots, which is right for a
-  // recording and wrong while you are still deciding what hour to record at.
   void set_environment_hour_override(float hour);
   void set_lighting_profile(const QString& profile);
   void set_time_mode(const QString& mode);

@@ -169,8 +169,6 @@ private:
       return;
     }
 
-    // Slow motion is produced by shrinking the simulation step, not by
-    // duplicating frames, so a half-speed clip keeps full temporal detail.
     m_step_seconds = 1.0F / (static_cast<float>(m_spec.fps) * shot.slow_motion);
     m_target_frames = std::max(
         1, static_cast<int>(std::lround(shot.duration_seconds / m_step_seconds)));
@@ -191,8 +189,6 @@ private:
                              .arg(QString::number(shot.start_seconds, 'f', 1));
   }
 
-  // Runs once per rendered frame, before the frame is drawn: this is where the
-  // authored camera is resolved against the live battle.
   void on_tick(float scenario_time) {
     if (!m_shot_active) {
       return;
@@ -212,15 +208,11 @@ private:
     const bool recording =
         scenario_time >= shot.start_seconds && m_frames_written < m_target_frames;
     if (recording && m_frames_written == 0) {
-      // Only slow the simulation down once the shot is actually running, so
-      // the run-up to a slow-motion shot costs the same as any other.
+
       m_viewport.set_batch_fixed_step(m_step_seconds);
     }
     m_viewport.set_capture_active(recording);
 
-    // Report the framing that the first recorded frame actually used. Authoring
-    // a shot blind is the slowest part of building a promo, and a focus that
-    // silently resolved to nothing looks identical to a mis-aimed camera.
     if (recording && !m_logged_framing) {
       m_logged_framing = true;
       const auto& stats = Render::GL::get_humanoid_render_stats();
@@ -245,8 +237,7 @@ private:
       advance_within_pass();
       return;
     }
-    // A scenario that resolves early (everyone dead) can never deliver the rest
-    // of the take; stop rather than spin until the watchdog.
+
     if (m_viewport.active_scenario_finished() && m_frames_written < m_target_frames) {
       qWarning().noquote() << QStringLiteral(
                                   "Promo shot '%1' ended early with %2 of %3 frames")
@@ -305,8 +296,6 @@ private:
       break;
     }
 
-    // Losing the tracked group (wiped out) must not snap the camera to the
-    // world origin mid-shot; hold the last good focus instead.
     if (!raw.has_value()) {
       return m_focus_valid ? m_smoothed_focus : QVector3D{};
     }

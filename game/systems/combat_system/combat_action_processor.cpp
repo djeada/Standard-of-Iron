@@ -295,8 +295,6 @@ void process_authored_combat_action(
   auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
       action->combat_action_id);
 
-  // A light flinch never takes a swing away from the player; anything heavier
-  // does, and does it in the simulation so the animation can honestly show it.
   if (auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
       commander != nullptr && commander->fpv_controlled && action->action_running) {
     auto const* stagger = entity.get_component<Engine::Core::StaggerComponent>();

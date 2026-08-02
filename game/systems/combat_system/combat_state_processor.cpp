@@ -163,9 +163,6 @@ auto base_phase_duration(CS state) noexcept -> float {
   }
 }
 
-// The authored action owns the commander's swing timeline. The presentation
-// phase machine mirrors it so the visual phases and the gameplay events can
-// never drift apart.
 auto running_authored_action(const Engine::Core::Entity& unit) noexcept
     -> const Game::Systems::CombatActions::CombatActionDefinition* {
   auto const* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();

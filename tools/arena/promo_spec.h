@@ -77,20 +77,12 @@ struct Pose {
   float height{0.0F};
 };
 
-// One load of one scenario, covering every shot whose window fits inside it.
 struct CapturePass {
   QString scenario;
   int seed{0};
   std::vector<std::size_t> shots;
 };
 
-// Reloading per shot means re-simulating the whole battle up to that shot's
-// start, and a reel whose shots march through a long scenario pays that bill
-// once per shot; recording them in one continuous take pays it once. Shots go
-// in authored order into the first pass that can still take them -- same
-// scenario, same seed, no window already claimed -- so two angles on the same
-// moment still work, each in its own pass. Within a pass the shots come out
-// ordered by start time, which is the order the recorder has to play them in.
 [[nodiscard]] auto plan_passes(const Spec& spec) -> std::vector<CapturePass>;
 
 [[nodiscard]] auto load(const QString& path, QString* error) -> std::optional<Spec>;

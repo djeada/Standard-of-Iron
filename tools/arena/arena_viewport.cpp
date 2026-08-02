@@ -1466,9 +1466,7 @@ void ArenaViewport::regenerate_terrain() {
       std::min(safe_scale * 0.18F, std::max(0.0F, max_height * 0.25F));
   float const arena_half_extent =
       std::clamp(m_arena_floor_half_extent, 4.0F, half_width - 2.0F);
-  // Ease the flat floor into the surrounding noise instead of stepping out of
-  // it. A hard edge turns the mountains into a wall standing right on the
-  // touchline, which a camera at eye level inside the field cannot avoid.
+
   float const taper = std::min(12.0F, half_width - arena_half_extent);
   for (int z = 0; z < k_terrain_height; ++z) {
     for (int x = 0; x < k_terrain_width; ++x) {

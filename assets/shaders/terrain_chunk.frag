@@ -192,6 +192,32 @@ vec3 heightmap_normal(vec2 uv) {
   return normalize(vec3(-dhdx, 1.0, -dhdz));
 }
 
+const vec2 k_openness_directions[6] = vec2[6](vec2(1.0, 0.0),
+                                              vec2(0.5, 0.866),
+                                              vec2(-0.5, 0.866),
+                                              vec2(-1.0, 0.0),
+                                              vec2(-0.5, -0.866),
+                                              vec2(0.5, -0.866));
+const float k_openness_radii[3] = float[3](1.5, 4.0, 9.0);
+
+float terrain_sky_openness(vec2 uv, float center_height) {
+  float horizon_sum = 0.0;
+  for (int direction = 0; direction < 6; ++direction) {
+    float highest_tangent = 0.0;
+    for (int ring = 0; ring < 3; ++ring) {
+      vec2 step_uv = k_openness_directions[direction] * u_height_texel_size *
+                     k_openness_radii[ring];
+      float span = max(length(uv_to_world(step_uv)), 1e-3);
+      highest_tangent =
+          max(highest_tangent, (sample_height(uv + step_uv) - center_height) / span);
+    }
+
+    horizon_sum +=
+        highest_tangent * inversesqrt(highest_tangent * highest_tangent + 1.0);
+  }
+  return clamp(1.0 - horizon_sum / 6.0, 0.0, 1.0);
+}
+
 float tactical_zoom() {
   return smoothstep(58.0, 115.0, length(u_camera_pos - v_world_pos));
 }
@@ -214,9 +240,10 @@ void main() {
   float facet_weight = 0.20 * smoothstep(0.30, 0.80, facet_break);
   vec3 normal = normalize(mix(smooth_normal, facet_normal, facet_weight));
 
+  vec2 height_uv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
+
   if (u_has_height_tex == 1) {
-    vec2 huv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
-    vec3 hm_n = heightmap_normal(huv);
+    vec3 hm_n = heightmap_normal(height_uv);
     float slope0 = 1.0 - clamp(normal.y, 0.0, 1.0);
 
     float w = 0.18 * (1.0 - 0.24 * smoothstep(0.78, 0.98, slope0));
@@ -248,6 +275,13 @@ void main() {
       smoothstep(0.0, ridge_threshold, max(0.0, curvature * curvature_gain));
   float gully_mask =
       smoothstep(0.0, gully_threshold, max(0.0, -curvature * curvature_gain));
+
+  float sky_openness = (u_has_height_tex == 1)
+                           ? terrain_sky_openness(height_uv, sample_height(height_uv))
+                           : 1.0 - clamp(-curvature * curvature_gain * 6.0, 0.0, 0.55);
+
+  float sheltered_ground = smoothstep(0.35, 0.92, sky_openness);
+  float terrain_cavity = 1.0 - sheltered_ground;
 
   float tile_scale = max(u_tile_size, 0.0001);
   vec2 world_coord = (v_world_pos.xz / tile_scale) + u_noise_offset;
@@ -310,15 +344,17 @@ void main() {
 
   float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
   float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
-  float drainage_field = clamp(moisture_field * 0.60 + (1.0 - meadow_field) * 0.12 +
-                                   gully_mask * 0.22 + low_ground * 0.10 - slope * 0.24,
-                               0.0,
-                               1.0);
-  float exposure_field = clamp(soil_field * 0.44 + (1.0 - moisture_field) * 0.20 +
-                                   meadow_field * 0.10 + high_ground * 0.10 +
-                                   slope * 0.30 + ridge_mask * 0.12 - gully_mask * 0.18,
-                               0.0,
-                               1.0);
+  float drainage_field =
+      clamp(moisture_field * 0.60 + (1.0 - meadow_field) * 0.12 + gully_mask * 0.22 +
+                low_ground * 0.10 + terrain_cavity * 0.20 - slope * 0.24,
+            0.0,
+            1.0);
+  float exposure_field =
+      clamp(soil_field * 0.44 + (1.0 - moisture_field) * 0.20 + meadow_field * 0.10 +
+                high_ground * 0.10 + slope * 0.30 + ridge_mask * 0.12 -
+                gully_mask * 0.18 - terrain_cavity * 0.14,
+            0.0,
+            1.0);
   float material_patch =
       clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.8 + domain_warp * 0.58 +
                                vec2(37.0, -61.0)) *
@@ -331,6 +367,51 @@ void main() {
                                       (1.0 - drainage_field) * 0.16);
   float sparse_cover =
       smoothstep(0.32, 0.62, exposure_field * 0.55 + material_patch * 0.45);
+
+  vec2 flow_down = normal.xz;
+  float flow_length = length(flow_down);
+  flow_down = (flow_length > 1e-4) ? flow_down / flow_length : vec2(0.0, 1.0);
+  vec2 flow_across = vec2(-flow_down.y, flow_down.x);
+  const float k_rill_frequency = 1.35;
+  const float k_rill_elongation = 0.13;
+  vec2 rill_coord = vec2(dot(world_coord, flow_across),
+                         dot(world_coord, flow_down) * k_rill_elongation);
+  float rill_field = gradient_fbm(rill_coord * k_rill_frequency + vec2(9.0, -31.0));
+  float rill_exposure = smoothstep(0.09, 0.36, slope) *
+                        (1.0 - smoothstep(0.58, 0.84, slope)) *
+                        band_limit(coord_footprint, k_rill_frequency);
+  float rill_strength = rill_exposure * (1.0 - 0.70 * entry_mask) *
+                        (1.0 - 0.35 * feature_foot) * (0.50 + 0.50 * exposure_field) *
+                        mix(1.0, 0.80, tactical);
+  float rill_incision = clamp(-rill_field * 1.75, 0.0, 1.0) * rill_strength;
+  float rill_interfluve = clamp(rill_field * 1.75, 0.0, 1.0) * rill_strength;
+
+  const float k_mosaic_frequency = 0.24;
+  const float k_fleck_frequency = 1.15;
+  vec2 mosaic_warp = vec2(gradient_noise(world_coord * 0.31 + vec2(3.0, 17.0)),
+                          gradient_noise(world_coord * 0.31 - vec2(23.0, 5.0)));
+  float mosaic_field =
+      clamp(0.5 + gradient_fbm(world_coord * k_mosaic_frequency + mosaic_warp * 0.90 +
+                               vec2(-71.0, 12.0)) *
+                      1.35,
+            0.0,
+            1.0);
+  float fleck_field = clamp(0.5 + gradient_fbm(world_coord * k_fleck_frequency +
+                                               mosaic_warp * 0.35 + vec2(58.0, -44.0)) *
+                                      1.25,
+                            0.0,
+                            1.0);
+  float mosaic_fade = band_limit(coord_footprint, k_mosaic_frequency);
+  float fleck_fade = band_limit(coord_footprint, k_fleck_frequency);
+  float mosaic_dry = smoothstep(0.48, 0.78, mosaic_field) * mosaic_fade *
+                     (0.55 + 0.45 * exposure_field) * (1.0 - 0.35 * u_moisture_level);
+  float mosaic_lush = smoothstep(0.46, 0.74, 1.0 - mosaic_field) * mosaic_fade *
+                      (0.50 + 0.50 * drainage_field);
+  float ground_scuff = smoothstep(0.52,
+                                  0.82,
+                                  fleck_field * 0.60 + mosaic_field * 0.22 +
+                                      exposure_field * 0.34 - drainage_field * 0.16) *
+                       fleck_fade;
 
   float grass_mix = 0.30 + regional_field * 0.36;
   vec3 grass_color = mix(u_grass_primary, u_grass_secondary, grass_mix);
@@ -375,6 +456,11 @@ void main() {
 
   vec3 blade_shade = mix(u_grass_secondary, u_grass_dry, 0.35);
   grass_color = mix(grass_color, blade_shade, clamp(tussock, 0.0, 1.0) * 0.07);
+  grass_color = mix(grass_color, deep_sward, rill_interfluve * 0.10);
+
+  grass_color = mix(grass_color, u_grass_dry, mosaic_dry * 0.44);
+  grass_color = mix(grass_color, deep_sward, mosaic_lush * 0.30);
+  grass_color *= 1.0 - mosaic_dry * 0.06 + mosaic_lush * 0.05;
 
   float damp_patch = smoothstep(0.68, 0.86, drainage_field + u_moisture_level * 0.10);
   damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
@@ -404,6 +490,8 @@ void main() {
   float deposited_soil = gully_mask * (1.0 - smoothstep(0.08, 0.32, slope)) *
                          (0.14 + 0.14 * gully_response);
   soil_mix = max(soil_mix, deposited_soil);
+  soil_mix = max(soil_mix, rill_incision * 0.34);
+  soil_mix = max(soil_mix, ground_scuff * 0.32);
   soil_mix = max(soil_mix, foot_shelter * (0.15 + u_soil_foot_height));
   float level_ground = 1.0 - smoothstep(0.018, 0.075, slope);
   soil_mix *= mix(1.0, 0.88, level_ground);
@@ -565,6 +653,7 @@ void main() {
     float wind_deposit =
         0.78 +
         0.22 * smoothstep(0.34, 0.72, moisture_field * 0.55 + material_patch * 0.45);
+    wind_deposit *= 0.92 + terrain_cavity * 0.38;
     float snow_mask = clamp(mountain_surface * altitude_snow * snow_retention *
                                 wind_deposit * u_snow_coverage * 1.85,
                             0.0,
@@ -609,6 +698,12 @@ void main() {
       0.30 * coarse_relief.z + 0.20 * mid_relief.z + 0.11 * fine_relief.z;
   float relief_lost = clamp(1.0 - relief_resolved / 0.61, 0.0, 1.0);
 
+  const float k_rill_step = 0.05;
+  float rill_shifted = gradient_fbm(
+      (rill_coord + vec2(k_rill_step, 0.0)) * k_rill_frequency + vec2(9.0, -31.0));
+  vec2 rill_gradient = flow_across * ((rill_shifted - rill_field) / k_rill_step);
+  relief_gradient += rill_gradient * rill_strength * (1.0 - wall_blend) * 0.42;
+
   float material_roughness =
       clamp(0.30 + u_soil_roughness * 0.48 + rock_mask * 0.18 - wet_surface * 0.30,
             0.18,
@@ -630,6 +725,15 @@ void main() {
 
   ambient_occlusion *= 1.0 - relief_lost * relief_amp * 0.30;
   ambient_occlusion *= 1.0 - 0.10 * smoothstep(0.20, 0.75, slope);
+  ambient_occlusion *= mix(1.0, sheltered_ground, 0.60 * (1.0 - 0.45 * entry_mask));
+
+  float sun_ground_span = length(L.xz);
+  vec2 sun_ground_dir = (sun_ground_span > 1e-4) ? L.xz / sun_ground_span : vec2(0.0);
+  float sun_tangent = max(L.y, 0.02) / max(sun_ground_span, 1e-3);
+  float micro_rise = dot(relief_gradient, sun_ground_dir) * relief_amp;
+  float micro_shadow = smoothstep(sun_tangent * 0.55, sun_tangent * 1.70, micro_rise) *
+                       sun_ground_span * (1.0 - relief_lost);
+  float direct_occlusion = 1.0 - micro_shadow * (0.26 + 0.20 * soil_mix);
 
   vec3 sun_light = environment_primary_color() * environment_primary_intensity();
   vec3 ambient_term = ambient_occlusion * environment_ambient_light(detail_normal);
@@ -644,9 +748,10 @@ void main() {
   float sheen = grazing * (0.020 + 0.070 * u_moisture_level) *
                 (1.0 - material_roughness) * (1.0 - rock_mask * 0.55);
 
-  vec3 lit_color = terrain_color *
-                   (ambient_term + sun_light * (ndl * 0.76 + wet_glint) + sheen) *
-                   u_ambient_boost * environment_exposure();
+  vec3 lit_color =
+      terrain_color *
+      (ambient_term + sun_light * (ndl * direct_occlusion * 0.76 + wet_glint) + sheen) *
+      u_ambient_boost * environment_exposure();
   lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
   lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
   lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);

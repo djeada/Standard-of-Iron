@@ -180,11 +180,6 @@ auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
   return false;
 }
 
-// Scattered trees, boulders and ore veins block their whole navigation cell so
-// that RTS formations keep well clear of them. A person walking between them
-// only has to clear the trunk or the rock itself, so the commander re-tests
-// those cells as a circle around the prop rather than as a square metre of
-// invisible wall.
 constexpr float k_scatter_prop_block_radius = 0.52F;
 
 auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfinder,
@@ -196,8 +191,6 @@ auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfi
 
   float const clearance = k_scatter_prop_block_radius + k_commander_body_radius;
 
-  // The clearance reaches past the sampled cell, so the neighbours have to be
-  // considered as well.
   for (int offset_z = -1; offset_z <= 1; ++offset_z) {
     for (int offset_x = -1; offset_x <= 1; ++offset_x) {
       int const cell_x = grid_x + offset_x;
@@ -252,9 +245,6 @@ auto is_walkable_at(float x, float z) -> bool {
   return !structure_blocks_commander_body(x, z);
 }
 
-// The RTS troop speed is tuned for formations crossing a battlefield. A directly
-// controlled body needs a livelier stride, and a clear gap between walking and
-// running so the run reads as a run.
 constexpr float k_fpv_walk_speed_scale = 1.25F;
 
 constexpr float k_fpv_backpedal_speed_scale = 0.72F;
@@ -271,17 +261,12 @@ auto directional_speed_scale(int forward_axis, int right_axis) -> float {
   return 1.0F;
 }
 
-// Direct control has to behave like a body, not like a path request: when the
-// desired step is blocked the commander keeps whichever axis is still free and
-// slides along the obstacle instead of stopping dead in front of it.
 struct GroundMove {
   float x{0.0F};
   float z{0.0F};
   bool moved{false};
 };
 
-// An airborne commander clears ground obstacles outright; the landing is
-// validated separately once the jump ends.
 auto airborne_step(float to_x, float to_z) -> GroundMove {
   return {.x = to_x, .z = to_z, .moved = true};
 }
