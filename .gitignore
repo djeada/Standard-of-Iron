@@ -68,6 +68,7 @@ compile_commands.json
 # matches asset directories that happen to be called "build".
 /build/
 /build-*/
+tools/map_pipeline/build/
 # Note: dist/ contains deployment configs and is tracked
 dist/mesh/
 _codeql_build_dir/
