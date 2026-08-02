@@ -68,6 +68,8 @@ struct SpearmanRendererRegistration {
   std::string_view renderer_key;
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_spear_asset};
+
+  bool use_beard_archetypes{true};
 };
 
 void register_spearman_renderer_profile(

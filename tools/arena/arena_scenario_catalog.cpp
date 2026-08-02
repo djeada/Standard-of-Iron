@@ -1213,6 +1213,129 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s =
+        definition(QString::fromLatin1(k_commander_helmet_review_id),
+                   QStringLiteral("Commander Helmet Review"),
+                   QStringLiteral("Head-height close-up of all six commander helmets, "
+                                  "three per rank, so crest, shell profile, cheek "
+                                  "pieces and neck guard can be judged at the size a "
+                                  "player actually reads them."),
+                   6.0F,
+                   {5.0F, 8.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.45F, 1.10F, 0.0F);
+    struct CommanderHelmetEntry {
+      const char* group_name{};
+      Troop troop;
+      Nation nation;
+      int owner{};
+      QVector3D position;
+      float facing{};
+    };
+    const CommanderHelmetEntry entries[] = {
+        {"fabius",
+         Troop::RomanLegionOrganizer,
+         Nation::RomanRepublic,
+         1,
+         {-1.9F, 0.0F, 1.3F},
+         180.0F},
+        {"scipio",
+         Troop::RomanVeteranConsul,
+         Nation::RomanRepublic,
+         2,
+         {0.0F, 0.0F, 1.3F},
+         180.0F},
+        {"marcellus",
+         Troop::RomanFieldCommander,
+         Nation::RomanRepublic,
+         3,
+         {1.9F, 0.0F, 1.3F},
+         180.0F},
+        {"hanno",
+         Troop::CarthageMercenaryBroker,
+         Nation::Carthage,
+         4,
+         {-0.95F, 0.0F, -1.3F},
+         180.0F},
+        {"hasdrubal",
+         Troop::CarthageCavalryPatron,
+         Nation::Carthage,
+         5,
+         {0.95F, 0.0F, -1.3F},
+         180.0F},
+        {"hannibal",
+         Troop::CarthageElephantMaster,
+         Nation::Carthage,
+         6,
+         {2.85F, 0.0F, -1.3F},
+         180.0F},
+    };
+    for (auto const& entry : entries) {
+      auto commander = group(QString::fromLatin1(entry.group_name),
+                             entry.troop,
+                             entry.owner,
+                             1,
+                             entry.position,
+                             1);
+      commander.nation_id = entry.nation;
+      commander.facing_degrees = entry.facing;
+      s.groups.push_back(std::move(commander));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_helmet_identity_review_id),
+        QStringLiteral("Helmet Identity Review"),
+        QStringLiteral("Head-height close-up of the helmets both nations issue, from "
+                       "the front and in profile, so bowl shape, brow, cheek guards, "
+                       "neck guard and crest can be judged at the size a player "
+                       "actually reads them."),
+        6.0F,
+        {3.2F, 6.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 1.15F, 0.0F);
+    struct HelmetReviewEntry {
+      const char* group_name{};
+      Troop troop;
+      Nation nation;
+      int owner{};
+      float x{};
+      float z{};
+      float facing{};
+    };
+    const HelmetReviewEntry entries[] = {
+        {"line_front", Troop::Archer, Nation::RomanRepublic, 1, -1.8F, 0.0F, 180.0F},
+        {"line_profile", Troop::Archer, Nation::RomanRepublic, 1, -0.6F, 0.0F, 270.0F},
+        {"work_front", Troop::Builder, Nation::RomanRepublic, 1, 0.6F, 0.0F, 180.0F},
+        {"work_profile", Troop::Builder, Nation::RomanRepublic, 1, 1.8F, 0.0F, 270.0F},
+    };
+    for (auto const& entry : entries) {
+      auto unit = group(QString::fromLatin1(entry.group_name),
+                        entry.troop,
+                        entry.owner,
+                        1,
+                        {entry.x, 0.0F, entry.z},
+                        1);
+      unit.nation_id = entry.nation;
+      unit.facing_degrees = entry.facing;
+      s.groups.push_back(std::move(unit));
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(
         QString::fromLatin1(k_worker_identity_lineup_id),
         QStringLiteral("Worker Identity Lineup"),
