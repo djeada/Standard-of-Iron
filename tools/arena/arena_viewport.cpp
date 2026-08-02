@@ -3183,6 +3183,16 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
            m_rpg_commander_controller->primary_action(
                *m_world, entity_id, k_local_owner_id);
   };
+  host.set_rpg_attack_held = [this](Engine::Core::EntityID entity_id, bool held) {
+    if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
+      return;
+    }
+    if (held) {
+      m_rpg_commander_controller->primary_action_down();
+    } else {
+      m_rpg_commander_controller->primary_action_up();
+    }
+  };
   host.set_rpg_guard = [this](Engine::Core::EntityID entity_id, bool enabled) {
     if (m_world == nullptr || m_rpg_commander_controller == nullptr ||
         entity_id != m_rpg_commander_id) {

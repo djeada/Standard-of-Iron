@@ -651,6 +651,28 @@ When changing terrain:
 3. Keep hill plateau and entrance paths connected.
 4. Add tests for the exact walkability contract.
 
+## Directly Controlled Commander
+
+The navigation grid is sized for formations: whole cells are blocked around
+structures, trees, boulders and ore so that a marching body of troops keeps
+clear of them. A directly controlled commander is one person and must not
+inherit that margin, so `CommanderControlController` does not path — it moves a
+body:
+
+- Terrain walkability (water, mountains, hill access) still comes from the grid
+  and is shared with the RTS rules.
+- Structures are tested against their real footprint, not their grid padding.
+- Scatter props are tested as a circle around the prop rather than as the whole
+  cell they occupy, so a person can walk between trees that a formation routes
+  around.
+- A blocked step is resolved by dropping the blocked axis and keeping the free
+  one, so the commander slides along an obstacle instead of stopping in front of
+  it with the stick still pushed.
+
+`rpg_obstacle_slide` and `rpg_close_quarters` in the arena catalog are the
+regression contracts for this. Anything that makes the commander's clearance
+match the formation grid again will fail them.
+
 When changing movement behavior:
 
 1. Use `CommandService` shared queries instead of duplicating terrain/pathfinder checks.
