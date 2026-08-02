@@ -112,6 +112,9 @@ inline constexpr char k_carthage_trade_town_id[] = "carthage_trade_town";
 inline constexpr char k_architecture_and_props_showcase_id[] =
     "architecture_and_props_showcase";
 inline constexpr char k_world_prop_lineup_id[] = "world_prop_lineup";
+inline constexpr char k_sanctuary_precinct_day_id[] = "sanctuary_precinct_day";
+inline constexpr char k_sanctuary_precinct_night_id[] = "sanctuary_precinct_night";
+inline constexpr char k_sanctuary_precinct_storm_id[] = "sanctuary_precinct_storm";
 inline constexpr char k_roman_fortification_showcase_id[] =
     "roman_fortification_showcase";
 inline constexpr char k_carthage_fortification_showcase_id[] =

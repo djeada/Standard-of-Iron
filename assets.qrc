@@ -97,6 +97,8 @@
         <file>assets/shaders/weapon_rack_instanced.vert</file>
         <file>assets/shaders/ruins_instanced.frag</file>
         <file>assets/shaders/ruins_instanced.vert</file>
+        <file>assets/shaders/statue_instanced.frag</file>
+        <file>assets/shaders/statue_instanced.vert</file>
         <file>assets/shaders/dead_tree_instanced.frag</file>
         <file>assets/shaders/dead_tree_instanced.vert</file>
         <file>assets/shaders/iron_ore_instanced.frag</file>

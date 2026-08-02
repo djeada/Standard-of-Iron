@@ -58,6 +58,9 @@ PropPanel::PropPanel(QWidget* parent)
   add_prop_button(m_prop_group, button_grid, 4, 0, "Pine Tree", "pine_tree");
   add_prop_button(m_prop_group, button_grid, 4, 1, "Olive Tree", "olive_tree");
   add_prop_button(m_prop_group, button_grid, 5, 0, "Plant", "plant");
+  add_prop_button(m_prop_group, button_grid, 5, 1, "Iron Ore", "iron_ore");
+  add_prop_button(m_prop_group, button_grid, 6, 0, "Abandoned Home", "abandoned_home");
+  add_prop_button(m_prop_group, button_grid, 6, 1, "Statue", "statue");
   placement_layout->addLayout(button_grid);
 
   auto* hint = new QLabel("Click the arena to set an anchor, then place the "

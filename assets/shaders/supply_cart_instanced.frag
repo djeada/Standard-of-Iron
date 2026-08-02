@@ -26,11 +26,11 @@ void main() {
   vec3 V = normalize(vec3(0.0, 0.86, 0.52));
   vec3 H = normalize(L + V);
 
-  float wheel_x = smoothstep(0.67, 0.72, abs(v_local_pos.x)) *
-                  (1.0 - smoothstep(0.86, 0.90, abs(v_local_pos.x)));
+  float wheel_x = smoothstep(0.71, 0.755, abs(v_local_pos.x)) *
+                  (1.0 - smoothstep(0.90, 0.94, abs(v_local_pos.x)));
   float rear = step(0.0, v_local_pos.z);
-  vec2 wheel_center = mix(vec2(0.24, -0.48), vec2(0.30, 0.42), rear);
-  float wheel_radius = mix(0.22, 0.28, rear);
+  vec2 wheel_center = mix(vec2(0.26, -0.50), vec2(0.34, 0.44), rear);
+  float wheel_radius = mix(0.26, 0.34, rear);
   float radial = length(v_local_pos.yz - wheel_center);
   float wheel_mask =
       wheel_x * (1.0 - smoothstep(wheel_radius + 0.01, wheel_radius + 0.045, radial));

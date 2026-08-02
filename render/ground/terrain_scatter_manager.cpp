@@ -6,6 +6,7 @@
 
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain_service.h"
+#include "../ground/abandoned_home_renderer.h"
 #include "../ground/biome_renderer.h"
 #include "../ground/boulder_renderer.h"
 #include "../ground/dead_tree_renderer.h"
@@ -16,6 +17,7 @@
 #include "../ground/pine_renderer.h"
 #include "../ground/plant_renderer.h"
 #include "../ground/ruins_renderer.h"
+#include "../ground/statue_renderer.h"
 #include "../ground/stone_renderer.h"
 #include "../ground/supply_cart_renderer.h"
 #include "../ground/tent_renderer.h"
@@ -57,6 +59,8 @@ TerrainScatterManager::TerrainScatterManager()
     , m_boulder(std::make_unique<BoulderRenderer>())
     , m_iron_ore(std::make_unique<IronOreRenderer>())
     , m_magic_shrine(std::make_unique<MagicShrineRenderer>())
+    , m_abandoned_home(std::make_unique<AbandonedHomeRenderer>())
+    , m_statue(std::make_unique<StatueRenderer>())
     , m_passes{m_biome.get(),
                m_stone.get(),
                m_plant.get(),
@@ -70,7 +74,9 @@ TerrainScatterManager::TerrainScatterManager()
                m_dead_tree.get(),
                m_boulder.get(),
                m_iron_ore.get(),
-               m_magic_shrine.get()} {
+               m_magic_shrine.get(),
+               m_abandoned_home.get(),
+               m_statue.get()} {
 }
 
 TerrainScatterManager::~TerrainScatterManager() = default;
@@ -114,6 +120,8 @@ void TerrainScatterManager::configure(
                        m_use_world_props_exclusively);
   m_iron_ore->configure(height_map, biome_settings, runtime_world_props);
   m_magic_shrine->configure(height_map, biome_settings, runtime_world_props);
+  m_abandoned_home->configure(height_map, biome_settings, runtime_world_props);
+  m_statue->configure(height_map, biome_settings, runtime_world_props);
 }
 
 void TerrainScatterManager::refresh_runtime_world_props(
@@ -160,6 +168,8 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   m_boulder->set_light_direction(dir);
   m_iron_ore->set_light_direction(dir);
   m_magic_shrine->set_light_direction(dir);
+  m_abandoned_home->set_light_direction(dir);
+  m_statue->set_light_direction(dir);
 }
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
@@ -200,6 +210,8 @@ void TerrainScatterManager::clear() {
   m_boulder->clear();
   m_iron_ore->clear();
   m_magic_shrine->clear();
+  m_abandoned_home->clear();
+  m_statue->clear();
 }
 
 void TerrainScatterManager::refresh_grass() {
@@ -215,7 +227,8 @@ auto TerrainScatterManager::is_gpu_ready() const -> bool {
          m_supply_cart->is_gpu_ready() && m_weapon_rack->is_gpu_ready() &&
          m_ruins->is_gpu_ready() && m_dead_tree->is_gpu_ready() &&
          m_boulder->is_gpu_ready() && m_iron_ore->is_gpu_ready() &&
-         m_magic_shrine->is_gpu_ready();
+         m_magic_shrine->is_gpu_ready() && m_abandoned_home->is_gpu_ready() &&
+         m_statue->is_gpu_ready();
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer* {
@@ -272,6 +285,14 @@ auto TerrainScatterManager::iron_ore() const -> IronOreRenderer* {
 
 auto TerrainScatterManager::magic_shrine() const -> MagicShrineRenderer* {
   return m_magic_shrine.get();
+}
+
+auto TerrainScatterManager::abandoned_home() const -> AbandonedHomeRenderer* {
+  return m_abandoned_home.get();
+}
+
+auto TerrainScatterManager::statue() const -> StatueRenderer* {
+  return m_statue.get();
 }
 
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
@@ -374,7 +395,21 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
            m_magic_shrine != nullptr ? m_magic_shrine->instance_count() : 0U,
            m_magic_shrine == nullptr || m_magic_shrine->is_gpu_ready(),
            m_magic_shrine != nullptr ? m_magic_shrine->last_sync_stats()
-                                     : Render::Ground::Scatter::SyncStats{}}};
+                                     : Render::Ground::Scatter::SyncStats{}},
+          {ScatterSpeciesId::AbandonedHome,
+           ScatterVisibilityMode::InstanceFiltered,
+           m_abandoned_home.get(),
+           m_abandoned_home != nullptr ? m_abandoned_home->instance_count() : 0U,
+           m_abandoned_home == nullptr || m_abandoned_home->is_gpu_ready(),
+           m_abandoned_home != nullptr ? m_abandoned_home->last_sync_stats()
+                                       : Render::Ground::Scatter::SyncStats{}},
+          {ScatterSpeciesId::Statue,
+           ScatterVisibilityMode::InstanceFiltered,
+           m_statue.get(),
+           m_statue != nullptr ? m_statue->instance_count() : 0U,
+           m_statue == nullptr || m_statue->is_gpu_ready(),
+           m_statue != nullptr ? m_statue->last_sync_stats()
+                               : Render::Ground::Scatter::SyncStats{}}};
 }
 
 auto TerrainScatterManager::last_sync_stats() const
@@ -423,6 +458,12 @@ auto TerrainScatterManager::last_sync_stats() const
   }
   if (m_magic_shrine != nullptr) {
     stats += m_magic_shrine->last_sync_stats();
+  }
+  if (m_abandoned_home != nullptr) {
+    stats += m_abandoned_home->last_sync_stats();
+  }
+  if (m_statue != nullptr) {
+    stats += m_statue->last_sync_stats();
   }
   return stats;
 }

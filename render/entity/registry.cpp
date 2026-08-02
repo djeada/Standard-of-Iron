@@ -32,6 +32,7 @@
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
+#include "temple_renderer.h"
 #include "wall_renderer.h"
 
 namespace Render::GL {
@@ -118,6 +119,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   register_wall_renderer(registry);
 
   register_marketplace_renderer(registry);
+  register_temple_renderer(registry);
 }
 
 } // namespace Render::GL

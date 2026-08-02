@@ -214,6 +214,7 @@ add_library(
     units/defense_tower.cpp
     units/home.cpp
     units/marketplace.cpp
+    units/temple.cpp
     units/wall_segment.cpp
     units/wall_gate.cpp
     systems/home_system.cpp
