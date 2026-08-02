@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "../game/accessibility/team_identity.h"
 #include "../game/map/render_visibility_rules.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
@@ -200,6 +201,14 @@ public:
                       float alpha_outer,
                       const QVector3D& color) override {
     m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
+  }
+
+  void selection_ring_styled(const QMatrix4x4& model,
+                             float alpha_inner,
+                             float alpha_outer,
+                             const QVector3D& color,
+                             Game::Accessibility::TeamPattern pattern) override {
+    m_inner.selection_ring_styled(model, alpha_inner, alpha_outer, color, pattern);
   }
 
   void grid(const QMatrix4x4& model,
@@ -476,6 +485,11 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
     placements.push_back({transform->position.x, transform->position.z, ring_size});
   }
 
+  const auto ring_pattern =
+      Game::Accessibility::TeamIdentity::patterns_enabled() && unit_comp != nullptr
+          ? Game::Accessibility::TeamIdentity::pattern_for_slot(unit_comp->owner_id)
+          : Game::Accessibility::TeamPattern::Solid;
+
   auto& terrain_service = Game::Map::TerrainService::instance();
   for (const SelectionRingPlacement& placement : placements) {
     QVector3D const grounded_center = terrain_service.resolve_surface_world_position(
@@ -490,9 +504,11 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
     ring_model.scale(placement.ring_size, 1.0F, placement.ring_size);
 
     if (selected) {
-      selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
+      selection_ring_styled(
+          ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F), ring_pattern);
     } else if (hovered) {
-      selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
+      selection_ring_styled(
+          ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F), ring_pattern);
     }
   }
 }

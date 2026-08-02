@@ -58,8 +58,24 @@ void wait_for_saves(SaveLoadService& service) {
 
 class SaveLoadServiceTest : public ::testing::Test {
 protected:
-  static void SetUpTestSuite() { QStandardPaths::setTestModeEnabled(true); }
-  static void TearDownTestSuite() { QStandardPaths::setTestModeEnabled(false); }
+  static void SetUpTestSuite() {
+    QStandardPaths::setTestModeEnabled(true);
+
+    s_saved_application_name = QCoreApplication::applicationName();
+    const QString base = s_saved_application_name.isEmpty()
+                             ? QStringLiteral("StandardOfIron")
+                             : s_saved_application_name;
+    QCoreApplication::setApplicationName(QStringLiteral("%1-save-tests-%2")
+                                             .arg(base)
+                                             .arg(QCoreApplication::applicationPid()));
+  }
+
+  static void TearDownTestSuite() {
+    QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+        .removeRecursively();
+    QCoreApplication::setApplicationName(s_saved_application_name);
+    QStandardPaths::setTestModeEnabled(false);
+  }
 
   void SetUp() override {
     QDir(SaveLoadService::saves_directory()).removeRecursively();
@@ -75,7 +91,11 @@ protected:
   }
 
   std::unique_ptr<SaveLoadService> service;
+
+  static QString s_saved_application_name;
 };
+
+QString SaveLoadServiceTest::s_saved_application_name;
 
 TEST_F(SaveLoadServiceTest, BackgroundSaveReportsProgressAndCompletes) {
   int progress_events = 0;

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "../accessibility/team_identity.h"
 #include "../session/session_context.h"
 
 namespace {
@@ -80,23 +81,8 @@ auto OwnerRegistry::register_owner(OwnerType type, const std::string& name) -> i
   info.type = type;
   info.name = name.empty() ? ("Owner" + std::to_string(owner_id)) : name;
 
-  switch (owner_id) {
-  case 1:
-    info.color = {0.20F, 0.55F, 1.00F};
-    break;
-  case 2:
-    info.color = {1.00F, 0.30F, 0.30F};
-    break;
-  case 3:
-    info.color = {0.20F, 0.80F, 0.40F};
-    break;
-  case 4:
-    info.color = {1.00F, 0.80F, 0.20F};
-    break;
-  default:
-    info.color = {0.8F, 0.9F, 1.0F};
-    break;
-  }
+  info.color = Game::Accessibility::TeamIdentity::color_for_slot(owner_id);
+  info.color_is_default = true;
 
   size_t const index = m_owners.size();
   m_owners.push_back(info);
@@ -117,23 +103,8 @@ void OwnerRegistry::register_owner_with_id(int owner_id,
   info.type = type;
   info.name = name.empty() ? ("Owner" + std::to_string(owner_id)) : name;
 
-  switch (owner_id) {
-  case 1:
-    info.color = {0.20F, 0.55F, 1.00F};
-    break;
-  case 2:
-    info.color = {1.00F, 0.30F, 0.30F};
-    break;
-  case 3:
-    info.color = {0.20F, 0.80F, 0.40F};
-    break;
-  case 4:
-    info.color = {1.00F, 0.80F, 0.20F};
-    break;
-  default:
-    info.color = {0.8F, 0.9F, 1.0F};
-    break;
-  }
+  info.color = Game::Accessibility::TeamIdentity::color_for_slot(owner_id);
+  info.color_is_default = true;
 
   size_t const index = m_owners.size();
   m_owners.push_back(info);
@@ -285,16 +256,26 @@ void OwnerRegistry::set_owner_color(int owner_id, float r, float g, float b) {
   auto it = m_owner_id_to_index.find(owner_id);
   if (it != m_owner_id_to_index.end()) {
     m_owners[it->second].color = {r, g, b};
+    m_owners[it->second].color_is_default = false;
   }
 }
 
 auto OwnerRegistry::get_owner_color(int owner_id) const -> std::array<float, 3> {
   auto it = m_owner_id_to_index.find(owner_id);
-  if (it != m_owner_id_to_index.end()) {
-    return m_owners[it->second].color;
+  if (it == m_owner_id_to_index.end()) {
+    return Defaults::k_default_owner_color;
   }
 
-  return {0.8F, 0.9F, 1.0F};
+  const auto& owner = m_owners[it->second];
+  if (owner.color_is_default) {
+    return Game::Accessibility::TeamIdentity::color_for_slot(owner_id);
+  }
+  return owner.color;
+}
+
+auto OwnerRegistry::get_owner_pattern(int owner_id) const
+    -> Game::Accessibility::TeamPattern {
+  return Game::Accessibility::TeamIdentity::pattern_for_slot(owner_id);
 }
 
 auto OwnerRegistry::to_json() const -> QJsonObject {
@@ -310,6 +291,7 @@ auto OwnerRegistry::to_json() const -> QJsonObject {
     owner_obj["name"] = QString::fromStdString(owner.name);
     owner_obj["team_id"] = owner.team_id;
     owner_obj["color"] = color_to_json(owner.color);
+    owner_obj["color_is_default"] = owner.color_is_default;
     owners_array.append(owner_obj);
   }
 
@@ -343,6 +325,8 @@ void OwnerRegistry::from_json(const QJsonObject& json) {
     info.team_id = owner_obj["team_id"].toInt(0);
     if (owner_obj.contains("color")) {
       info.color = color_from_json(owner_obj["color"].toArray());
+
+      info.color_is_default = owner_obj["color_is_default"].toBool(false);
     }
 
     const size_t index = m_owners.size();

@@ -16,6 +16,7 @@
 #include <variant>
 #include <vector>
 
+#include "../game/accessibility/team_identity.h"
 #include "decoration_gpu.h"
 #include "draw_part.h"
 #include "frame_budget.h"
@@ -206,6 +207,8 @@ struct SelectionRingCmd {
   QVector3D color{0, 0, 0};
   float alpha_inner = 0.6F;
   float alpha_outer = 0.25F;
+
+  Game::Accessibility::TeamPattern pattern{Game::Accessibility::TeamPattern::Solid};
   CommandPriority priority{CommandPriority::Critical};
 };
 

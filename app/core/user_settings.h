@@ -30,6 +30,13 @@ inline constexpr char kUiReducedMotionKey[] = "ui/reduced_motion";
 inline constexpr char kUiHighContrastKey[] = "ui/high_contrast";
 inline constexpr char kUiColorVisionKey[] = "ui/color_vision_mode";
 inline constexpr char kUiKeyboardFocusKey[] = "ui/always_show_focus";
+inline constexpr char kUiTeamPatternsKey[] = "ui/team_patterns";
+inline constexpr char kUiEdgeScrollKey[] = "ui/edge_scroll_enabled";
+inline constexpr char kUiEdgeScrollSensitivityKey[] = "ui/edge_scroll_sensitivity";
+inline constexpr char kUiCameraMotionKey[] = "ui/camera_motion_scale";
+inline constexpr char kUiDamageNumbersKey[] = "ui/damage_numbers";
+inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
+inline constexpr char kInputBindingsGroup[] = "input/bindings";
 
 inline constexpr int kDefaultAutosaveSlotCount = 3;
 inline constexpr int kMinAutosaveSlotCount = 1;
@@ -40,6 +47,13 @@ inline constexpr int kMaxAutosaveIntervalMinutes = 60;
 inline constexpr double kDefaultUiScale = 1.0;
 inline constexpr double kMinUiScale = 0.75;
 inline constexpr double kMaxUiScale = 2.0;
+
+inline constexpr double kDefaultEdgeScrollSensitivity = 1.0;
+inline constexpr double kMinEdgeScrollSensitivity = 0.25;
+inline constexpr double kMaxEdgeScrollSensitivity = 2.0;
+
+inline constexpr double kDefaultCameraMotionScale = 1.0;
+inline constexpr double kDefaultScreenEffectIntensity = 1.0;
 
 using AudioVolumes = Game::Audio::Settings::Volumes;
 
@@ -266,6 +280,131 @@ inline auto load_ui_always_show_focus() -> bool {
 inline void save_ui_always_show_focus(bool enabled) {
   auto settings = open();
   settings.setValue(QString::fromLatin1(kUiKeyboardFocusKey), enabled);
+  settings.sync();
+}
+
+namespace Detail {
+
+inline auto load_bounded_double(const char* key,
+                                double fallback,
+                                double minimum,
+                                double maximum) -> double {
+  auto settings = open();
+  const QVariant value = settings.value(QString::fromLatin1(key));
+  if (!value.isValid()) {
+    return fallback;
+  }
+
+  bool ok = false;
+  const double stored = value.toDouble(&ok);
+  if (!ok || !(stored >= minimum) || !(stored <= maximum)) {
+    qWarning() << "Ignoring out-of-range setting" << key << value;
+    return fallback;
+  }
+  return stored;
+}
+
+inline void
+save_bounded_double(const char* key, double value, double minimum, double maximum) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(key), std::clamp(value, minimum, maximum));
+  settings.sync();
+}
+
+inline auto load_bool(const char* key, bool fallback) -> bool {
+  auto settings = open();
+  return settings.value(QString::fromLatin1(key), fallback).toBool();
+}
+
+inline void save_bool(const char* key, bool value) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(key), value);
+  settings.sync();
+}
+
+} // namespace Detail
+
+inline auto load_ui_team_patterns() -> bool {
+  return Detail::load_bool(kUiTeamPatternsKey, false);
+}
+
+inline void save_ui_team_patterns(bool enabled) {
+  Detail::save_bool(kUiTeamPatternsKey, enabled);
+}
+
+inline auto load_ui_edge_scroll_enabled() -> bool {
+  return Detail::load_bool(kUiEdgeScrollKey, true);
+}
+
+inline void save_ui_edge_scroll_enabled(bool enabled) {
+  Detail::save_bool(kUiEdgeScrollKey, enabled);
+}
+
+inline auto load_ui_edge_scroll_sensitivity() -> double {
+  return Detail::load_bounded_double(kUiEdgeScrollSensitivityKey,
+                                     kDefaultEdgeScrollSensitivity,
+                                     kMinEdgeScrollSensitivity,
+                                     kMaxEdgeScrollSensitivity);
+}
+
+inline void save_ui_edge_scroll_sensitivity(double sensitivity) {
+  Detail::save_bounded_double(kUiEdgeScrollSensitivityKey,
+                              sensitivity,
+                              kMinEdgeScrollSensitivity,
+                              kMaxEdgeScrollSensitivity);
+}
+
+inline auto load_ui_camera_motion_scale() -> double {
+  return Detail::load_bounded_double(
+      kUiCameraMotionKey, kDefaultCameraMotionScale, 0.0, 1.0);
+}
+
+inline void save_ui_camera_motion_scale(double scale) {
+  Detail::save_bounded_double(kUiCameraMotionKey, scale, 0.0, 1.0);
+}
+
+inline auto load_ui_damage_numbers() -> bool {
+  return Detail::load_bool(kUiDamageNumbersKey, true);
+}
+
+inline void save_ui_damage_numbers(bool enabled) {
+  Detail::save_bool(kUiDamageNumbersKey, enabled);
+}
+
+inline auto load_ui_screen_effect_intensity() -> double {
+  return Detail::load_bounded_double(
+      kUiScreenEffectsKey, kDefaultScreenEffectIntensity, 0.0, 1.0);
+}
+
+inline void save_ui_screen_effect_intensity(double intensity) {
+  Detail::save_bounded_double(kUiScreenEffectsKey, intensity, 0.0, 1.0);
+}
+
+inline auto load_input_binding(const QString& action_id) -> QString {
+  auto settings = open();
+  settings.beginGroup(QString::fromLatin1(kInputBindingsGroup));
+  const QString stored = settings.value(action_id).toString();
+  settings.endGroup();
+  return stored;
+}
+
+inline void save_input_binding(const QString& action_id, const QString& shortcut) {
+  auto settings = open();
+  settings.beginGroup(QString::fromLatin1(kInputBindingsGroup));
+  if (shortcut.isEmpty()) {
+    settings.remove(action_id);
+  } else {
+    settings.setValue(action_id, shortcut);
+  }
+  settings.endGroup();
+  settings.sync();
+}
+
+inline void clear_input_bindings() {
+  auto settings = open();
+  settings.beginGroup(QString::fromLatin1(kInputBindingsGroup));
+  settings.remove(QString());
+  settings.endGroup();
   settings.sync();
 }
 

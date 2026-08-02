@@ -10,6 +10,7 @@
 #include <numbers>
 #include <vector>
 
+#include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -1791,7 +1792,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   set_view_pitch(m_view_pitch);
 
-  const float bob_amp_target = (m_move_speed > 0.05F) ? 1.0F : 0.0F;
+  const float motion_scale = Game::Accessibility::MotionSettings::camera_motion_scale();
+
+  const float bob_amp_target = (m_move_speed > 0.05F) ? motion_scale : 0.0F;
   m_bob_amplitude += (bob_amp_target - m_bob_amplitude) *
                      (1.0F - std::exp(-k_bob_decay * std::max(dt, 0.0F)));
   if (m_move_speed > 0.05F) {
@@ -1805,10 +1808,11 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
       std::sin(m_bob_phase * 0.5F) * k_bob_lat_amp * bob_run_factor * m_bob_amplitude;
 
   m_breath_phase += k_breath_freq * 2.0F * k_pi * std::max(dt, 0.0F);
-  const float breath_idle = 1.0F - m_bob_amplitude;
+  const float breath_idle = motion_scale - m_bob_amplitude;
   const float breath_v = std::sin(m_breath_phase) * k_breath_vert_amp * breath_idle;
 
-  const float lean_target = -static_cast<float>(m_move_right_axis) * k_lean_max_deg;
+  const float lean_target =
+      -static_cast<float>(m_move_right_axis) * k_lean_max_deg * motion_scale;
   m_strafe_lean += (lean_target - m_strafe_lean) *
                    (1.0F - std::exp(-k_lean_follow * std::max(dt, 0.0F)));
 

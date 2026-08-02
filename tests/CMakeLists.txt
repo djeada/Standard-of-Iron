@@ -226,6 +226,7 @@ add_executable(
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/selection_ring_mesh_test.cpp
+    render/selection_ring_pattern_test.cpp
     render/arrow_cloud_render_test.cpp
     render/orientation_arrow_mesh_test.cpp
     render/creature/rigged_mesh_asset_test.cpp
@@ -285,6 +286,8 @@ add_executable(
     core/runtime_frame_orchestrator_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
+    ui/input_bindings_test.cpp
+    ui/team_identity_test.cpp
     ui/selection_grouping_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
