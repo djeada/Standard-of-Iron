@@ -1,7 +1,11 @@
 #include "formation_doctrine.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <utility>
+
+#include "game/util/asset_text.h"
 
 namespace Game::Formation {
 
@@ -238,7 +242,7 @@ auto FormationDoctrine::supports(ArmyFormationIntent intent) const -> bool {
 auto make_neutral_doctrine() -> FormationDoctrine {
   FormationDoctrine doctrine;
   doctrine.id = k_neutral_doctrine;
-  doctrine.display_name = "Neutral";
+  doctrine.display_name = QT_TRANSLATE_NOOP("Formation", "Neutral");
   doctrine.default_intent = ArmyFormationIntent::Line;
 
   DoctrineIntentTemplate line;
@@ -290,7 +294,7 @@ auto make_neutral_doctrine() -> FormationDoctrine {
 auto make_rome_doctrine() -> FormationDoctrine {
   FormationDoctrine doctrine;
   doctrine.id = "rome";
-  doctrine.display_name = "Roman Republic";
+  doctrine.display_name = QT_TRANSLATE_NOOP("Formation", "Roman Republic");
   doctrine.default_intent = ArmyFormationIntent::Line;
 
   DoctrineIntentTemplate battle_line;
@@ -386,8 +390,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   siege_escort.frontage_scale = 0.9F;
   siege_escort.depth_scale = 1.35F;
   siege_escort.required_roles = k_any_siege;
-  siege_escort.requirement_hint =
-      "Requires at least one siege engine in the selection.";
+  siege_escort.requirement_hint = QT_TRANSLATE_NOOP(
+      "Formation", "Requires at least one siege engine in the selection.");
   for (auto& rule : siege_escort.lines) {
     if (rule.role == ArmyRole::Siege) {
       rule.front_offset_scale = -0.2F;
@@ -405,8 +409,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   encirclement.depth_scale = 0.7F;
   encirclement.default_flank = FlankPreference::Split;
   encirclement.required_roles = k_any_cavalry;
-  encirclement.requirement_hint =
-      "Requires cavalry or mounted troops to close the encirclement.";
+  encirclement.requirement_hint = QT_TRANSLATE_NOOP(
+      "Formation", "Requires cavalry or mounted troops to close the encirclement.");
   for (auto& rule : encirclement.lines) {
     if (rule.placement == LinePlacement::SplitFlanks) {
       rule.flank_gap_scale = 3.4F;
@@ -421,7 +425,7 @@ auto make_rome_doctrine() -> FormationDoctrine {
 auto make_carthage_doctrine() -> FormationDoctrine {
   FormationDoctrine doctrine;
   doctrine.id = "carthage";
-  doctrine.display_name = "Carthage";
+  doctrine.display_name = QT_TRANSLATE_NOOP("Formation", "Carthage");
   doctrine.default_intent = ArmyFormationIntent::Line;
 
   DoctrineIntentTemplate battle_line;
@@ -513,8 +517,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   encirclement.depth_scale = 0.65F;
   encirclement.default_flank = FlankPreference::Split;
   encirclement.required_roles = k_any_cavalry;
-  encirclement.requirement_hint =
-      "Requires cavalry or mounted troops to close the encirclement.";
+  encirclement.requirement_hint = QT_TRANSLATE_NOOP(
+      "Formation", "Requires cavalry or mounted troops to close the encirclement.");
   for (auto& rule : encirclement.lines) {
     if (rule.placement == LinePlacement::SplitFlanks) {
       rule.flank_gap_scale = 3.8F;
@@ -529,8 +533,8 @@ auto make_carthage_doctrine() -> FormationDoctrine {
   siege_escort.frontage_scale = 1.05F;
   siege_escort.depth_scale = 1.30F;
   siege_escort.required_roles = k_any_siege;
-  siege_escort.requirement_hint =
-      "Requires at least one siege engine in the selection.";
+  siege_escort.requirement_hint = QT_TRANSLATE_NOOP(
+      "Formation", "Requires at least one siege engine in the selection.");
   for (auto& rule : siege_escort.lines) {
     if (rule.role == ArmyRole::Siege) {
       rule.line_gap_scale = 1.5F;
@@ -547,7 +551,7 @@ auto make_carthage_doctrine() -> FormationDoctrine {
 auto make_iron_sepulcher_doctrine() -> FormationDoctrine {
   FormationDoctrine doctrine;
   doctrine.id = "iron_sepulcher";
-  doctrine.display_name = "The Iron Sepulcher";
+  doctrine.display_name = QT_TRANSLATE_NOOP("Formation", "The Iron Sepulcher");
   doctrine.default_intent = ArmyFormationIntent::Defensive;
 
   DoctrineIntentTemplate burial_guard;
@@ -623,8 +627,8 @@ auto make_iron_sepulcher_doctrine() -> FormationDoctrine {
   siege_escort.intent = ArmyFormationIntent::SiegeEscort;
   siege_escort.depth_scale = 1.50F;
   siege_escort.required_roles = k_any_siege;
-  siege_escort.requirement_hint =
-      "Requires at least one siege engine in the selection.";
+  siege_escort.requirement_hint = QT_TRANSLATE_NOOP(
+      "Formation", "Requires at least one siege engine in the selection.");
   doctrine.intents[static_cast<int>(ArmyFormationIntent::SiegeEscort)] = siege_escort;
 
   return doctrine;
@@ -687,22 +691,31 @@ auto DoctrineRegistry::availability_reason(const FormationDoctrineId& doctrine_i
                                            ArmyFormationIntent intent,
                                            RoleTagSet available_roles,
                                            int member_count) const -> std::string {
+
   if (member_count <= 0) {
-    return "No units selected.";
+    return QCoreApplication::translate("Formation", "No units selected.").toStdString();
   }
   const auto& doctrine = get_or_neutral(doctrine_id);
   const auto* tmpl = doctrine.resolve_template(intent);
   if (tmpl == nullptr) {
-    return std::string(doctrine.display_name) + " has no template for this intent.";
+    return QCoreApplication::translate("Formation",
+                                       "%1 has no template for this intent.")
+        .arg(Util::tr_asset(Util::k_formations_context, doctrine.display_name))
+        .toStdString();
   }
   if (tmpl->required_roles != 0U &&
       !has_any_role(available_roles, tmpl->required_roles)) {
     return tmpl->requirement_hint.empty()
-               ? "The selection lacks the troop types this formation needs."
-               : tmpl->requirement_hint;
+               ? QCoreApplication::translate(
+                     "Formation",
+                     "The selection lacks the troop types this formation needs.")
+                     .toStdString()
+               : Util::tr_asset_std(Util::k_formations_context, tmpl->requirement_hint);
   }
   if (intent == ArmyFormationIntent::Encirclement && member_count < 3) {
-    return "Encirclement needs at least three units.";
+    return QCoreApplication::translate("Formation",
+                                       "Encirclement needs at least three units.")
+        .toStdString();
   }
   return {};
 }

@@ -7,6 +7,7 @@
 #include <qtmetamacros.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "../core/component.h"
@@ -19,6 +20,23 @@
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
+
+namespace {
+
+void play_selection_cue(std::size_t selected_count) {
+  if (selected_count == 0) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
+      selected_count > 1 ? "ui.select_group" : "ui.select_unit"));
+}
+
+void play_deselect_cue() {
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent("ui.deselect"));
+}
+
+} // namespace
 
 SelectionController::SelectionController(Engine::Core::World* world,
                                          SelectionSystem* selection_system,
@@ -60,6 +78,7 @@ void SelectionController::on_click_select(qreal sx,
     }
     m_selection_system->select_unit(picked);
     sync_selection_flags();
+    play_selection_cue(m_selection_system->get_selected_units().size());
     emit selection_changed();
     return;
   }
@@ -67,6 +86,7 @@ void SelectionController::on_click_select(qreal sx,
   if (!additive && !m_selection_system->get_selected_units().empty()) {
     m_selection_system->clear_selection();
     sync_selection_flags();
+    play_deselect_cue();
     emit selection_changed();
   }
 }
@@ -85,6 +105,7 @@ void SelectionController::on_area_selected(qreal x1,
     return;
   }
 
+  const bool had_selection = !m_selection_system->get_selected_units().empty();
   if (!additive) {
     m_selection_system->clear_selection();
   }
@@ -103,6 +124,13 @@ void SelectionController::on_area_selected(qreal x1,
     m_selection_system->select_unit(id);
   }
   sync_selection_flags();
+  if (picked.empty()) {
+    if (had_selection && !additive) {
+      play_deselect_cue();
+    }
+  } else {
+    play_selection_cue(m_selection_system->get_selected_units().size());
+  }
   emit selection_changed();
 }
 
@@ -110,8 +138,12 @@ void SelectionController::on_right_click_clear_selection() {
   if (m_selection_system == nullptr) {
     return;
   }
+  const bool had_selection = !m_selection_system->get_selected_units().empty();
   m_selection_system->clear_selection();
   sync_selection_flags();
+  if (had_selection) {
+    play_deselect_cue();
+  }
   emit selection_changed();
 }
 
@@ -141,6 +173,7 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
   }
 
   sync_selection_flags();
+  play_selection_cue(m_selection_system->get_selected_units().size());
   emit selection_changed();
 }
 
@@ -163,6 +196,7 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
   m_selection_system->clear_selection();
   m_selection_system->select_unit(id);
   sync_selection_flags();
+  play_selection_cue(m_selection_system->get_selected_units().size());
   emit selection_changed();
 }
 
@@ -197,6 +231,7 @@ void SelectionController::select_selected_units_by_type(const QString& unit_type
     m_selection_system->select_unit(id);
   }
   sync_selection_flags();
+  play_selection_cue(m_selection_system->get_selected_units().size());
   emit selection_changed();
 }
 

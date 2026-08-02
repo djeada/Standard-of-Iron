@@ -83,6 +83,7 @@ target_link_libraries(
         engine_core
         render_gl
         game_systems
+        audio_system
         arena_scenario_harness
         arena_panels
 )
@@ -145,4 +146,7 @@ add_custom_target(arena_shader_includes DEPENDS ${_arena_shader_include_outputs}
 add_dependencies(arena_shaders arena_shader_includes)
 add_dependencies(arena_app arena_shaders)
 
-install(TARGETS arena_app RUNTIME DESTINATION .)
+# The arena is a development playground, not something a player needs. Keep it
+# out of the default install so release packages stay to the game itself; fetch
+# it deliberately with `cmake --install <dir> --component tools`.
+install(TARGETS arena_app RUNTIME DESTINATION . COMPONENT tools EXCLUDE_FROM_ALL)

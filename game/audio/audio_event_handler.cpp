@@ -391,6 +391,10 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
   }
 
   play_cue(Cue::k_combat_death);
+
+  if (m_local_owner_id != 0 && event.owner_id == m_local_owner_id) {
+    play_cue(Cue::k_alert_unit_lost);
+  }
 }
 
 void AudioEventHandler::on_ambient_state_changed(

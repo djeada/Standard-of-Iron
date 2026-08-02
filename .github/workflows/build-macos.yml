@@ -103,6 +103,10 @@ jobs:
           "${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}" \
             --renderer-self-test 2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+          # Music and ambience are read from assets/ rather than embedded in
+          # the binary, so a package that loses that directory renders fine and
+          # is simply mute. The self-test reports on it; fail the release here.
+          grep -q "SOI_AUDIO_SELF_TEST: PASS" renderer_self_test.log
 
       - name: Create DMG
         id: package

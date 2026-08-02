@@ -1281,20 +1281,21 @@
     },
     {
       "id": "ui.hover.soft",
-      "path": "sfx/alerts/low_resources_click.ogg",
+      "path": "sfx/ui/hover_brush.ogg",
       "category": "sfx",
       "volume": 0.4,
       "priority": 4,
-      "cooldown_ms": 90,
+      "cooldown_ms": 60,
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "ui": "hover"
+        "ui": "hover",
+        "source": "synth"
       }
     },
     {
       "id": "ui.click.primary",
-      "path": "sfx/alerts/low_resources_click.ogg",
+      "path": "sfx/ui/click_confirm.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 5,
@@ -1302,7 +1303,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "ui": "click"
+        "ui": "click",
+        "source": "synth"
       }
     },
     {
@@ -1333,6 +1335,1051 @@
       "load_policy": "startup",
       "tags": {
         "alert": "enemy_spotted"
+      }
+    },
+    {
+      "id": "ui.back.synth",
+      "path": "sfx/ui/back_cancel.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.tab_switch.synth",
+      "path": "sfx/ui/tab_slide.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 60,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.panel_open.synth",
+      "path": "sfx/ui/panel_open.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.panel_close.synth",
+      "path": "sfx/ui/panel_close.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.toggle.synth",
+      "path": "sfx/ui/toggle_latch.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.error.synth",
+      "path": "sfx/ui/error_thud.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.notification.synth",
+      "path": "sfx/ui/notification.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_unit.synth",
+      "path": "sfx/ui/select_unit.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_group.synth",
+      "path": "sfx/ui/select_group.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.deselect.synth",
+      "path": "sfx/ui/deselect.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.move",
+      "path": "sfx/orders/move_kit_shuffle.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.attack",
+      "path": "sfx/orders/attack_horn_stab.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.patrol",
+      "path": "sfx/orders/patrol_horn_two_note.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.stop",
+      "path": "sfx/orders/stop_drum.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.hold",
+      "path": "sfx/orders/hold_shields_plant.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.guard",
+      "path": "sfx/orders/guard_spear_taps.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.run",
+      "path": "sfx/orders/run_kit_rattle.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.formation",
+      "path": "sfx/orders/formation_pole_shift.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.formation_placed",
+      "path": "sfx/orders/formation_standard_planted.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.gate_mode",
+      "path": "sfx/orders/gate_bolt_slide.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.rally_set",
+      "path": "sfx/orders/rally_banner_peg.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.placement_begin",
+      "path": "sfx/build/placement_begin.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.placement_confirmed",
+      "path": "sfx/build/placement_confirmed.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.placement_rejected",
+      "path": "sfx/build/placement_rejected.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.construction_started",
+      "path": "sfx/build/construction_started.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.construction_complete",
+      "path": "sfx/build/construction_complete.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.unit_queued",
+      "path": "sfx/build/unit_queued.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.unit_ready",
+      "path": "sfx/build/unit_ready_bell.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.building_destroyed",
+      "path": "sfx/build/building_destroyed.ogg",
+      "category": "sfx",
+      "priority": 8,
+      "cooldown_ms": 600,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.gate_open",
+      "path": "sfx/build/gate_open.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.gate_close",
+      "path": "sfx/build/gate_close.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.alert.objective_complete",
+      "path": "sfx/alerts/objective_complete.ogg",
+      "category": "sfx",
+      "priority": 8,
+      "cooldown_ms": 1000,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.alert.objective_failed",
+      "path": "sfx/alerts/objective_failed.ogg",
+      "category": "sfx",
+      "priority": 8,
+      "cooldown_ms": 1000,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.alert.unit_lost",
+      "path": "sfx/alerts/unit_lost.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 2500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.arrow_launch",
+      "path": "sfx/combat/bow_release_single.ogg",
+      "category": "sfx",
+      "priority": 2,
+      "cooldown_ms": 110,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.charge",
+      "path": "sfx/combat/charge_roar.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 4000,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.siege_launch",
+      "path": "sfx/combat/siege_launch.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.siege_impact",
+      "path": "sfx/combat/siege_impact.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.heal",
+      "path": "sfx/combat/heal_bind_wound.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.guard_raise",
+      "path": "sfx/combat/guard_raise.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 180,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.block",
+      "path": "sfx/combat/shield_block.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.perfect_guard",
+      "path": "sfx/combat/perfect_guard.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.guard_break",
+      "path": "sfx/combat/guard_break.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.dodge",
+      "path": "sfx/combat/dodge_roll.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.jump",
+      "path": "sfx/combat/jump_effort.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.land",
+      "path": "sfx/combat/land_thud.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.shield_bash",
+      "path": "sfx/combat/shield_bash.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.vanguard_rush",
+      "path": "sfx/combat/vanguard_rush.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.second_wind",
+      "path": "sfx/combat/second_wind.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.ability_refused",
+      "path": "sfx/combat/ability_refused.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 350,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.lock_on",
+      "path": "sfx/combat/lock_on_tick.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 150,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.pause",
+      "path": "sfx/state/pause.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.resume",
+      "path": "sfx/state/resume.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.speed_change",
+      "path": "sfx/state/speed_notch.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 150,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.save_complete",
+      "path": "sfx/state/save_complete.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.load_complete",
+      "path": "sfx/state/load_complete.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.commander_enter",
+      "path": "sfx/state/commander_enter.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.state.commander_exit",
+      "path": "sfx/state/commander_exit.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.hover.soft_v2",
+      "path": "sfx/ui/hover_brush_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 60,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.hover.soft_v3",
+      "path": "sfx/ui/hover_brush_v3.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 60,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.click.primary_v2",
+      "path": "sfx/ui/click_confirm_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.click.primary_v3",
+      "path": "sfx/ui/click_confirm_v3.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.back.synth_v2",
+      "path": "sfx/ui/back_cancel_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.tab_switch.synth_v2",
+      "path": "sfx/ui/tab_slide_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 60,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.toggle.synth_v2",
+      "path": "sfx/ui/toggle_latch_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 40,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.error.synth_v2",
+      "path": "sfx/ui/error_thud_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_unit.synth_v2",
+      "path": "sfx/ui/select_unit_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_unit.synth_v3",
+      "path": "sfx/ui/select_unit_v3.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_group.synth_v2",
+      "path": "sfx/ui/select_group_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.select_group.synth_v3",
+      "path": "sfx/ui/select_group_v3.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.deselect.synth_v2",
+      "path": "sfx/ui/deselect_v2.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.move_v2",
+      "path": "sfx/orders/move_kit_shuffle_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.move_v3",
+      "path": "sfx/orders/move_kit_shuffle_v3.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.stop_v2",
+      "path": "sfx/orders/stop_drum_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.hold_v2",
+      "path": "sfx/orders/hold_shields_plant_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.guard_v2",
+      "path": "sfx/orders/guard_spear_taps_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.run_v2",
+      "path": "sfx/orders/run_kit_rattle_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.order.formation_v2",
+      "path": "sfx/orders/formation_pole_shift_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.placement_confirmed_v2",
+      "path": "sfx/build/placement_confirmed_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.placement_rejected_v2",
+      "path": "sfx/build/placement_rejected_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.build.unit_queued_v2",
+      "path": "sfx/build/unit_queued_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.arrow_launch_v2",
+      "path": "sfx/combat/bow_release_single_v2.ogg",
+      "category": "sfx",
+      "priority": 2,
+      "cooldown_ms": 110,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.arrow_launch_v3",
+      "path": "sfx/combat/bow_release_single_v3.ogg",
+      "category": "sfx",
+      "priority": 2,
+      "cooldown_ms": 110,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.guard_raise_v2",
+      "path": "sfx/combat/guard_raise_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 180,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.block_v2",
+      "path": "sfx/combat/shield_block_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.block_v3",
+      "path": "sfx/combat/shield_block_v3.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.perfect_guard_v2",
+      "path": "sfx/combat/perfect_guard_v2.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 120,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.dodge_v2",
+      "path": "sfx/combat/dodge_roll_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.dodge_v3",
+      "path": "sfx/combat/dodge_roll_v3.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.jump_v2",
+      "path": "sfx/combat/jump_effort_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.land_v2",
+      "path": "sfx/combat/land_thud_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.land_v3",
+      "path": "sfx/combat/land_thud_v3.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 250,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.shield_bash_v2",
+      "path": "sfx/combat/shield_bash_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.ability_refused_v2",
+      "path": "sfx/combat/ability_refused_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 350,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.lock_on_v2",
+      "path": "sfx/combat/lock_on_tick_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 150,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
       }
     }
   ]

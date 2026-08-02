@@ -7,6 +7,20 @@ ItemDelegate {
 
     implicitHeight: 42
     hoverEnabled: true
+
+    Connections {
+        function onClicked() {
+            Design.UiSound.activate();
+        }
+
+        function onHoveredChanged() {
+            if (control.hovered && control.enabled)
+                Design.UiSound.hover();
+        }
+
+        target: control
+    }
+
     contentItem: Text {
         text: control.text
         color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled

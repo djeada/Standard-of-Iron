@@ -71,6 +71,9 @@ Design.IronPanel {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        onClicked: root.dismissRequested()
+        onClicked: {
+            Design.UiSound.back();
+            root.dismissRequested();
+        }
     }
 }
