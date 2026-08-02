@@ -778,7 +778,6 @@ TEST(CommanderControlRegressionTest,
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(movement_source.empty());
 
-  // Formatting may wrap the conditional, so assert on the call itself.
   EXPECT_TRUE(contains(controller_source, "airborne_step(nx, nz)"));
   EXPECT_TRUE(contains(controller_source, "jump_active"));
   EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));

@@ -567,18 +567,11 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     bool const has_authored_action =
         presentation->fpv_controlled && presentation->authored_action_id != 0U;
 
-    // The authored timeline is authoritative while the action runs and through
-    // the short tail where the presentation phase machine has not returned to
-    // idle yet.
     bool const authored_timeline_is_authoritative =
         has_authored_action &&
         (presentation->authored_action_running ||
          presentation->combat_phase != Engine::Core::CombatAnimationState::Idle);
 
-    // The clip itself stays selected for as long as any attack pose is drawn,
-    // including the frames where the visual transaction outlives the action, so
-    // the swing settles on its own return-to-guard key instead of popping onto
-    // the generic infantry clip to finish.
     if (has_authored_action && anim.is_melee &&
         anim.attack_family == Engine::Core::CombatAttackFamily::Sword) {
       anim.has_sword_attack_animation = true;
@@ -592,11 +585,6 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
           Game::Systems::CombatActions::find_combat_action_definition(action_id);
       if (definition != nullptr) {
 
-        // The authored action already carries the timeline its clip was keyed
-        // against. Publishing it lets the visual pipeline play the clip on that
-        // timeline instead of re-deriving a phase from the generic windows,
-        // which would never reach the authored contact pose and could not rewind
-        // when one swing is chained into the next.
         anim.authored_action_phase =
             std::clamp(presentation->authored_action_phase, 0.0F, 1.0F);
         anim.has_authored_action_phase = authored_timeline_is_authoritative;

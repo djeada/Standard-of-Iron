@@ -455,10 +455,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       }
     }
 
-    // A player-driven authored swing owns the body for its whole duration. An
-    // incoming blow shakes it through recoil instead of replacing the swing
-    // with a flinch pose; a blow heavy enough to matter cancels the action in
-    // the simulation, which clears the swing here as well.
     bool const authored_swing_owns_body =
         soldier_render_anim.has_authored_action_phase &&
         soldier_render_anim.is_attacking;

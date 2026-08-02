@@ -55,9 +55,7 @@ CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
 OPENING_FADE = 0.6
 
-# Editorial names for the xfade transitions worth reaching for in a battle reel.
-# The value is the ffmpeg transition; ``None`` means a hard cut, which xfade
-# cannot express and which is therefore handled by concatenation instead.
+
 TRANSITIONS = {
     "cut": None,
     "dissolve": "fade",
@@ -417,8 +415,7 @@ def main() -> int:
     ]
     stage = "graded"
     if not args.no_captions:
-        # Type is sized off the shorter edge. Scaling it by width makes a
-        # landscape title so tall that it lands on top of the last caption.
+
         type_base = min(width, height)
         caption_size = max(46, int(type_base * 0.075))
         title_size = max(60, int(type_base * 0.105))
@@ -433,16 +430,13 @@ def main() -> int:
             if not caption:
                 continue
 
-            # Hold the caption clear of the blend either side of it, so it is
-            # never half-dissolved into the neighbouring shot.
             leading = max(0.15, joins[index].seconds)
             trailing = 0.15
             if index + 1 < len(joins):
                 trailing = max(trailing, joins[index + 1].seconds)
             visible_start = start + leading
             visible_end = max(visible_start + 0.6, end - trailing)
-            # The end card owns the frame once it starts; a caption still up
-            # underneath it reads as two overlapping titles.
+
             if has_card and visible_start < card_start:
                 visible_end = min(visible_end, card_start - CAPTION_FADE)
             chain.append(

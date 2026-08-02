@@ -368,8 +368,7 @@ auto main(int argc, char** argv) -> int {
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
   window.viewport()->set_lighting_profile(lighting_profile);
-  // An explicit --time is a deliberate instruction and outranks a scenario
-  // that pins its own hour; --time-of-day stays a default the scenario wins.
+
   if (environment_hour_forced) {
     window.viewport()->set_environment_hour_override(environment_hour);
   } else {

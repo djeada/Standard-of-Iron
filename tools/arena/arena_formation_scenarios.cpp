@@ -1156,12 +1156,6 @@ void add_terrain_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) 
   }
 }
 
-// The capture scenarios behind the formation promo reels. They differ from the
-// acceptance scenarios above in scale and dressing rather than in kind: each is
-// one faction's army large enough to read as an army, put through the army
-// formation layer's own vocabulary -- column, line, defensive, assault,
-// encirclement -- so the finished video shows the system working rather than a
-// battle happening.
 using Intent = Game::Formation::ArmyFormationIntent;
 
 auto form_step(float time,
@@ -1194,10 +1188,7 @@ void dress_for_capture(ArenaScenarioDefinition& scenario, float hour) {
   scenario.graphics_quality = Render::GraphicsQuality::Ultra;
   scenario.arena_floor_half_extent = 40.0F;
   scenario.environment.start_time = hour;
-  // Locked, because a promo records the same scenario once per shot and the
-  // light has to match across the cut. The exposure and fog the profile picks
-  // for the hour are left alone: overriding them is what turned the earlier
-  // capture scenes into murk.
+
   scenario.environment.time_mode = Game::Map::TimeMode::Locked;
 }
 

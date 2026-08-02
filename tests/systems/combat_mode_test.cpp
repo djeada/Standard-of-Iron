@@ -3070,8 +3070,6 @@ auto start_authored_action_at(Entity* entity,
   return action;
 }
 
-// Authored-action tests step the simulation in fractions of the action's own
-// timeline so they keep testing the same event window when a swing is retuned.
 auto action_seconds(Game::Systems::CombatActions::CombatActionId id,
                     float normalized_delta) -> float {
   auto const* definition =
