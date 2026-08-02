@@ -86,6 +86,8 @@ public:
   auto is_boulder(int x, int y) const -> bool;
   auto is_iron_ore(int x, int y) const -> bool;
   auto cell_value(int x, int y) const -> CellValue;
+
+  [[nodiscard]] auto is_terrain_walkable(int x, int y) const -> bool;
   auto is_world_position_walkable(const QVector3D& world_position) const -> bool;
   auto is_world_segment_walkable(const QVector3D& from,
                                  const QVector3D& to) const -> bool;

@@ -420,10 +420,11 @@ TEST(CommanderControlRegressionTest,
   ASSERT_FALSE(fpv_overlay_source.empty());
   ASSERT_FALSE(damage_numbers_source.empty());
 
-  EXPECT_TRUE(contains(fpv_overlay_source, "id: punishPulseRing"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: lockBrackets"));
-  EXPECT_TRUE(contains(fpv_overlay_source, "id: finisherBurst"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: combatFrame"));
+
+  EXPECT_FALSE(contains(fpv_overlay_source, "id: punishPulseRing"));
+  EXPECT_FALSE(contains(fpv_overlay_source, "id: finisherBurst"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: attackSweep"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: dodgeTrail"));
   EXPECT_TRUE(contains(fpv_overlay_source, "id: guardBreakShock"));

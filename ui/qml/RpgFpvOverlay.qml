@@ -271,7 +271,7 @@ Item {
     Item {
         id: combatFrame
         anchors.fill: parent
-        visible: root.status_value("locked_target_name", "") !== "" || root.status_value("is_attacking", false) === true || root.status_value("guard_active", false) === true
+        visible: root.status_value("focus_marker_locked", false) === true || root.status_value("is_attacking", false) === true
         opacity: visible ? (0.22 + Math.min(0.16, Number(root.status_value("combo_step", 0)) * 0.04)) : 0.0
 
         Rectangle {
@@ -417,40 +417,6 @@ Item {
     }
 
     Item {
-        id: punishPulseRing
-        anchors.centerIn: parent
-        width: root.scaled(136)
-        height: width
-        visible: root.status_value("punish_active", false) === true
-        opacity: visible ? 0.7 : 0.0
-
-        Rectangle {
-            anchors.fill: parent
-            radius: width / 2
-            color: "transparent"
-            border.width: 2
-            border.color: "#99ffc84a"
-        }
-
-        SequentialAnimation on scale  {
-            running: punishPulseRing.visible
-            loops: Animation.Infinite
-            NumberAnimation {
-                from: 0.86
-                to: 1.05
-                duration: 320
-                easing.type: Easing.OutQuad
-            }
-            NumberAnimation {
-                from: 1.05
-                to: 0.94
-                duration: 420
-                easing.type: Easing.InOutQuad
-            }
-        }
-    }
-
-    Item {
         id: lockBrackets
 
         readonly property bool lockedOn: root.status_value("focus_marker_locked", false) === true
@@ -523,47 +489,8 @@ Item {
     }
 
     Item {
-        id: finisherBurst
-        anchors.centerIn: parent
-        width: root.scaled(84)
-        height: width
-        visible: root.status_value("finisher_ready", false) === true
-        opacity: visible ? 0.9 : 0.0
-        property real spin: 0
-
-        NumberAnimation on spin  {
-            running: finisherBurst.visible
-            from: 0
-            to: 360
-            duration: 2600
-            loops: Animation.Infinite
-        }
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: root.scaled(58)
-            height: width
-            radius: root.scaled(14)
-            rotation: finisherBurst.spin
-            color: "transparent"
-            border.width: 2
-            border.color: "#d0ffd24a"
-        }
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: root.scaled(42)
-            height: width
-            radius: root.scaled(12)
-            rotation: -finisherBurst.spin * 0.7
-            color: "transparent"
-            border.width: 1
-            border.color: "#88fff0aa"
-        }
-    }
-
-    Item {
         id: crosshair
+        objectName: "rpgCrosshair"
         width: root.scaled(58)
         height: root.scaled(58)
         anchors.centerIn: parent
@@ -572,7 +499,7 @@ Item {
         property int comboStep: Number(root.status_value("combo_step", 0))
         property bool finisherReady: root.status_value("finisher_ready", false) === true
         property bool punishActive: root.status_value("punish_active", false) === true
-        property bool lockedOn: root.status_value("locked_target_name", "") !== ""
+        property bool lockedOn: root.status_value("focus_marker_locked", false) === true
         property bool targetInRange: root.status_value("aim_candidate_in_range", false) === true
         property color crossColor: finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (targetInRange ? "#52f4ff" : (lockedOn ? "#bfe8ff" : "#f3efe6")))
         property real crossSize: finisherReady ? 1.18 : (targetInRange ? 1.12 : (comboStep >= 2 ? 1.08 : 1.0))
@@ -645,13 +572,20 @@ Item {
         }
     }
 
+    readonly property int abilityTileSize: scaled(60)
+    readonly property int abilityRowWidth: abilityTileSize * 3 + scaled(24)
+
+    readonly property int abilityBandWidth: abilityRowWidth + scaled(28) + scaled(12)
+
     Item {
         id: hudBarsRow
+        objectName: "rpgHudBarsRow"
         anchors.bottom: parent.bottom
 
         anchors.bottomMargin: root.bottomInset + root.scaled(20)
         anchors.horizontalCenter: parent.horizontalCenter
-        width: root.scaled(460)
+
+        width: Math.max(root.scaled(180), Math.min(root.scaled(460), root.width - 2 * root.abilityBandWidth))
         height: root.scaled(34)
 
         RowLayout {
@@ -785,6 +719,7 @@ Item {
 
     Row {
         id: comboIndicator
+        objectName: "rpgComboIndicator"
 
         property int combo: Number(root.status_value("combo_step", 0))
         property bool finisherReady: root.status_value("finisher_ready", false) === true
@@ -845,11 +780,12 @@ Item {
 
     Item {
         id: postureBar
+        objectName: "rpgPostureBar"
 
         anchors.bottom: hudBarsRow.top
         anchors.bottomMargin: root.scaled(6)
         anchors.horizontalCenter: parent.horizontalCenter
-        width: root.scaled(216)
+        width: Math.min(root.scaled(216), hudBarsRow.width)
         height: root.scaled(14)
         visible: Number(root.status_value("posture_ratio", 0.0)) > 0.05
         opacity: visible ? 1.0 : 0.0
@@ -946,6 +882,7 @@ Item {
 
     Row {
         id: abilityCooldowns
+        objectName: "rpgAbilityCooldowns"
         anchors.right: parent.right
         anchors.rightMargin: root.scaled(28)
         anchors.bottom: parent.bottom
@@ -974,8 +911,8 @@ Item {
                 }]
 
             delegate: Item {
-                width: root.scaled(60)
-                height: root.scaled(60)
+                width: root.abilityTileSize
+                height: root.abilityTileSize
 
                 property bool isReady: root.status_value(modelData.readyKey, true) === true
                 property real cdRatio: root.cooldown_ratio(modelData.cdKey, modelData.totalKey)
@@ -1074,7 +1011,7 @@ Item {
         var guardBroken = root.status_value("guard_broken", false) === true;
         var perfectGuard = root.status_value("perfect_guard_active", false) === true;
         var dodgeActive = root.status_value("dodge_active", false) === true;
-        var hasLockedTarget = root.status_value("locked_target_name", "") !== "";
+        var hasLockedTarget = root.status_value("focus_marker_locked", false) === true;
         if (_prevHealth >= 0.0 && hp < _prevHealth) {
             var damage_severity = Math.min(1.0, (_prevHealth - hp) * 3.0);
             damageVignette.opacity = damage_severity * 0.8;
@@ -1083,9 +1020,6 @@ Item {
         if (attacking && !_prevAttacking) {
             attackSweep.opacity = 0.85;
             attackSweepDecay.restart();
-            combatEntryFlash.accentColor = hasLockedTarget ? "#79cfff" : "#ffb260";
-            combatEntryFlash.opacity = 0.18;
-            combatEntryDecay.restart();
         }
         if (perfectGuard && !_prevPerfectGuard) {
             combatEntryFlash.accentColor = "#bce7ff";

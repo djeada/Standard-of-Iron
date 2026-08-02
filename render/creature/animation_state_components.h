@@ -28,8 +28,10 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   float filtered_speed{0.0F};
   float filtered_acceleration{0.0F};
   float filtered_turn{0.0F};
+  float filtered_travel_alignment{1.0F};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
+  bool reverse_gait{false};
   Render::GL::HumanoidMotionState locomotion_state{
       Render::GL::HumanoidMotionState::Idle};
   bool locomotion_initialized{false};

@@ -369,6 +369,9 @@ Four behind-head scenes cover commander (FPV) control:
 
 - `rpg_melee_contact` validates exact in-range soldier highlighting, authored blade
   contact, hit reactions, and visible incoming weapon damage.
+  `RpgStrikeAnimationMatched` additionally fails the run when the simulation
+  resolves a strike for longer than one frame while the renderer still draws an
+  idle or walking commander.
 - `rpg_defense_contact` is a frontal sword block followed by a timed dodge; health
   must stay unchanged while the block contact and dodge window remain visible.
 - `rpg_projectile_block` requires an authored arrow to arrive at the guard, publish
@@ -380,6 +383,21 @@ Four behind-head scenes cover commander (FPV) control:
   `escort_flank` stands beside the commander and must still render, which is what
   keeps the cull from being over-broad; `escort_rear` stays alive in the trace
   while it is deliberately not drawn.
+- `rpg_locomotion` drives the commander's own movement input rather than an order:
+  he walks, breaks into a run, backs up and strafes without ever turning. It is
+  the contract for locomotion synchronisation — `RpgWalkObserved` and
+  `RpgRunObserved` require both simulated gaits to actually occur, and
+  `RpgLocomotionAnimationMatched` fails the run when the simulation reports one
+  gait while the renderer draws another on the same frame.
+- `rpg_close_quarters` walks the commander into a house wall, off it, and back onto
+  it from the flank. The RTS navigation grid rounds every structure up to whole
+  cells and pads it for formation-sized bodies; a person-scale commander has to
+  reach the facade itself. `RpgApproachWithin` fails when he cannot close to the
+  declared distance of the structure.
+
+Both scenes are driven by the `RpgMove` scenario command, which sets the
+behind-head controller's own movement axes (and optionally its view yaw) instead
+of issuing an RTS order, so they exercise the same input path a player uses.
 
 ```sh
 build/bin/arena_app --batch --scenario rpg_escort_crowd \

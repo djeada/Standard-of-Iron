@@ -16,6 +16,8 @@ constexpr float k_head_bob_lag_phase = 0.085F;
 constexpr float k_arm_swing_phase_shift = 0.30F;
 constexpr float k_arm_forward_bias = 0.86F;
 constexpr float k_arm_backward_bias = 1.18F;
+
+constexpr float k_reverse_stride_scale = 0.74F;
 constexpr float k_arm_back_lift_ratio = 0.35F;
 
 [[nodiscard]] auto smoothing_alpha(float dt, float tau) noexcept -> float {
@@ -73,6 +75,21 @@ smooth_towards(float current, float target, float dt, float tau) noexcept -> flo
   return std::clamp((forward_z * motion_x) - (forward_x * motion_z), -1.0F, 1.0F);
 }
 
+[[nodiscard]] auto
+signed_travel_alignment(float entity_forward_x,
+                        float entity_forward_z,
+                        float locomotion_direction_x,
+                        float locomotion_direction_z) noexcept -> float {
+  auto const [forward_x, forward_z] =
+      normalized_or(entity_forward_x, entity_forward_z, 0.0F, 1.0F);
+  auto const [motion_x, motion_z] = normalized_or(
+      locomotion_direction_x, locomotion_direction_z, forward_x, forward_z);
+  return std::clamp((forward_x * motion_x) + (forward_z * motion_z), -1.0F, 1.0F);
+}
+
+constexpr float k_reverse_gait_enter_alignment = -0.30F;
+constexpr float k_reverse_gait_exit_alignment = -0.05F;
+
 struct LocomotionTargets {
   float normalized_speed{0.0F};
   float locomotion_blend{0.0F};
@@ -80,6 +97,7 @@ struct LocomotionTargets {
   float cycle_time{0.0F};
   float base_phase{0.0F};
   float turn_amount{0.0F};
+  float travel_alignment{1.0F};
 };
 
 struct LocomotionPoseProfile {
@@ -322,6 +340,12 @@ build_targets(const HumanoidLocomotionInputs& inputs) noexcept -> LocomotionTarg
                                                  inputs.locomotion_direction_x,
                                                  inputs.locomotion_direction_z)
                             : 0.0F;
+  targets.travel_alignment =
+      has_locomotion ? signed_travel_alignment(inputs.entity_forward_x,
+                                               inputs.entity_forward_z,
+                                               inputs.locomotion_direction_x,
+                                               inputs.locomotion_direction_z)
+                     : 1.0F;
   if (has_locomotion) {
     float const walk_cycle_time =
         humanoid_walk_cycle_time_for_speed(targets.normalized_speed, inputs.tuning);
@@ -396,7 +420,26 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
   sample.locomotion_blend = targets.locomotion_blend;
   sample.run_blend = targets.run_blend;
   sample.turn_amount = targets.turn_amount;
+  sample.travel_alignment = targets.travel_alignment;
   sample.acceleration = 0.0F;
+
+  if (previous.initialized) {
+    sample.travel_alignment = smooth_towards(previous.filtered_travel_alignment,
+                                             targets.travel_alignment,
+                                             delta_time,
+                                             inputs.tuning.turn_blend_tau);
+  }
+
+  sample.reverse_gait = previous.initialized ? previous.reverse_gait : false;
+  if (is_moving(inputs.movement_state)) {
+    if (sample.travel_alignment <= k_reverse_gait_enter_alignment) {
+      sample.reverse_gait = true;
+    } else if (sample.travel_alignment >= k_reverse_gait_exit_alignment) {
+      sample.reverse_gait = false;
+    }
+  } else {
+    sample.reverse_gait = false;
+  }
 
   if (previous.initialized && is_moving(inputs.movement_state)) {
     float const previous_cycle_time =
@@ -405,8 +448,10 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
                                        targets.cycle_time,
                                        delta_time,
                                        inputs.tuning.cadence_blend_tau);
-    sample.cycle_phase = wrap_locomotion_phase(
-        previous.phase + delta_time / std::max(0.001F, sample.cycle_time));
+    float const phase_direction = sample.reverse_gait ? -1.0F : 1.0F;
+    sample.cycle_phase =
+        wrap_locomotion_phase(previous.phase + phase_direction * delta_time /
+                                                   std::max(0.001F, sample.cycle_time));
   }
 
   if (previous.initialized) {
@@ -453,6 +498,8 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
     sample.persistent.filtered_speed = sample.normalized_speed;
     sample.persistent.filtered_acceleration = sample.acceleration;
     sample.persistent.filtered_turn = sample.turn_amount;
+    sample.persistent.filtered_travel_alignment = sample.travel_alignment;
+    sample.persistent.reverse_gait = sample.reverse_gait;
     sample.persistent.locomotion_blend = sample.locomotion_blend;
     sample.persistent.run_blend = sample.run_blend;
     sample.persistent.state = sample.state;
@@ -600,10 +647,17 @@ auto resolve_humanoid_locomotion_pose(
   float const braking = std::max(0.0F, -acceleration);
   float const turn_amount = std::clamp(inputs.turn_amount, -1.0F, 1.0F);
   float const turn_abs = std::abs(turn_amount);
-  float const stride_scale = std::max(
-      0.10F, locomotion_blend * (1.0F + acceleration_push * 0.12F - braking * 0.16F));
-  float const step_scale =
-      std::max(0.15F, locomotion_blend * (1.0F + acceleration_push * 0.08F));
+  float const travel_alignment = std::clamp(inputs.travel_alignment, -1.0F, 1.0F);
+
+  float const travel_stride_scale =
+      lerp(k_reverse_stride_scale, 1.0F, (travel_alignment + 1.0F) * 0.5F);
+  float const stride_scale =
+      std::max(0.10F,
+               locomotion_blend * travel_stride_scale *
+                   (1.0F + acceleration_push * 0.12F - braking * 0.16F));
+  float const step_scale = std::max(0.15F,
+                                    locomotion_blend * travel_stride_scale *
+                                        (1.0F + acceleration_push * 0.08F));
   float const planted_fraction =
       std::clamp(profile.planted_fraction + braking * 0.06F -
                      acceleration_push * 0.04F + turn_abs * 0.04F,
@@ -628,7 +682,8 @@ auto resolve_humanoid_locomotion_pose(
   float const shoulder_twist = sway_lagged * profile.shoulder_twist * stride_scale;
   float const acceleration_lean = acceleration * 0.006F;
   float const braking_sink = braking * 0.010F * locomotion_blend;
-  float const forward_lean = profile.forward_lean * stride_scale + acceleration_lean;
+  float const forward_lean =
+      profile.forward_lean * stride_scale * travel_alignment + acceleration_lean;
   float const turn_lean = turn_amount * (0.010F + 0.012F * locomotion_blend);
   float const turn_twist = turn_amount * (0.008F + 0.010F * locomotion_blend);
   float const turn_step_bias = turn_amount * 0.018F * stride_scale;

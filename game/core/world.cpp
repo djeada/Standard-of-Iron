@@ -931,7 +931,7 @@ void World::destroy_entity(EntityID entity_id) {
   if (index != 0 && index < m_slots.size()) {
     auto& slot = m_slots[index];
     if (slot.entity != nullptr && slot.generation == Handle::generation_of(entity_id)) {
-      if (slot.entity->has_component<BuildingComponent>()) {
+      if (!m_is_render_snapshot && slot.entity->has_component<BuildingComponent>()) {
 
         Game::Systems::BuildingCollisionRegistry::instance().unregister_building(
             entity_id);

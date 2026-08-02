@@ -359,12 +359,11 @@ RowLayout {
                     text: qsTr("Posture")
                     color: Theme.textMain
                     font.pointSize: 8
-                    visible: !bottomRoot.fpv_mode || Number(bottomRoot.status_value("posture_ratio", 0)) > 0.05
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: bottomRoot.fpv_mode ? 8 : 10
+                    Layout.preferredHeight: 10
                     color: Theme.bgShade
                     radius: 5
                     border.color: hs.bronzeDeep
@@ -419,29 +418,12 @@ RowLayout {
                         font.bold: true
                     }
                 }
-
-                Rectangle {
-                    visible: bottomRoot.status_value("locked_target_name", "") !== ""
-                    radius: 12
-                    color: Qt.rgba(0.53, 0.22, 0.14, 0.92)
-                    border.color: hs.wax
-                    border.width: 1
-                    height: 24
-                    width: targetChipText.implicitWidth + 20
-
-                    Text {
-                        id: targetChipText
-                        anchors.centerIn: parent
-                        text: qsTr("Locked target")
-                        color: Theme.textMain
-                        font.pointSize: 8
-                        font.bold: true
-                    }
-                }
             }
 
             Text {
-                text: bottomRoot.fpv_mode ? (bottomRoot.status_value("locked_target_name", "") !== "" ? qsTr("Locked on %1").arg(bottomRoot.status_value("locked_target_name", "")) : qsTr("Lead from the front and keep the line stable.")) : qsTr("State: %1").arg(bottomRoot.stance_label())
+
+                visible: !bottomRoot.fpv_mode
+                text: qsTr("State: %1").arg(bottomRoot.stance_label())
                 color: Theme.textSubLite
                 font.pointSize: 8
                 wrapMode: Text.WordWrap

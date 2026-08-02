@@ -184,6 +184,18 @@ auto Pathfinding::cell_value(int x, int y) const -> CellValue {
   return m_navigation_grid.get(x, y);
 }
 
+auto Pathfinding::is_terrain_walkable(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return false;
+  }
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return true;
+  }
+  return terrain_cell_value(terrain_service, terrain_service.get_height_map(), x, y) ==
+         CellValue::Walkable;
+}
+
 auto Pathfinding::is_world_position_walkable(const QVector3D& world_position) const
     -> bool {
   Point const grid = world_to_grid(world_position.x(), world_position.z());
