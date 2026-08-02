@@ -1,6 +1,7 @@
 #include "gate_system.h"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "../core/component.h"
@@ -18,13 +19,15 @@ using Engine::Core::PendingRemovalComponent;
 using Engine::Core::TransformComponent;
 using Engine::Core::UnitComponent;
 
-constexpr float k_occupancy_half_extent = 1.4F;
+constexpr float k_occupancy_margin = 0.6F;
 
 struct GateRecord {
   Engine::Core::Entity* entity{nullptr};
   GateComponent* gate{nullptr};
   float center_x{0.0F};
   float center_z{0.0F};
+  float occupancy_half_x{0.0F};
+  float occupancy_half_z{0.0F};
   int owner_id{0};
   bool wants_open{false};
   bool occupied{false};
@@ -69,10 +72,13 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
+    const auto passage = GateService::passage_extent(transform->rotation.y);
     gates.push_back(GateRecord{.entity = entity,
                                .gate = gate,
                                .center_x = transform->position.x,
                                .center_z = transform->position.z,
+                               .occupancy_half_x = passage.half_x + k_occupancy_margin,
+                               .occupancy_half_z = passage.half_z + k_occupancy_margin,
                                .owner_id = unit->owner_id});
   }
 
@@ -102,11 +108,12 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       const float dx = transform->position.x - record.center_x;
       const float dz = transform->position.z - record.center_z;
       const float radius = record.gate->trigger_radius;
-      if (dx * dx + dz * dz <= radius * radius) {
+      if ((dx * dx) + (dz * dz) <= radius * radius) {
         record.wants_open = true;
       }
-      if (std::abs(dx) <= k_occupancy_half_extent &&
-          std::abs(dz) <= k_occupancy_half_extent) {
+
+      if (std::abs(dx) <= record.occupancy_half_x &&
+          std::abs(dz) <= record.occupancy_half_z) {
         record.occupied = true;
       }
     }
@@ -138,7 +145,8 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       gate.hold_timer = 0.0F;
     }
 
-    const float step = std::max(gate.open_speed, 0.01F) * delta_time;
+    const float speed = target_open ? gate.open_speed : gate.close_speed;
+    const float step = std::max(speed, 0.01F) * delta_time;
     const float previous = gate.open_amount;
     gate.open_amount = target_open ? std::min(1.0F, gate.open_amount + step)
                                    : std::max(0.0F, gate.open_amount - step);

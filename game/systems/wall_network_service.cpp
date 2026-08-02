@@ -14,6 +14,7 @@
 #include "../visuals/building_asset_key.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "gate_service.h"
 #include "pathfinding.h"
 
 namespace Game::Systems {
@@ -86,6 +87,28 @@ auto resolve_wall_network_owner_id(const Engine::Core::Entity* entity)
     return site->owner_id;
   }
   return std::nullopt;
+}
+
+auto wall_network_cells(const Engine::Core::Entity* entity,
+                        const WallGridPosition& center)
+    -> std::vector<WallGridPosition> {
+  const auto* transform =
+      entity != nullptr ? entity->get_component<TransformComponent>() : nullptr;
+  const bool is_gate =
+      entity != nullptr &&
+      (entity->has_component<GateComponent>() ||
+       (entity->get_component<WallConstructionSiteComponent>() != nullptr &&
+        entity->get_component<WallConstructionSiteComponent>()->product_type ==
+            Game::Units::SpawnType::WallGate));
+  if (!is_gate || transform == nullptr) {
+    return {center};
+  }
+
+  constexpr int k_spacing = WallNetworkService::k_segment_spacing;
+  if (GateComponent::spans_x_axis(transform->rotation.y)) {
+    return {{center.x - k_spacing, center.z}, center, {center.x + k_spacing, center.z}};
+  }
+  return {{center.x, center.z - k_spacing}, center, {center.x, center.z + k_spacing}};
 }
 
 auto decode_key(std::uint64_t key) -> WallGridPosition {
@@ -376,6 +399,10 @@ void update_wall_entity_visuals(Engine::Core::Entity* entity,
                               : appearance.rotation_y;
   renderable->renderer_id = appearance.renderer_id;
   wall->connection_mask = connection_mask;
+
+  if (is_gate && entity->has_component<GateComponent>()) {
+    GateService::sync_gate_footprint(entity->get_id(), transform->rotation.y);
+  }
 }
 
 } // namespace
@@ -448,7 +475,9 @@ void WallNetworkService::add_world_occupancy(Engine::Core::World& world,
         snap_world_position(transform->position.x, transform->position.z);
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
-    out.insert(encode_key(snapped.x, snapped.z));
+    for (const auto& cell : wall_network_cells(entity, snapped)) {
+      out.insert(encode_key(cell.x, cell.z));
+    }
   }
 }
 
@@ -475,7 +504,9 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
         snap_world_position(transform->position.x, transform->position.z);
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
-    add_owner_occupancy(out, *owner_id, snapped.x, snapped.z);
+    for (const auto& cell : wall_network_cells(entity, snapped)) {
+      add_owner_occupancy(out, *owner_id, cell.x, cell.z);
+    }
   }
 
   if (!include_towers) {
@@ -503,21 +534,31 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
 auto WallNetworkService::compute_connection_mask(const OccupancySet& occupancy,
                                                  int grid_x,
                                                  int grid_z) -> std::uint8_t {
+  static const OccupancySet k_nothing_ignored;
+  return compute_connection_mask(occupancy, grid_x, grid_z, k_nothing_ignored);
+}
+
+auto WallNetworkService::compute_connection_mask(const OccupancySet& occupancy,
+                                                 int grid_x,
+                                                 int grid_z,
+                                                 const OccupancySet& ignored)
+    -> std::uint8_t {
+  const auto joined = [&](int x, int z) {
+    const auto key = encode_key(x, z);
+    return ignored.find(key) == ignored.end() && occupancy.find(key) != occupancy.end();
+  };
+
   std::uint8_t mask = 0;
-  if (occupancy.find(encode_key(grid_x, grid_z - k_segment_spacing)) !=
-      occupancy.end()) {
+  if (joined(grid_x, grid_z - k_segment_spacing)) {
     mask |= k_connection_north;
   }
-  if (occupancy.find(encode_key(grid_x + k_segment_spacing, grid_z)) !=
-      occupancy.end()) {
+  if (joined(grid_x + k_segment_spacing, grid_z)) {
     mask |= k_connection_east;
   }
-  if (occupancy.find(encode_key(grid_x, grid_z + k_segment_spacing)) !=
-      occupancy.end()) {
+  if (joined(grid_x, grid_z + k_segment_spacing)) {
     mask |= k_connection_south;
   }
-  if (occupancy.find(encode_key(grid_x - k_segment_spacing, grid_z)) !=
-      occupancy.end()) {
+  if (joined(grid_x - k_segment_spacing, grid_z)) {
     mask |= k_connection_west;
   }
   return mask;
@@ -695,9 +736,24 @@ auto collect_navigation_passages(
     if (!is_live_wall_entity(entity, false)) {
       continue;
     }
-    if (const auto* wall = entity->get_component<WallSegmentComponent>()) {
-      emit_passage(wall->grid_x, wall->grid_z, wall->connection_mask);
+    const auto* wall = entity->get_component<WallSegmentComponent>();
+    const auto* transform = entity->get_component<TransformComponent>();
+    if (wall == nullptr || transform == nullptr) {
+      continue;
     }
+
+    if (!emitted.insert(WallNetworkService::encode_key(wall->grid_x, wall->grid_z))
+             .second) {
+      continue;
+    }
+    const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
+    const float opening = GateComponent::k_passage_half_width * 2.0F;
+    const auto center =
+        CommandService::grid_to_world(Point{wall->grid_x, wall->grid_z});
+    passages.push_back(NavigationPassage{.center_x = center.x(),
+                                         .center_z = center.z(),
+                                         .width = spans_x ? opening : crossing_depth,
+                                         .depth = spans_x ? crossing_depth : opening});
   }
 
   constexpr int k_spacing = WallNetworkService::k_segment_spacing;
@@ -766,7 +822,13 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
     const auto& occupancy = occupancy_it != connection_occupancy.end()
                                 ? occupancy_it->second
                                 : empty_occupancy;
-    const auto mask = compute_connection_mask(occupancy, wall->grid_x, wall->grid_z);
+    OccupancySet self_cells;
+    for (const auto& cell :
+         wall_network_cells(entity, {.x = wall->grid_x, .z = wall->grid_z})) {
+      self_cells.insert(encode_key(cell.x, cell.z));
+    }
+    const auto mask =
+        compute_connection_mask(occupancy, wall->grid_x, wall->grid_z, self_cells);
     update_wall_entity_visuals(entity, wall, mask);
   }
 

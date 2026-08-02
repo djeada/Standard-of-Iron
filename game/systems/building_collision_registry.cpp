@@ -97,6 +97,22 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   }
 
   BuildingSize const size = get_building_size(building_type);
+  register_building(entity_id, building_type, center_x, center_z, owner_id, size);
+}
+
+void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_id,
+                                                  const std::string& building_type,
+                                                  float center_x,
+                                                  float center_z,
+                                                  int owner_id,
+                                                  BuildingSize size) {
+
+  if (m_entity_to_index.find(entity_id) != m_entity_to_index.end()) {
+
+    update_building_position(entity_id, center_x, center_z);
+    return;
+  }
+
   BuildingFootprint const footprint(center_x,
                                     center_z,
                                     size.width,
@@ -186,6 +202,35 @@ void BuildingCollisionRegistry::update_building_position(
 
     pf->mark_building_region_dirty(old_x, old_z, width, depth);
     pf->mark_building_region_dirty(center_x, center_z, width, depth);
+  }
+}
+
+void BuildingCollisionRegistry::resize_building(Engine::Core::EntityID entity_id,
+                                                BuildingSize size) {
+  auto it = m_entity_to_index.find(entity_id);
+  if (it == m_entity_to_index.end()) {
+    return;
+  }
+
+  size_t const index = it->second;
+  if (m_buildings[index].width == size.width &&
+      m_buildings[index].depth == size.depth) {
+    return;
+  }
+
+  float const center_x = m_buildings[index].center_x;
+  float const center_z = m_buildings[index].center_z;
+  float const old_width = m_buildings[index].width;
+  float const old_depth = m_buildings[index].depth;
+
+  remove_from_spatial_index(m_buildings[index]);
+  m_buildings[index].width = size.width;
+  m_buildings[index].depth = size.depth;
+  add_to_spatial_index(m_buildings[index]);
+
+  if (auto* pf = CommandService::get_pathfinder()) {
+    pf->mark_building_region_dirty(center_x, center_z, old_width, old_depth);
+    pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
   }
 }
 

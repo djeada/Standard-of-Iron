@@ -15,6 +15,8 @@
 #include "systems/pathfinding.h"
 #include "systems/wall_network_service.h"
 #include "units/spawn_type.h"
+#include "units/troop_config.h"
+#include "units/troop_type.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -79,9 +81,14 @@ protected:
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
     entity->add_component<GateComponent>();
+    const auto extent = GateService::structure_extent(0.0F);
     BuildingCollisionRegistry::instance().register_building(
-        entity->get_id(), "wall_gate", x, z, owner_id);
-    GateService::mark_gate_footprint_navigable(entity->get_id());
+        entity->get_id(),
+        "wall_gate",
+        x,
+        z,
+        owner_id,
+        {.width = extent.half_x * 2.0F, .depth = extent.half_z * 2.0F});
     return entity;
   }
 
@@ -122,7 +129,7 @@ TEST_F(GateSystemTest, GateFootprintMatchesWallSegment) {
   EXPECT_FLOAT_EQ(gate.depth, wall.depth);
 }
 
-TEST_F(GateSystemTest, GateFootprintDoesNotStampNavigationGrid) {
+TEST_F(GateSystemTest, GatehouseIsSolidAcrossThreeCellsAndOpensOnlyInTheMiddle) {
   World world;
   auto* gate = make_gate(world, 0.0F, 0.0F, k_gate_owner);
 
@@ -130,7 +137,24 @@ TEST_F(GateSystemTest, GateFootprintDoesNotStampNavigationGrid) {
       BuildingCollisionRegistry::instance().find_building(gate->get_id());
 
   ASSERT_NE(footprint, nullptr);
-  EXPECT_FALSE(footprint->blocks_navigation);
+
+  EXPECT_TRUE(footprint->blocks_navigation);
+  EXPECT_FLOAT_EQ(footprint->width, GateComponent::k_structure_half_span * 2.0F);
+  EXPECT_FLOAT_EQ(footprint->depth, GateComponent::k_cross_half_extent * 2.0F);
+
+  WallNetworkService::refresh_world(world);
+  const auto& passages = BuildingCollisionRegistry::instance().navigation_passages();
+  ASSERT_EQ(passages.size(), 1U);
+  EXPECT_FLOAT_EQ(passages.front().width, GateComponent::k_passage_half_width * 2.0F);
+  EXPECT_LT(passages.front().width, footprint->width);
+}
+
+TEST_F(GateSystemTest, GateOpeningIsWideEnoughForTheLargestUnit) {
+
+  const float elephant_width =
+      Game::Units::TroopConfig::instance().get_selection_ring_size(
+          Game::Units::TroopType::Elephant);
+  EXPECT_GT(GateComponent::k_passage_half_width * 2.0F, elephant_width * 1.5F);
 }
 
 TEST_F(GateSystemTest, OpensForOwnerTroopInRange) {
@@ -354,4 +378,25 @@ TEST_F(GateSystemTest, ManualModeSurvivesASaveRoundTrip) {
   EXPECT_EQ(restored_gate->manual_mode, GateComponent::ManualMode::ForcedOpen);
   EXPECT_FLOAT_EQ(restored_gate->open_amount, 0.5F);
   EXPECT_EQ(restored_gate->state, GateComponent::State::Opening);
+}
+
+TEST_F(GateSystemTest, RenderSnapshotCarriesTheLeafPosition) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  make_troop(world, 0.0F, -3.0F, k_gate_owner);
+
+  tick(world, 2.0F);
+  const float open_amount = gate_entity->get_component<GateComponent>()->open_amount;
+  ASSERT_GT(open_amount, GateComponent::k_passable_open_amount);
+
+  world.request_render_snapshots();
+  world.update(0.016F);
+  const auto snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+
+  auto* mirrored = snapshot->get_entity(gate_entity->get_id());
+  ASSERT_NE(mirrored, nullptr);
+  const auto* mirrored_gate = mirrored->get_component<GateComponent>();
+  ASSERT_NE(mirrored_gate, nullptr);
+  EXPECT_FLOAT_EQ(mirrored_gate->open_amount, open_amount);
 }

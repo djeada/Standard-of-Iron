@@ -600,6 +600,7 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<ElephantComponent>(source, destination);
   copy_snapshot_component<ElephantStompImpactComponent>(source, destination);
   copy_snapshot_component<CatapultLoadingComponent>(source, destination);
+  copy_snapshot_component<GateComponent>(source, destination);
 }
 
 void render_hash_combine(std::uint64_t& seed, std::uint64_t value) {
@@ -681,6 +682,12 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+  }
+  if (auto const* gate = entity.get_component<GateComponent>()) {
+
+    render_hash_float(signature, gate->open_amount);
+    render_hash_combine(signature, static_cast<std::uint64_t>(gate->state));
+    render_hash_combine(signature, static_cast<std::uint64_t>(gate->manual_mode));
   }
   if (auto const* renderable = entity.get_component<RenderableComponent>()) {
     render_hash_combine(signature, std::hash<std::string>{}(renderable->mesh_path));

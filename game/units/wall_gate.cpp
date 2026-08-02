@@ -58,9 +58,14 @@ void WallGate::init(const SpawnParams& params) {
 
   e->add_component<Engine::Core::GateComponent>();
 
+  const auto extent = Game::Systems::GateService::structure_extent(m_t->rotation.y);
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
-      m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
-  Game::Systems::GateService::mark_gate_footprint_navigable(m_id);
+      m_id,
+      m_type_string,
+      m_t->position.x,
+      m_t->position.z,
+      m_u->owner_id,
+      {.width = extent.half_x * 2.0F, .depth = extent.half_z * 2.0F});
   Game::Systems::WallNetworkService::refresh_world(*m_world);
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(

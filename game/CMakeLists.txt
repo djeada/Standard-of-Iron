@@ -201,6 +201,7 @@ add_library(
     units/wall_segment.cpp
     units/wall_gate.cpp
     systems/home_system.cpp
+    systems/settlement_life_system.cpp
 )
 
 target_include_directories(game_sim PUBLIC .)

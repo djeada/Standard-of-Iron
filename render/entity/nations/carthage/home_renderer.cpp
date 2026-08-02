@@ -23,15 +23,15 @@ using Render::Geom::clamp_vec_01;
 constexpr std::uint8_t k_home_team_slot = 0;
 
 struct CarthagePalette {
-  QVector3D stone_light{0.66F, 0.53F, 0.38F};
-  QVector3D stone_dark{0.13F, 0.115F, 0.09F};
-  QVector3D stone_base{0.34F, 0.28F, 0.20F};
-  QVector3D brick{0.44F, 0.20F, 0.105F};
-  QVector3D brick_dark{0.20F, 0.075F, 0.04F};
-  QVector3D tile_red{0.31F, 0.085F, 0.04F};
-  QVector3D tile_dark{0.105F, 0.045F, 0.025F};
-  QVector3D wood{0.28F, 0.17F, 0.08F};
-  QVector3D wood_dark{0.075F, 0.052F, 0.03F};
+  QVector3D stone_light{0.88F, 0.79F, 0.63F};
+  QVector3D stone_dark{0.38F, 0.32F, 0.24F};
+  QVector3D stone_base{0.74F, 0.64F, 0.48F};
+  QVector3D brick{0.71F, 0.43F, 0.27F};
+  QVector3D brick_dark{0.40F, 0.18F, 0.11F};
+  QVector3D tile_red{0.57F, 0.21F, 0.12F};
+  QVector3D tile_dark{0.43F, 0.18F, 0.11F};
+  QVector3D wood{0.46F, 0.30F, 0.16F};
+  QVector3D wood_dark{0.23F, 0.16F, 0.09F};
   QVector3D bronze{0.72F, 0.43F, 0.12F};
   QVector3D ember{0.68F, 0.22F, 0.045F};
   QVector3D team{0.8F, 0.9F, 1.0F};
