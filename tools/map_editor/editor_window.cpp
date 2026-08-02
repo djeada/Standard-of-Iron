@@ -1067,6 +1067,12 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::PropIronOre:
     tool_name = "Iron Ore";
     break;
+  case ToolType::PropAbandonedHome:
+    tool_name = "Abandoned Home";
+    break;
+  case ToolType::PropStatue:
+    tool_name = "Statue";
+    break;
   case ToolType::Barracks:
     tool_name = "Barracks";
     break;
@@ -1081,6 +1087,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
     break;
   case ToolType::Marketplace:
     tool_name = "Marketplace";
+    break;
+  case ToolType::Temple:
+    tool_name = "Temple";
     break;
   case ToolType::Wall:
     tool_name = "Wall (click start, then end)";

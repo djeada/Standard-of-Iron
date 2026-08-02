@@ -21,6 +21,7 @@
 #include "skeleton_swordsman.h"
 #include "spearman.h"
 #include "swordsman.h"
+#include "temple.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
 #include "wall_gate.h"
@@ -185,6 +186,11 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Marketplace,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Marketplace::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Temple,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Temple::Create(world, params);
                        });
 }
 

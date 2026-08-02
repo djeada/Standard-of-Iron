@@ -163,7 +163,8 @@ auto is_previewable_structure_item(const QString& item_type) -> bool {
   return item_type == QStringLiteral("defense_tower") ||
          item_type == QStringLiteral("barracks") ||
          item_type == QStringLiteral("home") ||
-         item_type == QStringLiteral("marketplace");
+         item_type == QStringLiteral("marketplace") ||
+         item_type == QStringLiteral("temple");
 }
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
@@ -192,6 +193,9 @@ auto spawn_type_for_construction_item(const QString& item_type)
   }
   if (item_type == QStringLiteral("home")) {
     return Game::Units::SpawnType::Home;
+  }
+  if (item_type == QStringLiteral("temple")) {
+    return Game::Units::SpawnType::Temple;
   }
   if (item_type == QStringLiteral("marketplace")) {
     return Game::Units::SpawnType::Marketplace;
@@ -2453,7 +2457,11 @@ auto ProductionManager::get_construction_build_time(const std::string& item_type
   constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
   constexpr float WALL_SEGMENT_BUILD_TIME = 8.0F;
   constexpr float WALL_GATE_BUILD_TIME = 12.0F;
+  constexpr float TEMPLE_BUILD_TIME = 18.0F;
 
+  if (item_type == "temple") {
+    return TEMPLE_BUILD_TIME;
+  }
   if (item_type == "catapult") {
     return CATAPULT_BUILD_TIME;
   }

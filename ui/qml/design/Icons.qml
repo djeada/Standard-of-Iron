@@ -147,6 +147,7 @@ QtObject {
             "home": "\u2302",
             "house": "\u2302",
             "marketplace": "\u25C7",
+            "temple": "\u25B3",
             "commander": "\u265B"
         })
 

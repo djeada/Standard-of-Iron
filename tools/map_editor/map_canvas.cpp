@@ -85,6 +85,10 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
     return QStringLiteral("plant");
   case ToolType::PropIronOre:
     return QStringLiteral("iron_ore");
+  case ToolType::PropAbandonedHome:
+    return QStringLiteral("abandoned_home");
+  case ToolType::PropStatue:
+    return QStringLiteral("statue");
   default:
     return {};
   }
@@ -1630,6 +1634,8 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::PropOliveTree:
   case ToolType::PropPlant:
   case ToolType::PropIronOre:
+  case ToolType::PropAbandonedHome:
+  case ToolType::PropStatue:
     type = world_prop_type_for_tool(m_current_tool);
     break;
   case ToolType::Barracks:
@@ -1646,6 +1652,9 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
     break;
   case ToolType::Marketplace:
     type = "marketplace";
+    break;
+  case ToolType::Temple:
+    type = "temple";
     break;
   default:
     break;
@@ -1680,7 +1689,8 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
                type == QStringLiteral("village") ||
                type == QStringLiteral("defense_tower") ||
                type == QStringLiteral("home") ||
-               type == QStringLiteral("marketplace")) {
+               type == QStringLiteral("marketplace") ||
+               type == QStringLiteral("temple")) {
       draw_element(painter, type, widget_pos, m_current_player_id);
     } else {
       draw_element(painter, type, widget_pos);
@@ -1716,6 +1726,9 @@ void MapCanvas::draw_element(QPainter& painter,
   } else if (type == "marketplace") {
     fill_color = player_color_for_editor(player_id);
     symbol = "M";
+  } else if (type == "temple") {
+    fill_color = player_color_for_editor(player_id);
+    symbol = "\u03A9";
   } else {
     fill_color = QColor(128, 128, 128);
     symbol = "?";
@@ -1724,7 +1737,8 @@ void MapCanvas::draw_element(QPainter& painter,
   if (type == "firecamp" || type == "tent" || type == "supply_cart" ||
       type == "weapon_rack" || type == "ruins" || type == "magic_shrine" ||
       type == "dead_tree" || type == "boulder" || type == "pine_tree" ||
-      type == "olive_tree" || type == "plant" || type == "iron_ore") {
+      type == "olive_tree" || type == "plant" || type == "iron_ore" ||
+      type == "abandoned_home" || type == "statue") {
     draw_world_prop_icon(painter, type, pos, size);
   } else {
     painter.setBrush(fill_color);
@@ -1740,7 +1754,7 @@ void MapCanvas::draw_element(QPainter& painter,
                      Qt::AlignCenter,
                      symbol);
     if ((type == "barracks" || type == "village" || type == "defense_tower" ||
-         type == "home" || type == "marketplace") &&
+         type == "home" || type == "marketplace" || type == "temple") &&
         player_id >= 0 && labels_visible()) {
       QString const player_text = player_id == 0 ? "N" : QString::number(player_id);
       font.setPointSize(8);
@@ -1919,6 +1933,27 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
         << QPointF(-s * 0.7F, -s * 0.2F);
     painter.setBrush(QColor(150, 164, 176));
     painter.drawPolygon(ore);
+  } else if (type == QStringLiteral("abandoned_home")) {
+    painter.setBrush(QColor(86, 74, 60));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    QPolygonF gable;
+    gable << QPointF(-s * 0.62F, s * 0.55F) << QPointF(-s * 0.62F, -s * 0.20F)
+          << QPointF(0.0F, -s * 0.70F) << QPointF(s * 0.62F, -s * 0.20F)
+          << QPointF(s * 0.62F, s * 0.55F);
+    painter.setBrush(QColor(168, 152, 126));
+    painter.drawPolygon(gable);
+    painter.setPen(QPen(QColor(58, 48, 38), std::max(1.5F, s * 0.14F)));
+    painter.drawLine(QPointF(s * 0.10F, -s * 0.45F), QPointF(s * 0.62F, -s * 0.05F));
+    painter.drawLine(QPointF(-s * 0.30F, s * 0.55F), QPointF(-s * 0.30F, -s * 0.05F));
+  } else if (type == QStringLiteral("statue")) {
+    painter.setBrush(QColor(74, 82, 88));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    painter.setBrush(QColor(214, 210, 198));
+    painter.drawRect(QRectF(-s * 0.46F, s * 0.34F, s * 0.92F, s * 0.34F));
+    painter.drawRect(QRectF(-s * 0.24F, -s * 0.14F, s * 0.48F, s * 0.48F));
+    painter.drawEllipse(QPointF(0, -s * 0.36F), s * 0.24F, s * 0.24F);
   }
 
   painter.restore();
@@ -2740,7 +2775,8 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
              m_current_tool == ToolType::Village ||
              m_current_tool == ToolType::DefenseTower ||
              m_current_tool == ToolType::Home ||
-             m_current_tool == ToolType::Marketplace) {
+             m_current_tool == ToolType::Marketplace ||
+             m_current_tool == ToolType::Temple) {
     StructureElement elem;
     switch (m_current_tool) {
     case ToolType::Barracks:
@@ -2757,6 +2793,9 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
       break;
     case ToolType::Marketplace:
       elem.type = "marketplace";
+      break;
+    case ToolType::Temple:
+      elem.type = "temple";
       break;
     default:
       break;

@@ -60,6 +60,11 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place authored ground plants as explicit world props.";
   case ToolType::PropIronOre:
     return "Place authored iron ore deposits as explicit world props.";
+  case ToolType::PropAbandonedHome:
+    return "Place a derelict home that blocks movement as an explicit world prop.";
+  case ToolType::PropStatue:
+    return "Place a commemorative statue that blocks movement as an explicit "
+           "world prop.";
   case ToolType::Barracks:
     return "Place barracks and assign them to a player.";
   case ToolType::Village:
@@ -70,6 +75,8 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place a home building and assign it to a player.";
   case ToolType::Marketplace:
     return "Place a marketplace building and assign it to a player.";
+  case ToolType::Temple:
+    return "Place a temple building and assign it to a player.";
   case ToolType::Wall:
     return "Draw a wall segment between two points and assign it to a player.";
   case ToolType::Eraser:
@@ -284,6 +291,20 @@ void ToolPanel::setup_ui() {
                   "◆",
                   "Place authored iron ore deposits.",
                   ToolType::PropIronOre);
+  add_tool_button(props_layout,
+                  6,
+                  0,
+                  "Abandoned Home",
+                  "\u2302",
+                  "Place a derelict home.",
+                  ToolType::PropAbandonedHome);
+  add_tool_button(props_layout,
+                  6,
+                  1,
+                  "Statue",
+                  "\u265F",
+                  "Place a commemorative statue.",
+                  ToolType::PropStatue);
   layout->addWidget(props_group);
 
   auto* ownership_group = new QGroupBox("Ownership", this);
@@ -439,6 +460,13 @@ void ToolPanel::setup_ui() {
                   "\u25C7",
                   "Place a marketplace and assign a player.",
                   ToolType::Marketplace);
+  add_tool_button(structures_layout,
+                  2,
+                  1,
+                  "Temple",
+                  "\u25B3",
+                  "Place a temple and assign a player.",
+                  ToolType::Temple);
 
   layout->addWidget(structures_group);
 

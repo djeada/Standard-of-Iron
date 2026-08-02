@@ -18,6 +18,8 @@ class DeadTreeRenderer;
 class FireCampRenderer;
 class IronOreRenderer;
 class MagicShrineRenderer;
+class AbandonedHomeRenderer;
+class StatueRenderer;
 class OliveRenderer;
 class PineRenderer;
 class PlantRenderer;
@@ -63,6 +65,8 @@ public:
   [[nodiscard]] auto boulder() const -> BoulderRenderer*;
   [[nodiscard]] auto iron_ore() const -> IronOreRenderer*;
   [[nodiscard]] auto magic_shrine() const -> MagicShrineRenderer*;
+  [[nodiscard]] auto abandoned_home() const -> AbandonedHomeRenderer*;
+  [[nodiscard]] auto statue() const -> StatueRenderer*;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
   [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
@@ -82,6 +86,8 @@ private:
   std::unique_ptr<BoulderRenderer> m_boulder;
   std::unique_ptr<IronOreRenderer> m_iron_ore;
   std::unique_ptr<MagicShrineRenderer> m_magic_shrine;
+  std::unique_ptr<AbandonedHomeRenderer> m_abandoned_home;
+  std::unique_ptr<StatueRenderer> m_statue;
   std::vector<IRenderPass*> m_passes;
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;

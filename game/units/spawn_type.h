@@ -38,7 +38,8 @@ enum class SpawnType : std::uint8_t {
   Home,
   WallSegment,
   Marketplace,
-  WallGate
+  WallGate,
+  Temple
 };
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
@@ -97,6 +98,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("marketplace");
   case SpawnType::WallGate:
     return QStringLiteral("wall_gate");
+  case SpawnType::Temple:
+    return QStringLiteral("temple");
   }
   return QStringLiteral("archer");
 }
@@ -219,6 +222,10 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     out = SpawnType::WallGate;
     return true;
   }
+  if (lowered == QStringLiteral("temple")) {
+    out = SpawnType::Temple;
+    return true;
+  }
   return false;
 }
 
@@ -307,13 +314,17 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "wall_gate") {
     return SpawnType::WallGate;
   }
+  if (str == "temple") {
+    return SpawnType::Temple;
+  }
   return std::nullopt;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks || type == SpawnType::DefenseTower ||
          type == SpawnType::Home || type == SpawnType::WallSegment ||
-         type == SpawnType::Marketplace || type == SpawnType::WallGate;
+         type == SpawnType::Marketplace || type == SpawnType::WallGate ||
+         type == SpawnType::Temple;
 }
 
 inline auto is_troop_spawn(SpawnType type) -> bool {
@@ -375,6 +386,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::WallSegment:
   case SpawnType::Marketplace:
   case SpawnType::WallGate:
+  case SpawnType::Temple:
     return false;
   }
   return false;
@@ -435,6 +447,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::Marketplace:
     return std::nullopt;
   case SpawnType::WallGate:
+    return std::nullopt;
+  case SpawnType::Temple:
     return std::nullopt;
   }
   return std::nullopt;

@@ -67,7 +67,9 @@ const QStringList k_prop_types = {"firecamp",
                                   "pine_tree",
                                   "olive_tree",
                                   "plant",
-                                  "iron_ore"};
+                                  "iron_ore",
+                                  "abandoned_home",
+                                  "statue"};
 
 auto terrain_schema(const QString& sub_type) -> JsonSchema {
   const bool is_mountain = sub_type == QStringLiteral("mountain");
@@ -225,11 +227,12 @@ auto structure_schema(const QString& sub_type) -> JsonSchema {
       "slot in the mission.");
 
   schema.fields = {
-      required_field("type",
-                     "string",
-                     "Building kind.",
-                     sub_type.isEmpty() ? QStringLiteral("barracks") : sub_type,
-                     {"barracks", "village", "defense_tower", "home", "marketplace"}),
+      required_field(
+          "type",
+          "string",
+          "Building kind.",
+          sub_type.isEmpty() ? QStringLiteral("barracks") : sub_type,
+          {"barracks", "village", "defense_tower", "home", "marketplace", "temple"}),
       grid_x_field(),
       grid_z_field(),
       optional_field("player_id", "integer", "0", "Owning player; 0 is neutral.", 0),
