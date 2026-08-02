@@ -141,6 +141,7 @@ soi_register_test_binary(persistence_tests)
 add_executable(
     render_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
+    render/unit_primitive_convention_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp

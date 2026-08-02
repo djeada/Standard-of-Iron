@@ -50,6 +50,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   Stand,
   Move,
   FormationMove,
+  Run,
   Charge,
   Attack,
   AttackMove,
@@ -340,7 +341,7 @@ struct ArenaRenderedFrameTimings {
   double terrain_submit_ms{0.0};
   double world_submit_ms{0.0};
   double effects_submit_ms{0.0};
-  double playback_ms{0.0};
+  double render_execute_ms{0.0};
   double overlays_ms{0.0};
   double humanoid_preparation_ms{0.0};
   double animation_sampling_ms{0.0};

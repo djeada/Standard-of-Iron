@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 in vec3 v_world_pos;
 in vec3 v_normal;
@@ -14,34 +15,6 @@ uniform float u_time;
 uniform vec3 u_center;
 uniform float u_radius;
 uniform int u_effect_type;
-
-float hash12(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise2(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  float a = hash12(i);
-  float b = hash12(i + vec2(1.0, 0.0));
-  float c = hash12(i + vec2(0.0, 1.0));
-  float d = hash12(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-
-float fbm(vec2 p) {
-  float value = 0.0;
-  float amplitude = 0.5;
-  for (int octave = 0; octave < 4; ++octave) {
-    value += amplitude * noise2(p);
-    p = p * 2.03 + vec2(13.1, 7.7);
-    amplitude *= 0.5;
-  }
-  return value;
-}
 
 float inv_smoothstep(float edge0, float edge1, float x) {
   float lower_edge = min(edge0, edge1);
@@ -79,15 +52,15 @@ void main() {
     float axis_radius = length(v_local_pos.xz);
     float radius_factor = smoothstep(0.18, 2.8, u_radius);
 
-    float body_noise =
-        fbm(vec2(v_texcoord.x * 4.6 + 3.0,
-                 flame_height * 4.4 - u_time * (1.5 + radius_factor * 0.18)));
-    float curl_noise = fbm(
+    float body_noise = soi_fbm_23e5ab(
+        vec2(v_texcoord.x * 4.6 + 3.0,
+             flame_height * 4.4 - u_time * (1.5 + radius_factor * 0.18)));
+    float curl_noise = soi_fbm_23e5ab(
         vec2(v_texcoord.x * 9.8 - u_time * 0.75, flame_height * 7.6 - u_time * 2.6));
-    float ember_noise = fbm(
+    float ember_noise = soi_fbm_23e5ab(
         vec2(v_texcoord.x * 18.0 + u_time * 0.55, flame_height * 18.0 - u_time * 5.2));
-    float soot_noise =
-        fbm(vec2(v_texcoord.x * 11.0 - u_time * 0.25, flame_height * 13.0 + 6.0));
+    float soot_noise = soi_fbm_23e5ab(
+        vec2(v_texcoord.x * 11.0 - u_time * 0.25, flame_height * 13.0 + 6.0));
 
     vec3 white_hot = vec3(2.25, 1.92, 1.28);
     vec3 hot_core = vec3(1.82, 0.82, 0.13);
@@ -193,9 +166,9 @@ void main() {
   } else if (u_effect_type == 3) {
 
     vec3 shell_dir = normalize(v_local_pos);
-    float shell_noise =
-        fbm(vec2(v_texcoord.x * 7.5 - u_time * 1.9, v_texcoord.y * 6.4 - u_time * 2.6));
-    float detail_noise = fbm(
+    float shell_noise = soi_fbm_23e5ab(
+        vec2(v_texcoord.x * 7.5 - u_time * 1.9, v_texcoord.y * 6.4 - u_time * 2.6));
+    float detail_noise = soi_fbm_23e5ab(
         vec2(v_texcoord.x * 15.0 + u_time * 0.8, v_texcoord.y * 12.0 - u_time * 4.4));
     float hot_streak = pow(max(detail_noise - 0.70, 0.0) * 3.5, 2.6);
     float polar = 1.0 - smoothstep(0.65, 1.0, abs(shell_dir.y));

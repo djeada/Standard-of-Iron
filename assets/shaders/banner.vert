@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
@@ -16,17 +17,13 @@ out float v_billow;
 out float v_cloth_depth;
 out float v_banner_seed;
 
-float hash12(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
 void main() {
   vec3 pos = a_position;
   float u = clamp(a_tex_coord.x, 0.0, 1.0);
   float v = clamp(a_tex_coord.y, 0.0, 1.0);
 
   vec2 world_anchor = vec2(u_model[3].x, u_model[3].z);
-  float banner_seed = hash12(floor(world_anchor * 3.7) + vec2(7.1, 3.9));
+  float banner_seed = soi_hash12_9f6e8e(floor(world_anchor * 3.7) + vec2(7.1, 3.9));
   float spatial_phase = banner_seed * 6.2831853;
   float wind = clamp(u_wind_strength, 0.0, 1.35);
 
@@ -34,8 +31,10 @@ void main() {
   float free_edge = attached * pow(u, 0.72);
   float free_edge_sq = free_edge * free_edge;
   float gust = 0.66 + 0.34 * sin(u_time * 0.43 + spatial_phase * 0.73);
-  gust += (hash12(vec2(floor(u_time * 0.37 + banner_seed * 11.0), banner_seed)) - 0.5) *
-          0.16;
+  gust +=
+      (soi_hash12_9f6e8e(vec2(floor(u_time * 0.37 + banner_seed * 11.0), banner_seed)) -
+       0.5) *
+      0.16;
 
   float primary_phase = u_time * 1.85 + u * 5.4 + v * 1.25 + spatial_phase;
   float cross_phase = u_time * 3.65 + u * 10.8 - v * 4.1 + spatial_phase * 1.7;

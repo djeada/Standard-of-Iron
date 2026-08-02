@@ -173,6 +173,23 @@ Key properties that keep it smooth (Phase 6):
 - **Turn (6.4):** a signed turn amount drives lean, torso twist, stride bias and
   inside/outside foot asymmetry.
 
+### Gait amplitude and the skate budget
+
+`walk_profile()` / `run_profile()` in `animation/locomotion_manifest.cpp` hold the gait
+amplitudes. Note that `stride_length` is the distance the foot sweeps **relative to the
+body** over one stance, while the body itself covers `speed * cycle_time` per cycle. At
+the reference walk speed those numbers are far apart (roughly 0.4 against 2.0), so planted
+feet always slide somewhat — this is a stylised RTS gait, not a foot-locked one, and
+`stride_distance_scale()` only keeps the ratio stable across speeds rather than closing it.
+
+The practical consequence: raising `stride_length` _reduces_ skate, it does not cause it.
+The original values were small enough that the legs read as a stiff shuffle from the game
+camera. The ceiling is leg reach — at a half-stride approaching `UPPER_LEG_LEN +
+LOWER_LEG_LEN` the pelvis has to drop to keep the foot on the ground, and the arena's
+`NoLimbOverextension` expectation is what catches overshoot. Review changes with the
+`humanoid_gait_review` scenario, which walks then runs three troop types across a close
+side-on camera.
+
 ---
 
 ## 5. Combat: visual state machine + marker-driven damage

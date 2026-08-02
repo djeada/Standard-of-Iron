@@ -587,7 +587,7 @@ void ArenaViewport::paintGL() {
   }
   timings.effects_submit_ms = elapsed_phase_ms();
   m_renderer->end_frame();
-  timings.playback_ms = elapsed_phase_ms();
+  timings.render_execute_ms = elapsed_phase_ms();
   if (sampled_frame) {
     sample_frame_continuity();
   }

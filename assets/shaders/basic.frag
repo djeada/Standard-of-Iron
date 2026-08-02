@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
+#include "noise.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -15,27 +16,10 @@ uniform int u_material_id;
 
 out vec4 frag_color;
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
 float wood_grain(vec2 p, float y) {
-  float grain = sin(y * 22.0 + noise(p * 4.5) * 3.5) * 0.5 + 0.5;
-  float fine = noise(p * 48.0) * 0.10;
-  float knot = step(0.93, noise(p * 2.2)) * 0.16;
+  float grain = sin(y * 22.0 + soi_noise_3d41e6(p * 4.5) * 3.5) * 0.5 + 0.5;
+  float fine = soi_noise_3d41e6(p * 48.0) * 0.10;
+  float knot = step(0.93, soi_noise_3d41e6(p * 2.2)) * 0.16;
   return grain * 0.13 + fine - knot;
 }
 
@@ -68,7 +52,7 @@ vec3 procedural_material_variation(vec3 base_color, vec3 world_pos, vec3 normal)
     float sheen = pow(1.0 - view_angle, 4.0) * 0.06;
     variation = base_color * (1.0 + wood_noise) + vec3(sheen);
   } else if (b_is_metal) {
-    float metal_noise = noise(uv * 9.0) * 0.018;
+    float metal_noise = soi_noise_3d41e6(uv * 9.0) * 0.018;
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
     float fresnel = pow(1.0 - view_angle, 2.0) * 0.10;
     variation = base_color + vec3(metal_noise + fresnel);
@@ -76,15 +60,15 @@ vec3 procedural_material_variation(vec3 base_color, vec3 world_pos, vec3 normal)
     float weave_x = sin(world_pos.x * 55.0);
     float weave_z = sin(world_pos.z * 55.0);
     float weave_pattern = weave_x * weave_z * 0.025;
-    float cloth_noise = noise(uv * 2.5) * 0.10 - 0.05;
+    float cloth_noise = soi_noise_3d41e6(uv * 2.5) * 0.10 - 0.05;
 
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
     float sheen = pow(1.0 - view_angle, 3.0) * 0.15;
 
     variation = base_color * (1.0 + cloth_noise + weave_pattern) + vec3(sheen);
   } else {
-    float leather_noise = noise(uv * 5.5);
-    float blotches = noise(uv * 1.8) * 0.12 - 0.06;
+    float leather_noise = soi_noise_3d41e6(uv * 5.5);
+    float blotches = soi_noise_3d41e6(uv * 1.8) * 0.12 - 0.06;
     variation = base_color * (1.0 + leather_noise * 0.14 - 0.07 + blotches);
   }
 
@@ -103,7 +87,8 @@ void main() {
   if (u_material_id >= 10) {
     float soot_amt = float(u_material_id - 9) * 0.45;
     vec2 soot_uv = v_world_pos.xz * 3.5;
-    float soot_patch = noise(soot_uv) * 0.6 + noise(soot_uv * 4.1) * 0.4;
+    float soot_patch =
+        soi_noise_3d41e6(soot_uv) * 0.6 + soi_noise_3d41e6(soot_uv * 4.1) * 0.4;
     float soot_mask = smoothstep(0.42, 0.65, soot_patch) * soot_amt;
     vec3 char_color = mix(color * 0.25, vec3(0.08, 0.07, 0.06), 0.5);
     color = mix(color, char_color, clamp(soot_mask, 0.0, 0.85));

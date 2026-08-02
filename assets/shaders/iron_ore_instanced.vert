@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;
@@ -14,12 +15,6 @@ out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
 flat out float v_seed;
-
-float hash13(vec3 p) {
-  p = fract(p * 0.1031);
-  p += dot(p, p.yzx + 33.33);
-  return fract((p.x + p.y) * p.z);
-}
 
 void main() {
   float scale = a_pos_scale.w;
@@ -42,7 +37,7 @@ void main() {
 
   v_local_pos = a_pos * scale;
 
-  v_seed = hash13(world_origin * 0.173 + vec3(rotation, scale, 0.37));
+  v_seed = soi_hash13_1c8396(world_origin * 0.173 + vec3(rotation, scale, 0.37));
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

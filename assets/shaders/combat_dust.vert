@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
@@ -18,34 +19,6 @@ out vec2 v_texcoord;
 out vec3 v_local_pos;
 out float v_intensity;
 out float v_alpha;
-
-float hash12(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-
-float noise2(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  float a = hash12(i);
-  float b = hash12(i + vec2(1.0, 0.0));
-  float c = hash12(i + vec2(0.0, 1.0));
-  float d = hash12(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-
-float fbm(vec2 p) {
-  float value = 0.0;
-  float amplitude = 0.5;
-  for (int octave = 0; octave < 4; ++octave) {
-    value += amplitude * noise2(p);
-    p = p * 2.03 + vec2(13.1, 7.7);
-    amplitude *= 0.5;
-  }
-  return value;
-}
 
 float inv_smoothstep(float edge0, float edge1, float x) {
   float lower_edge = min(edge0, edge1);
@@ -83,12 +56,13 @@ void main() {
     float angle = angle_t * 6.28318;
     float radius_factor = smoothstep(0.18, 2.8, u_radius);
 
-    float flow_noise = fbm(vec2(angle_t * 3.6 + 4.0,
-                                height * 3.8 - u_time * (1.2 + radius_factor * 0.15)));
-    float curl_noise = fbm(vec2(angle_t * 7.8 - u_time * 0.65,
-                                height * 6.3 - u_time * (2.2 + radius_factor * 0.25)));
-    float detail_noise =
-        fbm(vec2(angle_t * 14.5 + curl_noise * 0.6, height * 12.0 - u_time * 3.2));
+    float flow_noise = soi_fbm_23e5ab(vec2(
+        angle_t * 3.6 + 4.0, height * 3.8 - u_time * (1.2 + radius_factor * 0.15)));
+    float curl_noise =
+        soi_fbm_23e5ab(vec2(angle_t * 7.8 - u_time * 0.65,
+                            height * 6.3 - u_time * (2.2 + radius_factor * 0.25)));
+    float detail_noise = soi_fbm_23e5ab(
+        vec2(angle_t * 14.5 + curl_noise * 0.6, height * 12.0 - u_time * 3.2));
 
     float lobe = 0.78 + 0.27 * sin(angle * 3.0 + u_time * 2.1 + flow_noise * 2.4) +
                  0.13 * sin(angle * 6.0 - u_time * 3.2 + detail_noise * 3.14159);
@@ -203,8 +177,8 @@ void main() {
     vec3 normal_dir = normalize(a_normal);
     vec2 flow_uv = vec2(a_texcoord.x * 6.0 + normal_dir.y * 1.4,
                         a_texcoord.y * 6.5 - u_time * 1.8);
-    float shell_noise = fbm(flow_uv);
-    float detail_noise = fbm(flow_uv * 1.9 + vec2(2.7, -u_time * 0.55));
+    float shell_noise = soi_fbm_23e5ab(flow_uv);
+    float detail_noise = soi_fbm_23e5ab(flow_uv * 1.9 + vec2(2.7, -u_time * 0.55));
     float flare =
         sin((a_texcoord.x + a_texcoord.y) * 18.0 + u_time * 11.0 + detail_noise * 4.0);
     float pulse = 0.92 + 0.08 * sin(u_time * 9.0 + shell_noise * 3.14159);

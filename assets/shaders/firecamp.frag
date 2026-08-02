@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 out vec4 frag_color;
 in vec2 tex_coord;
 in float intensity_val;
@@ -9,28 +10,11 @@ uniform sampler2D fire_texture;
 uniform float u_time;
 uniform float u_glow_strength;
 
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
-
-float noise(vec2 p) {
-  vec2 cell = floor(p);
-  vec2 local = fract(p);
-  vec2 smooth_local = local * local * (3.0 - 2.0 * local);
-
-  float a = hash(cell);
-  float b = hash(cell + vec2(1.0, 0.0));
-  float c = hash(cell + vec2(0.0, 1.0));
-  float d = hash(cell + vec2(1.0, 1.0));
-
-  return mix(mix(a, b, smooth_local.x), mix(c, d, smooth_local.x), smooth_local.y);
-}
-
 float fbm(vec2 p) {
   float value = 0.0;
   float amplitude = 0.5;
   for (int octave = 0; octave < 4; ++octave) {
-    value += amplitude * noise(p);
+    value += amplitude * soi_noise_95f501(p);
     p = p * 2.03 + vec2(17.13, 9.37);
     amplitude *= 0.5;
   }
@@ -86,7 +70,7 @@ void main() {
       vec2(centered_x * 7.0 + flame_phase * 2.3, height_t * 15.0 - u_time * 5.6);
   vec2 spark_cell = floor(spark_grid);
   vec2 spark_local = fract(spark_grid) - 0.5;
-  float spark_seed = hash(spark_cell + vec2(flame_phase * 3.7, 11.0));
+  float spark_seed = soi_hash_565aa4(spark_cell + vec2(flame_phase * 3.7, 11.0));
   spark_local.x += (spark_seed - 0.5) * 0.42;
   float spark_dot = 1.0 - smoothstep(0.045, 0.14, length(spark_local));
   float detached_sparks = spark_dot * smoothstep(0.82, 0.97, spark_seed) *

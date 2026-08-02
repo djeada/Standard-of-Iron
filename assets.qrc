@@ -9,6 +9,7 @@
         <file>assets/shaders/include/local_lighting.glsl</file>
         <file>assets/shaders/include/directional_shadows.glsl</file>
         <file>assets/shaders/include/visibility_mask.glsl</file>
+        <file>assets/shaders/include/noise.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
         <file>assets/shaders/directional_shadow_rigged.vert</file>
         <file>assets/shaders/directional_shadow_rigged_instanced.vert</file>
