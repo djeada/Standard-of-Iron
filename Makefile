@@ -74,6 +74,8 @@ help:
 	@echo "  $(GREEN)test$(RESET)          - Build only test binaries, then run them"
 	@echo "  $(GREEN)test-only$(RESET)     - Run existing test binaries without building"
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
+	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
+	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
@@ -333,6 +335,21 @@ test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@bash scripts/run-tests.sh $(BUILD_DIR) --gtest_brief=1 $(TEST_ARGS)
 
+# Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
+# assets on disk. Run it any time you want the current list of missing sounds.
+.PHONY: audio-report
+audio-report:
+	@echo "$(BOLD)$(BLUE)Auditing game audio...$(RESET)"
+	@$(PYTHON) scripts/audio_report.py
+	@echo "$(GREEN)✓ Audio report written to docs/AUDIO_WISHLIST.md$(RESET)"
+
+# Same audit as a gate: fails when a cue, a manifest entry and a file disagree.
+.PHONY: audio-check
+audio-check:
+	@echo "$(BOLD)$(BLUE)Checking game audio wiring...$(RESET)"
+	@$(PYTHON) scripts/audio_report.py --stdout --check > /dev/null
+	@echo "$(GREEN)✓ Audio cue, manifest and asset links are consistent$(RESET)"
+
 # Validate mission and campaign content
 .PHONY: validate-content
 validate-content: build
@@ -438,6 +455,47 @@ strip-comments:
 
 # Backwards-compatible alias for the old target name.
 format-strip-comments: strip-comments
+
+# ---- Translations ----
+# lupdate rescans every qsTr()/tr()/QT_TR_NOOP in the UI and engine sources and
+# rewrites the .ts catalogues; lrelease compiles them into the .qm files that
+# translations.qrc embeds. `-locations none` keeps the diffs free of the line
+# numbers that churn on every unrelated edit.
+.PHONY: translations translations-check
+
+LUPDATE ?= $(shell command -v lupdate 2>/dev/null || echo /usr/lib/qt6/bin/lupdate)
+LRELEASE ?= $(shell command -v lrelease 2>/dev/null || echo /usr/lib/qt6/bin/lrelease)
+TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_pt_br.ts
+TS_SOURCE_DIRS := ui app game scene render
+
+## Rescan sources for translatable strings and recompile the .qm catalogues.
+translations:
+	@echo "$(BOLD)$(BLUE)Updating translation catalogues...$(RESET)"
+	@$(LUPDATE) $(TS_SOURCE_DIRS) -no-obsolete -locations none -ts $(TS_FILES)
+	@for ts in $(TS_FILES); do $(LRELEASE) $$ts -qm $${ts%.ts}.qm; done
+	@echo "$(GREEN)✓ Translations updated$(RESET)"
+
+## Fail if any UI string is missing from the catalogues or left untranslated.
+## Rescans into a scratch copy so it never rewrites the tracked catalogues.
+translations-check:
+	@echo "$(BOLD)$(BLUE)Checking translation coverage...$(RESET)"
+	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
+	cp $(TS_FILES) "$$tmp/" && \
+	probe=""; for ts in $(TS_FILES); do probe="$$probe $$tmp/$$(basename $$ts)"; done && \
+	$(LUPDATE) $(TS_SOURCE_DIRS) -no-obsolete -locations none -ts $$probe >/dev/null && \
+	for ts in $(TS_FILES); do \
+		if ! diff -q "$$ts" "$$tmp/$$(basename $$ts)" >/dev/null; then \
+			echo "$(RED)$$ts is stale. Run 'make translations'.$(RESET)"; \
+			diff -u "$$ts" "$$tmp/$$(basename $$ts)" | head -40; \
+			exit 1; \
+		fi; \
+	done
+	@if grep -q 'type="unfinished"' $(TS_FILES); then \
+		echo "$(RED)Untranslated strings remain:$(RESET)"; \
+		grep -l 'type="unfinished"' $(TS_FILES); \
+		exit 1; \
+	fi
+	@echo "$(GREEN)✓ Every UI string is translated$(RESET)"
 
 # ---- Aggregate gates ----
 .PHONY: quality validate hooks-install

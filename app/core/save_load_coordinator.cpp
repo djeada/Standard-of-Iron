@@ -22,6 +22,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game_state_restorer.h"
+#include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
 
@@ -129,6 +130,11 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
 
 auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) const
     -> LoadFromSlotEffects {
+
+  if (context.scene.renderer != nullptr) {
+    context.scene.renderer->clear_entity_render_caches();
+  }
+
   if (!context.save_load_service.load_game_from_slot(context.world, context.slot)) {
     return {.error = context.save_load_service.get_last_error()};
   }

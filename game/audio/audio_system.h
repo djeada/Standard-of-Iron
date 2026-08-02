@@ -28,12 +28,10 @@ enum class AudioEventType {
   PLAY_MUSIC,
   STOP_SOUND,
   STOP_MUSIC,
-  SET_VOLUME,
   PAUSE,
   RESUME,
   SHUTDOWN,
-  UNLOAD_RESOURCE,
-  CLEANUP_INACTIVE
+  UNLOAD_RESOURCE
 };
 
 enum class AudioCategory {
@@ -133,7 +131,7 @@ private:
 
   void audio_thread_func();
   void process_event(const AudioEvent& event);
-  void cleanup_inactive_sounds();
+  void enqueue(AudioEvent&& event);
   void cleanup_inactive_sounds_locked();
   auto resolve_resource_id_locked(const std::string& resource_id) const -> std::string;
   auto should_accept_sound_locked(int priority) -> bool;

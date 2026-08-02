@@ -7,6 +7,7 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "audio_cues.h"
 #include "audio_system.h"
 #include "core/event_manager.h"
 #include "units/spawn_type.h"
@@ -139,132 +140,28 @@ auto ambient_sfx_group_key(Engine::Core::AmbientState state) -> std::string {
   return "ambient.sfx.peaceful";
 }
 
-auto victory_state_sounds() -> const std::vector<std::string>& {
-  static const std::vector<std::string> k_sounds = {
-      "sfx.combat.soldiers_victory_cheer",
-  };
-  return k_sounds;
-}
-
-auto defeat_state_sounds() -> const std::vector<std::string>& {
-  static const std::vector<std::string> k_sounds = {
-      "sfx.combat.army_retreat_panic",
-  };
-  return k_sounds;
-}
-
-auto death_sound_pool() -> const std::vector<std::string>& {
-  static const std::vector<std::string> k_sounds = {
-      "combat_death",
-      "sfx.combat.aftermath_battlefield",
-  };
-  return k_sounds;
-}
-
-auto get_hit_sound_group_key(Game::Units::SpawnType type) -> std::string {
+auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   switch (type) {
   case Game::Units::SpawnType::Knight:
   case Game::Units::SpawnType::SkeletonSwordsman:
   case Game::Units::SpawnType::GravePriest:
-    return "combat.hit.sword";
+    return Cue::k_combat_hit_sword;
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::HorseSpearman:
-    return "combat.hit.spear";
+    return Cue::k_combat_hit_spear;
   case Game::Units::SpawnType::Archer:
   case Game::Units::SpawnType::SkeletonArcher:
   case Game::Units::SpawnType::HorseArcher:
-    return "combat.hit.arrow";
+    return Cue::k_combat_hit_arrow;
   case Game::Units::SpawnType::MountedKnight:
-    return "combat.hit.cavalry";
+    return Cue::k_combat_hit_cavalry;
   case Game::Units::SpawnType::Elephant:
-    return "combat.hit.elephant";
+    return Cue::k_combat_hit_elephant;
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
-    return "combat.hit.siege";
+    return Cue::k_combat_hit_siege;
   default:
-    return "combat.hit.generic";
-  }
-}
-
-auto get_hit_sound_cooldown_ms(Game::Units::SpawnType type) -> int {
-  switch (type) {
-  case Game::Units::SpawnType::Knight:
-  case Game::Units::SpawnType::SkeletonSwordsman:
-  case Game::Units::SpawnType::GravePriest:
-    return 90;
-  case Game::Units::SpawnType::Spearman:
-  case Game::Units::SpawnType::HorseSpearman:
-    return 100;
-  case Game::Units::SpawnType::Archer:
-  case Game::Units::SpawnType::SkeletonArcher:
-  case Game::Units::SpawnType::HorseArcher:
-    return 120;
-  case Game::Units::SpawnType::MountedKnight:
-    return 220;
-  case Game::Units::SpawnType::Elephant:
-    return 260;
-  case Game::Units::SpawnType::Catapult:
-  case Game::Units::SpawnType::Ballista:
-    return 250;
-  default:
-    return 140;
-  }
-}
-
-auto get_hit_sound_pool(Game::Units::SpawnType type)
-    -> const std::vector<std::string>& {
-  static const std::vector<std::string> k_sword = {
-      "combat_hit_sword",
-      "sfx.combat.roman_shield_wall_impact",
-  };
-  static const std::vector<std::string> k_spear = {
-      "combat_hit_spear",
-      "sfx.combat.spearmen_formation_advance",
-  };
-  static const std::vector<std::string> k_arrow = {
-      "combat_hit_arrow",
-      "sfx.combat.archer_volley_many",
-      "sfx.combat.archers_shooting_close",
-      "sfx.combat.arrows_whistle_snap_impact",
-  };
-  static const std::vector<std::string> k_generic = {
-      "combat_hit_generic",
-      "sfx.combat.battlefield_distant_mass_01",
-  };
-  static const std::vector<std::string> k_cavalry = {
-      "combat_hit_cavalry",
-      "sfx.combat.horse_gallop_close_pass",
-      "sfx.combat.numidian_cavalry_chase",
-  };
-  static const std::vector<std::string> k_elephant = {
-      "combat_hit_elephant",
-      "sfx.combat.elephant_panic",
-  };
-  static const std::vector<std::string> k_siege = {
-      "combat_hit_siege",
-  };
-
-  switch (type) {
-  case Game::Units::SpawnType::Knight:
-  case Game::Units::SpawnType::SkeletonSwordsman:
-  case Game::Units::SpawnType::GravePriest:
-    return k_sword;
-  case Game::Units::SpawnType::Spearman:
-  case Game::Units::SpawnType::HorseSpearman:
-    return k_spear;
-  case Game::Units::SpawnType::Archer:
-  case Game::Units::SpawnType::SkeletonArcher:
-  case Game::Units::SpawnType::HorseArcher:
-    return k_arrow;
-  case Game::Units::SpawnType::MountedKnight:
-    return k_cavalry;
-  case Game::Units::SpawnType::Elephant:
-    return k_elephant;
-  case Game::Units::SpawnType::Catapult:
-  case Game::Units::SpawnType::Ballista:
-    return k_siege;
-  default:
-    return k_generic;
+    return Cue::k_combat_hit_generic;
   }
 }
 
@@ -300,6 +197,9 @@ auto AudioEventHandler::initialize() -> bool {
           [this](const Engine::Core::AudioTriggerEvent& event) {
             on_audio_trigger(event);
           });
+
+  m_audio_cue_sub = Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent>(
+      [this](const Engine::Core::AudioCueEvent& event) { on_audio_cue(event); });
 
   m_music_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>(
@@ -344,6 +244,7 @@ void AudioEventHandler::shutdown() {
   m_unit_selected_sub.unsubscribe();
   m_ambient_changed_sub.unsubscribe();
   m_audio_trigger_sub.unsubscribe();
+  m_audio_cue_sub.unsubscribe();
   m_music_trigger_sub.unsubscribe();
   m_combat_hit_sub.unsubscribe();
   m_unit_spawned_sub.unsubscribe();
@@ -484,12 +385,12 @@ void AudioEventHandler::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& ev
 }
 
 void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
-  if (!Game::Units::is_troop_spawn(event.spawn_type)) {
+  if (Game::Units::is_building_spawn(event.spawn_type)) {
+    play_cue(Cue::k_build_building_destroyed);
     return;
   }
 
-  play_sound_group(
-      "combat.hit.death", death_sound_pool(), 0.75F, 6, AudioCategory::SFX, 160);
+  play_cue(Cue::k_combat_death);
 }
 
 void AudioEventHandler::on_ambient_state_changed(
@@ -516,11 +417,9 @@ void AudioEventHandler::on_ambient_state_changed(
   }
 
   if (event.new_state == Engine::Core::AmbientState::VICTORY) {
-    play_sound_group(
-        "state.victory", victory_state_sounds(), 0.9F, 7, AudioCategory::SFX, 2000);
+    play_cue(Cue::k_state_victory);
   } else if (event.new_state == Engine::Core::AmbientState::DEFEAT) {
-    play_sound_group(
-        "state.defeat", defeat_state_sounds(), 0.9F, 7, AudioCategory::SFX, 2000);
+    play_cue(Cue::k_state_defeat);
   }
 }
 
@@ -568,50 +467,28 @@ void AudioEventHandler::on_building_attacked(
   if (m_local_owner_id != 0 && event.owner_id != m_local_owner_id) {
     return;
   }
-  static const std::vector<std::string> k_sounds = {"enemy_spotted_horn"};
-  play_sound_group("alert.enemy_spotted", k_sounds, 0.85F, 7, AudioCategory::SFX, 1500);
+  play_cue(Cue::k_alert_base_under_attack);
 }
 
 void AudioEventHandler::on_barrack_captured(
     const Engine::Core::BarrackCapturedEvent& event) {
-  static const std::vector<std::string> k_player_capture_sounds = {
-      "reinforcements_arrived",
-      "sfx.combat.army_march_dirt_mass",
-  };
-  static const std::vector<std::string> k_player_loss_sounds = {
-      "enemy_reinforcements_warning",
-  };
-
-  if (m_local_owner_id == 0) {
-    play_sound_group("alert.reinforcements_arrived",
-                     k_player_capture_sounds,
-                     0.90F,
-                     8,
-                     AudioCategory::SFX,
-                     3000);
+  if (m_local_owner_id == 0 || event.new_owner_id == m_local_owner_id) {
+    play_cue(Cue::k_alert_reinforcements);
     return;
   }
 
-  if (event.new_owner_id == m_local_owner_id) {
-    play_sound_group("alert.reinforcements_arrived",
-                     k_player_capture_sounds,
-                     0.90F,
-                     8,
-                     AudioCategory::SFX,
-                     3000);
-  } else if (event.previous_owner_id == m_local_owner_id) {
-    play_sound_group("alert.enemy_reinforcements",
-                     k_player_loss_sounds,
-                     0.90F,
-                     8,
-                     AudioCategory::SFX,
-                     3000);
+  if (event.previous_owner_id == m_local_owner_id) {
+    play_cue(Cue::k_alert_enemy_reinforcements);
   }
 }
 
 void AudioEventHandler::on_audio_trigger(const Engine::Core::AudioTriggerEvent& event) {
   AudioSystem::get_instance().play_sound(
       event.sound_id, event.volume, event.loop, event.priority);
+}
+
+void AudioEventHandler::on_audio_cue(const Engine::Core::AudioCueEvent& event) {
+  play_cue(event.cue_id, event.volume_scale);
 }
 
 void AudioEventHandler::on_music_trigger(const Engine::Core::MusicTriggerEvent& event) {
@@ -624,20 +501,10 @@ void AudioEventHandler::on_music_trigger(const Engine::Core::MusicTriggerEvent& 
 
 void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event) {
   float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
-  play_sound_group(get_hit_sound_group_key(event.attacker_type),
-                   get_hit_sound_pool(event.attacker_type),
-                   volume,
-                   COMBAT_HIT_PRIORITY,
-                   AudioCategory::SFX,
-                   get_hit_sound_cooldown_ms(event.attacker_type));
+  play_cue(hit_cue_for_attacker(event.attacker_type), volume);
 
   if (event.is_killing_blow) {
-    play_sound_group("combat.hit.death",
-                     death_sound_pool(),
-                     volume * 0.9F,
-                     COMBAT_HIT_PRIORITY + 1,
-                     AudioCategory::SFX,
-                     160);
+    play_cue(Cue::k_combat_death, get_volume_variation());
   }
 }
 

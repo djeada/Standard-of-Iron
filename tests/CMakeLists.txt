@@ -267,6 +267,7 @@ add_executable(
     app_tests
     ${CMAKE_SOURCE_DIR}/translations.qrc
     core/audio_system_test.cpp
+    core/audio_cues_test.cpp
     db/save_preview_test.cpp
     core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp

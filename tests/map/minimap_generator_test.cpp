@@ -1,10 +1,14 @@
 #include <QColor>
 #include <QImage>
+#include <QVariantList>
+#include <QVariantMap>
 
 #include <cmath>
 #include <gtest/gtest.h>
 
 #include "map/map_definition.h"
+#include "map/map_loader.h"
+#include "map/minimap/map_preview_generator.h"
 #include "map/minimap/minimap_generator.h"
 #include "map/minimap/minimap_utils.h"
 
@@ -227,6 +231,66 @@ TEST_F(MinimapGeneratorTest, RendersWallStructures) {
   EXPECT_GT(color_distance(walls.pixelColor(center), empty.pixelColor(center)), 20);
 }
 
+TEST_F(MinimapGeneratorTest, LandmarkBakeKeepsBarracksOnTheStaticImage) {
+  MapDefinition const empty_map = test_map;
+  test_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::Barracks, 0.5F, 0.5F, 2));
+
+  MinimapGenerator::Config config;
+  config.structure_bake = MinimapGenerator::StructureBake::LandmarksOnly;
+  MinimapGenerator generator(config);
+
+  const QImage empty = generator.generate(empty_map);
+  const QImage with_barracks = generator.generate(test_map);
+  const QPoint center(with_barracks.width() / 2, with_barracks.height() / 2);
+
+  EXPECT_GT(region_distance(empty, with_barracks, center, 4), 100)
+      << "Barracks stay marked on the minimap even before they are scouted.";
+}
+
+TEST_F(MinimapGeneratorTest, LandmarkBakeHidesNonBarracksStructures) {
+  MapDefinition const empty_map = test_map;
+  test_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::DefenseTower, 0.5F, 0.5F, 2));
+  test_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::Home, -8.5F, 6.5F, 2));
+  test_map.structures.push_back({
+      .type = Game::Units::SpawnType::WallSegment,
+      .geometry =
+          LineStructureGeometry{
+              .start = QVector3D(-10.0F, 0.0F, 0.0F),
+              .end = QVector3D(10.0F, 0.0F, 0.0F),
+              .width = 2.0F,
+          },
+      .player_id = 2,
+  });
+
+  MinimapGenerator::Config config;
+  config.structure_bake = MinimapGenerator::StructureBake::LandmarksOnly;
+  MinimapGenerator generator(config);
+
+  const QImage empty = generator.generate(empty_map);
+  const QImage with_structures = generator.generate(test_map);
+
+  EXPECT_EQ(empty, with_structures)
+      << "Towers, homes and walls must not leak through fog via the static "
+         "minimap image.";
+}
+
+TEST_F(MinimapGeneratorTest, DefaultBakeStillDrawsEveryStructure) {
+  MapDefinition const empty_map = test_map;
+  test_map.structures.push_back(
+      point_structure(Game::Units::SpawnType::DefenseTower, 0.5F, 0.5F, 2));
+
+  MinimapGenerator generator;
+  const QImage empty = generator.generate(empty_map);
+  const QImage with_tower = generator.generate(test_map);
+  const QPoint center(with_tower.width() / 2, with_tower.height() / 2);
+
+  EXPECT_GT(region_distance(empty, with_tower, center, 4), 100)
+      << "The map-select preview has no fog and keeps showing everything.";
+}
+
 TEST_F(MinimapGeneratorTest, RoadsRenderBelowTerrainFeatures) {
   RoadSegment road;
   road.start = QVector3D(-15.0F, 0.0F, 0.0F);
@@ -328,6 +392,56 @@ TEST_F(MinimapGeneratorTest, BarracksAndHomesExtendFartherThanOtherBuildingIcons
             color_distance(tower_pixel, empty_pixel) + 20);
   EXPECT_GT(color_distance(home_pixel, empty_pixel),
             color_distance(tower_pixel, empty_pixel) + 20);
+}
+
+TEST(MapPreviewGeneratorTest, PlayerBasesLandOnTheCappedPreviewScale) {
+  const QString map_path = QStringLiteral("assets/maps/map_battle_cannae.json");
+
+  MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(MapLoader::load_from_json_file(map_path, map_def, &error))
+      << error.toStdString();
+  ASSERT_GT(map_def.grid.width, 256)
+      << "This map has to be large enough for the generator to cap the image.";
+
+  const PointStructureGeometry* player_one_base = nullptr;
+  for (const auto& structure : map_def.structures) {
+    if (structure.player_id != 1) {
+      continue;
+    }
+    if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
+      player_one_base = point;
+      break;
+    }
+  }
+  ASSERT_NE(player_one_base, nullptr);
+
+  const QColor player_color(QStringLiteral("#ff00ff"));
+  QVariantMap config;
+  config["player_id"] = 1;
+  config["colorHex"] = player_color.name();
+
+  MapPreviewGenerator generator;
+  const QImage preview = generator.generate_preview(map_path, QVariantList{config});
+  ASSERT_FALSE(preview.isNull());
+  EXPECT_LE(std::max(preview.width(), preview.height()), 512);
+
+  const auto [world_width, world_height] = world_dimensions(map_def.grid);
+  const auto [px, py] =
+      Game::Map::Minimap::world_to_pixel(player_one_base->position.x(),
+                                         player_one_base->position.z(),
+                                         world_width,
+                                         world_height,
+                                         static_cast<float>(preview.width()),
+                                         static_cast<float>(preview.height()));
+
+  const QPoint marker(static_cast<int>(std::lround(px)),
+                      static_cast<int>(std::lround(py)));
+  ASSERT_TRUE(preview.rect().contains(marker))
+      << "marker at " << marker.x() << "," << marker.y();
+  EXPECT_LT(color_distance(preview.pixelColor(marker), player_color), 90)
+      << "The start-position marker must be drawn at the same scale as the "
+         "capped preview image.";
 }
 
 TEST_F(MinimapGeneratorTest, HandlesEmptyMap) {

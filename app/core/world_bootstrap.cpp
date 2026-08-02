@@ -1,5 +1,7 @@
 #include "world_bootstrap.h"
 
+#include <QCoreApplication>
+
 #include "render/gl/bootstrap.h"
 #include "render/ground/ground_renderer.h"
 
@@ -11,7 +13,8 @@ auto WorldBootstrap::initialize(Render::GL::Renderer& renderer,
                                 QString* out_error) -> bool {
   if (!Render::GL::RenderBootstrap::initialize(renderer, camera)) {
     if (out_error != nullptr) {
-      *out_error =
+      *out_error = QCoreApplication::translate(
+          "WorldBootstrap",
           "Failed to initialize OpenGL renderer.\n\n"
           "This usually means:\n"
           "1. Graphics drivers don't support required OpenGL 3.3 Core Profile\n"
@@ -20,7 +23,7 @@ auto WorldBootstrap::initialize(Render::GL::Renderer& renderer,
           "To fix:\n"
           "- Run run_debug_softwaregl.cmd or set QT_OPENGL=software\n"
           "- Update graphics drivers\n"
-          "- On VMs: Enable 3D acceleration in VM settings";
+          "- On VMs: Enable 3D acceleration in VM settings");
     }
     return false;
   }

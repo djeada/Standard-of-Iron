@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../game_config.h"
 #include "../systems/nation_registry.h"
@@ -149,6 +150,8 @@ auto ProductionService::start_production(Engine::Core::World& world,
     p->time_remaining = p->build_time;
     p->in_progress = true;
   }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent("build.unit_queued"));
   p->manpower_available -= production_cost;
   resources.spend(owner_id, profile.production.resource_costs);
 
@@ -290,6 +293,8 @@ auto ProductionService::start_production_for_first_selected_home(
     p->time_remaining = p->build_time;
     p->in_progress = true;
   }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent("build.unit_queued"));
 
   p->manpower_available -= production_cost;
   resources.spend(owner_id, profile.production.resource_costs);

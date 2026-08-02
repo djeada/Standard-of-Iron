@@ -42,6 +42,8 @@ auto MapPreviewGenerator::generate_preview(
     return error_image;
   }
 
+  MinimapOrientation::instance().set_yaw_degrees(map_def.camera.yaw_deg);
+
   QImage preview = m_minimap_generator->generate(map_def);
 
   std::vector<PlayerConfig> parsed_configs = parse_player_configs(player_configs);
@@ -88,10 +90,15 @@ void MapPreviewGenerator::draw_player_bases(
     return;
   }
 
+  if (map_def.grid.width <= 0 || image.width() <= 0) {
+    return;
+  }
+
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  constexpr float pixels_per_tile = 2.0F;
+  const float pixels_per_tile =
+      static_cast<float>(image.width()) / static_cast<float>(map_def.grid.width);
 
   for (const auto& structure : map_def.structures) {
     const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry);

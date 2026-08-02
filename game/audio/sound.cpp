@@ -1,9 +1,7 @@
 #include "sound.h"
 
-#include <QCryptographicHash>
 #include <QDebug>
 #include <QFileInfo>
-#include <qcryptographichash.h>
 #include <qfileinfo.h>
 #include <qglobal.h>
 #include <qobject.h>
@@ -13,16 +11,16 @@
 
 #include "miniaudio_backend.h"
 
-Sound::Sound(const std::string& file_path, MiniaudioBackend* backend)
+Sound::Sound(const std::string& resource_id,
+             const std::string& file_path,
+             MiniaudioBackend* backend)
     : QObject(nullptr)
     , m_file_path(file_path)
     , m_backend(backend)
     , m_loaded(false)
     , m_volume(Sound::DEFAULT_VOLUME) {
 
-  QByteArray const hash = QCryptographicHash::hash(QByteArray::fromStdString(file_path),
-                                                   QCryptographicHash::Md5);
-  m_track_id = "sound_" + QString(hash.toHex());
+  m_track_id = "sound_" + QString::fromStdString(resource_id);
 
   QFileInfo const file_info(QString::fromStdString(m_file_path));
   if (!file_info.exists()) {
@@ -32,9 +30,6 @@ Sound::Sound(const std::string& file_path, MiniaudioBackend* backend)
 
   if (m_backend != nullptr) {
     m_loaded = m_backend->predecode(m_track_id, file_info.absoluteFilePath());
-    if (m_loaded) {
-      qDebug() << "Sound: Loaded" << file_info.absoluteFilePath();
-    }
   }
 }
 
@@ -75,9 +70,6 @@ void Sound::play(float volume, bool loop) {
 
   m_volume = volume;
   m_backend->play_sound(m_track_id, volume, loop);
-
-  qDebug() << "Sound: Playing" << QString::fromStdString(m_file_path)
-           << "volume:" << volume << "loop:" << loop;
 }
 
 void Sound::stop() {

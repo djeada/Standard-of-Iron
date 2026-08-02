@@ -1,5 +1,6 @@
 #include "mission_setup_coordinator.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QSet>
 #include <QVariantMap>
@@ -44,21 +45,23 @@ auto classify_wave_direction(const QVector3D& entry_point) -> QString {
 
   constexpr float k_direction_bias = 1.25F;
   if (ax > az * k_direction_bias) {
-    return x >= 0.0F ? QStringLiteral("east") : QStringLiteral("west");
+    return x >= 0.0F ? QCoreApplication::translate("MissionSetupCoordinator", "east")
+                     : QCoreApplication::translate("MissionSetupCoordinator", "west");
   }
   if (az > ax * k_direction_bias) {
-    return z >= 0.0F ? QStringLiteral("south") : QStringLiteral("north");
+    return z >= 0.0F ? QCoreApplication::translate("MissionSetupCoordinator", "south")
+                     : QCoreApplication::translate("MissionSetupCoordinator", "north");
   }
   if (x >= 0.0F && z >= 0.0F) {
-    return QStringLiteral("southeast");
+    return QCoreApplication::translate("MissionSetupCoordinator", "southeast");
   }
   if (x >= 0.0F && z < 0.0F) {
-    return QStringLiteral("northeast");
+    return QCoreApplication::translate("MissionSetupCoordinator", "northeast");
   }
   if (x < 0.0F && z >= 0.0F) {
-    return QStringLiteral("southwest");
+    return QCoreApplication::translate("MissionSetupCoordinator", "southwest");
   }
-  return QStringLiteral("northwest");
+  return QCoreApplication::translate("MissionSetupCoordinator", "northwest");
 }
 
 auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bool {
@@ -926,13 +929,14 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
     QString wave_name = wave.ai_id;
     wave_name.replace('_', ' ');
     if (wave_name.isEmpty()) {
-      wave_name = QStringLiteral("Enemy");
+      wave_name = QCoreApplication::translate("MissionSetupCoordinator", "Enemy");
     }
 
     const QString direction = classify_wave_direction(
         wave.entry_world_position - wave.defense_reference_world_position);
     const QString announcement =
-        QStringLiteral("Assault phase %1/%2: %3 from the %4 (%5 units)")
+        QCoreApplication::translate("MissionSetupCoordinator",
+                                    "Assault phase %1/%2: %3 from the %4 (%5 units)")
             .arg(wave.phase_index)
             .arg(wave.phase_count)
             .arg(wave_name, direction)

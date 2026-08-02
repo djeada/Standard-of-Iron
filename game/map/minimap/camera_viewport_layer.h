@@ -22,6 +22,8 @@ public:
 
   [[nodiscard]] auto get_image() const -> const QImage& { return m_image; }
 
+  [[nodiscard]] auto content_rect() const -> const QRect& { return m_content_rect; }
+
   void set_border_width(float width) { m_border_width = width; }
   void set_border_color(std::uint8_t r,
                         std::uint8_t g,
@@ -44,6 +46,7 @@ private:
                           float pixel_height) const;
 
   QImage m_image;
+  QRect m_content_rect;
   int m_width = 0;
   int m_height = 0;
   float m_world_width = 0.0F;

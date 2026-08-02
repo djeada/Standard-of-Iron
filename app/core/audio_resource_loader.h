@@ -21,6 +21,8 @@ public:
   load_audio_resources(AudioLoadPolicy load_policy = AudioLoadPolicy::Startup);
   static void unload_audio_resources(AudioLoadPolicy load_policy);
   static auto ensure_audio_resource_loaded(const QString& resource_id) -> bool;
+  static auto has_manifest_entry(const QString& resource_id) -> bool;
+  static void load_audio_cues();
   static auto find_resource_ids(AudioCategory category,
                                 const QMap<QString, QString>& tags) -> QStringList;
   static auto find_first_resource_id(AudioCategory category,

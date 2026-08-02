@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <QRect>
 
 #include <cstdint>
 #include <functional>
@@ -71,7 +72,11 @@ class UnitLayer {
 public:
   UnitLayer() = default;
 
-  void init(int width, int height, float world_width, float world_height);
+  void init(int width,
+            int height,
+            float world_width,
+            float world_height,
+            float tile_size = 1.0F);
 
   [[nodiscard]] auto is_initialized() const -> bool { return !m_image.isNull(); }
 
@@ -83,6 +88,8 @@ public:
               const PlayerColorFn& player_color_fn = nullptr);
 
   [[nodiscard]] auto get_image() const -> const QImage& { return m_image; }
+
+  [[nodiscard]] auto content_rect() const -> const QRect& { return m_content_rect; }
 
   void set_unit_radius(float radius) { m_unit_radius = radius; }
 
@@ -113,6 +120,7 @@ private:
   int m_height = 0;
   float m_world_width = 0.0F;
   float m_world_height = 0.0F;
+  float m_inv_tile_size = 1.0F;
   float m_unit_radius = 3.0F;
   float m_building_half_size = 4.25F;
 
@@ -120,6 +128,12 @@ private:
   float m_scale_y = 1.0F;
   float m_offset_x = 0.0F;
   float m_offset_y = 0.0F;
+
+  QRect m_content_rect;
+
+  std::vector<const UnitMarker*> m_buildings;
+  std::vector<const UnitMarker*> m_units;
+  std::vector<const UnitMarker*> m_selected;
 };
 
 } // namespace Game::Map::Minimap

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 
 namespace App::Models {
 
@@ -16,8 +17,15 @@ public:
   Q_INVOKABLE void set_sound_volume(float volume);
   Q_INVOKABLE void set_voice_volume(float volume);
   Q_INVOKABLE void set_ambience_volume(float volume);
+  Q_INVOKABLE void play_cue(const QString& cue_id);
   Q_INVOKABLE void play_ui_hover();
   Q_INVOKABLE void play_ui_click();
+  Q_INVOKABLE void play_ui_back();
+  Q_INVOKABLE void play_ui_tab_switch();
+  Q_INVOKABLE void play_ui_panel_open();
+  Q_INVOKABLE void play_ui_panel_close();
+  Q_INVOKABLE void play_ui_toggle();
+  Q_INVOKABLE void play_ui_error();
 
   Q_INVOKABLE [[nodiscard]] float get_master_volume();
   Q_INVOKABLE [[nodiscard]] float get_music_volume();

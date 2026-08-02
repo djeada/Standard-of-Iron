@@ -1,5 +1,6 @@
 #include "production_manager.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QPointF>
 
@@ -333,16 +334,34 @@ auto scaled_resource_amounts(const Game::Systems::ResourceAmounts& base,
   return scaled;
 }
 
+auto translated_resource_name(Game::Systems::ResourceType type) -> QString {
+  switch (type) {
+  case Game::Systems::ResourceType::Gold:
+    return QCoreApplication::translate("ProductionManager", "gold");
+  case Game::Systems::ResourceType::Food:
+    return QCoreApplication::translate("ProductionManager", "food");
+  case Game::Systems::ResourceType::Wood:
+    return QCoreApplication::translate("ProductionManager", "wood");
+  case Game::Systems::ResourceType::Stone:
+    return QCoreApplication::translate("ProductionManager", "stone");
+  case Game::Systems::ResourceType::Iron:
+    return QCoreApplication::translate("ProductionManager", "iron");
+  case Game::Systems::ResourceType::Count:
+    break;
+  }
+  return QCoreApplication::translate("ProductionManager", "resources");
+}
+
 auto first_missing_resource_name(
     int owner_id, const Game::Systems::ResourceAmounts& cost) -> QString {
   Game::Systems::ResourceAmounts const available =
       Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
   for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
     if (available.get(type) < cost.get(type)) {
-      return QLatin1String(Game::Systems::resource_type_key(type));
+      return translated_resource_name(type);
     }
   }
-  return QStringLiteral("resources");
+  return QCoreApplication::translate("ProductionManager", "resources");
 }
 
 auto construction_costs_for_item(const QString& item_type)
@@ -352,7 +371,7 @@ auto construction_costs_for_item(const QString& item_type)
 
 auto insufficient_construction_resources_reason(
     int owner_id, const Game::Systems::ResourceAmounts& cost) -> QString {
-  return QStringLiteral("Not enough %1.")
+  return QCoreApplication::translate("ProductionManager", "Not enough %1.")
       .arg(first_missing_resource_name(owner_id, cost));
 }
 
@@ -362,17 +381,20 @@ auto is_harvest_construction_item(const QString& item_type) -> bool {
 }
 
 auto generic_collect_failure_reason() -> QString {
-  return QStringLiteral("Select a tree, boulder, or iron ore deposit.");
+  return QCoreApplication::translate("ProductionManager",
+                                     "Select a tree, boulder, or iron ore deposit.");
 }
 
 auto missing_harvest_target_reason(HarvestTargetKind kind) -> QString {
   switch (kind) {
   case HarvestTargetKind::Tree:
-    return QStringLiteral("Select a tree to chop.");
+    return QCoreApplication::translate("ProductionManager", "Select a tree to chop.");
   case HarvestTargetKind::Boulder:
-    return QStringLiteral("Select a boulder to collect.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "Select a boulder to collect.");
   case HarvestTargetKind::IronOre:
-    return QStringLiteral("Select iron ore to collect.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "Select iron ore to collect.");
   }
   return generic_collect_failure_reason();
 }
@@ -380,25 +402,33 @@ auto missing_harvest_target_reason(HarvestTargetKind kind) -> QString {
 auto unavailable_builder_reason(HarvestTargetKind kind) -> QString {
   switch (kind) {
   case HarvestTargetKind::Tree:
-    return QStringLiteral("No available builder can chop that tree.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "No available builder can chop that tree.");
   case HarvestTargetKind::Boulder:
-    return QStringLiteral("No available builder can collect that boulder.");
+    return QCoreApplication::translate(
+        "ProductionManager", "No available builder can collect that boulder.");
   case HarvestTargetKind::IronOre:
-    return QStringLiteral("No available builder can collect that iron ore.");
+    return QCoreApplication::translate(
+        "ProductionManager", "No available builder can collect that iron ore.");
   }
-  return QStringLiteral("No available builder can collect that resource.");
+  return QCoreApplication::translate("ProductionManager",
+                                     "No available builder can collect that resource.");
 }
 
 auto no_walkable_harvest_reason(HarvestTargetKind kind) -> QString {
   switch (kind) {
   case HarvestTargetKind::Tree:
-    return QStringLiteral("No walkable spot near that tree.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "No walkable spot near that tree.");
   case HarvestTargetKind::Boulder:
-    return QStringLiteral("No walkable spot near that boulder.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "No walkable spot near that boulder.");
   case HarvestTargetKind::IronOre:
-    return QStringLiteral("No walkable spot near that iron ore.");
+    return QCoreApplication::translate("ProductionManager",
+                                       "No walkable spot near that iron ore.");
   }
-  return QStringLiteral("No walkable spot near that resource.");
+  return QCoreApplication::translate("ProductionManager",
+                                     "No walkable spot near that resource.");
 }
 
 auto harvest_target_kind_for_cell_value(
@@ -1068,8 +1098,8 @@ void ProductionManager::on_construction_confirm() {
 
   if (is_wall_construction_mode()) {
     if (!m_construction_preview_active) {
-      emit construction_placement_rejected(
-          QStringLiteral("Drag out a wall line first."));
+      emit construction_placement_rejected(QCoreApplication::translate(
+          "ProductionManager", "Drag out a wall line first."));
       return;
     }
     confirm_wall_construction_plan();
@@ -1080,7 +1110,8 @@ void ProductionManager::on_construction_confirm() {
     emit construction_placement_rejected(
         is_harvest_construction_item(m_pending_construction_type)
             ? generic_collect_failure_reason()
-            : QStringLiteral("Choose a build location."));
+            : QCoreApplication::translate("ProductionManager",
+                                          "Choose a build location."));
     return;
   }
 
@@ -1105,8 +1136,8 @@ void ProductionManager::on_construction_confirm() {
     auto& terrain_service = Game::Map::TerrainService::instance();
     if (!terrain_service.reserve_world_prop(placement.target->id)) {
       set_construction_preview_valid(false);
-      emit construction_placement_rejected(
-          QStringLiteral("That resource is already assigned."));
+      emit construction_placement_rejected(QCoreApplication::translate(
+          "ProductionManager", "That resource is already assigned."));
       return;
     }
 
@@ -1172,7 +1203,8 @@ void ProductionManager::on_construction_confirm() {
                                       m_construction_placement_position.z(),
                                       m_pending_construction_type.toStdString())) {
 
-    emit construction_placement_rejected(QStringLiteral("Cannot build there."));
+    emit construction_placement_rejected(
+        QCoreApplication::translate("ProductionManager", "Cannot build there."));
     return;
   }
 
@@ -1702,14 +1734,18 @@ void ProductionManager::rebuild_wall_preview_plan(
     segment.world_position = world_position;
 
     if (occupancy.find(key) != occupancy.end()) {
-      segment.failure_reason = "Blocked by an existing wall.";
+      segment.failure_reason = QCoreApplication::translate(
+                                   "ProductionManager", "Blocked by an existing wall.")
+                                   .toStdString();
     } else if (const auto validation =
                    Game::Systems::WallNetworkService::validate_wall_segment_placement(
                        *m_world, grid_pos, true);
                !validation.valid) {
       segment.failure_reason = validation.failure_reason;
     } else if (available_wood < wood_cost) {
-      segment.failure_reason = "Not enough wood.";
+      segment.failure_reason =
+          QCoreApplication::translate("ProductionManager", "Not enough wood.")
+              .toStdString();
     } else {
       segment.valid = true;
       ++valid_segment_count;
@@ -1767,7 +1803,8 @@ void ProductionManager::confirm_wall_construction_plan() {
                     m_wall_preview_segments.end(),
                     [](const auto& segment) { return segment.valid; }));
   if (valid_segment_count <= 0) {
-    QString reason = QStringLiteral("No valid wall segments in that drag.");
+    QString reason = QCoreApplication::translate(
+        "ProductionManager", "No valid wall segments in that drag.");
     for (const auto& segment : m_wall_preview_segments) {
       if (!segment.failure_reason.empty()) {
         reason = QString::fromStdString(segment.failure_reason);
@@ -1862,7 +1899,8 @@ void ProductionManager::confirm_wall_construction_plan() {
   Game::Systems::WallNetworkService::refresh_world(*m_world);
 
   if (m_pending_construction_builders.empty()) {
-    emit construction_placement_rejected(QStringLiteral("No available builder."));
+    emit construction_placement_rejected(
+        QCoreApplication::translate("ProductionManager", "No available builder."));
     return;
   }
 
@@ -1946,14 +1984,15 @@ void ProductionManager::confirm_direct_building_placement() {
   if (!is_construction_position_valid(m_construction_placement_position.x(),
                                       m_construction_placement_position.z(),
                                       m_pending_construction_type.toStdString())) {
-    emit construction_placement_rejected(QStringLiteral("Cannot build there."));
+    emit construction_placement_rejected(
+        QCoreApplication::translate("ProductionManager", "Cannot build there."));
     return;
   }
 
   const auto spawn_type = spawn_type_for_construction_item(m_pending_construction_type);
   if (!spawn_type.has_value()) {
-    emit construction_placement_rejected(
-        QStringLiteral("That structure cannot be placed."));
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "That structure cannot be placed."));
     return;
   }
 
@@ -1970,8 +2009,8 @@ void ProductionManager::confirm_direct_building_placement() {
 
   auto registry = Game::Map::MapTransformer::get_factory_registry();
   if (registry == nullptr) {
-    emit construction_placement_rejected(
-        QStringLiteral("Building factory unavailable."));
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "Building factory unavailable."));
     return;
   }
 
@@ -1988,7 +2027,8 @@ void ProductionManager::confirm_direct_building_placement() {
 
   auto unit = registry->create(params.spawn_type, *m_world, params);
   if (!unit) {
-    emit construction_placement_rejected(QStringLiteral("Failed to place building."));
+    emit construction_placement_rejected(
+        QCoreApplication::translate("ProductionManager", "Failed to place building."));
     return;
   }
 

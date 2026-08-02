@@ -64,7 +64,10 @@ ApplicationWindow {
     visible: true
     title: qsTr("Standard of Iron - RTS Game")
     color: Theme.bg
-    Component.onCompleted: sync_audio_context()
+    Component.onCompleted: {
+        Design.UiSound.audioSystem = (typeof game !== 'undefined') ? game.audio_system : null;
+        sync_audio_context();
+    }
 
     onMenu_visibleChanged: {
         if (menu_visible)
@@ -386,10 +389,14 @@ ApplicationWindow {
             if (visible) {
                 settingsPanel.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
         onCancelled: function () {
+            Design.UiSound.back();
             mainWindow.menu_visible = true;
             settingsPanel.visible = false;
         }
@@ -405,10 +412,14 @@ ApplicationWindow {
             if (visible) {
                 objectivesPanel.forceActiveFocus();
                 gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
         onClose_requested: function () {
+            Design.UiSound.back();
             objectivesPanel.visible = false;
             if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.game_started) {
                 mainWindow.game_paused = false;
