@@ -12,6 +12,7 @@
         <file>ui/qml/LoadGamePanel.qml</file>
         <file>ui/qml/SaveProgressOverlay.qml</file>
         <file>ui/qml/FormationPanel.qml</file>
+        <file>ui/qml/FormationStatusBadge.qml</file>
         <file>ui/qml/ObjectivesPanel.qml</file>
         <file>ui/qml/Constants.qml</file>
         <file>ui/qml/StyleGuide.qml</file>

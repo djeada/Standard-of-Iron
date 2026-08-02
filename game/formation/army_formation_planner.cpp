@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <numbers>
 #include <unordered_map>
 
@@ -49,6 +50,31 @@ struct Bounds {
   [[nodiscard]] auto half_width() const -> float {
     return valid ? std::max(std::abs(min_x), std::abs(max_x)) : 0.0F;
   }
+};
+
+class Hasher {
+public:
+  void mix(std::uint64_t value) {
+    m_state ^= value + 0x9e3779b97f4a7c15ULL + (m_state << 6U) + (m_state >> 2U);
+  }
+
+  void mix_float(float value) {
+    std::uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(bits));
+    mix(static_cast<std::uint64_t>(bits));
+  }
+
+  void mix(const std::string& value) {
+    for (char const character : value) {
+      mix(static_cast<std::uint64_t>(static_cast<unsigned char>(character)));
+    }
+    mix(value.size());
+  }
+
+  [[nodiscard]] auto value() const -> std::uint64_t { return m_state; }
+
+private:
+  std::uint64_t m_state{0xcbf29ce484222325ULL};
 };
 
 auto signed_noise(std::uint64_t seed) -> float {
@@ -429,29 +455,81 @@ auto rotate_offset(const QVector3D& local, float yaw_degrees) -> QVector3D {
           -local.x() * sin_yaw + local.z() * cos_yaw};
 }
 
+class ClaimGrid {
+public:
+  explicit ClaimGrid(float min_separation)
+      : m_cell(std::max(min_separation, 0.05F))
+      , m_min_separation_sq(min_separation * min_separation) {}
+
+  [[nodiscard]] auto is_free(const QVector3D& point) const -> bool {
+    auto const cell_x = to_cell(point.x());
+    auto const cell_z = to_cell(point.z());
+    for (int dx = -1; dx <= 1; ++dx) {
+      for (int dz = -1; dz <= 1; ++dz) {
+        auto const it = m_cells.find(key(cell_x + dx, cell_z + dz));
+        if (it == m_cells.end()) {
+          continue;
+        }
+        for (const auto& claimed : it->second) {
+          float const off_x = claimed.x() - point.x();
+          float const off_z = claimed.z() - point.z();
+          if ((off_x * off_x + off_z * off_z) < m_min_separation_sq) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  void claim(const QVector3D& point) {
+    m_cells[key(to_cell(point.x()), to_cell(point.z()))].push_back(point);
+  }
+
+  void reserve(std::size_t count) { m_cells.reserve(count * 2U); }
+
+private:
+  [[nodiscard]] auto to_cell(float value) const -> std::int32_t {
+    return static_cast<std::int32_t>(std::floor(value / m_cell));
+  }
+
+  [[nodiscard]] static auto key(std::int32_t cell_x,
+                                std::int32_t cell_z) -> std::uint64_t {
+    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_x)) << 32U) |
+           static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_z));
+  }
+
+  std::unordered_map<std::uint64_t, std::vector<QVector3D>> m_cells;
+  float m_cell{1.0F};
+  float m_min_separation_sq{1.0F};
+};
+
 class SlotTerrainFitter {
 public:
-  SlotTerrainFitter(float spacing, bool enabled)
-      : m_min_separation_sq(spacing * spacing * 0.36F)
-      , m_enabled(enabled) {}
+  SlotTerrainFitter(float spacing, bool enabled, std::size_t expected_slots)
+      : m_grid(spacing * 0.6F)
+      , m_separation(spacing * 0.6F)
+      , m_enabled(enabled) {
+    m_grid.reserve(expected_slots);
+  }
 
   auto fit(const QVector3D& ideal, SlotStatus& status) -> QVector3D {
     if (!m_enabled) {
-      claim(ideal);
+      m_grid.claim(ideal);
       status = SlotStatus::Valid;
       return ideal;
     }
 
-    if (is_free(ideal) &&
+    if (m_grid.is_free(ideal) &&
         Game::Systems::CommandService::is_world_position_walkable(ideal)) {
-      claim(ideal);
+      m_grid.claim(ideal);
       status = SlotStatus::Valid;
       return ideal;
     }
 
     constexpr int k_rings = 6;
     constexpr int k_samples = 12;
-    float const step = std::sqrt(m_min_separation_sq) * 1.05F;
+    float const step = m_separation * 1.05F;
     for (int ring = 1; ring <= k_rings; ++ring) {
       float const radius = step * static_cast<float>(ring);
       for (int sample = 0; sample < k_samples; ++sample) {
@@ -461,13 +539,13 @@ public:
         QVector3D const candidate(ideal.x() + std::cos(angle) * radius,
                                   ideal.y(),
                                   ideal.z() + std::sin(angle) * radius);
-        if (!is_free(candidate)) {
+        if (!m_grid.is_free(candidate)) {
           continue;
         }
         if (!Game::Systems::CommandService::is_world_position_walkable(candidate)) {
           continue;
         }
-        claim(candidate);
+        m_grid.claim(candidate);
         status = SlotStatus::Adjusted;
         return candidate;
       }
@@ -478,21 +556,8 @@ public:
   }
 
 private:
-  [[nodiscard]] auto is_free(const QVector3D& point) const -> bool {
-    for (const auto& claimed : m_claimed) {
-      float const dx = claimed.x() - point.x();
-      float const dz = claimed.z() - point.z();
-      if ((dx * dx + dz * dz) < m_min_separation_sq) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void claim(const QVector3D& point) { m_claimed.push_back(point); }
-
-  std::vector<QVector3D> m_claimed;
-  float m_min_separation_sq{1.0F};
+  ClaimGrid m_grid;
+  float m_separation{1.0F};
   bool m_enabled{true};
 };
 
@@ -529,6 +594,43 @@ auto ArmyFormationPlan::placed_count() const -> int {
       std::count_if(slot_list.begin(), slot_list.end(), [](const auto& s) {
         return s.status != SlotStatus::Blocked;
       }));
+}
+
+auto ArmyFormationPlan::depth_bands() const -> std::vector<int> {
+  std::vector<int> bands;
+  if (slot_list.empty()) {
+    return bands;
+  }
+
+  std::vector<float> depths;
+  depths.reserve(slot_list.size());
+  for (const auto& slot : slot_list) {
+    depths.push_back(slot.local_offset.z());
+  }
+  std::sort(depths.begin(), depths.end(), std::greater<>());
+
+  float const band_gap = std::max(spacing, 0.2F) * 0.5F;
+  float band_start = depths.front();
+  int in_band = 0;
+  for (float const depth : depths) {
+    if (std::abs(depth - band_start) > band_gap) {
+      bands.push_back(in_band);
+      band_start = depth;
+      in_band = 0;
+    }
+    ++in_band;
+  }
+  bands.push_back(in_band);
+  return bands;
+}
+
+auto ArmyFormationPlan::rank_count() const -> int {
+  return static_cast<int>(depth_bands().size());
+}
+
+auto ArmyFormationPlan::file_count() const -> int {
+  auto const bands = depth_bands();
+  return bands.empty() ? 0 : *std::max_element(bands.begin(), bands.end());
 }
 
 auto ArmyFormationPlanner::collect_members(Engine::Core::World& world,
@@ -729,53 +831,98 @@ auto ArmyFormationPlanner::plan(Engine::Core::World& world,
   return plan(collect_members(world, request.members), request);
 }
 
-auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
-                                const ArmyFormationRequest& request)
-    -> ArmyFormationPlan {
-  ArmyFormationPlan plan;
-  plan.anchor = request.anchor;
-  plan.facing = request.facing;
-  plan.intent = request.intent;
+auto ArmyFormationPlanner::layout_signature(
+    const std::vector<ArmyFormationMember>& members,
+    const ArmyFormationRequest& request) -> std::uint64_t {
+  Hasher hasher;
+  for (const auto& member : members) {
+    hasher.mix(member.entity_id);
+    hasher.mix(static_cast<std::uint64_t>(member.troop_type));
+    hasher.mix(static_cast<std::uint64_t>(member.roles));
+    hasher.mix(member.doctrine);
+    hasher.mix_float(member.footprint);
 
-  if (members.empty()) {
-    plan.rejection_reason = "No units eligible for formation placement.";
-    return plan;
+    hasher.mix_float(member.current_position.x());
   }
 
-  plan.doctrine = resolve_doctrine(members, request);
-  const auto& doctrine = DoctrineRegistry::instance().get_or_neutral(plan.doctrine);
+  hasher.mix(static_cast<std::uint64_t>(request.intent));
+  hasher.mix(request.doctrine);
+  hasher.mix_float(request.spacing);
+  hasher.mix_float(request.frontage);
+  hasher.mix(request.group_id);
+  hasher.mix(static_cast<std::uint64_t>(request.preserve_previous_slots));
+
+  const auto& options = request.options;
+  hasher.mix(static_cast<std::uint64_t>(options.flank_preference));
+  hasher.mix(static_cast<std::uint64_t>(options.ranged_placement));
+  hasher.mix(static_cast<std::uint64_t>(options.mixed_policy));
+  hasher.mix(static_cast<std::uint64_t>(options.movement_policy));
+  hasher.mix_float(options.frontage_scale);
+  hasher.mix_float(options.depth_scale);
+  hasher.mix_float(options.spacing_scale);
+  hasher.mix(static_cast<std::uint64_t>(options.reserve_rows));
+  hasher.mix(static_cast<std::uint64_t>(options.preserve_member_order));
+  hasher.mix(static_cast<std::uint64_t>(options.doctrine_locked));
+
+  if (request.preserve_previous_slots && request.group_id != k_invalid_group) {
+    const auto* previous = ArmyFormationRegistry::instance().find(request.group_id);
+    if (previous != nullptr) {
+      for (const auto& slot : previous->slot_list) {
+        hasher.mix(slot.occupant);
+        hasher.mix(static_cast<std::uint64_t>(slot.id));
+      }
+    }
+  }
+
+  return hasher.value();
+}
+
+auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& members,
+                                        const ArmyFormationRequest& request)
+    -> ArmyFormationLayout {
+  ArmyFormationLayout layout;
+  layout.intent = request.intent;
+  layout.signature = layout_signature(members, request);
+
+  if (members.empty()) {
+    layout.rejection_reason = "No units eligible for formation placement.";
+    return layout;
+  }
+
+  layout.doctrine = resolve_doctrine(members, request);
+  const auto& doctrine = DoctrineRegistry::instance().get_or_neutral(layout.doctrine);
 
   auto const roles = combined_roles(members);
   auto const reason = DoctrineRegistry::instance().availability_reason(
-      plan.doctrine, request.intent, roles, static_cast<int>(members.size()));
+      layout.doctrine, request.intent, roles, static_cast<int>(members.size()));
   if (!reason.empty()) {
-    plan.rejection_reason = reason;
-    return plan;
+    layout.rejection_reason = reason;
+    return layout;
   }
 
   const auto* tmpl = doctrine.resolve_template(request.intent);
   if (tmpl == nullptr) {
-    plan.rejection_reason = "This doctrine has no template for the chosen formation.";
-    return plan;
+    layout.rejection_reason = "This doctrine has no template for the chosen formation.";
+    return layout;
   }
 
   float const spacing =
       std::max(0.2F,
                request.spacing * tmpl->spacing_scale *
                    std::clamp(request.options.spacing_scale, 0.4F, 2.5F));
-  plan.spacing = spacing;
+  layout.spacing = spacing;
 
-  plan.slot_list =
+  layout.slot_list =
       plan_local_slots(members, *tmpl, request.options, spacing, request.frontage);
-  if (plan.slot_list.empty()) {
-    plan.rejection_reason = "The formation template produced no slot_list.";
-    return plan;
+  if (layout.slot_list.empty()) {
+    layout.rejection_reason = "The formation template produced no slot_list.";
+    return layout;
   }
 
   if (request.preserve_previous_slots && request.group_id != k_invalid_group) {
     const auto* previous = ArmyFormationRegistry::instance().find(request.group_id);
     if (previous != nullptr) {
-      std::vector<FormationSlot> reordered = plan.slot_list;
+      std::vector<FormationSlot> reordered = layout.slot_list;
       std::vector<bool> claimed(reordered.size(), false);
       std::unordered_map<EntityID, std::size_t> desired;
       for (const auto& old_slot : previous->slot_list) {
@@ -789,7 +936,7 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
       }
       std::vector<EntityID> unassigned;
       std::vector<EntityID> occupants(reordered.size(), 0U);
-      for (const auto& slot : plan.slot_list) {
+      for (const auto& slot : layout.slot_list) {
         auto it = desired.find(slot.occupant);
         if (it != desired.end() && !claimed[it->second]) {
           claimed[it->second] = true;
@@ -810,18 +957,41 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
       for (std::size_t i = 0; i < reordered.size(); ++i) {
         reordered[i].occupant = occupants[i];
       }
-      plan.slot_list = reordered;
+      layout.slot_list = reordered;
     }
   }
 
   Bounds bounds;
-  for (const auto& slot : plan.slot_list) {
+  for (const auto& slot : layout.slot_list) {
     bounds.expand(slot.local_offset);
   }
-  plan.frontage = bounds.width();
-  plan.depth = bounds.depth();
+  layout.frontage = bounds.width();
+  layout.depth = bounds.depth();
+  layout.valid = true;
+  return layout;
+}
 
-  SlotTerrainFitter fitter(spacing, request.resolve_terrain);
+auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
+                                 const ArmyFormationRequest& request)
+    -> ArmyFormationPlan {
+  ArmyFormationPlan plan;
+  plan.anchor = request.anchor;
+  plan.facing = request.facing;
+  plan.intent = layout.intent;
+  plan.doctrine = layout.doctrine;
+  plan.spacing = layout.spacing;
+  plan.frontage = layout.frontage;
+  plan.depth = layout.depth;
+
+  if (!layout.valid) {
+    plan.rejection_reason = layout.rejection_reason;
+    return plan;
+  }
+
+  plan.slot_list = layout.slot_list;
+
+  SlotTerrainFitter fitter(
+      layout.spacing, request.resolve_terrain, plan.slot_list.size());
   QVector3D const anchor =
       request.resolve_terrain
           ? Game::Systems::CommandService::snap_to_walkable_ground(request.anchor, 15)
@@ -862,6 +1032,12 @@ auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
 
   plan.valid = true;
   return plan;
+}
+
+auto ArmyFormationPlanner::plan(const std::vector<ArmyFormationMember>& members,
+                                const ArmyFormationRequest& request)
+    -> ArmyFormationPlan {
+  return place(build_layout(members, request), request);
 }
 
 } // namespace Game::Formation

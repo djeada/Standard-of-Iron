@@ -20,6 +20,16 @@ constexpr float k_advance_interval_seconds = 0.25F;
 constexpr float k_maintain_speed_multiplier = 0.55F;
 constexpr float k_stage_arrival_tolerance = 2.5F;
 
+constexpr float k_cohesion_interval_seconds = 0.35F;
+
+constexpr float k_in_slot_radius_scale = 1.35F;
+
+constexpr float k_formed_cohesion = 0.8F;
+constexpr float k_disrupted_cohesion = 0.45F;
+
+constexpr float k_formed_damage_floor = 0.88F;
+constexpr float k_disrupted_damage_penalty = 1.08F;
+
 auto vector_to_json(const QVector3D& value) -> QJsonArray {
   QJsonArray array;
   array.append(static_cast<double>(value.x()));
@@ -274,6 +284,7 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["depth"] = static_cast<double>(formation->depth);
     obj["spacing"] = static_cast<double>(formation->spacing);
     obj["phase"] = static_cast<int>(formation->phase);
+    obj["cohesion"] = static_cast<double>(formation->cohesion);
     obj["plan_revision"] = static_cast<qint64>(formation->plan_revision);
     obj["needs_replan"] = formation->needs_replan;
     obj["options"] = options_to_json(formation->options);
@@ -314,6 +325,7 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.depth = static_cast<float>(obj["depth"].toDouble(0.0));
     formation.spacing = static_cast<float>(obj["spacing"].toDouble(1.0));
     formation.phase = static_cast<FormationPhase>(obj["phase"].toInt(0));
+    formation.cohesion = static_cast<float>(obj["cohesion"].toDouble(1.0));
     formation.plan_revision =
         static_cast<std::uint32_t>(obj["plan_revision"].toVariant().toUInt());
     formation.needs_replan = obj["needs_replan"].toBool(false);
@@ -341,6 +353,77 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
       m_next_id = std::max(m_next_id, entry.first + 1U);
     }
   }
+}
+
+void ArmyFormationRuntime::refresh_cohesion(Engine::Core::World& world,
+                                            ArmyFormation& formation) {
+  float const radius = formation.spacing * k_in_slot_radius_scale;
+  float const radius_sq = radius * radius;
+
+  int occupied = 0;
+  int in_slot = 0;
+  for (const auto& slot : formation.slot_list) {
+    if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
+      continue;
+    }
+    auto* entity = world.get_entity(slot.occupant);
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform == nullptr) {
+      continue;
+    }
+    ++occupied;
+    float const off_x = transform->position.x - slot.world_position.x();
+    float const off_z = transform->position.z - slot.world_position.z();
+    if ((off_x * off_x) + (off_z * off_z) <= radius_sq) {
+      ++in_slot;
+    }
+  }
+
+  if (occupied == 0) {
+    formation.cohesion = 0.0F;
+    formation.phase = FormationPhase::Disrupted;
+    return;
+  }
+
+  formation.cohesion = static_cast<float>(in_slot) / static_cast<float>(occupied);
+
+  if (formation.cohesion >= k_formed_cohesion) {
+    formation.phase = FormationPhase::Formed;
+  } else if (formation.cohesion <= k_disrupted_cohesion) {
+    formation.phase = FormationPhase::Disrupted;
+  } else {
+    formation.phase = FormationPhase::Forming;
+  }
+}
+
+auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& entity)
+    -> float {
+  const auto* membership =
+      entity.get_component<Engine::Core::ArmyFormationMembershipComponent>();
+  if (membership == nullptr || !membership->is_valid()) {
+    return 1.0F;
+  }
+  const auto* formation = ArmyFormationRegistry::instance().find(membership->group_id);
+  if (formation == nullptr) {
+    return 1.0F;
+  }
+
+  if (formation->phase == FormationPhase::Disrupted) {
+    return k_disrupted_damage_penalty;
+  }
+  if (formation->phase != FormationPhase::Formed) {
+    return 1.0F;
+  }
+
+  float const span = 1.0F - k_formed_cohesion;
+  float const t =
+      span <= 0.0F
+          ? 1.0F
+          : std::clamp((formation->cohesion - k_formed_cohesion) / span, 0.0F, 1.0F);
+  return 1.0F + (k_formed_damage_floor - 1.0F) * t;
 }
 
 auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& entity)
@@ -574,6 +657,18 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
     advance_maintained_groups(*world, delta_time);
   }
 
+  m_cohesion_accumulator += delta_time;
+  if (m_cohesion_accumulator >= k_cohesion_interval_seconds) {
+    m_cohesion_accumulator = 0.0F;
+    for (auto const id : registry.group_ids()) {
+      auto* formation = registry.find(id);
+      if (formation == nullptr) {
+        continue;
+      }
+      refresh_cohesion(*world, *formation);
+    }
+  }
+
   m_replan_accumulator += delta_time;
   if (m_replan_accumulator < k_replan_interval_seconds) {
     return;
@@ -585,7 +680,7 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
     if (formation == nullptr || !formation->needs_replan) {
       continue;
     }
-    replan(*world, id);
+    static_cast<void>(replan(*world, id));
   }
 }
 

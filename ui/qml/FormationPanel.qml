@@ -15,6 +15,17 @@ Item {
     readonly property string warning: options.warning !== undefined ? options.warning : ""
     readonly property string active_intent: options.intent !== undefined ? options.intent : "faction_default"
 
+    readonly property int unit_count: options.unit_count !== undefined ? options.unit_count : 0
+    readonly property int placed_count: options.placed_count !== undefined ? options.placed_count : 0
+    readonly property int slot_count: options.slot_count !== undefined ? options.slot_count : 0
+    readonly property int blocked_slots: options.blocked_slots !== undefined ? options.blocked_slots : 0
+    readonly property int adjusted_slots: options.adjusted_slots !== undefined ? options.adjusted_slots : 0
+    readonly property int ranks: options.ranks !== undefined ? options.ranks : 0
+    readonly property int files: options.files !== undefined ? options.files : 0
+    readonly property real plan_frontage: options.plan_frontage !== undefined ? options.plan_frontage : 0
+    readonly property real plan_depth: options.plan_depth !== undefined ? options.plan_depth : 0
+    readonly property bool plan_valid: options.plan_valid !== undefined ? options.plan_valid : false
+
     visible: placing
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
@@ -60,6 +71,10 @@ Item {
             return qsTr("Engines protected behind infantry. Needs a siege engine.");
         }
         return "";
+    }
+
+    function measure(value) {
+        return qsTr("%1 m").arg(Math.round(value));
     }
 
     onPlacingChanged: refresh()
@@ -110,6 +125,12 @@ Item {
                     font.pixelSize: Design.Typography.caption
                     text: formationPanel.doctrine_name
                 }
+
+                Design.IronBadge {
+                    text: qsTr("%1 units").arg(formationPanel.unit_count)
+                    tone: Design.Theme.accent
+                    visible: formationPanel.unit_count > 0
+                }
             }
 
             Flow {
@@ -124,7 +145,7 @@ Item {
                         readonly property string blocked_reason: formationPanel.intent_blocked_reason(modelData)
 
                         ToolTip.delay: Design.Metrics.tooltipDelay
-                        ToolTip.text: enabled ? formationPanel.intent_purpose(modelData) : blocked_reason
+                        ToolTip.text: enabled ? qsTr("[%1] %2").arg(index + 1).arg(formationPanel.intent_purpose(modelData)) : blocked_reason
                         ToolTip.visible: hovered && ToolTip.text.length > 0
                         disabledReason: blocked_reason
                         enabled: blocked_reason.length === 0
@@ -140,10 +161,69 @@ Item {
                 }
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 420
+                color: Design.Theme.backgroundRaised
+                radius: Design.Metrics.radiusSmall
+                border.width: Design.Metrics.borderThin
+                border.color: Design.Theme.borderSubtle
+                implicitHeight: readout.implicitHeight + Design.Metrics.space12
+                visible: formationPanel.slot_count > 0
+
+                RowLayout {
+                    id: readout
+
+                    anchors.fill: parent
+                    anchors.margins: Design.Metrics.space8
+                    spacing: Design.Metrics.space12
+
+                    Repeater {
+                        model: [{
+                                "label": qsTr("Ranks"),
+                                "value": formationPanel.ranks + " × " + formationPanel.files,
+                                "tone": Design.Theme.textPrimary
+                            }, {
+                                "label": qsTr("Frontage"),
+                                "value": formationPanel.measure(formationPanel.plan_frontage),
+                                "tone": Design.Theme.textPrimary
+                            }, {
+                                "label": qsTr("Depth"),
+                                "value": formationPanel.measure(formationPanel.plan_depth),
+                                "tone": Design.Theme.textPrimary
+                            }, {
+                                "label": qsTr("Placed"),
+                                "value": formationPanel.placed_count + "/" + formationPanel.slot_count,
+                                "tone": formationPanel.blocked_slots > 0 ? Design.Theme.danger : Design.Theme.success
+                            }]
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+
+                            Text {
+                                color: Design.Theme.textSecondary
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.caption
+                                text: modelData.label
+                            }
+
+                            Text {
+                                color: modelData.tone
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.label
+                                font.weight: Design.Typography.medium
+                                text: modelData.value
+                            }
+                        }
+                    }
+                }
+            }
+
             Text {
                 Layout.fillWidth: true
                 Layout.maximumWidth: 420
-                color: Design.Theme.warning !== undefined ? Design.Theme.warning : Design.Theme.textSecondary
+                color: Design.Theme.warning
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.caption
                 text: formationPanel.warning
@@ -157,7 +237,18 @@ Item {
                 color: Design.Theme.textSecondary
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.caption
-                text: qsTr("Drag to set frontage and facing • Wheel: depth • Alt: strong flank • Shift: keep order • Ctrl: tighter • Esc: cancel")
+                text: qsTr("%1 position(s) nudged to fit the ground.").arg(formationPanel.adjusted_slots)
+                visible: formationPanel.adjusted_slots > 0 && formationPanel.blocked_slots === 0
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 420
+                color: Design.Theme.textSecondary
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.caption
+                text: qsTr("Drag to set frontage and facing • 1-9: preset • Wheel: depth • Alt: strong flank • Shift: keep order • Ctrl: tighter • Esc: cancel")
                 wrapMode: Text.WordWrap
             }
 
@@ -189,6 +280,7 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: formationPanel.options.frontage_index !== undefined ? formationPanel.options.frontage_index : 1
                     model: [qsTr("Narrow"), qsTr("Balanced"), qsTr("Wide")]
 
                     onActivated: function (index) {
@@ -206,6 +298,7 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: formationPanel.options.depth_index !== undefined ? formationPanel.options.depth_index : 1
                     model: [qsTr("Shallow"), qsTr("Balanced"), qsTr("Deep")]
 
                     onActivated: function (index) {
@@ -223,6 +316,7 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: formationPanel.options.spacing_index !== undefined ? formationPanel.options.spacing_index : 1
                     model: [qsTr("Tight"), qsTr("Normal"), qsTr("Loose")]
 
                     onActivated: function (index) {
@@ -240,11 +334,12 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
-                    model: [qsTr("Balanced"), qsTr("Left"), qsTr("Split"), qsTr("Right")]
+                    currentIndex: formationPanel.options.flank_index !== undefined ? formationPanel.options.flank_index : 0
+                    model: [qsTr("Balanced"), qsTr("Left"), qsTr("Right"), qsTr("Split")]
 
                     onActivated: function (index) {
                         if (formationPanel.game_ready())
-                            game.placement.set_formation_flank_preference(["balanced", "left", "split", "right"][index]);
+                            game.placement.set_formation_flank_preference(["balanced", "left", "right", "split"][index]);
                     }
                 }
 
@@ -257,11 +352,12 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
-                    model: [qsTr("Rear"), qsTr("Front"), qsTr("Skirmish")]
+                    currentIndex: formationPanel.options.ranged_index !== undefined ? formationPanel.options.ranged_index : 1
+                    model: [qsTr("Front"), qsTr("Rear"), qsTr("Skirmish")]
 
                     onActivated: function (index) {
                         if (formationPanel.game_ready())
-                            game.placement.set_formation_ranged_placement(["rear", "front", "skirmish"][index]);
+                            game.placement.set_formation_ranged_placement(["front", "rear", "skirmish"][index]);
                     }
                 }
 
@@ -274,6 +370,7 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: formationPanel.options.reserve_index !== undefined ? formationPanel.options.reserve_index : 0
                     model: [qsTr("Automatic"), qsTr("None"), qsTr("One row"), qsTr("Two rows")]
 
                     onActivated: function (index) {
@@ -291,6 +388,7 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: formationPanel.options.movement_index !== undefined ? formationPanel.options.movement_index : 0
                     model: [qsTr("Reform at destination"), qsTr("Maintain formation")]
 
                     onActivated: function (index) {
@@ -308,11 +406,12 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
-                    model: [qsTr("Majority doctrine"), qsTr("By role"), qsTr("Separate contingents"), qsTr("Commander")]
+                    currentIndex: formationPanel.options.mixed_index !== undefined ? formationPanel.options.mixed_index : 3
+                    model: [qsTr("By role"), qsTr("Separate contingents"), qsTr("Commander"), qsTr("Majority doctrine")]
 
                     onActivated: function (index) {
                         if (formationPanel.game_ready())
-                            game.placement.set_formation_mixed_policy(["majority_doctrine", "composite_by_role", "separate_contingents", "commander_doctrine"][index]);
+                            game.placement.set_formation_mixed_policy(["composite_by_role", "separate_contingents", "commander_doctrine", "majority_doctrine"][index]);
                     }
                 }
 
@@ -325,6 +424,13 @@ Item {
 
                 Design.IronDropdown {
                     Layout.fillWidth: true
+                    currentIndex: {
+                        if (formationPanel.options.doctrine_locked !== true)
+                            return 0;
+                        var order = ["rome", "carthage", "iron_sepulcher"];
+                        var found = order.indexOf(formationPanel.options.doctrine);
+                        return found < 0 ? 0 : found + 1;
+                    }
                     model: [qsTr("Automatic"), qsTr("Rome"), qsTr("Carthage"), qsTr("Iron Sepulcher")]
 
                     onActivated: function (index) {

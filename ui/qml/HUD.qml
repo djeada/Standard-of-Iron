@@ -157,6 +157,16 @@ Item {
         placing: typeof game !== 'undefined' && game.placement !== undefined && game.placement.is_placing_formation
     }
 
+    FormationStatusBadge {
+        id: formationStatusBadge
+
+        anchors.bottom: bottomPanel.top
+        anchors.bottomMargin: 12
+        anchors.left: parent.left
+        anchors.leftMargin: 16
+        visible: has_formation && !formationPanel.placing
+    }
+
     RpgTargetBar {
         id: rpgTargetBar
 
