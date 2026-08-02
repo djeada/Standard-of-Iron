@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include "app/core/app_scene_context.h"
+#include "app/core/game_state_restorer.h"
 #include "app/core/minimap_manager.h"
 #include "app/core/visibility_coordinator.h"
 #include "core/component.h"
@@ -15,6 +17,7 @@
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
 #include "scene/camera.h"
+#include "systems/game_state_serializer.h"
 
 using namespace Game::Map;
 
@@ -345,6 +348,88 @@ TEST(MinimapManagerTest, NonLocalMarkersDisappearWhenCellsFallBackToExplored) {
           fog_with_enemy_explored, image_with_enemy_explored, enemy_px, enemy_py, 3),
       0)
       << "The minimap must cull enemy markers once the cell is no longer visible.";
+}
+
+TEST(MinimapManagerTest, RegeneratingTheSameMapRedrawsTheCameraViewport) {
+
+  MinimapManager manager;
+  manager.generate_for_map(make_test_map(64, 64));
+
+  Render::GL::Camera camera;
+  camera.set_rts_view(QVector3D(3.0F, 0.0F, -4.0F), 18.0F, 45.0F, 30.0F);
+
+  manager.update_camera_viewport(&camera, 1920.0F, 1080.0F);
+  (void)manager.consume_dirty_flag();
+  const QImage before_reload = manager.get_image().copy();
+  ASSERT_FALSE(before_reload.isNull());
+
+  manager.generate_for_map(make_test_map(64, 64));
+  (void)manager.consume_dirty_flag();
+  const QImage after_regenerate = manager.get_image().copy();
+
+  manager.update_camera_viewport(&camera, 1920.0F, 1080.0F);
+  const QImage after_reload = manager.get_image().copy();
+
+  EXPECT_EQ(count_changed_pixels(before_reload, after_reload), 0)
+      << "Reloading the same map with an unmoved camera must restore the same "
+         "minimap, viewport brackets included.";
+  EXPECT_GT(count_changed_pixels(after_regenerate, after_reload), 0)
+      << "The freshly generated base image carries no viewport brackets yet.";
+}
+
+TEST(MinimapManagerTest, RepeatedRestoresKeepRebuildingTheMinimap) {
+  auto world = std::make_unique<Engine::Core::World>();
+
+  MinimapManager manager;
+  VisibilityCoordinator coordinator;
+  coordinator.set_presenters(nullptr, &manager);
+
+  AppSceneContext scene;
+  scene.world = world.get();
+
+  Game::Systems::LevelSnapshot level;
+  level.map_path = QStringLiteral(":/assets/maps/map_forest.json");
+
+  const QJsonObject metadata;
+
+  for (int restore = 0; restore < 3; ++restore) {
+    GameStateRestorer::restore_environment_from_metadata(
+        metadata, scene, level, 1, &manager, &coordinator);
+
+    ASSERT_TRUE(manager.has_minimap()) << "restore #" << restore;
+    EXPECT_GT(manager.get_image().width(), 0) << "restore #" << restore;
+    EXPECT_GT(manager.get_image().height(), 0) << "restore #" << restore;
+    EXPECT_GT(manager.get_world_width(), 0.0F) << "restore #" << restore;
+    EXPECT_GT(manager.get_world_height(), 0.0F) << "restore #" << restore;
+  }
+}
+
+TEST(MinimapManagerTest, MarkersFollowTileSizeWhenTilesAreNotUnitSized) {
+  constexpr int kMapSize = 32;
+  constexpr float kTileSize = 2.0F;
+
+  MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+  map.grid.tile_size = kTileSize;
+
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(kMapSize, kMapSize, kTileSize);
+  visibility.reveal_all();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  (void)add_unit(*world, 6.0F * kTileSize, 6.0F * kTileSize, 1);
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  sync_minimap_fog_from_visibility(manager);
+  const QImage fog_only = manager.get_image().copy();
+
+  manager.update_units(world.get(), nullptr, 1);
+  const QImage with_marker = manager.get_image().copy();
+
+  const auto [px, py] = world_to_pixel(with_marker, map, 6.0F, 6.0F);
+  EXPECT_GT(changed_pixels_in_radius(fog_only, with_marker, px, py, 4), 0)
+      << "A marker must land on the tile the unit occupies, not tile_size "
+         "times further out.";
 }
 
 TEST(VisibilityServiceSnapshotTest, SnapshotIfNewerReturnsPublishedFrames) {

@@ -23,6 +23,7 @@ public:
   static constexpr float MIN_VOLUME = 0.0F;
   static constexpr float MAX_VOLUME = 2.0F;
   static constexpr float DEFAULT_VOLUME = 1.0F;
+  static constexpr float MAX_OUTPUT_SAMPLE = 1.0F;
 
   explicit MiniaudioBackend(QObject* parent = nullptr);
   ~MiniaudioBackend() override;
@@ -31,6 +32,7 @@ public:
   void shutdown();
 
   auto predecode(const QString& id, const QString& path) -> bool;
+  void unload(const QString& id);
 
   void play(int channel, const QString& id, float volume, bool loop, int fade_ms);
   void stop(int channel, int fade_ms);

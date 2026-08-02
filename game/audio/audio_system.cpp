@@ -104,41 +104,44 @@ void AudioSystem::shutdown() {
   }
 }
 
+void AudioSystem::enqueue(AudioEvent&& event) {
+
+  if (!is_running) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> const lock(queue_mutex);
+  event_queue.push(std::move(event));
+  queue_condition.notify_one();
+}
+
 void AudioSystem::play_sound(const std::string& sound_id,
                              float volume,
                              bool loop,
                              int priority,
                              AudioCategory category) {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(
-      AudioEventType::PLAY_SOUND, sound_id, volume, loop, priority, category);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(
+      AudioEventType::PLAY_SOUND, sound_id, volume, loop, priority, category));
 }
 
 void AudioSystem::play_music(const std::string& music_id,
                              float volume,
                              Game::Audio::MusicTransition transition) {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::PLAY_MUSIC,
-                      music_id,
-                      volume,
-                      true,
-                      AudioConstants::DEFAULT_PRIORITY,
-                      AudioCategory::MUSIC,
-                      transition == Game::Audio::MusicTransition::Crossfade);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::PLAY_MUSIC,
+                     music_id,
+                     volume,
+                     true,
+                     AudioConstants::DEFAULT_PRIORITY,
+                     AudioCategory::MUSIC,
+                     transition == Game::Audio::MusicTransition::Crossfade));
 }
 
 void AudioSystem::stop_sound(const std::string& sound_id) {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::STOP_SOUND, sound_id);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::STOP_SOUND, sound_id));
 }
 
 void AudioSystem::stop_music() {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::STOP_MUSIC);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::STOP_MUSIC));
 }
 
 void AudioSystem::set_master_volume(float volume) {
@@ -183,15 +186,11 @@ void AudioSystem::load_persisted_volumes() {
 }
 
 void AudioSystem::pause_all() {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::PAUSE);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::PAUSE));
 }
 
 void AudioSystem::resume_all() {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::RESUME);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::RESUME));
 }
 
 auto AudioSystem::load_sound(const std::string& sound_id,
@@ -204,8 +203,8 @@ auto AudioSystem::load_sound(const std::string& sound_id,
 
   MiniaudioBackend* backend =
       (m_music_player != nullptr) ? m_music_player->get_backend() : nullptr;
-  auto sound = std::make_unique<Sound>(file_path, backend);
-  if (!sound || !sound->is_loaded()) {
+  auto sound = std::make_unique<Sound>(sound_id, file_path, backend);
+  if (!sound->is_loaded()) {
     return false;
   }
 
@@ -252,15 +251,11 @@ auto AudioSystem::has_resource(const std::string& resource_id) const -> bool {
 }
 
 void AudioSystem::unload_sound(const std::string& sound_id) {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::UNLOAD_RESOURCE, sound_id);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, sound_id));
 }
 
 void AudioSystem::unload_music(const std::string& music_id) {
-  std::lock_guard<std::mutex> const lock(queue_mutex);
-  event_queue.emplace(AudioEventType::UNLOAD_RESOURCE, music_id);
-  queue_condition.notify_one();
+  enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, music_id));
 }
 
 void AudioSystem::unload_all_sounds() {
@@ -273,31 +268,24 @@ void AudioSystem::unload_all_sounds() {
     }
   }
 
-  std::lock_guard<std::mutex> const queue_lock(queue_mutex);
   for (const auto& sound_id : sound_resources) {
-    event_queue.emplace(AudioEventType::UNLOAD_RESOURCE, sound_id);
+    enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, sound_id));
   }
-  queue_condition.notify_one();
 }
 
 void AudioSystem::unload_all_music() {
-  std::lock_guard<std::mutex> const lock(resource_mutex);
-
-  if (m_music_player != nullptr) {
-    m_music_player->stop_all(AudioConstants::NO_FADE_MS);
-  }
-
   std::vector<std::string> music_resources;
-  for (const auto& res : active_resources) {
-
-    if (sounds.find(res) == sounds.end()) {
-      music_resources.push_back(res);
+  {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    for (const auto& [resource_id, config] : resource_configs) {
+      if (config.category == AudioCategory::MUSIC) {
+        music_resources.push_back(resource_id);
+      }
     }
   }
-  for (const auto& res : music_resources) {
-    active_resources.erase(res);
-    resource_configs.erase(res);
-    resource_last_played_at.erase(res);
+
+  for (const auto& music_id : music_resources) {
+    enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, music_id));
   }
 }
 
@@ -446,18 +434,26 @@ void AudioSystem::process_event(const AudioEvent& event) {
     if (sound_it != sounds.end()) {
       sound_it->second->stop();
 
-      std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
-      active_sounds.erase(
-          std::remove_if(active_sounds.begin(),
-                         active_sounds.end(),
-                         [&](const ActiveSound& as) { return as.id == resource_id; }),
-          active_sounds.end());
+      {
+        std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
+        active_sounds.erase(
+            std::remove_if(active_sounds.begin(),
+                           active_sounds.end(),
+                           [&](const ActiveSound& as) { return as.id == resource_id; }),
+            active_sounds.end());
+      }
 
+      MiniaudioBackend* const backend =
+          (m_music_player != nullptr) ? m_music_player->get_backend() : nullptr;
+      if (backend != nullptr) {
+        backend->unload(sound_it->second->track_id());
+      }
       sounds.erase(sound_it);
     }
 
     if (config.category == AudioCategory::MUSIC && m_music_player != nullptr) {
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
+      m_music_player->unregister_track(resource_id);
     }
 
     resource_configs.erase(resource_id);
@@ -477,11 +473,6 @@ void AudioSystem::process_event(const AudioEvent& event) {
     }
     break;
   }
-  case AudioEventType::CLEANUP_INACTIVE: {
-    cleanup_inactive_sounds();
-    break;
-  }
-  case AudioEventType::SET_VOLUME:
   case AudioEventType::SHUTDOWN:
     break;
   }
@@ -576,11 +567,6 @@ void AudioSystem::evict_lowest_priority_sound_locked() {
       it->second->stop();
     }
   }
-}
-
-void AudioSystem::cleanup_inactive_sounds() {
-  std::lock_guard<std::mutex> const resource_lock(resource_mutex);
-  cleanup_inactive_sounds_locked();
 }
 
 void AudioSystem::cleanup_inactive_sounds_locked() {

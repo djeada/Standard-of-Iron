@@ -7,6 +7,8 @@ TabBar {
 
     property var tabs: []
 
+    onCurrentIndexChanged: Design.UiSound.tabSwitch()
+
     background: Rectangle {
         color: Design.Theme.backgroundRaised
         border.width: Design.Metrics.borderThin

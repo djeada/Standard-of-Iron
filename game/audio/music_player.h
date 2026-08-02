@@ -23,6 +23,7 @@ public:
   void shutdown();
 
   void register_track(const std::string& track_id, const std::string& file_path);
+  void unregister_track(const std::string& track_id);
 
   void play(const std::string& track_id,
             float volume = AudioConstants::DEFAULT_VOLUME,

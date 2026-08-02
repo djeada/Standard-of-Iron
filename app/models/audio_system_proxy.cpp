@@ -3,23 +3,10 @@
 #include <QDebug>
 #include <qobject.h>
 
-#include "app/core/audio_resource_loader.h"
+#include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 
 namespace App::Models {
-namespace {
-
-void play_ui_sound(const QString& sound_id, float volume, int priority) {
-  if (!AudioResourceLoader::ensure_audio_resource_loaded(sound_id)) {
-    qWarning() << "UI audio resource unavailable:" << sound_id;
-    return;
-  }
-
-  AudioSystem::get_instance().play_sound(
-      sound_id.toStdString(), volume, false, priority, AudioCategory::SFX);
-}
-
-} // namespace
 
 AudioSystemProxy::AudioSystemProxy(QObject* parent)
     : QObject(parent) {
@@ -45,14 +32,40 @@ void AudioSystemProxy::set_ambience_volume(float volume) {
   AudioSystem::get_instance().set_ambience_volume(volume);
 }
 
+void AudioSystemProxy::play_cue(const QString& cue_id) {
+  Game::Audio::play_cue(cue_id.toStdString());
+}
+
 void AudioSystemProxy::play_ui_hover() {
-  static const QString sound_id = QStringLiteral("ui.hover.soft");
-  play_ui_sound(sound_id, 1.0F, AudioConstants::DEFAULT_PRIORITY);
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_hover);
 }
 
 void AudioSystemProxy::play_ui_click() {
-  static const QString sound_id = QStringLiteral("ui.click.primary");
-  play_ui_sound(sound_id, 1.0F, AudioConstants::DEFAULT_PRIORITY);
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_click);
+}
+
+void AudioSystemProxy::play_ui_back() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_back);
+}
+
+void AudioSystemProxy::play_ui_tab_switch() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_tab_switch);
+}
+
+void AudioSystemProxy::play_ui_panel_open() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_panel_open);
+}
+
+void AudioSystemProxy::play_ui_panel_close() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_panel_close);
+}
+
+void AudioSystemProxy::play_ui_toggle() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_toggle);
+}
+
+void AudioSystemProxy::play_ui_error() {
+  Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
 }
 
 auto AudioSystemProxy::get_master_volume() -> float {

@@ -1,5 +1,6 @@
 #include "level_loader.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
 #include <qglobal.h>
@@ -149,7 +150,8 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
     }
   } else {
     res.ok = false;
-    res.error_message = QString("Map load failed: %1").arg(err);
+    res.error_message =
+        QCoreApplication::translate("LevelLoader", "Map load failed: %1").arg(err);
     qWarning() << "LevelLoader: Map load failed:" << err
                << "(path:" << resolved_map_path << ')'
                << "- applying default environment";

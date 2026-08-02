@@ -5,14 +5,15 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <vector>
 
 #include "game/map/minimap/minimap_fog_compositor.h"
+#include "game/map/minimap/unit_layer.h"
 #include "game/map/visibility_service.h"
 
 namespace Game::Map {
 struct MapDefinition;
 namespace Minimap {
-class UnitLayer;
 class CameraViewportLayer;
 } // namespace Minimap
 } // namespace Game::Map
@@ -78,8 +79,12 @@ private:
 
   std::uint64_t m_last_fog_composite_version =
       std::numeric_limits<std::uint64_t>::max();
+  bool m_camera_viewport_valid = false;
   float m_last_camera_x = 0.0F;
   float m_last_camera_z = 0.0F;
   float m_last_viewport_w = 0.0F;
   float m_last_viewport_h = 0.0F;
+
+  std::vector<Game::Map::Minimap::UnitMarker> m_marker_scratch;
+  std::vector<Engine::Core::EntityID> m_selected_scratch;
 };
