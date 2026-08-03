@@ -1901,22 +1901,29 @@ Rectangle {
                     spacing: 6
 
                     Button {
+                        id: rallyButton
+
+                        readonly property bool allowed: rallyContent.prod.has_barracks
+
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
                         height: 32
                         text: rallyContent.placing_barracks_rally ? Design.Icons.rally + " " + qsTr("Click Map to Set Rally") : Design.Icons.rally + " " + qsTr("Set Rally Point")
                         focusPolicy: Qt.NoFocus
-                        enabled: rallyContent.prod.has_barracks
                         onClicked: {
+                            if (!allowed) {
+                                Design.UiSound.warning();
+                                return;
+                            }
                             Design.UiSound.activate();
                             productionPanel.rally_mode_toggled();
                         }
                         ToolTip.visible: hovered
-                        ToolTip.text: qsTr("Set where newly recruited units will gather.\nRight-click to cancel.")
+                        ToolTip.text: allowed ? qsTr("Set where newly recruited units will gather.\nRight-click to cancel.") : qsTr("Build a barracks before setting a rally point.")
                         ToolTip.delay: 500
 
                         background: Rectangle {
-                            color: parent.enabled ? (parent.down ? hs.bronzeDeep : (parent.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
+                            color: rallyButton.allowed ? (parent.down ? hs.bronzeDeep : (parent.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
                             radius: 6
                             border.color: rallyContent.placing_barracks_rally ? hs.bronze : hs.bronzeDeep
                             border.width: 2
@@ -1926,7 +1933,7 @@ Rectangle {
                             text: parent.text
                             font.pointSize: 9
                             font.bold: true
-                            color: parent.enabled ? "#F4E7C8" : "#6B5231"
+                            color: rallyButton.allowed ? "#F4E7C8" : "#6B5231"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -3345,10 +3352,17 @@ Rectangle {
                                     }
 
                                     Button {
+
+                                        readonly property bool allowed: productionPanel.can_buy_trade_resource(marketplaceContent.market_state, resource_key)
+
                                         Layout.preferredWidth: 110
                                         text: qsTr("Buy %1 (%2g)").arg(trade_quantity).arg(buy_price)
-                                        enabled: productionPanel.can_buy_trade_resource(marketplaceContent.market_state, resource_key)
+                                        opacity: allowed ? 1 : 0.5
                                         onClicked: {
+                                            if (!allowed) {
+                                                Design.UiSound.warning();
+                                                return;
+                                            }
                                             Design.UiSound.activate();
                                             productionPanel.game_instance.marketplace_buy_resource(resource_key);
                                         }
@@ -3357,10 +3371,17 @@ Rectangle {
                                     }
 
                                     Button {
+
+                                        readonly property bool allowed: productionPanel.can_sell_trade_resource(marketplaceContent.market_state, resource_key)
+
                                         Layout.preferredWidth: 110
                                         text: qsTr("Sell %1 (+%2g)").arg(trade_quantity).arg(sell_price)
-                                        enabled: productionPanel.can_sell_trade_resource(marketplaceContent.market_state, resource_key)
+                                        opacity: allowed ? 1 : 0.5
                                         onClicked: {
+                                            if (!allowed) {
+                                                Design.UiSound.warning();
+                                                return;
+                                            }
                                             Design.UiSound.activate();
                                             productionPanel.game_instance.marketplace_sell_resource(resource_key);
                                         }

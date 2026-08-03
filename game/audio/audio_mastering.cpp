@@ -74,6 +74,8 @@ constexpr float LOUDNESS_RELATIVE_GATE_DB = 10.0F;
 constexpr float LOUDNESS_OFFSET_DB = 0.691F;
 constexpr float MAX_LIMITING_DB = 4.0F;
 
+constexpr float INTERFACE_MAKEUP_DB = 12.0F;
+
 constexpr int LIMITER_BLOCK_SAMPLES = 32;
 constexpr float LIMITER_LOOKAHEAD_MS = 4.0F;
 constexpr float LIMITER_RELEASE_MS = 120.0F;
@@ -942,6 +944,7 @@ auto profile_for(Material material) -> Profile {
     break;
   case Material::Interface:
     profile.normalise_loudness = false;
+    profile.makeup_db = INTERFACE_MAKEUP_DB;
     profile.presence_target_db = -8.0F;
     profile.air_target_db = -16.0F;
     profile.tilt_cut_db = 3.0F;
@@ -1123,8 +1126,11 @@ auto apply(float* pcm,
   }
 
   const float ceiling = from_db(profile.ceiling_db);
-  float loudness_gain = 1.0F;
-  report.output_lufs = analysis.loudness_lufs;
+  float loudness_gain = from_db(profile.makeup_db);
+  report.loudness_gain_db = profile.makeup_db;
+  report.output_lufs = (analysis.loudness_lufs > -60.0F)
+                           ? analysis.loudness_lufs + profile.makeup_db
+                           : analysis.loudness_lufs;
   if (profile.normalise_loudness && analysis.loudness_lufs > -60.0F) {
     const float shaped_lufs = context.loudness.lufs();
     float gain_db = std::clamp(profile.target_lufs - shaped_lufs,

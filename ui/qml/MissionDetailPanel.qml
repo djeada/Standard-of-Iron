@@ -693,9 +693,9 @@ Rectangle {
             StyledButton {
                 Layout.fillWidth: true
                 text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
-                enabled: !!(mission_data && mission_data.unlocked)
+                blocked: !(mission_data && mission_data.unlocked)
                 onClicked: root.start_mission_clicked()
-                ToolTip.visible: !enabled && hovered
+                ToolTip.visible: !interactive && hovered
                 ToolTip.text: {
                     if (!mission_data)
                         return "";

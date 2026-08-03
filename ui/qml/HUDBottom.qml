@@ -373,7 +373,8 @@ RowLayout {
                     hint: modelData.hint || ""
                     disabledReason: bottomRoot.unavailable_reason(modelData, state)
 
-                    enabled: !modelData.alwaysDisabled && (modelData.needsTroops ? bottomRoot.has_movable_units : true) && (modelData.ignoreActionState ? true : state.enabled)
+                    enabled: !modelData.alwaysDisabled
+                    blocked: (modelData.needsTroops && !bottomRoot.has_movable_units) || (!modelData.ignoreActionState && !state.enabled)
                     active: modelData.activeFromPlacing ? state.placing : (modelData.mode ? (bottomRoot.current_command_mode === modelData.mode && bottomRoot.has_movable_units) : state.active)
                     mixed: state.mixed
                     placing: state.placing

@@ -8,22 +8,34 @@ ItemDelegate {
     implicitHeight: 42
     hoverEnabled: true
 
+    property bool blocked: false
+    readonly property bool interactive: enabled && !blocked
+
     Connections {
         function onClicked() {
             Design.UiSound.activate();
         }
 
         function onHoveredChanged() {
-            if (control.hovered && control.enabled)
+            if (control.hovered && control.interactive)
                 Design.UiSound.hover();
         }
 
         target: control
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: control.blocked
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
+        onPressed: Design.UiSound.warning()
+    }
+
     contentItem: Text {
         text: control.text
-        color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+        color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.label
         verticalAlignment: Text.AlignVCenter

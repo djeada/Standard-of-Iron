@@ -6,6 +6,10 @@ Slider {
     id: control
 
     property string accessibleName: ""
+
+    property bool blocked: false
+    readonly property bool interactive: enabled && !blocked
+
     readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
 
     implicitHeight: Math.max(Design.Metrics.controlHeight, Design.Metrics.minTouchTarget)
@@ -22,6 +26,15 @@ Slider {
         target: control
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: control.blocked
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
+        onPressed: Design.UiSound.warning()
+    }
+
     background: Rectangle {
         x: control.leftPadding
         y: control.topPadding + control.availableHeight / 2 - height / 2
@@ -36,7 +49,7 @@ Slider {
             width: control.position * parent.width
             height: parent.height
             radius: parent.radius
-            color: control.enabled ? Design.Theme.accent : Design.Theme.textDisabled
+            color: control.interactive ? Design.Theme.accent : Design.Theme.textDisabled
         }
     }
 
@@ -46,7 +59,7 @@ Slider {
         width: Design.Metrics.iconSmall
         height: width
         radius: Design.Metrics.radiusSmall
-        color: !control.enabled ? Design.Theme.surfaceDisabled : control.pressed ? Design.Theme.focus : Design.Theme.accent
+        color: !control.interactive ? Design.Theme.surfaceDisabled : control.pressed ? Design.Theme.focus : Design.Theme.accent
         border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: control.showFocusRing ? Design.Theme.focus : Design.Theme.backgroundDeep
     }

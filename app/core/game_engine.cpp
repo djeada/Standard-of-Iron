@@ -522,6 +522,15 @@ GameEngine::GameEngine(QObject* parent)
             set_error(message);
           });
   connect(m_command_controller.get(),
+          &App::Controllers::CommandController::formation_placement_rejected,
+          this,
+          [this](const QString& reason) {
+            Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
+            if (!reason.isEmpty()) {
+              set_error(reason);
+            }
+          });
+  connect(m_command_controller.get(),
           &App::Controllers::CommandController::hold_mode_changed,
           this,
           [this](bool active) {
