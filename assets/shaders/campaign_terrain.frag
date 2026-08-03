@@ -43,22 +43,26 @@ float compute_hillshade(vec3 normal, vec3 light_dir) {
 
 vec3 get_elevation_tint(float height) {
   if (height < 0.0) {
-
     float depth = clamp(-height, 0.0, 1.0);
     return mix(u_water_shallow_color, u_water_deep_color, depth);
-  } else if (height < 0.25) {
-
-    float t = height / 0.25;
-    return mix(u_lowland_tint, vec3(1.0), 1.0 - t * 0.1);
-  } else if (height < 0.6) {
-
-    float t = (height - 0.25) / 0.35;
-    return mix(u_lowland_tint, u_highland_tint, t);
-  } else {
-
-    float t = (height - 0.6) / 0.4;
-    return mix(u_highland_tint, u_mountain_tint, t);
   }
+
+  float h = clamp(height, 0.0, 1.0);
+  if (h < 0.14) {
+
+    return mix(vec3(1.0), u_lowland_tint, smoothstep(0.0, 0.14, h));
+  }
+  if (h < 0.38) {
+    float t = smoothstep(0.14, 0.38, h);
+    return mix(u_lowland_tint, u_highland_tint, t);
+  }
+  float t = smoothstep(0.38, 0.85, h);
+  return mix(u_highland_tint, u_mountain_tint, t);
+}
+
+float land_at(vec2 uv) {
+  vec4 c = textureLod(u_base_texture, vec2(uv.x, 1.0 - uv.y), 0.0);
+  return smoothstep(-0.01, 0.05, c.r - c.b);
 }
 
 float get_parchment_pattern(vec2 uv) {
@@ -68,7 +72,7 @@ float get_parchment_pattern(vec2 uv) {
 
   float pattern = n1 * 0.6 + n2 * 0.4;
 
-  return 0.88 + pattern * 0.12;
+  return 0.955 + pattern * 0.045;
 }
 
 void main() {
@@ -78,38 +82,49 @@ void main() {
 
   vec3 color = base_color.rgb;
 
-  vec3 elevation_tint = get_elevation_tint(v_height * u_elevation_scale);
-  color *= elevation_tint;
+  float land = land_at(v_uv);
+  color *= mix(vec3(1.0), get_elevation_tint(v_height * u_elevation_scale), land);
 
-  if (u_use_hillshade) {
-
-    float hillshade = compute_hillshade(v_normal, normalize(u_light_direction));
-
-    color *= mix(1.0, hillshade, u_hillshade_strength);
-  }
-
-  if (u_use_lighting) {
-
+  if (u_use_hillshade || u_use_lighting) {
     vec3 light_dir = normalize(u_light_direction);
-    float diffuse = max(0.0, dot(v_normal, light_dir));
-    float lighting = u_ambient_strength + (1.0 - u_ambient_strength) * diffuse;
+    float ndotl = max(0.0, dot(v_normal, light_dir));
+    float shade = u_ambient_strength + (1.0 - u_ambient_strength) * ndotl;
+    shade *= compute_ao(v_normal);
 
-    float ao = compute_ao(v_normal);
-
-    color *= lighting * ao;
+    float relief = 1.0 + (shade - 1.0) * u_hillshade_strength;
+    color *= mix(1.0, relief, land);
   }
 
   if (u_use_parchment) {
     float parchment = get_parchment_pattern(v_uv);
-
-    color *= parchment;
-
+    color *= mix(1.0, parchment, land);
     color = mix(color, color * vec3(1.02, 1.0, 0.96), 0.3);
   }
 
+  vec2 pixel = fwidth(v_uv);
+
+  vec2 ink_step = pixel * 1.7;
+  float offshore = min(
+      min(land_at(v_uv + vec2(ink_step.x, 0.0)), land_at(v_uv - vec2(ink_step.x, 0.0))),
+      min(land_at(v_uv + vec2(0.0, ink_step.y)),
+          land_at(v_uv - vec2(0.0, ink_step.y))));
+  float coast = land * (1.0 - offshore);
+  color = mix(color, color * vec3(0.34, 0.31, 0.28), coast);
+
+  vec2 halo_step = pixel * 5.0;
+  float ashore =
+      land_at(v_uv + vec2(halo_step.x, 0.0)) + land_at(v_uv - vec2(halo_step.x, 0.0)) +
+      land_at(v_uv + vec2(0.0, halo_step.y)) + land_at(v_uv - vec2(0.0, halo_step.y)) +
+      land_at(v_uv + halo_step) + land_at(v_uv - halo_step) +
+      land_at(v_uv + vec2(halo_step.x, -halo_step.y)) +
+      land_at(v_uv - vec2(halo_step.x, -halo_step.y));
+
+  float shallows = (1.0 - land) * smoothstep(0.18, 0.62, ashore * 0.125);
+  color = mix(color, mix(color, vec3(0.55, 0.68, 0.74), 0.5), shallows);
+
   vec2 vignette_coord = v_uv * 2.0 - 1.0;
-  float vignette = 1.0 - dot(vignette_coord, vignette_coord) * 0.15;
+  float vignette = 1.0 - smoothstep(0.75, 1.5, length(vignette_coord)) * 0.06;
   color *= vignette;
 
-  frag_color = vec4(color, base_color.a);
+  frag_color = vec4(color, base_color.a * max(land, shallows));
 }

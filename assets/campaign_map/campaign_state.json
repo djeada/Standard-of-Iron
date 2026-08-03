@@ -1,8 +1,9 @@
 {
+  "_comment": "Who holds what when the campaign opens in 218 BC. Rome has held Sicily since 241 and Sardinia and Corsica since 238; the Barcids hold Spain south of the Ebro; the Gauls of the Po valley, the Celtiberians of the interior and the Illyrian tribes of the hinterland answer to nobody. Rome's Illyrian holding is the coastal protectorate won in the Illyrian Wars, not the interior. Ids must match assets/campaign_map/provinces.json.",
   "provinces": [
     {
       "id": "iberia_carthaginian",
-      "owner": "neutral"
+      "owner": "carthage"
     },
     {
       "id": "iberia_interior",
@@ -18,43 +19,43 @@
     },
     {
       "id": "etruria",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "roman_core",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "southern_italy",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "sicily_roman",
-      "owner": "neutral"
-    },
-    {
-      "id": "sicily_carthaginian",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "sardinia",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "corsica",
-      "owner": "neutral"
+      "owner": "rome"
     },
     {
       "id": "carthage_core",
-      "owner": "neutral"
+      "owner": "carthage"
     },
     {
       "id": "numidia",
-      "owner": "neutral"
+      "owner": "carthage"
     },
     {
       "id": "libya",
-      "owner": "neutral"
+      "owner": "carthage"
+    },
+    {
+      "id": "illyrian_coast",
+      "owner": "rome"
     },
     {
       "id": "illyria",

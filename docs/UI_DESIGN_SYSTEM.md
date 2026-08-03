@@ -153,6 +153,32 @@ interchangeable:
 nation's family → the default family. It never returns an empty source for a
 type it knows, so a roster row cannot render a hole.
 
+### Vector command and activity icons
+
+The order bar and the activity readouts are drawn from vector outlines, not from
+bitmaps. The originals were 30×30 PNGs: soft at 1× and mush on a high-DPI panel,
+and impossible to retint for a disabled or interrupted state.
+
+The geometry lives in one place, `ui/icon_art.cpp`, as paths over a 24×24 design
+grid, and is published three ways:
+
+- `Core.IconArt` (a C++ singleton in `StandardOfIron.Core`) hands QML flattened,
+  0..1-normalised polylines, which `IronVectorIcon` strokes onto a `Canvas`
+- `Ui::IconArt::paint()` draws the same shapes with `QPainter`, which is how the
+  arena viewport shows activity badges over the battlefield
+- `IronCommandButton` prefers the vector drawing and only falls back to the
+  legacy bitmap, then to a font glyph, when a drawing does not exist
+
+Every shape names a _tone_ rather than a colour — `ink`, `metal`, `edge`, `ember`
+plus the material tones `timber`, `stone`, `iron` and `gold`. That is what lets
+one drawing serve an enabled button, a disabled one, and a small monochrome mark
+over a unit, and it is why the gathering icons can identify the resource they
+yield without a second set of artwork.
+
+`Design.ActivityIcons` is the semantic half: activity id → drawing, label,
+tooltip and resource. It is the only place a player-facing activity string is
+written, and `IronActivityIcon` is the only control that renders one.
+
 Two rules are enforced by tests rather than by review:
 
 - **No emoji.** The shipped font has no glyph for them, so they render as empty
@@ -163,6 +189,10 @@ Two rules are enforced by tests rather than by review:
   instead of listing them, and `icon_resources_test.cpp` checks the registry and
   the directory agree in both directions: no name that cannot resolve, no file
   that nothing can request.
+- **A vector icon still reads when it is small.** `icon_art_test.cpp` rasterises
+  every drawing at 16 px and 96 px and asserts the painted fraction of the tile
+  stays in a sane band and barely changes between the two. An icon that vanishes,
+  fills the tile, or is clipped by its own bounds fails the build.
 
 ## Reviewing a screen
 
@@ -209,6 +239,9 @@ the component belongs in the library first.
 - `tst_glyph_coverage.qml` — every glyph exists in the shipped font
 - `tst_command_button.qml` — availability, partial coverage, armed and active
   states stay distinguishable
+- `tst_activity_icons.qml` — every activity has a drawing, a label and a tooltip;
+  gathering activities name their resource; the four order states stay distinct
+  by shape as well as by colour; unknown ids degrade to idle
 - `tst_selection_summary.qml` — the presentation switches at the right army size
 - `tst_campaign_flow.qml` — objective states, briefing sections, outcome kinds
 
@@ -217,8 +250,11 @@ They run headless via `ctest -R design_system_qml`, and from `make test`.
 On the C++ side: `preferences_test.cpp` covers the persistence layer including
 clamping and corrupted values, `selection_grouping_test.cpp` covers the HUD
 roster, `icon_resources_test.cpp` keeps the icon registry and the shipped files
-in step, and `widget_theme_test.cpp` pins the widget vocabulary the tools use and
-proves the shared accessibility settings reach them.
+in step, `icon_art_test.cpp` holds the vector catalogue to its legibility
+contract, `activity_markers_test.cpp` covers which units earn an overhead marker
+and how crowded ones are merged, and `widget_theme_test.cpp` pins the widget
+vocabulary the tools use and proves the shared accessibility settings reach
+them.
 
 ## The Qt Widgets tools
 

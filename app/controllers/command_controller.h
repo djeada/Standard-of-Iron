@@ -62,6 +62,12 @@ public:
                                   int viewport_height,
                                   void* camera,
                                   int local_owner_id) -> CommandResult;
+  auto on_builder_repair_click(qreal sx,
+                               qreal sy,
+                               int viewport_width,
+                               int viewport_height,
+                               void* camera,
+                               int local_owner_id) -> CommandResult;
   auto on_patrol_click(qreal sx,
                        qreal sy,
                        int viewport_width,

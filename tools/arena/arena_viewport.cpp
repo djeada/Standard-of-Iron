@@ -31,6 +31,7 @@
 #include "app/core/commander_control_controller.h"
 #include "app/core/renderer_bootstrap.h"
 #include "app/core/world_bootstrap.h"
+#include "app/models/activity_markers.h"
 #include "app/utils/movement_utils.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
@@ -61,6 +62,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/undead_awakening_system.h"
+#include "game/systems/unit_activity.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -88,6 +90,7 @@
 #include "render/terrain_scene_proxy.h"
 #include "scene/camera.h"
 #include "terrain_alignment.h"
+#include "ui/icon_art.h"
 #include "unit_spawn_options.h"
 #include "utils/resource_utils.h"
 
@@ -622,8 +625,12 @@ void ArenaViewport::paintGL() {
       playback_stats.shadow_rigged_instanced_instances;
   timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;
 
+  bool const capture_keeps_overlays =
+      m_scenario_runner != nullptr &&
+      m_scenario_runner->definition().capture_ui_overlays;
   bool const suppress_ui_overlays =
-      m_clean_capture || m_terrain_review_mode || m_promo_mode || capture_frame ||
+      m_clean_capture || m_terrain_review_mode || m_promo_mode ||
+      (capture_frame && !capture_keeps_overlays) ||
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays);
   if (!suppress_ui_overlays) {
@@ -646,6 +653,7 @@ void ArenaViewport::paintGL() {
       QPainter painter(this);
       painter.setRenderHint(QPainter::Antialiasing, true);
       draw_debug_overlay(painter);
+      draw_activity_overlay(painter);
     }
 
     {
@@ -4113,6 +4121,89 @@ void ArenaViewport::draw_spawn_anchor_marker(QPainter& painter) {
   painter.setPen(QColor(245, 245, 245, 230));
   painter.drawText(
       label_box.adjusted(6.0, 0.0, -6.0, 0.0), Qt::AlignVCenter | Qt::AlignLeft, label);
+  painter.restore();
+}
+
+void ArenaViewport::draw_activity_overlay(QPainter& painter) {
+  if (!m_activity_overlay_visible || m_camera == nullptr || m_world == nullptr ||
+      width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  std::vector<App::Models::ActivityMarkerSource> sources;
+  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->health <= 0) {
+      continue;
+    }
+    const auto activity = Game::Systems::classify_unit_activity(*entity);
+
+    if (!App::Models::activity_deserves_marker(activity, false)) {
+      continue;
+    }
+
+    App::Models::ActivityMarkerSource source;
+    source.entity_id = entity->get_id();
+    source.activity = activity;
+    source.x = transform->position.x;
+    source.y = transform->position.y;
+    source.z = transform->position.z;
+    sources.push_back(source);
+  }
+
+  if (sources.empty()) {
+    return;
+  }
+  const auto palette = Ui::IconArt::default_palette();
+  const QFont label_font(QStringLiteral("Sans"), 8, QFont::DemiBold);
+  constexpr qreal k_badge = 30.0;
+
+  painter.save();
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  for (const auto& marker : App::Models::group_activity_markers(sources)) {
+    QPointF screen;
+    if (!Game::Systems::PickingService::world_to_screen(
+            *m_camera,
+            width(),
+            height(),
+            QVector3D(marker.x, marker.y + 3.4F, marker.z),
+            screen)) {
+      continue;
+    }
+
+    QColor tone(214, 178, 92);
+    if (marker.state == QStringLiteral("unavailable")) {
+      tone = QColor(214, 96, 96);
+    } else if (marker.state == QStringLiteral("interrupted")) {
+      tone = QColor(226, 170, 70);
+    } else if (marker.state == QStringLiteral("queued")) {
+      tone = QColor(170, 170, 170);
+    }
+
+    const QRectF box(
+        screen.x() - k_badge * 0.5, screen.y() - k_badge, k_badge, k_badge);
+    painter.setPen(QPen(tone, marker.state == QStringLiteral("active") ? 1.0 : 2.0));
+    painter.setBrush(QColor(14, 12, 10, 200));
+    painter.drawRoundedRect(box, 4.0, 4.0);
+    Ui::IconArt::paint(painter, marker.activity, box.adjusted(4, 4, -4, -4), palette);
+
+    QString caption = marker.activity;
+    if (marker.state != QStringLiteral("active")) {
+      caption += QStringLiteral(" / ") + marker.state;
+    }
+    if (marker.count > 1) {
+      caption += QStringLiteral(" x") + QString::number(marker.count);
+    }
+    painter.setFont(label_font);
+    painter.setPen(tone);
+    painter.drawText(QRectF(box.x() - 90.0, box.bottom(), k_badge + 180.0, 14.0),
+                     Qt::AlignHCenter | Qt::AlignTop,
+                     caption);
+  }
   painter.restore();
 }
 

@@ -9,6 +9,7 @@
 #include <QtQuickTest/quicktest.h>
 
 #include "app/core/user_settings.h"
+#include "ui/icon_art.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
@@ -34,8 +35,9 @@ public:
       if (metrics.inFontUcs4(code_point)) {
         continue;
       }
+      const auto glyph = static_cast<char32_t>(code_point);
       absent.append(QStringLiteral("%1 (U+%2)")
-                        .arg(QString::fromUcs4(&code_point, 1),
+                        .arg(QString::fromUcs4(&glyph, 1),
                              QString::number(code_point, 16).toUpper()));
     }
     return absent;
@@ -71,6 +73,8 @@ public slots:
       qmlRegisterSingletonType<Theme>(uri, 1, 0, "Theme", &Theme::create);
       qmlRegisterSingletonType<UiPreferences>(
           uri, 1, 0, "UiPreferences", &UiPreferences::create);
+      qmlRegisterSingletonType<IconArtLibrary>(
+          uri, 1, 0, "IconArt", &IconArtLibrary::create);
     }
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);

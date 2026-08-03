@@ -111,7 +111,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.16)) : Math.max(196, parent.height * 0.22)
+        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.16)) : Math.max(216, parent.height * 0.24)
         clip: true
 
         Loader {

@@ -5,18 +5,11 @@ in vec2 v_uv;
 in vec2 v_world_pos;
 
 uniform vec4 u_color;
-uniform vec4 u_hover_color;
-uniform float u_hover_blend;
-uniform float u_time;
 
-uniform sampler2D u_parchment_texture;
+uniform sampler2D u_base_texture;
 uniform bool u_use_parchment;
 uniform float u_parchment_scale;
 uniform float u_parchment_strength;
-
-uniform bool u_is_hovered;
-uniform float u_pulse_speed;
-uniform float u_pulse_amplitude;
 
 out vec4 frag_color;
 
@@ -31,51 +24,22 @@ float get_parchment_mask(vec2 uv) {
   return 0.85 + combined * 0.15;
 }
 
-float get_edge_darkening(vec2 uv) {
-
-  float center = soi_fbm_d6cc9d(uv * 20.0, 2);
-  float right = soi_fbm_d6cc9d((uv + vec2(0.002, 0.0)) * 20.0, 2);
-  float up = soi_fbm_d6cc9d((uv + vec2(0.0, 0.002)) * 20.0, 2);
-
-  float edge = abs(center - right) + abs(center - up);
-  return 1.0 - edge * 0.3;
-}
-
 void main() {
-  vec4 color = u_color;
 
-  if (u_is_hovered) {
-    float pulse = 0.5 + 0.5 * sin(u_time * u_pulse_speed);
-    float brightness = u_pulse_amplitude * pulse;
-
-    vec4 hover_effect = mix(color, u_hover_color, u_hover_blend);
-    hover_effect.rgb += vec3(brightness);
-
-    color = hover_effect;
+  vec2 base_uv = vec2(v_uv.x, 1.0 - v_uv.y);
+  vec4 base_color = textureLod(u_base_texture, base_uv, 0.0);
+  float land = smoothstep(-0.01, 0.05, base_color.r - base_color.b);
+  if (land <= 0.001) {
+    discard;
   }
+
+  vec4 color = u_color;
+  color.a *= land;
 
   if (u_use_parchment) {
-    float parchment;
-
-    if (textureSize(u_parchment_texture, 0).x > 1) {
-      vec2 tex_uv = v_uv * u_parchment_scale;
-      parchment = texture(u_parchment_texture, tex_uv).r;
-    } else {
-      parchment = get_parchment_mask(v_uv);
-    }
-
-    float tex_strength = u_parchment_strength;
-    color.rgb *= mix(1.0, parchment, tex_strength);
-
-    float edge = get_edge_darkening(v_uv);
-    color.rgb *= mix(1.0, edge, tex_strength * 0.5);
+    float parchment = get_parchment_mask(v_uv);
+    color.rgb *= mix(1.0, parchment, u_parchment_strength);
   }
 
-  vec3 tinted_color = color.rgb;
-
-  float dist_from_center = length(v_uv - vec2(0.5));
-  float province_vignette = 1.0 - dist_from_center * dist_from_center * 0.1;
-  color.rgb *= province_vignette;
-
-  frag_color = vec4(color.rgb * color.a, color.a);
+  frag_color = color;
 }

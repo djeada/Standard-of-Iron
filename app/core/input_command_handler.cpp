@@ -461,6 +461,24 @@ void InputCommandHandler::on_civilian_delivery_click(qreal sx,
   }
 }
 
+void InputCommandHandler::on_builder_repair_click(qreal sx,
+                                                  qreal sy,
+                                                  int local_owner_id,
+                                                  const ViewportState& viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if ((m_command_controller == nullptr) || (m_camera == nullptr)) {
+    return;
+  }
+
+  auto result = m_command_controller->on_builder_repair_click(
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 auto InputCommandHandler::any_selected_in_hold_mode() const -> bool {
   if (m_command_controller == nullptr) {
     return false;

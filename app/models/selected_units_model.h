@@ -21,6 +21,11 @@ struct SelectionGroup {
   double health = 0.0;
   double stamina = 1.0;
   bool can_run = false;
+
+  QString activity = QStringLiteral("idle");
+  QString activity_state = QStringLiteral("active");
+  int activity_count = 0;
+  bool mixed_activity = false;
 };
 
 [[nodiscard]] auto
@@ -44,7 +49,9 @@ public:
     NationRole,
     StaminaRatioRole,
     IsRunningRole,
-    CanRunRole
+    CanRunRole,
+    ActivityRole,
+    ActivityStateRole
   };
 
   explicit SelectedUnitsModel(GameEngine* engine, QObject* parent = nullptr);

@@ -122,6 +122,27 @@ a map or a lobby chose explicitly is that owner's identity and is left alone.
 Because the lookup happens on read, changing the mode recolours a running match
 rather than only the next one.
 
+### Order state without hue
+
+The activity a unit is on, and how that order is going, are reported by
+`IronActivityIcon` in the selection panel and over the unit itself. The four
+order states — active, queued, unavailable, interrupted — never rely on colour
+alone:
+
+- **Shape.** A queued order carries a filled chevron in the corner of the
+  medallion, an interrupted one a pair of paused bars, an unavailable one a
+  cross. An active order carries no corner mark at all.
+- **Weight.** Anything other than an active order also thickens the medallion
+  border, so the difference survives a greyscale screenshot.
+- **Words.** Every marker exposes `Accessible.name` (the activity and its state)
+  and `Accessible.description` (the same, plus the headcount when the marker
+  stands for a group, plus what the state means). The same text is the tooltip,
+  so a mouse user and a screen-reader user get the same sentence.
+
+Gathering icons identify their resource by both the material tone of the drawing
+and the label — "Cutting timber", "Quarrying stone", "Mining iron" — rather than
+by tone alone.
+
 ### Contrast and focus
 
 - **High contrast** raises panel and text contrast.

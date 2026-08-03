@@ -543,6 +543,11 @@ Timed or state-based triggers for dynamic gameplay:
 
 ## Campaign Configuration
 
+For the shipped Second Punic War campaign specifically -- opponents, wave
+pressure, timers, starting bases and what wins each mission -- see
+[CAMPAIGN_MISSIONS.md](CAMPAIGN_MISSIONS.md). This section describes the format;
+that one describes the content.
+
 ### File Structure
 
 ```json

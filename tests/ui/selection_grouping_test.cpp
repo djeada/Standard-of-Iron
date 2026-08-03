@@ -190,6 +190,49 @@ TEST(SelectionGroupingTest, VariantConversionExposesTheKeysTheHudBindsTo) {
   EXPECT_NEAR(row.value(QStringLiteral("health")).toDouble(), 0.5, 1e-9);
   EXPECT_DOUBLE_EQ(row.value(QStringLiteral("stamina")).toDouble(), 1.0);
   EXPECT_TRUE(row.value(QStringLiteral("canRun")).toBool());
+  EXPECT_EQ(row.value(QStringLiteral("activity")).toString(), QStringLiteral("idle"));
+  EXPECT_EQ(row.value(QStringLiteral("activityState")).toString(),
+            QStringLiteral("active"));
+}
+
+TEST(SelectionGroupingTest, AGroupReportsTheActivityMostOfItIsDoing) {
+  QVariantList units;
+  for (int i = 0; i < 3; ++i) {
+    QVariantMap builder = unit("builder", "Builder", 1.0).toMap();
+    builder[QStringLiteral("activity")] = QStringLiteral("chop_wood");
+    builder[QStringLiteral("activity_state")] = QStringLiteral("active");
+    units.append(builder);
+  }
+  QVariantMap stalled = unit("builder", "Builder", 1.0).toMap();
+  stalled[QStringLiteral("activity")] = QStringLiteral("chop_wood");
+  stalled[QStringLiteral("activity_state")] = QStringLiteral("interrupted");
+  units.append(stalled);
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("chop_wood"));
+  EXPECT_EQ(groups[0].activity_state, QStringLiteral("active"));
+  EXPECT_EQ(groups[0].activity_count, 3);
+  EXPECT_TRUE(groups[0].mixed_activity)
+      << "a split crew must be flagged, not silently reported as uniform";
+}
+
+TEST(SelectionGroupingTest, AGroupWithOneMindIsNotFlaggedAsMixed) {
+  QVariantList units;
+  for (int i = 0; i < 2; ++i) {
+    QVariantMap miner = unit("builder", "Builder", 1.0).toMap();
+    miner[QStringLiteral("activity")] = QStringLiteral("mine_iron");
+    miner[QStringLiteral("activity_state")] = QStringLiteral("queued");
+    units.append(miner);
+  }
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].activity, QStringLiteral("mine_iron"));
+  EXPECT_EQ(groups[0].activity_state, QStringLiteral("queued"));
+  EXPECT_FALSE(groups[0].mixed_activity);
 }
 
 } // namespace
