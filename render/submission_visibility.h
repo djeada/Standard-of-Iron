@@ -31,14 +31,68 @@ struct SubmissionVisibilityResult {
   }
 };
 
+struct LensGapExclusion {
+  bool enabled = false;
+
+  std::uint32_t focus_entity_id = 0;
+
+  float eye_x = 0.0F;
+  float eye_z = 0.0F;
+
+  float axis_x = 0.0F;
+  float axis_z = 0.0F;
+  float length = 0.0F;
+
+  float focus_radius = 0.0F;
+
+  [[nodiscard]] auto contains(const QVector3D& point,
+                              float body_radius) const noexcept -> bool {
+    if (!enabled || length <= 0.0F) {
+      return false;
+    }
+    const float offset_x = point.x() - eye_x;
+    const float offset_z = point.z() - eye_z;
+    const float along = (offset_x * axis_x) + (offset_z * axis_z);
+    if (along < 0.0F || along > length) {
+      return false;
+    }
+    const float perpendicular_x = offset_x - (axis_x * along);
+    const float perpendicular_z = offset_z - (axis_z * along);
+    const float limit = body_radius + (focus_radius * (along / length));
+    return ((perpendicular_x * perpendicular_x) +
+            (perpendicular_z * perpendicular_z)) <= limit * limit;
+  }
+};
+
 class SubmissionVisibilityPolicy {
 public:
   static constexpr float k_frustum_guard_band = 1.5F;
+
+  static constexpr float k_default_body_radius = 0.42F;
 
   void reset(const Camera* camera,
              const Game::Map::VisibilityService::Snapshot* snapshot) noexcept {
     m_camera = camera;
     m_snapshot = snapshot;
+    m_lens_gap = {};
+  }
+
+  void set_lens_gap(const LensGapExclusion& lens_gap) noexcept {
+    m_lens_gap = lens_gap;
+  }
+
+  [[nodiscard]] auto lens_gap() const noexcept -> const LensGapExclusion& {
+    return m_lens_gap;
+  }
+
+  [[nodiscard]] auto
+  occludes_lens_gap(const QVector3D& body_position,
+                    std::uint32_t entity_id = 0,
+                    float body_radius = k_default_body_radius) const noexcept -> bool {
+    if (entity_id != 0 && entity_id == m_lens_gap.focus_entity_id) {
+      return false;
+    }
+    return m_lens_gap.contains(body_position, body_radius);
   }
 
   [[nodiscard]] auto
@@ -138,6 +192,7 @@ private:
 
   const Camera* m_camera = nullptr;
   const Game::Map::VisibilityService::Snapshot* m_snapshot = nullptr;
+  LensGapExclusion m_lens_gap;
 };
 
 } // namespace Render::GL

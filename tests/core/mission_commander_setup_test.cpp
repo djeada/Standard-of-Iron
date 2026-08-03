@@ -6,19 +6,19 @@
 
 TEST(MissionCommanderSetupTest, FallsBackToHannibalForCarthage) {
   EXPECT_EQ(App::Core::resolve_commander_troop("carthage", std::nullopt),
-            QStringLiteral("carthage_elephant_master"));
+            QStringLiteral("carthage_sword_commander"));
 }
 
 TEST(MissionCommanderSetupTest, KeepsConfiguredCommanderWhenPresent) {
   EXPECT_EQ(App::Core::resolve_commander_troop(
-                "carthage", QStringLiteral("carthage_cavalry_patron")),
-            QStringLiteral("carthage_cavalry_patron"));
+                "carthage", QStringLiteral("carthage_bow_commander")),
+            QStringLiteral("carthage_bow_commander"));
 }
 
 TEST(MissionCommanderSetupTest, FallsBackWhenConfiguredCommanderBelongsToOtherNation) {
   EXPECT_EQ(App::Core::resolve_commander_troop("carthage",
                                                QStringLiteral("roman_veteran_consul")),
-            QStringLiteral("carthage_elephant_master"));
+            QStringLiteral("carthage_sword_commander"));
 }
 
 TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {

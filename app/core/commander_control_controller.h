@@ -13,6 +13,7 @@ namespace Engine::Core {
 class Entity;
 class CommanderComponent;
 class World;
+class TransformComponent;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
@@ -88,10 +89,12 @@ public:
   controlled_commander(Engine::Core::World& world,
                        Engine::Core::EntityID commander_id,
                        int local_owner_id) const;
+
   [[nodiscard]] Engine::Core::EntityID
   find_primary_target(Engine::Core::World& world,
                       Engine::Core::EntityID commander_id,
-                      int local_owner_id);
+                      int local_owner_id,
+                      float extra_reach = 0.0F);
   [[nodiscard]] bool primary_action(Engine::Core::World& world,
                                     Engine::Core::EntityID commander_id,
                                     int local_owner_id);
@@ -127,6 +130,10 @@ private:
   void update_lock_on_yaw(Engine::Core::World& world,
                           Engine::Core::Entity& commander,
                           float dt);
+  void apply_strike_lunge(Engine::Core::World& world,
+                          Engine::Core::Entity& commander,
+                          Engine::Core::TransformComponent& transform,
+                          float dt);
   InputState m_input;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;
@@ -146,6 +153,9 @@ private:
   QVector3D m_cam_target_smooth{};
   bool m_cam_smooth_valid = false;
 
+  float m_cam_ground_y = 0.0F;
+  bool m_cam_ground_valid = false;
+
   float m_move_speed = 0.0F;
   int m_move_right_axis = 0;
   int m_move_forward_axis = 0;
@@ -157,6 +167,9 @@ private:
   QVector3D m_requested_dodge_direction{0.0F, 0.0F, 0.0F};
   bool m_has_requested_dodge_direction = false;
   float m_dodge_fov_kick = 0.0F;
+
+  float m_hit_impact_kick = 0.0F;
+  std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
   QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};

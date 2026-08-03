@@ -446,9 +446,9 @@ void Renderer::prewarm_unit_templates(
     case SpawnType::RomanLegionOrganizer:
     case SpawnType::RomanVeteranConsul:
     case SpawnType::RomanFieldCommander:
-    case SpawnType::CarthageMercenaryBroker:
-    case SpawnType::CarthageCavalryPatron:
-    case SpawnType::CarthageElephantMaster:
+    case SpawnType::CarthageSpearCommander:
+    case SpawnType::CarthageBowCommander:
+    case SpawnType::CarthageSwordCommander:
     case SpawnType::SkeletonSwordsman:
     case SpawnType::SkeletonArcher:
     case SpawnType::GravePriest:
@@ -476,9 +476,9 @@ void Renderer::prewarm_unit_templates(
     case TroopType::RomanLegionOrganizer:
     case TroopType::RomanVeteranConsul:
     case TroopType::RomanFieldCommander:
-    case TroopType::CarthageMercenaryBroker:
-    case TroopType::CarthageCavalryPatron:
-    case TroopType::CarthageElephantMaster:
+    case TroopType::CarthageSpearCommander:
+    case TroopType::CarthageBowCommander:
+    case TroopType::CarthageSwordCommander:
     case TroopType::SkeletonSwordsman:
     case TroopType::SkeletonArcher:
     case TroopType::GravePriest:
@@ -655,9 +655,9 @@ void Renderer::prewarm_unit_templates(
                         TroopType::RomanLegionOrganizer,
                         TroopType::RomanVeteranConsul,
                         TroopType::RomanFieldCommander,
-                        TroopType::CarthageMercenaryBroker,
-                        TroopType::CarthageCavalryPatron,
-                        TroopType::CarthageElephantMaster,
+                        TroopType::CarthageSpearCommander,
+                        TroopType::CarthageBowCommander,
+                        TroopType::CarthageSwordCommander,
                         TroopType::SkeletonSwordsman,
                         TroopType::SkeletonArcher,
                         TroopType::GravePriest,

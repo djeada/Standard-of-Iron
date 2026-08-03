@@ -23,8 +23,9 @@ enum RomanGreavesPaletteSlot : std::uint8_t {
   k_greaves_slot = 0U,
 };
 
-constexpr int k_num_segments = 3;
-constexpr std::array<float, k_num_segments> k_segment_angles{-0.8F, 0.0F, 0.8F};
+constexpr int k_num_segments = 5;
+constexpr std::array<float, k_num_segments> k_segment_angles{
+    -1.55F, -0.78F, 0.0F, 0.78F, 1.55F};
 
 auto make_leg_attachment_transform(const QMatrix4x4& parent,
                                    const AttachmentFrame& shin) -> QMatrix4x4 {
@@ -45,7 +46,7 @@ auto greave_segment_local_model(float shin_radius, float angle) -> QMatrix4x4 {
   float const greave_length = greave_end - greave_start;
   float const greave_offset = shin_radius * 1.08F;
   float const greave_thickness = 0.006F;
-  float const segment_width = shin_radius * 0.55F;
+  float const segment_width = shin_radius * 0.72F;
 
   float const cos_a = std::cos(angle);
   float const sin_a = std::sin(angle);
@@ -139,7 +140,7 @@ auto roman_greaves_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_roman_greaves_role_count) {
     return 0;
   }
-  out[0] = saturate_color(palette.metal * QVector3D(0.95F, 0.88F, 0.68F));
+  out[0] = saturate_color(palette.metal * QVector3D(0.74F, 0.79F, 0.86F));
   return k_roman_greaves_role_count;
 }
 

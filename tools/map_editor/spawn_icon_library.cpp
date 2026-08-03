@@ -150,7 +150,7 @@ void draw_glyph(QPainter& painter, const QRectF& bounds, const QString& type) {
     painter.drawLine(QPointF(9.0, 4.0), QPointF(7.0, 2.0));
     painter.drawLine(QPointF(11.0, 3.5), QPointF(9.5, 1.5));
     painter.drawLine(QPointF(13.0, 3.5), QPointF(12.5, 1.3));
-  } else if (type == QStringLiteral("carthage_mercenary_broker")) {
+  } else if (type == QStringLiteral("carthage_spear_commander")) {
     painter.drawEllipse(QPointF(10.0, 10.0), 4.0, 4.0);
     painter.drawLine(QPointF(10.0, 8.0), QPointF(10.0, 12.0));
     painter.drawLine(QPointF(8.0, 10.0), QPointF(12.0, 10.0));
@@ -159,12 +159,12 @@ void draw_glyph(QPainter& painter, const QRectF& bounds, const QString& type) {
     painter.setPen(Qt::NoPen);
     painter.drawPolygon(
         QPolygonF{QPointF(16.0, 5.0), QPointF(18.5, 8.5), QPointF(14.5, 8.5)});
-  } else if (type == QStringLiteral("carthage_cavalry_patron")) {
+  } else if (type == QStringLiteral("carthage_bow_commander")) {
     draw_horse_head(painter);
     painter.drawEllipse(QPointF(18.0, 8.0), 2.5, 2.5);
     painter.drawLine(QPointF(18.0, 5.0), QPointF(18.0, 11.0));
     painter.drawLine(QPointF(15.0, 8.0), QPointF(21.0, 8.0));
-  } else if (type == QStringLiteral("carthage_elephant_master")) {
+  } else if (type == QStringLiteral("carthage_sword_commander")) {
     draw_elephant_head(painter);
     painter.drawPolyline(QPolygonF{QPointF(11.0, 4.0),
                                    QPointF(13.0, 2.0),

@@ -586,7 +586,8 @@ TEST_F(ArmorRendererTest, RomanGreavesRenderThroughArchetypePath) {
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 2U);
-  EXPECT_EQ(draw_count_of(batch), 6);
+
+  EXPECT_EQ(draw_count_of(batch), 10);
 }
 
 TEST_F(ArmorRendererTest, ArmGuardsRenderThroughArchetypePath) {

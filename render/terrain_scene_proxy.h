@@ -31,6 +31,7 @@ class ResourceManager;
 
 struct TerrainSceneSubmitOptions {
   bool include_scatters = true;
+  bool include_features = true;
   bool include_environment = true;
 };
 
@@ -72,7 +73,9 @@ public:
               ResourceManager* resources,
               TerrainSceneSubmitOptions options = {}) const {
     submit_surfaces(renderer, resources);
-    submit_features(renderer, resources);
+    if (options.include_features) {
+      submit_features(renderer, resources);
+    }
     if (options.include_scatters) {
       submit_scatters(renderer, resources);
     }

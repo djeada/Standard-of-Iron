@@ -145,11 +145,12 @@ auto make_humanoid_palette(const QVector3D& team_tint,
   }();
 
   float const leather_var = (hash_01(seed ^ 0x1234U) - 0.5F) * 0.06F;
-  QVector3D const neutral_leather(0.24F, 0.15F, 0.09F);
+
+  QVector3D const neutral_leather(0.36F, 0.23F, 0.14F);
   p.leather = clamp_vec_01(neutral_leather * (1.0F + leather_var));
   p.leather_dark = p.leather * 0.72F;
 
-  p.wood = QVector3D(0.16F, 0.10F, 0.05F);
+  p.wood = QVector3D(0.30F, 0.20F, 0.11F);
 
   p.metal = QVector3D(0.68F, 0.70F, 0.72F);
 

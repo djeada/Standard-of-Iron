@@ -10,7 +10,7 @@ void register_carthage_archer_style() {
   ArcherStyleConfig carthage;
   carthage.cloth_color = QVector3D(0.12F, 0.36F, 0.52F);
   carthage.leather_color = QVector3D(0.36F, 0.24F, 0.12F);
-  carthage.leather_dark_color = QVector3D(0.22F, 0.16F, 0.10F);
+  carthage.leather_dark_color = QVector3D(0.33F, 0.23F, 0.15F);
   carthage.metal_color = QVector3D(0.75F, 0.66F, 0.42F);
   carthage.wood_color = QVector3D(0.38F, 0.28F, 0.18F);
   carthage.fletching_color = QVector3D(0.90F, 0.82F, 0.28F);

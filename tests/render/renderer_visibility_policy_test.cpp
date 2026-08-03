@@ -172,3 +172,77 @@ TEST(RendererVisibilityPolicyTest, FrustumBroadPhaseHasStableEdgeGuardBand) {
   policy.reset(&camera, nullptr);
   EXPECT_TRUE(policy.accepts_sphere(near_edge, 0.1F));
 }
+
+namespace {
+
+auto make_chase_lens_gap() -> Render::GL::LensGapExclusion {
+  Render::GL::LensGapExclusion gap;
+  gap.enabled = true;
+  gap.focus_entity_id = 7U;
+  gap.eye_x = 0.0F;
+  gap.eye_z = -3.1F;
+  gap.axis_x = 0.0F;
+  gap.axis_z = 1.0F;
+  gap.length = 3.1F - 0.35F;
+  gap.focus_radius = 0.45F;
+  return gap;
+}
+
+} // namespace
+
+TEST(RendererVisibilityPolicyTest, LensGapDropsOnlyBodiesStandingInTheGap) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  policy.set_lens_gap(make_chase_lens_gap());
+
+  EXPECT_TRUE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, -1.5F)));
+
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(2.4F, 0.0F, -1.5F)));
+
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, 3.2F)));
+
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, -5.0F)));
+
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, 0.0F)));
+}
+
+TEST(RendererVisibilityPolicyTest, LensGapKeepsTheFlankOfAFormationItPassesThrough) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  policy.set_lens_gap(make_chase_lens_gap());
+
+  int dropped = 0;
+  int kept = 0;
+  for (int col = -3; col <= 3; ++col) {
+    const QVector3D soldier(static_cast<float>(col) * 0.9F, 0.0F, -1.4F);
+    if (policy.occludes_lens_gap(soldier)) {
+      ++dropped;
+    } else {
+      ++kept;
+    }
+  }
+
+  EXPECT_EQ(dropped, 1);
+  EXPECT_EQ(kept, 6);
+}
+
+TEST(RendererVisibilityPolicyTest, LensGapNeverHidesTheCommanderItFrames) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  auto gap = make_chase_lens_gap();
+
+  gap.length = 6.0F;
+  policy.set_lens_gap(gap);
+
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, 0.0F), 7U));
+  EXPECT_TRUE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, 0.0F), 8U));
+}
+
+TEST(RendererVisibilityPolicyTest, LensGapIsClearedByFrameReset) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.set_lens_gap(make_chase_lens_gap());
+  ASSERT_TRUE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, -1.5F)));
+
+  policy.reset(nullptr, nullptr);
+  EXPECT_FALSE(policy.occludes_lens_gap(QVector3D(0.0F, 0.0F, -1.5F)));
+}

@@ -35,7 +35,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        "health_regen",
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Nearby allied infantry regenerate health while inside the aura."),
+           "Nearby allied spearmen regenerate health fastest inside the aura."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Rally of Patience stabilizes wavering lines during attritional combat."),
@@ -82,7 +82,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        "attack_boost",
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Nearby allied troops gain bonus melee and ranged damage in aura range."),
+           "Nearby allied swordsmen gain the most bonus damage in aura range."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Consular Rally rapidly restores morale to wavering assault cohorts."),
@@ -128,7 +128,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
                          "repositioning."),
        "speed_boost",
        QT_TRANSLATE_NOOP("Commanders",
-                         "Nearby allied infantry move faster while in aura range."),
+                         "Nearby allied archers move fastest while in aura range."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Vanguard Rally snaps wavering attackers back into coherent motion."),
@@ -149,14 +149,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        12.0F,
        50.0F,
        SpawnType::Archer},
-      {TroopType::CarthageMercenaryBroker,
+      {TroopType::CarthageSpearCommander,
        NationID::Carthage,
-       "carthage_mercenary_broker",
+       "carthage_spear_commander",
        QT_TRANSLATE_NOOP("Commanders", "Hanno the Great"),
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Carthaginian political commander who leverages resources and manpower "
-           "flows."),
+           "Carthaginian phalanx commander who holds ground with hired spear "
+           "levies."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "A campaign and scenario commander; never produced from a barracks."),
@@ -165,16 +165,16 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
            "Bronze-spear commander coordinating disciplined mercenary infantry."),
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Accelerates nearby barracks production through logistical oversight."),
+           "Keeps a braced spear line standing far longer than it should."),
        QT_TRANSLATE_NOOP("Commanders",
                          "Mediocre direct combat impact and risky if exposed."),
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Contract Logistics boosts nearby production tempo and reserve buildup."),
-       "production_haste",
+           "Contract Discipline knits nearby spear levies into an unbroken hedge."),
+       "health_regen",
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Nearby allied barracks train units faster while in aura range."),
+           "Nearby allied spearmen recover health fastest inside the aura."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Treasury Rally restores wavering troops and keeps formations from "
@@ -187,7 +187,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        0,
        13.0F,
        6.0F,
-       0.35F,
+       22.0F,
        12.0F,
        44.0F,
        30.0F,
@@ -196,9 +196,9 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        15.0F,
        65.0F,
        SpawnType::Spearman},
-      {TroopType::CarthageCavalryPatron,
+      {TroopType::CarthageBowCommander,
        NationID::Carthage,
-       "carthage_cavalry_patron",
+       "carthage_bow_commander",
        QT_TRANSLATE_NOOP("Commanders", "Hasdrubal Barca"),
        QT_TRANSLATE_NOOP(
            "Commanders",
@@ -221,7 +221,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        "speed_boost",
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Nearby allied troops gain movement speed while within aura range."),
+           "Nearby allied archers gain the most movement speed in aura range."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Flank Rally rapidly restores wavering units preparing to maneuver."),
@@ -242,9 +242,9 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        12.0F,
        50.0F,
        SpawnType::Archer},
-      {TroopType::CarthageElephantMaster,
+      {TroopType::CarthageSwordCommander,
        NationID::Carthage,
-       "carthage_elephant_master",
+       "carthage_sword_commander",
        QT_TRANSLATE_NOOP("Commanders", "Hannibal Barca"),
        QT_TRANSLATE_NOOP(
            "Commanders",
@@ -267,7 +267,7 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        "attack_boost",
        QT_TRANSLATE_NOOP(
            "Commanders",
-           "Nearby allied troops gain substantial attack damage in aura range."),
+           "Nearby allied swordsmen gain substantial attack damage in aura range."),
        QT_TRANSLATE_NOOP(
            "Commanders",
            "Supreme Rally restores routing or wavering units to fighting order."),

@@ -416,6 +416,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                       formation_presentation->target_alive;
 
   constexpr float k_formation_fog_radius = 6.0F;
+  const std::uint32_t ctx_entity_id =
+      ctx.entity != nullptr ? static_cast<std::uint32_t>(ctx.entity->get_id()) : 0U;
   const QVector3D unit_origin = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
   const bool unit_fog_visible =
       ctx.submission_visibility == nullptr ||
@@ -541,11 +543,17 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                   true};
     const bool outside_frustum = !visibility_result.in_frustum;
     const bool hidden_by_fog = !unit_fog_visible;
-    if (outside_frustum || hidden_by_fog) {
+
+    const bool blocks_lens_gap =
+        ctx.submission_visibility != nullptr &&
+        ctx.submission_visibility->occludes_lens_gap(early_world_pos, ctx_entity_id);
+    if (outside_frustum || hidden_by_fog || blocks_lens_gap) {
       if (outside_frustum) {
         ++s_render_stats.soldiers_skipped_frustum;
-      } else {
+      } else if (hidden_by_fog) {
         ++s_render_stats.soldiers_skipped_fog;
+      } else {
+        ++s_render_stats.soldiers_skipped_lens_gap;
       }
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
       record_soldier_debug(
@@ -556,7 +564,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           Render::Creature::resolve_pose(soldier_render_anim).animation_state,
           HumanoidLOD::Billboard,
           outside_frustum ? Render::Profiling::SoldierCullReason::Frustum
-                          : Render::Profiling::SoldierCullReason::Fog,
+          : hidden_by_fog ? Render::Profiling::SoldierCullReason::Fog
+                          : Render::Profiling::SoldierCullReason::LensGap,
           false,
           early_world_pos,
           1.0F,

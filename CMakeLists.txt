@@ -587,6 +587,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/emblems/cartaghe.png
             assets/visuals/load_screen.png
             assets/visuals/hannibal.png
+            assets/visuals/scipio.png
+            assets/visuals/standard_of_iron.png
             ${SOI_UNIT_ICON_RESOURCES}
         DEPENDENCIES
             Qt6::QuickControls2

@@ -1030,14 +1030,132 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_strike_lunge_id),
+        QStringLiteral("RPG Strike Lunge"),
+        QStringLiteral(
+            "Behind-head commander attacks an enemy standing just outside his "
+            "planted reach, with no movement input at all. A swing has to carry "
+            "the body into the target: from a planted stance the strike whiffs "
+            "at the edge of reach and the fight reads as two puppets waving at "
+            "each other."),
+        6.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+
+    auto enemy = group(
+        QStringLiteral("enemy_target"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 2.6F}, 1);
+    enemy.facing_degrees = 180.0F;
+    enemy.health_override = enemy.max_health_override = 4000;
+    s.groups = {commander, enemy};
+
+    s.steps = {
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(2.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(3.80F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_target")});
+
+    auto lunge = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 0.30F, 0.50F);
+    lunge.end_seconds = 5.50F;
+    s.expectations.push_back(lunge);
+    s.expectations.push_back(
+        expectation(Expect::RpgDamageContactObserved, QStringLiteral("enemy_target")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_target")));
+    s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_pass_ranks_id),
+        QStringLiteral("RPG Pass Ranks"),
+        QStringLiteral(
+            "Behind-head commander walks the length of a friendly line and then "
+            "back through it. Only the individual bodies that stand between the "
+            "lens and the commander may drop out: a rank the player walks past "
+            "has to stay on screen instead of the whole unit blinking away as "
+            "soon as its anchor enters the gap."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-6.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 90.0F;
+
+    auto line = group(QStringLiteral("marching_line"),
+                      Troop::Spearman,
+                      1,
+                      3,
+                      {-3.0F, 0.0F, 1.2F},
+                      8,
+                      {3.4F, 0.0F, 0.0F});
+    line.facing_degrees = 180.0F;
+    s.groups = {commander, line};
+
+    auto move = [](float time, QVector3D axes, std::optional<float> yaw = {}) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      step.rpg_view_yaw_degrees = yaw;
+      return step;
+    };
+    s.steps = {
+
+        move(0.30F, {0.0F, 0.0F, 1.0F}, 90.0F),
+
+        move(4.20F, {0.0F, 0.0F, 1.0F}, 0.0F),
+
+        move(6.40F, {0.0F, 0.0F, 1.0F}, 270.0F),
+        move(8.40F, {0.0F, 0.0F, 0.0F}),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("marching_line")});
+    s.expectations.push_back(expectation(Expect::RpgFormationSurvivesLensGap,
+                                         QStringLiteral("marching_line"),
+                                         {},
+                                         0.5F));
+    s.expectations.push_back(
+        expectation(Expect::GroupIsRendered, QStringLiteral("marching_line")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_commander_identity_lineup_id),
         QStringLiteral("Commander Identity Lineup"),
         QStringLiteral("Displays all six commanders without bodyguards or supporting "
                        "units for direct silhouette, weapon, scale, color, and "
                        "ancient-dark-fantasy identity review."),
         12.0F,
-        {9.8F, 36.0F, 0.0F});
+        {11.2F, 21.0F, 0.0F});
     s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.camera_focus = QVector3D(0.75F, 1.15F, 0.0F);
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
@@ -1050,42 +1168,42 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       float facing{};
     };
     const CommanderLineupEntry entries[] = {
-        {"fabius",
-         Troop::RomanLegionOrganizer,
-         Nation::RomanRepublic,
-         1,
-         {-3.0F, 0.0F, -1.6F},
-         0.0F},
         {"scipio",
          Troop::RomanVeteranConsul,
          Nation::RomanRepublic,
+         1,
+         {-3.0F, 0.0F, 1.7F},
+         180.0F},
+        {"fabius",
+         Troop::RomanLegionOrganizer,
+         Nation::RomanRepublic,
          2,
-         {0.0F, 0.0F, -1.6F},
-         0.0F},
+         {0.0F, 0.0F, 1.7F},
+         180.0F},
         {"marcellus",
          Troop::RomanFieldCommander,
          Nation::RomanRepublic,
          3,
-         {3.0F, 0.0F, -1.6F},
-         0.0F},
-        {"hanno",
-         Troop::CarthageMercenaryBroker,
+         {3.0F, 0.0F, 1.7F},
+         180.0F},
+        {"hannibal",
+         Troop::CarthageSwordCommander,
          Nation::Carthage,
          4,
-         {-3.0F, 0.0F, 1.6F},
-         0.0F},
-        {"hasdrubal",
-         Troop::CarthageCavalryPatron,
+         {-1.5F, 0.0F, -1.7F},
+         180.0F},
+        {"hanno",
+         Troop::CarthageSpearCommander,
          Nation::Carthage,
          5,
-         {0.0F, 0.0F, 1.6F},
-         0.0F},
-        {"hannibal",
-         Troop::CarthageElephantMaster,
+         {1.5F, 0.0F, -1.7F},
+         180.0F},
+        {"hasdrubal",
+         Troop::CarthageBowCommander,
          Nation::Carthage,
          6,
-         {3.0F, 0.0F, 1.6F},
-         0.0F},
+         {4.5F, 0.0F, -1.7F},
+         180.0F},
     };
     for (auto const& entry : entries) {
       auto commander = group(QString::fromLatin1(entry.group_name),
@@ -1224,6 +1342,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    6.0F,
                    {5.0F, 8.0F, 0.0F});
     s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
@@ -1256,19 +1375,19 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
          {1.9F, 0.0F, 1.3F},
          180.0F},
         {"hanno",
-         Troop::CarthageMercenaryBroker,
+         Troop::CarthageSpearCommander,
          Nation::Carthage,
          4,
          {-0.95F, 0.0F, -1.3F},
          180.0F},
         {"hasdrubal",
-         Troop::CarthageCavalryPatron,
+         Troop::CarthageBowCommander,
          Nation::Carthage,
          5,
          {0.95F, 0.0F, -1.3F},
          180.0F},
         {"hannibal",
-         Troop::CarthageElephantMaster,
+         Troop::CarthageSwordCommander,
          Nation::Carthage,
          6,
          {2.85F, 0.0F, -1.3F},
@@ -1594,18 +1713,18 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       Troop carthaginian;
     };
     constexpr DuelSpec duels[] = {
-        {k_commander_consul_vs_broker_id,
-         "Consul vs Mercenary Broker",
+        {k_commander_sword_duel_id,
+         "Sword Commanders: Scipio vs Hannibal",
          Troop::RomanVeteranConsul,
-         Troop::CarthageMercenaryBroker},
-        {k_commander_field_vs_cavalry_id,
-         "Field Commander vs Cavalry Patron",
-         Troop::RomanFieldCommander,
-         Troop::CarthageCavalryPatron},
-        {k_commander_legion_vs_elephant_id,
-         "Legion Organizer vs Elephant Master",
+         Troop::CarthageSwordCommander},
+        {k_commander_spear_duel_id,
+         "Spear Commanders: Fabius vs Hanno",
          Troop::RomanLegionOrganizer,
-         Troop::CarthageElephantMaster},
+         Troop::CarthageSpearCommander},
+        {k_commander_bow_duel_id,
+         "Bow Commanders: Marcellus vs Hasdrubal",
+         Troop::RomanFieldCommander,
+         Troop::CarthageBowCommander},
     };
     for (auto const& duel : duels) {
       auto s = definition(

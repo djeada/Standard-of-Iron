@@ -513,7 +513,7 @@ enum class CombatAttackFamily : std::uint8_t {
     case SpawnType::GravePriest:
     case SpawnType::HorseArcher:
     case SpawnType::RomanFieldCommander:
-    case SpawnType::CarthageCavalryPatron:
+    case SpawnType::CarthageBowCommander:
       return CombatAttackFamily::Bow;
     default:
       return CombatAttackFamily::None;
@@ -529,13 +529,13 @@ enum class CombatAttackFamily : std::uint8_t {
   case SpawnType::SkeletonArcher:
   case SpawnType::RomanVeteranConsul:
   case SpawnType::RomanFieldCommander:
-  case SpawnType::CarthageCavalryPatron:
-  case SpawnType::CarthageElephantMaster:
+  case SpawnType::CarthageBowCommander:
+  case SpawnType::CarthageSwordCommander:
     return CombatAttackFamily::Sword;
   case SpawnType::Spearman:
   case SpawnType::HorseSpearman:
   case SpawnType::RomanLegionOrganizer:
-  case SpawnType::CarthageMercenaryBroker:
+  case SpawnType::CarthageSpearCommander:
     return CombatAttackFamily::Spear;
   case SpawnType::GravePriest:
     return CombatAttackFamily::Sword;

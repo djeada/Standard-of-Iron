@@ -434,6 +434,17 @@ Four behind-head scenes cover commander (FPV) control:
   between swings that is too long. `RpgStrikeAnimationMatched` additionally fails
   the run if the renderer ever drops the swing — for a flinch, or for anything
   else — while the simulation is still committed to it.
+- `rpg_pass_ranks` walks the commander the length of a friendly line and back
+  through it. The chase lens hides bodies standing in the gap between it and the
+  commander, and this is the contract that keeps that judgement per body: an
+  anchor entering the gap must not take its whole formation with it.
+  `RpgFormationSurvivesLensGap` fails a frame that drops more than half of a
+  unit's living soldiers to the lens gap, and also fails a unit that vanishes
+  from submission entirely for any reason other than the frustum or the fog.
+- `rpg_strike_lunge` attacks an enemy standing just outside planted reach with no
+  movement input at all. A swing has to carry the body into the target, so
+  `RpgTravelObserved` fails a commander who swings from a planted stance and
+  `GroupHealthReduced` fails the whiff that follows from it.
 
 These scenes are driven by the `RpgMove` and `RpgAttackHold` scenario commands,
 which set the behind-head controller's own movement axes, view yaw, and attack
