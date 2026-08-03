@@ -17,7 +17,10 @@ uniform float u_time;
 
 flat out vec3 v_instance_color;
 flat out float v_instance_alpha;
-out float v_dist_from_center;
+out vec3 v_normal;
+out float v_layer;
+out float v_radial;
+out float v_phase;
 
 void main() {
   mat4 model = mat4(vec4(a_instance_model_col0.xyz, 0.0),
@@ -28,13 +31,18 @@ void main() {
                          a_instance_model_col2.w,
                          1.0));
 
-  vec3 pos = a_position;
-  float pulse = 1.0 + 0.03 * sin(u_time * 3.0);
-  pos *= pulse;
+  vec3 origin =
+      vec3(a_instance_model_col0.w, a_instance_model_col1.w, a_instance_model_col2.w);
+  v_phase = origin.x * 0.9 + origin.z * 1.7;
 
-  v_dist_from_center = length(a_position.xy);
+  v_normal = a_normal;
+  v_layer = a_tex_coord.x;
+  v_radial = a_tex_coord.y;
   v_instance_color = a_instance_color_alpha.rgb;
   v_instance_alpha = a_instance_color_alpha.a;
+
+  float pulse = 1.0 + 0.015 * sin(u_time * 2.0 + v_phase);
+  vec3 pos = vec3(a_position.xy * pulse, a_position.z);
 
   gl_Position = u_view_proj * model * vec4(pos, 1.0);
 }

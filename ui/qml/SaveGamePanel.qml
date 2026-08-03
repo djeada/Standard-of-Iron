@@ -253,7 +253,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: model.uncompressed_size > 0 ? qsTr("%1 - %2 (%3 KB on disk)").arg(model.map_name).arg(model.mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish")).arg(Math.max(1, Math.round(model.stored_size / 1024))) : model.map_name
+                                        text: model.uncompressed_size > 0 ? qsTr("%1 - %2 (%3 KB on disk)").arg(model.map_name).arg(model.mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish")).arg(Design.Numerals.roman(Math.max(1, Math.round(model.stored_size / 1024)))) : model.map_name
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true

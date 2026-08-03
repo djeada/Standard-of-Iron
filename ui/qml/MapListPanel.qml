@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
 
 Item {
@@ -36,7 +37,7 @@ Item {
     Text {
         id: countLabel
 
-        text: "(" + (list.count || 0) + ")"
+        text: "(" + Design.Numerals.roman(list.count || 0) + ")"
         color: colors.textSubLite
         font.pixelSize: 12
 

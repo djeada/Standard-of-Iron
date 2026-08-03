@@ -22,7 +22,7 @@ Item {
         var total = Math.floor(seconds);
         var hours = Math.floor(total / 3600);
         var minutes = Math.floor((total % 3600) / 60);
-        return hours > 0 ? qsTr("%1h %2m").arg(hours).arg(minutes) : qsTr("%1m").arg(minutes);
+        return hours > 0 ? qsTr("%1h %2m").arg(Design.Numerals.roman(hours)).arg(Design.Numerals.roman(minutes)) : qsTr("%1m").arg(Design.Numerals.roman(minutes));
     }
 
     function describe_mode(mode, kind) {

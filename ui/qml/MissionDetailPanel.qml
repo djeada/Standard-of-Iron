@@ -107,21 +107,21 @@ Rectangle {
 
     function calculate_tactical_rating() {
         if (!mission_data || !mission_data.difficulty_modifier)
-            return qsTr("3/") + tactical_rating_max.toString();
-        return Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier))).toString() + "/" + tactical_rating_max.toString();
+            return Design.Numerals.roman(3) + "/" + Design.Numerals.roman(tactical_rating_max);
+        return Design.Numerals.roman(Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier)))) + "/" + Design.Numerals.roman(tactical_rating_max);
     }
 
     function calculate_casualty_forecast() {
         if (!mission_data || !mission_data.difficulty_modifier)
-            return qsTr("610");
-        return Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString();
+            return Design.Numerals.roman(610);
+        return Design.Numerals.roman(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step);
     }
 
     function calculate_success_estimate() {
         if (!mission_data)
             return qsTr("Unknown");
         if (mission_data.completed)
-            return qsTr("100%");
+            return Design.Numerals.percent(100);
         if (mission_data.unlocked === false)
             return qsTr("Sealed");
         return qsTr("In Progress");
@@ -443,7 +443,7 @@ Rectangle {
                                         id: unit_label
 
                                         anchors.centerIn: parent
-                                        text: modelData.count + "x " + titleize(modelData.type)
+                                        text: Design.Numerals.roman(modelData.count) + "x " + titleize(modelData.type)
                                         color: Theme.infoText
                                         font.pointSize: Theme.fontSizeTiny
                                     }

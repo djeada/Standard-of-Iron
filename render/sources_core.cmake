@@ -21,6 +21,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_disc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/stone.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/icon_glyph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/mode_indicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/projectile_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/flag.cpp

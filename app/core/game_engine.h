@@ -410,7 +410,6 @@ public:
   [[nodiscard]] Game::Systems::UnitActivity
   get_unit_activity_state(Engine::Core::EntityID id) const;
 
-  [[nodiscard]] auto activity_markers() const -> QVariantList override;
   [[nodiscard]] auto unit_activity(qulonglong unit_id) const -> QVariantMap override;
   [[nodiscard]] auto selection_activity_summary() const -> QVariantMap override;
   void toggle_repair_order() override;

@@ -86,10 +86,7 @@ Item {
     }
 
     function format_play_time(seconds) {
-        var h = Math.floor(seconds / 3600);
-        var m = Math.floor((seconds % 3600) / 60);
-        var s = Math.floor(seconds % 60);
-        return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+        return Design.Numerals.clock(seconds);
     }
 
     anchors.fill: parent
@@ -174,16 +171,16 @@ Item {
                         Repeater {
                             model: [{
                                     "label": qsTr("Kills"),
-                                    "value": banner.model.kills
+                                    "value": Design.Numerals.roman(banner.model.kills)
                                 }, {
                                     "label": qsTr("Losses"),
-                                    "value": banner.model.losses
+                                    "value": Design.Numerals.roman(banner.model.losses)
                                 }, {
                                     "label": qsTr("Units trained"),
-                                    "value": banner.model.unitsTrained
+                                    "value": Design.Numerals.roman(banner.model.unitsTrained)
                                 }, {
                                     "label": qsTr("Villages"),
-                                    "value": banner.model.villages
+                                    "value": Design.Numerals.roman(banner.model.villages)
                                 }, {
                                     "label": qsTr("Play time"),
                                     "value": banner.model.playTime
@@ -232,7 +229,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: banner.model.score
+                            text: Design.Numerals.roman(banner.model.score)
                             color: Design.Theme.accent
                             font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.title

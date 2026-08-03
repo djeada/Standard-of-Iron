@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Rectangle {
     id: load_screen
@@ -265,7 +266,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: Math.floor(load_screen.display_progress * 100) + "%"
+                text: Design.Numerals.percent(Math.floor(load_screen.display_progress * 100))
                 color: Theme.textMain
                 font.pixelSize: 14
                 font.bold: true

@@ -165,7 +165,7 @@ grid, and is published three ways:
 - `Core.IconArt` (a C++ singleton in `StandardOfIron.Core`) hands QML flattened,
   0..1-normalised polylines, which `IronVectorIcon` strokes onto a `Canvas`
 - `Ui::IconArt::paint()` draws the same shapes with `QPainter`, which is how the
-  arena viewport shows activity badges over the battlefield
+  Widgets tools render them
 - `IronCommandButton` prefers the vector drawing and only falls back to the
   legacy bitmap, then to a font glyph, when a drawing does not exist
 
@@ -178,6 +178,13 @@ yield without a second set of artwork.
 `Design.ActivityIcons` is the semantic half: activity id → drawing, label,
 tooltip and resource. It is the only place a player-facing activity string is
 written, and `IronActivityIcon` is the only control that renders one.
+
+These icons belong to the panels — the selection summary, the roster chips, the
+order bar. They are deliberately **not** used over the battlefield. What a unit
+is doing is drawn in the world by the 3D activity indicators described in
+`RENDERING_ARCHITECTURE.md`; a screen-space badge layer over the same units
+existed alongside it for a while and the two disagreed about height, ownership
+and grouping. One system owns the overhead read, and it is the 3D one.
 
 Two rules are enforced by tests rather than by review:
 
@@ -251,8 +258,7 @@ On the C++ side: `preferences_test.cpp` covers the persistence layer including
 clamping and corrupted values, `selection_grouping_test.cpp` covers the HUD
 roster, `icon_resources_test.cpp` keeps the icon registry and the shipped files
 in step, `icon_art_test.cpp` holds the vector catalogue to its legibility
-contract, `activity_markers_test.cpp` covers which units earn an overhead marker
-and how crowded ones are merged, and `widget_theme_test.cpp` pins the widget
+contract, and `widget_theme_test.cpp` pins the widget
 vocabulary the tools use and proves the shared accessibility settings reach
 them.
 

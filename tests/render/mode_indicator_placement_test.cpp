@@ -27,6 +27,16 @@ protected:
   }
 };
 
+auto activity_of(
+    Game::Systems::ActivityKind kind,
+    Game::Systems::ActivityState state = Game::Systems::ActivityState::Active)
+    -> Game::Systems::UnitActivity {
+  Game::Systems::UnitActivity activity{};
+  activity.kind = kind;
+  activity.state = state;
+  return activity;
+}
+
 TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   Render::GL::Renderer renderer;
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
@@ -39,7 +49,13 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   transform.position = {1.0F, 2.0F, 3.0F};
   transform.scale = {0.5F, 0.5F, 0.5F};
 
-  renderer.enqueue_mode_indicator(1U, &transform, nullptr, true, false, false, false);
+  renderer.enqueue_activity_indicator(1U,
+                                      &transform,
+                                      activity_of(Game::Systems::ActivityKind::Guard),
+                                      1,
+                                      0.0F,
+                                      0.5F,
+                                      0.0F);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
@@ -53,10 +69,109 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   EXPECT_FLOAT_EQ(translation.y(),
                   transform.position.y + Render::Geom::k_indicator_height_base);
   EXPECT_FLOAT_EQ(translation.z(), transform.position.z);
+  EXPECT_EQ(cmd.mode_type, static_cast<int>(Game::Systems::ActivityKind::Guard));
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   EXPECT_TRUE(diagnostics.mode_indicator_submitted(1U));
   diagnostics.set_enabled(false);
 #endif
+}
+
+TEST(ModeIndicatorPlacement, UsesThePerUnitAnchorHeightWhenOneIsCached) {
+  Render::GL::Renderer renderer;
+  Engine::Core::TransformComponent transform{};
+  transform.position = {0.0F, 0.0F, 0.0F};
+
+  constexpr float anchor = 6.25F;
+  renderer.enqueue_activity_indicator(1U,
+                                      &transform,
+                                      activity_of(Game::Systems::ActivityKind::Repair),
+                                      1,
+                                      anchor,
+                                      0.5F,
+                                      0.0F);
+
+  auto const& items = renderer.m_active_queue->items();
+  ASSERT_EQ(items.size(), 1U);
+  auto const& cmd = std::get<Render::GL::ModeIndicatorCmd>(items.front());
+  EXPECT_FLOAT_EQ(cmd.model.column(3).y(), anchor);
+}
+
+TEST(ModeIndicatorPlacement, SubmitsAnIconForEveryNoteworthyActivity) {
+  Render::GL::Renderer renderer;
+  Engine::Core::TransformComponent transform{};
+
+  std::size_t expected = 0;
+  for (std::size_t i = 0; i < Render::Geom::k_indicator_kind_count; ++i) {
+    auto const kind = static_cast<Game::Systems::ActivityKind>(i);
+    auto const activity = activity_of(kind);
+    if (Game::Systems::activity_is_noteworthy(activity)) {
+      ++expected;
+    }
+    renderer.enqueue_activity_indicator(static_cast<Engine::Core::EntityID>(i + 1U),
+                                        &transform,
+                                        activity,
+                                        1,
+                                        3.0F,
+                                        0.5F,
+                                        0.0F);
+  }
+
+  EXPECT_EQ(renderer.m_active_queue->items().size(), expected);
+  EXPECT_EQ(expected, Render::Geom::k_indicator_kind_count - 2U);
+}
+
+TEST(ModeIndicatorPlacement, StaysSilentForUnitsTheLocalPlayerDoesNotOwn) {
+  Render::GL::Renderer renderer;
+  renderer.set_local_owner_id(1);
+  Engine::Core::TransformComponent transform{};
+
+  renderer.enqueue_activity_indicator(
+      1U,
+      &transform,
+      activity_of(Game::Systems::ActivityKind::ChopWood),
+      2,
+      3.0F,
+      0.5F,
+      0.0F);
+
+  EXPECT_TRUE(renderer.m_active_queue->items().empty());
+}
+
+TEST(ModeIndicatorPlacement, DropsIconsPastTheFadeDistance) {
+  Render::GL::Renderer renderer;
+  Engine::Core::TransformComponent transform{};
+
+  renderer.enqueue_activity_indicator(1U,
+                                      &transform,
+                                      activity_of(Game::Systems::ActivityKind::Hold),
+                                      1,
+                                      3.0F,
+                                      0.5F,
+                                      Render::Geom::k_indicator_fade_end_sq + 1.0F);
+
+  EXPECT_TRUE(renderer.m_active_queue->items().empty());
+}
+
+TEST(ModeIndicatorPlacement, CarriesTheActivityStateInTheCommandColour) {
+  Render::GL::Renderer renderer;
+  Engine::Core::TransformComponent transform{};
+
+  renderer.enqueue_activity_indicator(
+      1U,
+      &transform,
+      activity_of(Game::Systems::ActivityKind::Construct,
+                  Game::Systems::ActivityState::Unavailable),
+      1,
+      3.0F,
+      0.5F,
+      0.0F);
+
+  auto const& items = renderer.m_active_queue->items();
+  ASSERT_EQ(items.size(), 1U);
+  auto const& cmd = std::get<Render::GL::ModeIndicatorCmd>(items.front());
+  EXPECT_EQ(cmd.color,
+            Render::Geom::indicator_color(Game::Systems::ActivityKind::Construct,
+                                          Game::Systems::ActivityState::Unavailable));
 }
 
 TEST_F(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {

@@ -16,7 +16,6 @@ public:
   virtual ~ActivityHost() = default;
 
   virtual void ensure_initialized() = 0;
-  [[nodiscard]] virtual auto activity_markers() const -> QVariantList = 0;
   [[nodiscard]] virtual auto unit_activity(qulonglong unit_id) const -> QVariantMap = 0;
   [[nodiscard]] virtual auto selection_activity_summary() const -> QVariantMap = 0;
   virtual void toggle_repair_order() = 0;
@@ -29,7 +28,6 @@ class ActivityViewModel : public QObject {
 public:
   explicit ActivityViewModel(ActivityHost* host, QObject* parent = nullptr);
 
-  Q_INVOKABLE [[nodiscard]] QVariantList markers() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap unit(qulonglong unit_id) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selection_summary() const;
 

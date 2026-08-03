@@ -64,7 +64,6 @@
 #include "app/core/environment.h"
 #include "app/core/skirmish_loader.h"
 #include "app/core/world_bootstrap.h"
-#include "app/models/activity_markers.h"
 #include "app/models/cursor_mode.h"
 #include "app/utils/engine_view_helpers.h"
 #include "app/utils/movement_utils.h"
@@ -2664,66 +2663,6 @@ auto GameEngine::selection_activity_summary() const -> QVariantMap {
   summary[QStringLiteral("total")] = static_cast<int>(selected.size());
   summary[QStringLiteral("mixed")] = tally.size() > 1;
   return summary;
-}
-
-auto GameEngine::activity_markers() const -> QVariantList {
-  QVariantList result;
-  if (m_world == nullptr) {
-    return result;
-  }
-
-  std::vector<Engine::Core::EntityID> selected;
-  get_selected_unit_ids(selected);
-  const std::set<Engine::Core::EntityID> selected_set(selected.begin(), selected.end());
-
-  std::vector<App::Models::ActivityMarkerSource> sources;
-  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->health <= 0) {
-      continue;
-    }
-
-    if (unit->owner_id != m_runtime.local_owner_id) {
-      continue;
-    }
-
-    const bool selected_unit = selected_set.count(entity->get_id()) > 0;
-    const auto activity = Game::Systems::classify_unit_activity(*entity);
-    if (!App::Models::activity_deserves_marker(activity, selected_unit)) {
-      continue;
-    }
-
-    App::Models::ActivityMarkerSource source;
-    source.entity_id = entity->get_id();
-    source.activity = activity;
-    source.selected = selected_unit;
-    source.x = transform->position.x;
-    source.y = transform->position.y;
-    source.z = transform->position.z;
-    sources.push_back(source);
-  }
-
-  for (const auto& marker : App::Models::group_activity_markers(sources)) {
-    QPointF screen;
-
-    if (!world_to_screen(QVector3D(marker.x, marker.y + 3.4F, marker.z), screen)) {
-      continue;
-    }
-    QVariantMap entry;
-    entry[QStringLiteral("activity")] = marker.activity;
-    entry[QStringLiteral("state")] = marker.state;
-    entry[QStringLiteral("count")] = marker.count;
-    entry[QStringLiteral("unitId")] =
-        QVariant::fromValue<qulonglong>(static_cast<qulonglong>(marker.lead_entity_id));
-    entry[QStringLiteral("x")] = screen.x();
-    entry[QStringLiteral("y")] = screen.y();
-    result.append(entry);
-  }
-  return result;
 }
 
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {

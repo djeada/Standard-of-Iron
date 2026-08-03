@@ -401,10 +401,10 @@ struct UnitRenderEntry {
   bool combat_active{false};
   bool in_frustum{true};
   bool fog_visible{true};
-  bool has_attack{false};
-  bool has_guard_mode{false};
-  bool has_hold_mode{false};
-  bool has_patrol{false};
+  Game::Systems::UnitActivity activity{};
+  int owner_id{0};
+  float indicator_height{0.0F};
+  float indicator_size{0.0F};
   float distance_sq{0.0F};
 };
 
@@ -513,56 +513,58 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
   }
 }
 
-void Renderer::enqueue_mode_indicator(Engine::Core::EntityID entity_id,
-                                      Engine::Core::TransformComponent* transform,
-                                      Engine::Core::UnitComponent* unit_comp,
-                                      bool has_attack,
-                                      bool has_guard_mode,
-                                      bool has_hold_mode,
-                                      bool has_patrol) {
-  if (transform == nullptr || m_cinematic_mode) {
+void Renderer::refresh_billboard_basis() {
+  if (m_camera == nullptr) {
+    return;
+  }
+  const QMatrix4x4 view = m_camera->get_view_matrix();
+  m_billboard_right = QVector3D(view(0, 0), view(0, 1), view(0, 2));
+  m_billboard_up = QVector3D(view(1, 0), view(1, 1), view(1, 2));
+  QVector3D const view_forward =
+      QVector3D::crossProduct(m_billboard_right, m_billboard_up).normalized();
+
+  float const tilt_sin = std::sin(Render::Geom::k_indicator_tilt_radians);
+  float const tilt_cos = std::cos(Render::Geom::k_indicator_tilt_radians);
+  m_billboard_up = (m_billboard_up * tilt_cos - view_forward * tilt_sin).normalized();
+  m_billboard_forward =
+      QVector3D::crossProduct(m_billboard_right, m_billboard_up).normalized();
+}
+
+void Renderer::enqueue_activity_indicator(Engine::Core::EntityID entity_id,
+                                          Engine::Core::TransformComponent* transform,
+                                          const Game::Systems::UnitActivity& activity,
+                                          int owner_id,
+                                          float anchor_height,
+                                          float world_size,
+                                          float distance_sq) {
+  if (transform == nullptr || !order_markers_visible_for_owner(owner_id)) {
+    return;
+  }
+  if (!Game::Systems::activity_is_noteworthy(activity) ||
+      !Render::Geom::indicator_has_glyph(activity.kind)) {
     return;
   }
 
-  if (!has_attack && !has_guard_mode && !has_hold_mode && !has_patrol) {
+  float const distance_fade = Render::Geom::indicator_distance_fade(distance_sq);
+  if (distance_fade <= 0.02F) {
     return;
   }
 
-  float indicator_height = Render::Geom::k_indicator_height_base;
-  float const indicator_size = Render::Geom::k_indicator_size;
-
-  if (unit_comp != nullptr) {
-    auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
-
-    if (troop_type_opt) {
-      const auto& nation_reg = Game::Systems::NationRegistry::instance();
-      const Game::Systems::Nation* nation =
-          nation_reg.get_nation_for_player(unit_comp->owner_id);
-      Game::Systems::NationID const nation_id =
-          nation != nullptr ? nation->id : nation_reg.default_nation_id();
-
-      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-          nation_id, *troop_type_opt);
-      indicator_height = Render::Geom::indicator_height_for_unit(
-          profile.visuals.selection_ring_size, profile.visuals.render_scale);
-    } else {
-      indicator_height = Render::Geom::indicator_height_for_unit(
-          Game::Units::TroopConfig::instance().get_selection_ring_size(
-              unit_comp->spawn_type),
-          1.0F);
-    }
-  }
-
-  QVector3D const pos(transform->position.x,
-                      transform->position.y + indicator_height,
-                      transform->position.z);
+  float const height =
+      anchor_height > 0.0F ? anchor_height : Render::Geom::k_indicator_height_base;
+  float const scale = world_size > 0.0F
+                          ? world_size
+                          : Render::Geom::indicator_size_for_unit(1.0F, 1.0F);
+  QVector3D const pos(
+      transform->position.x, transform->position.y + height, transform->position.z);
 
   if (m_camera != nullptr) {
     QVector4D const clip_pos = m_view_proj * QVector4D(pos, 1.0F);
     if (clip_pos.w() > 0.0F) {
-      float const ndc_x = clip_pos.x() / clip_pos.w();
-      float const ndc_y = clip_pos.y() / clip_pos.w();
-      float const ndc_z = clip_pos.z() / clip_pos.w();
+      float const inv_w = 1.0F / clip_pos.w();
+      float const ndc_x = clip_pos.x() * inv_w;
+      float const ndc_y = clip_pos.y() * inv_w;
+      float const ndc_z = clip_pos.z() * inv_w;
 
       constexpr float margin = Render::Geom::k_frustum_cull_margin;
       if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin || ndc_y > margin ||
@@ -573,37 +575,15 @@ void Renderer::enqueue_mode_indicator(Engine::Core::EntityID entity_id,
   }
 
   QMatrix4x4 indicator_model;
-  indicator_model.translate(pos);
-  indicator_model.scale(indicator_size, indicator_size, indicator_size);
+  indicator_model.setColumn(0, QVector4D(m_billboard_right * scale, 0.0F));
+  indicator_model.setColumn(1, QVector4D(m_billboard_up * scale, 0.0F));
+  indicator_model.setColumn(2, QVector4D(m_billboard_forward * scale, 0.0F));
+  indicator_model.setColumn(3, QVector4D(pos, 1.0F));
 
-  if (m_camera != nullptr) {
-    QVector3D const cam_pos = m_camera->get_position();
-    QVector3D const to_camera = (cam_pos - pos).normalized();
-
-    constexpr float k_pi = std::numbers::pi_v<float>;
-    float const yaw = std::atan2(to_camera.x(), to_camera.z());
-    indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
-  }
-
-  int mode_type = Render::Geom::k_mode_type_patrol;
-  QVector3D color = Render::Geom::k_patrol_mode_color;
-
-  if (has_hold_mode) {
-    mode_type = Render::Geom::k_mode_type_hold;
-    color = Render::Geom::k_hold_mode_color;
-  }
-
-  if (has_guard_mode) {
-    mode_type = Render::Geom::k_mode_type_guard;
-    color = Render::Geom::k_guard_mode_color;
-  }
-
-  if (has_attack) {
-    mode_type = Render::Geom::k_mode_type_attack;
-    color = Render::Geom::k_attack_mode_color;
-  }
-
-  mode_indicator(indicator_model, mode_type, color, Render::Geom::k_indicator_alpha);
+  mode_indicator(indicator_model,
+                 static_cast<int>(activity.kind),
+                 Render::Geom::indicator_color(activity.kind, activity.state),
+                 Render::Geom::indicator_state_alpha(activity.state) * distance_fade);
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
   Render::Profiling::CombatAnimationDiagnostics::instance().record_mode_indicator(
       entity_id);
@@ -816,15 +796,12 @@ void Renderer::render_world(Engine::Core::World* world) {
       auto const* presentation =
           entity->get_component<Engine::Core::CreaturePresentationComponent>();
       entry.combat_active = is_unit_combat_active(presentation);
-      entry.has_attack = presentation != nullptr && presentation->snapshot_valid &&
-                         presentation->is_in_melee_lock;
-
-      entry.has_guard_mode = presentation != nullptr && presentation->snapshot_valid &&
-                             presentation->guard_mode_indicator;
-      entry.has_hold_mode = presentation != nullptr && presentation->snapshot_valid &&
-                            presentation->hold_mode_indicator;
-      entry.has_patrol = presentation != nullptr && presentation->snapshot_valid &&
-                         presentation->patrol_mode_indicator;
+      if (presentation != nullptr && presentation->snapshot_valid) {
+        entry.activity = presentation->activity;
+      }
+      entry.owner_id = unit_comp->owner_id;
+      entry.indicator_height = cached.indicator_height;
+      entry.indicator_size = cached.indicator_size;
 
       unit_entries.push_back(std::move(entry));
     }
@@ -1143,13 +1120,13 @@ void Renderer::render_world(Engine::Core::World* world) {
             entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
       }
 
-      enqueue_mode_indicator(entry.entity_id,
-                             entry.transform,
-                             entry.unit,
-                             entry.has_attack,
-                             entry.has_guard_mode,
-                             entry.has_hold_mode,
-                             entry.has_patrol);
+      enqueue_activity_indicator(entry.entity_id,
+                                 entry.transform,
+                                 entry.activity,
+                                 entry.owner_id,
+                                 entry.indicator_height,
+                                 entry.indicator_size,
+                                 entry.distance_sq);
       continue;
     }
 
@@ -1162,13 +1139,13 @@ void Renderer::render_world(Engine::Core::World* world) {
       enqueue_selection_ring(
           entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
     }
-    enqueue_mode_indicator(entry.entity_id,
-                           entry.transform,
-                           entry.unit,
-                           entry.has_attack,
-                           entry.has_guard_mode,
-                           entry.has_hold_mode,
-                           entry.has_patrol);
+    enqueue_activity_indicator(entry.entity_id,
+                               entry.transform,
+                               entry.activity,
+                               entry.owner_id,
+                               entry.indicator_height,
+                               entry.indicator_size,
+                               entry.distance_sq);
     mesh(mesh_to_draw,
          model_matrix,
          color,
