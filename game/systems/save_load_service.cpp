@@ -573,17 +573,6 @@ auto SaveLoadService::get_campaign_progress(const QString& campaign_id,
   return m_storage->get_campaign_progress(campaign_id, out_error);
 }
 
-auto SaveLoadService::mark_campaign_completed(const QString& campaign_id,
-                                              QString* out_error) -> bool {
-  if (!m_storage) {
-    if (out_error != nullptr) {
-      *out_error = tr("Save storage unavailable");
-    }
-    return false;
-  }
-  return m_storage->mark_campaign_completed(campaign_id, out_error);
-}
-
 auto SaveLoadService::save_mission_result(const QString& mission_id,
                                           const QString& mode,
                                           const QString& campaign_id,
@@ -630,16 +619,17 @@ auto SaveLoadService::get_campaign_mission_progress(
   return m_storage->get_campaign_mission_progress(campaign_id, out_error);
 }
 
-auto SaveLoadService::unlock_next_campaign_mission(const QString& campaign_id,
-                                                   const QString& completed_mission_id,
-                                                   QString* out_error) -> bool {
+auto SaveLoadService::complete_campaign_mission(const QString& campaign_id,
+                                                const QString& mission_id,
+                                                QString* out_error)
+    -> std::optional<CampaignAdvance> {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = tr("Save storage unavailable");
     }
-    return false;
+    return std::nullopt;
   }
-  return m_storage->unlock_next_mission(campaign_id, completed_mission_id, out_error);
+  return m_storage->complete_campaign_mission(campaign_id, mission_id, out_error);
 }
 
 void SaveLoadService::open_settings() {

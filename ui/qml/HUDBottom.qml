@@ -14,6 +14,8 @@ RowLayout {
     property var selection_groups: []
     property int selection_count: 0
 
+    readonly property int orderGridHeight: Math.max(Design.Metrics.commandButtonSize, bottomRoot.height - Design.Metrics.controlHeight - Design.Metrics.space8)
+
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
 
@@ -69,6 +71,7 @@ RowLayout {
                 "patrol": qsTr("Patrol order"),
                 "heal": qsTr("Medic order"),
                 "build": qsTr("Engineer order"),
+                "repair": qsTr("Repair order"),
                 "collect": qsTr("Collection order"),
                 "deliver": qsTr("Barracks delivery"),
                 "formation": qsTr("Formation order"),
@@ -193,6 +196,17 @@ RowLayout {
                 }
                 if (game.placement.start_builder_construction)
                     game.placement.start_builder_construction("collect");
+            }
+        }, {
+            "id": "repair",
+            "label": qsTr("Repair"),
+            "needsTroops": true,
+            "activeFromPlacing": true,
+            "hint": qsTr("Click a damaged building of yours. Right-click to cancel."),
+            "unavailable": qsTr("Repair is only available to builders"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.activity)
+                    game.activity.begin_repair_order();
             }
         }, {
             "id": "deliver",
@@ -333,7 +347,10 @@ RowLayout {
 
             Layout.fillWidth: true
 
-            columns: 6
+            readonly property int rowHeight: Design.Metrics.commandButtonSize + rowSpacing
+            readonly property int maxRows: Math.max(1, Math.floor((bottomRoot.orderGridHeight + rowSpacing) / rowHeight))
+
+            columns: Math.max(3, Math.ceil(bottomRoot.commands.length / maxRows))
             rowSpacing: Design.Metrics.space4
             columnSpacing: Design.Metrics.space4
 

@@ -634,6 +634,40 @@ auto CommandController::on_civilian_delivery_click(qreal sx,
   return result;
 }
 
+auto CommandController::on_builder_repair_click(qreal sx,
+                                                qreal sy,
+                                                int viewport_width,
+                                                int viewport_height,
+                                                void* camera,
+                                                int local_owner_id) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  result.input_consumed = App::Utils::issue_builder_repair_command(m_world,
+                                                                   selected,
+                                                                   m_picking_service,
+                                                                   cam,
+                                                                   sx,
+                                                                   sy,
+                                                                   viewport_width,
+                                                                   viewport_height,
+                                                                   local_owner_id);
+
+  result.reset_cursor_to_normal = result.input_consumed;
+  return result;
+}
+
 auto CommandController::on_formation_command() -> CommandResult {
   CommandResult result;
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {

@@ -1149,7 +1149,7 @@ TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOf
   constexpr float k_dt = 0.016F;
   for (int frame = 0; frame < 40; ++frame) {
 
-    Game::Systems::CombatActions::advance_combat_action_events(
+    (void)Game::Systems::CombatActions::advance_combat_action_events(
         *action, k_dt, *definition);
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
   }

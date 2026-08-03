@@ -173,7 +173,7 @@ TEST(MissionWaveDirectorTest, ClearingEarlyPullsTheNextWaveForward) {
   }
 
   director.set_elapsed(12.0F);
-  director.advance();
+  (void)director.advance();
   director.set_elapsed(18.0F);
 
   EXPECT_EQ(director.advance().waves_to_spawn.size(), 1U);
@@ -194,13 +194,13 @@ TEST(MissionWaveDirectorTest, RoutedSurvivorsDoNotHoldAWaveOpen) {
   kill(world, units[1]);
 
   director.set_elapsed(5.0F);
-  director.advance();
+  (void)director.advance();
   EXPECT_EQ(director.cleared_wave_count(), 0);
 
   rout(world, units[2]);
   rout(world, units[3]);
   director.set_elapsed(6.0F);
-  director.advance();
+  (void)director.advance();
   EXPECT_EQ(director.cleared_wave_count(), 1);
 }
 
@@ -251,7 +251,7 @@ TEST(MissionWaveDirectorTest, PhaseCountsSpanEveryAiInThePhase) {
     kill(world, entity_id);
   }
   director.set_elapsed(5.0F);
-  director.advance();
+  (void)director.advance();
   EXPECT_EQ(director.cleared_wave_count(), 0)
       << "one AI's column dying is not the whole phase";
 
@@ -259,7 +259,7 @@ TEST(MissionWaveDirectorTest, PhaseCountsSpanEveryAiInThePhase) {
     kill(world, entity_id);
   }
   director.set_elapsed(6.0F);
-  director.advance();
+  (void)director.advance();
   EXPECT_EQ(director.cleared_wave_count(), 1);
 }
 
@@ -279,7 +279,7 @@ TEST(MissionWaveDirectorTest, SavedStateSurvivesARoundTrip) {
   kill(world, units[0]);
 
   director.set_elapsed(42.0F);
-  director.advance();
+  (void)director.advance();
   const QJsonObject saved = director.serialize();
 
   std::vector<PendingMissionWave> restored_waves{
@@ -309,7 +309,7 @@ TEST(MissionWaveDirectorTest, RestoringAMismatchedLayoutLeavesTheAuthoredSchedul
   MissionWaveDirector director;
   director.bind(&waves, &world);
   director.set_elapsed(10.0F);
-  director.advance();
+  (void)director.advance();
   spawn_into(director, world, 0, 2);
   const QJsonObject saved = director.serialize();
 

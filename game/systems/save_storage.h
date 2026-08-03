@@ -7,6 +7,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <optional>
+
 #include "save_format.h"
 
 namespace Game::Campaign {
@@ -14,6 +16,15 @@ struct CampaignDefinition;
 }
 
 namespace Game::Systems {
+
+struct CampaignAdvance {
+
+  QString unlocked_mission_id;
+
+  bool campaign_completed = false;
+
+  bool newly_completed = false;
+};
 
 class SaveStorage {
 public:
@@ -51,6 +62,7 @@ public:
   auto list_campaigns(QString* out_error = nullptr) -> QVariantList;
   auto get_campaign_progress(const QString& campaign_id,
                              QString* out_error = nullptr) const -> QVariantMap;
+
   auto mark_campaign_completed(const QString& campaign_id,
                                QString* out_error = nullptr) -> bool;
 
@@ -70,9 +82,10 @@ public:
   get_campaign_mission_progress(const QString& campaign_id,
                                 QString* out_error = nullptr) const -> QVariantList;
 
-  auto unlock_next_mission(const QString& campaign_id,
-                           const QString& completed_mission_id,
-                           QString* out_error = nullptr) -> bool;
+  auto complete_campaign_mission(const QString& campaign_id,
+                                 const QString& mission_id,
+                                 QString* out_error = nullptr)
+      -> std::optional<CampaignAdvance>;
 
   auto
   ensure_campaign_missions_in_db(const Game::Campaign::CampaignDefinition& campaign,

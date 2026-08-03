@@ -76,6 +76,18 @@ TestCase {
                 "tag": "IronCommandButton",
                 "qml": "IronCommandButton {}"
             }, {
+                "tag": "IronVectorIcon",
+                "qml": "IronVectorIcon { iconId: \"repair\" }"
+            }, {
+                "tag": "IronActivityIcon",
+                "qml": "IronActivityIcon { activity: \"chop_wood\" }"
+            }, {
+                "tag": "IronActivityMarkerLayer",
+                "qml": "IronActivityMarkerLayer {}"
+            }, {
+                "tag": "IronOutcomeOverlay",
+                "qml": "IronOutcomeOverlay {}"
+            }, {
                 "tag": "IronObjectiveRow",
                 "qml": "IronObjectiveRow {}"
             }, {

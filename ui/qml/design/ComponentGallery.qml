@@ -169,6 +169,48 @@ ScrollView {
                                 disabledReason: qsTr("Build is only available to builders")
                             }
                         }
+
+                        Text {
+                            text: qsTr("Unit activities")
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+
+                        Flow {
+                            width: parent.width
+                            spacing: Design.Metrics.space8
+
+                            Repeater {
+                                model: Design.ActivityIcons.ids()
+
+                                delegate: Design.IronActivityIcon {
+                                    required property string modelData
+
+                                    activity: modelData
+                                    showLabel: true
+                                }
+                            }
+                        }
+
+                        Flow {
+                            width: parent.width
+                            spacing: Design.Metrics.space8
+
+                            Repeater {
+                                model: Design.ActivityIcons.stateIds()
+
+                                delegate: Design.IronActivityIcon {
+                                    required property string modelData
+
+                                    activity: "mine_iron"
+                                    state_id: modelData
+                                    count: 4
+                                    showLabel: true
+                                }
+                            }
+                        }
                     }
                 }
 

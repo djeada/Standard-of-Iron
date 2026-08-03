@@ -6,7 +6,7 @@
 #
 # The rest of ui/ (GLView, CampaignMapView) stays in the executable: it is
 # registered with QML by main.cpp and has no other consumer.
-add_library(ui_shell STATIC theme.cpp preferences.cpp input_bindings.cpp)
+add_library(ui_shell STATIC theme.cpp preferences.cpp input_bindings.cpp icon_art.cpp)
 
 target_include_directories(ui_shell PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(

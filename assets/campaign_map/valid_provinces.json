@@ -41,11 +41,6 @@
       "region": "sicily"
     },
     {
-      "id": "sicily_carthaginian",
-      "name": "Sicily (Carthage)",
-      "region": "sicily"
-    },
-    {
       "id": "sardinia",
       "name": "Sardinia",
       "region": "islands"
@@ -71,8 +66,13 @@
       "region": "africa"
     },
     {
+      "id": "illyrian_coast",
+      "name": "Illyrian Coast",
+      "region": "balkans"
+    },
+    {
       "id": "illyria",
-      "name": "Illyria",
+      "name": "Illyrian Interior",
       "region": "balkans"
     }
   ],

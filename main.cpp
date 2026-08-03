@@ -142,6 +142,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
+#include "ui/icon_art.h"
 #include "ui/input_bindings.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
@@ -793,12 +794,16 @@ auto main(int argc, char* argv[]) -> int {
 
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
+  qmlRegisterSingletonType<IconArtLibrary>(
+      "StandardOfIron", 1, 0, "IconArt", &IconArtLibrary::create);
 
   qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
   qmlRegisterSingletonType<UiPreferences>(
       "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron.Core", 1, 0, "InputBindings", &InputBindings::create);
+  qmlRegisterSingletonType<IconArtLibrary>(
+      "StandardOfIron.Core", 1, 0, "IconArt", &IconArtLibrary::create);
 
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
                            "StandardOfIron",
@@ -860,32 +865,43 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Window set successfully";
 
   if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty()) {
-    if (!root_obj->setProperty("game_started", true) ||
-        !root_obj->setProperty("menu_visible", false)) {
-      qCritical() << "Could not expose GameView for direct campaign mission";
-      return 10;
-    }
-    auto* gl_view = root_obj->findChild<GLView*>();
-    if (gl_view == nullptr) {
-      qCritical() << "Could not find gameplay GLView for direct campaign mission";
-      return 10;
-    }
-    QObject::connect(
-        gl_view,
-        &GLView::renderer_ready,
+
+    QTimer::singleShot(
+        0,
         &app,
-        [game_engine_ptr = game_engine.get(),
+        [root_obj,
+         &app,
+         game_engine_ptr = game_engine.get(),
          direct_campaign_mission,
-         direct_mission_file]() {
-          if (!direct_mission_file.isEmpty()) {
-            qInfo() << "Starting mission file directly:" << direct_mission_file;
-            game_engine_ptr->start_mission_file(direct_mission_file);
-          } else {
-            qInfo() << "Starting campaign mission directly:" << direct_campaign_mission;
-            game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+         direct_mission_file] {
+          if (!root_obj->setProperty("game_started", true) ||
+              !root_obj->setProperty("menu_visible", false)) {
+            qCritical() << "Could not expose GameView for direct campaign mission";
+            QCoreApplication::exit(10);
+            return;
           }
-        },
-        Qt::QueuedConnection);
+          auto* gl_view = root_obj->findChild<GLView*>();
+          if (gl_view == nullptr) {
+            qCritical() << "Could not find gameplay GLView for direct campaign mission";
+            QCoreApplication::exit(10);
+            return;
+          }
+          QObject::connect(
+              gl_view,
+              &GLView::renderer_ready,
+              &app,
+              [game_engine_ptr, direct_campaign_mission, direct_mission_file]() {
+                if (!direct_mission_file.isEmpty()) {
+                  qInfo() << "Starting mission file directly:" << direct_mission_file;
+                  game_engine_ptr->start_mission_file(direct_mission_file);
+                } else {
+                  qInfo() << "Starting campaign mission directly:"
+                          << direct_campaign_mission;
+                  game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+                }
+              },
+              Qt::QueuedConnection);
+        });
     window->show();
     window->update();
   }

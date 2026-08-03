@@ -23,6 +23,9 @@ class CampaignMapView : public QQuickFramebufferObject {
   Q_PROPERTY(float pan_v READ pan_v WRITE set_pan_v NOTIFY pan_v_changed)
   Q_PROPERTY(QString hover_province_id READ hover_province_id WRITE
                  set_hover_province_id NOTIFY hover_province_id_changed)
+
+  Q_PROPERTY(QString selected_province_id READ selected_province_id WRITE
+                 set_selected_province_id NOTIFY selected_province_id_changed)
   Q_PROPERTY(
       QVariantList province_labels READ province_labels NOTIFY province_labels_changed)
   Q_PROPERTY(int current_mission READ current_mission WRITE set_current_mission NOTIFY
@@ -88,6 +91,10 @@ public:
     return m_hover_province_id;
   }
   void set_hover_province_id(const QString& province_id);
+  [[nodiscard]] auto selected_province_id() const -> QString {
+    return m_selected_province_id;
+  }
+  void set_selected_province_id(const QString& province_id);
 
   [[nodiscard]] auto current_mission() const -> int { return m_current_mission; }
   void set_current_mission(int mission);
@@ -109,6 +116,7 @@ signals:
   void pan_u_changed();
   void pan_v_changed();
   void hover_province_id_changed();
+  void selected_province_id_changed();
   void province_labels_changed();
   void current_mission_changed();
   void terrain_height_scale_changed();
@@ -121,6 +129,7 @@ private:
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
+  QString m_selected_province_id;
   int m_current_mission = 7;
   float m_terrain_height_scale = 0.15F;
   bool m_show_province_fills = true;

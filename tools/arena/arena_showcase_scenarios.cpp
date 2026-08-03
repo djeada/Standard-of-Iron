@@ -76,6 +76,73 @@ auto prop(QString type,
   return patch;
 }
 
+constexpr int k_camp_owner = 2;
+
+auto worker(QString name,
+            Troop troop,
+            QVector3D origin,
+            int count,
+            bool ai_controlled,
+            QVector3D spacing = {2.6F, 0.0F, 0.0F}) -> ArenaScenarioGroup {
+  ArenaScenarioGroup group;
+  group.name = std::move(name);
+  group.troop_type = troop;
+  group.nation_id = Nation::Carthage;
+  group.owner_id = k_camp_owner;
+  group.count = count;
+  group.individuals_per_unit = 1;
+  group.origin = origin;
+  group.spacing = spacing;
+  group.ai_controlled = ai_controlled;
+  return group;
+}
+
+auto structure(QString name,
+               Game::Units::SpawnType type,
+               QVector3D origin,
+               float facing = 0.0F) -> ArenaScenarioGroup {
+  ArenaScenarioGroup group;
+  group.name = std::move(name);
+  group.spawn_type = type;
+  group.nation_id = Nation::Carthage;
+  group.owner_id = k_camp_owner;
+  group.count = 1;
+  group.origin = origin;
+  group.spacing = {0.0F, 0.0F, 0.0F};
+  group.facing_degrees = facing;
+  return group;
+}
+
+auto harvest_step(float time,
+                  QString source,
+                  QString resource_kind) -> ArenaScenarioStep {
+  ArenaScenarioStep step;
+  step.name = QStringLiteral("%1_%2_%3")
+                  .arg(QString::number(time, 'f', 2), source, resource_kind);
+  step.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
+  step.command = Command::HarvestResource;
+  step.group = std::move(source);
+  step.resource_kind = std::move(resource_kind);
+  return step;
+}
+
+auto targeted_step(float time,
+                   Command command,
+                   QString source,
+                   QString target,
+                   QVector3D destination = {},
+                   int value = 0) -> ArenaScenarioStep {
+  ArenaScenarioStep step;
+  step.name = QStringLiteral("%1_%2").arg(QString::number(time, 'f', 2), source);
+  step.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
+  step.command = command;
+  step.group = std::move(source);
+  step.target_group = std::move(target);
+  step.destination = destination;
+  step.value = value;
+  return step;
+}
+
 } // namespace
 
 auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
@@ -176,6 +243,132 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
   };
 
   out.push_back(std::move(s));
+
+  {
+
+    ArenaScenarioDefinition activity;
+    activity.id = QStringLiteral("unit_activity_showcase");
+    activity.label = QStringLiteral("Showcase: Unit Activities");
+    activity.description = QStringLiteral(
+        "Builders raise a camp, fell timber, work a boulder field and an ore "
+        "seam, carriers walk their load to the barracks, a repair crew mends a "
+        "battered home, and one work party is pulled off its job so the "
+        "interrupted and unavailable order states can be read on the markers.");
+    activity.duration_seconds = 70.0F;
+    activity.camera = {58.0F, 46.0F, 18.0F};
+    activity.camera_focus = QVector3D(0.0F, 0.0F, -5.0F);
+    activity.arena_floor_half_extent = 44.0F;
+    activity.suppress_spawn_anchor = true;
+
+    activity.suppress_ui_overlays = false;
+    activity.capture_ui_overlays = true;
+    activity.select_spawned_units = false;
+    activity.environment.start_time = 11.0F;
+    activity.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    activity.resource_patches = {
+        prop(QStringLiteral("pine_tree"), {-25.0F, 0.0F, -6.0F}, 1.05F, 5),
+        prop(QStringLiteral("boulder"), {-11.0F, 0.0F, -15.0F}, 1.2F, 5),
+        prop(QStringLiteral("iron_ore"), {9.0F, 0.0F, -15.0F}, 1.1F, 4),
+        prop(QStringLiteral("olive_tree"), {25.0F, 0.0F, -4.0F}, 1.0F, 3),
+    };
+
+    activity.groups = {
+        structure(QStringLiteral("camp_barracks"),
+                  Game::Units::SpawnType::Barracks,
+                  {14.0F, 0.0F, 10.0F},
+                  180.0F),
+        structure(QStringLiteral("battered_home"),
+                  Game::Units::SpawnType::Home,
+                  {-14.0F, 0.0F, 10.0F},
+                  180.0F),
+
+        worker(QStringLiteral("camp_builders"),
+               Troop::Builder,
+               {2.0F, 0.0F, -6.0F},
+               2,
+               true),
+        worker(QStringLiteral("foresters"),
+               Troop::Builder,
+               {-19.0F, 0.0F, -3.0F},
+               2,
+               false),
+        worker(QStringLiteral("quarriers"),
+               Troop::Builder,
+               {-9.0F, 0.0F, -9.0F},
+               2,
+               false),
+        worker(QStringLiteral("miners"), Troop::Builder, {9.0F, 0.0F, -9.0F}, 2, false),
+        worker(QStringLiteral("repair_crew"),
+               Troop::Builder,
+               {-8.0F, 0.0F, 4.0F},
+               2,
+               false),
+        worker(QStringLiteral("stalled_crew"),
+               Troop::Builder,
+               {2.0F, 0.0F, 2.0F},
+               2,
+               false),
+        worker(QStringLiteral("carriers"),
+               Troop::Civilian,
+               {-8.0F, 0.0F, 22.0F},
+               3,
+               false),
+    };
+
+    activity.steps = {
+        harvest_step(3.0F, QStringLiteral("foresters"), QStringLiteral("tree")),
+        harvest_step(3.0F, QStringLiteral("quarriers"), QStringLiteral("boulder")),
+        harvest_step(3.0F, QStringLiteral("miners"), QStringLiteral("iron_ore")),
+
+        harvest_step(24.0F, QStringLiteral("foresters"), QStringLiteral("tree")),
+        harvest_step(24.0F, QStringLiteral("quarriers"), QStringLiteral("boulder")),
+        harvest_step(24.0F, QStringLiteral("miners"), QStringLiteral("iron_ore")),
+
+        targeted_step(
+            2.0F, Command::SetHealth, QStringLiteral("battered_home"), {}, {}, 220),
+        targeted_step(4.0F,
+                      Command::RepairStructure,
+                      QStringLiteral("repair_crew"),
+                      QStringLiteral("battered_home")),
+        targeted_step(6.0F,
+                      Command::DeliverToStructure,
+                      QStringLiteral("carriers"),
+                      QStringLiteral("camp_barracks")),
+
+        targeted_step(
+            30.0F, Command::Move, QStringLiteral("carriers"), {}, {-8.0F, 0.0F, 22.0F}),
+        targeted_step(38.0F,
+                      Command::DeliverToStructure,
+                      QStringLiteral("carriers"),
+                      QStringLiteral("camp_barracks")),
+        targeted_step(10.0F,
+                      Command::RepairStructure,
+                      QStringLiteral("stalled_crew"),
+                      QStringLiteral("battered_home")),
+
+        targeted_step(26.0F,
+                      Command::AbandonWork,
+                      QStringLiteral("stalled_crew"),
+                      {},
+                      {18.0F, 0.0F, -2.0F},
+                      20),
+    };
+
+    activity.expectations = {
+        expect(Expect::GroupIsRendered, QStringLiteral("camp_builders")),
+        expect(Expect::GroupIsRendered, QStringLiteral("foresters")),
+        expect(Expect::GroupIsRendered, QStringLiteral("quarriers")),
+        expect(Expect::GroupIsRendered, QStringLiteral("miners")),
+        expect(Expect::GroupIsRendered, QStringLiteral("repair_crew")),
+        expect(Expect::GroupIsRendered, QStringLiteral("carriers")),
+        expect(Expect::MovementAnimationObserved, QStringLiteral("carriers")),
+        expect(Expect::FrameBudget, {}, 33.34F, 0.5F),
+    };
+
+    out.push_back(std::move(activity));
+  }
+
   return out;
 }
 
