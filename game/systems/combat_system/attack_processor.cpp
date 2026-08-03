@@ -9,6 +9,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../units/commander_catalog.h"
 #include "../../units/spawn_type.h"
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
@@ -263,6 +264,12 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
     return false;
   }
 
+  auto const* healer_attack = healer->get_component<Engine::Core::AttackComponent>();
+  if (healer_attack != nullptr && healer_attack->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(healer)) {
+    return false;
+  }
+
   for (auto* target : world->get_entities_with<Engine::Core::UnitComponent>()) {
     if (target == nullptr ||
         target->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -347,6 +354,25 @@ auto rotate_xz(const QVector3D& vec, float angle) -> QVector3D {
   float const cos_a = std::cos(angle);
   float const sin_a = std::sin(angle);
   return {vec.x() * cos_a - vec.z() * sin_a, 0.0F, vec.x() * sin_a + vec.z() * cos_a};
+}
+
+auto single_body_chase_distance(Engine::Core::Entity& attacker,
+                                Engine::Core::Entity& target,
+                                const FormationCombat::ContactGeometry& geometry)
+    -> float {
+  auto const* target_attack = target.get_component<Engine::Core::AttackComponent>();
+  bool const target_already_engaged =
+      target_attack != nullptr && target_attack->in_melee_lock &&
+      target_attack->melee_lock_target_id != 0 &&
+      target_attack->melee_lock_target_id != attacker.get_id();
+
+  if (target_already_engaged) {
+    return std::max(0.2F,
+                    geometry.engagement_center_distance > 0.0F
+                        ? geometry.engagement_center_distance
+                        : geometry.contact_center_distance);
+  }
+  return geometry.contact_center_distance * 0.35F;
 }
 
 auto chase_destination(const QVector3D& attacker_pos,
@@ -970,6 +996,46 @@ auto is_formation_reserve(Engine::Core::Entity* entity,
   return mode->stable_rank > front_rank;
 }
 
+auto claim_commander_signature(Engine::Core::Entity* attacker, int& damage)
+    -> std::optional<Game::Systems::CombatActions::CombatActionId> {
+  auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || commander->fpv_controlled ||
+      commander->signature_move ==
+          static_cast<std::uint8_t>(Game::Units::CommanderSignatureMove::None) ||
+      commander->signature_cooldown_remaining > 0.0F || commander->wounded) {
+    return std::nullopt;
+  }
+
+  auto const move =
+      static_cast<Game::Units::CommanderSignatureMove>(commander->signature_move);
+  std::optional<Game::Systems::CombatActions::CombatActionId> action_id;
+  switch (move) {
+  case Game::Units::CommanderSignatureMove::BracingThrust:
+  case Game::Units::CommanderSignatureMove::PhalanxSweep:
+    action_id = Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust;
+    break;
+  case Game::Units::CommanderSignatureMove::ConsularRiposte:
+  case Game::Units::CommanderSignatureMove::EncirclingCut:
+    action_id = Game::Systems::CombatActions::CombatActionId::RtsCommanderCut;
+    break;
+  case Game::Units::CommanderSignatureMove::PointBlankVolley:
+  case Game::Units::CommanderSignatureMove::HuntingShot:
+
+    action_id = Game::Systems::CombatActions::CombatActionId::RtsCommanderShot;
+    break;
+  case Game::Units::CommanderSignatureMove::None:
+    return std::nullopt;
+  }
+
+  commander->signature_cooldown_remaining = commander->signature_cooldown;
+  commander->signature_strike_active = true;
+  damage = std::max(
+      1,
+      static_cast<int>(static_cast<float>(damage) *
+                       std::max(1.0F, commander->signature_damage_multiplier)));
+  return action_id;
+}
+
 void begin_rts_melee_action(Engine::Core::Entity* attacker,
                             Engine::Core::Entity* target,
                             int damage,
@@ -983,12 +1049,16 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   }
   auto const family = Engine::Core::resolve_combat_attack_family(
       unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
+  auto const signature = claim_commander_signature(attacker, damage);
   auto const id =
-      attacker->has_component<Engine::Core::ElephantComponent>()
-          ? Game::Systems::CombatActions::CombatActionId::RtsElephantStomp
-          : (family == Engine::Core::CombatAttackFamily::Spear
-                 ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
-                 : Game::Systems::CombatActions::CombatActionId::RtsSwordStrike);
+      signature.has_value()
+          ? *signature
+          : (attacker->has_component<Engine::Core::ElephantComponent>()
+                 ? Game::Systems::CombatActions::CombatActionId::RtsElephantStomp
+                 : (family == Engine::Core::CombatAttackFamily::Spear
+                        ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
+                        : Game::Systems::CombatActions::CombatActionId::
+                              RtsSwordStrike));
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
   action->combat_action_id = static_cast<std::uint8_t>(id);
   action->active_target_id = target->get_id();
@@ -1159,13 +1229,24 @@ void process_attacks(Engine::Core::World* world,
         bool target_reached = is_in_range(attacker, target, range);
         if (target_reached && !is_ranged_mode(attacker_atk)) {
           auto const geometry = FormationCombat::contact_geometry(*attacker, *target);
+          float const dx =
+              target_transform->position.x - attacker_transform->position.x;
+          float const dz =
+              target_transform->position.z - attacker_transform->position.z;
+          float const centre_distance = std::hypot(dx, dz);
           if (auto const penetration = elephant_formation_penetration_distance(
                   *attacker, *target, geometry)) {
-            float const dx =
-                target_transform->position.x - attacker_transform->position.x;
-            float const dz =
-                target_transform->position.z - attacker_transform->position.z;
-            target_reached = std::hypot(dx, dz) <= *penetration + 0.15F;
+            target_reached = centre_distance <= *penetration + 0.15F;
+          } else if (!geometry.uses_formation_slots) {
+
+            auto const* attacker_movement =
+                attacker->get_component<Engine::Core::MovementComponent>();
+            bool const still_closing =
+                attacker_movement != nullptr && attacker_movement->get_has_target();
+            target_reached =
+                !still_closing ||
+                centre_distance <= FormationCombat::single_combat_strike_distance(
+                                       *attacker, *target, geometry);
           }
         }
 
@@ -1287,20 +1368,35 @@ void process_attacks(Engine::Core::World* world,
                                          (geometry.formation_overlap_required
                                               ? geometry.contact_tolerance * 2.0F
                                               : 0.0F)))
-                      : std::max(range - 0.2F, 0.2F);
+                      : single_body_chase_distance(*attacker, *target, geometry);
               bool const engagement_reached =
                   elephant_penetration.has_value()
                       ? distance <= desired_distance + 0.15F
                       : (geometry.uses_formation_slots
                              ? FormationCombat::contact_is_active(
                                    *attacker, *target, geometry)
-                             : distance <= desired_distance + 0.15F);
+
+                             : distance <=
+                                   FormationCombat::single_combat_strike_distance(
+                                       *attacker, *target, geometry));
               if (!engagement_reached) {
-                desired_pos = chase_destination(
-                    attacker_pos,
-                    target_pos,
-                    desired_distance,
-                    geometry.uses_formation_slots ? 0.0F : spread_angle);
+
+                auto const* slot =
+                    attacker->get_component<Engine::Core::EngagementSlotComponent>();
+                QVector3D const anchor =
+                    (slot != nullptr && slot->valid &&
+                     slot->target_id == target->get_id())
+                        ? QVector3D(slot->anchor_offset_x, 0.0F, slot->anchor_offset_z)
+                        : QVector3D();
+                if (anchor.lengthSquared() > 0.000001F) {
+                  desired_pos = target_pos + anchor.normalized() * desired_distance;
+                } else {
+                  desired_pos = chase_destination(
+                      attacker_pos,
+                      target_pos,
+                      desired_distance,
+                      geometry.uses_formation_slots ? 0.0F : spread_angle);
+                }
               } else {
                 hold_position = true;
               }
@@ -1348,6 +1444,24 @@ void process_attacks(Engine::Core::World* world,
         !suppress_opportunistic_combat) {
       if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
+        if (best_target != nullptr && !is_ranged_mode(attacker_atk) &&
+            !is_building(best_target)) {
+
+          auto const geometry =
+              FormationCombat::contact_geometry(*attacker, *best_target);
+          auto const* candidate_transform =
+              best_target->get_component<Engine::Core::TransformComponent>();
+          if (!geometry.uses_formation_slots && candidate_transform != nullptr) {
+            float const dx =
+                candidate_transform->position.x - attacker_transform->position.x;
+            float const dz =
+                candidate_transform->position.z - attacker_transform->position.z;
+            if (std::hypot(dx, dz) > FormationCombat::single_combat_strike_distance(
+                                         *attacker, *best_target, geometry)) {
+              best_target = nullptr;
+            }
+          }
+        }
         if (best_target != nullptr) {
           best_target_unit = best_target->get_component<Engine::Core::UnitComponent>();
           best_target_transform =

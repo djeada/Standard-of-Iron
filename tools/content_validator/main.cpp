@@ -8,11 +8,16 @@
 #include <QJsonObject>
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <set>
 
 #include "../../game/map/campaign_loader.h"
+#include "../../game/map/map_loader.h"
 #include "../../game/map/mission_loader.h"
+#include "../../game/map/terrain_service.h"
+#include "../../game/map/undead_shrine_placement.h"
+#include "../../game/systems/building_collision_registry.h"
 #include "game/formation/formation_data_loader.h"
 #include "game/units/troop_catalog_loader.h"
 
@@ -279,6 +284,55 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
   return result;
 }
 
+auto validateMapFile(const QString& file_path) -> ValidationResult {
+  ValidationResult result;
+
+  Game::Map::MapDefinition map_definition;
+  QString error_msg;
+  if (!Game::Map::MapLoader::load_from_json_file(
+          file_path, map_definition, &error_msg)) {
+    result.addError(QString("Failed to parse map %1: %2").arg(file_path, error_msg));
+    return result;
+  }
+
+  if (map_definition.undead_zones.empty()) {
+    return result;
+  }
+
+  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.clear();
+  terrain.initialize(map_definition);
+
+  const auto placements = Game::Map::plan_undead_zone_shrines(terrain, map_definition);
+  for (std::size_t index = 0; index < placements.size(); ++index) {
+    const auto& placement = placements[index];
+    const auto& zone = map_definition.undead_zones[index];
+
+    if (!placement.placed) {
+      result.addError(QString("Map %1: undead zone '%2' has no clear ground for its "
+                              "magic shrine")
+                          .arg(file_path, placement.zone_id));
+      continue;
+    }
+
+    const QVector3D center = Game::Map::undead_zone_center_world(map_definition, zone);
+    const float offset = std::hypot(placement.world_position.x() - center.x(),
+                                    placement.world_position.z() - center.z());
+    if (offset > zone.radius) {
+      result.addWarning(
+          QString("Map %1: undead zone '%2' is so crowded that its shrine landed "
+                  "%3 cells from the centre, outside the zone radius")
+              .arg(file_path, placement.zone_id)
+              .arg(offset, 0, 'f', 1));
+    }
+  }
+
+  terrain.clear();
+  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  return result;
+}
+
 auto validateCampaignFile(const QString& file_path,
                           const std::set<QString>& available_missions)
     -> ValidationResult {
@@ -453,6 +507,24 @@ auto main(int argc, char* argv[]) -> int {
     }
   } else {
     std::cout << "\nNo missions directory found (this is OK)" << '\n';
+  }
+
+  const QDir maps_dir = base_dir.filePath("maps");
+  if (maps_dir.exists()) {
+    const QStringList map_files =
+        maps_dir.entryList(QStringList() << "*.json", QDir::Files);
+
+    std::cout << "\nValidating " << map_files.size() << " map(s)..." << '\n';
+
+    for (const auto& map_file : map_files) {
+      const ValidationResult result = validateMapFile(maps_dir.filePath(map_file));
+      printResults(result, QString("maps/") + map_file);
+      if (!result.success) {
+        all_valid = false;
+      }
+    }
+  } else {
+    std::cout << "\nNo maps directory found (this is OK)" << '\n';
   }
 
   const QDir campaigns_dir = base_dir.filePath("campaigns");

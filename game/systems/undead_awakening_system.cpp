@@ -1,6 +1,7 @@
 #include "undead_awakening_system.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QJsonObject>
 #include <QVector3D>
 #include <qjsonarray.h>
@@ -15,6 +16,7 @@
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/map/undead_shrine_placement.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -25,7 +27,6 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr float k_grid_to_world_epsilon = 0.0001F;
 constexpr float k_between_wave_delay_seconds = 1.5F;
 constexpr float k_spawn_y_offset = 0.05F;
 constexpr float k_anchor_match_distance = 3.5F;
@@ -34,23 +35,6 @@ constexpr float k_golden_angle_radians = 2.3999632F;
 constexpr float k_min_spawn_ring_radius = 2.0F;
 constexpr float k_spawn_ring_fraction = 0.8F;
 constexpr int k_spawn_placement_attempts = 12;
-
-auto authored_to_world(float coord, int grid_size, float tile_size) -> float {
-  float const safe_tile = std::max(tile_size, k_grid_to_world_epsilon);
-  return (coord - (static_cast<float>(grid_size) * 0.5F - 0.5F)) * safe_tile;
-}
-
-auto authored_to_world_position(const Game::Map::MapDefinition& map_definition,
-                                float x,
-                                float z) -> QVector3D {
-  if (map_definition.coordSystem == Game::Map::CoordSystem::World) {
-    return {x, 0.0F, z};
-  }
-  return {
-      authored_to_world(x, map_definition.grid.width, map_definition.grid.tile_size),
-      0.0F,
-      authored_to_world(z, map_definition.grid.height, map_definition.grid.tile_size)};
-}
 
 auto should_trigger_on_mission_start(const QString& trigger) -> bool {
   return trigger == QStringLiteral("mission_start") ||
@@ -96,7 +80,7 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
   m_zones.reserve(map_definition.undead_zones.size());
 
   auto const& terrain_service = Game::Map::TerrainService::instance();
-  auto const& world_props = terrain_service.world_props();
+  Game::Map::UndeadShrineExclusions shrine_exclusions;
 
   for (const auto& zone_definition : map_definition.undead_zones) {
     RuntimeZone zone;
@@ -104,14 +88,14 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
     if (zone.definition.waves.empty()) {
       zone.definition.waves = Game::Map::default_undead_waves();
     }
-    zone.center_world = authored_to_world_position(
-        map_definition, zone_definition.x, zone_definition.z);
+    zone.center_world =
+        Game::Map::undead_zone_center_world(map_definition, zone_definition);
     zone.center_world.setY(terrain_service.resolve_surface_world_y(
         zone.center_world.x(), zone.center_world.z(), k_spawn_y_offset));
     zone.anchor_world = zone.center_world;
 
     float best_distance_sq = k_anchor_match_distance * k_anchor_match_distance;
-    for (const auto& prop : world_props) {
+    for (const auto& prop : terrain_service.world_props()) {
       if (prop.type != zone_definition.anchor_type) {
         continue;
       }
@@ -128,7 +112,11 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
       best_distance_sq = distance_sq;
     }
 
-    zone.anchor_pending = Game::Map::zone_has_structural_anchor(zone.definition);
+    place_zone_shrine(map_definition, zone, shrine_exclusions);
+    if (zone.anchor_world_prop_id == 0 && zone.shrine_placed) {
+      zone.anchor_world = zone.shrine_world;
+    }
+    zone.anchor_pending = zone.shrine_placed;
 
     ensure_zone_owner_registered(zone);
     m_zone_index.insert(zone.definition.id, static_cast<int>(m_zones.size()));
@@ -221,6 +209,39 @@ void UndeadAwakeningSystem::ensure_zone_owner_registered(
                             Game::Systems::NationID::IronSepulcher);
   Game::Systems::GlobalStatsRegistry::instance().mark_game_start(
       zone.definition.owner_id);
+}
+
+void UndeadAwakeningSystem::place_zone_shrine(
+    const Game::Map::MapDefinition& map_definition,
+    RuntimeZone& zone,
+    Game::Map::UndeadShrineExclusions& exclusions) const {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+
+  auto const placement = Game::Map::plan_undead_zone_shrine(
+      terrain_service, map_definition, zone.definition, exclusions);
+
+  zone.shrine_placed = placement.placed;
+  zone.shrine_world = placement.world_position;
+
+  if (!placement.placed) {
+    qWarning() << "UndeadAwakeningSystem: zone" << zone.definition.id
+               << "has no clear ground for its shrine - the zone will raise no "
+                  "capturable barracks";
+    return;
+  }
+
+  if (placement.adopted_existing_prop) {
+    zone.shrine_world_prop_id = placement.prop_id;
+  } else {
+    Game::Map::WorldProp shrine;
+    shrine.type = Game::Map::WorldProp::Type::MagicShrine;
+    shrine.persistent = true;
+    zone.shrine_world_prop_id = terrain_service.add_world_prop_at_world(
+        shrine, placement.world_position.x(), placement.world_position.z());
+  }
+
+  exclusions.claimed_prop_ids.insert(zone.shrine_world_prop_id);
+  exclusions.reserved_sites.push_back(placement.world_position);
 }
 
 void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,
@@ -365,7 +386,7 @@ void UndeadAwakeningSystem::ensure_anchor_structure(Engine::Core::World& world,
   ensure_zone_owner_registered(zone);
 
   Game::Units::SpawnParams params;
-  params.position = zone.anchor_world;
+  params.position = zone.shrine_world;
   params.player_id = zone.definition.owner_id;
   params.spawn_type = Game::Units::SpawnType::Barracks;
   params.ai_controlled = true;
@@ -604,15 +625,40 @@ auto UndeadAwakeningSystem::is_zone_cleared(const QString& zone_id) const -> boo
 
 auto UndeadAwakeningSystem::is_shrine_purified(const QString& zone_id) const -> bool {
   auto const* zone = find_zone(zone_id);
-  return zone != nullptr &&
-         zone->definition.anchor_type == Game::Map::WorldProp::Type::MagicShrine &&
-         is_zone_cleared(zone_id);
+  return zone != nullptr && zone->shrine_placed && is_zone_cleared(zone_id);
 }
 
 auto UndeadAwakeningSystem::anchor_entity(const QString& zone_id) const
     -> Engine::Core::EntityID {
   auto const* zone = find_zone(zone_id);
   return zone != nullptr ? zone->anchor_entity_id : 0U;
+}
+
+auto UndeadAwakeningSystem::has_shrine(const QString& zone_id) const -> bool {
+  auto const* zone = find_zone(zone_id);
+  return zone != nullptr && zone->shrine_placed;
+}
+
+auto UndeadAwakeningSystem::shrine_world_position(const QString& zone_id) const
+    -> QVector3D {
+  auto const* zone = find_zone(zone_id);
+  return zone != nullptr ? zone->shrine_world : QVector3D{};
+}
+
+auto UndeadAwakeningSystem::shrine_prop_id(const QString& zone_id) const
+    -> std::uint64_t {
+  auto const* zone = find_zone(zone_id);
+  return zone != nullptr ? zone->shrine_world_prop_id : 0U;
+}
+
+auto UndeadAwakeningSystem::zones_without_shrine() const -> std::vector<QString> {
+  std::vector<QString> zone_ids;
+  for (const auto& zone : m_zones) {
+    if (!zone.shrine_placed) {
+      zone_ids.push_back(zone.definition.id);
+    }
+  }
+  return zone_ids;
 }
 
 auto UndeadAwakeningSystem::completed_wave_count(const QString& zone_id) const -> int {

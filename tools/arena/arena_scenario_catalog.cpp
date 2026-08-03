@@ -1780,6 +1780,89 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    struct SignatureDuel {
+      const char* id;
+      const char* label;
+      const char* description;
+      Troop roman;
+      Troop carthaginian;
+    };
+    constexpr std::array<SignatureDuel, 3> signature_duels{{
+        {k_commander_signature_spear_vs_sword_id,
+         "Commander Signatures: Fabius vs Hannibal",
+         "Spear against sword. Fabius answers with the braced thrust that rocks "
+         "his man back; Hannibal replies with the encircling cut. Long enough for "
+         "both signatures to come round more than once.",
+         Troop::RomanLegionOrganizer,
+         Troop::CarthageSwordCommander},
+        {k_commander_signature_sword_vs_bow_id,
+         "Commander Signatures: Scipio vs Hasdrubal",
+         "Sword against bow at arm's length. Scipio's consular riposte lands "
+         "heavy; Hasdrubal keeps loosing hunting shots into the clinch instead "
+         "of backing away.",
+         Troop::RomanVeteranConsul,
+         Troop::CarthageBowCommander},
+        {k_commander_signature_bow_vs_spear_id,
+         "Commander Signatures: Marcellus vs Hanno",
+         "Bow against spear. Marcellus fires point-blank between sword strokes "
+         "while Hanno sweeps his spear through the clinch.",
+         Troop::RomanFieldCommander,
+         Troop::CarthageSpearCommander},
+    }};
+
+    for (auto const& duel : signature_duels) {
+      auto s = definition(QString::fromLatin1(duel.id),
+                          QString::fromLatin1(duel.label),
+                          QString::fromLatin1(duel.description),
+                          24.0F,
+                          {9.0F, 46.0F, 90.0F});
+      s.suppress_terrain_scatter = true;
+      s.select_spawned_units = false;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.camera_focus = QVector3D(0.0F, 0.9F, 0.0F);
+
+      auto roman = group(
+          QStringLiteral("roman_commander"), duel.roman, 1, 1, {0.0F, 0.0F, -4.0F}, 1);
+      auto carthaginian = group(QStringLiteral("carthage_commander"),
+                                duel.carthaginian,
+                                2,
+                                1,
+                                {0.0F, 0.0F, 4.0F},
+                                1);
+
+      roman.health_override = roman.max_health_override = 9000;
+      carthaginian.health_override = carthaginian.max_health_override = 9000;
+      s.groups = {roman, carthaginian};
+      s.steps = {
+          at(0.4F,
+             Command::Attack,
+             QStringLiteral("roman_commander"),
+             QStringLiteral("carthage_commander")),
+          at(0.4F,
+             Command::Attack,
+             QStringLiteral("carthage_commander"),
+             QStringLiteral("roman_commander")),
+      };
+      add_visual_stability(
+          s, {QStringLiteral("roman_commander"), QStringLiteral("carthage_commander")});
+      for (auto const& name :
+           {QStringLiteral("roman_commander"), QStringLiteral("carthage_commander")}) {
+        QString const opponent = name == QStringLiteral("roman_commander")
+                                     ? QStringLiteral("carthage_commander")
+                                     : QStringLiteral("roman_commander");
+        s.expectations.push_back(expectation(Expect::GroupExists, name));
+        s.expectations.push_back(
+            expectation(Expect::RepeatedAttackAnimationObserved, name, {}, 3.0F));
+        s.expectations.push_back(
+            expectation(Expect::AttackHasVisibleContact, name, opponent));
+        s.expectations.push_back(expectation(Expect::HitReactionObserved, name));
+      }
+      result.push_back(std::move(s));
+    }
+  }
+
+  {
     auto s = definition(QString::fromLatin1(k_sword_duel_id),
                         QStringLiteral("Sword Duel"),
                         QStringLiteral("Baseline reciprocal sword attack flow."),
@@ -6809,6 +6892,58 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_sepulcher_fireball_review_id),
+        QStringLiteral("Iron Sepulcher Fireball Review"),
+        QStringLiteral("Fireball close-up on clean ground: no melee, no dust, no "
+                       "burning bystanders. The camera sits on the flight path so "
+                       "the cast, the ball in flight, its smoke trail and the "
+                       "detonation can be judged frame by frame."),
+        14.0F,
+        {8.0F, 24.0F, 90.0F});
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(-1.2F, 0.9F, 0.0F);
+
+    auto priest = nation_group(QStringLiteral("fireball_caster"),
+                               Troop::GravePriest,
+                               Nation::IronSepulcher,
+                               2,
+                               1,
+                               {-1.2F, 0.0F, -3.4F},
+                               1);
+    auto target = nation_group(QStringLiteral("fireball_target"),
+                               Troop::Swordsman,
+                               Nation::RomanRepublic,
+                               1,
+                               1,
+                               {-1.2F, 0.0F, 3.4F},
+                               1);
+
+    target.health_override = target.max_health_override = 20000;
+    s.groups = {std::move(priest), std::move(target)};
+    s.steps = {at(0.4F,
+                  Command::Attack,
+                  QStringLiteral("fireball_caster"),
+                  QStringLiteral("fireball_target")),
+               at(0.4F, Command::Hold, QStringLiteral("fireball_target"))};
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("fireball_caster")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("fireball_target")));
+    s.expectations.push_back(expectation(Expect::ProjectileFlightObserved,
+                                         QStringLiteral("fireball_caster"),
+                                         QStringLiteral("fireball_target")));
+    s.expectations.push_back(expectation(Expect::ProjectileImpactObserved,
+                                         QStringLiteral("fireball_caster"),
+                                         QStringLiteral("fireball_target")));
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_sepulcher_vs_rome_infantry_id),
         QStringLiteral("Sepulcher vs Rome: Infantry"),
         QStringLiteral("Equivalent-value melee test: three Roman swordsmen against a "
@@ -7176,6 +7311,185 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         Expect::UndeadZoneAwakened, QStringLiteral("shrine_sentinels"), 2.0F));
     s.expectations.push_back(zone_expectation(Expect::UndeadZoneCleared,
                                               QStringLiteral("shrine_sentinels")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_zone_shrine_spawn_id),
+        QStringLiteral("Sepulcher Zone Shrine Spawn"),
+        QStringLiteral("Bare ground, no authored prop: the awakening zone raises "
+                       "its own magic shrine at the centre. Roman scouts walk in, "
+                       "the zone wakes, and the shrine stands through the fight as "
+                       "the sepulcher's barracks."),
+        26.0F,
+        {28.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.undead_zones = {
+        undead_zone(QStringLiteral("bare_barrow"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2}})})};
+    s.groups = {nation_group(QStringLiteral("scouts"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("scouts"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+    add_visual_stability(s, {QStringLiteral("scouts")});
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("bare_barrow"), 2.0F));
+    s.expectations.push_back(zone_expectation(Expect::UndeadZoneShrineStands,
+                                              QStringLiteral("bare_barrow")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_twin_zone_shrines_id),
+        QStringLiteral("Sepulcher Twin Zone Shrines"),
+        QStringLiteral("Two awakening zones share one field. Each raises its own "
+                       "shrine, and a Roman column walks into each of them, so the "
+                       "two garrisons and their two barracks stand side by side."),
+        30.0F,
+        {34.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.undead_zones = {
+        undead_zone(QStringLiteral("west_barrow"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(-10.0F, 0.0F, 6.0F),
+                    5.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 1}})}),
+        undead_zone(QStringLiteral("east_barrow"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(10.0F, 0.0F, 6.0F),
+                    5.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 1}})})};
+    s.groups = {nation_group(QStringLiteral("west_column"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {-10.0F, 0.0F, -12.0F}),
+                nation_group(QStringLiteral("east_column"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {10.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("west_column")),
+               at(1.0F, Command::FormationMove, QStringLiteral("east_column"))};
+    s.steps[0].destination = QVector3D(-10.0F, 0.0F, 4.0F);
+    s.steps[1].destination = QVector3D(10.0F, 0.0F, 4.0F);
+    add_visual_stability(
+        s, {QStringLiteral("west_column"), QStringLiteral("east_column")});
+    for (auto const& zone_id :
+         {QStringLiteral("west_barrow"), QStringLiteral("east_barrow")}) {
+      s.expectations.push_back(
+          zone_expectation(Expect::UndeadZoneAwakened, zone_id, 1.0F));
+      s.expectations.push_back(
+          zone_expectation(Expect::UndeadZoneShrineStands, zone_id));
+    }
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_shrine_demolition_id),
+        QStringLiteral("Sepulcher Shrine Demolition"),
+        QStringLiteral("The zone wakes on a Roman assault, then its shrine is "
+                       "brought down. Losing the barracks crumbles every risen "
+                       "guardian and leaves the ground quiet."),
+        32.0F,
+        {30.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.undead_zones = {
+        undead_zone(QStringLiteral("doomed_shrine"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2}})})};
+    s.groups = {nation_group(QStringLiteral("breakers"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             4,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("breakers"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+
+    ArenaScenarioStep raze;
+    raze.name = QStringLiteral("raze_shrine");
+    raze.trigger = {Trigger::AtTime, 10.0F, {}, {}, 0.0F};
+    raze.command = Command::ApplyDamage;
+    raze.zone_id = QStringLiteral("doomed_shrine");
+    raze.value = 100000;
+    s.steps.push_back(std::move(raze));
+
+    add_visual_stability(s, {QStringLiteral("breakers")});
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("doomed_shrine"), 2.0F));
+    s.expectations.push_back(zone_expectation(Expect::UndeadZoneShrineDestroyed,
+                                              QStringLiteral("doomed_shrine")));
+    s.expectations.push_back(
+        zone_expectation(Expect::UndeadZoneCleared, QStringLiteral("doomed_shrine")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_sepulcher_shrine_state_reload_id),
+        QStringLiteral("Sepulcher Shrine State Reload"),
+        QStringLiteral("A woken zone is written out and read back the way a saved "
+                       "game does it. The reload must keep the shrine that already "
+                       "stands and the guardians already raised, without planting a "
+                       "second shrine or a fresh wave."),
+        28.0F,
+        {30.0F, 50.0F, 24.0F});
+    s.suppress_spawn_anchor = true;
+    s.camera_focus = QVector3D(0.0F, 0.0F, 2.0F);
+    s.undead_zones = {
+        undead_zone(QStringLiteral("saved_shrine"),
+                    Game::Map::WorldProp::Type::Ruins,
+                    QVector3D(0.0F, 0.0F, 6.0F),
+                    6.0F,
+                    99,
+                    {undead_wave(QStringLiteral("initial"),
+                                 {{Game::Units::SpawnType::SkeletonSwordsman, 2}})})};
+    s.groups = {nation_group(QStringLiteral("visitors"),
+                             Troop::Swordsman,
+                             Nation::RomanRepublic,
+                             1,
+                             3,
+                             {0.0F, 0.0F, -12.0F})};
+    s.steps = {at(1.0F, Command::FormationMove, QStringLiteral("visitors"))};
+    s.steps.back().destination = QVector3D(0.0F, 0.0F, 4.0F);
+
+    ArenaScenarioStep reload;
+    reload.name = QStringLiteral("reload_zone_state");
+    reload.trigger = {Trigger::AtTime, 10.0F, {}, {}, 0.0F};
+    reload.command = Command::ReloadUndeadZoneState;
+    s.steps.push_back(std::move(reload));
+
+    add_visual_stability(s, {QStringLiteral("visitors")});
+    s.expectations.push_back(zone_expectation(
+        Expect::UndeadZoneAwakened, QStringLiteral("saved_shrine"), 2.0F));
+    s.expectations.push_back(zone_expectation(Expect::UndeadZoneShrineStands,
+                                              QStringLiteral("saved_shrine")));
     result.push_back(std::move(s));
   }
 

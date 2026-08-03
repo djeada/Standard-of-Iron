@@ -333,6 +333,71 @@ tests/systems/
 
 Avoid creating a new top-level `System` for combat damage unless the behavior is genuinely outside the combat simulation. Separate damage systems tend to develop inconsistent targeting, validation, and damage rules.
 
+## Commander signature moves
+
+Every commander owns one duel move that no other commander has, declared beside
+its aura in `game/units/commander_catalog.cpp`:
+
+| Commander       | Signature          | Form                                         |
+| --------------- | ------------------ | -------------------------------------------- |
+| Fabius Maximus  | Bracing Thrust     | `RtsCommanderThrust`, long reach, staggers   |
+| Scipio          | Consular Riposte   | `RtsCommanderCut`, heaviest single blow      |
+| Marcellus       | Point-blank Volley | `RtsCommanderShot`, bow loosed in the clinch |
+| Hanno (spear)   | Phalanx Sweep      | `RtsCommanderThrust`, catches four fighters  |
+| Hasdrubal (bow) | Hunting Shot       | `RtsCommanderShot`, heaviest arrow           |
+| Hannibal        | Encircling Cut     | `RtsCommanderCut`, two fighters, fast cycle  |
+
+The move is claimed in `begin_rts_melee_action` when the commander's signature
+cooldown has run out: the action id, the damage multiplier, the extra reach and
+the stagger all come from the catalogue, so a duel reads as _that_ commander
+fighting rather than two officers trading the same swing. Cooldowns start at half
+so a commander does not open a fight with its signature, and the routine swing is
+still the common case.
+
+### How a signature reads on screen
+
+Two cues carry the move, and both are presentation only - nothing in them feeds
+back into the simulation:
+
+- **The commander's own glow** (`render/entity/commander_aura_renderer.cpp`).
+  Nothing shows for most of the cooldown; a glow gathers over the last quarter of
+  it, so an enemy gets a moment's warning that the move is coming back, and it
+  flares wide while `signature_strike_active` is set. The aura mesh is a standing
+  column rather than a flat ring, which is why it is kept off the field except in
+  those moments - left on permanently it reads as a haze curtain from a low
+  camera.
+- **The contact burst** (`CommanderSignaturePresentationComponent`). When the
+  signature lands, `record_signature_contact` stores the contact point, the
+  direction the blow travelled and one of three forms; the entry ages out in
+  `process_signature_presentations`. `combat_dust_renderer` draws a line of cold
+  glints down the shaft for `Thrust`, a warm arc plus a kick of dust for `Cut`,
+  and a single hard point with a short back-fan for `Shot`.
+
+`metal_spark` takes the spark's _own age_ as its time argument - its life ends at
+t = 0.28 in the shader - so bursts must be driven by the entry's age, never by the
+rolling animation clock, or they never appear at all.
+
+It also takes an optional `direction`. The spark mesh is a fan of rays pointing
+every which way, which on its own reads as a twinkle; given a direction,
+`spark_model_matrix` (`render/gl/backend/spark_orientation.h`) lays that fan along
+the line the blow travelled and squeezes it across, so the burst streaks. Signature
+bursts pass the blow's line, arrow and bolt impacts pass the shaft's flight, and
+fireball embers pass their own outward throw. Leave it zero for a spark with
+nothing behind it - a squeezed burst also covers less screen, so a directional
+spark needs roughly a third more radius to read at the same distance.
+
+The impact debris shader (`u_effect_type == 2`) used to ignore `u_dust_color`
+entirely, so every strike threw the same tan grit no matter what hit what. It now
+tints the debris by the caller's chroma, which is what makes a grave priest's
+`StructureImpactStyle::Magic` hit throw violet shards while a catapult stone stays
+tan.
+
+Anything the signature staggers recovers through `process_stagger_recovery` in
+the status-effect pass. Before that existed, staggers were only wound down by the
+RPG combat tick, which does not run unless a first-person commander is on the
+field - anything staggered in a plain RTS battle stayed staggered forever and
+never swung again.
+
 ## Authored Combat Actions
 
 Every commander swing is an _authored action_: one entry in

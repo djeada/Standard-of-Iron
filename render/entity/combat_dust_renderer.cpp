@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
@@ -424,6 +425,179 @@ void render_combat_dust(Renderer* renderer,
                          blood_stain->rotation,
                          blood_stain->aspect_ratio,
                          blood_stain->seed);
+  }
+
+  auto casters =
+      world->get_entities_with<Engine::Core::CreaturePresentationComponent>();
+  for (auto* caster : casters) {
+    if (caster == nullptr ||
+        caster->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto const* presentation =
+        caster->get_component<Engine::Core::CreaturePresentationComponent>();
+    auto* transform = caster->get_component<Engine::Core::TransformComponent>();
+    auto const* unit_comp = caster->get_component<Engine::Core::UnitComponent>();
+    if (presentation == nullptr || transform == nullptr || !presentation->is_casting ||
+        presentation->cast != Engine::Core::CreatureCastPresentation::Fireball) {
+      continue;
+    }
+    if (unit_comp != nullptr && unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (!is_fog_visible(transform->position.x, transform->position.z) ||
+        !visibility.is_entity_visible(
+            transform->position.x, transform->position.z, k_visibility_check_radius)) {
+      continue;
+    }
+
+    float const charge = std::clamp(presentation->combat_phase_progress, 0.0F, 1.0F);
+    float const swell = std::sin(charge * std::numbers::pi_v<float>);
+    if (swell <= 0.02F) {
+      continue;
+    }
+
+    float const size_scale = std::max(
+        0.5F, std::max({transform->scale.x, transform->scale.y, transform->scale.z}));
+    UnitFlameAnchor const hand{
+        0.17F, 1.12F, 0.42F, 0.0F, 1.0F, 0.0F, QVector3D(1.0F, 0.5F, 0.1F)};
+    QVector3D const hand_position = transform_unit_anchor(*transform, hand, size_scale);
+    float const flicker =
+        0.92F + 0.08F * std::sin(animation_time * 21.0F + transform->position.x);
+
+    renderer->fireball(hand_position,
+                       QVector3D(0.36F, 0.10F, 0.02F),
+                       (0.085F + 0.115F * swell) * size_scale * flicker,
+                       0.85F * swell,
+                       animation_time * 1.6F);
+    renderer->fireball(hand_position,
+                       QVector3D(1.0F, 0.52F, 0.10F),
+                       (0.048F + 0.075F * swell) * size_scale * flicker,
+                       1.9F * swell,
+                       animation_time * 2.3F + 1.7F);
+    renderer->fireball(hand_position,
+                       QVector3D(1.0F, 0.86F, 0.52F),
+                       (0.018F + 0.032F * swell) * size_scale,
+                       2.2F * swell * swell,
+                       animation_time * 3.1F + 4.2F);
+
+    Render::LocalLight charge_light;
+    charge_light.position = hand_position;
+    charge_light.color = QVector3D(1.0F, 0.46F, 0.15F);
+    charge_light.radius = 2.1F;
+    charge_light.intensity = 0.55F * swell;
+    renderer->local_light(charge_light);
+  }
+
+  for (auto* commander : world->get_entities_with<
+                         Engine::Core::CommanderSignaturePresentationComponent>()) {
+    if (commander == nullptr) {
+      continue;
+    }
+    auto const* presentation =
+        commander
+            ->get_component<Engine::Core::CommanderSignaturePresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+
+    for (auto const& entry : presentation->entries) {
+      float const progress =
+          std::clamp(entry.age / std::max(0.01F, entry.lifetime), 0.0F, 1.0F);
+      float const fade = (1.0F - progress) * (1.0F - progress) * entry.intensity;
+      if (fade <= 0.01F) {
+        continue;
+      }
+
+      if (!is_fog_visible(entry.x, entry.z) ||
+          !visibility.is_entity_visible(entry.x, entry.z, k_visibility_check_radius)) {
+        continue;
+      }
+
+      QVector3D const contact(entry.x, entry.y, entry.z);
+      QVector3D const forward(entry.dir_x, 0.0F, entry.dir_z);
+      QVector3D const across(-entry.dir_z, 0.0F, entry.dir_x);
+
+      auto spark_age = [&entry](float delay) {
+        return std::max(0.0F, entry.age - delay);
+      };
+
+      switch (entry.form) {
+      case Engine::Core::CommanderSignatureForm::Thrust: {
+
+        for (int step = 0; step < 3; ++step) {
+          float const along = -0.16F + 0.16F * static_cast<float>(step);
+          renderer->metal_spark(
+              contact + forward * (along + progress * 0.22F) +
+                  QVector3D(0.0F, 0.05F * static_cast<float>(step % 2) - 0.03F, 0.0F),
+              QVector3D(0.86F, 0.92F, 1.0F),
+              0.135F,
+              2.8F,
+              spark_age(0.025F * static_cast<float>(step)),
+              forward);
+        }
+        renderer->metal_spark(contact + forward * 0.06F,
+                              QVector3D(1.0F, 0.95F, 0.82F),
+                              0.175F,
+                              3.2F,
+                              spark_age(0.0F),
+                              forward);
+        break;
+      }
+      case Engine::Core::CommanderSignatureForm::Cut: {
+
+        for (int step = 0; step < 5; ++step) {
+          float const offset = -0.40F + 0.20F * static_cast<float>(step);
+          float const arc = 0.10F - 0.30F * offset * offset;
+          renderer->metal_spark(contact + across * offset * (1.0F + progress * 0.4F) +
+                                    forward * arc +
+                                    QVector3D(0.0F, 0.20F * offset, 0.0F),
+                                QVector3D(1.0F, 0.72F, 0.30F),
+                                0.115F,
+                                2.4F,
+                                spark_age(0.035F * static_cast<float>(step)),
+                                across);
+        }
+        renderer->combat_dust(QVector3D(entry.x, entry.y - 0.55F, entry.z),
+                              QVector3D(0.52F, 0.44F, 0.34F),
+                              0.8F + 0.6F * progress,
+                              0.45F * fade,
+                              animation_time);
+        break;
+      }
+      case Engine::Core::CommanderSignatureForm::Shot: {
+
+        renderer->metal_spark(contact,
+                              QVector3D(1.0F, 0.90F, 0.62F),
+                              0.150F,
+                              3.2F,
+                              spark_age(0.0F),
+                              forward);
+        for (int step = -1; step <= 1; ++step) {
+          float const spread = 0.14F * static_cast<float>(step);
+          renderer->metal_spark(contact - forward * 0.16F + across * spread +
+                                    QVector3D(0.0F, 0.06F * spread, 0.0F),
+                                QVector3D(0.95F, 0.80F, 0.48F),
+                                0.090F,
+                                1.9F,
+                                spark_age(0.045F),
+                                forward);
+        }
+        break;
+      }
+      }
+
+      Render::LocalLight strike_light;
+      strike_light.position = contact;
+      strike_light.color = entry.form == Engine::Core::CommanderSignatureForm::Thrust
+                               ? QVector3D(0.72F, 0.84F, 1.0F)
+                               : QVector3D(1.0F, 0.72F, 0.34F);
+      strike_light.radius = 2.6F;
+      strike_light.intensity = 0.7F * fade;
+      renderer->local_light(strike_light);
+    }
   }
 
   auto burning_units = world->get_entities_with<Engine::Core::BurningStatusComponent>();

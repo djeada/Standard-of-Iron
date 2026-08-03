@@ -54,6 +54,38 @@ void render_commander_auras(Renderer* renderer,
       continue;
     }
 
+    QVector3D const banner_color = unit_comp != nullptr
+                                       ? get_commander_aura_color(unit_comp->nation_id)
+                                       : QVector3D(1.0F, 0.7F, 0.2F);
+
+    float const readiness =
+        commander->signature_cooldown > 0.0F
+            ? std::clamp(1.0F - commander->signature_cooldown_remaining /
+                                    commander->signature_cooldown,
+                         0.0F,
+                         1.0F)
+            : 1.0F;
+    float const gathering = std::clamp((readiness - 0.72F) / 0.28F, 0.0F, 1.0F);
+    if (gathering > 0.01F || commander->signature_strike_active) {
+      float const footprint = std::max(transform->scale.x, transform->scale.z);
+      float const base_radius = std::clamp(0.80F + footprint * 0.35F, 0.92F, 1.20F);
+      float const pulse = 0.5F + 0.5F * std::sin(animation_time * 4.2F +
+                                                 static_cast<float>(entity->get_id()));
+      float const glow_intensity =
+          commander->signature_strike_active
+              ? 0.11F
+              : gathering * gathering * (0.030F + 0.026F * pulse);
+      float const glow_radius =
+          commander->signature_strike_active ? base_radius * 1.35F : base_radius;
+      renderer->healer_aura(QVector3D(transform->position.x,
+                                      transform->position.y + 0.04F,
+                                      transform->position.z),
+                            banner_color,
+                            glow_radius,
+                            glow_intensity,
+                            animation_time);
+    }
+
     if (!commander->aura_ability_active) {
       continue;
     }
@@ -63,11 +95,7 @@ void render_commander_auras(Renderer* renderer,
     float const radius = commander->aura_radius;
     float const intensity = 0.10F;
 
-    QVector3D const color = unit_comp != nullptr
-                                ? get_commander_aura_color(unit_comp->nation_id)
-                                : QVector3D(1.0F, 0.7F, 0.2F);
-
-    renderer->healer_aura(position, color, radius, intensity, animation_time);
+    renderer->healer_aura(position, banner_color, radius, intensity, animation_time);
   }
 
   for (auto* entity :

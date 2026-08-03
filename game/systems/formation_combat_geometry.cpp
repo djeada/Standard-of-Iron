@@ -21,7 +21,11 @@ constexpr float k_elephant_visual_body_radius = 1.15F;
 constexpr float k_elephant_chase_penetration = 1.50F;
 constexpr float k_elephant_contact_penetration = 1.10F;
 
-constexpr float k_single_body_approach_margin = 0.5F;
+constexpr float k_single_body_reach_share = 0.20F;
+
+constexpr float k_mixed_body_approach_margin = 0.5F;
+
+constexpr float k_single_body_strike_share = 0.55F;
 
 constexpr float k_engagement_close_slack = 0.25F;
 
@@ -57,6 +61,24 @@ auto world_slot(const Engine::Core::TransformComponent& transform,
 auto melee_reach(const Engine::Core::Entity& entity) noexcept -> float {
   auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
   return attack != nullptr ? std::max(0.0F, attack->melee_range) : 1.5F;
+}
+
+auto single_body_radius(const Engine::Core::Entity& entity,
+                        const Engine::Core::TransformComponent::Vec3& scale) noexcept
+    -> float {
+  float radius = std::max(0.05F, std::max(scale.x, scale.z) * 0.5F);
+  if (auto const* unit = entity.get_component<Engine::Core::UnitComponent>()) {
+    radius = std::max(
+        radius,
+        Game::Units::TroopConfig::instance().get_selection_ring_size(unit->spawn_type) *
+            0.5F);
+  }
+  if (entity.has_component<Engine::Core::ElephantComponent>()) {
+    float const visual_scale =
+        std::max(0.05F, std::max(std::abs(scale.x), std::abs(scale.z)));
+    radius = std::max(radius, k_elephant_visual_body_radius * visual_scale);
+  }
+  return radius;
 }
 
 auto holds_formation_line(const Engine::Core::Entity& entity) noexcept -> bool {
@@ -489,8 +511,13 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
       has_formation_slots(attacker) || has_formation_slots(target);
   if (!result.uses_formation_slots) {
     result.surface_gap = result.center_distance;
-    result.contact_center_distance = 0.0F;
-    result.engagement_center_distance = 0.0F;
+
+    float const body_contact = single_body_radius(attacker, attacker_transform->scale) +
+                               single_body_radius(target, target_transform->scale);
+    float const reach = melee_reach(attacker);
+    result.contact_center_distance = body_contact;
+    result.engagement_center_distance =
+        body_contact + std::max(0.0F, reach - body_contact) * k_single_body_reach_share;
     return context;
   }
 
@@ -560,7 +587,7 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
     result.engagement_center_distance =
         std::max(0.0F,
                  result.center_distance - result.surface_gap +
-                     melee_reach(attacker) * k_single_body_approach_margin);
+                     melee_reach(attacker) * k_mixed_body_approach_margin);
   }
   return context;
 }
@@ -568,6 +595,18 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
 auto contact_geometry(const Engine::Core::Entity& attacker,
                       const Engine::Core::Entity& target) -> ContactGeometry {
   return resolve_contact_context(attacker, target).geometry;
+}
+
+auto single_combat_strike_distance(const Engine::Core::Entity& attacker,
+                                   const Engine::Core::Entity& target,
+                                   const ContactGeometry& geometry) -> float {
+  (void)target;
+  float const contact = geometry.contact_center_distance;
+  float const reach = std::max(0.2F, melee_reach(attacker));
+  if (contact <= 0.0F) {
+    return reach;
+  }
+  return contact + std::max(0.0F, reach - contact) * k_single_body_strike_share;
 }
 
 auto contact_is_active(const Engine::Core::Entity& attacker,

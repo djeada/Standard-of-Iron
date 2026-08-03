@@ -306,7 +306,8 @@ auto undead_zone_schema() -> JsonSchema {
   schema.title = QStringLiteral("Undead zone");
   schema.summary = QStringLiteral(
       "Dormant undead encounter anchored to a prop. Waves spawn when a trigger "
-      "fires; units are leashed to the anchor.");
+      "fires; units are leashed to the anchor. Every zone also raises a magic "
+      "shrine at its centre - the sepulcher's capturable barracks.");
 
   schema.fields = {
       optional_field("id",
@@ -331,11 +332,6 @@ auto undead_zone_schema() -> JsonSchema {
       optional_field("owner_id", "integer", "99", "Owning player slot.", 99),
       optional_field(
           "team_id", "integer", "99", "Team slot; shared by all undead.", 99),
-      optional_field("anchor_structure",
-                     "bool",
-                     "false",
-                     "Anchor is a structure rather than a world prop.",
-                     false),
       optional_field(
           "fog_density", "number", "zone default", "Fog thickness over the zone.", 0.6),
       optional_field("wave_timeout",

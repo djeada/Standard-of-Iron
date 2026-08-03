@@ -30,6 +30,7 @@
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/units/unit.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 
@@ -127,6 +128,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgDodge");
   case ScenarioCommandKind::RpgMove:
     return QStringLiteral("RpgMove");
+  case ScenarioCommandKind::ReloadUndeadZoneState:
+    return QStringLiteral("ReloadUndeadZoneState");
   }
   return QStringLiteral("Unknown");
 }
@@ -283,6 +286,10 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("UndeadZoneAwakened");
   case ArenaExpectationKind::UndeadZoneCleared:
     return QStringLiteral("UndeadZoneCleared");
+  case ArenaExpectationKind::UndeadZoneShrineStands:
+    return QStringLiteral("UndeadZoneShrineStands");
+  case ArenaExpectationKind::UndeadZoneShrineDestroyed:
+    return QStringLiteral("UndeadZoneShrineDestroyed");
   }
   return QStringLiteral("Unknown");
 }
@@ -294,7 +301,9 @@ auto json_vector(const QVector3D& value) -> QJsonArray {
 auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
   return kind == ArenaExpectationKind::UndeadZoneDormantBefore ||
          kind == ArenaExpectationKind::UndeadZoneAwakened ||
-         kind == ArenaExpectationKind::UndeadZoneCleared;
+         kind == ArenaExpectationKind::UndeadZoneCleared ||
+         kind == ArenaExpectationKind::UndeadZoneShrineStands ||
+         kind == ArenaExpectationKind::UndeadZoneShrineDestroyed;
 }
 
 } // namespace
@@ -408,6 +417,23 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
                       QStringLiteral("RPG commander group requires rpg_mode")});
   }
 
+  QSet<QString> zone_ids;
+  for (std::size_t i = 0; i < definition.undead_zones.size(); ++i) {
+    auto const& zone = definition.undead_zones[i];
+    QString const field = QStringLiteral("undead_zones[%1]").arg(i);
+    if (zone.id.trimmed().isEmpty()) {
+      errors.push_back({field, QStringLiteral("undead zone id is empty")});
+    } else if (zone_ids.contains(zone.id)) {
+      errors.push_back(
+          {field, QStringLiteral("duplicate undead zone '%1'").arg(zone.id)});
+    } else {
+      zone_ids.insert(zone.id);
+    }
+    if (!(zone.radius > 0.0F)) {
+      errors.push_back({field, QStringLiteral("undead zone radius must be positive")});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
     QString const field = QStringLiteral("steps[%1]").arg(i);
@@ -415,9 +441,15 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
       errors.push_back({field, QStringLiteral("trigger time cannot be negative")});
     }
     bool const command_needs_group =
-        step.command != ScenarioCommandKind::SetCamera &&
-        step.command != ScenarioCommandKind::SetFullCreatureLod;
+        step.zone_id.isEmpty() && step.command != ScenarioCommandKind::SetCamera &&
+        step.command != ScenarioCommandKind::SetFullCreatureLod &&
+        step.command != ScenarioCommandKind::ReloadUndeadZoneState;
     check_group(step.group, field + QStringLiteral(".group"), command_needs_group);
+    if (!step.zone_id.isEmpty() && !zone_ids.contains(step.zone_id)) {
+      errors.push_back(
+          {field + QStringLiteral(".zone_id"),
+           QStringLiteral("unknown undead zone reference '%1'").arg(step.zone_id)});
+    }
     bool const command_needs_target =
         step.command == ScenarioCommandKind::Attack ||
         step.command == ScenarioCommandKind::AttackMove ||
@@ -448,23 +480,6 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
         step.formation.frontage < 0.0F) {
       errors.push_back(
           {field, QStringLiteral("formation frontage cannot be negative")});
-    }
-  }
-
-  QSet<QString> zone_ids;
-  for (std::size_t i = 0; i < definition.undead_zones.size(); ++i) {
-    auto const& zone = definition.undead_zones[i];
-    QString const field = QStringLiteral("undead_zones[%1]").arg(i);
-    if (zone.id.trimmed().isEmpty()) {
-      errors.push_back({field, QStringLiteral("undead zone id is empty")});
-    } else if (zone_ids.contains(zone.id)) {
-      errors.push_back(
-          {field, QStringLiteral("duplicate undead zone '%1'").arg(zone.id)});
-    } else {
-      zone_ids.insert(zone.id);
-    }
-    if (!(zone.radius > 0.0F)) {
-      errors.push_back({field, QStringLiteral("undead zone radius must be positive")});
     }
   }
 
@@ -640,6 +655,9 @@ struct ArenaScenarioRunner::Impl {
     int peak_alive{0};
     int alive{0};
     float first_spawn_at{-1.0F};
+    bool shrine_seen{false};
+    bool shrine_standing{false};
+    bool shrine_destroyed{false};
   };
 
   Engine::Core::World& world;
@@ -754,6 +772,19 @@ struct ArenaScenarioRunner::Impl {
     static const std::vector<Engine::Core::EntityID> empty;
     auto const found = groups.constFind(group);
     return found == groups.cend() ? empty : found.value();
+  }
+
+  [[nodiscard]] auto step_entities(const ArenaScenarioStep& step) const
+      -> std::vector<Engine::Core::EntityID> {
+    if (step.zone_id.isEmpty()) {
+      return ids(step.group);
+    }
+    auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+    auto const shrine_id = undead != nullptr ? undead->anchor_entity(step.zone_id) : 0U;
+    if (shrine_id == 0U) {
+      return {};
+    }
+    return {shrine_id};
   }
 
   [[nodiscard]] auto entity_alive(Engine::Core::EntityID entity_id) const -> bool {
@@ -1224,7 +1255,7 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     case ScenarioCommandKind::SetHealth:
-      for (auto entity_id : ids(step.group)) {
+      for (auto entity_id : step_entities(step)) {
         auto* entity = world.get_entity(entity_id);
         auto* unit = entity != nullptr
                          ? entity->get_component<Engine::Core::UnitComponent>()
@@ -1237,7 +1268,7 @@ struct ArenaScenarioRunner::Impl {
     case ScenarioCommandKind::ApplyDamage: {
       Engine::Core::EntityID const attacker_id =
           !ids(step.target_group).empty() ? ids(step.target_group).front() : 0U;
-      for (auto entity_id : ids(step.group)) {
+      for (auto entity_id : step_entities(step)) {
         auto* entity = world.get_entity(entity_id);
         (void)Game::Systems::Combat::apply_unit_damage(
             &world, entity, std::max(0, step.value), attacker_id);
@@ -1347,6 +1378,17 @@ struct ArenaScenarioRunner::Impl {
         host.set_rpg_move_input(entity_id, step.destination, step.value != 0);
       }
       break;
+    case ScenarioCommandKind::ReloadUndeadZoneState: {
+      auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+      if (undead == nullptr) {
+        add_issue(QStringLiteral("undead_zone_reload_unavailable"),
+                  QStringLiteral("the scene has no undead awakening system to "
+                                 "save and restore"));
+        break;
+      }
+      undead->restore_state(undead->serialize_state());
+      break;
+    }
     }
   }
 
@@ -1379,6 +1421,30 @@ struct ArenaScenarioRunner::Impl {
       }
       state.alive = alive;
       state.peak_alive = std::max(state.peak_alive, alive);
+      observe_zone_shrine(zone, state);
+    }
+  }
+
+  void observe_zone_shrine(const Game::Map::UndeadZone& zone,
+                           UndeadZoneObservation& state) {
+    auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+    if (undead == nullptr) {
+      return;
+    }
+
+    auto const anchor_id = undead->anchor_entity(zone.id);
+    auto* anchor = anchor_id != 0 ? world.get_entity(anchor_id) : nullptr;
+    auto const* unit = anchor != nullptr
+                           ? anchor->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    bool const standing = unit != nullptr && unit->health > 0;
+
+    if (standing) {
+      state.shrine_seen = true;
+    }
+    state.shrine_standing = standing;
+    if (state.shrine_seen && !standing) {
+      state.shrine_destroyed = true;
     }
   }
 
@@ -3529,6 +3595,32 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::UndeadZoneShrineStands: {
+        auto const state = undead_zone_state(expectation.zone_id);
+        if (!state.shrine_seen) {
+          add_issue(QStringLiteral("undead_zone_shrine_missing"),
+                    QStringLiteral("%1 never raised a magic shrine")
+                        .arg(expectation.zone_id));
+        } else if (!state.shrine_standing) {
+          add_issue(QStringLiteral("undead_zone_shrine_lost"),
+                    QStringLiteral("%1 lost the shrine it was meant to keep")
+                        .arg(expectation.zone_id));
+        }
+        break;
+      }
+      case ArenaExpectationKind::UndeadZoneShrineDestroyed: {
+        auto const state = undead_zone_state(expectation.zone_id);
+        if (!state.shrine_seen) {
+          add_issue(QStringLiteral("undead_zone_shrine_missing"),
+                    QStringLiteral("%1 never raised a magic shrine to destroy")
+                        .arg(expectation.zone_id));
+        } else if (!state.shrine_destroyed) {
+          add_issue(
+              QStringLiteral("undead_zone_shrine_survived"),
+              QStringLiteral("%1 still holds its shrine").arg(expectation.zone_id));
+        }
+        break;
+      }
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::RpgFormationSurvivesLensGap:
       case ArenaExpectationKind::FullCreatureDetailOnly:
@@ -3826,7 +3918,10 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                       {QStringLiteral("spawned_total"), state.spawned_total},
                       {QStringLiteral("peak_alive"), state.peak_alive},
                       {QStringLiteral("alive"), state.alive},
-                      {QStringLiteral("first_spawn_seconds"), state.first_spawn_at}});
+                      {QStringLiteral("first_spawn_seconds"), state.first_spawn_at},
+                      {QStringLiteral("shrine_seen"), state.shrine_seen},
+                      {QStringLiteral("shrine_standing"), state.shrine_standing},
+                      {QStringLiteral("shrine_destroyed"), state.shrine_destroyed}});
     }
     report_object.insert(QStringLiteral("undead_zones"), zones);
   }

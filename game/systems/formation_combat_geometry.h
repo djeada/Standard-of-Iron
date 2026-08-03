@@ -90,6 +90,11 @@ resolve_contact_context(const Engine::Core::Entity& attacker,
 contact_geometry(const Engine::Core::Entity& attacker,
                  const Engine::Core::Entity& target) -> ContactGeometry;
 
+[[nodiscard]] auto
+single_combat_strike_distance(const Engine::Core::Entity& attacker,
+                              const Engine::Core::Entity& target,
+                              const ContactGeometry& geometry) -> float;
+
 [[nodiscard]] auto contact_is_active(const Engine::Core::Entity& attacker,
                                      const Engine::Core::Entity& target,
                                      const ContactGeometry& geometry) -> bool;

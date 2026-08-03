@@ -1,6 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <map>
+#include <tuple>
 #include <vector>
 
 #include "core/component.h"
@@ -8,6 +9,7 @@
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -75,6 +77,40 @@ auto make_two_wave_shrine_map(float wave_timeout) -> Game::Map::MapDefinition {
   return map_definition;
 }
 
+auto make_two_zone_map() -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition map_definition;
+  map_definition.grid.width = 48;
+  map_definition.grid.height = 48;
+  map_definition.grid.tile_size = 1.0F;
+
+  for (const auto& [id, x, z] : std::vector<std::tuple<QString, float, float>>{
+           {QStringLiteral("north_zone"), 16.0F, 16.0F},
+           {QStringLiteral("south_zone"), 32.0F, 32.0F}}) {
+    Game::Map::UndeadZone zone;
+    zone.id = id;
+    zone.anchor_type = Game::Map::WorldProp::Type::Ruins;
+    zone.x = x;
+    zone.z = z;
+    zone.radius = 6.0F;
+    zone.owner_id = 99;
+    zone.team_id = 99;
+    zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+    map_definition.undead_zones.push_back(zone);
+  }
+
+  return map_definition;
+}
+
+auto count_shrine_props() -> int {
+  int count = 0;
+  for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+    if (prop.type == Game::Map::WorldProp::Type::MagicShrine) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 auto add_intruder(Engine::Core::World& world,
                   const QVector3D& position) -> Engine::Core::Entity* {
   auto* entity = world.create_entity();
@@ -99,7 +135,8 @@ auto count_owner_units(Engine::Core::World& world, int owner_id) -> int {
   int count = 0;
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+    if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
       ++count;
     }
   }
@@ -121,9 +158,11 @@ protected:
     nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
 
     Game::Systems::GlobalStatsRegistry::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
   void TearDown() override {
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::GlobalStatsRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
@@ -214,7 +253,8 @@ TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAuthoredWavesRaisesTheDefaultGarris
   std::map<Game::Units::SpawnType, int> roster;
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr && unit->owner_id == 99 && unit->health > 0) {
+    if (unit != nullptr && unit->owner_id == 99 && unit->health > 0 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
       roster[unit->spawn_type] += 1;
     }
   }
@@ -237,7 +277,8 @@ TEST_F(UndeadAwakeningSystemTest, MapAuthoredWavesOverrideTheDefaultGarrison) {
 
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr && unit->owner_id == 99) {
+    if (unit != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
       EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::SkeletonSwordsman);
     }
   }
@@ -261,7 +302,8 @@ TEST_F(UndeadAwakeningSystemTest, WaveRisesTogetherAtDistinctSpreadPositions) {
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit != nullptr && transform != nullptr && unit->owner_id == 99) {
+    if (unit != nullptr && transform != nullptr && unit->owner_id == 99 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
       positions.emplace_back(
           transform->position.x, transform->position.y, transform->position.z);
     }
@@ -303,7 +345,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineZoneGarrisonsACapturableSepulcherBarrack
   EXPECT_EQ(system.anchor_entity(k_shrine_zone_id), anchor_id);
 }
 
-TEST_F(UndeadAwakeningSystemTest, RuinZoneKeepsItsAnchorDecorative) {
+TEST_F(UndeadAwakeningSystemTest, RuinZoneAlsoRaisesAShrineBesideItsRuins) {
   Engine::Core::World world;
   Game::Systems::UndeadAwakeningSystem system;
 
@@ -312,8 +354,186 @@ TEST_F(UndeadAwakeningSystemTest, RuinZoneKeepsItsAnchorDecorative) {
   system.configure(map_definition);
   system.update(&world, 0.1F);
 
-  EXPECT_EQ(system.anchor_entity(QStringLiteral("sepulcher_zone")), 0U);
-  EXPECT_EQ(count_owner_units(world, 99), 0);
+  const QString zone_id = QStringLiteral("sepulcher_zone");
+  EXPECT_TRUE(system.has_shrine(zone_id));
+
+  const Engine::Core::EntityID anchor_id = system.anchor_entity(zone_id);
+  ASSERT_NE(anchor_id, 0U);
+  auto* anchor = world.get_entity(anchor_id);
+  ASSERT_NE(anchor, nullptr);
+  auto* unit = anchor->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::Barracks);
+  EXPECT_EQ(unit->owner_id, 99);
+
+  const QVector3D shrine_position = system.shrine_world_position(zone_id);
+  const float dx = shrine_position.x() - 0.5F;
+  const float dz = shrine_position.z() - 0.5F;
+  EXPECT_GT(std::sqrt(dx * dx + dz * dz), 1.0F)
+      << "the ruins occupy the centre, so the shrine has to step aside";
+  EXPECT_LT(std::sqrt(dx * dx + dz * dz), map_definition.undead_zones.front().radius)
+      << "the shrine still belongs to its zone";
+}
+
+TEST_F(UndeadAwakeningSystemTest, EveryZoneRaisesExactlyOneShrineOfItsOwn) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system;
+
+  const Game::Map::MapDefinition map_definition = make_two_zone_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(count_shrine_props(), 2);
+  EXPECT_TRUE(system.zones_without_shrine().empty());
+
+  const QString north = QStringLiteral("north_zone");
+  const QString south = QStringLiteral("south_zone");
+  EXPECT_TRUE(system.has_shrine(north));
+  EXPECT_TRUE(system.has_shrine(south));
+  EXPECT_NE(system.shrine_prop_id(north), system.shrine_prop_id(south));
+  EXPECT_NE(system.anchor_entity(north), 0U);
+  EXPECT_NE(system.anchor_entity(south), 0U);
+  EXPECT_NE(system.anchor_entity(north), system.anchor_entity(south));
+
+  for (const QString& zone_id : {north, south}) {
+    auto* anchor = world.get_entity(system.anchor_entity(zone_id));
+    ASSERT_NE(anchor, nullptr) << zone_id.toStdString();
+    auto* unit = anchor->get_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(unit, nullptr);
+    EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::Barracks);
+    EXPECT_EQ(unit->owner_id, 99);
+    EXPECT_EQ(unit->nation_id, Game::Systems::NationID::IronSepulcher);
+    EXPECT_EQ(anchor->get_component<Engine::Core::ProductionComponent>(), nullptr)
+        << "a shrine is captured, never recruited from";
+
+    auto* transform = anchor->get_component<Engine::Core::TransformComponent>();
+    ASSERT_NE(transform, nullptr);
+    const QVector3D shrine = system.shrine_world_position(zone_id);
+    EXPECT_NEAR(transform->position.x, shrine.x(), 0.01F);
+    EXPECT_NEAR(transform->position.z, shrine.z(), 0.01F);
+  }
+}
+
+TEST_F(UndeadAwakeningSystemTest, ReconfiguringAZoneDoesNotStampOutASecondShrine) {
+  Engine::Core::World world;
+  const Game::Map::MapDefinition map_definition = make_two_zone_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+
+  Game::Systems::UndeadAwakeningSystem system;
+  system.configure(map_definition);
+  const std::uint64_t first_prop_id =
+      system.shrine_prop_id(QStringLiteral("north_zone"));
+
+  system.configure(map_definition);
+
+  EXPECT_EQ(count_shrine_props(), 2);
+  EXPECT_EQ(system.shrine_prop_id(QStringLiteral("north_zone")), first_prop_id);
+}
+
+TEST_F(UndeadAwakeningSystemTest, WorldSpaceZoneKeepsItsShrinePropAndBarracksTogether) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system;
+
+  Game::Map::MapDefinition terrain_map;
+  terrain_map.grid.width = 64;
+  terrain_map.grid.height = 64;
+  terrain_map.grid.tile_size = 1.0F;
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(terrain_map);
+
+  Game::Map::MapDefinition zone_map = terrain_map;
+  zone_map.coordSystem = Game::Map::CoordSystem::World;
+  Game::Map::UndeadZone zone;
+  zone.id = QStringLiteral("world_zone");
+  zone.anchor_type = Game::Map::WorldProp::Type::Ruins;
+  zone.x = 0.0F;
+  zone.z = 6.0F;
+  zone.radius = 6.0F;
+  zone.owner_id = 99;
+  zone.team_id = 99;
+  zone_map.undead_zones.push_back(zone);
+
+  system.configure(zone_map);
+  system.update(&world, 0.1F);
+
+  ASSERT_TRUE(system.has_shrine(zone.id));
+  const QVector3D shrine = system.shrine_world_position(zone.id);
+  EXPECT_LE(std::hypot(shrine.x() - zone.x, shrine.z() - zone.z), zone.radius)
+      << "a world-space zone must not read its centre as grid coordinates";
+
+  const std::uint64_t prop_id = system.shrine_prop_id(zone.id);
+  ASSERT_NE(prop_id, 0U);
+  const Game::Map::WorldProp* prop = nullptr;
+  for (const auto& candidate : terrain.world_props()) {
+    if (candidate.id == prop_id) {
+      prop = &candidate;
+    }
+  }
+  ASSERT_NE(prop, nullptr);
+
+  const QVector3D prop_world = terrain.world_prop_world_position(*prop);
+  EXPECT_NEAR(prop_world.x(), shrine.x(), 0.01F)
+      << "the shrine mesh must stand where its barracks does";
+  EXPECT_NEAR(prop_world.z(), shrine.z(), 0.01F);
+
+  auto* anchor = world.get_entity(system.anchor_entity(zone.id));
+  ASSERT_NE(anchor, nullptr);
+  auto* transform = anchor->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_NEAR(transform->position.x, shrine.x(), 0.01F);
+  EXPECT_NEAR(transform->position.z, shrine.z(), 0.01F);
+}
+
+TEST_F(UndeadAwakeningSystemTest, ZoneDrownedByALakeReportsItsShrinePlacementFailure) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system;
+
+  Game::Map::MapDefinition map_definition = make_test_map();
+  map_definition.world_props.clear();
+  map_definition.lakes.push_back(Game::Map::Lake{
+      .center = QVector3D(0.5F, 0.0F, 0.5F), .width = 40.0F, .depth = 40.0F});
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+  system.update(&world, 0.1F);
+
+  const QString zone_id = QStringLiteral("sepulcher_zone");
+  EXPECT_FALSE(system.has_shrine(zone_id));
+  EXPECT_EQ(system.anchor_entity(zone_id), 0U);
+  EXPECT_EQ(count_shrine_props(), 0);
+
+  const auto unplaced = system.zones_without_shrine();
+  ASSERT_EQ(unplaced.size(), 1U);
+  EXPECT_EQ(unplaced.front(), zone_id);
+}
+
+TEST_F(UndeadAwakeningSystemTest, ShrineHealthAndZoneAssociationSurviveASaveLoad) {
+  Engine::Core::World world;
+  const Game::Map::MapDefinition map_definition = make_two_zone_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+
+  Game::Systems::UndeadAwakeningSystem first_system;
+  first_system.configure(map_definition);
+  first_system.update(&world, 0.1F);
+
+  const QString zone_id = QStringLiteral("north_zone");
+  const Engine::Core::EntityID anchor_id = first_system.anchor_entity(zone_id);
+  ASSERT_NE(anchor_id, 0U);
+  auto* anchor_unit =
+      world.get_entity(anchor_id)->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(anchor_unit, nullptr);
+  anchor_unit->health = 640;
+
+  Game::Systems::UndeadAwakeningSystem restored_system;
+  restored_system.configure(map_definition);
+  restored_system.restore_state(first_system.serialize_state());
+  restored_system.update(&world, 0.1F);
+
+  EXPECT_EQ(restored_system.anchor_entity(zone_id), anchor_id)
+      << "the restored zone must keep the shrine it already owns";
+  EXPECT_EQ(anchor_unit->health, 640) << "a reload must not heal the shrine";
+  EXPECT_EQ(count_shrine_props(), 2) << "a reload must not plant a second shrine";
+  EXPECT_TRUE(restored_system.has_shrine(zone_id));
 }
 
 TEST_F(UndeadAwakeningSystemTest, LosingTheShrineBreaksTheGarrisonAndClearsTheZone) {
