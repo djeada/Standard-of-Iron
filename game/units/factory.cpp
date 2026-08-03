@@ -145,9 +145,9 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::RomanLegionOrganizer, spear_commander_factory);
   reg.register_factory(SpawnType::RomanVeteranConsul, sword_commander_factory);
   reg.register_factory(SpawnType::RomanFieldCommander, bow_commander_factory);
-  reg.register_factory(SpawnType::CarthageMercenaryBroker, spear_commander_factory);
-  reg.register_factory(SpawnType::CarthageCavalryPatron, bow_commander_factory);
-  reg.register_factory(SpawnType::CarthageElephantMaster, sword_commander_factory);
+  reg.register_factory(SpawnType::CarthageSpearCommander, spear_commander_factory);
+  reg.register_factory(SpawnType::CarthageBowCommander, bow_commander_factory);
+  reg.register_factory(SpawnType::CarthageSwordCommander, sword_commander_factory);
 
   reg.register_factory(SpawnType::Civilian,
                        [](Engine::Core::World& world, const SpawnParams& params) {

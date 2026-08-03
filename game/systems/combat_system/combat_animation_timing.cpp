@@ -57,9 +57,9 @@ auto humanoid_clip_profile_for_spawn(Game::Units::SpawnType spawn_type) noexcept
   case SpawnType::RomanLegionOrganizer:
   case SpawnType::RomanVeteranConsul:
   case SpawnType::RomanFieldCommander:
-  case SpawnType::CarthageMercenaryBroker:
-  case SpawnType::CarthageCavalryPatron:
-  case SpawnType::CarthageElephantMaster:
+  case SpawnType::CarthageSpearCommander:
+  case SpawnType::CarthageBowCommander:
+  case SpawnType::CarthageSwordCommander:
     return Animation::HumanoidClipProfile::SwordReady;
   default:
     return Animation::HumanoidClipProfile::Default;

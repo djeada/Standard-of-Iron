@@ -85,6 +85,8 @@
         <file alias="assets/visuals/icons/defeated.png">assets/visuals/icons/defeated.png</file>
         <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
         <file alias="assets/visuals/hannibal.png">assets/visuals/hannibal.png</file>
+        <file alias="assets/visuals/scipio.png">assets/visuals/scipio.png</file>
+        <file alias="assets/visuals/standard_of_iron.png">assets/visuals/standard_of_iron.png</file>
         <file alias="assets/visuals/emblems/rome.png">assets/visuals/emblems/rome.png</file>
         <file alias="assets/visuals/emblems/cartaghe.png">assets/visuals/emblems/cartaghe.png</file>
     </qresource>
@@ -119,6 +121,8 @@
         <file alias="assets/visuals/icons/defeated.png">assets/visuals/icons/defeated.png</file>
         <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
         <file alias="assets/visuals/hannibal.png">assets/visuals/hannibal.png</file>
+        <file alias="assets/visuals/scipio.png">assets/visuals/scipio.png</file>
+        <file alias="assets/visuals/standard_of_iron.png">assets/visuals/standard_of_iron.png</file>
         <file alias="assets/visuals/emblems/rome.png">assets/visuals/emblems/rome.png</file>
         <file alias="assets/visuals/emblems/cartaghe.png">assets/visuals/emblems/cartaghe.png</file>
     </qresource>

@@ -172,12 +172,12 @@ TEST(NationLoader, CommanderProfilesKeepFallbackRenderersWithoutNationData) {
                            Game::Units::TroopType::RomanFieldCommander);
   auto const hanno =
       profiles.get_profile(Game::Systems::NationID::Carthage,
-                           Game::Units::TroopType::CarthageMercenaryBroker);
+                           Game::Units::TroopType::CarthageSpearCommander);
   auto const hasdrubal = profiles.get_profile(
-      Game::Systems::NationID::Carthage, Game::Units::TroopType::CarthageCavalryPatron);
+      Game::Systems::NationID::Carthage, Game::Units::TroopType::CarthageBowCommander);
   auto const hannibal =
       profiles.get_profile(Game::Systems::NationID::Carthage,
-                           Game::Units::TroopType::CarthageElephantMaster);
+                           Game::Units::TroopType::CarthageSwordCommander);
 
   EXPECT_EQ(fabius.visuals.renderer_id, "troops/roman/commanders/fabius_maximus");
   EXPECT_EQ(scipio.visuals.renderer_id, "troops/roman/commanders/scipio_africanus");
