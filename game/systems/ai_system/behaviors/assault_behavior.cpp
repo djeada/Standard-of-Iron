@@ -24,12 +24,14 @@ auto select_assault_target(const AISnapshot& snapshot,
   const ContactSnapshot* best = nullptr;
   float best_score = std::numeric_limits<float>::infinity();
 
+  const bool troops_in_sight = has_troop_contact(snapshot.visible_enemies);
+
   for (const auto& candidate : snapshot.visible_enemies) {
-    float score = distance_squared(
-        candidate.pos_x, 0.0F, candidate.pos_z, reference_x, 0.0F, reference_z);
-    if (candidate.is_building) {
-      score += 400.0F;
+    if (troops_in_sight && candidate.is_building) {
+      continue;
     }
+    const float score = distance_squared(
+        candidate.pos_x, 0.0F, candidate.pos_z, reference_x, 0.0F, reference_z);
     if (score < best_score) {
       best_score = score;
       best = &candidate;

@@ -9,6 +9,29 @@
 
 namespace Game::Systems::Combat {
 
+namespace {
+
+auto besieging_structure(Engine::Core::Entity* unit,
+                         const CombatQueryContext& query_context) -> bool {
+  if (!unit->has_component<Engine::Core::AIControlledComponent>()) {
+    return false;
+  }
+
+  auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
+  if (attack_target == nullptr || attack_target->target_id == 0) {
+    return false;
+  }
+
+  auto it = query_context.entities_by_id.find(attack_target->target_id);
+  if (it == query_context.entities_by_id.end()) {
+    return false;
+  }
+
+  return is_building(it->second);
+}
+
+} // namespace
+
 void AutoEngagement::process(Engine::Core::World*,
                              const CombatQueryContext& query_context,
                              float delta_time) {
@@ -61,7 +84,9 @@ void AutoEngagement::process(Engine::Core::World*,
     auto* guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
     bool const in_guard_mode = (guard_mode != nullptr) && guard_mode->active;
 
-    if (!in_guard_mode && !is_unit_idle(unit)) {
+    bool const siege_retarget = besieging_structure(unit, query_context);
+
+    if (!in_guard_mode && !siege_retarget && !is_unit_idle(unit)) {
       continue;
     }
 
