@@ -273,6 +273,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("RpgSwingCadenceWithin");
   case ArenaExpectationKind::RpgTravelObserved:
     return QStringLiteral("RpgTravelObserved");
+  case ArenaExpectationKind::RpgFormationSurvivesLensGap:
+    return QStringLiteral("RpgFormationSurvivesLensGap");
   case ArenaExpectationKind::RpgApproachWithin:
     return QStringLiteral("RpgApproachWithin");
   case ArenaExpectationKind::UndeadZoneDormantBefore:
@@ -328,6 +330,7 @@ expectation_needs_soldier_diagnostics(ArenaExpectationKind kind) noexcept -> boo
   case ArenaExpectationKind::HitReactionObserved:
   case ArenaExpectationKind::DeathAnimationObserved:
   case ArenaExpectationKind::GroupIsRendered:
+  case ArenaExpectationKind::RpgFormationSurvivesLensGap:
     return true;
   default:
     return false;
@@ -2201,6 +2204,17 @@ struct ArenaScenarioRunner::Impl {
           return expectation.kind == ArenaExpectationKind::NoRenderVisibilityChurn &&
                  expectation_active(expectation) && applies_to(expectation, group);
         });
+
+    const bool verify_unit_submission =
+        verify_render_continuity ||
+        std::any_of(scenario.expectations.begin(),
+                    scenario.expectations.end(),
+                    [&](const ArenaExpectation& expectation) {
+                      return expectation.kind ==
+                                 ArenaExpectationKind::RpgFormationSurvivesLensGap &&
+                             expectation_active(expectation) &&
+                             applies_to(expectation, group);
+                    });
     if (debug == nullptr) {
       const auto previous_samples = sampled_soldiers_by_entity.value(entity_id);
       const bool had_living_render_sample = std::any_of(
@@ -2209,15 +2223,28 @@ struct ArenaScenarioRunner::Impl {
                 soldier_states.constFind(soldier_key(entity_id, soldier_index));
             return state != soldier_states.cend() && state->alive;
           });
-      if (verify_render_continuity && entity_alive(entity_id) &&
+      auto const unit_cull_reason =
+          Render::Profiling::CombatAnimationDiagnostics::instance().unit_cull_reason(
+              entity_id);
+
+      const bool explained_by_visibility =
+          unit_cull_reason == Render::Profiling::SoldierCullReason::Frustum ||
+          unit_cull_reason == Render::Profiling::SoldierCullReason::Fog;
+      const bool unit_continuity_required =
+          verify_render_continuity ||
+          (verify_unit_submission && !explained_by_visibility);
+      if (unit_continuity_required && entity_alive(entity_id) &&
           entities_with_render_samples.contains(entity_id) &&
           had_living_render_sample) {
-        add_issue(QStringLiteral("unit_submission_disappeared"),
-                  QStringLiteral("%1 entity %2 disappeared before per-soldier "
-                                 "submission diagnostics")
-                      .arg(group)
-                      .arg(entity_id),
-                  entity_id);
+        add_issue(
+            QStringLiteral("unit_submission_disappeared"),
+            QStringLiteral("%1 entity %2 disappeared before per-soldier "
+                           "submission diagnostics (%3)")
+                .arg(group)
+                .arg(entity_id)
+                .arg(QString::fromLatin1(
+                    Render::Profiling::soldier_cull_reason_name(unit_cull_reason))),
+            entity_id);
       }
       return;
     }
@@ -2249,6 +2276,8 @@ struct ArenaScenarioRunner::Impl {
                       soldier.action ==
                           Engine::Core::FormationSoldierAction::MeleeFollowThrough);
             });
+    int living_soldier_samples = 0;
+    int lens_gap_culled_samples = 0;
     float minimum_attack_phase = std::numeric_limits<float>::max();
     float maximum_attack_phase = std::numeric_limits<float>::lowest();
     QSet<int> attack_phase_bins;
@@ -2339,6 +2368,12 @@ struct ArenaScenarioRunner::Impl {
         living_soldiers_by_group[group].insert(key);
         if (directive->action == Engine::Core::FormationSoldierAction::MeleeEngaged) {
           engaged_soldiers_by_group[group].insert(key);
+        }
+      }
+      if (continuity_alive) {
+        ++living_soldier_samples;
+        if (soldier.cull_reason == Render::Profiling::SoldierCullReason::LensGap) {
+          ++lens_gap_culled_samples;
         }
       }
       auto& previous = soldier_states[key];
@@ -2600,6 +2635,8 @@ struct ArenaScenarioRunner::Impl {
         }
       }
     }
+    check_lens_gap_readability(
+        entity_id, group, living_soldier_samples, lens_gap_culled_samples);
     sampled_soldiers_by_entity[entity_id] = std::move(sampled_this_frame);
     bool const small_group_staggered =
         visible_attack_count >= 2 && visible_attack_count < 8 &&
@@ -2609,6 +2646,35 @@ struct ArenaScenarioRunner::Impl {
         maximum_attack_phase - minimum_attack_phase >= 0.20F;
     if (small_group_staggered || formation_staggered) {
       staggered_attack_phases[group] = true;
+    }
+  }
+
+  void check_lens_gap_readability(Engine::Core::EntityID entity_id,
+                                  const QString& group,
+                                  int living_samples,
+                                  int lens_gap_culled) {
+    if (living_samples <= 0 || lens_gap_culled <= 0) {
+      return;
+    }
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind != ArenaExpectationKind::RpgFormationSurvivesLensGap ||
+          !expectation_active(expectation) || !applies_to(expectation, group)) {
+        continue;
+      }
+      float const allowed_fraction =
+          expectation.threshold > 0.0F ? expectation.threshold : 0.5F;
+      float const culled_fraction =
+          static_cast<float>(lens_gap_culled) / static_cast<float>(living_samples);
+      if (culled_fraction > allowed_fraction) {
+        add_issue(QStringLiteral("formation_erased_by_lens_gap"),
+                  QStringLiteral("%1 entity %2 dropped %3 of %4 living soldiers to "
+                                 "the chase-lens gap in one frame")
+                      .arg(group)
+                      .arg(entity_id)
+                      .arg(lens_gap_culled)
+                      .arg(living_samples),
+                  entity_id);
+      }
     }
   }
 
@@ -3464,6 +3530,7 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       case ArenaExpectationKind::NoRenderVisibilityChurn:
+      case ArenaExpectationKind::RpgFormationSurvivesLensGap:
       case ArenaExpectationKind::FullCreatureDetailOnly:
       case ArenaExpectationKind::NoFullscreenFlash:
 
