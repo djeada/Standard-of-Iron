@@ -144,6 +144,29 @@ void AICommandApplier::apply(Engine::Core::World& world,
       break;
     }
 
+    case AICommandType::SetRallyPoint: {
+      auto* entity = world.get_entity(command.building_id);
+      if (entity == nullptr) {
+        break;
+      }
+
+      auto* production = entity->get_component<Engine::Core::ProductionComponent>();
+      if (production == nullptr) {
+        break;
+      }
+
+      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if ((unit != nullptr) && unit->owner_id != ai_owner_id) {
+        break;
+      }
+
+      production->rally_x = command.rally_x;
+      production->rally_z = command.rally_z;
+      production->rally_set = true;
+
+      break;
+    }
+
     case AICommandType::TriggerCommanderRally: {
       for (auto entity_id : command.units) {
         auto* entity = world.get_entity(entity_id);

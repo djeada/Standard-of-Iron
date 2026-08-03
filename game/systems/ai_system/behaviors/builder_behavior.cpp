@@ -10,6 +10,7 @@
 #include "../../../map/terrain_service.h"
 #include "../../construction_cost_catalog.h"
 #include "../../nation_registry.h"
+#include "../ai_base_manager.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -111,6 +112,18 @@ auto needs_outpost_construction(const AIContext& context) -> bool {
 auto recent_outpost_order(const AISnapshot& snapshot,
                           const AIContext& context) -> bool {
   return (snapshot.game_time - context.last_expansion_order_time) < 4.0F;
+}
+
+auto exposed_secondary_base(const AIContext& context) -> const AIBase* {
+  for (const auto& base : context.bases) {
+    if (base.role == BaseRole::Main || base.defense_tower_count > 0) {
+      continue;
+    }
+    if (base.under_threat) {
+      return &base;
+    }
+  }
+  return nullptr;
 }
 
 auto select_best_builder(const AISnapshot& snapshot,
@@ -292,6 +305,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       construction_z = context.expansion_site_z + dx * offset_scale;
     }
     expansion_order = true;
+  } else if (const AIBase* exposed = exposed_secondary_base(context);
+             exposed != nullptr) {
+    building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
+    construction_x = exposed->center_x;
+    construction_z = exposed->center_z;
   } else {
     if (context.home_count < 2) {
       building_to_construct = BUILDING_TYPE_HOME;
@@ -384,7 +402,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     out_commands.push_back(std::move(command));
 
     if (expansion_order) {
-      context.last_expansion_order_time = snapshot.game_time;
+      AIBaseManager::note_expansion_order(
+          context, snapshot.game_time, construction_x, construction_z);
     }
     m_construction_counter++;
   }
@@ -409,6 +428,10 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
                     }));
 
   if (context.state == AIState::Expanding && needs_outpost_construction(context)) {
+    return true;
+  }
+
+  if (exposed_secondary_base(context) != nullptr) {
     return true;
   }
 

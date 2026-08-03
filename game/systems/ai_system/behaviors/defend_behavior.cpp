@@ -12,12 +12,38 @@
 #include <vector>
 
 #include "../../nation_registry.h"
+#include "../ai_base_manager.h"
 #include "../ai_formation.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace Game::Systems::AI {
+
+namespace {
+
+auto select_defended_base(const AIContext& context) -> const AIBase* {
+  const AIBase* best = nullptr;
+
+  for (const auto& base : context.bases) {
+    if (!base.under_threat) {
+      continue;
+    }
+    if (best == nullptr || base.nearby_threat_count > best->nearby_threat_count ||
+        (base.nearby_threat_count == best->nearby_threat_count &&
+         base.role == BaseRole::Main)) {
+      best = &base;
+    }
+  }
+
+  if (best != nullptr) {
+    return best;
+  }
+
+  return AIBaseManager::main_base(context);
+}
+
+} // namespace
 
 void DefendBehavior::execute(const AISnapshot& snapshot,
                              AIContext& context,
@@ -37,9 +63,14 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  const float defend_pos_x = context.base_pos_x;
+  const AIBase* defended_base = select_defended_base(context);
+
+  const float defend_pos_x =
+      (defended_base != nullptr) ? defended_base->center_x : context.base_pos_x;
   const float defend_pos_y = context.base_pos_y;
-  const float defend_pos_z = context.base_pos_z;
+  const float defend_pos_z =
+      (defended_base != nullptr) ? defended_base->center_z : context.base_pos_z;
+  const int defended_base_id = (defended_base != nullptr) ? defended_base->id : 0;
 
   std::vector<const EntitySnapshot*> ready_defenders;
   std::vector<const EntitySnapshot*> engaged_defenders;
@@ -52,6 +83,10 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     }
 
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
+    if (entity.is_assault) {
       continue;
     }
 
@@ -85,7 +120,13 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   const std::size_t total_available = ready_defenders.size() + engaged_defenders.size();
   std::size_t desired_count = total_available;
 
-  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
+  const bool base_is_attacked = context.barracks_under_threat ||
+                                context.any_base_under_threat ||
+                                !context.buildings_under_attack.empty();
+  const bool full_recall =
+      base_is_attacked && context.strategy_config.full_recall_on_base_threat;
+
+  if (base_is_attacked) {
 
     desired_count = total_available;
   } else {
@@ -120,7 +161,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       }
     }
 
-    if (selected.empty()) {
+    if (selected.empty() || full_recall) {
       selected = ready_defenders;
     }
 
@@ -191,7 +232,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                          "defending",
                                          context,
                                          snapshot.game_time,
-                                         3.0F);
+                                         3.0F,
+                                         defended_base_id);
 
         if (!claimed_units.empty()) {
           AICommand attack;
@@ -241,7 +283,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                          "intercepting",
                                          context,
                                          snapshot.game_time,
-                                         2.0F);
+                                         2.0F,
+                                         defended_base_id);
 
         if (!claimed_units.empty()) {
 
@@ -330,7 +373,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                       "positioning",
                                       context,
                                       snapshot.game_time,
-                                      1.5F);
+                                      1.5F,
+                                      defended_base_id);
 
   if (claimed_for_move.empty()) {
     return;

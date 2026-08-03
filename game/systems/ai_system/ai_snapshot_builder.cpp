@@ -10,6 +10,7 @@
 #include "../../map/terrain_service.h"
 #include "../nation_registry.h"
 #include "../player_resource_registry.h"
+#include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace {
@@ -128,6 +129,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
 
+    const auto* assault_wave =
+        entity->get_component<Engine::Core::AssaultWaveComponent>();
+    const bool is_assault = (assault_wave != nullptr) && assault_wave->active;
+
     if (unit->health <= 0) {
       continue;
     }
@@ -140,6 +145,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.max_health = unit->max_health;
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
     data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
+    data.is_assault = is_assault;
 
     if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
       data.pos_x = transform->position.x;
@@ -249,6 +255,22 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     contact.spawn_type = unit->spawn_type;
 
     snapshot.visible_enemies.push_back(std::move(contact));
+  }
+
+  const float engaged_radius_sq =
+      Game::Systems::AI::k_engaged_radius * Game::Systems::AI::k_engaged_radius;
+  for (auto& friendly : snapshot.friendly_units) {
+    friendly.engagement_resolved = true;
+    friendly.engaged = false;
+    for (const auto& enemy : snapshot.visible_enemies) {
+      const float dx = enemy.pos_x - friendly.pos_x;
+      const float dy = enemy.pos_y - friendly.pos_y;
+      const float dz = enemy.pos_z - friendly.pos_z;
+      if ((dx * dx + dy * dy + dz * dz) <= engaged_radius_sq) {
+        friendly.engaged = true;
+        break;
+      }
+    }
   }
 
   return snapshot;
