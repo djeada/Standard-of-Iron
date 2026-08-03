@@ -717,7 +717,6 @@ private:
     case SelectionRingCmdIndex:
     case GridCmdIndex:
     case EffectBatchCmdIndex:
-    case ModeIndicatorCmdIndex:
       return true;
     case TerrainFeatureCmdIndex: {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);

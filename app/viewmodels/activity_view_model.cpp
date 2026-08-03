@@ -7,10 +7,6 @@ ActivityViewModel::ActivityViewModel(ActivityHost* host, QObject* parent)
     , m_host(host) {
 }
 
-QVariantList ActivityViewModel::markers() const {
-  return m_host != nullptr ? m_host->activity_markers() : QVariantList{};
-}
-
 QVariantMap ActivityViewModel::unit(qulonglong unit_id) const {
   return m_host != nullptr ? m_host->unit_activity(unit_id) : QVariantMap{};
 }

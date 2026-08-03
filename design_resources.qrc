@@ -13,6 +13,7 @@
         <file alias="Typography.qml">ui/qml/design/Typography.qml</file>
         <file alias="Motion.qml">ui/qml/design/Motion.qml</file>
         <file alias="Icons.qml">ui/qml/design/Icons.qml</file>
+        <file alias="Numerals.qml">ui/qml/design/Numerals.qml</file>
         <file alias="ActivityIcons.qml">ui/qml/design/ActivityIcons.qml</file>
         <file alias="UiSound.qml">ui/qml/design/UiSound.qml</file>
         <file alias="FactionTheme.qml">ui/qml/design/FactionTheme.qml</file>
@@ -39,7 +40,6 @@
         <file alias="controls/IronCommandButton.qml">ui/qml/design/controls/IronCommandButton.qml</file>
         <file alias="controls/IronVectorIcon.qml">ui/qml/design/controls/IronVectorIcon.qml</file>
         <file alias="controls/IronActivityIcon.qml">ui/qml/design/controls/IronActivityIcon.qml</file>
-        <file alias="controls/IronActivityMarkerLayer.qml">ui/qml/design/controls/IronActivityMarkerLayer.qml</file>
         <file alias="controls/IronOutcomeOverlay.qml">ui/qml/design/controls/IronOutcomeOverlay.qml</file>
         <file alias="controls/IronObjectiveRow.qml">ui/qml/design/controls/IronObjectiveRow.qml</file>
         <file alias="controls/IronResourceCounter.qml">ui/qml/design/controls/IronResourceCounter.qml</file>

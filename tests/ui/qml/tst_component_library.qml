@@ -82,9 +82,6 @@ TestCase {
                 "tag": "IronActivityIcon",
                 "qml": "IronActivityIcon { activity: \"chop_wood\" }"
             }, {
-                "tag": "IronActivityMarkerLayer",
-                "qml": "IronActivityMarkerLayer {}"
-            }, {
                 "tag": "IronOutcomeOverlay",
                 "qml": "IronOutcomeOverlay {}"
             }, {

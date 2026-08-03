@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
 
 Rectangle {
@@ -107,7 +108,7 @@ Rectangle {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "T" + (player_data.team_id || 1)
+                    text: "T" + Design.Numerals.roman(player_data.team_id || 1)
                     color: colors.textSubLite
                     font.pixelSize: 9
                 }

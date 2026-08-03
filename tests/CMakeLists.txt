@@ -310,7 +310,6 @@ add_executable(
     ui/input_bindings_test.cpp
     ui/team_identity_test.cpp
     ui/selection_grouping_test.cpp
-    ui/activity_markers_test.cpp
     ui/icon_art_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp

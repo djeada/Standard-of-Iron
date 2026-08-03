@@ -95,7 +95,7 @@ Rectangle {
 
             Label {
                 anchors.centerIn: parent
-                text: mission_data ? (mission_data.order_index + 1).toString() : "?"
+                text: mission_data ? Design.Numerals.ordinal(mission_data.order_index) : "?"
                 color: "#f5e7c5"
                 font.pointSize: Theme.fontSizeMedium
                 font.bold: true

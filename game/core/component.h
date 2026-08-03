@@ -12,6 +12,7 @@
 
 #include "../systems/nation_id.h"
 #include "../systems/projectile_kind.h"
+#include "../systems/unit_activity.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
@@ -1886,9 +1887,7 @@ public:
 
   bool guard_requested{false};
   bool formation_guard_active{false};
-  bool guard_mode_indicator{false};
-  bool hold_mode_indicator{false};
-  bool patrol_mode_indicator{false};
+  Game::Systems::UnitActivity activity{};
   bool hold_requested{false};
   bool hold_exit_requested{false};
   float hold_entry_progress{0.0F};

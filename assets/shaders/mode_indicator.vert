@@ -7,15 +7,19 @@ layout(location = 2) in vec2 a_tex_coord;
 uniform mat4 u_mvp;
 uniform float u_time;
 
-out float v_dist_from_center;
+out vec3 v_normal;
+out float v_layer;
+out float v_radial;
+out float v_phase;
 
 void main() {
+  v_normal = a_normal;
+  v_layer = a_tex_coord.x;
+  v_radial = a_tex_coord.y;
+  v_phase = 0.0;
 
-  vec3 pos = a_position;
-  float pulse = 1.0 + 0.03 * sin(u_time * 3.0);
-  pos *= pulse;
-
-  v_dist_from_center = length(a_position.xy);
+  float pulse = 1.0 + 0.015 * sin(u_time * 2.0);
+  vec3 pos = vec3(a_position.xy * pulse, a_position.z);
 
   gl_Position = u_mvp * vec4(pos, 1.0);
 }

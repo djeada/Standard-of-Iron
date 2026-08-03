@@ -819,7 +819,7 @@ Item {
                                 spacing: Theme.spacingMedium
 
                                 Label {
-                                    text: (modelData.order_index + 1).toString()
+                                    text: Design.Numerals.ordinal(modelData.order_index)
                                     color: Theme.accent
                                     font.pointSize: Theme.fontSizeTitle
                                     font.bold: true
