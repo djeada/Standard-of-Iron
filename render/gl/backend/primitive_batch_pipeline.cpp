@@ -317,7 +317,8 @@ void PrimitiveBatchPipeline::shutdown_vaos() {
 
 void PrimitiveBatchPipeline::upload_sphere_instances(
     const GL::PrimitiveInstanceGpu* data, std::size_t count) {
-  if (count == 0 || data == nullptr) {
+  m_sphere_instances_resident = 0;
+  if (count == 0 || data == nullptr || m_sphere_instance_buffer == 0) {
     return;
   }
 
@@ -332,11 +333,13 @@ void PrimitiveBatchPipeline::upload_sphere_instances(
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  m_sphere_instances_resident = count;
 }
 
 void PrimitiveBatchPipeline::upload_cylinder_instances(
     const GL::PrimitiveInstanceGpu* data, std::size_t count) {
-  if (count == 0 || data == nullptr) {
+  m_cylinder_instances_resident = 0;
+  if (count == 0 || data == nullptr || m_cylinder_instance_buffer == 0) {
     return;
   }
 
@@ -351,11 +354,13 @@ void PrimitiveBatchPipeline::upload_cylinder_instances(
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  m_cylinder_instances_resident = count;
 }
 
 void PrimitiveBatchPipeline::upload_cone_instances(const GL::PrimitiveInstanceGpu* data,
                                                    std::size_t count) {
-  if (count == 0 || data == nullptr) {
+  m_cone_instances_resident = 0;
+  if (count == 0 || data == nullptr || m_cone_instance_buffer == 0) {
     return;
   }
 
@@ -370,12 +375,14 @@ void PrimitiveBatchPipeline::upload_cone_instances(const GL::PrimitiveInstanceGp
   }
 
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(GL::PrimitiveInstanceGpu), data);
+  m_cone_instances_resident = count;
 }
 
 void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
                                           const QMatrix4x4& view_proj,
                                           const QVector3D& light_dir,
                                           float ambient_strength) {
+  count = m_sphere_draw_guard.clamp(count, m_sphere_instances_resident);
   if (count == 0 || m_sphere_vao == 0 || m_shader == nullptr) {
     return;
   }
@@ -398,6 +405,7 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
                                             const QMatrix4x4& view_proj,
                                             const QVector3D& light_dir,
                                             float ambient_strength) {
+  count = m_cylinder_draw_guard.clamp(count, m_cylinder_instances_resident);
   if (count == 0 || m_cylinder_vao == 0 || m_shader == nullptr) {
     return;
   }
@@ -420,6 +428,7 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
                                         const QMatrix4x4& view_proj,
                                         const QVector3D& light_dir,
                                         float ambient_strength) {
+  count = m_cone_draw_guard.clamp(count, m_cone_instances_resident);
   if (count == 0 || m_cone_vao == 0 || m_shader == nullptr) {
     return;
   }

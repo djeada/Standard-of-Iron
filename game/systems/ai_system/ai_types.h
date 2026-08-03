@@ -41,10 +41,18 @@ enum class AIState {
   Expanding
 };
 
+enum class BaseRole {
+  Main,
+  Production,
+  Defensive,
+  Forward
+};
+
 enum class AICommandType {
   MoveUnits,
   AttackTarget,
   StartProduction,
+  SetRallyPoint,
   StartBuilderConstruction,
   StartBuilderHarvest,
   TriggerCommanderRally,
@@ -103,6 +111,9 @@ struct EntitySnapshot {
   int max_health = 0;
   bool is_building = false;
   bool is_commander = false;
+  bool is_assault = false;
+  bool engagement_resolved = false;
+  bool engaged = false;
 
   float pos_x = 0.0F;
   float pos_y = 0.0F;
@@ -176,6 +187,8 @@ struct AIStrategyConfig {
   int proactive_attack_size = 4;
   int reserve_units = 0;
   int harass_units = 0;
+  int max_chase_units = 0;
+  bool full_recall_on_base_threat = false;
   int desired_outpost_barracks_count = 0;
   int outpost_home_target = 0;
   float assembly_radius = 10.0F;
@@ -184,6 +197,49 @@ struct AIStrategyConfig {
   float scouting_distance = 40.0F;
   float reserve_hold_radius = 8.0F;
   float expansion_site_distance = 28.0F;
+  float chase_radius = 0.0F;
+};
+
+struct AIBase {
+  int id = 0;
+  BaseRole role = BaseRole::Main;
+
+  float center_x = 0.0F;
+  float center_z = 0.0F;
+  float rally_x = 0.0F;
+  float rally_z = 0.0F;
+
+  Engine::Core::EntityID primary_barracks = 0;
+  std::vector<Engine::Core::EntityID> buildings;
+  std::vector<Engine::Core::EntityID> production_buildings;
+
+  int barracks_count = 0;
+  int home_count = 0;
+  int defense_tower_count = 0;
+  int queued_production = 0;
+  int production_capacity = 0;
+
+  int nearby_threat_count = 0;
+  bool under_threat = false;
+  float last_threat_time = -1000.0F;
+
+  bool is_planned = false;
+};
+
+struct ForwardBasePlan {
+  bool has_site = false;
+  float site_x = 0.0F;
+  float site_z = 0.0F;
+  int failed_attempts = 0;
+  int abandoned_count = 0;
+  float attempt_deadline = 0.0F;
+  bool attempt_in_flight = false;
+};
+
+struct AbandonedSite {
+  float x = 0.0F;
+  float z = 0.0F;
+  float time = 0.0F;
 };
 
 struct AIContext {
@@ -226,8 +282,17 @@ struct AIContext {
     BehaviorPriority owner_priority = BehaviorPriority::Normal;
     float assignment_time = 0.0F;
     const char* assigned_task = "";
+    int base_id = 0;
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assigned_units;
+
+  std::vector<AIBase> bases;
+  std::vector<AbandonedSite> abandoned_expansion_sites;
+  ForwardBasePlan forward_plan;
+  int main_base_id = 0;
+  int forward_base_id = 0;
+  int next_base_id = 1;
+  int reassigned_units_last_update = 0;
 
   int melee_count = 0;
   int ranged_count = 0;
@@ -251,6 +316,9 @@ struct AIContext {
   int outpost_home_count = 0;
   std::vector<Engine::Core::EntityID> reserve_unit_ids;
   std::vector<Engine::Core::EntityID> harass_unit_ids;
+  std::vector<Engine::Core::EntityID> assault_unit_ids;
+  int assault_unit_count = 0;
+  bool any_base_under_threat = false;
 
   int max_troops_per_player = 500;
   bool expansion_construction_pending = false;
@@ -306,6 +374,9 @@ struct AICommand {
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
   std::uint64_t resource_target_id = 0;
+
+  float rally_x = 0.0F;
+  float rally_z = 0.0F;
 };
 
 struct AIResult {

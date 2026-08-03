@@ -1300,6 +1300,14 @@ public:
   std::vector<Entry> entries;
 };
 
+class AssaultWaveComponent : public Component {
+public:
+  AssaultWaveComponent() = default;
+
+  bool active{true};
+  int wave_phase{0};
+};
+
 class HoldModeComponent : public Component {
 public:
   HoldModeComponent()

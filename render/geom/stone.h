@@ -10,6 +10,9 @@ namespace Geom {
 class Stone {
 public:
   static auto get() -> GL::Mesh*;
+
+  static constexpr float k_mean_radius = 1.0F;
+  static constexpr float k_projectile_radius = 0.15F;
 };
 
 } // namespace Geom

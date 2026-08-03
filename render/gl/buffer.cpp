@@ -1,6 +1,7 @@
 #include "buffer.h"
 
 #include <QDebug>
+#include <QOpenGLContext>
 #include <qopenglext.h>
 
 #include <GL/gl.h>
@@ -14,9 +15,15 @@ Buffer::Buffer(Type type)
 }
 
 Buffer::~Buffer() {
-  if (m_buffer != 0) {
-    glDeleteBuffers(1, &m_buffer);
+  if (m_buffer == 0) {
+    return;
   }
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "Buffer destroyed without a current GL context; leaking buffer"
+               << m_buffer;
+    return;
+  }
+  glDeleteBuffers(1, &m_buffer);
 }
 
 void Buffer::bind() {
@@ -33,7 +40,8 @@ void Buffer::unbind() {
 
 void Buffer::set_data(const void* data, size_t size, Usage usage) {
   bind();
-  glBufferData(get_gl_type(), size, data, get_gl_usage(usage));
+  glBufferData(get_gl_type(), static_cast<GLsizeiptr>(size), data, get_gl_usage(usage));
+  m_size_bytes = size;
 }
 
 auto Buffer::get_gl_type() const -> GLenum {
@@ -63,9 +71,15 @@ auto Buffer::get_gl_usage(Usage usage) -> GLenum {
 VertexArray::VertexArray() = default;
 
 VertexArray::~VertexArray() {
-  if (m_vao != 0) {
-    glDeleteVertexArrays(1, &m_vao);
+  if (m_vao == 0) {
+    return;
   }
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "VertexArray destroyed without a current GL context; leaking vao"
+               << m_vao;
+    return;
+  }
+  glDeleteVertexArrays(1, &m_vao);
 }
 
 void VertexArray::bind() {

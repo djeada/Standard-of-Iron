@@ -13,11 +13,13 @@
 
 Sound::Sound(const std::string& resource_id,
              const std::string& file_path,
+             Game::Audio::Mastering::Material material,
              MiniaudioBackend* backend)
     : QObject(nullptr)
     , m_file_path(file_path)
+    , m_material(material)
     , m_backend(backend)
-    , m_loaded(false)
+    , m_registered(false)
     , m_volume(Sound::DEFAULT_VOLUME) {
 
   m_track_id = "sound_" + QString::fromStdString(resource_id);
@@ -29,7 +31,8 @@ Sound::Sound(const std::string& resource_id,
   }
 
   if (m_backend != nullptr) {
-    m_loaded = m_backend->predecode(m_track_id, file_info.absoluteFilePath());
+    m_registered =
+        m_backend->request_track(m_track_id, file_info.absoluteFilePath(), m_material);
   }
 }
 
@@ -42,20 +45,21 @@ void Sound::set_backend(MiniaudioBackend* backend) {
 
   m_backend = backend;
 
-  if ((m_backend != nullptr) && !m_loaded) {
+  if ((m_backend != nullptr) && !m_registered) {
     QFileInfo const file_info(QString::fromStdString(m_file_path));
     if (file_info.exists()) {
-      m_loaded = m_backend->predecode(m_track_id, file_info.absoluteFilePath());
+      m_registered = m_backend->request_track(
+          m_track_id, file_info.absoluteFilePath(), m_material);
     }
   }
 }
 
-auto Sound::is_loaded() const -> bool {
-  return m_loaded.load();
+auto Sound::is_registered() const -> bool {
+  return m_registered.load();
 }
 
 auto Sound::is_playing() const -> bool {
-  if ((m_backend == nullptr) || !m_loaded) {
+  if ((m_backend == nullptr) || !m_registered) {
     return false;
   }
 
@@ -63,8 +67,8 @@ auto Sound::is_playing() const -> bool {
 }
 
 void Sound::play(float volume, bool loop) {
-  if ((m_backend == nullptr) || !m_loaded) {
-    qWarning() << "Sound: Cannot play - backend not available or not loaded";
+  if ((m_backend == nullptr) || !m_registered) {
+    qWarning() << "Sound: Cannot play - backend unavailable or asset not registered";
     return;
   }
 
@@ -73,7 +77,7 @@ void Sound::play(float volume, bool loop) {
 }
 
 void Sound::stop() {
-  if ((m_backend == nullptr) || !m_loaded) {
+  if ((m_backend == nullptr) || !m_registered) {
     return;
   }
 

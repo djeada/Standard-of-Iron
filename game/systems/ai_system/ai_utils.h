@@ -44,9 +44,15 @@ inline void replicate_last_target_if_needed(const std::vector<float>& from_x,
   }
 }
 
+inline constexpr float k_engaged_radius = 7.5F;
+
 inline auto is_entity_engaged(const EntitySnapshot& entity,
                               const std::vector<ContactSnapshot>& enemies) -> bool {
-  constexpr float ENGAGED_RADIUS = 7.5F;
+  if (entity.engagement_resolved) {
+    return entity.engaged;
+  }
+
+  constexpr float ENGAGED_RADIUS = k_engaged_radius;
   const float engaged_sq = ENGAGED_RADIUS * ENGAGED_RADIUS;
 
   for (const auto& enemy : enemies) {
@@ -81,6 +87,13 @@ inline auto is_harass_unit(Engine::Core::EntityID unit_id,
                    unit_id) != context.harass_unit_ids.end();
 }
 
+inline auto is_assault_unit(Engine::Core::EntityID unit_id,
+                            const AIContext& context) -> bool {
+  return std::find(context.assault_unit_ids.begin(),
+                   context.assault_unit_ids.end(),
+                   unit_id) != context.assault_unit_ids.end();
+}
+
 inline auto collect_attack_force_units(const AISnapshot& snapshot,
                                        const AIContext& context,
                                        bool exclude_engaged = true)
@@ -90,7 +103,7 @@ inline auto collect_attack_force_units(const AISnapshot& snapshot,
 
   for (const auto& entity : snapshot.friendly_units) {
     if (!is_combat_role_unit(entity) || is_reserved_unit(entity.id, context) ||
-        is_harass_unit(entity.id, context)) {
+        is_harass_unit(entity.id, context) || entity.is_assault) {
       continue;
     }
     if (exclude_engaged && is_entity_engaged(entity, snapshot.visible_enemies)) {
@@ -109,7 +122,8 @@ inline auto collect_harass_force_units(const AISnapshot& snapshot,
   std::unordered_map<Engine::Core::EntityID, const EntitySnapshot*> by_id;
   by_id.reserve(snapshot.friendly_units.size());
   for (const auto& entity : snapshot.friendly_units) {
-    if (!is_combat_role_unit(entity) || is_reserved_unit(entity.id, context)) {
+    if (!is_combat_role_unit(entity) || is_reserved_unit(entity.id, context) ||
+        entity.is_assault) {
       continue;
     }
     if (exclude_engaged && is_entity_engaged(entity, snapshot.visible_enemies)) {
@@ -137,7 +151,7 @@ inline auto collect_reserve_force_units(const AISnapshot& snapshot,
   std::unordered_map<Engine::Core::EntityID, const EntitySnapshot*> by_id;
   by_id.reserve(snapshot.friendly_units.size());
   for (const auto& entity : snapshot.friendly_units) {
-    if (!is_combat_role_unit(entity)) {
+    if (!is_combat_role_unit(entity) || entity.is_assault) {
       continue;
     }
     if (exclude_engaged && is_entity_engaged(entity, snapshot.visible_enemies)) {
@@ -171,13 +185,13 @@ distance(float x1, float y1, float z1, float x2, float y2, float z2) -> float {
   return std::sqrt(distance_squared(x1, y1, z1, x2, y2, z2));
 }
 
-inline auto
-claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
-            BehaviorPriority priority,
-            const char* task_name,
-            AIContext& context,
-            float current_time,
-            float min_lock_duration = 2.0F) -> std::vector<Engine::Core::EntityID> {
+inline auto claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
+                        BehaviorPriority priority,
+                        const char* task_name,
+                        AIContext& context,
+                        float current_time,
+                        float min_lock_duration = 2.0F,
+                        int base_id = 0) -> std::vector<Engine::Core::EntityID> {
 
   std::vector<Engine::Core::EntityID> claimed;
   claimed.reserve(requested_units.size());
@@ -191,6 +205,7 @@ claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
       assignment.owner_priority = priority;
       assignment.assignment_time = current_time;
       assignment.assigned_task = task_name;
+      assignment.base_id = base_id;
       context.assigned_units[unit_id] = assignment;
       claimed.push_back(unit_id);
 
@@ -202,6 +217,7 @@ claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
 
       if (same_task) {
         existing.assignment_time = current_time;
+        existing.base_id = base_id;
         claimed.push_back(unit_id);
         continue;
       }
@@ -215,6 +231,7 @@ claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
         assignment.owner_priority = priority;
         assignment.assignment_time = current_time;
         assignment.assigned_task = task_name;
+        assignment.base_id = base_id;
         context.assigned_units[unit_id] = assignment;
         claimed.push_back(unit_id);
       }

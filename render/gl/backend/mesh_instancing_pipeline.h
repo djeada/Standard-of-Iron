@@ -9,6 +9,7 @@
 
 #include "../shader.h"
 #include "../shader_cache.h"
+#include "instance_draw_guard.h"
 #include "pipeline_interface.h"
 
 namespace Render::GL {
@@ -56,6 +57,7 @@ public:
 
 private:
   void setup_instance_attributes();
+  auto upload_instances(const MeshInstanceGpu* data, std::size_t count) -> std::size_t;
 
   GL::Backend* m_backend{nullptr};
   GL::ShaderCache* m_shader_cache{nullptr};
@@ -69,6 +71,8 @@ private:
   std::size_t m_instance_capacity{0};
 
   GLuint m_instance_buffer{0};
+
+  InstanceDrawGuard m_draw_guard{"MeshInstancingPipeline"};
 };
 
 } // namespace Render::GL::BackendPipelines

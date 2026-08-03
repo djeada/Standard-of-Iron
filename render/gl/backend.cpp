@@ -50,6 +50,7 @@
 #include "buffer.h"
 #include "decoration_gpu.h"
 #include "gl/resources.h"
+#include "gl_debug_log.h"
 #include "mesh.h"
 #include "render_constants.h"
 #include "scene/camera.h"
@@ -161,6 +162,7 @@ auto Backend::initialize() -> bool {
                    " and that the application window has a valid Core Profile context.";
     return false;
   }
+  install_gl_debug_logger();
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);

@@ -31,6 +31,25 @@ namespace {
 constexpr float k_scenario_tail_seconds = 2.0F;
 constexpr int k_pass_watchdog_ms = 1'800'000;
 constexpr int k_pass_warmup_frames = 3;
+constexpr int k_first_frame_min_peak = 8;
+constexpr int k_max_black_frames_skipped = 45;
+
+auto brightest_sample(const QImage& frame) -> int {
+  if (frame.isNull()) {
+    return 0;
+  }
+  const QImage probe =
+      frame.scaled(64, 64, Qt::IgnoreAspectRatio, Qt::FastTransformation)
+          .convertToFormat(QImage::Format_Grayscale8);
+  int peak = 0;
+  for (int y = 0; y < probe.height(); ++y) {
+    const uchar* line = probe.constScanLine(y);
+    for (int x = 0; x < probe.width(); ++x) {
+      peak = std::max(peak, int(line[x]));
+    }
+  }
+  return peak;
+}
 
 struct ShotResult {
   QString name;
@@ -175,6 +194,7 @@ private:
     m_target_frames = std::max(
         1, static_cast<int>(std::lround(shot.duration_seconds / m_step_seconds)));
     m_frames_written = 0;
+    m_black_frames_skipped = 0;
     m_focus_valid = false;
     m_logged_framing = false;
     m_shot_active = true;
@@ -265,6 +285,25 @@ private:
       output = frame.scaled(
           m_spec.width, m_spec.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     }
+
+    if (m_frames_written == 0) {
+      const int peak = brightest_sample(output);
+      if (peak < k_first_frame_min_peak) {
+        if (m_black_frames_skipped < k_max_black_frames_skipped) {
+          ++m_black_frames_skipped;
+          return;
+        }
+        qWarning().noquote() << QStringLiteral(
+                                    "Promo shot '%1' is still black after %2 frames; "
+                                    "recording it anyway")
+                                    .arg(current_shot().name)
+                                    .arg(m_black_frames_skipped);
+      } else if (m_black_frames_skipped > 0) {
+        qInfo().noquote() << QStringLiteral("  skipped %1 black lead-in frame(s)")
+                                 .arg(m_black_frames_skipped);
+      }
+    }
+
     QString error;
     if (!m_encoder->write_frame(output, &error)) {
       qCritical().noquote() << QStringLiteral("Promo encode failed: %1").arg(error);
@@ -433,6 +472,7 @@ private:
   int m_target_frames{0};
   int m_frames_written{0};
   int m_pass_frames{0};
+  int m_black_frames_skipped{0};
   float m_step_seconds{1.0F / 60.0F};
   bool m_pass_active{false};
   bool m_shot_active{false};

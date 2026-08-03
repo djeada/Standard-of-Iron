@@ -7,7 +7,9 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_debug_log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/instance_draw_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp

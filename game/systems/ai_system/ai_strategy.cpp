@@ -126,6 +126,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 2.2F;
     config.scouting_distance = 48.0F;
     config.reserve_hold_radius = 6.5F;
+    config.chase_radius = 24.0F;
+    config.max_chase_units = 4;
     config.expansion_site_distance = 32.0F;
     break;
 
@@ -156,6 +158,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 3.0F;
     config.scouting_distance = 36.0F;
     config.reserve_hold_radius = 11.5F;
+    config.chase_radius = 22.0F;
+    config.max_chase_units = 3;
     config.expansion_site_distance = 22.0F;
     break;
 
@@ -186,6 +190,9 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 2.5F;
     config.scouting_distance = 44.0F;
     config.reserve_hold_radius = 8.5F;
+    config.chase_radius = 20.0F;
+    config.max_chase_units = 3;
+    config.full_recall_on_base_threat = true;
     config.expansion_site_distance = 34.0F;
     break;
 
@@ -218,6 +225,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 40.0F;
     config.reserve_hold_radius = 10.0F;
     config.expansion_site_distance = 28.0F;
+    config.chase_radius = 20.0F;
+    config.max_chase_units = 2;
     break;
 
   case AIStrategy::Harasser:
@@ -248,6 +257,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 60.0F;
     config.reserve_hold_radius = 5.5F;
     config.expansion_site_distance = 30.0F;
+    config.chase_radius = 18.0F;
+    config.max_chase_units = 2;
     break;
 
   case AIStrategy::Rusher:
@@ -278,6 +289,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 52.0F;
     config.reserve_hold_radius = 5.0F;
     config.expansion_site_distance = 24.0F;
+    config.chase_radius = 20.0F;
+    config.max_chase_units = 3;
     break;
 
   case AIStrategy::SepulcherDefense:
@@ -307,6 +320,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 22.0F;
     config.reserve_hold_radius = 10.0F;
     config.expansion_site_distance = 0.0F;
+    config.chase_radius = 26.0F;
+    config.max_chase_units = 4;
     break;
 
   case AIStrategy::Balanced:
@@ -338,6 +353,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 40.0F;
     config.reserve_hold_radius = 8.0F;
     config.expansion_site_distance = 28.0F;
+    config.chase_radius = 24.0F;
+    config.max_chase_units = 3;
     break;
   }
 
@@ -366,6 +383,8 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
   }
 
   if (aggression > 0.65F) {
+    config.max_chase_units += 1;
+    config.chase_radius += 4.0F;
     config.desired_barracks_count += 1;
     config.desired_assembly_size -= 1;
     config.reactive_attack_size = std::max(1, config.reactive_attack_size - 1);
@@ -376,6 +395,7 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
     config.expansion_site_distance += 4.0F;
   }
   if (defense > 0.65F) {
+    config.max_chase_units = std::max(1, config.max_chase_units - 1);
     config.target_builder_count += 1;
     config.desired_defense_tower_count += 1;
     config.desired_wall_segment_count += 1;
@@ -408,6 +428,8 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
   config.defense_modifier = std::max(0.3F, std::min(3.0F, config.defense_modifier));
   config.retreat_threshold = std::max(0.05F, std::min(0.60F, config.retreat_threshold));
   config.harassment_range = std::max(0.0F, std::min(100.0F, config.harassment_range));
+  config.chase_radius = std::max(0.0F, std::min(60.0F, config.chase_radius));
+  config.max_chase_units = std::clamp(config.max_chase_units, 0, 8);
   clamp_style_targets(config);
 }
 

@@ -17,11 +17,35 @@ namespace Render::GL {
 namespace {
 
 constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
+constexpr float k_streak_xy_scale = 0.62F;
+constexpr float k_bolt_z_scale = Geom::Arrow::k_arrow_z_scale * 2.05F;
+constexpr float k_bolt_xy_scale = Geom::Arrow::k_arrow_xy_scale * 1.55F;
 
 [[nodiscard]] auto scaled_color(const QVector3D& color, float scale) -> QVector3D {
   return {std::clamp(color.x() * scale, 0.0F, 1.0F),
           std::clamp(color.y() * scale, 0.0F, 1.0F),
           std::clamp(color.z() * scale, 0.0F, 1.0F)};
+}
+
+void draw_arrow_glow(Renderer* renderer,
+                     GL::Mesh* shaft,
+                     GL::Mesh* tip,
+                     const QMatrix4x4& model,
+                     const QVector3D& glow,
+                     float alpha_scale) {
+  using Geom::Arrow;
+
+  QMatrix4x4 sheath = model;
+  sheath.scale(Arrow::k_shaft_glow_xy_scale, Arrow::k_shaft_glow_xy_scale, 1.0F);
+  renderer->mesh(shaft, sheath, glow, nullptr, Arrow::k_shaft_glow_alpha * alpha_scale);
+
+  QMatrix4x4 head = model;
+  head.translate(0.0F, 0.0F, Arrow::k_head_center_z);
+  head.scale(Arrow::k_head_glow_xy_scale,
+             Arrow::k_head_glow_xy_scale,
+             Arrow::k_head_glow_z_scale);
+  head.translate(0.0F, 0.0F, -Arrow::k_head_center_z);
+  renderer->mesh(tip, head, glow, nullptr, Arrow::k_head_glow_alpha * alpha_scale);
 }
 
 [[nodiscard]] auto projectile_model_at(const QVector3D& position,
@@ -45,7 +69,6 @@ void render_projectile_impact(Renderer* renderer,
   float const progress =
       std::clamp(impact.age / std::max(impact.lifetime, 1.0e-4F), 0.0F, 1.0F);
   float const fade = 1.0F - progress;
-  float const flash = std::clamp(1.0F - progress * 4.5F, 0.0F, 1.0F);
 
   if (impact.kind == Game::Systems::ProjectileKind::Stone) {
     renderer->stone_impact(impact.position + QVector3D(0.0F, 0.08F, 0.0F),
@@ -159,6 +182,24 @@ void render_projectile_impact(Renderer* renderer,
     return;
   }
 
+  if (!impact.ballista_bolt) {
+    return;
+  }
+
+  renderer->combat_dust(impact.position,
+                        QVector3D(0.58F, 0.52F, 0.42F),
+                        0.30F * impact.scale,
+                        0.62F * fade,
+                        renderer->get_animation_time() + impact.age);
+}
+
+void render_spent_projectile(Renderer* renderer,
+                             const Game::Systems::SpentProjectile& spent) {
+  float const alpha = Game::Systems::spent_projectile_alpha(spent);
+  if (alpha <= 0.01F) {
+    return;
+  }
+
   auto* shaft = Geom::Arrow::get_shaft();
   auto* tip = Geom::Arrow::get_tip();
   auto* fletching = Geom::Arrow::get_fletching();
@@ -166,53 +207,36 @@ void render_projectile_impact(Renderer* renderer,
     return;
   }
 
-  bool const cursed = impact.kind == Game::Systems::ProjectileKind::CursedArrow;
-  QVector3D const flash_color =
-      cursed ? QVector3D(0.76F, 0.30F, 1.0F)
-             : (impact.ballista_bolt ? QVector3D(1.0F, 0.76F, 0.28F)
-                                     : QVector3D(1.0F, 0.88F, 0.52F));
-  float const impact_radius = impact.ballista_bolt ? 0.32F : 0.14F;
-  float const impact_intensity = impact.ballista_bolt ? 1.35F : 0.72F;
-  renderer->metal_spark(impact.position,
-                        flash_color,
-                        impact_radius,
-                        impact_intensity,
-                        impact.age,
-                        impact.incoming_direction);
+  float const z_scale =
+      (spent.ballista_bolt ? k_bolt_z_scale : Geom::Arrow::k_arrow_z_scale) *
+      spent.scale;
+  float const xy_scale =
+      (spent.ballista_bolt ? k_bolt_xy_scale : Geom::Arrow::k_arrow_xy_scale) *
+      spent.scale;
 
-  if (!impact.ballista_bolt) {
-    return;
-  }
+  float const above_ground =
+      (1.0F - spent.embed) * Geom::Arrow::k_total_length * z_scale;
+  QMatrix4x4 model = projectile_model_at(
+      spent.position - spent.direction * above_ground, spent.direction);
+  model.rotate(spent.roll_deg, QVector3D(0, 0, 1));
+  model.scale(xy_scale, xy_scale, z_scale);
 
-  if (auto* sphere = get_unit_sphere(); sphere != nullptr && flash > 0.0F) {
-    QMatrix4x4 flash_model;
-    flash_model.translate(impact.position);
-    float const radius =
-        (impact.ballista_bolt ? 0.20F : 0.075F) * (0.55F + flash * 1.30F);
-    flash_model.scale(radius, radius, radius);
-    renderer->mesh(sphere, flash_model, flash_color, nullptr, flash);
-  }
-
-  QMatrix4x4 model =
-      projectile_model_at(impact.position - impact.incoming_direction *
-                                                (impact.ballista_bolt ? 0.24F : 0.10F),
-                          impact.incoming_direction);
-  if (impact.ballista_bolt) {
-    model.translate(0.0F, 0.0F, -0.62F);
-    model.scale(0.72F, 0.72F, 1.25F);
-  } else {
-    model.translate(0.0F, 0.0F, -Geom::Arrow::k_arrow_z_scale * 0.48F);
-    model.scale(Geom::Arrow::k_arrow_xy_scale * impact.scale,
-                Geom::Arrow::k_arrow_xy_scale * impact.scale,
-                Geom::Arrow::k_arrow_z_scale * impact.scale);
-  }
+  bool const cursed = spent.kind == Game::Systems::ProjectileKind::CursedArrow;
   QVector3D const shaft_color =
-      cursed ? QVector3D(0.42F, 0.18F, 0.58F) : Geom::Arrow::shaft_color(impact.color);
-  QVector3D const tip_color =
-      cursed ? QVector3D(0.75F, 0.36F, 0.96F) : Geom::Arrow::tip_color();
-  renderer->mesh(shaft, model, shaft_color, nullptr, fade);
-  renderer->mesh(tip, model, tip_color, nullptr, fade);
-  renderer->mesh(fletching, model, impact.color, nullptr, fade * 0.82F);
+      cursed ? QVector3D(0.34F, 0.15F, 0.47F)
+             : scaled_color(Geom::Arrow::shaft_color(spent.color), 0.86F);
+  QVector3D const fletch_color =
+      cursed ? QVector3D(0.48F, 0.19F, 0.68F)
+             : scaled_color(Geom::Arrow::fletch_color(spent.color), 0.80F);
+
+  renderer->mesh(shaft, model, shaft_color, nullptr, alpha);
+  renderer->mesh(fletching, model, fletch_color, nullptr, alpha);
+
+  constexpr float k_head_fraction =
+      Geom::Arrow::k_tip_length / Geom::Arrow::k_total_length;
+  if (spent.embed < k_head_fraction) {
+    renderer->mesh(tip, model, Geom::Arrow::tip_color(0.82F), nullptr, alpha);
+  }
 }
 
 } // namespace
@@ -327,89 +351,56 @@ void render_arrow_projectile(Renderer* renderer,
 
   if (arrow.is_ballista_bolt()) {
 
-    float const spin_speed = 1440.0F;
+    float const spin_speed = 190.0F;
     float const spin_angle = arrow.get_progress() * spin_speed;
     model.rotate(spin_angle, QVector3D(0, 0, 1));
 
-    constexpr float bolt_z_scale = 1.25F;
-    constexpr float bolt_xy_scale = 0.72F;
-    constexpr float bolt_z_translate_factor = 0.5F;
-
     QMatrix4x4 bolt_model = model;
-    bolt_model.translate(0.0F, 0.0F, -bolt_z_scale * bolt_z_translate_factor);
-    bolt_model.scale(bolt_xy_scale, bolt_xy_scale, bolt_z_scale);
+    bolt_model.translate(
+        0.0F, 0.0F, -k_bolt_z_scale * Geom::Arrow::k_arrow_z_translate_factor);
+    bolt_model.scale(k_bolt_xy_scale, k_bolt_xy_scale, k_bolt_z_scale);
 
     QVector3D const base_color = arrow.get_color();
-
     QVector3D const wood_color =
-        QVector3D(std::clamp(base_color.x() * 0.45F + 0.54F, 0.0F, 1.0F),
-                  std::clamp(base_color.y() * 0.40F + 0.43F, 0.0F, 1.0F),
-                  std::clamp(base_color.z() * 0.30F + 0.22F, 0.0F, 1.0F));
+        scaled_color(Geom::Arrow::shaft_color(base_color), 0.84F);
+    QVector3D const iron_color = Geom::Arrow::tip_color(0.94F);
+    QVector3D const vane_color =
+        scaled_color(Geom::Arrow::fletch_color(base_color), 0.86F);
 
     renderer->mesh(arrow_shaft_mesh, bolt_model, wood_color, nullptr, 1.0F);
+    renderer->mesh(arrow_tip_mesh, bolt_model, iron_color, nullptr, 1.0F);
+    renderer->mesh(arrow_fletching_mesh, bolt_model, vane_color, nullptr, 1.0F);
+    draw_arrow_glow(renderer,
+                    arrow_shaft_mesh,
+                    arrow_tip_mesh,
+                    bolt_model,
+                    Geom::Arrow::glow_color(base_color),
+                    1.15F);
 
-    QMatrix4x4 glow_model = bolt_model;
-    glow_model.scale(1.55F, 1.55F, 1.04F);
-    renderer->mesh(
-        arrow_shaft_mesh, glow_model, QVector3D(1.0F, 0.72F, 0.30F), nullptr, 0.28F);
-
-    QMatrix4x4 tip_model = bolt_model;
-
-    tip_model.translate(0.0F, 0.0F, bolt_z_scale * 0.3F);
-    tip_model.scale(0.85F, 0.85F, 0.2F);
-
-    QVector3D const iron_color = QVector3D(0.70F, 0.68F, 0.62F);
-    renderer->mesh(arrow_tip_mesh, tip_model, iron_color, nullptr, 1.0F);
-
-    QMatrix4x4 fletch_model = bolt_model;
-    fletch_model.translate(0.0F, 0.0F, -bolt_z_scale * 0.2F);
-    fletch_model.scale(0.75F, 0.75F, 0.15F);
-
-    QVector3D const fletch_color =
-        QVector3D(std::clamp(wood_color.x() * 1.15F, 0.0F, 1.0F),
-                  std::clamp(wood_color.y() * 1.10F, 0.0F, 1.0F),
-                  std::clamp(wood_color.z() * 0.95F, 0.0F, 1.0F));
-    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 0.85F);
-
-    if (arrow.get_progress() > 0.15F) {
-      float const trail_opacity =
-          std::clamp((arrow.get_progress() - 0.15F) / 0.85F, 0.0F, 0.3F);
-
-      for (int trail_idx = 1; trail_idx <= 3; trail_idx++) {
-        float const trail_t = arrow.get_progress() - (trail_idx * 0.065F);
-        if (trail_t >= 0.0F) {
-          QVector3D trail_pos = arrow.get_start() + delta * trail_t;
-          float const trail_h =
-              arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t);
-          trail_pos.setY(trail_pos.y() + trail_h);
-
-          QMatrix4x4 trail_model;
-          trail_model.translate(trail_pos.x(), trail_pos.y(), trail_pos.z());
-
-          constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
-          QVector3D const dir = delta.normalized();
-          float const yaw_deg = std::atan2(dir.x(), dir.z()) * k_rad_to_deg;
-          trail_model.rotate(yaw_deg, QVector3D(0, 1, 0));
-          trail_model.rotate(pitch_deg, QVector3D(1, 0, 0));
-
-          float const trail_spin_angle = trail_t * spin_speed;
-          trail_model.rotate(trail_spin_angle, QVector3D(0, 0, 1));
-
-          float const trail_scale_factor = 0.72F - (trail_idx * 0.13F);
-          trail_model.translate(0.0F, 0.0F, -bolt_z_scale * bolt_z_translate_factor);
-          trail_model.scale(bolt_xy_scale * trail_scale_factor,
-                            bolt_xy_scale * trail_scale_factor,
-                            bolt_z_scale * trail_scale_factor);
-
-          QVector3D const trail_color =
-              scaled_color(wood_color, 1.0F - trail_opacity * 0.25F);
-          renderer->mesh(arrow_shaft_mesh,
-                         trail_model,
-                         trail_color,
-                         nullptr,
-                         1.0F - (trail_opacity * 0.7F));
-        }
+    for (int trail_idx = 1; trail_idx <= 2; trail_idx++) {
+      float const trail_t = arrow.get_progress() - (trail_idx * 0.055F);
+      if (trail_t <= 0.0F) {
+        continue;
       }
+      QVector3D trail_pos = arrow.get_start() + delta * trail_t;
+      trail_pos.setY(trail_pos.y() +
+                     arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t));
+
+      QVector3D tangent = delta;
+      tangent.setY(tangent.y() +
+                   arrow.get_arc_height() * 4.0F * (1.0F - 2.0F * trail_t));
+      QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
+      trail_model.rotate(trail_t * spin_speed, QVector3D(0, 0, 1));
+      trail_model.translate(
+          0.0F, 0.0F, -k_bolt_z_scale * Geom::Arrow::k_arrow_z_translate_factor);
+      trail_model.scale(k_bolt_xy_scale * k_streak_xy_scale,
+                        k_bolt_xy_scale * k_streak_xy_scale,
+                        k_bolt_z_scale);
+      renderer->mesh(arrow_shaft_mesh,
+                     trail_model,
+                     wood_color,
+                     nullptr,
+                     0.34F - (0.12F * static_cast<float>(trail_idx)));
     }
   } else {
     if (arrow.trail_alpha() > 0.001F && arrow.trail_length() > 0.0F) {
@@ -429,24 +420,22 @@ void render_arrow_projectile(Renderer* renderer,
         QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
         trail_model.rotate(arrow.roll_deg() + trail_t * arrow.spin_rate_deg(),
                            QVector3D(0, 0, 1));
-        trail_model.translate(0.0F, 0.0F, -Geom::Arrow::k_arrow_z_scale * 0.5F);
-        float const trail_scale =
-            arrow.get_scale() * (0.82F - 0.14F * static_cast<float>(segment));
-        trail_model.scale(Geom::Arrow::k_arrow_xy_scale * trail_scale,
-                          Geom::Arrow::k_arrow_xy_scale * trail_scale,
-                          Geom::Arrow::k_arrow_z_scale * trail_scale);
+        float const trail_scale = arrow.get_scale() * (1.0F - 0.06F * segment);
+        trail_model.translate(0.0F,
+                              0.0F,
+                              -Geom::Arrow::k_arrow_z_scale * trail_scale *
+                                  Geom::Arrow::k_arrow_z_translate_factor);
+        trail_model.scale(
+            Geom::Arrow::k_arrow_xy_scale * trail_scale * k_streak_xy_scale,
+            Geom::Arrow::k_arrow_xy_scale * trail_scale * k_streak_xy_scale,
+            Geom::Arrow::k_arrow_z_scale * trail_scale);
         float const alpha =
-            arrow.trail_alpha() * (0.95F - 0.24F * static_cast<float>(segment));
+            arrow.trail_alpha() * (0.55F - 0.16F * static_cast<float>(segment));
         renderer->mesh(arrow_shaft_mesh,
                        trail_model,
-                       scaled_color(Geom::Arrow::shaft_color(arrow.get_color()), 0.82F),
+                       scaled_color(Geom::Arrow::shaft_color(arrow.get_color()), 0.88F),
                        nullptr,
                        alpha);
-        renderer->mesh(arrow_tip_mesh,
-                       trail_model,
-                       scaled_color(Geom::Arrow::tip_color(), 0.88F),
-                       nullptr,
-                       alpha * 0.78F);
       }
     }
     model.rotate(arrow.roll_deg() + arrow.get_progress() * arrow.spin_rate_deg(),
@@ -473,13 +462,12 @@ void render_arrow_projectile(Renderer* renderer,
     renderer->mesh(arrow_shaft_mesh, model, shaft_color, nullptr, 1.0F);
     renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
 
-    QMatrix4x4 glow_model = model;
-    glow_model.scale(2.45F, 2.45F, 1.08F);
-    QVector3D const glow_color =
+    QVector3D const glow =
         arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow
             ? QVector3D(0.78F, 0.35F, 1.0F)
-            : Geom::Arrow::fletch_color(team_color);
-    renderer->mesh(arrow_shaft_mesh, glow_model, glow_color, nullptr, 0.30F);
+            : Geom::Arrow::glow_color(team_color);
+    draw_arrow_glow(
+        renderer, arrow_shaft_mesh, arrow_tip_mesh, model, glow, arrow.brightness());
 
     QMatrix4x4 fletch_model = model;
     fletch_model.translate(
@@ -487,7 +475,7 @@ void render_arrow_projectile(Renderer* renderer,
     fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_z_scale);
-    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 0.85F);
+    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 1.0F);
   }
 }
 
@@ -512,7 +500,8 @@ void render_stone_projectile(Renderer* renderer,
   model.rotate(tumble_angle, QVector3D(1, 0.5F, 0.3F).normalized());
 
   float const stone_scale = stone.get_scale();
-  model.scale(stone_scale, stone_scale, stone_scale);
+  float const mesh_scale = stone_scale * Geom::Stone::k_projectile_radius;
+  model.scale(mesh_scale, mesh_scale, mesh_scale);
 
   bool const flaming = stone.get_kind() == Game::Systems::ProjectileKind::FlamingStone;
   QVector3D const stone_color =
@@ -596,6 +585,10 @@ void render_projectiles(Renderer* renderer,
                    projectile.get())) {
       render_stone_projectile(renderer, resources, *stone, pos, model);
     }
+  }
+
+  for (auto const& spent : projectile_system.spent_projectiles()) {
+    render_spent_projectile(renderer, spent);
   }
 
   for (auto const& impact : projectile_system.impacts()) {

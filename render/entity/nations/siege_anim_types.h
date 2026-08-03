@@ -28,6 +28,7 @@ struct CatapultAnimContext {
   float loading_progress{0.0F};
   float firing_progress{0.0F};
   bool show_stone{false};
+  bool incendiary_round{false};
 };
 
 } // namespace Render::GL
